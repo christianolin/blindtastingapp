@@ -113,3 +113,15 @@ recursion comes back.
 - Reveal + scoring for a wine happens via the Postgres RPC `reveal_wine(wine_id)`
   (security definer, host-only) — this is the single source of truth for
   scoring, not duplicated in the client.
+- A tasting also has `reveal_mode` (`BLIND` | `SEMI_BLIND`), independent of
+  `wine_source` — either host or participants can still provide the wines. In
+  `SEMI_BLIND`, every wine's answer key is visible to all participants up
+  front as a "candidate list" (`wine_answers` RLS allows this — see
+  `is_tasting_participant` + `reveal_mode` check in the read policy); guessing
+  becomes "which candidate wine is this glass" (`guesses.guessed_wine_id`)
+  instead of filling in each category. `reveal_wine` resolves a
+  `guessed_wine_id` guess to that wine's own answer key and scores it through
+  the exact same per-category logic as a normal blind guess — semi-blind adds
+  an input path, not a second scoring engine. Matching is NOT enforced to be
+  1-to-1 (the same candidate can be picked for more than one glass); each
+  glass is still scored independently against its own true answer.

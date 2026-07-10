@@ -74,6 +74,57 @@ export async function submitGuess(
   return { success: true };
 }
 
+export async function submitMatchGuess(
+  _prevState: GuessFormState,
+  formData: FormData,
+): Promise<GuessFormState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const wineId = String(formData.get("wine_id") ?? "");
+  const guessedWineId = String(formData.get("guessed_wine_id") ?? "") || null;
+
+  const { data: participant } = await supabase
+    .from("tasting_participants")
+    .select("id")
+    .eq("tasting_id", tastingId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!participant) {
+    return { error: "You're not a participant in this tasting." };
+  }
+
+  const payload = {
+    wine_id: wineId,
+    participant_id: participant.id,
+    guessed_wine_id: guessedWineId,
+  };
+
+  const { data: existing } = await supabase
+    .from("guesses")
+    .select("id")
+    .eq("wine_id", wineId)
+    .eq("participant_id", participant.id)
+    .maybeSingle();
+
+  const { error } = existing
+    ? await supabase.from("guesses").update(payload).eq("id", existing.id)
+    : await supabase.from("guesses").insert(payload);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/tastings/${tastingId}/play`);
+  return { success: true };
+}
+
 export type RevealFormState = { error: string } | null;
 
 export async function revealWine(

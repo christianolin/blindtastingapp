@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { GuessForm, type ExistingGuess } from "./guess-form";
+import { MatchGuessForm } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -41,6 +42,7 @@ export default async function PlayPage({
   }
 
   const isHost = tasting.host_id === user.id;
+  const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
 
   const { data: myParticipant } = await supabase
     .from("tasting_participants")
@@ -91,6 +93,40 @@ export default async function PlayPage({
     for (const row of list ?? []) nameById.set(row.id, row.name);
   }
 
+  function vintageLabel(row: {
+    vintage_kind: string | null;
+    vintage_year: number | null;
+    vintage_tawny_years: number | null;
+  }) {
+    if (row.vintage_kind === "YEAR") return String(row.vintage_year ?? "—");
+    if (row.vintage_kind === "NV") return "NV";
+    if (row.vintage_kind === "TAWNY")
+      return `${row.vintage_tawny_years ?? "?"} years tawny`;
+    return "—";
+  }
+
+  function describeAnswer(answer: {
+    country_id: string;
+    region_id: string;
+    appellation_id: string;
+    primary_grape_id: string;
+    secondary_grape_id: string | null;
+    producer_id: string;
+    type_designation_id: string | null;
+    vintage_kind: string | null;
+    vintage_year: number | null;
+    vintage_tawny_years: number | null;
+  }) {
+    return (
+      `${nameById.get(answer.country_id)} · ${nameById.get(answer.region_id)} · ` +
+      `${nameById.get(answer.appellation_id)} — ${nameById.get(answer.primary_grape_id)}` +
+      `${answer.secondary_grape_id ? ` / ${nameById.get(answer.secondary_grape_id)}` : ""}` +
+      ` — ${nameById.get(answer.producer_id)}` +
+      `${answer.type_designation_id ? ` (${nameById.get(answer.type_designation_id)})` : ""}` +
+      ` — ${vintageLabel(answer)}`
+    );
+  }
+
   const wineIds = (wines ?? []).map((w) => w.id);
   const { data: myGuesses } = await supabase
     .from("guesses")
@@ -111,17 +147,18 @@ export default async function PlayPage({
       : { data: [] };
   const answerByWineId = new Map((revealedAnswers ?? []).map((a) => [a.wine_id, a]));
 
-  function vintageLabel(row: {
-    vintage_kind: string | null;
-    vintage_year: number | null;
-    vintage_tawny_years: number | null;
-  }) {
-    if (row.vintage_kind === "YEAR") return String(row.vintage_year ?? "—");
-    if (row.vintage_kind === "NV") return "NV";
-    if (row.vintage_kind === "TAWNY")
-      return `${row.vintage_tawny_years ?? "?"} years tawny`;
-    return "—";
-  }
+  // In semi-blind mode every wine's answer key is visible up front, as the
+  // pool of candidates participants match glasses against.
+  const { data: allAnswers } = isSemiBlind
+    ? await supabase
+        .from("wine_answers")
+        .select("*")
+        .in("wine_id", wineIds.length > 0 ? wineIds : [""])
+    : { data: [] };
+  const candidateByWineId = new Map((allAnswers ?? []).map((a) => [a.wine_id, a]));
+  const candidates = (allAnswers ?? [])
+    .map((a) => ({ id: a.wine_id, name: describeAnswer(a) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
@@ -143,6 +180,24 @@ export default async function PlayPage({
         {tasting.name}
       </h1>
 
+      {isSemiBlind && candidates.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>The wines in this tasting</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">
+              {`These are the ${candidates.length} wines being poured — you just don't know which glass is which. Match each glass below.`}
+            </p>
+            <ul className="flex flex-col gap-1.5 text-sm">
+              {candidates.map((c) => (
+                <li key={c.id}>{c.name}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {(wines ?? []).length === 0 ? (
         <p className="text-muted-foreground">No wines added yet.</p>
       ) : null}
@@ -151,6 +206,9 @@ export default async function PlayPage({
         const isMine = wine.contributor_participant_id === myParticipant.id;
         const answer = answerByWineId.get(wine.id);
         const guess = myGuessByWineId.get(wine.id);
+        const guessedCandidate = guess?.guessed_wine_id
+          ? candidateByWineId.get(guess.guessed_wine_id)
+          : null;
 
         return (
           <Card key={wine.id}>
@@ -173,21 +231,7 @@ export default async function PlayPage({
                   <div>
                     <h3 className="mb-1 text-sm font-medium">Answer</h3>
                     <p className="text-sm text-muted-foreground">
-                      {nameById.get(answer.country_id)} ·{" "}
-                      {nameById.get(answer.region_id)} ·{" "}
-                      {nameById.get(answer.appellation_id)}
-                      <br />
-                      {nameById.get(answer.primary_grape_id)}
-                      {answer.secondary_grape_id
-                        ? ` / ${nameById.get(answer.secondary_grape_id)}`
-                        : ""}
-                      {" — "}
-                      {nameById.get(answer.producer_id)}
-                      {answer.type_designation_id
-                        ? ` (${nameById.get(answer.type_designation_id)})`
-                        : ""}
-                      {" — "}
-                      {vintageLabel(answer)}
+                      {describeAnswer(answer)}
                     </p>
                   </div>
                   {guess ? (
@@ -195,6 +239,11 @@ export default async function PlayPage({
                       <h3 className="mb-1 text-sm font-medium">
                         Your guess — {guess.total_points ?? 0} points
                       </h3>
+                      {guessedCandidate ? (
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          You guessed: {describeAnswer(guessedCandidate)}
+                        </p>
+                      ) : null}
                       <table className="w-full text-sm">
                         <tbody>
                           {(
@@ -231,6 +280,13 @@ export default async function PlayPage({
                 <p className="text-sm text-muted-foreground">
                   This is your wine — nothing to guess.
                 </p>
+              ) : isSemiBlind ? (
+                <MatchGuessForm
+                  tastingId={tastingId}
+                  wineId={wine.id}
+                  candidates={candidates}
+                  existingGuessedWineId={guess?.guessed_wine_id ?? null}
+                />
               ) : (
                 <GuessForm
                   tastingId={tastingId}

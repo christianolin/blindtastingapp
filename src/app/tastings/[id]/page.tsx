@@ -85,6 +85,9 @@ export default async function TastingPage({
                 ? "Host provides wines"
                 : "Participants bring wines"}
             </Badge>
+            {tasting.reveal_mode === "SEMI_BLIND" ? (
+              <Badge variant="secondary">Semi-blind</Badge>
+            ) : null}
             <Badge>{tasting.status}</Badge>
           </div>
         </div>

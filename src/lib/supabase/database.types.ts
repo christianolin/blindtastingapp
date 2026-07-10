@@ -11,6 +11,7 @@
 
 export type TimingMode = "LIVE" | "ASYNC";
 export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
+export type RevealMode = "BLIND" | "SEMI_BLIND";
 export type TastingStatus = "DRAFT" | "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
@@ -68,6 +69,7 @@ export type Database = {
           host_id: string;
           timing_mode: TimingMode;
           wine_source: WineSourceMode;
+          reveal_mode: RevealMode;
           status: TastingStatus;
           current_wine_id: string | null;
           opens_at: string | null;
@@ -80,6 +82,7 @@ export type Database = {
           host_id: string;
           timing_mode: TimingMode;
           wine_source: WineSourceMode;
+          reveal_mode?: RevealMode;
           status?: TastingStatus;
           current_wine_id?: string | null;
           opens_at?: string | null;
@@ -182,6 +185,7 @@ export type Database = {
           vintage_kind: VintageKind | null;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
+          guessed_wine_id: string | null;
           country_points: number | null;
           region_points: number | null;
           appellation_points: number | null;
@@ -209,6 +213,7 @@ export type Database = {
           vintage_kind?: VintageKind | null;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
+          guessed_wine_id?: string | null;
           submitted_at?: string;
           updated_at?: string;
         };

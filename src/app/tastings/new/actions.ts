@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { TimingMode, WineSourceMode } from "@/lib/supabase/database.types";
+import type {
+  RevealMode,
+  TimingMode,
+  WineSourceMode,
+} from "@/lib/supabase/database.types";
 
 export type CreateTastingFormState = { error: string } | null;
 
@@ -24,6 +28,7 @@ export async function createTasting(
   const wineSource = String(
     formData.get("wine_source") ?? "",
   ) as WineSourceMode;
+  const revealMode = String(formData.get("reveal_mode") ?? "") as RevealMode;
   const emailsRaw = String(formData.get("emails") ?? "");
 
   if (!name) {
@@ -37,6 +42,9 @@ export async function createTasting(
     wineSource !== "PARTICIPANT_CONTRIBUTED"
   ) {
     return { error: "Choose who provides the wines." };
+  }
+  if (revealMode !== "BLIND" && revealMode !== "SEMI_BLIND") {
+    return { error: "Choose a reveal mode." };
   }
 
   const emails = [
@@ -55,6 +63,7 @@ export async function createTasting(
       host_id: user.id,
       timing_mode: timingMode,
       wine_source: wineSource,
+      reveal_mode: revealMode,
       status: "OPEN",
     })
     .select()

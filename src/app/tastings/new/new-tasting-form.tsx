@@ -24,6 +24,12 @@ const WINE_SOURCE_ITEMS = {
   PARTICIPANT_CONTRIBUTED: "Everyone brings and guesses each other's wines",
 };
 
+const REVEAL_MODE_ITEMS = {
+  BLIND: "Fully blind — nothing is known ahead of time",
+  SEMI_BLIND:
+    "Semi-blind — everyone can see the full wine list up front, just not which glass is which",
+};
+
 export function NewTastingForm() {
   const [state, formAction, pending] = useActionState<
     CreateTastingFormState,
@@ -74,6 +80,26 @@ export function NewTastingForm() {
             </SelectItem>
             <SelectItem value="PARTICIPANT_CONTRIBUTED">
               {WINE_SOURCE_ITEMS.PARTICIPANT_CONTRIBUTED}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="reveal_mode">Reveal</Label>
+        <Select
+          name="reveal_mode"
+          items={REVEAL_MODE_ITEMS}
+          defaultValue="BLIND"
+          required
+        >
+          <SelectTrigger id="reveal_mode" className="w-full">
+            <SelectValue placeholder="Choose a reveal mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="BLIND">{REVEAL_MODE_ITEMS.BLIND}</SelectItem>
+            <SelectItem value="SEMI_BLIND">
+              {REVEAL_MODE_ITEMS.SEMI_BLIND}
             </SelectItem>
           </SelectContent>
         </Select>
