@@ -48,6 +48,29 @@ networks — use the connection pooler string from Project Settings → Database
   handing off to a server-rendered page. Point any future invite/recovery
   `redirectTo` at `/auth/confirm-hash?next=<destination>`, not `/auth/callback`.
 
+## RLS recursion (important gotcha)
+
+`tastings` and `tasting_participants` policies used to subquery each other
+directly (host check → tasting_participants, participant check → tastings),
+which Postgres detects as infinite recursion ("infinite recursion detected in
+policy for relation..."). Fixed via two `SECURITY DEFINER` helper functions —
+`is_tasting_host(tasting_id)` and `is_tasting_participant(tasting_id)` — which
+bypass RLS internally. Any new policy that needs to check "is this user the
+host/participant of tasting X" should call these functions, not write a raw
+`exists (select ... from tastings/tasting_participants ...)` subquery, or the
+recursion comes back.
+
+## Base UI component gotchas (shadcn/ui here uses @base-ui/react, not Radix)
+
+- `Button` composed with another element (e.g. a `Link`) needs
+  `nativeButton={false}` passed alongside `render={<Link .../>}` — otherwise
+  it logs "expected a native <button>" because it defaults to
+  `nativeButton: true`. There's no `asChild` prop like Radix; use `render`.
+- `Select` does NOT infer option labels from `<SelectItem>` children text —
+  it only shows a label if you pass an `items` prop (a `{value: label}` map)
+  to `Select` (`Select.Root`), otherwise the trigger displays the raw value
+  string once selected.
+
 ## Domain rules
 
 - A tasting has `timing_mode` (`LIVE` | `ASYNC`) and `wine_source`

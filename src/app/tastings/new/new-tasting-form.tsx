@@ -1,0 +1,101 @@
+"use client";
+
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createTasting, type CreateTastingFormState } from "./actions";
+
+const TIMING_MODE_ITEMS = {
+  ASYNC: "Async — open over several days",
+  LIVE: "Live — everyone tastes together",
+};
+
+const WINE_SOURCE_ITEMS = {
+  HOST_PROVIDES: "I'll pick all the wines",
+  PARTICIPANT_CONTRIBUTED: "Everyone brings and guesses each other's wines",
+};
+
+export function NewTastingForm() {
+  const [state, formAction, pending] = useActionState<
+    CreateTastingFormState,
+    FormData
+  >(createTasting, null);
+
+  return (
+    <form action={formAction} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="name">Tasting name</Label>
+        <Input id="name" name="name" required autoFocus />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="timing_mode">Timing</Label>
+        <Select
+          name="timing_mode"
+          items={TIMING_MODE_ITEMS}
+          defaultValue="ASYNC"
+          required
+        >
+          <SelectTrigger id="timing_mode" className="w-full">
+            <SelectValue placeholder="Choose a timing mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ASYNC">
+              {TIMING_MODE_ITEMS.ASYNC}
+            </SelectItem>
+            <SelectItem value="LIVE">{TIMING_MODE_ITEMS.LIVE}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="wine_source">Wines</Label>
+        <Select
+          name="wine_source"
+          items={WINE_SOURCE_ITEMS}
+          defaultValue="HOST_PROVIDES"
+          required
+        >
+          <SelectTrigger id="wine_source" className="w-full">
+            <SelectValue placeholder="Who provides the wines?" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="HOST_PROVIDES">
+              {WINE_SOURCE_ITEMS.HOST_PROVIDES}
+            </SelectItem>
+            <SelectItem value="PARTICIPANT_CONTRIBUTED">
+              {WINE_SOURCE_ITEMS.PARTICIPANT_CONTRIBUTED}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="emails">Invite participants</Label>
+        <Textarea
+          id="emails"
+          name="emails"
+          placeholder="One email per line (or comma-separated)"
+          rows={4}
+        />
+      </div>
+
+      {state?.error ? (
+        <p className="text-sm text-destructive">{state.error}</p>
+      ) : null}
+
+      <Button type="submit" disabled={pending}>
+        {pending ? "Creating…" : "Create tasting"}
+      </Button>
+    </form>
+  );
+}
