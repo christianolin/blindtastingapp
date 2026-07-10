@@ -138,7 +138,9 @@ export default async function ResultsPage({
       >
         ← Back to tasting
       </Link>
-      <h1 className="text-2xl font-semibold">{tasting.name} — results</h1>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight">
+        {tasting.name} — results
+      </h1>
 
       <Card>
         <CardHeader>

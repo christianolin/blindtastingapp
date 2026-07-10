@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">
           Welcome, {profile?.display_name ?? user.email}
         </h1>
         <form action={signOut}>
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Your tastings</h2>
+        <h2 className="font-heading text-xl font-medium">Your tastings</h2>
         <Button nativeButton={false} render={<Link href="/tastings/new" />}>
           New tasting
         </Button>

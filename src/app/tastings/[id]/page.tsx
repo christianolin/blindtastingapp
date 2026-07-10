@@ -73,7 +73,9 @@ export default async function TastingPage({
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{tasting.name}</h1>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {tasting.name}
+          </h1>
           <div className="mt-2 flex gap-2">
             <Badge variant="secondary">
               {tasting.timing_mode === "LIVE" ? "Live" : "Async"}

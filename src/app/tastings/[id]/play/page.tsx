@@ -139,7 +139,9 @@ export default async function PlayPage({
           View results →
         </Link>
       </div>
-      <h1 className="text-2xl font-semibold">{tasting.name}</h1>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight">
+        {tasting.name}
+      </h1>
 
       {(wines ?? []).length === 0 ? (
         <p className="text-muted-foreground">No wines added yet.</p>

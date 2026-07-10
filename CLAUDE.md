@@ -33,6 +33,16 @@ Schema/RLS changes go through `supabase/migrations/`, pushed with
 networks — use the connection pooler string from Project Settings → Database
 → Connection pooling instead.
 
+## Dev server gotcha: spurious 404s on nested dynamic routes
+
+Turbopack's dev cache has repeatedly gone stale on routes like
+`/tastings/[id]/wines/new` — a fresh `npm run dev` (or one that's been
+stop/started a few times in the same session) sometimes 404s a route that
+demonstrably exists and worked before. Tell: the 404 page itself renders
+unstyled (plain black/white, ignoring globals.css) — a sign it's a
+framework-level routing miss, not our own `notFound()`. Fix: stop the
+server, `rm -rf .next`, start it again.
+
 ## Auth link handling (important gotcha)
 
 `@supabase/ssr`'s browser client hardcodes `flowType: "pkce"`. That means:
