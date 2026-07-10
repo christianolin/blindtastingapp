@@ -3,6 +3,11 @@
 // container) or a logged-in CLI session (Management API), neither available
 // here. Regenerate once one of those is available:
 // npx supabase gen types typescript --linked > src/lib/supabase/database.types.ts
+//
+// `Relationships: []` on every table and `Views: {}` on the schema aren't
+// unused boilerplate — @supabase/postgrest-js's GenericTable/GenericSchema
+// types require those exact keys to exist or its generic inference silently
+// collapses to `never`.
 
 export type TimingMode = "LIVE" | "ASYNC";
 export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
@@ -14,12 +19,14 @@ type ReferenceTable = {
   Row: { id: string; name: string };
   Insert: { id?: string; name: string };
   Update: { id?: string; name: string };
+  Relationships: [];
 };
 
 type ScopedReferenceTable<ParentKey extends string> = {
   Row: { id: string; name: string } & Record<ParentKey, string>;
   Insert: { id?: string; name: string } & Record<ParentKey, string>;
   Update: Partial<{ id: string; name: string } & Record<ParentKey, string>>;
+  Relationships: [];
 };
 
 export type Database = {
@@ -51,6 +58,7 @@ export type Database = {
           email: string;
           created_at: string;
         }>;
+        Relationships: [];
       };
 
       tastings: {
@@ -79,6 +87,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
+        Relationships: [];
       };
 
       tasting_participants: {
@@ -101,6 +110,7 @@ export type Database = {
         Update: Partial<
           Database["public"]["Tables"]["tasting_participants"]["Insert"]
         >;
+        Relationships: [];
       };
 
       wines: {
@@ -121,6 +131,7 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
+        Relationships: [];
       };
 
       wine_answers: {
@@ -153,6 +164,7 @@ export type Database = {
         Update: Partial<
           Database["public"]["Tables"]["wine_answers"]["Insert"]
         >;
+        Relationships: [];
       };
 
       guesses: {
@@ -201,8 +213,10 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guesses"]["Insert"]>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
     Functions: {
       reveal_wine: {
         Args: { p_wine_id: string };

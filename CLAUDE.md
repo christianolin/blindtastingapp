@@ -20,9 +20,33 @@ dashboard (Project Settings → API):
   email (`supabase.auth.admin.inviteUserByEmail`). Never import
   `src/lib/supabase/admin.ts` from client components.
 
-`src/lib/supabase/database.types.ts` is a placeholder until the schema is
-pushed to Supabase. Regenerate it with:
-`npx supabase gen types typescript --project-id <ref> > src/lib/supabase/database.types.ts`
+`src/lib/supabase/database.types.ts` is hand-written (Docker isn't available
+for `supabase gen types --local`, and `--linked` needs a logged-in CLI
+session). It must match `supabase/migrations/*_init_schema.sql` — update both
+together. Every table needs `Relationships: []` and the schema needs
+`Views: {}`, or postgrest-js's generic inference silently collapses to
+`never` with no clear error.
+
+Schema/RLS changes go through `supabase/migrations/`, pushed with
+`npx supabase db push --db-url "<pooler-connection-string>"`. The direct
+`db.<ref>.supabase.co` host is IPv6-only and won't resolve on IPv4-only
+networks — use the connection pooler string from Project Settings → Database
+→ Connection pooling instead.
+
+## Auth link handling (important gotcha)
+
+`@supabase/ssr`'s browser client hardcodes `flowType: "pkce"`. That means:
+- Self-serve `signUp()` / `signInWithOtp()` confirmation links use `?code=`
+  and are exchanged server-side in `src/app/auth/callback/route.ts` via
+  `exchangeCodeForSession` — this works out of the box.
+- Admin-generated links (`supabase.auth.admin.inviteUserByEmail`,
+  `generateLink`, password recovery) redirect with tokens in a URL **fragment**
+  (`#access_token=...&refresh_token=...`), which never reaches the server and
+  is NOT auto-parsed by the pkce-flow browser client. These must redirect to
+  `src/app/auth/confirm-hash/page.tsx`, a client component that manually reads
+  `window.location.hash` and calls `supabase.auth.setSession(...)` before
+  handing off to a server-rendered page. Point any future invite/recovery
+  `redirectTo` at `/auth/confirm-hash?next=<destination>`, not `/auth/callback`.
 
 ## Domain rules
 
