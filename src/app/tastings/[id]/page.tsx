@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +30,7 @@ export default async function TastingPage({
 
   const { data: participantRows } = await supabase
     .from("tasting_participants")
-    .select("user_id, status")
+    .select("id, user_id, status")
     .eq("tasting_id", id);
 
   const userIds = (participantRows ?? []).map((p) => p.user_id);
@@ -40,7 +41,24 @@ export default async function TastingPage({
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
+  const { data: wines } = await supabase
+    .from("wines")
+    .select("id, position, is_revealed, contributor_participant_id")
+    .eq("tasting_id", id)
+    .order("position");
+
   const isHost = tasting.host_id === user.id;
+  const myParticipant = (participantRows ?? []).find(
+    (p) => p.user_id === user.id,
+  );
+  const myWine = (wines ?? []).find(
+    (w) => w.contributor_participant_id === myParticipant?.id,
+  );
+
+  const canAddWine =
+    tasting.wine_source === "HOST_PROVIDES"
+      ? isHost
+      : Boolean(myParticipant) && !myWine;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
@@ -97,10 +115,52 @@ export default async function TastingPage({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Wines
+            {canAddWine ? (
+              <Button
+                nativeButton={false}
+                render={<Link href={`/tastings/${id}/wines/new`} />}
+              >
+                {tasting.wine_source === "HOST_PROVIDES"
+                  ? "Add wine"
+                  : "Add your wine"}
+              </Button>
+            ) : null}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(wines ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No wines added yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {(wines ?? []).map((w) => (
+                <li
+                  key={w.id}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span>Wine {w.position}</span>
+                  <Badge variant={w.is_revealed ? "default" : "outline"}>
+                    {w.is_revealed ? "Revealed" : "Hidden"}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+          {tasting.wine_source === "PARTICIPANT_CONTRIBUTED" && myWine ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              You&apos;ve added your wine — waiting for the rest.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+
       <p className="text-sm text-muted-foreground">
-        {isHost
-          ? "Wine entry is coming soon — you'll be able to add wines from here."
-          : "Wine entry and guessing are coming soon."}
+        Guessing is coming soon.
       </p>
     </div>
   );

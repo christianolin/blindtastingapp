@@ -1,0 +1,254 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ReferenceCombobox,
+  type ReferenceOption,
+} from "@/components/reference-combobox";
+import {
+  addWine,
+  createAppellation,
+  createCountry,
+  createGrape,
+  createProducer,
+  createRegion,
+  createTypeDesignation,
+  type AddWineFormState,
+} from "./actions";
+
+const VINTAGE_KIND_ITEMS = {
+  YEAR: "A specific vintage year",
+  NV: "NV — non-vintage",
+  TAWNY: "XX years tawny",
+};
+
+const TAWNY_YEARS_ITEMS = {
+  "10": "10 years",
+  "20": "20 years",
+  "30": "30 years",
+  "40": "40+ years",
+};
+
+export function WineForm({
+  tastingId,
+  countries: initialCountries,
+  regions: initialRegions,
+  appellations: initialAppellations,
+  grapes: initialGrapes,
+  producers: initialProducers,
+  typeDesignations: initialTypeDesignations,
+}: {
+  tastingId: string;
+  countries: ReferenceOption[];
+  regions: (ReferenceOption & { country_id: string })[];
+  appellations: (ReferenceOption & { region_id: string })[];
+  grapes: ReferenceOption[];
+  producers: ReferenceOption[];
+  typeDesignations: ReferenceOption[];
+}) {
+  const [state, formAction, pending] = useActionState<
+    AddWineFormState,
+    FormData
+  >(addWine, null);
+
+  const [countries, setCountries] = useState(initialCountries);
+  const [regions, setRegions] = useState(initialRegions);
+  const [appellations, setAppellations] = useState(initialAppellations);
+  const [grapes, setGrapes] = useState(initialGrapes);
+  const [producers, setProducers] = useState(initialProducers);
+  const [typeDesignations, setTypeDesignations] = useState(
+    initialTypeDesignations,
+  );
+
+  const [countryId, setCountryId] = useState("");
+  const [regionId, setRegionId] = useState("");
+  const [appellationId, setAppellationId] = useState("");
+  const [primaryGrapeId, setPrimaryGrapeId] = useState("");
+  const [secondaryGrapeId, setSecondaryGrapeId] = useState("");
+  const [producerId, setProducerId] = useState("");
+  const [typeDesignationId, setTypeDesignationId] = useState("");
+  const [vintageKind, setVintageKind] = useState("YEAR");
+
+  return (
+    <form action={formAction} className="flex flex-col gap-6">
+      <input type="hidden" name="tasting_id" value={tastingId} />
+
+      <div className="flex flex-col gap-2">
+        <Label>Country</Label>
+        <ReferenceCombobox
+          formFieldName="country_id"
+          options={countries}
+          value={countryId}
+          onValueChange={(id) => {
+            setCountryId(id);
+            setRegionId("");
+            setAppellationId("");
+          }}
+          onOptionCreated={(o) => setCountries((c) => [...c, o])}
+          placeholder="Select a country"
+          createLabel="country"
+          onCreate={createCountry}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Region</Label>
+        <ReferenceCombobox
+          formFieldName="region_id"
+          options={regions.filter((r) => r.country_id === countryId)}
+          value={regionId}
+          onValueChange={(id) => {
+            setRegionId(id);
+            setAppellationId("");
+          }}
+          onOptionCreated={(o) =>
+            setRegions((r) => [...r, { ...o, country_id: countryId }])
+          }
+          placeholder={countryId ? "Select a region" : "Choose a country first"}
+          createLabel="region"
+          onCreate={countryId ? (name) => createRegion(countryId, name) : undefined}
+          disabled={!countryId}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>District / Appellation</Label>
+        <ReferenceCombobox
+          formFieldName="appellation_id"
+          options={appellations.filter((a) => a.region_id === regionId)}
+          value={appellationId}
+          onValueChange={setAppellationId}
+          onOptionCreated={(o) =>
+            setAppellations((a) => [...a, { ...o, region_id: regionId }])
+          }
+          placeholder={regionId ? "Select an appellation" : "Choose a region first"}
+          createLabel="appellation"
+          onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
+          disabled={!regionId}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Primary grape</Label>
+        <ReferenceCombobox
+          formFieldName="primary_grape_id"
+          options={grapes}
+          value={primaryGrapeId}
+          onValueChange={setPrimaryGrapeId}
+          onOptionCreated={(o) => setGrapes((g) => [...g, o])}
+          placeholder="Select the primary grape"
+          createLabel="grape"
+          onCreate={createGrape}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Secondary grape (optional, blends only)</Label>
+        <ReferenceCombobox
+          formFieldName="secondary_grape_id"
+          options={grapes}
+          value={secondaryGrapeId}
+          onValueChange={setSecondaryGrapeId}
+          onOptionCreated={(o) => setGrapes((g) => [...g, o])}
+          placeholder="None"
+          createLabel="grape"
+          onCreate={createGrape}
+          allowClear
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Producer</Label>
+        <ReferenceCombobox
+          formFieldName="producer_id"
+          options={producers}
+          value={producerId}
+          onValueChange={setProducerId}
+          onOptionCreated={(o) => setProducers((p) => [...p, o])}
+          placeholder="Select the producer"
+          createLabel="producer"
+          onCreate={createProducer}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Type designation (optional)</Label>
+        <ReferenceCombobox
+          formFieldName="type_designation_id"
+          options={typeDesignations}
+          value={typeDesignationId}
+          onValueChange={setTypeDesignationId}
+          onOptionCreated={(o) => setTypeDesignations((t) => [...t, o])}
+          placeholder="None"
+          createLabel="type designation"
+          onCreate={createTypeDesignation}
+          allowClear
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="vintage_kind">Vintage</Label>
+        <Select
+          name="vintage_kind"
+          items={VINTAGE_KIND_ITEMS}
+          value={vintageKind}
+          onValueChange={(v) => setVintageKind(v as string)}
+          required
+        >
+          <SelectTrigger id="vintage_kind" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="YEAR">{VINTAGE_KIND_ITEMS.YEAR}</SelectItem>
+            <SelectItem value="NV">{VINTAGE_KIND_ITEMS.NV}</SelectItem>
+            <SelectItem value="TAWNY">{VINTAGE_KIND_ITEMS.TAWNY}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {vintageKind === "YEAR" ? (
+          <Input
+            name="vintage_year"
+            type="number"
+            placeholder="e.g. 2018"
+            min={1900}
+            max={2100}
+            required
+          />
+        ) : null}
+
+        {vintageKind === "TAWNY" ? (
+          <Select name="vintage_tawny_years" items={TAWNY_YEARS_ITEMS} required>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose the age statement" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(TAWNY_YEARS_ITEMS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
+      </div>
+
+      {state?.error ? (
+        <p className="text-sm text-destructive">{state.error}</p>
+      ) : null}
+
+      <Button type="submit" disabled={pending}>
+        {pending ? "Adding wine…" : "Add wine"}
+      </Button>
+    </form>
+  );
+}

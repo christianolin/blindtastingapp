@@ -62,10 +62,16 @@ recursion comes back.
 
 ## Base UI component gotchas (shadcn/ui here uses @base-ui/react, not Radix)
 
-- `Button` composed with another element (e.g. a `Link`) needs
-  `nativeButton={false}` passed alongside `render={<Link .../>}` — otherwise
-  it logs "expected a native <button>" because it defaults to
-  `nativeButton: true`. There's no `asChild` prop like Radix; use `render`.
+- `Button` composed with a non-button element via its own `render` prop (e.g.
+  `<Button render={<Link .../>}>`) needs `nativeButton={false}` on that same
+  `Button` — otherwise it logs "expected a native `<button>`". But when
+  `Button` is passed as *another* component's `render` target (e.g.
+  `<PopoverTrigger render={<Button .../>}>`) and isn't itself composed with
+  anything, leave `nativeButton` alone — `Button` still renders a real
+  `<button>` there, and forcing `nativeButton={false}` causes the opposite
+  error ("expected a non-`<button>`"). There's no `asChild` prop like Radix;
+  it's always the `render` prop, and `nativeButton` describes what the
+  *innermost* rendered element actually is.
 - `Select` does NOT infer option labels from `<SelectItem>` children text —
   it only shows a label if you pass an `items` prop (a `{value: label}` map)
   to `Select` (`Select.Root`), otherwise the trigger displays the raw value
