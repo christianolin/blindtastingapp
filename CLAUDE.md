@@ -87,6 +87,13 @@ recursion comes back.
   table, never free text — matching is a plain FK id comparison. The host can
   add a new reference entry inline when entering a wine's answer key;
   participants guessing can only pick existing entries.
+- The answer-key form (`wines/new/wine-form.tsx`) cascades
+  country→region→appellation, since the host is entering one authoritative
+  hierarchy. The guess form (`play/guess-form.tsx`) deliberately does NOT
+  cascade — each category is scored independently (`reveal_wine` compares
+  each FK separately), so a participant must be able to guess, say, the
+  correct appellation while guessing the wrong region. Don't copy the
+  cascading filter from one form into the other.
 - Vintage is its own type: `vintage_kind` (`YEAR` | `NV` | `TAWNY`) plus
   `vintage_year` or `vintage_tawny_years`. Scoring: exact match → 2 pts;
   `YEAR` off by exactly 1 → 1 pt; anything else → 0.

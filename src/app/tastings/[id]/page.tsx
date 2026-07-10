@@ -159,9 +159,22 @@ export default async function TastingPage({
         </CardContent>
       </Card>
 
-      <p className="text-sm text-muted-foreground">
-        Guessing is coming soon.
-      </p>
+      {myParticipant && (wines ?? []).length > 0 ? (
+        <div className="flex gap-4">
+          <Link
+            href={`/tastings/${id}/play`}
+            className="text-sm underline underline-offset-4"
+          >
+            Guess the wines →
+          </Link>
+          <Link
+            href={`/tastings/${id}/results`}
+            className="text-sm underline underline-offset-4"
+          >
+            View results →
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
