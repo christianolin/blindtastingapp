@@ -5,6 +5,44 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 
+// Auto-reveals a wine once every participant who's supposed to guess it has
+// submitted — so the host doesn't have to babysit "has everyone answered?"
+// during live play. Skips silently on any lookup failure; a missed
+// auto-reveal just means the host reveals manually, same as before this
+// existed.
+async function maybeAutoRevealWine(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  wineId: string,
+) {
+  const { data: wine } = await supabase
+    .from("wines")
+    .select("tasting_id, is_revealed, contributor_participant_id")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (!wine || wine.is_revealed) return;
+
+  const { count: eligibleCount } = await supabase
+    .from("tasting_participants")
+    .select("id", { count: "exact", head: true })
+    .eq("tasting_id", wine.tasting_id)
+    .eq("status", "JOINED")
+    .neq(
+      "id",
+      wine.contributor_participant_id ?? "00000000-0000-0000-0000-000000000000",
+    );
+
+  if (!eligibleCount || eligibleCount <= 0) return;
+
+  const { count: guessCount } = await supabase
+    .from("guesses")
+    .select("id", { count: "exact", head: true })
+    .eq("wine_id", wineId);
+
+  if ((guessCount ?? 0) >= eligibleCount) {
+    await supabase.rpc("reveal_wine", { p_wine_id: wineId });
+  }
+}
+
 export type GuessFormState = { error: string } | { success: true } | null;
 
 export async function submitGuess(
@@ -70,7 +108,10 @@ export async function submitGuess(
     return { error: error.message };
   }
 
+  await maybeAutoRevealWine(supabase, wineId);
+
   revalidatePath(`/tastings/${tastingId}/play`);
+  revalidatePath(`/tastings/${tastingId}/results`);
   return { success: true };
 }
 
@@ -121,7 +162,10 @@ export async function submitMatchGuess(
     return { error: error.message };
   }
 
+  await maybeAutoRevealWine(supabase, wineId);
+
   revalidatePath(`/tastings/${tastingId}/play`);
+  revalidatePath(`/tastings/${tastingId}/results`);
   return { success: true };
 }
 
