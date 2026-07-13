@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { BlindrLockup } from "@/components/logo";
 import { signOut } from "@/app/actions";
 
 export function AppHeader({
@@ -13,11 +14,8 @@ export function AppHeader({
 }) {
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-3">
-      <Link
-        href="/dashboard"
-        className="font-heading text-lg tracking-[0.15em] uppercase"
-      >
-        Blindr
+      <Link href="/dashboard" className="flex items-center">
+        <BlindrLockup size={30} gap={8} />
       </Link>
       <nav className="flex items-center gap-4 text-sm">
         <Link href="/dashboard" className="hover:underline">

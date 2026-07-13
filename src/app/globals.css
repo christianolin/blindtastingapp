@@ -7,10 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-playfair);
+  --font-sans: var(--font-manrope);
+  --font-mono: ui-monospace, monospace;
+  --font-heading: var(--font-cormorant);
   --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,75 +51,79 @@
 }
 
 :root {
-  /* Parchment label, deep Bordeaux, aged gold foil — Margaux/DRC inspired. */
-  --background: #f6efdf;
-  --foreground: #241a12;
-  --card: #fbf6ea;
-  --card-foreground: #241a12;
-  --popover: #fbf6ea;
-  --popover-foreground: #241a12;
-  --primary: #6b1220;
-  --primary-foreground: #f6efdf;
-  --secondary: #e7d9b8;
-  --secondary-foreground: #241a12;
-  --muted: #ece3ce;
+  /* Blindr brand palette — Bordeaux, gilt gold, parchment (from the "Sip
+     Blind" logo handoff). Keep these exact; they're shared with the logo
+     SVGs in src/components/logo.tsx. */
+  --background: #f5efe3;
+  --foreground: #2a211e;
+  --card: #fbf7ef;
+  --card-foreground: #2a211e;
+  --popover: #fbf7ef;
+  --popover-foreground: #2a211e;
+  --primary: #5c1a2b;
+  --primary-foreground: #f5efe3;
+  --secondary: #e9dcc0;
+  --secondary-foreground: #2a211e;
+  --muted: #ede4d1;
   --muted-foreground: #7a6a52;
   --accent: #efe2c0;
-  --accent-foreground: #241a12;
+  --accent-foreground: #2a211e;
   --destructive: #a8412c;
-  --border: #ded0ae;
-  --input: #ded0ae;
-  --ring: #b08a3e;
-  --gold: #b08a3e;
-  --chart-1: #6b1220;
-  --chart-2: #b08a3e;
+  --border: #e0d2b4;
+  --input: #e0d2b4;
+  --ring: #c3a25b;
+  --gold: #c3a25b;
+  --gold-deep: #b78e42;
+  --chart-1: #5c1a2b;
+  --chart-2: #c3a25b;
   --chart-3: #3f5b42;
   --chart-4: #7a6a52;
   --chart-5: #a8412c;
   --radius: 0.625rem;
-  --sidebar: #fbf6ea;
-  --sidebar-foreground: #241a12;
-  --sidebar-primary: #6b1220;
-  --sidebar-primary-foreground: #f6efdf;
+  --sidebar: #fbf7ef;
+  --sidebar-foreground: #2a211e;
+  --sidebar-primary: #5c1a2b;
+  --sidebar-primary-foreground: #f5efe3;
   --sidebar-accent: #efe2c0;
-  --sidebar-accent-foreground: #241a12;
-  --sidebar-border: #ded0ae;
-  --sidebar-ring: #b08a3e;
+  --sidebar-accent-foreground: #2a211e;
+  --sidebar-border: #e0d2b4;
+  --sidebar-ring: #c3a25b;
 }
 
 .dark {
   /* Wine cellar at night — near-black, warm parchment ink, gold catching the light. */
   --background: #1b1310;
-  --foreground: #efe3cc;
+  --foreground: #f5efe3;
   --card: #241b16;
-  --card-foreground: #efe3cc;
+  --card-foreground: #f5efe3;
   --popover: #241b16;
-  --popover-foreground: #efe3cc;
-  --primary: #a23b4a;
-  --primary-foreground: #f6efdf;
+  --popover-foreground: #f5efe3;
+  --primary: #a8425a;
+  --primary-foreground: #f5efe3;
   --secondary: #3a2e24;
-  --secondary-foreground: #efe3cc;
+  --secondary-foreground: #f5efe3;
   --muted: #2e2419;
   --muted-foreground: #b9a98c;
   --accent: #3f3225;
-  --accent-foreground: #efe3cc;
+  --accent-foreground: #f5efe3;
   --destructive: #c6543f;
-  --border: rgba(239, 227, 204, 0.14);
-  --input: rgba(239, 227, 204, 0.16);
+  --border: rgba(245, 239, 227, 0.14);
+  --input: rgba(245, 239, 227, 0.16);
   --ring: #d4af6a;
   --gold: #d4af6a;
-  --chart-1: #a23b4a;
+  --gold-deep: #c3a25b;
+  --chart-1: #a8425a;
   --chart-2: #d4af6a;
   --chart-3: #6c8f70;
   --chart-4: #b9a98c;
   --chart-5: #c6543f;
   --sidebar: #241b16;
-  --sidebar-foreground: #efe3cc;
-  --sidebar-primary: #a23b4a;
-  --sidebar-primary-foreground: #f6efdf;
+  --sidebar-foreground: #f5efe3;
+  --sidebar-primary: #a8425a;
+  --sidebar-primary-foreground: #f5efe3;
   --sidebar-accent: #3f3225;
-  --sidebar-accent-foreground: #efe3cc;
-  --sidebar-border: rgba(239, 227, 204, 0.14);
+  --sidebar-accent-foreground: #f5efe3;
+  --sidebar-border: rgba(245, 239, 227, 0.14);
   --sidebar-ring: #d4af6a;
 }
 

@@ -10,6 +10,29 @@ A web app for running blind wine tastings using VM/DM scoring rules.
 - Supabase: Postgres, Auth (email + password/magic link), Realtime.
 - Deployed to Vercel (not yet wired up).
 
+## Brand assets
+
+`src/components/logo.tsx` — `BlindrMark`, `BlindrAppIcon`, `BlindrWordmark`,
+`BlindrLockup` — is the "Sip Blind" logo (a blindfolded taster tipping a
+glass), ported from a design handoff. Brand hex values (Bordeaux `#5C1A2B`,
+Gold `#C3A25B`, Gold deep `#B78E42`, Parchment `#F5EFE3`) are wired into
+`globals.css`'s `--primary`/`--gold`/`--gold-deep`/`--background` tokens —
+change the palette there, not by hand-editing the logo component. Wordmark
+font is Cormorant Garamond (`--font-heading`), UI font is Manrope
+(`--font-sans`), both loaded in `src/app/layout.tsx`.
+
+`src/app/icon.svg` (static file, native SVG rendering — used as the browser
+favicon) renders correctly. `src/app/apple-icon.tsx` generates the iOS icon
+via `next/og`'s `ImageResponse`, which uses Satori — **Satori does not
+correctly interpret an SVG `transform="rotate(...)"` on a group**; it was
+tried two ways (raw shapes with the transform, and re-embedding the whole
+SVG as a base64 data-URI `<img>`) and both rendered the glass mangled. The
+fix was to bake the rotation into each path/line's coordinates by hand
+(precompute the rotated points) so no `transform` attribute exists at all.
+If the mark's geometry ever changes, apple-icon.tsx's coordinates need to be
+recomputed the same way — don't just copy the source SVG's `<g transform>`
+in.
+
 ## Environment
 
 Copy `.env.example` to `.env.local` and fill in from the Supabase project
