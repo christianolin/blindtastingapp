@@ -97,7 +97,7 @@ export function GuessForm({
       <input type="hidden" name="wine_id" value={wineId} />
 
       <div className="flex flex-col gap-2">
-        <Label>Country</Label>
+        <Label>Country (2 pts)</Label>
         <ReferenceCombobox
           formFieldName="country_id"
           options={countries}
@@ -109,7 +109,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Region</Label>
+        <Label>Region (3 pts)</Label>
         <ReferenceCombobox
           formFieldName="region_id"
           options={regions}
@@ -121,7 +121,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>District / Appellation</Label>
+        <Label>District / Appellation (5 pts)</Label>
         <SearchableCombobox
           formFieldName="appellation_id"
           value={appellationId}
@@ -137,7 +137,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Primary grape</Label>
+        <Label>Primary grape (8 pts)</Label>
         <ReferenceCombobox
           formFieldName="primary_grape_id"
           options={grapes}
@@ -149,7 +149,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Secondary grape (optional)</Label>
+        <Label>Secondary grape (2 pts, if this wine has one)</Label>
         <ReferenceCombobox
           formFieldName="secondary_grape_id"
           options={grapes}
@@ -161,7 +161,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Producer</Label>
+        <Label>Producer (6 pts)</Label>
         <SearchableCombobox
           formFieldName="producer_id"
           value={producerId}
@@ -177,7 +177,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Type designation (optional)</Label>
+        <Label>Type designation (2 pts, if this wine has one)</Label>
         <ReferenceCombobox
           formFieldName="type_designation_id"
           options={typeDesignations}
@@ -189,7 +189,9 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`vintage_kind_${wineId}`}>Vintage</Label>
+        <Label htmlFor={`vintage_kind_${wineId}`}>
+          Vintage (2 pts exact, 1 pt if off by 1 year)
+        </Label>
         <Select
           name="vintage_kind"
           items={VINTAGE_KIND_ITEMS}
