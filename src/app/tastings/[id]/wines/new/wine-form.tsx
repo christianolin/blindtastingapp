@@ -76,22 +76,20 @@ export function WineForm({
   const [typeDesignationId, setTypeDesignationId] = useState("");
   const [vintageKind, setVintageKind] = useState("YEAR");
 
-  // Appellations are too large to preload in full (LWIN import), but scoped
-  // to a single country they're small enough to just list — no debounced
-  // search needed, unlike the producer field. Loaded fresh whenever the
-  // country changes, then filtered client-side like any other combobox.
+  // Appellations are too large to preload in full (LWIN import), but an
+  // appellation only ever belongs to one region (Pauillac is Bordeaux, full
+  // stop) so scoping by region keeps the list small enough to just list in
+  // full — no debounced search needed, unlike the producer field. Loaded
+  // fresh whenever the region changes, then filtered client-side.
   const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
   const [appellationsPending, startAppellationsTransition] = useTransition();
 
   useEffect(() => {
-    const regionIds = countryId
-      ? regions.filter((r) => r.country_id === countryId).map((r) => r.id)
-      : [];
     startAppellationsTransition(async () => {
-      setAppellations(regionIds.length > 0 ? await listAppellationsForRegions(regionIds) : []);
+      setAppellations(regionId ? await listAppellationsForRegions([regionId]) : []);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId]);
+  }, [regionId]);
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -121,7 +119,10 @@ export function WineForm({
           formFieldName="region_id"
           options={regions.filter((r) => r.country_id === countryId)}
           value={regionId}
-          onValueChange={setRegionId}
+          onValueChange={(id) => {
+            setRegionId(id);
+            setAppellationId("");
+          }}
           onOptionCreated={(o) =>
             setRegions((r) => [...r, { ...o, country_id: countryId }])
           }
@@ -141,15 +142,15 @@ export function WineForm({
           onValueChange={setAppellationId}
           onOptionCreated={(o) => setAppellations((a) => [...a, o])}
           placeholder={
-            !countryId
-              ? "Choose a country first"
+            !regionId
+              ? "Choose a region first"
               : appellationsPending
                 ? "Loading appellations…"
                 : "Select an appellation"
           }
           createLabel="appellation"
           onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
-          disabled={!countryId || appellationsPending}
+          disabled={!regionId || appellationsPending}
         />
       </div>
 
