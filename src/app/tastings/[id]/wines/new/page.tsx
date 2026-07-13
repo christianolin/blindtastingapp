@@ -84,16 +84,12 @@ export default async function NewWinePage({
   const [
     { data: countries },
     { data: regions },
-    { data: appellations },
     { data: grapes },
-    { data: producers },
     { data: typeDesignations },
   ] = await Promise.all([
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
-    supabase.from("appellations").select("id, name, region_id").order("name"),
     supabase.from("grapes").select("id, name").order("name"),
-    supabase.from("producers").select("id, name").order("name"),
     supabase.from("type_designations").select("id, name").order("name"),
   ]);
 
@@ -114,9 +110,7 @@ export default async function NewWinePage({
             tastingId={tastingId}
             countries={countries ?? []}
             regions={regions ?? []}
-            appellations={appellations ?? []}
             grapes={grapes ?? []}
-            producers={producers ?? []}
             typeDesignations={typeDesignations ?? []}
           />
         </CardContent>

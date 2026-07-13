@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 
 export default async function ResultsPage({
   params,
@@ -39,9 +40,7 @@ export default async function ResultsPage({
     { data: wines },
     { data: countries },
     { data: regions },
-    { data: appellations },
     { data: grapes },
-    { data: producers },
     { data: typeDesignations },
   ] = await Promise.all([
     supabase
@@ -55,21 +54,12 @@ export default async function ResultsPage({
       .order("position"),
     supabase.from("countries").select("id, name"),
     supabase.from("regions").select("id, name"),
-    supabase.from("appellations").select("id, name"),
     supabase.from("grapes").select("id, name"),
-    supabase.from("producers").select("id, name"),
     supabase.from("type_designations").select("id, name"),
   ]);
 
   const nameById = new Map<string, string>();
-  for (const list of [
-    countries,
-    regions,
-    appellations,
-    grapes,
-    producers,
-    typeDesignations,
-  ]) {
+  for (const list of [countries, regions, grapes, typeDesignations]) {
     for (const row of list ?? []) nameById.set(row.id, row.name);
   }
 
@@ -96,6 +86,12 @@ export default async function ResultsPage({
       ? await supabase.from("wine_answers").select("*").in("wine_id", revealedWineIds)
       : { data: [] };
   const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
+
+  const lookedUpNames = await lookupAppellationAndProducerNames({
+    appellationIds: (answers ?? []).map((a) => a.appellation_id),
+    producerIds: (answers ?? []).map((a) => a.producer_id),
+  });
+  for (const [id, name] of lookedUpNames) nameById.set(id, name);
 
   const { data: guesses } =
     revealedWineIds.length > 0

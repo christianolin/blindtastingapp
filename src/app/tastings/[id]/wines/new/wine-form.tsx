@@ -15,6 +15,8 @@ import {
   ReferenceCombobox,
   type ReferenceOption,
 } from "@/components/reference-combobox";
+import { SearchableCombobox } from "@/components/searchable-combobox";
+import { searchAppellations, searchProducers } from "@/lib/reference-search";
 import {
   addWine,
   createAppellation,
@@ -43,17 +45,13 @@ export function WineForm({
   tastingId,
   countries: initialCountries,
   regions: initialRegions,
-  appellations: initialAppellations,
   grapes: initialGrapes,
-  producers: initialProducers,
   typeDesignations: initialTypeDesignations,
 }: {
   tastingId: string;
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
-  appellations: (ReferenceOption & { region_id: string })[];
   grapes: ReferenceOption[];
-  producers: ReferenceOption[];
   typeDesignations: ReferenceOption[];
 }) {
   const [state, formAction, pending] = useActionState<
@@ -63,9 +61,7 @@ export function WineForm({
 
   const [countries, setCountries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
-  const [appellations, setAppellations] = useState(initialAppellations);
   const [grapes, setGrapes] = useState(initialGrapes);
-  const [producers, setProducers] = useState(initialProducers);
   const [typeDesignations, setTypeDesignations] = useState(
     initialTypeDesignations,
   );
@@ -73,9 +69,11 @@ export function WineForm({
   const [countryId, setCountryId] = useState("");
   const [regionId, setRegionId] = useState("");
   const [appellationId, setAppellationId] = useState("");
+  const [appellationLabel, setAppellationLabel] = useState<string | null>(null);
   const [primaryGrapeId, setPrimaryGrapeId] = useState("");
   const [secondaryGrapeId, setSecondaryGrapeId] = useState("");
   const [producerId, setProducerId] = useState("");
+  const [producerLabel, setProducerLabel] = useState<string | null>(null);
   const [typeDesignationId, setTypeDesignationId] = useState("");
   const [vintageKind, setVintageKind] = useState("YEAR");
 
@@ -110,6 +108,7 @@ export function WineForm({
           onValueChange={(id) => {
             setRegionId(id);
             setAppellationId("");
+            setAppellationLabel(null);
           }}
           onOptionCreated={(o) =>
             setRegions((r) => [...r, { ...o, country_id: countryId }])
@@ -123,15 +122,16 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>District / Appellation</Label>
-        <ReferenceCombobox
+        <SearchableCombobox
           formFieldName="appellation_id"
-          options={appellations.filter((a) => a.region_id === regionId)}
           value={appellationId}
-          onValueChange={setAppellationId}
-          onOptionCreated={(o) =>
-            setAppellations((a) => [...a, { ...o, region_id: regionId }])
-          }
-          placeholder={regionId ? "Select an appellation" : "Choose a region first"}
+          selectedLabel={appellationLabel}
+          onValueChange={(id, label) => {
+            setAppellationId(id);
+            setAppellationLabel(label || null);
+          }}
+          search={(query) => searchAppellations(query, regionId)}
+          placeholder={regionId ? "Search for an appellation" : "Choose a region first"}
           createLabel="appellation"
           onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
           disabled={!regionId}
@@ -169,13 +169,16 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>Producer</Label>
-        <ReferenceCombobox
+        <SearchableCombobox
           formFieldName="producer_id"
-          options={producers}
           value={producerId}
-          onValueChange={setProducerId}
-          onOptionCreated={(o) => setProducers((p) => [...p, o])}
-          placeholder="Select the producer"
+          selectedLabel={producerLabel}
+          onValueChange={(id, label) => {
+            setProducerId(id);
+            setProducerLabel(label || null);
+          }}
+          search={searchProducers}
+          placeholder="Search for the producer"
           createLabel="producer"
           onCreate={createProducer}
         />

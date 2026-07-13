@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
@@ -63,9 +64,7 @@ export default async function PlayPage({
     { data: wines },
     { data: countries },
     { data: regions },
-    { data: appellations },
     { data: grapes },
-    { data: producers },
     { data: typeDesignations },
   ] = await Promise.all([
     supabase
@@ -75,21 +74,12 @@ export default async function PlayPage({
       .order("position"),
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
-    supabase.from("appellations").select("id, name, region_id").order("name"),
     supabase.from("grapes").select("id, name").order("name"),
-    supabase.from("producers").select("id, name").order("name"),
     supabase.from("type_designations").select("id, name").order("name"),
   ]);
 
   const nameById = new Map<string, string>();
-  for (const list of [
-    countries,
-    regions,
-    appellations,
-    grapes,
-    producers,
-    typeDesignations,
-  ]) {
+  for (const list of [countries, regions, grapes, typeDesignations]) {
     for (const row of list ?? []) nameById.set(row.id, row.name);
   }
 
@@ -156,6 +146,25 @@ export default async function PlayPage({
         .in("wine_id", wineIds.length > 0 ? wineIds : [""])
     : { data: [] };
   const candidateByWineId = new Map((allAnswers ?? []).map((a) => [a.wine_id, a]));
+
+  // Appellations/producers are too large to preload in full (thousands of
+  // rows after the LWIN import) — look up only the names this page actually
+  // renders: revealed/candidate answers, plus whatever a participant already
+  // guessed (so the guess form's combobox can show its selected label).
+  const answersNeedingNames = [...(revealedAnswers ?? []), ...(allAnswers ?? [])];
+  const guessesNeedingNames = myGuesses ?? [];
+  const lookedUpNames = await lookupAppellationAndProducerNames({
+    appellationIds: [
+      ...answersNeedingNames.map((a) => a.appellation_id),
+      ...guessesNeedingNames.map((g) => g.appellation_id),
+    ],
+    producerIds: [
+      ...answersNeedingNames.map((a) => a.producer_id),
+      ...guessesNeedingNames.map((g) => g.producer_id),
+    ],
+  });
+  for (const [id, name] of lookedUpNames) nameById.set(id, name);
+
   const candidates = (allAnswers ?? [])
     .map((a) => ({ id: a.wine_id, name: describeAnswer(a) }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -293,11 +302,19 @@ export default async function PlayPage({
                   wineId={wine.id}
                   countries={countries ?? []}
                   regions={regions ?? []}
-                  appellations={appellations ?? []}
                   grapes={grapes ?? []}
-                  producers={producers ?? []}
                   typeDesignations={typeDesignations ?? []}
                   existingGuess={(guess as ExistingGuess | undefined) ?? null}
+                  initialAppellationLabel={
+                    guess?.appellation_id
+                      ? (nameById.get(guess.appellation_id) ?? null)
+                      : null
+                  }
+                  initialProducerLabel={
+                    guess?.producer_id
+                      ? (nameById.get(guess.producer_id) ?? null)
+                      : null
+                  }
                 />
               )}
             </CardContent>

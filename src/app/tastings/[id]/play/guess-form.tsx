@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ReferenceCombobox, type ReferenceOption } from "@/components/reference-combobox";
+import { SearchableCombobox } from "@/components/searchable-combobox";
+import { searchAppellations, searchProducers } from "@/lib/reference-search";
 import { submitGuess, type GuessFormState } from "./actions";
 
 const VINTAGE_KIND_ITEMS = {
@@ -45,21 +47,21 @@ export function GuessForm({
   wineId,
   countries,
   regions,
-  appellations,
   grapes,
-  producers,
   typeDesignations,
   existingGuess,
+  initialAppellationLabel,
+  initialProducerLabel,
 }: {
   tastingId: string;
   wineId: string;
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
-  appellations: (ReferenceOption & { region_id: string })[];
   grapes: ReferenceOption[];
-  producers: ReferenceOption[];
   typeDesignations: ReferenceOption[];
   existingGuess: ExistingGuess | null;
+  initialAppellationLabel?: string | null;
+  initialProducerLabel?: string | null;
 }) {
   const [state, formAction, pending] = useActionState<GuessFormState, FormData>(
     submitGuess,
@@ -71,6 +73,9 @@ export function GuessForm({
   const [appellationId, setAppellationId] = useState(
     existingGuess?.appellation_id ?? "",
   );
+  const [appellationLabel, setAppellationLabel] = useState<string | null>(
+    initialAppellationLabel ?? null,
+  );
   const [primaryGrapeId, setPrimaryGrapeId] = useState(
     existingGuess?.primary_grape_id ?? "",
   );
@@ -78,6 +83,9 @@ export function GuessForm({
     existingGuess?.secondary_grape_id ?? "",
   );
   const [producerId, setProducerId] = useState(existingGuess?.producer_id ?? "");
+  const [producerLabel, setProducerLabel] = useState<string | null>(
+    initialProducerLabel ?? null,
+  );
   const [typeDesignationId, setTypeDesignationId] = useState(
     existingGuess?.type_designation_id ?? "",
   );
@@ -114,11 +122,15 @@ export function GuessForm({
 
       <div className="flex flex-col gap-2">
         <Label>District / Appellation</Label>
-        <ReferenceCombobox
+        <SearchableCombobox
           formFieldName="appellation_id"
-          options={appellations}
           value={appellationId}
-          onValueChange={setAppellationId}
+          selectedLabel={appellationLabel}
+          onValueChange={(id, label) => {
+            setAppellationId(id);
+            setAppellationLabel(label || null);
+          }}
+          search={(query) => searchAppellations(query)}
           placeholder="Guess the appellation"
           allowClear
         />
@@ -150,11 +162,15 @@ export function GuessForm({
 
       <div className="flex flex-col gap-2">
         <Label>Producer</Label>
-        <ReferenceCombobox
+        <SearchableCombobox
           formFieldName="producer_id"
-          options={producers}
           value={producerId}
-          onValueChange={setProducerId}
+          selectedLabel={producerLabel}
+          onValueChange={(id, label) => {
+            setProducerId(id);
+            setProducerLabel(label || null);
+          }}
+          search={searchProducers}
           placeholder="Guess the producer"
           allowClear
         />

@@ -142,3 +142,42 @@ recursion comes back.
   removable chips. Both paths funnel into the same hidden newline-joined
   `emails` field the `createTasting` server action already parses, so that
   action needed no changes when this UI was redesigned.
+- `appellations` and `producers` are populated from a real LWIN (Liv-ex Wine
+  Identification Number) database via `scripts/import-lwin.mjs`, not just
+  hand-seeded data — tens of thousands of rows. Because of that:
+  - Country/region dropdowns still use `ReferenceCombobox` (small tables,
+    preloaded in full). Appellation and producer fields use
+    `SearchableCombobox` (`src/components/searchable-combobox.tsx`) instead —
+    it searches server-side via `searchAppellations`/`searchProducers` in
+    `src/lib/reference-search.ts`, debounced, backed by the `pg_trgm` GIN
+    indexes in `supabase/migrations/20260713124415_add_reference_search_indexes.sql`.
+    Never preload the full `appellations`/`producers` tables again (Supabase's
+    default page size is 1000 rows — a plain `.select()` silently truncates).
+  - Any page that needs to *display* a specific appellation/producer name
+    (e.g. a revealed answer, a participant's saved guess) should look up only
+    the ids it actually renders via `lookupAppellationAndProducerNames` in
+    `src/lib/reference-lookup.ts`, not preload the whole table just to build
+    an id→name map.
+  - Producer/appellation dedup during import only normalizes hyphens and
+    whitespace (`safeKey()` in the import scripts) — it deliberately does
+    NOT strip accents or leading words like "Chateau"/"Domaine"/"Le"/"La",
+    because those can be genuinely different producers or appellations (e.g.
+    a real "Domaine Montrose" is not the same estate as "Château Montrose";
+    "Classico" is a legitimately distinct appellation under seven different
+    Italian regions — appellation dedup must always be scoped by `region_id`,
+    never by name alone).
+  - LWIN stores a producer's title ("Chateau"/"Domaine"/"Maison"/...)
+    separately in `PRODUCER_TITLE` for some rows but bakes it into
+    `PRODUCER_NAME` (with proper French accents) for others — `import-lwin.mjs`
+    concatenates title+name up front now, but the original import missed this
+    and had to be corrected after the fact by
+    `scripts/fix-lwin-producer-titles.mjs` (rename-in-place by id, not
+    delete+reinsert, so `wine_answers`/`guesses` FK references stay valid).
+    That concatenation then surfaced a second-order problem: accent-only
+    duplicate producer rows (e.g. "Château Palmer" vs "Chateau Palmer") that
+    didn't collide before the title fix, since the title-less LWIN spelling
+    is always plain ASCII while the baked-in-title LWIN spelling keeps
+    accents. `scripts/dedupe-producer-orthographic-variants.mjs` cleans these
+    up — accent/punctuation-only folding, same non-destructive-elsewhere
+    rename-in-place-or-reassign-FKs approach, still never stripping
+    meaningful prefix words.
