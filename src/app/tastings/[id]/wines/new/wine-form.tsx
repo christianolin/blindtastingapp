@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import {
   type ReferenceOption,
 } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
-import { searchAppellations, searchProducers } from "@/lib/reference-search";
+import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import {
   addWine,
   createAppellation,
@@ -69,13 +69,29 @@ export function WineForm({
   const [countryId, setCountryId] = useState("");
   const [regionId, setRegionId] = useState("");
   const [appellationId, setAppellationId] = useState("");
-  const [appellationLabel, setAppellationLabel] = useState<string | null>(null);
   const [primaryGrapeId, setPrimaryGrapeId] = useState("");
   const [secondaryGrapeId, setSecondaryGrapeId] = useState("");
   const [producerId, setProducerId] = useState("");
   const [producerLabel, setProducerLabel] = useState<string | null>(null);
   const [typeDesignationId, setTypeDesignationId] = useState("");
   const [vintageKind, setVintageKind] = useState("YEAR");
+
+  // Appellations are too large to preload in full (LWIN import), but scoped
+  // to a single country they're small enough to just list — no debounced
+  // search needed, unlike the producer field. Loaded fresh whenever the
+  // country changes, then filtered client-side like any other combobox.
+  const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
+  const [appellationsPending, startAppellationsTransition] = useTransition();
+
+  useEffect(() => {
+    const regionIds = countryId
+      ? regions.filter((r) => r.country_id === countryId).map((r) => r.id)
+      : [];
+    startAppellationsTransition(async () => {
+      setAppellations(regionIds.length > 0 ? await listAppellationsForRegions(regionIds) : []);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryId]);
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -105,11 +121,7 @@ export function WineForm({
           formFieldName="region_id"
           options={regions.filter((r) => r.country_id === countryId)}
           value={regionId}
-          onValueChange={(id) => {
-            setRegionId(id);
-            setAppellationId("");
-            setAppellationLabel(null);
-          }}
+          onValueChange={setRegionId}
           onOptionCreated={(o) =>
             setRegions((r) => [...r, { ...o, country_id: countryId }])
           }
@@ -122,19 +134,22 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>District / Appellation</Label>
-        <SearchableCombobox
+        <ReferenceCombobox
           formFieldName="appellation_id"
+          options={appellations}
           value={appellationId}
-          selectedLabel={appellationLabel}
-          onValueChange={(id, label) => {
-            setAppellationId(id);
-            setAppellationLabel(label || null);
-          }}
-          search={(query) => searchAppellations(query, regionId)}
-          placeholder={regionId ? "Search for an appellation" : "Choose a region first"}
+          onValueChange={setAppellationId}
+          onOptionCreated={(o) => setAppellations((a) => [...a, o])}
+          placeholder={
+            !countryId
+              ? "Choose a country first"
+              : appellationsPending
+                ? "Loading appellations…"
+                : "Select an appellation"
+          }
           createLabel="appellation"
           onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
-          disabled={!regionId}
+          disabled={!countryId || appellationsPending}
         />
       </div>
 
