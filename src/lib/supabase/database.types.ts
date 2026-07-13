@@ -165,7 +165,7 @@ export type Database = {
           wine_id: string;
           country_id: string;
           region_id: string;
-          appellation_id: string;
+          appellation_id: string | null;
           primary_grape_id: string;
           secondary_grape_id: string | null;
           producer_id: string;
@@ -178,7 +178,7 @@ export type Database = {
           wine_id: string;
           country_id: string;
           region_id: string;
-          appellation_id: string;
+          appellation_id?: string | null;
           primary_grape_id: string;
           secondary_grape_id?: string | null;
           producer_id: string;

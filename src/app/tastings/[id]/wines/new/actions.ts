@@ -142,7 +142,7 @@ export async function addWine(
   const tastingId = String(formData.get("tasting_id") ?? "");
   const countryId = String(formData.get("country_id") ?? "");
   const regionId = String(formData.get("region_id") ?? "");
-  const appellationId = String(formData.get("appellation_id") ?? "");
+  const appellationId = String(formData.get("appellation_id") ?? "") || null;
   const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
   const secondaryGrapeId =
     String(formData.get("secondary_grape_id") ?? "") || null;
@@ -155,13 +155,7 @@ export async function addWine(
     formData.get("vintage_tawny_years") ?? "",
   );
 
-  if (
-    !countryId ||
-    !regionId ||
-    !appellationId ||
-    !primaryGrapeId ||
-    !producerId
-  ) {
+  if (!countryId || !regionId || !primaryGrapeId || !producerId) {
     return { error: "Please fill in all required fields." };
   }
   if (!["YEAR", "NV", "TAWNY"].includes(vintageKind)) {

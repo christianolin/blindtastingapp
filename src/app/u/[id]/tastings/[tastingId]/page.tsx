@@ -135,7 +135,9 @@ export default async function ProfileTastingHistoryPage({
     if (!row) return "No guess submitted.";
     const name = (nid: string | null) => (nid ? (nameById.get(nid) ?? "—") : "—");
     return (
-      `${name(row.country_id)} · ${name(row.region_id)} · ${name(row.appellation_id)} — ` +
+      `${name(row.country_id)} · ${name(row.region_id)}` +
+      `${row.appellation_id ? ` · ${name(row.appellation_id)}` : ""}` +
+      ` — ` +
       `${name(row.primary_grape_id)}` +
       `${row.secondary_grape_id ? ` / ${name(row.secondary_grape_id)}` : ""}` +
       ` — ${name(row.producer_id)}` +

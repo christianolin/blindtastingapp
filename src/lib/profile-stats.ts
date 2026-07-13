@@ -72,7 +72,6 @@ function tallyGuess(acc: ProfileStatsSummary, g: ScoredGuessRow) {
   const always: [CategoryKey, number | null][] = [
     ["country", g.country_points],
     ["region", g.region_points],
-    ["appellation", g.appellation_points],
     ["primary_grape", g.primary_grape_points],
     ["producer", g.producer_points],
   ];
@@ -83,6 +82,7 @@ function tallyGuess(acc: ProfileStatsSummary, g: ScoredGuessRow) {
   }
 
   const optional: [CategoryKey, number | null][] = [
+    ["appellation", g.appellation_points],
     ["secondary_grape", g.secondary_grape_points],
     ["type_designation", g.type_designation_points],
   ];

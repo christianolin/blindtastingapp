@@ -180,8 +180,8 @@ export default async function ResultsPage({
             <CardContent className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">
                 {nameById.get(answer.country_id)} ·{" "}
-                {nameById.get(answer.region_id)} ·{" "}
-                {nameById.get(answer.appellation_id)}
+                {nameById.get(answer.region_id)}
+                {answer.appellation_id ? ` · ${nameById.get(answer.appellation_id)}` : ""}
                 <br />
                 {nameById.get(answer.primary_grape_id)}
                 {answer.secondary_grape_id

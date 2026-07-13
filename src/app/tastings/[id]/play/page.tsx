@@ -98,7 +98,7 @@ export default async function PlayPage({
   function describeAnswer(answer: {
     country_id: string;
     region_id: string;
-    appellation_id: string;
+    appellation_id: string | null;
     primary_grape_id: string;
     secondary_grape_id: string | null;
     producer_id: string;
@@ -108,8 +108,9 @@ export default async function PlayPage({
     vintage_tawny_years: number | null;
   }) {
     return (
-      `${nameById.get(answer.country_id)} · ${nameById.get(answer.region_id)} · ` +
-      `${nameById.get(answer.appellation_id)} — ${nameById.get(answer.primary_grape_id)}` +
+      `${nameById.get(answer.country_id)} · ${nameById.get(answer.region_id)}` +
+      `${answer.appellation_id ? ` · ${nameById.get(answer.appellation_id)}` : ""}` +
+      ` — ${nameById.get(answer.primary_grape_id)}` +
       `${answer.secondary_grape_id ? ` / ${nameById.get(answer.secondary_grape_id)}` : ""}` +
       ` — ${nameById.get(answer.producer_id)}` +
       `${answer.type_designation_id ? ` (${nameById.get(answer.type_designation_id)})` : ""}` +

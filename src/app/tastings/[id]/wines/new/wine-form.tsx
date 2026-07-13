@@ -134,7 +134,7 @@ export function WineForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>District / Appellation</Label>
+        <Label>District / Appellation (optional)</Label>
         <ReferenceCombobox
           formFieldName="appellation_id"
           options={appellations}
@@ -146,11 +146,12 @@ export function WineForm({
               ? "Choose a region first"
               : appellationsPending
                 ? "Loading appellations…"
-                : "Select an appellation"
+                : "None — just the region above"
           }
           createLabel="appellation"
           onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
           disabled={!regionId || appellationsPending}
+          allowClear
         />
       </div>
 

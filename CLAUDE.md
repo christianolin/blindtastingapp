@@ -136,9 +136,22 @@ a raw subquery, regardless of which two tables look involved at a glance.
 - Vintage is its own type: `vintage_kind` (`YEAR` | `NV` | `TAWNY`) plus
   `vintage_year` or `vintage_tawny_years`. Scoring: exact match → 2 pts;
   `YEAR` off by exactly 1 → 1 pt; anything else → 0.
-- Scoring points: country 2, region 3, appellation 5, primary grape 8,
-  secondary grape 2 (only if the wine has one), producer 6, type designation 2
-  (only if the wine has one), vintage 2/1/0 as above.
+- Scoring points: country 2, region 3, appellation 5 (only if the wine has
+  one), primary grape 8, secondary grape 2 (only if the wine has one),
+  producer 6, type designation 2 (only if the wine has one), vintage 2/1/0
+  as above.
+- Appellation is optional (`wine_answers.appellation_id` is nullable) —
+  plenty of real wines carry nothing more specific than the region itself
+  (a plain "Bourgogne rouge", "Alsace", generic "Rioja", "California", a
+  Mendoza varietal) or no formal appellation at all ("Vin de France"). Every
+  region got a self-named appellation added (migration
+  `20260713180000_optional_regional_appellation.sql`) so "just the region"
+  is always pickable — the original LWIN-import fallback only added one for
+  regions with *zero* appellation candidates, missing 181 of 378 regions
+  (including Bordeaux, Rhône, Alsace, Rioja, California, Mendoza) that had
+  specific sub-appellations but no option matching the region's own name.
+  The wine-form's appellation field is `allowClear`; leaving it blank is a
+  valid, real answer key, not a placeholder for "not entered yet."
 - Reveal + scoring for a wine happens via the Postgres RPC `reveal_wine(wine_id)`
   (security definer, host-only) — this is the single source of truth for
   scoring, not duplicated in the client.

@@ -121,7 +121,7 @@ export function GuessForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>District / Appellation (5 pts)</Label>
+        <Label>District / Appellation (5 pts, if this wine has one)</Label>
         <SearchableCombobox
           formFieldName="appellation_id"
           value={appellationId}
