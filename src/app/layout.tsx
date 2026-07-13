@@ -18,7 +18,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Blind Tasting",
+  title: "Blindr",
   description: "Run blind wine tastings with VM/DM scoring rules.",
 };
 

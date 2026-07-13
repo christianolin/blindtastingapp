@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Blind Tasting App
+# Blindr
 
 A web app for running blind wine tastings using VM/DM scoring rules.
 
@@ -125,3 +125,20 @@ recursion comes back.
   an input path, not a second scoring engine. Matching is NOT enforced to be
   1-to-1 (the same candidate can be picked for more than one glass); each
   glass is still scored independently against its own true answer.
+- Every profile has a public page (`/u/[id]`) and there's an open directory
+  (`/people`) — any authenticated user can browse or search every profile,
+  by design (confirmed with the user; not search-only). Avatars live in the
+  public `avatars` Storage bucket, one file per user at `avatars/<user_id>/...`
+  (RLS on `storage.objects` restricts writes to your own folder); uploaded
+  directly from the browser client in `profile/edit/avatar-uploader.tsx`,
+  not through a server action.
+- Friends (`friendships` table) are one-way, no accept/request flow — adding
+  a friend is unilateral, like saving a contact (confirmed with the user).
+  A user only ever sees/manages rows where they are `user_id`; there's no
+  notion of the other side consenting or even being notified.
+- The tasting-invite UI (`tastings/new/invite-field.tsx`) is NOT a
+  comma/newline-separated textarea — participants are added one at a time
+  (typed email + "Add", or picked from a friends combobox), rendered as
+  removable chips. Both paths funnel into the same hidden newline-joined
+  `emails` field the `createTasting` server action already parses, so that
+  action needed no changes when this UI was redesigned.

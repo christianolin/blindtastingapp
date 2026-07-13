@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTasting, type CreateTastingFormState } from "./actions";
+import { InviteField } from "./invite-field";
 
 const TIMING_MODE_ITEMS = {
   ASYNC: "Async — open over several days",
@@ -30,7 +30,11 @@ const REVEAL_MODE_ITEMS = {
     "Semi-blind — everyone can see the full wine list up front, just not which glass is which",
 };
 
-export function NewTastingForm() {
+export function NewTastingForm({
+  friends,
+}: {
+  friends: { id: string; display_name: string; email: string }[];
+}) {
   const [state, formAction, pending] = useActionState<
     CreateTastingFormState,
     FormData
@@ -105,15 +109,7 @@ export function NewTastingForm() {
         </Select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="emails">Invite participants</Label>
-        <Textarea
-          id="emails"
-          name="emails"
-          placeholder="One email per line (or comma-separated)"
-          rows={4}
-        />
-      </div>
+      <InviteField friends={friends} />
 
       {state?.error ? (
         <p className="text-sm text-destructive">{state.error}</p>

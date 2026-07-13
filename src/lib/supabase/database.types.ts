@@ -45,20 +45,43 @@ export type Database = {
           id: string;
           display_name: string;
           email: string;
+          avatar_url: string | null;
+          bio: string | null;
           created_at: string;
         };
         Insert: {
           id: string;
           display_name: string;
           email: string;
+          avatar_url?: string | null;
+          bio?: string | null;
           created_at?: string;
         };
         Update: Partial<{
           id: string;
           display_name: string;
           email: string;
+          avatar_url: string | null;
+          bio: string | null;
           created_at: string;
         }>;
+        Relationships: [];
+      };
+
+      friendships: {
+        Row: {
+          id: string;
+          user_id: string;
+          friend_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          friend_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["friendships"]["Insert"]>;
         Relationships: [];
       };
 
