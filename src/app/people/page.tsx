@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/app-header";
@@ -60,9 +61,9 @@ export default async function PeoplePage({
           />
         </form>
         <div className="flex flex-col gap-3">
-          {(profiles ?? [])
-            .filter((p) => p.id !== user.id)
-            .map((p) => (
+          {(profiles ?? []).map((p) => {
+            const isMe = p.id === user.id;
+            return (
               <Card key={p.id}>
                 <CardContent className="flex items-center justify-between gap-4 pt-6">
                   <Link
@@ -82,7 +83,10 @@ export default async function PeoplePage({
                       </span>
                     )}
                     <div>
-                      <p className="font-medium">{p.display_name}</p>
+                      <p className="flex items-center gap-2 font-medium">
+                        {p.display_name}
+                        {isMe ? <Badge variant="secondary">You</Badge> : null}
+                      </p>
                       {p.bio ? (
                         <p className="line-clamp-1 text-sm text-muted-foreground">
                           {p.bio}
@@ -90,14 +94,17 @@ export default async function PeoplePage({
                       ) : null}
                     </div>
                   </Link>
-                  <FriendButton
-                    friendId={p.id}
-                    isFriend={friendIds.has(p.id)}
-                  />
+                  {isMe ? null : (
+                    <FriendButton
+                      friendId={p.id}
+                      isFriend={friendIds.has(p.id)}
+                    />
+                  )}
                 </CardContent>
               </Card>
-            ))}
-          {(profiles ?? []).filter((p) => p.id !== user.id).length === 0 ? (
+            );
+          })}
+          {(profiles ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No one found.</p>
           ) : null}
         </div>

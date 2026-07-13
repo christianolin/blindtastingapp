@@ -91,7 +91,13 @@ policy for relation..."). Fixed via two `SECURITY DEFINER` helper functions —
 bypass RLS internally. Any new policy that needs to check "is this user the
 host/participant of tasting X" should call these functions, not write a raw
 `exists (select ... from tastings/tasting_participants ...)` subquery, or the
-recursion comes back.
+recursion comes back. This bit again one hop further out: the (never-updated)
+`wines read` policy still raw-subqueries `tasting_participants`, so a new
+`tastings`/`tasting_participants` policy that raw-subqueried `wines` recreated
+the exact same cycle. Fixed the same way — a `tasting_has_revealed_wine(tasting_id)`
+SECURITY DEFINER helper. Moral: any new cross-table RLS check involving
+tastings/tasting_participants/wines should go through a helper function, never
+a raw subquery, regardless of which two tables look involved at a glance.
 
 ## Base UI component gotchas (shadcn/ui here uses @base-ui/react, not Radix)
 
@@ -150,11 +156,30 @@ recursion comes back.
   glass is still scored independently against its own true answer.
 - Every profile has a public page (`/u/[id]`) and there's an open directory
   (`/people`) — any authenticated user can browse or search every profile,
-  by design (confirmed with the user; not search-only). Avatars live in the
-  public `avatars` Storage bucket, one file per user at `avatars/<user_id>/...`
-  (RLS on `storage.objects` restricts writes to your own folder); uploaded
-  directly from the browser client in `profile/edit/avatar-uploader.tsx`,
-  not through a server action.
+  by design (confirmed with the user; not search-only), and the directory
+  includes yourself (with a "You" badge), not just other people. Avatars live
+  in the public `avatars` Storage bucket, one file per user at
+  `avatars/<user_id>/...` (RLS on `storage.objects` restricts writes to your
+  own folder); uploaded directly from the browser client in
+  `profile/edit/avatar-uploader.tsx`, not through a server action.
+- A profile page also shows that person's cross-tasting stats (wines
+  guessed, avg points, per-category accuracy) and a list of tastings they've
+  attended, each linking to `/u/[id]/tastings/[tastingId]` — a per-tasting
+  breakdown of their guess vs. the true answer for every revealed wine.
+  Computed in `src/lib/profile-stats.ts`. This is visible to ANY signed-in
+  viewer, not just co-participants — consistent with the open-directory
+  philosophy above, and made possible by the RLS policies in
+  `20260713170000_public_revealed_tasting_history.sql`
+  (tastings/tasting_participants/wines go public once a tasting has at
+  least one revealed wine; wine_answers/guesses were already public on
+  reveal from day one). A wine still hidden in an otherwise-revealed tasting
+  stays hidden — the visibility gate is per-wine, not per-tasting.
+- `scripts/seed-demo-people.mjs` creates ~5 persistent fake profiles (emails
+  on the `.invalid` TLD) and two fully-revealed demo tastings so the People
+  directory and profile stats have real content without needing real
+  participants. Idempotent — re-running skips people/tastings that already
+  exist by name+host. Not meant to be deleted; this is seed data, not
+  scratch/test output.
 - Friends (`friendships` table) are one-way, no accept/request flow — adding
   a friend is unilateral, like saving a contact (confirmed with the user).
   A user only ever sees/manages rows where they are `user_id`; there's no
