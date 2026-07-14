@@ -152,6 +152,20 @@ a raw subquery, regardless of which two tables look involved at a glance.
   specific sub-appellations but no option matching the region's own name.
   The wine-form's appellation field is `allowClear`; leaving it blank is a
   valid, real answer key, not a placeholder for "not entered yet."
+- Appellation names include their real geographic designation as a suffix
+  where one applies — "Barolo DOCG", "Napa Valley AVA", "Toscana IGT",
+  "Rioja DOCa", "Bordeaux AOP" — via `scripts/add-appellation-designations.mjs`.
+  LWIN's `DESIGNATION` column (not previously imported) is per-wine-row, not
+  per-appellation, so the script takes the mode value per (country, region,
+  sub_region/site) group — almost always unanimous or near-unanimous. It
+  deliberately uses an ALLOWLIST rather than every DESIGNATION value LWIN
+  has: German quality tiers (Qualitätswein, Prädikatswein, Landwein) and
+  below-appellation/table-wine markers (VdF "Vin de France", VdT/VT) are not
+  geographic designations — appending them to a place name would be wrong,
+  not just unhelpful — and a handful of obscure low-count codes with no
+  confident identification (AOG, AOR, VC, DOK, DOT, IPR) are excluded too;
+  under-labeling beats mislabeling. Applied 3282 of 3282 planned updates
+  cleanly (0 unmatched, 5 skipped for colliding with an existing row).
 - Reveal + scoring for a wine happens via the Postgres RPC `reveal_wine(wine_id)`
   (security definer, host-only) — this is the single source of truth for
   scoring, not duplicated in the client.
