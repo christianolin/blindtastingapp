@@ -2,44 +2,74 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
+import { MobileNav, type NavLink } from "@/components/mobile-nav";
+import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions";
 
-export function AppHeader({
-  userId,
-  displayName,
-  avatarUrl,
+const NAV_LINKS: NavLink[] = [
+  { href: "/dashboard", label: "Tastings" },
+  { href: "/people", label: "People" },
+  { href: "/friends", label: "Friends" },
+];
+
+/**
+ * The app's persistent top bar — shown on every authenticated page. Callers
+ * that already have the user/profile in hand can pass them to skip a refetch;
+ * everywhere else just renders `<AppHeader />` and lets it fetch. Renders
+ * nothing when logged out (those pages redirect to /login anyway).
+ *
+ * Desktop shows the nav inline; below `md` it collapses into MobileNav's
+ * hamburger drawer so navigation is always reachable, never "use the browser
+ * back button."
+ */
+export async function AppHeader({
+  userId: userIdProp,
+  displayName: displayNameProp,
+  avatarUrl: avatarUrlProp,
 }: {
-  userId: string;
-  displayName: string;
-  avatarUrl: string | null;
+  userId?: string;
+  displayName?: string;
+  avatarUrl?: string | null;
 }) {
+  let userId = userIdProp;
+  let displayName = displayNameProp;
+  let avatarUrl = avatarUrlProp ?? null;
+
+  if (!userId) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+    userId = user.id;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+    displayName = profile?.display_name ?? user.email ?? "";
+    avatarUrl = profile?.avatar_url ?? null;
+  }
+
+  const name = displayName ?? "";
+
   return (
-    <header className="flex items-center justify-between border-b border-border px-6 py-3">
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
       <Link href="/dashboard" className="flex items-center">
         <BlindrLockup size={30} gap={8} />
       </Link>
-      <nav className="flex items-center gap-4 text-sm">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1 hover:underline"
-        >
-          Tastings
-          <LinkLoadingHint />
-        </Link>
-        <Link
-          href="/people"
-          className="inline-flex items-center gap-1 hover:underline"
-        >
-          People
-          <LinkLoadingHint />
-        </Link>
-        <Link
-          href="/friends"
-          className="inline-flex items-center gap-1 hover:underline"
-        >
-          Friends
-          <LinkLoadingHint />
-        </Link>
+
+      <nav className="hidden items-center gap-4 text-sm md:flex">
+        {NAV_LINKS.map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="inline-flex items-center gap-1 hover:underline"
+          >
+            {l.label}
+            <LinkLoadingHint />
+          </Link>
+        ))}
         <Link
           href={`/u/${userId}`}
           className="flex items-center gap-2 hover:underline"
@@ -53,10 +83,10 @@ export function AppHeader({
             />
           ) : (
             <span className="flex size-6 items-center justify-center rounded-full bg-secondary text-xs">
-              {displayName.slice(0, 1).toUpperCase()}
+              {name.slice(0, 1).toUpperCase()}
             </span>
           )}
-          {displayName}
+          {name}
         </Link>
         <form action={signOut}>
           <Button variant="outline" size="sm" type="submit">
@@ -64,6 +94,13 @@ export function AppHeader({
           </Button>
         </form>
       </nav>
+
+      <MobileNav
+        userId={userId}
+        displayName={name}
+        avatarUrl={avatarUrl}
+        links={NAV_LINKS}
+      />
     </header>
   );
 }
