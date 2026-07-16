@@ -1,6 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type LeaderboardRow = { participantId: string; name: string; total: number };
+export type LeaderboardRow = {
+  participantId: string;
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  total: number;
+  winesScored: number;
+};
 
 // Shared by the results page and the persistent sidebar — scores only
 // count revealed wines, so this is safe to show mid-tasting without
@@ -16,9 +23,9 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
   const userIds = (participants ?? []).map((p) => p.user_id);
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name")
+    .select("id, display_name, avatar_url")
     .in("id", userIds.length > 0 ? userIds : [""]);
-  const nameByUserId = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+  const profileByUserId = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   const { data: wines } = await supabase
     .from("wines")
@@ -35,18 +42,29 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
       : { data: [] };
 
   const totalByParticipantId = new Map<string, number>();
+  const countByParticipantId = new Map<string, number>();
   for (const g of guesses ?? []) {
     totalByParticipantId.set(
       g.participant_id,
       (totalByParticipantId.get(g.participant_id) ?? 0) + (g.total_points ?? 0),
     );
+    countByParticipantId.set(
+      g.participant_id,
+      (countByParticipantId.get(g.participant_id) ?? 0) + 1,
+    );
   }
 
   return (participants ?? [])
-    .map((p) => ({
-      participantId: p.id,
-      name: nameByUserId.get(p.user_id) ?? "Unknown",
-      total: totalByParticipantId.get(p.id) ?? 0,
-    }))
+    .map((p) => {
+      const profile = profileByUserId.get(p.user_id);
+      return {
+        participantId: p.id,
+        userId: p.user_id,
+        name: profile?.display_name ?? "Unknown",
+        avatarUrl: profile?.avatar_url ?? null,
+        total: totalByParticipantId.get(p.id) ?? 0,
+        winesScored: countByParticipantId.get(p.id) ?? 0,
+      };
+    })
     .sort((a, b) => b.total - a.total);
 }
