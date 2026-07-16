@@ -97,6 +97,15 @@ export function GuessForm({
       <input type="hidden" name="tasting_id" value={tastingId} />
       <input type="hidden" name="wine_id" value={wineId} />
 
+      <a
+        href="/rules"
+        target="_blank"
+        rel="noreferrer"
+        className="text-xs text-muted-foreground underline underline-offset-4"
+      >
+        How scoring works ↗
+      </a>
+
       <div className="flex flex-col gap-2">
         <Label>Country (2 pts)</Label>
         <ReferenceCombobox

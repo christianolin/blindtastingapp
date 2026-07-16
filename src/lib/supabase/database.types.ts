@@ -273,6 +273,10 @@ export type Database = {
         Args: { p_query: string };
         Returns: { id: string; name: string }[];
       };
+      tasting_guess_status: {
+        Args: { p_tasting_id: string };
+        Returns: { wine_id: string; participant_id: string }[];
+      };
     };
   };
 };

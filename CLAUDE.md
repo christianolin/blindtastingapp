@@ -412,3 +412,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   on touch yanked the page to the top before floating-ui had positioned it
   (tapping "choose a friend" scrolled to top). Fixed positioning + no
   touch-focus fixes both; mouse/keyboard still focus the search field.
+- Everyone (not just the host) can see WHO has guessed each wine, so the host
+  knows when to reveal. The guesses RLS still hides guess *content* until
+  reveal; the `tasting_guess_status(tasting_id)` RPC (SECURITY DEFINER, gated
+  via is_tasting_host/is_tasting_participant) exposes only the (wine_id,
+  participant_id) pairs a guess exists for. The play page shows a
+  "N/M ready to reveal" readiness footer per still-hidden wine (blind), or a
+  per-person "submitted their matches" summary in the intro card (semi-blind).
+  Eligible guessers for a wine = JOINED participants minus that wine's
+  contributor minus the host when wine_source is HOST_PROVIDES (the host set
+  the answers, so they don't guess).
+- Bring-your-own (PARTICIPANT_CONTRIBUTED) wines are labelled by contributor
+  ("Gustav's wine"), not "Wine N", on the play page (`wineTitle`). The lobby's
+  Wines card, in BYO mode, lists every JOINED participant with "Added" or
+  "Still waiting for {name} to add their wine" so everyone sees who's brought a
+  bottle — driven off `wines.contributor_participant_id`, no answer leaked.
+- `/rules` (`app/rules/page.tsx`) explains the VM/DM point system (and the
+  semi-blind 1-point-per-match variant). Linked from the reveal-mode badge on
+  the lobby and a "How scoring works" link atop the guess form. Vintage
+  scoring (exact = 2, off-by-one year = 1, else 0; NV/tawny exact-only) is
+  shown both there and inline in the guess form's Vintage field label.

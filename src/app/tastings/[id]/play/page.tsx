@@ -162,6 +162,61 @@ export default async function PlayPage({
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
 
+  // Everyone can see WHO has guessed each wine (not the guesses themselves) so
+  // the host knows when to reveal and everyone sees who's still thinking.
+  const [{ data: participantRows }, { data: guessStatus }] = await Promise.all([
+    supabase
+      .from("tasting_participants")
+      .select("id, user_id, status")
+      .eq("tasting_id", tastingId),
+    supabase.rpc("tasting_guess_status", { p_tasting_id: tastingId }),
+  ]);
+  const pUserIds = (participantRows ?? []).map((p) => p.user_id);
+  const { data: pProfiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, email")
+    .in("id", pUserIds.length > 0 ? pUserIds : [""]);
+  const profileByUserId = new Map((pProfiles ?? []).map((p) => [p.id, p]));
+  const nameByParticipantId = new Map(
+    (participantRows ?? []).map((p) => [
+      p.id,
+      profileByUserId.get(p.user_id)?.display_name ??
+        profileByUserId.get(p.user_id)?.email ??
+        "Someone",
+    ]),
+  );
+  const guessersByWineId = new Map<string, Set<string>>();
+  for (const row of guessStatus ?? []) {
+    const set = guessersByWineId.get(row.wine_id) ?? new Set<string>();
+    set.add(row.participant_id);
+    guessersByWineId.set(row.wine_id, set);
+  }
+  const joinedParticipants = (participantRows ?? []).filter(
+    (p) => p.status === "JOINED",
+  );
+  // Who's expected to guess a given wine: joined participants, minus its
+  // contributor (you don't guess your own bottle) and minus the host when the
+  // host provided the wines (they set the answers).
+  const eligibleGuessers = (wine: {
+    contributor_participant_id: string | null;
+  }) =>
+    joinedParticipants.filter(
+      (p) =>
+        p.id !== wine.contributor_participant_id &&
+        !(tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id),
+    );
+
+  // In bring-your-own tastings a wine is known by its contributor, not a
+  // number ("Gustav's wine" rather than "Wine 2").
+  const wineTitle = (wine: {
+    position: number;
+    contributor_participant_id: string | null;
+  }) =>
+    tasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
+    wine.contributor_participant_id
+      ? `${nameByParticipantId.get(wine.contributor_participant_id) ?? "Someone"}'s wine`
+      : `Wine ${wine.position}`;
+
   // A wine's answer is visible to me once it's globally revealed OR my own
   // guess for it has been scored (immediate-reveal async). The wine_answers
   // RLS grants both.
@@ -254,6 +309,45 @@ export default async function PlayPage({
                 <li key={c.id}>{c.name}</li>
               ))}
             </ul>
+
+            {/* Who's submitted their matches (semi-blind is one batch, so
+                readiness is per-person, not per-glass). */}
+            {(() => {
+              const eligible = joinedParticipants.filter(
+                (p) =>
+                  !(
+                    tasting.wine_source === "HOST_PROVIDES" &&
+                    p.user_id === tasting.host_id
+                  ),
+              );
+              if (eligible.length === 0) return null;
+              const submitted = new Set<string>();
+              for (const set of guessersByWineId.values())
+                for (const pid of set) submitted.add(pid);
+              const readyCount = eligible.filter((p) =>
+                submitted.has(p.id),
+              ).length;
+              return (
+                <div className="mt-4 border-t pt-3">
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                    {readyCount}/{eligible.length} submitted their matches
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {eligible.map((p) => {
+                      const ready = submitted.has(p.id);
+                      return (
+                        <span
+                          key={p.id}
+                          className={ready ? "text-[#3f5b42]" : ""}
+                        >
+                          {ready ? "✓" : "○"} {nameByParticipantId.get(p.id)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       ) : null}
@@ -292,8 +386,8 @@ export default async function PlayPage({
         return (
           <Card key={wine.id}>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Wine {wine.position}
+              <CardTitle className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                   {isHost && !wine.is_revealed ? (
@@ -408,6 +502,40 @@ export default async function PlayPage({
                   </CollapsiblePanel>
                 </div>
               )}
+
+              {/* Readiness: who's guessed this wine (visible to everyone, so
+                  the host knows when to reveal). Only while still hidden. */}
+              {!wine.is_revealed
+                ? (() => {
+                    const eligible = eligibleGuessers(wine);
+                    if (eligible.length === 0) return null;
+                    const guessers = guessersByWineId.get(wine.id) ?? new Set();
+                    const readyCount = eligible.filter((p) =>
+                      guessers.has(p.id),
+                    ).length;
+                    return (
+                      <div className="mt-4 border-t pt-3">
+                        <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                          {readyCount}/{eligible.length} ready to reveal
+                        </p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {eligible.map((p) => {
+                            const ready = guessers.has(p.id);
+                            return (
+                              <span
+                                key={p.id}
+                                className={ready ? "text-[#3f5b42]" : ""}
+                              >
+                                {ready ? "✓" : "○"}{" "}
+                                {nameByParticipantId.get(p.id)}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()
+                : null}
             </CardContent>
           </Card>
         );

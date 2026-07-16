@@ -69,6 +69,24 @@ export default async function TastingPage({
   const hasStarted = tasting.status !== "DRAFT";
   const wineCount = (wines ?? []).length;
 
+  const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
+  const nameByParticipantId = new Map(
+    (participantRows ?? []).map((p) => [
+      p.id,
+      profileById.get(p.user_id)?.display_name ??
+        profileById.get(p.user_id)?.email ??
+        "Someone",
+    ]),
+  );
+  const wineByContributor = new Map(
+    (wines ?? [])
+      .filter((w) => w.contributor_participant_id)
+      .map((w) => [w.contributor_participant_id as string, w]),
+  );
+  const joinedParticipants = (participantRows ?? []).filter(
+    (p) => p.status === "JOINED",
+  );
+
   const canAddWine =
     tasting.wine_source === "HOST_PROVIDES"
       ? isHost
@@ -130,14 +148,17 @@ export default async function TastingPage({
               : "Participants bring wines"}
           </Badge>
           {tasting.reveal_mode === "SEMI_BLIND" ? (
-            <Badge variant="secondary">Semi-blind</Badge>
+            <Link href="/rules">
+              <Badge variant="secondary" className="hover:bg-secondary/70">
+                Semi-blind · scoring ↗
+              </Badge>
+            </Link>
           ) : (
-            <Badge
-              variant="secondary"
-              title="Scored under Danish Championship (VM/DM) rules — points per category: country, region, appellation, primary/secondary grape, producer, type designation, vintage."
-            >
-              Danish Championship rules
-            </Badge>
+            <Link href="/rules">
+              <Badge variant="secondary" className="hover:bg-secondary/70">
+                Danish Championship rules ↗
+              </Badge>
+            </Link>
           )}
         </div>
       </div>
@@ -266,7 +287,44 @@ export default async function TastingPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {wineCount === 0 ? (
+          {isByo ? (
+            // Bring-your-own: everyone sees who's added their bottle and who
+            // we're still waiting on. The wine itself stays hidden until
+            // reveal, but the contributor's identity isn't a secret.
+            joinedParticipants.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No one has joined yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {joinedParticipants.map((p) => {
+                  const w = wineByContributor.get(p.id);
+                  const who = nameByParticipantId.get(p.id) ?? "Someone";
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span
+                        className={w ? "" : "text-muted-foreground italic"}
+                      >
+                        {w
+                          ? `${who}'s wine`
+                          : `Still waiting for ${who} to add their wine`}
+                      </span>
+                      {w ? (
+                        <Badge variant={w.is_revealed ? "default" : "outline"}>
+                          {w.is_revealed ? "Revealed" : "Added"}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Pending</Badge>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          ) : wineCount === 0 ? (
             <p className="text-sm text-muted-foreground">No wines added yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -283,11 +341,6 @@ export default async function TastingPage({
               ))}
             </ul>
           )}
-          {tasting.wine_source === "PARTICIPANT_CONTRIBUTED" && myWine ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              You&apos;ve added your wine — waiting for the rest.
-            </p>
-          ) : null}
         </CardContent>
       </Card>
 
