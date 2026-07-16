@@ -9,6 +9,7 @@ import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
@@ -270,6 +271,7 @@ export default async function PlayPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <AutoRefresh />
       <div className="flex items-center justify-between">
         <Link
           href={`/tastings/${tastingId}`}

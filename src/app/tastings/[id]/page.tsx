@@ -8,6 +8,7 @@ import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
 import { makeWineLabeler } from "@/lib/wine-label";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
 import { respondToInvite } from "./actions";
 
@@ -117,6 +118,7 @@ export default async function TastingPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      {hasStarted ? <AutoRefresh /> : null}
       {tasting.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
