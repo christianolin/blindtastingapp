@@ -358,3 +358,32 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `src/components/local-date-time.tsx` (viewer's locale/timezone) — the
   server's timezone is not the user's. `datetime-local` inputs give/expect
   local `YYYY-MM-DDTHH:mm`; convert to/from ISO at the action/effect boundary.
+- Reveal timing. LIVE tastings are never auto-revealed — the host reveals each
+  wine manually (RevealButton → `reveal_wine`); `maybeAutoRevealWine` early-
+  returns unless `timing_mode = 'ASYNC'`. ASYNC tastings choose a
+  `async_reveal_policy` (enum type `async_reveal_type`, values `AFTER_ALL` /
+  `IMMEDIATE`; default `AFTER_ALL`) at creation: `AFTER_ALL` keeps the wine
+  hidden until everyone's guessed, then auto-reveals globally; `IMMEDIATE`
+  scores *your own* guess the moment you submit (via the `score_own_guess`
+  RPC) and shows you the answer, WITHOUT setting `wines.is_revealed` (others
+  can still guess) — the wine still auto-reveals globally once all have
+  guessed. `score_own_guess` mirrors `reveal_wine`'s per-category / semi-blind
+  scoring exactly and only touches the caller's own not-yet-scored guess.
+- A guess is locked once it has `scored_at` (immediate-scored, or a revealed
+  wine): `submitGuess`/`submitAllMatchGuesses` reject edits to a scored guess.
+  This is app-enforced, not a DB trigger, on purpose — `reveal_wine` and
+  `score_own_guess` both write `scored_at` themselves, so a trigger keying on
+  "already scored" would block those legitimate SECURITY DEFINER writes.
+- The wine_answers read RLS grants access once you have a scored guess for a
+  wine (`has_scored_guess(wine_id)` SECURITY DEFINER helper) — this is what
+  lets an immediate-mode guesser see the answer for a wine that isn't globally
+  revealed. Added via `20260716140000_async_reveal_policy.sql`.
+- Play page (`play/page.tsx`): a wine is "resolved for me" when it's globally
+  revealed OR my own guess for it is scored; resolved wines show the Answer +
+  my result, unresolved ones show a per-wine status badge (Not guessed /
+  Guessed / Your result / Revealed) plus a `CollapsiblePanel`-wrapped guess
+  form ("Guess this wine" / "Edit your guess") rather than every form being
+  expanded at once. Semi-blind unresolved glasses still go through the single
+  batch MatchGuessForm; a glass leaves the batch and gets its own result card
+  once resolved. Fetch answers for `revealed ∪ my-scored` wine ids, not just
+  revealed.

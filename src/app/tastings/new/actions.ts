@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
+  AsyncRevealPolicy,
   RevealMode,
   TimingMode,
   WineSourceMode,
@@ -29,6 +30,11 @@ export async function createTasting(
     formData.get("wine_source") ?? "",
   ) as WineSourceMode;
   const revealMode = String(formData.get("reveal_mode") ?? "") as RevealMode;
+  const asyncRevealPolicy = (String(
+    formData.get("async_reveal_policy") ?? "AFTER_ALL",
+  ) === "IMMEDIATE"
+    ? "IMMEDIATE"
+    : "AFTER_ALL") as AsyncRevealPolicy;
   const emailsRaw = String(formData.get("emails") ?? "");
   const description = String(formData.get("description") ?? "").trim() || null;
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
@@ -74,6 +80,7 @@ export async function createTasting(
       description,
       image_url: imageUrl,
       scheduled_at: scheduledAt,
+      async_reveal_policy: asyncRevealPolicy,
     })
     .select()
     .single();

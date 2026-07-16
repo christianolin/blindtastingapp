@@ -33,6 +33,11 @@ const REVEAL_MODE_ITEMS = {
     "Semi-blind — everyone can see the full wine list up front, just not which glass is which",
 };
 
+const ASYNC_REVEAL_ITEMS = {
+  AFTER_ALL: "After everyone has guessed that wine",
+  IMMEDIATE: "Immediately after you submit your own guess",
+};
+
 export function NewTastingForm({
   friends,
   userId,
@@ -141,6 +146,32 @@ export function NewTastingForm({
             </SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="async_reveal_policy">When to show results</Label>
+        <Select
+          name="async_reveal_policy"
+          items={ASYNC_REVEAL_ITEMS}
+          defaultValue="AFTER_ALL"
+          required
+        >
+          <SelectTrigger id="async_reveal_policy" className="w-full">
+            <SelectValue placeholder="When to show results" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="AFTER_ALL">
+              {ASYNC_REVEAL_ITEMS.AFTER_ALL}
+            </SelectItem>
+            <SelectItem value="IMMEDIATE">
+              {ASYNC_REVEAL_ITEMS.IMMEDIATE}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Async tastings only. In a live tasting the host reveals each wine
+          manually.
+        </p>
       </div>
 
       <InviteField friends={friends} />

@@ -6,10 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 
 // Auto-reveals a wine once every participant who's supposed to guess it has
-// submitted — so the host doesn't have to babysit "has everyone answered?"
-// during live play. Skips silently on any lookup failure; a missed
-// auto-reveal just means the host reveals manually, same as before this
-// existed.
+// submitted, so an ASYNC host doesn't have to babysit "has everyone
+// answered?". LIVE tastings are NEVER auto-revealed — the host paces the
+// reveal manually with the Reveal button. Skips silently on any lookup
+// failure; a missed auto-reveal just means the host reveals manually.
 async function maybeAutoRevealWine(
   supabase: Awaited<ReturnType<typeof createClient>>,
   wineId: string,
@@ -20,6 +20,13 @@ async function maybeAutoRevealWine(
     .eq("id", wineId)
     .maybeSingle();
   if (!wine || wine.is_revealed) return;
+
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("timing_mode")
+    .eq("id", wine.tasting_id)
+    .maybeSingle();
+  if (!tasting || tasting.timing_mode !== "ASYNC") return;
 
   const { count: eligibleCount } = await supabase
     .from("tasting_participants")
@@ -123,10 +130,16 @@ export async function submitGuess(
 
   const { data: existing } = await supabase
     .from("guesses")
-    .select("id")
+    .select("id, scored_at")
     .eq("wine_id", wineId)
     .eq("participant_id", participant.id)
     .maybeSingle();
+
+  // Once a guess has been scored (immediate-reveal async, or a revealed wine)
+  // it's locked — you've already seen the answer, no re-guessing.
+  if (existing?.scored_at) {
+    return { error: "This guess is locked — it's already been scored." };
+  }
 
   const { error } = existing
     ? await supabase.from("guesses").update(payload).eq("id", existing.id)
@@ -136,6 +149,10 @@ export async function submitGuess(
     return { error: error.message };
   }
 
+  // Immediate-reveal async: score this guess now so the guesser sees their
+  // result right away (no-op for every other mode). Then the usual auto-reveal
+  // fires once everyone has guessed.
+  await supabase.rpc("score_own_guess", { p_wine_id: wineId });
   await maybeAutoRevealWine(supabase, wineId);
 
   revalidatePath(`/tastings/${tastingId}/play`);
@@ -180,22 +197,24 @@ export async function submitAllMatchGuesses(
 
   const { data: existingGuesses } = await supabase
     .from("guesses")
-    .select("id, wine_id")
+    .select("id, wine_id, scored_at")
     .eq("participant_id", participant.id)
     .in("wine_id", wineIds);
-  const existingIdByWineId = new Map(
-    (existingGuesses ?? []).map((g) => [g.wine_id, g.id]),
+  const existingByWineId = new Map(
+    (existingGuesses ?? []).map((g) => [g.wine_id, g]),
   );
 
   for (const wineId of wineIds) {
+    const existing = existingByWineId.get(wineId);
+    // Skip glasses whose match is already locked in (scored).
+    if (existing?.scored_at) continue;
     const payload = {
       wine_id: wineId,
       participant_id: participant.id,
       guessed_wine_id: guessesByWineId[wineId],
     };
-    const existingId = existingIdByWineId.get(wineId);
-    const { error } = existingId
-      ? await supabase.from("guesses").update(payload).eq("id", existingId)
+    const { error } = existing
+      ? await supabase.from("guesses").update(payload).eq("id", existing.id)
       : await supabase.from("guesses").insert(payload);
     if (error) {
       return { error: error.message };
@@ -203,6 +222,7 @@ export async function submitAllMatchGuesses(
   }
 
   for (const wineId of wineIds) {
+    await supabase.rpc("score_own_guess", { p_wine_id: wineId });
     await maybeAutoRevealWine(supabase, wineId);
   }
 

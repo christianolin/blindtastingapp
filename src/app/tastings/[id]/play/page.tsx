@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
+import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { GuessForm, type ExistingGuess } from "./guess-form";
@@ -158,17 +162,26 @@ export default async function PlayPage({
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
 
-  const revealedWineIds = (wines ?? [])
-    .filter((w) => w.is_revealed)
-    .map((w) => w.id);
-  const { data: revealedAnswers } =
-    revealedWineIds.length > 0
-      ? await supabase
-          .from("wine_answers")
-          .select("*")
-          .in("wine_id", revealedWineIds)
+  // A wine's answer is visible to me once it's globally revealed OR my own
+  // guess for it has been scored (immediate-reveal async). The wine_answers
+  // RLS grants both.
+  const resolvedForMe = (wineId: string, isRevealed: boolean) =>
+    isRevealed || Boolean(myGuessByWineId.get(wineId)?.scored_at);
+
+  const answerWineIds = [
+    ...new Set(
+      (wines ?? [])
+        .filter((w) => resolvedForMe(w.id, w.is_revealed))
+        .map((w) => w.id),
+    ),
+  ];
+  const { data: resolvedAnswers } =
+    answerWineIds.length > 0
+      ? await supabase.from("wine_answers").select("*").in("wine_id", answerWineIds)
       : { data: [] };
-  const answerByWineId = new Map((revealedAnswers ?? []).map((a) => [a.wine_id, a]));
+  const answerByWineId = new Map(
+    (resolvedAnswers ?? []).map((a) => [a.wine_id, a]),
+  );
 
   // In semi-blind mode every wine's answer key is visible up front, as the
   // pool of candidates participants match glasses against.
@@ -179,12 +192,12 @@ export default async function PlayPage({
         .in("wine_id", wineIds.length > 0 ? wineIds : [""])
     : { data: [] };
   const candidateByWineId = new Map((allAnswers ?? []).map((a) => [a.wine_id, a]));
+  // Semi-blind answers are all readable, so a resolved glass can show its own.
+  for (const a of allAnswers ?? []) {
+    if (!answerByWineId.has(a.wine_id)) answerByWineId.set(a.wine_id, a);
+  }
 
-  // Appellations/producers are too large to preload in full (thousands of
-  // rows after the LWIN import) — look up only the names this page actually
-  // renders: revealed/candidate answers, plus whatever a participant already
-  // guessed (so the guess form's combobox can show its selected label).
-  const answersNeedingNames = [...(revealedAnswers ?? []), ...(allAnswers ?? [])];
+  const answersNeedingNames = [...(resolvedAnswers ?? []), ...(allAnswers ?? [])];
   const guessesNeedingNames = myGuesses ?? [];
   const lookedUpNames = await lookupAppellationAndProducerNames({
     appellationIds: [
@@ -203,7 +216,7 @@ export default async function PlayPage({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <div className="flex items-center justify-between">
         <Link
           href={`/tastings/${tastingId}`}
@@ -211,12 +224,17 @@ export default async function PlayPage({
         >
           ← Back to tasting
         </Link>
-        <Link
-          href={`/tastings/${tastingId}/results`}
-          className="text-sm underline underline-offset-4"
+        <Button
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={<Link href={`/tastings/${tastingId}/results`} />}
+          className="gap-1.5"
         >
-          View results →
-        </Link>
+          <Trophy className="size-4 text-gold-deep" />
+          Results
+          <LinkLoadingHint />
+        </Button>
       </div>
       <h1 className="font-heading text-3xl font-semibold tracking-tight">
         {tasting.name}
@@ -251,10 +269,25 @@ export default async function PlayPage({
         const guessedCandidate = guess?.guessed_wine_id
           ? candidateByWineId.get(guess.guessed_wine_id)
           : null;
+        const resolved = resolvedForMe(wine.id, wine.is_revealed);
+        const hasGuessed = isSemiBlind
+          ? Boolean(guess?.guessed_wine_id)
+          : Boolean(guess);
 
-        // Semi-blind matching is one combined form below, not per-wine —
-        // skip rendering a card for glasses still waiting to be matched.
-        if (!wine.is_revealed && !isMine && isSemiBlind) return null;
+        // Semi-blind matching is one combined form below, not per-wine — a
+        // glass only gets its own card once it's resolved for me (revealed or
+        // my match scored); otherwise it lives in the batch form.
+        if (!resolved && !isMine && isSemiBlind) return null;
+
+        const statusBadge = wine.is_revealed
+          ? { label: "Revealed", variant: "default" as const }
+          : resolved
+            ? { label: "Your result", variant: "default" as const }
+            : isMine
+              ? { label: "Your wine", variant: "outline" as const }
+              : hasGuessed
+                ? { label: "Guessed", variant: "secondary" as const }
+                : { label: "Not guessed", variant: "outline" as const };
 
         return (
           <Card key={wine.id}>
@@ -262,9 +295,7 @@ export default async function PlayPage({
               <CardTitle className="flex items-center justify-between">
                 Wine {wine.position}
                 <div className="flex items-center gap-2">
-                  <Badge variant={wine.is_revealed ? "default" : "outline"}>
-                    {wine.is_revealed ? "Revealed" : "Hidden"}
-                  </Badge>
+                  <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                   {isHost && !wine.is_revealed ? (
                     <RevealButton tastingId={tastingId} wineId={wine.id} />
                   ) : null}
@@ -272,7 +303,7 @@ export default async function PlayPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {wine.is_revealed && answer ? (
+              {resolved && answer ? (
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="mb-1 text-sm font-medium">Answer</h3>
@@ -292,7 +323,9 @@ export default async function PlayPage({
                     isSemiBlind ? (
                       <div>
                         <h3 className="mb-1 text-sm font-medium">
-                          {guess.total_points ? "✓ Correct match" : "✗ Wrong match"}
+                          {guess.total_points
+                            ? "✓ Correct match"
+                            : "✗ Wrong match"}
                         </h3>
                         {guessedCandidate ? (
                           <p className="text-sm text-muted-foreground">
@@ -343,25 +376,37 @@ export default async function PlayPage({
                   This is your wine — nothing to guess.
                 </p>
               ) : isSemiBlind ? null : (
-                <GuessForm
-                  tastingId={tastingId}
-                  wineId={wine.id}
-                  countries={countries ?? []}
-                  regions={regions ?? []}
-                  grapes={grapes ?? []}
-                  typeDesignations={typeDesignations ?? []}
-                  existingGuess={(guess as ExistingGuess | undefined) ?? null}
-                  initialAppellationLabel={
-                    guess?.appellation_id
-                      ? (nameById.get(guess.appellation_id) ?? null)
-                      : null
-                  }
-                  initialProducerLabel={
-                    guess?.producer_id
-                      ? (nameById.get(guess.producer_id) ?? null)
-                      : null
-                  }
-                />
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    {hasGuessed
+                      ? "You've guessed this wine. You can still edit until it's revealed."
+                      : "You haven't guessed this wine yet."}
+                  </p>
+                  <CollapsiblePanel
+                    label={hasGuessed ? "Edit your guess" : "Guess this wine"}
+                    variant={hasGuessed ? "outline" : "default"}
+                  >
+                    <GuessForm
+                      tastingId={tastingId}
+                      wineId={wine.id}
+                      countries={countries ?? []}
+                      regions={regions ?? []}
+                      grapes={grapes ?? []}
+                      typeDesignations={typeDesignations ?? []}
+                      existingGuess={(guess as ExistingGuess | undefined) ?? null}
+                      initialAppellationLabel={
+                        guess?.appellation_id
+                          ? (nameById.get(guess.appellation_id) ?? null)
+                          : null
+                      }
+                      initialProducerLabel={
+                        guess?.producer_id
+                          ? (nameById.get(guess.producer_id) ?? null)
+                          : null
+                      }
+                    />
+                  </CollapsiblePanel>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -373,7 +418,7 @@ export default async function PlayPage({
             const glasses: MatchGlass[] = (wines ?? [])
               .filter(
                 (w) =>
-                  !w.is_revealed &&
+                  !resolvedForMe(w.id, w.is_revealed) &&
                   w.contributor_participant_id !== myParticipant.id,
               )
               .map((w) => ({

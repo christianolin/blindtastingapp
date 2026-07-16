@@ -14,6 +14,7 @@ export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
 export type RevealMode = "BLIND" | "SEMI_BLIND";
 export type TastingStatus = "DRAFT" | "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
+export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 
 type ReferenceTable = {
@@ -98,6 +99,7 @@ export type Database = {
           opens_at: string | null;
           closes_at: string | null;
           scheduled_at: string | null;
+          async_reveal_policy: AsyncRevealPolicy;
           created_at: string;
           image_url: string | null;
           description: string | null;
@@ -114,6 +116,7 @@ export type Database = {
           opens_at?: string | null;
           closes_at?: string | null;
           scheduled_at?: string | null;
+          async_reveal_policy?: AsyncRevealPolicy;
           created_at?: string;
           image_url?: string | null;
           description?: string | null;
@@ -255,6 +258,10 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       reveal_wine: {
+        Args: { p_wine_id: string };
+        Returns: void;
+      };
+      score_own_guess: {
         Args: { p_wine_id: string };
         Returns: void;
       };
