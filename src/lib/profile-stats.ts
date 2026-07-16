@@ -65,38 +65,39 @@ function emptyAccuracy(): Record<CategoryKey, { correct: number; applicable: num
   };
 }
 
+// A semi-blind guess is scored as a plain match/no-match (see
+// reveal_wine's SEMI_BLIND branch) and has every category column set to
+// null — "not applicable", not "guessed and got it wrong". All eight
+// categories are tallied through this one loop so that null always means
+// skip, rather than country/region/primary_grape/producer (previously
+// "always applicable") getting silently counted as wrong for every
+// semi-blind guess.
 function tallyGuess(acc: ProfileStatsSummary, g: ScoredGuessRow) {
   acc.winesGuessed++;
   acc.totalPoints += g.total_points ?? 0;
 
-  const always: [CategoryKey, number | null][] = [
+  const categories: [CategoryKey, number | null][] = [
     ["country", g.country_points],
     ["region", g.region_points],
-    ["primary_grape", g.primary_grape_points],
-    ["producer", g.producer_points],
-  ];
-  for (const [key, points] of always) {
-    acc.categoryAccuracy[key].applicable++;
-    acc.maxPossiblePoints += CATEGORY_MAX_POINTS[key];
-    if (points === CATEGORY_MAX_POINTS[key]) acc.categoryAccuracy[key].correct++;
-  }
-
-  const optional: [CategoryKey, number | null][] = [
     ["appellation", g.appellation_points],
+    ["primary_grape", g.primary_grape_points],
     ["secondary_grape", g.secondary_grape_points],
+    ["producer", g.producer_points],
     ["type_designation", g.type_designation_points],
   ];
-  for (const [key, points] of optional) {
+  for (const [key, points] of categories) {
     if (points === null) continue;
     acc.categoryAccuracy[key].applicable++;
     acc.maxPossiblePoints += CATEGORY_MAX_POINTS[key];
     if (points === CATEGORY_MAX_POINTS[key]) acc.categoryAccuracy[key].correct++;
   }
 
-  acc.categoryAccuracy.vintage.applicable++;
-  acc.maxPossiblePoints += CATEGORY_MAX_POINTS.vintage;
-  if (g.vintage_points === 2) acc.categoryAccuracy.vintage.correct++;
-  else if (g.vintage_points === 1) acc.vintagePartialCredit++;
+  if (g.vintage_points !== null) {
+    acc.categoryAccuracy.vintage.applicable++;
+    acc.maxPossiblePoints += CATEGORY_MAX_POINTS.vintage;
+    if (g.vintage_points === 2) acc.categoryAccuracy.vintage.correct++;
+    else if (g.vintage_points === 1) acc.vintagePartialCredit++;
+  }
 }
 
 /**

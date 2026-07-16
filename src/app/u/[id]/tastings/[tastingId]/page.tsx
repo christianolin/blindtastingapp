@@ -47,12 +47,13 @@ export default async function ProfileTastingHistoryPage({
 
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, name")
+    .select("id, name, reveal_mode")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) {
     notFound();
   }
+  const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
 
   const { data: participant } = await supabase
     .from("tasting_participants")
@@ -84,16 +85,26 @@ export default async function ProfileTastingHistoryPage({
   ]);
 
   const wineIds = (wines ?? []).map((w) => w.id);
-  const [{ data: answers }, { data: guesses }] = await Promise.all([
-    supabase.from("wine_answers").select("*").in("wine_id", wineIds.length > 0 ? wineIds : [""]),
-    supabase
-      .from("guesses")
-      .select("*")
-      .eq("participant_id", participant.id)
-      .in("wine_id", wineIds.length > 0 ? wineIds : [""]),
-  ]);
-  const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
+  const { data: guesses } = await supabase
+    .from("guesses")
+    .select("*")
+    .eq("participant_id", participant.id)
+    .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const guessByWineId = new Map((guesses ?? []).map((g) => [g.wine_id, g]));
+
+  // In semi-blind mode a guess points at a candidate wine (guessed_wine_id)
+  // that isn't necessarily one of this page's revealed wines, so pull in
+  // whichever candidate answers were actually guessed alongside the
+  // revealed wines' own answers.
+  const guessedWineIds = (guesses ?? [])
+    .map((g) => g.guessed_wine_id)
+    .filter((id): id is string => Boolean(id));
+  const answerLookupIds = [...new Set([...wineIds, ...guessedWineIds])];
+  const { data: answers } = await supabase
+    .from("wine_answers")
+    .select("*")
+    .in("wine_id", answerLookupIds.length > 0 ? answerLookupIds : [""]);
+  const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
 
   const nameById = new Map<string, string>();
   for (const list of [countries, regions, grapes, typeDesignations]) {
@@ -173,6 +184,9 @@ export default async function ProfileTastingHistoryPage({
         {(wines ?? []).map((wine) => {
           const answer = answerByWineId.get(wine.id);
           const guess = guessByWineId.get(wine.id);
+          const guessedCandidate = guess?.guessed_wine_id
+            ? answerByWineId.get(guess.guessed_wine_id)
+            : null;
           return (
             <Card key={wine.id}>
               <CardHeader>
@@ -193,42 +207,60 @@ export default async function ProfileTastingHistoryPage({
                     {describe(answer ?? null)} — {vintageLabel(answer ?? null)}
                   </p>
                 </div>
-                <div>
-                  <h3 className="mb-1 text-sm font-medium">
-                    Guess — {guess?.total_points ?? 0} points
-                  </h3>
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    {describe(guess ?? null)}
-                    {guess ? ` — ${vintageLabel(guess)}` : ""}
-                  </p>
-                  {guess ? (
-                    <table className="w-full text-sm">
-                      <tbody>
-                        {(
-                          [
-                            ["country", guess.country_points],
-                            ["region", guess.region_points],
-                            ["appellation", guess.appellation_points],
-                            ["primary_grape", guess.primary_grape_points],
-                            ["secondary_grape", guess.secondary_grape_points],
-                            ["producer", guess.producer_points],
-                            ["type_designation", guess.type_designation_points],
-                            ["vintage", guess.vintage_points],
-                          ] as const
-                        ).map(([key, points]) => (
-                          <tr key={key} className="border-b last:border-0">
-                            <td className="py-1 text-muted-foreground">
-                              {CATEGORY_LABELS[key]}
-                            </td>
-                            <td className="py-1 text-right">
-                              {points === null ? "—" : points}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : null}
-                </div>
+                {isSemiBlind ? (
+                  <div>
+                    <h3 className="mb-1 text-sm font-medium">
+                      {!guess
+                        ? "No guess submitted"
+                        : guess.total_points
+                          ? "✓ Correct match"
+                          : "✗ Wrong match"}
+                    </h3>
+                    {guessedCandidate ? (
+                      <p className="text-sm text-muted-foreground">
+                        Guessed: {describe(guessedCandidate)} —{" "}
+                        {vintageLabel(guessedCandidate)}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="mb-1 text-sm font-medium">
+                      Guess — {guess?.total_points ?? 0} points
+                    </h3>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      {describe(guess ?? null)}
+                      {guess ? ` — ${vintageLabel(guess)}` : ""}
+                    </p>
+                    {guess ? (
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {(
+                            [
+                              ["country", guess.country_points],
+                              ["region", guess.region_points],
+                              ["appellation", guess.appellation_points],
+                              ["primary_grape", guess.primary_grape_points],
+                              ["secondary_grape", guess.secondary_grape_points],
+                              ["producer", guess.producer_points],
+                              ["type_designation", guess.type_designation_points],
+                              ["vintage", guess.vintage_points],
+                            ] as const
+                          ).map(([key, points]) => (
+                            <tr key={key} className="border-b last:border-0">
+                              <td className="py-1 text-muted-foreground">
+                                {CATEGORY_LABELS[key]}
+                              </td>
+                              <td className="py-1 text-right">
+                                {points === null ? "—" : points}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : null}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );

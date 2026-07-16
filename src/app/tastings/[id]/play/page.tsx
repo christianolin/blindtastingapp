@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { GuessForm, type ExistingGuess } from "./guess-form";
-import { MatchGuessForm } from "./match-guess-form";
+import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -220,6 +220,10 @@ export default async function PlayPage({
           ? candidateByWineId.get(guess.guessed_wine_id)
           : null;
 
+        // Semi-blind matching is one combined form below, not per-wine —
+        // skip rendering a card for glasses still waiting to be matched.
+        if (!wine.is_revealed && !isMine && isSemiBlind) return null;
+
         return (
           <Card key={wine.id}>
             <CardHeader>
@@ -253,41 +257,49 @@ export default async function PlayPage({
                     </p>
                   </div>
                   {guess ? (
-                    <div>
-                      <h3 className="mb-1 text-sm font-medium">
-                        Your guess — {guess.total_points ?? 0} points
-                      </h3>
-                      {guessedCandidate ? (
-                        <p className="mb-2 text-sm text-muted-foreground">
-                          You guessed: {describeAnswer(guessedCandidate)}
-                        </p>
-                      ) : null}
-                      <table className="w-full text-sm">
-                        <tbody>
-                          {(
-                            [
-                              ["country", guess.country_points],
-                              ["region", guess.region_points],
-                              ["appellation", guess.appellation_points],
-                              ["primary_grape", guess.primary_grape_points],
-                              ["secondary_grape", guess.secondary_grape_points],
-                              ["producer", guess.producer_points],
-                              ["type_designation", guess.type_designation_points],
-                              ["vintage", guess.vintage_points],
-                            ] as const
-                          ).map(([key, points]) => (
-                            <tr key={key} className="border-b last:border-0">
-                              <td className="py-1 text-muted-foreground">
-                                {CATEGORY_LABELS[key]}
-                              </td>
-                              <td className="py-1 text-right">
-                                {points === null ? "—" : points}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    isSemiBlind ? (
+                      <div>
+                        <h3 className="mb-1 text-sm font-medium">
+                          {guess.total_points ? "✓ Correct match" : "✗ Wrong match"}
+                        </h3>
+                        {guessedCandidate ? (
+                          <p className="text-sm text-muted-foreground">
+                            You guessed: {describeAnswer(guessedCandidate)}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div>
+                        <h3 className="mb-1 text-sm font-medium">
+                          Your guess — {guess.total_points ?? 0} points
+                        </h3>
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {(
+                              [
+                                ["country", guess.country_points],
+                                ["region", guess.region_points],
+                                ["appellation", guess.appellation_points],
+                                ["primary_grape", guess.primary_grape_points],
+                                ["secondary_grape", guess.secondary_grape_points],
+                                ["producer", guess.producer_points],
+                                ["type_designation", guess.type_designation_points],
+                                ["vintage", guess.vintage_points],
+                              ] as const
+                            ).map(([key, points]) => (
+                              <tr key={key} className="border-b last:border-0">
+                                <td className="py-1 text-muted-foreground">
+                                  {CATEGORY_LABELS[key]}
+                                </td>
+                                <td className="py-1 text-right">
+                                  {points === null ? "—" : points}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       You didn&apos;t submit a guess for this wine.
@@ -298,14 +310,7 @@ export default async function PlayPage({
                 <p className="text-sm text-muted-foreground">
                   This is your wine — nothing to guess.
                 </p>
-              ) : isSemiBlind ? (
-                <MatchGuessForm
-                  tastingId={tastingId}
-                  wineId={wine.id}
-                  candidates={candidates}
-                  existingGuessedWineId={guess?.guessed_wine_id ?? null}
-                />
-              ) : (
+              ) : isSemiBlind ? null : (
                 <GuessForm
                   tastingId={tastingId}
                   wineId={wine.id}
@@ -330,6 +335,30 @@ export default async function PlayPage({
           </Card>
         );
       })}
+
+      {isSemiBlind
+        ? (() => {
+            const glasses: MatchGlass[] = (wines ?? [])
+              .filter(
+                (w) =>
+                  !w.is_revealed &&
+                  w.contributor_participant_id !== myParticipant.id,
+              )
+              .map((w) => ({
+                wineId: w.id,
+                position: w.position,
+                existingGuessedWineId:
+                  myGuessByWineId.get(w.id)?.guessed_wine_id ?? null,
+              }));
+            return glasses.length > 0 ? (
+              <MatchGuessForm
+                tastingId={tastingId}
+                glasses={glasses}
+                candidates={candidates}
+              />
+            ) : null;
+          })()
+        : null}
     </div>
   );
 }

@@ -34,6 +34,7 @@ export default async function ResultsPage({
   if (!tasting) {
     notFound();
   }
+  const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
 
   const [
     { data: participants },
@@ -152,14 +153,20 @@ export default async function ResultsPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>Participant</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
+                  <TableHead className="text-right">
+                    {isSemiBlind ? "Correct" : "Points"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {leaderboard.map((row) => (
                   <TableRow key={row.participantId}>
                     <TableCell>{row.name}</TableCell>
-                    <TableCell className="text-right">{row.total}</TableCell>
+                    <TableCell className="text-right">
+                      {isSemiBlind
+                        ? `${row.total}/${revealedWines.length}`
+                        : row.total}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -207,7 +214,9 @@ export default async function ResultsPage({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Participant</TableHead>
-                    <TableHead className="text-right">Points</TableHead>
+                    <TableHead className="text-right">
+                      {isSemiBlind ? "Result" : "Points"}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -218,7 +227,11 @@ export default async function ResultsPage({
                           "Unknown"}
                       </TableCell>
                       <TableCell className="text-right">
-                        {g.total_points ?? 0}
+                        {isSemiBlind
+                          ? g.total_points
+                            ? "✓"
+                            : "✗"
+                          : (g.total_points ?? 0)}
                       </TableCell>
                     </TableRow>
                   ))}

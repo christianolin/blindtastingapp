@@ -115,7 +115,10 @@ export async function submitGuess(
   return { success: true };
 }
 
-export async function submitMatchGuess(
+// Semi-blind matching is submitted as one batch (every still-hidden glass
+// paired to a candidate at once), not per-glass — see match-guess-form.tsx
+// for why partial submission doesn't make sense here.
+export async function submitAllMatchGuesses(
   _prevState: GuessFormState,
   formData: FormData,
 ): Promise<GuessFormState> {
@@ -128,8 +131,20 @@ export async function submitMatchGuess(
   }
 
   const tastingId = String(formData.get("tasting_id") ?? "");
-  const wineId = String(formData.get("wine_id") ?? "");
-  const guessedWineId = String(formData.get("guessed_wine_id") ?? "") || null;
+  let guessesByWineId: Record<string, string>;
+  try {
+    guessesByWineId = JSON.parse(String(formData.get("guesses") ?? "{}"));
+  } catch {
+    return { error: "Malformed submission." };
+  }
+
+  const wineIds = Object.keys(guessesByWineId);
+  if (wineIds.length === 0) {
+    return { error: "No glasses to match." };
+  }
+  if (wineIds.some((id) => !guessesByWineId[id])) {
+    return { error: "Match every glass before submitting." };
+  }
 
   const { data: participant } = await supabase
     .from("tasting_participants")
@@ -141,28 +156,33 @@ export async function submitMatchGuess(
     return { error: "You're not a participant in this tasting." };
   }
 
-  const payload = {
-    wine_id: wineId,
-    participant_id: participant.id,
-    guessed_wine_id: guessedWineId,
-  };
-
-  const { data: existing } = await supabase
+  const { data: existingGuesses } = await supabase
     .from("guesses")
-    .select("id")
-    .eq("wine_id", wineId)
+    .select("id, wine_id")
     .eq("participant_id", participant.id)
-    .maybeSingle();
+    .in("wine_id", wineIds);
+  const existingIdByWineId = new Map(
+    (existingGuesses ?? []).map((g) => [g.wine_id, g.id]),
+  );
 
-  const { error } = existing
-    ? await supabase.from("guesses").update(payload).eq("id", existing.id)
-    : await supabase.from("guesses").insert(payload);
-
-  if (error) {
-    return { error: error.message };
+  for (const wineId of wineIds) {
+    const payload = {
+      wine_id: wineId,
+      participant_id: participant.id,
+      guessed_wine_id: guessesByWineId[wineId],
+    };
+    const existingId = existingIdByWineId.get(wineId);
+    const { error } = existingId
+      ? await supabase.from("guesses").update(payload).eq("id", existingId)
+      : await supabase.from("guesses").insert(payload);
+    if (error) {
+      return { error: error.message };
+    }
   }
 
-  await maybeAutoRevealWine(supabase, wineId);
+  for (const wineId of wineIds) {
+    await maybeAutoRevealWine(supabase, wineId);
+  }
 
   revalidatePath(`/tastings/${tastingId}/play`);
   revalidatePath(`/tastings/${tastingId}/results`);

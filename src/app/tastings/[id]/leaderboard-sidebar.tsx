@@ -15,9 +15,11 @@ export async function LeaderboardSidebar({ tastingId }: { tastingId: string }) {
     getTastingLeaderboard(tastingId),
     createClient(),
   ]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [{ data: { user } }, { data: tasting }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("tastings").select("reveal_mode").eq("id", tastingId).maybeSingle(),
+  ]);
+  const isSemiBlind = tasting?.reveal_mode === "SEMI_BLIND";
 
   const maxTotal = Math.max(1, ...leaderboard.map((r) => r.total));
 
@@ -73,12 +75,12 @@ export async function LeaderboardSidebar({ tastingId }: { tastingId: string }) {
                       {isMe ? <span className="ml-1 text-xs font-normal text-primary">(you)</span> : null}
                     </span>
                     <span className="shrink-0 font-heading text-lg font-semibold tabular-nums">
-                      {row.total}
+                      {isSemiBlind ? `${row.total}/${row.totalWines}` : row.total}
                     </span>
                   </div>
                   <div className="ml-9.5 mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                     <span>
-                      Wine {row.winesScored}/{row.totalWines}
+                      {isSemiBlind ? "Matched" : "Wine"} {row.winesScored}/{row.totalWines}
                     </span>
                     {row.lastRoundPoints !== null ? (
                       <span
@@ -87,8 +89,11 @@ export async function LeaderboardSidebar({ tastingId }: { tastingId: string }) {
                           row.lastRoundPoints > 0 ? "text-[#3f5b42]" : "text-muted-foreground",
                         )}
                       >
-                        {row.lastRoundPoints > 0 ? "+" : ""}
-                        {row.lastRoundPoints} last round
+                        {isSemiBlind
+                          ? row.lastRoundPoints > 0
+                            ? "✓ last round"
+                            : "✗ last round"
+                          : `${row.lastRoundPoints > 0 ? "+" : ""}${row.lastRoundPoints} last round`}
                       </span>
                     ) : null}
                   </div>

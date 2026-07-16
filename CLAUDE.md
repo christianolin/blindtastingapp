@@ -283,3 +283,44 @@ a raw subquery, regardless of which two tables look involved at a glance.
     up — accent/punctuation-only folding, same non-destructive-elsewhere
     rename-in-place-or-reassign-FKs approach, still never stripping
     meaningful prefix words.
+- Semi-blind matching (`play/match-guess-form.tsx` +
+  `submitAllMatchGuesses` in `play/actions.ts`) is submitted as one combined
+  batch, not per-glass — every still-hidden glass must be matched to a
+  candidate before the submit button enables (client-side `allMatched` check)
+  and the server independently re-validates the same completeness rule.
+  Partial submission doesn't make sense here the way a partial blind guess
+  does: blind guessing scores each category independently, so a half-filled
+  guess is still meaningful, but a half-finished matching pass just means
+  some glasses have no guess row at all yet.
+- Semi-blind scoring is NOT the VM/DM category breakdown — `reveal_wine`
+  branches on `tastings.reveal_mode` (the enum type is `reveal_mode_type`,
+  not `reveal_mode` — that name collides with the column) and for
+  `SEMI_BLIND` sets every category points column to `null` (not applicable)
+  and `total_points` to a plain 1 (matched) / 0 (didn't), rather than summing
+  category points. `src/lib/profile-stats.ts`'s `tallyGuess` treats a `null`
+  category column as "not applicable, skip" for all eight categories
+  uniformly (not just the three that were already nullable for BLIND mode
+  wines without a secondary grape/type designation/appellation) — this is
+  what keeps semi-blind guesses from being miscounted as "wrong" for
+  country/region/primary_grape/producer in per-category accuracy stats.
+  Every surface that renders a per-category point breakdown (`play/page.tsx`,
+  `results/page.tsx`, `u/[id]/tastings/[tastingId]/page.tsx`,
+  `leaderboard-sidebar.tsx`, `tasting-leaderboard.ts`) has a semi-blind
+  branch showing a plain ✓/✗ (or "X/Y correct") instead — copy that branch
+  to any new page that renders scoring, don't reuse the category table for
+  semi-blind wines.
+- A BLIND tasting shows a "Danish Championship rules" badge in the lobby
+  (`tastings/[id]/page.tsx`) next to the reveal-mode badge, since the VM/DM
+  point values aren't self-explanatory without that context. SEMI_BLIND
+  tastings show "Semi-blind" instead — the two badges are mutually
+  exclusive, not additive.
+- `SearchableCombobox`'s search input only gets `autoFocus` on pointer-fine
+  (mouse/trackpad) devices, detected once via a lazy `useState` initializer
+  guarded by `typeof window !== "undefined"` (not a `useEffect`+setState,
+  which is unnecessary here and trips the `set-state-in-effect` lint rule).
+  On a touch device, autofocusing immediately pops the virtual keyboard
+  while the popover is still animating in, and floating-ui's anchor
+  positioning reacts to the resulting viewport resize mid-animation — this
+  was the main reported cause of "janky" mobile scrolling when adding a wine
+  or guessing (both forms are full of these comboboxes). `ReferenceCombobox`
+  never had this problem since its `CommandInput` was never autofocused.

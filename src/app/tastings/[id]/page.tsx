@@ -99,7 +99,14 @@ export default async function TastingPage({
             </Badge>
             {tasting.reveal_mode === "SEMI_BLIND" ? (
               <Badge variant="secondary">Semi-blind</Badge>
-            ) : null}
+            ) : (
+              <Badge
+                variant="secondary"
+                title="Scored under Danish Championship (VM/DM) rules — points per category: country, region, appellation, primary/secondary grape, producer, type designation, vintage."
+              >
+                Danish Championship rules
+              </Badge>
+            )}
             <Badge>{tasting.status}</Badge>
           </div>
         </div>
