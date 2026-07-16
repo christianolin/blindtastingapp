@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import { makeWineLabeler } from "@/lib/wine-label";
 import { HostControls } from "./host-controls";
 import { respondToInvite } from "./actions";
 
@@ -63,9 +64,6 @@ export default async function TastingPage({
     (p) => p.user_id === user.id,
   );
   const myStatus = myParticipant?.status ?? null;
-  const myWine = (wines ?? []).find(
-    (w) => w.contributor_participant_id === myParticipant?.id,
-  );
   const hasStarted = tasting.status !== "DRAFT";
   const wineCount = (wines ?? []).length;
 
@@ -78,19 +76,25 @@ export default async function TastingPage({
         "Someone",
     ]),
   );
-  const wineByContributor = new Map(
-    (wines ?? [])
-      .filter((w) => w.contributor_participant_id)
-      .map((w) => [w.contributor_participant_id as string, w]),
-  );
   const joinedParticipants = (participantRows ?? []).filter(
     (p) => p.status === "JOINED",
   );
+  const wineLabel = makeWineLabeler(
+    wines ?? [],
+    tasting.wine_source,
+    nameByParticipantId,
+  );
+  const participantsWithoutWine = isByo
+    ? joinedParticipants.filter(
+        (p) =>
+          !(wines ?? []).some((w) => w.contributor_participant_id === p.id),
+      )
+    : [];
 
   const canAddWine =
     tasting.wine_source === "HOST_PROVIDES"
       ? isHost
-      : Boolean(myParticipant) && !myWine && myStatus === "JOINED";
+      : Boolean(myParticipant) && myStatus === "JOINED";
 
   // Friends for the host's "invite more people" picker (only fetched for the
   // host, and only needed while the tasting is still in draft).
@@ -281,49 +285,45 @@ export default async function TastingPage({
               >
                 {tasting.wine_source === "HOST_PROVIDES"
                   ? "Add wine"
-                  : "Add your wine"}
+                  : "Add a wine"}
               </Button>
             ) : null}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isByo ? (
-            // Bring-your-own: everyone sees who's added their bottle and who
-            // we're still waiting on. The wine itself stays hidden until
-            // reveal, but the contributor's identity isn't a secret.
-            joinedParticipants.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No one has joined yet.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {joinedParticipants.map((p) => {
-                  const w = wineByContributor.get(p.id);
-                  const who = nameByParticipantId.get(p.id) ?? "Someone";
-                  return (
+            // Bring-your-own: everyone sees which bottles have been brought and
+            // who's yet to add one (people can bring several, or none). The
+            // wine stays hidden until reveal, but the contributor isn't secret.
+            <div className="flex flex-col gap-3">
+              {wineCount === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No wines added yet.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {(wines ?? []).map((w) => (
                     <li
-                      key={p.id}
+                      key={w.id}
                       className="flex items-center justify-between text-sm"
                     >
-                      <span
-                        className={w ? "" : "text-muted-foreground italic"}
-                      >
-                        {w
-                          ? `${who}'s wine`
-                          : `Still waiting for ${who} to add their wine`}
-                      </span>
-                      {w ? (
-                        <Badge variant={w.is_revealed ? "default" : "outline"}>
-                          {w.is_revealed ? "Revealed" : "Added"}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Pending</Badge>
-                      )}
+                      <span>{wineLabel(w)}</span>
+                      <Badge variant={w.is_revealed ? "default" : "outline"}>
+                        {w.is_revealed ? "Revealed" : "Added"}
+                      </Badge>
                     </li>
-                  );
-                })}
-              </ul>
-            )
+                  ))}
+                </ul>
+              )}
+              {participantsWithoutWine.length > 0 ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Yet to add a wine:{" "}
+                  {participantsWithoutWine
+                    .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
+                    .join(", ")}
+                </p>
+              ) : null}
+            </div>
           ) : wineCount === 0 ? (
             <p className="text-sm text-muted-foreground">No wines added yet.</p>
           ) : (

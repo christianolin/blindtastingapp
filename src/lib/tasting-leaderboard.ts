@@ -31,10 +31,22 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
 
   const { data: wines } = await supabase
     .from("wines")
-    .select("id, is_revealed")
+    .select("id, is_revealed, contributor_participant_id")
     .eq("tasting_id", tastingId);
   const totalWines = (wines ?? []).length;
   const revealedWineIds = (wines ?? []).filter((w) => w.is_revealed).map((w) => w.id);
+
+  // In bring-your-own you never guess your own bottle(s), so a participant's
+  // "out of" count is the total minus however many wines they contributed.
+  const ownWinesByParticipant = new Map<string, number>();
+  for (const w of wines ?? []) {
+    if (w.contributor_participant_id) {
+      ownWinesByParticipant.set(
+        w.contributor_participant_id,
+        (ownWinesByParticipant.get(w.contributor_participant_id) ?? 0) + 1,
+      );
+    }
+  }
 
   const { data: guesses } =
     revealedWineIds.length > 0
@@ -84,7 +96,7 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
         avatarUrl: profile?.avatar_url ?? null,
         total: totalByParticipantId.get(p.id) ?? 0,
         winesScored: countByParticipantId.get(p.id) ?? 0,
-        totalWines,
+        totalWines: totalWines - (ownWinesByParticipant.get(p.id) ?? 0),
         lastRoundPoints: lastRoundWineId ? (lastRoundByParticipantId.get(p.id) ?? 0) : null,
       };
     })

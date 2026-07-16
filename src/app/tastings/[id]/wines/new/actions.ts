@@ -197,17 +197,9 @@ export async function addWine(
     if (!participant) {
       return { error: "You're not a participant in this tasting." };
     }
+    // Bring-your-own allows any number of bottles per person (including
+    // none) — no one-wine-per-participant cap.
     contributorParticipantId = participant.id;
-
-    const { data: existingWine } = await supabase
-      .from("wines")
-      .select("id")
-      .eq("tasting_id", tastingId)
-      .eq("contributor_participant_id", participant.id)
-      .maybeSingle();
-    if (existingWine) {
-      return { error: "You've already added your wine." };
-    }
   } else if (tasting.host_id !== user.id) {
     return { error: "Only the host can add wines to this tasting." };
   }

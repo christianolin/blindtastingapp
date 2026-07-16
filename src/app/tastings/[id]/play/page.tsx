@@ -8,6 +8,7 @@ import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
+import { makeWineLabeler } from "@/lib/wine-label";
 import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
@@ -207,15 +208,12 @@ export default async function PlayPage({
     );
 
   // In bring-your-own tastings a wine is known by its contributor, not a
-  // number ("Gustav's wine" rather than "Wine 2").
-  const wineTitle = (wine: {
-    position: number;
-    contributor_participant_id: string | null;
-  }) =>
-    tasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
-    wine.contributor_participant_id
-      ? `${nameByParticipantId.get(wine.contributor_participant_id) ?? "Someone"}'s wine`
-      : `Wine ${wine.position}`;
+  // number ("Gustav's wine", or "Gustav's wine #2" if they brought several).
+  const wineTitle = makeWineLabeler(
+    wines ?? [],
+    tasting.wine_source,
+    nameByParticipantId,
+  );
 
   // A wine's answer is visible to me once it's globally revealed OR my own
   // guess for it has been scored (immediate-reveal async). The wine_answers
