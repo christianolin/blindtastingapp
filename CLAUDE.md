@@ -387,3 +387,28 @@ a raw subquery, regardless of which two tables look involved at a glance.
   batch MatchGuessForm; a glass leaves the batch and gets its own result card
   once resolved. Fetch answers for `revealed ∪ my-scored` wine ids, not just
   revealed.
+- Appellation/producer search is accent-insensitive via the
+  `search_appellations` / `search_producers` RPCs (not a plain PostgREST
+  `.ilike`, which can't fold accents) — `reference-search.ts` calls them.
+  They fold with an IMMUTABLE `f_unaccent()` wrapper (2-arg
+  `unaccent(regdictionary, text)`) so a trigram GIN index on
+  `f_unaccent(name)` keeps it fast; migration
+  `20260716160000_accent_insensitive_search.sql`. This is why "estephe" finds
+  "Saint-Estèphe AOP" and "chateau" finds "Château …". The classic Bordeaux
+  sub-appellations (Pauillac, Saint-Estèphe, Margaux, Pomerol, Saint-Émilion,
+  …) were never missing from the data — they were just unsearchable without
+  accent folding. Note `gin_trgm_ops` must be referenced UNqualified (pg_trgm
+  lives in `extensions`, which is on the migration search_path;
+  `extensions.gin_trgm_ops` errors with "operator class does not exist").
+- The create-tasting timing defaults to LIVE, and the "When to show results"
+  (async reveal policy) field only renders when timing is ASYNC — the timing
+  Select is controlled client state in `new-tasting-form.tsx` so the async
+  field can show/hide. A hidden/absent async field just means the action
+  defaults it to AFTER_ALL (irrelevant for LIVE).
+- Combobox popovers (`components/ui/popover.tsx`) use base-ui with
+  `positionMethod="fixed"` and an `initialFocus` that returns `false` on
+  touch/pen. On mobile the default `absolute` positioning mis-placed the
+  dropdown ("appears randomly"), and base-ui's default of focusing the popup
+  on touch yanked the page to the top before floating-ui had positioned it
+  (tapping "choose a friend" scrolled to top). Fixed positioning + no
+  touch-focus fixes both; mouse/keyboard still focus the search field.

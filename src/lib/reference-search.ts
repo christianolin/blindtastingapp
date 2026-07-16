@@ -8,8 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 
 export type SearchOption = { id: string; name: string };
 
-const RESULT_LIMIT = 25;
-
 export async function searchAppellations(
   query: string,
   regionId?: string,
@@ -17,14 +15,13 @@ export async function searchAppellations(
   const trimmed = query.trim();
   if (!trimmed) return [];
   const supabase = await createClient();
-  let request = supabase
-    .from("appellations")
-    .select("id, name")
-    .ilike("name", `%${trimmed}%`)
-    .order("name")
-    .limit(RESULT_LIMIT);
-  if (regionId) request = request.eq("region_id", regionId);
-  const { data } = await request;
+  // RPC (not a plain ilike) so the match is accent-insensitive — "estephe"
+  // must find "Saint-Estèphe AOP". See search_appellations in
+  // 20260716160000_accent_insensitive_search.sql.
+  const { data } = await supabase.rpc("search_appellations", {
+    p_query: trimmed,
+    p_region_id: regionId ?? undefined,
+  });
   return data ?? [];
 }
 
@@ -58,11 +55,8 @@ export async function searchProducers(query: string): Promise<SearchOption[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("producers")
-    .select("id, name")
-    .ilike("name", `%${trimmed}%`)
-    .order("name")
-    .limit(RESULT_LIMIT);
+  // Accent-insensitive RPC — "chateau"/"petrus" must find "Château …" /
+  // "Pétrus". See 20260716160000_accent_insensitive_search.sql.
+  const { data } = await supabase.rpc("search_producers", { p_query: trimmed });
   return data ?? [];
 }

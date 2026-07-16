@@ -265,6 +265,14 @@ export type Database = {
         Args: { p_wine_id: string };
         Returns: void;
       };
+      search_appellations: {
+        Args: { p_query: string; p_region_id?: string };
+        Returns: { id: string; name: string }[];
+      };
+      search_producers: {
+        Args: { p_query: string };
+        Returns: { id: string; name: string }[];
+      };
     };
   };
 };

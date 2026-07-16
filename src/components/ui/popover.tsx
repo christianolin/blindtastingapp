@@ -32,10 +32,25 @@ function PopoverContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        // `fixed` (viewport-relative) instead of the default `absolute`: on a
+        // phone, absolute positioning against a portaled popup was mis-placing
+        // the dropdown ("appears randomly around the screen"). Fixed +
+        // collision padding keeps it anchored to its trigger and on-screen.
+        positionMethod="fixed"
+        collisionPadding={8}
         className="isolate z-50"
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
+          // Don't move focus into the popup on touch/pen. base-ui's default
+          // focuses the popup itself on touch, and a just-opened popup (before
+          // floating-ui has positioned it) grabbing focus is what yanked the
+          // page to the top when tapping a combobox on mobile. Mouse/keyboard
+          // still focus the first field (nice for desktop typing); touch users
+          // tap the search box when ready.
+          initialFocus={(type) =>
+            type === "touch" || type === "pen" ? false : true
+          }
           className={cn(
             "z-50 flex w-72 origin-(--transform-origin) flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className

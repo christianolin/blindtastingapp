@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import type { TimingMode } from "@/lib/supabase/database.types";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ export function NewTastingForm({
     CreateTastingFormState,
     FormData
   >(createTasting, null);
+  const [timing, setTiming] = useState<TimingMode>("LIVE");
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -91,17 +93,18 @@ export function NewTastingForm({
         <Select
           name="timing_mode"
           items={TIMING_MODE_ITEMS}
-          defaultValue="ASYNC"
+          value={timing}
+          onValueChange={(v) => setTiming(v as TimingMode)}
           required
         >
           <SelectTrigger id="timing_mode" className="w-full">
             <SelectValue placeholder="Choose a timing mode" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="LIVE">{TIMING_MODE_ITEMS.LIVE}</SelectItem>
             <SelectItem value="ASYNC">
               {TIMING_MODE_ITEMS.ASYNC}
             </SelectItem>
-            <SelectItem value="LIVE">{TIMING_MODE_ITEMS.LIVE}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -148,31 +151,29 @@ export function NewTastingForm({
         </Select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="async_reveal_policy">When to show results</Label>
-        <Select
-          name="async_reveal_policy"
-          items={ASYNC_REVEAL_ITEMS}
-          defaultValue="AFTER_ALL"
-          required
-        >
-          <SelectTrigger id="async_reveal_policy" className="w-full">
-            <SelectValue placeholder="When to show results" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="AFTER_ALL">
-              {ASYNC_REVEAL_ITEMS.AFTER_ALL}
-            </SelectItem>
-            <SelectItem value="IMMEDIATE">
-              {ASYNC_REVEAL_ITEMS.IMMEDIATE}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          Async tastings only. In a live tasting the host reveals each wine
-          manually.
-        </p>
-      </div>
+      {timing === "ASYNC" ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="async_reveal_policy">When to show results</Label>
+          <Select
+            name="async_reveal_policy"
+            items={ASYNC_REVEAL_ITEMS}
+            defaultValue="AFTER_ALL"
+            required
+          >
+            <SelectTrigger id="async_reveal_policy" className="w-full">
+              <SelectValue placeholder="When to show results" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="AFTER_ALL">
+                {ASYNC_REVEAL_ITEMS.AFTER_ALL}
+              </SelectItem>
+              <SelectItem value="IMMEDIATE">
+                {ASYNC_REVEAL_ITEMS.IMMEDIATE}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
 
       <InviteField friends={friends} />
 
