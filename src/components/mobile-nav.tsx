@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,11 @@ export type NavLink = { href: string; label: string };
  * fights base-ui's Dialog positioning; closes on link tap, backdrop tap, or
  * the X. `notifications` is an optional slot the header drops the invite bell
  * into so pending invites are reachable on mobile too.
+ *
+ * The drawer is portaled to document.body: AppHeader uses backdrop-blur, which
+ * makes it a containing block for `position: fixed` descendants — rendered
+ * inline the drawer's `fixed inset-0` resolved against the short header box
+ * (so its background didn't cover the page). Portaling escapes that.
  */
 export function MobileNav({
   userId,
@@ -31,20 +37,10 @@ export function MobileNav({
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
-  return (
-    <div className="flex items-center gap-1 md:hidden">
-      {notifications}
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Open menu"
-        onClick={() => setOpen(true)}
-      >
-        <Menu />
-      </Button>
-
-      {open ? (
-        <div className="fixed inset-0 z-50">
+  const drawer =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div className="fixed inset-0 z-50">
           <button
             aria-label="Close menu"
             className="animate-in fade-in absolute inset-0 bg-black/40 duration-150"
@@ -100,8 +96,23 @@ export function MobileNav({
               </Button>
             </form>
           </div>
-        </div>
-      ) : null}
+        </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div className="flex items-center gap-1 md:hidden">
+      {notifications}
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Open menu"
+        onClick={() => setOpen(true)}
+      >
+        <Menu />
+      </Button>
+      {drawer}
     </div>
   );
 }

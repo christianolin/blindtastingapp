@@ -47,6 +47,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Tastings" },
   { href: "/people", label: "People" },
   { href: "/friends", label: "Friends" },
+  { href: "/rules", label: "Rules" },
 ];
 
 /**
