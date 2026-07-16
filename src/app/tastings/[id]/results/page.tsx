@@ -178,6 +178,14 @@ export default async function ResultsPage({
               <CardTitle>Wine {wine.position}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              {answer.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={answer.image_url}
+                  alt=""
+                  className="max-h-64 rounded-lg object-cover"
+                />
+              ) : null}
               <p className="text-sm text-muted-foreground">
                 {nameById.get(answer.country_id)} ·{" "}
                 {nameById.get(answer.region_id)}

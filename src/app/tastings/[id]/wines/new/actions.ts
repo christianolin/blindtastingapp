@@ -149,6 +149,7 @@ export async function addWine(
   const producerId = String(formData.get("producer_id") ?? "");
   const typeDesignationId =
     String(formData.get("type_designation_id") ?? "") || null;
+  const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
   const vintageKind = String(formData.get("vintage_kind") ?? "") as VintageKind;
   const vintageYearRaw = String(formData.get("vintage_year") ?? "");
   const vintageTawnyYearsRaw = String(
@@ -239,6 +240,7 @@ export async function addWine(
     secondary_grape_id: secondaryGrapeId,
     producer_id: producerId,
     type_designation_id: typeDesignationId,
+    image_url: imageUrl,
     vintage_kind: vintageKind,
     vintage_year: vintageYear,
     vintage_tawny_years: vintageTawnyYears,

@@ -71,11 +71,23 @@ export default async function TastingPage({
         </Link>
       </div>
 
+      {tasting.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={tasting.image_url}
+          alt=""
+          className="aspect-[3/1] w-full rounded-xl object-cover"
+        />
+      ) : null}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
             {tasting.name}
           </h1>
+          {tasting.description ? (
+            <p className="mt-2 text-muted-foreground">{tasting.description}</p>
+          ) : null}
           <div className="mt-2 flex gap-2">
             <Badge variant="secondary">
               {tasting.timing_mode === "LIVE" ? "Live" : "Async"}

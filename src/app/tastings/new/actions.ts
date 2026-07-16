@@ -30,6 +30,8 @@ export async function createTasting(
   ) as WineSourceMode;
   const revealMode = String(formData.get("reveal_mode") ?? "") as RevealMode;
   const emailsRaw = String(formData.get("emails") ?? "");
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
 
   if (!name) {
     return { error: "Name is required." };
@@ -65,6 +67,8 @@ export async function createTasting(
       wine_source: wineSource,
       reveal_mode: revealMode,
       status: "OPEN",
+      description,
+      image_url: imageUrl,
     })
     .select()
     .single();

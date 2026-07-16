@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -11,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUploader } from "@/components/image-uploader";
 import { createTasting, type CreateTastingFormState } from "./actions";
 import { InviteField } from "./invite-field";
 
@@ -32,8 +34,10 @@ const REVEAL_MODE_ITEMS = {
 
 export function NewTastingForm({
   friends,
+  userId,
 }: {
   friends: { id: string; display_name: string; email: string }[];
+  userId: string;
 }) {
   const [state, formAction, pending] = useActionState<
     CreateTastingFormState,
@@ -45,6 +49,26 @@ export function NewTastingForm({
       <div className="flex flex-col gap-2">
         <Label htmlFor="name">Tasting name</Label>
         <Input id="name" name="name" required autoFocus />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="description">Description (optional)</Label>
+        <Textarea
+          id="description"
+          name="description"
+          placeholder="What's the theme? Any tasting notes for the group?"
+          rows={3}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Cover photo (optional)</Label>
+        <ImageUploader
+          name="image_url"
+          bucket="tasting-images"
+          folder={userId}
+          label="Add a cover photo"
+        />
       </div>
 
       <div className="flex flex-col gap-2">

@@ -30,7 +30,7 @@ export default async function NewTastingPage() {
           <CardTitle>New tasting</CardTitle>
         </CardHeader>
         <CardContent>
-          <NewTastingForm friends={friends ?? []} />
+          <NewTastingForm friends={friends ?? []} userId={user.id} />
         </CardContent>
       </Card>
     </div>

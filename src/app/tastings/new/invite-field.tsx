@@ -76,9 +76,9 @@ export function InviteField({
         </div>
       </div>
 
-      {friends.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          <Label>Invite a friend</Label>
+      <div className="flex flex-col gap-2">
+        <Label>Invite a friend</Label>
+        {friends.length > 0 ? (
           <ReferenceCombobox
             formFieldName="__friend_pick"
             options={friendOptions}
@@ -91,8 +91,16 @@ export function InviteField({
             }}
             placeholder="Choose a friend"
           />
-        </div>
-      ) : null}
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            You haven&apos;t added any friends yet —{" "}
+            <a href="/people" className="underline underline-offset-4">
+              browse People
+            </a>{" "}
+            to add some, then they&apos;ll show up here.
+          </p>
+        )}
+      </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

@@ -216,7 +216,34 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (typed email + "Add", or picked from a friends combobox), rendered as
   removable chips. Both paths funnel into the same hidden newline-joined
   `emails` field the `createTasting` server action already parses, so that
-  action needed no changes when this UI was redesigned.
+  action needed no changes when this UI was redesigned. The friends-picker
+  half of that UI must render even when the friends list is empty (with a
+  "browse People to add some" message) — hiding it entirely when
+  `friends.length === 0` (the original implementation) makes the feature
+  invisible to any new account, which looked like a missing feature rather
+  than an empty state.
+- Tastings and wines can each carry an optional image, uploaded directly
+  from the browser via `src/components/image-uploader.tsx` (same
+  direct-to-Storage pattern as `profile/edit/avatar-uploader.tsx`) to two
+  public Storage buckets, `tasting-images` and `wine-images`. Neither bucket
+  can be keyed by the row's own id, because the upload happens *before* that
+  row exists (the create-tasting and add-wine forms are single-step) — so
+  `tasting-images` is scoped by the host's `user_id` folder instead (known
+  at upload time even though the tasting isn't), and `wine-images` is scoped
+  by `tasting_id` folder (the wine doesn't exist yet, but its tasting
+  does). `wine_answers.image_url` needs no RLS changes — it's just another
+  column on a row already gated by the existing "visible once revealed"
+  policy, so the photo is automatically hidden until reveal along with the
+  rest of the answer key.
+- The leaderboard sidebar shows more than a bare score per participant: a
+  "wine X/Y" progress readout (their own scored-guess count over the
+  tasting's total wine count — this can differ between participants if one
+  of them hasn't guessed an already-revealed wine, unlike a purely
+  tasting-global "wines revealed" count) and "+N last round" (their points
+  on whichever wine has the most recent `scored_at` across the tasting —
+  `reveal_wine` scores every guess for a wine in one transaction, so the max
+  `scored_at` per `wine_id` groups cleanly into "rounds" without needing a
+  dedicated reveal-order column).
 - `appellations` and `producers` are populated from a real LWIN (Liv-ex Wine
   Identification Number) database via `scripts/import-lwin.mjs`, not just
   hand-seeded data — tens of thousands of rows. Because of that:

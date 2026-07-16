@@ -182,48 +182,65 @@ export default async function DashboardPage() {
                     )}
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    <CardHeader className="px-4">
-                      <CardTitle className="flex items-center justify-between text-base">
-                        <span className="font-heading text-lg font-semibold group-hover:text-primary">
-                          {tasting.name}
-                        </span>
-                        {isHost ? (
-                          <Badge className="bg-primary">Hosting</Badge>
-                        ) : (
-                          <Badge variant="outline">
-                            {statusByTastingId.get(tasting.id)}
-                          </Badge>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        {tasting.timing_mode === "LIVE" ? (
-                          <span className="relative flex size-2">
-                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
-                            <span className="relative inline-flex size-2 rounded-full bg-destructive" />
-                          </span>
-                        ) : (
-                          <Clock className="size-3.5" />
-                        )}
-                        {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Wine className="size-3.5" />
-                        {wineInfo.total > 0
-                          ? `${wineInfo.revealed}/${wineInfo.total} revealed`
-                          : "No wines yet"}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Users className="size-3.5" />
-                        {participantCount}
-                      </span>
-                      {tasting.wine_source === "PARTICIPANT_CONTRIBUTED" ? (
-                        <Badge variant="secondary" className="ml-auto">
-                          BYO wine
-                        </Badge>
+                    <div className="flex gap-4 px-4">
+                      {tasting.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={tasting.image_url}
+                          alt=""
+                          className="size-20 shrink-0 rounded-lg object-cover"
+                        />
                       ) : null}
-                    </CardContent>
+                      <div className="flex min-w-0 flex-1 flex-col gap-3">
+                        <CardHeader className="p-0">
+                          <CardTitle className="flex items-center justify-between text-base">
+                            <span className="font-heading text-lg font-semibold group-hover:text-primary">
+                              {tasting.name}
+                            </span>
+                            {isHost ? (
+                              <Badge className="bg-primary">Hosting</Badge>
+                            ) : (
+                              <Badge variant="outline">
+                                {statusByTastingId.get(tasting.id)}
+                              </Badge>
+                            )}
+                          </CardTitle>
+                        </CardHeader>
+                        {tasting.description ? (
+                          <p className="line-clamp-1 text-sm text-muted-foreground">
+                            {tasting.description}
+                          </p>
+                        ) : null}
+                        <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-1.5 p-0 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            {tasting.timing_mode === "LIVE" ? (
+                              <span className="relative flex size-2">
+                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+                                <span className="relative inline-flex size-2 rounded-full bg-destructive" />
+                              </span>
+                            ) : (
+                              <Clock className="size-3.5" />
+                            )}
+                            {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Wine className="size-3.5" />
+                            {wineInfo.total > 0
+                              ? `${wineInfo.revealed}/${wineInfo.total} revealed`
+                              : "No wines yet"}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Users className="size-3.5" />
+                            {participantCount}
+                          </span>
+                          {tasting.wine_source === "PARTICIPANT_CONTRIBUTED" ? (
+                            <Badge variant="secondary" className="ml-auto">
+                              BYO wine
+                            </Badge>
+                          ) : null}
+                        </CardContent>
+                      </div>
+                    </div>
                   </Card>
                 </Link>
               );

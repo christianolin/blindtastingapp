@@ -181,6 +181,14 @@ export default async function ProfileTastingHistoryPage({
               <CardContent className="flex flex-col gap-4">
                 <div>
                   <h3 className="mb-1 text-sm font-medium">Answer</h3>
+                  {answer?.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={answer.image_url}
+                      alt=""
+                      className="mb-2 max-h-64 rounded-lg object-cover"
+                    />
+                  ) : null}
                   <p className="text-sm text-muted-foreground">
                     {describe(answer ?? null)} — {vintageLabel(answer ?? null)}
                   </p>

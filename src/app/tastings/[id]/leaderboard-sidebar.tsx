@@ -76,6 +76,22 @@ export async function LeaderboardSidebar({ tastingId }: { tastingId: string }) {
                       {row.total}
                     </span>
                   </div>
+                  <div className="ml-9.5 mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      Wine {row.winesScored}/{row.totalWines}
+                    </span>
+                    {row.lastRoundPoints !== null ? (
+                      <span
+                        className={cn(
+                          "font-medium",
+                          row.lastRoundPoints > 0 ? "text-[#3f5b42]" : "text-muted-foreground",
+                        )}
+                      >
+                        {row.lastRoundPoints > 0 ? "+" : ""}
+                        {row.lastRoundPoints} last round
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="mt-1.5 ml-9.5 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
                       className={cn(

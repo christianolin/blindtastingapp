@@ -98,6 +98,8 @@ export type Database = {
           opens_at: string | null;
           closes_at: string | null;
           created_at: string;
+          image_url: string | null;
+          description: string | null;
         };
         Insert: {
           id?: string;
@@ -111,6 +113,8 @@ export type Database = {
           opens_at?: string | null;
           closes_at?: string | null;
           created_at?: string;
+          image_url?: string | null;
+          description?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
         Relationships: [];
@@ -173,6 +177,7 @@ export type Database = {
           vintage_kind: VintageKind;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
+          image_url: string | null;
         };
         Insert: {
           wine_id: string;
@@ -186,6 +191,7 @@ export type Database = {
           vintage_kind: VintageKind;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
+          image_url?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_answers"]["Insert"]

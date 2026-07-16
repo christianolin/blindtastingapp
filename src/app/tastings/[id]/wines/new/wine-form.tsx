@@ -16,6 +16,7 @@ import {
   type ReferenceOption,
 } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
+import { ImageUploader } from "@/components/image-uploader";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import {
   addWine,
@@ -213,6 +214,20 @@ export function WineForm({
           createLabel="type designation"
           onCreate={createTypeDesignation}
           allowClear
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Photo (optional)</Label>
+        <p className="text-xs text-muted-foreground">
+          Revealed alongside the rest of the answer — not shown until then.
+        </p>
+        <ImageUploader
+          name="image_url"
+          bucket="wine-images"
+          folder={tastingId}
+          label="Add a photo"
+          aspectClassName="aspect-square max-w-48"
         />
       </div>
 
