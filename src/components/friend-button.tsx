@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { addFriend, removeFriend } from "@/app/friends/actions";
 
 export function FriendButton({
@@ -28,7 +29,15 @@ export function FriendButton({
         })
       }
     >
-      {isFriend ? "Remove friend" : "Add friend"}
+      {pending ? (
+        <>
+          <WineGlassLoader /> {isFriend ? "Removing…" : "Adding…"}
+        </>
+      ) : isFriend ? (
+        "Remove friend"
+      ) : (
+        "Add friend"
+      )}
     </Button>
   );
 }

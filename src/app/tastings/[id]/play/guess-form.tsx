@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -251,7 +252,15 @@ export function GuessForm({
       ) : null}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : existingGuess ? "Update guess" : "Submit guess"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Saving…
+          </>
+        ) : existingGuess ? (
+          "Update guess"
+        ) : (
+          "Submit guess"
+        )}
       </Button>
     </form>
   );

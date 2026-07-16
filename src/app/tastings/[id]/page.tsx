@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function TastingPage({
@@ -187,15 +188,17 @@ export default async function TastingPage({
         <div className="flex gap-4">
           <Link
             href={`/tastings/${id}/play`}
-            className="text-sm underline underline-offset-4"
+            className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4"
           >
             Guess the wines →
+            <LinkLoadingHint />
           </Link>
           <Link
             href={`/tastings/${id}/results`}
-            className="text-sm underline underline-offset-4"
+            className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4"
           >
             View results →
+            <LinkLoadingHint />
           </Link>
         </div>
       ) : null}

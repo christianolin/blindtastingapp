@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp, type SignUpFormState } from "./actions";
@@ -45,7 +46,13 @@ export function SignUpForm() {
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Creating account…" : "Sign up"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Creating account…
+          </>
+        ) : (
+          "Sign up"
+        )}
       </Button>
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}

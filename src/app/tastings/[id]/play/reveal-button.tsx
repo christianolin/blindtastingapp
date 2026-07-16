@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { revealWine, type RevealFormState } from "./actions";
 
 export function RevealButton({
@@ -21,7 +22,13 @@ export function RevealButton({
       <input type="hidden" name="tasting_id" value={tastingId} />
       <input type="hidden" name="wine_id" value={wineId} />
       <Button type="submit" variant="outline" disabled={pending}>
-        {pending ? "Revealing…" : "Reveal"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Revealing…
+          </>
+        ) : (
+          "Reveal"
+        )}
       </Button>
       {state?.error ? (
         <p className="text-xs text-destructive">{state.error}</p>

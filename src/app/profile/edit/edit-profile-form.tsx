@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +45,13 @@ export function EditProfileForm({
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Save"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Saving…
+          </>
+        ) : (
+          "Save"
+        )}
       </Button>
     </form>
   );

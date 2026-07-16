@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { signIn, type AuthFormState } from "./actions";
 
 export function LoginForm() {
@@ -27,7 +28,13 @@ export function LoginForm() {
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Signing in…
+          </>
+        ) : (
+          "Sign in"
+        )}
       </Button>
       <p className="text-sm text-muted-foreground">
         No account yet?{" "}

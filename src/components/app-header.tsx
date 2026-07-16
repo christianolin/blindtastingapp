@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
+import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { signOut } from "@/app/actions";
 
 export function AppHeader({
@@ -18,14 +19,26 @@ export function AppHeader({
         <BlindrLockup size={30} gap={8} />
       </Link>
       <nav className="flex items-center gap-4 text-sm">
-        <Link href="/dashboard" className="hover:underline">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1 hover:underline"
+        >
           Tastings
+          <LinkLoadingHint />
         </Link>
-        <Link href="/people" className="hover:underline">
+        <Link
+          href="/people"
+          className="inline-flex items-center gap-1 hover:underline"
+        >
           People
+          <LinkLoadingHint />
         </Link>
-        <Link href="/friends" className="hover:underline">
+        <Link
+          href="/friends"
+          className="inline-flex items-center gap-1 hover:underline"
+        >
           Friends
+          <LinkLoadingHint />
         </Link>
         <Link
           href={`/u/${userId}`}

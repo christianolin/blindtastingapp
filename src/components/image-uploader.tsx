@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { createClient } from "@/lib/supabase/client";
 
 // Uploads directly to a Storage bucket from the browser (like
@@ -78,7 +79,15 @@ export function ImageUploader({
         onClick={() => inputRef.current?.click()}
         className="self-start"
       >
-        {pending ? "Uploading…" : url ? "Change photo" : label}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Uploading…
+          </>
+        ) : url ? (
+          "Change photo"
+        ) : (
+          label
+        )}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

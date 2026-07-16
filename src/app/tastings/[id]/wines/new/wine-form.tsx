@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -282,7 +283,13 @@ export function WineForm({
       ) : null}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Adding wine…" : "Add wine"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Adding wine…
+          </>
+        ) : (
+          "Add wine"
+        )}
       </Button>
     </form>
   );

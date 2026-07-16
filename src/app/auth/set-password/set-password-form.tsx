@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setPassword, type SetPasswordFormState } from "./actions";
@@ -42,7 +43,13 @@ export function SetPasswordForm({
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Continue"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Saving…
+          </>
+        ) : (
+          "Continue"
+        )}
       </Button>
     </form>
   );

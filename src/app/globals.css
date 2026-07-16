@@ -157,6 +157,32 @@
       transform: scaleX(1);
     }
   }
+
+  /* The wine rising inside WineGlassLoader's bowl: pour in, hold a beat,
+     fade, repeat. Percentages are of the rect's own height via
+     transform-box: fill-box. */
+  @keyframes wine-fill {
+    0% {
+      transform: translateY(100%);
+      opacity: 1;
+    }
+    55% {
+      transform: translateY(28%);
+      opacity: 1;
+    }
+    78% {
+      transform: translateY(28%);
+      opacity: 1;
+    }
+    92% {
+      transform: translateY(28%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
 }
 
 .animate-rise-in {
@@ -166,4 +192,31 @@
 .animate-fill-bar {
   transform-origin: left;
   animation: fill-bar 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-wine-fill {
+  transform-box: fill-box;
+  animation: wine-fill 2s cubic-bezier(0.33, 1, 0.68, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wine-fill {
+    animation: none;
+    transform: translateY(28%);
+  }
+}
+
+/* LinkLoadingHint: reserves its space always (no layout shift), only
+   becomes visible if a link's navigation is still pending after 150ms —
+   fast (prefetched) navigations never flash it. */
+.link-hint {
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.link-hint.is-pending {
+  visibility: visible;
+  animation: rise-in 0.25s 0.15s ease both;
 }

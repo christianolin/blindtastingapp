@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ReferenceCombobox, type ReferenceOption } from "@/components/reference-combobox";
@@ -78,13 +79,17 @@ export function MatchGuessForm({
           ) : null}
 
           <Button type="submit" disabled={pending || !allMatched}>
-            {pending
-              ? "Saving…"
-              : !allMatched
-                ? "Match every glass to submit"
-                : anyExisting
-                  ? "Update guesses"
-                  : "Submit guesses"}
+            {pending ? (
+              <>
+                <WineGlassLoader /> Saving…
+              </>
+            ) : !allMatched ? (
+              "Match every glass to submit"
+            ) : anyExisting ? (
+              "Update guesses"
+            ) : (
+              "Submit guesses"
+            )}
           </Button>
         </form>
       </CardContent>

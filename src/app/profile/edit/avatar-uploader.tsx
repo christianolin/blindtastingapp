@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { createClient } from "@/lib/supabase/client";
 
 export function AvatarUploader({
@@ -88,7 +89,13 @@ export function AvatarUploader({
         disabled={pending}
         onClick={() => inputRef.current?.click()}
       >
-        {pending ? "Uploading…" : "Change photo"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Uploading…
+          </>
+        ) : (
+          "Change photo"
+        )}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

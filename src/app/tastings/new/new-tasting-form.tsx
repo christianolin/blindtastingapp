@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,7 +141,13 @@ export function NewTastingForm({
       ) : null}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Creating…" : "Create tasting"}
+        {pending ? (
+          <>
+            <WineGlassLoader /> Creating…
+          </>
+        ) : (
+          "Create tasting"
+        )}
       </Button>
     </form>
   );

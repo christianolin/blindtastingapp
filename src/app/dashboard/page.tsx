@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { BlindrMark } from "@/components/logo";
+import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats } from "@/lib/profile-stats";
 import { cn } from "@/lib/utils";
@@ -194,8 +195,9 @@ export default async function DashboardPage() {
                       <div className="flex min-w-0 flex-1 flex-col gap-3">
                         <CardHeader className="p-0">
                           <CardTitle className="flex items-center justify-between text-base">
-                            <span className="font-heading text-lg font-semibold group-hover:text-primary">
+                            <span className="inline-flex items-center gap-2 font-heading text-lg font-semibold group-hover:text-primary">
                               {tasting.name}
+                              <LinkLoadingHint />
                             </span>
                             {isHost ? (
                               <Badge className="bg-primary">Hosting</Badge>
