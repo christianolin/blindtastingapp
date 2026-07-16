@@ -105,6 +105,27 @@ export async function submitGuess(
   if ("error" in guesser) return { error: guesser.error };
   const participant = { id: guesser.participantId };
 
+  // "One wine at a time" pacing: only the current (lowest-position unrevealed)
+  // wine may be guessed.
+  const { data: seqTasting } = await supabase
+    .from("tastings")
+    .select("sequential_guessing, reveal_mode")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (seqTasting?.sequential_guessing && seqTasting.reveal_mode === "BLIND") {
+    const { data: current } = await supabase
+      .from("wines")
+      .select("id")
+      .eq("tasting_id", tastingId)
+      .eq("is_revealed", false)
+      .order("position")
+      .limit(1)
+      .maybeSingle();
+    if (current && current.id !== wineId) {
+      return { error: "Guess the wines in order — earlier wines come first." };
+    }
+  }
+
   const get = (name: string) => String(formData.get(name) ?? "") || null;
   const vintageKind = (get("vintage_kind") as VintageKind | null) ?? null;
   const vintageYearRaw = get("vintage_year");

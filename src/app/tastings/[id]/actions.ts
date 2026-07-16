@@ -162,6 +162,52 @@ export async function inviteToTasting(
     : { error: "Nobody new was added (already invited?)." };
 }
 
+// Host toggles "one wine at a time" pacing.
+export async function setSequentialGuessing(formData: FormData): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return;
+  const enabled = String(formData.get("enabled") ?? "") === "true";
+  await supabase
+    .from("tastings")
+    .update({ sequential_guessing: enabled })
+    .eq("id", tastingId);
+  revalidatePath(`/tastings/${tastingId}`);
+}
+
+// Host reorders a wine one step up/down the serving order by swapping its
+// position with the neighbour. The (tasting_id, position) unique constraint
+// means we can't set both at once, so bounce one through a temporary slot.
+export async function moveWine(formData: FormData): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const wineId = String(formData.get("wine_id") ?? "");
+  const direction = String(formData.get("direction") ?? "");
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return;
+
+  const { data: wines } = await supabase
+    .from("wines")
+    .select("id, position")
+    .eq("tasting_id", tastingId)
+    .order("position");
+  const ordered = wines ?? [];
+  const idx = ordered.findIndex((w) => w.id === wineId);
+  if (idx === -1) return;
+  const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (targetIdx < 0 || targetIdx >= ordered.length) return;
+
+  const a = ordered[idx];
+  const b = ordered[targetIdx];
+  // temp slot (negative never collides with real positions)
+  await supabase.from("wines").update({ position: -1 }).eq("id", a.id);
+  await supabase.from("wines").update({ position: a.position }).eq("id", b.id);
+  await supabase.from("wines").update({ position: b.position }).eq("id", a.id);
+
+  revalidatePath(`/tastings/${tastingId}`);
+}
+
 // A participant responds to their invite. Accept -> JOINED (can now guess);
 // decline -> DECLINED. RLS already lets a participant update their own row.
 export async function respondToInvite(formData: FormData): Promise<void> {

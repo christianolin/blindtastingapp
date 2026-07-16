@@ -222,6 +222,15 @@ export default async function PlayPage({
   const resolvedForMe = (wineId: string, isRevealed: boolean) =>
     isRevealed || Boolean(myGuessByWineId.get(wineId)?.scored_at);
 
+  // "One wine at a time" pacing (blind only): only the current wine — the
+  // lowest-position one not yet revealed — is guessable; the rest are locked
+  // until the host reveals their way down the order. `wines` is ordered by
+  // position, so the first unrevealed row is the current wine.
+  const sequential = tasting.sequential_guessing && !isSemiBlind;
+  const currentWineId = sequential
+    ? ((wines ?? []).find((w) => !w.is_revealed)?.id ?? null)
+    : null;
+
   const answerWineIds = [
     ...new Set(
       (wines ?? [])
@@ -469,7 +478,12 @@ export default async function PlayPage({
                 <p className="text-sm text-muted-foreground">
                   This is your wine — nothing to guess.
                 </p>
-              ) : isSemiBlind ? null : (
+              ) : isSemiBlind ? null : sequential && wine.id !== currentWineId ? (
+                <p className="text-sm text-muted-foreground">
+                  🔒 One wine at a time — this opens once the earlier wines
+                  have been revealed.
+                </p>
+              ) : (
                 <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">
                     {hasGuessed

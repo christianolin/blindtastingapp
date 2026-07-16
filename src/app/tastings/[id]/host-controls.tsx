@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { Trash2, Play, CalendarClock, UserPlus } from "lucide-react";
+import {
+  Trash2,
+  Play,
+  CalendarClock,
+  UserPlus,
+  ListOrdered,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +19,7 @@ import {
   updateSchedule,
   inviteToTasting,
   deleteTasting,
+  setSequentialGuessing,
   type LobbyActionState,
 } from "./actions";
 
@@ -37,12 +44,16 @@ export function HostControls({
   scheduledAt,
   wineCount,
   friends,
+  sequentialGuessing,
+  showSequentialToggle,
 }: {
   tastingId: string;
   status: string;
   scheduledAt: string | null;
   wineCount: number;
   friends: { id: string; display_name: string; email: string }[];
+  sequentialGuessing: boolean;
+  showSequentialToggle: boolean;
 }) {
   const notStarted = status === "DRAFT";
 
@@ -147,6 +158,28 @@ export function HostControls({
             This tasting has started. Invitations are closed.
           </p>
         )}
+
+        {showSequentialToggle ? (
+          <form action={setSequentialGuessing} className="flex flex-col gap-2">
+            <input type="hidden" name="tasting_id" value={tastingId} />
+            <input
+              type="hidden"
+              name="enabled"
+              value={String(!sequentialGuessing)}
+            />
+            <Label className="flex items-center gap-1.5">
+              <ListOrdered className="size-4" /> One wine at a time
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {sequentialGuessing
+                ? "On — participants guess in the serving order; reveal a wine to open the next."
+                : "Off — participants can guess any wine in any order."}
+            </p>
+            <Button type="submit" variant="outline" className="w-fit">
+              {sequentialGuessing ? "Turn off" : "Turn on"}
+            </Button>
+          </form>
+        ) : null}
 
         <form
           action={deleteTasting}

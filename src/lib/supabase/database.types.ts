@@ -100,6 +100,7 @@ export type Database = {
           closes_at: string | null;
           scheduled_at: string | null;
           async_reveal_policy: AsyncRevealPolicy;
+          sequential_guessing: boolean;
           created_at: string;
           image_url: string | null;
           description: string | null;
@@ -117,6 +118,7 @@ export type Database = {
           closes_at?: string | null;
           scheduled_at?: string | null;
           async_reveal_policy?: AsyncRevealPolicy;
+          sequential_guessing?: boolean;
           created_at?: string;
           image_url?: string | null;
           description?: string | null;

@@ -422,6 +422,38 @@ a raw subquery, regardless of which two tables look involved at a glance.
   Eligible guessers for a wine = JOINED participants minus that wine's
   contributor minus the host when wine_source is HOST_PROVIDES (the host set
   the answers, so they don't guess).
+- Bring-your-own (PARTICIPANT_CONTRIBUTED) wines: a participant may bring any
+  number of bottles (including zero) — no one-per-person cap (removed from
+  addWine and the lobby). Wines are labelled by contributor via the shared
+  `src/lib/wine-label.ts` `makeWineLabeler` ("Gustav's wine", or "Gustav's
+  wine #2" when someone brought several); use it anywhere a wine needs a title
+  (play, results, lobby). The leaderboard "wine X/Y" denominator is
+  per-participant — total wines minus the ones they contributed (you never
+  guess your own), computed in `tasting-leaderboard.ts`.
+- Live updates during a tasting are polling, not Supabase Realtime:
+  `src/components/auto-refresh.tsx` calls `router.refresh()` on an interval
+  while the tab is visible (mounted on the play page always, the lobby once
+  started). `router.refresh()` preserves client state, so an open guess form
+  isn't disrupted. If real push is ever wanted, that's the swap point.
+- "One wine at a time" pacing: `tastings.sequential_guessing` (blind only;
+  host toggles it in HostControls). When on, only the current wine — the
+  lowest-`position` not-yet-revealed one — is guessable; the play page locks
+  the rest and `submitGuess` rejects out-of-order guesses server-side.
+  Revealing the current wine advances everyone. The host sets the order with
+  up/down arrows on the lobby wine list (`moveWine` swaps positions through a
+  temporary negative slot to dodge the `(tasting_id, position)` unique
+  constraint). The results/play wine numbering follows list order, not the
+  raw stored position.
+- Everyone (not just the host) can see WHO has guessed each wine, so the host
+  knows when to reveal. The guesses RLS still hides guess *content* until
+  reveal; the `tasting_guess_status(tasting_id)` RPC (SECURITY DEFINER, gated
+  via is_tasting_host/is_tasting_participant) exposes only the (wine_id,
+  participant_id) pairs a guess exists for. The play page shows a
+  "N/M ready to reveal" readiness footer per still-hidden wine (blind), or a
+  per-person "submitted their matches" summary in the intro card (semi-blind).
+  Eligible guessers for a wine = JOINED participants minus that wine's
+  contributor minus the host when wine_source is HOST_PROVIDES (the host set
+  the answers, so they don't guess).
 - Bring-your-own (PARTICIPANT_CONTRIBUTED) wines are labelled by contributor
   ("Gustav's wine"), not "Wine N", on the play page (`wineTitle`). The lobby's
   Wines card, in BYO mode, lists every JOINED participant with "Added" or

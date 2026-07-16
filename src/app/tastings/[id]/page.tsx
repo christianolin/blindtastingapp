@@ -1,6 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { CalendarClock, ListChecks, Trophy } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
+  ListChecks,
+  Trophy,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
-import { respondToInvite } from "./actions";
+import { respondToInvite, moveWine } from "./actions";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Not started",
@@ -329,19 +335,64 @@ export default async function TastingPage({
           ) : wineCount === 0 ? (
             <p className="text-sm text-muted-foreground">No wines added yet.</p>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {(wines ?? []).map((w) => (
-                <li
-                  key={w.id}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span>Wine {w.position}</span>
-                  <Badge variant={w.is_revealed ? "default" : "outline"}>
-                    {w.is_revealed ? "Revealed" : "Hidden"}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
+            <>
+              {isHost ? (
+                <p className="mb-2 text-xs text-muted-foreground">
+                  This is the serving order. Use the arrows to reorder.
+                </p>
+              ) : null}
+              <ul className="flex flex-col gap-2">
+                {(wines ?? []).map((w, i) => (
+                  <li
+                    key={w.id}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span>Wine {i + 1}</span>
+                    <div className="flex items-center gap-2">
+                      {isHost && !w.is_revealed ? (
+                        <span className="flex items-center gap-0.5">
+                          <form action={moveWine}>
+                            <input type="hidden" name="tasting_id" value={id} />
+                            <input type="hidden" name="wine_id" value={w.id} />
+                            <input type="hidden" name="direction" value="up" />
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Move up"
+                              disabled={i === 0}
+                            >
+                              <ChevronUp className="size-4" />
+                            </Button>
+                          </form>
+                          <form action={moveWine}>
+                            <input type="hidden" name="tasting_id" value={id} />
+                            <input type="hidden" name="wine_id" value={w.id} />
+                            <input
+                              type="hidden"
+                              name="direction"
+                              value="down"
+                            />
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Move down"
+                              disabled={i === (wines ?? []).length - 1}
+                            >
+                              <ChevronDown className="size-4" />
+                            </Button>
+                          </form>
+                        </span>
+                      ) : null}
+                      <Badge variant={w.is_revealed ? "default" : "outline"}>
+                        {w.is_revealed ? "Revealed" : "Hidden"}
+                      </Badge>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>
@@ -353,6 +404,8 @@ export default async function TastingPage({
           scheduledAt={tasting.scheduled_at}
           wineCount={wineCount}
           friends={friends}
+          sequentialGuessing={tasting.sequential_guessing}
+          showSequentialToggle={tasting.reveal_mode === "BLIND"}
         />
       ) : null}
     </div>
