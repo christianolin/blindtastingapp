@@ -97,6 +97,7 @@ export type Database = {
           current_wine_id: string | null;
           opens_at: string | null;
           closes_at: string | null;
+          scheduled_at: string | null;
           created_at: string;
           image_url: string | null;
           description: string | null;
@@ -112,6 +113,7 @@ export type Database = {
           current_wine_id?: string | null;
           opens_at?: string | null;
           closes_at?: string | null;
+          scheduled_at?: string | null;
           created_at?: string;
           image_url?: string | null;
           description?: string | null;

@@ -45,6 +45,40 @@ async function maybeAutoRevealWine(
 
 export type GuessFormState = { error: string } | { success: true } | null;
 
+// Resolves the caller's participant row and enforces that they may guess:
+// they must be a JOINED participant and the tasting must have started (host
+// pressed Start → status left 'DRAFT'). Returns the participant id or an
+// error message.
+async function resolveGuesser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tastingId: string,
+  userId: string,
+): Promise<{ participantId: string } | { error: string }> {
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("status")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) return { error: "Tasting not found." };
+  if (tasting.status === "DRAFT") {
+    return { error: "The host hasn't started this tasting yet." };
+  }
+
+  const { data: participant } = await supabase
+    .from("tasting_participants")
+    .select("id, status")
+    .eq("tasting_id", tastingId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!participant) {
+    return { error: "You're not a participant in this tasting." };
+  }
+  if (participant.status !== "JOINED") {
+    return { error: "Accept your invitation before guessing." };
+  }
+  return { participantId: participant.id };
+}
+
 export async function submitGuess(
   _prevState: GuessFormState,
   formData: FormData,
@@ -60,15 +94,9 @@ export async function submitGuess(
   const tastingId = String(formData.get("tasting_id") ?? "");
   const wineId = String(formData.get("wine_id") ?? "");
 
-  const { data: participant } = await supabase
-    .from("tasting_participants")
-    .select("id")
-    .eq("tasting_id", tastingId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!participant) {
-    return { error: "You're not a participant in this tasting." };
-  }
+  const guesser = await resolveGuesser(supabase, tastingId, user.id);
+  if ("error" in guesser) return { error: guesser.error };
+  const participant = { id: guesser.participantId };
 
   const get = (name: string) => String(formData.get(name) ?? "") || null;
   const vintageKind = (get("vintage_kind") as VintageKind | null) ?? null;
@@ -146,15 +174,9 @@ export async function submitAllMatchGuesses(
     return { error: "Match every glass before submitting." };
   }
 
-  const { data: participant } = await supabase
-    .from("tasting_participants")
-    .select("id")
-    .eq("tasting_id", tastingId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!participant) {
-    return { error: "You're not a participant in this tasting." };
-  }
+  const guesser = await resolveGuesser(supabase, tastingId, user.id);
+  if ("error" in guesser) return { error: guesser.error };
+  const participant = { id: guesser.participantId };
 
   const { data: existingGuesses } = await supabase
     .from("guesses")

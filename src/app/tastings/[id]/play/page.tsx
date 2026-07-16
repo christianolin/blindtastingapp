@@ -47,7 +47,7 @@ export default async function PlayPage({
 
   const { data: myParticipant } = await supabase
     .from("tasting_participants")
-    .select("id")
+    .select("id, status")
     .eq("tasting_id", tastingId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -56,6 +56,38 @@ export default async function PlayPage({
     return (
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-8">
         <p>You&apos;re not a participant in this tasting.</p>
+      </div>
+    );
+  }
+
+  if (tasting.status === "DRAFT") {
+    return (
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-8">
+        <p className="text-muted-foreground">
+          This tasting hasn&apos;t started yet.
+        </p>
+        <Link
+          href={`/tastings/${tastingId}`}
+          className="text-sm underline underline-offset-4"
+        >
+          ← Back to tasting
+        </Link>
+      </div>
+    );
+  }
+
+  if (myParticipant.status !== "JOINED") {
+    return (
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-8">
+        <p className="text-muted-foreground">
+          Accept your invitation before guessing.
+        </p>
+        <Link
+          href={`/tastings/${tastingId}`}
+          className="text-sm underline underline-offset-4"
+        >
+          ← Go to the tasting to respond
+        </Link>
       </div>
     );
   }

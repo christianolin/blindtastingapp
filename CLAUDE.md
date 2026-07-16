@@ -324,3 +324,37 @@ a raw subquery, regardless of which two tables look involved at a glance.
   was the main reported cause of "janky" mobile scrolling when adding a wine
   or guessing (both forms are full of these comboboxes). `ReferenceCombobox`
   never had this problem since its `CommandInput` was never autofocused.
+- The app nav (`src/components/app-header.tsx`) is global and self-fetching:
+  it looks up the current user/profile itself when props aren't passed, so
+  any page/layout can render `<AppHeader />` with no prop-drilling (the
+  `/tastings` layout does exactly this — that section previously had no menu
+  at all). Below `md` it collapses into `MobileNav`'s hamburger drawer;
+  the leaderboard (a desktop-only sidebar in `tastings/[id]/layout.tsx`) is
+  reachable on mobile via `MobileLeaderboard`'s floating button + bottom
+  sheet. Both drawers are dependency-free overlay+panel client components,
+  not base-ui Dialogs (avoids fighting Dialog positioning). AppHeader also
+  renders `NotificationsBell` (pending-invite count + dropdown).
+- Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
+  `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
+  add wines, edit the schedule, and invite more people (`HostControls` in
+  `tastings/[id]/host-controls.tsx` + actions in `tastings/[id]/actions.ts`);
+  the host presses **Start** (`startTasting`, requires ≥1 wine) to move it to
+  `IN_PROGRESS`, which opens guessing. Guessing is gated both in `play/page.tsx`
+  (UI) and in `play/actions.ts`'s `resolveGuesser` helper (server): the tasting
+  must not be `DRAFT` and the caller's participant `status` must be `JOINED`.
+  Legacy rows created as `OPEN` count as "started" (anything ≠ `DRAFT`), so old
+  demo/test tastings keep working. The host can **delete** a tasting anytime
+  (`deleteTasting`, cascades via FK). Invites close once started.
+- Invitations now require acceptance. An invited participant (`status`
+  `INVITED`) sees an Accept/Decline card on the lobby (`respondToInvite`
+  action → `JOINED`/`DECLINED`) and a bell notification in the header; only
+  `JOINED` participants can guess. The dashboard groups tastings into three
+  tabs — **Invited** (pending), **Hosting** (`host_id` = me), **Attending**
+  (`JOINED`, not host) — in `dashboard/tastings-tabs.tsx`; the host row is
+  always a `JOINED` participant so a hosted tasting is shown only under
+  Hosting, never also under Attending.
+- Tastings carry an optional `scheduled_at timestamptz` (date + time),
+  editable while `DRAFT`. Always format it client-side via
+  `src/components/local-date-time.tsx` (viewer's locale/timezone) — the
+  server's timezone is not the user's. `datetime-local` inputs give/expect
+  local `YYYY-MM-DDTHH:mm`; convert to/from ISO at the action/effect boundary.

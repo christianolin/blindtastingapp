@@ -63,6 +63,15 @@ export function NewTastingForm({
       </div>
 
       <div className="flex flex-col gap-2">
+        <Label htmlFor="scheduled_at">Date &amp; time (optional)</Label>
+        <Input id="scheduled_at" name="scheduled_at" type="datetime-local" />
+        <p className="text-xs text-muted-foreground">
+          When the group will taste. Leave blank for an open-ended async
+          tasting.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
         <Label>Cover photo (optional)</Label>
         <ImageUploader
           name="image_url"

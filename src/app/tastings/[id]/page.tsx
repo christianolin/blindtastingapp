@@ -1,10 +1,21 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { CalendarClock, ListChecks, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
+import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import { HostControls } from "./host-controls";
+import { respondToInvite } from "./actions";
+
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT: "Not started",
+  OPEN: "Open",
+  IN_PROGRESS: "In progress",
+  CLOSED: "Finished",
+};
 
 export default async function TastingPage({
   params,
@@ -39,7 +50,6 @@ export default async function TastingPage({
     .from("profiles")
     .select("id, display_name, email")
     .in("id", userIds.length > 0 ? userIds : [""]);
-
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   const { data: wines } = await supabase
@@ -52,26 +62,39 @@ export default async function TastingPage({
   const myParticipant = (participantRows ?? []).find(
     (p) => p.user_id === user.id,
   );
+  const myStatus = myParticipant?.status ?? null;
   const myWine = (wines ?? []).find(
     (w) => w.contributor_participant_id === myParticipant?.id,
   );
+  const hasStarted = tasting.status !== "DRAFT";
+  const wineCount = (wines ?? []).length;
 
   const canAddWine =
     tasting.wine_source === "HOST_PROVIDES"
       ? isHost
-      : Boolean(myParticipant) && !myWine;
+      : Boolean(myParticipant) && !myWine && myStatus === "JOINED";
+
+  // Friends for the host's "invite more people" picker (only fetched for the
+  // host, and only needed while the tasting is still in draft).
+  let friends: { id: string; display_name: string; email: string }[] = [];
+  if (isHost && !hasStarted) {
+    const { data: friendRows } = await supabase
+      .from("friendships")
+      .select("friend_id")
+      .eq("user_id", user.id);
+    const friendIds = (friendRows ?? []).map((f) => f.friend_id);
+    const { data: friendProfiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, email")
+      .in("id", friendIds.length > 0 ? friendIds : [""])
+      .order("display_name");
+    friends = friendProfiles ?? [];
+  }
+
+  const canGuess = myStatus === "JOINED" && hasStarted && wineCount > 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
-      <div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-muted-foreground underline underline-offset-4"
-        >
-          ← Dashboard
-        </Link>
-      </div>
-
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
       {tasting.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -81,41 +104,122 @@ export default async function TastingPage({
         />
       ) : null}
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {tasting.name}
-          </h1>
-          {tasting.description ? (
-            <p className="mt-2 text-muted-foreground">{tasting.description}</p>
-          ) : null}
-          <div className="mt-2 flex gap-2">
-            <Badge variant="secondary">
-              {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
+      <div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">
+          {tasting.name}
+        </h1>
+        {tasting.description ? (
+          <p className="mt-2 text-muted-foreground">{tasting.description}</p>
+        ) : null}
+        {tasting.scheduled_at ? (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <CalendarClock className="size-4" />
+            <LocalDateTime iso={tasting.scheduled_at} />
+          </p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Badge variant={hasStarted ? "default" : "outline"}>
+            {STATUS_LABEL[tasting.status] ?? tasting.status}
+          </Badge>
+          <Badge variant="secondary">
+            {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
+          </Badge>
+          <Badge variant="secondary">
+            {tasting.wine_source === "HOST_PROVIDES"
+              ? "Host provides wines"
+              : "Participants bring wines"}
+          </Badge>
+          {tasting.reveal_mode === "SEMI_BLIND" ? (
+            <Badge variant="secondary">Semi-blind</Badge>
+          ) : (
+            <Badge
+              variant="secondary"
+              title="Scored under Danish Championship (VM/DM) rules — points per category: country, region, appellation, primary/secondary grape, producer, type designation, vintage."
+            >
+              Danish Championship rules
             </Badge>
-            <Badge variant="secondary">
-              {tasting.wine_source === "HOST_PROVIDES"
-                ? "Host provides wines"
-                : "Participants bring wines"}
-            </Badge>
-            {tasting.reveal_mode === "SEMI_BLIND" ? (
-              <Badge variant="secondary">Semi-blind</Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                title="Scored under Danish Championship (VM/DM) rules — points per category: country, region, appellation, primary/secondary grape, producer, type designation, vintage."
-              >
-                Danish Championship rules
-              </Badge>
-            )}
-            <Badge>{tasting.status}</Badge>
-          </div>
+          )}
         </div>
       </div>
 
+      {/* Pending invite: accept or decline before you can take part. */}
+      {myStatus === "INVITED" ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base">You&apos;re invited</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              {profileById.get(tasting.host_id)?.display_name ?? "The host"}{" "}
+              invited you to this tasting. Accept to take part.
+            </p>
+            <div className="flex gap-2">
+              <form action={respondToInvite}>
+                <input type="hidden" name="tasting_id" value={id} />
+                <input type="hidden" name="response" value="accept" />
+                <Button type="submit">Accept</Button>
+              </form>
+              <form action={respondToInvite}>
+                <input type="hidden" name="tasting_id" value={id} />
+                <input type="hidden" name="response" value="decline" />
+                <Button type="submit" variant="outline">
+                  Decline
+                </Button>
+              </form>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Prominent primary actions once you're in and the tasting is live. */}
+      {canGuess ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button
+            size="lg"
+            nativeButton={false}
+            render={<Link href={`/tastings/${id}/play`} />}
+            className="h-auto justify-start gap-3 py-4 text-left shadow-sm"
+          >
+            <ListChecks className="size-6 shrink-0" strokeWidth={2} />
+            <span className="flex flex-col">
+              <span className="text-base font-semibold">Guess the wines</span>
+              <span className="text-xs font-normal opacity-80">
+                Enter or edit your guesses
+              </span>
+            </span>
+            <LinkLoadingHint className="ml-auto" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href={`/tastings/${id}/results`} />}
+            className="h-auto justify-start gap-3 py-4 text-left"
+          >
+            <Trophy className="size-6 shrink-0 text-gold-deep" strokeWidth={2} />
+            <span className="flex flex-col">
+              <span className="text-base font-semibold">View results</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                Leaderboard &amp; revealed wines
+              </span>
+            </span>
+            <LinkLoadingHint className="ml-auto" />
+          </Button>
+        </div>
+      ) : myStatus === "JOINED" && !hasStarted ? (
+        <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+          Waiting for the host to start the tasting.
+        </p>
+      ) : null}
+
       <Card>
         <CardHeader>
-          <CardTitle>Participants</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Participants
+            <span className="text-sm font-normal text-muted-foreground">
+              {(participantRows ?? []).length}
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="flex flex-col gap-2">
@@ -131,7 +235,11 @@ export default async function TastingPage({
                     {p.user_id === tasting.host_id ? " (host)" : ""}
                   </span>
                   <Badge variant={p.status === "JOINED" ? "default" : "outline"}>
-                    {p.status}
+                    {p.status === "JOINED"
+                      ? "In"
+                      : p.status === "INVITED"
+                        ? "Invited"
+                        : "Declined"}
                   </Badge>
                 </li>
               );
@@ -146,6 +254,7 @@ export default async function TastingPage({
             Wines
             {canAddWine ? (
               <Button
+                size="sm"
                 nativeButton={false}
                 render={<Link href={`/tastings/${id}/wines/new`} />}
               >
@@ -157,10 +266,8 @@ export default async function TastingPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {(wines ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No wines added yet.
-            </p>
+          {wineCount === 0 ? (
+            <p className="text-sm text-muted-foreground">No wines added yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {(wines ?? []).map((w) => (
@@ -184,23 +291,14 @@ export default async function TastingPage({
         </CardContent>
       </Card>
 
-      {myParticipant && (wines ?? []).length > 0 ? (
-        <div className="flex gap-4">
-          <Link
-            href={`/tastings/${id}/play`}
-            className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4"
-          >
-            Guess the wines →
-            <LinkLoadingHint />
-          </Link>
-          <Link
-            href={`/tastings/${id}/results`}
-            className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4"
-          >
-            View results →
-            <LinkLoadingHint />
-          </Link>
-        </div>
+      {isHost ? (
+        <HostControls
+          tastingId={id}
+          status={tasting.status}
+          scheduledAt={tasting.scheduled_at}
+          wineCount={wineCount}
+          friends={friends}
+        />
       ) : null}
     </div>
   );

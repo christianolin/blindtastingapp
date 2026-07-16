@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Clock, Wine, Users, Sparkles, Target, Trophy } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Sparkles, Wine, Target, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { BlindrMark } from "@/components/logo";
-import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats } from "@/lib/profile-stats";
-import { cn } from "@/lib/utils";
+import { TastingsTabs } from "./tastings-tabs";
+import { TastingCard, type TastingCardData } from "./tasting-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -71,6 +70,47 @@ export default async function DashboardPage() {
   }
 
   const hostedCount = (tastings ?? []).filter((t) => t.host_id === user.id).length;
+
+  // Three dashboard buckets. Host rows are always JOINED participants, so a
+  // hosted tasting would also match "attending" — keep it only under Hosting.
+  const byId = new Map((tastings ?? []).map((t) => [t.id, t]));
+  const invitedTastings = (participantRows ?? [])
+    .filter((p) => p.status === "INVITED")
+    .map((p) => byId.get(p.tasting_id))
+    .filter((t): t is NonNullable<typeof t> => Boolean(t));
+  const hostingTastings = (tastings ?? []).filter((t) => t.host_id === user.id);
+  const attendingTastings = (tastings ?? []).filter(
+    (t) =>
+      t.host_id !== user.id && statusByTastingId.get(t.id) === "JOINED",
+  );
+
+  const renderList = (
+    list: TastingCardData[],
+    accent: "primary" | "gold",
+    label: string,
+    emptyMsg: string,
+  ) =>
+    list.length === 0 ? (
+      <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+        {emptyMsg}
+      </p>
+    ) : (
+      <div className="flex flex-col gap-3">
+        {list.map((t, i) => (
+          <TastingCard
+            key={t.id}
+            tasting={t}
+            wineInfo={
+              wineCountByTastingId.get(t.id) ?? { total: 0, revealed: 0 }
+            }
+            participantCount={participantCountByTastingId.get(t.id) ?? 0}
+            badgeLabel={label}
+            accent={accent}
+            index={i}
+          />
+        ))}
+      </div>
+    );
 
   const statTiles = [
     {
@@ -166,88 +206,31 @@ export default async function DashboardPage() {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {(tastings ?? []).map((tasting, i) => {
-              const isHost = tasting.host_id === user.id;
-              const wineInfo = wineCountByTastingId.get(tasting.id) ?? {
-                total: 0,
-                revealed: 0,
-              };
-              const participantCount = participantCountByTastingId.get(tasting.id) ?? 0;
-              return (
-                <Link key={tasting.id} href={`/tastings/${tasting.id}`}>
-                  <Card
-                    className={cn(
-                      "animate-rise-in group relative gap-3 overflow-hidden border-l-4 py-4 transition-all hover:-translate-y-0.5 hover:shadow-md",
-                      isHost ? "border-l-primary" : "border-l-gold",
-                    )}
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    <div className="flex gap-4 px-4">
-                      {tasting.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={tasting.image_url}
-                          alt=""
-                          className="size-20 shrink-0 rounded-lg object-cover"
-                        />
-                      ) : null}
-                      <div className="flex min-w-0 flex-1 flex-col gap-3">
-                        <CardHeader className="p-0">
-                          <CardTitle className="flex items-center justify-between text-base">
-                            <span className="inline-flex items-center gap-2 font-heading text-lg font-semibold group-hover:text-primary">
-                              {tasting.name}
-                              <LinkLoadingHint />
-                            </span>
-                            {isHost ? (
-                              <Badge className="bg-primary">Hosting</Badge>
-                            ) : (
-                              <Badge variant="outline">
-                                {statusByTastingId.get(tasting.id)}
-                              </Badge>
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                        {tasting.description ? (
-                          <p className="line-clamp-1 text-sm text-muted-foreground">
-                            {tasting.description}
-                          </p>
-                        ) : null}
-                        <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-1.5 p-0 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1.5">
-                            {tasting.timing_mode === "LIVE" ? (
-                              <span className="relative flex size-2">
-                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
-                                <span className="relative inline-flex size-2 rounded-full bg-destructive" />
-                              </span>
-                            ) : (
-                              <Clock className="size-3.5" />
-                            )}
-                            {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Wine className="size-3.5" />
-                            {wineInfo.total > 0
-                              ? `${wineInfo.revealed}/${wineInfo.total} revealed`
-                              : "No wines yet"}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Users className="size-3.5" />
-                            {participantCount}
-                          </span>
-                          {tasting.wine_source === "PARTICIPANT_CONTRIBUTED" ? (
-                            <Badge variant="secondary" className="ml-auto">
-                              BYO wine
-                            </Badge>
-                          ) : null}
-                        </CardContent>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
+          <TastingsTabs
+            counts={{
+              invited: invitedTastings.length,
+              hosting: hostingTastings.length,
+              attending: attendingTastings.length,
+            }}
+            invited={renderList(
+              invitedTastings,
+              "primary",
+              "Invited",
+              "No pending invitations.",
+            )}
+            hosting={renderList(
+              hostingTastings,
+              "primary",
+              "Hosting",
+              "You're not hosting any tastings yet.",
+            )}
+            attending={renderList(
+              attendingTastings,
+              "gold",
+              "Attending",
+              "You haven't joined anyone else's tasting yet.",
+            )}
+          />
         )}
       </div>
     </div>

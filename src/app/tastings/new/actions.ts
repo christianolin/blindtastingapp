@@ -32,6 +32,10 @@ export async function createTasting(
   const emailsRaw = String(formData.get("emails") ?? "");
   const description = String(formData.get("description") ?? "").trim() || null;
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
+  const scheduledAtRaw = String(formData.get("scheduled_at") ?? "").trim();
+  const scheduledAt = scheduledAtRaw
+    ? new Date(scheduledAtRaw).toISOString()
+    : null;
 
   if (!name) {
     return { error: "Name is required." };
@@ -66,9 +70,10 @@ export async function createTasting(
       timing_mode: timingMode,
       wine_source: wineSource,
       reveal_mode: revealMode,
-      status: "OPEN",
+      status: "DRAFT",
       description,
       image_url: imageUrl,
+      scheduled_at: scheduledAt,
     })
     .select()
     .single();
