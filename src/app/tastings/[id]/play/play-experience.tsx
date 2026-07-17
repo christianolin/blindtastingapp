@@ -328,9 +328,11 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
             ? { label: "Your result", variant: "default" as const }
             : isMine
               ? { label: "Your wine", variant: "outline" as const }
-              : hasGuessed
-                ? { label: "Guessed", variant: "secondary" as const }
-                : { label: "Not guessed", variant: "outline" as const };
+              : hostProvidesHost
+                ? { label: "Hidden", variant: "outline" as const }
+                : hasGuessed
+                  ? { label: "Guessed", variant: "secondary" as const }
+                  : { label: "Not guessed", variant: "outline" as const };
 
         const everyone = wine.is_revealed
           ? (revealedGuessesByWineId.get(wine.id) ?? [])

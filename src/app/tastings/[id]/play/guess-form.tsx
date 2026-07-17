@@ -92,6 +92,28 @@ export function GuessForm({
   );
   const [vintageKind, setVintageKind] = useState(existingGuess?.vintage_kind ?? "YEAR");
 
+  // Cascade country → region → appellation so the region list is scoped to the
+  // country you guessed (picking France shows French regions, not all 378).
+  const visibleRegions = countryId
+    ? regions.filter((r) => r.country_id === countryId)
+    : regions;
+
+  function onCountryChange(id: string) {
+    setCountryId(id);
+    // Drop a now-mismatched region/appellation.
+    if (regionId && !regions.some((r) => r.id === regionId && r.country_id === id)) {
+      setRegionId("");
+      setAppellationId("");
+      setAppellationLabel(null);
+    }
+  }
+
+  function onRegionChange(id: string) {
+    setRegionId(id);
+    setAppellationId("");
+    setAppellationLabel(null);
+  }
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="tasting_id" value={tastingId} />
@@ -112,7 +134,7 @@ export function GuessForm({
           formFieldName="country_id"
           options={countries}
           value={countryId}
-          onValueChange={setCountryId}
+          onValueChange={onCountryChange}
           placeholder="Guess the country"
           allowClear
         />
@@ -122,10 +144,10 @@ export function GuessForm({
         <Label>Region (3 pts)</Label>
         <ReferenceCombobox
           formFieldName="region_id"
-          options={regions}
+          options={visibleRegions}
           value={regionId}
-          onValueChange={setRegionId}
-          placeholder="Guess the region"
+          onValueChange={onRegionChange}
+          placeholder={countryId ? "Guess the region" : "Pick a country first"}
           allowClear
         />
       </div>
@@ -140,7 +162,7 @@ export function GuessForm({
             setAppellationId(id);
             setAppellationLabel(label || null);
           }}
-          search={(query) => searchAppellations(query)}
+          search={(query) => searchAppellations(query, regionId || undefined)}
           placeholder="Guess the appellation"
           allowClear
         />
