@@ -1,16 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  CalendarClock,
-  ChevronDown,
-  ChevronUp,
-  ListChecks,
-  Trophy,
-} from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -18,6 +11,7 @@ import { makeWineLabeler } from "@/lib/wine-label";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
 import { RevealButton } from "./play/reveal-button";
+import { PlayExperience } from "./play/play-experience";
 import { respondToInvite, moveWine } from "./actions";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -282,42 +276,7 @@ export default async function TastingPage({
         </Card>
       ) : null}
 
-      {/* Prominent primary actions once you're in and the tasting is live. */}
-      {canGuess ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Button
-            size="lg"
-            nativeButton={false}
-            render={<Link href={`/tastings/${id}/play`} />}
-            className="h-auto justify-start gap-3 py-4 text-left shadow-sm"
-          >
-            <ListChecks className="size-6 shrink-0" strokeWidth={2} />
-            <span className="flex flex-col">
-              <span className="text-base font-semibold">Guess the wines</span>
-              <span className="text-xs font-normal opacity-80">
-                Enter or edit your guesses
-              </span>
-            </span>
-            <LinkLoadingHint className="ml-auto" />
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            nativeButton={false}
-            render={<Link href={`/tastings/${id}/results`} />}
-            className="h-auto justify-start gap-3 py-4 text-left"
-          >
-            <Trophy className="size-6 shrink-0 text-gold-deep" strokeWidth={2} />
-            <span className="flex flex-col">
-              <span className="text-base font-semibold">View results</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                Leaderboard &amp; revealed wines
-              </span>
-            </span>
-            <LinkLoadingHint className="ml-auto" />
-          </Button>
-        </div>
-      ) : myStatus === "JOINED" && !hasStarted ? (
+      {myStatus === "JOINED" && !hasStarted ? (
         <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
           Waiting for the host to start the tasting.
         </p>
@@ -359,6 +318,10 @@ export default async function TastingPage({
         </CardContent>
       </Card>
 
+      {/* Host always keeps this compact wine overview (reveal / reorder /
+          identity); participants who can guess see the full play cards below
+          instead. */}
+      {!canGuess || isHost ? (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -430,6 +393,11 @@ export default async function TastingPage({
           )}
         </CardContent>
       </Card>
+      ) : null}
+
+      {/* Everything on one page: the guess/reveal/results experience is
+          embedded here for JOINED participants of a started tasting. */}
+      {canGuess ? <PlayExperience tastingId={id} /> : null}
 
       {isHost ? (
         <HostControls
