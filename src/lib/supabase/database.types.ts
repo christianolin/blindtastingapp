@@ -67,7 +67,12 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
       };
-      producers: ReferenceTable;
+      producers: {
+        Row: { id: string; name: string; region_id: string | null };
+        Insert: { id?: string; name: string; region_id?: string | null };
+        Update: Partial<{ id: string; name: string; region_id: string | null }>;
+        Relationships: [];
+      };
       type_designations: {
         Row: {
           id: string;
@@ -370,7 +375,7 @@ export type Database = {
         Returns: { id: string; name: string }[];
       };
       search_producers: {
-        Args: { p_query: string };
+        Args: { p_query: string; p_region_id?: string };
         Returns: { id: string; name: string }[];
       };
       tasting_guess_status: {

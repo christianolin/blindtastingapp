@@ -215,7 +215,7 @@ export function GuessForm({
             setProducerId(id);
             setProducerLabel(label || null);
           }}
-          search={searchProducers}
+          search={(q) => searchProducers(q, regionId || undefined)}
           placeholder="Guess the producer"
           allowClear
         />

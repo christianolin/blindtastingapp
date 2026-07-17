@@ -199,10 +199,10 @@ export function WineForm({
             setProducerId(id);
             setProducerLabel(label || null);
           }}
-          search={searchProducers}
+          search={(q) => searchProducers(q, regionId || undefined)}
           placeholder="Search for the producer"
           createLabel="producer"
-          onCreate={createProducer}
+          onCreate={regionId ? (name) => createProducer(regionId, name) : undefined}
         />
       </div>
 

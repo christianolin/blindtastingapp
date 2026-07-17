@@ -574,3 +574,34 @@ a raw subquery, regardless of which two tables look involved at a glance.
     point for adding more regions/countries later without needing a
     hand-drawn map for each one.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
+- Producers are scoped by region so the producer field narrows once a region
+  is chosen, the same way appellation already does. Unlike `appellations`,
+  `producers.region_id` is **nullable** — the original LWIN import deduped
+  producers purely by name (`safeKey()` in `import-lwin.mjs`), discarding
+  each raw row's country/region, so a re-analysis of the source spreadsheet
+  found real multi-region producers (large negociants/brands with estates in
+  more than one place, e.g. "Penfolds" across several Australian regions,
+  "William Fevre" in both Bourgogne and Chile) that a single required
+  region_id would misrepresent. `scripts/backfill-producer-regions.mjs`
+  re-derives region_id per producer from the same LWIN source file: ~92% of
+  producers have a single region across all their raw mentions (assigned
+  directly), ~3% have a strongly dominant region (≥80% of mentions, mode
+  value assigned, same "under-labeling beats mislabeling" tradeoff as the
+  appellation-designation backfill), and the remaining ~5% are genuinely
+  split and are left `region_id = null` on purpose. `search_producers`
+  (migration `20260720090000_producer_region_scoping.sql`) always includes
+  NULL-region producers regardless of the query's region filter — a producer
+  with no confident region is "never filtered", never "invisible". Both
+  `wine-form.tsx` and `guess-form.tsx` pass the currently-selected `regionId`
+  into `searchProducers(query, regionId)`; the host's "add new producer"
+  (`createProducer(regionId, name)` in `wines/new/actions.ts`) requires a
+  region be chosen first, same as `createAppellation`. Producer name stays
+  globally unique (no change to that constraint) — region_id is an additive
+  scoping hint, not a re-keying of the dedup identity. After running the
+  backfill, 32,088 of 33,741 producers ended up linked; the ~1,650 left NULL
+  are overwhelmingly the predicted ambiguous ones plus a handful of
+  historical duplicates (e.g. a host once typed "Château Pétrus" as a new
+  producer via the inline-create combobox, which exact-name-matches nothing
+  and became a separate row from LWIN's already-linked plain "Petrus") —
+  spot-checked against real usage and only 3 of the ~1,650 are actually
+  referenced by an entered wine, so this wasn't worth chasing further.

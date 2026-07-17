@@ -51,12 +51,22 @@ export async function listAppellationsForRegions(
   return all;
 }
 
-export async function searchProducers(query: string): Promise<SearchOption[]> {
+export async function searchProducers(
+  query: string,
+  regionId?: string,
+): Promise<SearchOption[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
   const supabase = await createClient();
   // Accent-insensitive RPC — "chateau"/"petrus" must find "Château …" /
-  // "Pétrus". See 20260716160000_accent_insensitive_search.sql.
-  const { data } = await supabase.rpc("search_producers", { p_query: trimmed });
+  // "Pétrus". See 20260716160000_accent_insensitive_search.sql. Scoping by
+  // region_id (20260720090000_producer_region_scoping.sql) always still
+  // includes producers with a NULL region_id — those are genuinely
+  // multi-region (or not yet backfilled) and must never be hidden by a
+  // region filter.
+  const { data } = await supabase.rpc("search_producers", {
+    p_query: trimmed,
+    p_region_id: regionId ?? undefined,
+  });
   return data ?? [];
 }

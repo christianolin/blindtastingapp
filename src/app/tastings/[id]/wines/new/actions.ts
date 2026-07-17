@@ -53,13 +53,18 @@ export async function createGrape(name: string) {
   );
 }
 
-export async function createProducer(name: string) {
+export async function createProducer(regionId: string, name: string) {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required.");
   const supabase = await createClient();
   return findOrCreate(
     () => supabase.from("producers").select("id, name").eq("name", trimmed).maybeSingle(),
-    () => supabase.from("producers").insert({ name: trimmed }).select("id, name").single(),
+    () =>
+      supabase
+        .from("producers")
+        .insert({ name: trimmed, region_id: regionId })
+        .select("id, name")
+        .single(),
   );
 }
 
