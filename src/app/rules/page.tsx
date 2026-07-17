@@ -1,13 +1,5 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { AppHeader } from "@/components/app-header";
 
 export const metadata = {
@@ -62,31 +54,26 @@ export default function RulesPage() {
             <CardTitle className="text-base">Points per category</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Points</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ROWS.map((r) => (
-                  <TableRow key={r.category}>
-                    <TableCell>
-                      <div className="font-medium">{r.category}</div>
-                      {r.note ? (
-                        <div className="text-xs text-muted-foreground">
-                          {r.note}
-                        </div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="text-right align-top font-semibold tabular-nums">
-                      {r.points}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ul className="flex flex-col divide-y divide-border">
+              {ROWS.map((r) => (
+                <li
+                  key={r.category}
+                  className="flex items-start justify-between gap-4 py-2.5 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{r.category}</p>
+                    {r.note ? (
+                      <p className="text-xs text-muted-foreground">
+                        {r.note}
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="shrink-0 font-semibold tabular-nums">
+                    {r.points}
+                  </p>
+                </li>
+              ))}
+            </ul>
             <p className="mt-4 text-sm text-muted-foreground">
               A wine with every category in play is worth up to{" "}
               <span className="font-semibold text-foreground">30 points</span>.
