@@ -16,7 +16,7 @@ export default async function EditProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, bio, avatar_url")
+    .select("display_name, bio, avatar_url, location, phone, favorite_wine_type")
     .eq("id", user.id)
     .single();
 
@@ -40,6 +40,9 @@ export default async function EditProfilePage() {
             <EditProfileForm
               displayName={profile?.display_name ?? ""}
               bio={profile?.bio ?? ""}
+              location={profile?.location ?? ""}
+              phone={profile?.phone ?? ""}
+              favoriteWineType={profile?.favorite_wine_type ?? ""}
             />
           </CardContent>
         </Card>

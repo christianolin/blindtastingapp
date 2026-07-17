@@ -3,45 +3,10 @@ import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { MobileNav, type NavLink } from "@/components/mobile-nav";
-import {
-  NotificationsBell,
-  type InviteNotification,
-} from "@/components/notifications-bell";
+import { NotificationsBell } from "@/components/notifications-bell";
 import { createClient } from "@/lib/supabase/server";
+import { getPendingInvites } from "@/lib/notifications";
 import { signOut } from "@/app/actions";
-
-// Pending tasting invitations for the bell. Kept to plain typed queries (no
-// nested PostgREST select) since the hand-written types declare no
-// relationships.
-async function getPendingInvites(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-): Promise<InviteNotification[]> {
-  const { data: invitedRows } = await supabase
-    .from("tasting_participants")
-    .select("tasting_id")
-    .eq("user_id", userId)
-    .eq("status", "INVITED");
-  const invitedIds = (invitedRows ?? []).map((r) => r.tasting_id);
-  if (invitedIds.length === 0) return [];
-
-  const { data: tastings } = await supabase
-    .from("tastings")
-    .select("id, name, host_id")
-    .in("id", invitedIds);
-  const hostIds = [...new Set((tastings ?? []).map((t) => t.host_id))];
-  const { data: hosts } = await supabase
-    .from("profiles")
-    .select("id, display_name")
-    .in("id", hostIds.length > 0 ? hostIds : [""]);
-  const hostNameById = new Map((hosts ?? []).map((h) => [h.id, h.display_name]));
-
-  return (tastings ?? []).map((t) => ({
-    tastingId: t.id,
-    tastingName: t.name,
-    hostName: hostNameById.get(t.host_id) ?? "Someone",
-  }));
-}
 
 const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Tastings" },
@@ -91,7 +56,7 @@ export async function AppHeader({
   }
 
   const name = displayName ?? "";
-  const invites = await getPendingInvites(supabase, userId);
+  const invites = await getPendingInvites();
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">

@@ -21,6 +21,15 @@ const CATEGORY_MAX_POINTS: Record<CategoryKey, number> = {
   vintage: 2,
 };
 
+export type OriginStat = { id: string; name: string; count: number };
+
+export type CategoryStrength = {
+  key: CategoryKey;
+  correct: number;
+  applicable: number;
+  pct: number;
+};
+
 export type ProfileStatsSummary = {
   winesGuessed: number;
   tastingsAttended: number;
@@ -29,6 +38,13 @@ export type ProfileStatsSummary = {
   averagePoints: number;
   categoryAccuracy: Record<CategoryKey, { correct: number; applicable: number }>;
   vintagePartialCredit: number;
+  // What they've tasted most (from the actual wine, not the guess) and which
+  // category they're most accurate at guessing (min sample size applied so a
+  // single lucky guess doesn't read as a "strength").
+  topCountries: OriginStat[];
+  topRegions: OriginStat[];
+  topGrapes: OriginStat[];
+  bestCategory: CategoryStrength | null;
 };
 
 export type TastingHistoryEntry = {
@@ -130,6 +146,10 @@ export async function getProfileStats(profileId: string): Promise<{
     averagePoints: 0,
     categoryAccuracy: emptyAccuracy(),
     vintagePartialCredit: 0,
+    topCountries: [],
+    topRegions: [],
+    topGrapes: [],
+    bestCategory: null,
   };
 
   if (participantIds.length === 0) {
@@ -146,6 +166,74 @@ export async function getProfileStats(profileId: string): Promise<{
 
   for (const g of guesses ?? []) tallyGuess(summary, g);
   summary.averagePoints = summary.winesGuessed > 0 ? summary.totalPoints / summary.winesGuessed : 0;
+
+  // "What have they tasted most" — from the actual wine (wine_answers), not
+  // their guess, since a scored guess means they tasted that glass regardless
+  // of whether they guessed it right.
+  const wineIds = [...new Set((guesses ?? []).map((g) => g.wine_id))];
+  if (wineIds.length > 0) {
+    const { data: answers } = await supabase
+      .from("wine_answers")
+      .select("wine_id, country_id, region_id, primary_grape_id")
+      .in("wine_id", wineIds);
+
+    const countryCounts = new Map<string, number>();
+    const regionCounts = new Map<string, number>();
+    const grapeCounts = new Map<string, number>();
+    for (const a of answers ?? []) {
+      countryCounts.set(a.country_id, (countryCounts.get(a.country_id) ?? 0) + 1);
+      regionCounts.set(a.region_id, (regionCounts.get(a.region_id) ?? 0) + 1);
+      grapeCounts.set(
+        a.primary_grape_id,
+        (grapeCounts.get(a.primary_grape_id) ?? 0) + 1,
+      );
+    }
+
+    const [{ data: countries }, { data: regions }, { data: grapes }] =
+      await Promise.all([
+        supabase
+          .from("countries")
+          .select("id, name")
+          .in("id", [...countryCounts.keys()]),
+        supabase
+          .from("regions")
+          .select("id, name")
+          .in("id", [...regionCounts.keys()]),
+        supabase
+          .from("grapes")
+          .select("id, name")
+          .in("id", [...grapeCounts.keys()]),
+      ]);
+
+    const topN = (
+      counts: Map<string, number>,
+      names: { id: string; name: string }[] | null,
+    ): OriginStat[] => {
+      const nameById = new Map((names ?? []).map((n) => [n.id, n.name]));
+      return [...counts.entries()]
+        .map(([id, count]) => ({ id, name: nameById.get(id) ?? "Unknown", count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    };
+
+    summary.topCountries = topN(countryCounts, countries);
+    summary.topRegions = topN(regionCounts, regions);
+    summary.topGrapes = topN(grapeCounts, grapes);
+  }
+
+  // Strongest category: highest accuracy among categories with enough sample
+  // size that one lucky guess doesn't read as a "strength".
+  const MIN_SAMPLE = 3;
+  let best: CategoryStrength | null = null;
+  for (const key of Object.keys(summary.categoryAccuracy) as CategoryKey[]) {
+    const { correct, applicable } = summary.categoryAccuracy[key];
+    if (applicable < MIN_SAMPLE) continue;
+    const pct = correct / applicable;
+    if (!best || pct > best.pct || (pct === best.pct && applicable > best.applicable)) {
+      best = { key, correct, applicable, pct };
+    }
+  }
+  summary.bestCategory = best;
 
   const pointsByTastingId = new Map<string, number>();
   const winesByTastingId = new Map<string, number>();
@@ -185,4 +273,77 @@ export async function getProfileStats(profileId: string): Promise<{
     .sort((a, b) => a.tastingName.localeCompare(b.tastingName));
 
   return { summary, tastings };
+}
+
+export type BulkProfileSummary = {
+  tastingsAttended: number;
+  winesGuessed: number;
+  averagePoints: number;
+};
+
+/**
+ * Lightweight per-profile stats for a whole list of people at once (the
+ * People directory) — batched across all requested profile ids rather than
+ * calling getProfileStats in a loop, since that would be an N+1 query fan-out
+ * on a page that can list every user in the app.
+ */
+export async function getBulkProfileSummaries(
+  profileIds: string[],
+): Promise<Map<string, BulkProfileSummary>> {
+  const result = new Map<string, BulkProfileSummary>();
+  if (profileIds.length === 0) return result;
+
+  const supabase = await createClient();
+
+  const { data: participantRows } = await supabase
+    .from("tasting_participants")
+    .select("id, user_id, tasting_id")
+    .in("user_id", profileIds);
+  if (!participantRows || participantRows.length === 0) return result;
+
+  const participantIds = participantRows.map((p) => p.id);
+  const userIdByParticipantId = new Map(
+    participantRows.map((p) => [p.id, p.user_id]),
+  );
+
+  const { data: guesses } = await supabase
+    .from("guesses")
+    .select("participant_id, total_points")
+    .in("participant_id", participantIds)
+    .not("scored_at", "is", null);
+
+  const tastingIdsByUser = new Map<string, Set<string>>();
+  const winesByUser = new Map<string, number>();
+  const pointsByUser = new Map<string, number>();
+  const tastingIdByParticipantId = new Map(
+    participantRows.map((p) => [p.id, p.tasting_id]),
+  );
+
+  for (const g of guesses ?? []) {
+    const userId = userIdByParticipantId.get(g.participant_id);
+    if (!userId) continue;
+    winesByUser.set(userId, (winesByUser.get(userId) ?? 0) + 1);
+    pointsByUser.set(
+      userId,
+      (pointsByUser.get(userId) ?? 0) + (g.total_points ?? 0),
+    );
+    const tastingId = tastingIdByParticipantId.get(g.participant_id);
+    if (tastingId) {
+      const set = tastingIdsByUser.get(userId) ?? new Set<string>();
+      set.add(tastingId);
+      tastingIdsByUser.set(userId, set);
+    }
+  }
+
+  for (const userId of profileIds) {
+    const winesGuessed = winesByUser.get(userId) ?? 0;
+    const totalPoints = pointsByUser.get(userId) ?? 0;
+    result.set(userId, {
+      tastingsAttended: tastingIdsByUser.get(userId)?.size ?? 0,
+      winesGuessed,
+      averagePoints: winesGuessed > 0 ? totalPoints / winesGuessed : 0,
+    });
+  }
+
+  return result;
 }

@@ -20,6 +20,10 @@ export async function updateProfile(
 
   const displayName = String(formData.get("display_name") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
+  const location = String(formData.get("location") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const favoriteWineType =
+    String(formData.get("favorite_wine_type") ?? "").trim() || null;
 
   if (!displayName) {
     return { error: "Name is required." };
@@ -27,7 +31,13 @@ export async function updateProfile(
 
   const { error } = await supabase
     .from("profiles")
-    .update({ display_name: displayName, bio: bio || null })
+    .update({
+      display_name: displayName,
+      bio: bio || null,
+      location: location || null,
+      phone: phone || null,
+      favorite_wine_type: favoriteWineType,
+    })
     .eq("id", user.id);
 
   if (error) {

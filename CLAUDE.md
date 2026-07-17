@@ -496,3 +496,37 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the lobby and a "How scoring works" link atop the guess form. Vintage
   scoring (exact = 2, off-by-one year = 1, else 0; NV/tawny exact-only) is
   shown both there and inline in the guess form's Vintage field label.
+- Profiles carry optional `location`, `phone`, `favorite_wine_type` (plain
+  text columns, migration `20260718090000_profile_optional_fields.sql`) set
+  on `/profile/edit`. `favorite_wine_type` is a fixed set defined in
+  `src/lib/wine-types.ts` (`FAVORITE_WINE_TYPE_ITEMS`), not a reference table
+  — it's flavor text, nothing scores off it. `location` and
+  `favorite_wine_type` are shown on the public profile (`/u/[id]`) and People
+  directory, consistent with the app's open-directory philosophy; **phone is
+  deliberately kept private** — only ever queried/shown on the owner's own
+  `/profile/edit` page, never on `/u/[id]` or `/people`, since it's more
+  sensitive PII than the rest of what's public here. If phone is ever wanted
+  publicly, that's a conscious call to make separately, not a default.
+- `getProfileStats` (`src/lib/profile-stats.ts`) also computes "what have you
+  tasted most" (`topCountries`/`topRegions`/`topGrapes`, top 5 each) — tallied
+  from the actual `wine_answers` for every wine with a scored guess, NOT from
+  the guess itself, since tasting the glass (not guessing it correctly) is
+  what counts as exposure to that origin. And `bestCategory` — the single
+  category with the highest accuracy, gated by a `MIN_SAMPLE = 3` threshold so
+  one lucky first guess doesn't read as a "strength". Both are shown on
+  `/u/[id]`.
+- `getBulkProfileSummaries(profileIds)` (also in `profile-stats.ts`) is a
+  separate, lighter batched query for the People directory — tastings
+  attended / wines guessed / avg points for a whole list of profiles in a
+  handful of queries, not `getProfileStats` called in a loop (which would be
+  an N+1 fan-out across every user in the directory). Use this one for any
+  future "stats for many people at once" surface; reach for `getProfileStats`
+  only when you need one person's full detail (category accuracy, tasting
+  history, top origins).
+- The notifications bell polls live. `src/lib/notifications.ts`'s
+  `getPendingInvites()` is a `"use server"` action (not just a plain helper)
+  specifically so `NotificationsBell` (client component) can call it directly
+  on a `setInterval` (15s, paused when the tab is hidden) and update just its
+  own state — instead of the old behavior where a new invite only appeared
+  after a full manual page reload. `AppHeader` still calls the same function
+  for the initial server-rendered count, so there's one source of truth.

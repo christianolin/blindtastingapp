@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin, Wine as WineIcon } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { AppHeader } from "@/components/app-header";
 import { FriendButton } from "@/components/friend-button";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats, type CategoryKey } from "@/lib/profile-stats";
+import { FAVORITE_WINE_TYPE_ITEMS } from "@/lib/wine-types";
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
   country: "Country",
@@ -41,7 +43,9 @@ export default async function ProfilePage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, bio, avatar_url")
+    .select(
+      "id, display_name, bio, avatar_url, location, favorite_wine_type, created_at",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!profile) {
@@ -94,6 +98,28 @@ export default async function ProfilePage({
                   {profile.bio}
                 </p>
               ) : null}
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                {profile.location ? (
+                  <Badge variant="secondary" className="gap-1">
+                    <MapPin className="size-3" />
+                    {profile.location}
+                  </Badge>
+                ) : null}
+                {profile.favorite_wine_type ? (
+                  <Badge variant="secondary" className="gap-1">
+                    <WineIcon className="size-3" />
+                    {FAVORITE_WINE_TYPE_ITEMS[profile.favorite_wine_type] ??
+                      profile.favorite_wine_type}
+                  </Badge>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Joined{" "}
+                {new Date(profile.created_at).toLocaleDateString(undefined, {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
             </div>
             {isOwnProfile ? (
               <Button
@@ -136,6 +162,19 @@ export default async function ProfilePage({
                 </div>
               </div>
 
+              {summary.bestCategory ? (
+                <div className="rounded-lg bg-primary/8 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Strongest at:</span>{" "}
+                  <span className="font-medium">
+                    {CATEGORY_LABELS[summary.bestCategory.key]}
+                  </span>{" "}
+                  <span className="text-muted-foreground">
+                    ({Math.round(summary.bestCategory.pct * 100)}% —{" "}
+                    {summary.bestCategory.correct}/{summary.bestCategory.applicable})
+                  </span>
+                </div>
+              ) : null}
+
               <div>
                 <h3 className="mb-2 text-sm font-medium">Accuracy by category</h3>
                 <table className="w-full text-sm">
@@ -161,6 +200,44 @@ export default async function ProfilePage({
                   </tbody>
                 </table>
               </div>
+
+              {summary.topCountries.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">Top countries</h3>
+                    <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
+                      {summary.topCountries.map((c) => (
+                        <li key={c.id} className="flex justify-between gap-2">
+                          <span className="truncate">{c.name}</span>
+                          <span className="shrink-0">{c.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">Top regions</h3>
+                    <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
+                      {summary.topRegions.map((r) => (
+                        <li key={r.id} className="flex justify-between gap-2">
+                          <span className="truncate">{r.name}</span>
+                          <span className="shrink-0">{r.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="mb-2 text-sm font-medium">Top grapes</h3>
+                    <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
+                      {summary.topGrapes.map((g) => (
+                        <li key={g.id} className="flex justify-between gap-2">
+                          <span className="truncate">{g.name}</span>
+                          <span className="shrink-0">{g.count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         ) : null}

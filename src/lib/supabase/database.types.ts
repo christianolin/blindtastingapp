@@ -71,6 +71,9 @@ export type Database = {
           email: string;
           avatar_url: string | null;
           bio: string | null;
+          location: string | null;
+          phone: string | null;
+          favorite_wine_type: string | null;
           created_at: string;
         };
         Insert: {
@@ -79,6 +82,9 @@ export type Database = {
           email: string;
           avatar_url?: string | null;
           bio?: string | null;
+          location?: string | null;
+          phone?: string | null;
+          favorite_wine_type?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -87,6 +93,9 @@ export type Database = {
           email: string;
           avatar_url: string | null;
           bio: string | null;
+          location: string | null;
+          phone: string | null;
+          favorite_wine_type: string | null;
           created_at: string;
         }>;
         Relationships: [];

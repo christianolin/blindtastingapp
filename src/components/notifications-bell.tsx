@@ -1,24 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getPendingInvites, type InviteNotification } from "@/lib/notifications";
 
-export type InviteNotification = {
-  tastingId: string;
-  tastingName: string;
-  hostName: string;
-};
+export type { InviteNotification };
+
+const POLL_MS = 15000;
 
 /**
- * Bell in the app header showing pending tasting invitations. The count badge
- * is always rendered (fixed size) so it never shifts layout; the dropdown
- * lists each invite with a link into the tasting lobby where you accept or
- * decline. Dependency-free toggle + panel, same pattern as MobileNav.
+ * Bell in the app header showing pending tasting invitations. Polls
+ * getPendingInvites directly (not router.refresh()) every 15s while the tab
+ * is visible, so a new invite shows up on its own instead of only after a
+ * manual page reload — and without re-rendering the whole page the way a
+ * full refresh would. The count badge is always rendered (fixed size) so it
+ * never shifts layout; the dropdown lists each invite with a link into the
+ * tasting lobby where you accept or decline.
  */
-export function NotificationsBell({ invites }: { invites: InviteNotification[] }) {
+export function NotificationsBell({
+  invites: initialInvites,
+}: {
+  invites: InviteNotification[];
+}) {
   const [open, setOpen] = useState(false);
+  const [invites, setInvites] = useState(initialInvites);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      getPendingInvites()
+        .then(setInvites)
+        .catch(() => {
+          // A transient failure just means the bell doesn't update this tick.
+        });
+    }, POLL_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const count = invites.length;
 
   return (
