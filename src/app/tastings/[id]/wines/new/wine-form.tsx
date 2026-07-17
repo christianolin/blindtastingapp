@@ -17,6 +17,10 @@ import {
   type ReferenceOption,
 } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
+import {
+  TypeDesignationField,
+  type TypeDesignationOption,
+} from "@/components/type-designation-field";
 import { ImageUploader } from "@/components/image-uploader";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import {
@@ -54,7 +58,7 @@ export function WineForm({
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
-  typeDesignations: ReferenceOption[];
+  typeDesignations: TypeDesignationOption[];
 }) {
   const [state, formAction, pending] = useActionState<
     AddWineFormState,
@@ -90,7 +94,6 @@ export function WineForm({
     startAppellationsTransition(async () => {
       setAppellations(regionId ? await listAppellationsForRegions([regionId]) : []);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionId]);
 
   return (
@@ -205,16 +208,20 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>Type designation (optional)</Label>
-        <ReferenceCombobox
+        <TypeDesignationField
           formFieldName="type_designation_id"
           options={typeDesignations}
           value={typeDesignationId}
           onValueChange={setTypeDesignationId}
+          priorityCountryId={countryId || undefined}
+          priorityCountryName={
+            countries.find((c) => c.id === countryId)?.name ?? undefined
+          }
+          onCreate={async (name) => {
+            const created = await createTypeDesignation(name);
+            return { ...created, category: null, country_id: null };
+          }}
           onOptionCreated={(o) => setTypeDesignations((t) => [...t, o])}
-          placeholder="None"
-          createLabel="type designation"
-          onCreate={createTypeDesignation}
-          allowClear
         />
       </div>
 

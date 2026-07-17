@@ -39,7 +39,30 @@ export type Database = {
       appellations: ScopedReferenceTable<"region_id">;
       grapes: ReferenceTable;
       producers: ReferenceTable;
-      type_designations: ReferenceTable;
+      type_designations: {
+        Row: {
+          id: string;
+          name: string;
+          category: string | null;
+          country_id: string | null;
+          region_id: string | null;
+          sort_order: number;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          category?: string | null;
+          country_id?: string | null;
+          region_id?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["type_designations"]["Insert"]
+        >;
+        Relationships: [];
+      };
 
       profiles: {
         Row: {

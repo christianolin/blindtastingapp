@@ -71,7 +71,11 @@ export default async function NewWinePage({
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
     supabase.from("grapes").select("id, name").order("name"),
-    supabase.from("type_designations").select("id, name").order("name"),
+    supabase
+      .from("type_designations")
+      .select("id, name, category, country_id")
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
 
   return (

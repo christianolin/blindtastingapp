@@ -136,6 +136,19 @@ a raw subquery, regardless of which two tables look involved at a glance.
   regardless of country read as a broken filter, so per the user it now
   cascades like the answer-key form. Changing country clears a now-mismatched
   region/appellation; changing region clears the appellation.)
+- `type_designations` stays a single flat table but carries `category`
+  (Prädikat, Quality Classification, Aging Classification, Sparkling Dosage,
+  Fortified Style, Sweetness), optional `country_id`/`region_id`, `sort_order`,
+  and `is_active` (migration `20260717090000_type_designations_categories.sql`,
+  seeded with the official competition set). Both the answer-key and guess
+  forms use `src/components/type-designation-field.tsx` — a searchable dropdown
+  grouped by category, with the chosen country's designations surfaced in a
+  "For {country}" group at the top (others stay visible under their category).
+  The list (~50 rows) is small enough to preload in full; fetch it with
+  `.eq("is_active", true).order("sort_order")` so groups/items keep their
+  intended order. Host-created designations land with `category` null (an
+  "Other" group). Scoring is unchanged — still a plain `type_designation_id`
+  FK comparison.
 - Vintage is its own type: `vintage_kind` (`YEAR` | `NV` | `TAWNY`) plus
   `vintage_year` or `vintage_tawny_years`. Scoring: exact match → 2 pts;
   `YEAR` off by exactly 1 → 1 pt; anything else → 0.

@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/select";
 import { ReferenceCombobox, type ReferenceOption } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
+import {
+  TypeDesignationField,
+  type TypeDesignationOption,
+} from "@/components/type-designation-field";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import { submitGuess, type GuessFormState } from "./actions";
 
@@ -58,7 +62,7 @@ export function GuessForm({
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
-  typeDesignations: ReferenceOption[];
+  typeDesignations: TypeDesignationOption[];
   existingGuess: ExistingGuess | null;
   initialProducerLabel?: string | null;
 }) {
@@ -219,13 +223,15 @@ export function GuessForm({
 
       <div className="flex flex-col gap-2">
         <Label>Type designation (2 pts, if this wine has one)</Label>
-        <ReferenceCombobox
+        <TypeDesignationField
           formFieldName="type_designation_id"
           options={typeDesignations}
           value={typeDesignationId}
           onValueChange={setTypeDesignationId}
-          placeholder="None"
-          allowClear
+          priorityCountryId={countryId || undefined}
+          priorityCountryName={
+            countries.find((c) => c.id === countryId)?.name ?? undefined
+          }
         />
       </div>
 
