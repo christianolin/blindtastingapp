@@ -16,6 +16,8 @@ export type TastingStatus = "DRAFT" | "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
+export type GrapeColor = "RED" | "WHITE";
+export type WineMapLevel = "COUNTRY" | "REGION" | "APPELLATION";
 
 type ReferenceTable = {
   Row: { id: string; name: string };
@@ -37,7 +39,34 @@ export type Database = {
       countries: ReferenceTable;
       regions: ScopedReferenceTable<"country_id">;
       appellations: ScopedReferenceTable<"region_id">;
-      grapes: ReferenceTable;
+      grapes: {
+        Row: {
+          id: string;
+          name: string;
+          color: GrapeColor | null;
+          description: string | null;
+          typical_aromas: string | null;
+          typical_acidity: string | null;
+          typical_tannin: string | null;
+          typical_body: string | null;
+          typical_alcohol: string | null;
+          main_regions: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          color?: GrapeColor | null;
+          description?: string | null;
+          typical_aromas?: string | null;
+          typical_acidity?: string | null;
+          typical_tannin?: string | null;
+          typical_body?: string | null;
+          typical_alcohol?: string | null;
+          main_regions?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
+        Relationships: [];
+      };
       producers: ReferenceTable;
       type_designations: {
         Row: {
@@ -48,6 +77,7 @@ export type Database = {
           region_id: string | null;
           sort_order: number;
           is_active: boolean;
+          description: string | null;
         };
         Insert: {
           id?: string;
@@ -57,9 +87,45 @@ export type Database = {
           region_id?: string | null;
           sort_order?: number;
           is_active?: boolean;
+          description?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["type_designations"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+      wine_map_nodes: {
+        Row: {
+          id: string;
+          parent_id: string | null;
+          level: WineMapLevel;
+          name: string;
+          slug: string;
+          description: string | null;
+          climate: string | null;
+          grape_varieties: string | null;
+          wine_styles: string | null;
+          key_facts: string[] | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          parent_id?: string | null;
+          level: WineMapLevel;
+          name: string;
+          slug: string;
+          description?: string | null;
+          climate?: string | null;
+          grape_varieties?: string | null;
+          wine_styles?: string | null;
+          key_facts?: string[] | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_map_nodes"]["Insert"]
         >;
         Relationships: [];
       };

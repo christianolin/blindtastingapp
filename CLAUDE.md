@@ -530,3 +530,47 @@ a raw subquery, regardless of which two tables look involved at a glance.
   own state — instead of the old behavior where a new invite only appeared
   after a full manual page reload. `AppHeader` still calls the same function
   for the initial server-rendered count, so there's one source of truth.
+- `/knowledge` is a separate reference library, deliberately decoupled from
+  tastings/scoring — nothing under it is scored or tasting-specific, it just
+  requires login for consistency with the rest of the app. Three pages, each
+  reusing existing tables rather than inventing parallel content stores:
+  - **Type Designations** (`/knowledge/type-designations`) reuses the same
+    `type_designations` table the answer-key/guess forms already use, via a
+    new nullable `description` column (migration
+    `20260719090000_type_designation_descriptions.sql`). Grouped by the same
+    `category` enum used for scoring, in the same fixed `CATEGORY_ORDER` as
+    `type-designation-field.tsx`'s picker groups.
+  - **Grape Library** (`/knowledge/grapes`) reuses the shared `grapes` table
+    (the same one every `wine_answers`/`guesses` FK points at) via new
+    nullable knowledge columns — `color`, `description`, `typical_aromas`,
+    `typical_acidity`, `typical_tannin`, `typical_body`, `typical_alcohol`,
+    `main_regions` (migration `20260719093000_grape_knowledge_columns.sql`).
+    Only 41 of 57 grapes are seeded with a profile; the rest render "No
+    profile yet." — a deliberate curated-subset approach (breadth of the
+    grape *list* already exists via LWIN-derived usage, depth of profile
+    content is added gradually) rather than blocking launch on profiling
+    every obscure variety. A grape added ad-hoc from a tasting's answer-key
+    combobox just shows up here unprofiled until someone curates it.
+  - **Wine Map** (`/knowledge/map`) is the one net-new table,
+    `wine_map_nodes` — a small self-referencing tree (`parent_id`, `level`
+    `COUNTRY`/`REGION`/`APPELLATION`, `name`, `slug`, `description`,
+    `climate`, `grape_varieties`, `wine_styles`, `key_facts text[]`,
+    `sort_order`), seeded via migration `20260719096000_wine_map.sql` with
+    France → Bordeaux → 12 appellations (Médoc, Haut-Médoc, Margaux,
+    Pauillac, Saint-Julien, Saint-Estèphe, Pessac-Léognan, Graves,
+    Saint-Émilion, Pomerol, Sauternes, Barsac). This is intentionally its
+    own table, not a repurposing of `countries`/`regions`/`appellations` —
+    those are flat lookup tables optimized for FK matching in scoring
+    (tens of thousands of LWIN rows, no editorial content), whereas the map
+    is a small, hand-curated, deeply-nested content tree; conflating them
+    would mean bolting knowledge-article columns onto every appellation a
+    host might reference in an answer key. Currently small enough (14 rows)
+    to fetch in full and build into a tree client-side in
+    `wine-map-explorer.tsx` (`childrenByParent`, keyed by `parent_id`) rather
+    than querying per level. The SVG diagram is opt-in per region via
+    `REGION_LAYOUTS[slug]` (hand-positioned schematic boxes, not
+    geographically precise) — a region with no layout entry just falls back
+    to the always-present plain clickable pill list, which is the extension
+    point for adding more regions/countries later without needing a
+    hand-drawn map for each one.
+  - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
