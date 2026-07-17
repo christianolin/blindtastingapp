@@ -51,9 +51,9 @@ export default function RulesPage() {
             Danish Championship scoring
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Fully-blind tastings on Blindr are scored with the VM/DM
-            (Danish national championship) point system. For each wine you earn
-            points per category you guess correctly:
+            Fully-blind tastings on Blindr are scored with the 
+            Danish national championship point system. For each wine 
+            you earn points per category you guess correctly:
           </p>
         </div>
 
