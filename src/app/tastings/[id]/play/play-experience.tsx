@@ -38,6 +38,9 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
 
   const isHost = tasting.host_id === user.id;
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
+  // The host who provided all the wines set the answers — they host, they
+  // don't guess. (In bring-your-own the host guesses everyone else's bottles.)
+  const hostProvidesHost = tasting.wine_source === "HOST_PROVIDES" && isHost;
 
   const { data: myParticipant } = await supabase
     .from("tasting_participants")
@@ -480,6 +483,10 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 <p className="text-sm text-muted-foreground">
                   This is your wine — nothing to guess.
                 </p>
+              ) : hostProvidesHost ? (
+                <p className="text-sm text-muted-foreground">
+                  You set the wines — you&apos;re hosting, not guessing.
+                </p>
               ) : isSemiBlind ? null : sequential && wine.id !== currentWineId ? (
                 <p className="text-sm text-muted-foreground">
                   🔒 One wine at a time — this opens once the earlier wines have
@@ -554,7 +561,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
         );
       })}
 
-      {isSemiBlind
+      {isSemiBlind && !hostProvidesHost
         ? (() => {
             const glasses: MatchGlass[] = (wines ?? [])
               .filter(

@@ -63,12 +63,17 @@ async function resolveGuesser(
 ): Promise<{ participantId: string } | { error: string }> {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("status")
+    .select("status, wine_source, host_id")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) return { error: "Tasting not found." };
   if (tasting.status === "DRAFT") {
     return { error: "The host hasn't started this tasting yet." };
+  }
+  // When the host provides all the wines they set the answers, so they host
+  // rather than guess.
+  if (tasting.wine_source === "HOST_PROVIDES" && tasting.host_id === userId) {
+    return { error: "You set these wines — you're hosting, not guessing." };
   }
 
   const { data: participant } = await supabase
