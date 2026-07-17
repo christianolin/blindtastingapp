@@ -58,27 +58,8 @@ export default async function NewWinePage({
         </div>
       );
     }
-
-    const { data: existingWine } = await supabase
-      .from("wines")
-      .select("id")
-      .eq("tasting_id", tastingId)
-      .eq("contributor_participant_id", participant.id)
-      .maybeSingle();
-
-    if (existingWine) {
-      return (
-        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-8">
-          <p>You&apos;ve already added your wine to this tasting.</p>
-          <Link
-            href={`/tastings/${tastingId}`}
-            className="text-sm underline underline-offset-4"
-          >
-            ← Back to tasting
-          </Link>
-        </div>
-      );
-    }
+    // Bring-your-own allows any number of bottles per person, so no
+    // already-added guard here.
   }
 
   const [

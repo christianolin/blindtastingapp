@@ -13,9 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
+import { RevealButton } from "./play/reveal-button";
 import { respondToInvite, moveWine } from "./actions";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -121,6 +123,82 @@ export default async function TastingPage({
   }
 
   const canGuess = myStatus === "JOINED" && hasStarted && wineCount > 0;
+
+  // The host set the answers, so show them a short identity per wine (so the
+  // serving order is actually visible when reordering — otherwise every hidden
+  // wine looks identical). Never fetched for non-hosts.
+  const hostWineIdentity = new Map<string, string>();
+  if (isHost && wineCount > 0) {
+    const wineIds = (wines ?? []).map((w) => w.id);
+    const [
+      { data: hc },
+      { data: hr },
+      { data: hg },
+      { data: ht },
+      { data: hAnswers },
+    ] = await Promise.all([
+      supabase.from("countries").select("id, name"),
+      supabase.from("regions").select("id, name"),
+      supabase.from("grapes").select("id, name"),
+      supabase.from("type_designations").select("id, name"),
+      supabase.from("wine_answers").select("*").in("wine_id", wineIds),
+    ]);
+    const nm = new Map<string, string>();
+    for (const list of [hc, hr, hg, ht])
+      for (const r of list ?? []) nm.set(r.id, r.name);
+    const looked = await lookupAppellationAndProducerNames({
+      appellationIds: (hAnswers ?? []).map((a) => a.appellation_id),
+      producerIds: (hAnswers ?? []).map((a) => a.producer_id),
+    });
+    for (const [id2, n] of looked) nm.set(id2, n);
+    for (const a of hAnswers ?? []) {
+      const vintage =
+        a.vintage_kind === "YEAR"
+          ? String(a.vintage_year ?? "")
+          : a.vintage_kind === "NV"
+            ? "NV"
+            : `${a.vintage_tawny_years ?? ""}yr tawny`;
+      hostWineIdentity.set(
+        a.wine_id,
+        [nm.get(a.producer_id), nm.get(a.region_id), vintage]
+          .filter(Boolean)
+          .join(" · "),
+      );
+    }
+  }
+
+  const reorderControls = (wineId: string, canUp: boolean, canDown: boolean) => (
+    <span className="flex items-center gap-0.5">
+      <form action={moveWine}>
+        <input type="hidden" name="tasting_id" value={id} />
+        <input type="hidden" name="wine_id" value={wineId} />
+        <input type="hidden" name="direction" value="up" />
+        <Button
+          type="submit"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Move up"
+          disabled={!canUp}
+        >
+          <ChevronUp className="size-4" />
+        </Button>
+      </form>
+      <form action={moveWine}>
+        <input type="hidden" name="tasting_id" value={id} />
+        <input type="hidden" name="wine_id" value={wineId} />
+        <input type="hidden" name="direction" value="down" />
+        <Button
+          type="submit"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Move down"
+          disabled={!canDown}
+        >
+          <ChevronDown className="size-4" />
+        </Button>
+      </form>
+    </span>
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -299,46 +377,13 @@ export default async function TastingPage({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isByo ? (
-            // Bring-your-own: everyone sees which bottles have been brought and
-            // who's yet to add one (people can bring several, or none). The
-            // wine stays hidden until reveal, but the contributor isn't secret.
-            <div className="flex flex-col gap-3">
-              {wineCount === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No wines added yet.
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {(wines ?? []).map((w) => (
-                    <li
-                      key={w.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span>{wineLabel(w)}</span>
-                      <Badge variant={w.is_revealed ? "default" : "outline"}>
-                        {w.is_revealed ? "Revealed" : "Added"}
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {participantsWithoutWine.length > 0 ? (
-                <p className="text-sm text-muted-foreground italic">
-                  Yet to add a wine:{" "}
-                  {participantsWithoutWine
-                    .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
-                    .join(", ")}
-                </p>
-              ) : null}
-            </div>
-          ) : wineCount === 0 ? (
+          {wineCount === 0 ? (
             <p className="text-sm text-muted-foreground">No wines added yet.</p>
           ) : (
-            <>
-              {isHost ? (
-                <p className="mb-2 text-xs text-muted-foreground">
-                  This is the serving order. Use the arrows to reorder.
+            <div className="flex flex-col gap-3">
+              {isHost && !isByo ? (
+                <p className="text-xs text-muted-foreground">
+                  This is the serving order — use the arrows to reorder.
                 </p>
               ) : null}
               <ul className="flex flex-col gap-2">
@@ -347,52 +392,41 @@ export default async function TastingPage({
                     key={w.id}
                     className="flex items-center justify-between gap-2 text-sm"
                   >
-                    <span>Wine {i + 1}</span>
-                    <div className="flex items-center gap-2">
-                      {isHost && !w.is_revealed ? (
-                        <span className="flex items-center gap-0.5">
-                          <form action={moveWine}>
-                            <input type="hidden" name="tasting_id" value={id} />
-                            <input type="hidden" name="wine_id" value={w.id} />
-                            <input type="hidden" name="direction" value="up" />
-                            <Button
-                              type="submit"
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Move up"
-                              disabled={i === 0}
-                            >
-                              <ChevronUp className="size-4" />
-                            </Button>
-                          </form>
-                          <form action={moveWine}>
-                            <input type="hidden" name="tasting_id" value={id} />
-                            <input type="hidden" name="wine_id" value={w.id} />
-                            <input
-                              type="hidden"
-                              name="direction"
-                              value="down"
-                            />
-                            <Button
-                              type="submit"
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Move down"
-                              disabled={i === (wines ?? []).length - 1}
-                            >
-                              <ChevronDown className="size-4" />
-                            </Button>
-                          </form>
-                        </span>
+                    <div className="min-w-0">
+                      <span>{isByo ? wineLabel(w) : `Wine ${i + 1}`}</span>
+                      {isHost && hostWineIdentity.get(w.id) ? (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {hostWineIdentity.get(w.id)}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {isHost && !w.is_revealed
+                        ? reorderControls(
+                            w.id,
+                            i > 0,
+                            i < (wines ?? []).length - 1,
+                          )
+                        : null}
+                      {isHost && hasStarted && !w.is_revealed ? (
+                        <RevealButton tastingId={id} wineId={w.id} />
                       ) : null}
                       <Badge variant={w.is_revealed ? "default" : "outline"}>
-                        {w.is_revealed ? "Revealed" : "Hidden"}
+                        {w.is_revealed ? "Revealed" : isByo ? "Added" : "Hidden"}
                       </Badge>
                     </div>
                   </li>
                 ))}
               </ul>
-            </>
+              {isByo && participantsWithoutWine.length > 0 ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Yet to add a wine:{" "}
+                  {participantsWithoutWine
+                    .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
+                    .join(", ")}
+                </p>
+              ) : null}
+            </div>
           )}
         </CardContent>
       </Card>
