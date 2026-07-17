@@ -513,11 +513,6 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                       grapes={grapes ?? []}
                       typeDesignations={typeDesignations ?? []}
                       existingGuess={(guess as ExistingGuess | undefined) ?? null}
-                      initialAppellationLabel={
-                        guess?.appellation_id
-                          ? (nameById.get(guess.appellation_id) ?? null)
-                          : null
-                      }
                       initialProducerLabel={
                         guess?.producer_id
                           ? (nameById.get(guess.producer_id) ?? null)

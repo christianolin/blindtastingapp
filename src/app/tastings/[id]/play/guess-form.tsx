@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ReferenceCombobox, type ReferenceOption } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
-import { searchAppellations, searchProducers } from "@/lib/reference-search";
+import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import { submitGuess, type GuessFormState } from "./actions";
 
 const VINTAGE_KIND_ITEMS = {
@@ -51,7 +51,6 @@ export function GuessForm({
   grapes,
   typeDesignations,
   existingGuess,
-  initialAppellationLabel,
   initialProducerLabel,
 }: {
   tastingId: string;
@@ -61,7 +60,6 @@ export function GuessForm({
   grapes: ReferenceOption[];
   typeDesignations: ReferenceOption[];
   existingGuess: ExistingGuess | null;
-  initialAppellationLabel?: string | null;
   initialProducerLabel?: string | null;
 }) {
   const [state, formAction, pending] = useActionState<GuessFormState, FormData>(
@@ -73,9 +71,6 @@ export function GuessForm({
   const [regionId, setRegionId] = useState(existingGuess?.region_id ?? "");
   const [appellationId, setAppellationId] = useState(
     existingGuess?.appellation_id ?? "",
-  );
-  const [appellationLabel, setAppellationLabel] = useState<string | null>(
-    initialAppellationLabel ?? null,
   );
   const [primaryGrapeId, setPrimaryGrapeId] = useState(
     existingGuess?.primary_grape_id ?? "",
@@ -98,20 +93,31 @@ export function GuessForm({
     ? regions.filter((r) => r.country_id === countryId)
     : regions;
 
+  // Appellations for the chosen region are loaded in full and shown in a plain
+  // dropdown (no type-to-search) — same as the answer-key form. An appellation
+  // only ever belongs to one region, so the list stays short.
+  const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
+  const [appellationsPending, startAppellationsTransition] = useTransition();
+  useEffect(() => {
+    startAppellationsTransition(async () => {
+      setAppellations(
+        regionId ? await listAppellationsForRegions([regionId]) : [],
+      );
+    });
+  }, [regionId]);
+
   function onCountryChange(id: string) {
     setCountryId(id);
     // Drop a now-mismatched region/appellation.
     if (regionId && !regions.some((r) => r.id === regionId && r.country_id === id)) {
       setRegionId("");
       setAppellationId("");
-      setAppellationLabel(null);
     }
   }
 
   function onRegionChange(id: string) {
     setRegionId(id);
     setAppellationId("");
-    setAppellationLabel(null);
   }
 
   return (
@@ -154,16 +160,19 @@ export function GuessForm({
 
       <div className="flex flex-col gap-2">
         <Label>District / Appellation (5 pts, if this wine has one)</Label>
-        <SearchableCombobox
+        <ReferenceCombobox
           formFieldName="appellation_id"
+          options={appellations}
           value={appellationId}
-          selectedLabel={appellationLabel}
-          onValueChange={(id, label) => {
-            setAppellationId(id);
-            setAppellationLabel(label || null);
-          }}
-          search={(query) => searchAppellations(query, regionId || undefined)}
-          placeholder="Guess the appellation"
+          onValueChange={setAppellationId}
+          placeholder={
+            !regionId
+              ? "Guess a region first"
+              : appellationsPending
+                ? "Loading appellations…"
+                : "Guess the appellation"
+          }
+          disabled={!regionId || appellationsPending}
           allowClear
         />
       </div>
