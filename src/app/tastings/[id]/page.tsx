@@ -118,11 +118,13 @@ export default async function TastingPage({
 
   const canGuess = myStatus === "JOINED" && hasStarted && wineCount > 0;
 
-  // The host set the answers, so show them a short identity per wine (so the
-  // serving order is actually visible when reordering — otherwise every hidden
-  // wine looks identical). Never fetched for non-hosts.
+  // HOST_PROVIDES only: the host set these answers, so showing a short identity
+  // per wine lets reordering be visible (hidden wines otherwise look
+  // identical) with no spoiler. NEVER in bring-your-own — there the host is a
+  // guesser too and didn't bring the others' bottles, so their identities must
+  // stay hidden until reveal (only the contributor's name shows).
   const hostWineIdentity = new Map<string, string>();
-  if (isHost && wineCount > 0) {
+  if (isHost && !isByo && wineCount > 0) {
     const wineIds = (wines ?? []).map((w) => w.id);
     const [
       { data: hc },
