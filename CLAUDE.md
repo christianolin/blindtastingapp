@@ -430,6 +430,22 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (play, results, lobby). The leaderboard "wine X/Y" denominator is
   per-participant — total wines minus the ones they contributed (you never
   guess your own), computed in `tasting-leaderboard.ts`.
+- Everything for a running tasting lives on the main page (`tastings/[id]/page.tsx`):
+  participants, wines, guessing, reveal, and per-wine results are all there, to
+  avoid bouncing between routes. The guess/reveal/readiness/results UI is a
+  shared server component `play/play-experience.tsx` (`PlayExperience`),
+  embedded on the main page for JOINED participants of a started tasting and
+  also rendered by the thin `/play` route (kept so old links work). Revealed
+  wines show EVERY participant's per-category chip breakdown inline. The host
+  still gets the compact "Wines" overview card (reveal button + reorder arrows
+  + a private producer·region·vintage identity line so reordering is visibly
+  doing something — hidden host-provided wines otherwise all look identical);
+  participants who can guess get the full play cards instead of that card.
+  `/results` remains as the dedicated leaderboard + breakdown page, linked from
+  the bottom of the play experience.
+- Bring-your-own has NO one-wine-per-person cap in either the add-wine action
+  OR the add-wine page (`wines/new/page.tsx` — the page-level guard was a
+  separate spot that also had to be removed); people can add 0, 1, or many.
 - Live updates during a tasting are polling, not Supabase Realtime:
   `src/components/auto-refresh.tsx` calls `router.refresh()` on an interval
   while the tab is visible (mounted on the play page always, the lobby once
