@@ -607,11 +607,13 @@ a raw subquery, regardless of which two tables look involved at a glance.
     focused shape. Brand colors are hardcoded hex in the MapLibre paint
     expressions (paint expressions can't read CSS variables). Nodes without
     `boundary_geojson` simply don't render on the map — the always-present
-    pill list is the fallback,     and realistic hand-traced polygons (9–20 coordinate points per
-    appellation, migration `20260724090000_wine_map_real_boundaries.sql`)
-    render the actual geographic shapes of the France/Bordeaux tree —
-    the commune AOCs overlap Haut-Médoc visually in the rendered z-order.
-    The old hand-positioned schematic SVG (`REGION_LAYOUTS`) is gone.
+    pill list is the fallback,     and realistic hand-traced polygons (migration `20260725090000_wine_map_fixed_boundaries.sql`,
+    10–25 coordinate points per appellation, every ring properly closed).
+    The commune AOCs (Saint-Estèphe, Pauillac, Saint-Julien, Margaux) tile
+    north→south along the Gironde with no overlap; Haut-Médoc sits west of
+    them with a 0.02° buffer. Coastline forms the hard western limit of
+    Médoc and Haut-Médoc. The old hand-positioned schematic SVG
+    (`REGION_LAYOUTS`) is gone.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
