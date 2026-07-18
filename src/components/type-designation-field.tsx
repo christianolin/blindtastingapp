@@ -118,9 +118,12 @@ export function TypeDesignationField({
       <input type="hidden" name={formFieldName} value={value} />
       <Popover
         open={open}
-        onOpenChange={setOpen}
-        onOpenChangeComplete={(isOpen) => {
-          if (isOpen) inputRef.current?.focus();
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Focus synchronously in the same tap/click — see popover.tsx's
+          // `keepMounted` comment for why this needs to happen here rather
+          // than after the open animation completes.
+          if (next) inputRef.current?.focus();
         }}
       >
         <PopoverTrigger

@@ -67,13 +67,15 @@ export function ReferenceCombobox({
       <input type="hidden" name={formFieldName} value={value} />
       <Popover
         open={open}
-        onOpenChange={setOpen}
-        onOpenChangeComplete={(isOpen) => {
-          // Focus once the popover has fully finished opening (not an
-          // instant autoFocus) — this is what lets typing start immediately
-          // without an extra tap/click, while still avoiding the jank an
-          // instant focus causes on touch (see SearchableCombobox).
-          if (isOpen) inputRef.current?.focus();
+        onOpenChange={(next) => {
+          setOpen(next);
+          // Focus synchronously, in the same tap/click that opens the
+          // popover — on mobile the virtual keyboard only appears when
+          // focus() runs inside the original trusted gesture, not after a
+          // delay. The popup's content stays mounted (PopoverContent's
+          // `keepMounted`) specifically so this input already exists to
+          // focus at this exact instant.
+          if (next) inputRef.current?.focus();
         }}
       >
         <PopoverTrigger

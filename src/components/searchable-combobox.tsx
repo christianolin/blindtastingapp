@@ -92,16 +92,15 @@ export function SearchableCombobox({
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
-          if (next) setQuery("");
-        }}
-        onOpenChangeComplete={(isOpen) => {
-          // Focus once the popover has fully finished opening, not an
-          // instant autoFocus — an instant focus pops the mobile keyboard
-          // while the popup is still animating in, and floating-ui's anchor
-          // positioning reacts to the resulting viewport resize mid-
-          // animation, producing visible jank. Waiting for the animation to
-          // finish first avoids that while still needing no manual tap.
-          if (isOpen) inputRef.current?.focus();
+          if (next) {
+            setQuery("");
+            // Focus synchronously, in the same tap/click that opens the
+            // popover — mobile only pops the virtual keyboard when focus()
+            // runs inside the original trusted gesture. PopoverContent's
+            // `keepMounted` keeps this input in the DOM at all times so
+            // there's always something to focus at this exact instant.
+            inputRef.current?.focus();
+          }
         }}
       >
         <PopoverTrigger

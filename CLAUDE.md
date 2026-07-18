@@ -331,23 +331,40 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tastings show "Semi-blind" instead — the two badges are mutually
   exclusive, not additive.
 - Every combobox (`ReferenceCombobox`, `SearchableCombobox`,
-  `TypeDesignationField`) focuses its search input via the shared
-  `Popover`'s `onOpenChangeComplete` callback, not an instant HTML
-  `autoFocus` — `if (isOpen) inputRef.current?.focus()`, called once the
-  popover has fully finished its open transition. This used to be gated to
-  pointer-fine (mouse/trackpad) devices only: an instant `autoFocus` pops
-  the mobile keyboard while the popover is still animating in, and
-  floating-ui's anchor positioning reacts to the resulting viewport resize
-  mid-animation, producing visible jank — the original reported cause of
-  "janky" mobile scrolling when adding/guessing a wine. But gating on
-  pointer type traded that jank for a worse regression: every dropdown
-  needed an extra tap/click on the search field before you could type,
-  on every device. Deferring the focus call until after the animation
-  finishes (rather than gating it by input type) gets both — typing starts
-  immediately with no extra tap, and the keyboard only appears once
-  positioning has settled, so the animation-vs-resize race is avoided at
-  the source. `CommandInput` (`components/ui/command.tsx`) needed a `ref`
-  prop added to forward to the underlying `cmdk` input for this to work.
+  `TypeDesignationField`) focuses its search input synchronously inside the
+  same `onOpenChange(true)` call that opens the popover —
+  `if (next) inputRef.current?.focus()` — not an instant HTML `autoFocus`,
+  and NOT deferred to a later callback. This went through two wrong designs
+  before landing here, both worth knowing about since the failure modes are
+  easy to reintroduce:
+  1. Plain `autoFocus`, gated to pointer-fine (mouse/trackpad) devices only
+     (skipped on touch): an instant focus on touch pops the virtual
+     keyboard while the popover is still animating in, and floating-ui's
+     anchor positioning reacts to the resulting viewport resize
+     mid-animation, producing visible jank. But this meant every dropdown
+     needed an extra tap on touch before you could type at all.
+  2. Deferring the focus call to the popover's `onOpenChangeComplete`
+     (fires once the open transition finishes): this fixed the extra-tap
+     problem on desktop, but broke mobile in a different way — mobile
+     browsers only pop the virtual keyboard when `.focus()` runs
+     *synchronously inside the original trusted user-gesture event*. By the
+     time `onOpenChangeComplete` fires, the tap is long over, so the input
+     silently becomes the focused DOM element but the keyboard never
+     appears (confirmed against a real phone: the popover opened, but no
+     keyboard/cursor showed in the search field).
+  The actual fix needed two parts together: `PopoverContent`
+  (`components/ui/popover.tsx`) sets `keepMounted` on the portal so the
+  popup's content — and its search input — stays in the DOM at all times
+  instead of only mounting once `open` becomes true (otherwise there's
+  nothing to `.focus()` yet at the exact instant of the tap); then each
+  combobox calls `.focus()` directly inside its `onOpenChange` handler, in
+  the same synchronous call as `setOpen(true)`, so it's still within the
+  trusted gesture on mobile. `CommandInput` (`components/ui/command.tsx`)
+  needed a `ref` prop added to forward to the underlying `cmdk` input for
+  this to work. The original animation-vs-keyboard-resize jank this whole
+  chain of fixes started from has not been re-verified on a real device
+  since this change — if it resurfaces, the fix belongs in taming
+  floating-ui's reposition-on-resize behavior, not in re-delaying focus().
 - The app nav (`src/components/app-header.tsx`) is global and self-fetching:
   it looks up the current user/profile itself when props aren't passed, so
   any page/layout can render `<AppHeader />` with no prop-drilling (the

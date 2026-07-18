@@ -26,7 +26,16 @@ function PopoverContent({
     "align" | "alignOffset" | "side" | "sideOffset"
   >) {
   return (
-    <PopoverPrimitive.Portal>
+    // `keepMounted`: the popup (and its search input) stays in the DOM even
+    // while closed, instead of only mounting once open. Comboboxes need
+    // this so they can call `inputRef.current.focus()` synchronously inside
+    // the same tap/click that opens the popover — on mobile, focusing an
+    // input only pops the virtual keyboard when the call happens inside a
+    // trusted user-gesture handler; if the input doesn't exist in the DOM
+    // yet (because it only mounts after the open-state update commits),
+    // there's nothing to focus at that instant, forcing a delayed focus
+    // call that's too late for the keyboard on touch devices.
+    <PopoverPrimitive.Portal keepMounted>
       <PopoverPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
