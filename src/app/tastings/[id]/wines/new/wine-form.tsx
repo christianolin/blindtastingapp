@@ -96,6 +96,24 @@ export function WineForm({
     });
   }, [regionId]);
 
+  // Producer search: opening the dropdown with a region chosen instantly
+  // lists that region's producers ("Specific to {region}"); typed matches
+  // from elsewhere still appear under "Other producers" so a producer is
+  // never unfindable.
+  const regionName = regions.find((r) => r.id === regionId)?.name;
+  async function searchProducersGrouped(query: string) {
+    const found = await searchProducers(query, regionId || undefined);
+    return found.map(({ id, name, in_region }) => ({
+      id,
+      name,
+      group: regionId
+        ? in_region
+          ? `Specific to ${regionName ?? "the region"}`
+          : "Other producers"
+        : undefined,
+    }));
+  }
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="tasting_id" value={tastingId} />
@@ -199,10 +217,11 @@ export function WineForm({
             setProducerId(id);
             setProducerLabel(label || null);
           }}
-          search={(q) => searchProducers(q, regionId || undefined)}
+          search={searchProducersGrouped}
           placeholder="Search for the producer"
           createLabel="producer"
           onCreate={regionId ? (name) => createProducer(regionId, name) : undefined}
+          emptyQueryHint={regionId ? "Type to search all producers" : undefined}
         />
       </div>
 
@@ -213,10 +232,6 @@ export function WineForm({
           options={typeDesignations}
           value={typeDesignationId}
           onValueChange={setTypeDesignationId}
-          priorityCountryId={countryId || undefined}
-          priorityCountryName={
-            countries.find((c) => c.id === countryId)?.name ?? undefined
-          }
           onCreate={async (name) => {
             const created = await createTypeDesignation(name);
             return { ...created, category: null, country_id: null };

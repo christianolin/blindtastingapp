@@ -142,8 +142,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   and `is_active` (migration `20260717090000_type_designations_categories.sql`,
   seeded with the official competition set). Both the answer-key and guess
   forms use `src/components/type-designation-field.tsx` — a searchable dropdown
-  grouped by category, with the chosen country's designations surfaced in a
-  "For {country}" group at the top (others stay visible under their category).
+  grouped by category in a fixed order. (It used to float the chosen
+  country's designations into a "For {country}" priority group at the top —
+  removed per user feedback in favor of the plain, predictable category
+  list; the `country_id` column stays, it just doesn't drive UI anymore.)
   The list (~50 rows) is small enough to preload in full; fetch it with
   `.eq("is_active", true).order("sort_order")` so groups/items keep their
   intended order. Host-created designations land with `category` null (an
@@ -614,13 +616,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   value assigned, same "under-labeling beats mislabeling" tradeoff as the
   appellation-designation backfill), and the remaining ~5% are genuinely
   split and are left `region_id = null` on purpose. `search_producers`
-  (migration `20260720090000_producer_region_scoping.sql`) always includes
-  NULL-region producers regardless of the query's region filter — a producer
-  with no confident region is "never filtered", never "invisible". Both
-  `wine-form.tsx` and `guess-form.tsx` pass the currently-selected `regionId`
-  into `searchProducers(query, regionId)`; the host's "add new producer"
-  (`createProducer(regionId, name)` in `wines/new/actions.ts`) requires a
-  region be chosen first, same as `createAppellation`. Producer name stays
+  (v3 in `20260721090000_producer_search_groups.sql`) does NOT filter a
+  typed query by region at all — it returns every match with an `in_region`
+  flag, and the UI groups the selected region's producers under a
+  "Specific to {region}" heading with everything else (other regions +
+  NULL) under "Other producers". A wrong region guess therefore never
+  hides the right producer, it just ranks it lower. An empty query WITH a
+  region returns that region's first 30 producers alphabetically — this is
+  what makes the dropdown show real options the instant it opens (the
+  combobox skips its debounce for the empty query); an empty query without
+  a region returns nothing (type-to-search as before). `SearchableCombobox`
+  supports this via an optional `group` label on results (no group → flat
+  list, so the appellation field is untouched) and an `emptyQueryHint`
+  line. Both `wine-form.tsx` and `guess-form.tsx` wrap `searchProducers`
+  in a `searchProducersGrouped` helper mapping `in_region` → group labels;
+  the host's "add new producer" (`createProducer(regionId, name)` in
+  `wines/new/actions.ts`) requires a region be chosen first, same as
+  `createAppellation`. Producer name stays
   globally unique (no change to that constraint) — region_id is an additive
   scoping hint, not a re-keying of the dedup identity. After running the
   backfill, 32,088 of 33,741 producers ended up linked; the ~1,650 left NULL
@@ -630,3 +642,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   and became a separate row from LWIN's already-linked plain "Petrus") —
   spot-checked against real usage and only 3 of the ~1,650 are actually
   referenced by an entered wine, so this wasn't worth chasing further.
+- The tasting page's Participants card is rich, not a bare name list: each
+  row links to the person's profile and shows their avatar (initial-circle
+  fallback), a Host badge where applicable, the In/Invited/Declined status,
+  a location/favorite-wine info line, and a cross-tasting stats line
+  ("N tastings · X.X avg pts") fetched via `getBulkProfileSummaries` — the
+  batched helper, per its own rule about many-people stat surfaces.
+- The guess form states up front that every field is optional (one line
+  under "How scoring works"); this is informational only — guess fields
+  were always optional server-side, nothing about validation changed.

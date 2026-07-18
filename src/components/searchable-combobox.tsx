@@ -14,7 +14,11 @@ import {
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
-export type SearchOption = { id: string; name: string };
+// `group` is an optional heading label — consecutive results sharing one
+// render under a CommandGroup heading (the producer field's "Specific to
+// {region}" / "Other producers" split). Results without a group render as
+// today's flat list, so callers like the appellation field are unaffected.
+export type SearchOption = { id: string; name: string; group?: string };
 
 // For reference tables too large to preload (thousands of appellations,
 // tens of thousands of producers after the LWIN import) — queries the
@@ -32,6 +36,7 @@ export function SearchableCombobox({
   onCreate,
   disabled,
   allowClear,
+  emptyQueryHint,
 }: {
   formFieldName: string;
   value: string;
@@ -43,6 +48,8 @@ export function SearchableCombobox({
   onCreate?: (name: string) => Promise<SearchOption>;
   disabled?: boolean;
   allowClear?: boolean;
+  /** Shown under instant (empty-query) results, e.g. "Type to search all producers". */
+  emptyQueryHint?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -56,13 +63,16 @@ export function SearchableCombobox({
   useEffect(() => {
     if (!open) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    // No debounce for the initial empty query — the instant first page (a
+    // region's producers) should appear the moment the dropdown opens.
+    const delay = query.trim() ? 250 : 0;
     debounceRef.current = setTimeout(() => {
       const requestId = ++requestIdRef.current;
       startTransition(async () => {
         const found = await search(query);
         if (requestId === requestIdRef.current) setResults(found);
       });
-    }, 250);
+    }, delay);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -84,6 +94,19 @@ export function SearchableCombobox({
       select(created);
     });
   }
+
+  // Bucket consecutive results by their group label, preserving order.
+  const grouped: { heading: string | undefined; options: SearchOption[] }[] = [];
+  for (const option of results) {
+    const last = grouped[grouped.length - 1];
+    if (last && last.heading === option.group) {
+      last.options.push(option);
+    } else {
+      grouped.push({ heading: option.group, options: [option] });
+    }
+  }
+
+  const hasQuery = query.trim().length > 0;
 
   return (
     <>
@@ -142,15 +165,42 @@ export function SearchableCombobox({
                   </CommandItem>
                 </CommandGroup>
               ) : null}
-              {query.trim().length === 0 ? (
+              {results.length > 0 ? (
+                <>
+                  {grouped.map((g, i) => (
+                    <CommandGroup key={g.heading ?? `__ungrouped_${i}`} heading={g.heading}>
+                      {g.options.map((option) => (
+                        <CommandItem
+                          key={option.id}
+                          value={option.id}
+                          onSelect={() => select(option)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2",
+                              option.id === value ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          {option.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ))}
+                  {!hasQuery && emptyQueryHint ? (
+                    <p className="px-3 pt-1 pb-2 text-center text-xs text-muted-foreground">
+                      {emptyQueryHint}
+                    </p>
+                  ) : null}
+                </>
+              ) : !hasQuery ? (
                 <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                  Type to search…
+                  {pending ? "Loading…" : "Type to search…"}
                 </p>
               ) : pending ? (
                 <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                   Searching…
                 </p>
-              ) : results.length === 0 ? (
+              ) : (
                 <CommandEmpty>
                   {onCreate ? (
                     <button
@@ -166,24 +216,6 @@ export function SearchableCombobox({
                     <span className="text-muted-foreground">No results.</span>
                   )}
                 </CommandEmpty>
-              ) : (
-                <CommandGroup>
-                  {results.map((option) => (
-                    <CommandItem
-                      key={option.id}
-                      value={option.id}
-                      onSelect={() => select(option)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2",
-                          option.id === value ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                      {option.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
               )}
             </CommandList>
           </Command>

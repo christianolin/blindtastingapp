@@ -39,20 +39,18 @@ function groupByCategory(items: TypeDesignationOption[]) {
 
 /**
  * Type-designation picker: a searchable dropdown grouped by `category`
- * (Prädikat, Quality Classification, …). When a country is already chosen for
- * the wine, that country's designations are surfaced in a "For {country}"
- * group at the top — without hiding any of the others (they stay under their
- * category headings). Options are expected pre-sorted by sort_order, so
- * categories and items keep their intended order. The host form passes
- * `onCreate` to add a new designation inline; the guess form doesn't.
+ * (Prädikat, Quality Classification, …) in a fixed order. Options are
+ * expected pre-sorted by sort_order, so categories and items keep their
+ * intended order. The host form passes `onCreate` to add a new designation
+ * inline; the guess form doesn't. (A "For {country}" priority group used to
+ * float the chosen country's designations to the top — removed per user
+ * feedback in favor of the plain, predictable category list.)
  */
 export function TypeDesignationField({
   formFieldName,
   options,
   value,
   onValueChange,
-  priorityCountryId,
-  priorityCountryName,
   placeholder = "None",
   allowClear = true,
   onCreate,
@@ -62,8 +60,6 @@ export function TypeDesignationField({
   options: TypeDesignationOption[];
   value: string;
   onValueChange: (id: string) => void;
-  priorityCountryId?: string;
-  priorityCountryName?: string;
   placeholder?: string;
   allowClear?: boolean;
   onCreate?: (name: string) => Promise<TypeDesignationOption>;
@@ -77,13 +73,7 @@ export function TypeDesignationField({
   const selected = options.find((o) => o.id === value);
   const trimmedSearch = search.trim();
 
-  const priorityItems = priorityCountryId
-    ? options.filter((o) => o.country_id === priorityCountryId)
-    : [];
-  const rest = priorityCountryId
-    ? options.filter((o) => o.country_id !== priorityCountryId)
-    : options;
-  const restGroups = groupByCategory(rest);
+  const groups = groupByCategory(options);
 
   function selectOption(id: string) {
     onValueChange(id);
@@ -175,19 +165,7 @@ export function TypeDesignationField({
                 </CommandGroup>
               ) : null}
 
-              {priorityItems.length > 0 ? (
-                <CommandGroup
-                  heading={
-                    priorityCountryName
-                      ? `For ${priorityCountryName}`
-                      : "Suggested"
-                  }
-                >
-                  {priorityItems.map(renderItem)}
-                </CommandGroup>
-              ) : null}
-
-              {restGroups.map((g) => (
+              {groups.map((g) => (
                 <CommandGroup key={g.category} heading={g.category}>
                   {g.items.map(renderItem)}
                 </CommandGroup>

@@ -51,19 +51,24 @@ export async function listAppellationsForRegions(
   return all;
 }
 
+export type ProducerSearchOption = SearchOption & { in_region: boolean };
+
 export async function searchProducers(
   query: string,
   regionId?: string,
-): Promise<SearchOption[]> {
+): Promise<ProducerSearchOption[]> {
   const trimmed = query.trim();
-  if (!trimmed) return [];
+  // An empty query is meaningful when a region is chosen: the RPC returns
+  // that region's first page so the dropdown shows real options the moment
+  // it opens. Without a region there's nothing sensible to page through.
+  if (!trimmed && !regionId) return [];
   const supabase = await createClient();
   // Accent-insensitive RPC — "chateau"/"petrus" must find "Château …" /
-  // "Pétrus". See 20260716160000_accent_insensitive_search.sql. Scoping by
-  // region_id (20260720090000_producer_region_scoping.sql) always still
-  // includes producers with a NULL region_id — those are genuinely
-  // multi-region (or not yet backfilled) and must never be hidden by a
-  // region filter.
+  // "Pétrus". See 20260716160000_accent_insensitive_search.sql. A typed
+  // query is NOT filtered by region (20260721090000_producer_search_groups.sql)
+  // — matches from other regions still return, just with in_region=false so
+  // the UI can rank/group the selected region's producers first. A wrong
+  // region guess must never hide the right producer.
   const { data } = await supabase.rpc("search_producers", {
     p_query: trimmed,
     p_region_id: regionId ?? undefined,

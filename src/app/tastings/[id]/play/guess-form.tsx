@@ -110,6 +110,24 @@ export function GuessForm({
     });
   }, [regionId]);
 
+  // Producer search: opening the dropdown with a region guessed instantly
+  // lists that region's producers ("Specific to {region}"); typed matches
+  // from elsewhere still appear under "Other producers" so guessing the
+  // wrong region never hides the right producer.
+  const regionName = regions.find((r) => r.id === regionId)?.name;
+  async function searchProducersGrouped(query: string) {
+    const found = await searchProducers(query, regionId || undefined);
+    return found.map(({ id, name, in_region }) => ({
+      id,
+      name,
+      group: regionId
+        ? in_region
+          ? `Specific to ${regionName ?? "the region"}`
+          : "Other producers"
+        : undefined,
+    }));
+  }
+
   function onCountryChange(id: string) {
     setCountryId(id);
     // Drop a now-mismatched region/appellation.
@@ -129,14 +147,20 @@ export function GuessForm({
       <input type="hidden" name="tasting_id" value={tastingId} />
       <input type="hidden" name="wine_id" value={wineId} />
 
-      <a
-        href="/rules"
-        target="_blank"
-        rel="noreferrer"
-        className="text-xs text-muted-foreground underline underline-offset-4"
-      >
-        How scoring works ↗
-      </a>
+      <div className="flex flex-col gap-1">
+        <a
+          href="/rules"
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-muted-foreground underline underline-offset-4"
+        >
+          How scoring works ↗
+        </a>
+        <p className="text-xs text-muted-foreground">
+          Every field is optional — skip anything you&apos;re unsure of; a
+          blank simply scores 0 for that category.
+        </p>
+      </div>
 
       <div className="flex flex-col gap-2">
         <Label>Country (2 pts)</Label>
@@ -215,9 +239,10 @@ export function GuessForm({
             setProducerId(id);
             setProducerLabel(label || null);
           }}
-          search={(q) => searchProducers(q, regionId || undefined)}
+          search={searchProducersGrouped}
           placeholder="Guess the producer"
           allowClear
+          emptyQueryHint={regionId ? "Type to search all producers" : undefined}
         />
       </div>
 
@@ -228,10 +253,6 @@ export function GuessForm({
           options={typeDesignations}
           value={typeDesignationId}
           onValueChange={setTypeDesignationId}
-          priorityCountryId={countryId || undefined}
-          priorityCountryName={
-            countries.find((c) => c.id === countryId)?.name ?? undefined
-          }
         />
       </div>
 

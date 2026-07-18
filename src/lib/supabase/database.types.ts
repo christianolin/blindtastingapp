@@ -376,7 +376,7 @@ export type Database = {
       };
       search_producers: {
         Args: { p_query: string; p_region_id?: string };
-        Returns: { id: string; name: string }[];
+        Returns: { id: string; name: string; in_region: boolean }[];
       };
       tasting_guess_status: {
         Args: { p_tasting_id: string };
