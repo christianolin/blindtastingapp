@@ -651,3 +651,33 @@ a raw subquery, regardless of which two tables look involved at a glance.
 - The guess form states up front that every field is optional (one line
   under "How scoring works"); this is informational only — guess fields
   were always optional server-side, nothing about validation changed.
+  Producer stays REQUIRED on the add-wine answer key on purpose (briefly
+  made optional, then reverted per the user: optional applies to guessing
+  only, and guessing already was).
+- Every value in the guess form must be React state, never an uncontrolled
+  input with `defaultValue`: the play page's AutoRefresh polls
+  `router.refresh()` every few seconds, and while client component STATE
+  survives that, an uncontrolled input's DOM-only value gets wiped by the
+  re-render. The vintage year/tawny fields were the one uncontrolled pair
+  and users had to "type the vintage last" — now controlled like the rest.
+  (The add-wine form's vintage input can stay uncontrolled; that route has
+  no AutoRefresh.)
+- Wines are editable after being added, while the tasting is still DRAFT:
+  an Edit button on the lobby wine list links to
+  `/tastings/[id]/wines/[wineId]/edit`, which reuses `WineForm` in edit
+  mode (`wineId` + `initial` props → `updateWine` action instead of
+  `addWine`). Who can edit = whoever added the wine: the host for wines
+  with no contributor, the contributing participant for their own BYO
+  bottle (the host can NOT edit someone else's BYO wine — they can't see
+  its answer anyway). Gated three ways: the Edit button only renders
+  pre-start, the `updateWine` action re-checks DRAFT + not-revealed +
+  adder identity, and the `wine_answers` update RLS policy
+  (`20260722090000_wine_answers_contributor_update.sql`) extends the old
+  host-only update to contributors with a not-revealed guard as the
+  defense-in-depth floor.
+- The LWIN import promoted every SITE/sub-region value to an appellation,
+  which occasionally produced a nonsense row when LWIN's site column held a
+  vineyard/lieu-dit name that collides with a famous term — e.g.
+  "Champagne AOP" under Beaujolais (a Fleurie lieu-dit named Champagne),
+  deleted as data cleanup. If a user reports a bizarre appellation under
+  the wrong region, this artifact pattern is the first suspect.

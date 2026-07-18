@@ -249,3 +249,117 @@ export async function addWine(
 
   redirect(`/tastings/${tastingId}`);
 }
+
+// Rewrites an existing wine's answer key. Only while the tasting is still
+// DRAFT, and only by whoever added the wine — the host for host-entered
+// wines, the contributing participant for their own BYO bottle.
+export async function updateWine(
+  _prevState: AddWineFormState,
+  formData: FormData,
+): Promise<AddWineFormState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const wineId = String(formData.get("wine_id") ?? "");
+  const countryId = String(formData.get("country_id") ?? "");
+  const regionId = String(formData.get("region_id") ?? "");
+  const appellationId = String(formData.get("appellation_id") ?? "") || null;
+  const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
+  const secondaryGrapeId =
+    String(formData.get("secondary_grape_id") ?? "") || null;
+  const producerId = String(formData.get("producer_id") ?? "");
+  const typeDesignationId =
+    String(formData.get("type_designation_id") ?? "") || null;
+  const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
+  const vintageKind = String(formData.get("vintage_kind") ?? "") as VintageKind;
+  const vintageYearRaw = String(formData.get("vintage_year") ?? "");
+  const vintageTawnyYearsRaw = String(
+    formData.get("vintage_tawny_years") ?? "",
+  );
+
+  if (!countryId || !regionId || !primaryGrapeId || !producerId) {
+    return { error: "Please fill in all required fields." };
+  }
+  if (!["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
+    return { error: "Choose a vintage type." };
+  }
+
+  let vintageYear: number | null = null;
+  let vintageTawnyYears: number | null = null;
+  if (vintageKind === "YEAR") {
+    vintageYear = parseInt(vintageYearRaw, 10);
+    if (!Number.isFinite(vintageYear)) {
+      return { error: "Enter a vintage year." };
+    }
+  } else if (vintageKind === "TAWNY") {
+    vintageTawnyYears = parseInt(vintageTawnyYearsRaw, 10);
+    if (!Number.isFinite(vintageTawnyYears)) {
+      return { error: "Choose the tawny age statement." };
+    }
+  }
+
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("id, host_id, status")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) {
+    return { error: "Tasting not found." };
+  }
+  if (tasting.status !== "DRAFT") {
+    return { error: "Wines can only be edited before the tasting starts." };
+  }
+
+  const { data: wine } = await supabase
+    .from("wines")
+    .select("id, tasting_id, contributor_participant_id, is_revealed")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (!wine || wine.tasting_id !== tastingId) {
+    return { error: "Wine not found." };
+  }
+  if (wine.is_revealed) {
+    return { error: "This wine has already been revealed." };
+  }
+
+  if (wine.contributor_participant_id) {
+    const { data: contributor } = await supabase
+      .from("tasting_participants")
+      .select("user_id")
+      .eq("id", wine.contributor_participant_id)
+      .maybeSingle();
+    if (contributor?.user_id !== user.id) {
+      return { error: "Only whoever added this wine can edit it." };
+    }
+  } else if (tasting.host_id !== user.id) {
+    return { error: "Only whoever added this wine can edit it." };
+  }
+
+  const { error: answerError } = await supabase
+    .from("wine_answers")
+    .update({
+      country_id: countryId,
+      region_id: regionId,
+      appellation_id: appellationId,
+      primary_grape_id: primaryGrapeId,
+      secondary_grape_id: secondaryGrapeId,
+      producer_id: producerId,
+      type_designation_id: typeDesignationId,
+      image_url: imageUrl,
+      vintage_kind: vintageKind,
+      vintage_year: vintageYear,
+      vintage_tawny_years: vintageTawnyYears,
+    })
+    .eq("wine_id", wineId);
+  if (answerError) {
+    return { error: answerError.message };
+  }
+
+  redirect(`/tastings/${tastingId}`);
+}

@@ -25,6 +25,7 @@ import { ImageUploader } from "@/components/image-uploader";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import {
   addWine,
+  updateWine,
   createAppellation,
   createCountry,
   createGrape,
@@ -33,6 +34,23 @@ import {
   createTypeDesignation,
   type AddWineFormState,
 } from "./actions";
+
+// Pre-filled values for edit mode — the wine's current answer key, plus the
+// producer's display name (SearchableCombobox can't derive it from the id).
+export type WineFormInitial = {
+  country_id: string;
+  region_id: string;
+  appellation_id: string | null;
+  primary_grape_id: string;
+  secondary_grape_id: string | null;
+  producer_id: string;
+  producer_name: string | null;
+  type_designation_id: string | null;
+  vintage_kind: "YEAR" | "NV" | "TAWNY";
+  vintage_year: number | null;
+  vintage_tawny_years: number | null;
+  image_url: string | null;
+};
 
 const VINTAGE_KIND_ITEMS = {
   YEAR: "A specific vintage year",
@@ -53,17 +71,23 @@ export function WineForm({
   regions: initialRegions,
   grapes: initialGrapes,
   typeDesignations: initialTypeDesignations,
+  wineId,
+  initial,
 }: {
   tastingId: string;
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
   typeDesignations: TypeDesignationOption[];
+  /** When set (with `initial`), the form edits this wine instead of adding one. */
+  wineId?: string;
+  initial?: WineFormInitial;
 }) {
+  const isEditing = Boolean(wineId && initial);
   const [state, formAction, pending] = useActionState<
     AddWineFormState,
     FormData
-  >(addWine, null);
+  >(isEditing ? updateWine : addWine, null);
 
   const [countries, setCountries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
@@ -72,15 +96,27 @@ export function WineForm({
     initialTypeDesignations,
   );
 
-  const [countryId, setCountryId] = useState("");
-  const [regionId, setRegionId] = useState("");
-  const [appellationId, setAppellationId] = useState("");
-  const [primaryGrapeId, setPrimaryGrapeId] = useState("");
-  const [secondaryGrapeId, setSecondaryGrapeId] = useState("");
-  const [producerId, setProducerId] = useState("");
-  const [producerLabel, setProducerLabel] = useState<string | null>(null);
-  const [typeDesignationId, setTypeDesignationId] = useState("");
-  const [vintageKind, setVintageKind] = useState("YEAR");
+  const [countryId, setCountryId] = useState(initial?.country_id ?? "");
+  const [regionId, setRegionId] = useState(initial?.region_id ?? "");
+  const [appellationId, setAppellationId] = useState(
+    initial?.appellation_id ?? "",
+  );
+  const [primaryGrapeId, setPrimaryGrapeId] = useState(
+    initial?.primary_grape_id ?? "",
+  );
+  const [secondaryGrapeId, setSecondaryGrapeId] = useState(
+    initial?.secondary_grape_id ?? "",
+  );
+  const [producerId, setProducerId] = useState(initial?.producer_id ?? "");
+  const [producerLabel, setProducerLabel] = useState<string | null>(
+    initial?.producer_name ?? null,
+  );
+  const [typeDesignationId, setTypeDesignationId] = useState(
+    initial?.type_designation_id ?? "",
+  );
+  const [vintageKind, setVintageKind] = useState(
+    initial?.vintage_kind ?? "YEAR",
+  );
 
   // Appellations are too large to preload in full (LWIN import), but an
   // appellation only ever belongs to one region (Pauillac is Bordeaux, full
@@ -117,6 +153,9 @@ export function WineForm({
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="tasting_id" value={tastingId} />
+      {isEditing ? (
+        <input type="hidden" name="wine_id" value={wineId} />
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <Label>Country</Label>
@@ -251,6 +290,7 @@ export function WineForm({
           folder={tastingId}
           label="Add a photo"
           aspectClassName="aspect-square max-w-48"
+          initialUrl={initial?.image_url ?? null}
         />
       </div>
 
@@ -260,7 +300,7 @@ export function WineForm({
           name="vintage_kind"
           items={VINTAGE_KIND_ITEMS}
           value={vintageKind}
-          onValueChange={(v) => setVintageKind(v as string)}
+          onValueChange={(v) => setVintageKind(v as "YEAR" | "NV" | "TAWNY")}
           required
         >
           <SelectTrigger id="vintage_kind" className="w-full">
@@ -280,12 +320,22 @@ export function WineForm({
             placeholder="e.g. 2018"
             min={1900}
             max={2100}
+            defaultValue={initial?.vintage_year ?? undefined}
             required
           />
         ) : null}
 
         {vintageKind === "TAWNY" ? (
-          <Select name="vintage_tawny_years" items={TAWNY_YEARS_ITEMS} required>
+          <Select
+            name="vintage_tawny_years"
+            items={TAWNY_YEARS_ITEMS}
+            defaultValue={
+              initial?.vintage_tawny_years != null
+                ? String(initial.vintage_tawny_years)
+                : undefined
+            }
+            required
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Choose the age statement" />
             </SelectTrigger>
@@ -307,8 +357,10 @@ export function WineForm({
       <Button type="submit" disabled={pending}>
         {pending ? (
           <>
-            <WineGlassLoader /> Adding wine…
+            <WineGlassLoader /> {isEditing ? "Saving…" : "Adding wine…"}
           </>
+        ) : isEditing ? (
+          "Save changes"
         ) : (
           "Add wine"
         )}

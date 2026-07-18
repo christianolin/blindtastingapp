@@ -90,6 +90,20 @@ export function GuessForm({
     existingGuess?.type_designation_id ?? "",
   );
   const [vintageKind, setVintageKind] = useState(existingGuess?.vintage_kind ?? "YEAR");
+  // Vintage year/tawny are controlled state, NOT uncontrolled inputs with
+  // defaultValue: the play page polls router.refresh() every few seconds
+  // (AutoRefresh), and a re-render mid-edit was wiping whatever was typed
+  // into the one field whose value lived only in the DOM — users had to
+  // "type the vintage last". React state survives those refreshes like
+  // every other field in this form.
+  const [vintageYear, setVintageYear] = useState(
+    existingGuess?.vintage_year != null ? String(existingGuess.vintage_year) : "",
+  );
+  const [vintageTawnyYears, setVintageTawnyYears] = useState(
+    existingGuess?.vintage_tawny_years != null
+      ? String(existingGuess.vintage_tawny_years)
+      : "",
+  );
 
   // Cascade country → region → appellation so the region list is scoped to the
   // country you guessed (picking France shows French regions, not all 378).
@@ -283,7 +297,8 @@ export function GuessForm({
             placeholder="e.g. 2018"
             min={1900}
             max={2100}
-            defaultValue={existingGuess?.vintage_year ?? undefined}
+            value={vintageYear}
+            onChange={(e) => setVintageYear(e.target.value)}
           />
         ) : null}
 
@@ -291,11 +306,8 @@ export function GuessForm({
           <Select
             name="vintage_tawny_years"
             items={TAWNY_YEARS_ITEMS}
-            defaultValue={
-              existingGuess?.vintage_tawny_years
-                ? String(existingGuess.vintage_tawny_years)
-                : undefined
-            }
+            value={vintageTawnyYears}
+            onValueChange={(v) => setVintageTawnyYears(v as string)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Choose the age statement" />

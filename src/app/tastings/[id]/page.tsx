@@ -421,6 +421,26 @@ export default async function TastingPage({
                       ) : null}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
+                      {/* Editable while the tasting hasn't started, by
+                          whoever added the wine: host for host-entered
+                          wines, the contributor for their own BYO bottle. */}
+                      {!hasStarted &&
+                      (w.contributor_participant_id
+                        ? w.contributor_participant_id === myParticipant?.id
+                        : isHost) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          nativeButton={false}
+                          render={
+                            <Link
+                              href={`/tastings/${id}/wines/${w.id}/edit`}
+                            />
+                          }
+                        >
+                          Edit
+                        </Button>
+                      ) : null}
                       {isHost && !w.is_revealed
                         ? reorderControls(
                             w.id,
