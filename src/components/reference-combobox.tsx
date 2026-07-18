@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -42,6 +42,7 @@ export function ReferenceCombobox({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const selected = options.find((o) => o.id === value);
   const trimmedSearch = search.trim();
@@ -64,7 +65,17 @@ export function ReferenceCombobox({
   return (
     <>
       <input type="hidden" name={formFieldName} value={value} />
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+        onOpenChangeComplete={(isOpen) => {
+          // Focus once the popover has fully finished opening (not an
+          // instant autoFocus) — this is what lets typing start immediately
+          // without an extra tap/click, while still avoiding the jank an
+          // instant focus causes on touch (see SearchableCombobox).
+          if (isOpen) inputRef.current?.focus();
+        }}
+      >
         <PopoverTrigger
           disabled={disabled}
           render={
@@ -84,6 +95,7 @@ export function ReferenceCombobox({
         <PopoverContent className="w-(--anchor-width) p-0">
           <Command>
             <CommandInput
+              ref={inputRef}
               placeholder={`Search ${(createLabel ?? placeholder).toLowerCase()}…`}
               value={search}
               onValueChange={setSearch}

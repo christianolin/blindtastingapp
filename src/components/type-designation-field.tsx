@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -72,6 +72,7 @@ export function TypeDesignationField({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [pending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const selected = options.find((o) => o.id === value);
   const trimmedSearch = search.trim();
@@ -115,7 +116,13 @@ export function TypeDesignationField({
   return (
     <>
       <input type="hidden" name={formFieldName} value={value} />
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+        onOpenChangeComplete={(isOpen) => {
+          if (isOpen) inputRef.current?.focus();
+        }}
+      >
         <PopoverTrigger
           render={
             <Button
@@ -134,6 +141,7 @@ export function TypeDesignationField({
         <PopoverContent className="w-(--anchor-width) p-0">
           <Command>
             <CommandInput
+              ref={inputRef}
               placeholder="Search designations…"
               value={search}
               onValueChange={setSearch}

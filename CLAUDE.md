@@ -330,16 +330,24 @@ a raw subquery, regardless of which two tables look involved at a glance.
   point values aren't self-explanatory without that context. SEMI_BLIND
   tastings show "Semi-blind" instead — the two badges are mutually
   exclusive, not additive.
-- `SearchableCombobox`'s search input only gets `autoFocus` on pointer-fine
-  (mouse/trackpad) devices, detected once via a lazy `useState` initializer
-  guarded by `typeof window !== "undefined"` (not a `useEffect`+setState,
-  which is unnecessary here and trips the `set-state-in-effect` lint rule).
-  On a touch device, autofocusing immediately pops the virtual keyboard
-  while the popover is still animating in, and floating-ui's anchor
-  positioning reacts to the resulting viewport resize mid-animation — this
-  was the main reported cause of "janky" mobile scrolling when adding a wine
-  or guessing (both forms are full of these comboboxes). `ReferenceCombobox`
-  never had this problem since its `CommandInput` was never autofocused.
+- Every combobox (`ReferenceCombobox`, `SearchableCombobox`,
+  `TypeDesignationField`) focuses its search input via the shared
+  `Popover`'s `onOpenChangeComplete` callback, not an instant HTML
+  `autoFocus` — `if (isOpen) inputRef.current?.focus()`, called once the
+  popover has fully finished its open transition. This used to be gated to
+  pointer-fine (mouse/trackpad) devices only: an instant `autoFocus` pops
+  the mobile keyboard while the popover is still animating in, and
+  floating-ui's anchor positioning reacts to the resulting viewport resize
+  mid-animation, producing visible jank — the original reported cause of
+  "janky" mobile scrolling when adding/guessing a wine. But gating on
+  pointer type traded that jank for a worse regression: every dropdown
+  needed an extra tap/click on the search field before you could type,
+  on every device. Deferring the focus call until after the animation
+  finishes (rather than gating it by input type) gets both — typing starts
+  immediately with no extra tap, and the keyboard only appears once
+  positioning has settled, so the animation-vs-resize race is avoided at
+  the source. `CommandInput` (`components/ui/command.tsx`) needed a `ref`
+  prop added to forward to the underlying `cmdk` input for this to work.
 - The app nav (`src/components/app-header.tsx`) is global and self-fetching:
   it looks up the current user/profile itself when props aren't passed, so
   any page/layout can render `<AppHeader />` with no prop-drilling (the

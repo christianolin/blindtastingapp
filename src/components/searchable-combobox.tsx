@@ -49,19 +49,7 @@ export function SearchableCombobox({
   const [results, setResults] = useState<SearchOption[]>([]);
   const [pending, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
-  // Autofocusing the search input immediately pops the mobile keyboard,
-  // which resizes the viewport while the popover is still animating in —
-  // its floating-ui anchor positioning reacts to that resize and repositions
-  // mid-animation, producing visible jank. On a touch device the user can
-  // just tap the input when they're ready to type, so skip the autofocus
-  // there; keep it on pointer-fine (mouse/trackpad) devices where it's a
-  // pure convenience with no keyboard to fight. Computed once via a lazy
-  // initializer, not an effect: this popup is unmounted (base-ui doesn't
-  // keep it mounted while closed) for the entire SSR pass, so there's no
-  // window-is-undefined crash and no hydration mismatch to worry about.
-  const [autoFocusSearch] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
-  );
+  const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
@@ -106,6 +94,15 @@ export function SearchableCombobox({
           setOpen(next);
           if (next) setQuery("");
         }}
+        onOpenChangeComplete={(isOpen) => {
+          // Focus once the popover has fully finished opening, not an
+          // instant autoFocus — an instant focus pops the mobile keyboard
+          // while the popup is still animating in, and floating-ui's anchor
+          // positioning reacts to the resulting viewport resize mid-
+          // animation, producing visible jank. Waiting for the animation to
+          // finish first avoids that while still needing no manual tap.
+          if (isOpen) inputRef.current?.focus();
+        }}
       >
         <PopoverTrigger
           disabled={disabled}
@@ -128,7 +125,7 @@ export function SearchableCombobox({
             <div className="p-1 pb-0">
               <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none!">
                 <InputGroupInput
-                  autoFocus={autoFocusSearch}
+                  ref={inputRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={`Search ${(createLabel ?? placeholder).toLowerCase()}…`}
