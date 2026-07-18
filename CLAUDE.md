@@ -594,12 +594,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
     host might reference in an answer key. Currently small enough (14 rows)
     to fetch in full and build into a tree client-side in
     `wine-map-explorer.tsx` (`childrenByParent`, keyed by `parent_id`) rather
-    than querying per level. The SVG diagram is opt-in per region via
-    `REGION_LAYOUTS[slug]` (hand-positioned schematic boxes, not
-    geographically precise) — a region with no layout entry just falls back
-    to the always-present plain clickable pill list, which is the extension
-    point for adding more regions/countries later without needing a
-    hand-drawn map for each one.
+    than querying per level. The map view is a real interactive geographic map
+    (`interactive-wine-map.tsx`: MapLibre GL via `react-map-gl/maplibre`,
+    free un-keyed Carto Positron vector basemap — no API key). Each node
+    can carry a `boundary_geojson` JSONB column (a bare GeoJSON *geometry*,
+    not a Feature; migration `20260723090000_wine_map_boundaries.sql`) —
+    typed `unknown` in `database.types.ts` and cast to `GeoJSON.Geometry`
+    at the component edge. The component must ONLY be loaded via
+    `next/dynamic` with `ssr: false` (maplibre-gl touches `window` on
+    import). Clicking a polygon and clicking a pill both drive the same
+    `focusedId`; the map auto-fits (`@turf/bbox` + `fitBounds`) to the
+    focused shape. Brand colors are hardcoded hex in the MapLibre paint
+    expressions (paint expressions can't read CSS variables). Nodes without
+    `boundary_geojson` simply don't render on the map — the always-present
+    pill list is the fallback, and rough placeholder polygons (hand-drawn
+    boxes, NOT real boundaries) are seeded for the France/Bordeaux tree;
+    replacing them with real traced boundaries is a data task, not a code
+    task. The old hand-positioned schematic SVG (`REGION_LAYOUTS`) is gone.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
