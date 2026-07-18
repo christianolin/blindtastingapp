@@ -114,6 +114,7 @@ export type Database = {
           key_facts: string[] | null;
           sort_order: number;
           created_at: string;
+          boundary_geojson: unknown;
         };
         Insert: {
           id?: string;
@@ -128,6 +129,7 @@ export type Database = {
           key_facts?: string[] | null;
           sort_order?: number;
           created_at?: string;
+          boundary_geojson?: unknown;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_map_nodes"]["Insert"]
