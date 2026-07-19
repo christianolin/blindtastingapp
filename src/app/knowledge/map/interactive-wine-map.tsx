@@ -13,59 +13,74 @@ type WineMapNode = Database["public"]["Tables"]["wine_map_nodes"]["Row"];
 const BASEMAP_STYLE =
   "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
-const APPELLATION_LAYER_ID = "appellation-fills";
+const FILL_LAYER_PREFIX = "area-fills-depth-";
 
 function geometryOf(node: WineMapNode): Geometry | null {
   return (node.boundary_geojson as Geometry | null) ?? null;
 }
 
-function toFeature(node: WineMapNode) {
-  const geometry = geometryOf(node);
-  if (!geometry) return null;
-  return {
-    type: "Feature" as const,
-    properties: { id: node.id, name: node.name },
-    geometry,
-  };
-}
-
+// Nested AOCs (Margaux inside Haut-Médoc inside Bordeaux) are rendered as
+// stacked translucent fills, one layer per nesting depth, painted
+// shallow-first so deeper shapes always sit on top and stay clickable.
+// A click can hit several overlapping polygons; it resolves to the deepest
+// one, tie-broken by smaller bbox area (so a small commune wins over the
+// broad appellation it overlaps at the same depth, e.g. Médoc vs Haut-Médoc).
 export function InteractiveWineMap({
-  region,
-  appellations,
+  viewRoot,
+  items,
   focusedId,
   onFocus,
 }: {
-  region: WineMapNode | null;
-  appellations: WineMapNode[];
+  viewRoot: WineMapNode | null;
+  items: { node: WineMapNode; depth: number }[];
   focusedId: string | null;
   onFocus: (id: string) => void;
 }) {
   const mapRef = useRef<MapRef>(null);
 
-  const appellationCollection = useMemo(
-    () => ({
-      type: "FeatureCollection" as const,
-      features: appellations
-        .map(toFeature)
-        .filter((f): f is NonNullable<typeof f> => f !== null),
-    }),
-    [appellations],
-  );
+  const { collection, depths } = useMemo(() => {
+    const features = items.flatMap(({ node, depth }) => {
+      const geometry = geometryOf(node);
+      if (!geometry) return [];
+      const [minX, minY, maxX, maxY] = bbox(geometry);
+      return [
+        {
+          type: "Feature" as const,
+          properties: {
+            id: node.id,
+            name: node.name,
+            depth,
+            bboxArea: (maxX - minX) * (maxY - minY),
+          },
+          geometry,
+        },
+      ];
+    });
+    const depths = [...new Set(features.map((f) => f.properties.depth))].sort(
+      (a, b) => a - b,
+    );
+    return {
+      collection: { type: "FeatureCollection" as const, features },
+      depths,
+    };
+  }, [items]);
 
-  const regionFeature = useMemo(
-    () => (region ? toFeature(region) : null),
-    [region],
-  );
+  const rootFeature = useMemo(() => {
+    const geometry = viewRoot ? geometryOf(viewRoot) : null;
+    return geometry
+      ? { type: "Feature" as const, properties: {}, geometry }
+      : null;
+  }, [viewRoot]);
 
   // Auto-fit: fly to the focused node's shape; if the focused node has no
-  // boundary (or nothing is focused), fall back to the region's shape.
+  // boundary (or nothing is focused), fall back to the view root's shape.
   useEffect(() => {
     const focusedNode =
-      appellations.find((n) => n.id === focusedId) ??
-      (region?.id === focusedId ? region : null);
+      items.find(({ node }) => node.id === focusedId)?.node ??
+      (viewRoot?.id === focusedId ? viewRoot : null);
     const target =
       (focusedNode && geometryOf(focusedNode)) ??
-      (region && geometryOf(region));
+      (viewRoot && geometryOf(viewRoot));
     if (!target) return;
     const [minX, minY, maxX, maxY] = bbox(target);
     mapRef.current?.fitBounds(
@@ -75,9 +90,9 @@ export function InteractiveWineMap({
       ],
       { padding: 48, duration: 900, maxZoom: 11 },
     );
-  }, [focusedId, region, appellations]);
+  }, [focusedId, viewRoot, items]);
 
-  if (appellationCollection.features.length === 0 && !regionFeature) {
+  if (collection.features.length === 0 && !rootFeature) {
     return null;
   }
 
@@ -87,10 +102,31 @@ export function InteractiveWineMap({
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
         initialViewState={{ longitude: -0.58, latitude: 44.84, zoom: 7 }}
-        interactiveLayerIds={[APPELLATION_LAYER_ID]}
+        interactiveLayerIds={depths.map((d) => `${FILL_LAYER_PREFIX}${d}`)}
         onClick={(e) => {
-          const id = e.features?.[0]?.properties?.id;
-          if (typeof id === "string") onFocus(id);
+          let best: { id: string; depth: number; bboxArea: number } | null =
+            null;
+          for (const f of e.features ?? []) {
+            const p = f.properties as {
+              id?: string;
+              depth?: number;
+              bboxArea?: number;
+            };
+            if (typeof p.id !== "string") continue;
+            if (
+              !best ||
+              (p.depth ?? 0) > best.depth ||
+              ((p.depth ?? 0) === best.depth &&
+                (p.bboxArea ?? Infinity) < best.bboxArea)
+            ) {
+              best = {
+                id: p.id,
+                depth: p.depth ?? 0,
+                bboxArea: p.bboxArea ?? Infinity,
+              };
+            }
+          }
+          if (best) onFocus(best.id);
         }}
         onMouseMove={(e) => {
           const map = mapRef.current;
@@ -101,10 +137,10 @@ export function InteractiveWineMap({
         attributionControl={{ compact: true }}
         style={{ width: "100%", height: "100%" }}
       >
-        {regionFeature ? (
-          <Source id="region-boundary" type="geojson" data={regionFeature}>
+        {rootFeature ? (
+          <Source id="view-root-boundary" type="geojson" data={rootFeature}>
             <Layer
-              id="region-outline"
+              id="view-root-outline"
               type="line"
               paint={{
                 "line-color": "#C3A25B",
@@ -114,36 +150,48 @@ export function InteractiveWineMap({
             />
           </Source>
         ) : null}
-        <Source id="appellations" type="geojson" data={appellationCollection}>
+        <Source id="wine-areas" type="geojson" data={collection}>
+          {depths.map((depth) => (
+            <Layer
+              key={depth}
+              id={`${FILL_LAYER_PREFIX}${depth}`}
+              type="fill"
+              filter={["==", ["get", "depth"], depth]}
+              paint={{
+                "fill-color": [
+                  "case",
+                  ["==", ["get", "id"], focusedId ?? ""],
+                  "#B78E42",
+                  "#5C1A2B",
+                ],
+                "fill-opacity": [
+                  "case",
+                  ["==", ["get", "id"], focusedId ?? ""],
+                  0.6,
+                  // Deeper shapes get slightly stronger fills so nesting
+                  // reads as darker islands inside their parent.
+                  Math.min(0.18 + depth * 0.12, 0.55),
+                ],
+              }}
+            />
+          ))}
           <Layer
-            id={APPELLATION_LAYER_ID}
-            type="fill"
+            id="area-outlines"
+            type="line"
             paint={{
-              "fill-color": [
-                "case",
-                ["==", ["get", "id"], focusedId ?? ""],
-                "#B78E42",
-                "#5C1A2B",
-              ],
-              "fill-opacity": [
-                "case",
-                ["==", ["get", "id"], focusedId ?? ""],
-                0.65,
-                0.35,
-              ],
+              "line-color": "#5C1A2B",
+              "line-width": ["+", 0.5, ["*", 0.5, ["get", "depth"]]],
             }}
           />
           <Layer
-            id="appellation-outlines"
-            type="line"
-            paint={{ "line-color": "#5C1A2B", "line-width": 1 }}
-          />
-          <Layer
-            id="appellation-labels"
+            id="area-labels"
             type="symbol"
             layout={{
               "text-field": ["get", "name"],
               "text-size": 11,
+              // Deeper (smaller) shapes label first so commune names survive
+              // the collision pass against their parent's label.
+              "symbol-sort-key": ["-", 10, ["get", "depth"]],
             }}
             paint={{
               "text-color": "#3d1220",

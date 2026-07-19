@@ -594,26 +594,36 @@ a raw subquery, regardless of which two tables look involved at a glance.
     host might reference in an answer key. Currently small enough (14 rows)
     to fetch in full and build into a tree client-side in
     `wine-map-explorer.tsx` (`childrenByParent`, keyed by `parent_id`) rather
-    than querying per level. The map view is a real interactive geographic map
+    than querying per level. The map view uses real INAO parcel data
     (`interactive-wine-map.tsx`: MapLibre GL via `react-map-gl/maplibre`,
     free un-keyed Carto Positron vector basemap — no API key). Each node
-    can carry a `boundary_geojson` JSONB column (a bare GeoJSON *geometry*,
-    not a Feature; migration `20260723090000_wine_map_boundaries.sql`) —
-    typed `unknown` in `database.types.ts` and cast to `GeoJSON.Geometry`
-    at the component edge. The component must ONLY be loaded via
-    `next/dynamic` with `ssr: false` (maplibre-gl touches `window` on
-    import). Clicking a polygon and clicking a pill both drive the same
+    carries a `boundary_geojson` JSONB column (a bare GeoJSON *geometry*,
+    not a Feature). Boundaries were sourced from IGN Géoplateforme WFS layer
+    `AOC-VITICOLES:aire_parcellaire` — all 5193 Bordeaux-area parcels fetched
+    (6 paged requests), then dissolved and simplified per appellation via
+    mapshaper (Bordeaux at 0.8% simplification ~176KB; communes at 8%
+    3–15 KB each). Set via migration `20260726090000_wine_map_inao_boundaries.sql`.
+    `boundary_geojson` is typed `unknown` in `database.types.ts` and cast to
+    `GeoJSON.Geometry` at the component edge. The component must ONLY be
+    loaded via `next/dynamic` with `ssr: false` (maplibre-gl touches `window`
+    on import). Clicking a polygon and clicking a pill both drive the same
     `focusedId`; the map auto-fits (`@turf/bbox` + `fitBounds`) to the
     focused shape. Brand colors are hardcoded hex in the MapLibre paint
     expressions (paint expressions can't read CSS variables). Nodes without
     `boundary_geojson` simply don't render on the map — the always-present
-    pill list is the fallback,     and realistic hand-traced polygons (migration `20260725090000_wine_map_fixed_boundaries.sql`,
-    10–25 coordinate points per appellation, every ring properly closed).
-    The commune AOCs (Saint-Estèphe, Pauillac, Saint-Julien, Margaux) tile
-    north→south along the Gironde with no overlap; Haut-Médoc sits west of
-    them with a 0.02° buffer. Coastline forms the hard western limit of
-    Médoc and Haut-Médoc. The old hand-positioned schematic SVG
-    (`REGION_LAYOUTS`) is gone.
+    pill list is the fallback. The map renders one MapLibre fill layer per
+    nesting depth (shallowest painted first, deeper shapes on top); click
+    resolves to the deepest-smallest feature (tie-break by bbox area), which
+    sets `focusedId`. The explore view (`wine-map-explorer.tsx`) uses a single
+    `focusedId` state with a depth-agnostic breadcrumb trail
+    (ancestors of focused node separated by ChevronRight icons), children of
+    the focused node as a pill list, and country pills at top-level. `viewRoot`
+    is computed as the REGION-level ancestor or the country itself.
+    Saint-Estèphe, Pauillac, Saint-Julien, and Margaux are reparented under
+    Haut-Médoc (not directly under Médoc); Barsac is reparented under
+    Sauternes — matching the real INAO appellation hierarchy. The old
+    hand-positioned schematic SVG (`REGION_LAYOUTS`) and hand-traced polygons
+    (`20260725090000_wine_map_fixed_boundaries.sql`) are both gone.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
