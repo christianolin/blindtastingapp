@@ -4,7 +4,7 @@
 
 **Goal:** Replace fragmented INAO parcel multipolygons with one clean concave cartographic footprint per Bordeaux map node.
 
-**Architecture:** A reproducible Node script reads the existing official parcel-derived migration, extracts each area's exterior coordinates, and uses `concaveman` to produce one closed, hole-free `Polygon`. The script writes a new data-only migration; the existing database schema and React map components remain unchanged.
+**Architecture:** A reproducible Node script reads the existing official parcel-derived migration, extracts each area's exterior coordinates, and uses `concaveman` to produce one closed, hole-free `Polygon`. It first generates an all-component hull; only when that hull's longest edge exceeds 20% of its diagonal does it omit components below 2% of the dominant exterior component and regenerate once. This global rule currently changes Pauillac and Saint-Julien. The script writes a new data-only migration; the existing database schema and React map components remain unchanged.
 
 **Tech Stack:** Node.js ESM, `concaveman`, Node's built-in test runner, Supabase Postgres JSONB, GeoJSON.
 
@@ -15,7 +15,7 @@
 - Work directly on `master` and push to `origin/master`; do not create a PR or worktree.
 - Preserve `20260726090000_wine_map_inao_boundaries.sql` as the official parcel-derived source migration.
 - Every generated geometry must be one GeoJSON `Polygon` containing exactly one closed exterior ring and no holes.
-- Use every source component when calculating the envelope, but never render detached output islands.
+- Generate the all-component hull first. Only if its longest edge exceeds 20% of its diagonal, omit components below 2% of the dominant exterior component and regenerate once; this currently changes Pauillac and Saint-Julien without slug-specific branching.
 - Do not change the hierarchy, schema, breadcrumbs, MapLibre layers, click resolution, or auto-fit behavior.
 - Apply the migration through `pg.Client` using explicit pooler connection fields and a process environment variable for the database password. Never write the password to a file or commit it.
 - Before the final commit, run `node --test`, `npx tsc --noEmit`, targeted ESLint, and `npm run build`.
@@ -32,8 +32,10 @@
 
 **Interfaces:**
 - `parseBoundaryUpdates(sql: string): Array<{ slug: string, geometry: GeoJSONGeometry }>` extracts parcel geometries from the source migration.
+- `createAllComponentEnvelope(geometry: GeoJSONGeometry): Polygon` returns the pre-adaptation all-component envelope.
 - `createConcaveEnvelope(geometry: GeoJSONGeometry): Polygon` returns one hole-free, closed polygon.
 - `validateEnvelope(geometry: Polygon): void` throws on malformed output.
+- `renderMigration(updates): string` returns the complete generated migration text.
 - Running `node scripts/generate-wine-map-concave-boundaries.mjs` writes `supabase/migrations/20260726100000_wine_map_concave_boundaries.sql`.
 
 - [ ] **Step 1: Add failing generator tests**

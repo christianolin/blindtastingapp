@@ -5,7 +5,8 @@
 Replace the exact, fragmented INAO parcel coverage shown on the wine map with
 one readable outer footprint per mapped area. The footprint should resemble a
 traditional regional wine map: it preserves the area's broad geographic shape
-but fills internal non-vineyard gaps and omits detached parcel islands.
+but fills internal non-vineyard gaps and does not render detached parcel
+islands as separate polygons.
 
 ## Data Source
 
@@ -17,14 +18,17 @@ input for this refinement, so the result does not depend on hand-drawn points.
 
 ## Boundary Generation
 
-- Collect the exterior coordinates from every polygon component belonging to
-  one map node.
-- Generate a concave hull around those coordinates, tuned to bridge normal
+- Generate an all-component concave hull from the exterior coordinates of every
+  polygon component belonging to one map node. It is tuned to bridge normal
   gaps between parcel clusters without collapsing to a broad convex hull.
+- If that hull's longest edge exceeds 20% of its diagonal, omit components whose
+  exterior area is below 2% of the dominant exterior component and regenerate
+  once. This global rule currently changes the output for Pauillac and
+  Saint-Julien only.
 - Emit exactly one GeoJSON `Polygon` with one closed exterior ring.
 - Do not emit interior rings. White space within an appellation is filled.
-- Do not retain detached polygons or tiny islands. Their outermost coordinates
-  influence the envelope, but they do not render as separate shapes.
+- Do not retain detached output polygons or tiny islands. Components retained
+  by the adaptive area rule influence the single generated envelope.
 - Simplify the final ring enough for a clean browser map while preserving the
   area's recognizable silhouette.
 
@@ -49,6 +53,8 @@ Before applying the migration, validate every generated boundary:
 - `coordinates` contains exactly one ring.
 - The ring has at least four positions and is exactly closed.
 - Every coordinate is finite and in GeoJSON longitude/latitude order.
+- The ring has non-zero signed area, no repeated non-closing vertex, and no
+  intersections between non-adjacent segments.
 - No generated boundary is empty.
 - The set of updated slugs exactly matches the parcel-derived boundaries being
   replaced.

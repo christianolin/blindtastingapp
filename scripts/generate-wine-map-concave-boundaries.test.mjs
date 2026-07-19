@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import {
+import * as boundaryGenerator from "./generate-wine-map-concave-boundaries.mjs";
+
+const {
   createConcaveEnvelope,
   parseBoundaryUpdates,
   validateEnvelope,
-} from "./generate-wine-map-concave-boundaries.mjs";
+} = boundaryGenerator;
 
 const EXPECTED_SLUGS = [
   "bordeaux",
@@ -115,6 +117,45 @@ test("validateEnvelope rejects malformed polygons", () => {
   );
 });
 
+test("validateEnvelope rejects a repeated non-closing vertex", () => {
+  assert.throws(
+    () =>
+      validateEnvelope({
+        type: "Polygon",
+        coordinates: [
+          [[0, 0], [2, 0], [2, 2], [0, 2], [2, 0], [0, 0]],
+        ],
+      }),
+    TypeError,
+  );
+});
+
+test("validateEnvelope rejects a closed bow-tie ring", () => {
+  assert.throws(
+    () =>
+      validateEnvelope({
+        type: "Polygon",
+        coordinates: [
+          [[0, 0], [2, 2], [0, 2], [2, 0], [0, 0]],
+        ],
+      }),
+    TypeError,
+  );
+});
+
+test("validateEnvelope rejects a closed collinear ring", () => {
+  assert.throws(
+    () =>
+      validateEnvelope({
+        type: "Polygon",
+        coordinates: [
+          [[-1, 44], [-0.9999, 44.0002], [-0.9998, 44.0004], [-1, 44]],
+        ],
+      }),
+    TypeError,
+  );
+});
+
 test("parses every parcel-derived boundary in source order", async () => {
   const sql = await readFile(SOURCE_MIGRATION, "utf8");
   const updates = parseBoundaryUpdates(sql);
@@ -157,6 +198,34 @@ test("keeps every generated edge at or below 20 percent of its envelope diagonal
       .map(({ slug, percentOfDiagonal }) => `${slug} ${percentOfDiagonal}%`)
       .join(", ")}`,
   );
+});
+
+test("adaptive envelopes differ from all-component baselines only for expected slugs", async () => {
+  assert.equal(typeof boundaryGenerator.createAllComponentEnvelope, "function");
+
+  const sourceSql = await readFile(SOURCE_MIGRATION, "utf8");
+  const updates = parseBoundaryUpdates(sourceSql);
+  const changedSlugs = updates.flatMap(({ slug, geometry }) => {
+    const adaptive = JSON.stringify(createConcaveEnvelope(geometry));
+    const allComponents = JSON.stringify(
+      boundaryGenerator.createAllComponentEnvelope(geometry),
+    );
+    return adaptive === allComponents ? [] : [slug];
+  });
+
+  assert.deepEqual(changedSlugs, ["pauillac", "saint-julien"]);
+});
+
+test("complete rendered migration exactly matches the checked-in file", async () => {
+  assert.equal(typeof boundaryGenerator.renderMigration, "function");
+
+  const [sourceSql, outputSql] = await Promise.all([
+    readFile(SOURCE_MIGRATION, "utf8"),
+    readFile(OUTPUT_MIGRATION, "utf8"),
+  ]);
+  const sourceUpdates = parseBoundaryUpdates(sourceSql);
+
+  assert.equal(boundaryGenerator.renderMigration(sourceUpdates), outputSql);
 });
 
 test("generated migration exactly matches valid source envelopes in source order", async () => {

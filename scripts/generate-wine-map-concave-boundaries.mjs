@@ -39,6 +39,54 @@ function positionsEqual(left, right) {
   return left[0] === right[0] && left[1] === right[1];
 }
 
+function segmentsIntersect(startA, endA, startB, endB) {
+  const crossAbStart =
+    (endA[0] - startA[0]) * (startB[1] - startA[1]) -
+    (endA[1] - startA[1]) * (startB[0] - startA[0]);
+  const crossAbEnd =
+    (endA[0] - startA[0]) * (endB[1] - startA[1]) -
+    (endA[1] - startA[1]) * (endB[0] - startA[0]);
+  const crossCdStart =
+    (endB[0] - startB[0]) * (startA[1] - startB[1]) -
+    (endB[1] - startB[1]) * (startA[0] - startB[0]);
+  const crossCdEnd =
+    (endB[0] - startB[0]) * (endA[1] - startB[1]) -
+    (endB[1] - startB[1]) * (endA[0] - startB[0]);
+  const crossesAb =
+    (crossAbStart > 0 && crossAbEnd < 0) ||
+    (crossAbStart < 0 && crossAbEnd > 0);
+  const crossesCd =
+    (crossCdStart > 0 && crossCdEnd < 0) ||
+    (crossCdStart < 0 && crossCdEnd > 0);
+
+  if (crossesAb && crossesCd) {
+    return true;
+  }
+
+  return (
+    (crossAbStart === 0 &&
+      startB[0] >= Math.min(startA[0], endA[0]) &&
+      startB[0] <= Math.max(startA[0], endA[0]) &&
+      startB[1] >= Math.min(startA[1], endA[1]) &&
+      startB[1] <= Math.max(startA[1], endA[1])) ||
+    (crossAbEnd === 0 &&
+      endB[0] >= Math.min(startA[0], endA[0]) &&
+      endB[0] <= Math.max(startA[0], endA[0]) &&
+      endB[1] >= Math.min(startA[1], endA[1]) &&
+      endB[1] <= Math.max(startA[1], endA[1])) ||
+    (crossCdStart === 0 &&
+      startA[0] >= Math.min(startB[0], endB[0]) &&
+      startA[0] <= Math.max(startB[0], endB[0]) &&
+      startA[1] >= Math.min(startB[1], endB[1]) &&
+      startA[1] <= Math.max(startB[1], endB[1])) ||
+    (crossCdEnd === 0 &&
+      endA[0] >= Math.min(startB[0], endB[0]) &&
+      endA[0] <= Math.max(startB[0], endB[0]) &&
+      endA[1] >= Math.min(startB[1], endB[1]) &&
+      endA[1] <= Math.max(startB[1], endB[1]))
+  );
+}
+
 function roundPosition([longitude, latitude]) {
   const scale = 10 ** COORDINATE_PRECISION;
   return [
@@ -227,15 +275,59 @@ export function validateEnvelope(geometry) {
   if (distinctPositions.size < 3) {
     throw new TypeError("Envelope ring must contain at least three distinct positions");
   }
+  if (distinctPositions.size !== ring.length - 1) {
+    throw new TypeError("Envelope ring must not repeat non-closing positions");
+  }
+
+  const coordinateScale = 10 ** COORDINATE_PRECISION;
+  const scaledRing = ring.map(([longitude, latitude]) => [
+    Math.round(longitude * coordinateScale),
+    Math.round(latitude * coordinateScale),
+  ]);
+  const segmentCount = ring.length - 1;
+  for (let left = 0; left < segmentCount; left += 1) {
+    for (let right = left + 1; right < segmentCount; right += 1) {
+      const segmentsAreAdjacent =
+        right === left + 1 || (left === 0 && right === segmentCount - 1);
+      if (segmentsAreAdjacent) {
+        continue;
+      }
+
+      if (
+        segmentsIntersect(
+          scaledRing[left],
+          scaledRing[left + 1],
+          scaledRing[right],
+          scaledRing[right + 1],
+        )
+      ) {
+        throw new TypeError("Envelope ring must not self-intersect");
+      }
+    }
+  }
+
+  let signedDoubleArea = 0;
+  for (let index = 0; index < segmentCount; index += 1) {
+    const current = scaledRing[index];
+    const next = scaledRing[index + 1];
+    signedDoubleArea += current[0] * next[1] - next[0] * current[1];
+  }
+  if (signedDoubleArea === 0) {
+    throw new TypeError("Envelope ring must have non-zero signed area");
+  }
+}
+
+export function createAllComponentEnvelope(geometry) {
+  return createEnvelope(exteriorRings(geometry));
 }
 
 export function createConcaveEnvelope(geometry) {
-  const rings = exteriorRings(geometry);
-  const envelope = createEnvelope(rings);
+  const envelope = createAllComponentEnvelope(geometry);
   if (longestEdgeShare(envelope) <= MAX_EDGE_DIAGONAL_SHARE) {
     return envelope;
   }
 
+  const rings = exteriorRings(geometry);
   const areas = rings.map(exteriorArea);
   const dominantArea = Math.max(...areas);
   // Tiny detached components can force large cartographic wedges between clusters.
@@ -264,7 +356,7 @@ function assertExpectedUpdates(updates) {
   }
 }
 
-function renderMigration(updates) {
+export function renderMigration(updates) {
   const header = [
     "-- Generalized concave wine map boundaries derived from official INAO AOC parcels.",
     "-- Source: IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (licence ouverte Etalab).",
