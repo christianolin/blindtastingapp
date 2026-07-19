@@ -28,6 +28,10 @@ const SOURCE_MIGRATION = new URL(
   "../supabase/migrations/20260726090000_wine_map_inao_boundaries.sql",
   import.meta.url,
 );
+const OUTPUT_MIGRATION = new URL(
+  "../supabase/migrations/20260726100000_wine_map_concave_boundaries.sql",
+  import.meta.url,
+);
 
 function countPositions(value) {
   if (
@@ -106,5 +110,18 @@ test("creates a valid smaller envelope for every source boundary", async () => {
       countPositions(envelope.coordinates) < countPositions(geometry.coordinates),
       `${slug} should contain fewer positions than its source geometry`,
     );
+  }
+});
+
+test("generated migration contains valid polygons in source order", async () => {
+  const sql = await readFile(OUTPUT_MIGRATION, "utf8");
+  const updates = parseBoundaryUpdates(sql);
+
+  assert.deepEqual(
+    updates.map(({ slug }) => slug),
+    EXPECTED_SLUGS,
+  );
+  for (const { slug, geometry } of updates) {
+    assert.doesNotThrow(() => validateEnvelope(geometry), slug);
   }
 });
