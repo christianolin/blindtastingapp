@@ -7,6 +7,8 @@ import concaveman from "concaveman";
 const CONCAVITY = 2;
 const EDGE_THRESHOLD_DIVISOR = 30;
 const COORDINATE_PRECISION = 4;
+const MAX_EDGE_DIAGONAL_SHARE = 0.2;
+const MIN_COMPONENT_AREA_SHARE = 0.02;
 
 const EXPECTED_SLUGS = [
   "bordeaux",
@@ -64,7 +66,7 @@ function closeRing(positions) {
   return ring;
 }
 
-function uniqueExteriorPositions(geometry) {
+function exteriorRings(geometry) {
   const exteriorRings =
     geometry?.type === "Polygon"
       ? [geometry.coordinates?.[0]]
@@ -76,6 +78,10 @@ function uniqueExteriorPositions(geometry) {
     throw new TypeError("Expected a Polygon or MultiPolygon geometry");
   }
 
+  return exteriorRings;
+}
+
+function uniqueExteriorPositions(exteriorRings) {
   const unique = new Map();
   for (const ring of exteriorRings) {
     for (const position of ring) {
@@ -94,6 +100,66 @@ function uniqueExteriorPositions(geometry) {
   }
 
   return [...unique.values()];
+}
+
+function exteriorArea(ring) {
+  let doubleArea = 0;
+  for (let index = 0; index < ring.length; index += 1) {
+    const current = ring[index];
+    const next = ring[(index + 1) % ring.length];
+    doubleArea += current[0] * next[1] - next[0] * current[1];
+  }
+  return Math.abs(doubleArea / 2);
+}
+
+function longestEdgeShare(envelope) {
+  const [ring] = envelope.coordinates;
+  const latitudes = ring.map(([, latitude]) => latitude);
+  const referenceLatitude =
+    (Math.min(...latitudes) + Math.max(...latitudes)) / 2;
+  const longitudeKm = 111.32 * Math.cos((referenceLatitude * Math.PI) / 180);
+  const latitudeKm = 110.574;
+  const projected = ring.map(([longitude, latitude]) => [
+    longitude * longitudeKm,
+    latitude * latitudeKm,
+  ]);
+  const xs = projected.map(([x]) => x);
+  const ys = projected.map(([, y]) => y);
+  const diagonal = Math.hypot(
+    Math.max(...xs) - Math.min(...xs),
+    Math.max(...ys) - Math.min(...ys),
+  );
+  const longestEdge = Math.max(
+    ...projected.slice(1).map((position, index) =>
+      Math.hypot(
+        position[0] - projected[index][0],
+        position[1] - projected[index][1],
+      ),
+    ),
+  );
+
+  return longestEdge / diagonal;
+}
+
+function createEnvelope(exteriorRings) {
+  const points = uniqueExteriorPositions(exteriorRings);
+  if (points.length < 3) {
+    throw new TypeError("Source geometry must contain at least three unique positions");
+  }
+
+  const longitudes = points.map(([longitude]) => longitude);
+  const latitudes = points.map(([, latitude]) => latitude);
+  const minX = Math.min(...longitudes);
+  const maxX = Math.max(...longitudes);
+  const minY = Math.min(...latitudes);
+  const maxY = Math.max(...latitudes);
+  const diagonal = Math.hypot(maxX - minX, maxY - minY);
+  const hull = concaveman(points, CONCAVITY, diagonal / EDGE_THRESHOLD_DIVISOR);
+  const ring = closeRing(removeAdjacentDuplicates(hull.map(roundPosition)));
+  const envelope = { type: "Polygon", coordinates: [ring] };
+
+  validateEnvelope(envelope);
+  return envelope;
 }
 
 export function parseBoundaryUpdates(sql) {
@@ -164,24 +230,19 @@ export function validateEnvelope(geometry) {
 }
 
 export function createConcaveEnvelope(geometry) {
-  const points = uniqueExteriorPositions(geometry);
-  if (points.length < 3) {
-    throw new TypeError("Source geometry must contain at least three unique positions");
+  const rings = exteriorRings(geometry);
+  const envelope = createEnvelope(rings);
+  if (longestEdgeShare(envelope) <= MAX_EDGE_DIAGONAL_SHARE) {
+    return envelope;
   }
 
-  const longitudes = points.map(([longitude]) => longitude);
-  const latitudes = points.map(([, latitude]) => latitude);
-  const minX = Math.min(...longitudes);
-  const maxX = Math.max(...longitudes);
-  const minY = Math.min(...latitudes);
-  const maxY = Math.max(...latitudes);
-  const diagonal = Math.hypot(maxX - minX, maxY - minY);
-  const hull = concaveman(points, CONCAVITY, diagonal / EDGE_THRESHOLD_DIVISOR);
-  const ring = closeRing(removeAdjacentDuplicates(hull.map(roundPosition)));
-  const envelope = { type: "Polygon", coordinates: [ring] };
-
-  validateEnvelope(envelope);
-  return envelope;
+  const areas = rings.map(exteriorArea);
+  const dominantArea = Math.max(...areas);
+  // Tiny detached components can force large cartographic wedges between clusters.
+  const retainedRings = rings.filter(
+    (_, index) => areas[index] >= dominantArea * MIN_COMPONENT_AREA_SHARE,
+  );
+  return createEnvelope(retainedRings);
 }
 
 function assertExpectedUpdates(updates) {
