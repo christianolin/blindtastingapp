@@ -1,0 +1,657 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { basename, delimiter } from "node:path";
+import test, { after, before } from "node:test";
+import pg from "pg";
+
+assert.ok(process.env.DB_PASSWORD, "DB_PASSWORD is required");
+
+const migrationPaths = (process.env.WORLD_WINE_MAP_MIGRATIONS ?? "")
+  .split(delimiter)
+  .filter(Boolean);
+const isMigrationDryRun = migrationPaths.length > 0;
+const referenceNameMode =
+  process.env.WORLD_WINE_MAP_REFERENCE_NAMES ?? "CURRENT";
+assert.ok(
+  ["CURRENT", "REPLAY"].includes(referenceNameMode),
+  "WORLD_WINE_MAP_REFERENCE_NAMES must be CURRENT or REPLAY",
+);
+assert.ok(
+  isMigrationDryRun || referenceNameMode === "CURRENT",
+  "REPLAY mode is only valid inside a rollback-only migration run",
+);
+
+const connectionConfig = {
+  host: process.env.DB_HOST ?? "aws-0-eu-central-1.pooler.supabase.com",
+  port: Number(process.env.DB_PORT ?? 6543),
+  user: process.env.DB_USER ?? "postgres.eqzwmkpeysqiihuojmuj",
+  database: process.env.DB_NAME ?? "postgres",
+  password: process.env.DB_PASSWORD,
+  ssl: { rejectUnauthorized: false },
+};
+const client = new pg.Client(connectionConfig);
+
+const REPLAY_APPELLATION_NAMES = [
+  ["Barsac AOP", "Barsac"],
+  ["Graves AOP", "Graves"],
+  ["Haut-Médoc AOP", "Haut-Médoc"],
+  ["Margaux AOP", "Margaux"],
+  ["Médoc AOP", "Médoc"],
+  ["Pauillac AOP", "Pauillac"],
+  ["Pessac-Léognan AOP", "Pessac-Léognan"],
+  ["Pomerol AOP", "Pomerol"],
+  ["Saint-Estèphe AOP", "Saint-Estèphe"],
+  ["Saint-Émilion AOP", "Saint-Émilion"],
+  ["Saint-Julien AOP", "Saint-Julien"],
+  ["Sauternes AOP", "Sauternes"],
+];
+const REFERENCE_ID_TABLES = [
+  ["countries", "id"],
+  ["regions", "id"],
+  ["appellations", "id"],
+  ["wine_answers", "wine_id"],
+  ["guesses", "id"],
+];
+const FOUNDATION_TABLES = [
+  "wine_boundary_source_snapshots",
+  "wine_boundary_sources",
+  "wine_map_releases",
+  "wine_place_aliases",
+  "wine_place_articles",
+  "wine_place_boundaries",
+  "wine_place_relationships",
+  "wine_places",
+];
+let safetyBaseline;
+let foundationBaseline;
+let savepointSequence = 0;
+
+async function readSafetySnapshot() {
+  const references = {};
+  for (const [table, key] of REFERENCE_ID_TABLES) {
+    const result = await client.query(
+      `select count(*)::int count,
+              md5(coalesce(
+                string_agg(${key}::text, ',' order by ${key}),
+                ''
+              )) digest
+         from ${table}`,
+    );
+    references[table] = result.rows[0];
+  }
+  const scoringFunctions = await client.query(
+    `select count(*)::int count,
+            md5(coalesce(string_agg(
+              pg_get_functiondef(p.oid), E'\n'
+              order by p.proname, pg_get_function_identity_arguments(p.oid)
+            ), '')) digest
+       from pg_proc p
+       join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'
+        and p.proname = any(array[
+          'has_scored_guess', 'reveal_wine', 'score_own_guess'
+        ])`,
+  );
+  return { references, scoringFunctions: scoringFunctions.rows[0] };
+}
+
+async function readFoundationFootprint() {
+  const result = await client.query(
+    `select
+       coalesce((
+         select n.nspname
+         from pg_extension e
+         join pg_namespace n on n.oid = e.extnamespace
+         where e.extname = 'postgis'
+       ), '') postgis_schema,
+       (select count(*)::int
+          from information_schema.tables
+         where table_schema = 'public'
+           and table_name = any($1::text[])) foundation_tables`,
+    [FOUNDATION_TABLES],
+  );
+  return result.rows[0];
+}
+
+async function useReplayAppellationNames() {
+  for (const [currentName, replayName] of REPLAY_APPELLATION_NAMES) {
+    const result = await client.query(
+      `update appellations a
+          set name = $2
+         from regions r
+         join countries c on c.id = r.country_id
+        where a.region_id = r.id
+          and c.name = 'France'
+          and r.name = 'Bordeaux'
+          and a.name = $1`,
+      [currentName, replayName],
+    );
+    assert.equal(result.rowCount, 1, currentName);
+  }
+}
+
+async function applyMigrationInCurrentTransaction(migrationPath) {
+  const match = /^(\d+)_([^/\\]+)\.sql$/.exec(basename(migrationPath));
+  assert.ok(match, `Invalid migration filename: ${migrationPath}`);
+  const [, version, name] = match;
+  const existing = await client.query(
+    `select name from supabase_migrations.schema_migrations where version = $1`,
+    [version],
+  );
+  assert.equal(existing.rowCount, 0, `Migration version ${version} already exists`);
+  const sql = await readFile(migrationPath, "utf8");
+  await client.query(sql);
+  await client.query(
+    `insert into supabase_migrations.schema_migrations
+       (version, name, statements)
+     values ($1, $2, $3)`,
+    [version, name, [sql]],
+  );
+}
+
+async function withRollback(callback) {
+  if (!isMigrationDryRun) {
+    await client.query("begin");
+    try {
+      return await callback();
+    } finally {
+      await client.query("rollback");
+    }
+  }
+
+  const savepoint = `world_wine_map_test_${++savepointSequence}`;
+  await client.query(`savepoint ${savepoint}`);
+  try {
+    return await callback();
+  } finally {
+    await client.query(`rollback to savepoint ${savepoint}`);
+    await client.query(`release savepoint ${savepoint}`);
+  }
+}
+
+async function waitForAdvisoryLockWait(pid) {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const result = await client.query(
+      `select exists (
+         select 1 from pg_locks
+          where pid = $1 and locktype = 'advisory' and not granted
+       ) waiting`,
+      [pid],
+    );
+    if (result.rows[0].waiting) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`Backend ${pid} did not wait for the hierarchy advisory lock`);
+}
+
+before(async () => {
+  await client.connect();
+  safetyBaseline = await readSafetySnapshot();
+  foundationBaseline = await readFoundationFootprint();
+  if (!isMigrationDryRun) return;
+
+  await client.query("begin");
+  for (const migrationPath of migrationPaths) {
+    if (
+      referenceNameMode === "REPLAY" &&
+      basename(migrationPath).includes("world_wine_map_bordeaux_seed")
+    ) {
+      // Database helper, not a React hook.
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      await useReplayAppellationNames();
+    }
+    await applyMigrationInCurrentTransaction(migrationPath);
+  }
+});
+
+after(async () => {
+  try {
+    if (isMigrationDryRun) {
+      await client.query("rollback");
+      assert.deepEqual(await readFoundationFootprint(), foundationBaseline);
+    }
+  } finally {
+    await client.end();
+  }
+});
+
+test("world wine map foundation schema is installed", async () => {
+  const extension = await client.query(
+    `select n.nspname as schema
+       from pg_extension e
+       join pg_namespace n on n.oid = e.extnamespace
+      where e.extname = 'postgis'`,
+  );
+  assert.deepEqual(extension.rows, [{ schema: "extensions" }]);
+
+  const tables = await client.query(
+    `select table_name
+       from information_schema.tables
+      where table_schema = 'public'
+        and table_name = any($1::text[])
+      order by table_name`,
+    [FOUNDATION_TABLES],
+  );
+  assert.deepEqual(
+    tables.rows.map(({ table_name }) => table_name),
+    FOUNDATION_TABLES,
+  );
+
+  const referenceColumns = await client.query(
+    `select table_name,
+            array_agg(column_name::text order by column_name::text)::text[] columns
+       from information_schema.columns
+      where table_schema = 'public'
+        and table_name = any(array['countries', 'regions', 'appellations'])
+        and column_name = any($1::text[])
+      group by table_name
+      order by table_name`,
+    [[
+      "map_match_confidence",
+      "map_match_method",
+      "map_review_note",
+      "map_reviewed_at",
+      "map_reviewed_by",
+      "map_status",
+      "wine_place_id",
+    ]],
+  );
+  const expectedColumns = [
+    "map_match_confidence",
+    "map_match_method",
+    "map_review_note",
+    "map_reviewed_at",
+    "map_reviewed_by",
+    "map_status",
+    "wine_place_id",
+  ];
+  assert.equal(referenceColumns.rows.length, 3);
+  for (const row of referenceColumns.rows) {
+    assert.deepEqual(row.columns, expectedColumns, row.table_name);
+  }
+
+  const rls = await client.query(
+    `select c.relname table_name
+       from pg_class c
+       join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public'
+        and c.relname = any($1::text[])
+        and c.relrowsecurity
+      order by c.relname`,
+    [FOUNDATION_TABLES],
+  );
+  assert.deepEqual(
+    rls.rows.map(({ table_name }) => table_name),
+    FOUNDATION_TABLES,
+  );
+
+  const policies = await client.query(
+    `select tablename from pg_policies
+      where schemaname = 'public'
+        and tablename = any($1::text[])
+      group by tablename
+      order by tablename`,
+    [FOUNDATION_TABLES],
+  );
+  assert.deepEqual(
+    policies.rows.map(({ tablename }) => tablename),
+    FOUNDATION_TABLES,
+  );
+});
+
+test("authenticated reference inserts cannot set map-review columns", async () => {
+  for (const [table, allowed] of [
+    ["countries", ["name"]],
+    ["regions", ["country_id", "name"]],
+    ["appellations", ["name", "region_id"]],
+  ]) {
+    for (const column of allowed) {
+      const result = await client.query(
+        `select has_column_privilege('authenticated', $1, $2, 'INSERT') allowed`,
+        [`public.${table}`, column],
+      );
+      assert.equal(result.rows[0].allowed, true, `${table}.${column}`);
+    }
+    for (const column of [
+      "wine_place_id",
+      "map_status",
+      "map_match_method",
+      "map_match_confidence",
+      "map_reviewed_by",
+      "map_reviewed_at",
+      "map_review_note",
+    ]) {
+      const denied = await client.query(
+        `select has_column_privilege('authenticated', $1, $2, 'INSERT') allowed`,
+        [`public.${table}`, column],
+      );
+      assert.equal(denied.rows[0].allowed, false, `${table}.${column}`);
+    }
+  }
+});
+
+test("authenticated inline reference creation still works", async () => {
+  await withRollback(async () => {
+    await client.query("set local role authenticated");
+    const country = await client.query(
+      `insert into countries (name)
+       values ('Phase 1 Test Country')
+       returning id, map_status, wine_place_id`,
+    );
+    assert.deepEqual(
+      {
+        map_status: country.rows[0].map_status,
+        wine_place_id: country.rows[0].wine_place_id,
+      },
+      { map_status: "PENDING", wine_place_id: null },
+    );
+    const region = await client.query(
+      `insert into regions (country_id, name)
+       values ($1, 'Phase 1 Test Region') returning id`,
+      [country.rows[0].id],
+    );
+    await client.query(
+      `insert into appellations (region_id, name)
+       values ($1, 'Phase 1 Test Appellation')`,
+      [region.rows[0].id],
+    );
+  });
+});
+
+test("authenticated users can only read published foundation rows", async () => {
+  await withRollback(async () => {
+    await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values
+         ('COUNTRY', 'rls-verified', 'RLS Verified', 'rls-verified', 0, 0, 0,
+          'VERIFIED'),
+         ('COUNTRY', 'rls-draft', 'RLS Draft', 'rls-draft', 0, 0, 0,
+          'DRAFT')`,
+    );
+
+    await client.query("set local role authenticated");
+    const visible = await client.query(
+      `select canonical_key from wine_places
+        where canonical_key like 'rls-%'
+        order by canonical_key`,
+    );
+    assert.deepEqual(visible.rows, [{ canonical_key: "rls-verified" }]);
+    await assert.rejects(
+      client.query(
+        `insert into wine_places
+           (kind, canonical_key, name, slug, display_tier, min_zoom,
+            label_min_zoom, publication_status)
+         values ('COUNTRY', 'rls-write', 'RLS Write', 'rls-write', 0, 0, 0,
+                 'DRAFT')`,
+      ),
+      /permission denied|row-level security/i,
+    );
+  });
+});
+
+test("boundary source snapshots are immutable", async () => {
+  for (const operation of ["update", "delete", "truncate"]) {
+    await withRollback(async () => {
+      const source = await client.query(
+        `insert into wine_boundary_sources
+           (source_namespace, source_feature_id, authority, jurisdiction)
+         values ('test', $1, 'Test', 'Test')
+         returning id`,
+        [`snapshot-${operation}`],
+      );
+      const snapshot = await client.query(
+        `insert into wine_boundary_source_snapshots
+           (source_id, source_revision, licence, normalized_artifact_uri,
+            normalized_checksum_sha256, provenance_note, importer_version)
+         values ($1, 'v1', 'Test', 'test://normalized', $2,
+                 'Legacy test artifact', 'test')
+         returning id`,
+        [source.rows[0].id, "A".repeat(64)],
+      );
+      let mutation;
+      if (operation === "update") {
+        mutation = client.query(
+          "update wine_boundary_source_snapshots set source_revision = 'v2' where id = $1",
+          [snapshot.rows[0].id],
+        );
+      } else if (operation === "delete") {
+        mutation = client.query(
+          "delete from wine_boundary_source_snapshots where id = $1",
+          [snapshot.rows[0].id],
+        );
+      } else {
+        mutation = client.query("truncate wine_boundary_source_snapshots cascade");
+      }
+      await assert.rejects(mutation, /source snapshots are immutable/i);
+    });
+  }
+
+  for (const [index, rawUri, rawChecksum, note] of [
+    ["uri-only", "test://raw", null, null],
+    ["checksum-only", null, "B".repeat(64), "Raw artifact unavailable"],
+  ]) {
+    await withRollback(async () => {
+      const source = await client.query(
+        `insert into wine_boundary_sources
+           (source_namespace, source_feature_id, authority, jurisdiction)
+         values ('test', $1, 'Test', 'Test') returning id`,
+        [`incomplete-${index}`],
+      );
+      await assert.rejects(
+        client.query(
+          `insert into wine_boundary_source_snapshots
+             (source_id, source_revision, licence, raw_snapshot_uri,
+              raw_checksum_sha256, normalized_artifact_uri,
+              normalized_checksum_sha256, provenance_note, importer_version)
+           values ($1, 'v1', 'Test', $2, $3, 'test://normalized', $4, $5,
+                   'test')`,
+          [source.rows[0].id, rawUri, rawChecksum, "A".repeat(64), note],
+        ),
+        /check constraint/i,
+      );
+    });
+  }
+});
+
+test("boundary source identity keys are immutable", async () => {
+  await withRollback(async () => {
+    const source = await client.query(
+      `insert into wine_boundary_sources
+         (source_namespace, source_feature_id, authority, jurisdiction)
+       values ('test', 'stable-source', 'Test', 'Test')
+       returning id`,
+    );
+    await assert.rejects(
+      client.query(
+        "update wine_boundary_sources set source_feature_id = 'changed' where id = $1",
+        [source.rows[0].id],
+      ),
+      /source identity is immutable/i,
+    );
+  });
+});
+
+test("wine place hierarchy rejects cycles and invalid display tiers", async () => {
+  await withRollback(async () => {
+    const parent = await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values ('COUNTRY', 'test-parent', 'Test Parent', 'test-parent', 0, 0, 0,
+               'DRAFT')
+       returning id`,
+    );
+    const parentId = parent.rows[0].id;
+    const child = await client.query(
+      `insert into wine_places
+         (primary_parent_id, kind, canonical_key, name, slug, display_tier,
+          min_zoom, label_min_zoom, publication_status)
+       values ($1, 'REGION', 'test-child', 'Test Child', 'test-child', 1, 4, 4,
+               'DRAFT')
+       returning id`,
+      [parentId],
+    );
+    const childId = child.rows[0].id;
+
+    await assert.rejects(
+      client.query(
+        "update wine_places set primary_parent_id = $1 where id = $2",
+        [childId, parentId],
+      ),
+      /cycle/i,
+    );
+  });
+
+  await withRollback(async () => {
+    const secondParent = await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values ('COUNTRY', 'test-tier-parent', 'Test Tier Parent',
+                'test-tier-parent', 1, 0, 0, 'DRAFT')
+       returning id`,
+    );
+    await assert.rejects(
+      client.query(
+        `insert into wine_places
+           (primary_parent_id, kind, canonical_key, name, slug, display_tier,
+            min_zoom, label_min_zoom, publication_status)
+         values ($1, 'REGION', 'test-tier', 'Test Tier', 'test-tier', 0, 4, 4,
+                 'DRAFT')`,
+        [secondParent.rows[0].id],
+      ),
+      /display tier/i,
+    );
+  });
+
+  await withRollback(async () => {
+    const equalTierParent = await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values ('COUNTRY', 'equal-tier-parent', 'Equal Tier Parent',
+               'equal-tier-parent', 1, 0, 0, 'DRAFT')
+       returning id`,
+    );
+    await client.query(
+      `insert into wine_places
+         (primary_parent_id, kind, canonical_key, name, slug, display_tier,
+          min_zoom, label_min_zoom, publication_status)
+       values ($1, 'REGION', 'equal-tier-child', 'Equal Tier Child',
+               'equal-tier-child', 1, 4, 4, 'DRAFT')`,
+      [equalTierParent.rows[0].id],
+    );
+  });
+});
+
+test("verified canonical keys are permanently locked", async () => {
+  await withRollback(async () => {
+    const inserted = await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values ('COUNTRY', 'locked-key', 'Locked Key', 'locked-key', 0, 0, 0,
+               'VERIFIED')
+       returning id, canonical_key_locked_at`,
+    );
+    assert.ok(inserted.rows[0].canonical_key_locked_at);
+    const demoted = await client.query(
+      `update wine_places set publication_status = 'DRAFT'
+        where id = $1 returning canonical_key_locked_at`,
+      [inserted.rows[0].id],
+    );
+    assert.equal(
+      demoted.rows[0].canonical_key_locked_at.toISOString(),
+      inserted.rows[0].canonical_key_locked_at.toISOString(),
+    );
+    await assert.rejects(
+      client.query(
+        "update wine_places set canonical_key = 'changed-key' where id = $1",
+        [inserted.rows[0].id],
+      ),
+      /canonical key is immutable/i,
+    );
+  });
+});
+
+test("reference IDs and scoring functions remain unchanged", async () => {
+  assert.deepEqual(await readSafetySnapshot(), safetyBaseline);
+});
+
+test(
+  "concurrent hierarchy changes cannot create a cycle",
+  { skip: isMigrationDryRun },
+  async () => {
+    const fixturePattern = "phase1-concurrency-test-%";
+    await client.query(
+      "update wine_places set primary_parent_id = null where canonical_key like $1",
+      [fixturePattern],
+    );
+    await client.query("delete from wine_places where canonical_key like $1", [
+      fixturePattern,
+    ]);
+    const suffix = randomUUID();
+    const inserted = await client.query(
+      `insert into wine_places
+         (kind, canonical_key, name, slug, display_tier, min_zoom,
+          label_min_zoom, publication_status)
+       values
+         ('REGION', $1, 'Concurrent A', $2, 1, 0, 0, 'DRAFT'),
+         ('REGION', $3, 'Concurrent B', $4, 1, 0, 0, 'DRAFT')
+       returning id`,
+      [
+        `phase1-concurrency-test-a-${suffix}`,
+        `phase1-concurrency-test-a-${suffix}`,
+        `phase1-concurrency-test-b-${suffix}`,
+        `phase1-concurrency-test-b-${suffix}`,
+      ],
+    );
+    const [a, b] = inserted.rows.map(({ id }) => id);
+    const first = new pg.Client(connectionConfig);
+    const second = new pg.Client(connectionConfig);
+    let competingUpdate;
+    try {
+      await first.connect();
+      await second.connect();
+      await first.query("begin");
+      await second.query("begin");
+      const secondPid = (await second.query("select pg_backend_pid() pid")).rows[0]
+        .pid;
+      await first.query(
+        "update wine_places set primary_parent_id = $1 where id = $2",
+        [b, a],
+      );
+      competingUpdate = second.query(
+        "update wine_places set primary_parent_id = $1 where id = $2",
+        [a, b],
+      );
+      void competingUpdate.catch(() => undefined);
+      await waitForAdvisoryLockWait(secondPid);
+      await first.query("commit");
+      await assert.rejects(competingUpdate, /cycle/i);
+    } finally {
+      await first.query("rollback").catch(() => undefined);
+      if (competingUpdate) {
+        await competingUpdate.catch(() => undefined);
+      }
+      await second.query("rollback").catch(() => undefined);
+      await first.end().catch(() => undefined);
+      await second.end().catch(() => undefined);
+      await client.query(
+        "update wine_places set primary_parent_id = null where id = any($1::uuid[])",
+        [[a, b]],
+      );
+      await client.query("delete from wine_places where id = any($1::uuid[])", [
+        [a, b],
+      ]);
+      await client.query(
+        "delete from wine_places where canonical_key like $1",
+        [fixturePattern],
+      );
+    }
+  },
+);
