@@ -594,15 +594,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
     host might reference in an answer key. Currently small enough (14 rows)
     to fetch in full and build into a tree client-side in
     `wine-map-explorer.tsx` (`childrenByParent`, keyed by `parent_id`) rather
-    than querying per level. The map view uses real INAO parcel data
-    (`interactive-wine-map.tsx`: MapLibre GL via `react-map-gl/maplibre`,
-    free un-keyed Carto Positron vector basemap — no API key). Each node
-    carries a `boundary_geojson` JSONB column (a bare GeoJSON *geometry*,
-    not a Feature). Boundaries were sourced from IGN Géoplateforme WFS layer
-    `AOC-VITICOLES:aire_parcellaire` — all 5193 Bordeaux-area parcels fetched
-    (6 paged requests), then dissolved and simplified per appellation via
-    mapshaper (Bordeaux at 0.8% simplification ~176KB; communes at 8%
-    3–15 KB each). Set via migration `20260726090000_wine_map_inao_boundaries.sql`.
+    than querying per level. The map view derives its boundaries from official
+    INAO parcel geometries fetched from IGN Géoplateforme WFS layer
+    `AOC-VITICOLES:aire_parcellaire` (all 5193 Bordeaux-area parcels in 6 paged
+    requests), retained in source migration
+    `20260726090000_wine_map_inao_boundaries.sql`. Display migration
+    `20260726100000_wine_map_concave_boundaries.sql` replaces the fragmented
+    parcel display with one hole-free generalized concave `Polygon`, and thus
+    one shape/label, for each of the 13 Bordeaux map nodes. These are
+    cartographic footprints: they fill internal non-vineyard whitespace and
+    connect detached source components, not exact parcel coverage or legal
+    appellation boundaries. Normal footprints retain every source component;
+    only when a hull edge exceeds 20% of its diagonal does the adaptive quality
+    gate omit components smaller than 2% of the dominant component before one
+    regeneration (currently Pauillac and Saint-Julien). The map uses MapLibre
+    GL via `react-map-gl/maplibre` in `interactive-wine-map.tsx`, with the free
+    un-keyed Carto Positron vector basemap (no API key). Each node carries a
+    `boundary_geojson` JSONB column (a bare GeoJSON *geometry*, not a Feature).
     `boundary_geojson` is typed `unknown` in `database.types.ts` and cast to
     `GeoJSON.Geometry` at the component edge. The component must ONLY be
     loaded via `next/dynamic` with `ssr: false` (maplibre-gl touches `window`
