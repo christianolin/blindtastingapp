@@ -105,6 +105,7 @@ Core fields:
 - `kind`: `COUNTRY`, `MACRO_REGION`, `REGION`, `SUBREGION`, `APPELLATION`,
   `SITE`, or `VINEYARD`;
 - `canonical_key text unique`, a stable globally unique source-independent key;
+- `canonical_key_locked_at`, set when a place first becomes verified;
 - `name` and `slug`;
 - `display_tier smallint`, independent of `kind` and hierarchy depth;
 - default `min_zoom` and `label_min_zoom`;
@@ -113,8 +114,10 @@ Core fields:
 
 `primary_parent_id` provides one deterministic breadcrumb and drill-down tree.
 Cycles, self-parenting, missing parents, and invalid parent ordering are blocked
-before publication. The hierarchy may be arbitrarily deep. A published
-`canonical_key` is immutable even if the place is renamed or reparented.
+before publication. A child's `display_tier` may equal but never precede its
+parent's tier, so reveal ordering remains valid without limiting hierarchy
+depth. A published `canonical_key` is immutable even if the place is renamed or
+reparented.
 
 ### `wine_place_aliases`
 
@@ -143,7 +146,9 @@ metadata:
 No uniqueness constraint is placed on `wine_place_id`, so duplicate or
 alternate reference rows may resolve to one canonical place. A review report
 must account for every reference row; unlinked rows are explicit, not silent.
-Suggested name matches never become verified links without review.
+`VERIFIED`, `SYNTHETIC`, and `DUPLICATE` rows require a canonical link;
+`PENDING`, `INVALID`, and `NOT_GEOGRAPHIC` rows remain unlinked. Suggested name
+matches never become verified links without review.
 
 ### `wine_place_articles`
 
@@ -154,21 +159,39 @@ with a "Profile being curated" state.
 
 ### Boundary And Source Records
 
-`wine_boundary_sources` records:
+`wine_boundary_sources` provides stable source-feature identity:
 
 - authority and jurisdiction;
-- source namespace and feature identifier;
-- source URL, revision/date, licence, retrieval timestamp, and checksum;
-- immutable raw snapshot object URL;
+- source namespace and feature identifier, unique as a pair.
+
+The namespace/feature pair is immutable after insertion; corrections create a
+new source identity rather than rewriting snapshot history.
+
+`wine_boundary_source_snapshots` records immutable revisions of a source
+feature:
+
+- source identity;
+- source revision/date and evidenced retrieval timestamp;
+- source URL and licence at that revision;
+- optional immutable raw snapshot URL/checksum plus required immutable normalized
+  artifact URL/checksum;
+- a provenance note whenever a migrated legacy source has no retained raw
+  snapshot;
 - importer version.
+
+New source adapters must retain the genuine raw response. The nullable raw fields
+exist only so legacy geometries can be migrated honestly when the earliest
+retained artifact is already normalized; those rows require an explanatory
+provenance note.
 
 `wine_place_boundaries` records:
 
 - canonical `wine_place_id`;
 - reviewed PostGIS display geometry in SRID 4326;
 - one reviewed label point and bounding box;
-- boundary method: `OFFICIAL`, `DERIVED_FROM_DESCENDANTS`, or `MANUAL`;
-- source record, quality status, and revision;
+- boundary method: `OFFICIAL`, `GENERALIZED_FROM_OFFICIAL_SOURCE`,
+  `DERIVED_FROM_DESCENDANTS`, or `MANUAL`;
+- source snapshot, quality status, and revision;
 - generation parameters and review timestamps.
 
 Raw cadastral/parcel datasets stay as immutable source artifacts rather than
