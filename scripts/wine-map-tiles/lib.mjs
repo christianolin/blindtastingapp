@@ -153,3 +153,51 @@ export function tippecanoeArgs(target) {
     "-L", `labels:${target}-labels.geojson`,
   ];
 }
+
+export function expectedIdSets(release) {
+  const world = new Set();
+  const france = new Set();
+  for (const { id, archive } of release.expected) {
+    if (archive === "world" || archive === "both") world.add(id);
+    if (archive === "france" || archive === "both") france.add(id);
+  }
+  return { world, france };
+}
+
+// Minimal pmtiles Source over a local file (the npm package's own sources
+// are fetch/browser oriented).
+export class NodeFileSource {
+  constructor(filePath) {
+    this.filePath = filePath;
+  }
+  getKey() {
+    return this.filePath;
+  }
+  async getBytes(offset, length) {
+    const { open } = await import("node:fs/promises");
+    const handle = await open(this.filePath);
+    try {
+      const buffer = Buffer.alloc(length);
+      const { bytesRead } = await handle.read(buffer, 0, length, offset);
+      return {
+        data: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + bytesRead),
+      };
+    } finally {
+      await handle.close();
+    }
+  }
+}
+
+export async function decodeTileFeatures(tileData) {
+  const { VectorTile } = await import("@mapbox/vector-tile");
+  const { PbfReader } = await import("pbf");
+  const tile = new VectorTile(new PbfReader(new Uint8Array(tileData)));
+  const byLayer = {};
+  for (const [layerName, layer] of Object.entries(tile.layers)) {
+    byLayer[layerName] = [];
+    for (let i = 0; i < layer.length; i += 1) {
+      byLayer[layerName].push(layer.feature(i).properties);
+    }
+  }
+  return byLayer;
+}

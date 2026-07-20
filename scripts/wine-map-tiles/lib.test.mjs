@@ -142,3 +142,17 @@ test("tippecanoeArgs pins zoom windows and layers per archive", async () => {
   ]);
   assert.throws(() => tippecanoeArgs("mars"), /Unknown build target/);
 });
+
+test("expectedIdSets splits ids by archive with Bordeaux in both", async () => {
+  const { expectedIdSets } = await import("./lib.mjs");
+  const release = {
+    expected: [
+      { id: "a", archive: "world" },
+      { id: "b", archive: "both" },
+      { id: "c", archive: "france" },
+    ],
+  };
+  const sets = expectedIdSets(release);
+  assert.deepEqual([...sets.world].sort(), ["a", "b"]);
+  assert.deepEqual([...sets.france].sort(), ["b", "c"]);
+});
