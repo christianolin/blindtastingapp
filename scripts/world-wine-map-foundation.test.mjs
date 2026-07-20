@@ -655,3 +655,285 @@ test(
     }
   },
 );
+
+const EXPECTED_APPELLATION_LINKS = [
+  { names: ["Barsac AOP", "Barsac"], key: "france.bordeaux.sauternes.barsac" },
+  { names: ["Graves AOP", "Graves"], key: "france.bordeaux.graves" },
+  { names: ["Haut-Médoc AOP", "Haut-Médoc"], key: "france.bordeaux.haut-medoc" },
+  { names: ["Margaux AOP", "Margaux"], key: "france.bordeaux.haut-medoc.margaux" },
+  { names: ["Médoc AOP", "Médoc"], key: "france.bordeaux.medoc" },
+  { names: ["Pauillac AOP", "Pauillac"], key: "france.bordeaux.haut-medoc.pauillac" },
+  { names: ["Pessac-Léognan AOP", "Pessac-Léognan"], key: "france.bordeaux.pessac-leognan" },
+  { names: ["Pomerol AOP", "Pomerol"], key: "france.bordeaux.pomerol" },
+  { names: ["Saint-Estèphe AOP", "Saint-Estèphe"], key: "france.bordeaux.haut-medoc.saint-estephe" },
+  { names: ["Saint-Émilion AOP", "Saint-Émilion"], key: "france.bordeaux.saint-emilion" },
+  { names: ["Saint-Julien AOP", "Saint-Julien"], key: "france.bordeaux.haut-medoc.saint-julien" },
+  { names: ["Sauternes AOP", "Sauternes"], key: "france.bordeaux.sauternes" },
+];
+
+const SOURCE_MIGRATION_SHA256 =
+  "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177";
+const MANUAL_MIGRATION_SHA256 =
+  "C5196565DFB93ABD68F5C398717440C142FCE621A773CABE6CEAEF7BEE9A0D50";
+const EXPECTED_BOUNDARIES = [
+  ["france", "MANUAL", "legacy-20260724-france-mainland", MANUAL_MIGRATION_SHA256],
+  ["france.bordeaux", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-bordeaux", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.graves", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-graves", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.haut-medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-haut-medoc", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.haut-medoc.margaux", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-margaux", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.haut-medoc.pauillac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pauillac", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.haut-medoc.saint-estephe", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-estephe", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.haut-medoc.saint-julien", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-julien", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-medoc", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.pessac-leognan", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pessac-leognan", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.pomerol", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pomerol", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.saint-emilion", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-emilion", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.sauternes", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-sauternes", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.sauternes.barsac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-barsac", SOURCE_MIGRATION_SHA256],
+];
+
+test("canonical catalog is a lossless copy of the current map tree", async () => {
+  const parity = await client.query(
+    `select count(*)::int total,
+            count(*) filter (
+              where p.id = n.id
+                and p.name = n.name
+                 and p.slug = n.slug
+                 and p.primary_parent_id is not distinct from n.parent_id
+                 and p.kind::text = n.level::text
+                 and p.publication_status = 'VERIFIED'
+                 and p.canonical_key_locked_at is not null
+                 and p.sort_order = n.sort_order
+            )::int matching
+       from wine_map_nodes n
+       left join wine_places p on p.id = n.id`,
+  );
+  assert.deepEqual(parity.rows[0], { total: 14, matching: 14 });
+  const canonicalCount = await client.query(
+    "select count(*)::int count from wine_places",
+  );
+  assert.equal(canonicalCount.rows[0].count, 14);
+
+  const articleParity = await client.query(
+    `select count(*)::int total,
+            count(*) filter (
+              where a.description is not distinct from n.description
+                and a.climate is not distinct from n.climate
+                and a.grape_varieties is not distinct from n.grape_varieties
+                and a.wine_styles is not distinct from n.wine_styles
+                and a.key_facts is not distinct from n.key_facts
+                and a.editorial_status = 'PUBLISHED'
+            )::int matching
+       from wine_map_nodes n
+       left join wine_place_articles a on a.wine_place_id = n.id`,
+  );
+  assert.deepEqual(articleParity.rows[0], { total: 14, matching: 14 });
+});
+
+test("all migrated places have valid reviewed current boundaries", async () => {
+  const result = await client.query(
+    `select count(*)::int total,
+            count(*) filter (where b.quality_status = 'VALIDATED')::int validated,
+            count(*) filter (where b.is_current)::int current,
+             count(*) filter (where extensions.ST_IsValid(b.display_geometry))::int valid,
+             count(*) filter (where extensions.ST_Covers(b.display_geometry, b.label_point))::int labelled,
+             count(*) filter (
+               where extensions.ST_Equals(
+                 b.display_geometry,
+                 extensions.ST_Multi(
+                   extensions.ST_SetSRID(
+                     extensions.ST_GeomFromGeoJSON(n.boundary_geojson::text),
+                     4326
+                   )
+                 )
+               )
+             )::int exact_geometry,
+             count(*) filter (where b.boundary_method = 'MANUAL')::int manual,
+             count(*) filter (
+               where b.boundary_method = 'GENERALIZED_FROM_OFFICIAL_SOURCE'
+             )::int generalized,
+             count(*) filter (
+               where b.boundary_method = 'GENERALIZED_FROM_OFFICIAL_SOURCE'
+                 and b.generation_parameters @> '{
+                   "concaveman_version": "2.0.0",
+                   "concavity": 2,
+                   "edge_threshold_divisor": 30,
+                   "coordinate_precision": 4,
+                   "max_edge_diagonal_share": 0.2,
+                   "min_component_area_share": 0.02
+                 }'::jsonb
+             )::int reproducible
+       from wine_place_boundaries b
+       join wine_map_nodes n on n.id = b.wine_place_id`,
+  );
+  assert.deepEqual(result.rows[0], {
+    total: 14,
+    validated: 14,
+    current: 14,
+    valid: 14,
+    labelled: 14,
+    exact_geometry: 14,
+    manual: 1,
+    generalized: 13,
+    reproducible: 13,
+  });
+
+  const classifications = await client.query(
+    `select p.canonical_key, b.boundary_method, s.source_feature_id,
+            snapshot.normalized_checksum_sha256,
+            snapshot.raw_snapshot_uri,
+            snapshot.raw_checksum_sha256,
+            snapshot.provenance_note is not null documented
+       from wine_place_boundaries b
+       join wine_places p on p.id = b.wine_place_id
+       join wine_boundary_source_snapshots snapshot
+         on snapshot.id = b.source_snapshot_id
+       join wine_boundary_sources s on s.id = snapshot.source_id
+      order by p.canonical_key`,
+  );
+  assert.deepEqual(
+    classifications.rows,
+    EXPECTED_BOUNDARIES.map(([canonical_key, boundary_method,
+      source_feature_id, normalized_checksum_sha256]) => ({
+      canonical_key,
+      boundary_method,
+      source_feature_id,
+      normalized_checksum_sha256,
+      raw_snapshot_uri: null,
+      raw_checksum_sha256: null,
+      documented: true,
+    })),
+  );
+
+  const provenance = await client.query(
+    `select
+       (select count(*)::int from wine_boundary_sources) sources,
+       (select count(*)::int from wine_boundary_source_snapshots) snapshots,
+       count(distinct (s.source_namespace, s.source_feature_id))::int identities,
+       count(*)::int linked_boundaries
+     from wine_place_boundaries b
+     join wine_boundary_source_snapshots snapshot
+       on snapshot.id = b.source_snapshot_id
+     join wine_boundary_sources s on s.id = snapshot.source_id`,
+  );
+  assert.deepEqual(provenance.rows[0], {
+    sources: 14,
+    snapshots: 14,
+    identities: 14,
+    linked_boundaries: 14,
+  });
+});
+
+test("only exact current Bordeaux references are verified", async () => {
+  const country = await client.query(
+    `select c.name, p.canonical_key
+       from countries c join wine_places p on p.id = c.wine_place_id
+      where c.map_status = 'VERIFIED'`,
+  );
+  assert.deepEqual(country.rows, [{ name: "France", canonical_key: "france" }]);
+
+  const region = await client.query(
+    `select r.name, p.canonical_key
+       from regions r join wine_places p on p.id = r.wine_place_id
+      where r.map_status = 'VERIFIED'`,
+  );
+  assert.deepEqual(region.rows, [{ name: "Bordeaux", canonical_key: "france.bordeaux" }]);
+
+  const appellations = await client.query(
+    `select a.name, p.canonical_key
+       from appellations a
+       join regions r on r.id = a.region_id
+       join countries c on c.id = r.country_id
+       join wine_places p on p.id = a.wine_place_id
+      where a.map_status = 'VERIFIED'
+       order by a.id`,
+  );
+  assert.equal(appellations.rows.length, 12);
+  const actualAppellations = new Map(
+    appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
+  );
+  assert.equal(actualAppellations.size, EXPECTED_APPELLATION_LINKS.length);
+  for (const { names, key } of EXPECTED_APPELLATION_LINKS) {
+    const matchedNames = names.filter((name) => actualAppellations.has(name));
+    assert.equal(matchedNames.length, 1, names.join(" or "));
+    assert.equal(actualAppellations.get(matchedNames[0]), key, matchedNames[0]);
+  }
+
+  for (const [table, expectedVerified] of [
+    ["countries", 1],
+    ["regions", 1],
+    ["appellations", 12],
+  ]) {
+    const statuses = await client.query(
+      `select count(*)::int total,
+              count(*) filter (where map_status = 'VERIFIED')::int verified,
+              count(*) filter (
+                where map_status = 'VERIFIED'
+                  and wine_place_id is not null
+                  and map_match_method = 'MIGRATED_EXACT'
+                  and map_match_confidence = 1
+                  and map_reviewed_at is not null
+                  and map_review_note = 'Phase 1 canonical migration'
+              )::int reviewed,
+              count(*) filter (
+                where map_status = 'PENDING' and wine_place_id is null
+              )::int pending
+         from ${table}`,
+    );
+    assert.equal(statuses.rows[0].verified, expectedVerified, table);
+    assert.equal(statuses.rows[0].reviewed, expectedVerified, table);
+    assert.equal(
+      statuses.rows[0].total,
+      statuses.rows[0].verified + statuses.rows[0].pending,
+      table,
+    );
+  }
+});
+
+test("existing scoring references remain valid", async () => {
+  const answers = await client.query(
+    `select
+       count(*) filter (where c.id is null)::int missing_country,
+       count(*) filter (where r.id is null)::int missing_region,
+       count(*) filter (where wa.appellation_id is not null and a.id is null)::int missing_appellation
+     from wine_answers wa
+     left join countries c on c.id = wa.country_id
+     left join regions r on r.id = wa.region_id
+     left join appellations a on a.id = wa.appellation_id`,
+  );
+  assert.deepEqual(answers.rows[0], {
+    missing_country: 0,
+    missing_region: 0,
+    missing_appellation: 0,
+  });
+
+  const guesses = await client.query(
+    `select
+       count(*) filter (where g.country_id is not null and c.id is null)::int missing_country,
+       count(*) filter (where g.region_id is not null and r.id is null)::int missing_region,
+       count(*) filter (where g.appellation_id is not null and a.id is null)::int missing_appellation
+     from guesses g
+     left join countries c on c.id = g.country_id
+     left join regions r on r.id = g.region_id
+     left join appellations a on a.id = g.appellation_id`,
+  );
+  assert.deepEqual(guesses.rows[0], {
+    missing_country: 0,
+    missing_region: 0,
+    missing_appellation: 0,
+  });
+});
+
+test("Phase 1 migrations are recorded", async () => {
+  const result = await client.query(
+    `select version, name
+       from supabase_migrations.schema_migrations
+      where version = any($1::text[])
+      order by version`,
+    [["20260727090000", "20260727093000"]],
+  );
+  assert.deepEqual(result.rows, [
+    { version: "20260727090000", name: "world_wine_map_foundation" },
+    { version: "20260727093000", name: "world_wine_map_bordeaux_seed" },
+  ]);
+});
