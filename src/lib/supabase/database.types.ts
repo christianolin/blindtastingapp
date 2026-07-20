@@ -18,18 +18,71 @@ export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 export type GrapeColor = "RED" | "WHITE";
 export type WineMapLevel = "COUNTRY" | "REGION" | "APPELLATION";
+export type WinePlaceKind =
+  | "COUNTRY"
+  | "MACRO_REGION"
+  | "REGION"
+  | "SUBREGION"
+  | "APPELLATION"
+  | "SITE"
+  | "VINEYARD";
+export type WinePlacePublicationStatus = "DRAFT" | "VERIFIED" | "EXCLUDED";
+export type WinePlaceRelationshipType = "OVERLAPS" | "ALTERNATE_PARENT" | "RELATED";
+export type WineArticleStatus = "PLACEHOLDER" | "DRAFT" | "PUBLISHED";
+export type WineReferenceMapStatus =
+  | "PENDING"
+  | "VERIFIED"
+  | "SYNTHETIC"
+  | "DUPLICATE"
+  | "INVALID"
+  | "NOT_GEOGRAPHIC";
+export type WineBoundaryMethod =
+  | "OFFICIAL"
+  | "GENERALIZED_FROM_OFFICIAL_SOURCE"
+  | "DERIVED_FROM_DESCENDANTS"
+  | "MANUAL";
+export type WineBoundaryQualityStatus = "DRAFT" | "VALIDATED" | "REJECTED";
+export type WineMapReleaseStatus =
+  | "BUILDING"
+  | "VALIDATED"
+  | "ACTIVE"
+  | "RETIRED"
+  | "FAILED";
+
+type ReferenceMapFields = {
+  wine_place_id: string | null;
+  map_status: WineReferenceMapStatus;
+  map_match_method: string | null;
+  map_match_confidence: number | null;
+  map_reviewed_by: string | null;
+  map_reviewed_at: string | null;
+  map_review_note: string | null;
+};
+
+type ReferenceMapInsertFields = {
+  wine_place_id?: string | null;
+  map_status?: WineReferenceMapStatus;
+  map_match_method?: string | null;
+  map_match_confidence?: number | null;
+  map_reviewed_by?: string | null;
+  map_reviewed_at?: string | null;
+  map_review_note?: string | null;
+};
 
 type ReferenceTable = {
-  Row: { id: string; name: string };
-  Insert: { id?: string; name: string };
-  Update: { id?: string; name: string };
+  Row: { id: string; name: string } & ReferenceMapFields;
+  Insert: { id?: string; name: string } & ReferenceMapInsertFields;
+  Update: Partial<{ id: string; name: string } & ReferenceMapFields>;
   Relationships: [];
 };
 
 type ScopedReferenceTable<ParentKey extends string> = {
-  Row: { id: string; name: string } & Record<ParentKey, string>;
-  Insert: { id?: string; name: string } & Record<ParentKey, string>;
-  Update: Partial<{ id: string; name: string } & Record<ParentKey, string>>;
+  Row: { id: string; name: string } & Record<ParentKey, string> & ReferenceMapFields;
+  Insert: { id?: string; name: string } & Record<ParentKey, string> &
+    ReferenceMapInsertFields;
+  Update: Partial<
+    { id: string; name: string } & Record<ParentKey, string> & ReferenceMapFields
+  >;
   Relationships: [];
 };
 
@@ -359,6 +412,243 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guesses"]["Insert"]>;
+        Relationships: [];
+      };
+
+      wine_places: {
+        Row: {
+          id: string;
+          primary_parent_id: string | null;
+          kind: WinePlaceKind;
+          canonical_key: string;
+          canonical_key_locked_at: string | null;
+          name: string;
+          slug: string;
+          display_tier: number;
+          min_zoom: number;
+          label_min_zoom: number;
+          publication_status: WinePlacePublicationStatus;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          primary_parent_id?: string | null;
+          kind: WinePlaceKind;
+          canonical_key: string;
+          canonical_key_locked_at?: string | null;
+          name: string;
+          slug: string;
+          display_tier: number;
+          min_zoom: number;
+          label_min_zoom: number;
+          publication_status?: WinePlacePublicationStatus;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["wine_places"]["Insert"]>;
+        Relationships: [];
+      };
+      wine_place_aliases: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          name: string;
+          normalized_name: string;
+          language_code: string;
+          alias_type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          name: string;
+          normalized_name: string;
+          language_code?: string;
+          alias_type: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_aliases"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_relationships: {
+        Row: {
+          source_place_id: string;
+          target_place_id: string;
+          relationship_type: WinePlaceRelationshipType;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          source_place_id: string;
+          target_place_id: string;
+          relationship_type: WinePlaceRelationshipType;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_relationships"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_articles: {
+        Row: {
+          wine_place_id: string;
+          description: string | null;
+          climate: string | null;
+          grape_varieties: string | null;
+          wine_styles: string | null;
+          key_facts: string[] | null;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          wine_place_id: string;
+          description?: string | null;
+          climate?: string | null;
+          grape_varieties?: string | null;
+          wine_styles?: string | null;
+          key_facts?: string[] | null;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_articles"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_boundary_sources: {
+        Row: {
+          id: string;
+          source_namespace: string;
+          source_feature_id: string;
+          authority: string;
+          jurisdiction: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          source_namespace: string;
+          source_feature_id: string;
+          authority: string;
+          jurisdiction: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_boundary_sources"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_boundary_source_snapshots: {
+        Row: {
+          id: string;
+          source_id: string;
+          source_revision: string;
+          retrieved_at: string | null;
+          source_url: string | null;
+          licence: string;
+          raw_snapshot_uri: string | null;
+          raw_checksum_sha256: string | null;
+          normalized_artifact_uri: string;
+          normalized_checksum_sha256: string;
+          provenance_note: string | null;
+          importer_version: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          source_id: string;
+          source_revision: string;
+          retrieved_at?: string | null;
+          source_url?: string | null;
+          licence: string;
+          raw_snapshot_uri?: string | null;
+          raw_checksum_sha256?: string | null;
+          normalized_artifact_uri: string;
+          normalized_checksum_sha256: string;
+          provenance_note?: string | null;
+          importer_version: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_boundary_source_snapshots"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_boundaries: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          source_snapshot_id: string;
+          boundary_method: WineBoundaryMethod;
+          quality_status: WineBoundaryQualityStatus;
+          display_geometry: unknown;
+          label_point: unknown;
+          bbox: number[];
+          source_feature_refs: unknown;
+          generation_parameters: unknown;
+          revision: string;
+          is_current: boolean;
+          reviewed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          source_snapshot_id: string;
+          boundary_method: WineBoundaryMethod;
+          quality_status?: WineBoundaryQualityStatus;
+          display_geometry: unknown;
+          label_point: unknown;
+          bbox: number[];
+          source_feature_refs?: unknown;
+          generation_parameters?: unknown;
+          revision: string;
+          is_current?: boolean;
+          reviewed_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_boundaries"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_map_releases: {
+        Row: {
+          id: string;
+          version: string;
+          status: WineMapReleaseStatus;
+          manifest_url: string | null;
+          manifest_checksum_sha256: string | null;
+          tile_checksums: unknown;
+          feature_counts: unknown;
+          build_inputs: unknown;
+          validation_report: unknown;
+          promoted_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          version: string;
+          status?: WineMapReleaseStatus;
+          manifest_url?: string | null;
+          manifest_checksum_sha256?: string | null;
+          tile_checksums?: unknown;
+          feature_counts?: unknown;
+          build_inputs?: unknown;
+          validation_report?: unknown;
+          promoted_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_map_releases"]["Insert"]
+        >;
         Relationships: [];
       };
     };
