@@ -127,3 +127,18 @@ test("featureCollection wraps features", () => {
 test("WORLD_KEYS pins the world archive contents", () => {
   assert.deepEqual(WORLD_KEYS, ["france", "france.bordeaux"]);
 });
+
+test("tippecanoeArgs pins zoom windows and layers per archive", async () => {
+  const { tippecanoeArgs } = await import("./lib.mjs");
+  assert.deepEqual(tippecanoeArgs("world"), [
+    "-o", "world.pmtiles", "--force", "-Z0", "-z7", "-r1",
+    "--no-progress-indicator",
+    "-L", "places:world-places.geojson", "-L", "labels:world-labels.geojson",
+  ]);
+  assert.deepEqual(tippecanoeArgs("france"), [
+    "-o", "france.pmtiles", "--force", "-Z4", "-z12", "-r1",
+    "--no-progress-indicator",
+    "-L", "places:france-places.geojson", "-L", "labels:france-labels.geojson",
+  ]);
+  assert.throws(() => tippecanoeArgs("mars"), /Unknown build target/);
+});

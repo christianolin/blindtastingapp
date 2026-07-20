@@ -135,3 +135,21 @@ export async function uploadObject(objectPath, body, { contentType, cacheControl
   });
   if (error) throw new Error(`Upload ${objectPath} failed: ${error.message}`);
 }
+
+const BUILD_TARGETS = {
+  world: { output: "world.pmtiles", minZoom: 0, maxZoom: 7 },
+  france: { output: "france.pmtiles", minZoom: 4, maxZoom: 12 },
+};
+
+// Args are relative paths run with cwd=WORK_DIR so tippecanoe's embedded
+// generator_options metadata stays machine-independent (determinism).
+export function tippecanoeArgs(target) {
+  const spec = BUILD_TARGETS[target];
+  if (!spec) throw new Error(`Unknown build target: ${target}`);
+  return [
+    "-o", spec.output, "--force", `-Z${spec.minZoom}`, `-z${spec.maxZoom}`, "-r1",
+    "--no-progress-indicator",
+    "-L", `places:${target}-places.geojson`,
+    "-L", `labels:${target}-labels.geojson`,
+  ];
+}
