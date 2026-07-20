@@ -633,6 +633,25 @@ a raw subquery, regardless of which two tables look involved at a glance.
     hand-positioned schematic SVG (`REGION_LAYOUTS`) and hand-traced polygons
     (`20260725090000_wine_map_fixed_boundaries.sql`) are both gone.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
+- World Wine Map Phase 1 adds `wine_places` as the canonical future map
+  catalog, plus aliases, articles, stable boundary-source identities,
+  immutable source snapshots, reviewed PostGIS display geometries, and release
+  metadata. New imports must retain genuine raw source artifacts; the migrated
+  legacy Bordeaux rows explicitly record that their raw WFS responses,
+  retrieval timestamps, and parcel IDs are unavailable and instead pin the
+  earliest normalized Git artifacts. `wine_map_nodes` remains the active read
+  source during Phase 1 and is retired only after the Phase 2 tile UI passes
+  parity; there is no permanent dual-write. Existing
+  country/region/appellation UUIDs and scoring behavior are unchanged. Their
+  nullable `wine_place_id` and required `map_status` record curation explicitly:
+  Phase 1 verifies only exact France, Bordeaux, and the 12 currently mapped
+  Bordeaux appellations (accepting the clean-replay name or its live
+  `AOP`-suffixed equivalent); every other row remains `PENDING`. PostGIS is the
+  reviewed geometry/validation store for later offline tile builds, not a
+  request-time tile service. The 13 Bordeaux footprints are
+  `GENERALIZED_FROM_OFFICIAL_SOURCE`, while France is `MANUAL`; neither is a
+  claim of legal boundary accuracy. PMTiles publication and map UI changes are
+  Phase 2 work.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
   `producers.region_id` is **nullable** — the original LWIN import deduped
