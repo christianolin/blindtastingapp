@@ -723,13 +723,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // 15 rows since the France revision: the superseded legacy outline is
   // retained (is_current = false) beside the current Natural Earth one.
   assert.deepEqual(result.rows[0], {
-    total: 15,
+    total: 22,
     validated: 15,
     current: 14,
-    valid: 15,
-    labelled: 15,
+    valid: 22,
+    labelled: 22,
     manual: 2,
-    generalized: 13,
+    generalized: 20,
     reproducible: 13,
   });
 
@@ -774,10 +774,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
      join wine_boundary_sources s on s.id = snapshot.source_id`,
   );
   assert.deepEqual(provenance.rows[0], {
-    sources: 15,
-    snapshots: 15,
-    identities: 15,
-    linked_boundaries: 15,
+    sources: 22,
+    snapshots: 22,
+    identities: 22,
+    linked_boundaries: 22,
   });
 });
 
@@ -916,8 +916,8 @@ test("classification facts and legal relationship types", async () => {
        from wine_places`,
   );
   assert.deepEqual(facts.rows[0], {
-    appellations: 13,
-    aoc: 13,
+    appellations: 18,
+    aoc: 18,
     missing_level: 0,
     france_plain: 1,
   });

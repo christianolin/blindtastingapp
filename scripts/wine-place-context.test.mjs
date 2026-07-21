@@ -87,7 +87,8 @@ test("bordeaux context has the full contract shape", async () => {
     ctx.ancestors.map((a) => a.key),
     ["france"],
   );
-  assert.equal(ctx.children.length, 7);
+  // Table-owning pooler role: RLS does not filter, so DRAFT places count.
+  assert.equal(ctx.children.length, 9);
   assert.ok(ctx.children.every((c) => typeof c.min_zoom === "number"));
   assert.equal(ctx.article.editorial_status, "PUBLISHED");
   assert.equal(ctx.boundary.bbox.length, 4);
@@ -99,10 +100,16 @@ test("nested appellation ancestors are outermost first", async () => {
   const ctx = await contextFor("france.bordeaux.haut-medoc.margaux");
   assert.deepEqual(
     ctx.ancestors.map((a) => a.key),
-    ["france", "france.bordeaux", "france.bordeaux.haut-medoc"],
+    ["france", "france.bordeaux", "france.bordeaux.medoc", "france.bordeaux.haut-medoc"],
   );
   assert.equal(ctx.children.length, 0);
   assert.equal(ctx.place.kind, "APPELLATION");
+
+  const graves = await contextFor("france.bordeaux.graves");
+  assert.deepEqual(
+    graves.children.map((c) => c.key),
+    ["france.bordeaux.pessac-leognan", "france.bordeaux.sauternes"],
+  );
 });
 
 test("unknown key returns null", async () => {
@@ -127,5 +134,8 @@ test("authenticated role sees verified content through RLS", async () => {
     assert.equal(ctx.place.key, "france.bordeaux");
     assert.ok(ctx.article, "article should be visible to authenticated");
     assert.ok(ctx.boundary, "boundary should be visible to authenticated");
+    // DRAFT places are invisible through RLS: only the 4 VERIFIED children
+    // remain until Task 6 publishes the new appellations (then: 9).
+    assert.equal(ctx.children.length, 4);
   });
 });
