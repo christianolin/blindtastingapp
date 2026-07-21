@@ -328,12 +328,14 @@ test("membership file backs the allowlist", async () => {
 });
 
 test("wfsPageUrl bounds with LIKE, sorts deterministically, escapes quotes", () => {
+  // URLSearchParams form-encodes spaces as "+", which decodeURIComponent
+  // does NOT undo — assert on the parsed parameter, not the raw string.
   const url = wfsPageUrl("L'Étoile", 5000);
-  assert.ok(url.includes("sortBy=gml_id"));
-  assert.ok(url.includes(`count=${PAGE_SIZE}`));
-  assert.ok(url.includes("startIndex=5000"));
-  const decoded = decodeURIComponent(url);
-  assert.ok(decoded.includes("denom LIKE '%L''Étoile%'"));
+  const params = new URL(url).searchParams;
+  assert.equal(params.get("sortBy"), "gml_id");
+  assert.equal(params.get("count"), String(PAGE_SIZE));
+  assert.equal(params.get("startIndex"), "5000");
+  assert.equal(params.get("cql_filter"), "denom LIKE '%L''Étoile%'");
 });
 
 test("raw object paths are namespaced and versioned", () => {
@@ -382,7 +384,8 @@ export function parcelMatches(comboString, denomination) {
 }
 
 export async function loadMembership() {
-  const parsed = JSON.parse(await readFile(MEMBERSHIP_FILE, "utf8"));
+  const fileUrl = new URL(`../../${MEMBERSHIP_FILE}`, import.meta.url);
+  const parsed = JSON.parse(await readFile(fileUrl, "utf8"));
   return new Map(Object.entries(parsed.membership));
 }
 
@@ -505,7 +508,6 @@ import {
   loadMembership,
   parcelMatches,
   rawObjectPath,
-  splitDenominations,
   uploadRawObject,
   wfsPageUrl,
   PAGE_SIZE,
@@ -579,7 +581,10 @@ for (const member of members) {
       featuresById.set(feature.id ?? feature.properties?.gml_id, feature);
     }
     startIndex += features.length;
-    if (features.length < PAGE_SIZE) break;
+    const totalMatched = page.totalFeatures ?? page.numberMatched ?? null;
+    if (features.length === 0) break;
+    if (totalMatched !== null && startIndex >= totalMatched) break;
+    if (totalMatched === null && features.length < PAGE_SIZE) break;
   }
 }
 
@@ -631,6 +636,7 @@ console.log(
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import pg from "pg";
 import { pgConfig, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { rawObjectPath, uploadRawObject, SOURCE_NAMESPACE, WFS_LICENCE } from "./inao-lib.mjs";
@@ -781,7 +787,7 @@ try {
       fetchManifest.manifest_checksum_sha256,
       `storage://wine-map-sources/${normalizedPath}`,
       sha256hex(normalizedBody),
-      `scripts/wine-map-sources/build-boundary.mjs@${process.env.GITHUB_SHA ?? "dev"}`,
+      `scripts/wine-map-sources/build-boundary.mjs@${process.env.GITHUB_SHA ?? execSync("git rev-parse HEAD").toString().trim()}`,
       geojson,
       JSON.stringify(fetchManifest.members),
       parcels.features.length,
@@ -791,8 +797,9 @@ try {
     ],
   );
   assert.equal(result.rows.length, 1, "expected one staged boundary row");
-  await client.query("commit");
 
+  // Preview renders BEFORE commit: a preview failure rolls the staged row
+  // back rather than leaving an unreviewable DRAFT behind.
   const geometry = JSON.parse(geojson);
   const rings = geometry.coordinates.flat(1);
   const all = rings.flat(1);
@@ -817,6 +824,7 @@ try {
     `.superpowers/sdd/preview-${slug}.svg`,
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${((maxX - minX) * scale).toFixed(0)} ${((maxY - minY) * scale).toFixed(0)}"><path d="${paths}" fill="#5C1A2B" fill-opacity="0.35" stroke="#5C1A2B"/></svg>\n`,
   );
+  await client.query("commit");
   console.log(
     `BOUNDARY-STAGED ${slug} -> ${targetKey} boundary=${result.rows[0].id} vertices=${all.length} components=${geometry.coordinates.length}`,
   );
@@ -860,7 +868,7 @@ service role.
 **Interfaces:**
 - Consumes Tasks 1–3. Produces: 5 new `DRAFT` places, corrected `primary_parent_id` tree, 2 legal edges, 7 staged `DRAFT` boundaries (5 new appellations + widened Graves and Médoc grouping footprints).
 
-**Execution order within this task:** migration first (Steps 2–3: dry-run, live apply — the tooling needs the new target keys to exist), then the tooling runs (Step 1's list), then test updates and commit.
+**Execution order within this task (checkbox numbering is by artifact, not sequence):** (1) write the Step 2 migration and stage the classification expectations (13 → 18), (2) dry-run + live apply it — the tooling needs the new target keys to exist, (3) run Step 1's tooling list, (4) apply Step 3's boundary/provenance and context expectations, run both suites live, commit.
 
 - [ ] **Step 1: Stage the seven boundaries (live tooling runs, after the migration is applied)**
 
@@ -956,9 +964,9 @@ $$;
 
 - [ ] **Step 3: Dry-run, live apply, tooling, expectations, commit**
 
-Dry-run this migration through the foundation harness, live apply via the scratch applier, then run Step 1's tooling. Update expectations:
+Stage the expectation updates around the dry-run — a single state cannot satisfy both the dry-run (boundaries still at the live 15 rows) and the post-tooling live suite (22): FIRST update the Task 1 classification test's counts (`appellations` and `aoc` both 13 → 18), THEN dry-run this migration through the foundation harness, live apply via the scratch applier, run Step 1's tooling, and only then apply the boundary/provenance expectation updates below. Update expectations:
 
-- `scripts/wine-place-context.test.mjs`: Bordeaux's VISIBLE children are still 4 (`medoc`, `graves`, `saint-emilion`, `pomerol` — RLS hides the 5 DRAFT places until Task 6); Margaux ancestors become `["france","france.bordeaux","france.bordeaux.medoc","france.bordeaux.haut-medoc"]`; Graves children keys `["france.bordeaux.pessac-leognan","france.bordeaux.sauternes"]`.
+- `scripts/wine-place-context.test.mjs`: the suite's default connection is the table-owning pooler role, which RLS does NOT filter — Bordeaux children become **9 immediately** (4 VERIFIED + 5 DRAFT); assert `length === 9` there. DRAFT-hiding is asserted where RLS actually applies: inside the existing `set local role authenticated` test, assert Bordeaux children `length === 4` (Task 6 flips that assertion to 9 when the places publish). Margaux ancestors become `["france","france.bordeaux","france.bordeaux.medoc","france.bordeaux.haut-medoc"]`; Graves children keys `["france.bordeaux.pessac-leognan","france.bordeaux.sauternes"]`.
 - `scripts/world-wine-map-foundation.test.mjs`: boundary counts `total: 22, validated: 15, current: 14, valid: 22, labelled: 22, manual: 2, generalized: 20, reproducible: 13`; provenance `sources: 22, snapshots: 22, identities: 22, linked_boundaries: 22`; classification appellation count `13 → 18`.
 
 Both suites live green, then:
@@ -1001,14 +1009,14 @@ end;
 $$;
 ```
 
-Steps: dry-run → live apply → tooling:
+Steps: update the classification expectation first (`appellations`/`aoc` 18 → 19) → dry-run → live apply → tooling:
 
 ```powershell
 node scripts/wine-map-sources/fetch-inao-denomination.mjs --slug bourgogne --target-key france.bourgogne --members "Bourgogne"
 node scripts/wine-map-sources/build-boundary.mjs --slug bourgogne --target-key france.bourgogne
 ```
 
-Fetch is the largest of 3A (the LIKE bound matches every combo containing the substring; expect many pages, minutes of runtime, gzipped raw pages in Storage). `FETCHED` must report parcels ≥ 16855. Foundation counts bump to `total: 23`, `valid/labelled: 23`, `generalized: 21`, provenance 23s; classification appellation count `18 → 19` (Bourgogne is dual-role). Live suites green → commit (`feat: add bourgogne pilot region`).
+Fetch is the largest of 3A (the LIKE bound matches every combo containing the substring; expect many pages, minutes of runtime, gzipped raw pages in Storage). `FETCHED` must report parcels ≥ 16855. Foundation boundary counts then bump to `total: 23`, `valid/labelled: 23`, `generalized: 21`, provenance 23s (the classification 18 → 19 bump was staged before the dry-run; Bourgogne is dual-role). Live suites green → commit (`feat: add bourgogne pilot region`).
 
 ---
 
@@ -1018,7 +1026,7 @@ Fetch is the largest of 3A (the LIKE bound matches every combo containing the su
 - Create: `supabase/migrations/20260803090000_phase3a_boundary_review.sql`
 - Modify: both test files (final expectations)
 
-**Review first (human-in-the-loop):** inspect every `.superpowers/sdd/preview-<slug>.svg`, vertex/component counts from `BOUNDARY-STAGED` output, and bbox sanity (inside the France window). Record approval in the ledger before writing the flip migration.
+**Review first (human-in-the-loop):** inspect every `.superpowers/sdd/preview-<slug>.svg`, vertex/component counts from `BOUNDARY-STAGED` output, and bbox sanity (inside the France window). If any target was re-staged with adjusted parameters, delete the superseded DRAFT row(s) first (`delete from wine_place_boundaries where wine_place_id = <place> and quality_status = 'DRAFT' and id <> <kept-id>` — boundaries carry no immutability trigger; the orphaned snapshot rows are fine and stay). The flip migration fails closed on more than one DRAFT per target. Record approval in the ledger before writing the flip migration.
 
 ```sql
 -- Flip the eight reviewed Phase 3A boundaries current and publish their
@@ -1057,14 +1065,14 @@ end;
 $$;
 ```
 
-Final expectations: boundaries `total: 23, validated: 23, current: 20, valid: 23, labelled: 23, manual: 2, generalized: 21, reproducible: 13`; provenance 23/23/23/23; `EXPECTED_BOUNDARIES` (is_current-only) rewritten to 20 rows — the eight new entries use `denomset:<slug>` source ids with `storage://wine-map-sources/...` raw URIs and non-null raw checksums (take exact values from the snapshot rows at implementation time and pin them). Context tests: Bordeaux visible children 9; Bourgogne context returns `article: null` (UI shows "Profile being curated"). Dry-run → live apply → both suites green → commit (`feat: validate phase 3a boundaries after review`).
+Final expectations: boundaries `total: 23, validated: 23, current: 20, valid: 23, labelled: 23, manual: 2, generalized: 21, reproducible: 13`; provenance 23/23/23/23; `EXPECTED_BOUNDARIES` (is_current-only) rewritten to 20 rows — the eight new entries use `denomset:<slug>` source ids with `storage://wine-map-sources/...` raw URIs and non-null raw checksums (take exact values from the snapshot rows at implementation time and pin them). Context tests: the authenticated-role Bordeaux children assertion flips 4 → 9 (the default-role assertion is already 9); Bourgogne context returns `article: null` (UI shows "Profile being curated"). Dry-run → live apply → both suites green → commit (`feat: validate phase 3a boundaries after review`).
 
 ---
 
 ### Task 7: Pipeline Split Rule, Reference Links, Docs, Full Verification
 
-1. **Tile split becomes tier-based** (`scripts/wine-map-tiles/lib.mjs` + `export.mjs` + `lib.test.mjs`): world archive = places with `display_tier <= 1` (France + every tier-1 region, archive `both` for tier-1 places so shard behavior is unchanged); `EXPECTED_PLACES` 14 → 20; replace the `WORLD_KEYS` constant + its test with the tier rule; update `release.json` archive mapping (`both` for tier-1, `world` only for `france`) and `expectedIdSets` fixtures. France shard keeps every `france.*` place.
-2. **Reference links** `supabase/migrations/20260803093000_phase3a_reference_links.sql`: Phase 1 exact-name pattern — Bourgogne region row (accept exactly one of `Bourgogne` / `Burgundy`; abort if both or neither... if neither, leave `PENDING` and `raise notice` instead of exception), and the five appellation rows (accept `<name>` / `<name> AOP`; `Côtes de Bourg` for the comma-named place). `VERIFIED` + `MIGRATED_EXACT` + confidence 1 on match; explicit `PENDING` report otherwise. Dry-run in the context harness, live apply, suites green.
+1. **Tile split becomes tier-based** (`scripts/wine-map-tiles/lib.mjs` + `export.mjs` + `lib.test.mjs`): world archive = places with `display_tier <= 1` (France + every tier-1 region, archive `both` for tier-1 places so shard behavior is unchanged); `EXPECTED_PLACES` 14 → 20; replace the `WORLD_KEYS` constant + its test with the tier rule; update `release.json` archive mapping (`both` for tier-1, `world` only for `france`) and `expectedIdSets` fixtures; update `export.mjs`'s hardcoded shard asserts (`worldRows.length === 2`, `franceRows.length === 13`) and its "14 verified places" header comment to the tier rule. France shard keeps every `france.*` place. **Register the new source namespace or the export crashes at Task 8:** add `IGN_INAO_AOC_VITICOLES: { key: "ign-inao", text: "Contains data © IGN / INAO, Licence Ouverte Etalab" }` to `ATTRIBUTION` (same display text as the legacy namespace — the display map collapses them) and update the `attributionDisplayMap` expectation in `lib.test.mjs`.
+2. **Reference links** `supabase/migrations/20260803093000_phase3a_reference_links.sql`: Phase 1 exact-name pattern with review note `'Phase 3A canonical migration'`. Rule stated once: abort only if MULTIPLE candidate rows match a place; if none match, leave `PENDING` with a `raise notice`. Links: the Bourgogne region row (the live seed row is literally named `Bourgogne`; accept `Bourgogne` / `Burgundy`), and the appellation rows accepting `<name>` / `<name> AOP` plus known spelling variants — `Entre-Deux-Mers` (the live row capitalizes Deux) for Entre-deux-Mers, `Côtes de Bourg` for the comma-named place. **Blaye is EXPECTED to end `PENDING`**: the only live row is `Blaye Côtes de Bordeaux`, a different AOC — do not match it. Update `scripts/world-wine-map-foundation.test.mjs` in the SAME commit: the "only exact current Bordeaux references are verified" test gains the new links (region rows become `[Bordeaux, Bourgogne]` with an `order by` added to the query; appellation links 12 → 16: + Fronsac, Canon-Fronsac, Côtes de Bourg, Entre-Deux-Mers) and its reviewed-tally filter accepts both review notes. Dry-run in the FOUNDATION harness (the affected tests live there, not in the context suite), live apply, suites green.
 3. **Docs**: CLAUDE.md Phase 3A bullet (classification axes live; INAO adapter with Storage raw retention; corrected Bordeaux; Bourgogne; region waves are data batches through the same pipeline).
 4. **Full battery**: both DB suites live, tile lib tests, boundary-generator tests, `npx tsc --noEmit`, targeted eslint, `npm run build`, `git diff --check`, clean tree. Commit (`feat: link phase 3a references and update tile split`).
 
