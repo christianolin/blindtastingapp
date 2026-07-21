@@ -46,4 +46,4 @@ promotion (spec §5, Application tests).
 
 ## Sign-off
 
-- Owner approval (date + note): ____________________
+- Owner approval (date + note): 2026-07-21 — approved by the owner in-session after walking the deployed opt-in map at `?map=tiles` ("It looks good continue").
