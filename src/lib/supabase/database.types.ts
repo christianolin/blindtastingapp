@@ -654,6 +654,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_wine_place_context: {
+        Args: { p_place_key: string };
+        Returns: unknown;
+      };
       reveal_wine: {
         Args: { p_wine_id: string };
         Returns: void;
