@@ -1289,7 +1289,6 @@ Hand the owner the checklist and the production URL. Wait for explicit approval 
 - Delete: `src/app/knowledge/map/wine-map-explorer.tsx`
 - Delete: `src/app/knowledge/map/interactive-wine-map.tsx`
 - Modify: `docs/superpowers/specs/2026-07-21-wine-map-parity-checklist.md` (sign-off line)
-- Modify: `package.json`, `package-lock.json` (`@turf/bbox` leaves with its only importer)
 - Modify: `package.json`, `package-lock.json` (`@turf/bbox` removed with its only importer)
 
 **Interfaces:**
@@ -1372,7 +1371,7 @@ npx eslint src/app/knowledge/map/page.tsx src/app/knowledge/map/tile-wine-map-ex
 if ($LASTEXITCODE -ne 0) { throw "eslint failed." }
 npm run build
 if ($LASTEXITCODE -ne 0) { throw "build failed." }
-git add src/app/knowledge/map/page.tsx docs/superpowers/specs/2026-07-21-wine-map-parity-checklist.md package.json package-lock.json
+git add src/app/knowledge/map/page.tsx docs/superpowers/specs/2026-07-21-wine-map-parity-checklist.md package.json package-lock.json package.json package-lock.json
 if ($LASTEXITCODE -ne 0) { throw "git add failed." }
 git commit -m "feat: promote tile wine map to default"
 if ($LASTEXITCODE -ne 0) { throw "commit failed." }
