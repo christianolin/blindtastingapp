@@ -99,6 +99,15 @@ export function TileWineMap({
         mapStyle={BASEMAP_STYLE}
         initialViewState={{ longitude: -0.58, latitude: 44.84, zoom: 6 }}
         interactiveLayerIds={["france-fills", "world-fills"]}
+        onLoad={(e) => {
+          // MapLibre's compact attribution control mounts expanded; collapse
+          // it so only the "i" toggle shows until the user opens it.
+          const details = e.target
+            .getContainer()
+            .querySelector("details.maplibregl-ctrl-attrib");
+          details?.classList.remove("maplibregl-compact-show");
+          details?.removeAttribute("open");
+        }}
         onClick={(e) => {
           let best: { key: string; tier: number } | null = null;
           for (const feature of e.features ?? []) {
