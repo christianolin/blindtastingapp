@@ -673,10 +673,14 @@ const EXPECTED_APPELLATION_LINKS = [
 
 const SOURCE_MIGRATION_SHA256 =
   "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177";
-const MANUAL_MIGRATION_SHA256 =
-  "C5196565DFB93ABD68F5C398717440C142FCE621A773CABE6CEAEF7BEE9A0D50";
+const NE_FRANCE_NORMALIZED_SHA256 =
+  "3AEBD6EBF53C1FC35649BCB4DC09B71FC75923A11B5BF92178D8338764A2FCB0";
+const NE_FRANCE_RAW_SHA256 =
+  "9E891251F9AE6543E4ED3501AF46CA17D432F3ED1C8E09DF89336D9CC6118469";
+const NE_FRANCE_RAW_URI =
+  "https://raw.githubusercontent.com/christianolin/blindtastingapp/6257e2ae3bd2982482cc756465108fe6ef7ed615/data/wine-map/france-ne50m-raw.geojson";
 const EXPECTED_BOUNDARIES = [
-  ["france", "MANUAL", "legacy-20260724-france-mainland", MANUAL_MIGRATION_SHA256],
+  ["france", "MANUAL", "ne_50m_admin_0_countries:FRA", NE_FRANCE_NORMALIZED_SHA256, NE_FRANCE_RAW_SHA256],
   ["france.bordeaux", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-bordeaux", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.graves", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-graves", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.haut-medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-haut-medoc", SOURCE_MIGRATION_SHA256],
@@ -716,13 +720,15 @@ test("all migrated places have valid reviewed current boundaries", async () => {
              )::int reproducible
        from wine_place_boundaries b`,
   );
+  // 15 rows since the France revision: the superseded legacy outline is
+  // retained (is_current = false) beside the current Natural Earth one.
   assert.deepEqual(result.rows[0], {
-    total: 14,
-    validated: 14,
+    total: 15,
+    validated: 15,
     current: 14,
-    valid: 14,
-    labelled: 14,
-    manual: 1,
+    valid: 15,
+    labelled: 15,
+    manual: 2,
     generalized: 13,
     reproducible: 13,
   });
@@ -738,18 +744,20 @@ test("all migrated places have valid reviewed current boundaries", async () => {
        join wine_boundary_source_snapshots snapshot
          on snapshot.id = b.source_snapshot_id
        join wine_boundary_sources s on s.id = snapshot.source_id
+      where b.is_current
       order by p.canonical_key`,
   );
   assert.deepEqual(
     classifications.rows,
     EXPECTED_BOUNDARIES.map(([canonical_key, boundary_method,
-      source_feature_id, normalized_checksum_sha256]) => ({
+      source_feature_id, normalized_checksum_sha256,
+      raw_checksum_sha256 = null]) => ({
       canonical_key,
       boundary_method,
       source_feature_id,
       normalized_checksum_sha256,
-      raw_snapshot_uri: null,
-      raw_checksum_sha256: null,
+      raw_snapshot_uri: raw_checksum_sha256 ? NE_FRANCE_RAW_URI : null,
+      raw_checksum_sha256,
       documented: true,
     })),
   );
@@ -766,10 +774,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
      join wine_boundary_sources s on s.id = snapshot.source_id`,
   );
   assert.deepEqual(provenance.rows[0], {
-    sources: 14,
-    snapshots: 14,
-    identities: 14,
-    linked_boundaries: 14,
+    sources: 15,
+    snapshots: 15,
+    identities: 15,
+    linked_boundaries: 15,
   });
 });
 
