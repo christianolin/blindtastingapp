@@ -26,7 +26,12 @@ export type WinePlaceKind =
   | "SITE"
   | "VINEYARD";
 export type WinePlacePublicationStatus = "DRAFT" | "VERIFIED" | "EXCLUDED";
-export type WinePlaceRelationshipType = "OVERLAPS" | "ALTERNATE_PARENT" | "RELATED";
+export type WinePlaceRelationshipType =
+  | "OVERLAPS"
+  | "ALTERNATE_PARENT"
+  | "RELATED"
+  | "REPLACES_WITHIN"
+  | "DUAL_LABEL";
 export type WineArticleStatus = "PLACEHOLDER" | "DRAFT" | "PUBLISHED";
 export type WineReferenceMapStatus =
   | "PENDING"
@@ -389,8 +394,11 @@ export type Database = {
           display_tier: number;
           min_zoom: number;
           label_min_zoom: number;
-          publication_status: WinePlacePublicationStatus;
-          sort_order: number;
+    publication_status: WinePlacePublicationStatus;
+    is_appellation: boolean;
+    appellation_system: string | null;
+    appellation_level: string | null;
+    sort_order: number;
           created_at: string;
           updated_at: string;
         };
@@ -405,8 +413,11 @@ export type Database = {
           display_tier: number;
           min_zoom: number;
           label_min_zoom: number;
-          publication_status?: WinePlacePublicationStatus;
-          sort_order?: number;
+    publication_status?: WinePlacePublicationStatus;
+    is_appellation?: boolean;
+    appellation_system?: string | null;
+    appellation_level?: string | null;
+    sort_order?: number;
           created_at?: string;
           updated_at?: string;
         };

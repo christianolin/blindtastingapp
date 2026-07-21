@@ -108,3 +108,23 @@ export type BoundaryMethodValuesContract = Expect<
     | "MANUAL"
   >
 >;
+export type ClassificationFactsContract = Expect<
+  Equal<
+    Pick<WinePlace, "is_appellation" | "appellation_system" | "appellation_level">,
+    {
+      is_appellation: boolean;
+      appellation_system: string | null;
+      appellation_level: string | null;
+    }
+  >
+>;
+export type LegalRelationshipContract = Expect<
+  Equal<
+    WinePlaceRelationshipType,
+    | "OVERLAPS"
+    | "ALTERNATE_PARENT"
+    | "RELATED"
+    | "REPLACES_WITHIN"
+    | "DUAL_LABEL"
+  >
+>;

@@ -894,3 +894,52 @@ test("Phase 1 migrations are recorded", async () => {
     { version: "20260727093000", name: "world_wine_map_bordeaux_seed" },
   ]);
 });
+
+test("classification facts and legal relationship types", async () => {
+  const enumValues = await client.query(
+    `select e.enumlabel
+       from pg_enum e
+       join pg_type t on t.oid = e.enumtypid
+      where t.typname = 'wine_place_relationship_type'
+      order by e.enumsortorder`,
+  );
+  assert.deepEqual(
+    enumValues.rows.map(({ enumlabel }) => enumlabel),
+    ["OVERLAPS", "ALTERNATE_PARENT", "RELATED", "REPLACES_WITHIN", "DUAL_LABEL"],
+  );
+
+  const facts = await client.query(
+    `select count(*) filter (where is_appellation)::int appellations,
+            count(*) filter (where is_appellation and appellation_system = 'AOC/AOP')::int aoc,
+            count(*) filter (where is_appellation and appellation_level is null)::int missing_level,
+            count(*) filter (where not is_appellation and canonical_key = 'france')::int france_plain
+       from wine_places`,
+  );
+  assert.deepEqual(facts.rows[0], {
+    appellations: 13,
+    aoc: 13,
+    missing_level: 0,
+    france_plain: 1,
+  });
+
+  // One failing statement per rollback scope: after a rejected statement
+  // the (sub)transaction is aborted and a second probe would only see
+  // "current transaction is aborted".
+  await withRollback(async () => {
+    await assert.rejects(
+      client.query(
+        `update wine_places set is_appellation = true where canonical_key = 'france'`,
+      ),
+      /classification_coupling/i,
+    );
+  });
+  await withRollback(async () => {
+    await assert.rejects(
+      client.query(
+        `update wine_places set appellation_level = 'village-ish'
+          where canonical_key = 'france.bordeaux'`,
+      ),
+      /appellation_level/i,
+    );
+  });
+});
