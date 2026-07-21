@@ -652,6 +652,16 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `GENERALIZED_FROM_OFFICIAL_SOURCE`, while France is `MANUAL`; neither is a
   claim of legal boundary accuracy. PMTiles publication and map UI changes are
   Phase 2 work.
+- World Wine Map Phase 2A publishes the 14 verified places as immutable PMTiles
+  releases. `scripts/wine-map-tiles/` holds the pipeline (export → tippecanoe →
+  validate → publish → promote); tippecanoe 2.79.0 runs only in the
+  `wine-map-tiles` GitHub Actions workflow. Storage bucket `wine-map-tiles` is
+  public-read; archives live at `tiles/releases/<version>/` with immutable
+  cache headers and `tiles/manifest.json` (max-age=60) is the only mutable
+  pointer — promotion/rollback rewrite the manifest and flip
+  `wine_map_releases.status`; archives are never mutated. Releases that fail
+  any gate are recorded `FAILED` and never promoted. The map UI still reads
+  `wine_map_nodes`; consuming the manifest is Phase 2B.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
   `producers.region_id` is **nullable** — the original LWIN import deduped

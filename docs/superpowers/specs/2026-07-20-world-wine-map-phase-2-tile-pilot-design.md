@@ -20,9 +20,11 @@ human approval gate — promote the tile UI and retire `wine_map_nodes`.
   `wine_places`/`wine_place_boundaries`. No new geographic data. Source adapters
   and versioned raw snapshots move to Phase 3; nothing in this phase blocks them.
 - **Hosting: Supabase Storage, gated by an acceptance spike.** A spike script must
-  prove HTTP range requests, CORS from the app origin, cache-header control, and
-  acceptable file sizes on a real PMTiles file before any pipeline work builds on
-  the bucket. If the spike fails, choose another host; only manifest URLs change.
+  prove HTTP range requests, CORS from the app origin, and cache-header control
+  on a binary fixture before any pipeline work builds on the bucket, and the
+  publish stage must re-prove range reads through the pmtiles client on the real
+  archives before a release can be promoted. If either fails, choose another
+  host; only manifest URLs change.
 - **Tile build: pinned tippecanoe in GitHub Actions.** Export, validation, and
   publish are Node scripts that also run locally on Windows; only the tippecanoe
   stage requires the CI runner. Tippecanoe is proven at planet scale, which covers

@@ -1,0 +1,65 @@
+name: Wine Map Tiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      promote:
+        description: "Promote the release after validation"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: wine-map-tiles
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://eqzwmkpeysqiihuojmuj.supabase.co
+      DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache tippecanoe
+        id: cache-tippecanoe
+        uses: actions/cache@v4
+        with:
+          path: ~/tippecanoe-bin
+          key: tippecanoe-2.79.0
+      - name: Build tippecanoe 2.79.0
+        if: steps.cache-tippecanoe.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch 2.79.0 https://github.com/felt/tippecanoe.git "$RUNNER_TEMP/tippecanoe"
+          make -C "$RUNNER_TEMP/tippecanoe" -j"$(nproc)"
+          mkdir -p ~/tippecanoe-bin
+          cp "$RUNNER_TEMP/tippecanoe/tippecanoe" ~/tippecanoe-bin/
+      - name: Add tippecanoe to PATH
+        run: echo "$HOME/tippecanoe-bin" >> "$GITHUB_PATH"
+      - run: tippecanoe --version
+      - run: node --test scripts/wine-map-tiles/lib.test.mjs
+      - run: node scripts/wine-map-tiles/export.mjs
+      - run: node scripts/wine-map-tiles/build.mjs
+      - run: node scripts/wine-map-tiles/build.mjs --check-determinism
+      - run: node scripts/wine-map-tiles/validate.mjs local
+      - run: node scripts/wine-map-tiles/publish.mjs
+      - name: Promote release
+        if: inputs.promote
+        run: node scripts/wine-map-tiles/promote.mjs
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiles-build
+          path: |
+            .tiles-build/release.json
+            .tiles-build/*.geojson
+          retention-days: 7

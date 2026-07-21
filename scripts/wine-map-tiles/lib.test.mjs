@@ -156,3 +156,13 @@ test("expectedIdSets splits ids by archive with Bordeaux in both", async () => {
   assert.deepEqual([...sets.world].sort(), ["a", "b"]);
   assert.deepEqual([...sets.france].sort(), ["b", "c"]);
 });
+
+test("tile decode dependencies expose the expected API", async () => {
+  const { PbfReader } = await import("pbf");
+  const { VectorTile } = await import("@mapbox/vector-tile");
+  // .layers is a null-prototype object; spread it so strict deepEqual
+  // compares contents rather than prototypes.
+  assert.deepEqual({ ...new VectorTile(new PbfReader(new Uint8Array())).layers }, {});
+  const { decodeTileFeatures } = await import("./lib.mjs");
+  assert.deepEqual(await decodeTileFeatures(new ArrayBuffer(0)), {});
+});
