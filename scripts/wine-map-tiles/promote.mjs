@@ -69,7 +69,12 @@ try {
   );
   await client.query("commit");
 
-  const readBack = await fetch(storagePublicUrl("tiles/manifest.json"), { cache: "no-store" });
+  // A fresh query string busts the storage CDN edge cache (max-age=60), so
+  // this verifies the just-uploaded object rather than a stale cached copy.
+  const readBack = await fetch(
+    `${storagePublicUrl("tiles/manifest.json")}?readback=${Date.now()}`,
+    { cache: "no-store" },
+  );
   const readBody = Buffer.from(await readBack.arrayBuffer());
   assert.equal(readBack.status, 200, "manifest read-back failed");
   assert.equal(sha256hex(readBody), manifestChecksum, "manifest checksum mismatch after upload");
