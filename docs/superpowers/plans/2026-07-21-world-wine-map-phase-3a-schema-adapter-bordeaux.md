@@ -87,6 +87,9 @@ test("classification facts and legal relationship types", async () => {
     france_plain: 1,
   });
 
+  // One failing statement per rollback scope: after a rejected statement
+  // the (sub)transaction is aborted and a second probe would only see
+  // "current transaction is aborted".
   await withRollback(async () => {
     await assert.rejects(
       client.query(
@@ -94,6 +97,8 @@ test("classification facts and legal relationship types", async () => {
       ),
       /classification_coupling/i,
     );
+  });
+  await withRollback(async () => {
     await assert.rejects(
       client.query(
         `update wine_places set appellation_level = 'village-ish'
