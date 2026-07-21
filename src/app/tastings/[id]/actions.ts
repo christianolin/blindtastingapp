@@ -77,7 +77,8 @@ export async function finishTasting(
   const { error } = await supabase
     .from("tastings")
     .update({ status: "CLOSED" })
-    .eq("id", tastingId);
+    .eq("id", tastingId)
+    .eq("status", "IN_PROGRESS");
   if (error) return { error: error.message };
 
   revalidatePath(`/tastings/${tastingId}`);

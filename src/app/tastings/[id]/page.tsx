@@ -448,7 +448,10 @@ export default async function TastingPage({
                             i < (wines ?? []).length - 1,
                           )
                         : null}
-                      {isHost && hasStarted && !w.is_revealed ? (
+                      {isHost &&
+                      hasStarted &&
+                      tasting.status !== "CLOSED" &&
+                      !w.is_revealed ? (
                         <RevealButton tastingId={id} wineId={w.id} />
                       ) : null}
                       <Badge variant={w.is_revealed ? "default" : "outline"}>

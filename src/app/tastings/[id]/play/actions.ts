@@ -266,14 +266,21 @@ export async function revealWine(
   _prevState: RevealFormState,
   formData: FormData,
 ): Promise<RevealFormState> {
-  const tastingId = String(formData.get("tasting_id") ?? "");
   const wineId = String(formData.get("wine_id") ?? "");
 
   const supabase = await createClient();
+  // Derive the tasting from the wine row — the form's tasting_id is
+  // client-supplied and must not be trusted for the closed-state check.
+  const { data: wine } = await supabase
+    .from("wines")
+    .select("tasting_id")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (!wine) return { error: "Wine not found." };
   const { data: tasting } = await supabase
     .from("tastings")
     .select("status")
-    .eq("id", tastingId)
+    .eq("id", wine.tasting_id)
     .maybeSingle();
   if (tasting?.status === "CLOSED") {
     return { error: "This tasting is finished — reveals are closed." };
@@ -283,7 +290,7 @@ export async function revealWine(
     return { error: error.message };
   }
 
-  revalidatePath(`/tastings/${tastingId}/play`);
-  revalidatePath(`/tastings/${tastingId}/results`);
+  revalidatePath(`/tastings/${wine.tasting_id}/play`);
+  revalidatePath(`/tastings/${wine.tasting_id}/results`);
   return null;
 }

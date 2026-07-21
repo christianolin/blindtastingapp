@@ -71,7 +71,7 @@ export default async function DashboardPage() {
 
   const hostedCount = (tastings ?? []).filter((t) => t.host_id === user.id).length;
 
-  // Three dashboard buckets. Host rows are always JOINED participants, so a
+  // Dashboard buckets. Host rows are always JOINED participants, so a
   // hosted tasting would also match "attending" — keep it only under Hosting.
   const byId = new Map((tastings ?? []).map((t) => [t.id, t]));
   const invitedTastings = (participantRows ?? [])
