@@ -1,0 +1,131 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { basename, delimiter } from "node:path";
+import test, { after, before } from "node:test";
+import pg from "pg";
+
+assert.ok(process.env.DB_PASSWORD, "DB_PASSWORD is required");
+
+const migrationPaths = (process.env.WINE_PLACE_CONTEXT_MIGRATIONS ?? "")
+  .split(delimiter)
+  .filter(Boolean);
+const isMigrationDryRun = migrationPaths.length > 0;
+
+const client = new pg.Client({
+  host: process.env.DB_HOST ?? "aws-0-eu-central-1.pooler.supabase.com",
+  port: Number(process.env.DB_PORT ?? 6543),
+  user: process.env.DB_USER ?? "postgres.eqzwmkpeysqiihuojmuj",
+  database: process.env.DB_NAME ?? "postgres",
+  password: process.env.DB_PASSWORD,
+  ssl: { rejectUnauthorized: false },
+});
+
+let savepointSequence = 0;
+async function withRollback(callback) {
+  if (!isMigrationDryRun) {
+    await client.query("begin");
+    try {
+      return await callback();
+    } finally {
+      await client.query("rollback");
+    }
+  }
+  const savepoint = `wine_place_context_${++savepointSequence}`;
+  await client.query(`savepoint ${savepoint}`);
+  try {
+    return await callback();
+  } finally {
+    await client.query(`rollback to savepoint ${savepoint}`);
+    await client.query(`release savepoint ${savepoint}`);
+  }
+}
+
+before(async () => {
+  await client.connect();
+  if (!isMigrationDryRun) return;
+  await client.query("begin");
+  for (const migrationPath of migrationPaths) {
+    const match = /^(\d+)_([^/\\]+)\.sql$/.exec(basename(migrationPath));
+    assert.ok(match, `Invalid migration filename: ${migrationPath}`);
+    const existing = await client.query(
+      "select 1 from supabase_migrations.schema_migrations where version = $1",
+      [match[1]],
+    );
+    assert.equal(existing.rowCount, 0, `version ${match[1]} already recorded`);
+    const sql = await readFile(migrationPath, "utf8");
+    await client.query(sql);
+    await client.query(
+      `insert into supabase_migrations.schema_migrations (version, name, statements)
+       values ($1, $2, $3)`,
+      [match[1], match[2], [sql]],
+    );
+  }
+});
+
+after(async () => {
+  try {
+    if (isMigrationDryRun) await client.query("rollback");
+  } finally {
+    await client.end();
+  }
+});
+
+async function contextFor(key) {
+  const result = await client.query("select get_wine_place_context($1) ctx", [key]);
+  return result.rows[0].ctx;
+}
+
+test("bordeaux context has the full contract shape", async () => {
+  const ctx = await contextFor("france.bordeaux");
+  assert.equal(ctx.place.key, "france.bordeaux");
+  assert.equal(ctx.place.name, "Bordeaux");
+  assert.equal(ctx.place.kind, "REGION");
+  assert.equal(ctx.place.tier, 1);
+  assert.equal(typeof ctx.place.min_zoom, "number");
+  assert.equal(typeof ctx.place.label_min_zoom, "number");
+  assert.deepEqual(
+    ctx.ancestors.map((a) => a.key),
+    ["france"],
+  );
+  assert.equal(ctx.children.length, 7);
+  assert.ok(ctx.children.every((c) => typeof c.min_zoom === "number"));
+  assert.equal(ctx.article.editorial_status, "PUBLISHED");
+  assert.equal(ctx.boundary.bbox.length, 4);
+  assert.ok(ctx.boundary.label_lon > -6 && ctx.boundary.label_lon < 11);
+  assert.ok(ctx.boundary.label_lat > 41 && ctx.boundary.label_lat < 52);
+});
+
+test("nested appellation ancestors are outermost first", async () => {
+  const ctx = await contextFor("france.bordeaux.haut-medoc.margaux");
+  assert.deepEqual(
+    ctx.ancestors.map((a) => a.key),
+    ["france", "france.bordeaux", "france.bordeaux.haut-medoc"],
+  );
+  assert.equal(ctx.children.length, 0);
+  assert.equal(ctx.place.kind, "APPELLATION");
+});
+
+test("unknown key returns null", async () => {
+  assert.equal(await contextFor("nowhere.special"), null);
+});
+
+test("execute privileges are authenticated-only", async () => {
+  const anon = await client.query(
+    `select has_function_privilege('anon', 'get_wine_place_context(text)', 'execute') ok`,
+  );
+  assert.equal(anon.rows[0].ok, false);
+  const authenticated = await client.query(
+    `select has_function_privilege('authenticated', 'get_wine_place_context(text)', 'execute') ok`,
+  );
+  assert.equal(authenticated.rows[0].ok, true);
+});
+
+test("authenticated role sees verified content through RLS", async () => {
+  await withRollback(async () => {
+    await client.query("set local role authenticated");
+    const ctx = await contextFor("france.bordeaux");
+    assert.equal(ctx.place.key, "france.bordeaux");
+    assert.ok(ctx.article, "article should be visible to authenticated");
+    assert.ok(ctx.boundary, "boundary should be visible to authenticated");
+  });
+});
