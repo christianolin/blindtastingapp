@@ -17,7 +17,6 @@ export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 export type GrapeColor = "RED" | "WHITE";
-export type WineMapLevel = "COUNTRY" | "REGION" | "APPELLATION";
 export type WinePlaceKind =
   | "COUNTRY"
   | "MACRO_REGION"
@@ -149,43 +148,6 @@ export type Database = {
         };
         Update: Partial<
           Database["public"]["Tables"]["type_designations"]["Insert"]
-        >;
-        Relationships: [];
-      };
-
-      wine_map_nodes: {
-        Row: {
-          id: string;
-          parent_id: string | null;
-          level: WineMapLevel;
-          name: string;
-          slug: string;
-          description: string | null;
-          climate: string | null;
-          grape_varieties: string | null;
-          wine_styles: string | null;
-          key_facts: string[] | null;
-          sort_order: number;
-          created_at: string;
-          boundary_geojson: unknown;
-        };
-        Insert: {
-          id?: string;
-          parent_id?: string | null;
-          level: WineMapLevel;
-          name: string;
-          slug: string;
-          description?: string | null;
-          climate?: string | null;
-          grape_varieties?: string | null;
-          wine_styles?: string | null;
-          key_facts?: string[] | null;
-          sort_order?: number;
-          created_at?: string;
-          boundary_geojson?: unknown;
-        };
-        Update: Partial<
-          Database["public"]["Tables"]["wine_map_nodes"]["Insert"]
         >;
         Relationships: [];
       };

@@ -578,60 +578,40 @@ a raw subquery, regardless of which two tables look involved at a glance.
     content is added gradually) rather than blocking launch on profiling
     every obscure variety. A grape added ad-hoc from a tasting's answer-key
     combobox just shows up here unprofiled until someone curates it.
-  - **Wine Map** (`/knowledge/map`) is the one net-new table,
-    `wine_map_nodes` — a small self-referencing tree (`parent_id`, `level`
-    `COUNTRY`/`REGION`/`APPELLATION`, `name`, `slug`, `description`,
-    `climate`, `grape_varieties`, `wine_styles`, `key_facts text[]`,
-    `sort_order`), seeded via migration `20260719096000_wine_map.sql` with
-    France → Bordeaux → 12 appellations (Médoc, Haut-Médoc, Margaux,
-    Pauillac, Saint-Julien, Saint-Estèphe, Pessac-Léognan, Graves,
-    Saint-Émilion, Pomerol, Sauternes, Barsac). This is intentionally its
-    own table, not a repurposing of `countries`/`regions`/`appellations` —
-    those are flat lookup tables optimized for FK matching in scoring
-    (tens of thousands of LWIN rows, no editorial content), whereas the map
-    is a small, hand-curated, deeply-nested content tree; conflating them
-    would mean bolting knowledge-article columns onto every appellation a
-    host might reference in an answer key. Currently small enough (14 rows)
-    to fetch in full and build into a tree client-side in
-    `wine-map-explorer.tsx` (`childrenByParent`, keyed by `parent_id`) rather
-    than querying per level. The map view derives its boundaries from official
-    INAO parcel geometries fetched from IGN Géoplateforme WFS layer
-    `AOC-VITICOLES:aire_parcellaire` (all 5193 Bordeaux-area parcels in 6 paged
-    requests), retained in source migration
-    `20260726090000_wine_map_inao_boundaries.sql`. Display migration
-    `20260726100000_wine_map_concave_boundaries.sql` replaces the fragmented
-    parcel display with one hole-free generalized concave `Polygon`, and thus
-    one shape/label, for each of the 13 Bordeaux map nodes. These are
-    cartographic footprints: they fill internal non-vineyard whitespace and
-    connect detached source components, not exact parcel coverage or legal
-    appellation boundaries. Normal footprints retain every source component;
-    only when a hull edge exceeds 20% of its diagonal does the adaptive quality
-    gate omit components smaller than 2% of the dominant component before one
-    regeneration (currently Pauillac and Saint-Julien). The map uses MapLibre
-    GL via `react-map-gl/maplibre` in `interactive-wine-map.tsx`, with the free
-    un-keyed Carto Positron vector basemap (no API key). Each node carries a
-    `boundary_geojson` JSONB column (a bare GeoJSON *geometry*, not a Feature).
-    `boundary_geojson` is typed `unknown` in `database.types.ts` and cast to
-    `GeoJSON.Geometry` at the component edge. The component must ONLY be
-    loaded via `next/dynamic` with `ssr: false` (maplibre-gl touches `window`
-    on import). Clicking a polygon and clicking a pill both drive the same
-    `focusedId`; the map auto-fits (`@turf/bbox` + `fitBounds`) to the
-    focused shape. Brand colors are hardcoded hex in the MapLibre paint
-    expressions (paint expressions can't read CSS variables). Nodes without
-    `boundary_geojson` simply don't render on the map — the always-present
-    pill list is the fallback. The map renders one MapLibre fill layer per
-    nesting depth (shallowest painted first, deeper shapes on top); click
-    resolves to the deepest-smallest feature (tie-break by bbox area), which
-    sets `focusedId`. The explore view (`wine-map-explorer.tsx`) uses a single
-    `focusedId` state with a depth-agnostic breadcrumb trail
-    (ancestors of focused node separated by ChevronRight icons), children of
-    the focused node as a pill list, and country pills at top-level. `viewRoot`
-    is computed as the REGION-level ancestor or the country itself.
-    Saint-Estèphe, Pauillac, Saint-Julien, and Margaux are reparented under
-    Haut-Médoc (not directly under Médoc); Barsac is reparented under
-    Sauternes — matching the real INAO appellation hierarchy. The old
-    hand-positioned schematic SVG (`REGION_LAYOUTS`) and hand-traced polygons
-    (`20260725090000_wine_map_fixed_boundaries.sql`) are both gone.
+  - **Wine Map** (`/knowledge/map`) renders the tile map:
+    `TileWineMapExplorer` (client state, breadcrumb + child pills + details
+    panel, `?place=<canonical key>` deep links via `history.replaceState`)
+    plus `TileWineMap` (MapLibre GL via `react-map-gl/maplibre` with the
+    pmtiles protocol over the archives named in `tiles/manifest.json`).
+    Place context (ancestors, children, article, boundary bbox) comes from
+    the `get_wine_place_context` RPC — security invoker, authenticated-only,
+    RLS-bound to the canonical `wine_places` catalog. Deeper places reveal
+    with zoom (tippecanoe per-feature minzoom); clicks resolve to the
+    highest-tier feature; selecting a place fits the camera to its boundary
+    bbox. Boundary lineage (still true of the canonical geometries):
+    official INAO parcel geometries from IGN Géoplateforme WFS layer
+    `AOC-VITICOLES:aire_parcellaire` (retained in source migration
+    `20260726090000_wine_map_inao_boundaries.sql`), generalized into
+    hole-free concave footprints (`20260726100000_wine_map_concave_boundaries.sql`)
+    — cartographic footprints that fill non-vineyard whitespace, not legal
+    appellation boundaries; the adaptive quality gate omits sub-2%
+    components only when a hull edge exceeds 20% of its diagonal (Pauillac,
+    Saint-Julien). The generator
+    `scripts/generate-wine-map-concave-boundaries.mjs` is historical — it
+    emits SQL against the retired `wine_map_nodes` table and its tests are
+    file-fixture-based only. The map uses MapLibre
+    GL with the free un-keyed Carto Positron vector basemap (no API key).
+    Map components must ONLY be loaded via `next/dynamic` with `ssr: false`
+    (maplibre-gl touches `window` on import). Brand colors are hardcoded hex
+    in MapLibre paint expressions (paint expressions can't read CSS
+    variables). If the manifest fetch fails, the page shows a retry card
+    while breadcrumb, pills, and details keep working (text navigation
+    survives tile failure). Hierarchy note: Saint-Estèphe, Pauillac,
+    Saint-Julien, and Margaux sit under Haut-Médoc, and Barsac under
+    Sauternes — matching the real INAO appellation hierarchy. The legacy
+    `wine_map_nodes` implementation (`wine-map-explorer.tsx`,
+    `interactive-wine-map.tsx`, full-tree fetch) is deleted, and the table
+    itself was dropped in `20260730090000_wine_map_nodes_retirement.sql`.
   - Nav entry added to `AppHeader`'s `NAV_LINKS` between Friends and Rules.
 - World Wine Map Phase 1 adds `wine_places` as the canonical future map
   catalog, plus aliases, articles, stable boundary-source identities,
@@ -639,9 +619,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   metadata. New imports must retain genuine raw source artifacts; the migrated
   legacy Bordeaux rows explicitly record that their raw WFS responses,
   retrieval timestamps, and parcel IDs are unavailable and instead pin the
-  earliest normalized Git artifacts. `wine_map_nodes` remains the active read
-  source during Phase 1 and is retired only after the Phase 2 tile UI passes
-  parity; there is no permanent dual-write. Existing
+  earliest normalized Git artifacts. `wine_map_nodes` remained the active read
+  source through Phase 1 and was retired in Phase 2B after the tile UI passed
+  parity; there was no permanent dual-write. Existing
   country/region/appellation UUIDs and scoring behavior are unchanged. Their
   nullable `wine_place_id` and required `map_status` record curation explicitly:
   Phase 1 verifies only exact France, Bordeaux, and the 12 currently mapped
@@ -660,8 +640,16 @@ a raw subquery, regardless of which two tables look involved at a glance.
   cache headers and `tiles/manifest.json` (max-age=60) is the only mutable
   pointer — promotion/rollback rewrite the manifest and flip
   `wine_map_releases.status`; archives are never mutated. Releases that fail
-  any gate are recorded `FAILED` and never promoted. The map UI still reads
-  `wine_map_nodes`; consuming the manifest is Phase 2B.
+  any gate are recorded `FAILED` and never promoted. The map UI read
+  `wine_map_nodes` until the Phase 2B tile UI replaced it.
+- World Wine Map Phase 2B made the tile map the only map UI: `/knowledge/map`
+  renders `TileWineMapExplorer`, which reads `tiles/manifest.json` (PMTiles
+  archives) for geometry and `get_wine_place_context` (RLS-bound RPC,
+  authenticated-only) for place context; deep links use `?place=<canonical
+  key>`. `wine_map_nodes` is retired and dropped — the canonical
+  `wine_places` catalog is the single map source. New places appear on the
+  map by verifying them in the catalog and publishing a release through the
+  Wine Map Tiles workflow; no UI change is needed for new coverage.
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
   `producers.region_id` is **nullable** — the original LWIN import deduped

@@ -692,44 +692,6 @@ const EXPECTED_BOUNDARIES = [
   ["france.bordeaux.sauternes.barsac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-barsac", SOURCE_MIGRATION_SHA256],
 ];
 
-test("canonical catalog is a lossless copy of the current map tree", async () => {
-  const parity = await client.query(
-    `select count(*)::int total,
-            count(*) filter (
-              where p.id = n.id
-                and p.name = n.name
-                 and p.slug = n.slug
-                 and p.primary_parent_id is not distinct from n.parent_id
-                 and p.kind::text = n.level::text
-                 and p.publication_status = 'VERIFIED'
-                 and p.canonical_key_locked_at is not null
-                 and p.sort_order = n.sort_order
-            )::int matching
-       from wine_map_nodes n
-       left join wine_places p on p.id = n.id`,
-  );
-  assert.deepEqual(parity.rows[0], { total: 14, matching: 14 });
-  const canonicalCount = await client.query(
-    "select count(*)::int count from wine_places",
-  );
-  assert.equal(canonicalCount.rows[0].count, 14);
-
-  const articleParity = await client.query(
-    `select count(*)::int total,
-            count(*) filter (
-              where a.description is not distinct from n.description
-                and a.climate is not distinct from n.climate
-                and a.grape_varieties is not distinct from n.grape_varieties
-                and a.wine_styles is not distinct from n.wine_styles
-                and a.key_facts is not distinct from n.key_facts
-                and a.editorial_status = 'PUBLISHED'
-            )::int matching
-       from wine_map_nodes n
-       left join wine_place_articles a on a.wine_place_id = n.id`,
-  );
-  assert.deepEqual(articleParity.rows[0], { total: 14, matching: 14 });
-});
-
 test("all migrated places have valid reviewed current boundaries", async () => {
   const result = await client.query(
     `select count(*)::int total,
@@ -737,17 +699,6 @@ test("all migrated places have valid reviewed current boundaries", async () => {
             count(*) filter (where b.is_current)::int current,
              count(*) filter (where extensions.ST_IsValid(b.display_geometry))::int valid,
              count(*) filter (where extensions.ST_Covers(b.display_geometry, b.label_point))::int labelled,
-             count(*) filter (
-               where extensions.ST_Equals(
-                 b.display_geometry,
-                 extensions.ST_Multi(
-                   extensions.ST_SetSRID(
-                     extensions.ST_GeomFromGeoJSON(n.boundary_geojson::text),
-                     4326
-                   )
-                 )
-               )
-             )::int exact_geometry,
              count(*) filter (where b.boundary_method = 'MANUAL')::int manual,
              count(*) filter (
                where b.boundary_method = 'GENERALIZED_FROM_OFFICIAL_SOURCE'
@@ -763,8 +714,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
                    "min_component_area_share": 0.02
                  }'::jsonb
              )::int reproducible
-       from wine_place_boundaries b
-       join wine_map_nodes n on n.id = b.wine_place_id`,
+       from wine_place_boundaries b`,
   );
   assert.deepEqual(result.rows[0], {
     total: 14,
@@ -772,7 +722,6 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     current: 14,
     valid: 14,
     labelled: 14,
-    exact_geometry: 14,
     manual: 1,
     generalized: 13,
     reproducible: 13,
