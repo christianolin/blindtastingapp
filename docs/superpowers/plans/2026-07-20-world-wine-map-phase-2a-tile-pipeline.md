@@ -1324,7 +1324,9 @@ Append this test to `scripts/wine-map-tiles/lib.test.mjs` — it needs the fresh
 test("tile decode dependencies expose the expected API", async () => {
   const { PbfReader } = await import("pbf");
   const { VectorTile } = await import("@mapbox/vector-tile");
-  assert.deepEqual(new VectorTile(new PbfReader(new Uint8Array())).layers, {});
+  // .layers is a null-prototype object; spread it so strict deepEqual
+  // compares contents rather than prototypes.
+  assert.deepEqual({ ...new VectorTile(new PbfReader(new Uint8Array())).layers }, {});
   const { decodeTileFeatures } = await import("./lib.mjs");
   assert.deepEqual(await decodeTileFeatures(new ArrayBuffer(0)), {});
 });
