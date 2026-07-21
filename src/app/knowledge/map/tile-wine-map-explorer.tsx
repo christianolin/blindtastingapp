@@ -96,13 +96,20 @@ export function TileWineMapExplorer({
   // Selection updates the URL in place (shareable deep links) while
   // preserving any other params — including ?map=tiles during the opt-in
   // phase — without a Next navigation round-trip.
-  const select = useCallback((key: string) => {
-    setContextState("loading");
-    setSelectedKey(key);
-    const params = new URLSearchParams(window.location.search);
-    params.set("place", key);
-    window.history.replaceState(null, "", `?${params.toString()}`);
-  }, []);
+  const select = useCallback(
+    (key: string) => {
+      // Same-key selection must be a no-op: the context effect only re-runs
+      // when selectedKey changes, so setting "loading" here would never
+      // resolve.
+      if (key === selectedKey) return;
+      setContextState("loading");
+      setSelectedKey(key);
+      const params = new URLSearchParams(window.location.search);
+      params.set("place", key);
+      window.history.replaceState(null, "", `?${params.toString()}`);
+    },
+    [selectedKey],
+  );
 
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;

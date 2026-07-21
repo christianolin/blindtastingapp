@@ -50,7 +50,12 @@ function isContext(value: unknown): value is WinePlaceContext {
     typeof place.name === "string" &&
     typeof place.tier === "number" &&
     Array.isArray(value.ancestors) &&
-    Array.isArray(value.children)
+    Array.isArray(value.children) &&
+    (value.boundary === null ||
+      value.boundary === undefined ||
+      (isRecord(value.boundary) &&
+        Array.isArray(value.boundary.bbox) &&
+        value.boundary.bbox.length === 4))
   );
 }
 
