@@ -108,21 +108,30 @@ export function buildManifest({ version, generatedAt, world, france, attribution
   };
 }
 
+// Secrets pasted through dashboard/CI UIs can arrive wrapped in quotes or
+// with stray whitespace/newlines; server auth then fails even though the
+// underlying credential is correct.
+function cleanSecret(value) {
+  return value?.trim().replace(/^["']|["']$/g, "").trim();
+}
+
 export function pgConfig() {
-  assert.ok(process.env.DB_PASSWORD, "DB_PASSWORD is required");
+  const password = cleanSecret(process.env.DB_PASSWORD);
+  assert.ok(password, "DB_PASSWORD is required");
   return {
     host: process.env.DB_HOST ?? "aws-0-eu-central-1.pooler.supabase.com",
     port: Number(process.env.DB_PORT ?? 6543),
     user: process.env.DB_USER ?? "postgres.eqzwmkpeysqiihuojmuj",
     database: process.env.DB_NAME ?? "postgres",
-    password: process.env.DB_PASSWORD,
+    password,
     ssl: { rejectUnauthorized: false },
   };
 }
 
 export function storageBucket() {
-  assert.ok(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY is required");
-  return createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  const serviceRoleKey = cleanSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  assert.ok(serviceRoleKey, "SUPABASE_SERVICE_ROLE_KEY is required");
+  return createClient(SUPABASE_URL, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   }).storage.from(BUCKET);
 }
