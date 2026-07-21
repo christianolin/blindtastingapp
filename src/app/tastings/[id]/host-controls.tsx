@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import {
   Trash2,
   Play,
+  Flag,
   CalendarClock,
   UserPlus,
   ListOrdered,
@@ -19,6 +20,7 @@ import {
   updateSchedule,
   inviteToTasting,
   deleteTasting,
+  finishTasting,
   setSequentialGuessing,
   type LobbyActionState,
 } from "./actions";
@@ -59,6 +61,10 @@ export function HostControls({
 
   const [startState, startAction, startPending] = useActionState(
     startTasting,
+    null,
+  );
+  const [finishState, finishAction, finishPending] = useActionState(
+    finishTasting,
     null,
   );
   const [scheduleState, scheduleAction, schedulePending] = useActionState(
@@ -153,9 +159,46 @@ export function HostControls({
               <StateMessage state={inviteState} />
             </form>
           </>
+        ) : status === "IN_PROGRESS" ? (
+          <form
+            action={finishAction}
+            className="flex flex-col gap-2"
+            onSubmit={(e) => {
+              if (
+                !window.confirm(
+                  "Finish this tasting? Guessing closes and it moves to History. This can't be undone.",
+                )
+              ) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="tasting_id" value={tastingId} />
+            <p className="text-sm text-muted-foreground">
+              This tasting has started. Invitations are closed. Finish it when
+              you&apos;re done to close guessing and move it to History.
+            </p>
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={finishPending}
+              className="w-fit gap-1.5"
+            >
+              {finishPending ? (
+                <>
+                  <WineGlassLoader /> Finishing…
+                </>
+              ) : (
+                <>
+                  <Flag className="size-4" /> Finish tasting
+                </>
+              )}
+            </Button>
+            <StateMessage state={finishState} />
+          </form>
         ) : (
           <p className="text-sm text-muted-foreground">
-            This tasting has started. Invitations are closed.
+            This tasting is finished. Results stay available below.
           </p>
         )}
 

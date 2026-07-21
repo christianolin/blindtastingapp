@@ -59,6 +59,32 @@ export async function startTasting(
   return { success: "Tasting started — guessing is open." };
 }
 
+// Host presses "Finish" — moves IN_PROGRESS → CLOSED, one-way. Guessing and
+// reveals lock, the tasting moves to the dashboard's History tab, and
+// results stay viewable.
+export async function finishTasting(
+  _prev: LobbyActionState,
+  formData: FormData,
+): Promise<LobbyActionState> {
+  const { supabase, user } = await requireUser();
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return { error: "Only the host can finish this tasting." };
+  if (tasting.status !== "IN_PROGRESS") {
+    return { error: "Only a started tasting can be finished." };
+  }
+
+  const { error } = await supabase
+    .from("tastings")
+    .update({ status: "CLOSED" })
+    .eq("id", tastingId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/tastings/${tastingId}`);
+  revalidatePath("/dashboard");
+  return { success: "Tasting finished — moved to History." };
+}
+
 // Host deletes the whole tasting (cascades to wines/answers/guesses/
 // participants via FK on delete cascade). Redirects to the dashboard.
 export async function deleteTasting(formData: FormData): Promise<void> {

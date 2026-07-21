@@ -70,6 +70,9 @@ async function resolveGuesser(
   if (tasting.status === "DRAFT") {
     return { error: "The host hasn't started this tasting yet." };
   }
+  if (tasting.status === "CLOSED") {
+    return { error: "This tasting is finished — guessing is closed." };
+  }
   // When the host provides all the wines they set the answers, so they host
   // rather than guess.
   if (tasting.wine_source === "HOST_PROVIDES" && tasting.host_id === userId) {
@@ -267,6 +270,14 @@ export async function revealWine(
   const wineId = String(formData.get("wine_id") ?? "");
 
   const supabase = await createClient();
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("status")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (tasting?.status === "CLOSED") {
+    return { error: "This tasting is finished — reveals are closed." };
+  }
   const { error } = await supabase.rpc("reveal_wine", { p_wine_id: wineId });
   if (error) {
     return { error: error.message };

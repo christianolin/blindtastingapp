@@ -49,6 +49,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     .eq("user_id", user.id)
     .maybeSingle();
   if (!myParticipant || myParticipant.status !== "JOINED") return null;
+  const finished = tasting.status === "CLOSED";
   if (tasting.status === "DRAFT") return null;
 
   const [
@@ -351,7 +352,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                  {isHost && !wine.is_revealed ? (
+                  {isHost && !wine.is_revealed && !finished ? (
                     <RevealButton tastingId={tastingId} wineId={wine.id} />
                   ) : null}
                 </div>
@@ -493,6 +494,10 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 <p className="text-sm text-muted-foreground">
                   You set the wines — you&apos;re hosting, not guessing.
                 </p>
+              ) : finished ? (
+                <p className="text-sm text-muted-foreground">
+                  This tasting is finished — guessing is closed.
+                </p>
               ) : isSemiBlind ? null : sequential && wine.id !== currentWineId ? (
                 <p className="text-sm text-muted-foreground">
                   🔒 One wine at a time — this opens once the earlier wines have
@@ -527,7 +532,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 </div>
               )}
 
-              {!wine.is_revealed
+              {!wine.is_revealed && !finished
                 ? (() => {
                     const eligible = eligibleGuessers(wine);
                     if (eligible.length === 0) return null;
@@ -562,7 +567,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
         );
       })}
 
-      {isSemiBlind && !hostProvidesHost
+      {isSemiBlind && !hostProvidesHost && !finished
         ? (() => {
             const glasses: MatchGlass[] = (wines ?? [])
               .filter(

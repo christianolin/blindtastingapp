@@ -77,11 +77,23 @@ export default async function DashboardPage() {
   const invitedTastings = (participantRows ?? [])
     .filter((p) => p.status === "INVITED")
     .map((p) => byId.get(p.tasting_id))
-    .filter((t): t is NonNullable<typeof t> => Boolean(t));
-  const hostingTastings = (tastings ?? []).filter((t) => t.host_id === user.id);
+    .filter((t): t is NonNullable<typeof t> => Boolean(t))
+    .filter((t) => t.status !== "CLOSED");
+  const hostingTastings = (tastings ?? []).filter(
+    (t) => t.host_id === user.id && t.status !== "CLOSED",
+  );
   const attendingTastings = (tastings ?? []).filter(
     (t) =>
-      t.host_id !== user.id && statusByTastingId.get(t.id) === "JOINED",
+      t.host_id !== user.id &&
+      t.status !== "CLOSED" &&
+      statusByTastingId.get(t.id) === "JOINED",
+  );
+  // Finished tastings (hosted or attended) move to History; created_at
+  // ordering from the query keeps the most recent first.
+  const historyTastings = (tastings ?? []).filter(
+    (t) =>
+      t.status === "CLOSED" &&
+      (t.host_id === user.id || statusByTastingId.get(t.id) === "JOINED"),
   );
 
   const renderList = (
@@ -211,6 +223,7 @@ export default async function DashboardPage() {
               invited: invitedTastings.length,
               hosting: hostingTastings.length,
               attending: attendingTastings.length,
+              history: historyTastings.length,
             }}
             invited={renderList(
               invitedTastings,
@@ -229,6 +242,12 @@ export default async function DashboardPage() {
               "gold",
               "Attending",
               "You haven't joined anyone else's tasting yet.",
+            )}
+            history={renderList(
+              historyTastings,
+              "gold",
+              "Finished",
+              "No finished tastings yet.",
             )}
           />
         )}

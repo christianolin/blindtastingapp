@@ -3,24 +3,27 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-type TabKey = "invited" | "hosting" | "attending";
+type TabKey = "invited" | "hosting" | "attending" | "history";
 
 /**
- * Client tab switcher for the dashboard's three tasting buckets. The panels
+ * Client tab switcher for the dashboard's tasting buckets. The panels
  * themselves are server-rendered card lists passed in as nodes; this only
  * owns which one is visible. Defaults to "Invited" when there are pending
- * invites (so they're seen first), otherwise "Hosting".
+ * invites (so they're seen first), otherwise "Hosting". Finished tastings
+ * live under "History".
  */
 export function TastingsTabs({
   counts,
   invited,
   hosting,
   attending,
+  history,
 }: {
   counts: Record<TabKey, number>;
   invited: React.ReactNode;
   hosting: React.ReactNode;
   attending: React.ReactNode;
+  history: React.ReactNode;
 }) {
   const [active, setActive] = useState<TabKey>(
     counts.invited > 0 ? "invited" : "hosting",
@@ -30,12 +33,14 @@ export function TastingsTabs({
     { key: "invited", label: "Invited" },
     { key: "hosting", label: "Hosting" },
     { key: "attending", label: "Attending" },
+    { key: "history", label: "History" },
   ];
 
   const panels: Record<TabKey, React.ReactNode> = {
     invited,
     hosting,
     attending,
+    history,
   };
 
   return (
