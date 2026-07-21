@@ -1359,13 +1359,14 @@ concurrency:
   group: wine-map-tiles
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://eqzwmkpeysqiihuojmuj.supabase.co
-      DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -1393,13 +1394,21 @@ jobs:
       - run: tippecanoe --version
       - run: node --test scripts/wine-map-tiles/lib.test.mjs
       - run: node scripts/wine-map-tiles/export.mjs
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       - run: node scripts/wine-map-tiles/build.mjs
       - run: node scripts/wine-map-tiles/build.mjs --check-determinism
       - run: node scripts/wine-map-tiles/validate.mjs local
       - run: node scripts/wine-map-tiles/publish.mjs
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: Promote release
         if: inputs.promote
         run: node scripts/wine-map-tiles/promote.mjs
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: Upload build artifacts
         if: always()
         uses: actions/upload-artifact@v4
