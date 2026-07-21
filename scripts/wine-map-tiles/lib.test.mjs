@@ -98,6 +98,7 @@ test("attribution keys reject unknown namespaces", () => {
   assert.deepEqual(attributionDisplayMap(), {
     blindr: ATTRIBUTION.BLINDR_MANUAL.text,
     "ign-inao": ATTRIBUTION.IGN_INAO_AOC_VITICOLES_LEGACY.text,
+    "natural-earth": ATTRIBUTION.NATURAL_EARTH.text,
   });
 });
 

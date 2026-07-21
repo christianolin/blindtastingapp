@@ -19,6 +19,7 @@ export const ATTRIBUTION = {
     key: "ign-inao",
     text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
   },
+  NATURAL_EARTH: { key: "natural-earth", text: "Made with Natural Earth" },
 };
 
 export function attributionKeyFor(namespace) {
