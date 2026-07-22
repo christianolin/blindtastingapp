@@ -741,6 +741,23 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.batard-montrachet" },
   { names: ["Bienvenues-Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.bienvenues-batard-montrachet" },
   { names: ["Criots-Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.chassagne-montrachet.criots-batard-montrachet" },
+  { names: ["Chablis AOP"], key: "france.bourgogne.chablis.chablis" },
+  { names: ["Petit Chablis AOP"], key: "france.bourgogne.chablis.petit-chablis" },
+  { names: ["Chablis Grand Cru"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru" },
+  { names: ["Irancy AOP"], key: "france.bourgogne.grand-auxerrois.irancy" },
+  { names: ["Saint-Bris AOP"], key: "france.bourgogne.grand-auxerrois.saint-bris" },
+  { names: ["Vezelay AOP"], key: "france.bourgogne.grand-auxerrois.vezelay" },
+  { names: ["Bouzeron AOP"], key: "france.bourgogne.cote-chalonnaise.bouzeron" },
+  { names: ["Rully AOP"], key: "france.bourgogne.cote-chalonnaise.rully" },
+  { names: ["Mercurey AOP"], key: "france.bourgogne.cote-chalonnaise.mercurey" },
+  { names: ["Givry AOP"], key: "france.bourgogne.cote-chalonnaise.givry" },
+  { names: ["Montagny AOP"], key: "france.bourgogne.cote-chalonnaise.montagny" },
+  { names: ["Macon AOP"], key: "france.bourgogne.maconnais.macon" },
+  { names: ["Vire-Clesse AOP"], key: "france.bourgogne.maconnais.vire-clesse" },
+  { names: ["Pouilly-Fuissé AOP"], key: "france.bourgogne.maconnais.pouilly-fuisse" },
+  { names: ["Pouilly-Vinzelles AOP"], key: "france.bourgogne.maconnais.pouilly-vinzelles" },
+  { names: ["Pouilly-Loche AOP"], key: "france.bourgogne.maconnais.pouilly-loche" },
+  { names: ["Saint-Véran AOP"], key: "france.bourgogne.maconnais.saint-veran" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -782,14 +799,16 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // + current; superseded non-current rows are retained as history.
   // Wave 3D-1 adds 40 Côte de Beaune dissolve boundaries plus 1 derived
   // district footprint (all validated + current); superseded rows retained.
+  // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
+  // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 165,
-    validated: 165,
-    current: 114,
-    valid: 165,
-    labelled: 165,
+    total: 193,
+    validated: 193,
+    current: 141,
+    valid: 193,
+    labelled: 193,
     manual: 2,
-    generalized: 159,
+    generalized: 182,
     reproducible: 13,
   });
 
@@ -833,10 +852,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Trim revisions REUSE their plot's snapshot (same evidence, corrected
   // generalization), so linked boundaries outnumber distinct snapshots.
   assert.deepEqual(provenance.rows[0], {
-    sources: 118,
-    snapshots: 145,
-    identities: 118,
-    linked_boundaries: 165,
+    sources: 146,
+    snapshots: 173,
+    identities: 146,
+    linked_boundaries: 193,
   });
 });
 
@@ -868,7 +887,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 84);
+  assert.equal(appellations.rows.length, 101);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -882,7 +901,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 2],
-    ["appellations", 84],
+    ["appellations", 101],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -896,7 +915,8 @@ test("only exact current Bordeaux references are verified", async () => {
                   and map_review_note in (
                     'Phase 1 canonical migration', 'Phase 3A canonical migration',
                     'Phase 3C cote-de-nuits migration',
-                    'Phase 3D cote-de-beaune migration: exact name match'
+                    'Phase 3D cote-de-beaune migration: exact name match',
+                    'Phase 3D districts migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -983,10 +1003,10 @@ test("classification facts and legal relationship types", async () => {
        from wine_places`,
   );
   assert.deepEqual(facts.rows[0], {
-      // 71 through wave 5b + 40 Côte de Beaune (17 villages, 8 grands crus,
-      // 15 premier-cru groups).
-      appellations: 111,
-      aoc: 111,
+      // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
+      // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups).
+      appellations: 134,
+      aoc: 134,
     missing_level: 0,
     france_plain: 1,
   });

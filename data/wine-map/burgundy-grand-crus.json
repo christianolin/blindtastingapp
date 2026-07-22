@@ -31,6 +31,7 @@
     { "denom": "Chevalier-Montrachet", "name": "Chevalier-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
     { "denom": "Bienvenues-Bâtard-Montrachet", "name": "Bienvenues-Bâtard-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
     { "denom": "Bâtard-Montrachet", "name": "Bâtard-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
-    { "denom": "Criots-Bâtard-Montrachet", "name": "Criots-Bâtard-Montrachet", "district": "cote-de-beaune", "village": "chassagne-montrachet" }
+    { "denom": "Criots-Bâtard-Montrachet", "name": "Criots-Bâtard-Montrachet", "district": "cote-de-beaune", "village": "chassagne-montrachet" },
+    { "denom": "Chablis Grand Cru", "name": "Chablis Grand Cru", "district": "chablis", "village": "chablis" }
   ]
 }

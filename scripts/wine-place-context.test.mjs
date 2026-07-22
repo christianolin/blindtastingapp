@@ -144,9 +144,17 @@ test("burgundy depth chain resolves to the climat level", async () => {
   const bourgogne = await contextFor("france.bourgogne");
   // Owner-role connection sees DRAFT places too: Côte de Beaune joins the
   // list at its 3D-1 catalog apply, ahead of its boundary flip.
+  // All six Burgundy districts after the 3D waves, in sort order.
   assert.deepEqual(
     bourgogne.children.map((c) => c.key),
-    ["france.bourgogne.cote-de-nuits", "france.bourgogne.cote-de-beaune"],
+    [
+      "france.bourgogne.cote-de-nuits",
+      "france.bourgogne.cote-de-beaune",
+      "france.bourgogne.chablis",
+      "france.bourgogne.grand-auxerrois",
+      "france.bourgogne.cote-chalonnaise",
+      "france.bourgogne.maconnais",
+    ],
   );
 
   const district = await contextFor("france.bourgogne.cote-de-nuits");
@@ -187,7 +195,7 @@ test("burgundy depth chain resolves to the climat level", async () => {
 test("place tree returns every verified place with parent links", async () => {
   const result = await client.query("select get_wine_place_tree() tree");
   const tree = result.rows[0].tree;
-  assert.equal(tree.length, 114);
+  assert.equal(tree.length, 141);
   const byKey = new Map(tree.map((node) => [node.key, node]));
   assert.equal(byKey.get("france").parent_key, null);
   assert.equal(

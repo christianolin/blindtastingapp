@@ -90,6 +90,64 @@ const WAVES = {
       { name: "Maranges", climats: false },
     ],
   },
+  "3d2-chablis": {
+    // 20260811090000 is taken by wine_knowledge_content_v2 — versions are a
+    // global sequence, so Chablis sits at 10:00.
+    migration: "supabase/migrations/20260811100000_chablis.sql",
+    targetsFile: "chablis-targets.json",
+    district: { key: "france.bourgogne.chablis", parent: "france.bourgogne", name: "Chablis" },
+    insertDistrict: true,
+    sortBase: 94,
+    expectedSubtree: null,
+    villages: [
+      { name: "Chablis", climats: false },
+      { name: "Petit Chablis", climats: false },
+    ],
+  },
+  "3d2-auxerrois": {
+    migration: "supabase/migrations/20260811093000_grand_auxerrois.sql",
+    targetsFile: "grand-auxerrois-targets.json",
+    district: { key: "france.bourgogne.grand-auxerrois", parent: "france.bourgogne", name: "Grand Auxerrois" },
+    insertDistrict: true,
+    sortBase: 100,
+    expectedSubtree: null,
+    villages: [
+      { name: "Irancy", climats: false },
+      { name: "Saint-Bris", climats: false },
+      { name: "Vézelay", climats: false },
+    ],
+  },
+  "3d3-chalonnaise": {
+    migration: "supabase/migrations/20260812090000_cote_chalonnaise.sql",
+    targetsFile: "cote-chalonnaise-targets.json",
+    district: { key: "france.bourgogne.cote-chalonnaise", parent: "france.bourgogne", name: "Côte Chalonnaise" },
+    insertDistrict: true,
+    sortBase: 105,
+    expectedSubtree: null,
+    villages: [
+      { name: "Bouzeron", climats: false },
+      { name: "Rully", climats: false },
+      { name: "Mercurey", climats: false },
+      { name: "Givry", climats: false },
+      { name: "Montagny", climats: false },
+    ],
+  },
+  "3d3-maconnais": {
+    migration: "supabase/migrations/20260812093000_maconnais.sql",
+    targetsFile: "maconnais-targets.json",
+    district: { key: "france.bourgogne.maconnais", parent: "france.bourgogne", name: "Mâconnais" },
+    insertDistrict: true,
+    sortBase: 115,
+    expectedSubtree: null,
+    villages: [
+      { name: "Mâcon", climats: false },
+      { name: "Viré-Clessé", climats: false },
+      { name: "Pouilly-Fuissé", climats: false },
+      { name: "Pouilly-Vinzelles", climats: false },
+      { name: "Pouilly-Loché", climats: false },
+      { name: "Saint-Véran", climats: false },
+    ],
+  },
 };
 const waveName = process.argv[2] ?? "5b";
 const wave = WAVES[waveName];

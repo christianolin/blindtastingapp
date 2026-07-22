@@ -172,11 +172,146 @@
   },
   {
     "canonical_key": "france.bourgogne",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:bourgogne-region-derived",
+    "normalized_checksum_sha256": "FBE446480A03D4E076F82FBF08E42F7734B5C98382E21E468735E4C36F91CD01",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:chablis-district",
+    "normalized_checksum_sha256": "CBEA6856A759E5ABFCCA7757B2E6F5940554895839B67D1E22F2EF52C0806213",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "denomset:bourgogne",
-    "normalized_checksum_sha256": "0B51697DEE2CC1D696738D99C34BE997576747EC126D5F0D62DC54CE1E6CCB0B",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T223003Z/bourgogne/fetch-manifest.json",
-    "raw_checksum_sha256": "89AE9A9710D40F5B6B2E7D923EF77A7147108729B39F743FC887ED15F9842B3D",
+    "source_feature_id": "denomset:chablis-village",
+    "normalized_checksum_sha256": "39E4365BA09AE9C97C77268B3A8B14CE45AB6914A81B4A9698294D83115B0592",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190839Z/chablis-village/fetch-manifest.json",
+    "raw_checksum_sha256": "1F4184B3597EE1FD157F9D03F77D60A55F6DAF262F922B8C4E574B56AA425246",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-chablis-grand-cru",
+    "normalized_checksum_sha256": "5F9B7AD0999413E753667927F3FDAD4264ED685B1C71F6CCC8402EC97BF2D159",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190844Z/chablis-gc-chablis-grand-cru/fetch-manifest.json",
+    "raw_checksum_sha256": "98CF50269A04067ED75D9A6100EEED6B4BB646B55F6019077E3D105FAF78BD05",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-1er",
+    "normalized_checksum_sha256": "74AA4670B3E4600487DA90E42471A3B7128BC07D37BE2CE65FA77AB4068ECA7D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190846Z/chablis-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "AE0220490B6F31622F3AA7066113E74CA98EF9A238031EEBB347AE36B1EEF632",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.petit-chablis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:petit-chablis-village",
+    "normalized_checksum_sha256": "3A7365106C4F71ABEB66014DA0DB1442A85DDEBAE400A8818AC9916A6B6D3249",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190848Z/petit-chablis-village/fetch-manifest.json",
+    "raw_checksum_sha256": "84BB2B3952AD8D4DE58EDF515DFEC5949EC162B52507B6EF9A7AD30124C39931",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:cote-chalonnaise-district",
+    "normalized_checksum_sha256": "27952084D41EF4A8F3FEDDC897E9CFA991D1E15D0682FEFE76EE086BD6A11074",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.bouzeron",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:bouzeron-village",
+    "normalized_checksum_sha256": "6FF70E8FFE4972C26A5D8A05E315EE8602133C24ADEFD369AB8972EA5A4600A6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190902Z/bouzeron-village/fetch-manifest.json",
+    "raw_checksum_sha256": "48DF5FF65E9EE9DCD8FD4DF15FA47497F15A192ED2ECBC588DE33D6BFEB56E13",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-village",
+    "normalized_checksum_sha256": "B6CE50AA7622D73169DFBC14E45D9440FF22D5143AF22923081ECBA418F67C98",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190914Z/givry-village/fetch-manifest.json",
+    "raw_checksum_sha256": "0A5F2FA4867DD2C49A5AA7B3EC2E864A7039ABB6CD5835363A8B285227F184AA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er",
+    "normalized_checksum_sha256": "304AA4AE3802CF925A2EFD814AAD313FC9476BD53F0A223AED3EB3D576F8D624",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190916Z/givry-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "C089477179CA6EF7E301AFD88401294C4E7C62C9F9281CA00A9B4427B24B5A8E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-village",
+    "normalized_checksum_sha256": "DE7675A8B3B264971453BA8561C018ED2448069BAE08E353BD20120F23EEABF6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190909Z/mercurey-village/fetch-manifest.json",
+    "raw_checksum_sha256": "2EC8521B3E6957A8A5ABF9D3E9CC8BAB037D2D87D0A4411FD95279E20F44C6AF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er",
+    "normalized_checksum_sha256": "6E8F93A644B5246190947C087BFA06742221746876525A245FA973B3414CEFA8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190912Z/mercurey-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "0AC0F3EF6CABECECB8AC11BD5492B2D53957220E038AD77724268069025DA1A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-village",
+    "normalized_checksum_sha256": "66D5606CD357E3230427CF3A29E8F7F591D5CB070B6CC6DB9BB2422347D10662",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190918Z/montagny-village/fetch-manifest.json",
+    "raw_checksum_sha256": "5211F1F1D050CB538D8B5FFB2C4127FD4D17B0A0ED26BD2F2D39F6A80F9252DC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er",
+    "normalized_checksum_sha256": "07C6C10B8D4A525E1759BDA16A82EC397F46E8160B45E9EEC380507C50B78BF9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190921Z/montagny-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "5F85A3A1B825B7A14330CF9186D4A04C07CC206AE3301FE168164650F0FE62E6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-village",
+    "normalized_checksum_sha256": "F304122713AFC38FB945380A305BA18F0D54860A31A2AFE2D5F18FFD993B8A66",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190905Z/rully-village/fetch-manifest.json",
+    "raw_checksum_sha256": "98C217E9EE5C4431BE984DC91C662CC201C479856BA4F3E81B5E5AFBA98FA25C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er",
+    "normalized_checksum_sha256": "F66CAF7C74A8DEE1EE257B48E7E337EAEC39D533FD0C7F0B74D20F62326AFFE9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190907Z/rully-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "6C504B47DBA6BD4E2676599003F825B9D9AFB3FA04FE5DE706F9588ECE29C502",
     "documented": true
   },
   {
@@ -1023,6 +1158,114 @@
     "normalized_checksum_sha256": "33346FC878021F7496DCE8BD29BA584EB58BCBB9A7BDA5CB82A0A44849BA0D02",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123140Z/vougeot-1er/fetch-manifest.json",
     "raw_checksum_sha256": "6323309E43680EA33C10B59815E125DF597D687082ED15148EB782859BE36466",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.grand-auxerrois",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:grand-auxerrois-district",
+    "normalized_checksum_sha256": "F70654013FEBE3BB82C08A79153F9CABE3685BD705CAC0DE8EF30068B5E8D4A6",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.grand-auxerrois.irancy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:irancy-village",
+    "normalized_checksum_sha256": "C1135DD4ABCB48F98B6C4A940A1F985BF230FF681A10B790C5279825D0E82B20",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190854Z/irancy-village/fetch-manifest.json",
+    "raw_checksum_sha256": "FBDE0C723462F8EEF0041246C1835EFF134426ECCBE538F26071BE827EAEC8EF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.grand-auxerrois.saint-bris",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-bris-village",
+    "normalized_checksum_sha256": "FE46816D2D8EB7C668BA5959CC65AF0EE5EE8FA1FCEE48E0379CA516127F4F78",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190856Z/saint-bris-village/fetch-manifest.json",
+    "raw_checksum_sha256": "690A305D54228EBA1004E706FDA5EC0A9C5AB674774FBEAA6BCF72B18046577A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.grand-auxerrois.vezelay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vezelay-village",
+    "normalized_checksum_sha256": "CCB3C759E65869C8F1DA8AE7903A63F978979F93BD439EF50FCAF9DEDF5B288C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190859Z/vezelay-village/fetch-manifest.json",
+    "raw_checksum_sha256": "02769817F14FCE431C214FC1AE82FDC34158EC85E3574A3A18A6D6F0D8D0E788",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:maconnais-district",
+    "normalized_checksum_sha256": "6DF85149E2CD4E57E28A6287FB56A5BBF289C54EC3EC094EE343B19F6DDA79CC",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.macon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:macon-village",
+    "normalized_checksum_sha256": "00EE12F10E4D5C577721D2B36C493151A69E9FF0425CDBF92B06EB04793FEE0B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190923Z/macon-village/fetch-manifest.json",
+    "raw_checksum_sha256": "2A0FBB39AABF6D82FA32D6163E8C77BFE462F6ED9F54295E4CC6B84679CCC555",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-village",
+    "normalized_checksum_sha256": "0B2F475E1A1E9855CC86ECACF74839ED456CDB6C1E907CC16C3B6FFFB1CEFC7B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191427Z/pouilly-fuisse-village/fetch-manifest.json",
+    "raw_checksum_sha256": "232A67B5257D298C7915BEF3B781D7CD2617CD4F5CD9FC4C9C158B9CFF4725BA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er",
+    "normalized_checksum_sha256": "15D0EA04DEF12FB2467F916E32969062B8C5F58E63FDD86AA3A5A3AF008D973F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191433Z/pouilly-fuisse-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "37175691D9F21A2B0DCCA3814B43D0840C199D18CBE83FF840FCC5B39B01BDA6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-loche",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-loche-village",
+    "normalized_checksum_sha256": "8AA1262BFC7DFB3278FE9833881A1AD40D3B4F8B09721EC63BF15FC7604AAD24",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191440Z/pouilly-loche-village/fetch-manifest.json",
+    "raw_checksum_sha256": "4AED704BE18571CD463D71A334E460CD857FEB18E185E8688575CD71EC9EB6A7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-vinzelles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-vinzelles-village",
+    "normalized_checksum_sha256": "309A8A73AF3B8BB475809B39C2BF4806B68A4CDB2C909CB3E6C0D87B41FF17D4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191437Z/pouilly-vinzelles-village/fetch-manifest.json",
+    "raw_checksum_sha256": "D7DC56E3446679E107379EA8B92E428A8A6963B25C6A53CBACD47EB3492FE480",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.saint-veran",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-veran-village",
+    "normalized_checksum_sha256": "50DB878E714C27FC1B879EFDD53613AEDABDBBE34FFD5C4AA3A48307AE27EA6D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191444Z/saint-veran-village/fetch-manifest.json",
+    "raw_checksum_sha256": "D069D6F183947ADBA5896A025B056D4056ABD981F3403072689BACEA990C8085",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.vire-clesse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vire-clesse-village",
+    "normalized_checksum_sha256": "079C9732A357EA2AF2B95B62A7E633D4E3B20764A710B3F1C6BD3919256590FC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191423Z/vire-clesse-village/fetch-manifest.json",
+    "raw_checksum_sha256": "A7FA839617C16B27ADB8D7018A5E8FEDAAD4E8F1F9278B58F7BC9DC292C27C0D",
     "documented": true
   }
 ]
