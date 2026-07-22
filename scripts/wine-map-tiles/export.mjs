@@ -7,9 +7,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
 import {
-  EXPECTED_PLACES,
   WORK_DIR,
-  archiveForTier,
+  archiveForPlace,
+  SHARD_TARGET,
   featureCollection,
   labelFeature,
   pgConfig,
@@ -52,39 +52,64 @@ try {
   const verified = await client.query(
     "select count(*)::int as count from wine_places where publication_status = 'VERIFIED'",
   );
-  assert.equal(verified.rows[0].count, EXPECTED_PLACES, "verified place count drifted");
   ({ rows } = await client.query(EXPORT_SQL));
+  assert.equal(rows.length, verified.rows[0].count, "verified/export row mismatch");
+  assert.ok(rows.length >= 20, "implausibly few exportable places");
 } finally {
   await client.end();
 }
 
-assert.equal(rows.length, EXPECTED_PLACES, `expected ${EXPECTED_PLACES} exportable places, got ${rows.length}`);
-assert.equal(new Set(rows.map(({ id }) => id)).size, EXPECTED_PLACES, "duplicate place ids");
+assert.equal(new Set(rows.map(({ id }) => id)).size, rows.length, "duplicate place ids");
 for (const row of rows) {
   const geometry = JSON.parse(row.geometry);
   assert.equal(geometry.type, "MultiPolygon", `${row.canonical_key}: unexpected geometry type`);
   assert.equal(JSON.parse(row.label_point).type, "Point", `${row.canonical_key}: unexpected label type`);
 }
 
-const worldRows = rows.filter((row) => archiveForTier(row.display_tier) !== "france");
-const franceRows = rows.filter((row) => archiveForTier(row.display_tier) !== "world");
+function extendBbox(bbox, geojson) {
+  for (const polygon of geojson.coordinates) {
+    for (const ring of polygon) {
+      for (const [x, y] of ring) {
+        bbox[0] = Math.min(bbox[0], x);
+        bbox[1] = Math.min(bbox[1], y);
+        bbox[2] = Math.max(bbox[2], x);
+        bbox[3] = Math.max(bbox[3], y);
+      }
+    }
+  }
+  return bbox;
+}
+
+const world = { rows: [], ids: [] };
+const shards = {};
+for (const row of rows) {
+  const { world: inWorld, shard } = archiveForPlace(row);
+  if (inWorld) {
+    world.rows.push(row);
+    world.ids.push(row.id);
+  }
+  if (shard) {
+    const bucket = (shards[shard] ??= { rows: [], ids: [], bbox: [180, 90, -180, -90] });
+    bucket.rows.push(row);
+    bucket.ids.push(row.id);
+    extendBbox(bucket.bbox, JSON.parse(row.geometry));
+  }
+}
 assert.ok(
-  worldRows.some(({ canonical_key }) => canonical_key === "france"),
+  world.rows.some(({ canonical_key }) => canonical_key === "france"),
   "world archive must contain France",
 );
-assert.ok(
-  !franceRows.some(({ canonical_key }) => canonical_key === "france"),
-  "France (the country) must not be in the shard",
-);
-assert.ok(worldRows.length >= 2 && franceRows.length >= 1, "empty archive");
+assert.ok(world.rows.length >= 2 && Object.keys(shards).length >= 1, "empty archive");
 
 await mkdir(WORK_DIR, { recursive: true });
 const outputs = [
-  ["world-places.geojson", featureCollection(worldRows.map(placeFeature))],
-  ["world-labels.geojson", featureCollection(worldRows.map(labelFeature))],
-  ["france-places.geojson", featureCollection(franceRows.map(placeFeature))],
-  ["france-labels.geojson", featureCollection(franceRows.map(labelFeature))],
+  ["world-places.geojson", featureCollection(world.rows.map(placeFeature))],
+  ["world-labels.geojson", featureCollection(world.rows.map(labelFeature))],
 ];
+for (const [key, bucket] of Object.entries(shards)) {
+  outputs.push([`${key}-places.geojson`, featureCollection(bucket.rows.map(placeFeature))]);
+  outputs.push([`${key}-labels.geojson`, featureCollection(bucket.rows.map(labelFeature))]);
+}
 for (const [filename, collection] of outputs) {
   await writeFile(path.join(WORK_DIR, filename), `${JSON.stringify(collection)}\n`);
 }
@@ -97,6 +122,18 @@ const release = {
   git_sha: process.env.GITHUB_SHA ?? null,
   node: process.version,
   counts: { places: rows.length, labels: rows.length, by_kind: byKind },
+  world: { place_ids: world.ids },
+  shards: Object.fromEntries(
+    Object.entries(shards).map(([key, bucket]) => [
+      key,
+      {
+        place_ids: bucket.ids,
+        bbox: bucket.bbox,
+        min_zoom: SHARD_TARGET.minZoom,
+        max_zoom: SHARD_TARGET.maxZoom,
+      },
+    ]),
+  ),
   expected: rows.map((row) => ({
     id: row.id,
     key: row.canonical_key,
@@ -104,7 +141,7 @@ const release = {
     parent_id: row.primary_parent_id,
     label_lon: Number(row.label_lon),
     label_lat: Number(row.label_lat),
-    archive: archiveForTier(row.display_tier),
+    archive: archiveForPlace(row),
   })),
 };
 await writeFile(path.join(WORK_DIR, "release.json"), `${JSON.stringify(release, null, 2)}\n`);

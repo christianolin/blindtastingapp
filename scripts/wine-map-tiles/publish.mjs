@@ -18,14 +18,36 @@ import {
 import { validateArchives } from "./validate.mjs";
 
 const release = JSON.parse(await readFile(path.join(WORK_DIR, "release.json"), "utf8"));
+const names = ["world", ...Object.keys(release.shards)];
 const archives = {};
-for (const name of ["world", "france"]) {
+for (const name of names) {
   const body = await readFile(path.join(WORK_DIR, `${name}.pmtiles`));
   archives[name] = {
     body,
     path: releaseObjectPath(release.version, `${name}.pmtiles`),
     bytes: body.byteLength,
     checksum_sha256: sha256hex(body),
+  };
+}
+
+// tile_checksums persists each shard's bbox/zoom so promote.mjs can emit v2
+// manifest metadata even on the rollback/explicit-version path, where
+// release.json is not on disk.
+const tileChecksums = {
+  world: {
+    path: archives.world.path,
+    bytes: archives.world.bytes,
+    checksum_sha256: archives.world.checksum_sha256,
+  },
+};
+for (const key of Object.keys(release.shards)) {
+  tileChecksums[key] = {
+    path: archives[key].path,
+    bytes: archives[key].bytes,
+    checksum_sha256: archives[key].checksum_sha256,
+    bbox: release.shards[key].bbox,
+    min_zoom: release.shards[key].min_zoom,
+    max_zoom: release.shards[key].max_zoom,
   };
 }
 
@@ -39,10 +61,7 @@ try {
      returning id`,
     [
       release.version,
-      JSON.stringify({
-        world: { path: archives.world.path, bytes: archives.world.bytes, checksum_sha256: archives.world.checksum_sha256 },
-        france: { path: archives.france.path, bytes: archives.france.bytes, checksum_sha256: archives.france.checksum_sha256 },
-      }),
+      JSON.stringify(tileChecksums),
       JSON.stringify(release.counts),
       JSON.stringify({
         git_sha: release.git_sha,
@@ -55,7 +74,7 @@ try {
   releaseId = inserted.rows[0].id;
 
   try {
-    for (const name of ["world", "france"]) {
+    for (const name of names) {
       await uploadObject(archives[name].path, archives[name].body, {
         contentType: "application/octet-stream",
         cacheControlSeconds: 31536000,
@@ -66,13 +85,11 @@ try {
 
     // Remote read-back through the public URLs: proves range requests work
     // on a REAL PMTiles archive before this release can ever be promoted.
-    const { gates, featureCounts } = await validateArchives(
-      {
-        world: new FetchSource(storagePublicUrl(archives.world.path)),
-        france: new FetchSource(storagePublicUrl(archives.france.path)),
-      },
-      release,
-    );
+    const remoteSources = {};
+    for (const name of names) {
+      remoteSources[name] = new FetchSource(storagePublicUrl(archives[name].path));
+    }
+    const { gates, featureCounts } = await validateArchives(remoteSources, release);
     for (const gate of gates) console.log(`REMOTE GATE ${gate}`);
 
     const ranged = await fetch(storagePublicUrl(archives.world.path), {

@@ -6,16 +6,23 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
-export const EXPECTED_PLACES = 20;
-// Tile split by display tier: the country (tier 0) seeds the world archive
-// only, tier-1 regions live in both the world archive and their country
-// shard, everything deeper (tier >= 2) is shard-only. Region coverage grows
-// without touching this rule.
-export function archiveForTier(tier) {
-  if (tier <= 0) return "world";
-  if (tier === 1) return "both";
-  return "france";
+// Shard = 2nd segment of the canonical key. tier 0 (country) -> world only;
+// tier 1 (region) -> world AND its own shard; tier >= 2 -> shard only. Region
+// coverage grows without touching this rule.
+export function shardKeyFor(canonicalKey) {
+  const segments = canonicalKey.split(".");
+  return segments.length >= 2 ? segments[1] : null;
 }
+
+export function archiveForPlace(row) {
+  const shard = shardKeyFor(row.canonical_key);
+  if (row.display_tier <= 0) return { world: true, shard: null };
+  if (row.display_tier === 1) return { world: true, shard };
+  return { world: false, shard };
+}
+
+export const WORLD_TARGET = { minZoom: 0, maxZoom: 7 };
+export const SHARD_TARGET = { minZoom: 4, maxZoom: 16 };
 export const BUCKET = "wine-map-tiles";
 export const WORK_DIR = path.resolve(".tiles-build");
 export const SUPABASE_URL =
@@ -112,13 +119,13 @@ export function featureCollection(features) {
   return { type: "FeatureCollection", features };
 }
 
-export function buildManifest({ version, generatedAt, world, france, attribution }) {
+export function buildManifest({ version, generatedAt, world, shards, attribution }) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     release_version: version,
     generated_at: generatedAt,
-    world,
-    shards: { france },
+    world, // { url, checksum_sha256, bytes }
+    shards, // { <key>: { url, checksum_sha256, bytes, bbox:[w,s,e,n], min_zoom, max_zoom } }
     attribution,
   };
 }
@@ -160,32 +167,25 @@ export async function uploadObject(objectPath, body, { contentType, cacheControl
   if (error) throw new Error(`Upload ${objectPath} failed: ${error.message}`);
 }
 
-const BUILD_TARGETS = {
-  world: { output: "world.pmtiles", minZoom: 0, maxZoom: 7 },
-  france: { output: "france.pmtiles", minZoom: 4, maxZoom: 12 },
-};
-
 // Args are relative paths run with cwd=WORK_DIR so tippecanoe's embedded
 // generator_options metadata stays machine-independent (determinism).
-export function tippecanoeArgs(target) {
-  const spec = BUILD_TARGETS[target];
-  if (!spec) throw new Error(`Unknown build target: ${target}`);
+// name is "world" or a shard key; spec carries that archive's min/max zoom.
+export function tippecanoeArgs(name, spec) {
   return [
-    "-o", spec.output, "--force", `-Z${spec.minZoom}`, `-z${spec.maxZoom}`, "-r1",
+    "-o", `${name}.pmtiles`, "--force", `-Z${spec.minZoom}`, `-z${spec.maxZoom}`, "-r1",
     "--no-progress-indicator",
-    "-L", `places:${target}-places.geojson`,
-    "-L", `labels:${target}-labels.geojson`,
+    "-L", `places:${name}-places.geojson`,
+    "-L", `labels:${name}-labels.geojson`,
   ];
 }
 
 export function expectedIdSets(release) {
-  const world = new Set();
-  const france = new Set();
-  for (const { id, archive } of release.expected) {
-    if (archive === "world" || archive === "both") world.add(id);
-    if (archive === "france" || archive === "both") france.add(id);
+  const world = new Set(release.world.place_ids);
+  const shards = {};
+  for (const [key, shard] of Object.entries(release.shards)) {
+    shards[key] = new Set(shard.place_ids);
   }
-  return { world, france };
+  return { world, shards };
 }
 
 // Minimal pmtiles Source over a local file (the npm package's own sources

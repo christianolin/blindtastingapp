@@ -13,7 +13,8 @@ import {
   releaseVersion,
   sha256hex,
   storagePublicUrl,
-  archiveForTier,
+  archiveForPlace,
+  shardKeyFor,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -102,21 +103,25 @@ test("attribution keys reject unknown namespaces", () => {
   });
 });
 
-test("buildManifest emits the schema_version 1 contract", () => {
-  const archive = { url: "https://x/world.pmtiles", checksum_sha256: "A".repeat(64), bytes: 10 };
+test("buildManifest emits the schema_version 2 contract", () => {
+  const world = { url: "https://x/world.pmtiles", checksum_sha256: "A".repeat(64), bytes: 10 };
+  const shard = {
+    url: "https://x/bourgogne.pmtiles", checksum_sha256: "B".repeat(64), bytes: 20,
+    bbox: [3, 46, 5, 48], min_zoom: 4, max_zoom: 16,
+  };
   const manifest = buildManifest({
     version: "20260720T140000Z",
     generatedAt: "2026-07-20T14:00:00.000Z",
-    world: archive,
-    france: archive,
+    world,
+    shards: { bourgogne: shard },
     attribution: attributionDisplayMap(),
   });
   assert.deepEqual(manifest, {
-    schema_version: 1,
+    schema_version: 2,
     release_version: "20260720T140000Z",
     generated_at: "2026-07-20T14:00:00.000Z",
-    world: archive,
-    shards: { france: archive },
+    world,
+    shards: { bourgogne: shard },
     attribution: attributionDisplayMap(),
   });
 });
@@ -125,11 +130,18 @@ test("featureCollection wraps features", () => {
   assert.deepEqual(featureCollection([]), { type: "FeatureCollection", features: [] });
 });
 
-test("archiveForTier splits world/both/shard by display tier", () => {
-  assert.equal(archiveForTier(0), "world");
-  assert.equal(archiveForTier(1), "both");
-  assert.equal(archiveForTier(2), "france");
-  assert.equal(archiveForTier(5), "france");
+test("archiveForPlace routes by tier and region segment", () => {
+  assert.deepEqual(archiveForPlace({ display_tier: 0, canonical_key: "france" }), {
+    world: true, shard: null,
+  });
+  assert.deepEqual(archiveForPlace({ display_tier: 1, canonical_key: "france.bourgogne" }), {
+    world: true, shard: "bourgogne",
+  });
+  assert.deepEqual(
+    archiveForPlace({ display_tier: 3, canonical_key: "france.bourgogne.cote-de-nuits.vosne-romanee" }),
+    { world: false, shard: "bourgogne" },
+  );
+  assert.equal(shardKeyFor("france.bordeaux.fronsac"), "bordeaux");
 });
 
 test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {
@@ -140,33 +152,29 @@ test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {
   );
 });
 
-test("tippecanoeArgs pins zoom windows and layers per archive", async () => {
-  const { tippecanoeArgs } = await import("./lib.mjs");
-  assert.deepEqual(tippecanoeArgs("world"), [
+test("tippecanoeArgs honours per-archive zoom", async () => {
+  const { tippecanoeArgs, WORLD_TARGET, SHARD_TARGET } = await import("./lib.mjs");
+  assert.deepEqual(tippecanoeArgs("world", WORLD_TARGET), [
     "-o", "world.pmtiles", "--force", "-Z0", "-z7", "-r1",
     "--no-progress-indicator",
     "-L", "places:world-places.geojson", "-L", "labels:world-labels.geojson",
   ]);
-  assert.deepEqual(tippecanoeArgs("france"), [
-    "-o", "france.pmtiles", "--force", "-Z4", "-z12", "-r1",
+  assert.deepEqual(tippecanoeArgs("bourgogne", SHARD_TARGET), [
+    "-o", "bourgogne.pmtiles", "--force", "-Z4", "-z16", "-r1",
     "--no-progress-indicator",
-    "-L", "places:france-places.geojson", "-L", "labels:france-labels.geojson",
+    "-L", "places:bourgogne-places.geojson", "-L", "labels:bourgogne-labels.geojson",
   ]);
-  assert.throws(() => tippecanoeArgs("mars"), /Unknown build target/);
 });
 
-test("expectedIdSets splits ids by archive with Bordeaux in both", async () => {
+test("expectedIdSets splits ids into world + shard sets", async () => {
   const { expectedIdSets } = await import("./lib.mjs");
   const release = {
-    expected: [
-      { id: "a", archive: "world" },
-      { id: "b", archive: "both" },
-      { id: "c", archive: "france" },
-    ],
+    world: { place_ids: ["a", "b"] },
+    shards: { bourgogne: { place_ids: ["b", "c"] } },
   };
   const sets = expectedIdSets(release);
   assert.deepEqual([...sets.world].sort(), ["a", "b"]);
-  assert.deepEqual([...sets.france].sort(), ["b", "c"]);
+  assert.deepEqual([...sets.shards.bourgogne].sort(), ["b", "c"]);
 });
 
 test("tile decode dependencies expose the expected API", async () => {

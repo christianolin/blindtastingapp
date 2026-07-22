@@ -12,21 +12,26 @@ import {
   expectedIdSets,
   lonLatToTile,
   NodeFileSource,
+  SHARD_TARGET,
   WORK_DIR,
+  WORLD_TARGET,
 } from "./lib.mjs";
 
-const ARCHIVE_SPECS = {
-  world: { minZoom: 0, maxZoom: 7 },
-  france: { minZoom: 4, maxZoom: 12 },
-};
+// TODO(3E): the first non-France region shard will need its own bbox gate;
+// today every shard is a subset of France, so this window is a safe superset.
 const FRANCE_BBOX = { minLon: -6, minLat: 41, maxLon: 11, maxLat: 52 };
 
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
+  const allExpectedIds = new Set([
+    ...idSets.world,
+    ...Object.values(idSets.shards).flatMap((set) => [...set]),
+  ]);
   const gates = [];
   const featureCounts = {};
 
-  for (const [name, spec] of Object.entries(ARCHIVE_SPECS)) {
+  for (const name of Object.keys(sources)) {
+    const spec = name === "world" ? WORLD_TARGET : SHARD_TARGET;
     const pmt = new PMTiles(sources[name]);
     const header = await pmt.getHeader();
     assert.equal(header.minZoom, spec.minZoom, `${name}: header minZoom`);
@@ -44,7 +49,8 @@ export async function validateArchives(sources, release) {
     assert.deepEqual(layerNames, ["labels", "places"], `${name}: vector layers`);
     gates.push(`${name}: layers ok`);
 
-    const expectedIds = idSets[name];
+    const expectedIds = name === "world" ? idSets.world : idSets.shards[name];
+    assert.ok(expectedIds, `no expected id set for archive ${name}`);
     const seen = { places: new Set(), labels: new Set() };
     const expectedRows = release.expected.filter(({ id }) => expectedIds.has(id));
     for (const row of expectedRows) {
@@ -55,7 +61,7 @@ export async function validateArchives(sources, release) {
       for (const layer of ["places", "labels"]) {
         for (const properties of layers[layer] ?? []) {
           if (expectedIds.has(properties.id)) seen[layer].add(properties.id);
-          assert.ok(idSets.world.has(properties.id) || idSets.france.has(properties.id),
+          assert.ok(allExpectedIds.has(properties.id),
             `${name}/${layer}: unexpected feature id ${properties.id}`);
           assert.equal(typeof properties.key, "string", `${name}/${layer}: missing key`);
           assert.equal(typeof properties.tier, "number", `${name}/${layer}: missing tier`);
@@ -79,13 +85,11 @@ if (isMain) {
     throw new Error(`validate.mjs requires mode "local" when run directly, got ${mode}`);
   }
   const release = JSON.parse(await readFile(path.join(WORK_DIR, "release.json"), "utf8"));
-  const { gates, featureCounts } = await validateArchives(
-    {
-      world: new NodeFileSource(path.join(WORK_DIR, "world.pmtiles")),
-      france: new NodeFileSource(path.join(WORK_DIR, "france.pmtiles")),
-    },
-    release,
-  );
+  const sources = { world: new NodeFileSource(path.join(WORK_DIR, "world.pmtiles")) };
+  for (const key of Object.keys(release.shards)) {
+    sources[key] = new NodeFileSource(path.join(WORK_DIR, `${key}.pmtiles`));
+  }
+  const { gates, featureCounts } = await validateArchives(sources, release);
   for (const gate of gates) console.log(`GATE ${gate}`);
   console.log(`Local validation passed: ${JSON.stringify(featureCounts)}`);
 }

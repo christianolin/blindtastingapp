@@ -33,6 +33,18 @@ try {
     `release ${row.version} is ${row.status}; cannot promote a FAILED/BUILDING release`,
   );
 
+  const shards = {};
+  for (const [key, entry] of Object.entries(row.tile_checksums)) {
+    if (key === "world") continue;
+    shards[key] = {
+      url: storagePublicUrl(entry.path),
+      checksum_sha256: entry.checksum_sha256,
+      bytes: entry.bytes,
+      bbox: entry.bbox,
+      min_zoom: entry.min_zoom,
+      max_zoom: entry.max_zoom,
+    };
+  }
   const manifest = buildManifest({
     version: row.version,
     generatedAt: new Date().toISOString(),
@@ -41,11 +53,7 @@ try {
       checksum_sha256: row.tile_checksums.world.checksum_sha256,
       bytes: row.tile_checksums.world.bytes,
     },
-    france: {
-      url: storagePublicUrl(row.tile_checksums.france.path),
-      checksum_sha256: row.tile_checksums.france.checksum_sha256,
-      bytes: row.tile_checksums.france.bytes,
-    },
+    shards,
     attribution: attributionDisplayMap(),
   });
   const body = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
