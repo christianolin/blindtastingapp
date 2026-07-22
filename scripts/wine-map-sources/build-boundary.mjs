@@ -200,7 +200,11 @@ try {
        on conflict (source_namespace, source_feature_id) do update set authority = excluded.authority
        returning id
      ),
-     snapshot as (
+     snapshot_ins as (
+       -- A re-stage that reproduces byte-identical evidence (same source,
+       -- revision, normalized checksum) legitimately REUSES the existing
+       -- immutable snapshot rather than duplicating it (deleting an
+       -- unreviewed DRAFT leaves its snapshot behind by design).
        insert into wine_boundary_source_snapshots (
          source_id, source_revision, retrieved_at, source_url, licence,
          raw_snapshot_uri, raw_checksum_sha256,
@@ -212,7 +216,18 @@ try {
               'Raw artifacts are the unmodified WFS page responses listed in the fetch manifest.',
               $12
        from source
+       on conflict (source_id, source_revision, normalized_checksum_sha256) do nothing
        returning id
+     ),
+     snapshot as (
+       select id from snapshot_ins
+       union all
+       select existing.id
+         from wine_boundary_source_snapshots existing, source
+        where existing.source_id = source.id
+          and existing.source_revision = $4
+          and existing.normalized_checksum_sha256 = $11
+        limit 1
      ),
      valid_geom as (
        -- ST_MakeValid can repair self-touching rings into a collection;

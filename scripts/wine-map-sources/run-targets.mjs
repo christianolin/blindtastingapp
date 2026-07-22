@@ -2,12 +2,14 @@
 // skips any target whose place already has a DRAFT boundary, so an
 // interrupted run can be re-invoked without duplicating staged rows.
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
 import { pgConfig } from "../wine-map-tiles/lib.mjs";
 
-const targetsPath = path.resolve(".tiles-build", "sources", "cote-de-nuits-targets.json");
+const workDir = path.resolve(".tiles-build", "sources");
+const targetsPath = path.join(workDir, "cote-de-nuits-targets.json");
 const targets = JSON.parse(await readFile(targetsPath, "utf8"));
 const only = process.argv[2] ?? null; // optional slug substring filter
 
@@ -42,15 +44,24 @@ for (const t of targets) {
     console.log(`SKIP (already staged) ${t.slug}`);
     continue;
   }
-  run("fetch-inao-denomination.mjs", [
-    "--slug", t.slug, "--target-key", t.key, "--members", t.members.join(";"),
-  ]);
+  // Reuse an existing local fetch (same raw provenance) when present; a
+  // re-stage with new generalization params does not need fresh WFS pages.
+  const haveLocal = existsSync(path.join(workDir, `${t.slug}-parcels.geojson`)) &&
+    existsSync(path.join(workDir, `${t.slug}-fetch-manifest.json`));
+  if (haveLocal) {
+    console.log(`REUSE local fetch ${t.slug}`);
+  } else {
+    run("fetch-inao-denomination.mjs", [
+      "--slug", t.slug, "--target-key", t.key, "--members", t.members.join(";"),
+    ]);
+  }
   run("build-boundary.mjs", [
     "--slug", t.slug, "--target-key", t.key,
     "--presimplify", String(t.presimplify),
     "--tolerance", String(t.tolerance),
     "--min-share", String(t.minShare),
     "--min-part-share", String(t.minPartShare),
+    "--closing", String(t.closing ?? 0.02),
   ]);
   done += 1;
 }

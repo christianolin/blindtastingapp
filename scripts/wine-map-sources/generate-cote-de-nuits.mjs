@@ -47,7 +47,7 @@ for (const village of VILLAGES) {
   });
   targets.push({
     slug: `${slugify(village.name)}-village`, key: vKey, members: [village.name],
-    presimplify: 0.0003, tolerance: 0.0008, minShare: 0.05, minPartShare: 0,
+    presimplify: 0.0001, tolerance: 0.0003, minShare: 0.05, minPartShare: 0, closing: 0.002,
   });
 
   // Grand crus (children of the village).
@@ -60,7 +60,7 @@ for (const village of VILLAGES) {
     });
     targets.push({
       slug: `${slugify(village.name)}-gc-${slugify(gc.name)}`, key: gKey, members: [gc.denom],
-      presimplify: 0.0001, tolerance: 0.0002, minShare: 0, minPartShare: 0,
+      presimplify: 0.00003, tolerance: 0.00008, minShare: 0, minPartShare: 0, closing: 0.0008,
     });
   }
 
@@ -74,7 +74,7 @@ for (const village of VILLAGES) {
   });
   targets.push({
     slug: `${slugify(village.name)}-1er`, key: grpKey, members: [groupDenom],
-    presimplify: 0.0002, tolerance: 0.0005, minShare: 0.05, minPartShare: 0,
+    presimplify: 0.0001, tolerance: 0.0003, minShare: 0.05, minPartShare: 0, closing: 0.002,
   });
 
   const climats = Object.keys(membership)
@@ -89,7 +89,7 @@ for (const village of VILLAGES) {
     });
     targets.push({
       slug: `${slugify(village.name)}-1er-${slugify(climatName)}`, key: cKey, members: [denom],
-      presimplify: 0.0001, tolerance: 0.0002, minShare: 0, minPartShare: 0,
+      presimplify: 0.00003, tolerance: 0.00008, minShare: 0, minPartShare: 0, closing: 0.0008,
     });
   }
 }
