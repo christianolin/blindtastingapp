@@ -1,20 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
-import { LinkLoadingHint } from "@/components/link-loading-hint";
-import { MobileNav, type NavLink } from "@/components/mobile-nav";
+import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { AppNav, NAV_GROUPS } from "@/components/app-nav";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { signOut } from "@/app/actions";
-
-const NAV_LINKS: NavLink[] = [
-  { href: "/dashboard", label: "Tastings" },
-  { href: "/people", label: "People" },
-  { href: "/friends", label: "Friends" },
-  { href: "/knowledge", label: "Knowledge" },
-  { href: "/rules", label: "Rules" },
-];
 
 /**
  * The app's persistent top bar — shown on every authenticated page. Callers
@@ -66,16 +58,7 @@ export async function AppHeader({
       </Link>
 
       <nav className="hidden items-center gap-4 text-sm md:flex">
-        {NAV_LINKS.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="inline-flex items-center gap-1 hover:underline"
-          >
-            {l.label}
-            <LinkLoadingHint />
-          </Link>
-        ))}
+        <AppNav />
         <Link
           href={`/u/${userId}`}
           className="flex items-center gap-2 hover:underline"
@@ -106,7 +89,7 @@ export async function AppHeader({
         userId={userId}
         displayName={name}
         avatarUrl={avatarUrl}
-        links={NAV_LINKS}
+        groups={NAV_GROUPS}
         notifications={<NotificationsBell invites={invites} />}
       />
     </header>

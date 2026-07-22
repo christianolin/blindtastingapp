@@ -7,6 +7,8 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/actions";
 
+import type { NavGroup } from "@/components/app-nav";
+
 export type NavLink = { href: string; label: string };
 
 /**
@@ -25,13 +27,13 @@ export function MobileNav({
   userId,
   displayName,
   avatarUrl,
-  links,
+  groups,
   notifications,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  links: NavLink[];
+  groups: NavGroup[];
   notifications?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -79,15 +81,22 @@ export function MobileNav({
               <span className="truncate">{displayName}</span>
             </Link>
 
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={close}
-                className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-              >
-                {l.label}
-              </Link>
+            {groups.map((group) => (
+              <div key={group.label} className="mb-1">
+                <p className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                  {group.label}
+                </p>
+                {group.items.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={close}
+                    className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
             ))}
 
             <form action={signOut} className="mt-2">
