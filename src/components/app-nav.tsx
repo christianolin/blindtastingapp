@@ -20,14 +20,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/dashboard", label: "My tastings" },
       { href: "/tastings/new", label: "New tasting" },
+      { href: "/people", label: "People & Friends" },
       { href: "/rules", label: "Rules" },
-    ],
-  },
-  {
-    label: "People & Friends",
-    items: [
-      { href: "/people", label: "People" },
-      { href: "/friends", label: "Friends" },
     ],
   },
   {
