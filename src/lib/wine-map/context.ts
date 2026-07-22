@@ -13,10 +13,37 @@ export type WinePlaceChild = WinePlaceSummary & { min_zoom: number };
 export type WinePlaceArticle = {
   description: string | null;
   climate: string | null;
+  soils: string | null;
   grape_varieties: string | null;
   wine_styles: string | null;
   key_facts: string[];
   editorial_status: string;
+};
+
+export type WinePlaceGrape = {
+  id: string;
+  name: string;
+  color: string | null;
+  skin_color: string | null;
+  role: "PRINCIPAL" | "ACCESSORY";
+  permitted: boolean;
+  share_pct: number | null;
+  local_note: string | null;
+};
+
+export type WinePlaceStyle = { style: string; note: string | null };
+
+export type WinePlaceDesignation = {
+  key: string;
+  name: string;
+  appellation_system: string | null;
+  description: string;
+  local_note: string | null;
+};
+
+export type WineDualLabel = WinePlaceSummary & {
+  direction: "MAY_BE_SOLD_AS" | "ALSO_SOLD_AS_THIS";
+  note: string | null;
 };
 
 export type WinePlaceContext = {
@@ -33,6 +60,11 @@ export type WinePlaceContext = {
     label_lon: number;
     label_lat: number;
   } | null;
+  grapes: WinePlaceGrape[];
+  styles: WinePlaceStyle[];
+  designations: WinePlaceDesignation[];
+  nearby: WinePlaceSummary[];
+  dual_labels: WineDualLabel[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -73,5 +105,14 @@ export async function fetchWinePlaceContext(
   if (!isContext(data)) {
     throw new Error("Unrecognized wine place context shape");
   }
-  return data;
+  // v2 keys default to empty so a stale function (or cached response)
+  // degrades to the v1 experience instead of crashing sections.
+  return {
+    ...data,
+    grapes: data.grapes ?? [],
+    styles: data.styles ?? [],
+    designations: data.designations ?? [],
+    nearby: data.nearby ?? [],
+    dual_labels: data.dual_labels ?? [],
+  };
 }

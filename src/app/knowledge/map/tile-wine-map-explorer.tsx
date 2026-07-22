@@ -24,6 +24,7 @@ import {
   type WinePlaceTreeNode,
 } from "@/lib/wine-map/tree";
 import { WineMapTree } from "./wine-map-tree";
+import { KnowledgeSections } from "./knowledge-sections";
 import type { CameraTarget } from "./tile-wine-map";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
@@ -319,7 +320,15 @@ export function TileWineMapExplorer({
                           <dd>{article.climate}</dd>
                         </div>
                       ) : null}
-                      {article.grape_varieties ? (
+                      {article.soils ? (
+                        <div>
+                          <dt className="text-xs font-medium text-muted-foreground">
+                            Soils
+                          </dt>
+                          <dd>{article.soils}</dd>
+                        </div>
+                      ) : null}
+                      {article.grape_varieties && context.grapes.length === 0 ? (
                         <div>
                           <dt className="text-xs font-medium text-muted-foreground">
                             Main grape varieties
@@ -327,7 +336,7 @@ export function TileWineMapExplorer({
                           <dd>{article.grape_varieties}</dd>
                         </div>
                       ) : null}
-                      {article.wine_styles ? (
+                      {article.wine_styles && context.styles.length === 0 ? (
                         <div>
                           <dt className="text-xs font-medium text-muted-foreground">
                             Wine styles
@@ -354,6 +363,7 @@ export function TileWineMapExplorer({
                     Profile being curated — check back soon.
                   </p>
                 )}
+                <KnowledgeSections context={context} onSelect={select} />
               </>
             )}
           </CardContent>

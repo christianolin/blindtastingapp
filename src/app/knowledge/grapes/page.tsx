@@ -40,6 +40,31 @@ export default async function GrapeLibraryPage({
   if (color === "RED" || color === "WHITE") query = query.eq("color", color);
   const { data: grapes } = await query;
 
+  // Where each grape is on the wine map (RLS: PUBLISHED links on VERIFIED
+  // places only) — rendered as clickable map deep-links per grape.
+  const { data: grapeLinks } = await supabase
+    .from("wine_place_grapes")
+    .select("grape_id, wine_place_id");
+  const linkedPlaceIds = [
+    ...new Set((grapeLinks ?? []).map((l) => l.wine_place_id)),
+  ];
+  const { data: linkedPlaces } =
+    linkedPlaceIds.length > 0
+      ? await supabase
+          .from("wine_places")
+          .select("id, name, canonical_key")
+          .in("id", linkedPlaceIds)
+      : { data: [] as { id: string; name: string; canonical_key: string }[] };
+  const placeById = new Map((linkedPlaces ?? []).map((p) => [p.id, p]));
+  const placesByGrape = new Map<string, { name: string; key: string }[]>();
+  for (const link of grapeLinks ?? []) {
+    const place = placeById.get(link.wine_place_id);
+    if (!place) continue;
+    const list = placesByGrape.get(link.grape_id) ?? [];
+    list.push({ name: place.name, key: place.canonical_key });
+    placesByGrape.set(link.grape_id, list);
+  }
+
   const buildHref = (params: { q?: string; color?: string }) => {
     const usp = new URLSearchParams();
     if (params.q) usp.set("q", params.q);
@@ -116,6 +141,11 @@ export default async function GrapeLibraryPage({
                       </Badge>
                     ) : null}
                   </CardTitle>
+                  {g.skin_color ? (
+                    <p className="text-xs text-muted-foreground">
+                      Skin: {g.skin_color}
+                    </p>
+                  ) : null}
                 </CardHeader>
                 <CardContent>
                   {g.description ? (
@@ -179,6 +209,24 @@ export default async function GrapeLibraryPage({
                       No profile yet.
                     </p>
                   )}
+                  {(placesByGrape.get(g.id) ?? []).length > 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      On the wine map:{" "}
+                      {(placesByGrape.get(g.id) ?? [])
+                        .slice(0, 6)
+                        .map((p, i) => (
+                          <span key={p.key}>
+                            {i > 0 ? " · " : ""}
+                            <Link
+                              className="underline underline-offset-4 hover:text-foreground"
+                              href={`/knowledge/map?place=${p.key}`}
+                            >
+                              {p.name}
+                            </Link>
+                          </span>
+                        ))}
+                    </p>
+                  ) : null}
                 </CardContent>
               </Card>
             ))}
