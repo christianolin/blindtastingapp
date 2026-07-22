@@ -1,0 +1,28 @@
+{
+  "source": "Curated Burgundy grand crus. denom = exact INAO AOC-VITICOLES vocabulary key (data/wine-map/inao-denomination-membership.json); name = display label. INAO strips accents on the Echezeaux pair and uses the compound 'Clos de Vougeot ou Clos Vougeot' form.",
+  "grand_crus": [
+    { "denom": "Chambertin", "name": "Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Chambertin-Clos de Bèze", "name": "Chambertin-Clos de Bèze", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Chapelle-Chambertin", "name": "Chapelle-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Charmes-Chambertin", "name": "Charmes-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Griotte-Chambertin", "name": "Griotte-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Latricières-Chambertin", "name": "Latricières-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Mazis-Chambertin", "name": "Mazis-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Mazoyères-Chambertin", "name": "Mazoyères-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Ruchottes-Chambertin", "name": "Ruchottes-Chambertin", "district": "cote-de-nuits", "village": "gevrey-chambertin" },
+    { "denom": "Clos de la Roche", "name": "Clos de la Roche", "district": "cote-de-nuits", "village": "morey-saint-denis" },
+    { "denom": "Clos Saint-Denis", "name": "Clos Saint-Denis", "district": "cote-de-nuits", "village": "morey-saint-denis" },
+    { "denom": "Clos des Lambrays", "name": "Clos des Lambrays", "district": "cote-de-nuits", "village": "morey-saint-denis" },
+    { "denom": "Clos de Tart", "name": "Clos de Tart", "district": "cote-de-nuits", "village": "morey-saint-denis" },
+    { "denom": "Bonnes-Mares", "name": "Bonnes-Mares", "district": "cote-de-nuits", "village": "chambolle-musigny" },
+    { "denom": "Musigny", "name": "Musigny", "district": "cote-de-nuits", "village": "chambolle-musigny" },
+    { "denom": "Clos de Vougeot ou Clos Vougeot", "name": "Clos de Vougeot", "district": "cote-de-nuits", "village": "vougeot" },
+    { "denom": "Echezeaux", "name": "Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Grands-Echezeaux", "name": "Grands-Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Richebourg", "name": "Richebourg", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Romanée-Conti", "name": "Romanée-Conti", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "La Romanée", "name": "La Romanée", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "La Tâche", "name": "La Tâche", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Romanée-Saint-Vivant", "name": "Romanée-Saint-Vivant", "district": "cote-de-nuits", "village": "vosne-romanee" }
+  ]
+}

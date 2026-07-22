@@ -972,4 +972,17 @@ test("classification facts and legal relationship types", async () => {
       /appellation_level/i,
     );
   });
+
+  // Phase 3C: premier_cru and grand_cru are accepted after the level migration
+  // (accepting statements do not abort the scope, so both share one rollback).
+  await withRollback(async () => {
+    await client.query(
+      `update wine_places set appellation_level = 'grand_cru'
+        where canonical_key = 'france.bordeaux'`,
+    );
+    await client.query(
+      `update wine_places set appellation_level = 'premier_cru'
+        where canonical_key = 'france.bordeaux'`,
+    );
+  });
 });
