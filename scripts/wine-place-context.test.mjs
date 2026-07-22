@@ -177,3 +177,29 @@ test("burgundy depth chain resolves to the climat level", async () => {
   assert.equal(suchots.children.length, 0);
   assert.equal(suchots.place.kind, "SITE");
 });
+
+test("place tree returns every verified place with parent links", async () => {
+  const result = await client.query("select get_wine_place_tree() tree");
+  const tree = result.rows[0].tree;
+  assert.equal(tree.length, 44);
+  const byKey = new Map(tree.map((node) => [node.key, node]));
+  assert.equal(byKey.get("france").parent_key, null);
+  assert.equal(
+    byKey.get("france.bourgogne.cote-de-nuits.vosne-romanee").parent_key,
+    "france.bourgogne.cote-de-nuits",
+  );
+  assert.ok(byKey.get("france.bourgogne").has_children);
+  assert.equal(
+    byKey.get("france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-suchots").has_children,
+    false,
+  );
+
+  const anon = await client.query(
+    `select has_function_privilege('anon', 'get_wine_place_tree()', 'execute') ok`,
+  );
+  assert.equal(anon.rows[0].ok, false);
+  const authenticated = await client.query(
+    `select has_function_privilege('authenticated', 'get_wine_place_tree()', 'execute') ok`,
+  );
+  assert.equal(authenticated.rows[0].ok, true);
+});

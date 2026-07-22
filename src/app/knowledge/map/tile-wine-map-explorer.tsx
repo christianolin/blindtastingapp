@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +13,11 @@ import {
   fetchWinePlaceContext,
   type WinePlaceContext,
 } from "@/lib/wine-map/context";
+import {
+  fetchWinePlaceTree,
+  type WinePlaceTreeNode,
+} from "@/lib/wine-map/tree";
+import { WineMapTree } from "./wine-map-tree";
 import type { CameraTarget } from "./tile-wine-map";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
@@ -22,7 +26,7 @@ const TileWineMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[420px] animate-pulse rounded-lg border bg-muted" />
+      <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted" />
     ),
   },
 );
@@ -54,6 +58,22 @@ export function TileWineMapExplorer({
   const [contextState, setContextState] = useState<
     "loading" | "ready" | "missing" | "error"
   >("loading");
+  const [tree, setTree] = useState<WinePlaceTreeNode[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchWinePlaceTree(supabase)
+      .then((roots) => {
+        if (!cancelled) setTree(roots);
+      })
+      .catch(() => {
+        // The map and details still work without the sidebar.
+        if (!cancelled) setTree([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   // Manifest loading is retriggered by bumping manifestAttempt from event
   // handlers; the effect body only starts async work so no setState runs
@@ -111,19 +131,21 @@ export function TileWineMapExplorer({
     [selectedKey],
   );
 
+  // Drill-down camera: selecting a place zooms far enough that ALL its
+  // children's reveal zooms are reached (deepest child + headroom), so one
+  // click on Vosne-Romanée shows its crus and climats immediately.
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
     const childZooms = context.children.map((c) => c.min_zoom);
     const maxZoom = Math.min(
       childZooms.length > 0
-        ? Math.min(...childZooms) + 0.5
+        ? Math.max(...childZooms) + 0.5
         : context.place.min_zoom + 1.5,
-      11,
+      15.5,
     );
     return { bbox: context.boundary.bbox, maxZoom };
   }, [context]);
 
-  const breadcrumb = context ? [...context.ancestors, context.place] : [];
   const article =
     context?.article && context.article.editorial_status !== "PLACEHOLDER"
       ? context.article
@@ -131,39 +153,22 @@ export function TileWineMapExplorer({
 
   return (
     <div className="flex flex-col gap-4">
-      {breadcrumb.length > 0 ? (
-        <nav
-          aria-label="Wine map breadcrumb"
-          className="flex flex-wrap items-center gap-1 text-sm"
-        >
-          {breadcrumb.map((entry, i) => {
-            const isLast = i === breadcrumb.length - 1;
-            return (
-              <span key={entry.id} className="flex items-center gap-1">
-                {i > 0 ? (
-                  <ChevronRight className="size-3.5 text-muted-foreground" />
-                ) : null}
-                {isLast ? (
-                  <span className="font-medium text-foreground">
-                    {entry.name}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => select(entry.key)}
-                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                  >
-                    {entry.name}
-                  </button>
-                )}
-              </span>
-            );
-          })}
-        </nav>
-      ) : null}
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+        <Card className="order-3 lg:order-1">
+          <CardContent className="h-[70vh] min-h-[420px] pt-6">
+            {tree === null ? (
+              <div className="h-full animate-pulse rounded-md bg-muted" />
+            ) : (
+              <WineMapTree
+                roots={tree}
+                selectedKey={selectedKey}
+                onSelect={select}
+              />
+            )}
+          </CardContent>
+        </Card>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card className="overflow-hidden">
+        <Card className="order-1 overflow-hidden lg:order-2">
           <CardContent className="flex flex-col gap-4 pt-6">
             {manifest ? (
               <TileWineMap
@@ -173,7 +178,7 @@ export function TileWineMapExplorer({
                 onSelect={select}
               />
             ) : manifestError ? (
-              <div className="flex h-[420px] flex-col items-center justify-center gap-3 rounded-lg border text-center">
+              <div className="flex h-[70vh] min-h-[420px] flex-col items-center justify-center gap-3 rounded-lg border text-center">
                 <p className="text-sm text-muted-foreground">
                   The map tiles are unavailable right now — navigation below
                   still works.
@@ -187,30 +192,13 @@ export function TileWineMapExplorer({
                 </button>
               </div>
             ) : (
-              <div className="h-[420px] animate-pulse rounded-lg border bg-muted" />
+              <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted" />
             )}
 
-            {context && context.children.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Within {context.place.name}:
-                </span>
-                {context.children.map((child) => (
-                  <button
-                    key={child.id}
-                    type="button"
-                    onClick={() => select(child.key)}
-                    className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {child.name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="order-2 lg:order-3 lg:col-span-2 xl:col-span-1">
           <CardContent className="flex flex-col gap-3 pt-6">
             {contextState === "loading" ? (
               <p className="text-sm text-muted-foreground">Loading…</p>

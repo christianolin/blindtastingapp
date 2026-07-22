@@ -432,6 +432,19 @@ Then update foundation + context expectations (place count, Bourgogne→Côte de
 
 ---
 
+## Task 5c — Owner UX directives (2026-07-22, takes precedence; 5b waits on this)
+
+Owner review of the live 5a slice ordered these fixes before any further region import:
+
+1. **Finer boundary detail** for appellations/sites — the 4–12-vertex shapes are too crude. Fine presets (crus/climats ≈8 m tolerance, villages ≈30 m); re-stage all 23 Vosne boundaries, revision-flip them current (retire the coarse rows), regenerate `boundary-expectations.json`; generator presets updated so 5b+ imports inherit the finer detail.
+2. **Click = drill-down**: selecting a place zooms so its children's reveal zoom is reached (camera target derives from children `min_zoom`, capped by shard max) — clicking Vosne-Romanée must show its crus/climats immediately.
+3. **Label every island**: multi-part regions (Bourgogne) emit one label point per polygon component in the tiles (per-component `ST_PointOnSurface`), not a single point on the largest part.
+4. **Colors + legend**: deterministic color per region (canonical-key segment carried as a `region` tile property), deeper levels as shades/opacity steps, plus an on-map legend explaining region colors and level shading.
+5. **Bigger map + fullscreen**: viewport-scaled height (not fixed 420 px) and a fullscreen control.
+6. **Searchable tree sidebar**: a folder-hierarchy of ALL verified places (new `get_wine_place_tree()` RPC, security-invoker, authenticated-only) with text search, expanded/highlighted current path — replacing the breadcrumb+pill "arrow" navigation; map and tree are two views of the same selection.
+
+Verification: suites + tsc/eslint/build; boundary re-stage is dry-run-first with fail-closed guards like every flip. Owner reviews on the live map after republish.
+
 ## Task 6 — Publish, performance gate, owner map sign-off
 
 **Goal:** ship it and prove it's fast.

@@ -631,6 +631,10 @@ export type Database = {
         Args: { p_place_key: string };
         Returns: unknown;
       };
+      get_wine_place_tree: {
+        Args: Record<string, never>;
+        Returns: unknown;
+      };
       reveal_wine: {
         Args: { p_wine_id: string };
         Returns: void;

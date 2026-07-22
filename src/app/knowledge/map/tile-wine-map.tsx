@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import Map, { Layer, Source, type MapRef } from "react-map-gl/maplibre";
+import Map, {
+  FullscreenControl,
+  Layer,
+  Source,
+  type MapRef,
+} from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -25,6 +30,33 @@ export type CameraTarget = {
   bbox: [number, number, number, number];
   maxZoom: number;
 };
+
+// Deterministic colour per region (canonical-key segment carried as the
+// `region` tile property); unknown regions fall back to the brand base.
+export const REGION_COLORS: Record<string, string> = {
+  bordeaux: "#5C1A2B",
+  bourgogne: "#1F4E5F",
+  champagne: "#8A6D3B",
+  loire: "#2F6B4F",
+  rhone: "#7A3B2E",
+  alsace: "#44548C",
+};
+const FALLBACK_COLOR = "#5C1A2B";
+const SELECTED_COLOR = "#B78E42";
+
+function regionColorExpression(selectedKey: string | null) {
+  return [
+    "case",
+    ["==", ["get", "key"], selectedKey ?? ""],
+    SELECTED_COLOR,
+    [
+      "match",
+      ["get", "region"],
+      ...Object.entries(REGION_COLORS).flat(),
+      FALLBACK_COLOR,
+    ],
+  ] as unknown as string;
+}
 
 export function TileWineMap({
   manifest,
@@ -69,12 +101,7 @@ export function TileWineMap({
   // label remain").
   const fillPaint = useMemo(
     () => ({
-      "fill-color": [
-        "case",
-        ["==", ["get", "key"], selectedKey ?? ""],
-        "#B78E42",
-        "#5C1A2B",
-      ] as unknown as string,
+      "fill-color": regionColorExpression(selectedKey),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -103,8 +130,20 @@ export function TileWineMap({
     [manifest],
   );
 
+  const legendRegions = useMemo(
+    () =>
+      Object.keys(manifest.shards)
+        .sort()
+        .map((key) => ({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          color: REGION_COLORS[key] ?? FALLBACK_COLOR,
+        })),
+    [manifest],
+  );
+
   return (
-    <div className="h-[420px] overflow-hidden rounded-lg border">
+    <div className="relative h-[70vh] min-h-[420px] overflow-hidden rounded-lg border">
       <Map
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
@@ -139,6 +178,7 @@ export function TileWineMap({
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
       >
+        <FullscreenControl position="top-right" />
         <Source id="wine-world" type="vector" url={`pmtiles://${manifest.world.url}`}>
           {/* The world archive contributes only the country outline; each
               region renders from its own on-demand shard to avoid double-
@@ -194,12 +234,7 @@ export function TileWineMap({
               type="line"
               source-layer="places"
               paint={{
-                "line-color": [
-                  "case",
-                  ["==", ["get", "key"], selectedKey ?? ""],
-                  "#B78E42",
-                  "#5C1A2B",
-                ] as unknown as string,
+                "line-color": regionColorExpression(selectedKey),
                 "line-width": ["+", 0.5, ["*", 0.5, ["get", "tier"]]] as unknown as number,
               }}
             />
@@ -223,6 +258,28 @@ export function TileWineMap({
           </Source>
         ) : null}
       </Map>
+      <div className="pointer-events-none absolute bottom-2 left-2 rounded-md border border-border bg-background/85 px-2.5 py-2 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
+        <p className="mb-1 font-medium text-foreground">Regions</p>
+        <ul className="flex flex-col gap-0.5">
+          {legendRegions.map((region) => (
+            <li key={region.key} className="flex items-center gap-1.5">
+              <span
+                className="inline-block size-2.5 rounded-sm"
+                style={{ backgroundColor: region.color }}
+              />
+              {region.label}
+            </li>
+          ))}
+          <li className="flex items-center gap-1.5">
+            <span
+              className="inline-block size-2.5 rounded-sm"
+              style={{ backgroundColor: "#B78E42" }}
+            />
+            Selected
+          </li>
+        </ul>
+        <p className="mt-1">Deeper levels fade as you zoom in.</p>
+      </div>
     </div>
   );
 }
