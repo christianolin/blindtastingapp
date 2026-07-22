@@ -12,7 +12,6 @@ import {
   expectedIdSets,
   lonLatToTile,
   NodeFileSource,
-  SHARD_TARGET,
   WORK_DIR,
   WORLD_TARGET,
 } from "./lib.mjs";
@@ -31,7 +30,10 @@ export async function validateArchives(sources, release) {
   const featureCounts = {};
 
   for (const name of Object.keys(sources)) {
-    const spec = name === "world" ? WORLD_TARGET : SHARD_TARGET;
+    const spec =
+      name === "world"
+        ? WORLD_TARGET
+        : { minZoom: release.shards[name].min_zoom, maxZoom: release.shards[name].max_zoom };
     const pmt = new PMTiles(sources[name]);
     const header = await pmt.getHeader();
     assert.equal(header.minZoom, spec.minZoom, `${name}: header minZoom`);

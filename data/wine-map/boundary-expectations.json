@@ -1,0 +1,398 @@
+[
+  {
+    "canonical_key": "france",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_0_countries:FRA",
+    "normalized_checksum_sha256": "3AEBD6EBF53C1FC35649BCB4DC09B71FC75923A11B5BF92178D8338764A2FCB0",
+    "raw_snapshot_uri": "https://raw.githubusercontent.com/christianolin/blindtastingapp/6257e2ae3bd2982482cc756465108fe6ef7ed615/data/wine-map/france-ne50m-raw.geojson",
+    "raw_checksum_sha256": "9E891251F9AE6543E4ED3501AF46CA17D432F3ED1C8E09DF89336D9CC6118469",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-bordeaux",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.blaye",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:blaye",
+    "normalized_checksum_sha256": "C010AC6548B5EA0EDBDA4E7C4FFB1F03E5E90FEB44E586C9DC2D739146B815BA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222859Z/blaye/fetch-manifest.json",
+    "raw_checksum_sha256": "BCDF4D3218DD8FB0A9C0564E26CD0D524EC162B63E8C5CECA86EAFD76845132B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.canon-fronsac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:canon-fronsac",
+    "normalized_checksum_sha256": "5C33ED83D09DD7387A3D21F86D52A5723A63FCF346C5D52A5332489A0FAAE262",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222857Z/canon-fronsac/fetch-manifest.json",
+    "raw_checksum_sha256": "FECFED4A439AD50D636B373F720E1601A0BE51A57901DB48E481B21458FB850C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.cotes-de-bourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-de-bourg",
+    "normalized_checksum_sha256": "1CD96E47BDA97998019CF09EFEFE5C32A8D34592F475AE5BC8FC02E59B68C6A5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222904Z/cotes-de-bourg/fetch-manifest.json",
+    "raw_checksum_sha256": "362BA2B07B6112D33BFF41E1E07D1CE91D5A06B4776CD1293BD17CB558451662",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.entre-deux-mers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:entre-deux-mers",
+    "normalized_checksum_sha256": "7A8690F2138E3385D3BAC92C8C1CA96F77E0B48A217B5BE1BB30F41F86A7C69B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222935Z/entre-deux-mers/fetch-manifest.json",
+    "raw_checksum_sha256": "E2CDBA872D73F60234C8AA58F00B20FA3B0AC5840698687ED5504A0D3835B6F0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.fronsac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fronsac",
+    "normalized_checksum_sha256": "4C5B8ED946D64C2B3A12F24335FE8419BBF4DB5E9E177E9A6C2DE1DDDE80573C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222855Z/fronsac/fetch-manifest.json",
+    "raw_checksum_sha256": "4537AB75AC58B56D23303A5611CCF51C496011D083B716D443DD9126A867252C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.graves",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:graves-grouping",
+    "normalized_checksum_sha256": "17FB774CA4E9F080742F92991868C0EFAEF876DEF489D2E2A7E4C7596F4AF74C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222950Z/graves-grouping/fetch-manifest.json",
+    "raw_checksum_sha256": "C21174CC48312366060575E2901F777C57561C01AA7292B3F24E2F3FA0EFB20B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.haut-medoc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-haut-medoc",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.haut-medoc.margaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-margaux",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.haut-medoc.pauillac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-pauillac",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.haut-medoc.saint-estephe",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-saint-estephe",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.haut-medoc.saint-julien",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-saint-julien",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.medoc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:medoc-grouping",
+    "normalized_checksum_sha256": "7F3D8B3341897877A02813DCCDE9DB736D16896F6F8865A314E610B1324BDF64",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222957Z/medoc-grouping/fetch-manifest.json",
+    "raw_checksum_sha256": "ED98B6CCFFD93C457937E3DDDE01E802B3DE1B7BF7BF9C925A26B8593245019C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.pessac-leognan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-pessac-leognan",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.pomerol",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-pomerol",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.saint-emilion",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-saint-emilion",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.sauternes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-sauternes",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.sauternes.barsac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "legacy-20260726-barsac",
+    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:bourgogne",
+    "normalized_checksum_sha256": "1DBE0CECD4F192F4C9158716772C06AF886F8D855A9E526077CC9C3586ADBEF1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T223003Z/bourgogne/fetch-manifest.json",
+    "raw_checksum_sha256": "89AE9A9710D40F5B6B2E7D923EF77A7147108729B39F743FC887ED15F9842B3D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:cote-de-nuits-derived",
+    "normalized_checksum_sha256": "AC641D290904059DD4800AD768D99EA3207712BFB3D4BB38B35B9329222EAFD2",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-village",
+    "normalized_checksum_sha256": "3B1528EFBEACF628CDF5148F140263209ABF4E88A95FEF8AD72EEFAA78BD9584",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103415Z/vosne-romanee-village/fetch-manifest.json",
+    "raw_checksum_sha256": "B882139A5030FF53DEF997C04A0777737429BFB5AA9CF92A6A29BF6452351EE1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.echezeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-echezeaux",
+    "normalized_checksum_sha256": "D417CBB4CB8ACA90B09FAFECB1B459BD2CB4C3A1508BCCAF0204E8BAD6196DE3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103422Z/vosne-romanee-gc-echezeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "2A96A2B1AC9A29A759E2CFD8CED091ADC5A7DBE2135E2C0D5CE7EA3F48A814FC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.grands-echezeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-grands-echezeaux",
+    "normalized_checksum_sha256": "369DBFECC66BD611DC3C821FEBBA12AA794AF54E360B89787A254AD33E3890A1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103426Z/vosne-romanee-gc-grands-echezeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "AEBB95A70AB3F2BB74B64A7389AFBD543744EE19668B99A39484035F550F786F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.la-romanee",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-la-romanee",
+    "normalized_checksum_sha256": "08E2A31EE668EEA65CBCCAB257BD575077010D45F4ECF6A6C49C4A10AC88AE95",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103443Z/vosne-romanee-gc-la-romanee/fetch-manifest.json",
+    "raw_checksum_sha256": "081846747B4C5A744C325132F7DD894859A3685BD86EEEC476B02F26557E72D7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.la-tache",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-la-tache",
+    "normalized_checksum_sha256": "9CC586BAC2641EDF29274E85BE5C95FBEA42B60EDAFC20A88C45FE69FDB52478",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103446Z/vosne-romanee-gc-la-tache/fetch-manifest.json",
+    "raw_checksum_sha256": "A65C1ECE2F83793A751575AD478337030E427CF844D7A806CC300E9B2B4285F7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er",
+    "normalized_checksum_sha256": "2513BD7F4A0CB087A6DACC63A7C2AFF0339E6227FE1D6F5C173B40FA51E792D3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103452Z/vosne-romanee-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "C8F38F7D714C68DA6A6A8031A937690054B7D0138846E86A5B30A4B5F1D9F9D5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.au-dessus-des-malconsorts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-au-dessus-des-malconsorts",
+    "normalized_checksum_sha256": "63BDD3AE131EB5278453C60F8D470BE9C332A8F30E5C41B6F618AFF1DAEDF1A2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103456Z/vosne-romanee-1er-au-dessus-des-malconsorts/fetch-manifest.json",
+    "raw_checksum_sha256": "65D41B609EE91421F891B0DB49A84D2B77B4223D4439AD0999109808C660291E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.aux-brulees",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-aux-brulees",
+    "normalized_checksum_sha256": "14E4DDDEC5BA9D357A4C77C181E9B10DB2A27319034530C56A09CBF6BBB51EF8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103458Z/vosne-romanee-1er-aux-brulees/fetch-manifest.json",
+    "raw_checksum_sha256": "07706FFFA4F3312C94ED5629083D08A79F00C797615425531657DD3A9640E261",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.aux-malconsorts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-aux-malconsorts",
+    "normalized_checksum_sha256": "07C5C60EEC58EC3A9DE77B52CDC48578A4B46AC3FC44619BD75A98562B2EE9BE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103501Z/vosne-romanee-1er-aux-malconsorts/fetch-manifest.json",
+    "raw_checksum_sha256": "95A34AB33BCE4BFA1B39805ED74E066B07B45D4513C9FB13E61D73FFAEF9B0D3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.aux-raignots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-aux-raignots",
+    "normalized_checksum_sha256": "1F45034D199A30616CB38B069AACCCFFBFCF689EE0A1907E10DA37CE24AF6852",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103504Z/vosne-romanee-1er-aux-raignots/fetch-manifest.json",
+    "raw_checksum_sha256": "15C3AA143DE542588A7FC35B0165970ADFC49C80CD2324EC68CBF0ABC75E4A35",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.clos-des-reas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-clos-des-reas",
+    "normalized_checksum_sha256": "74B3FC59B1E14FD1E6A2C580D0BA59D048DAEE8578167CD9CA225A41883A9E63",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103524Z/vosne-romanee-1er-clos-des-reas/fetch-manifest.json",
+    "raw_checksum_sha256": "66152A939A37B0749651E6521AFAC88F5FF8208BE6C879DB8D9FB2D6E1997C82",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.cros-parantoux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-cros-parantoux",
+    "normalized_checksum_sha256": "518ADA6BC7D6FF073064E2921DD9BDFB786FDE6EDE7E9DB8F7F571228E13C3D7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103529Z/vosne-romanee-1er-cros-parantoux/fetch-manifest.json",
+    "raw_checksum_sha256": "4B5A86B84F641563169949BB3A6021320D06D05C145393EDA55A84C7DB37BA14",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.en-orveaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-en-orveaux",
+    "normalized_checksum_sha256": "137FAEED5EBA4B400B2974561CA84D38897B8A852B4F4B975DBB162F539228C8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103533Z/vosne-romanee-1er-en-orveaux/fetch-manifest.json",
+    "raw_checksum_sha256": "670192D4AAF3FA9333AB908BC872534FF0DDDA6FFA58A30B9B29FC23AFE2264E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.la-croix-rameau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-la-croix-rameau",
+    "normalized_checksum_sha256": "DE29C727A5A784D19DC79E3DA5598953246EF244CB18AB06D4EC6B3A6B6C99DD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103537Z/vosne-romanee-1er-la-croix-rameau/fetch-manifest.json",
+    "raw_checksum_sha256": "20F9CF8411AA909EDAF6063960B44D5A23C755DC868B98103395E2B9B5DDC1E6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-beaux-monts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-beaux-monts",
+    "normalized_checksum_sha256": "280F222DFF393B954FAC68A275EB6646B3586B57ABD946695259A07A9941650B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103541Z/vosne-romanee-1er-les-beaux-monts/fetch-manifest.json",
+    "raw_checksum_sha256": "62A3A6F196698E66A40BD847B4E9DE6653C84520619FBAF51B4786EFE6C559E2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-chaumes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-chaumes",
+    "normalized_checksum_sha256": "AB3F0E3E0D802E68ADB764F793F14AC40A91926F01146A8E9C251C816E2255D1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103544Z/vosne-romanee-1er-les-chaumes/fetch-manifest.json",
+    "raw_checksum_sha256": "3647382E8AB6FEF1F11667E9863D4700E323CF03F0B7AE03C08FA4E311875B86",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-gaudichots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-gaudichots",
+    "normalized_checksum_sha256": "53C7233EE071C3877EC1E00FF83E15EB59F8D25D99F7C70CDBB9157A0370D873",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103547Z/vosne-romanee-1er-les-gaudichots/fetch-manifest.json",
+    "raw_checksum_sha256": "6EF833A67269419086AA8C5D1FF94A44B92302F89E1D7B9EDB2D7DE0F6795617",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-petis-monts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-petis-monts",
+    "normalized_checksum_sha256": "BCB4E2485B5F6EF4009ADF70312593389477B821B8BA26BDCC467D22FAE84D14",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103550Z/vosne-romanee-1er-les-petis-monts/fetch-manifest.json",
+    "raw_checksum_sha256": "8982AE115902A4916FF0FCF90EE01CD45FBE3D7C8702BAA4D13F356899177946",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-rouges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-rouges",
+    "normalized_checksum_sha256": "0807E27C8569F61D1FC184DC4019DD829701176140EACD201D2DD685462571D5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103553Z/vosne-romanee-1er-les-rouges/fetch-manifest.json",
+    "raw_checksum_sha256": "D39B2172CDC494268E9E199C5A201D988B7B4A7F9A1E2413CB7D0090BC8E1172",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-suchots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-1er-les-suchots",
+    "normalized_checksum_sha256": "91FBB7A0251398562AEF23D857370DDD30ACE13B85A7CDBECE6342DDACE41054",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103556Z/vosne-romanee-1er-les-suchots/fetch-manifest.json",
+    "raw_checksum_sha256": "8D12F6FF902556802E64348439CA05AB1BC96EEEA5AF200184B0D67AECA929E2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.richebourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-richebourg",
+    "normalized_checksum_sha256": "8FD486B4BE7AFD8135C88F3691DA9DC751419A71F8B466620612592A74095134",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103431Z/vosne-romanee-gc-richebourg/fetch-manifest.json",
+    "raw_checksum_sha256": "047A660AE15A289F1B147886EFF37EFC3C5F119DE6EE62946526D946F1E6A2D8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.romanee-conti",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-romanee-conti",
+    "normalized_checksum_sha256": "A547D2E3FA5D4026F06B61339EDD493959A60A3085C362C5930245E99CF05FA6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103436Z/vosne-romanee-gc-romanee-conti/fetch-manifest.json",
+    "raw_checksum_sha256": "7D750A000E4293223715A15F10B82637D792C5021F937C58A0BD953099F67A3D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.romanee-saint-vivant",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vosne-romanee-gc-romanee-saint-vivant",
+    "normalized_checksum_sha256": "9F9D62CD3D173449CB268DAB129CAA67011A9548B25B9BE37385B492355466D6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T103449Z/vosne-romanee-gc-romanee-saint-vivant/fetch-manifest.json",
+    "raw_checksum_sha256": "5B94D85C88013E4F0CCC564D18A50A03560D16C59F01D83C0513DF48529C6F05",
+    "documented": true
+  }
+]

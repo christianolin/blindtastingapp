@@ -6,12 +6,15 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { sha256hex, tippecanoeArgs, SHARD_TARGET, WORK_DIR, WORLD_TARGET } from "./lib.mjs";
+import { sha256hex, tippecanoeArgs, WORK_DIR, WORLD_TARGET } from "./lib.mjs";
 
 const release = JSON.parse(await readFile(path.join(WORK_DIR, "release.json"), "utf8"));
 const targets = [
   ["world", WORLD_TARGET],
-  ...Object.keys(release.shards).map((key) => [key, SHARD_TARGET]),
+  ...Object.entries(release.shards).map(([key, shard]) => [
+    key,
+    { minZoom: shard.min_zoom, maxZoom: shard.max_zoom },
+  ]),
 ];
 const checkDeterminism = process.argv.includes("--check-determinism");
 

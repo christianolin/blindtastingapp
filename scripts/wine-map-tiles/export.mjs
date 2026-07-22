@@ -89,9 +89,12 @@ for (const row of rows) {
     world.ids.push(row.id);
   }
   if (shard) {
-    const bucket = (shards[shard] ??= { rows: [], ids: [], bbox: [180, 90, -180, -90] });
+    const bucket = (shards[shard] ??= {
+      rows: [], ids: [], bbox: [180, 90, -180, -90], maxLabelZoom: 0,
+    });
     bucket.rows.push(row);
     bucket.ids.push(row.id);
+    bucket.maxLabelZoom = Math.max(bucket.maxLabelZoom, Number(row.label_min_zoom));
     extendBbox(bucket.bbox, JSON.parse(row.geometry));
   }
 }
@@ -130,7 +133,14 @@ const release = {
         place_ids: bucket.ids,
         bbox: bucket.bbox,
         min_zoom: SHARD_TARGET.minZoom,
-        max_zoom: SHARD_TARGET.maxZoom,
+        // Content-driven ceiling: deepest label reveal + 2 zooms of headroom
+        // (MapLibre overzooms past the archive max), capped at the envelope.
+        // Keeps shallow shards (Bordeaux, z9 reveals) from emitting tens of
+        // thousands of empty z16 tiles.
+        max_zoom: Math.min(
+          SHARD_TARGET.maxZoom,
+          Math.max(SHARD_TARGET.minZoom + 1, Math.ceil(bucket.maxLabelZoom) + 2),
+        ),
       },
     ]),
   ),

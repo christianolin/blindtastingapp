@@ -139,3 +139,41 @@ test("authenticated role sees verified content through RLS", async () => {
     assert.equal(ctx.children.length, 9);
   });
 });
+
+test("burgundy depth chain resolves to the climat level", async () => {
+  const bourgogne = await contextFor("france.bourgogne");
+  assert.deepEqual(
+    bourgogne.children.map((c) => c.key),
+    ["france.bourgogne.cote-de-nuits"],
+  );
+
+  const vosne = await contextFor("france.bourgogne.cote-de-nuits.vosne-romanee");
+  assert.deepEqual(
+    vosne.ancestors.map((a) => a.key),
+    ["france", "france.bourgogne", "france.bourgogne.cote-de-nuits"],
+  );
+  assert.equal(vosne.place.kind, "APPELLATION");
+  // 7 grands crus + the premier-cru group.
+  assert.equal(vosne.children.length, 8);
+
+  const group = await contextFor(
+    "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru",
+  );
+  assert.equal(group.children.length, 14);
+
+  const suchots = await contextFor(
+    "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-suchots",
+  );
+  assert.deepEqual(
+    suchots.ancestors.map((a) => a.key),
+    [
+      "france",
+      "france.bourgogne",
+      "france.bourgogne.cote-de-nuits",
+      "france.bourgogne.cote-de-nuits.vosne-romanee",
+      "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru",
+    ],
+  );
+  assert.equal(suchots.children.length, 0);
+  assert.equal(suchots.place.kind, "SITE");
+});
