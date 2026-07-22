@@ -128,3 +128,35 @@ export type LegalRelationshipContract = Expect<
     | "DUAL_LABEL"
   >
 >;
+
+// Phase 3K knowledge schema contracts.
+export type GrapeRoleValuesContract = Expect<
+  Equal<
+    Database["public"]["Tables"]["wine_place_grapes"]["Row"]["role"],
+    "PRINCIPAL" | "ACCESSORY"
+  >
+>;
+export type StyleKindValuesContract = Expect<
+  Equal<
+    Database["public"]["Tables"]["wine_place_styles"]["Row"]["style"],
+    "RED" | "WHITE" | "ROSE" | "SPARKLING" | "SWEET" | "FORTIFIED"
+  >
+>;
+export type KnowledgeEditorialContract = Expect<
+  Equal<
+    Database["public"]["Tables"]["wine_place_designations"]["Row"]["editorial_status"],
+    "PLACEHOLDER" | "DRAFT" | "PUBLISHED"
+  >
+>;
+export type GrapeSkinColorContract = Expect<
+  Equal<
+    Database["public"]["Tables"]["grapes"]["Row"]["skin_color"],
+    string | null
+  >
+>;
+export type ArticleSoilsContract = Expect<
+  Equal<
+    Database["public"]["Tables"]["wine_place_articles"]["Row"]["soils"],
+    string | null
+  >
+>;

@@ -33,6 +33,14 @@ export type WinePlaceRelationshipType =
   | "REPLACES_WITHIN"
   | "DUAL_LABEL";
 export type WineArticleStatus = "PLACEHOLDER" | "DRAFT" | "PUBLISHED";
+export type WineGrapeRole = "PRINCIPAL" | "ACCESSORY";
+export type WineStyleKind =
+  | "RED"
+  | "WHITE"
+  | "ROSE"
+  | "SPARKLING"
+  | "SWEET"
+  | "FORTIFIED";
 export type WineReferenceMapStatus =
   | "PENDING"
   | "VERIFIED"
@@ -108,6 +116,7 @@ export type Database = {
           typical_body: string | null;
           typical_alcohol: string | null;
           main_regions: string | null;
+          skin_color: string | null;
         };
         Insert: {
           id?: string;
@@ -120,6 +129,7 @@ export type Database = {
           typical_body?: string | null;
           typical_alcohol?: string | null;
           main_regions?: string | null;
+          skin_color?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
@@ -476,6 +486,7 @@ export type Database = {
           grape_varieties: string | null;
           wine_styles: string | null;
           key_facts: string[] | null;
+          soils: string | null;
           editorial_status: WineArticleStatus;
           created_at: string;
           updated_at: string;
@@ -487,12 +498,111 @@ export type Database = {
           grape_varieties?: string | null;
           wine_styles?: string | null;
           key_facts?: string[] | null;
+          soils?: string | null;
           editorial_status?: WineArticleStatus;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_place_articles"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_grapes: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          grape_id: string;
+          role: WineGrapeRole;
+          permitted: boolean;
+          share_pct: number | null;
+          local_note: string | null;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          grape_id: string;
+          role: WineGrapeRole;
+          permitted?: boolean;
+          share_pct?: number | null;
+          local_note?: string | null;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_grapes"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_styles: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          style: WineStyleKind;
+          note: string | null;
+          sort_order: number;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          style: WineStyleKind;
+          note?: string | null;
+          sort_order?: number;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_styles"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_designations: {
+        Row: {
+          id: string;
+          key: string;
+          name: string;
+          appellation_system: string | null;
+          description: string;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          name: string;
+          appellation_system?: string | null;
+          description: string;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_designations"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_designations: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          designation_id: string;
+          local_note: string | null;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          designation_id: string;
+          local_note?: string | null;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_designations"]["Insert"]
         >;
         Relationships: [];
       };
