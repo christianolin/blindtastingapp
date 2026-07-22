@@ -19,14 +19,17 @@ export function WineMapTree({
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const normalizedQuery = query.trim().toLowerCase();
+  // Accent- and case-insensitive: "tache" or "TÂCHE" both find La Tâche.
+  const fold = (value: string) =>
+    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalizedQuery = fold(query.trim());
 
   // Keys kept by the search: matches plus every ancestor of a match.
   const visibleKeys = useMemo(() => {
     if (!normalizedQuery) return null;
     const keep = new Set<string>();
     const walk = (node: WinePlaceTreeNode, ancestors: string[]) => {
-      if (node.name.toLowerCase().includes(normalizedQuery)) {
+      if (fold(node.name).includes(normalizedQuery)) {
         keep.add(node.key);
         for (const ancestor of ancestors) keep.add(ancestor);
       }

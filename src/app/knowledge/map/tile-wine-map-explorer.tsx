@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
@@ -74,6 +80,20 @@ export function TileWineMapExplorer({
       cancelled = true;
     };
   }, [supabase]);
+
+  // Expanded ("full view") keeps the tree and details visible but
+  // collapsible; Escape exits.
+  const [expanded, setExpanded] = useState(false);
+  const [treeOpen, setTreeOpen] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
 
   // Manifest loading is retriggered by bumping manifestAttempt from event
   // handlers; the effect body only starts async work so no setState runs
@@ -152,33 +172,78 @@ export function TileWineMapExplorer({
       : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_320px]">
-        <Card className="order-3 lg:order-1">
-          <CardContent className="h-[70vh] min-h-[420px] pt-6">
-            {tree === null ? (
-              <div className="h-full animate-pulse rounded-md bg-muted" />
-            ) : (
-              <WineMapTree
-                roots={tree}
-                selectedKey={selectedKey}
-                onSelect={select}
-              />
-            )}
-          </CardContent>
-        </Card>
+    <div
+      className={
+        expanded
+          ? "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4"
+          : "flex flex-col gap-4"
+      }
+    >
+      <div
+        className={`flex flex-col gap-4 lg:flex-row lg:items-stretch ${
+          expanded ? "min-h-0 flex-1" : ""
+        }`}
+      >
+        {treeOpen ? (
+          <Card className="order-3 lg:order-1 lg:w-[280px] lg:shrink-0">
+            <CardContent
+              className={`flex flex-col pt-4 ${
+                expanded ? "h-full min-h-0" : "h-[70vh] min-h-[420px]"
+              }`}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Hierarchy
+                </span>
+                <button
+                  type="button"
+                  aria-label="Collapse hierarchy"
+                  onClick={() => setTreeOpen(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <PanelLeftClose className="size-4" />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1">
+                {tree === null ? (
+                  <div className="h-full animate-pulse rounded-md bg-muted" />
+                ) : (
+                  <WineMapTree
+                    roots={tree}
+                    selectedKey={selectedKey}
+                    onSelect={select}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <button
+            type="button"
+            aria-label="Show hierarchy"
+            onClick={() => setTreeOpen(true)}
+            className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-1 lg:flex lg:w-9 lg:items-start lg:justify-center"
+          >
+            <PanelLeftOpen className="size-4" />
+          </button>
+        )}
 
-        <Card className="order-1 overflow-hidden lg:order-2">
-          <CardContent className="flex flex-col gap-4 pt-6">
+        <Card className="order-1 min-w-0 flex-1 overflow-hidden lg:order-2">
+          <CardContent
+            className={`pt-4 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
+          >
+            <div className={expanded ? "min-h-0 flex-1" : "h-[70vh] min-h-[420px]"}>
             {manifest ? (
               <TileWineMap
                 manifest={manifest}
                 selectedKey={selectedKey}
                 cameraTarget={cameraTarget}
                 onSelect={select}
+                expanded={expanded}
+                onToggleExpanded={() => setExpanded((value) => !value)}
               />
             ) : manifestError ? (
-              <div className="flex h-[70vh] min-h-[420px] flex-col items-center justify-center gap-3 rounded-lg border text-center">
+              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border text-center">
                 <p className="text-sm text-muted-foreground">
                   The map tiles are unavailable right now — navigation below
                   still works.
@@ -192,14 +257,32 @@ export function TileWineMapExplorer({
                 </button>
               </div>
             ) : (
-              <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted" />
+              <div className="h-full animate-pulse rounded-lg border bg-muted" />
             )}
-
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="order-2 lg:order-3 lg:col-span-2 xl:col-span-1">
-          <CardContent className="flex flex-col gap-3 pt-6">
+        {detailsOpen ? (
+        <Card
+          className={`order-2 lg:order-3 lg:w-[320px] lg:shrink-0 ${
+            expanded ? "lg:overflow-y-auto" : ""
+          }`}
+        >
+          <CardContent className="flex flex-col gap-3 pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                Details
+              </span>
+              <button
+                type="button"
+                aria-label="Collapse details"
+                onClick={() => setDetailsOpen(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <PanelRightClose className="size-4" />
+              </button>
+            </div>
             {contextState === "loading" ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : contextState === "error" ? (
@@ -275,6 +358,16 @@ export function TileWineMapExplorer({
             )}
           </CardContent>
         </Card>
+        ) : (
+          <button
+            type="button"
+            aria-label="Show details"
+            onClick={() => setDetailsOpen(true)}
+            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-3 lg:flex lg:w-9 lg:items-start lg:justify-center"
+          >
+            <PanelRightOpen className="size-4" />
+          </button>
+        )}
       </div>
     </div>
   );

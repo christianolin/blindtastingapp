@@ -26,7 +26,7 @@ export default async function WineMapPage({
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-1 flex-col gap-6 p-6 sm:p-8">
         <div>
           <Link
             href="/knowledge"

@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import Map, {
-  FullscreenControl,
-  Layer,
-  Source,
-  type MapRef,
-} from "react-map-gl/maplibre";
+import Map, { Layer, Source, type MapRef } from "react-map-gl/maplibre";
+import { Maximize2, Minimize2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -63,11 +59,15 @@ export function TileWineMap({
   selectedKey,
   cameraTarget,
   onSelect,
+  expanded,
+  onToggleExpanded,
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
   cameraTarget: CameraTarget | null;
   onSelect: (key: string) => void;
+  expanded: boolean;
+  onToggleExpanded: () => void;
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
@@ -130,6 +130,18 @@ export function TileWineMap({
     [manifest],
   );
 
+  // World layers show the country (tier 0) and every region NOT already
+  // rendered by the mounted shard — so France's regions are always visible.
+  const worldFilter = useMemo(
+    () =>
+      [
+        "any",
+        ["==", ["get", "tier"], 0],
+        ["!=", ["get", "region"], activeShardKey ?? ""],
+      ] as unknown as boolean,
+    [activeShardKey],
+  );
+
   const legendRegions = useMemo(
     () =>
       Object.keys(manifest.shards)
@@ -143,7 +155,15 @@ export function TileWineMap({
   );
 
   return (
-    <div className="relative h-[70vh] min-h-[420px] overflow-hidden rounded-lg border">
+    <div className="relative h-full overflow-hidden rounded-lg border">
+      <button
+        type="button"
+        onClick={onToggleExpanded}
+        aria-label={expanded ? "Exit full view" : "Full view"}
+        className="absolute right-2 top-2 z-10 rounded-md border border-border bg-background/85 p-1.5 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+      >
+        {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+      </button>
       <Map
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
@@ -159,12 +179,25 @@ export function TileWineMap({
           details?.removeAttribute("open");
         }}
         onClick={(e) => {
-          let best: { key: string; tier: number } | null = null;
+          // Smallest-wins: deepest tier first, then the latest-revealing
+          // (most specific) feature — so a click inside La Tâche hits La
+          // Tâche, never the village polygon underneath it.
+          let best: { key: string; tier: number; minZoom: number } | null = null;
           for (const feature of e.features ?? []) {
-            const p = feature.properties as { key?: string; tier?: number };
+            const p = feature.properties as {
+              key?: string;
+              tier?: number;
+              min_zoom?: number;
+            };
             if (typeof p.key !== "string") continue;
-            if (!best || (p.tier ?? 0) > best.tier) {
-              best = { key: p.key, tier: p.tier ?? 0 };
+            const tier = p.tier ?? 0;
+            const minZoom = p.min_zoom ?? 0;
+            if (
+              !best ||
+              tier > best.tier ||
+              (tier === best.tier && minZoom > best.minZoom)
+            ) {
+              best = { key: p.key, tier, minZoom };
             }
           }
           if (best) onSelect(best.key);
@@ -178,26 +211,27 @@ export function TileWineMap({
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
       >
-        <FullscreenControl position="top-right" />
         <Source id="wine-world" type="vector" url={`pmtiles://${manifest.world.url}`}>
-          {/* The world archive contributes only the country outline; each
-              region renders from its own on-demand shard to avoid double-
-              drawing (regions exist in both archives). */}
+          {/* The world archive carries the country plus every region, so
+              selecting France shows all its regions. A region already served
+              by the mounted shard is filtered out to avoid double-drawing. */}
           <Layer
             id="world-fills"
             type="fill"
             source-layer="places"
-            filter={["==", ["get", "key"], "france"]}
+            filter={worldFilter}
             paint={{
-              "fill-color": "#5C1A2B",
+              "fill-color": regionColorExpression(selectedKey),
               "fill-opacity": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
                 2,
-                0.12,
-                5,
-                0.03,
+                ["case", ["==", ["get", "tier"], 0], 0.1, 0.35],
+                6,
+                ["case", ["==", ["get", "tier"], 0], 0.04, 0.28],
+                9,
+                ["case", ["==", ["get", "tier"], 0], 0.02, 0.12],
               ] as unknown as number,
             }}
           />
@@ -205,14 +239,17 @@ export function TileWineMap({
             id="world-outlines"
             type="line"
             source-layer="places"
-            filter={["==", ["get", "key"], "france"]}
-            paint={{ "line-color": "#5C1A2B", "line-width": 1 }}
+            filter={worldFilter}
+            paint={{
+              "line-color": regionColorExpression(selectedKey),
+              "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
+            }}
           />
           <Layer
             id="world-labels"
             type="symbol"
             source-layer="labels"
-            filter={["==", ["get", "key"], "france"]}
+            filter={worldFilter}
             layout={{ "text-field": ["get", "name"], "text-size": 12 }}
             paint={{
               "text-color": "#3d1220",
