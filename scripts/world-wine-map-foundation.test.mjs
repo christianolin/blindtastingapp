@@ -723,13 +723,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // 15 rows since the France revision: the superseded legacy outline is
   // retained (is_current = false) beside the current Natural Earth one.
   assert.deepEqual(result.rows[0], {
-    total: 22,
+    total: 23,
     validated: 15,
     current: 14,
-    valid: 22,
-    labelled: 22,
+    valid: 23,
+    labelled: 23,
     manual: 2,
-    generalized: 20,
+    generalized: 21,
     reproducible: 13,
   });
 
@@ -762,10 +762,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     })),
   );
 
+  // snapshots counts LINKED snapshots, not the table: the CRS-corrected
+  // re-stage of the seven Bordeaux boundaries left seven immutable orphan
+  // snapshot rows (the snapshot immutability trigger forbids deleting them),
+  // so the table holds more rows than there are boundaries. Provenance
+  // integrity here means "every boundary resolves to a distinct snapshot and
+  // source, with no orphan sources", not raw table cardinality (sources ==
+  // identities still proves no source is left dangling).
   const provenance = await client.query(
     `select
        (select count(*)::int from wine_boundary_sources) sources,
-       (select count(*)::int from wine_boundary_source_snapshots) snapshots,
+       count(distinct snapshot.id)::int snapshots,
        count(distinct (s.source_namespace, s.source_feature_id))::int identities,
        count(*)::int linked_boundaries
      from wine_place_boundaries b
@@ -774,10 +781,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
      join wine_boundary_sources s on s.id = snapshot.source_id`,
   );
   assert.deepEqual(provenance.rows[0], {
-    sources: 22,
-    snapshots: 22,
-    identities: 22,
-    linked_boundaries: 22,
+    sources: 23,
+    snapshots: 23,
+    identities: 23,
+    linked_boundaries: 23,
   });
 });
 
@@ -916,8 +923,8 @@ test("classification facts and legal relationship types", async () => {
        from wine_places`,
   );
   assert.deepEqual(facts.rows[0], {
-    appellations: 18,
-    aoc: 18,
+    appellations: 19,
+    aoc: 19,
     missing_level: 0,
     france_plain: 1,
   });
