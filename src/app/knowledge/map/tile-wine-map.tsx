@@ -314,9 +314,9 @@ export function TileWineMap({
             filter={worldFilter}
             layout={{ "text-field": ["get", "name"], "text-size": 12 }}
             paint={{
-              "text-color": "#3d1220",
-              "text-halo-color": "#F5EFE3",
-              "text-halo-width": 1,
+              "text-color": "#2b0f18",
+              "text-halo-color": "#FFFDF7",
+              "text-halo-width": 1.7,
             }}
           />
         </Source>
@@ -333,8 +333,10 @@ export function TileWineMap({
               type="line"
               source-layer="places"
               paint={{
-                "line-color": regionColorExpression(selectedKey),
-                "line-width": ["+", 0.5, ["*", 0.5, ["get", "tier"]]] as unknown as number,
+                // Outlines follow the fill palette (classification colours at
+                // village zoom) so deep levels aren't ringed in region teal.
+                "line-color": fillColorExpression(selectedKey),
+                "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
             <Layer
@@ -343,15 +345,17 @@ export function TileWineMap({
               source-layer="labels"
               layout={{
                 "text-field": ["get", "name"],
-                "text-size": 11,
+                "text-size": 12,
                 // Deeper (smaller) places label first so commune names
                 // survive collision against their parent's label.
                 "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
               }}
               paint={{
-                "text-color": "#3d1220",
-                "text-halo-color": "#F5EFE3",
-                "text-halo-width": 1,
+                // Strong near-white halo keeps names legible on the solid
+                // cru fills (owner: labels were muddy on dark red).
+                "text-color": "#2b0f18",
+                "text-halo-color": "#FFFDF7",
+                "text-halo-width": 1.7,
               }}
             />
           </Source>

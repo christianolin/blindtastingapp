@@ -11,10 +11,10 @@
   {
     "canonical_key": "france.bordeaux",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "legacy-20260726-bordeaux",
-    "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
-    "raw_snapshot_uri": null,
-    "raw_checksum_sha256": null,
+    "source_feature_id": "denomset:bordeaux-region",
+    "normalized_checksum_sha256": "5FA754FC782B5D233381F1A44301032641CF16D7C29D2CEA800E9DCF730BE34F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T131054Z/bordeaux-region/fetch-manifest.json",
+    "raw_checksum_sha256": "6715DECF59656A5B3FBA2DA96E785C27F8E6D31BFAD58C49E5C0F7C2E57CD290",
     "documented": true
   },
   {
