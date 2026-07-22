@@ -27,13 +27,13 @@ Today `archiveForTier` puts everything deeper than a region into a single `franc
 **Per-region deep shards, loaded on demand, with per-feature zoom-gating.**
 
 1. **`world.pmtiles` (z0–7):** countries (tier 0) + regions (tier 1) only. Small, always loaded.
-2. **One shard per region**, covering only that region's bbox, at high zoom — `burgundy.pmtiles` z4–**16**. Region area is tiny, so even z16 stays small (tile count ∝ area × 4^zoom).
+2. **One shard per region**, covering only that region's bbox, at high zoom — `bourgogne.pmtiles` z4–**16**. Region area is tiny, so even z16 stays small (tile count ∝ area × 4^zoom). (The shard is keyed by the region's `canonical_key` segment, i.e. `bourgogne`, not the English "burgundy".)
 3. **On-demand shard loading:** the UI loads a region's shard only when the user selects it or the viewport enters its bbox; **≤2 shards loaded at once**. The whole of France's detail is never downloaded at once.
 4. **Per-feature `minzoom`** (already wired to each place's `min_zoom`) reveals depth progressively: district ~z8, village ~z10, 1er-cru group ~z12, grand cru ~z13, climat ~z14.
 
 Mechanics this requires:
 - **Manifest `schema_version` → 2:** each shard entry carries `{ url, checksum, bytes, bbox:[w,s,e,n], min_zoom, max_zoom, region_key }` so the UI knows when to fetch it. `world` unchanged shape; `shards` becomes a keyed map of the richer entry. Client parser accepts v2; falls back cleanly.
-- **`archiveForTier` → `archiveForPlace`:** tier 0/1 → world; tier ≥2 → the shard named by the place's **region ancestor** (`canonical_key` second segment, e.g. `france.bourgogne.*` → `burgundy`). Bordeaux's appellations move from `france` to a `bordeaux` shard in 3E.
+- **`archiveForTier` → `archiveForPlace`:** tier 0/1 → world; tier ≥2 → the shard named by the place's **region ancestor** (`canonical_key` second segment, e.g. `france.bourgogne.*` → `bourgogne`). Bordeaux's appellations move from `france` to a `bordeaux` shard in 3E.
 - **Build targets** become per-shard with per-region min/max zoom; tippecanoe runs once per archive.
 - **UI** (`tile-wine-map.tsx`) becomes shard-generic: iterate `manifest.shards`, add/remove MapLibre sources by viewport/selection rather than the hardcoded single `wine-france` source.
 

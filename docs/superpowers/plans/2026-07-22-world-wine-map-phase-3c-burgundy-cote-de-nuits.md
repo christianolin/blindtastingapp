@@ -25,7 +25,7 @@ A place's **shard** is the 2nd segment of its `canonical_key`:
 - `data/wine-map/burgundy-grand-crus.json` — curated grand-cru denomination list, self-validated against the vocabulary (Task 1).
 - `scripts/wine-map-tiles/lib.mjs` — `archiveForPlace`/`shardKeyFor`, dynamic BUILD_TARGETS, manifest v2, drop hardcoded `EXPECTED_PLACES` drift check (Task 2).
 - `scripts/wine-map-tiles/export.mjs` — per-shard GeoJSON + shard bbox/zoom in release.json (Task 2).
-- `scripts/wine-map-tiles/build.mjs`, `validate.mjs`, `promote.mjs` — iterate shards (Task 2).
+- `scripts/wine-map-tiles/build.mjs`, `validate.mjs`, `publish.mjs`, `promote.mjs` — iterate shards; `publish.mjs` persists per-shard bbox/zoom into the release row (Task 2).
 - `scripts/wine-map-tiles/lib.test.mjs` — shard-routing + manifest-v2 unit tests (Task 2).
 - `.github/workflows/wine-map-tiles.yml` — build all shards (Task 2).
 - `src/lib/wine-map/manifest.ts` — manifest v2 type + parser (Task 3).
@@ -89,9 +89,9 @@ commit;
     { "denom": "Clos de Tart", "district": "cote-de-nuits", "village": "morey-saint-denis" },
     { "denom": "Bonnes-Mares", "district": "cote-de-nuits", "village": "chambolle-musigny" },
     { "denom": "Musigny", "district": "cote-de-nuits", "village": "chambolle-musigny" },
-    { "denom": "Clos de Vougeot", "district": "cote-de-nuits", "village": "vougeot" },
-    { "denom": "Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
-    { "denom": "Grands-Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Clos de Vougeot ou Clos Vougeot", "name": "Clos de Vougeot", "district": "cote-de-nuits", "village": "vougeot" },
+    { "denom": "Echezeaux", "name": "Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Grands-Echezeaux", "name": "Grands-Échezeaux", "district": "cote-de-nuits", "village": "vosne-romanee" },
     { "denom": "Richebourg", "district": "cote-de-nuits", "village": "vosne-romanee" },
     { "denom": "Romanée-Conti", "district": "cote-de-nuits", "village": "vosne-romanee" },
     { "denom": "La Romanée", "district": "cote-de-nuits", "village": "vosne-romanee" },
@@ -101,7 +101,7 @@ commit;
 }
 ```
 
-> The implementer MUST validate every `denom` against `data/wine-map/inao-denomination-membership.json` (each key present) before committing; the exact INAO strings (accents, `Clos de Tart`, `Échezeaux`) are load-bearing. `Clos de Tart` and `Clos des Lambrays` are monopole grands crus — confirm their denom form in the vocabulary (may appear as themselves). Any denom not found is corrected or dropped with a note, not force-added.
+> **`denom` = the exact vocabulary key; `name` = display label — they differ.** INAO stores some names *without* accents (`Echezeaux`, `Grands-Echezeaux`) and some as compound "ou" forms (`Clos de Vougeot ou Clos Vougeot`), even though the display `name` keeps the accent/short form. The generator MUST assert every `denom` is a key in `data/wine-map/inao-denomination-membership.json` before committing and fail loudly otherwise. `Clos de Tart`/`Clos des Lambrays` are monopoles — confirm their exact denom form too. Any denom not found is corrected against the vocabulary (never force-added); the human-facing `name` is set separately.
 
 ### Step 3 — Foundation-test probe (rollback-scoped)
 
@@ -117,9 +117,10 @@ await withRollback(async (tx) => {
 });
 await withRollback(async (tx) => {
   await tx.query("savepoint p");
+  // france.bordeaux is already is_appellation=true, so only the level check can fire
   await assert.rejects(
     tx.query(`update wine_places set appellation_level = 'bogus_level'
-              where canonical_key = 'france.bordeaux.fronsac'`),
+              where canonical_key = 'france.bordeaux'`),
     /appellation_level_check/,
   );
   await tx.query("rollback to savepoint p");
@@ -256,11 +257,12 @@ const release = {
 };
 ```
 
-### Step 3 — `build.mjs`, `validate.mjs`, `promote.mjs`
+### Step 3 — `build.mjs`, `validate.mjs`, `publish.mjs`, `promote.mjs`
 
 - **build.mjs:** read `release.json`; build `world` with `WORLD_TARGET` and each `shards` key with `SHARD_TARGET`; keep the determinism double-build (per archive). Fail if any `<name>-places.geojson` is missing.
-- **validate.mjs:** iterate `world` + every shard; decode probe tiles at the shard's `max_zoom`; assert each archive's feature-id set equals `expectedIdSets(release)` for that archive; assert every id resolves to a VERIFIED place; range-read each archive.
-- **promote.mjs:** upload `world.pmtiles` + every `<shard>.pmtiles` to the versioned path; build the **v2 manifest** — `world` entry + a `shards` map where each entry has `{ url, checksum_sha256, bytes, bbox, min_zoom, max_zoom }` (bbox/zoom copied from `release.json`); upload manifest; flip the `wine_map_releases` row (unchanged). Cache-busted read-back stays.
+- **validate.mjs:** replace the hardcoded `ARCHIVE_SPECS = { world, france }` with specs derived from `release.json` (each shard's own `max_zoom`); iterate `world` + every shard, decode probe tiles at that archive's `max_zoom`, assert its feature-id set equals `expectedIdSets(release)` for that archive. Generalise the per-feature guard from `idSets.world.has(id) || idSets.france.has(id)` to "id is in *any* expected archive set". Range-read each archive. NOTE: the `FRANCE_BBOX` header-bounds gate passes for `bourgogne` (Burgundy ⊂ France) but is a latent trap for the first non-France shard in 3E — leave a `TODO(3E)` to make it per-shard bbox.
+- **publish.mjs:** the CI script run between build and promote. Generalise the hardcoded `for (const name of ["world","france"])` to `["world", ...Object.keys(release.shards)]`. It MUST **persist each shard's `bbox`/`min_zoom`/`max_zoom` into the DB release row** (extend `tile_checksums[name]` to `{ path, bytes, checksum, bbox, min_zoom, max_zoom }`), because `promote.mjs` reads the DB row — not `release.json` — on the explicit-version/rollback path.
+- **promote.mjs:** read `tile_checksums` from the DB row; upload `world.pmtiles` + every `<shard>.pmtiles`; build the **v2 manifest** — `world` entry + a `shards` map where each entry is `{ url, checksum_sha256, bytes, bbox, min_zoom, max_zoom }` taken from the persisted `tile_checksums` (so rollback to an older version still emits correct shard metadata); upload manifest; flip the `wine_map_releases` row. Cache-busted read-back stays.
 
 ### Step 4 — `lib.test.mjs` (RED → GREEN)
 
@@ -362,7 +364,7 @@ join wine_place_boundaries cb on cb.wine_place_id = child.id
   and cb.is_current and cb.quality_status = 'VALIDATED'
 where parent.canonical_key = $1;
 ```
-Then simplify to the level tolerance, insert a DRAFT boundary with `boundary_method = 'DERIVED_FROM_DESCENDANTS'`, provenance snapshot pointing at the child revision set (no external raw artifact — record the child boundary ids in `generation_parameters`). Used for the district (union of villages) and each premier-cru group (union of climats).
+Then simplify to the level tolerance and insert a DRAFT boundary with `boundary_method = 'DERIVED_FROM_DESCENDANTS'`. It still uploads a real `normalized.geojson` (the `normalized_artifact_uri`/`normalized_checksum_sha256` columns are NOT NULL), sets `raw_snapshot_uri = null` with a `provenance_note`, and records child boundary ids in `generation_parameters`. The query needs VERIFIED+current+VALIDATED children, so derived nodes build AFTER the child flip (Task 5 two-phase), not during DRAFT staging.
 
 ### Step 3 — Per-level generalisation defaults (documented + wired as `--preset`)
 
@@ -405,9 +407,9 @@ Fetch + build, in this order (children before parents so `derived` works):
 2. **Grand crus** (~23) — `--preset grandcru`, exact denom from `burgundy-grand-crus.json`. Shared crus (Bonnes-Mares spans Chambolle+Morey) are one place under the primary village with an `OVERLAPS` note.
 3. **Vosne climats** (13) — `--preset climat`, exact denom (`Vosne-Romanée premier cru Les Suchots`, …).
 4. **1er-cru groups** — dissolve the aggregate denom (`Vosne-Romanée premier cru`) `--preset premiergroup`; for villages where we only model the group (not each climat yet), dissolve their aggregate too.
-5. **District Côte de Nuits** — `--engine derived` (union of the 8 villages).
+5. **District Côte de Nuits** is NOT staged here — `--engine derived` needs its villages VERIFIED+current first, so it is built in Step 4 Phase B, after the child flip.
 
-Raw pages retained gzipped in `wine-map-sources`; each build stages a DRAFT boundary + provenance snapshot.
+Raw pages retained gzipped in `wine-map-sources`; each build stages a DRAFT boundary + provenance snapshot. Before staging the climats, take a rough z16 tile-count estimate over Burgundy's bbox; if it projects beyond the ~3 MB shard budget, cap climat detail at z15 now rather than waiting for the Task 6 gate.
 
 ### Step 2 — Catalog migration `20260805090000_cote_de_nuits.sql`
 
@@ -417,9 +419,14 @@ Insert all ~53 places (DRAFT) with the attributes above, classification facts, n
 
 Audit live `appellations`/`regions` for Côte de Nuits names; link **by exact name only** (villages + grand crus most likely present; climats likely absent → PENDING, reported). Update foundation reference-link test counts.
 
-### Step 4 — Review gate (owner) + flip
+### Step 4 — Review gate (owner) + two-phase flip
 
-Generate preview SVGs + numeric sanity (component counts, vertices, bbox within Burgundy window 3.0–5.2 / 46.1–48.0) for all new boundaries. **Owner reviews** the shapes (esp. the tiny climats and grand crus). On approval, `20260805096000_cote_de_nuits_flip.sql` flips the ~53 DRAFT boundaries → VALIDATED+current and the places → VERIFIED. Update foundation + context expectations (place count, Bourgogne→Côte de Nuits child, Vosne-Romanée children = its grand crus + 1er-cru group, the group's children = 13 climats). Live suites green. Commit + push per sub-step with review.
+Generate preview SVGs + numeric sanity (component counts, vertices, bbox within Burgundy window 3.0–5.2 / 46.1–48.0) for all staged **child** boundaries (villages, grand crus, 1er-cru groups, Vosne climats). **Owner reviews** the shapes (esp. the tiny climats and grand crus).
+
+- **Phase A — flip children.** On approval, `20260805096000_cote_de_nuits_flip.sql` flips the staged child boundaries → VALIDATED+current and their places → VERIFIED.
+- **Phase B — build + flip the district.** Now the 8 villages are VERIFIED+current, so run `--engine derived` for `cote-de-nuits` (union of villages), quick-preview it, then `20260805097000_cote_de_nuits_district_flip.sql` flips the district boundary → VALIDATED+current and the district place → VERIFIED.
+
+Then update foundation + context expectations (place count, Bourgogne→Côte de Nuits child, Vosne-Romanée children = its grand crus + 1er-cru group, the group's children = 13 climats). Live suites green. Commit + push per sub-step with review.
 
 **Task 5 acceptance:** ~53 Côte de Nuits places VERIFIED with reviewed boundaries; Vosne-Romanée resolves to Échezeaux/Richebourg/… + a 1er-cru group of 13 climats; suites green live.
 
