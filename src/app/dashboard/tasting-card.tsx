@@ -79,7 +79,10 @@ export function TastingCard({
             ) : null}
             <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-1.5 p-0 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                {tasting.timing_mode === "LIVE" ? (
+                {/* The pulsing dot means "happening right now" — only while
+                    the tasting is actually in progress, never in History. */}
+                {tasting.timing_mode === "LIVE" &&
+                tasting.status === "IN_PROGRESS" ? (
                   <span className="relative flex size-2">
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
                     <span className="relative inline-flex size-2 rounded-full bg-destructive" />
@@ -105,9 +108,14 @@ export function TastingCard({
                   <LocalDateTime iso={tasting.scheduled_at} />
                 </span>
               ) : null}
-              <Badge variant="secondary" className="ml-auto">
-                {STATUS_LABEL[tasting.status] ?? tasting.status}
-              </Badge>
+              {/* Skip the status badge when the top-right tab badge already
+                  says the same thing (History passes "Finished"). */}
+              {(STATUS_LABEL[tasting.status] ?? tasting.status) !==
+              badgeLabel ? (
+                <Badge variant="secondary" className="ml-auto">
+                  {STATUS_LABEL[tasting.status] ?? tasting.status}
+                </Badge>
+              ) : null}
             </CardContent>
           </div>
         </div>

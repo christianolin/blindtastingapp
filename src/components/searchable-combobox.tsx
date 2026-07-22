@@ -186,6 +186,28 @@ export function SearchableCombobox({
                       ))}
                     </CommandGroup>
                   ))}
+                  {/* Creation used to hide whenever the search returned any
+                      near-miss results — the only way to add a new entry was
+                      a query with zero matches. Always offer it unless the
+                      exact name already exists. */}
+                  {hasQuery &&
+                  onCreate &&
+                  !results.some(
+                    (r) =>
+                      r.name.trim().toLowerCase() ===
+                      query.trim().toLowerCase(),
+                  ) ? (
+                    <CommandGroup>
+                      <CommandItem
+                        value="__create__"
+                        disabled={creating}
+                        onSelect={() => createOption()}
+                      >
+                        <Plus className="size-4" />
+                        Add &quot;{query.trim()}&quot;
+                      </CommandItem>
+                    </CommandGroup>
+                  ) : null}
                   {!hasQuery && emptyQueryHint ? (
                     <p className="px-3 pt-1 pb-2 text-center text-xs text-muted-foreground">
                       {emptyQueryHint}
