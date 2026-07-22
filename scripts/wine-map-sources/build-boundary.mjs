@@ -23,6 +23,10 @@ assert.ok(slug && targetKey, "--slug and --target-key are required");
 const closing = Number(arg("closing", "0.02"));
 const tolerance = Number(arg("tolerance", "0.005"));
 const minShare = Number(arg("min-share", "0.02"));
+// Post-MakeValid part filter: ST_MakeValid can split a self-touching hull into
+// a dominant part plus tiny slivers that the client-side cluster filter never
+// sees. Default 0 keeps every part (grand crus / climats want all of them).
+const minPartShare = Number(arg("min-part-share", "0"));
 // Pre-union simplification: below the closing buffer and final tolerance,
 // so the output shape is unchanged while union cost collapses.
 const presimplify = Number(arg("presimplify", "0.0005"));
@@ -55,6 +59,7 @@ const generation = clientGeojson
       concavity: 2,
       cluster_grid_size: 0.05,
       min_component_area_share: minShare,
+      min_part_area_share: minPartShare,
       coordinate_precision: 4,
     }
   : {
@@ -62,6 +67,7 @@ const generation = clientGeojson
       closing_buffer: closing,
       simplify_tolerance: tolerance,
       min_component_area_share: minShare,
+      min_part_area_share: minPartShare,
       presimplify_tolerance: presimplify,
       coordinate_precision: 4,
     };
@@ -208,15 +214,29 @@ try {
        from source
        returning id
      ),
-     geom as (
+     valid_geom as (
        -- ST_MakeValid can repair self-touching rings into a collection;
        -- CollectionExtract(…, 3) keeps the polygonal parts only, which is
        -- what the MultiPolygon column requires.
-       select extensions.ST_Multi(extensions.ST_CollectionExtract(
+       select extensions.ST_CollectionExtract(
          extensions.ST_MakeValid(
            extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($13), 4326)
          ), 3
-       )) g
+       ) g
+     ),
+     geom_parts as (
+       select (extensions.ST_Dump(extensions.ST_Multi(g))).geom part from valid_geom
+     ),
+     geom_measured as (
+       select part, extensions.ST_Area(part) area,
+              sum(extensions.ST_Area(part)) over () total
+       from geom_parts
+     ),
+     geom as (
+       -- Drop tiny MakeValid slivers below the part-area floor (0 keeps all).
+       select extensions.ST_Multi(extensions.ST_Collect(part)) g
+       from geom_measured
+       where total = 0 or area / total >= $17
      )
      insert into wine_place_boundaries (
        wine_place_id, source_snapshot_id, boundary_method, quality_status,
@@ -253,6 +273,7 @@ try {
       JSON.stringify(fetchManifest.members),
       parcels.features.length,
       JSON.stringify(generation),
+      minPartShare,
     ],
   );
   assert.equal(result.rows.length, 1, "expected one staged boundary row");
