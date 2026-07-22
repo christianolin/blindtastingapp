@@ -82,19 +82,14 @@ export function districtColor(slug: string) {
   return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length];
 }
 
-function regionColorExpression(selectedKey: string | null) {
-  return [
-    "case",
-    ["==", ["get", "key"], selectedKey ?? ""],
-    SELECTED_COLOR,
-    regionMatch,
-  ] as unknown as string;
-}
+// Selection no longer recolours the shape — places keep their true palette
+// colour and selection reads as a gold outline ring drawn above everything
+// (plus a slight opacity lift in fillPaint).
+const regionColor = regionMatch as unknown as string;
 
 // Camera ("zoom") expressions must sit at the top level of a paint property,
 // so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(selectedKey: string | null, groupSlugs: string[]) {
-  const selected = ["==", ["get", "key"], selectedKey ?? ""];
+function fillColorExpression(groupSlugs: string[]) {
   // From z8 the palette is region-aware: classification regions colour by
   // cru level, district regions by area group (region hue for groups not
   // yet observed, or tiles predating the group property).
@@ -116,10 +111,16 @@ function fillColorExpression(selectedKey: string | null, groupSlugs: string[]) {
   return [
     "step",
     ["zoom"],
-    ["case", selected, SELECTED_COLOR, regionMatch],
+    regionMatch,
     8,
-    ["case", selected, SELECTED_COLOR, deepMatch],
+    deepMatch,
   ] as unknown as string;
+}
+
+// The selection ring: cream casing under a gold line, drawn only on the
+// selected feature and above the ordinary outlines.
+function selectedFilter(selectedKey: string | null) {
+  return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
 }
 
 export function TileWineMap({
@@ -220,7 +221,7 @@ export function TileWineMap({
   // label remain").
   const fillPaint = useMemo(
     () => ({
-      "fill-color": fillColorExpression(selectedKey, paintGroups),
+      "fill-color": fillColorExpression(paintGroups),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -372,7 +373,7 @@ export function TileWineMap({
             source-layer="places"
             filter={worldFilter}
             paint={{
-              "fill-color": regionColorExpression(selectedKey),
+              "fill-color": regionColor,
               "fill-opacity": [
                 "interpolate",
                 ["linear"],
@@ -392,9 +393,23 @@ export function TileWineMap({
             source-layer="places"
             filter={worldFilter}
             paint={{
-              "line-color": regionColorExpression(selectedKey),
+              "line-color": regionColor,
               "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
             }}
+          />
+          <Layer
+            id="world-selected-casing"
+            type="line"
+            source-layer="places"
+            filter={selectedFilter(selectedKey)}
+            paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
+          />
+          <Layer
+            id="world-selected-ring"
+            type="line"
+            source-layer="places"
+            filter={selectedFilter(selectedKey)}
+            paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
           />
           <Layer
             id="world-labels"
@@ -424,9 +439,23 @@ export function TileWineMap({
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
-                "line-color": fillColorExpression(selectedKey, paintGroups),
+                "line-color": fillColorExpression(paintGroups),
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
+            />
+            <Layer
+              id="shard-selected-casing"
+              type="line"
+              source-layer="places"
+              filter={selectedFilter(selectedKey)}
+              paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
+            />
+            <Layer
+              id="shard-selected-ring"
+              type="line"
+              source-layer="places"
+              filter={selectedFilter(selectedKey)}
+              paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
             />
             <Layer
               id="shard-labels"
@@ -464,10 +493,10 @@ export function TileWineMap({
           ))}
           <li className="flex items-center gap-1.5">
             <span
-              className="inline-block size-2.5 rounded-sm"
-              style={{ backgroundColor: "#B78E42" }}
+              className="inline-block size-2.5 rounded-sm border-2 bg-transparent"
+              style={{ borderColor: "#B78E42" }}
             />
-            Selected
+            Selected (gold ring)
           </li>
         </ul>
         {viewInfo.groups.length > 0 ? (
