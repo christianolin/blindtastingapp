@@ -1,8 +1,9 @@
 // Client-side region generalizer: cluster parcels by 8-neighbor grid
 // adjacency, one adaptive concave envelope per cluster (concaveman — the
-// engine class behind the Phase 1 Bordeaux footprints). Exists because
-// server-side GEOS closing exceeds the free-tier instance above ~10k
-// parcels.
+// engine class behind the Phase 1 Bordeaux footprints), then Douglas-Peucker
+// simplify each hull so a region footprint is a few hundred vertices rather
+// than raw parcel detail. Exists because server-side GEOS closing exceeds
+// the free-tier instance above ~10k parcels.
 import concaveman from "concaveman";
 
 const r4 = (n) => Math.round(n * 1e4) / 1e4;
@@ -15,9 +16,54 @@ function ringArea(ring) {
   return Math.abs(area / 2);
 }
 
+function perpDistance(p, a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+  const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2;
+  return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+}
+
+// Iterative Ramer-Douglas-Peucker on a closed ring (first === last); the
+// stack form avoids deep recursion on dense hulls.
+function simplifyRing(ring, epsilon) {
+  const open = ring.slice(0, -1);
+  if (open.length < 4) return ring;
+  const keep = new Array(open.length).fill(false);
+  keep[0] = true;
+  keep[open.length - 1] = true;
+  const stack = [[0, open.length - 1]];
+  while (stack.length > 0) {
+    const [lo, hi] = stack.pop();
+    let maxDist = 0;
+    let index = -1;
+    for (let i = lo + 1; i < hi; i += 1) {
+      const dist = perpDistance(open[i], open[lo], open[hi]);
+      if (dist > maxDist) {
+        maxDist = dist;
+        index = i;
+      }
+    }
+    if (maxDist > epsilon && index !== -1) {
+      keep[index] = true;
+      stack.push([lo, index], [index, hi]);
+    }
+  }
+  const simplified = open.filter((_, i) => keep[i]);
+  if (simplified.length < 3) return ring;
+  simplified.push([...simplified[0]]);
+  return simplified;
+}
+
 export function buildConcaveGeometry(
   collection,
-  { gridSize = 0.05, minComponentShare = 0.02, concavity = 2 } = {},
+  {
+    gridSize = 0.05,
+    minComponentShare = 0.02,
+    concavity = 2,
+    simplifyTolerance = 0.005,
+  } = {},
 ) {
   const cells = new Map();
   for (const feature of collection.features) {
@@ -62,11 +108,11 @@ export function buildConcaveGeometry(
   }
 
   const rings = [...clusters.values()].map((pts) => {
-    const ring = concaveman(pts, concavity).map(([x, y]) => [r4(x), r4(y)]);
-    const [fx, fy] = ring[0];
-    const [lx, ly] = ring[ring.length - 1];
-    if (fx !== lx || fy !== ly) ring.push([fx, fy]);
-    return ring;
+    const hull = concaveman(pts, concavity).map(([x, y]) => [r4(x), r4(y)]);
+    const [fx, fy] = hull[0];
+    const [lx, ly] = hull[hull.length - 1];
+    if (fx !== lx || fy !== ly) hull.push([fx, fy]);
+    return simplifyRing(hull, simplifyTolerance).map(([x, y]) => [r4(x), r4(y)]);
   });
   const total = rings.reduce((sum, ring) => sum + ringArea(ring), 0);
   const kept = rings.filter(
