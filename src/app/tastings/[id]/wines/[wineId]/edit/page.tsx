@@ -132,7 +132,9 @@ export default async function EditWinePage({
               primary_grape_id: answer.primary_grape_id,
               secondary_grape_id: answer.secondary_grape_id,
               producer_id: answer.producer_id,
-              producer_name: nameById.get(answer.producer_id) ?? null,
+              producer_name: answer.producer_id
+                ? (nameById.get(answer.producer_id) ?? null)
+                : null,
               type_designation_id: answer.type_designation_id,
               vintage_kind: answer.vintage_kind,
               vintage_year: answer.vintage_year,

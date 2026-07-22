@@ -304,9 +304,9 @@ export type Database = {
           appellation_id: string | null;
           primary_grape_id: string;
           secondary_grape_id: string | null;
-          producer_id: string;
+          producer_id: string | null;
           type_designation_id: string | null;
-          vintage_kind: VintageKind;
+          vintage_kind: VintageKind | null;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
           image_url: string | null;
@@ -318,9 +318,9 @@ export type Database = {
           appellation_id?: string | null;
           primary_grape_id: string;
           secondary_grape_id?: string | null;
-          producer_id: string;
+          producer_id?: string | null;
           type_designation_id?: string | null;
-          vintage_kind: VintageKind;
+          vintage_kind?: VintageKind | null;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
           image_url?: string | null;

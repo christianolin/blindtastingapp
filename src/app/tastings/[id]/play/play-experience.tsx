@@ -97,7 +97,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     appellation_id: string | null;
     primary_grape_id: string;
     secondary_grape_id: string | null;
-    producer_id: string;
+    producer_id: string | null;
     type_designation_id: string | null;
     vintage_kind: string | null;
     vintage_year: number | null;
@@ -108,7 +108,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
       `${answer.appellation_id ? ` · ${nameById.get(answer.appellation_id)}` : ""}` +
       ` — ${nameById.get(answer.primary_grape_id)}` +
       `${answer.secondary_grape_id ? ` / ${nameById.get(answer.secondary_grape_id)}` : ""}` +
-      ` — ${nameById.get(answer.producer_id)}` +
+      ` — ${answer.producer_id ? (nameById.get(answer.producer_id) ?? "—") : "Producer unknown"}` +
       `${answer.type_designation_id ? ` (${nameById.get(answer.type_designation_id)})` : ""}` +
       ` — ${vintageLabel(answer)}`
     );

@@ -160,17 +160,29 @@ export async function addWine(
   const vintageTawnyYearsRaw = String(
     formData.get("vintage_tawny_years") ?? "",
   );
+  // "Unknown" checkboxes: the host can record a wine without knowing its
+  // producer or vintage — the answer stores null and scoring gives the
+  // category null points (excluded), same as a wine with no appellation.
+  const producerUnknown = formData.get("producer_unknown") === "on";
+  const vintageUnknown = formData.get("vintage_unknown") === "on";
 
-  if (!countryId || !regionId || !primaryGrapeId || !producerId) {
+  if (
+    !countryId ||
+    !regionId ||
+    !primaryGrapeId ||
+    (!producerId && !producerUnknown)
+  ) {
     return { error: "Please fill in all required fields." };
   }
-  if (!["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
+  if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
     return { error: "Choose a vintage type." };
   }
 
   let vintageYear: number | null = null;
   let vintageTawnyYears: number | null = null;
-  if (vintageKind === "YEAR") {
+  if (vintageUnknown) {
+    // kind/year/tawny all stored as null — nothing to validate
+  } else if (vintageKind === "YEAR") {
     vintageYear = parseInt(vintageYearRaw, 10);
     if (!Number.isFinite(vintageYear)) {
       return { error: "Enter a vintage year." };
@@ -235,10 +247,10 @@ export async function addWine(
     appellation_id: appellationId,
     primary_grape_id: primaryGrapeId,
     secondary_grape_id: secondaryGrapeId,
-    producer_id: producerId,
+    producer_id: producerUnknown ? null : producerId,
     type_designation_id: typeDesignationId,
     image_url: imageUrl,
-    vintage_kind: vintageKind,
+    vintage_kind: vintageUnknown ? null : vintageKind,
     vintage_year: vintageYear,
     vintage_tawny_years: vintageTawnyYears,
   });
@@ -282,17 +294,29 @@ export async function updateWine(
   const vintageTawnyYearsRaw = String(
     formData.get("vintage_tawny_years") ?? "",
   );
+  // "Unknown" checkboxes: the host can record a wine without knowing its
+  // producer or vintage — the answer stores null and scoring gives the
+  // category null points (excluded), same as a wine with no appellation.
+  const producerUnknown = formData.get("producer_unknown") === "on";
+  const vintageUnknown = formData.get("vintage_unknown") === "on";
 
-  if (!countryId || !regionId || !primaryGrapeId || !producerId) {
+  if (
+    !countryId ||
+    !regionId ||
+    !primaryGrapeId ||
+    (!producerId && !producerUnknown)
+  ) {
     return { error: "Please fill in all required fields." };
   }
-  if (!["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
+  if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
     return { error: "Choose a vintage type." };
   }
 
   let vintageYear: number | null = null;
   let vintageTawnyYears: number | null = null;
-  if (vintageKind === "YEAR") {
+  if (vintageUnknown) {
+    // kind/year/tawny all stored as null — nothing to validate
+  } else if (vintageKind === "YEAR") {
     vintageYear = parseInt(vintageYearRaw, 10);
     if (!Number.isFinite(vintageYear)) {
       return { error: "Enter a vintage year." };
@@ -349,10 +373,10 @@ export async function updateWine(
       appellation_id: appellationId,
       primary_grape_id: primaryGrapeId,
       secondary_grape_id: secondaryGrapeId,
-      producer_id: producerId,
+      producer_id: producerUnknown ? null : producerId,
       type_designation_id: typeDesignationId,
       image_url: imageUrl,
-      vintage_kind: vintageKind,
+      vintage_kind: vintageUnknown ? null : vintageKind,
       vintage_year: vintageYear,
       vintage_tawny_years: vintageTawnyYears,
     })

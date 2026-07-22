@@ -43,10 +43,10 @@ export type WineFormInitial = {
   appellation_id: string | null;
   primary_grape_id: string;
   secondary_grape_id: string | null;
-  producer_id: string;
+  producer_id: string | null;
   producer_name: string | null;
   type_designation_id: string | null;
-  vintage_kind: "YEAR" | "NV" | "TAWNY";
+  vintage_kind: "YEAR" | "NV" | "TAWNY" | null;
   vintage_year: number | null;
   vintage_tawny_years: number | null;
   image_url: string | null;
@@ -116,6 +116,14 @@ export function WineForm({
   );
   const [vintageKind, setVintageKind] = useState(
     initial?.vintage_kind ?? "YEAR",
+  );
+  // "Unknown" toggles — editing a wine whose answer already stores null
+  // starts with the box ticked.
+  const [producerUnknown, setProducerUnknown] = useState(
+    Boolean(isEditing && initial && initial.producer_id === null),
+  );
+  const [vintageUnknown, setVintageUnknown] = useState(
+    Boolean(isEditing && initial && initial.vintage_kind === null),
   );
 
   // Appellations are too large to preload in full (LWIN import), but an
@@ -250,18 +258,31 @@ export function WineForm({
         <Label>Producer</Label>
         <SearchableCombobox
           formFieldName="producer_id"
-          value={producerId}
-          selectedLabel={producerLabel}
+          value={producerUnknown ? "" : producerId}
+          selectedLabel={producerUnknown ? null : producerLabel}
           onValueChange={(id, label) => {
             setProducerId(id);
             setProducerLabel(label || null);
           }}
           search={searchProducersGrouped}
-          placeholder="Search for the producer"
+          placeholder={
+            producerUnknown ? "Producer unknown" : "Search for the producer"
+          }
           createLabel="producer"
           onCreate={regionId ? (name) => createProducer(regionId, name) : undefined}
           emptyQueryHint={regionId ? "Type to search all producers" : undefined}
+          disabled={producerUnknown}
         />
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            name="producer_unknown"
+            checked={producerUnknown}
+            onChange={(e) => setProducerUnknown(e.target.checked)}
+            className="size-4 accent-primary"
+          />
+          Producer unknown
+        </label>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -296,6 +317,18 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="vintage_kind">Vintage</Label>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            name="vintage_unknown"
+            checked={vintageUnknown}
+            onChange={(e) => setVintageUnknown(e.target.checked)}
+            className="size-4 accent-primary"
+          />
+          Vintage unknown
+        </label>
+        {vintageUnknown ? null : (
+        <>
         <Select
           name="vintage_kind"
           items={VINTAGE_KIND_ITEMS}
@@ -348,6 +381,8 @@ export function WineForm({
             </SelectContent>
           </Select>
         ) : null}
+        </>
+        )}
       </div>
 
       {state?.error ? (

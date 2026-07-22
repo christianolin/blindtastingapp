@@ -157,10 +157,16 @@ export default async function TastingPage({
           ? String(a.vintage_year ?? "")
           : a.vintage_kind === "NV"
             ? "NV"
-            : `${a.vintage_tawny_years ?? ""}yr tawny`;
+            : a.vintage_kind === "TAWNY"
+              ? `${a.vintage_tawny_years ?? ""}yr tawny`
+              : "";
       hostWineIdentity.set(
         a.wine_id,
-        [nm.get(a.producer_id), nm.get(a.region_id), vintage]
+        [
+          a.producer_id ? nm.get(a.producer_id) : null,
+          nm.get(a.region_id),
+          vintage,
+        ]
           .filter(Boolean)
           .join(" · "),
       );
