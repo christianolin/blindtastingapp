@@ -783,13 +783,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Wave 3D-1 adds 40 Côte de Beaune dissolve boundaries plus 1 derived
   // district footprint (all validated + current); superseded rows retained.
   assert.deepEqual(result.rows[0], {
-    total: 162,
-    validated: 162,
+    total: 165,
+    validated: 165,
     current: 114,
-    valid: 162,
-    labelled: 162,
+    valid: 165,
+    labelled: 165,
     manual: 2,
-    generalized: 156,
+    generalized: 159,
     reproducible: 13,
   });
 
@@ -836,7 +836,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     sources: 118,
     snapshots: 145,
     identities: 118,
-    linked_boundaries: 162,
+    linked_boundaries: 165,
   });
 });
 
