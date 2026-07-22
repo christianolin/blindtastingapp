@@ -37,6 +37,7 @@ const EXPORT_SQL = `
     extensions.ST_AsGeoJSON(b.label_point, 6) as label_point,
     extensions.ST_X(b.label_point) as label_lon,
     extensions.ST_Y(b.label_point) as label_lat,
+    round(extensions.ST_Area(b.display_geometry)::numeric, 8) as area,
     (
       select json_agg(json_build_array(
         round(extensions.ST_X(extensions.ST_PointOnSurface(d.geom))::numeric, 6),

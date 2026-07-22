@@ -32,9 +32,11 @@ const places = [];
 const targets = [];
 let sort = 0;
 
+// Districts reveal at z7: a region-fit camera lands around z7, so z8 would
+// leave the district invisible after clicking its region (owner-reported).
 places.push({
   parent: DISTRICT.parent, kind: "SUBREGION", key: DISTRICT.key, name: DISTRICT.name,
-  slug: "cote-de-nuits", tier: 2, zoom: 8, isApp: false, system: null, level: null, sort: sort++,
+  slug: "cote-de-nuits", tier: 2, zoom: 7, isApp: false, system: null, level: null, sort: sort++,
 });
 
 for (const village of VILLAGES) {

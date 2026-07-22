@@ -152,15 +152,15 @@ export function TileWineMapExplorer({
   );
 
   // Drill-down camera: selecting a place zooms far enough that ALL its
-  // children's reveal zooms are reached (deepest child + headroom), so one
-  // click on Vosne-Romanée shows its crus and climats immediately.
+  // children's reveal zooms are reached (deepest child + headroom). Leaf
+  // places instead zoom to their own footprint — bbox fitting decides, with
+  // a generous cap — so tiny appellations (Pomerol) fill the view rather
+  // than showing the whole parent region.
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
     const childZooms = context.children.map((c) => c.min_zoom);
     const maxZoom = Math.min(
-      childZooms.length > 0
-        ? Math.max(...childZooms) + 0.5
-        : context.place.min_zoom + 1.5,
+      childZooms.length > 0 ? Math.max(...childZooms) + 0.5 : 14.5,
       15.5,
     );
     return { bbox: context.boundary.bbox, maxZoom };

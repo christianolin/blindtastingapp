@@ -28,6 +28,7 @@ const EXPORT_ROW = {
   label_min_zoom: 4,
   sort_order: 0,
   has_children: true,
+  area: "0.042",
   source_namespace: "IGN_INAO_AOC_VITICOLES_LEGACY",
   geometry: '{"type":"MultiPolygon","coordinates":[[[[0,0],[1,0],[1,1],[0,0]]]]}',
   label_point: '{"type":"Point","coordinates":[-0.58,44.84]}',
@@ -76,6 +77,7 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     attribution: "ign-inao",
     min_zoom: 4,
     label_min_zoom: 4,
+    area: 0.042,
   });
   assert.deepEqual(feature.tippecanoe, { minzoom: 4 });
   assert.equal(feature.geometry.type, "MultiPolygon");

@@ -179,25 +179,36 @@ export function TileWineMap({
           details?.removeAttribute("open");
         }}
         onClick={(e) => {
-          // Smallest-wins: deepest tier first, then the latest-revealing
-          // (most specific) feature — so a click inside La Tâche hits La
-          // Tâche, never the village polygon underneath it.
-          let best: { key: string; tier: number; minZoom: number } | null = null;
+          // Smallest-wins: deepest tier first, then the smallest footprint —
+          // so a click inside an enclave (Canon-Fronsac within Fronsac's
+          // envelope, La Tâche under the village) always hits the most
+          // specific shape. min_zoom breaks residual ties on old tiles
+          // without the area property.
+          let best: {
+            key: string;
+            tier: number;
+            area: number;
+            minZoom: number;
+          } | null = null;
           for (const feature of e.features ?? []) {
             const p = feature.properties as {
               key?: string;
               tier?: number;
+              area?: number;
               min_zoom?: number;
             };
             if (typeof p.key !== "string") continue;
             const tier = p.tier ?? 0;
+            const area = typeof p.area === "number" && p.area > 0 ? p.area : Infinity;
             const minZoom = p.min_zoom ?? 0;
             if (
               !best ||
               tier > best.tier ||
-              (tier === best.tier && minZoom > best.minZoom)
+              (tier === best.tier &&
+                (area < best.area ||
+                  (area === best.area && minZoom > best.minZoom)))
             ) {
-              best = { key: p.key, tier, minZoom };
+              best = { key: p.key, tier, area, minZoom };
             }
           }
           if (best) onSelect(best.key);

@@ -97,6 +97,9 @@ function tileProperties(row) {
     attribution: attributionKeyFor(row.source_namespace),
     min_zoom: Number(row.min_zoom),
     label_min_zoom: Number(row.label_min_zoom),
+    // Planar deg² of the footprint: click resolution picks the smallest
+    // overlapping shape so enclaves (Canon-Fronsac in Fronsac) stay clickable.
+    area: Number(row.area ?? 0),
   };
 }
 
