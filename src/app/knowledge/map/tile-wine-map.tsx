@@ -6,6 +6,7 @@ import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
+import { shardKeyFor } from "@/lib/wine-map/shard";
 
 // Free, un-keyed Carto vector basemap — same as the legacy map.
 const BASEMAP_STYLE =
@@ -38,7 +39,17 @@ export function TileWineMap({
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
-  const franceShard = manifest.shards.france ?? null;
+  // On-demand shard loading: only the selected place's region shard is
+  // mounted (plus the always-on world archive), so entering a region fetches
+  // just that shard. Viewport-driven loading via each shard's bbox is a
+  // documented follow-up.
+  const activeShardKey = selectedKey ? shardKeyFor(selectedKey) : null;
+  // Transitional: the live v1 manifest exposes a single "france" shard; fall
+  // back to it until the first v2 promote publishes per-region shards.
+  const activeShard =
+    (activeShardKey ? manifest.shards[activeShardKey] : undefined) ??
+    manifest.shards.france ??
+    null;
 
   useEffect(() => {
     if (!cameraTarget) return;
@@ -98,7 +109,7 @@ export function TileWineMap({
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
         initialViewState={{ longitude: -0.58, latitude: 44.84, zoom: 6 }}
-        interactiveLayerIds={["france-fills", "world-fills"]}
+        interactiveLayerIds={["shard-fills", "world-fills"]}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
           // it so only the "i" toggle shows until the user opens it.
@@ -129,9 +140,9 @@ export function TileWineMap({
         style={{ width: "100%", height: "100%" }}
       >
         <Source id="wine-world" type="vector" url={`pmtiles://${manifest.world.url}`}>
-          {/* The pilot always loads the france shard, so the world archive
-              contributes only the country outline; Bordeaux renders from the
-              shard to avoid double-drawing (it exists in both archives). */}
+          {/* The world archive contributes only the country outline; each
+              region renders from its own on-demand shard to avoid double-
+              drawing (regions exist in both archives). */}
           <Layer
             id="world-fills"
             type="fill"
@@ -170,16 +181,16 @@ export function TileWineMap({
             }}
           />
         </Source>
-        {franceShard ? (
-          <Source id="wine-france" type="vector" url={`pmtiles://${franceShard.url}`}>
+        {activeShard ? (
+          <Source id="wine-shard" type="vector" url={`pmtiles://${activeShard.url}`}>
             <Layer
-              id="france-fills"
+              id="shard-fills"
               type="fill"
               source-layer="places"
               paint={fillPaint}
             />
             <Layer
-              id="france-outlines"
+              id="shard-outlines"
               type="line"
               source-layer="places"
               paint={{
@@ -193,7 +204,7 @@ export function TileWineMap({
               }}
             />
             <Layer
-              id="france-labels"
+              id="shard-labels"
               type="symbol"
               source-layer="labels"
               layout={{

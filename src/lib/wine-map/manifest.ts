@@ -1,6 +1,7 @@
-// Contract for tiles/manifest.json (schema_version 1), published by
+// Contract for tiles/manifest.json (schema_version 2), published by
 // scripts/wine-map-tiles/promote.mjs. The manifest is the only mutable
 // storage object; the archive URLs inside it are immutable and versioned.
+// v2 adds per-shard bbox + zoom so the UI can load region shards on demand.
 export const WINE_MAP_MANIFEST_URL =
   "https://eqzwmkpeysqiihuojmuj.supabase.co/storage/v1/object/public/wine-map-tiles/tiles/manifest.json";
 
@@ -10,12 +11,20 @@ export type WineMapArchive = {
   bytes: number;
 };
 
+// bbox/zoom are optional so the transitional v1 manifest (a single "france"
+// shard with no bbox) still parses until the first v2 promote (Phase 3C).
+export type WineMapShard = WineMapArchive & {
+  bbox?: [number, number, number, number];
+  min_zoom?: number;
+  max_zoom?: number;
+};
+
 export type WineMapManifest = {
-  schema_version: 1;
+  schema_version: 1 | 2;
   release_version: string;
   generated_at: string;
   world: WineMapArchive;
-  shards: Record<string, WineMapArchive>;
+  shards: Record<string, WineMapShard>;
   attribution: Record<string, string>;
 };
 
@@ -35,7 +44,7 @@ function isArchive(value: unknown): value is WineMapArchive {
 export function parseManifest(value: unknown): WineMapManifest {
   if (
     !isRecord(value) ||
-    value.schema_version !== 1 ||
+    (value.schema_version !== 1 && value.schema_version !== 2) ||
     typeof value.release_version !== "string" ||
     typeof value.generated_at !== "string" ||
     !isArchive(value.world) ||
