@@ -953,8 +953,10 @@ test("classification facts and legal relationship types", async () => {
        from wine_places`,
   );
   assert.deepEqual(facts.rows[0], {
-    appellations: 71,
-    aoc: 71,
+      // 71 through wave 5b + 40 Côte de Beaune (17 villages, 8 grands crus,
+      // 15 premier-cru groups).
+      appellations: 111,
+      aoc: 111,
     missing_level: 0,
     france_plain: 1,
   });

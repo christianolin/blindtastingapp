@@ -142,9 +142,11 @@ test("authenticated role sees verified content through RLS", async () => {
 
 test("burgundy depth chain resolves to the climat level", async () => {
   const bourgogne = await contextFor("france.bourgogne");
+  // Owner-role connection sees DRAFT places too: Côte de Beaune joins the
+  // list at its 3D-1 catalog apply, ahead of its boundary flip.
   assert.deepEqual(
     bourgogne.children.map((c) => c.key),
-    ["france.bourgogne.cote-de-nuits"],
+    ["france.bourgogne.cote-de-nuits", "france.bourgogne.cote-de-beaune"],
   );
 
   const district = await contextFor("france.bourgogne.cote-de-nuits");

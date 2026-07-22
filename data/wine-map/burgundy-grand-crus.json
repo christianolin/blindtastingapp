@@ -23,6 +23,14 @@
     { "denom": "Romanée-Conti", "name": "Romanée-Conti", "district": "cote-de-nuits", "village": "vosne-romanee" },
     { "denom": "La Romanée", "name": "La Romanée", "district": "cote-de-nuits", "village": "vosne-romanee" },
     { "denom": "La Tâche", "name": "La Tâche", "district": "cote-de-nuits", "village": "vosne-romanee" },
-    { "denom": "Romanée-Saint-Vivant", "name": "Romanée-Saint-Vivant", "district": "cote-de-nuits", "village": "vosne-romanee" }
+    { "denom": "Romanée-Saint-Vivant", "name": "Romanée-Saint-Vivant", "district": "cote-de-nuits", "village": "vosne-romanee" },
+    { "denom": "Corton", "name": "Corton", "district": "cote-de-beaune", "village": "aloxe-corton" },
+    { "denom": "Corton-Charlemagne", "name": "Corton-Charlemagne", "district": "cote-de-beaune", "village": "aloxe-corton" },
+    { "denom": "Charlemagne", "name": "Charlemagne", "district": "cote-de-beaune", "village": "aloxe-corton" },
+    { "denom": "Montrachet", "name": "Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
+    { "denom": "Chevalier-Montrachet", "name": "Chevalier-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
+    { "denom": "Bienvenues-Bâtard-Montrachet", "name": "Bienvenues-Bâtard-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
+    { "denom": "Bâtard-Montrachet", "name": "Bâtard-Montrachet", "district": "cote-de-beaune", "village": "puligny-montrachet" },
+    { "denom": "Criots-Bâtard-Montrachet", "name": "Criots-Bâtard-Montrachet", "district": "cote-de-beaune", "village": "chassagne-montrachet" }
   ]
 }
