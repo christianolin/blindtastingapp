@@ -75,6 +75,19 @@ for (const row of rows) {
   assert.equal(JSON.parse(row.label_point).type, "Point", `${row.canonical_key}: unexpected label type`);
 }
 
+// Third key segment = the region's top areas (medoc, graves, pomerol…),
+// carried on every deeper feature for district colouring + the dynamic
+// legend. group_name resolves from the ancestor row itself — every ancestor
+// of a verified place is verified, so it's always present in this export.
+const nameByKey = new Map(rows.map((r) => [r.canonical_key, r.name]));
+for (const row of rows) {
+  const segments = row.canonical_key.split(".");
+  row.group = segments.length >= 3 ? segments[2] : null;
+  row.group_name = row.group
+    ? (nameByKey.get(segments.slice(0, 3).join(".")) ?? null)
+    : null;
+}
+
 function extendBbox(bbox, geojson) {
   for (const polygon of geojson.coordinates) {
     for (const ring of polygon) {

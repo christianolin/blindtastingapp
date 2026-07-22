@@ -103,6 +103,11 @@ function tileProperties(row) {
     // Legal classification drives the village-zoom palette (grand cru dark
     // red, premier cru lighter, communal sand); null for non-appellations.
     level: row.level ?? null,
+    // Third key segment — a region's top-level areas (medoc, graves,
+    // pomerol…). District-mode regions colour and legend by it; computed in
+    // export.mjs from the full row set (needs the ancestor's display name).
+    group: row.group ?? null,
+    group_name: row.group_name ?? null,
   };
 }
 

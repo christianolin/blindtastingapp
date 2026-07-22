@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Map, { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { Maximize2, Minimize2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
@@ -64,6 +64,24 @@ const levelMatch = [
   regionMatch,
 ];
 
+// Regions whose deep-zoom palette is the legal classification hierarchy
+// (grand cru / premier cru / village). Everywhere else the deep palette is
+// per-area district colours (Bordeaux: Medoc, Graves, Pomerol, ...) - each
+// region gets the scheme that matches how its wines are organised.
+export const CLASSIFICATION_REGIONS = new Set(["bourgogne"]);
+
+// Curated palette for district colouring; slug-hashed so a group keeps its
+// colour across sessions and republish cycles.
+const DISTRICT_PALETTE = [
+  "#8C2D3C", "#3E6B54", "#4A5D8C", "#9A6A2F", "#5C7A3B", "#7A4E8C",
+  "#2F7A78", "#A34D2B", "#5B4A8C", "#3B6E8C", "#8C6D3B", "#6B4430",
+];
+export function districtColor(slug: string) {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length];
+}
+
 function regionColorExpression(selectedKey: string | null) {
   return [
     "case",
@@ -75,14 +93,32 @@ function regionColorExpression(selectedKey: string | null) {
 
 // Camera ("zoom") expressions must sit at the top level of a paint property,
 // so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(selectedKey: string | null) {
+function fillColorExpression(selectedKey: string | null, groupSlugs: string[]) {
   const selected = ["==", ["get", "key"], selectedKey ?? ""];
+  // From z8 the palette is region-aware: classification regions colour by
+  // cru level, district regions by area group (region hue for groups not
+  // yet observed, or tiles predating the group property).
+  const groupMatch = groupSlugs.length
+    ? [
+        "match",
+        ["get", "group"],
+        ...groupSlugs.flatMap((slug) => [slug, districtColor(slug)]),
+        regionMatch,
+      ]
+    : regionMatch;
+  const deepMatch = [
+    "match",
+    ["get", "region"],
+    [...CLASSIFICATION_REGIONS],
+    levelMatch,
+    groupMatch,
+  ];
   return [
     "step",
     ["zoom"],
     ["case", selected, SELECTED_COLOR, regionMatch],
-    10,
-    ["case", selected, SELECTED_COLOR, levelMatch],
+    8,
+    ["case", selected, SELECTED_COLOR, deepMatch],
   ] as unknown as string;
 }
 
@@ -115,6 +151,57 @@ export function TileWineMap({
     manifest.shards.france ??
     null;
 
+  // What's actually on screen — drives the dynamic legend (sections only
+  // where they apply) and the district colours. Scanned on map idle; the
+  // group set only accumulates so colours stay stable while panning.
+  const [viewInfo, setViewInfo] = useState<{
+    regions: string[];
+    groups: { slug: string; name: string }[];
+    hasCru: boolean;
+  }>({ regions: [], groups: [], hasCru: false });
+  // globalThis: `Map` in this module is the react-map-gl component.
+  const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
+  const [paintGroups, setPaintGroups] = useState<string[]>([]);
+  const scanView = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const layers = ["shard-fills", "world-fills"].filter((l) => map.getLayer(l));
+    if (layers.length === 0) return;
+    const regions = new Set<string>();
+    const groups = new globalThis.Map<string, string>();
+    let hasCru = false;
+    for (const feature of map.queryRenderedFeatures({ layers })) {
+      const p = (feature.properties ?? {}) as Record<string, unknown>;
+      const region = typeof p.region === "string" ? p.region : null;
+      if (region) regions.add(region);
+      if (p.level === "grand_cru" || p.level === "premier_cru") hasCru = true;
+      if (
+        region &&
+        !CLASSIFICATION_REGIONS.has(region) &&
+        typeof p.group === "string" &&
+        p.group
+      ) {
+        groups.set(p.group, typeof p.group_name === "string" ? p.group_name : p.group);
+      }
+    }
+    for (const [slug, name] of groups) allGroupsRef.current.set(slug, name);
+    setPaintGroups((prev) =>
+      prev.length === allGroupsRef.current.size
+        ? prev
+        : [...allGroupsRef.current.keys()].sort(),
+    );
+    const next = {
+      regions: [...regions].sort(),
+      groups: [...groups.entries()]
+        .map(([slug, name]) => ({ slug, name }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      hasCru,
+    };
+    setViewInfo((prev) =>
+      JSON.stringify(prev) === JSON.stringify(next) ? prev : next,
+    );
+  }, []);
+
   useEffect(() => {
     if (!cameraTarget) return;
     const [minX, minY, maxX, maxY] = cameraTarget.bbox;
@@ -133,7 +220,7 @@ export function TileWineMap({
   // label remain").
   const fillPaint = useMemo(
     () => ({
-      "fill-color": fillColorExpression(selectedKey),
+      "fill-color": fillColorExpression(selectedKey, paintGroups),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -173,7 +260,7 @@ export function TileWineMap({
         ],
       ] as unknown as number,
     }),
-    [selectedKey],
+    [selectedKey, paintGroups],
   );
 
   const attribution = useMemo(
@@ -193,17 +280,18 @@ export function TileWineMap({
     [activeShardKey],
   );
 
-  const legendRegions = useMemo(
-    () =>
-      Object.keys(manifest.shards)
-        .sort()
-        .map((key) => ({
-          key,
-          label: key.charAt(0).toUpperCase() + key.slice(1),
-          color: REGION_COLORS[key] ?? FALLBACK_COLOR,
-        })),
-    [manifest],
-  );
+  // Legend regions follow the viewport once the first scan lands; the
+  // manifest's shard list covers the initial paint.
+  const legendRegions = useMemo(() => {
+    const keys = viewInfo.regions.length
+      ? viewInfo.regions
+      : Object.keys(manifest.shards).sort();
+    return keys.map((key) => ({
+      key,
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      color: REGION_COLORS[key] ?? FALLBACK_COLOR,
+    }));
+  }, [manifest, viewInfo.regions]);
 
   return (
     <div className="relative h-full overflow-hidden rounded-lg border">
@@ -264,6 +352,7 @@ export function TileWineMap({
           }
           if (best) onSelect(best.key);
         }}
+        onIdle={scanView}
         onMouseMove={(e) => {
           const map = mapRef.current;
           if (map) {
@@ -335,7 +424,7 @@ export function TileWineMap({
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
-                "line-color": fillColorExpression(selectedKey),
+                "line-color": fillColorExpression(selectedKey, paintGroups),
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
@@ -381,27 +470,47 @@ export function TileWineMap({
             Selected
           </li>
         </ul>
-        <p className="mb-1 mt-2 font-medium text-foreground">Village zoom</p>
-        <ul className="flex flex-col gap-0.5">
-          <li className="flex items-center gap-1.5">
-            <span
-              className="inline-block size-2.5 rounded-sm"
-              style={{ backgroundColor: LEVEL_COLORS.grand_cru }}
-            />
-            Grand Cru
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span
-              className="inline-block size-2.5 rounded-sm"
-              style={{ backgroundColor: LEVEL_COLORS.premier_cru }}
-            />
-            Premier Cru
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span className="inline-block size-2.5 rounded-sm border border-border bg-transparent" />
-            Village (region colour)
-          </li>
-        </ul>
+        {viewInfo.groups.length > 0 ? (
+          <>
+            <p className="mb-1 mt-2 font-medium text-foreground">Areas</p>
+            <ul className="flex flex-col gap-0.5">
+              {viewInfo.groups.slice(0, 9).map((group) => (
+                <li key={group.slug} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block size-2.5 rounded-sm"
+                    style={{ backgroundColor: districtColor(group.slug) }}
+                  />
+                  {group.name}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+        {viewInfo.hasCru ? (
+          <>
+            <p className="mb-1 mt-2 font-medium text-foreground">Classification</p>
+            <ul className="flex flex-col gap-0.5">
+              <li className="flex items-center gap-1.5">
+                <span
+                  className="inline-block size-2.5 rounded-sm"
+                  style={{ backgroundColor: LEVEL_COLORS.grand_cru }}
+                />
+                Grand Cru
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span
+                  className="inline-block size-2.5 rounded-sm"
+                  style={{ backgroundColor: LEVEL_COLORS.premier_cru }}
+                />
+                Premier Cru
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="inline-block size-2.5 rounded-sm border border-border bg-transparent" />
+                Village (region colour)
+              </li>
+            </ul>
+          </>
+        ) : null}
       </div>
     </div>
   );

@@ -80,9 +80,22 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     min_zoom: 4,
     label_min_zoom: 4,
     area: 0.042,
+    group: null,
+    group_name: null,
   });
   assert.deepEqual(feature.tippecanoe, { minzoom: 4 });
   assert.equal(feature.geometry.type, "MultiPolygon");
+});
+
+test("placeFeature carries the district group when export computed one", () => {
+  const feature = placeFeature({
+    ...EXPORT_ROW,
+    canonical_key: "france.bordeaux.medoc.haut-medoc.margaux",
+    group: "medoc",
+    group_name: "Médoc",
+  });
+  assert.equal(feature.properties.group, "medoc");
+  assert.equal(feature.properties.group_name, "Médoc");
 });
 
 test("labelFeatures fall back to the canonical label point", () => {
