@@ -669,6 +669,10 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Saint-Émilion AOP", "Saint-Émilion"], key: "france.bordeaux.saint-emilion" },
   { names: ["Saint-Julien AOP", "Saint-Julien"], key: "france.bordeaux.haut-medoc.saint-julien" },
   { names: ["Sauternes AOP", "Sauternes"], key: "france.bordeaux.sauternes" },
+  { names: ["Fronsac AOP", "Fronsac"], key: "france.bordeaux.fronsac" },
+  { names: ["Canon-Fronsac AOP", "Canon-Fronsac"], key: "france.bordeaux.canon-fronsac" },
+  { names: ["Côtes de Bourg AOP", "Côtes de Bourg"], key: "france.bordeaux.cotes-de-bourg" },
+  { names: ["Entre-Deux-Mers AOP", "Entre-deux-Mers"], key: "france.bordeaux.entre-deux-mers" },
 ];
 
 const SOURCE_MIGRATION_SHA256 =
@@ -812,9 +816,13 @@ test("only exact current Bordeaux references are verified", async () => {
   const region = await client.query(
     `select r.name, p.canonical_key
        from regions r join wine_places p on p.id = r.wine_place_id
-      where r.map_status = 'VERIFIED'`,
+      where r.map_status = 'VERIFIED'
+      order by p.canonical_key`,
   );
-  assert.deepEqual(region.rows, [{ name: "Bordeaux", canonical_key: "france.bordeaux" }]);
+  assert.deepEqual(region.rows, [
+    { name: "Bordeaux", canonical_key: "france.bordeaux" },
+    { name: "Bourgogne", canonical_key: "france.bourgogne" },
+  ]);
 
   const appellations = await client.query(
     `select a.name, p.canonical_key
@@ -825,7 +833,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 12);
+  assert.equal(appellations.rows.length, 16);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -838,8 +846,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 1],
-    ["appellations", 12],
+    ["regions", 2],
+    ["appellations", 16],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -850,7 +858,9 @@ test("only exact current Bordeaux references are verified", async () => {
                   and map_match_method = 'MIGRATED_EXACT'
                   and map_match_confidence = 1
                   and map_reviewed_at is not null
-                  and map_review_note = 'Phase 1 canonical migration'
+                  and map_review_note in (
+                    'Phase 1 canonical migration', 'Phase 3A canonical migration'
+                  )
               )::int reviewed,
               count(*) filter (
                 where map_status = 'PENDING' and wine_place_id is null

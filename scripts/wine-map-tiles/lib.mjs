@@ -6,8 +6,16 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
-export const EXPECTED_PLACES = 14;
-export const WORLD_KEYS = ["france", "france.bordeaux"];
+export const EXPECTED_PLACES = 20;
+// Tile split by display tier: the country (tier 0) seeds the world archive
+// only, tier-1 regions live in both the world archive and their country
+// shard, everything deeper (tier >= 2) is shard-only. Region coverage grows
+// without touching this rule.
+export function archiveForTier(tier) {
+  if (tier <= 0) return "world";
+  if (tier === 1) return "both";
+  return "france";
+}
 export const BUCKET = "wine-map-tiles";
 export const WORK_DIR = path.resolve(".tiles-build");
 export const SUPABASE_URL =
@@ -16,6 +24,12 @@ export const SUPABASE_URL =
 export const ATTRIBUTION = {
   BLINDR_MANUAL: { key: "blindr", text: "© Blindr" },
   IGN_INAO_AOC_VITICOLES_LEGACY: {
+    key: "ign-inao",
+    text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
+  },
+  // Phase 3A adapter namespace (no _LEGACY suffix); same public credit as the
+  // legacy import, so attributionDisplayMap collapses both to one entry.
+  IGN_INAO_AOC_VITICOLES: {
     key: "ign-inao",
     text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
   },

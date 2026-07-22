@@ -650,6 +650,25 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `wine_places` catalog is the single map source. New places appear on the
   map by verifying them in the catalog and publishing a release through the
   Wine Map Tiles workflow; no UI change is needed for new coverage.
+- World Wine Map Phase 3A adds the four-axis place model and the France region
+  import machinery. Classification facts live as flat columns on `wine_places`
+  (`is_appellation`, `appellation_system`, `appellation_level`), legal
+  relationships as typed `wine_place_relationships` edges (`REPLACES_WITHIN`
+  for Pessac-Léognan→Graves, `DUAL_LABEL` for Barsac↔Sauternes) — kept
+  separate from the navigation tree (`primary_parent_id`) and from the scoring
+  links (`regions`/`appellations.wine_place_id`). `canonical_key` is a stable
+  opaque id — never parse it for hierarchy. Boundaries come from the INAO
+  parcel adapter (`scripts/wine-map-sources/`): fetch WFS parcels per
+  denomination (`srsName=EPSG:4326` — the layer is natively Lambert-93 metres),
+  retain the raw pages gzipped in the private `wine-map-sources` bucket, and
+  dissolve to a generalized footprint — server-side PostGIS for small sets,
+  the client-side clustered concave engine (`--engine concave`) for
+  region-scale sets that exceed the free-tier DB. Every generated boundary is
+  staged `DRAFT`/non-current and only flipped `VALIDATED`+current after human
+  review. The tile split is by `display_tier` (tier 0 → world archive, tier 1
+  → both, tier ≥ 2 → country shard), so new regions are pure data batches
+  through the same pipeline. Reference links use exact-name matching (one
+  candidate → link, multiple → abort, none → stays `PENDING`).
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
   `producers.region_id` is **nullable** — the original LWIN import deduped

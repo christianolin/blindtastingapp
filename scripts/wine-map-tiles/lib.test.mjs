@@ -13,7 +13,7 @@ import {
   releaseVersion,
   sha256hex,
   storagePublicUrl,
-  WORLD_KEYS,
+  archiveForTier,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -125,8 +125,19 @@ test("featureCollection wraps features", () => {
   assert.deepEqual(featureCollection([]), { type: "FeatureCollection", features: [] });
 });
 
-test("WORLD_KEYS pins the world archive contents", () => {
-  assert.deepEqual(WORLD_KEYS, ["france", "france.bordeaux"]);
+test("archiveForTier splits world/both/shard by display tier", () => {
+  assert.equal(archiveForTier(0), "world");
+  assert.equal(archiveForTier(1), "both");
+  assert.equal(archiveForTier(2), "france");
+  assert.equal(archiveForTier(5), "france");
+});
+
+test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {
+  assert.equal(attributionKeyFor("IGN_INAO_AOC_VITICOLES"), "ign-inao");
+  assert.equal(
+    ATTRIBUTION.IGN_INAO_AOC_VITICOLES.text,
+    ATTRIBUTION.IGN_INAO_AOC_VITICOLES_LEGACY.text,
+  );
 });
 
 test("tippecanoeArgs pins zoom windows and layers per archive", async () => {

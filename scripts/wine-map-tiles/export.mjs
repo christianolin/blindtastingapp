@@ -1,6 +1,7 @@
-// Export stage: reads the 14 verified places + current validated boundaries
-// from Supabase and writes tippecanoe-ready GeoJSON plus release.json into
-// .tiles-build/. Fail-closed: aborts on any count or shape mismatch.
+// Export stage: reads every verified place + current validated boundary from
+// Supabase and writes tippecanoe-ready GeoJSON plus release.json into
+// .tiles-build/. Tile split is by display tier (tier 0 -> world archive,
+// tier 1 -> both, tier >= 2 -> country shard). Fail-closed on count/shape drift.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -8,7 +9,7 @@ import pg from "pg";
 import {
   EXPECTED_PLACES,
   WORK_DIR,
-  WORLD_KEYS,
+  archiveForTier,
   featureCollection,
   labelFeature,
   pgConfig,
@@ -65,10 +66,17 @@ for (const row of rows) {
   assert.equal(JSON.parse(row.label_point).type, "Point", `${row.canonical_key}: unexpected label type`);
 }
 
-const worldRows = rows.filter(({ canonical_key }) => WORLD_KEYS.includes(canonical_key));
-const franceRows = rows.filter(({ canonical_key }) => canonical_key !== "france");
-assert.equal(worldRows.length, 2, "world archive must contain France + Bordeaux");
-assert.equal(franceRows.length, 13, "france shard must contain Bordeaux + 12 appellations");
+const worldRows = rows.filter((row) => archiveForTier(row.display_tier) !== "france");
+const franceRows = rows.filter((row) => archiveForTier(row.display_tier) !== "world");
+assert.ok(
+  worldRows.some(({ canonical_key }) => canonical_key === "france"),
+  "world archive must contain France",
+);
+assert.ok(
+  !franceRows.some(({ canonical_key }) => canonical_key === "france"),
+  "France (the country) must not be in the shard",
+);
+assert.ok(worldRows.length >= 2 && franceRows.length >= 1, "empty archive");
 
 await mkdir(WORK_DIR, { recursive: true });
 const outputs = [
@@ -96,12 +104,7 @@ const release = {
     parent_id: row.primary_parent_id,
     label_lon: Number(row.label_lon),
     label_lat: Number(row.label_lat),
-    archive:
-      row.canonical_key === "france"
-        ? "world"
-        : row.canonical_key === "france.bordeaux"
-          ? "both"
-          : "france",
+    archive: archiveForTier(row.display_tier),
   })),
 };
 await writeFile(path.join(WORK_DIR, "release.json"), `${JSON.stringify(release, null, 2)}\n`);
