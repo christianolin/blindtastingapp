@@ -714,6 +714,33 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Bonnes-Mares AOP"], key: "france.bourgogne.cote-de-nuits.chambolle-musigny.bonnes-mares" },
   { names: ["Musigny AOP"], key: "france.bourgogne.cote-de-nuits.chambolle-musigny.musigny" },
   { names: ["Clos de Vougeot AOP"], key: "france.bourgogne.cote-de-nuits.vougeot.clos-de-vougeot" },
+  { names: ["Ladoix AOP"], key: "france.bourgogne.cote-de-beaune.ladoix" },
+  { names: ["Aloxe-Corton AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton" },
+  { names: ["Pernand-Vergelesses AOP"], key: "france.bourgogne.cote-de-beaune.pernand-vergelesses" },
+  { names: ["Savigny-les-Beaune AOP"], key: "france.bourgogne.cote-de-beaune.savigny-les-beaune" },
+  { names: ["Chorey-les-Beaune AOP"], key: "france.bourgogne.cote-de-beaune.chorey-les-beaune" },
+  { names: ["Beaune AOP"], key: "france.bourgogne.cote-de-beaune.beaune" },
+  { names: ["Pommard AOP"], key: "france.bourgogne.cote-de-beaune.pommard" },
+  { names: ["Volnay AOP"], key: "france.bourgogne.cote-de-beaune.volnay" },
+  { names: ["Monthelie AOP"], key: "france.bourgogne.cote-de-beaune.monthelie" },
+  { names: ["Auxey-Duresses AOP"], key: "france.bourgogne.cote-de-beaune.auxey-duresses" },
+  { names: ["Saint-Romain AOP"], key: "france.bourgogne.cote-de-beaune.saint-romain" },
+  { names: ["Meursault AOP"], key: "france.bourgogne.cote-de-beaune.meursault" },
+  { names: ["Puligny-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet" },
+  { names: ["Chassagne-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.chassagne-montrachet" },
+  { names: ["Saint-Aubin AOP"], key: "france.bourgogne.cote-de-beaune.saint-aubin" },
+  { names: ["Santenay AOP"], key: "france.bourgogne.cote-de-beaune.santenay" },
+  { names: ["Maranges AOP"], key: "france.bourgogne.cote-de-beaune.maranges" },
+  { names: ["Corton AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton.corton" },
+  { names: ["Le Corton AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton.corton" },
+  { names: ["Corton-Charlemagne AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton.corton-charlemagne" },
+  { names: ["Charlemagne AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton.charlemagne" },
+  { names: ["Le Charlemagne AOP"], key: "france.bourgogne.cote-de-beaune.aloxe-corton.charlemagne" },
+  { names: ["Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.montrachet" },
+  { names: ["Chevalier-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.chevalier-montrachet" },
+  { names: ["Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.batard-montrachet" },
+  { names: ["Bienvenues-Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.puligny-montrachet.bienvenues-batard-montrachet" },
+  { names: ["Criots-Bâtard-Montrachet AOP"], key: "france.bourgogne.cote-de-beaune.chassagne-montrachet.criots-batard-montrachet" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -753,14 +780,16 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // After the Phase 3C Task 5a flips: +23 Vosne-subtree dissolve boundaries
   // and +1 DERIVED_FROM_DESCENDANTS district (Côte de Nuits), all validated
   // + current; superseded non-current rows are retained as history.
+  // Wave 3D-1 adds 40 Côte de Beaune dissolve boundaries plus 1 derived
+  // district footprint (all validated + current); superseded rows retained.
   assert.deepEqual(result.rows[0], {
-    total: 121,
-    validated: 121,
-    current: 73,
-    valid: 121,
-    labelled: 121,
+    total: 162,
+    validated: 162,
+    current: 114,
+    valid: 162,
+    labelled: 162,
     manual: 2,
-    generalized: 116,
+    generalized: 156,
     reproducible: 13,
   });
 
@@ -804,10 +833,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Trim revisions REUSE their plot's snapshot (same evidence, corrected
   // generalization), so linked boundaries outnumber distinct snapshots.
   assert.deepEqual(provenance.rows[0], {
-    sources: 77,
-    snapshots: 104,
-    identities: 77,
-    linked_boundaries: 121,
+    sources: 118,
+    snapshots: 145,
+    identities: 118,
+    linked_boundaries: 162,
   });
 });
 
@@ -839,7 +868,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 57);
+  assert.equal(appellations.rows.length, 84);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -853,7 +882,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 2],
-    ["appellations", 57],
+    ["appellations", 84],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -866,7 +895,8 @@ test("only exact current Bordeaux references are verified", async () => {
                   and map_reviewed_at is not null
                   and map_review_note in (
                     'Phase 1 canonical migration', 'Phase 3A canonical migration',
-                    'Phase 3C cote-de-nuits migration'
+                    'Phase 3C cote-de-nuits migration',
+                    'Phase 3D cote-de-beaune migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (

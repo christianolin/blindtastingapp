@@ -180,6 +180,375 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-beaune",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:cote-de-beaune-district",
+    "normalized_checksum_sha256": "C6AB678A3BF378F07C7249F27DD897A74A7286CC0DCA154151E166B8BD275AE8",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:aloxe-corton-village",
+    "normalized_checksum_sha256": "4EFE2CE2A29C9B32BD999B7ED8C7A33030C861D36411E4CB884F551709B0DF4F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184357Z/aloxe-corton-village/fetch-manifest.json",
+    "raw_checksum_sha256": "02FE1486D4C3B835CBD849CD028A87FE52C123E5961674AA941E6DE5EF8BF5CB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.charlemagne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:aloxe-corton-gc-charlemagne",
+    "normalized_checksum_sha256": "EA203390F6E7C8F63A5B5725F87FD60EE67145EDA2850383AE7CF630A4ACD51A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184409Z/aloxe-corton-gc-charlemagne/fetch-manifest.json",
+    "raw_checksum_sha256": "34872066E8EE85C4549F2AB315D5B7B229FC07416E923AADA6CFFB5932E02867",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:aloxe-corton-gc-corton",
+    "normalized_checksum_sha256": "1B571430727282969FAC220765030A63773B0968FBED7C3A7072CD0B0F02EE5C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184401Z/aloxe-corton-gc-corton/fetch-manifest.json",
+    "raw_checksum_sha256": "F0F049177EA760D7AB5F99316930ED6E81FF6C26C72275FED36578667ECCD16A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton-charlemagne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:aloxe-corton-gc-corton-charlemagne",
+    "normalized_checksum_sha256": "BA33617141EB2B7AF9363254A943CE824DB274E3CCA59484F96AC1AC484E0AA1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184404Z/aloxe-corton-gc-corton-charlemagne/fetch-manifest.json",
+    "raw_checksum_sha256": "1513AD111596EB4A607E0AC8685C01BFC970554B7D3D166892AD7559973412F6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:aloxe-corton-1er",
+    "normalized_checksum_sha256": "8AABCBA857B4D832E2490332B383D1377B78585C163AA33399F7A37CC766D2D1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184413Z/aloxe-corton-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "850459FFD4A1E71DA950A3CEDD0A2AD7DFD7F1533E4DBA6F20EB303D00E44762",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.auxey-duresses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:auxey-duresses-village",
+    "normalized_checksum_sha256": "DBD668B6A465BD1405985271B3A025590140068DF774B65D905F3C8193191425",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184508Z/auxey-duresses-village/fetch-manifest.json",
+    "raw_checksum_sha256": "D33BC0592F72ADAA4E1F65B0D0BBAB0E41FE30DCE63E20704D83FB7C6451E712",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.auxey-duresses.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:auxey-duresses-1er",
+    "normalized_checksum_sha256": "AB5BD83644B3D32CD368BC104DE5F879BD3A9A7F76455405E461B3834F1A5A0D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184511Z/auxey-duresses-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "70C53E08AE50281A425BA6FED23B2E8F710F682C6AD4B99E91EAD20CED9DD89F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.beaune",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:beaune-village",
+    "normalized_checksum_sha256": "AFF6D783A4C0B398C84B41C4209DA9EA5E656E0D24E62A5C2807D9B2D4E8B38F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184436Z/beaune-village/fetch-manifest.json",
+    "raw_checksum_sha256": "F7BFE8AB85C9396616F0FA30B9181F693154F26F6D3993ADCBF7A138EEC32CAD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.beaune.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:beaune-1er",
+    "normalized_checksum_sha256": "439410569B48A3F67E093C39F0FA9F9CD59158FB18A623D8FF98F4CAF2E6F63C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184441Z/beaune-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "20467AC650986091062D3E9BB8F2392F2DE143FDFF0CE0A27CC6760F8CBC0467",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.chassagne-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chassagne-montrachet-village",
+    "normalized_checksum_sha256": "EF67E1FF92035894C640A622CC8196F6FA35F7F49C1BCB7B274D0DBC7E8CEDBC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184550Z/chassagne-montrachet-village/fetch-manifest.json",
+    "raw_checksum_sha256": "F545DA64F95BEFB51C20A20478DB8F4BF7E05D98B3C55C8ABA4FEB7BF2FB721C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.chassagne-montrachet.criots-batard-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chassagne-montrachet-gc-criots-batard-montrachet",
+    "normalized_checksum_sha256": "DE58FF54DFC9C279970006F8755F0699A5EF3453821D33BDCF9B36F13BADF9E6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184554Z/chassagne-montrachet-gc-criots-batard-montrachet/fetch-manifest.json",
+    "raw_checksum_sha256": "A28C53E661CB4709A029C96B7449998271E777FBD4B07F6B4F54C70B8496D4A4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.chassagne-montrachet.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chassagne-montrachet-1er",
+    "normalized_checksum_sha256": "3C0650EED8C43B73F72F71735E90AB6C5AA9919B93839B4D365F2A0869CA70D7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184558Z/chassagne-montrachet-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "D81B56CD20A47982DF2C6E5DBF180851793C55E08E8C09A494B4174CEEE6E81A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.chorey-les-beaune",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chorey-les-beaune-village",
+    "normalized_checksum_sha256": "95936B629F5AADD363470356B3E0DB3C97F14A5BACBCCBF861433A014A86D2CD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184432Z/chorey-les-beaune-village/fetch-manifest.json",
+    "raw_checksum_sha256": "6B53CCA5AD8F7882DB130780833B329E335BE648ADFF9085A2CA9BACD6170089",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.ladoix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:ladoix-village",
+    "normalized_checksum_sha256": "816FF9116335F39A26BD80992549B40D6FB5EC787AFE3CDF276DE003CEE3C4E6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184348Z/ladoix-village/fetch-manifest.json",
+    "raw_checksum_sha256": "960717E3143BB9BC8E81A79894D581326E9DDE47A152C876655D9588F6AE4126",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.ladoix.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:ladoix-1er",
+    "normalized_checksum_sha256": "13AD233F0854D0ACB5FA8A77AC6A44DF42DDCA9A23CE54324274832963D32BDF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184354Z/ladoix-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "4E73B606BA9103AE367ED74A2D7CDFBA166DEA3F0D3847F56B928911A205C213",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.maranges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:maranges-village",
+    "normalized_checksum_sha256": "AD820003DDE14FBBBFFAF3F936A1713CAF0F2AB1447AA074AE5CF7BE524C1A38",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184617Z/maranges-village/fetch-manifest.json",
+    "raw_checksum_sha256": "676670F6FC6EA4A2B90A158E52322F55EA9A15FE379706C543AFA3AC986D888D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.maranges.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:maranges-1er",
+    "normalized_checksum_sha256": "172FD301406DC868CE6C80EFD582CADC4CE0A1BCCFF1E980F0A1CE4AD2D5B1B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184621Z/maranges-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "865279216909B5B3AF8BC83C6A978257E57864D723425A67290F0584C572CD10",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.meursault",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:meursault-village",
+    "normalized_checksum_sha256": "17D46D52EDC2E6DE4A6849771E19FE4101788AFADFAC235C2E7F1ECCD4F1AF99",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184519Z/meursault-village/fetch-manifest.json",
+    "raw_checksum_sha256": "A3AE2D51839471BD846EBAD8BEA401A6CB641668D519ACCD9947A0192DFC0A51",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.meursault.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:meursault-1er",
+    "normalized_checksum_sha256": "368F93CE6AEE607DAEF1F2DD541E938578CED09A90792AEA64F2AC4581C32D4C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184523Z/meursault-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "9E51AF33C4B2A4F5564B57D2CBB0024A50C130B437403B4A1B61370FA57A3B08",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.monthelie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:monthelie-village",
+    "normalized_checksum_sha256": "40ED5B53C537124E1C06A88631C5C0A4203A009B96278596FC350CAD3E12E136",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184500Z/monthelie-village/fetch-manifest.json",
+    "raw_checksum_sha256": "A696FA8DD4AFDE76FC6D95C1251CCE9283A0F28A6791E073ED4B91D2B2772A27",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.monthelie.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:monthelie-1er",
+    "normalized_checksum_sha256": "B329474405BC405F70E9D810AE00922C3D87311AD0FC287D2921E70949DAB17B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184504Z/monthelie-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "848F9B0D4F2D4DCB237AFE8B1718B12D9D0B37D2EE061F11173BE251C3017F45",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.pernand-vergelesses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pernand-vergelesses-village",
+    "normalized_checksum_sha256": "F58450C90992A9A806BE9661E9C83FD5970FDAC2A79D6757AFB260095BB03470",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184418Z/pernand-vergelesses-village/fetch-manifest.json",
+    "raw_checksum_sha256": "3CFEDC6D5D434BF3B790C7912B76D60F3BB7C1CBF8FC21945DC445BD6474FBC7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.pernand-vergelesses.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pernand-vergelesses-1er",
+    "normalized_checksum_sha256": "50BD66DDFE0F6D5BF4823E0D3C755FA1AED39805098373EF96D6F3BD66019B78",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184421Z/pernand-vergelesses-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "DD4C8D5C23772552261351AA0122B19FCC46720A2BA6B552FB74BFB1378AFEF3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.pommard",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pommard-village",
+    "normalized_checksum_sha256": "E63DAF71FC181DD701D8FC13B88D1240BACEF63B8564334A00A02D0EBE6F3F2E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184445Z/pommard-village/fetch-manifest.json",
+    "raw_checksum_sha256": "F485BD22732B6555A7A3EA8053253CFBD5C533DE1AA9A2D02A14194160894454",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.pommard.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pommard-1er",
+    "normalized_checksum_sha256": "706D5DCB09D4611E906D6F7A2DE498261C04B03FE437B57349C886C39195DACA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184449Z/pommard-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "11C765236B09163C50B30AD0F3A629F507D38FD262A6C356965D458AF44DAB41",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-village",
+    "normalized_checksum_sha256": "560DA5943C7E70BB6B075CEDD720FFA2356EDA8F1F445C54B627467F8617CEA0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184526Z/puligny-montrachet-village/fetch-manifest.json",
+    "raw_checksum_sha256": "9219080EED601C6C56467661F5785DCF4E62768BA461424178049D231CED20E0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.batard-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-gc-batard-montrachet",
+    "normalized_checksum_sha256": "452F341F9BA25A785A67024C69B1C4069C4C4716E7828A2D68152E0EDBF934F6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184542Z/puligny-montrachet-gc-batard-montrachet/fetch-manifest.json",
+    "raw_checksum_sha256": "07F96777AA72DA037CC2459E399061CE9272F5A83D399363FFFF01C5E36BB7D9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.bienvenues-batard-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-gc-bienvenues-batard-montrachet",
+    "normalized_checksum_sha256": "52B4E7A348E7EF807BC1D71FB67CA77893D3D972B6D61D83EDD49913A26F2897",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184538Z/puligny-montrachet-gc-bienvenues-batard-montrachet/fetch-manifest.json",
+    "raw_checksum_sha256": "67A92C9965202D04D596B2ADE41F6AE525AC4735670204A22A6E5AF6F9DB6EA2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.chevalier-montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-gc-chevalier-montrachet",
+    "normalized_checksum_sha256": "E3636587758C374AF08BF8D4053F3766D47A8C19B99782C12D7BAAD3E8125BCD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184534Z/puligny-montrachet-gc-chevalier-montrachet/fetch-manifest.json",
+    "raw_checksum_sha256": "C3E89277A7B4824269E3C1C4BEEBA5A77119CC70AC27735EBE41303FF9DA883E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.montrachet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-gc-montrachet",
+    "normalized_checksum_sha256": "68C94A0973DD101772D4FC9CEDCBDBB852A550AA94CA31A8BF62E31B48A0C3C2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184530Z/puligny-montrachet-gc-montrachet/fetch-manifest.json",
+    "raw_checksum_sha256": "7F47BE092E98F1C25778B8745E9BE356199B9C718A8B3E2F713F3C5EB782433A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puligny-montrachet-1er",
+    "normalized_checksum_sha256": "0E1E7520BBE63A4D74E94188EE85465536A5B856835C765FED128BA30DF5CC05",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184546Z/puligny-montrachet-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "513B1F60F86512670536006AE21908B933246F3761404330F95737B6492ACD29",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.saint-aubin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-aubin-village",
+    "normalized_checksum_sha256": "EF9223515DDEB435B8EFA00ADEFDD3D53920EF5CFDBF2946AC0ABC6E2194EF8B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184602Z/saint-aubin-village/fetch-manifest.json",
+    "raw_checksum_sha256": "4C051357FF9C9FFAA2CD2B8420FC89CA6C9B8EE4B8ECB82B4E22EFC7579CB01F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.saint-aubin.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-aubin-1er",
+    "normalized_checksum_sha256": "F7CB2169CA675961EF3B7F4EDA8592BC1C89B05155F76A9BDB9BCFAE16D74F16",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184606Z/saint-aubin-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "BA64B6517AAAC9F9A70EE53FC9D2A3890EA968A5A6608A02241584CD047AA98A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.saint-romain",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-romain-village",
+    "normalized_checksum_sha256": "43DB2B1069598A0AB96ED1BFF0C9257720C56820317E1843A2185496C53D2885",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184515Z/saint-romain-village/fetch-manifest.json",
+    "raw_checksum_sha256": "C3E410A0BF5611E3BF084A2E7A63738AE8D3CCD63DBDB0F9BA7435127C284DD0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.santenay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:santenay-village",
+    "normalized_checksum_sha256": "98FE57F3BAB7204FB097D6346C73949BF1273490ED8E965661D88131EB339FD1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184609Z/santenay-village/fetch-manifest.json",
+    "raw_checksum_sha256": "A6E8039977DDB625402B492FF502B252980621B15A9528388D7C1829D85CEDB7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.santenay.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:santenay-1er",
+    "normalized_checksum_sha256": "FDF34DB816CD347BA4FCB57E8677DF2C5FAAE6F9205A46DFF9B7F842BE13C176",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184614Z/santenay-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "79887D9CC1DE3F344EDA4D57C906C5E0D5F172D7A2D25ED902F7B573AD8CFF67",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.savigny-les-beaune",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savigny-les-beaune-village",
+    "normalized_checksum_sha256": "1B0ECAFA621F23B9290221CF469118AEE7EA419C65512358FB4FAAAB5C9F2D69",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184425Z/savigny-les-beaune-village/fetch-manifest.json",
+    "raw_checksum_sha256": "64A715674795802831A6544C1BA8322836E82941A3C59D6F422DC470A45FCDAE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.savigny-les-beaune.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savigny-les-beaune-1er",
+    "normalized_checksum_sha256": "1BFF69C47B95E03F9528B9CB0771AEB7C3B08F0127EF2CF4D939144622F5EA06",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184429Z/savigny-les-beaune-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "68567676783AAE728014377B84AB1AF9A0B00996D60BA18A3DEB9CB1F8B7E899",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.volnay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:volnay-village",
+    "normalized_checksum_sha256": "C937564EB2EB46B244F4A38F8A07F7875FADEFF91C116E3891EC616C6FF4D14D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184453Z/volnay-village/fetch-manifest.json",
+    "raw_checksum_sha256": "9E98E06D6674FF31BD73EAAB69E1238BF743365450C05D5FF47B99527EDF9E31",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.volnay.premier-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:volnay-1er",
+    "normalized_checksum_sha256": "3271B8613390972612533552AAA01C6FC93E27CBD5C726A382809A2E609D8D84",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184457Z/volnay-1er/fetch-manifest.json",
+    "raw_checksum_sha256": "9FCDB4AF8226658B996EBCEF590184F400AC9DF5D2FA7560464AA8F21B24AD08",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-nuits",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:cote-de-nuits-derived",
