@@ -679,21 +679,33 @@ const NE_FRANCE_RAW_SHA256 =
   "9E891251F9AE6543E4ED3501AF46CA17D432F3ED1C8E09DF89336D9CC6118469";
 const NE_FRANCE_RAW_URI =
   "https://raw.githubusercontent.com/christianolin/blindtastingapp/6257e2ae3bd2982482cc756465108fe6ef7ed615/data/wine-map/france-ne50m-raw.geojson";
+const inaoRaw = (revision, slug) =>
+  `storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/${revision}/${slug}/fetch-manifest.json`;
+// Post-review current set (20): the France outline, 11 unchanged legacy
+// Bordeaux appellations, the two new denomset grouping footprints (Graves,
+// Médoc), the five new right-bank appellations, and Bourgogne. denomset rows
+// carry a real raw (fetch-manifest) URI + checksum; legacy rows do not.
 const EXPECTED_BOUNDARIES = [
-  ["france", "MANUAL", "ne_50m_admin_0_countries:FRA", NE_FRANCE_NORMALIZED_SHA256, NE_FRANCE_RAW_SHA256],
+  ["france", "MANUAL", "ne_50m_admin_0_countries:FRA", NE_FRANCE_NORMALIZED_SHA256, NE_FRANCE_RAW_SHA256, NE_FRANCE_RAW_URI],
   ["france.bordeaux", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-bordeaux", SOURCE_MIGRATION_SHA256],
-  ["france.bordeaux.graves", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-graves", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.blaye", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:blaye", "C010AC6548B5EA0EDBDA4E7C4FFB1F03E5E90FEB44E586C9DC2D739146B815BA", "BCDF4D3218DD8FB0A9C0564E26CD0D524EC162B63E8C5CECA86EAFD76845132B", inaoRaw("20260721T222859Z", "blaye")],
+  ["france.bordeaux.canon-fronsac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:canon-fronsac", "5C33ED83D09DD7387A3D21F86D52A5723A63FCF346C5D52A5332489A0FAAE262", "FECFED4A439AD50D636B373F720E1601A0BE51A57901DB48E481B21458FB850C", inaoRaw("20260721T222857Z", "canon-fronsac")],
+  ["france.bordeaux.cotes-de-bourg", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:cotes-de-bourg", "1CD96E47BDA97998019CF09EFEFE5C32A8D34592F475AE5BC8FC02E59B68C6A5", "362BA2B07B6112D33BFF41E1E07D1CE91D5A06B4776CD1293BD17CB558451662", inaoRaw("20260721T222904Z", "cotes-de-bourg")],
+  ["france.bordeaux.entre-deux-mers", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:entre-deux-mers", "7A8690F2138E3385D3BAC92C8C1CA96F77E0B48A217B5BE1BB30F41F86A7C69B", "E2CDBA872D73F60234C8AA58F00B20FA3B0AC5840698687ED5504A0D3835B6F0", inaoRaw("20260721T222935Z", "entre-deux-mers")],
+  ["france.bordeaux.fronsac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:fronsac", "4C5B8ED946D64C2B3A12F24335FE8419BBF4DB5E9E177E9A6C2DE1DDDE80573C", "4537AB75AC58B56D23303A5611CCF51C496011D083B716D443DD9126A867252C", inaoRaw("20260721T222855Z", "fronsac")],
+  ["france.bordeaux.graves", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:graves-grouping", "17FB774CA4E9F080742F92991868C0EFAEF876DEF489D2E2A7E4C7596F4AF74C", "C21174CC48312366060575E2901F777C57561C01AA7292B3F24E2F3FA0EFB20B", inaoRaw("20260721T222950Z", "graves-grouping")],
   ["france.bordeaux.haut-medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-haut-medoc", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.haut-medoc.margaux", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-margaux", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.haut-medoc.pauillac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pauillac", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.haut-medoc.saint-estephe", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-estephe", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.haut-medoc.saint-julien", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-julien", SOURCE_MIGRATION_SHA256],
-  ["france.bordeaux.medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-medoc", SOURCE_MIGRATION_SHA256],
+  ["france.bordeaux.medoc", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:medoc-grouping", "7F3D8B3341897877A02813DCCDE9DB736D16896F6F8865A314E610B1324BDF64", "ED98B6CCFFD93C457937E3DDDE01E802B3DE1B7BF7BF9C925A26B8593245019C", inaoRaw("20260721T222957Z", "medoc-grouping")],
   ["france.bordeaux.pessac-leognan", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pessac-leognan", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.pomerol", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-pomerol", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.saint-emilion", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-saint-emilion", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.sauternes", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-sauternes", SOURCE_MIGRATION_SHA256],
   ["france.bordeaux.sauternes.barsac", "GENERALIZED_FROM_OFFICIAL_SOURCE", "legacy-20260726-barsac", SOURCE_MIGRATION_SHA256],
+  ["france.bourgogne", "GENERALIZED_FROM_OFFICIAL_SOURCE", "denomset:bourgogne", "1DBE0CECD4F192F4C9158716772C06AF886F8D855A9E526077CC9C3586ADBEF1", "89AE9A9710D40F5B6B2E7D923EF77A7147108729B39F743FC887ED15F9842B3D", inaoRaw("20260721T223003Z", "bourgogne")],
 ];
 
 test("all migrated places have valid reviewed current boundaries", async () => {
@@ -720,12 +732,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
              )::int reproducible
        from wine_place_boundaries b`,
   );
-  // 15 rows since the France revision: the superseded legacy outline is
-  // retained (is_current = false) beside the current Natural Earth one.
+  // After the Phase 3A review flip: 8 new boundaries validated + current;
+  // the superseded France outline and the old Graves/Médoc appellation
+  // footprints are retained (is_current = false).
   assert.deepEqual(result.rows[0], {
     total: 23,
-    validated: 15,
-    current: 14,
+    validated: 23,
+    current: 20,
     valid: 23,
     labelled: 23,
     manual: 2,
@@ -751,12 +764,12 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     classifications.rows,
     EXPECTED_BOUNDARIES.map(([canonical_key, boundary_method,
       source_feature_id, normalized_checksum_sha256,
-      raw_checksum_sha256 = null]) => ({
+      raw_checksum_sha256 = null, raw_snapshot_uri = null]) => ({
       canonical_key,
       boundary_method,
       source_feature_id,
       normalized_checksum_sha256,
-      raw_snapshot_uri: raw_checksum_sha256 ? NE_FRANCE_RAW_URI : null,
+      raw_snapshot_uri,
       raw_checksum_sha256,
       documented: true,
     })),

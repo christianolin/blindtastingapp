@@ -134,8 +134,8 @@ test("authenticated role sees verified content through RLS", async () => {
     assert.equal(ctx.place.key, "france.bordeaux");
     assert.ok(ctx.article, "article should be visible to authenticated");
     assert.ok(ctx.boundary, "boundary should be visible to authenticated");
-    // DRAFT places are invisible through RLS: only the 4 VERIFIED children
-    // remain until Task 6 publishes the new appellations (then: 9).
-    assert.equal(ctx.children.length, 4);
+    // After the Task 6 flip the 5 new appellations are VERIFIED, so the
+    // authenticated role now sees all 9 Bordeaux children.
+    assert.equal(ctx.children.length, 9);
   });
 });
