@@ -60,6 +60,7 @@ test("wfsPageUrl bounds with LIKE, sorts deterministically, escapes quotes", () 
   // does NOT undo — assert on the parsed parameter, not the raw string.
   const url = wfsPageUrl("L'Étoile", 5000);
   const params = new URL(url).searchParams;
+  assert.equal(params.get("srsName"), "EPSG:4326");
   assert.equal(params.get("sortBy"), "gml_id");
   assert.equal(params.get("count"), String(PAGE_SIZE));
   assert.equal(params.get("startIndex"), "5000");

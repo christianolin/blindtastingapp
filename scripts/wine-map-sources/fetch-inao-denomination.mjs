@@ -69,9 +69,16 @@ for (const member of members) {
       slug,
       `${memberSlug}-page-${startIndex / PAGE_SIZE}.json.gz`,
     );
-    await uploadRawObject(objectPath, gzipped, "application/gzip");
+    await uploadRawObject(objectPath, gzipped, { contentType: "application/gzip" });
     const page = JSON.parse(text);
     const features = page.features ?? [];
+    const probe = features[0]?.geometry?.coordinates?.flat(3) ?? [];
+    if (probe.length >= 2) {
+      assert.ok(
+        Math.abs(probe[0]) <= 180 && Math.abs(probe[1]) <= 90,
+        `WFS returned non-degree coordinates (first: ${probe[0]},${probe[1]}) — srsName ignored?`,
+      );
+    }
     pages.push({
       member,
       object_path: objectPath,

@@ -57,6 +57,9 @@ export function wfsPageUrl(denomination, startIndex) {
     outputFormat: "application/json",
     count: String(PAGE_SIZE),
     startIndex: String(startIndex),
+    // Without srsName the layer's native EPSG:2154 (Lambert-93 meters) comes
+    // back; every downstream tolerance and gate presumes degrees.
+    srsName: "EPSG:4326",
     sortBy: "gml_id",
     cql_filter: `denom LIKE '%${literal}%'`,
   });
@@ -79,11 +82,18 @@ function rawBucket() {
   }).storage.from(RAW_BUCKET);
 }
 
-export async function uploadRawObject(objectPath, body, contentType = "application/json") {
+// upsert defaults false so raw WFS pages stay immutable; the deterministic
+// normalized artifact opts in, so a re-run after a rolled-back build (uploads
+// are not transactional) does not collide on the leftover object.
+export async function uploadRawObject(
+  objectPath,
+  body,
+  { contentType = "application/json", upsert = false } = {},
+) {
   const { error } = await rawBucket().upload(objectPath, body, {
     contentType,
     cacheControl: "3600",
-    upsert: false,
+    upsert,
   });
   if (error) throw new Error(`Upload ${objectPath} failed: ${error.message}`);
 }

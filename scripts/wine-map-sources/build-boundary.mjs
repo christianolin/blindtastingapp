@@ -1,8 +1,9 @@
-// Dissolve fetched parcels into one generalized region footprint using
-// PostGIS (union -> closing buffer -> topology-preserving simplify ->
-// small-component filter -> 4-decimal quantization), create the
-// source/snapshot provenance rows, and stage a DRAFT, non-current
-// wine_place_boundaries row. Review (a later task) flips it current.
+// Generalize fetched parcels into one region footprint and stage a DRAFT,
+// non-current wine_place_boundaries row with full provenance. Two engines:
+// "dissolve" (PostGIS union -> closing -> simplify; the default) and
+// "concave" (client-side clustered concave envelopes for region-scale sets
+// that exceed the free-tier instance's GEOS capacity). Review (a later
+// task) flips staged rows current.
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -10,6 +11,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { pgConfig, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { rawObjectPath, uploadRawObject, SOURCE_NAMESPACE, WFS_LICENCE } from "./inao-lib.mjs";
+import { buildConcaveGeometry } from "./concave-engine.mjs";
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -21,6 +23,11 @@ assert.ok(slug && targetKey, "--slug and --target-key are required");
 const closing = Number(arg("closing", "0.02"));
 const tolerance = Number(arg("tolerance", "0.005"));
 const minShare = Number(arg("min-share", "0.02"));
+// Pre-union simplification: below the closing buffer and final tolerance,
+// so the output shape is unchanged while union cost collapses.
+const presimplify = Number(arg("presimplify", "0.0005"));
+const engine = arg("engine", "dissolve");
+assert.ok(["dissolve", "concave"].includes(engine), "--engine must be dissolve|concave");
 
 const workDir = path.resolve(".tiles-build", "sources");
 const parcels = JSON.parse(
@@ -31,72 +38,151 @@ const fetchManifest = JSON.parse(
 );
 assert.equal(fetchManifest.slug, slug);
 assert.equal(fetchManifest.target_key, targetKey);
-assert.ok(parcels.features.length > 0, "no parcels to dissolve");
+assert.ok(parcels.features.length > 0, "no parcels to generalize");
+
+// Concave runs entirely client-side before any DB work.
+let clientGeojson = null;
+if (engine === "concave") {
+  const started = Date.now();
+  clientGeojson = JSON.stringify(
+    buildConcaveGeometry(parcels, { minComponentShare: minShare }),
+  );
+  console.log(`concave engine done (${Math.round((Date.now() - started) / 1000)}s)`);
+}
+const generation = clientGeojson
+  ? {
+      engine: "concave",
+      concavity: 2,
+      cluster_grid_size: 0.05,
+      min_component_area_share: minShare,
+      coordinate_precision: 4,
+    }
+  : {
+      engine: "dissolve",
+      closing_buffer: closing,
+      simplify_tolerance: tolerance,
+      min_component_area_share: minShare,
+      presimplify_tolerance: presimplify,
+      coordinate_precision: 4,
+    };
 
 const client = new pg.Client(pgConfig());
 await client.connect();
 try {
   await client.query("begin");
-  await client.query(
-    "create temporary table _parcels (geom extensions.geometry) on commit drop",
-  );
-  const batchSize = 200;
-  for (let i = 0; i < parcels.features.length; i += batchSize) {
-    const batch = parcels.features.slice(i, i + batchSize);
-    const values = batch.map((_, j) =>
-      `(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($${j + 1}), 4326))`,
+  // set local: transaction-scoped and guaranteed to land on the same pooled
+  // backend as the work.
+  await client.query("set local statement_timeout = 600000");
+
+  let geojson = clientGeojson;
+  if (!geojson) {
+    await client.query(
+      "create temporary table _parcels (cell text, geom extensions.geometry) on commit drop",
+    );
+    const batchSize = 200;
+    for (let i = 0; i < parcels.features.length; i += batchSize) {
+      const batch = parcels.features.slice(i, i + batchSize);
+      const values = batch.map((_, j) =>
+        `(extensions.ST_SimplifyPreserveTopology(extensions.ST_MakeValid(
+            extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($${j + 1}), 4326)
+          ), ${presimplify}))`,
+      );
+      await client.query(
+        `insert into _parcels (geom) values ${values.join(", ")}`,
+        batch.map((feature) => JSON.stringify(feature.geometry)),
+      );
+    }
+    console.log(`parcels loaded: ${parcels.features.length}`);
+    // Bounded dissolve: numeric grid key (floor arithmetic cannot fail to
+    // collide), one short union statement per cell, then per super-cell.
+    await client.query(
+      `update _parcels set cell =
+         floor(extensions.ST_X(extensions.ST_Centroid(geom)) / 0.05)::int::text
+         || ':' ||
+         floor(extensions.ST_Y(extensions.ST_Centroid(geom)) / 0.05)::int::text`,
+    );
+    const cellKeys = await client.query(
+      "select distinct cell from _parcels order by cell",
+    );
+    console.log(`grid cells: ${cellKeys.rows.length}`);
+    assert.ok(
+      cellKeys.rows.length <= parcels.features.length / 2 ||
+        parcels.features.length < 500,
+      `grid clustering ineffective: ${cellKeys.rows.length} cells for ${parcels.features.length} parcels`,
     );
     await client.query(
-      `insert into _parcels (geom) values ${values.join(", ")}`,
-      batch.map((feature) => JSON.stringify(feature.geometry)),
+      "create temporary table _cells (super text, g extensions.geometry) on commit drop",
     );
+    const superOf = (cell) => {
+      const [x, y] = cell.split(":").map(Number);
+      return `${Math.floor(x / 10)}:${Math.floor(y / 10)}`;
+    };
+    for (const { cell } of cellKeys.rows) {
+      await client.query(
+        `insert into _cells
+         select $2, extensions.ST_SimplifyPreserveTopology(extensions.ST_Union(geom), $3)
+         from _parcels where cell = $1`,
+        [cell, superOf(cell), presimplify],
+      );
+    }
+    const superKeys = [...new Set(cellKeys.rows.map(({ cell }) => superOf(cell)))];
+    console.log(`super cells: ${superKeys.length}`);
+    await client.query(
+      "create temporary table _supers (g extensions.geometry) on commit drop",
+    );
+    for (const superKey of superKeys) {
+      await client.query(
+        `insert into _supers
+         select extensions.ST_SimplifyPreserveTopology(extensions.ST_Union(g), $2)
+         from _cells where super = $1`,
+        [superKey, presimplify],
+      );
+    }
+    const dissolved = await client.query(
+      `with u as (select extensions.ST_Union(g) g from _supers),
+       closed as (
+         select extensions.ST_MakeValid(
+           extensions.ST_Buffer(extensions.ST_Buffer(g, $1, 'quad_segs=4'), -$1, 'quad_segs=4')
+         ) g from u
+       ),
+       simplified as (
+         select extensions.ST_MakeValid(
+           extensions.ST_SimplifyPreserveTopology(g, $2)
+         ) g from closed
+       ),
+       parts as (
+         select (extensions.ST_Dump(extensions.ST_Multi(g))).geom part
+         from simplified
+       ),
+       measured as (
+         select part, extensions.ST_Area(part) area,
+                sum(extensions.ST_Area(part)) over () total
+         from parts
+       ),
+       kept as (
+         select extensions.ST_Multi(extensions.ST_Collect(part)) g
+         from measured where area / total >= $3
+       )
+       select extensions.ST_AsGeoJSON(extensions.ST_MakeValid(g), 4) geojson
+       from kept`,
+      [closing, tolerance, minShare],
+    );
+    geojson = dissolved.rows[0]?.geojson;
   }
-
-  const dissolved = await client.query(
-    `with u as (select extensions.ST_Union(geom) g from _parcels),
-     closed as (
-       select extensions.ST_MakeValid(
-         extensions.ST_Buffer(extensions.ST_Buffer(g, $1), -$1)
-       ) g from u
-     ),
-     simplified as (
-       select extensions.ST_MakeValid(
-         extensions.ST_SimplifyPreserveTopology(g, $2)
-       ) g from closed
-     ),
-     parts as (
-       select (extensions.ST_Dump(extensions.ST_Multi(g))).geom part
-       from simplified
-     ),
-     measured as (
-       select part, extensions.ST_Area(part) area,
-              sum(extensions.ST_Area(part)) over () total
-       from parts
-     ),
-     kept as (
-       select extensions.ST_Multi(extensions.ST_Collect(part)) g
-       from measured where area / total >= $3
-     )
-     select extensions.ST_AsGeoJSON(
-       extensions.ST_MakeValid(g), 4
-     ) geojson from kept`,
-    [closing, tolerance, minShare],
-  );
-  const geojson = dissolved.rows[0]?.geojson;
-  assert.ok(geojson, "dissolve produced no geometry");
+  assert.ok(geojson, "generalization produced no geometry");
 
   const normalizedFeature = {
     type: "Feature",
     properties: {
       target_key: targetKey,
       members: fetchManifest.members,
-      generation: { closing_buffer: closing, simplify_tolerance: tolerance, min_component_area_share: minShare, coordinate_precision: 4 },
+      generation,
     },
     geometry: JSON.parse(geojson),
   };
   const normalizedBody = Buffer.from(`${JSON.stringify(normalizedFeature)}\n`);
   const normalizedPath = rawObjectPath(fetchManifest.revision, slug, "normalized.geojson");
-  await uploadRawObject(normalizedPath, normalizedBody);
+  await uploadRawObject(normalizedPath, normalizedBody, { upsert: true });
 
   const result = await client.query(
     `with place as (
@@ -123,8 +209,13 @@ try {
        returning id
      ),
      geom as (
-       select extensions.ST_Multi(extensions.ST_MakeValid(
-         extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($13), 4326)
+       -- ST_MakeValid can repair self-touching rings into a collection;
+       -- CollectionExtract(…, 3) keeps the polygonal parts only, which is
+       -- what the MultiPolygon column requires.
+       select extensions.ST_Multi(extensions.ST_CollectionExtract(
+         extensions.ST_MakeValid(
+           extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($13), 4326)
+         ), 3
        )) g
      )
      insert into wine_place_boundaries (
@@ -141,7 +232,7 @@ try {
               extensions.ST_YMax(extensions.Box3D(geom.g))
             ]::double precision[],
             jsonb_build_object('dataset', 'AOC-VITICOLES:aire_parcellaire', 'members', $14::jsonb, 'filtered_parcels', $15::int),
-            jsonb_build_object('closing_buffer', $16::numeric, 'simplify_tolerance', $17::numeric, 'min_component_area_share', $18::numeric, 'coordinate_precision', 4),
+            $16::jsonb,
             $4, false, null
      from place, source, snapshot, geom
      returning id`,
@@ -161,9 +252,7 @@ try {
       geojson,
       JSON.stringify(fetchManifest.members),
       parcels.features.length,
-      closing,
-      tolerance,
-      minShare,
+      JSON.stringify(generation),
     ],
   );
   assert.equal(result.rows.length, 1, "expected one staged boundary row");
