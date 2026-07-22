@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { Award, Grape, MapPin, Tags, Wine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -20,6 +21,38 @@ const STYLE_LABELS: Record<string, string> = {
   SWEET: "Sweet",
   FORTIFIED: "Fortified",
 };
+
+// Learning-first visual cues: one colour per wine style, and grape icons
+// tinted by the grape's own colour.
+const STYLE_COLORS: Record<string, string> = {
+  RED: "#7E1B26",
+  WHITE: "#B78E42",
+  ROSE: "#D98A9E",
+  SPARKLING: "#8FA3B8",
+  SWEET: "#C08A2D",
+  FORTIFIED: "#6B4430",
+};
+
+export function grapeIconColor(color: string | null) {
+  if (color === "RED") return "#7E1B26";
+  if (color === "WHITE") return "#B78E42";
+  return "#8A8A85";
+}
+
+function SectionHeading({
+  icon: Icon,
+  children,
+}: {
+  icon: typeof Grape;
+  children: ReactNode;
+}) {
+  return (
+    <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+      <Icon className="size-3.5" />
+      {children}
+    </p>
+  );
+}
 
 type GrapeProfile = {
   description: string | null;
@@ -84,7 +117,13 @@ function GrapeModal({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{grape.name}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Grape
+              className="size-5"
+              style={{ color: grapeIconColor(grape.color) }}
+            />
+            {grape.name}
+          </DialogTitle>
         </DialogHeader>
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant={grape.role === "PRINCIPAL" ? "default" : "outline"}>
@@ -95,6 +134,23 @@ function GrapeModal({
             <Badge variant="secondary">~{grape.share_pct}% of vineyard</Badge>
           ) : null}
         </div>
+        {grape.share_pct != null ? (
+          <div>
+            <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+              <span>Share of vineyard here</span>
+              <span className="tabular-nums">~{grape.share_pct}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(100, Math.max(0, grape.share_pct))}%`,
+                  backgroundColor: grapeIconColor(grape.color),
+                }}
+              />
+            </div>
+          </div>
+        ) : null}
         {grape.local_note ? (
           <p className="text-sm text-muted-foreground">{grape.local_note}</p>
         ) : null}
@@ -147,14 +203,19 @@ export function KnowledgeSections({
     <>
       {styles.length > 0 ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Wine styles
-          </p>
+          <SectionHeading icon={Wine}>Wine styles</SectionHeading>
           <div className="flex flex-wrap gap-1.5">
             {styles.map((s) => (
-              <Badge key={s.style} variant="outline">
+              <span
+                key={s.style}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium"
+              >
+                <Wine
+                  className="size-3.5"
+                  style={{ color: STYLE_COLORS[s.style] ?? "#8A8A85" }}
+                />
                 {STYLE_LABELS[s.style] ?? s.style}
-              </Badge>
+              </span>
             ))}
           </div>
           {styles
@@ -168,23 +229,43 @@ export function KnowledgeSections({
       ) : null}
       {grapes.length > 0 ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Grapes
-          </p>
-          <div className="flex flex-wrap gap-1.5">
+          <SectionHeading icon={Grape}>Grapes</SectionHeading>
+          <div className="flex flex-col gap-1.5">
             {grapes.map((g) => (
               <button
                 key={g.id}
                 type="button"
                 onClick={() => setOpenGrape(g)}
-                className={
-                  g.role === "PRINCIPAL"
-                    ? "rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20"
-                    : "rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
-                }
+                className="w-full rounded-lg border border-border/70 px-2.5 py-2 text-left transition-colors hover:bg-muted/60"
               >
-                {g.name}
-                {g.share_pct != null ? ` · ~${g.share_pct}%` : ""}
+                <span className="flex items-center gap-2">
+                  <Grape
+                    className="size-4 shrink-0"
+                    style={{ color: grapeIconColor(g.color) }}
+                  />
+                  <span className="text-sm font-medium">{g.name}</span>
+                  {g.role === "ACCESSORY" ? (
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      accessory
+                    </span>
+                  ) : null}
+                  {g.share_pct != null ? (
+                    <span className="ml-auto text-xs tabular-nums text-muted-foreground">
+                      ~{g.share_pct}%
+                    </span>
+                  ) : null}
+                </span>
+                {g.share_pct != null ? (
+                  <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <span
+                      className="block h-full rounded-full"
+                      style={{
+                        width: `${Math.min(100, Math.max(0, g.share_pct))}%`,
+                        backgroundColor: grapeIconColor(g.color),
+                      }}
+                    />
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>
@@ -192,9 +273,7 @@ export function KnowledgeSections({
       ) : null}
       {designations.length > 0 ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Designations
-          </p>
+          <SectionHeading icon={Award}>Designations</SectionHeading>
           <div className="flex flex-col gap-1.5 text-sm">
             {designations.map((d) => (
               <div key={d.key}>
@@ -210,9 +289,7 @@ export function KnowledgeSections({
       ) : null}
       {dualLabels.length > 0 ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Labelling
-          </p>
+          <SectionHeading icon={Tags}>Labelling</SectionHeading>
           <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
             {dualLabels.map((d) => (
               <li key={`${d.key}-${d.direction}`}>
@@ -247,9 +324,7 @@ export function KnowledgeSections({
       ) : null}
       {nearby.length > 0 ? (
         <div>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">
-            Nearby
-          </p>
+          <SectionHeading icon={MapPin}>Nearby</SectionHeading>
           <div className="flex flex-wrap gap-1.5">
             {nearby.map((n) => (
               <button

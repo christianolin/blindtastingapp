@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Grape as GrapeIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -127,6 +128,17 @@ export default async function GrapeLibraryPage({
               <Card key={g.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
+                    <GrapeIcon
+                      className="size-5 shrink-0"
+                      style={{
+                        color:
+                          g.color === "RED"
+                            ? "#7E1B26"
+                            : g.color === "WHITE"
+                              ? "#B78E42"
+                              : "#8A8A85",
+                      }}
+                    />
                     {g.name}
                     {g.color ? (
                       <Badge

@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
+  Layers,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
+  Sparkles,
+  Thermometer,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -313,19 +316,25 @@ export function TileWineMapExplorer({
                     ) : null}
                     <dl className="flex flex-col gap-2 text-sm">
                       {article.climate ? (
-                        <div>
-                          <dt className="text-xs font-medium text-muted-foreground">
-                            Climate
-                          </dt>
-                          <dd>{article.climate}</dd>
+                        <div className="flex gap-2">
+                          <Thermometer className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                          <div>
+                            <dt className="text-xs font-medium text-muted-foreground">
+                              Climate
+                            </dt>
+                            <dd>{article.climate}</dd>
+                          </div>
                         </div>
                       ) : null}
                       {article.soils ? (
-                        <div>
-                          <dt className="text-xs font-medium text-muted-foreground">
-                            Soils
-                          </dt>
-                          <dd>{article.soils}</dd>
+                        <div className="flex gap-2">
+                          <Layers className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                          <div>
+                            <dt className="text-xs font-medium text-muted-foreground">
+                              Soils
+                            </dt>
+                            <dd>{article.soils}</dd>
+                          </div>
                         </div>
                       ) : null}
                       {article.grape_varieties && context.grapes.length === 0 ? (
@@ -347,7 +356,8 @@ export function TileWineMapExplorer({
                     </dl>
                     {article.key_facts.length > 0 ? (
                       <div>
-                        <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <Sparkles className="size-3.5" />
                           Key facts
                         </p>
                         <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
