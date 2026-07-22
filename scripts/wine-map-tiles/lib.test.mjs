@@ -6,7 +6,7 @@ import {
   attributionDisplayMap,
   buildManifest,
   featureCollection,
-  labelFeature,
+  labelFeatures,
   lonLatToTile,
   placeFeature,
   releaseObjectPath,
@@ -72,6 +72,7 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     parent_id: EXPORT_ROW.primary_parent_id,
     has_children: true,
     rank: 0,
+    region: "bordeaux",
     attribution: "ign-inao",
     min_zoom: 4,
     label_min_zoom: 4,
@@ -80,11 +81,22 @@ test("placeFeature maps an export row to the exact tile properties", () => {
   assert.equal(feature.geometry.type, "MultiPolygon");
 });
 
-test("labelFeature uses the label point and label_min_zoom", () => {
-  const feature = labelFeature(EXPORT_ROW);
-  assert.deepEqual(feature.geometry, { type: "Point", coordinates: [-0.58, 44.84] });
-  assert.deepEqual(feature.tippecanoe, { minzoom: 4 });
-  assert.equal(feature.properties.id, EXPORT_ROW.id);
+test("labelFeatures fall back to the canonical label point", () => {
+  const features = labelFeatures(EXPORT_ROW);
+  assert.equal(features.length, 1);
+  assert.deepEqual(features[0].geometry, { type: "Point", coordinates: [-0.58, 44.84] });
+  assert.deepEqual(features[0].tippecanoe, { minzoom: 4 });
+  assert.equal(features[0].properties.id, EXPORT_ROW.id);
+});
+
+test("labelFeatures emit one point per island component", () => {
+  const features = labelFeatures({
+    ...EXPORT_ROW,
+    component_labels: [[4.7, 47.9], [3.6, 47.7], [4.8, 46.8]],
+  });
+  assert.equal(features.length, 3);
+  assert.deepEqual(features[1].geometry, { type: "Point", coordinates: [3.6, 47.7] });
+  assert.ok(features.every((f) => f.properties.id === EXPORT_ROW.id));
 });
 
 test("fractional min_zoom floors and never goes below zero", () => {

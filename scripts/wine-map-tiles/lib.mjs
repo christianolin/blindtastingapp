@@ -91,6 +91,9 @@ function tileProperties(row) {
     parent_id: row.primary_parent_id,
     has_children: row.has_children,
     rank: row.sort_order,
+    // Region segment drives per-region map colouring; the country itself
+    // falls back to its own key.
+    region: shardKeyFor(row.canonical_key) ?? row.canonical_key,
     attribution: attributionKeyFor(row.source_namespace),
     min_zoom: Number(row.min_zoom),
     label_min_zoom: Number(row.label_min_zoom),
@@ -106,13 +109,21 @@ export function placeFeature(row) {
   };
 }
 
-export function labelFeature(row) {
-  return {
+// One label feature per polygon component (owner directive: multi-island
+// regions label every island). Falls back to the canonical label point when
+// the export row carries no per-component list (unit fixtures).
+export function labelFeatures(row) {
+  const properties = tileProperties(row);
+  const minzoom = Math.max(0, Math.floor(Number(row.label_min_zoom)));
+  const points = Array.isArray(row.component_labels) && row.component_labels.length > 0
+    ? row.component_labels
+    : [JSON.parse(row.label_point).coordinates];
+  return points.map((coordinates) => ({
     type: "Feature",
-    properties: tileProperties(row),
-    tippecanoe: { minzoom: Math.max(0, Math.floor(Number(row.label_min_zoom))) },
-    geometry: JSON.parse(row.label_point),
-  };
+    properties,
+    tippecanoe: { minzoom },
+    geometry: { type: "Point", coordinates },
+  }));
 }
 
 export function featureCollection(features) {

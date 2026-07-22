@@ -11,7 +11,7 @@ import {
   archiveForPlace,
   SHARD_TARGET,
   featureCollection,
-  labelFeature,
+  labelFeatures,
   pgConfig,
   placeFeature,
   releaseVersion,
@@ -36,7 +36,14 @@ const EXPORT_SQL = `
     extensions.ST_AsGeoJSON(b.display_geometry, 6) as geometry,
     extensions.ST_AsGeoJSON(b.label_point, 6) as label_point,
     extensions.ST_X(b.label_point) as label_lon,
-    extensions.ST_Y(b.label_point) as label_lat
+    extensions.ST_Y(b.label_point) as label_lat,
+    (
+      select json_agg(json_build_array(
+        round(extensions.ST_X(extensions.ST_PointOnSurface(d.geom))::numeric, 6),
+        round(extensions.ST_Y(extensions.ST_PointOnSurface(d.geom))::numeric, 6)
+      ))
+      from extensions.ST_Dump(b.display_geometry) d
+    ) as component_labels
   from wine_places p
   join wine_place_boundaries b
     on b.wine_place_id = p.id and b.is_current and b.quality_status = 'VALIDATED'
@@ -107,11 +114,11 @@ assert.ok(world.rows.length >= 2 && Object.keys(shards).length >= 1, "empty arch
 await mkdir(WORK_DIR, { recursive: true });
 const outputs = [
   ["world-places.geojson", featureCollection(world.rows.map(placeFeature))],
-  ["world-labels.geojson", featureCollection(world.rows.map(labelFeature))],
+  ["world-labels.geojson", featureCollection(world.rows.flatMap(labelFeatures))],
 ];
 for (const [key, bucket] of Object.entries(shards)) {
   outputs.push([`${key}-places.geojson`, featureCollection(bucket.rows.map(placeFeature))]);
-  outputs.push([`${key}-labels.geojson`, featureCollection(bucket.rows.map(labelFeature))]);
+  outputs.push([`${key}-labels.geojson`, featureCollection(bucket.rows.flatMap(labelFeatures))]);
 }
 for (const [filename, collection] of outputs) {
   await writeFile(path.join(WORK_DIR, filename), `${JSON.stringify(collection)}\n`);
@@ -119,12 +126,15 @@ for (const [filename, collection] of outputs) {
 
 const byKind = {};
 for (const { kind } of rows) byKind[kind] = (byKind[kind] ?? 0) + 1;
+const labelFeatureTotal = outputs
+  .filter(([filename]) => filename.endsWith("-labels.geojson"))
+  .reduce((sum, [, collection]) => sum + collection.features.length, 0);
 const release = {
   version: releaseVersion(),
   generated_at: new Date().toISOString(),
   git_sha: process.env.GITHUB_SHA ?? null,
   node: process.version,
-  counts: { places: rows.length, labels: rows.length, by_kind: byKind },
+  counts: { places: rows.length, labels: labelFeatureTotal, by_kind: byKind },
   world: { place_ids: world.ids },
   shards: Object.fromEntries(
     Object.entries(shards).map(([key, bucket]) => [
