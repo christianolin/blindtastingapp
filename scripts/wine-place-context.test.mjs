@@ -207,3 +207,50 @@ test("place tree returns every verified place with parent links", async () => {
   );
   assert.equal(authenticated.rows[0].ok, true);
 });
+
+test("context v2 carries knowledge keys and dual-label edges", async () => {
+  const bordeaux = await contextFor("france.bordeaux");
+  // Additive v2 contract — arrays exist regardless of content volume.
+  for (const key of ["grapes", "styles", "designations", "nearby", "dual_labels"]) {
+    assert.ok(Array.isArray(bordeaux[key]), `${key} should be an array`);
+  }
+  assert.ok("soils" in bordeaux.article, "article should carry soils");
+
+  const beze = await contextFor(
+    "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin-clos-de-beze",
+  );
+  assert.deepEqual(
+    beze.dual_labels.map((d) => [d.key, d.direction]),
+    [
+      [
+        "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin",
+        "MAY_BE_SOLD_AS",
+      ],
+    ],
+  );
+  const chambertin = await contextFor(
+    "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin",
+  );
+  assert.deepEqual(
+    chambertin.dual_labels.map((d) => [d.key, d.direction]),
+    [
+      [
+        "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin-clos-de-beze",
+        "ALSO_SOLD_AS_THIS",
+      ],
+    ],
+  );
+
+  // Nearby: neighbours within ~10 km; never ancestors, children, or own
+  // descendants.
+  const vosne = await contextFor("france.bourgogne.cote-de-nuits.vosne-romanee");
+  assert.ok(vosne.nearby.length > 0 && vosne.nearby.length <= 5);
+  const nearbyKeys = vosne.nearby.map((n) => n.key);
+  assert.ok(!nearbyKeys.includes("france.bourgogne.cote-de-nuits"));
+  assert.ok(!nearbyKeys.includes("france.bourgogne"));
+  assert.ok(
+    nearbyKeys.every(
+      (k) => !k.startsWith("france.bourgogne.cote-de-nuits.vosne-romanee."),
+    ),
+  );
+});
