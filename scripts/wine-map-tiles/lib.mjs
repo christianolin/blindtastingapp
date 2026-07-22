@@ -100,6 +100,9 @@ function tileProperties(row) {
     // Planar deg² of the footprint: click resolution picks the smallest
     // overlapping shape so enclaves (Canon-Fronsac in Fronsac) stay clickable.
     area: Number(row.area ?? 0),
+    // Legal classification drives the village-zoom palette (grand cru dark
+    // red, premier cru lighter, communal sand); null for non-appellations.
+    level: row.level ?? null,
   };
 }
 

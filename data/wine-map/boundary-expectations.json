@@ -174,7 +174,7 @@
     "canonical_key": "france.bourgogne",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:bourgogne",
-    "normalized_checksum_sha256": "D871119B12354AB2CD3372C5DA030895F47EB2EE0233B470E46C3C23B8AD0AA6",
+    "normalized_checksum_sha256": "0B51697DEE2CC1D696738D99C34BE997576747EC126D5F0D62DC54CE1E6CCB0B",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T223003Z/bourgogne/fetch-manifest.json",
     "raw_checksum_sha256": "89AE9A9710D40F5B6B2E7D923EF77A7147108729B39F743FC887ED15F9842B3D",
     "documented": true
@@ -183,7 +183,7 @@
     "canonical_key": "france.bourgogne.cote-de-nuits",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:cote-de-nuits-derived",
-    "normalized_checksum_sha256": "581298F726F7FD3FF5655CE97D00735C54477F664ACD59E66B3905D742A1C32C",
+    "normalized_checksum_sha256": "DEE867C87AFDF8A67ADB761D6A07ED6D7A904CAFE69F05AEEB5C860FB753289D",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true

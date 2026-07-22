@@ -39,18 +39,50 @@ export const REGION_COLORS: Record<string, string> = {
 };
 const FALLBACK_COLOR = "#5C1A2B";
 const SELECTED_COLOR = "#B78E42";
+// Global classification palette at village zoom (legend-learnable across
+// regions): grands crus dark red, premier cru lighter red; village land and
+// broader shapes keep their region hue.
+export const LEVEL_COLORS = {
+  grand_cru: "#7E1B26",
+  premier_cru: "#C4485B",
+};
+
+const regionMatch = [
+  "match",
+  ["get", "region"],
+  ...Object.entries(REGION_COLORS).flat(),
+  FALLBACK_COLOR,
+];
+
+const levelMatch = [
+  "match",
+  ["get", "level"],
+  "grand_cru",
+  LEVEL_COLORS.grand_cru,
+  "premier_cru",
+  LEVEL_COLORS.premier_cru,
+  regionMatch,
+];
 
 function regionColorExpression(selectedKey: string | null) {
   return [
     "case",
     ["==", ["get", "key"], selectedKey ?? ""],
     SELECTED_COLOR,
-    [
-      "match",
-      ["get", "region"],
-      ...Object.entries(REGION_COLORS).flat(),
-      FALLBACK_COLOR,
-    ],
+    regionMatch,
+  ] as unknown as string;
+}
+
+// Camera ("zoom") expressions must sit at the top level of a paint property,
+// so the zoom step wraps the selection cases rather than the reverse.
+function fillColorExpression(selectedKey: string | null) {
+  const selected = ["==", ["get", "key"], selectedKey ?? ""];
+  return [
+    "step",
+    ["zoom"],
+    ["case", selected, SELECTED_COLOR, regionMatch],
+    10,
+    ["case", selected, SELECTED_COLOR, levelMatch],
   ] as unknown as string;
 }
 
@@ -101,7 +133,7 @@ export function TileWineMap({
   // label remain").
   const fillPaint = useMemo(
     () => ({
-      "fill-color": regionColorExpression(selectedKey),
+      "fill-color": fillColorExpression(selectedKey),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -119,6 +151,25 @@ export function TileWineMap({
           ["==", ["get", "key"], selectedKey ?? ""],
           0.18,
           ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
+        ],
+        10,
+        // Classification palette takes over: crus read as solid plots,
+        // village land stays a light regional wash.
+        [
+          "case",
+          ["==", ["get", "key"], selectedKey ?? ""],
+          0.4,
+          [
+            "match",
+            ["get", "level"],
+            "grand_cru",
+            0.55,
+            "premier_cru",
+            0.38,
+            "communal",
+            0.16,
+            0.1,
+          ],
         ],
       ] as unknown as number,
     }),
@@ -326,7 +377,27 @@ export function TileWineMap({
             Selected
           </li>
         </ul>
-        <p className="mt-1">Deeper levels fade as you zoom in.</p>
+        <p className="mb-1 mt-2 font-medium text-foreground">Village zoom</p>
+        <ul className="flex flex-col gap-0.5">
+          <li className="flex items-center gap-1.5">
+            <span
+              className="inline-block size-2.5 rounded-sm"
+              style={{ backgroundColor: LEVEL_COLORS.grand_cru }}
+            />
+            Grand Cru
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              className="inline-block size-2.5 rounded-sm"
+              style={{ backgroundColor: LEVEL_COLORS.premier_cru }}
+            />
+            Premier Cru
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="inline-block size-2.5 rounded-sm border border-border bg-transparent" />
+            Village (region colour)
+          </li>
+        </ul>
       </div>
     </div>
   );

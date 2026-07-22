@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 
@@ -49,20 +49,33 @@ export function WineMapTree({
     return path;
   }, [selectedKey]);
 
+  // Map -> tree alignment: whenever the selection changes (e.g. a map click
+  // on Saint-Julien), scroll the selected row into view. Expansion of the
+  // path is derived below, so the row is guaranteed to be rendered.
+  const selectedRowRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    selectedRowRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedKey]);
+
   const renderNode = (node: WinePlaceTreeNode, depth: number) => {
     if (visibleKeys && !visibleKeys.has(node.key)) return null;
     const isSelected = node.key === selectedKey;
     const onSelectedPath = selectedPath.has(node.key);
-    // Search results and the selected path render expanded; everything else
-    // honours the manual toggle (collapsed by default below tier 1).
+    // Search results render expanded; the selected path is ALWAYS expanded so
+    // the map and tree stay aligned (a map click reveals its tree row even if
+    // an ancestor was manually collapsed); everything else honours the manual
+    // toggle (collapsed by default below tier 1).
     const isCollapsed = visibleKeys
       ? false
-      : (collapsed[node.key] ?? (node.tier >= 1 && !onSelectedPath));
+      : onSelectedPath
+        ? false
+        : (collapsed[node.key] ?? node.tier >= 1);
     const hasVisibleChildren = node.children.length > 0;
 
     return (
       <li key={node.key}>
         <div
+          ref={isSelected ? selectedRowRef : undefined}
           className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-sm ${
             isSelected
               ? "bg-primary/10 font-medium text-foreground"

@@ -754,13 +754,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // and +1 DERIVED_FROM_DESCENDANTS district (Côte de Nuits), all validated
   // + current; superseded non-current rows are retained as history.
   assert.deepEqual(result.rows[0], {
-    total: 101,
-    validated: 101,
+    total: 103,
+    validated: 103,
     current: 73,
-    valid: 101,
-    labelled: 101,
+    valid: 103,
+    labelled: 103,
     manual: 2,
-    generalized: 97,
+    generalized: 98,
     reproducible: 13,
   });
 
@@ -803,9 +803,9 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // with retained superseded revisions.
   assert.deepEqual(provenance.rows[0], {
     sources: 76,
-    snapshots: 101,
+    snapshots: 103,
     identities: 76,
-    linked_boundaries: 101,
+    linked_boundaries: 103,
   });
 });
 

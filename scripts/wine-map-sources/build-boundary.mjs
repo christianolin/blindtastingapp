@@ -49,7 +49,10 @@ let clientGeojson = null;
 if (engine === "concave") {
   const started = Date.now();
   clientGeojson = JSON.stringify(
-    buildConcaveGeometry(parcels, { minComponentShare: minShare }),
+    buildConcaveGeometry(parcels, {
+      minComponentShare: minShare,
+      simplifyTolerance: tolerance,
+    }),
   );
   console.log(`concave engine done (${Math.round((Date.now() - started) / 1000)}s)`);
 }
@@ -60,6 +63,7 @@ const generation = clientGeojson
       cluster_grid_size: 0.05,
       min_component_area_share: minShare,
       min_part_area_share: minPartShare,
+      simplify_tolerance: tolerance,
       coordinate_precision: 4,
     }
   : {

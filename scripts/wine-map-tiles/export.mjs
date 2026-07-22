@@ -24,6 +24,7 @@ const EXPORT_SQL = `
     p.name,
     p.kind::text as kind,
     p.display_tier,
+    p.appellation_level as level,
     p.primary_parent_id::text as primary_parent_id,
     p.min_zoom,
     p.label_min_zoom,
