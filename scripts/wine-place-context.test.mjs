@@ -147,6 +147,10 @@ test("burgundy depth chain resolves to the climat level", async () => {
     ["france.bourgogne.cote-de-nuits"],
   );
 
+  const district = await contextFor("france.bourgogne.cote-de-nuits");
+  // All eight Côte de Nuits villages after wave 5b.
+  assert.equal(district.children.length, 8);
+
   const vosne = await contextFor("france.bourgogne.cote-de-nuits.vosne-romanee");
   assert.deepEqual(
     vosne.ancestors.map((a) => a.key),
@@ -181,7 +185,7 @@ test("burgundy depth chain resolves to the climat level", async () => {
 test("place tree returns every verified place with parent links", async () => {
   const result = await client.query("select get_wine_place_tree() tree");
   const tree = result.rows[0].tree;
-  assert.equal(tree.length, 44);
+  assert.equal(tree.length, 73);
   const byKey = new Map(tree.map((node) => [node.key, node]));
   assert.equal(byKey.get("france").parent_key, null);
   assert.equal(

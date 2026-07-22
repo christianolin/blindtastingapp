@@ -691,6 +691,29 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Les Gaudichots AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-gaudichots" },
   { names: ["Les Rouges AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-rouges" },
   { names: ["Les Suchots AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.premier-cru.les-suchots" },
+  { names: ["Marsannay AOP"], key: "france.bourgogne.cote-de-nuits.marsannay" },
+  { names: ["Fixin AOP"], key: "france.bourgogne.cote-de-nuits.fixin" },
+  { names: ["Gevrey-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin" },
+  { names: ["Morey-Saint-Denis AOP"], key: "france.bourgogne.cote-de-nuits.morey-saint-denis" },
+  { names: ["Chambolle-Musigny AOP"], key: "france.bourgogne.cote-de-nuits.chambolle-musigny" },
+  { names: ["Vougeot AOP"], key: "france.bourgogne.cote-de-nuits.vougeot" },
+  { names: ["Nuits-Saint-Georges AOP"], key: "france.bourgogne.cote-de-nuits.nuits-saint-georges" },
+  { names: ["Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin" },
+  { names: ["Chambertin-Clos de Bèze AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.chambertin-clos-de-beze" },
+  { names: ["Chapelle-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.chapelle-chambertin" },
+  { names: ["Charmes-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.charmes-chambertin" },
+  { names: ["Griotte-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.griotte-chambertin" },
+  { names: ["Latricieres-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.latricieres-chambertin" },
+  { names: ["Mazis-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.mazis-chambertin" },
+  { names: ["Mazoyeres-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.mazoyeres-chambertin" },
+  { names: ["Ruchottes-Chambertin AOP"], key: "france.bourgogne.cote-de-nuits.gevrey-chambertin.ruchottes-chambertin" },
+  { names: ["Clos de la Roche AOP"], key: "france.bourgogne.cote-de-nuits.morey-saint-denis.clos-de-la-roche" },
+  { names: ["Clos Saint-Denis AOP"], key: "france.bourgogne.cote-de-nuits.morey-saint-denis.clos-saint-denis" },
+  { names: ["Clos des Lambrays AOP"], key: "france.bourgogne.cote-de-nuits.morey-saint-denis.clos-des-lambrays" },
+  { names: ["Clos de Tart AOP"], key: "france.bourgogne.cote-de-nuits.morey-saint-denis.clos-de-tart" },
+  { names: ["Bonnes-Mares AOP"], key: "france.bourgogne.cote-de-nuits.chambolle-musigny.bonnes-mares" },
+  { names: ["Musigny AOP"], key: "france.bourgogne.cote-de-nuits.chambolle-musigny.musigny" },
+  { names: ["Clos de Vougeot AOP"], key: "france.bourgogne.cote-de-nuits.vougeot.clos-de-vougeot" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -731,13 +754,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // and +1 DERIVED_FROM_DESCENDANTS district (Côte de Nuits), all validated
   // + current; superseded non-current rows are retained as history.
   assert.deepEqual(result.rows[0], {
-    total: 71,
-    validated: 71,
-    current: 44,
-    valid: 71,
-    labelled: 71,
+    total: 101,
+    validated: 101,
+    current: 73,
+    valid: 101,
+    labelled: 101,
     manual: 2,
-    generalized: 68,
+    generalized: 97,
     reproducible: 13,
   });
 
@@ -779,10 +802,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // tracks sources (== proves nothing dangles) while snapshots/linked grow
   // with retained superseded revisions.
   assert.deepEqual(provenance.rows[0], {
-    sources: 47,
-    snapshots: 71,
-    identities: 47,
-    linked_boundaries: 71,
+    sources: 76,
+    snapshots: 101,
+    identities: 76,
+    linked_boundaries: 101,
   });
 });
 
@@ -814,7 +837,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 34);
+  assert.equal(appellations.rows.length, 57);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -828,7 +851,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 2],
-    ["appellations", 34],
+    ["appellations", 57],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -928,8 +951,8 @@ test("classification facts and legal relationship types", async () => {
        from wine_places`,
   );
   assert.deepEqual(facts.rows[0], {
-    appellations: 42,
-    aoc: 42,
+    appellations: 71,
+    aoc: 71,
     missing_level: 0,
     france_plain: 1,
   });

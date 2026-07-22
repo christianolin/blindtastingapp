@@ -1,8 +1,10 @@
 // Generator for the Côte de Nuits import (Phase 3C). Derives the place tree
 // from the committed INAO vocabulary + curated grand-cru list, asserts every
-// denomination resolves, and emits (1) the catalog migration and (2) the
-// fetch/build target list. Scope is controlled by VILLAGES below; Task 5a
-// runs Vosne-Romanée only, Task 5b adds the rest.
+// denomination resolves, and emits (1) a catalog migration and (2) the
+// fetch/build target list for the requested wave:
+//   5a — Vosne-Romanée vertical slice (committed as 20260805090000)
+//   5b — the remaining seven villages, their grands crus, and 1er-cru
+//        groups where INAO defines one (individual climats follow in 3D).
 import assert from "node:assert/strict";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -24,83 +26,118 @@ const slugify = (name) =>
     .replace(/^-|-$/g, "");
 const esc = (s) => s.replace(/'/g, "''");
 
-// Task 5a scope: Vosne-Romanée only.
-const VILLAGES = [{ name: "Vosne-Romanée", district: "cote-de-nuits" }];
+// Fine generalization presets (owner directive: edges should track the real
+// parcel edges closely; per-region shards keep the byte cost local).
+const PRESETS = {
+  village: { presimplify: 0.00005, tolerance: 0.0001, minShare: 0.05, minPartShare: 0, closing: 0.002 },
+  group: { presimplify: 0.00005, tolerance: 0.0001, minShare: 0.05, minPartShare: 0, closing: 0.002 },
+  cru: { presimplify: 0.000015, tolerance: 0.00003, minShare: 0, minPartShare: 0, closing: 0.0008 },
+};
+
 const DISTRICT = { key: "france.bourgogne.cote-de-nuits", parent: "france.bourgogne", name: "Côte de Nuits" };
+
+// Villages in geographic north-to-south order.
+const WAVES = {
+  "5a": {
+    migration: "supabase/migrations/20260805090000_cote_de_nuits.sql",
+    targetsFile: "cote-de-nuits-targets.json",
+    insertDistrict: true,
+    sortBase: 0,
+    expectedSubtree: 24,
+    villages: [{ name: "Vosne-Romanée", climats: true }],
+  },
+  "5b": {
+    migration: "supabase/migrations/20260807090000_cote_de_nuits_villages.sql",
+    targetsFile: "cote-de-nuits-5b-targets.json",
+    insertDistrict: false,
+    sortBase: 24,
+    expectedSubtree: null, // computed: 24 existing + new places
+    villages: [
+      { name: "Marsannay", climats: false },
+      { name: "Fixin", climats: false },
+      { name: "Gevrey-Chambertin", climats: false },
+      { name: "Morey-Saint-Denis", climats: false },
+      { name: "Chambolle-Musigny", climats: false },
+      { name: "Vougeot", climats: false },
+      { name: "Nuits-Saint-Georges", climats: false },
+    ],
+  },
+};
+const waveName = process.argv[2] ?? "5b";
+const wave = WAVES[waveName];
+assert.ok(wave, `unknown wave ${waveName}`);
 
 const places = [];
 const targets = [];
-let sort = 0;
+let sort = wave.sortBase;
 
-// Districts reveal at z7: a region-fit camera lands around z7, so z8 would
-// leave the district invisible after clicking its region (owner-reported).
-places.push({
-  parent: DISTRICT.parent, kind: "SUBREGION", key: DISTRICT.key, name: DISTRICT.name,
-  slug: "cote-de-nuits", tier: 2, zoom: 7, isApp: false, system: null, level: null, sort: sort++,
-});
+if (wave.insertDistrict) {
+  // Districts reveal at z7: a region-fit camera lands around z7, so z8 would
+  // leave the district invisible after clicking its region.
+  places.push({
+    parent: DISTRICT.parent, kind: "SUBREGION", key: DISTRICT.key, name: DISTRICT.name,
+    slug: "cote-de-nuits", tier: 2, zoom: 7, isApp: false, system: null, level: null, sort: sort++,
+  });
+}
 
-for (const village of VILLAGES) {
+for (const village of wave.villages) {
   assert.ok(village.name in membership, `village denom missing: ${village.name}`);
-  const vKey = `${DISTRICT.key}.${slugify(village.name)}`;
+  const vSlug = slugify(village.name);
+  const vKey = `${DISTRICT.key}.${vSlug}`;
   places.push({
     parent: DISTRICT.key, kind: "APPELLATION", key: vKey, name: village.name,
-    slug: slugify(village.name), tier: 3, zoom: 10, isApp: true, system: "AOC/AOP",
+    slug: vSlug, tier: 3, zoom: 10, isApp: true, system: "AOC/AOP",
     level: "communal", sort: sort++,
   });
-  targets.push({
-    slug: `${slugify(village.name)}-village`, key: vKey, members: [village.name],
-    presimplify: 0.0001, tolerance: 0.0003, minShare: 0.05, minPartShare: 0, closing: 0.002,
-  });
+  targets.push({ slug: `${vSlug}-village`, key: vKey, members: [village.name], ...PRESETS.village });
 
-  // Grand crus (children of the village).
-  for (const gc of grandCrus.filter((g) => g.village === slugify(village.name))) {
+  for (const gc of grandCrus.filter((g) => g.village === vSlug)) {
     assert.ok(gc.denom in membership, `grand cru denom missing: ${gc.denom}`);
     const gKey = `${vKey}.${slugify(gc.name)}`;
     places.push({
       parent: vKey, kind: "APPELLATION", key: gKey, name: gc.name, slug: slugify(gc.name),
       tier: 4, zoom: 13, isApp: true, system: "AOC/AOP", level: "grand_cru", sort: sort++,
     });
-    targets.push({
-      slug: `${slugify(village.name)}-gc-${slugify(gc.name)}`, key: gKey, members: [gc.denom],
-      presimplify: 0.00003, tolerance: 0.00008, minShare: 0, minPartShare: 0, closing: 0.0008,
-    });
+    targets.push({ slug: `${vSlug}-gc-${slugify(gc.name)}`, key: gKey, members: [gc.denom], ...PRESETS.cru });
   }
 
-  // Premier-cru group + individual climats.
+  // 1er-cru group only where INAO defines the aggregate (Marsannay has none).
   const groupDenom = `${village.name} premier cru`;
-  assert.ok(groupDenom in membership, `1er cru group denom missing: ${groupDenom}`);
-  const grpKey = `${vKey}.premier-cru`;
-  places.push({
-    parent: vKey, kind: "SITE", key: grpKey, name: `${village.name} 1er Cru`, slug: "premier-cru",
-    tier: 4, zoom: 12, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
-  });
-  targets.push({
-    slug: `${slugify(village.name)}-1er`, key: grpKey, members: [groupDenom],
-    presimplify: 0.0001, tolerance: 0.0003, minShare: 0.05, minPartShare: 0, closing: 0.002,
-  });
-
-  const climats = Object.keys(membership)
-    .filter((k) => k.startsWith(`${groupDenom} `))
-    .sort();
-  for (const denom of climats) {
-    const climatName = denom.slice(groupDenom.length + 1);
-    const cKey = `${grpKey}.${slugify(climatName)}`;
+  if (groupDenom in membership) {
+    const grpKey = `${vKey}.premier-cru`;
     places.push({
-      parent: grpKey, kind: "SITE", key: cKey, name: climatName, slug: slugify(climatName),
-      tier: 5, zoom: 14, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
+      parent: vKey, kind: "SITE", key: grpKey, name: `${village.name} 1er Cru`, slug: "premier-cru",
+      tier: 4, zoom: 12, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
     });
-    targets.push({
-      slug: `${slugify(village.name)}-1er-${slugify(climatName)}`, key: cKey, members: [denom],
-      presimplify: 0.00003, tolerance: 0.00008, minShare: 0, minPartShare: 0, closing: 0.0008,
-    });
+    targets.push({ slug: `${vSlug}-1er`, key: grpKey, members: [groupDenom], ...PRESETS.group });
+
+    if (village.climats) {
+      const climats = Object.keys(membership)
+        .filter((k) => k.startsWith(`${groupDenom} `))
+        .sort();
+      for (const denom of climats) {
+        const climatName = denom.slice(groupDenom.length + 1);
+        const cKey = `${grpKey}.${slugify(climatName)}`;
+        places.push({
+          parent: grpKey, kind: "SITE", key: cKey, name: climatName, slug: slugify(climatName),
+          tier: 5, zoom: 14, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
+        });
+        targets.push({
+          slug: `${vSlug}-1er-${slugify(climatName)}`, key: cKey, members: [denom], ...PRESETS.cru,
+        });
+      }
+    }
+  } else {
+    console.log(`note: no INAO 1er-cru aggregate for ${village.name} — group skipped`);
   }
 }
 
-// Catalog migration SQL.
+const expectedSubtree = wave.expectedSubtree ?? 24 + places.length;
+
 const lines = [
-  "-- Phase 3C Task 5a: Côte de Nuits district + Vosne-Romanée subtree as DRAFT",
-  "-- places. Boundaries are staged separately by build-boundary.mjs; a later",
-  "-- flip migration marks them VERIFIED once the owner approves the shapes.",
+  `-- Phase 3C wave ${waveName}: Côte de Nuits places as DRAFT. Boundaries are`,
+  "-- staged separately by build-boundary.mjs; a flip migration marks them",
+  "-- VERIFIED once the owner approves the shapes.",
   "-- Generated by scripts/wine-map-sources/generate-cote-de-nuits.mjs.",
   "",
 ];
@@ -124,27 +161,24 @@ lines.push(
   "begin",
   "  select count(*) into v_count from wine_places",
   "   where canonical_key like 'france.bourgogne.cote-de-nuits%';",
-  `  if v_count <> ${places.length} then`,
-  `    raise exception 'expected ${places.length} Cote de Nuits places, got %', v_count;`,
+  `  if v_count <> ${expectedSubtree} then`,
+  `    raise exception 'expected ${expectedSubtree} Cote de Nuits places, got %', v_count;`,
   "  end if;",
   "end $$;",
   "",
 );
 
-await writeFile(
-  new URL("supabase/migrations/20260805090000_cote_de_nuits.sql", ROOT),
-  lines.join("\n"),
-);
+await writeFile(new URL(wave.migration, ROOT), lines.join("\n"));
 
 const workDir = path.resolve(".tiles-build", "sources");
 await mkdir(workDir, { recursive: true });
 await writeFile(
-  path.join(workDir, "cote-de-nuits-targets.json"),
+  path.join(workDir, wave.targetsFile),
   `${JSON.stringify(targets, null, 2)}\n`,
 );
 
 const byKind = {};
 for (const p of places) byKind[p.kind] = (byKind[p.kind] ?? 0) + 1;
 console.log(
-  `GENERATED ${places.length} places (${JSON.stringify(byKind)}), ${targets.length} boundary targets.`,
+  `GENERATED wave ${waveName}: ${places.length} places (${JSON.stringify(byKind)}), ${targets.length} targets, subtree guard ${expectedSubtree}.`,
 );

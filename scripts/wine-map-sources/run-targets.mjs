@@ -9,9 +9,11 @@ import pg from "pg";
 import { pgConfig } from "../wine-map-tiles/lib.mjs";
 
 const workDir = path.resolve(".tiles-build", "sources");
-const targetsPath = path.join(workDir, "cote-de-nuits-targets.json");
+const args = process.argv.slice(2);
+const targetsFile = args.find((a) => a.endsWith(".json")) ?? "cote-de-nuits-targets.json";
+const targetsPath = path.join(workDir, targetsFile);
 const targets = JSON.parse(await readFile(targetsPath, "utf8"));
-const only = process.argv[2] ?? null; // optional slug substring filter
+const only = args.find((a) => !a.endsWith(".json")) ?? null; // optional slug substring filter
 
 const client = new pg.Client(pgConfig());
 await client.connect();
