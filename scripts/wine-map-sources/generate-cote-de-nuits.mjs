@@ -169,6 +169,35 @@ const WAVES = {
       { name: "Nuits-Saint-Georges" },
     ],
   },
+  "3f-chablis-climats": {
+    migration: "supabase/migrations/20260816090000_chablis_premier_cru_climats.sql",
+    targetsFile: "chablis-climats-1er-targets.json",
+    district: { key: "france.bourgogne.chablis", parent: "france.bourgogne", name: "Chablis" },
+    climatsOnly: true,
+    insertDistrict: false,
+    sortBase: 600,
+    existingSubtree: 12,
+    expectedSubtree: null,
+    villages: [{ name: "Chablis" }],
+  },
+  "3f-cdb-climats": {
+    migration: "supabase/migrations/20260816093000_cote_de_beaune_climats.sql",
+    targetsFile: "cote-de-beaune-climats-targets.json",
+    district: { key: "france.bourgogne.cote-de-beaune", parent: "france.bourgogne", name: "Côte de Beaune" },
+    climatsOnly: true,
+    insertDistrict: false,
+    sortBase: 700,
+    existingSubtree: 41,
+    expectedSubtree: null,
+    villages: [
+      { name: "Ladoix" }, { name: "Aloxe-Corton" }, { name: "Pernand-Vergelesses" },
+      { name: "Savigny-lès-Beaune" }, { name: "Chorey-lès-Beaune" }, { name: "Beaune" },
+      { name: "Pommard" }, { name: "Volnay" }, { name: "Monthélie" },
+      { name: "Auxey-Duresses" }, { name: "Saint-Romain" }, { name: "Meursault" },
+      { name: "Puligny-Montrachet" }, { name: "Chassagne-Montrachet" }, { name: "Saint-Aubin" },
+      { name: "Santenay" }, { name: "Maranges" },
+    ],
+  },
 };
 const waveName = process.argv[2] ?? "5b";
 const wave = WAVES[waveName];
