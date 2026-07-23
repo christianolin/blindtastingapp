@@ -10,6 +10,62 @@ import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
 
+// One aligned row per scored attribute — the correct value, the taster's
+// guess, and the points — so the score reads as an auditable result sheet
+// instead of a loose row of chips. Colour is paired with an icon + text.
+function AttributeSheet({
+  rows,
+}: {
+  rows: {
+    label: string;
+    correct: string;
+    guessed: string | null;
+    points: number;
+  }[];
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="overflow-hidden rounded-lg border border-border/60">
+      {rows.map((r) => {
+        const got = r.points > 0;
+        const missed = r.guessed !== null && r.points === 0;
+        return (
+          <div
+            key={r.label}
+            className="flex items-baseline gap-2 border-t border-border/50 px-3 py-1.5 text-sm first:border-t-0"
+          >
+            <span className="w-24 shrink-0 text-xs text-muted-foreground">
+              {r.label}
+            </span>
+            <span className="min-w-0 flex-1">
+              {r.correct}
+              {r.guessed !== r.correct ? (
+                <span className="text-muted-foreground">
+                  {" · you: "}
+                  {r.guessed ?? "not answered"}
+                </span>
+              ) : null}
+            </span>
+            <span
+              className={cn(
+                "flex shrink-0 items-center gap-1 tabular-nums",
+                got
+                  ? "text-[#3f5b42]"
+                  : missed
+                    ? "text-destructive"
+                    : "text-muted-foreground",
+              )}
+            >
+              <span aria-hidden>{got ? "✓" : missed ? "✕" : "—"}</span>
+              {r.points > 0 ? `+${r.points}` : "0"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * The whole guess-and-reveal-and-results experience for a tasting, as an
  * embeddable server component. Rendered inline on the tasting main page (so
@@ -308,20 +364,65 @@ export async function PlayExperience({
       .sort((a, b) => b.total - a.total);
   })();
 
-  const breakdown = (g: Guess) => {
-    const rows: { key: string; guessed: string; points: number }[] = [];
-    const push = (key: string, guessed: string, points: number | null) => {
+  // Correct value + the taster's guess + points, per scored attribute. null
+  // points mean the category isn't in play for this wine, so it's skipped.
+  type AnswerLike = Parameters<typeof describeAnswer>[0];
+  const scoredRows = (answer: AnswerLike, g: Guess) => {
+    const rows: {
+      label: string;
+      correct: string;
+      guessed: string | null;
+      points: number;
+    }[] = [];
+    const add = (
+      label: string,
+      correctId: string | null,
+      guessedId: string | null,
+      points: number | null,
+    ) => {
       if (points === null) return;
-      rows.push({ key, guessed, points });
+      rows.push({
+        label,
+        correct: name(correctId),
+        guessed: guessedId != null ? name(guessedId) : null,
+        points,
+      });
     };
-    push("country", name(g.country_id), g.country_points);
-    push("region", name(g.region_id), g.region_points);
-    push("appellation", name(g.appellation_id), g.appellation_points);
-    push("primary_grape", name(g.primary_grape_id), g.primary_grape_points);
-    push("secondary_grape", name(g.secondary_grape_id), g.secondary_grape_points);
-    push("producer", name(g.producer_id), g.producer_points);
-    push("type_designation", name(g.type_designation_id), g.type_designation_points);
-    push("vintage", vintageLabel(g), g.vintage_points);
+    add("Country", answer.country_id, g.country_id, g.country_points);
+    add("Region", answer.region_id, g.region_id, g.region_points);
+    add(
+      "Appellation",
+      answer.appellation_id,
+      g.appellation_id,
+      g.appellation_points,
+    );
+    add(
+      "Primary grape",
+      answer.primary_grape_id,
+      g.primary_grape_id,
+      g.primary_grape_points,
+    );
+    add(
+      "Secondary grape",
+      answer.secondary_grape_id,
+      g.secondary_grape_id,
+      g.secondary_grape_points,
+    );
+    add("Producer", answer.producer_id, g.producer_id, g.producer_points);
+    add(
+      "Designation",
+      answer.type_designation_id,
+      g.type_designation_id,
+      g.type_designation_points,
+    );
+    if (g.vintage_points !== null) {
+      rows.push({
+        label: "Vintage",
+        correct: vintageLabel(answer),
+        guessed: g.vintage_kind != null ? vintageLabel(g) : null,
+        points: g.vintage_points,
+      });
+    }
     return rows;
   };
 
@@ -581,24 +682,7 @@ export async function PlayExperience({
                                   : "no match"}
                               </p>
                             ) : (
-                              <div className="flex flex-wrap gap-1">
-                                {breakdown(g).map((c) => (
-                                  <span
-                                    key={c.key}
-                                    className={cn(
-                                      "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs",
-                                      c.points > 0
-                                        ? "bg-[#3f5b42]/12 text-[#3f5b42]"
-                                        : "bg-destructive/10 text-destructive",
-                                    )}
-                                  >
-                                    {c.guessed}
-                                    <span className="font-semibold tabular-nums">
-                                      {c.points > 0 ? `+${c.points}` : "✗"}
-                                    </span>
-                                  </span>
-                                ))}
-                              </div>
+                              <AttributeSheet rows={scoredRows(answer, g)} />
                             )}
                           </div>
                         ))}
@@ -619,26 +703,11 @@ export async function PlayExperience({
                         ) : null}
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-1">
-                        <span className="mr-1 text-sm font-medium">
-                          Your result — {guess.total_points ?? 0} pts:
-                        </span>
-                        {breakdown(guess).map((c) => (
-                          <span
-                            key={c.key}
-                            className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs",
-                              c.points > 0
-                                ? "bg-[#3f5b42]/12 text-[#3f5b42]"
-                                : "bg-destructive/10 text-destructive",
-                            )}
-                          >
-                            {c.guessed}
-                            <span className="font-semibold tabular-nums">
-                              {c.points > 0 ? `+${c.points}` : "✗"}
-                            </span>
-                          </span>
-                        ))}
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-sm font-medium">
+                          Your result — {guess.total_points ?? 0} pts
+                        </p>
+                        <AttributeSheet rows={scoredRows(answer, guess)} />
                       </div>
                     )
                   ) : (

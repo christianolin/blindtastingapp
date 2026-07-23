@@ -38,7 +38,7 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
       supabase.auth.getUser(),
       supabase
         .from("tastings")
-        .select("reveal_mode, wine_source, host_id")
+        .select("reveal_mode, wine_source, host_id, status")
         .eq("id", tastingId)
         .maybeSingle(),
     ]);
@@ -72,22 +72,18 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
   });
   const maxTotal = Math.max(1, ...competitors.map((r) => r.total));
 
-  // Everyone else in the room: the organizer (organizer-selects host) plus
-  // invited / declined people.
-  const others = (participants ?? []).filter((p) => {
-    if (p.status !== "JOINED") return true;
-    if (hostProvides && p.user_id === hostId) return true;
-    return false;
-  });
+  // Crown/medals only once the tasting is finished — during play the ranking
+  // is provisional, so rank numbers carry it (no premature winner).
+  const completed = tasting?.status === "CLOSED";
 
-  const statusLabel = (p: { user_id: string; status: string }) =>
-    p.user_id === hostId
-      ? "Host"
-      : p.status === "INVITED"
-        ? "Invited"
-        : p.status === "DECLINED"
-          ? "Declined"
-          : "In";
+  // The organizer of an organizer-selects tasting sets the answers and doesn't
+  // compete — a lighter HOST utility line, not a ranked row.
+  const organizer =
+    hostProvides && hostId
+      ? ((participants ?? []).find((p) => p.user_id === hostId) ?? null)
+      : null;
+  // Not yet in: invited or declined people (joined competitors are ranked).
+  const waiting = (participants ?? []).filter((p) => p.status !== "JOINED");
 
   return (
     <Card className="overflow-hidden py-0">
@@ -106,7 +102,7 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
           <ol className="flex flex-col gap-1">
             {competitors.map((row, i) => {
               const isMe = row.userId === user?.id;
-              const rankStyle = RANK_STYLES[i];
+              const rankStyle = completed ? RANK_STYLES[i] : undefined;
               const pct = Math.max(4, Math.round((row.total / maxTotal) * 100));
               return (
                 <li
@@ -126,9 +122,9 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                           : "bg-muted text-muted-foreground",
                       )}
                     >
-                      {i === 0 ? (
+                      {completed && i === 0 ? (
                         <Crown className="size-3.5" strokeWidth={2.5} />
-                      ) : i < 3 ? (
+                      ) : completed && i < 3 ? (
                         <Medal className="size-3.5" strokeWidth={2.5} />
                       ) : (
                         i + 1
@@ -200,42 +196,76 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
           </ol>
         )}
 
-        {others.length > 0 ? (
-          <div className="mt-3 border-t border-border/60 pt-3">
-            <p className="mb-1.5 px-2 text-xs font-medium text-muted-foreground">
-              In the room
-            </p>
-            <ul className="flex flex-col gap-0.5">
-              {others.map((p) => {
-                const profile = profileByUserId.get(p.user_id);
-                const name = profile?.display_name ?? "Someone";
-                return (
-                  <li
-                    key={p.id}
-                    className="flex items-center gap-2.5 rounded-lg px-2 py-1.5"
-                  >
-                    {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profile.avatar_url}
-                        alt=""
-                        className="size-7 shrink-0 rounded-full object-cover ring-1 ring-border"
-                      />
-                    ) : (
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
-                        {name.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1 truncate text-sm">
-                      {name}
-                    </span>
-                    <Badge variant={p.status === "JOINED" ? "secondary" : "outline"}>
-                      {statusLabel(p)}
-                    </Badge>
-                  </li>
-                );
-              })}
-            </ul>
+        {organizer || waiting.length > 0 ? (
+          <div className="mt-3 flex flex-col gap-3 border-t border-border/60 pt-3">
+            {organizer
+              ? (() => {
+                  const profile = profileByUserId.get(organizer.user_id);
+                  const name = profile?.display_name ?? "Someone";
+                  return (
+                    <div>
+                      <p className="mb-1 px-2 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                        Host
+                      </p>
+                      <div className="flex items-center gap-2.5 px-2">
+                        {profile?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={profile.avatar_url}
+                            alt=""
+                            className="size-7 shrink-0 rounded-full object-cover ring-1 ring-border"
+                          />
+                        ) : (
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium">
+                            {name.slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm">
+                          {name}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()
+              : null}
+            {waiting.length > 0 ? (
+              <div>
+                <p className="mb-1 px-2 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Not yet joined
+                </p>
+                <ul className="flex flex-col gap-0.5">
+                  {waiting.map((p) => {
+                    const profile = profileByUserId.get(p.user_id);
+                    const name = profile?.display_name ?? "Someone";
+                    return (
+                      <li
+                        key={p.id}
+                        className="flex items-center gap-2.5 px-2 py-1"
+                      >
+                        {profile?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={profile.avatar_url}
+                            alt=""
+                            className="size-6 shrink-0 rounded-full object-cover opacity-70 ring-1 ring-border"
+                          />
+                        ) : (
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium opacity-70">
+                            {name.slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                          {name}
+                        </span>
+                        <Badge variant="outline">
+                          {p.status === "DECLINED" ? "Declined" : "Invited"}
+                        </Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </CardContent>
