@@ -819,13 +819,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 674,
-    validated: 674,
-    current: 608,
-    valid: 674,
-    labelled: 674,
+    total: 859,
+    validated: 859,
+    current: 793,
+    valid: 859,
+    labelled: 859,
     manual: 2,
-    generalized: 649,
+    generalized: 834,
     reproducible: 13,
   });
 
@@ -876,7 +876,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 674);
+  assert.equal(prov.linked_boundaries, 859);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1032,8 +1032,8 @@ test("classification facts and legal relationship types", async () => {
   assert.deepEqual(facts.rows[0], {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups).
-      appellations: 601,
-      aoc: 601,
+      appellations: 786,
+      aoc: 786,
     missing_level: 0,
     france_plain: 1,
   });

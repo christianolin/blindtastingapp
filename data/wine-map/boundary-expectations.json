@@ -513,6 +513,339 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.a-vigne-rouge",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-a-vigne-rouge",
+    "normalized_checksum_sha256": "C2F4275FDF32692B56AC4AFAC2610A275C75B2D70995CDFF85A54DCF990FCAD1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135717Z/givry-1er-a-vigne-rouge/fetch-manifest.json",
+    "raw_checksum_sha256": "568E7169F3AFBAFA905A72ED981707A0B3F97C38252BD3E4C92EDB0A99B7D045",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.champ-nalot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-champ-nalot",
+    "normalized_checksum_sha256": "F397AFB1BBE2AF56A62B0D4BF00CB3A650FF865FB84C2E9D1362426993E95CAF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135719Z/givry-1er-champ-nalot/fetch-manifest.json",
+    "raw_checksum_sha256": "DB33B16491F155BA4DBD9248EB1E1250D71478AE30A503EDF6D6CCB5E6D805BF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-charle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-charle",
+    "normalized_checksum_sha256": "347DC7EEEC4BB1EC2229906E78C38639770DB0B929AC201272C0C1EC06673681",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135721Z/givry-1er-clos-charle/fetch-manifest.json",
+    "raw_checksum_sha256": "C7D05C494367E0D76CE91153F38D1163B7E98E6097C01650233562422F17FD0E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-de-la-baraude",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-de-la-baraude",
+    "normalized_checksum_sha256": "6446161C32D1F1CCB9F19515CE811FBAA7AC243A5CD30D134D2718BC3C45EE46",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135730Z/givry-1er-clos-de-la-baraude/fetch-manifest.json",
+    "raw_checksum_sha256": "4A0B7D48FCCD2BA436BFC1B6BEF8D101569F0A80F73D9EB3CC6CE1E6B6D5E990",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-du-cellier-aux-moines",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-du-cellier-aux-moines",
+    "normalized_checksum_sha256": "CAF8C5CCC86D43D6590A09EF835A0EE171B280BC97D8224371489E4A76448A78",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135732Z/givry-1er-clos-du-cellier-aux-moines/fetch-manifest.json",
+    "raw_checksum_sha256": "792D2817279EFADE23051595D0958A0CC130CDD0102B475CCC95FFA406D4C7E4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-du-cras-long",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-du-cras-long",
+    "normalized_checksum_sha256": "793E487ECA44933C15B6C33ECD561FC73FE2BC067FFE7F367173AFE792ED8967",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135734Z/givry-1er-clos-du-cras-long/fetch-manifest.json",
+    "raw_checksum_sha256": "18134DD76610939B08A4A4840FD4A69588DAB8183E44DAB52F0F092A73473EF8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-du-vernoy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-du-vernoy",
+    "normalized_checksum_sha256": "463AB5E9A1F7BA8310D49F27D15C3462D8CE1E40CFE2D06002C30695298A55B7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135736Z/givry-1er-clos-du-vernoy/fetch-manifest.json",
+    "raw_checksum_sha256": "DAB6894795A245C12C00FACF2990FE1BF1E1E44941CEA689CBAC62532BEC3046",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-jus",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-jus",
+    "normalized_checksum_sha256": "D0049DF765AEE053C6A40597B4BBDFDDF69846899507144A35FDA89FB5ED9FD9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135723Z/givry-1er-clos-jus/fetch-manifest.json",
+    "raw_checksum_sha256": "7EC9C33408C1CF9E2A44F36C911F3CAE43A53281E459D25544C2F3E318D7D43C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-marceaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-marceaux",
+    "normalized_checksum_sha256": "BFBF778D3CEAB865C21C98B3512DE18C5AF6174A0DCA6A0E05AAE06DC2B3AA12",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135725Z/givry-1er-clos-marceaux/fetch-manifest.json",
+    "raw_checksum_sha256": "219F0797A5E21F86AF3F87CB8094787C09894B4E950ECBDE2A812A10096DEC2B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-marole",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-marole",
+    "normalized_checksum_sha256": "02BA061F4DFE508AECA50A209B0B974B6C751F00BDEC1B7EA5EDC1216FB86D85",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135727Z/givry-1er-clos-marole/fetch-manifest.json",
+    "raw_checksum_sha256": "9EC65BC287EC7E0BFDE28AC64AFB480532E19704DD426AD367C87A2B7787944B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-saint-paul",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-saint-paul",
+    "normalized_checksum_sha256": "E11BCEC77295A4C3310C76ED7349A0868A80276034A3DA0FA504D6051919E82D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135738Z/givry-1er-clos-saint-paul/fetch-manifest.json",
+    "raw_checksum_sha256": "DA15358658122F427A451437A0E1147DE84DC7C1E0F8876C944062C530580304",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-saint-pierre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-saint-pierre",
+    "normalized_checksum_sha256": "818FF1C7AE9034E91E003FF92CF3D2E6E5ABC4F93C4CF32246416DBC4D2714D4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135740Z/givry-1er-clos-saint-pierre/fetch-manifest.json",
+    "raw_checksum_sha256": "1204186B6032D8E7C8057438C6452D6D76353DECD9BB49AE5C55EB1F51F95CE2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.clos-salomon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-clos-salomon",
+    "normalized_checksum_sha256": "E924208169783847C05BC303B2F669F8B3FEAAC616FADCA8B25D4B33151410C5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135728Z/givry-1er-clos-salomon/fetch-manifest.json",
+    "raw_checksum_sha256": "89D4115F9C3490BEA7C129C31BEA8DCF434CFE53A5649187A917F87FB1A3D054",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.crausot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-crausot",
+    "normalized_checksum_sha256": "BE19DD12DB5C9FFE99B5008D3B4519E0CBF8CA5445844FAE863388BBAF784FB3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135742Z/givry-1er-crausot/fetch-manifest.json",
+    "raw_checksum_sha256": "57CCF09EE21B7FA0BEA5785A4751F243B8410132970F1E9F398538A0C24CB1AA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.cremillons",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-cremillons",
+    "normalized_checksum_sha256": "D392559E1A93D1243EEE44A3E213DF689335B2D15FA66160AAE1002F01FB6915",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135744Z/givry-1er-cremillons/fetch-manifest.json",
+    "raw_checksum_sha256": "776BDEC3DF6F35F127E9F97AC2729EFAE3F8630AE1ED19FE795DAC420A2F855E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.en-choue",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-en-choue",
+    "normalized_checksum_sha256": "0F7379707F75305F9D8302FBC1A1DF7492A1012713B9C84BE703E081645D2E83",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135746Z/givry-1er-en-choue/fetch-manifest.json",
+    "raw_checksum_sha256": "37ABDB191BA85C2198DF2D25BA00C662F717151507A2260DBF7D435A4B438B69",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.en-veau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-en-veau",
+    "normalized_checksum_sha256": "CC5D6925FBF09A2EA2D6A71EA8AF654E1FC3AB69278E594889BBF637BBBFE4DD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135748Z/givry-1er-en-veau/fetch-manifest.json",
+    "raw_checksum_sha256": "68675831A1C1BE4ADE607FEB8620FE1CDD6C8D20FB73F6F8D614683BCB2063CE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.la-brulee",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-la-brulee",
+    "normalized_checksum_sha256": "84F2208E173A31C2BBAF3BB38953301B1F222C8E838372ACD51BBC1064BD1E13",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135750Z/givry-1er-la-brulee/fetch-manifest.json",
+    "raw_checksum_sha256": "454667513220E4F1541761FD2CC8E075C28246816FFF49EAEEC4164F40CF7972",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.la-grande-berge",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-la-grande-berge",
+    "normalized_checksum_sha256": "BA284F637E17E20AE1DE8952D2B6AA4C3B34BC2634A8AEF21E92A6A07F19C3DB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135751Z/givry-1er-la-grande-berge/fetch-manifest.json",
+    "raw_checksum_sha256": "75D38F76B90F14871E87B4178A8188D6DC2D455E268F397FA117A721E0573F18",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.la-matrosse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-la-matrosse",
+    "normalized_checksum_sha256": "B912D62DC3BA3A4F3388547E2E8134E286B177060013D08951BF6712FE644544",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135753Z/givry-1er-la-matrosse/fetch-manifest.json",
+    "raw_checksum_sha256": "13586372D88542512AB32B873EDAC05F3760CBFFFC2BCD7667BEB2CB67687BEE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.la-petite-berge",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-la-petite-berge",
+    "normalized_checksum_sha256": "B66B8C6B1F40E06C36A4CCEEB3C7EEF5B08A126A21C6CF0A23327FC04EF482B8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135755Z/givry-1er-la-petite-berge/fetch-manifest.json",
+    "raw_checksum_sha256": "8707268AF3BBD6CE53BDA13F6A94BE15724924A03A1002AF5C3172D1FD9D9644",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.la-plante",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-la-plante",
+    "normalized_checksum_sha256": "881C8CC2A930663277A6506D1196D6D2444CA1F7D2226829369397770185E45B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135758Z/givry-1er-la-plante/fetch-manifest.json",
+    "raw_checksum_sha256": "4421CF4B41DC411714C1C29B3A8068C6CEB35A3F3A5B04F09BB750DCD4361E3F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-champ-lalot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-champ-lalot",
+    "normalized_checksum_sha256": "B3076B731FB9ACEAC390C20A400E0EA74F3C50333D586F4DB64604FDB8BFF754",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135800Z/givry-1er-le-champ-lalot/fetch-manifest.json",
+    "raw_checksum_sha256": "4979615BA4CB755C839088B651DFE387E48185DF50406457BD51F89E61D7B957",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-medenchot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-medenchot",
+    "normalized_checksum_sha256": "DF1EE6B4C7B71368B7BCD87A534FAEA9652C0381CFD8AF5344B52CD16A0042FF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135803Z/givry-1er-le-medenchot/fetch-manifest.json",
+    "raw_checksum_sha256": "2ED8877EC06E6A6EF9FB96338B4BFAA136D778A8EF38DB5A8281C8FACAD964A3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-paradis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-paradis",
+    "normalized_checksum_sha256": "63527B9D825ADE8D6ACB04AB97D3ABD56C9DC22CB0AA543781B242113CC1F205",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135805Z/givry-1er-le-paradis/fetch-manifest.json",
+    "raw_checksum_sha256": "79976DAC17BCA476B9534316C5AC514FF6D12E9959CD7954A703565C7F0DCB65",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-petit-pretan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-petit-pretan",
+    "normalized_checksum_sha256": "BA1C54F3597C8AA96358EFC97F88265D05A3AC08E036EE20302E1D0C3FD34413",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135807Z/givry-1er-le-petit-pretan/fetch-manifest.json",
+    "raw_checksum_sha256": "0C3DE425C2D83A82E9450C8FF9B7403470D473F6E7AAF5B0775C269716C73D9F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-pied-de-chaume",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-pied-de-chaume",
+    "normalized_checksum_sha256": "EFF0F0CCE7B992CAC89E1EDA420C6915D2CF5CC011BCF009EB40CD26B2BF27D9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135809Z/givry-1er-le-pied-de-chaume/fetch-manifest.json",
+    "raw_checksum_sha256": "92D049D3D1415F68E25A27C27CA1B575708996ECEBD33BF808DACACB2C92BC08",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-pied-du-clou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-pied-du-clou",
+    "normalized_checksum_sha256": "6A26D61BCE33E0F6AA99CADCFB5233272A6F14E9DB6BA4708675B75D397E9222",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135811Z/givry-1er-le-pied-du-clou/fetch-manifest.json",
+    "raw_checksum_sha256": "EF647159566C6A888D479D3149BE3FA8DCF9F963EEA4E147DEA21863FA78AC2C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.le-vigron",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-le-vigron",
+    "normalized_checksum_sha256": "7724F6B9899E7B16F4E73261D4153D8DDA5B84F6343E9BD3BC1383545BDFAC57",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135812Z/givry-1er-le-vigron/fetch-manifest.json",
+    "raw_checksum_sha256": "3A1DF567CDB3D7E57369D720D947F25259736A1BAC9C6E06EC4C15894BAB4653",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-bois-chevaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-bois-chevaux",
+    "normalized_checksum_sha256": "1639AF24D697C129F596ED8ECE395A8452281343C06F98B0D88FCB711FD3B3CF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135814Z/givry-1er-les-bois-chevaux/fetch-manifest.json",
+    "raw_checksum_sha256": "5067AF86652CE1AA172E7B1183687540D65D89E930807A7076588F3E8D0983C4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-bois-gautiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-bois-gautiers",
+    "normalized_checksum_sha256": "C2C8ED9C813631DF95C307E59D210878B4AE36145152ABD2DD8AAB156292EE3F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135816Z/givry-1er-les-bois-gautiers/fetch-manifest.json",
+    "raw_checksum_sha256": "40D63365A54CF70BDBD4A100CCB2AC9479E6072C0B3286A07CC17287CFD6B108",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-combes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-combes",
+    "normalized_checksum_sha256": "A2AFB89841B0FA00273BD1CA08D6084BF6C5B1D30F2C89E23F7B9942320AAD99",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135818Z/givry-1er-les-combes/fetch-manifest.json",
+    "raw_checksum_sha256": "86CB2E0F52ED06993DD3AF9946FCEC258C34655A7050C0E5588D413791894B94",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-galaffres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-galaffres",
+    "normalized_checksum_sha256": "A9660BEF25AE3AD404D5EF6E5A48D489B9FEDAF1EB85864AB171110030DBC916",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135821Z/givry-1er-les-galaffres/fetch-manifest.json",
+    "raw_checksum_sha256": "9BDBB2C3DB7512B89AE878541B3E8EA2444075889F2EA7E93519FAEE561A6C92",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-grandes-vignes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-grandes-vignes",
+    "normalized_checksum_sha256": "1672D8CD4C68B85E34D312A854CE65B05B7E558258A74F19620CE5ECC442B681",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135822Z/givry-1er-les-grandes-vignes/fetch-manifest.json",
+    "raw_checksum_sha256": "ED9A4894AA19C544FD55CEF9645AC81F4E0C50E79D17FECC2457204676B78170",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.les-grands-pretans",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-les-grands-pretans",
+    "normalized_checksum_sha256": "2AE35B0AB6D3CA44208F18D19C9B91F9CFCE5BA454B8C7B2EA2AF873DAA8B3E7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135824Z/givry-1er-les-grands-pretans/fetch-manifest.json",
+    "raw_checksum_sha256": "962D1145C968F2330260481941D8F54618003A1EA3399079FA5D564810F4DE7C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.petit-marole",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-petit-marole",
+    "normalized_checksum_sha256": "6B433EDDFC7ED81778372B025FB82FD04F01E164E7FD4C329AE2C2688CBDD7C1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135826Z/givry-1er-petit-marole/fetch-manifest.json",
+    "raw_checksum_sha256": "97728E6769439039CFEA445AD0BF4C87C7EFCFA72A44D22CE1A2F2CE65837E35",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.givry.premier-cru.servoisine",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:givry-1er-servoisine",
+    "normalized_checksum_sha256": "EF64DC3524CD219AFA420E84CAAC51AD283553403295C1685439DE967F6D686F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135828Z/givry-1er-servoisine/fetch-manifest.json",
+    "raw_checksum_sha256": "93616CD8F8635759E655E0EE18DBB07908A18F040013CFEFED755F79E5BFC0DA",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:mercurey-village",
@@ -528,6 +861,276 @@
     "normalized_checksum_sha256": "6E8F93A644B5246190947C087BFA06742221746876525A245FA973B3414CEFA8",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190912Z/mercurey-1er/fetch-manifest.json",
     "raw_checksum_sha256": "0AC0F3EF6CABECECB8AC11BD5492B2D53957220E038AD77724268069025DA1A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-de-paradis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-de-paradis",
+    "normalized_checksum_sha256": "84689F68700F8353D15EDC0E5728592280CCF4EB23AA0FA03F27A659026F7E70",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135625Z/mercurey-1er-clos-de-paradis/fetch-manifest.json",
+    "raw_checksum_sha256": "14640FE2F613B228E4C9BC3CBA276F431FED9BD977AB7D05FB2E947BC468515F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-des-barraults",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-des-barraults",
+    "normalized_checksum_sha256": "FEC47B4EA7E68E65D71B195ACD01DBEF1EF40B06C42B68BACCE096A4901B59BA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135627Z/mercurey-1er-clos-des-barraults/fetch-manifest.json",
+    "raw_checksum_sha256": "CB13D9B2D36A272A258790F798D273BBA2940B99A24205F66C828A7B1C9A4AA5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-des-grands-voyens",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-des-grands-voyens",
+    "normalized_checksum_sha256": "17EF372ED2F4455D90BA664FD12BD2768C67AF5D6AD3C6998D30C00C9DE525FA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135631Z/mercurey-1er-clos-des-grands-voyens/fetch-manifest.json",
+    "raw_checksum_sha256": "DE31C9618E9682591F624B987C067904D15853C589A78D43D92E83BA204FE63E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-des-myglands",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-des-myglands",
+    "normalized_checksum_sha256": "CD0373F39F68B2AE253D293A9EFCC1C712E1D7CCB4457A35922F3E718F9FFAB5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135629Z/mercurey-1er-clos-des-myglands/fetch-manifest.json",
+    "raw_checksum_sha256": "90311F80296253374EA41A2215B856B25799A8C2AEAE2E0695B88A6922744369",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-marcilly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-marcilly",
+    "normalized_checksum_sha256": "6F76F156594A3F46610B0270E7793DF7EE962BF03F490F7E12CF455B40273724",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135619Z/mercurey-1er-clos-marcilly/fetch-manifest.json",
+    "raw_checksum_sha256": "562FECEA2178B04668296DAFCBEA072BA2783677C0E497647B86CB2A9F975676",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-tonnerre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-tonnerre",
+    "normalized_checksum_sha256": "AEFEA6F5CAD9E5A8C78D513DF08C13EDB5F478DDCCE153FBF52B78DD6EAE25F3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135621Z/mercurey-1er-clos-tonnerre/fetch-manifest.json",
+    "raw_checksum_sha256": "D92B4C040DF6A11EDF6D03A6F08B2CFF9EF495FE47697F869BA7B45609B4E1FC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.clos-voyens",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-clos-voyens",
+    "normalized_checksum_sha256": "1208A2C3FAC31E1084365235CD043FAA6064B069FAE58ACAB56B78F8B455AE32",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135623Z/mercurey-1er-clos-voyens/fetch-manifest.json",
+    "raw_checksum_sha256": "A05759035938B4EB544B55FB53048BB10BB4A864D7F89A19353F3EE969AA59A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.grand-clos-fortoul",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-grand-clos-fortoul",
+    "normalized_checksum_sha256": "839C2390F61495E7D50F3DE520945EC6E9DF03792ED50688C71E4F259499B8D8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135633Z/mercurey-1er-grand-clos-fortoul/fetch-manifest.json",
+    "raw_checksum_sha256": "57CF9111C50C6C91B4D3BB5E80B289E61ACC62CA61E3134F833403447D805B6B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.grifferes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-grifferes",
+    "normalized_checksum_sha256": "1F9F2C76365F91B3DF5DD75E353EE4043EAE151147EF7AB414C5E707AA90ACD0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135634Z/mercurey-1er-grifferes/fetch-manifest.json",
+    "raw_checksum_sha256": "826ED89019E53E339F05F7252ADE9827193E7B73BE91B6531C0EC1AA02B2D7E5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.la-bondue",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-la-bondue",
+    "normalized_checksum_sha256": "6C18B089D86BE96160C9EEFDAE2A24AD73360939CE1192FC1C9CD7EB3DA001E2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135636Z/mercurey-1er-la-bondue/fetch-manifest.json",
+    "raw_checksum_sha256": "7C78C5E15C3F4C13D44E5BAA4F4068C9589FD3F30E64ED254DFAE6F798D47428",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.la-cailloute",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-la-cailloute",
+    "normalized_checksum_sha256": "6711CC4387C0A175077F6A3C1DB5A3893BE7FAEBF7830D27982B4D60D6C3AC6F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135638Z/mercurey-1er-la-cailloute/fetch-manifest.json",
+    "raw_checksum_sha256": "A45A7F256056B0A67BA6B14CB52E6A3B26EDE3E41C63F38A4ADB245514881767",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.la-chassiere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-la-chassiere",
+    "normalized_checksum_sha256": "41E2E8149E930B9A3E4E8A4A21E22E42114505821272212DE9DF886D1C29085F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135640Z/mercurey-1er-la-chassiere/fetch-manifest.json",
+    "raw_checksum_sha256": "C11411904C21F4452AC19528EC851EC9E551A23EAB5D9EBD92B6E8824FF9C0F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.la-levriere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-la-levriere",
+    "normalized_checksum_sha256": "9A1347DE28131434B2707670AFDD62A91A24A6239D0623A10DDCEB119F778E32",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135642Z/mercurey-1er-la-levriere/fetch-manifest.json",
+    "raw_checksum_sha256": "413FB4CCE2E1AC9AABB23B17C6989EEB9757DCDD6C69AFCD42240477A6339A43",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.la-mission",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-la-mission",
+    "normalized_checksum_sha256": "5C561634E8750A6B12EF1FE2278810B616BCCFFF0519E9B632B4C8258798E5B2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135644Z/mercurey-1er-la-mission/fetch-manifest.json",
+    "raw_checksum_sha256": "AA97D44A9AC707587A99E8B791EFFF834FE5F6C0927AB558F9F99006BFEA1897",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.le-clos-du-roy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-le-clos-du-roy",
+    "normalized_checksum_sha256": "204A3960CD64596896A112DED171E36CA4BD9B5EE40F0C136196482786E4DBAD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135646Z/mercurey-1er-le-clos-du-roy/fetch-manifest.json",
+    "raw_checksum_sha256": "F75952FDF0DA3EEB5746956BEDB9DE4C48C7E3EF503650C88053CDC1222B7A47",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.le-clos-l-eveque",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-le-clos-l-eveque",
+    "normalized_checksum_sha256": "EC9C9036737E0C2109B9AE6C2C5128A5854518BA6946AB2CBBDD4F616124835A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135647Z/mercurey-1er-le-clos-l-eveque/fetch-manifest.json",
+    "raw_checksum_sha256": "E4661D38A1F20DB5BA5B941A0AF8927F03A9CC0D255FFA9FE2B67BFE0AAE7BF9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-byots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-byots",
+    "normalized_checksum_sha256": "80C3D1E27646FEE719A9143F09F9DF56FA2E5659DF92BA66FC9B58685873F060",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135649Z/mercurey-1er-les-byots/fetch-manifest.json",
+    "raw_checksum_sha256": "BDCD6FB7BEE37B078D085165868D153762E29B76BEA29BF1D537EA5FE96AF009",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-champs-martin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-champs-martin",
+    "normalized_checksum_sha256": "211AFD623C7327B6033CEBFBCDEB1E254F53E6AECB23554AA2FD4E8AE1CABFDD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135651Z/mercurey-1er-les-champs-martin/fetch-manifest.json",
+    "raw_checksum_sha256": "3E8A2B5790B538FE45B012659EB27A4A76EF6F9A6D43D29390FBDF0BB4F94C11",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-combins",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-combins",
+    "normalized_checksum_sha256": "F7FF5532A412E49B653BD1BF1FEB3B446AFFBCD668DDFF29A6226C4FF23CC0A7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135653Z/mercurey-1er-les-combins/fetch-manifest.json",
+    "raw_checksum_sha256": "A6138E5A437116386A3D1CCD6773FB0253FFFE9971245E51C3B3BF425A4BA525",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-crets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-crets",
+    "normalized_checksum_sha256": "B85E770B7BB33063ABB98F5C3548C60C359EACC9FFC6A85EED33E0134D82EEB8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135656Z/mercurey-1er-les-crets/fetch-manifest.json",
+    "raw_checksum_sha256": "A124FA40FA2A3920469FD716DA7339F274B50557B214414FBA0ACEC001F2345F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-croichots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-croichots",
+    "normalized_checksum_sha256": "09B001352075BABEB416C224BD44CBD73B39F96665B8550525E4F6D525836660",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135655Z/mercurey-1er-les-croichots/fetch-manifest.json",
+    "raw_checksum_sha256": "7E8A150F5B7067E7B1286E86BB8D95C980E3D3DF6E3D63FE9CF4B27E18CB6C0A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-fourneaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-fourneaux",
+    "normalized_checksum_sha256": "340B7D628630CBB734FED9C591A7EA0C1E57C2DDE6EDDEA1FEF12DC0C7ECFBF5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135658Z/mercurey-1er-les-fourneaux/fetch-manifest.json",
+    "raw_checksum_sha256": "1EEC3312A49901A092BEEA27C4486D5EDB742524EBD8B083B3EB5FC0D1D2AC17",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-montaigus",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-montaigus",
+    "normalized_checksum_sha256": "91FFA1870F4312F65A5B247DB8433C511CEEBA6315B1C24546B9F31F07DC53B7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135700Z/mercurey-1er-les-montaigus/fetch-manifest.json",
+    "raw_checksum_sha256": "519DF2F4EBBCA3564851724315F781E3A1A81BFCA2A2642E23F8C02E417BF799",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-naugues",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-naugues",
+    "normalized_checksum_sha256": "BD1EBE7F67088C8BEDFC1128A10B60D2E93DF064D948560D6FB1FE4E15683456",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135702Z/mercurey-1er-les-naugues/fetch-manifest.json",
+    "raw_checksum_sha256": "74A55E01B9D0066CB1223A6F63AF062AED5EF9872ADCE5386D653F720B35DAEE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-puillets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-puillets",
+    "normalized_checksum_sha256": "C2AB8A26A1DFE10C40A1A82773985C5B5CA99C155803EC515812D4DC7D24EA15",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135704Z/mercurey-1er-les-puillets/fetch-manifest.json",
+    "raw_checksum_sha256": "4AB8D2FB8AB5454E82909E3EEDF7799520E8E4960DEC3A1BFEFF852B296FB192",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-ruelles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-ruelles",
+    "normalized_checksum_sha256": "1E45AE66248F89DB22F33EBA749270A79F6F63632ADE0FE1B3C216E1CDBE7699",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135706Z/mercurey-1er-les-ruelles/fetch-manifest.json",
+    "raw_checksum_sha256": "BCC9CF9E59DBFFD78E9113691FAA62CF14DEB5E6E032EBA68BE3C2278B1E4D32",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-saumonts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-saumonts",
+    "normalized_checksum_sha256": "94023EC7A97F8E5596C33E51F5BFFB46E0B003ED408ACB179F1C437874825820",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135708Z/mercurey-1er-les-saumonts/fetch-manifest.json",
+    "raw_checksum_sha256": "034280C8E53FB4F723B311FCB0B0AFA0824A0C8EF32D336E6C63E8C4905B3151",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-vasees",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-vasees",
+    "normalized_checksum_sha256": "2103C0256B105ED9929412A32E632D77B8A026C21AF6D1A2817A3BEFF5E70998",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135711Z/mercurey-1er-les-vasees/fetch-manifest.json",
+    "raw_checksum_sha256": "33E535D9B7AF1822BD27559B11961BB69B9A7654E5D4659F7C103955B5960598",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.les-velley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-les-velley",
+    "normalized_checksum_sha256": "B495CA75E339DC6F54725F1ED9144ABC3B92A9102BBEA6ACCDC340E8DFD0296C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135713Z/mercurey-1er-les-velley/fetch-manifest.json",
+    "raw_checksum_sha256": "B62340195184A28664568C6B6FA58F8EC380D71B66E2776DE8A24FCF4D1F61DF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.mercurey.premier-cru.sazenay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:mercurey-1er-sazenay",
+    "normalized_checksum_sha256": "75698838D2EDBA3F5A33BDB341ED560081BE4967382FD73B412A3B22A2AEBBE0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135715Z/mercurey-1er-sazenay/fetch-manifest.json",
+    "raw_checksum_sha256": "E3525759AA7E28A6CA2CB3538BF5240B0A02A833BD7A0D82D16C69A8B5BC3634",
     "documented": true
   },
   {
@@ -549,6 +1152,447 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.champ-toizeau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-champ-toizeau",
+    "normalized_checksum_sha256": "04015A5A90E1A3344B27E98173AA1662F6F457355A029D95856DC3CA59BAFB08",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135830Z/montagny-1er-champ-toizeau/fetch-manifest.json",
+    "raw_checksum_sha256": "66AEAFA94BB046F6727C6109EA1ADA654A36C060F4B93D4C9D4DC524D97B8289",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.chazelle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-chazelle",
+    "normalized_checksum_sha256": "B50B6AF9136F52E4F01FC8BE895A3557F7F148070D921D9A529713260610A74F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135832Z/montagny-1er-chazelle/fetch-manifest.json",
+    "raw_checksum_sha256": "394CBE4479D9A49B585D7BECCB82B496E75F9E09B01E4B3935E90A34B72CC606",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.cornevent",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-cornevent",
+    "normalized_checksum_sha256": "AF2F31D3794D4FB77A008C5FB051A07CA8D03B336029AA8E226EE54E7A9DEB04",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135835Z/montagny-1er-cornevent/fetch-manifest.json",
+    "raw_checksum_sha256": "9A97429613F8D3A61DC44899DBEA8FEA74CF4E058076544233DA4E66913B88CA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.creux-de-beaux-champs",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-creux-de-beaux-champs",
+    "normalized_checksum_sha256": "203430E8337A2DFFC133CA585114A12D71021C86B324FEF22CA1625ECE95ADFE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135836Z/montagny-1er-creux-de-beaux-champs/fetch-manifest.json",
+    "raw_checksum_sha256": "F1639D9A6C0990DC0F8B99360BD42E894BF5724FAC0B3BCA2F93B1B7ED37312A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.l-epaule",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-l-epaule",
+    "normalized_checksum_sha256": "E1943C40DCBB1518BD9C6C06E06207F8774DB3E63739EC56DF57A01985E1E1AD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135838Z/montagny-1er-l-epaule/fetch-manifest.json",
+    "raw_checksum_sha256": "DD4CDFF542F8464FD980EDC6232521DA547932CD1EB31664CA85503002C60DD3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.la-condemine-du-vieux-chateau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-la-condemine-du-vieux-chateau",
+    "normalized_checksum_sha256": "3FBD31D758FA526F1010E9EA9BB3B22673A9D20DC2728B03ED01849E5672A1A5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135840Z/montagny-1er-la-condemine-du-vieux-chateau/fetch-manifest.json",
+    "raw_checksum_sha256": "18D660BF62912EB27FF626C815668169764BD5D705E5D4BCFE0D2AE67181B02D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.la-grande-piece",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-la-grande-piece",
+    "normalized_checksum_sha256": "3B0AF5723FEC0E097E8D13B02C711E9CBBA69837EDBCF8A75D311765A5061A41",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135842Z/montagny-1er-la-grande-piece/fetch-manifest.json",
+    "raw_checksum_sha256": "839DAF252D01C2E3110216BA077937EB9068AF178A5F6CF693955B60648B9DFB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.la-moulliere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-la-moulliere",
+    "normalized_checksum_sha256": "FFD16B35BE0D863D84CC7C256ACDA0547DD124D18E6A15EB6D8267A4DE0429AF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135843Z/montagny-1er-la-moulliere/fetch-manifest.json",
+    "raw_checksum_sha256": "AFAF3E52C66AB665768126A1A8545C5752861C129BF23B1FAB85CD8F7AAFA048",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.le-clos-chaudron",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-le-clos-chaudron",
+    "normalized_checksum_sha256": "03321E3D836BCAD1D010DF70D1E2B5DE910D3670A91274A4B4F4FEA398ABD97B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135846Z/montagny-1er-le-clos-chaudron/fetch-manifest.json",
+    "raw_checksum_sha256": "60D18E9E022097DE1D56C6DB56E6C42931B7EB5D4052E52EA27CFC9AD6C4D264",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.le-cloux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-le-cloux",
+    "normalized_checksum_sha256": "66EE4144C738184DE1AA2B252AC6EE23CDB87B272088E9BE542A276723AFB18C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135847Z/montagny-1er-le-cloux/fetch-manifest.json",
+    "raw_checksum_sha256": "8B56D12FA2487F7444C48FEB8A4890EB3CB4D18549BF9A73F5205050A75011C3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.le-clouzot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-le-clouzot",
+    "normalized_checksum_sha256": "53A1FE3AF0659AA0788B35FB9B45F87FD45CBBD3932A9C601D7FE14E31ED9539",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135850Z/montagny-1er-le-clouzot/fetch-manifest.json",
+    "raw_checksum_sha256": "9DE62BB8F02E759314830D31157E05154665AD39FE47456DE53513B8871B2F30",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.le-vieux-chateau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-le-vieux-chateau",
+    "normalized_checksum_sha256": "116E6E1E5856594B469A16264DDB4932457C21A7D5503B4574E9F22F376BB3DC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135852Z/montagny-1er-le-vieux-chateau/fetch-manifest.json",
+    "raw_checksum_sha256": "7AC5006E24F45B6E91396B12C3351FB3582054684A18889B54A3C644ADBD9243",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-bassets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-bassets",
+    "normalized_checksum_sha256": "F5540F9E8F8B01B6A8306B927C3AA50877B422C4066F4975D18E1885D68A0430",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135854Z/montagny-1er-les-bassets/fetch-manifest.json",
+    "raw_checksum_sha256": "20D614EE32B6A63689E980E3ED2A6733650494A661D3918BAA4FF6F226B54E18",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-beaux-champs",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-beaux-champs",
+    "normalized_checksum_sha256": "830431E8F02F0E4072EADB0FCE5153B19A6E0C62ACD4430B96944D42618A8FAB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135856Z/montagny-1er-les-beaux-champs/fetch-manifest.json",
+    "raw_checksum_sha256": "EF32288B14C4BC34ACD475239159B9A05F1A742A349393E0AA65C758E49B9A71",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-bonneveaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-bonneveaux",
+    "normalized_checksum_sha256": "135D2EABA3003C3203D1B023D92A08631063CD78564210207DBFEF0FD639DFF6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135857Z/montagny-1er-les-bonneveaux/fetch-manifest.json",
+    "raw_checksum_sha256": "9AF157396BE21D98A5680D34AD1483F9C9A4D202E16F66BA396D5ACEF94A8429",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-bordes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-bordes",
+    "normalized_checksum_sha256": "3180AE9E7C01325073202E019C64EC153DF4696E214D411477322DECF8EB1CA8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135859Z/montagny-1er-les-bordes/fetch-manifest.json",
+    "raw_checksum_sha256": "5FCC50ACD0A29C215AA92649F0F41D5D1B3E772EB3C73E96864668C7735C0675",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-bouchots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-bouchots",
+    "normalized_checksum_sha256": "E5DE1C84DA4ADB7177E1F8A82EF8F9F1FE8C5132DAC8ED5C548012D81CEA6E3E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135901Z/montagny-1er-les-bouchots/fetch-manifest.json",
+    "raw_checksum_sha256": "C7E1951DBB88F1592E8DEE06A62014985D17B50B662D0F47FF9162D7DC35D9D3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-burnins",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-burnins",
+    "normalized_checksum_sha256": "74AD4A5DB179B37140C01C454BA15FEFAB8F089D69C0C7BF4EB8AE84F2D62D74",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135903Z/montagny-1er-les-burnins/fetch-manifest.json",
+    "raw_checksum_sha256": "B6805C56C09A8926046573F3212CAADFAC04775AF82FC205D7CF21159E1134D2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-chaniots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-chaniots",
+    "normalized_checksum_sha256": "8D31C34D744A058DD8B077FF23DB3F8FB970E3D3B08900E901DACD52275C7AA7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135905Z/montagny-1er-les-chaniots/fetch-manifest.json",
+    "raw_checksum_sha256": "AFC9D7C07FD672F4B760A8EA882234E5F444648ED03D7B3AEDE3CC7A9D72C833",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-chaumelottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-chaumelottes",
+    "normalized_checksum_sha256": "86A0E6595A6F7129AFFAD4A113F08D0AD33192DB98D1C98DF3F14EBDB6743EC7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135906Z/montagny-1er-les-chaumelottes/fetch-manifest.json",
+    "raw_checksum_sha256": "B44EFDDB2F94B68CDF96ACE52D8C0E7E9315D7975C8476C301F71588E846E46B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-coeres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-coeres",
+    "normalized_checksum_sha256": "82EB059B63E26CC8470EE6D079426AE7BD5D2DA317E601A5D904F32088166085",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135912Z/montagny-1er-les-coeres/fetch-manifest.json",
+    "raw_checksum_sha256": "35C81CF003E9D89E72F5DE9790D999264881BBCE8DFFE8B45F6ABD652490017B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-combes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-combes",
+    "normalized_checksum_sha256": "4B79FC849C4D00D06BB30466A9C4EACED398514510D4F2AF0D8721FF6D4283A2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135908Z/montagny-1er-les-combes/fetch-manifest.json",
+    "raw_checksum_sha256": "99DCFD477CDC2117EC50D8ED6C7E076D086CE1E18EAA2F7D16E683D3842E6EAC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-coudrettes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-coudrettes",
+    "normalized_checksum_sha256": "AD0AF9CDE9F45718A377482AC5CA2B40D71D2C793115A5DE9AD540B054DCCC25",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135910Z/montagny-1er-les-coudrettes/fetch-manifest.json",
+    "raw_checksum_sha256": "903C878C57ED8D0748DF6A8DF90ED5982A1A205A8597FFBA0007A2C69AE15E03",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-craboulettes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-craboulettes",
+    "normalized_checksum_sha256": "196949FDA2B80BFC915C3437025295FD0D98F3DD779849F9A42E4FFC01A26CFA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135914Z/montagny-1er-les-craboulettes/fetch-manifest.json",
+    "raw_checksum_sha256": "AE5D3899119BFFDF5BCED1309923CA5FBBBF1B4E4CA7E1ED657CC8F978DFD938",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-garcheres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-garcheres",
+    "normalized_checksum_sha256": "9FDE99657E1F539A89E9336E6993ED68CDFBFCF6AADDDCFBF4C0261D4016C1B4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135915Z/montagny-1er-les-garcheres/fetch-manifest.json",
+    "raw_checksum_sha256": "CC3B61A2D53F066851AA1C1E0AC99B399DAE3D0651D780368866D4CC2972BCF1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-gouresses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-gouresses",
+    "normalized_checksum_sha256": "E06A5FCB59F01D17148FE93549137A023C4178190D35BD59D92793CE5897C78B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135917Z/montagny-1er-les-gouresses/fetch-manifest.json",
+    "raw_checksum_sha256": "47BECE9B5AFA15FDD6373B2D9DB0EAF840B90A29E86C9B07316B933F80571E0B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-jardins",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-jardins",
+    "normalized_checksum_sha256": "7CB3D6001E1A7AC21C026492DFE3440DC595C68059185F6BC3A35532B5989F51",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135919Z/montagny-1er-les-jardins/fetch-manifest.json",
+    "raw_checksum_sha256": "EB77BACFFCBDDDD3ABCA5B63DE3DB64201F9AF79E5BE395B5F38263EBCEC7AB9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-las",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-las",
+    "normalized_checksum_sha256": "12D586254637C4E1EB58EE1538098FDA3BC6EC34BD2AD14EC7B36D80DB03A963",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135921Z/montagny-1er-les-las/fetch-manifest.json",
+    "raw_checksum_sha256": "C074DF506CA9728FB1FDA3A78F9124E6EF5171854668C181741113E7326A27D0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-macles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-macles",
+    "normalized_checksum_sha256": "F1EA3BE6918CF93D97B21F39A9F7F1B2BFF794D8B594674C0E040C3957D2D277",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135923Z/montagny-1er-les-macles/fetch-manifest.json",
+    "raw_checksum_sha256": "CA10674F01BAEB190FDED02B406B3CC186E553C2F51DE7421A4714E091E85A5E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-maroques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-maroques",
+    "normalized_checksum_sha256": "642C50915D1D474F78057582C2BEA88AFA0B6B6B8E0A938DAD0AF91631A1F803",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135925Z/montagny-1er-les-maroques/fetch-manifest.json",
+    "raw_checksum_sha256": "7A8BC78BF15F509858B1034E9EF9AC1F81D0101CE95C5884B2615396F295D3E0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-paquiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-paquiers",
+    "normalized_checksum_sha256": "7B1A11276EADF1247003329F72EC9FE869EB9D6A51F3F40395B60C8225E9B005",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135927Z/montagny-1er-les-paquiers/fetch-manifest.json",
+    "raw_checksum_sha256": "E397A5CE606F1F57CB0E0A9BE4FA96953817D4529068FC5AE08BDE0B8B68979D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-perrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-perrieres",
+    "normalized_checksum_sha256": "6767AE5461A63D6B016F1D5FF496C3369FF9ED0253A10E5D83D9A93CE2D63A70",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135930Z/montagny-1er-les-perrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "21ECF7AA9F00F45E6FED955ECE90C5DB14A263EAD11ACDCF61CB6E80FBE56841",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-pidances",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-pidances",
+    "normalized_checksum_sha256": "2DCB165EFD273A923C2411EFF68568C95C3365170B7255B42D760F28377AE4B5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135932Z/montagny-1er-les-pidances/fetch-manifest.json",
+    "raw_checksum_sha256": "A3A094B67A436C8CDCFEBEEB976B48D10580A302AE48541DCCBD571145943D75",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-platieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-platieres",
+    "normalized_checksum_sha256": "BFFCBBA5045913D07810A2A5FCEC40742D5B60F26DE90D54BFBC8FBD8E14DC28",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135933Z/montagny-1er-les-platieres/fetch-manifest.json",
+    "raw_checksum_sha256": "1B1D9567A1300F1957DB7D9158902EE403CFED2FA6E76C64825B289DD305C312",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-resses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-resses",
+    "normalized_checksum_sha256": "8F8A550349AB407359996A3759E72B9095E71165F1D1E90A1AA330E4932F5F00",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135935Z/montagny-1er-les-resses/fetch-manifest.json",
+    "raw_checksum_sha256": "FD4C7E498FEC35A274C0F2CF76DF2907333529D77F10A4F55C47E0791B7D164C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-treufferes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-treufferes",
+    "normalized_checksum_sha256": "B1A81259452A69DFCCA0D0D8A9174402CFA18DC140D1F30C19BC0943FB50B9DE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135937Z/montagny-1er-les-treufferes/fetch-manifest.json",
+    "raw_checksum_sha256": "59E3F2D66C416359489AD345D07A12D1F21A3DE45B13F5345219C38005A80C4D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-vignes-derriere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-vignes-derriere",
+    "normalized_checksum_sha256": "EA22F443B654DF5DEB884ED751851E3D23EDAC9D78CA85A6D5A836ABD3F23C68",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135939Z/montagny-1er-les-vignes-derriere/fetch-manifest.json",
+    "raw_checksum_sha256": "4D2ED75D1189AD16FAF5B1B87146E1DA6C1713B50A980DB41BC74AB78BA2EC57",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-vignes-des-pres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-vignes-des-pres",
+    "normalized_checksum_sha256": "71268091081F2F9C0EB40BA11918FC0035E43DBAF73F94575843237DFF9DFD5F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135941Z/montagny-1er-les-vignes-des-pres/fetch-manifest.json",
+    "raw_checksum_sha256": "0F6D74DB413B74B0A868B4207D95D01F2F83ADACF30C5FECFDF129D14BC2648F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.les-vignes-longues",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-les-vignes-longues",
+    "normalized_checksum_sha256": "1B2E9D4B4788D2C141A523DF77B6F8A7A46056E36D5DF7AE176222044FEB348A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135943Z/montagny-1er-les-vignes-longues/fetch-manifest.json",
+    "raw_checksum_sha256": "2899A07981BA130816AE373E06A4198EB1FC9E3DD182D5BF7E889AB280B50F30",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.mont-laurent",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-mont-laurent",
+    "normalized_checksum_sha256": "2C4F7D4C215CD77667D7EF68F0D1D75DF416FFAF604F10B939A38718D38C2617",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135945Z/montagny-1er-mont-laurent/fetch-manifest.json",
+    "raw_checksum_sha256": "CC2CC5A773E927710726C65CE418370C6C2725A619D6D9E54E00B4564EC0FF7F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.montcuchot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-montcuchot",
+    "normalized_checksum_sha256": "D4C4DA57EE5F2789E85DADD4FFC0E5FC536D33DCB2A424C0C452880FA39EB579",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135947Z/montagny-1er-montcuchot/fetch-manifest.json",
+    "raw_checksum_sha256": "85E68B10C349A36039ACFCAF371E710F893DAF51DF11F662DF3F6159E0CC19A6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.montorge",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-montorge",
+    "normalized_checksum_sha256": "4D5397B3FABB26095240D66E54A0D37797E3F285B4BDB0917ED600CCF86FD91D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135949Z/montagny-1er-montorge/fetch-manifest.json",
+    "raw_checksum_sha256": "F9BC164DA33E938000E0C18E687D83EA4B911589B7AEB7F289DA1739025F159F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.saint-ytages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-saint-ytages",
+    "normalized_checksum_sha256": "70F0851D085B90189E83F45D4242E8DFBE1D56853CC983D1E93F754738D4B96D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135951Z/montagny-1er-saint-ytages/fetch-manifest.json",
+    "raw_checksum_sha256": "9D4C302C0BBEF78C91E6DBCC808211A69E5EE40C043052EF6321284BF1FFE111",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.sainte-morille",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-sainte-morille",
+    "normalized_checksum_sha256": "414A02266BBDCD0EC9852D9DC6C0C9A726B5DBB7B32232494466CE56F2834340",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135952Z/montagny-1er-sainte-morille/fetch-manifest.json",
+    "raw_checksum_sha256": "4BFD15666DDA5E530CE230660EF4FAF57E545CEF8126D12964537D6018ABEC7F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.sous-les-feilles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-sous-les-feilles",
+    "normalized_checksum_sha256": "0B36BA2C807107C96E56FDAFCA1659D5453AAA52735B12A1AAAE2FBBDE5CF9BF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135954Z/montagny-1er-sous-les-feilles/fetch-manifest.json",
+    "raw_checksum_sha256": "6526397D964A8E5BE10FC861149AB6DF8DFE932E1E0649E7720DBE74254EACC4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.vigne-du-soleil",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-vigne-du-soleil",
+    "normalized_checksum_sha256": "A83F7A067F37D2EB43ECCD48B3BB3324F44859A2DF02E8C1F81D6A66F625FBC0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135956Z/montagny-1er-vigne-du-soleil/fetch-manifest.json",
+    "raw_checksum_sha256": "B0FDADA847275BD472DE0D603BEBB814D918989822AFD69AE95E36CCE185A5FE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.vignes-couland",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-vignes-couland",
+    "normalized_checksum_sha256": "D3F9E49BFED48275E72E3A5DEDFC3E7E7EBB2E1C45B04CFBD9099E8D3A50380F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135958Z/montagny-1er-vignes-couland/fetch-manifest.json",
+    "raw_checksum_sha256": "5319707E7415864A17B5B3F1FF3346945B10C3C17237CB0FCE40B82C8F4D83C9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.vignes-saint-pierre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-vignes-saint-pierre",
+    "normalized_checksum_sha256": "1670EACFC0D965076882CE1CA557F8A8D23937D724C6E739A4F1B68BB296F95D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140000Z/montagny-1er-vignes-saint-pierre/fetch-manifest.json",
+    "raw_checksum_sha256": "6E38EC397F57C45BA3FBC7442348830A6A9BE23BCDE76F03775E5CA31564F4A6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru.vignes-sur-le-cloux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagny-1er-vignes-sur-le-cloux",
+    "normalized_checksum_sha256": "108CFFBDDEA982A1910B034B2BF806CC593B45EDEAFE29218D28FE02585D0013",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140003Z/montagny-1er-vignes-sur-le-cloux/fetch-manifest.json",
+    "raw_checksum_sha256": "AD77688CF9AA6424A13DF5953DE1FB4A2AE8DA1969237FC85F98960B8BDB4C86",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-chalonnaise.rully",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:rully-village",
@@ -564,6 +1608,213 @@
     "normalized_checksum_sha256": "F66CAF7C74A8DEE1EE257B48E7E337EAEC39D533FD0C7F0B74D20F62326AFFE9",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190907Z/rully-1er/fetch-manifest.json",
     "raw_checksum_sha256": "6C504B47DBA6BD4E2676599003F825B9D9AFB3FA04FE5DE706F9588ECE29C502",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.agneux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-agneux",
+    "normalized_checksum_sha256": "F2FE340DF16B2AD338059D5D767A98DF036AE6B9B130D09BF1DA61C9EBD15BC6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135529Z/rully-1er-agneux/fetch-manifest.json",
+    "raw_checksum_sha256": "2E441126D6E2C6E709857CC9E7E097F9D0F3F4C365804B03E91EE8EB745C67CB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.champs-cloux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-champs-cloux",
+    "normalized_checksum_sha256": "739C01B0173BFA14AB804F0A31111489413210BB3E123D8DF7DCC2F78BFD7FBD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135533Z/rully-1er-champs-cloux/fetch-manifest.json",
+    "raw_checksum_sha256": "8C4941301181D4B52D15F45CF7A25C0EEE0820FFF62FAEDF9A006678FE74B6C3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.chapitre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-chapitre",
+    "normalized_checksum_sha256": "C6601443BCD2AD98CE20D6A6479E20E8FCA717470821BB0977C515B216163CE5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135535Z/rully-1er-chapitre/fetch-manifest.json",
+    "raw_checksum_sha256": "C9AE3AEA21B45BD37CFC9116C90E42F67C80F4DDA6D71004995D333DFA4A7C4B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.clos-du-chaigne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-clos-du-chaigne",
+    "normalized_checksum_sha256": "825D78F4A646A9F241D7B2CAE76F4FFA634A205C5189FC2512000B27895FF3CD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135540Z/rully-1er-clos-du-chaigne/fetch-manifest.json",
+    "raw_checksum_sha256": "422E15D5782DD12D16D79C8CB83155A0FEA1EC25DBC70D81C248C3DF5930CD3D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.clos-st-jacques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-clos-st-jacques",
+    "normalized_checksum_sha256": "726F93D1AB713D6E6CA14108454C3D42858A8E42D7DC648BCC4AD703DCD1CADC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135538Z/rully-1er-clos-st-jacques/fetch-manifest.json",
+    "raw_checksum_sha256": "5571CC7A6F53AB8947659BC5DE2BC8D3F6D6EC0DE5719ACE8D0BB111217856A9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.cloux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-cloux",
+    "normalized_checksum_sha256": "CF3B1B1BC128497E79A8E6CDBE0CB0F59080D43D8EAC9B54856F5E69D99FA335",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135543Z/rully-1er-cloux/fetch-manifest.json",
+    "raw_checksum_sha256": "7D25F71AB0A163D604E8E2BF78A21D564FBD3C170BD5F201CB319D3FC6E3B5B3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.gresigny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-gresigny",
+    "normalized_checksum_sha256": "617A469CE2DEAB45B303AFA5AD76989823698565B534063F9514C5CDC1B100C5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135546Z/rully-1er-gresigny/fetch-manifest.json",
+    "raw_checksum_sha256": "48C32E51CA8CFCFDE19A56C82CB09960B908EE4AB3FB5B8ECCD5C57E86F72227",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.la-bressande",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-la-bressande",
+    "normalized_checksum_sha256": "A00E3B4B78FDAFF4A4651BB0A732D49410C1BD412B26858D1909DA4D27FB55F9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135547Z/rully-1er-la-bressande/fetch-manifest.json",
+    "raw_checksum_sha256": "CF44BCA8978867B477B3FFB53C32DF628637DA74D09C5561CF400CAD9F16D3D5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.la-fosse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-la-fosse",
+    "normalized_checksum_sha256": "60428ECDEB41250955E3F6BD67ADA2B23F199F6AE5A1D228040D88708E1F568F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135549Z/rully-1er-la-fosse/fetch-manifest.json",
+    "raw_checksum_sha256": "CBBE09A05C8D6A9A330827CCE1A78FD3CF4DE90BF0FEB5098E444B9E2BFD978D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.la-pucelle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-la-pucelle",
+    "normalized_checksum_sha256": "462066AE03A8BB631E55DA28D7A9234BC4F291B4644777D001F2F0F74F63AD59",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135551Z/rully-1er-la-pucelle/fetch-manifest.json",
+    "raw_checksum_sha256": "6EF38DEBC1D896D15F606C7F35D4BA6F982CB33EB4250FF472060062499FF847",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.la-renarde",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-la-renarde",
+    "normalized_checksum_sha256": "B578867356BBBC226324E2D3C0CFCFE511CB254ABAAC8D57E8AD6BF36D45886E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135553Z/rully-1er-la-renarde/fetch-manifest.json",
+    "raw_checksum_sha256": "9BB398CF726D4EBB65B08B2B02961A2EB70F8164F0DBAEBC0BD9B5BF18FF01F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.le-meix-cadot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-le-meix-cadot",
+    "normalized_checksum_sha256": "6B2D0B3341F76A474084ADB41F2399C3928E73D08FB4C9A130CBE90B19D80599",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135555Z/rully-1er-le-meix-cadot/fetch-manifest.json",
+    "raw_checksum_sha256": "D8734D27DEC86B626AF67CBB9091C17200BFD5FD8337870E3984A3468EA97442",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.le-meix-caillet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-le-meix-caillet",
+    "normalized_checksum_sha256": "8BD8584289CB8C2771B172D910423A14E48877545237557C7AA7808F55D6B75B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135557Z/rully-1er-le-meix-caillet/fetch-manifest.json",
+    "raw_checksum_sha256": "FC15E3C6DF67BF0DE60D53E18EAAD68CB35D844C12EB514B053FC1BC020540DA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.les-pierres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-les-pierres",
+    "normalized_checksum_sha256": "51EE55BD8DD48C6CAFF023BF7E4D7253E0E7F3B37087A4756B46CE4FDFF21D35",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135600Z/rully-1er-les-pierres/fetch-manifest.json",
+    "raw_checksum_sha256": "35F14BF2A5A6DF20638BB2830002E031003CB9184958BB04CBA07C9F5B9A9D96",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.margotes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-margotes",
+    "normalized_checksum_sha256": "C98AD8E2D704D3351084D9D3A132EDF7F263464B8C4461B6F232BF302E2F4507",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135602Z/rully-1er-margotes/fetch-manifest.json",
+    "raw_checksum_sha256": "6678B7A6F514B8C6F1606EF62D410C9DF90BE18517822DED76954E7462FFBC75",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.marissou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-marissou",
+    "normalized_checksum_sha256": "962A92A1424B8520F7CA1A760BEDCF60A009FAFF1DF2A7DF66ED8301F61E58A4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135604Z/rully-1er-marissou/fetch-manifest.json",
+    "raw_checksum_sha256": "A864DDD8B028E7D1F501A11E5D59835782CF7C28AA3110CD984CFE60E85CFADB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.molesme",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-molesme",
+    "normalized_checksum_sha256": "FFBADD947EB29F31BE255B1887C2F98D33F924288A9442F59A6CD82664D33EA9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135606Z/rully-1er-molesme/fetch-manifest.json",
+    "raw_checksum_sha256": "B81F2FB946185B06CD4002FE42AF3963B308DF6B5F82D604667283B468CA0433",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.montpalais",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-montpalais",
+    "normalized_checksum_sha256": "C5F2974CB4A44A30BFEDAD01D33FE5EFEFE3A12CC398E17B8044A526889D5A64",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135608Z/rully-1er-montpalais/fetch-manifest.json",
+    "raw_checksum_sha256": "D690E69EC6739151E594F31E358A4D59A2206BD4BB103DAA233A32E699F82E03",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.pillot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-pillot",
+    "normalized_checksum_sha256": "3DF968A24634F2A14BEB68A82BDC4E5B5F51D90735EBA386520969EE5611A376",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135610Z/rully-1er-pillot/fetch-manifest.json",
+    "raw_checksum_sha256": "25429B40CA784D86A503F0E37AC169949249690F4D8F94C458335C1DC842B952",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.preaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-preaux",
+    "normalized_checksum_sha256": "DA19C98189D51382FF19BBE39B6CA00580DC0B012D3A778C13F8B0192CC589BD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135612Z/rully-1er-preaux/fetch-manifest.json",
+    "raw_checksum_sha256": "8681EA6798AA143BFDCE1153B318BBE49CD2B0B501A1950254C4A3CD3D7D9BD5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.rabource",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-rabource",
+    "normalized_checksum_sha256": "85A06CA9F0EF121D6ACD03B4573419D480B089C124BDE3C75B4E93EC0AB540F4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135614Z/rully-1er-rabource/fetch-manifest.json",
+    "raw_checksum_sha256": "FD88DCA387E52EDE948B60878771A0DF74A7BE02A4235DC07E425632D53CBD98",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.raclot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-raclot",
+    "normalized_checksum_sha256": "2DC1FA3D71211957A0AD6C4E21168CC4D84E04DFD897977AB5885E98DAE269FD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135615Z/rully-1er-raclot/fetch-manifest.json",
+    "raw_checksum_sha256": "67075E65E4EF4189656D96ECF3202F182778037F9F784878BD9F55CED67EDF85",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru.vauvry",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rully-1er-vauvry",
+    "normalized_checksum_sha256": "016644FC5557A893B84B6DEF5AAB0D66705E0474335B527D0D57BE7BA6315354",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T135617Z/rully-1er-vauvry/fetch-manifest.json",
+    "raw_checksum_sha256": "21B25658FCBF1F1A38410B59C2A2B28F1B9C0BFB251F984A147FC64AEC299A27",
     "documented": true
   },
   {
@@ -609,6 +1860,222 @@
     "normalized_checksum_sha256": "BA33617141EB2B7AF9363254A943CE824DB274E3CCA59484F96AC1AC484E0AA1",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184404Z/aloxe-corton-gc-corton-charlemagne/fetch-manifest.json",
     "raw_checksum_sha256": "1513AD111596EB4A607E0AC8685C01BFC970554B7D3D166892AD7559973412F6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.basses-mourottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-basses-mourottes",
+    "normalized_checksum_sha256": "E7FA8E3D26825B03D226F6823EEDF75C007FDECFD59C04745C6AB9F8A40972BC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140059Z/corton-basses-mourottes/fetch-manifest.json",
+    "raw_checksum_sha256": "EFB1A463978460C9F25811A31725ADC34AEDE81502E4BB0E1BAF7273FA7E57ED",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.clos-des-meix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-clos-des-meix",
+    "normalized_checksum_sha256": "1282457FE90F0CB91BD910DF9C77C129EDA36A90A0DC36D48547D7044868E540",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140101Z/corton-clos-des-meix/fetch-manifest.json",
+    "raw_checksum_sha256": "1C03DE1C8E00D586C53758DBE365EE03F594F1E5838DDB99A5DB44E677423247",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.hautes-mourottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-hautes-mourottes",
+    "normalized_checksum_sha256": "D74BD58177893ADF4C8833886CF919335DA8DA6E1B0FF350CE3639276EC37E16",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140103Z/corton-hautes-mourottes/fetch-manifest.json",
+    "raw_checksum_sha256": "AF24FCAC8E473B1D0BF18E89D44766A17BDC04D831DD3ED1E68768C6C0494279",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.la-toppe-au-vert",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-la-toppe-au-vert",
+    "normalized_checksum_sha256": "86647920CA6A6E53EFC4B883632B5235FAFB8C43B048052F22D282FC9921749C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140105Z/corton-la-toppe-au-vert/fetch-manifest.json",
+    "raw_checksum_sha256": "AC8EC51E234BD18650351917E729571281170441FA167F464547E4F04D6682E5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.la-vigne-au-saint",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-la-vigne-au-saint",
+    "normalized_checksum_sha256": "DF6240BD6B0BF7ACE0933B1FAD333A5777457A6DF5D7CBBB3A5394B5B40BFC7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140107Z/corton-la-vigne-au-saint/fetch-manifest.json",
+    "raw_checksum_sha256": "1139ADCBCFFE3B68D902146F6AA28E9BE76755CB024C3FA1031C78FBDDA150B2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.le-clos-du-roi",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-le-clos-du-roi",
+    "normalized_checksum_sha256": "00FA79E552EA2709B3098A664D97C0BB8A440F62441F10A1E94BBEC4CE94FECB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140109Z/corton-le-clos-du-roi/fetch-manifest.json",
+    "raw_checksum_sha256": "36C606278ABCA89AED047ABDC24EEA86E88EA196569E829368141E95BC9C6810",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.le-corton",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-le-corton",
+    "normalized_checksum_sha256": "663EBAF309592DD364172ACC9E610C52021C76867834101313169477B97DD9C5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140111Z/corton-le-corton/fetch-manifest.json",
+    "raw_checksum_sha256": "8502A45173C21138F2B8486A91F085FE61BF9E4EFF46B4147737071D27AEF0C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.le-meix-lallemand",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-le-meix-lallemand",
+    "normalized_checksum_sha256": "97BE1BF8B5BFDE0DE63C8ABAB983782058843B6FD3FD91C46B39FB14D1EE753F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140114Z/corton-le-meix-lallemand/fetch-manifest.json",
+    "raw_checksum_sha256": "BE850CC19BDA69D17C5FA9CF58DA43D1CF2AEB5C5F28AA3B7B64547007A4CD73",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.le-rognet-et-corton",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-le-rognet-et-corton",
+    "normalized_checksum_sha256": "DA3CEF6998B81388F6B63DEBB8A1BECD6E4A1898EAEE30F0B67FB5CCBDFE749C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140116Z/corton-le-rognet-et-corton/fetch-manifest.json",
+    "raw_checksum_sha256": "32B3FECEA766BB59238FD971D1EB46BF1F0A9A15403D27BFE8D03A90741AAB0D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-bressandes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-bressandes",
+    "normalized_checksum_sha256": "36F09BC5183F4AB99E244C1376020F4BA006526BE328892BADA42E50CE96C833",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140118Z/corton-les-bressandes/fetch-manifest.json",
+    "raw_checksum_sha256": "2BB90B529F7A0D96AFC2C4C5F1A7AF0BB44A4E72ECEF7437D5CC81AACC584280",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-carrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-carrieres",
+    "normalized_checksum_sha256": "B06EDE0E84750A16D985C860407770E009CFEFEBA0F28CBAB906DA60BBA348AB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140122Z/corton-les-carrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "3163BD4A19D95B8DD2B1FE849E79966E8E1A2565C79F495270B22846E8165979",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-chaumes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-chaumes",
+    "normalized_checksum_sha256": "4DAA139E500F0923EA3A8E2EC0E9A5C08AD9CF612E272369E71CB8FD220139A6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140124Z/corton-les-chaumes/fetch-manifest.json",
+    "raw_checksum_sha256": "F9CC9297A8A8087DA9D9D70432056C8A90CA234044809C10A11BA4B438CBAE53",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-combes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-combes",
+    "normalized_checksum_sha256": "8A9828CC28791ED58D4935D23CBDACA1024B747AE7FB1A87AC645E89E9A85E5A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140126Z/corton-les-combes/fetch-manifest.json",
+    "raw_checksum_sha256": "B7A89F6064CBEE7B09EC8C8BACEAEB29DC4C2F96D8543D90C0F7F1B7A90D9AFA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-fietres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-fietres",
+    "normalized_checksum_sha256": "EBA4E0CA3889D8BEF22720764EF434772AB0EBF85386F832E6129A1EEAB40EEA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140127Z/corton-les-fietres/fetch-manifest.json",
+    "raw_checksum_sha256": "F262A6E9DB8DFC1059FC5AD56FB9DC6C349DC57885323FBA06FC53A2C2A87D9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-grandes-lolieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-grandes-lolieres",
+    "normalized_checksum_sha256": "3BD97BFE7F95205795C6B4B85E035BE8EBD74BA7D0E81DAD78CE6C71E5547DC0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140129Z/corton-les-grandes-lolieres/fetch-manifest.json",
+    "raw_checksum_sha256": "FF5ACE2C873F8850917C228260CDD47BC942B3ACD4B2505F870971C48717D29F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-greves",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-greves",
+    "normalized_checksum_sha256": "5C438EC8AFF79563EFFA11E1AAD18797B3294A2B375F912105EF24653D4EB133",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140131Z/corton-les-greves/fetch-manifest.json",
+    "raw_checksum_sha256": "B041324CDEA34B6AE781E7FD7BC9AFDC43E30197CCC8020846B3820961016DA9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-languettes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-languettes",
+    "normalized_checksum_sha256": "25AC0090B59022C79CACB84AE4E61ACAF0B38261496FE7E3418834D503B30913",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140133Z/corton-les-languettes/fetch-manifest.json",
+    "raw_checksum_sha256": "84A9D0A0018F245D8AFA618C65D39A144BBE01C56CA43567F6290F599203BA8B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-marechaudes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-marechaudes",
+    "normalized_checksum_sha256": "9C85BABE3440679CBC5E81A2CA26C3FE89BE82A99E1EDA5D6648EBEA70B01121",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140135Z/corton-les-marechaudes/fetch-manifest.json",
+    "raw_checksum_sha256": "CC58BB1230A14FA957E5035C5E93719634A3A6FE2E5EDA3AD29F2D78C1D2B5C5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-moutottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-moutottes",
+    "normalized_checksum_sha256": "82BCEC032D6C3204D4F6C3063FF73A28B494D98585952ACC2F6517C5DCD4A6B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140137Z/corton-les-moutottes/fetch-manifest.json",
+    "raw_checksum_sha256": "ED0A22AC26D98126EC99431D3C6E8F85CF47DFDF7C719AFFB5D183C4BFC272FF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-paulands",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-paulands",
+    "normalized_checksum_sha256": "E9138F362071945F7DCF62C1FF9C576C40B80988E249100CE9A03C9C96D584EC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140139Z/corton-les-paulands/fetch-manifest.json",
+    "raw_checksum_sha256": "BB6F8795923AC029C73710A7F5BB273163DD6983E007AB570E2FCEA5366A3206",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-perrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-perrieres",
+    "normalized_checksum_sha256": "A289B5D5FB390D83E25B50D24823E1516874EA4854C0D8703748431BD507EB8E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140142Z/corton-les-perrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "7E0E55B2F52B49AE9BDEBEC06E028F0D996898FF73E227B28B32840BC499E558",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-pougets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-pougets",
+    "normalized_checksum_sha256": "3C39759A98B1D6DE25AAB817579DBCB03A4F0C9F21CAA42B820375E05CCD5940",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140145Z/corton-les-pougets/fetch-manifest.json",
+    "raw_checksum_sha256": "2F51707D0FFFB85EA52EC0FFE7ADDC23A137792DD0B6FB855CB547E3CCF1AC07",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-renardes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-renardes",
+    "normalized_checksum_sha256": "DE5BC4ADB424071271ABC05857251BC4C2830032D2ABBBBE2BCA1C8D77259461",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140146Z/corton-les-renardes/fetch-manifest.json",
+    "raw_checksum_sha256": "A110F5FF96C47E1617E9D682FC832AC18B2007BD38B93998CAF7F65EA181CCEC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.aloxe-corton.corton.les-vergennes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corton-les-vergennes",
+    "normalized_checksum_sha256": "2E0052F2DFDC37531B334AD927149F0EC1C5D2AF3E32B4E579A11C1497C0DC36",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140148Z/corton-les-vergennes/fetch-manifest.json",
+    "raw_checksum_sha256": "E2E1798EEFCB649B152CCB7C0AD292E032C1C0D3877BB35D3308807219AC518D",
     "documented": true
   },
   {
@@ -5433,6 +6900,204 @@
     "normalized_checksum_sha256": "15D0EA04DEF12FB2467F916E32969062B8C5F58E63FDD86AA3A5A3AF008D973F",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191433Z/pouilly-fuisse-1er/fetch-manifest.json",
     "raw_checksum_sha256": "37175691D9F21A2B0DCCA3814B43D0840C199D18CBE83FF840FCC5B39B01BDA6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.au-vignerais",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-au-vignerais",
+    "normalized_checksum_sha256": "71D412E79798DB200F39B26C807D4996C0C6A30B4C0813183CCEA8A0FAE9448E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140006Z/pouilly-fuisse-1er-au-vignerais/fetch-manifest.json",
+    "raw_checksum_sha256": "EF1E734232AAA012FFCE89847F34F991E5D8E77855FB59A89169869AED14CD06",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.aux-bouthieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-aux-bouthieres",
+    "normalized_checksum_sha256": "A43E9DE75E71C4A2E29EAFF658BAE80789E59767BA3A1516BDB16F274A546240",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140010Z/pouilly-fuisse-1er-aux-bouthieres/fetch-manifest.json",
+    "raw_checksum_sha256": "C1720B0B8184CDAAE8D94DF4FD853CE46A947F44F13F43FB5DC454859247525D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.aux-chailloux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-aux-chailloux",
+    "normalized_checksum_sha256": "A648676F7DA7F08C5B90AD827756CF5A4372ED2DCC61C3F6BA036364ED4E5D44",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140012Z/pouilly-fuisse-1er-aux-chailloux/fetch-manifest.json",
+    "raw_checksum_sha256": "709DEE1806866AE993FF1F1AEB1F4A382DBDF1BFFAE71A2DE7F740321CEE1438",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.aux-quarts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-aux-quarts",
+    "normalized_checksum_sha256": "7081CE648C39672507D1DCBD83BAB2A1C15B1F01A18878E8AEA90D07D31C7BF5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140014Z/pouilly-fuisse-1er-aux-quarts/fetch-manifest.json",
+    "raw_checksum_sha256": "A401C72D5F9970EA3EA50E8B2D13BE1E8030BFF2CE1B4A20982783AF276FCC79",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.en-france",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-en-france",
+    "normalized_checksum_sha256": "EFD133096735FB62B60A0DA29688AC10F59481C1A794EB7CE3A96F9325CCBA62",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140017Z/pouilly-fuisse-1er-en-france/fetch-manifest.json",
+    "raw_checksum_sha256": "F4C258964AB546EAB0AC0DB8B0FB8EEEBD1B4346B4DAC8B92A0E0815964A17D9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.en-servy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-en-servy",
+    "normalized_checksum_sha256": "C72A37BE90CA0BEBFBAFC88EFE1515F5015E7E2FFE0ED9EE5E3F564CF925F20C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140020Z/pouilly-fuisse-1er-en-servy/fetch-manifest.json",
+    "raw_checksum_sha256": "F2E7851659F1145AAACD392CE0C463C777D795D7FDC8CF2AA07DD16F22DB85C2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.la-frerie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-la-frerie",
+    "normalized_checksum_sha256": "73B69619FE9E69374F0102D059FAA561ED131AAB36D960F49324818F01A0FC9A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140022Z/pouilly-fuisse-1er-la-frerie/fetch-manifest.json",
+    "raw_checksum_sha256": "BA335D73733CA581860DEF5AC68AE33E44F95D73DAA4126CAB1E45F2F637A91E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.la-marechaude",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-la-marechaude",
+    "normalized_checksum_sha256": "0C25656D751C1E37D4CE0A3FEE9E7B5A96DFC47A935C435919B55BD4611B2613",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140024Z/pouilly-fuisse-1er-la-marechaude/fetch-manifest.json",
+    "raw_checksum_sha256": "2BC44EDA0BF9FEAD97C1F67F5AA8A521E7FCACCBD3D3E7487DACA5984F2309A4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.le-clos",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-le-clos",
+    "normalized_checksum_sha256": "D8EDBB7941026AC63389AA95181053EB85E35EB55FF563ABEFC1462070B8B190",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140028Z/pouilly-fuisse-1er-le-clos/fetch-manifest.json",
+    "raw_checksum_sha256": "412117DC0732F04D734B8DFB94419283BD83F238C72AFD7BDF0E73F99FAFF07F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.le-clos-de-monsieur-noly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-le-clos-de-monsieur-noly",
+    "normalized_checksum_sha256": "5EA71692524E8222E64FCECFA549CE2626F49BF34B9FA82B6C0F96BEF7DA1A62",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140033Z/pouilly-fuisse-1er-le-clos-de-monsieur-noly/fetch-manifest.json",
+    "raw_checksum_sha256": "869DACBFA779D33FAF64C078270E4C07D272B8B2A798EFAC849AB083EE261159",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.le-clos-de-solutre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-le-clos-de-solutre",
+    "normalized_checksum_sha256": "F740ABE9E0C4B83CDB67117467214DB8ABDC4A683BD016A6749DBFAA38F8EC8C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140035Z/pouilly-fuisse-1er-le-clos-de-solutre/fetch-manifest.json",
+    "raw_checksum_sha256": "EC9A18AFA10B9B48F85BFB16D526B393E224F40686602658AFD776DEE551A8A2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.le-clos-reyssier",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-le-clos-reyssier",
+    "normalized_checksum_sha256": "AD37D0DE9FB33743A3DDAABA1E80AF649C46D3B110E1A736E29B5B7A78B1B348",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140030Z/pouilly-fuisse-1er-le-clos-reyssier/fetch-manifest.json",
+    "raw_checksum_sha256": "AD8853B1512861738898F49A5861970DB96923C2520D84F85EBA5A2505EDBE66",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-brules",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-brules",
+    "normalized_checksum_sha256": "6CB8E68713B095392235B1E030B7E61C8E6C4A67871C510275C4757218AEEE05",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140037Z/pouilly-fuisse-1er-les-brules/fetch-manifest.json",
+    "raw_checksum_sha256": "DC3F1234D6D5D73F71170592EFA8EE2B3F38DAD462C80036F7AAC1CD8ED2F70A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-chevrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-chevrieres",
+    "normalized_checksum_sha256": "DC8DAFA7956414515E653580E3744C9A0876CCF78C8655F26409B425DFC7CB3E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140039Z/pouilly-fuisse-1er-les-chevrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "189C9505F7FE0641DE7A60F17A71034263D0D2215DD13C136A33EA0FE182CBC8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-crays",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-crays",
+    "normalized_checksum_sha256": "7AA524B57BB781F8CF4C825ED5550FBE1882A039E6A226D9F8E80EA82A3AE7E7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140041Z/pouilly-fuisse-1er-les-crays/fetch-manifest.json",
+    "raw_checksum_sha256": "826924F937BE7FF598F8C0B39106787C49B5DEE75843A9022944028ED13927F1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-menetrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-menetrieres",
+    "normalized_checksum_sha256": "9799F6B13986B60907C2EC141F1A1B8CD25FB43ED2FB2DB14B466774009C13CC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140043Z/pouilly-fuisse-1er-les-menetrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "C8946BC58B271257EE321E6FD9F4880D1811BF0B42DEE3EE17B809376BC5C7CD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-perrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-perrieres",
+    "normalized_checksum_sha256": "402B64E8CD6019A2F7D0F9E84197503D1183EE3EE0DCA2DADE36D291313FA940",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140045Z/pouilly-fuisse-1er-les-perrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "36C83E9C7CE51ACE8AE5679036CD02537FB3AE8865C324D5F5A2D3437DC32945",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-reisses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-reisses",
+    "normalized_checksum_sha256": "EC59B84D2859ACC070D33E6D72995A9304BF91E0921D404D0188D2CFB0BA1AE3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140048Z/pouilly-fuisse-1er-les-reisses/fetch-manifest.json",
+    "raw_checksum_sha256": "492B7ADCB6EB985E5A0E97842CE1B5DDAA7F1F29F7240D9B690817F4D6202395",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.les-vignes-blanches",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-les-vignes-blanches",
+    "normalized_checksum_sha256": "69CE80FCF662E5AC4CDBDF9637C06B02BB6E0427CCE84B7256FF003637E3F681",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140051Z/pouilly-fuisse-1er-les-vignes-blanches/fetch-manifest.json",
+    "raw_checksum_sha256": "12A44E41D06537F325F2DCD202A752330F520105832BD55793E7B19CA00C854D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.pouilly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-pouilly",
+    "normalized_checksum_sha256": "71274F00FD6E1C9C6C11A1AFD0F3D72EFD4734C9E3A36654D39D2802924326B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140053Z/pouilly-fuisse-1er-pouilly/fetch-manifest.json",
+    "raw_checksum_sha256": "CAE467699752485F07F7C90EE82DA1D9C15898E87931422A2926332F6AE4FB4A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.sur-la-roche",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-sur-la-roche",
+    "normalized_checksum_sha256": "E3EAC18F9FFF2FD0C36A3AB46D280913E037F847E67B173ABF29B49608F3C829",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140055Z/pouilly-fuisse-1er-sur-la-roche/fetch-manifest.json",
+    "raw_checksum_sha256": "8134FAC6559B55B8FB30ED9C5B09089D26AAA957F4F0FB4E06EF33F6CBC19191",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse.premier-cru.vers-cras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pouilly-fuisse-1er-vers-cras",
+    "normalized_checksum_sha256": "F9D037EA515E44292703659DD562E727F6553DDC4C27C8BA57BCB2E74A4BA649",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T140057Z/pouilly-fuisse-1er-vers-cras/fetch-manifest.json",
+    "raw_checksum_sha256": "D81BE9A9B5F7AB39A033663BDCD44AFD8529B470D1B9D83978043C598429EE30",
     "documented": true
   },
   {

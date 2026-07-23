@@ -198,6 +198,34 @@ const WAVES = {
       { name: "Santenay" }, { name: "Maranges" },
     ],
   },
+  "3f-chalonnaise-climats": {
+    migration: "supabase/migrations/20260817090000_cote_chalonnaise_climats.sql",
+    targetsFile: "cote-chalonnaise-climats-targets.json",
+    district: { key: "france.bourgogne.cote-chalonnaise", parent: "france.bourgogne", name: "Côte Chalonnaise" },
+    climatsOnly: true,
+    insertDistrict: false,
+    sortBase: 800,
+    existingSubtree: 10,
+    expectedSubtree: null,
+    villages: [
+      { name: "Bouzeron" }, { name: "Rully" }, { name: "Mercurey" },
+      { name: "Givry" }, { name: "Montagny" },
+    ],
+  },
+  "3f-maconnais-climats": {
+    migration: "supabase/migrations/20260817093000_maconnais_climats.sql",
+    targetsFile: "maconnais-climats-targets.json",
+    district: { key: "france.bourgogne.maconnais", parent: "france.bourgogne", name: "Mâconnais" },
+    climatsOnly: true,
+    insertDistrict: false,
+    sortBase: 900,
+    existingSubtree: 8,
+    expectedSubtree: null,
+    villages: [
+      { name: "Mâcon" }, { name: "Viré-Clessé" }, { name: "Pouilly-Fuissé" },
+      { name: "Pouilly-Vinzelles" }, { name: "Pouilly-Loché" }, { name: "Saint-Véran" },
+    ],
+  },
 };
 const waveName = process.argv[2] ?? "5b";
 const wave = WAVES[waveName];
