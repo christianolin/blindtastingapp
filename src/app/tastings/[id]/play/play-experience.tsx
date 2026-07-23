@@ -494,7 +494,9 @@ export async function PlayExperience({
         return (
           <Card
             key={wine.id}
+            id={`wine-${wine.id}`}
             className={cn(
+              "scroll-mt-24",
               isActive && "border-primary/50 shadow-md ring-1 ring-primary/30",
               !isActive && !wine.is_revealed && !resolved && "opacity-80",
             )}
@@ -509,9 +511,9 @@ export async function PlayExperience({
                 <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                  {/* When embedded, reveal lives in the left-rail flight list
-                      (one reveal home), so hide the per-card button here. */}
-                  {!embedded && isHost && !wine.is_revealed && !finished ? (
+                  {/* Reveal lives on each wine card (its natural home now the
+                      left rail is gone) for the host, in every layout. */}
+                  {isHost && !wine.is_revealed && !finished ? (
                     <RevealButton tastingId={tastingId} wineId={wine.id} />
                   ) : null}
                 </div>

@@ -9,17 +9,26 @@ import {
 } from "@/components/ui/popover";
 import { HostControls } from "./host-controls";
 
-// The running-tasting host menu: a cogwheel in the page header that opens a
-// popover with the lean host actions (finish / delete). Setup-time controls
-// (start / schedule / invite / flow) live inline in the draft lobby — once a
-// tasting has started, invites are closed and settings are locked, so nothing
-// else belongs here.
+// The host settings menu: a cogwheel in the page header that opens a popover
+// with the status-appropriate controls (draft: schedule / invite / flow /
+// delete; running: finish / delete). Keeps administrative actions out of the
+// result content. The prominent Start action stays inline in the draft lobby.
 export function HostControlsMenu({
   tastingId,
   status,
+  scheduledAt = null,
+  wineCount = 0,
+  friends = [],
+  sequentialGuessing = false,
+  showSequentialToggle = false,
 }: {
   tastingId: string;
   status: string;
+  scheduledAt?: string | null;
+  wineCount?: number;
+  friends?: { id: string; display_name: string; email: string }[];
+  sequentialGuessing?: boolean;
+  showSequentialToggle?: boolean;
 }) {
   return (
     <Popover>
@@ -30,9 +39,18 @@ export function HostControlsMenu({
       >
         <Settings className="size-4" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72">
+      <PopoverContent align="end" className="w-80">
         <p className="mb-1 font-heading text-sm font-semibold">Host controls</p>
-        <HostControls tastingId={tastingId} status={status} surface="menu" />
+        <HostControls
+          tastingId={tastingId}
+          status={status}
+          scheduledAt={scheduledAt}
+          wineCount={wineCount}
+          friends={friends}
+          sequentialGuessing={sequentialGuessing}
+          showSequentialToggle={showSequentialToggle}
+          surface="menu"
+        />
       </PopoverContent>
     </Popover>
   );
