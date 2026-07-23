@@ -123,10 +123,15 @@ function selectedFilter(selectedKey: string | null) {
   return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
 }
 
-// Progressive labels: only what matters at the current level — the selected
-// place and its direct children (tiles carry parent_id); regions only when
-// nothing is selected. Cuts label clutter without hiding shapes.
-function labelFilter(selectedKey: string | null, selectedId: string | null) {
+// Progressive labels: what matters at the current level — the selected
+// place, its direct children, AND its siblings (same parent), so a selected
+// Margaux still shows Pauillac and Saint-Julien for context. Regions only
+// when nothing is selected. Cuts clutter without losing orientation.
+function labelFilter(
+  selectedKey: string | null,
+  selectedId: string | null,
+  selectedParentId: string | null,
+) {
   if (!selectedKey) {
     return ["<=", ["get", "tier"], 1] as unknown as boolean;
   }
@@ -134,6 +139,7 @@ function labelFilter(selectedKey: string | null, selectedId: string | null) {
     "any",
     ["==", ["get", "key"], selectedKey],
     ["==", ["get", "parent_id"], selectedId ?? "__none__"],
+    ["==", ["get", "parent_id"], selectedParentId ?? "__none__"],
   ] as unknown as boolean;
 }
 
@@ -160,6 +166,7 @@ export function TileWineMap({
   manifest,
   selectedKey,
   selectedId,
+  selectedParentId,
   cameraTarget,
   onSelect,
   expanded,
@@ -169,6 +176,8 @@ export function TileWineMap({
   selectedKey: string | null;
   /** The selected place's id — lets label/fade rules target its children. */
   selectedId: string | null;
+  /** The selected place's parent id — keeps sibling labels visible. */
+  selectedParentId: string | null;
   cameraTarget: CameraTarget | null;
   onSelect: (key: string) => void;
   expanded: boolean;
@@ -447,7 +456,7 @@ export function TileWineMap({
             type="symbol"
             source-layer="labels"
             filter={
-              ["all", worldFilter, labelFilter(selectedKey, selectedId)] as unknown as boolean
+              ["all", worldFilter, labelFilter(selectedKey, selectedId, selectedParentId)] as unknown as boolean
             }
             layout={LABEL_LAYOUT}
             paint={{
@@ -494,7 +503,7 @@ export function TileWineMap({
               id="shard-labels"
               type="symbol"
               source-layer="labels"
-              filter={labelFilter(selectedKey, selectedId)}
+              filter={labelFilter(selectedKey, selectedId, selectedParentId)}
               layout={LABEL_LAYOUT}
               paint={{
                 // Strong near-white halo keeps names legible on the solid
