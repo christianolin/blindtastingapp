@@ -8,6 +8,7 @@ import {
   CalendarClock,
   UserPlus,
   ListOrdered,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
   deleteTasting,
   finishTasting,
   setSequentialGuessing,
+  setLeaderboardReveal,
   type LobbyActionState,
 } from "./actions";
 
@@ -57,6 +59,8 @@ export function HostControls({
   friends = [],
   sequentialGuessing = false,
   showSequentialToggle = false,
+  leaderboardReveal = "PER_ATTRIBUTE",
+  showLeaderboardToggle = false,
   surface,
 }: {
   tastingId: string;
@@ -66,6 +70,8 @@ export function HostControls({
   friends?: { id: string; display_name: string; email: string }[];
   sequentialGuessing?: boolean;
   showSequentialToggle?: boolean;
+  leaderboardReveal?: string;
+  showLeaderboardToggle?: boolean;
   surface: "start" | "menu";
 }) {
   const [startState, startAction, startPending] = useActionState(
@@ -213,6 +219,36 @@ export function HostControls({
               </p>
               <Button type="submit" variant="outline" className="w-fit">
                 {sequentialGuessing ? "Switch to Free" : "Switch to Guided"}
+              </Button>
+            </form>
+          ) : null}
+
+          {showLeaderboardToggle ? (
+            <form action={setLeaderboardReveal} className="flex flex-col gap-2">
+              <input type="hidden" name="tasting_id" value={tastingId} />
+              <input
+                type="hidden"
+                name="value"
+                value={
+                  leaderboardReveal === "PER_WINE"
+                    ? "PER_ATTRIBUTE"
+                    : "PER_WINE"
+                }
+              />
+              <Label className="flex items-center gap-1.5">
+                <Trophy className="size-4" /> Leaderboard —{" "}
+                {leaderboardReveal === "PER_WINE"
+                  ? "After the full wine"
+                  : "After each attribute"}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                When the standings move during a progressive reveal — after
+                every attribute, or only once the whole wine is revealed.
+              </p>
+              <Button type="submit" variant="outline" className="w-fit">
+                {leaderboardReveal === "PER_WINE"
+                  ? "Switch to after each attribute"
+                  : "Switch to after the full wine"}
               </Button>
             </form>
           ) : null}

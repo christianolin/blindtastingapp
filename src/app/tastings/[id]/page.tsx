@@ -518,6 +518,8 @@ export default async function TastingPage({
               friends={friends}
               sequentialGuessing={tasting.sequential_guessing}
               showSequentialToggle={tasting.reveal_mode === "BLIND"}
+              leaderboardReveal={tasting.leaderboard_reveal}
+              showLeaderboardToggle={tasting.reveal_mode === "BLIND"}
             />
           </div>
         ) : null}

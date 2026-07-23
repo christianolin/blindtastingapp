@@ -203,6 +203,25 @@ export async function setSequentialGuessing(formData: FormData): Promise<void> {
   revalidatePath(`/tastings/${tastingId}`);
 }
 
+// Host switches when the leaderboard moves during a progressive reveal (after
+// each attribute vs after the full wine). Exposed only in the draft menu; the
+// value only changes how partial reveals are aggregated, never scoring itself.
+export async function setLeaderboardReveal(formData: FormData): Promise<void> {
+  const { supabase, user } = await requireUser();
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return;
+  const value =
+    String(formData.get("value") ?? "") === "PER_WINE"
+      ? "PER_WINE"
+      : "PER_ATTRIBUTE";
+  await supabase
+    .from("tastings")
+    .update({ leaderboard_reveal: value })
+    .eq("id", tastingId);
+  revalidatePath(`/tastings/${tastingId}`);
+}
+
 // Host reorders a wine one step up/down the serving order by swapping its
 // position with the neighbour. The (tasting_id, position) unique constraint
 // means we can't set both at once, so bounce one through a temporary slot.

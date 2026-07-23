@@ -21,6 +21,8 @@ export function HostControlsMenu({
   friends = [],
   sequentialGuessing = false,
   showSequentialToggle = false,
+  leaderboardReveal = "PER_ATTRIBUTE",
+  showLeaderboardToggle = false,
 }: {
   tastingId: string;
   status: string;
@@ -29,6 +31,8 @@ export function HostControlsMenu({
   friends?: { id: string; display_name: string; email: string }[];
   sequentialGuessing?: boolean;
   showSequentialToggle?: boolean;
+  leaderboardReveal?: string;
+  showLeaderboardToggle?: boolean;
 }) {
   return (
     <Popover>
@@ -49,6 +53,8 @@ export function HostControlsMenu({
           friends={friends}
           sequentialGuessing={sequentialGuessing}
           showSequentialToggle={showSequentialToggle}
+          leaderboardReveal={leaderboardReveal}
+          showLeaderboardToggle={showLeaderboardToggle}
           surface="menu"
         />
       </PopoverContent>
