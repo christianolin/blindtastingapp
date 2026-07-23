@@ -30,6 +30,7 @@ export async function createTasting(
     formData.get("wine_source") ?? "",
   ) as WineSourceMode;
   const revealMode = String(formData.get("reveal_mode") ?? "") as RevealMode;
+  const flow = String(formData.get("flow") ?? "GUIDED");
   const asyncRevealPolicy = (String(
     formData.get("async_reveal_policy") ?? "AFTER_ALL",
   ) === "IMMEDIATE"
@@ -47,7 +48,7 @@ export async function createTasting(
     return { error: "Name is required." };
   }
   if (timingMode !== "LIVE" && timingMode !== "ASYNC") {
-    return { error: "Choose a timing mode." };
+    return { error: "Choose a format." };
   }
   if (
     wineSource !== "HOST_PROVIDES" &&
@@ -56,7 +57,7 @@ export async function createTasting(
     return { error: "Choose who provides the wines." };
   }
   if (revealMode !== "BLIND" && revealMode !== "SEMI_BLIND") {
-    return { error: "Choose a reveal mode." };
+    return { error: "Choose a blindness level." };
   }
 
   const emails = [
@@ -81,6 +82,7 @@ export async function createTasting(
       image_url: imageUrl,
       scheduled_at: scheduledAt,
       async_reveal_policy: asyncRevealPolicy,
+      sequential_guessing: revealMode === "BLIND" && flow === "GUIDED",
     })
     .select()
     .single();

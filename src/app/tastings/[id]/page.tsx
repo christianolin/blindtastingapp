@@ -236,12 +236,12 @@ export default async function TastingPage({
             {STATUS_LABEL[tasting.status] ?? tasting.status}
           </Badge>
           <Badge variant="secondary">
-            {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
+            {tasting.timing_mode === "LIVE" ? "Live" : "Self-paced"}
           </Badge>
           <Badge variant="secondary">
             {tasting.wine_source === "HOST_PROVIDES"
-              ? "Host provides wines"
-              : "Participants bring wines"}
+              ? "Organizer selects the wines"
+              : "Everyone brings wines"}
           </Badge>
           {tasting.reveal_mode === "SEMI_BLIND" ? (
             <Link href="/rules">

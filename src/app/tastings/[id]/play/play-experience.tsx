@@ -649,7 +649,7 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 </p>
               ) : isSemiBlind ? null : sequential && wine.id !== currentWineId ? (
                 <p className="text-sm text-muted-foreground">
-                  🔒 One wine at a time — this opens once the earlier wines have
+                  🔒 Guided flow — this opens once the earlier wines have
                   been revealed.
                 </p>
               ) : (

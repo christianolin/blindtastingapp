@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { TimingMode } from "@/lib/supabase/database.types";
+import type { RevealMode, TimingMode } from "@/lib/supabase/database.types";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ export function NewTastingForm({
     FormData
   >(createTasting, null);
   const [timing, setTiming] = useState<TimingMode>("LIVE");
+  const [reveal, setReveal] = useState<RevealMode>("BLIND");
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -77,7 +78,7 @@ export function NewTastingForm({
         <Label htmlFor="scheduled_at">Date &amp; time (optional)</Label>
         <Input id="scheduled_at" name="scheduled_at" type="datetime-local" />
         <p className="text-xs text-muted-foreground">
-          When the group will taste. Leave blank for an open-ended async
+          When the group will taste. Leave blank for an open-ended self-paced
           tasting.
         </p>
       </div>
@@ -93,7 +94,7 @@ export function NewTastingForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="timing_mode">Timing</Label>
+        <Label htmlFor="timing_mode">Format</Label>
         <Select
           name="timing_mode"
           items={TIMING_MODE_ITEMS}
@@ -102,7 +103,7 @@ export function NewTastingForm({
           required
         >
           <SelectTrigger id="timing_mode" className="w-full">
-            <SelectValue placeholder="Choose a timing mode" />
+            <SelectValue placeholder="Choose a format" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="LIVE">{TIMING_MODE_ITEMS.LIVE}</SelectItem>
@@ -111,6 +112,11 @@ export function NewTastingForm({
             </SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          {timing === "LIVE"
+            ? "Everyone tastes together in one sitting."
+            : "Open for days — people taste whenever they can."}
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -133,18 +139,23 @@ export function NewTastingForm({
             </SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          Everyone brings wines: each person adds a bottle only they know, and
+          even you as organizer can&apos;t see it until reveal.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="reveal_mode">Reveal</Label>
+        <Label htmlFor="reveal_mode">Blindness</Label>
         <Select
           name="reveal_mode"
           items={REVEAL_MODE_ITEMS}
-          defaultValue="BLIND"
+          value={reveal}
+          onValueChange={(v) => setReveal(v as RevealMode)}
           required
         >
           <SelectTrigger id="reveal_mode" className="w-full">
-            <SelectValue placeholder="Choose a reveal mode" />
+            <SelectValue placeholder="Choose how blind it is" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="BLIND">{REVEAL_MODE_ITEMS.BLIND}</SelectItem>
@@ -153,7 +164,31 @@ export function NewTastingForm({
             </SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">
+          {reveal === "BLIND"
+            ? "Nothing is known ahead of time — guess each wine from scratch."
+            : "The full wine list is shown up front; match each glass to a wine."}
+        </p>
       </div>
+
+      {reveal === "BLIND" ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="flow">Flow</Label>
+          <Select name="flow" items={FLOW_ITEMS} defaultValue="GUIDED" required>
+            <SelectTrigger id="flow" className="w-full">
+              <SelectValue placeholder="Choose a flow" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="GUIDED">{FLOW_ITEMS.GUIDED}</SelectItem>
+              <SelectItem value="FREE">{FLOW_ITEMS.FREE}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Guided: everyone tastes the same wine together, one at a time.
+            Free: people guess any wine in any order.
+          </p>
+        </div>
+      ) : null}
 
       {timing === "ASYNC" ? (
         <div className="flex flex-col gap-2">

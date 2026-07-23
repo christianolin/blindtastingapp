@@ -211,15 +211,16 @@ export function HostControls({
               value={String(!sequentialGuessing)}
             />
             <Label className="flex items-center gap-1.5">
-              <ListOrdered className="size-4" /> One wine at a time
+              <ListOrdered className="size-4" /> Flow —{" "}
+              {sequentialGuessing ? "Guided" : "Free"}
             </Label>
             <p className="text-sm text-muted-foreground">
               {sequentialGuessing
-                ? "On — participants guess in the serving order; reveal a wine to open the next."
-                : "Off — participants can guess any wine in any order."}
+                ? "Guided — everyone tastes the same wine together; reveal a wine to open the next."
+                : "Free — participants can guess any wine in any order."}
             </p>
             <Button type="submit" variant="outline" className="w-fit">
-              {sequentialGuessing ? "Turn off" : "Turn on"}
+              {sequentialGuessing ? "Switch to Free" : "Switch to Guided"}
             </Button>
           </form>
         ) : null}

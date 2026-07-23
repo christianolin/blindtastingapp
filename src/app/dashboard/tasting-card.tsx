@@ -90,7 +90,7 @@ export function TastingCard({
                 ) : (
                   <Clock className="size-3.5" />
                 )}
-                {tasting.timing_mode === "LIVE" ? "Live" : "Async"}
+                {tasting.timing_mode === "LIVE" ? "Live" : "Self-paced"}
               </span>
               <span className="flex items-center gap-1.5">
                 <Wine className="size-3.5" />
