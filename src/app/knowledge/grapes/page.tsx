@@ -74,10 +74,38 @@ export default async function GrapeLibraryPage({
     return qs ? `/knowledge/grapes?${qs}` : "/knowledge/grapes";
   };
 
+  const grapeDotColor = (c: string | null) =>
+    c === "RED" ? "#7E1B26" : c === "WHITE" ? "#B78E42" : "#8A8A85";
+
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 p-6 sm:p-8">
+        {/* Left nav: a dense, scrollable jump list — icon + name only —
+            so you can skim the whole library and click straight to a card. */}
+        <nav className="sticky top-20 hidden h-[calc(100vh-6rem)] w-52 shrink-0 flex-col overflow-y-auto lg:flex">
+          <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">
+            {(grapes ?? []).length} grapes
+          </p>
+          <ul className="flex flex-col">
+            {(grapes ?? []).map((g) => (
+              <li key={g.id}>
+                <a
+                  href={`#grape-${g.id}`}
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <GrapeIcon
+                    className="size-4 shrink-0"
+                    style={{ color: grapeDotColor(g.color) }}
+                  />
+                  <span className="truncate">{g.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
         <div>
           <Link
             href="/knowledge"
@@ -125,7 +153,7 @@ export default async function GrapeLibraryPage({
         ) : (
           <div className="flex flex-col gap-3">
             {(grapes ?? []).map((g) => (
-              <Card key={g.id}>
+              <Card key={g.id} id={`grape-${g.id}`} className="scroll-mt-20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <GrapeIcon
@@ -244,6 +272,7 @@ export default async function GrapeLibraryPage({
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
