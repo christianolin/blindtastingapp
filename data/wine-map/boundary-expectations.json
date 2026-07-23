@@ -27,12 +27,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.cadillac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cadillac",
+    "normalized_checksum_sha256": "A4A1D1059C25E07E4C4AE4EEB832C4D5A9ADBF4590721BFE0C42B73529F10A23",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124942Z/cadillac/fetch-manifest.json",
+    "raw_checksum_sha256": "BCDA8ABB0B2B81BCA9418061123B36E99FD06A681D0FAAB25D4A03F49C8036DF",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.canon-fronsac",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:canon-fronsac",
     "normalized_checksum_sha256": "5C33ED83D09DD7387A3D21F86D52A5723A63FCF346C5D52A5332489A0FAAE262",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222857Z/canon-fronsac/fetch-manifest.json",
     "raw_checksum_sha256": "FECFED4A439AD50D636B373F720E1601A0BE51A57901DB48E481B21458FB850C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.cerons",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cerons",
+    "normalized_checksum_sha256": "BB424EDC54D5FE959B0F71D83FB364BF2AA4A99FDABC4D55EE627C41BEC21A28",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124946Z/cerons/fetch-manifest.json",
+    "raw_checksum_sha256": "A152622ED9ED1A73EC47518E44F81DA350F03A89D63DB48A42A519E9B4CA4133",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.cotes-de-bordeaux-saint-macaire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-de-bordeaux-saint-macaire",
+    "normalized_checksum_sha256": "DE8F70B87961E6B46128B7D2927987DF3D6A31927B67D59838BE9777D008CC0F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124952Z/cotes-de-bordeaux-saint-macaire/fetch-manifest.json",
+    "raw_checksum_sha256": "7AE09EC85632B766C05F69AC018A97D42F5C40DC04A04C0530A2E9C0D7E4DABE",
     "documented": true
   },
   {
@@ -81,6 +108,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.haut-medoc.listrac-medoc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:listrac-medoc",
+    "normalized_checksum_sha256": "DDDE52D1B7EDA3F1745F8EF531280D1492DF03D81260F330D6527A7A4D7F7387",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124923Z/listrac-medoc/fetch-manifest.json",
+    "raw_checksum_sha256": "9BA986A558417A65CAE1AD3E29FAD1999F1D7E9E764FAF8270CE1913876C7E64",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.haut-medoc.margaux",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "legacy-20260726-margaux",
@@ -117,12 +153,48 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.lalande-de-pomerol",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lalande-de-pomerol",
+    "normalized_checksum_sha256": "82629A7568129522B7257954EEAD6033613031B86D1784B816FEFF747138AF33",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124939Z/lalande-de-pomerol/fetch-manifest.json",
+    "raw_checksum_sha256": "2E317FF805FA3807C4DFC05C864FA9906829095BC18F1D1AAB1EDAB999D495C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.loupiac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loupiac",
+    "normalized_checksum_sha256": "7CB35E668C862DDA4847AABF2FB6BE5253B1BBC74B65634B74570B0A226B764F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124948Z/loupiac/fetch-manifest.json",
+    "raw_checksum_sha256": "5D04CF5C8BC6E1A0E8AAF0B8E1AC7EFAB4AECE8079E227CFA4635C67A506E820",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.lussac-saint-emilion",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lussac-saint-emilion",
+    "normalized_checksum_sha256": "E2A3627A554C41F42C025F7617CC082F17338388C8E17405110B71EEC979DCE8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124932Z/lussac-saint-emilion/fetch-manifest.json",
+    "raw_checksum_sha256": "7FC536EB63EE7120113DA30C45FBE6CCDD4536CDA6EA7DE204BB72D561378A62",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.medoc",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:medoc-grouping",
     "normalized_checksum_sha256": "7F3D8B3341897877A02813DCCDE9DB736D16896F6F8865A314E610B1324BDF64",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222957Z/medoc-grouping/fetch-manifest.json",
     "raw_checksum_sha256": "ED98B6CCFFD93C457937E3DDDE01E802B3DE1B7BF7BF9C925A26B8593245019C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.montagne-saint-emilion",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:montagne-saint-emilion",
+    "normalized_checksum_sha256": "6E26E165945233638402F877A42217F94279820C9B1CA49B12E6DFC50BCC5FD0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124929Z/montagne-saint-emilion/fetch-manifest.json",
+    "raw_checksum_sha256": "4F236A91255F9CB4ED5DD2BD1E55E3BCB1D16B0F645D7D1E5D472D03CAA3374F",
     "documented": true
   },
   {
@@ -144,12 +216,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.puisseguin-saint-emilion",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:puisseguin-saint-emilion",
+    "normalized_checksum_sha256": "4688052EDDE696E931ACACEFF7C627C8D35B60C40B2DC2690C5ACFC9507D8842",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124934Z/puisseguin-saint-emilion/fetch-manifest.json",
+    "raw_checksum_sha256": "479A5FCA3C065FAEC44E9F03A2B0BAF3491BB5FE706B7100A77F238D188F8AE6",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.saint-emilion",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "legacy-20260726-saint-emilion",
     "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.saint-georges-saint-emilion",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-georges-saint-emilion",
+    "normalized_checksum_sha256": "EAA62425D8EFCC4CDD8A6B654C3CB860288B408328C55400896B14550462ABAB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124938Z/saint-georges-saint-emilion/fetch-manifest.json",
+    "raw_checksum_sha256": "1D9A3980C026215DDB4AB22BCE96A26EDA68FD22C08D934685B30D1FE6D93F18",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.sainte-croix-du-mont",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sainte-croix-du-mont",
+    "normalized_checksum_sha256": "51310DB05C31E22CD7D074C9201FC72E3F3989ECB9C2B78CD1821F9928525522",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124950Z/sainte-croix-du-mont/fetch-manifest.json",
+    "raw_checksum_sha256": "25594DC45118A1856CE6A7450CA6FEBBD1F355BA867EA01720213D7EDEF734FF",
     "documented": true
   },
   {
