@@ -9,8 +9,11 @@ import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { makeWineLabeler } from "@/lib/wine-label";
+import { cn } from "@/lib/utils";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
+import { HostControlsMenu } from "./host-controls-menu";
+import { StandingsPanel } from "./standings-panel";
 import { RevealButton } from "./play/reveal-button";
 import { PlayExperience } from "./play/play-experience";
 import { respondToInvite, moveWine } from "./actions";
@@ -73,6 +76,12 @@ export default async function TastingPage({
   const myStatus = myParticipant?.status ?? null;
   const hasStarted = tasting.status !== "DRAFT";
   const wineCount = (wines ?? []).length;
+  // The running (started) view is a 3-column board; the draft lobby stays a
+  // focused single column.
+  const running = hasStarted;
+  const revealedCount = (wines ?? []).filter((w) => w.is_revealed).length;
+  const progressPct =
+    wineCount > 0 ? Math.round((revealedCount / wineCount) * 100) : 0;
 
   const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
   const nameByParticipantId = new Map(
@@ -206,8 +215,227 @@ export default async function TastingPage({
     </span>
   );
 
+  // The wine list (serving order + reveal state). Shown to everyone: host gets
+  // the reveal / reorder / add / edit affordances, guessers see a read-only
+  // flight overview. Lives in the left rail while running, inline while setting
+  // up.
+  const winesPanel = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Wines
+          {canAddWine ? (
+            <Button
+              size="sm"
+              nativeButton={false}
+              render={<Link href={`/tastings/${id}/wines/new`} />}
+            >
+              {tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine"}
+            </Button>
+          ) : null}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {wineCount === 0 ? (
+          <p className="text-sm text-muted-foreground">No wines added yet.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {isHost && !isByo ? (
+              <p className="text-xs text-muted-foreground">
+                This is the serving order — use the arrows to reorder.
+              </p>
+            ) : null}
+            <ul className="flex flex-col gap-2">
+              {(wines ?? []).map((w, i) => (
+                <li
+                  key={w.id}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <div className="min-w-0">
+                    <span>{isByo ? wineLabel(w) : `Wine ${i + 1}`}</span>
+                    {isHost && hostWineIdentity.get(w.id) ? (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {hostWineIdentity.get(w.id)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {/* Editable while the tasting hasn't started, by whoever
+                        added the wine: host for host-entered wines, the
+                        contributor for their own BYO bottle. */}
+                    {!hasStarted &&
+                    (w.contributor_participant_id
+                      ? w.contributor_participant_id === myParticipant?.id
+                      : isHost) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        nativeButton={false}
+                        render={
+                          <Link href={`/tastings/${id}/wines/${w.id}/edit`} />
+                        }
+                      >
+                        Edit
+                      </Button>
+                    ) : null}
+                    {isHost && !w.is_revealed
+                      ? reorderControls(
+                          w.id,
+                          i > 0,
+                          i < (wines ?? []).length - 1,
+                        )
+                      : null}
+                    {isHost &&
+                    hasStarted &&
+                    tasting.status !== "CLOSED" &&
+                    !w.is_revealed ? (
+                      <RevealButton tastingId={id} wineId={w.id} />
+                    ) : null}
+                    <Badge variant={w.is_revealed ? "default" : "outline"}>
+                      {w.is_revealed ? "Revealed" : isByo ? "Added" : "Hidden"}
+                    </Badge>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {isByo && participantsWithoutWine.length > 0 ? (
+              <p className="text-sm text-muted-foreground italic">
+                Yet to add a wine:{" "}
+                {participantsWithoutWine
+                  .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
+                  .join(", ")}
+              </p>
+            ) : null}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // Full participant roster with cross-tasting stats — the draft lobby view.
+  // Once running, the right-rail StandingsPanel takes over (ranked + room).
+  const participantsCard = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Participants
+          <span className="text-sm font-normal text-muted-foreground">
+            {(participantRows ?? []).length}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="flex flex-col gap-1">
+          {(participantRows ?? []).map((p) => {
+            const profile = profileById.get(p.user_id);
+            const name = profile?.display_name ?? profile?.email ?? "Someone";
+            const stats = statsByUserId.get(p.user_id);
+            const infoBits = [
+              profile?.location ? (
+                <span key="loc" className="flex items-center gap-1">
+                  <MapPin className="size-3" />
+                  {profile.location}
+                </span>
+              ) : null,
+              profile?.favorite_wine_type ? (
+                <span key="wine" className="flex items-center gap-1">
+                  <Wine className="size-3" />
+                  {profile.favorite_wine_type}
+                </span>
+              ) : null,
+              stats && stats.winesGuessed > 0 ? (
+                <span key="stats">
+                  {stats.tastingsAttended} tasting
+                  {stats.tastingsAttended === 1 ? "" : "s"} ·{" "}
+                  {stats.averagePoints.toFixed(1)} avg pts
+                </span>
+              ) : null,
+            ].filter(Boolean);
+            return (
+              <li key={p.user_id}>
+                <Link
+                  href={`/u/${p.user_id}`}
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/60"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+                      />
+                    ) : (
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm">
+                        {name.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <span className="truncate">{name}</span>
+                        {p.user_id === tasting.host_id ? (
+                          <Badge variant="secondary">Host</Badge>
+                        ) : null}
+                      </span>
+                      {infoBits.length > 0 ? (
+                        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          {infoBits}
+                        </span>
+                      ) : null}
+                    </span>
+                  </span>
+                  <Badge variant={p.status === "JOINED" ? "default" : "outline"}>
+                    {p.status === "JOINED"
+                      ? "In"
+                      : p.status === "INVITED"
+                        ? "Invited"
+                        : "Declined"}
+                  </Badge>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+
+  const inviteCard =
+    myStatus === "INVITED" ? (
+      <Card className="border-primary/40 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="text-base">You&apos;re invited</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            {profileById.get(tasting.host_id)?.display_name ?? "The host"}{" "}
+            invited you to this tasting. Accept to take part.
+          </p>
+          <div className="flex gap-2">
+            <form action={respondToInvite}>
+              <input type="hidden" name="tasting_id" value={id} />
+              <input type="hidden" name="response" value="accept" />
+              <Button type="submit">Accept</Button>
+            </form>
+            <form action={respondToInvite}>
+              <input type="hidden" name="tasting_id" value={id} />
+              <input type="hidden" name="response" value="decline" />
+              <Button type="submit" variant="outline">
+                Decline
+              </Button>
+            </form>
+          </div>
+        </CardContent>
+      </Card>
+    ) : null;
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-1 flex-col gap-6 p-6 sm:p-8",
+        running ? "max-w-6xl" : "max-w-2xl",
+      )}
+    >
       {hasStarted ? <AutoRefresh /> : null}
       {tasting.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -218,284 +446,124 @@ export default async function TastingPage({
         />
       ) : null}
 
-      <div>
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          {tasting.name}
-        </h1>
-        {tasting.description ? (
-          <p className="mt-2 text-muted-foreground">{tasting.description}</p>
-        ) : null}
-        {tasting.scheduled_at ? (
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <CalendarClock className="size-4" />
-            <LocalDateTime iso={tasting.scheduled_at} />
-          </p>
-        ) : null}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Badge variant={hasStarted ? "default" : "outline"}>
-            {STATUS_LABEL[tasting.status] ?? tasting.status}
-          </Badge>
-          <Badge variant="secondary">
-            {tasting.timing_mode === "LIVE" ? "Live" : "Self-paced"}
-          </Badge>
-          <Badge variant="secondary">
-            {tasting.wine_source === "HOST_PROVIDES"
-              ? "Organizer selects the wines"
-              : "Everyone brings wines"}
-          </Badge>
-          {tasting.reveal_mode === "SEMI_BLIND" ? (
-            <Link href="/rules">
-              <Badge variant="secondary" className="hover:bg-secondary/70">
-                Semi-blind · scoring ↗
-              </Badge>
-            </Link>
-          ) : (
-            <Link href="/rules">
-              <Badge variant="secondary" className="hover:bg-secondary/70">
-                Danish Championship rules ↗
-              </Badge>
-            </Link>
-          )}
+      {/* Header: identity on the left, host settings cogwheel on the right
+          (running only — setup controls live inline in the draft lobby). */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {tasting.name}
+          </h1>
+          {tasting.description ? (
+            <p className="mt-2 text-muted-foreground">{tasting.description}</p>
+          ) : null}
+          {tasting.scheduled_at ? (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CalendarClock className="size-4" />
+              <LocalDateTime iso={tasting.scheduled_at} />
+            </p>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant={hasStarted ? "default" : "outline"}>
+              {STATUS_LABEL[tasting.status] ?? tasting.status}
+            </Badge>
+            <Badge variant="secondary">
+              {tasting.timing_mode === "LIVE" ? "Live" : "Self-paced"}
+            </Badge>
+            <Badge variant="secondary">
+              {tasting.wine_source === "HOST_PROVIDES"
+                ? "Organizer selects the wines"
+                : "Everyone brings wines"}
+            </Badge>
+            {tasting.reveal_mode === "SEMI_BLIND" ? (
+              <Link href="/rules">
+                <Badge variant="secondary" className="hover:bg-secondary/70">
+                  Semi-blind · scoring ↗
+                </Badge>
+              </Link>
+            ) : (
+              <Link href="/rules">
+                <Badge variant="secondary" className="hover:bg-secondary/70">
+                  Danish Championship rules ↗
+                </Badge>
+              </Link>
+            )}
+          </div>
         </div>
+        {isHost && running ? (
+          <div className="shrink-0">
+            <HostControlsMenu tastingId={id} status={tasting.status} />
+          </div>
+        ) : null}
       </div>
 
-      {/* Pending invite: accept or decline before you can take part. */}
-      {myStatus === "INVITED" ? (
-        <Card className="border-primary/40 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="text-base">You&apos;re invited</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">
-              {profileById.get(tasting.host_id)?.display_name ?? "The host"}{" "}
-              invited you to this tasting. Accept to take part.
-            </p>
-            <div className="flex gap-2">
-              <form action={respondToInvite}>
-                <input type="hidden" name="tasting_id" value={id} />
-                <input type="hidden" name="response" value="accept" />
-                <Button type="submit">Accept</Button>
-              </form>
-              <form action={respondToInvite}>
-                <input type="hidden" name="tasting_id" value={id} />
-                <input type="hidden" name="response" value="decline" />
-                <Button type="submit" variant="outline">
-                  Decline
-                </Button>
-              </form>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+      {inviteCard}
 
-      {myStatus === "JOINED" && !hasStarted ? (
-        <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
-          Waiting for the host to start the tasting.
-        </p>
-      ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Participants
-            <span className="text-sm font-normal text-muted-foreground">
-              {(participantRows ?? []).length}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="flex flex-col gap-1">
-            {(participantRows ?? []).map((p) => {
-              const profile = profileById.get(p.user_id);
-              const name =
-                profile?.display_name ?? profile?.email ?? "Someone";
-              const stats = statsByUserId.get(p.user_id);
-              const infoBits = [
-                profile?.location ? (
-                  <span key="loc" className="flex items-center gap-1">
-                    <MapPin className="size-3" />
-                    {profile.location}
+      {running ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)_minmax(0,20rem)]">
+          {/* Left rail — the flight: reveal progress + wine list. */}
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-8 lg:self-start">
+            {wineCount > 0 ? (
+              <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-heading text-base font-semibold">
+                    {tasting.status === "CLOSED"
+                      ? "Finished"
+                      : `${revealedCount} of ${wineCount} revealed`}
                   </span>
-                ) : null,
-                profile?.favorite_wine_type ? (
-                  <span key="wine" className="flex items-center gap-1">
-                    <Wine className="size-3" />
-                    {profile.favorite_wine_type}
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {progressPct}%
                   </span>
-                ) : null,
-                stats && stats.winesGuessed > 0 ? (
-                  <span key="stats">
-                    {stats.tastingsAttended} tasting
-                    {stats.tastingsAttended === 1 ? "" : "s"} ·{" "}
-                    {stats.averagePoints.toFixed(1)} avg pts
-                  </span>
-                ) : null,
-              ].filter(Boolean);
-              return (
-                <li key={p.user_id}>
-                  <Link
-                    href={`/u/${p.user_id}`}
-                    className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/60"
-                  >
-                    <span className="flex min-w-0 items-center gap-3">
-                      {profile?.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={profile.avatar_url}
-                          alt=""
-                          className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
-                        />
-                      ) : (
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm">
-                          {name.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-2 text-sm font-medium">
-                          <span className="truncate">{name}</span>
-                          {p.user_id === tasting.host_id ? (
-                            <Badge variant="secondary">Host</Badge>
-                          ) : null}
-                        </span>
-                        {infoBits.length > 0 ? (
-                          <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                            {infoBits}
-                          </span>
-                        ) : null}
-                      </span>
-                    </span>
-                    <Badge
-                      variant={p.status === "JOINED" ? "default" : "outline"}
-                    >
-                      {p.status === "JOINED"
-                        ? "In"
-                        : p.status === "INVITED"
-                          ? "Invited"
-                          : "Declined"}
-                    </Badge>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Host always keeps this compact wine overview (reveal / reorder /
-          identity); participants who can guess see the full play cards below
-          instead. */}
-      {!canGuess || isHost ? (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Wines
-            {canAddWine ? (
-              <Button
-                size="sm"
-                nativeButton={false}
-                render={<Link href={`/tastings/${id}/wines/new`} />}
-              >
-                {tasting.wine_source === "HOST_PROVIDES"
-                  ? "Add wine"
-                  : "Add a wine"}
-              </Button>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </div>
             ) : null}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {wineCount === 0 ? (
-            <p className="text-sm text-muted-foreground">No wines added yet.</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {isHost && !isByo ? (
-                <p className="text-xs text-muted-foreground">
-                  This is the serving order — use the arrows to reorder.
-                </p>
-              ) : null}
-              <ul className="flex flex-col gap-2">
-                {(wines ?? []).map((w, i) => (
-                  <li
-                    key={w.id}
-                    className="flex items-center justify-between gap-2 text-sm"
-                  >
-                    <div className="min-w-0">
-                      <span>{isByo ? wineLabel(w) : `Wine ${i + 1}`}</span>
-                      {isHost && hostWineIdentity.get(w.id) ? (
-                        <p className="truncate text-xs text-muted-foreground">
-                          {hostWineIdentity.get(w.id)}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {/* Editable while the tasting hasn't started, by
-                          whoever added the wine: host for host-entered
-                          wines, the contributor for their own BYO bottle. */}
-                      {!hasStarted &&
-                      (w.contributor_participant_id
-                        ? w.contributor_participant_id === myParticipant?.id
-                        : isHost) ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          nativeButton={false}
-                          render={
-                            <Link
-                              href={`/tastings/${id}/wines/${w.id}/edit`}
-                            />
-                          }
-                        >
-                          Edit
-                        </Button>
-                      ) : null}
-                      {isHost && !w.is_revealed
-                        ? reorderControls(
-                            w.id,
-                            i > 0,
-                            i < (wines ?? []).length - 1,
-                          )
-                        : null}
-                      {isHost &&
-                      hasStarted &&
-                      tasting.status !== "CLOSED" &&
-                      !w.is_revealed ? (
-                        <RevealButton tastingId={id} wineId={w.id} />
-                      ) : null}
-                      <Badge variant={w.is_revealed ? "default" : "outline"}>
-                        {w.is_revealed ? "Revealed" : isByo ? "Added" : "Hidden"}
-                      </Badge>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {isByo && participantsWithoutWine.length > 0 ? (
-                <p className="text-sm text-muted-foreground italic">
-                  Yet to add a wine:{" "}
-                  {participantsWithoutWine
-                    .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
-                    .join(", ")}
-                </p>
-              ) : null}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      ) : null}
+            {winesPanel}
+          </aside>
 
-      {/* Everything on one page: the guess/reveal/results experience is
-          embedded here for JOINED participants of a started tasting. */}
-      {canGuess ? <PlayExperience tastingId={id} /> : null}
+          {/* Middle — the guessing: only the active wine cards. */}
+          <div className="flex min-w-0 flex-col gap-6">
+            {canGuess ? (
+              <PlayExperience tastingId={id} embedded />
+            ) : (
+              <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+                Guessing is for people taking part in this tasting.
+              </p>
+            )}
+          </div>
 
-      {isHost ? (
-        <HostControls
-          tastingId={id}
-          status={tasting.status}
-          scheduledAt={tasting.scheduled_at}
-          wineCount={wineCount}
-          friends={friends}
-          sequentialGuessing={tasting.sequential_guessing}
-          showSequentialToggle={tasting.reveal_mode === "BLIND"}
-        />
-      ) : null}
+          {/* Right rail — standings: participants merged with the leaderboard. */}
+          <aside className="lg:sticky lg:top-8 lg:self-start">
+            <StandingsPanel tastingId={id} />
+          </aside>
+        </div>
+      ) : (
+        <>
+          {myStatus === "JOINED" && !hasStarted ? (
+            <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+              Waiting for the host to start the tasting.
+            </p>
+          ) : null}
+          {participantsCard}
+          {winesPanel}
+          {isHost ? (
+            <HostControls
+              tastingId={id}
+              status={tasting.status}
+              scheduledAt={tasting.scheduled_at}
+              wineCount={wineCount}
+              friends={friends}
+              sequentialGuessing={tasting.sequential_guessing}
+              showSequentialToggle={tasting.reveal_mode === "BLIND"}
+              surface="setup"
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

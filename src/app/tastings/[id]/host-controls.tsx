@@ -40,25 +40,36 @@ function StateMessage({ state }: { state: LobbyActionState }) {
   return <p className="text-sm text-[#3f5b42]">{state.success}</p>;
 }
 
+/**
+ * Host-only controls with two surfaces:
+ *  - "setup": the full draft-lobby card (start / schedule / invite / flow /
+ *    delete), rendered inline while the tasting hasn't started.
+ *  - "menu": the lean running-state actions (finish / delete) for the header
+ *    cogwheel popover — invites and settings are already locked once started,
+ *    so nothing else belongs here.
+ *
+ * The setup-only props are optional so the cogwheel can render `surface="menu"`
+ * with just the id and status.
+ */
 export function HostControls({
   tastingId,
   status,
-  scheduledAt,
-  wineCount,
-  friends,
-  sequentialGuessing,
-  showSequentialToggle,
+  scheduledAt = null,
+  wineCount = 0,
+  friends = [],
+  sequentialGuessing = false,
+  showSequentialToggle = false,
+  surface,
 }: {
   tastingId: string;
   status: string;
-  scheduledAt: string | null;
-  wineCount: number;
-  friends: { id: string; display_name: string; email: string }[];
-  sequentialGuessing: boolean;
-  showSequentialToggle: boolean;
+  scheduledAt?: string | null;
+  wineCount?: number;
+  friends?: { id: string; display_name: string; email: string }[];
+  sequentialGuessing?: boolean;
+  showSequentialToggle?: boolean;
+  surface: "setup" | "menu";
 }) {
-  const notStarted = status === "DRAFT";
-
   const [startState, startAction, startPending] = useActionState(
     startTasting,
     null,
@@ -83,83 +94,35 @@ export function HostControls({
     }
   }, [scheduledAt]);
 
-  return (
-    <Card className="border-primary/30">
-      <CardHeader>
-        <CardTitle className="text-base">Host controls</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        {notStarted ? (
-          <>
-            <form action={startAction} className="flex flex-col gap-2">
-              <input type="hidden" name="tasting_id" value={tastingId} />
-              <p className="text-sm text-muted-foreground">
-                The tasting hasn&apos;t started. Add wines and invite people,
-                then start it to open guessing.
-              </p>
-              <Button
-                type="submit"
-                disabled={startPending || wineCount < 1}
-                className="w-fit gap-1.5"
-              >
-                {startPending ? (
-                  <>
-                    <WineGlassLoader /> Starting…
-                  </>
-                ) : (
-                  <>
-                    <Play className="size-4" /> Start tasting
-                  </>
-                )}
-              </Button>
-              {wineCount < 1 ? (
-                <p className="text-xs text-muted-foreground">
-                  Add at least one wine first.
-                </p>
-              ) : null}
-              <StateMessage state={startState} />
-            </form>
+  const deleteForm = (
+    <form
+      action={deleteTasting}
+      onSubmit={(e) => {
+        if (
+          !window.confirm(
+            "Delete this tasting for everyone? This can't be undone.",
+          )
+        ) {
+          e.preventDefault();
+        }
+      }}
+    >
+      <input type="hidden" name="tasting_id" value={tastingId} />
+      <Button
+        type="submit"
+        variant="destructive"
+        className="w-full justify-start gap-1.5"
+      >
+        <Trash2 className="size-4" /> Delete tasting
+      </Button>
+    </form>
+  );
 
-            <form action={scheduleAction} className="flex flex-col gap-2">
-              <input type="hidden" name="tasting_id" value={tastingId} />
-              <Label
-                htmlFor="scheduled_at_edit"
-                className="flex items-center gap-1.5"
-              >
-                <CalendarClock className="size-4" /> Date &amp; time
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  ref={scheduleRef}
-                  id="scheduled_at_edit"
-                  name="scheduled_at"
-                  type="datetime-local"
-                />
-                <Button type="submit" variant="outline" disabled={schedulePending}>
-                  {schedulePending ? "Saving…" : "Save"}
-                </Button>
-              </div>
-              <StateMessage state={scheduleState} />
-            </form>
-
-            <form action={inviteAction} className="flex flex-col gap-3">
-              <input type="hidden" name="tasting_id" value={tastingId} />
-              <Label className="flex items-center gap-1.5">
-                <UserPlus className="size-4" /> Invite more people
-              </Label>
-              <InviteField friends={friends} />
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={invitePending}
-                className="w-fit"
-              >
-                {invitePending ? "Sending…" : "Send invites"}
-              </Button>
-              <StateMessage state={inviteState} />
-            </form>
-          </>
-        ) : status === "IN_PROGRESS" ? (
+  // Running state (header cogwheel): finish + delete only.
+  if (surface === "menu") {
+    return (
+      <div className="flex flex-col gap-3">
+        {status === "IN_PROGRESS" ? (
           <form
             action={finishAction}
             className="flex flex-col gap-2"
@@ -175,14 +138,14 @@ export function HostControls({
           >
             <input type="hidden" name="tasting_id" value={tastingId} />
             <p className="text-sm text-muted-foreground">
-              This tasting has started. Invitations are closed. Finish it when
-              you&apos;re done to close guessing and move it to History.
+              Finish when you&apos;re done to close guessing and move it to
+              History.
             </p>
             <Button
               type="submit"
               variant="outline"
               disabled={finishPending}
-              className="w-fit gap-1.5"
+              className="w-full justify-start gap-1.5"
             >
               {finishPending ? (
                 <>
@@ -201,8 +164,87 @@ export function HostControls({
             This tasting is finished. Results stay available below.
           </p>
         )}
+        {deleteForm}
+      </div>
+    );
+  }
 
-        {showSequentialToggle && notStarted ? (
+  // Setup surface (draft lobby): the full setup card.
+  return (
+    <Card className="border-primary/30">
+      <CardHeader>
+        <CardTitle className="text-base">Host setup</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-6">
+        <form action={startAction} className="flex flex-col gap-2">
+          <input type="hidden" name="tasting_id" value={tastingId} />
+          <p className="text-sm text-muted-foreground">
+            The tasting hasn&apos;t started. Add wines and invite people, then
+            start it to open guessing.
+          </p>
+          <Button
+            type="submit"
+            disabled={startPending || wineCount < 1}
+            className="w-fit gap-1.5"
+          >
+            {startPending ? (
+              <>
+                <WineGlassLoader /> Starting…
+              </>
+            ) : (
+              <>
+                <Play className="size-4" /> Start tasting
+              </>
+            )}
+          </Button>
+          {wineCount < 1 ? (
+            <p className="text-xs text-muted-foreground">
+              Add at least one wine first.
+            </p>
+          ) : null}
+          <StateMessage state={startState} />
+        </form>
+
+        <form action={scheduleAction} className="flex flex-col gap-2">
+          <input type="hidden" name="tasting_id" value={tastingId} />
+          <Label
+            htmlFor="scheduled_at_edit"
+            className="flex items-center gap-1.5"
+          >
+            <CalendarClock className="size-4" /> Date &amp; time
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              ref={scheduleRef}
+              id="scheduled_at_edit"
+              name="scheduled_at"
+              type="datetime-local"
+            />
+            <Button type="submit" variant="outline" disabled={schedulePending}>
+              {schedulePending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+          <StateMessage state={scheduleState} />
+        </form>
+
+        <form action={inviteAction} className="flex flex-col gap-3">
+          <input type="hidden" name="tasting_id" value={tastingId} />
+          <Label className="flex items-center gap-1.5">
+            <UserPlus className="size-4" /> Invite more people
+          </Label>
+          <InviteField friends={friends} />
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={invitePending}
+            className="w-fit"
+          >
+            {invitePending ? "Sending…" : "Send invites"}
+          </Button>
+          <StateMessage state={inviteState} />
+        </form>
+
+        {showSequentialToggle ? (
           <form action={setSequentialGuessing} className="flex flex-col gap-2">
             <input type="hidden" name="tasting_id" value={tastingId} />
             <input
@@ -225,23 +267,7 @@ export function HostControls({
           </form>
         ) : null}
 
-        <form
-          action={deleteTasting}
-          onSubmit={(e) => {
-            if (
-              !window.confirm(
-                "Delete this tasting for everyone? This can't be undone.",
-              )
-            ) {
-              e.preventDefault();
-            }
-          }}
-        >
-          <input type="hidden" name="tasting_id" value={tastingId} />
-          <Button type="submit" variant="destructive" className="gap-1.5">
-            <Trash2 className="size-4" /> Delete tasting
-          </Button>
-        </form>
+        {deleteForm}
       </CardContent>
     </Card>
   );

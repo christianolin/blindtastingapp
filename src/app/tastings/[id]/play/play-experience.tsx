@@ -22,7 +22,13 @@ import { RevealButton } from "./reveal-button";
  * Assumes the caller only renders it for a JOINED participant of a started
  * tasting; it still guards, rendering a short inline message otherwise.
  */
-export async function PlayExperience({ tastingId }: { tastingId: string }) {
+export async function PlayExperience({
+  tastingId,
+  embedded = false,
+}: {
+  tastingId: string;
+  embedded?: boolean;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -324,8 +330,9 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     <div className="flex flex-col gap-6">
       <AutoRefresh />
 
-      {/* Always-visible progress so players know where they are in the flight. */}
-      {totalWines > 0 ? (
+      {/* Always-visible progress so players know where they are in the flight.
+          Suppressed when embedded — the tasting page shows it in the left rail. */}
+      {!embedded && totalWines > 0 ? (
         <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-heading text-lg font-semibold">
@@ -349,8 +356,10 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
       ) : null}
 
       {/* Live leaderboard — updates on every reveal, with the points each
-          taster gained on the last wine so the standings feel alive. */}
-      {!isSemiBlind && leaderboard.length > 0 ? (
+          taster gained on the last wine so the standings feel alive.
+          Suppressed when embedded — the tasting page shows standings in the
+          right rail. */}
+      {!embedded && !isSemiBlind && leaderboard.length > 0 ? (
         <div className="rounded-xl border">
           <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2">
             <span className="font-heading text-sm font-semibold">Leaderboard</span>
@@ -501,7 +510,9 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                 <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                  {isHost && !wine.is_revealed && !finished ? (
+                  {/* When embedded, reveal lives in the left-rail flight list
+                      (one reveal home), so hide the per-card button here. */}
+                  {!embedded && isHost && !wine.is_revealed && !finished ? (
                     <RevealButton tastingId={tastingId} wineId={wine.id} />
                   ) : null}
                 </div>
