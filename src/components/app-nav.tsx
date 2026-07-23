@@ -1,58 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-export type NavEntry = { href: string; label: string };
-export type NavGroup = { label: string; items: NavEntry[] };
+export type NavLink = { href: string; label: string; match: string[] };
 
-// The app's top-level navigation: three dropdown groups instead of five
-// flat links (owner brief 2026-07-22).
-export const NAV_GROUPS: NavGroup[] = [
+// The app's top-level navigation: flat links, no dropdowns and no nav pages
+// (owner UX brief 2026-07-23). Each destination uses in-page tabs for its
+// subsections. Profile isn't a link here — it's the avatar chip in AppHeader.
+export const NAV_LINKS: NavLink[] = [
+  { href: "/dashboard", label: "Tastings", match: ["/dashboard", "/tastings"] },
   {
-    label: "Tastings",
-    items: [
-      { href: "/dashboard", label: "My tastings" },
-      { href: "/tastings/new", label: "New tasting" },
-      { href: "/people", label: "People & Friends" },
-      { href: "/rules", label: "Rules" },
-    ],
+    href: "/knowledge/map",
+    label: "Knowledge",
+    match: ["/knowledge", "/rules"],
   },
-  {
-    label: "Knowledge library",
-    items: [
-      { href: "/knowledge/map", label: "Wine Map" },
-      { href: "/knowledge/type-designations", label: "Designation library" },
-      { href: "/knowledge/grapes", label: "Grape library" },
-    ],
-  },
+  { href: "/people", label: "Friends", match: ["/people", "/friends"] },
 ];
 
-// Desktop dropdown nav (the header hides it below md; MobileNav renders the
-// same groups in the drawer).
+// A link is active when the current path is one of its section roots or sits
+// underneath one — so /tastings/[id] keeps "Tastings" lit and /rules keeps
+// "Knowledge" lit.
+export function isNavActive(pathname: string, link: NavLink) {
+  return link.match.some(
+    (root) => pathname === root || pathname.startsWith(`${root}/`),
+  );
+}
+
+// Desktop flat nav (the header hides it below md; MobileNav renders the same
+// links in the drawer).
 export function AppNav() {
+  const pathname = usePathname();
   return (
     <>
-      {NAV_GROUPS.map((group) => (
-        <DropdownMenu key={group.label}>
-          <DropdownMenuTrigger className="inline-flex cursor-pointer items-center gap-1 text-sm hover:underline">
-            {group.label}
-            <ChevronDown className="size-3.5 opacity-60" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-auto min-w-44">
-            {group.items.map((item) => (
-              <DropdownMenuItem key={item.href} render={<Link href={item.href} />}>
-                {item.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {NAV_LINKS.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={cn(
+            "transition-colors hover:text-foreground",
+            isNavActive(pathname, link)
+              ? "font-medium text-foreground"
+              : "text-muted-foreground",
+          )}
+        >
+          {link.label}
+        </Link>
       ))}
     </>
   );

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
+import { KnowledgeTabs } from "@/components/knowledge-tabs";
 
 export const metadata = {
   title: "Scoring — Danish Championship rules · Blindr",
@@ -38,13 +38,14 @@ export default function RulesPage() {
     <div className="flex flex-1 flex-col">
       <AppHeader />
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+        <KnowledgeTabs />
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
             Danish Championship scoring
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Fully-blind tastings on Blindr are scored with the 
-            Danish national championship point system. For each wine 
+            Fully-blind tastings on Blindr are scored with the
+            Danish national championship point system. For each wine
             you earn points per category you guess correctly:
           </p>
         </div>
@@ -115,13 +116,6 @@ export default function RulesPage() {
             the correct wine (e.g. &ldquo;4/6 correct&rdquo;).
           </CardContent>
         </Card>
-
-        <Link
-          href="/dashboard"
-          className="text-sm text-muted-foreground underline underline-offset-4"
-        >
-          ← Back to your tastings
-        </Link>
       </div>
     </div>
   );

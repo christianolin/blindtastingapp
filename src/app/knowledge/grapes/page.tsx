@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/app-header";
+import { KnowledgeTabs } from "@/components/knowledge-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { GrapeColor } from "@/lib/supabase/database.types";
@@ -106,14 +107,9 @@ export default async function GrapeLibraryPage({
         </nav>
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <KnowledgeTabs />
         <div>
-          <Link
-            href="/knowledge"
-            className="text-sm text-muted-foreground underline underline-offset-4"
-          >
-            ← Knowledge
-          </Link>
-          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
             Grape Library
           </h1>
           <p className="mt-2 text-muted-foreground">

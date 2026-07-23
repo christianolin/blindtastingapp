@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { AppNav, NAV_GROUPS } from "@/components/app-nav";
+import { AppNav, NAV_LINKS } from "@/components/app-nav";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { signOut } from "@/app/actions";
@@ -89,7 +89,7 @@ export async function AppHeader({
         userId={userId}
         displayName={name}
         avatarUrl={avatarUrl}
-        groups={NAV_GROUPS}
+        links={NAV_LINKS}
         notifications={<NotificationsBell invites={invites} />}
       />
     </header>
