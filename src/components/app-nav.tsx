@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type NavLink = { href: string; label: string; match: string[] };
@@ -29,25 +30,40 @@ export function isNavActive(pathname: string, link: NavLink) {
 }
 
 // Desktop flat nav (the header hides it below md; MobileNav renders the same
-// links in the drawer).
+// links in the drawer). These routes are dynamic (auth cookies), so Next skips
+// prefetch and a click waits on the server; we optimistically light the
+// clicked link immediately and drop the override once the path settles (a
+// render-phase reset, not an effect, to stay clear of set-state-in-effect).
 export function AppNav() {
   const pathname = usePathname();
+  const [clicked, setClicked] = useState<string | null>(null);
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (pathname !== seenPath) {
+    setSeenPath(pathname);
+    setClicked(null);
+  }
+
   return (
     <>
-      {NAV_LINKS.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className={cn(
-            "transition-colors hover:text-foreground",
-            isNavActive(pathname, link)
-              ? "font-medium text-foreground"
-              : "text-muted-foreground",
-          )}
-        >
-          {link.label}
-        </Link>
-      ))}
+      {NAV_LINKS.map((link) => {
+        const active = clicked
+          ? clicked === link.href
+          : isNavActive(pathname, link);
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            onClick={() => setClicked(link.href)}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "transition-colors hover:text-foreground",
+              active ? "font-medium text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </>
   );
 }
