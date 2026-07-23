@@ -1,0 +1,34 @@
+{
+  "classification": "Champagne — Échelle des Crus, Grand Cru villages",
+  "provenance": {
+    "authority": "Échelle des Crus — the 17 historically-fixed Grand Cru (100%-rated) villages of Champagne",
+    "commune_footprints": "IGN Admin Express commune polygons, fetched by the INSEE codes below (a subset of data/wine-map/champagne-communes.json — INAO 'Aires géographiques des AOC/AOP', Licence Ouverte)",
+    "reviewed_at": "2026-07-24",
+    "caveats": [
+      "A Champagne Grand Cru is a COMMUNE rating (the whole village is rated 100% on the Échelle des Crus), not a parcel appellation. The commune footprint is therefore an over-approximation of the actual rated vineyard area — acceptable at village display zoom, a documented approximation otherwise.",
+      "'Aÿ' is now inside the commune nouvelle 'Aÿ-Champagne' (INSEE 51030), which also contains Mareuil-sur-Aÿ (Premier Cru) and Bisseuil; the 51030 footprint over-includes those. Refining Aÿ to its historic déléguée footprint is a follow-up.",
+      "'Le Mesnil-sur-Oger' is the commune officially named 'Mesnil-sur-Oger' (INSEE 51367); the display name keeps the traditional 'Le Mesnil-sur-Oger'."
+    ]
+  },
+  "modeling_decision": "Recommended: kind = SITE, is_appellation = false, appellation_level = null, primary_parent = france.champagne, display_tier = 2. is_appellation=false keeps them out of the AOC/appellation counts (a Grand Cru village is a rating, not an AOC) and avoids the classification-coupling constraint + the foundation 'appellations == aoc' assertion; the only test bumps are total/current places +17, tree +17. A later pass can add an Échelle-des-Crus designation + a tile 'level' hook for GC colouring.",
+  "village_count": 17,
+  "villages": [
+    { "slug": "ambonnay", "name": "Ambonnay", "insee": "51007" },
+    { "slug": "avize", "name": "Avize", "insee": "51029" },
+    { "slug": "ay", "name": "Aÿ", "insee": "51030" },
+    { "slug": "beaumont-sur-vesle", "name": "Beaumont-sur-Vesle", "insee": "51044" },
+    { "slug": "bouzy", "name": "Bouzy", "insee": "51079" },
+    { "slug": "chouilly", "name": "Chouilly", "insee": "51153" },
+    { "slug": "cramant", "name": "Cramant", "insee": "51196" },
+    { "slug": "louvois", "name": "Louvois", "insee": "51331" },
+    { "slug": "mailly-champagne", "name": "Mailly-Champagne", "insee": "51338" },
+    { "slug": "le-mesnil-sur-oger", "name": "Le Mesnil-sur-Oger", "insee": "51367" },
+    { "slug": "oger", "name": "Oger", "insee": "51411" },
+    { "slug": "oiry", "name": "Oiry", "insee": "51413" },
+    { "slug": "puisieulx", "name": "Puisieulx", "insee": "51450" },
+    { "slug": "sillery", "name": "Sillery", "insee": "51536" },
+    { "slug": "tours-sur-marne", "name": "Tours-sur-Marne", "insee": "51576" },
+    { "slug": "verzenay", "name": "Verzenay", "insee": "51613" },
+    { "slug": "verzy", "name": "Verzy", "insee": "51614" }
+  ]
+}
