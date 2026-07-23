@@ -246,57 +246,78 @@ export default async function TastingPage({
               </p>
             ) : null}
             <ul className="flex flex-col gap-2">
-              {(wines ?? []).map((w, i) => (
-                <li
-                  key={w.id}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <div className="min-w-0">
-                    <span>{isByo ? wineLabel(w) : `Wine ${i + 1}`}</span>
-                    {isHost && hostWineIdentity.get(w.id) ? (
+              {(wines ?? []).map((w, i) => {
+                // Editable while the tasting hasn't started, by whoever added
+                // the wine: host for host-entered wines, the contributor for
+                // their own BYO bottle.
+                const editable =
+                  !hasStarted &&
+                  (w.contributor_participant_id
+                    ? w.contributor_participant_id === myParticipant?.id
+                    : isHost);
+                const canReorder = isHost && !w.is_revealed;
+                const canReveal =
+                  isHost &&
+                  hasStarted &&
+                  tasting.status !== "CLOSED" &&
+                  !w.is_revealed;
+                const identity = isHost ? hostWineIdentity.get(w.id) : null;
+                return (
+                  <li
+                    key={w.id}
+                    className="flex flex-col gap-1.5 rounded-lg border border-border/60 p-2.5 text-sm"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate font-medium">
+                        {isByo ? wineLabel(w) : `Wine ${i + 1}`}
+                      </span>
+                      <Badge
+                        variant={w.is_revealed ? "default" : "outline"}
+                        className="shrink-0"
+                      >
+                        {w.is_revealed
+                          ? "Revealed"
+                          : isByo
+                            ? "Added"
+                            : "Hidden"}
+                      </Badge>
+                    </div>
+                    {identity ? (
                       <p className="truncate text-xs text-muted-foreground">
-                        {hostWineIdentity.get(w.id)}
+                        {identity}
                       </p>
                     ) : null}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {/* Editable while the tasting hasn't started, by whoever
-                        added the wine: host for host-entered wines, the
-                        contributor for their own BYO bottle. */}
-                    {!hasStarted &&
-                    (w.contributor_participant_id
-                      ? w.contributor_participant_id === myParticipant?.id
-                      : isHost) ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        nativeButton={false}
-                        render={
-                          <Link href={`/tastings/${id}/wines/${w.id}/edit`} />
-                        }
-                      >
-                        Edit
-                      </Button>
+                    {editable || canReorder || canReveal ? (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {editable ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            nativeButton={false}
+                            render={
+                              <Link
+                                href={`/tastings/${id}/wines/${w.id}/edit`}
+                              />
+                            }
+                          >
+                            Edit
+                          </Button>
+                        ) : null}
+                        {canReorder
+                          ? reorderControls(
+                              w.id,
+                              i > 0,
+                              i < (wines ?? []).length - 1,
+                            )
+                          : null}
+                        {canReveal ? (
+                          <RevealButton tastingId={id} wineId={w.id} />
+                        ) : null}
+                      </div>
                     ) : null}
-                    {isHost && !w.is_revealed
-                      ? reorderControls(
-                          w.id,
-                          i > 0,
-                          i < (wines ?? []).length - 1,
-                        )
-                      : null}
-                    {isHost &&
-                    hasStarted &&
-                    tasting.status !== "CLOSED" &&
-                    !w.is_revealed ? (
-                      <RevealButton tastingId={id} wineId={w.id} />
-                    ) : null}
-                    <Badge variant={w.is_revealed ? "default" : "outline"}>
-                      {w.is_revealed ? "Revealed" : isByo ? "Added" : "Hidden"}
-                    </Badge>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
             {isByo && participantsWithoutWine.length > 0 ? (
               <p className="text-sm text-muted-foreground italic">
@@ -499,7 +520,7 @@ export default async function TastingPage({
       {inviteCard}
 
       {running ? (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)_minmax(0,20rem)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)_minmax(0,20rem)]">
           {/* Left rail — the flight: reveal progress + wine list. */}
           <aside className="flex flex-col gap-4 lg:sticky lg:top-8 lg:self-start">
             {wineCount > 0 ? (

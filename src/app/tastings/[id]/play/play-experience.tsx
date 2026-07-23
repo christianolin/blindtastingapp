@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
@@ -768,12 +767,6 @@ export async function PlayExperience({
           })()
         : null}
 
-      <Link
-        href={`/tastings/${tastingId}/results`}
-        className="text-sm text-muted-foreground underline underline-offset-4"
-      >
-        Full results & leaderboard →
-      </Link>
     </div>
   );
 }
