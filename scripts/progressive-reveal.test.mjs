@@ -1,0 +1,135 @@
+// Progressive-reveal DB tests. Runs against the LIVE schema (migrations are
+// applied before this runs). Each test wraps its work in begin/rollback so
+// nothing persists. Env: DB_PASSWORD (+ optional DB_PORT=5432).
+import assert from "node:assert/strict";
+import test, { after, before } from "node:test";
+import pg from "pg";
+
+assert.ok(process.env.DB_PASSWORD, "DB_PASSWORD is required");
+export const client = new pg.Client({
+  host: process.env.DB_HOST ?? "aws-0-eu-central-1.pooler.supabase.com",
+  port: Number(process.env.DB_PORT ?? 5432),
+  user: process.env.DB_USER ?? "postgres.eqzwmkpeysqiihuojmuj",
+  database: process.env.DB_NAME ?? "postgres",
+  password: process.env.DB_PASSWORD,
+  ssl: { rejectUnauthorized: false },
+});
+
+export async function withRollback(fn) {
+  await client.query("begin");
+  try {
+    return await fn();
+  } finally {
+    await client.query("rollback");
+  }
+}
+
+// Make auth.uid() resolve to a given user for SECURITY DEFINER RPCs.
+export async function actAs(userId) {
+  await client.query(
+    "select set_config('request.jwt.claims', $1, true)",
+    [JSON.stringify({ sub: userId })],
+  );
+}
+
+async function ref(table, name) {
+  const q = "select id from " + table + " where name=$1 limit 1";
+  const { rows } = await client.query(q, [name]);
+  assert.ok(rows[0], table + " '" + name + "' missing");
+  return rows[0].id;
+}
+
+// A LIVE + BLIND + guided tasting: host + two joined guessers, one wine with a
+// full answer (France/Bordeaux/CabSauv+Merlot/2020). p1 guesses perfectly; p2
+// gets country+grape right but region wrong and no secondary grape, vintage off
+// by one.
+export async function seedTasting({ timing = "LIVE" } = {}) {
+  // host_id / participant.user_id FK real users — use 3 existing profiles (all
+  // rolled back afterwards, so this leaves no trace).
+  const users = (await client.query("select id from profiles limit 3")).rows;
+  assert.ok(users.length >= 3, "need >= 3 profiles to seed a test tasting");
+  const hostUserId = users[0].id;
+  const p1UserId = users[1].id;
+  const p2UserId = users[2].id;
+  const host = (
+    await client.query(
+      "insert into tastings (name, host_id, timing_mode, wine_source, reveal_mode, status, sequential_guessing) values ('PR test', $2, $1, 'HOST_PROVIDES', 'BLIND', 'IN_PROGRESS', true) returning id, host_id",
+      [timing, hostUserId],
+    )
+  ).rows[0];
+  const tastingId = host.id;
+  const mk = async (uid) =>
+    (
+      await client.query(
+        "insert into tasting_participants (tasting_id, user_id, status) values ($1,$2,'JOINED') returning id",
+        [tastingId, uid],
+      )
+    ).rows[0].id;
+  const hostParticipantId = await mk(hostUserId);
+  const p1 = await mk(p1UserId);
+  const p2 = await mk(p2UserId);
+  const wineId = (
+    await client.query(
+      "insert into wines (tasting_id, position) values ($1, 1) returning id",
+      [tastingId],
+    )
+  ).rows[0].id;
+  const country = await ref("countries", "France");
+  const region = await ref("regions", "Bordeaux");
+  const cab = await ref("grapes", "Cabernet Sauvignon");
+  const merlot = await ref("grapes", "Merlot");
+  const prod = (await client.query("select id from producers limit 1")).rows[0].id;
+  await client.query(
+    "insert into wine_answers (wine_id, country_id, region_id, primary_grape_id, secondary_grape_id, producer_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,$6,'YEAR',2020)",
+    [wineId, country, region, cab, merlot, prod],
+  );
+  await client.query(
+    "insert into guesses (wine_id, participant_id, country_id, region_id, primary_grape_id, secondary_grape_id, producer_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,$6,$7,'YEAR',2020)",
+    [wineId, p1, country, region, cab, merlot, prod],
+  );
+  const otherRegion = (
+    await client.query("select id from regions where name<>'Bordeaux' limit 1")
+  ).rows[0].id;
+  await client.query(
+    "insert into guesses (wine_id, participant_id, country_id, region_id, primary_grape_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,'YEAR',2019)",
+    [wineId, p2, country, otherRegion, cab],
+  );
+  return {
+    tastingId,
+    hostUserId,
+    hostParticipantId,
+    p1,
+    p1UserId,
+    p2,
+    p2UserId,
+    wineId,
+  };
+}
+
+before(async () => {
+  await client.connect();
+});
+after(async () => {
+  await client.end();
+});
+
+test("schema: reveal_step + leaderboard_reveal exist with defaults", async () => {
+  await withRollback(async () => {
+    const { tastingId, wineId, p1 } = await seedTasting();
+    const w = await client.query(
+      "select reveal_step from wines where id=$1",
+      [wineId],
+    );
+    assert.equal(w.rows[0].reveal_step, 0);
+    const g = await client.query(
+      "select reveal_step from guesses where wine_id=$1 and participant_id=$2",
+      [wineId, p1],
+    );
+    assert.equal(g.rows[0].reveal_step, 0);
+    const t = await client.query(
+      "select leaderboard_reveal from tastings where id=$1",
+      [tastingId],
+    );
+    assert.equal(t.rows[0].leaderboard_reveal, "PER_ATTRIBUTE");
+  });
+});

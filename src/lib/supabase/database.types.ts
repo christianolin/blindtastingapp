@@ -15,6 +15,7 @@ export type RevealMode = "BLIND" | "SEMI_BLIND";
 export type TastingStatus = "DRAFT" | "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
+export type WineLeaderboardReveal = "PER_ATTRIBUTE" | "PER_WINE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 export type GrapeColor = "RED" | "WHITE";
 export type WinePlaceKind =
@@ -236,6 +237,7 @@ export type Database = {
           scheduled_at: string | null;
           async_reveal_policy: AsyncRevealPolicy;
           sequential_guessing: boolean;
+          leaderboard_reveal: WineLeaderboardReveal;
           created_at: string;
           image_url: string | null;
           description: string | null;
@@ -254,6 +256,7 @@ export type Database = {
           scheduled_at?: string | null;
           async_reveal_policy?: AsyncRevealPolicy;
           sequential_guessing?: boolean;
+          leaderboard_reveal?: WineLeaderboardReveal;
           created_at?: string;
           image_url?: string | null;
           description?: string | null;
@@ -292,6 +295,7 @@ export type Database = {
           position: number;
           contributor_participant_id: string | null;
           is_revealed: boolean;
+          reveal_step: number;
           created_at: string;
         };
         Insert: {
@@ -300,6 +304,7 @@ export type Database = {
           position: number;
           contributor_participant_id?: string | null;
           is_revealed?: boolean;
+          reveal_step?: number;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
@@ -367,6 +372,7 @@ export type Database = {
           vintage_points: number | null;
           total_points: number | null;
           scored_at: string | null;
+          reveal_step: number;
           submitted_at: string;
           updated_at: string;
         };
@@ -374,6 +380,7 @@ export type Database = {
           id?: string;
           wine_id: string;
           participant_id: string;
+          reveal_step?: number;
           country_id?: string | null;
           region_id?: string | null;
           appellation_id?: string | null;
