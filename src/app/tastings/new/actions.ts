@@ -31,6 +31,10 @@ export async function createTasting(
   ) as WineSourceMode;
   const revealMode = String(formData.get("reveal_mode") ?? "") as RevealMode;
   const flow = String(formData.get("flow") ?? "GUIDED");
+  const leaderboardReveal =
+    String(formData.get("leaderboard_reveal") ?? "PER_ATTRIBUTE") === "PER_WINE"
+      ? "PER_WINE"
+      : "PER_ATTRIBUTE";
   const asyncRevealPolicy = (String(
     formData.get("async_reveal_policy") ?? "AFTER_ALL",
   ) === "IMMEDIATE"
@@ -83,6 +87,7 @@ export async function createTasting(
       scheduled_at: scheduledAt,
       async_reveal_policy: asyncRevealPolicy,
       sequential_guessing: revealMode === "BLIND" && flow === "GUIDED",
+      leaderboard_reveal: leaderboardReveal,
     })
     .select()
     .single();

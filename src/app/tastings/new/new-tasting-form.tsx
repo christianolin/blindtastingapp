@@ -38,6 +38,11 @@ const FLOW_ITEMS = {
   FREE: "Free",
 };
 
+const LEADERBOARD_REVEAL_ITEMS = {
+  PER_ATTRIBUTE: "After each attribute",
+  PER_WINE: "After the full wine",
+};
+
 const ASYNC_REVEAL_ITEMS = {
   AFTER_ALL: "After everyone has guessed that wine",
   IMMEDIATE: "Immediately after you submit your own guess",
@@ -186,6 +191,34 @@ export function NewTastingForm({
           <p className="text-xs text-muted-foreground">
             Guided: everyone tastes the same wine together, one at a time.
             Free: people guess any wine in any order.
+          </p>
+        </div>
+      ) : null}
+
+      {reveal === "BLIND" ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="leaderboard_reveal">Leaderboard</Label>
+          <Select
+            name="leaderboard_reveal"
+            items={LEADERBOARD_REVEAL_ITEMS}
+            defaultValue="PER_ATTRIBUTE"
+            required
+          >
+            <SelectTrigger id="leaderboard_reveal" className="w-full">
+              <SelectValue placeholder="When to move the leaderboard" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PER_ATTRIBUTE">
+                {LEADERBOARD_REVEAL_ITEMS.PER_ATTRIBUTE}
+              </SelectItem>
+              <SelectItem value="PER_WINE">
+                {LEADERBOARD_REVEAL_ITEMS.PER_WINE}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            When the standings move during a progressive reveal — after every
+            attribute, or only once the whole wine is revealed.
           </p>
         </div>
       ) : null}
