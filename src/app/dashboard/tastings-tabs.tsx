@@ -62,36 +62,43 @@ export function TastingsTabs({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => select(t.key)}
-            aria-current={active === t.key ? "page" : undefined}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              active === t.key
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-            {counts[t.key] > 0 ? (
-              <span
-                className={cn(
-                  "flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs",
-                  t.key === "invited" && active !== t.key
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted-foreground/15",
-                )}
-              >
-                {counts[t.key]}
-              </span>
-            ) : null}
-          </button>
-        ))}
+    <div className="flex flex-col gap-5">
+      {/* Underlined tabs — deliberately distinct from the Knowledge section's
+          pill/segmented control so the two navigation styles don't blur. */}
+      <div className="flex gap-6 overflow-x-auto border-b border-border">
+        {tabs.map((t) => {
+          const isActive = active === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => select(t.key)}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "relative -mb-px flex shrink-0 items-center gap-2 border-b-2 px-0.5 pb-2.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+              {counts[t.key] > 0 ? (
+                <span
+                  className={cn(
+                    "flex min-w-5 items-center justify-center rounded-full px-1 text-[0.7rem] tabular-nums",
+                    isActive
+                      ? "bg-primary/12 text-primary"
+                      : t.key === "invited"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {counts[t.key]}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
       <div>{panels[active]}</div>
     </div>

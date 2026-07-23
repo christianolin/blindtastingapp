@@ -439,7 +439,7 @@ export function TileWineMap({
       <Map
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
-        initialViewState={{ longitude: -0.58, latitude: 44.84, zoom: 6 }}
+        initialViewState={{ longitude: 2.4, latitude: 46.6, zoom: 4.4 }}
         interactiveLayerIds={["shard-fills", "world-fills"]}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse

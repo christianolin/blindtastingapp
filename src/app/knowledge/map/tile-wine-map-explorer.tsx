@@ -41,8 +41,6 @@ const TileWineMap = dynamic(
   },
 );
 
-const DEFAULT_PLACE_KEY = "france.bordeaux";
-
 const KIND_LABELS: Record<string, string> = {
   COUNTRY: "Country",
   MACRO_REGION: "Macro region",
@@ -61,9 +59,10 @@ export function TileWineMapExplorer({
   const supabase = useMemo(() => createClient(), []);
   const [manifest, setManifest] = useState<WineMapManifest | null>(null);
   const [manifestError, setManifestError] = useState<string | null>(null);
-  const [selectedKey, setSelectedKey] = useState(
-    initialPlaceKey ?? DEFAULT_PLACE_KEY,
-  );
+  // Default to no selection — the map opens on the whole wine world (all
+  // regions from the world archive) rather than diving straight into one
+  // region. A deep link (?place=) still selects its place.
+  const [selectedKey, setSelectedKey] = useState<string | null>(initialPlaceKey);
   const [context, setContext] = useState<WinePlaceContext | null>(null);
   const [contextState, setContextState] = useState<
     "loading" | "ready" | "missing" | "error"
@@ -122,6 +121,7 @@ export function TileWineMapExplorer({
   }, []);
 
   useEffect(() => {
+    if (!selectedKey) return;
     let cancelled = false;
     fetchWinePlaceContext(supabase, selectedKey)
       .then((ctx) => {
@@ -289,7 +289,11 @@ export function TileWineMapExplorer({
                 <PanelRightClose className="size-4" />
               </button>
             </div>
-            {contextState === "loading" ? (
+            {!selectedKey ? (
+              <p className="text-sm text-muted-foreground">
+                Pick a region on the map or in the hierarchy to explore it.
+              </p>
+            ) : contextState === "loading" ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : contextState === "error" ? (
               <p className="text-sm text-muted-foreground">

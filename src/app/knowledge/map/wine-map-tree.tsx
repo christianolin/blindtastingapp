@@ -57,19 +57,29 @@ export function WineMapTree({
     selectedRowRef.current?.scrollIntoView({ block: "nearest" });
   }, [selectedKey]);
 
+  // Expand the selected place's ancestors when the selection CHANGES (a map
+  // click or tree pick) so its row is revealed — then leave them be. The path
+  // is NOT force-expanded on every render, so the user can collapse an
+  // ancestor (e.g. Bordeaux) again afterwards (owner: "don't lock it").
+  const [expandedForKey, setExpandedForKey] = useState<string | null>(null);
+  if (selectedKey && selectedKey !== expandedForKey) {
+    setExpandedForKey(selectedKey);
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const key of selectedPath) next[key] = false;
+      return next;
+    });
+  }
+
   const renderNode = (node: WinePlaceTreeNode, depth: number) => {
     if (visibleKeys && !visibleKeys.has(node.key)) return null;
     const isSelected = node.key === selectedKey;
-    const onSelectedPath = selectedPath.has(node.key);
-    // Search results render expanded; the selected path is ALWAYS expanded so
-    // the map and tree stay aligned (a map click reveals its tree row even if
-    // an ancestor was manually collapsed); everything else honours the manual
-    // toggle (collapsed by default below tier 1).
+    // Search results render expanded; otherwise honour the manual toggle
+    // (collapsed by default below tier 1). The selected path was expanded once
+    // when it was picked (above) — not pinned open.
     const isCollapsed = visibleKeys
       ? false
-      : onSelectedPath
-        ? false
-        : (collapsed[node.key] ?? node.tier >= 1);
+      : (collapsed[node.key] ?? node.tier >= 1);
     const hasVisibleChildren = node.children.length > 0;
 
     return (
