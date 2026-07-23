@@ -802,11 +802,11 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 193,
-    validated: 193,
+    total: 200,
+    validated: 200,
     current: 141,
-    valid: 193,
-    labelled: 193,
+    valid: 200,
+    labelled: 200,
     manual: 2,
     generalized: 182,
     reproducible: 13,
@@ -852,10 +852,10 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Trim revisions REUSE their plot's snapshot (same evidence, corrected
   // generalization), so linked boundaries outnumber distinct snapshots.
   assert.deepEqual(provenance.rows[0], {
-    sources: 146,
-    snapshots: 173,
-    identities: 146,
-    linked_boundaries: 193,
+    sources: 153,
+    snapshots: 180,
+    identities: 153,
+    linked_boundaries: 200,
   });
 });
 

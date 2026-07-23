@@ -19,6 +19,10 @@ const slug = arg("slug");
 const targetKey = arg("target-key");
 assert.ok(slug && targetKey, "--slug and --target-key are required");
 const tolerance = Number(arg("tolerance", "0.002"));
+// Morphological closing (deg) bridges gaps between child footprints so a
+// côte reads as one strip; part-share drops sub-fragment noise after it.
+const closing = Number(arg("closing", "0"));
+const minPartShare = Number(arg("min-part-share", "0"));
 const revision = releaseVersion();
 
 const client = new pg.Client(pgConfig());
@@ -40,20 +44,37 @@ try {
   assert.ok(children.rows.length > 0, `no VERIFIED+current children under ${targetKey}`);
 
   const derived = await client.query(
-    `select extensions.ST_AsGeoJSON(
-       extensions.ST_Multi(extensions.ST_CollectionExtract(
-         extensions.ST_MakeValid(
-           extensions.ST_SimplifyPreserveTopology(
-             extensions.ST_Union(b.display_geometry), $2
-           )
-         ), 3)), 4) geojson
-       from wine_places parent
-       join wine_places child on child.primary_parent_id = parent.id
-        and child.publication_status = 'VERIFIED'
-       join wine_place_boundaries b on b.wine_place_id = child.id
-        and b.is_current and b.quality_status = 'VALIDATED'
-      where parent.canonical_key = $1`,
-    [targetKey, tolerance],
+    `with u as (
+       select extensions.ST_Union(b.display_geometry) g
+         from wine_places parent
+         join wine_places child on child.primary_parent_id = parent.id
+          and child.publication_status = 'VERIFIED'
+         join wine_place_boundaries b on b.wine_place_id = child.id
+          and b.is_current and b.quality_status = 'VALIDATED'
+        where parent.canonical_key = $1
+     ),
+     closed as (
+       select case when $3::float8 > 0 then
+                extensions.ST_Buffer(
+                  extensions.ST_Buffer(g, $3::float8, 'quad_segs=4'),
+                  -$3::float8, 'quad_segs=4')
+              else g end g
+       from u
+     ),
+     simplified as (
+       select extensions.ST_CollectionExtract(extensions.ST_MakeValid(
+                extensions.ST_SimplifyPreserveTopology(g, $2)), 3) g
+       from closed
+     ),
+     parts as (
+       select (extensions.ST_Dump(g)).geom part, extensions.ST_Area(g) total
+       from simplified
+     )
+     select extensions.ST_AsGeoJSON(
+              extensions.ST_Multi(extensions.ST_Collect(part)), 4) geojson
+       from parts
+      where $4::float8 <= 0 or extensions.ST_Area(part) >= total * $4::float8`,
+    [targetKey, tolerance, closing, minPartShare],
   );
   const geojson = derived.rows[0]?.geojson;
   assert.ok(geojson, "derivation produced no geometry");
@@ -61,6 +82,8 @@ try {
   const generation = {
     engine: "derived",
     simplify_tolerance: tolerance,
+    closing,
+    min_part_share: minPartShare,
     coordinate_precision: 4,
     child_boundary_ids: children.rows.map(({ id }) => id),
   };

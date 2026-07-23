@@ -54,16 +54,6 @@ const regionMatch = [
   FALLBACK_COLOR,
 ];
 
-const levelMatch = [
-  "match",
-  ["get", "level"],
-  "grand_cru",
-  LEVEL_COLORS.grand_cru,
-  "premier_cru",
-  LEVEL_COLORS.premier_cru,
-  regionMatch,
-];
-
 // Regions whose deep-zoom palette is the legal classification hierarchy
 // (grand cru / premier cru / village). Everywhere else the deep palette is
 // per-area district colours (Bordeaux: Medoc, Graves, Pomerol, ...) - each
@@ -89,7 +79,7 @@ const regionColor = regionMatch as unknown as string;
 
 // Camera ("zoom") expressions must sit at the top level of a paint property,
 // so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(groupSlugs: string[]) {
+function fillColorExpression(groupSlugs: string[], communalKeys: string[]) {
   // From z8 the palette is region-aware: classification regions colour by
   // cru level, district regions by area group (region hue for groups not
   // yet observed, or tiles predating the group property).
@@ -101,11 +91,32 @@ function fillColorExpression(groupSlugs: string[]) {
         regionMatch,
       ]
     : regionMatch;
+  // Owner: Burgundy appellations "all just look the same" — every village
+  // gets its own slug-stable hue; crus keep the classification reds on top.
+  const villageMatch = communalKeys.length
+    ? [
+        "match",
+        ["get", "key"],
+        ...communalKeys.flatMap((key) => [key, districtColor(key)]),
+        regionMatch,
+      ]
+    : regionMatch;
+  const classificationMatch = [
+    "match",
+    ["get", "level"],
+    "grand_cru",
+    LEVEL_COLORS.grand_cru,
+    "premier_cru",
+    LEVEL_COLORS.premier_cru,
+    "communal",
+    villageMatch,
+    regionMatch,
+  ];
   const deepMatch = [
     "match",
     ["get", "region"],
     [...CLASSIFICATION_REGIONS],
-    levelMatch,
+    classificationMatch,
     groupMatch,
   ];
   return [
@@ -145,22 +156,39 @@ function labelFilter(
 
 // Typography hierarchy: regions largest (uppercase, spaced), then steadily
 // smaller through subregions, appellations and crus — the map itself
-// communicates depth.
-const LABEL_LAYOUT = {
-  "text-field": ["get", "name"] as unknown as string,
-  "text-size": [
-    "match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10,
-  ] as unknown as number,
-  "text-transform": [
-    "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
-  ] as unknown as "none",
-  "text-letter-spacing": [
-    "match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02,
-  ] as unknown as number,
-  // Deeper (smaller) places label first so commune names survive collision
-  // against their parent's label.
-  "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
-};
+// communicates depth. The selected place gets the highest visual priority
+// (owner brief): larger, darkest, strongest halo, first in collision;
+// neighbours stay readable a clear step lighter.
+const LABEL_TIER_SIZE = [
+  "match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10,
+];
+function labelLayout(selectedKey: string | null) {
+  const sel = ["==", ["get", "key"], selectedKey ?? ""];
+  return {
+    "text-field": ["get", "name"] as unknown as string,
+    "text-size": [
+      "+", LABEL_TIER_SIZE, ["case", sel, 2.5, 0],
+    ] as unknown as number,
+    "text-transform": [
+      "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
+    ] as unknown as "none",
+    "text-letter-spacing": [
+      "match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02,
+    ] as unknown as number,
+    "symbol-sort-key": [
+      "case", sel, -1, ["-", 10, ["get", "tier"]],
+    ] as unknown as number,
+  };
+}
+function labelPaint(selectedKey: string | null) {
+  const sel = ["==", ["get", "key"], selectedKey ?? ""];
+  return {
+    "text-color": ["case", sel, "#1d0a11", "#6b5560"] as unknown as string,
+    "text-opacity": ["case", sel, 1, 0.92] as unknown as number,
+    "text-halo-color": "#FFFDF7",
+    "text-halo-width": ["case", sel, 2.2, 1.5] as unknown as number,
+  };
+}
 
 export function TileWineMap({
   manifest,
@@ -208,6 +236,8 @@ export function TileWineMap({
   // globalThis: `Map` in this module is the react-map-gl component.
   const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
   const [paintGroups, setPaintGroups] = useState<string[]>([]);
+  const allCommunalsRef = useRef<Set<string>>(new Set());
+  const [paintCommunals, setPaintCommunals] = useState<string[]>([]);
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -229,12 +259,25 @@ export function TileWineMap({
       ) {
         groups.set(p.group, typeof p.group_name === "string" ? p.group_name : p.group);
       }
+      if (
+        region &&
+        CLASSIFICATION_REGIONS.has(region) &&
+        p.level === "communal" &&
+        typeof p.key === "string"
+      ) {
+        allCommunalsRef.current.add(p.key);
+      }
     }
     for (const [slug, name] of groups) allGroupsRef.current.set(slug, name);
     setPaintGroups((prev) =>
       prev.length === allGroupsRef.current.size
         ? prev
         : [...allGroupsRef.current.keys()].sort(),
+    );
+    setPaintCommunals((prev) =>
+      prev.length === allCommunalsRef.current.size
+        ? prev
+        : [...allCommunalsRef.current].sort(),
     );
     const next = {
       regions: [...regions].sort(),
@@ -277,7 +320,7 @@ export function TileWineMap({
         ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
         : ["case", sel, selectedOpacity, base];
     return {
-      "fill-color": fillColorExpression(paintGroups),
+      "fill-color": fillColorExpression(paintGroups, paintCommunals),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -302,7 +345,7 @@ export function TileWineMap({
         ]),
       ] as unknown as number,
     };
-  }, [selectedKey, selectedId, paintGroups]);
+  }, [selectedKey, selectedId, paintGroups, paintCommunals]);
 
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
@@ -458,12 +501,8 @@ export function TileWineMap({
             filter={
               ["all", worldFilter, labelFilter(selectedKey, selectedId, selectedParentId)] as unknown as boolean
             }
-            layout={LABEL_LAYOUT}
-            paint={{
-              "text-color": "#2b0f18",
-              "text-halo-color": "#FFFDF7",
-              "text-halo-width": 1.7,
-            }}
+            layout={labelLayout(selectedKey)}
+            paint={labelPaint(selectedKey)}
           />
         </Source>
         {activeShard ? (
@@ -481,7 +520,7 @@ export function TileWineMap({
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
-                "line-color": fillColorExpression(paintGroups),
+                "line-color": fillColorExpression(paintGroups, paintCommunals),
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
@@ -504,14 +543,8 @@ export function TileWineMap({
               type="symbol"
               source-layer="labels"
               filter={labelFilter(selectedKey, selectedId, selectedParentId)}
-              layout={LABEL_LAYOUT}
-              paint={{
-                // Strong near-white halo keeps names legible on the solid
-                // cru fills (owner: labels were muddy on dark red).
-                "text-color": "#2b0f18",
-                "text-halo-color": "#FFFDF7",
-                "text-halo-width": 1.7,
-              }}
+              layout={labelLayout(selectedKey)}
+              paint={labelPaint(selectedKey)}
             />
           </Source>
         ) : null}
@@ -572,7 +605,7 @@ export function TileWineMap({
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="inline-block size-2.5 rounded-sm border border-border bg-transparent" />
-                Village (region colour)
+                Villages (own colour each)
               </li>
             </ul>
           </>

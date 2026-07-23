@@ -133,7 +133,19 @@ const outputs = [
 ];
 for (const [key, bucket] of Object.entries(shards)) {
   outputs.push([`${key}-places.geojson`, featureCollection(bucket.rows.map(placeFeature))]);
-  outputs.push([`${key}-labels.geojson`, featureCollection(bucket.rows.flatMap(labelFeatures))]);
+  outputs.push([
+    `${key}-labels.geojson`,
+    featureCollection(
+      bucket.rows.flatMap((row) =>
+        // Per-island labels only for countries/regions (tier <= 1): a
+        // district or appellation gets exactly one canonical label point
+        // (owner brief: "only have the label once").
+        row.display_tier <= 1
+          ? labelFeatures(row)
+          : labelFeatures({ ...row, component_labels: null }),
+      ),
+    ),
+  ]);
 }
 for (const [filename, collection] of outputs) {
   await writeFile(path.join(WORK_DIR, filename), `${JSON.stringify(collection)}\n`);
