@@ -1,0 +1,31 @@
+{
+  "region": "Beaujolais",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline).",
+    "caveats": [
+      "Beaujolais is a dual-role region: the region place france.beaujolais IS the regional 'Beaujolais' AOC (single-entry member list), per the Phase 3 France design.",
+      "Beaujolais has a 3-tier pyramid: Beaujolais (regional) < Beaujolais-Villages (sub-regional) < the 10 Crus (top communal AOCs). The enum has no distinct 'sub-regional' level, so v1 models Beaujolais-Villages + the 10 crus flat at appellation_level=village under the region; a later pass can retier if wanted.",
+      "The 38 named-village complements (Beaujolais <Commune>, e.g. Beaujolais Lantignie) are the geographic-complement denominations of Beaujolais-Villages - deferred to a depth pass, analogous to Burgundy climats.",
+      "Crus are their own communal AOCs (parallel to Beaujolais-Villages, NOT nested inside it): primary_parent = france.beaujolais for all sub-appellations."
+    ]
+  },
+  "modeling_decision": "region france.beaujolais: kind=REGION-equivalent place, is_appellation=true, appellation_level=region, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, tier 1, min_zoom ~4, boundary = dissolve of member 'Beaujolais' (9297 parcels). Sub-appellations (Beaujolais-Villages + 10 crus): is_appellation=true, appellation_level=village, primary_parent=france.beaujolais, tier 2, boundary = dissolve of each member denomination. Grapes: Gamay (all reds), Chardonnay (Beaujolais Blanc/Beaujolais-Villages Blanc). Scoring links: exact-name against the live French regions/appellations reference rows (never fuzzy); crus that lack an exact scoring row stay PENDING. NOT run live - this is reviewable groundwork; the catalog/boundary/flip/links/content build waits on the owner shape-review gate.",
+  "region_window": { "minLon": 4.4, "minLat": 45.7, "maxLon": 5.0, "maxLat": 46.4 },
+  "targets": [
+    { "slug": "beaujolais", "key": "france.beaujolais", "name": "Beaujolais", "level": "region", "members": ["Beaujolais"], "parcels": 9297, "concave": { "gridSize": 0.05, "simplifyTolerance": 0.0015, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "beaujolais-villages", "key": "france.beaujolais.beaujolais-villages", "name": "Beaujolais-Villages", "level": "village", "members": ["Beaujolais Villages"], "parcels": 3933, "concave": { "gridSize": 0.05, "simplifyTolerance": 0.0012, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "brouilly", "key": "france.beaujolais.brouilly", "name": "Brouilly", "level": "village", "members": ["Brouilly"], "parcels": 281, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "cote-de-brouilly", "key": "france.beaujolais.cote-de-brouilly", "name": "Cote de Brouilly", "level": "village", "members": ["Côte de Brouilly"], "parcels": 87, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "chenas", "key": "france.beaujolais.chenas", "name": "Chenas", "level": "village", "members": ["Chénas"], "parcels": 129, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "chiroubles", "key": "france.beaujolais.chiroubles", "name": "Chiroubles", "level": "village", "members": ["Chiroubles"], "parcels": 128, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "fleurie", "key": "france.beaujolais.fleurie", "name": "Fleurie", "level": "village", "members": ["Fleurie"], "parcels": 206, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "julienas", "key": "france.beaujolais.julienas", "name": "Julienas", "level": "village", "members": ["Juliénas"], "parcels": 228, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "morgon", "key": "france.beaujolais.morgon", "name": "Morgon", "level": "village", "members": ["Morgon"], "parcels": 273, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "moulin-a-vent", "key": "france.beaujolais.moulin-a-vent", "name": "Moulin-a-Vent", "level": "village", "members": ["Moulin-à-Vent"], "parcels": 278, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "regnie", "key": "france.beaujolais.regnie", "name": "Regnie", "level": "village", "members": ["Régnié"], "parcels": 173, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "saint-amour", "key": "france.beaujolais.saint-amour", "name": "Saint-Amour", "level": "village", "members": ["Saint-Amour"], "parcels": 91, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } }
+  ]
+}
