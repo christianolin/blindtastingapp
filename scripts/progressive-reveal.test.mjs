@@ -319,3 +319,13 @@ test("skip-to-full: reveal_wine forces reveal_step to the in-play count", async 
     assert.equal(r.rows[0].step, 5);
   });
 });
+
+test("realtime: wines and guesses are in the supabase_realtime publication", async () => {
+  const r = await client.query(
+    "select tablename from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename in ('wines','guesses') order by tablename",
+  );
+  assert.deepEqual(
+    r.rows.map((x) => x.tablename),
+    ["guesses", "wines"],
+  );
+});
