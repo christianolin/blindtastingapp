@@ -176,101 +176,123 @@ export function GuessForm({
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Country (2 pts)</Label>
-        <ReferenceCombobox
-          formFieldName="country_id"
-          options={countries}
-          value={countryId}
-          onValueChange={onCountryChange}
-          placeholder="Guess the country"
-          allowClear
-        />
-      </div>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+          Location
+          <span className="h-px flex-1 bg-border" />
+        </legend>
+        <div className="flex flex-col gap-2">
+          <Label>Country (2 pts)</Label>
+          <ReferenceCombobox
+            formFieldName="country_id"
+            options={countries}
+            value={countryId}
+            onValueChange={onCountryChange}
+            placeholder="Guess the country"
+            allowClear
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Region (3 pts)</Label>
-        <ReferenceCombobox
-          formFieldName="region_id"
-          options={visibleRegions}
-          value={regionId}
-          onValueChange={onRegionChange}
-          placeholder={countryId ? "Guess the region" : "Pick a country first"}
-          allowClear
-        />
-      </div>
+        {/* Progressive disclosure: region appears once a country is chosen
+            (or when editing a guess that already has one), appellation once a
+            region is. Fewer empty fields up front, guided top-down. */}
+        {countryId || regionId ? (
+          <div className="flex flex-col gap-2">
+            <Label>Region (3 pts)</Label>
+            <ReferenceCombobox
+              formFieldName="region_id"
+              options={visibleRegions}
+              value={regionId}
+              onValueChange={onRegionChange}
+              placeholder="Guess the region"
+              allowClear
+            />
+          </div>
+        ) : null}
 
-      <div className="flex flex-col gap-2">
-        <Label>District / Appellation (5 pts, if this wine has one)</Label>
-        <ReferenceCombobox
-          formFieldName="appellation_id"
-          options={appellations}
-          value={appellationId}
-          onValueChange={setAppellationId}
-          placeholder={
-            !regionId
-              ? "Guess a region first"
-              : appellationsPending
-                ? "Loading appellations…"
-                : "Guess the appellation"
-          }
-          disabled={!regionId || appellationsPending}
-          allowClear
-        />
-      </div>
+        {regionId || appellationId ? (
+          <div className="flex flex-col gap-2">
+            <Label>District / Appellation (5 pts, if this wine has one)</Label>
+            <ReferenceCombobox
+              formFieldName="appellation_id"
+              options={appellations}
+              value={appellationId}
+              onValueChange={setAppellationId}
+              placeholder={
+                appellationsPending ? "Loading appellations…" : "Guess the appellation"
+              }
+              disabled={!regionId || appellationsPending}
+              allowClear
+            />
+          </div>
+        ) : null}
+      </fieldset>
 
-      <div className="flex flex-col gap-2">
-        <Label>Primary grape (8 pts)</Label>
-        <ReferenceCombobox
-          formFieldName="primary_grape_id"
-          options={grapes}
-          value={primaryGrapeId}
-          onValueChange={setPrimaryGrapeId}
-          placeholder="Guess the primary grape"
-          allowClear
-        />
-      </div>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+          Identity
+          <span className="h-px flex-1 bg-border" />
+        </legend>
+        <div className="flex flex-col gap-2">
+          <Label>Primary grape (8 pts)</Label>
+          <ReferenceCombobox
+            formFieldName="primary_grape_id"
+            options={grapes}
+            value={primaryGrapeId}
+            onValueChange={setPrimaryGrapeId}
+            placeholder="Guess the primary grape"
+            allowClear
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Secondary grape (2 pts, if this wine has one)</Label>
-        <ReferenceCombobox
-          formFieldName="secondary_grape_id"
-          options={grapes}
-          value={secondaryGrapeId}
-          onValueChange={setSecondaryGrapeId}
-          placeholder="None"
-          allowClear
-        />
-      </div>
+        {primaryGrapeId || secondaryGrapeId ? (
+          <div className="flex flex-col gap-2">
+            <Label>Secondary grape (2 pts, if this wine has one)</Label>
+            <ReferenceCombobox
+              formFieldName="secondary_grape_id"
+              options={grapes}
+              value={secondaryGrapeId}
+              onValueChange={setSecondaryGrapeId}
+              placeholder="None"
+              allowClear
+            />
+          </div>
+        ) : null}
 
-      <div className="flex flex-col gap-2">
-        <Label>Producer (6 pts)</Label>
-        <SearchableCombobox
-          formFieldName="producer_id"
-          value={producerId}
-          selectedLabel={producerLabel}
-          onValueChange={(id, label) => {
-            setProducerId(id);
-            setProducerLabel(label || null);
-          }}
-          search={searchProducersGrouped}
-          placeholder="Guess the producer"
-          allowClear
-          emptyQueryHint={regionId ? "Type to search all producers" : undefined}
-        />
-      </div>
+        <div className="flex flex-col gap-2">
+          <Label>Producer (6 pts)</Label>
+          <SearchableCombobox
+            formFieldName="producer_id"
+            value={producerId}
+            selectedLabel={producerLabel}
+            onValueChange={(id, label) => {
+              setProducerId(id);
+              setProducerLabel(label || null);
+            }}
+            search={searchProducersGrouped}
+            placeholder="Guess the producer"
+            allowClear
+            emptyQueryHint={regionId ? "Type to search all producers" : undefined}
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Type designation (2 pts, if this wine has one)</Label>
-        <TypeDesignationField
-          formFieldName="type_designation_id"
-          options={typeDesignations}
-          value={typeDesignationId}
-          onValueChange={setTypeDesignationId}
-        />
-      </div>
+        <div className="flex flex-col gap-2">
+          <Label>Type designation (2 pts, if this wine has one)</Label>
+          <TypeDesignationField
+            formFieldName="type_designation_id"
+            options={typeDesignations}
+            value={typeDesignationId}
+            onValueChange={setTypeDesignationId}
+          />
+        </div>
+      </fieldset>
 
-      <div className="flex flex-col gap-2">
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+          Age
+          <span className="h-px flex-1 bg-border" />
+        </legend>
+        <div className="flex flex-col gap-2">
         <Label htmlFor={`vintage_kind_${wineId}`}>
           Vintage (2 pts exact, 1 pt if off by 1 year)
         </Label>
@@ -321,7 +343,8 @@ export function GuessForm({
             </SelectContent>
           </Select>
         ) : null}
-      </div>
+        </div>
+      </fieldset>
 
       {state && "error" in state ? (
         <p className="text-sm text-destructive">{state.error}</p>

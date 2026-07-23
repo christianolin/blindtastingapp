@@ -181,6 +181,15 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     .filter((w) => w.is_revealed)
     .map((w) => w.id);
 
+  // Progress: overall reveal progress drives the bar; in guided (sequential)
+  // mode we also surface which wine is live as "Wine N of M".
+  const totalWines = (wines ?? []).length;
+  const revealedCount = revealedWineIds.length;
+  const progressPct = totalWines > 0 ? Math.round((revealedCount / totalWines) * 100) : 0;
+  const currentWinePosition = currentWineId
+    ? ((wines ?? []).find((w) => w.id === currentWineId)?.position ?? null)
+    : null;
+
   const answerWineIds = [
     ...new Set(
       (wines ?? [])
@@ -261,6 +270,30 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
   return (
     <div className="flex flex-col gap-6">
       <AutoRefresh />
+
+      {/* Always-visible progress so players know where they are in the flight. */}
+      {totalWines > 0 ? (
+        <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-heading text-lg font-semibold">
+              {finished
+                ? "Tasting finished"
+                : sequential && currentWinePosition
+                  ? `Wine ${currentWinePosition} of ${totalWines}`
+                  : `${revealedCount} of ${totalWines} revealed`}
+            </span>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {progressPct}%
+            </span>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {isSemiBlind && candidates.length > 0 ? (
         <Card>
@@ -540,10 +573,27 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
                     const readyCount = eligible.filter((p) =>
                       guessers.has(p.id),
                     ).length;
+                    const pendingNames = eligible
+                      .filter((p) => !guessers.has(p.id))
+                      .map((p) => nameByParticipantId.get(p.id) ?? "Someone");
+                    const allReady = pendingNames.length === 0;
+                    // Name who we're still waiting on (up to two) rather than a
+                    // bare count — it feels like a live room, not a form.
+                    const waitingLine = allReady
+                      ? "Everyone's ready to reveal"
+                      : pendingNames.length <= 2
+                        ? `Waiting for ${pendingNames.join(" and ")}…`
+                        : `${readyCount} of ${eligible.length} submitted`;
                     return (
                       <div className="mt-4 border-t pt-3">
-                        <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-                          {readyCount}/{eligible.length} ready to reveal
+                        <p
+                          className={cn(
+                            "mb-1.5 text-xs font-medium",
+                            allReady ? "text-[#3f5b42]" : "text-muted-foreground",
+                          )}
+                        >
+                          {allReady ? "✓ " : ""}
+                          {waitingLine}
                         </p>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           {eligible.map((p) => {
