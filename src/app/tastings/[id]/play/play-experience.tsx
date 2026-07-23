@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { AutoRefresh } from "@/components/auto-refresh";
+import { RevealSync } from "@/components/reveal-sync";
 import { cn } from "@/lib/utils";
 import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
@@ -428,7 +429,11 @@ export async function PlayExperience({
 
   return (
     <div className="flex flex-col gap-6">
-      <AutoRefresh />
+      {tasting.timing_mode === "LIVE" ? (
+        <RevealSync tastingId={tastingId} />
+      ) : (
+        <AutoRefresh />
+      )}
 
       {/* Always-visible progress so players know where they are in the flight.
           Suppressed when embedded — the tasting page shows it in the left rail. */}
