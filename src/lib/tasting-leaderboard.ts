@@ -11,16 +11,31 @@ export type LeaderboardRow = {
   lastRoundPoints: number | null;
 };
 
-// Shared by the results page and the persistent sidebar — scores only
-// count revealed wines, so this is safe to show mid-tasting without
-// spoiling anything still hidden.
-export async function getTastingLeaderboard(tastingId: string): Promise<LeaderboardRow[]> {
+// Shared by the results page and the standings panel. A guess's points count
+// once its wine is "countable", which depends on the leaderboard-reveal toggle:
+//   PER_WINE       => only once the wine is fully revealed
+//   PER_ATTRIBUTE  => as soon as the reveal has started — the shared wine step
+//                     (guided/live) or this guess's own step (self-paced)
+// so it only ever reflects revealed-category points and never spoils a wine
+// that's still hidden.
+export async function getTastingLeaderboard(
+  tastingId: string,
+): Promise<LeaderboardRow[]> {
   const supabase = await createClient();
 
-  const { data: participants } = await supabase
-    .from("tasting_participants")
-    .select("id, user_id")
-    .eq("tasting_id", tastingId);
+  const [{ data: tasting }, { data: participants }] = await Promise.all([
+    supabase
+      .from("tastings")
+      .select("timing_mode, leaderboard_reveal")
+      .eq("id", tastingId)
+      .maybeSingle(),
+    supabase
+      .from("tasting_participants")
+      .select("id, user_id")
+      .eq("tasting_id", tastingId),
+  ]);
+  const perAttribute = tasting?.leaderboard_reveal !== "PER_WINE";
+  const guided = tasting?.timing_mode === "LIVE";
 
   const userIds = (participants ?? []).map((p) => p.user_id);
   const { data: profiles } = await supabase
@@ -31,10 +46,11 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
 
   const { data: wines } = await supabase
     .from("wines")
-    .select("id, is_revealed, contributor_participant_id")
+    .select("id, is_revealed, reveal_step, contributor_participant_id")
     .eq("tasting_id", tastingId);
   const totalWines = (wines ?? []).length;
-  const revealedWineIds = (wines ?? []).filter((w) => w.is_revealed).map((w) => w.id);
+  const wineById = new Map((wines ?? []).map((w) => [w.id, w]));
+  const wineIds = (wines ?? []).map((w) => w.id);
 
   // In bring-your-own you never guess your own bottle(s), so a participant's
   // "out of" count is the total minus however many wines they contributed.
@@ -48,20 +64,31 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
     }
   }
 
-  const { data: guesses } =
-    revealedWineIds.length > 0
+  const { data: allGuesses } =
+    wineIds.length > 0
       ? await supabase
           .from("guesses")
-          .select("participant_id, wine_id, total_points, scored_at")
-          .in("wine_id", revealedWineIds)
+          .select("participant_id, wine_id, total_points, scored_at, reveal_step")
+          .in("wine_id", wineIds)
       : { data: [] };
 
-  // The most recently revealed wine, so we can show each participant's
-  // "points gained last round" — reveal_wine scores every guess for a wine
-  // in one transaction, so the max scored_at per wine_id groups cleanly.
+  const counts = (g: {
+    wine_id: string;
+    reveal_step: number | null;
+  }): boolean => {
+    const w = wineById.get(g.wine_id);
+    if (!w) return false;
+    if (w.is_revealed) return true;
+    if (!perAttribute) return false;
+    return guided ? (w.reveal_step ?? 0) > 0 : (g.reveal_step ?? 0) > 0;
+  };
+  const guesses = (allGuesses ?? []).filter(counts);
+
+  // The most recently reveal-started wine, for each participant's "points
+  // gained last round" delta (scored_at is set on the first reveal step).
   let lastRoundWineId: string | null = null;
   let lastRoundScoredAt: string | null = null;
-  for (const g of guesses ?? []) {
+  for (const g of guesses) {
     if (!g.scored_at) continue;
     if (!lastRoundScoredAt || g.scored_at > lastRoundScoredAt) {
       lastRoundScoredAt = g.scored_at;
@@ -72,7 +99,7 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
   const totalByParticipantId = new Map<string, number>();
   const countByParticipantId = new Map<string, number>();
   const lastRoundByParticipantId = new Map<string, number>();
-  for (const g of guesses ?? []) {
+  for (const g of guesses) {
     totalByParticipantId.set(
       g.participant_id,
       (totalByParticipantId.get(g.participant_id) ?? 0) + (g.total_points ?? 0),
@@ -97,7 +124,9 @@ export async function getTastingLeaderboard(tastingId: string): Promise<Leaderbo
         total: totalByParticipantId.get(p.id) ?? 0,
         winesScored: countByParticipantId.get(p.id) ?? 0,
         totalWines: totalWines - (ownWinesByParticipant.get(p.id) ?? 0),
-        lastRoundPoints: lastRoundWineId ? (lastRoundByParticipantId.get(p.id) ?? 0) : null,
+        lastRoundPoints: lastRoundWineId
+          ? (lastRoundByParticipantId.get(p.id) ?? 0)
+          : null,
       };
     })
     .sort((a, b) => b.total - a.total);
