@@ -163,11 +163,21 @@ export function TileWineMapExplorer({
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
     const childZooms = context.children.map((c) => c.min_zoom);
+    // Parents zoom to a cap where their children appear. Leaves must end past
+    // their OWN reveal zoom so the selected feature — and its gold ring —
+    // actually renders instead of hiding under a coarser ancestor polygon
+    // (a bbox-fit alone can land below a small climat/cru's min_zoom).
     const maxZoom = Math.min(
-      childZooms.length > 0 ? Math.max(...childZooms) + 0.5 : 14.5,
-      15.5,
+      childZooms.length > 0
+        ? Math.max(...childZooms) + 0.5
+        : context.place.min_zoom + 1.5,
+      16,
     );
-    return { bbox: context.boundary.bbox, maxZoom };
+    const minZoom =
+      childZooms.length > 0
+        ? 0
+        : Math.min(context.place.min_zoom + 0.35, maxZoom);
+    return { bbox: context.boundary.bbox, minZoom, maxZoom };
   }, [context]);
 
   const article =

@@ -24,6 +24,8 @@ function ensurePmtilesProtocol() {
 
 export type CameraTarget = {
   bbox: [number, number, number, number];
+  /** Never end below this — a small feature's reveal zoom, so it renders. */
+  minZoom: number;
   maxZoom: number;
 };
 
@@ -322,34 +324,56 @@ export function TileWineMap({
     if (!cameraTarget) return;
     const map = mapRef.current;
     const [minX, minY, maxX, maxY] = cameraTarget.bbox;
-    const fit = () =>
-      map?.fitBounds(
-        [
-          [minX, minY],
-          [maxX, maxY],
-        ],
-        { padding: 48, duration: 900, maxZoom: cameraTarget.maxZoom },
-      );
+    const bounds: [[number, number], [number, number]] = [
+      [minX, minY],
+      [maxX, maxY],
+    ];
     const inner = map?.getMap();
+    // Fit the footprint, but never end below the selection's reveal zoom: a
+    // bbox fit alone can land under a small feature's min_zoom, so it (and its
+    // gold ring) wouldn't render until the user zoomed in by hand.
+    const apply = () => {
+      const cam = inner?.cameraForBounds(bounds, {
+        padding: 48,
+        maxZoom: cameraTarget.maxZoom,
+      });
+      if (inner && cam) {
+        inner.easeTo({
+          center: cam.center,
+          zoom: Math.max(cam.zoom ?? 0, cameraTarget.minZoom),
+          duration: 900,
+        });
+      } else {
+        map?.fitBounds(bounds, {
+          padding: 48,
+          duration: 900,
+          maxZoom: cameraTarget.maxZoom,
+        });
+      }
+    };
     if (!inner) {
-      fit();
+      apply();
       return;
     }
-    // Only move the camera when the selection isn't already well framed. If
-    // its centre is on screen at a comfortable size (e.g. you can see the
-    // neighbouring Médoc communes and click one), leave the view untouched;
-    // reframe only when it's off-screen or too small/large — so tree
-    // navigation to a distant place still flies there.
+    // Leave the view untouched only when the selection is already well framed
+    // AND already past its reveal zoom (otherwise the feature/ring isn't on
+    // screen yet); reframe when it's off-screen, too small/large, or too far
+    // out — so tree navigation to a distant or deep place still flies there.
     const b = inner.getBounds();
     const viewW = b.getEast() - b.getWest();
     const viewH = b.getNorth() - b.getSouth();
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     const centreVisible =
-      cx > b.getWest() && cx < b.getEast() && cy > b.getSouth() && cy < b.getNorth();
+      cx > b.getWest() &&
+      cx < b.getEast() &&
+      cy > b.getSouth() &&
+      cy < b.getNorth();
     const spanFrac = Math.max((maxX - minX) / viewW, (maxY - minY) / viewH);
-    if (centreVisible && spanFrac >= 0.18 && spanFrac <= 1.3) return;
-    fit();
+    const zoomedEnough = inner.getZoom() >= cameraTarget.minZoom - 0.01;
+    if (centreVisible && zoomedEnough && spanFrac >= 0.18 && spanFrac <= 1.3)
+      return;
+    apply();
   }, [cameraTarget]);
 
   // Selection-aware paint. The zoom interpolation fades fills — the selected
