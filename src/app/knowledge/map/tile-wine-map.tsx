@@ -320,14 +320,36 @@ export function TileWineMap({
 
   useEffect(() => {
     if (!cameraTarget) return;
+    const map = mapRef.current;
     const [minX, minY, maxX, maxY] = cameraTarget.bbox;
-    mapRef.current?.fitBounds(
-      [
-        [minX, minY],
-        [maxX, maxY],
-      ],
-      { padding: 48, duration: 900, maxZoom: cameraTarget.maxZoom },
-    );
+    const fit = () =>
+      map?.fitBounds(
+        [
+          [minX, minY],
+          [maxX, maxY],
+        ],
+        { padding: 48, duration: 900, maxZoom: cameraTarget.maxZoom },
+      );
+    const inner = map?.getMap();
+    if (!inner) {
+      fit();
+      return;
+    }
+    // Only move the camera when the selection isn't already well framed. If
+    // its centre is on screen at a comfortable size (e.g. you can see the
+    // neighbouring Médoc communes and click one), leave the view untouched;
+    // reframe only when it's off-screen or too small/large — so tree
+    // navigation to a distant place still flies there.
+    const b = inner.getBounds();
+    const viewW = b.getEast() - b.getWest();
+    const viewH = b.getNorth() - b.getSouth();
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const centreVisible =
+      cx > b.getWest() && cx < b.getEast() && cy > b.getSouth() && cy < b.getNorth();
+    const spanFrac = Math.max((maxX - minX) / viewW, (maxY - minY) / viewH);
+    if (centreVisible && spanFrac >= 0.18 && spanFrac <= 1.3) return;
+    fit();
   }, [cameraTarget]);
 
   // Selection-aware paint. The zoom interpolation fades fills — the selected
@@ -461,7 +483,13 @@ export function TileWineMap({
               best = { key: p.key, tier, area, minZoom };
             }
           }
-          if (best) onSelect(best.key);
+          if (!best) return;
+          // The country fill covers the gaps between regions, so a stray
+          // click beside a region resolves to the country and would fling
+          // the camera out. Once you're past region zoom, ignore country
+          // selection — reach France via the tree instead.
+          if (best.tier === 0 && (mapRef.current?.getZoom() ?? 0) > 5) return;
+          onSelect(best.key);
         }}
         onIdle={scanView}
         onMouseMove={(e) => {
