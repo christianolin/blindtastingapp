@@ -40,6 +40,13 @@ export const ATTRIBUTION = {
     key: "ign-inao",
     text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
   },
+  // Champagne (and future no-parcel regions): commune-union from IGN Admin
+  // Express filtered by the INAO official commune list. IGN geometry + INAO
+  // membership, so it collapses to the same public credit as the parcel source.
+  IGN_ADMIN_EXPRESS: {
+    key: "ign-inao",
+    text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
+  },
   NATURAL_EARTH: { key: "natural-earth", text: "Made with Natural Earth" },
 };
 

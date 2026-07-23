@@ -819,12 +819,14 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 859,
-    validated: 859,
-    current: 793,
-    valid: 859,
-    labelled: 859,
-    manual: 2,
+    total: 860,
+    validated: 860,
+    current: 794,
+    valid: 860,
+    labelled: 860,
+    // +1 Champagne: a MANUAL commune-union outline (Champagne has no INAO
+    // parcel source), joining France as the second MANUAL boundary.
+    manual: 3,
     generalized: 834,
     reproducible: 13,
   });
@@ -876,7 +878,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 859);
+  assert.equal(prov.linked_boundaries, 860);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -901,6 +903,7 @@ test("only exact current Bordeaux references are verified", async () => {
   assert.deepEqual(region.rows, [
     { name: "Bordeaux", canonical_key: "france.bordeaux" },
     { name: "Bourgogne", canonical_key: "france.bourgogne" },
+    { name: "Champagne", canonical_key: "france.champagne" },
   ]);
 
   const appellations = await client.query(
@@ -925,7 +928,7 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 2],
+    ["regions", 3],
     ["appellations", 118],
   ]) {
     const statuses = await client.query(
@@ -943,7 +946,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Phase 3D cote-de-beaune migration: exact name match',
                     'Phase 3D districts migration: exact name match',
                     'Phase 3E bordeaux migration: exact name match',
-                    'Phase 3F chablis-climats migration: exact name match'
+                    'Phase 3F chablis-climats migration: exact name match',
+                    'Champagne region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1031,9 +1035,10 @@ test("classification facts and legal relationship types", async () => {
   );
   assert.deepEqual(facts.rows[0], {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
-      // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups).
-      appellations: 786,
-      aoc: 786,
+      // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
+      // +1 Champagne (region == regional AOC).
+      appellations: 787,
+      aoc: 787,
     missing_level: 0,
     france_plain: 1,
   });

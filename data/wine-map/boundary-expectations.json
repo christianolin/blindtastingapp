@@ -7135,5 +7135,14 @@
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T191423Z/vire-clesse-village/fetch-manifest.json",
     "raw_checksum_sha256": "A7FA839617C16B27ADB8D7018A5E8FEDAAD4E8F1F9278B58F7BC9DC292C27C0D",
     "documented": true
+  },
+  {
+    "canonical_key": "france.champagne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "aire-geographique:champagne",
+    "normalized_checksum_sha256": "A9D8C8F29C283AD5D80F2C41063AB18967A9EF575EBB7450E41B71A51D2B7E73",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260723T192110Z/champagne/raw-communes.geojson",
+    "raw_checksum_sha256": "3BA45F0D6E9539A5AD36A37B157B3D7EB1967D952D0677537CF7232238C9AE00",
+    "documented": true
   }
 ]

@@ -181,6 +181,15 @@ test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {
   );
 });
 
+test("the Admin Express namespace shares the ign-inao credit", () => {
+  assert.equal(attributionKeyFor("IGN_ADMIN_EXPRESS"), "ign-inao");
+  // Collapses to the same credit key, so attributionDisplayMap stays 3 entries.
+  assert.equal(
+    ATTRIBUTION.IGN_ADMIN_EXPRESS.text,
+    ATTRIBUTION.IGN_INAO_AOC_VITICOLES.text,
+  );
+});
+
 test("tippecanoeArgs honours per-archive zoom", async () => {
   const { tippecanoeArgs, WORLD_TARGET, SHARD_TARGET } = await import("./lib.mjs");
   assert.deepEqual(tippecanoeArgs("world", WORLD_TARGET), [
