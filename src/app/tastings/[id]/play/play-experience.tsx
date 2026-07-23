@@ -4,6 +4,7 @@ import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
+import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
 import { cn } from "@/lib/utils";
@@ -334,42 +335,32 @@ export async function PlayExperience({
     .map((a) => ({ id: a.wine_id, name: describeAnswer(a) }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Live leaderboard: running totals across every revealed wine, plus the
-  // points each taster gained on the most recently revealed wine (the
-  // "this round" delta that makes reveals feel like they move the standings).
-  const lastRevealedWine = (wines ?? [])
-    .filter((w) => w.is_revealed)
-    .sort((a, b) => b.position - a.position)[0];
-  const leaderboard = (() => {
-    if (revealedWineIds.length === 0) return [];
-    const totals = new Map<string, number>();
-    const lastRound = new Map<string, number>();
-    for (const g of allRevealedGuesses ?? []) {
-      totals.set(
-        g.participant_id,
-        (totals.get(g.participant_id) ?? 0) + (g.total_points ?? 0),
-      );
-      if (lastRevealedWine && g.wine_id === lastRevealedWine.id) {
-        lastRound.set(g.participant_id, g.total_points ?? 0);
-      }
-    }
-    return joinedParticipants
-      .filter(
-        (p) =>
-          !(
-            tasting.wine_source === "HOST_PROVIDES" &&
-            p.user_id === tasting.host_id
-          ),
-      )
-      .map((p) => ({
-        participantId: p.id,
-        name: nameByParticipantId.get(p.id) ?? "Someone",
-        isMe: p.id === myParticipant.id,
-        total: totals.get(p.id) ?? 0,
-        delta: lastRound.get(p.id) ?? 0,
-      }))
-      .sort((a, b) => b.total - a.total);
-  })();
+  // Live leaderboard (standalone /play only; the embedded tasting page renders
+  // StandingsPanel instead). Reuses getTastingLeaderboard so partial
+  // per-attribute reveals count exactly as on the main page — not just fully
+  // revealed wines. Shown once any reveal has started.
+  const revealStarted = (wines ?? []).some(
+    (w) => w.is_revealed || (w.reveal_step ?? 0) > 0,
+  );
+  const hostProvidesUserId =
+    tasting.wine_source === "HOST_PROVIDES" ? tasting.host_id : null;
+  const joinedUserId = new Map(joinedParticipants.map((p) => [p.id, p.user_id]));
+  const leaderboard =
+    !embedded && !isSemiBlind && revealStarted
+      ? (await getTastingLeaderboard(tastingId))
+          .filter(
+            (r) =>
+              joinedUserId.has(r.participantId) &&
+              joinedUserId.get(r.participantId) !== hostProvidesUserId,
+          )
+          .map((r) => ({
+            participantId: r.participantId,
+            name: nameByParticipantId.get(r.participantId) ?? r.name,
+            isMe: r.participantId === myParticipant.id,
+            total: r.total,
+            delta: r.lastRoundPoints ?? 0,
+          }))
+      : [];
 
   // Correct value + the taster's guess + points, per scored attribute. null
   // points mean the category isn't in play for this wine, so it's skipped.
@@ -475,7 +466,9 @@ export async function PlayExperience({
           <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2">
             <span className="font-heading text-sm font-semibold">Leaderboard</span>
             <span className="text-xs text-muted-foreground">
-              after {revealedCount} of {totalWines}
+              {revealedCount > 0
+                ? `after ${revealedCount} of ${totalWines}`
+                : "live"}
             </span>
           </div>
           <ol className="flex flex-col">
