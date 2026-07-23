@@ -19,19 +19,23 @@ import { createTasting, type CreateTastingFormState } from "./actions";
 import { InviteField } from "./invite-field";
 
 const TIMING_MODE_ITEMS = {
-  ASYNC: "Async — open over several days",
-  LIVE: "Live — everyone tastes together",
+  LIVE: "Live",
+  ASYNC: "Self-paced",
 };
 
 const WINE_SOURCE_ITEMS = {
-  HOST_PROVIDES: "I'll pick all the wines",
-  PARTICIPANT_CONTRIBUTED: "Everyone brings and guesses each other's wines",
+  HOST_PROVIDES: "Organizer selects the wines",
+  PARTICIPANT_CONTRIBUTED: "Everyone brings wines",
 };
 
 const REVEAL_MODE_ITEMS = {
-  BLIND: "Fully blind — nothing is known ahead of time",
-  SEMI_BLIND:
-    "Semi-blind — everyone can see the full wine list up front, just not which glass is which",
+  BLIND: "Blind",
+  SEMI_BLIND: "Semi-blind",
+};
+
+const FLOW_ITEMS = {
+  GUIDED: "Guided",
+  FREE: "Free",
 };
 
 const ASYNC_REVEAL_ITEMS = {
