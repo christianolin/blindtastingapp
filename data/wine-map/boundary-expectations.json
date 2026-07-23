@@ -306,6 +306,69 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.blanchot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-blanchot",
+    "normalized_checksum_sha256": "E851C6F5AC4E9561BE7B933A2A7B6E392338C096325E320C982952361A0337C7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130705Z/chablis-gc-blanchot/fetch-manifest.json",
+    "raw_checksum_sha256": "7827AD053DA85AE7A44FDA8F116C855C90724BE3504B6688CC6F3A85A707DF3B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.bougros",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-bougros",
+    "normalized_checksum_sha256": "CB3D2E61FCDB505CBCA45EDFF3264AE2F36A3C5594A4B64C6B548778F266A17A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130649Z/chablis-gc-bougros/fetch-manifest.json",
+    "raw_checksum_sha256": "0095ADD43179C353E2F007E836010DA640F79577A1C6F18B29F869E6865180F1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.grenouilles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-grenouilles",
+    "normalized_checksum_sha256": "9061C15688E5BC8116CF82C8EC0657CD71DAF2BC5A628985A3A2EE00172210F5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130658Z/chablis-gc-grenouilles/fetch-manifest.json",
+    "raw_checksum_sha256": "DC9FD75B64205A572EA0C70688F3E12B0D6FFAC66F54C7AFFB0E678E5D5D259C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.les-clos",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-les-clos",
+    "normalized_checksum_sha256": "CD91A11E565CEB1AB5EA3039FC029FC0977EF3B1BB15DB2FC26719081272E345",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130702Z/chablis-gc-les-clos/fetch-manifest.json",
+    "raw_checksum_sha256": "885C768C8378E3294FEC250DB4BDBB535F939795B0250E4C4F993504D805CC45",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.preuses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-preuses",
+    "normalized_checksum_sha256": "44F1ED7DDBB8C8CC7AB40A974E5930C27CDBD20575D6CC43461860142DD5E1E5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130653Z/chablis-gc-preuses/fetch-manifest.json",
+    "raw_checksum_sha256": "491E363AEC7D3BD1D5D1ECE964E17FBDC1CD4EF5FEB0910EB62F8EEC44D390D8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.valmur",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-valmur",
+    "normalized_checksum_sha256": "35452B475EAA9D0AEC65AAAA14B6A02004EEC86947E455AE8B3422DBA02FB17F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130700Z/chablis-gc-valmur/fetch-manifest.json",
+    "raw_checksum_sha256": "36578C845316B18F3F286F154276C1D101F12BDAD5C1EA553D6E5386B1B79870",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.chablis.chablis.chablis-grand-cru.vaudesir",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chablis-gc-vaudesir",
+    "normalized_checksum_sha256": "E2118C2E9988A4C91D29394E777F6E5B6C9D5C35A8CB9A9929C7219B76C3CAAE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T130656Z/chablis-gc-vaudesir/fetch-manifest.json",
+    "raw_checksum_sha256": "C1D00EC8B26EBCD008E3B0D896C3BB5426417908270740942428B860AA7CE95D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.chablis.chablis.premier-cru",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:chablis-1er",

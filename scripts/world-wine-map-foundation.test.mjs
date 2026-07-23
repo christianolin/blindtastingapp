@@ -768,6 +768,13 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Cerons AOP"], key: "france.bordeaux.cerons" },
   { names: ["Loupiac AOP"], key: "france.bordeaux.loupiac" },
   { names: ["Sainte-Croix-du-Mont AOP"], key: "france.bordeaux.sainte-croix-du-mont" },
+  { names: ["Bougros AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.bougros" },
+  { names: ["Preuses AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.preuses" },
+  { names: ["Vaudesir AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.vaudesir" },
+  { names: ["Grenouilles AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.grenouilles" },
+  { names: ["Valmur AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.valmur" },
+  { names: ["Les Clos AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.les-clos" },
+  { names: ["Blanchot AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.blanchot" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -812,13 +819,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 218,
-    validated: 218,
-    current: 152,
-    valid: 218,
-    labelled: 218,
+    total: 225,
+    validated: 225,
+    current: 159,
+    valid: 225,
+    labelled: 225,
     manual: 2,
-    generalized: 193,
+    generalized: 200,
     reproducible: 13,
   });
 
@@ -869,7 +876,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 218);
+  assert.equal(prov.linked_boundaries, 225);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -905,7 +912,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 111);
+  assert.equal(appellations.rows.length, 118);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -919,7 +926,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 2],
-    ["appellations", 111],
+    ["appellations", 118],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -935,7 +942,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Phase 3C cote-de-nuits migration',
                     'Phase 3D cote-de-beaune migration: exact name match',
                     'Phase 3D districts migration: exact name match',
-                    'Phase 3E bordeaux migration: exact name match'
+                    'Phase 3E bordeaux migration: exact name match',
+                    'Phase 3F chablis-climats migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1024,8 +1032,8 @@ test("classification facts and legal relationship types", async () => {
   assert.deepEqual(facts.rows[0], {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups).
-      appellations: 145,
-      aoc: 145,
+      appellations: 152,
+      aoc: 152,
     missing_level: 0,
     france_plain: 1,
   });
