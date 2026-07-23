@@ -43,7 +43,7 @@ async function ref(table, name) {
 // full answer (France/Bordeaux/CabSauv+Merlot/2020). p1 guesses perfectly; p2
 // gets country+grape right but region wrong and no secondary grape, vintage off
 // by one.
-export async function seedTasting({ timing = "LIVE" } = {}) {
+export async function seedTasting({ timing = "LIVE", sequential = true } = {}) {
   // host_id / participant.user_id FK real users — use 3 existing profiles (all
   // rolled back afterwards, so this leaves no trace).
   const users = (await client.query("select id from profiles limit 3")).rows;
@@ -53,8 +53,8 @@ export async function seedTasting({ timing = "LIVE" } = {}) {
   const p2UserId = users[2].id;
   const host = (
     await client.query(
-      "insert into tastings (name, host_id, timing_mode, wine_source, reveal_mode, status, sequential_guessing) values ('PR test', $2, $1, 'HOST_PROVIDES', 'BLIND', 'IN_PROGRESS', true) returning id, host_id",
-      [timing, hostUserId],
+      "insert into tastings (name, host_id, timing_mode, wine_source, reveal_mode, status, sequential_guessing) values ('PR test', $2, $1, 'HOST_PROVIDES', 'BLIND', 'IN_PROGRESS', $3) returning id, host_id",
+      [timing, hostUserId, sequential],
     )
   ).rows[0];
   const tastingId = host.id;
@@ -194,6 +194,52 @@ test("reveal_next_category: a plain guesser cannot advance a host-provided wine"
     await assert.rejects(
       client.query("select reveal_next_category($1, $2::smallint)", [s.wineId, 0]),
       /host or the wine owner/,
+    );
+  });
+});
+
+test("reveal_own_next_category: self-paced, scoped to caller, wine untouched", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting({ timing: "ASYNC" });
+    await actAs(s.p2UserId);
+    const r = await client.query(
+      "select reveal_own_next_category($1, $2::smallint) as step",
+      [s.wineId, 0],
+    );
+    assert.equal(r.rows[0].step, 1);
+    const own = await client.query(
+      "select reveal_step, country_points from guesses where wine_id=$1 and participant_id=$2",
+      [s.wineId, s.p2],
+    );
+    assert.equal(own.rows[0].reveal_step, 1);
+    assert.equal(own.rows[0].country_points, 2);
+    const other = await client.query(
+      "select reveal_step, country_points from guesses where wine_id=$1 and participant_id=$2",
+      [s.wineId, s.p1],
+    );
+    assert.equal(other.rows[0].reveal_step, 0);
+    assert.equal(other.rows[0].country_points, null);
+    const w = await client.query(
+      "select reveal_step, is_revealed from wines where id=$1",
+      [s.wineId],
+    );
+    assert.equal(w.rows[0].reveal_step, 0);
+    assert.equal(w.rows[0].is_revealed, false);
+    const again = await client.query(
+      "select reveal_own_next_category($1, $2::smallint) as step",
+      [s.wineId, 0],
+    );
+    assert.equal(again.rows[0].step, 1);
+  });
+});
+
+test("reveal_own_next_category: blocked in guided-live tastings", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.p2UserId);
+    await assert.rejects(
+      client.query("select reveal_own_next_category($1, $2::smallint)", [s.wineId, 0]),
+      /host-driven/,
     );
   });
 });
