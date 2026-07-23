@@ -1,0 +1,3197 @@
+{
+  "aire_geographique": "Champagne",
+  "provenance": {
+    "authority": "INAO (Institut national de l'origine et de la qualité)",
+    "dataset": "Aires géographiques des AOC/AOP",
+    "dataset_slug": "aires-geographiques-des-aoc-aop",
+    "resource_url": "https://static.data.gouv.fr/resources/aires-geographiques-des-aoc-aop/20251009-122320/2025-10-09-comagri-communes-aires-ao.csv",
+    "licence": "Licence Ouverte / Open Licence (fr-lo)",
+    "retrieved_at": "2026-07-23",
+    "note": "Champagne AOC is absent from the IGN AOC-VITICOLES:aire_parcellaire layer (0 parcels); its footprint is derived from member communes. INSEE codes (CI) filtered where Aire géographique == 'Champagne'."
+  },
+  "commune_count": 635,
+  "department_breakdown": {
+    "AISNE": 81,
+    "AUBE": 70,
+    "MARNE": 477,
+    "HAUTE-MARNE": 2,
+    "SEINE-ET-MARNE": 5
+  },
+  "communes": [
+    {
+      "insee": "02003",
+      "name": "Acy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02036",
+      "name": "Augy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02042",
+      "name": "Azy-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02051",
+      "name": "Barzy-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02053",
+      "name": "Vallées en Champagne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02084",
+      "name": "Bézu-le-Guéry",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02091",
+      "name": "Blanzy-lès-Fismes",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02094",
+      "name": "Blesmes",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02098",
+      "name": "Bonneil",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02110",
+      "name": "Braine",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02114",
+      "name": "Brasles",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02120",
+      "name": "Brenelle",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02131",
+      "name": "Bucy-le-Long",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02146",
+      "name": "Celles-lès-Condé",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02148",
+      "name": "Celles-sur-Aisne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02161",
+      "name": "Chapelle-Monthodon",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02163",
+      "name": "Charly-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02166",
+      "name": "Chartèves",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02167",
+      "name": "Chassemy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02168",
+      "name": "Château-Thierry",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02176",
+      "name": "Chavonne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02186",
+      "name": "Chézy-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02187",
+      "name": "Chierry",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02190",
+      "name": "Chivres-Val",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02195",
+      "name": "Ciry-Salsogne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02209",
+      "name": "Condé-en-Brie",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02210",
+      "name": "Condé-sur-Aisne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02213",
+      "name": "Connigis",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02223",
+      "name": "Courboin",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02224",
+      "name": "Courcelles-sur-Vesle",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02228",
+      "name": "Courtemont-Varennes",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02230",
+      "name": "Couvrelles",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02239",
+      "name": "Crézancy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02242",
+      "name": "Crouttes-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02255",
+      "name": "Cys-la-Commune",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02263",
+      "name": "Dhuizel",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02268",
+      "name": "Domptin",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02290",
+      "name": "Essômes-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02292",
+      "name": "Étampes-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02328",
+      "name": "Fossoy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02347",
+      "name": "Gland",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02348",
+      "name": "Glennes",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02389",
+      "name": "Jaulgonne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02439",
+      "name": "Septvallons",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02479",
+      "name": "Merval",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02484",
+      "name": "Mézy-Moulins",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02487",
+      "name": "Missy-sur-Aisne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02510",
+      "name": "Monthurel",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02515",
+      "name": "Montigny-lès-Condé",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02518",
+      "name": "Montlevon",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02521",
+      "name": "Montreuil-aux-Lions",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02524",
+      "name": "Mont-Saint-Père",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02540",
+      "name": "Nesles-la-Montagne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02554",
+      "name": "Nogentel",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02555",
+      "name": "Nogent-l'Artaud",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02581",
+      "name": "Paars",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02590",
+      "name": "Pargny-la-Dhuys",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02595",
+      "name": "Passy-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02596",
+      "name": "Pavant",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02597",
+      "name": "Perles",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02620",
+      "name": "Presles-et-Boves",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02645",
+      "name": "Reuilly-Sauvigny",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02646",
+      "name": "Révillon",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02653",
+      "name": "Romeny-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02669",
+      "name": "Saint-Agnan",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02677",
+      "name": "Saint-Eugène",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02682",
+      "name": "Saint-Mard",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02698",
+      "name": "Sancy-les-Cheminots",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02701",
+      "name": "Saulchery",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02714",
+      "name": "Sermoise",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02715",
+      "name": "Serval",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02730",
+      "name": "Soupir",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02748",
+      "name": "Trélou-sur-Marne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02758",
+      "name": "Vailly-sur-Aisne",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02763",
+      "name": "Vasseny",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02771",
+      "name": "Vauxcéré",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02773",
+      "name": "Vauxtin",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02781",
+      "name": "Verdilly",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02797",
+      "name": "Viel-Arcy",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02811",
+      "name": "Villers-en-Prayères",
+      "department": "AISNE"
+    },
+    {
+      "insee": "02818",
+      "name": "Villiers-Saint-Denis",
+      "department": "AISNE"
+    },
+    {
+      "insee": "10002",
+      "name": "Ailleville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10007",
+      "name": "Arconville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10008",
+      "name": "Argançon",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10011",
+      "name": "Arrentières",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10012",
+      "name": "Arsonval",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10022",
+      "name": "Avirey-Lingey",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10025",
+      "name": "Bagneux-la-Fosse",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10029",
+      "name": "Balnot-sur-Laignes",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10032",
+      "name": "Baroville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10033",
+      "name": "Bar-sur-Aube",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10034",
+      "name": "Bar-sur-Seine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10039",
+      "name": "Bergères",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10041",
+      "name": "Bertignolles",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10048",
+      "name": "Bligny",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10058",
+      "name": "Bragelogne-Beauvoir",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10064",
+      "name": "Brienne-le-Château",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10068",
+      "name": "Buxeuil",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10069",
+      "name": "Buxières-sur-Arce",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10070",
+      "name": "Celles-sur-Ource",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10071",
+      "name": "Chacenay",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10076",
+      "name": "Champignol-lez-Mondeville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10079",
+      "name": "Channes",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10097",
+      "name": "Chervey",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10102",
+      "name": "Colombé-la-Fosse",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10103",
+      "name": "Colombé-le-Sec",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10111",
+      "name": "Courteron",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10113",
+      "name": "Couvignon",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10119",
+      "name": "Cunfin",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10126",
+      "name": "Dolancourt",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10136",
+      "name": "Éguilly-sous-Bois",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10137",
+      "name": "Engente",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10138",
+      "name": "Épagne",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10141",
+      "name": "Essoyes",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10150",
+      "name": "Fontaine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10155",
+      "name": "Fontette",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10160",
+      "name": "Fravaux",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10170",
+      "name": "Gyé-sur-Seine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10176",
+      "name": "Jaucourt",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10187",
+      "name": "Landreville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10197",
+      "name": "Lignol-le-Château",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10199",
+      "name": "Loches-sur-Ource",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10223",
+      "name": "Marcilly-le-Hayer",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10232",
+      "name": "Merrey-sur-Arce",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10242",
+      "name": "Meurville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10248",
+      "name": "Montgueux",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10250",
+      "name": "Montier-en-l'Isle",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10261",
+      "name": "Mussy-sur-Seine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10262",
+      "name": "Neuville-sur-Seine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10264",
+      "name": "Noé-les-Mallets",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10288",
+      "name": "Plaines-Saint-Lange",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10295",
+      "name": "Polisot",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10296",
+      "name": "Polisy",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10304",
+      "name": "Précy-Saint-Martin",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10306",
+      "name": "Proverville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10317",
+      "name": "Riceys",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10330",
+      "name": "Rouvres-les-Vignes",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10345",
+      "name": "Saint-Léger-sous-Brienne",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10362",
+      "name": "Sainte-Savine",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10364",
+      "name": "Saint-Usage",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10366",
+      "name": "Saulcy",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10374",
+      "name": "Spoy",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10384",
+      "name": "Trannes",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10390",
+      "name": "Urville",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10404",
+      "name": "Verpillières-sur-Ource",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10420",
+      "name": "Villenauxe-la-Grande",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10421",
+      "name": "Villeneuve-au-Châtelot",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10427",
+      "name": "Ville-sur-Arce",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10438",
+      "name": "Vitry-le-Croisé",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10439",
+      "name": "Viviers-sur-Artaut",
+      "department": "AUBE"
+    },
+    {
+      "insee": "10440",
+      "name": "Voigny",
+      "department": "AUBE"
+    },
+    {
+      "insee": "51001",
+      "name": "Ablancourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51002",
+      "name": "Saint-Martin-d'Ablois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51003",
+      "name": "Aigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51004",
+      "name": "Allemanche-Launay-et-Soyer",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51005",
+      "name": "Allemant",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51007",
+      "name": "Ambonnay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51009",
+      "name": "Anglure",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51010",
+      "name": "Angluzelles-et-Courcelles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51012",
+      "name": "Anthenay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51013",
+      "name": "Aougny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51014",
+      "name": "Arcis-le-Ponsart",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51016",
+      "name": "Arrigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51017",
+      "name": "Arzillières-Neuville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51018",
+      "name": "Athis",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51019",
+      "name": "Aubérive",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51020",
+      "name": "Aubilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51022",
+      "name": "Aulnay-l'Aître",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51023",
+      "name": "Aulnay-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51025",
+      "name": "Auménancourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51028",
+      "name": "Avenay-Val-d'Or",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51029",
+      "name": "Avize",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51030",
+      "name": "Aÿ-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51031",
+      "name": "Baconnes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51032",
+      "name": "Bagneux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51033",
+      "name": "Baizil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51034",
+      "name": "Bannay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51035",
+      "name": "Bannes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51036",
+      "name": "Barbonne-Fayel",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51037",
+      "name": "Baslieux-lès-Fismes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51038",
+      "name": "Baslieux-sous-Châtillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51039",
+      "name": "Bassu",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51040",
+      "name": "Bassuet",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51041",
+      "name": "Baudement",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51042",
+      "name": "Baye",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51043",
+      "name": "Bazancourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51044",
+      "name": "Beaumont-sur-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51045",
+      "name": "Beaunay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51046",
+      "name": "Beine-Nauroy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51048",
+      "name": "Belval-sous-Châtillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51049",
+      "name": "Bergères-lès-Vertus",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51050",
+      "name": "Bergères-sous-Montmirail",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51051",
+      "name": "Berméricourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51052",
+      "name": "Berru",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51054",
+      "name": "Bétheniville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51055",
+      "name": "Bétheny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51056",
+      "name": "Bethon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51058",
+      "name": "Bezannes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51059",
+      "name": "Bignicourt-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51061",
+      "name": "Billy-le-Grand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51063",
+      "name": "Binson-et-Orquigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51064",
+      "name": "Bisseuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51065",
+      "name": "Blacy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51069",
+      "name": "Bligny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51070",
+      "name": "Boissy-le-Repos",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51071",
+      "name": "Bouchy-Saint-Genest",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51072",
+      "name": "Bouilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51073",
+      "name": "Bouleuse",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51074",
+      "name": "Boult-sur-Suippe",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51075",
+      "name": "Bourgogne-Fresne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51076",
+      "name": "Boursault",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51077",
+      "name": "Bouvancourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51078",
+      "name": "Bouy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51079",
+      "name": "Bouzy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51081",
+      "name": "Branscourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51085",
+      "name": "Breuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51086",
+      "name": "Breuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51087",
+      "name": "Breuvery-sur-Coole",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51088",
+      "name": "Brimont",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51089",
+      "name": "Brouillet",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51090",
+      "name": "Broussy-le-Grand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51091",
+      "name": "Broussy-le-Petit",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51092",
+      "name": "Broyes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51093",
+      "name": "Brugny-Vaudancourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51097",
+      "name": "Bussy-le-Château",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51099",
+      "name": "Bussy-Lettrée",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51100",
+      "name": "Caure",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51101",
+      "name": "Caurel",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51102",
+      "name": "Cauroy-lès-Hermonville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51103",
+      "name": "Celle-sous-Chantemerle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51105",
+      "name": "Cernay-lès-Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51106",
+      "name": "Cernon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51107",
+      "name": "Chaintrix-Bierges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51108",
+      "name": "Châlons-en-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51109",
+      "name": "Châlons-sur-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51110",
+      "name": "Chaltrait",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51111",
+      "name": "Chambrecy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51112",
+      "name": "Chamery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51113",
+      "name": "Champaubert",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51115",
+      "name": "Champfleury",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51116",
+      "name": "Champguyon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51117",
+      "name": "Champigneul-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51118",
+      "name": "Champigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51119",
+      "name": "Champillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51120",
+      "name": "Champlat-et-Boujacourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51121",
+      "name": "Champvoisy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51122",
+      "name": "Changy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51124",
+      "name": "Chantemerle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51127",
+      "name": "Chapelle-Lasson",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51128",
+      "name": "Chapelle-sous-Orbais",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51129",
+      "name": "Charleville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51136",
+      "name": "Châtillon-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51137",
+      "name": "Châtillon-sur-Morin",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51140",
+      "name": "Chaumuzy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51141",
+      "name": "Chaussée-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51142",
+      "name": "Chavot-Courcourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51145",
+      "name": "Chenay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51146",
+      "name": "Cheniers",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51147",
+      "name": "Cheppe",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51148",
+      "name": "Cheppes-la-Prairie",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51149",
+      "name": "Chepy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51150",
+      "name": "Cherville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51151",
+      "name": "Chichey",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51152",
+      "name": "Chigny-les-Roses",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51153",
+      "name": "Chouilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51154",
+      "name": "Clamanges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51155",
+      "name": "Clesles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51157",
+      "name": "Coizard-Joches",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51158",
+      "name": "Val-des-Marais",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51160",
+      "name": "Compertrix",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51161",
+      "name": "Condé-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51162",
+      "name": "Conflans-sur-Seine",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51163",
+      "name": "Congy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51164",
+      "name": "Connantray-Vaurefroy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51165",
+      "name": "Connantre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51168",
+      "name": "Coolus",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51170",
+      "name": "Corfélix",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51171",
+      "name": "Cormicy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51172",
+      "name": "Cormontreuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51173",
+      "name": "Cormoyeux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51174",
+      "name": "Corribert",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51175",
+      "name": "Corrobert",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51176",
+      "name": "Corroy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51177",
+      "name": "Coulommes-la-Montagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51178",
+      "name": "Coupetz",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51179",
+      "name": "Coupéville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51181",
+      "name": "Courcelles-Sapicourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51182",
+      "name": "Courcemain",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51183",
+      "name": "Courcy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51184",
+      "name": "Courdemanges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51185",
+      "name": "Courgivaux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51186",
+      "name": "Courjeonnet",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51187",
+      "name": "Courlandon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51188",
+      "name": "Courmas",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51190",
+      "name": "Courtagnon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51192",
+      "name": "Courthiézy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51193",
+      "name": "Courtisols",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51194",
+      "name": "Courville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51195",
+      "name": "Couvrot",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51196",
+      "name": "Cramant",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51198",
+      "name": "Crugny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51199",
+      "name": "Cuchery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51200",
+      "name": "Cuis",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51201",
+      "name": "Cuisles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51202",
+      "name": "Cumières",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51203",
+      "name": "Cuperly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51204",
+      "name": "Damery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51205",
+      "name": "Dampierre-au-Temple",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51208",
+      "name": "Dampierre-sur-Moivre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51210",
+      "name": "Dizy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51216",
+      "name": "Dontrien",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51217",
+      "name": "Dormans",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51218",
+      "name": "Val-de-Vière",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51220",
+      "name": "Drouilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51223",
+      "name": "Écollemont",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51225",
+      "name": "Écueil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51226",
+      "name": "Écury-le-Repos",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51227",
+      "name": "Écury-sur-Coole",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51230",
+      "name": "Épernay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51231",
+      "name": "Épine",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51232",
+      "name": "Époye",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51233",
+      "name": "Escardes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51234",
+      "name": "Esclavolles-Lurey",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51235",
+      "name": "Essarts-lès-Sézanne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51236",
+      "name": "Essarts-le-Vicomte",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51237",
+      "name": "Esternay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51238",
+      "name": "Étoges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51239",
+      "name": "Étréchy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51241",
+      "name": "Euvy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51242",
+      "name": "Fagnières",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51243",
+      "name": "Faux-Fresnay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51244",
+      "name": "Faux-Vésigneul",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51245",
+      "name": "Faverolles-et-Coëmy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51247",
+      "name": "Fèrebrianges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51248",
+      "name": "Fère-Champenoise",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51249",
+      "name": "Festigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51250",
+      "name": "Fismes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51251",
+      "name": "Flavigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51252",
+      "name": "Fleury-la-Rivière",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51254",
+      "name": "Fontaine-Denis-Nuisy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51256",
+      "name": "Fontaine-sur-Ay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51258",
+      "name": "Forestière",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51259",
+      "name": "Francheville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51260",
+      "name": "Fresne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51261",
+      "name": "Fresne-lès-Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51262",
+      "name": "Frignicourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51263",
+      "name": "Fromentières",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51264",
+      "name": "Gault-Soigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51265",
+      "name": "Gaye",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51266",
+      "name": "Germaine",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51267",
+      "name": "Germigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51268",
+      "name": "Germinon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51269",
+      "name": "Giffaumont-Champaubert",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51271",
+      "name": "Gionges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51273",
+      "name": "Givry-lès-Loisy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51275",
+      "name": "Glannes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51276",
+      "name": "Gourgançon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51277",
+      "name": "Sainte-Marie-du-Lac-Nuisement",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51278",
+      "name": "Grandes-Loges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51279",
+      "name": "Granges-sur-Aube",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51281",
+      "name": "Grauves",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51282",
+      "name": "Gueux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51285",
+      "name": "Haussimont",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51287",
+      "name": "Hautvillers",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51291",
+      "name": "Hermonville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51293",
+      "name": "Heutrégiville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51294",
+      "name": "Hourges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51295",
+      "name": "Huiron",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51298",
+      "name": "Igny-Comblizy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51299",
+      "name": "Isles-sur-Suippe",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51301",
+      "name": "Isse",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51302",
+      "name": "Istres-et-Bury",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51303",
+      "name": "Jâlons",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51304",
+      "name": "Janvilliers",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51305",
+      "name": "Janvry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51306",
+      "name": "Joiselle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51307",
+      "name": "Jonchery-sur-Suippe",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51308",
+      "name": "Jonchery-sur-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51309",
+      "name": "Jonquery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51310",
+      "name": "Jouy-lès-Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51312",
+      "name": "Juvigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51313",
+      "name": "Lachy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51314",
+      "name": "Lagery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51318",
+      "name": "Lavannes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51319",
+      "name": "Lenharrée",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51320",
+      "name": "Leuvrigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51321",
+      "name": "Lhéry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51323",
+      "name": "Linthelles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51324",
+      "name": "Linthes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51325",
+      "name": "Lisse-en-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51326",
+      "name": "Livry-Louvercy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51327",
+      "name": "Loisy-en-Brie",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51328",
+      "name": "Loisy-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51329",
+      "name": "Loivre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51331",
+      "name": "Louvois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51333",
+      "name": "Ludes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51334",
+      "name": "Luxémont-et-Villotte",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51337",
+      "name": "Magneux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51338",
+      "name": "Mailly-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51339",
+      "name": "Mairy-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51340",
+      "name": "Maisons-en-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51342",
+      "name": "Mancy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51343",
+      "name": "Marcilly-sur-Seine",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51344",
+      "name": "Mardeuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51345",
+      "name": "Mareuil-en-Brie",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51346",
+      "name": "Mareuil-le-Port",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51347",
+      "name": "Mareuil-sur-Ay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51348",
+      "name": "Marfaux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51350",
+      "name": "Margny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51351",
+      "name": "Marigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51352",
+      "name": "Marolles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51353",
+      "name": "Marsangis",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51354",
+      "name": "Marson",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51357",
+      "name": "Matougues",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51359",
+      "name": "Mécringes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51360",
+      "name": "Meix-Saint-Epoing",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51362",
+      "name": "Merfy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51363",
+      "name": "Merlaut",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51364",
+      "name": "Méry-Prémecy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51365",
+      "name": "Mesneux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51367",
+      "name": "Mesnil-sur-Oger",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51369",
+      "name": "Murs-Verdey",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51371",
+      "name": "Moivre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51372",
+      "name": "Moncetz-Longevas",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51374",
+      "name": "Mondement-Montgivroux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51375",
+      "name": "Montbré",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51376",
+      "name": "Montgenost",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51377",
+      "name": "Montépreux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51378",
+      "name": "Monthelon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51379",
+      "name": "Montigny-sur-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51380",
+      "name": "Montmirail",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51381",
+      "name": "Montmort-Lucy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51382",
+      "name": "Mont-sur-Courville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51384",
+      "name": "Morangis",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51386",
+      "name": "Morsains",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51387",
+      "name": "Moslins",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51388",
+      "name": "Mourmelon-le-Grand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51389",
+      "name": "Mourmelon-le-Petit",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51390",
+      "name": "Moussy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51391",
+      "name": "Muizon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51392",
+      "name": "Mutigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51393",
+      "name": "Nanteuil-la-Forêt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51395",
+      "name": "Nesle-la-Reposte",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51396",
+      "name": "Nesle-le-Repons",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51398",
+      "name": "Neuville-aux-Larris",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51402",
+      "name": "Neuvy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51403",
+      "name": "Nogent-l'Abbesse",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51407",
+      "name": "Noue",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51409",
+      "name": "Nuisement-sur-Coole",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51410",
+      "name": "uilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51411",
+      "name": "Oger",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51412",
+      "name": "Ognes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51413",
+      "name": "Oiry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51414",
+      "name": "Olizy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51415",
+      "name": "Omey",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51416",
+      "name": "Orbais-l'Abbaye",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51418",
+      "name": "Ormes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51420",
+      "name": "Outrepont",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51421",
+      "name": "Oyes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51422",
+      "name": "Pargny-lès-Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51425",
+      "name": "Passy-Grigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51426",
+      "name": "Péas",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51428",
+      "name": "Petites-Loges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51429",
+      "name": "Pévy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51430",
+      "name": "Pierre-Morains",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51431",
+      "name": "Pierry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51432",
+      "name": "Pleurs",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51434",
+      "name": "Plivot",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51435",
+      "name": "Pocancy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51436",
+      "name": "Pogny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51437",
+      "name": "Poilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51438",
+      "name": "Poix",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51439",
+      "name": "Pomacle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51440",
+      "name": "Pontfaverger-Moronvilliers",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51443",
+      "name": "Potangis",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51444",
+      "name": "Pouillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51445",
+      "name": "Pourcy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51446",
+      "name": "Pringy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51447",
+      "name": "Prosnes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51448",
+      "name": "Prouilly",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51449",
+      "name": "Prunay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51450",
+      "name": "Puisieulx",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51451",
+      "name": "Queudes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51453",
+      "name": "Recy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51454",
+      "name": "Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51457",
+      "name": "Reuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51458",
+      "name": "Reuves",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51459",
+      "name": "Réveillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51460",
+      "name": "Rieux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51461",
+      "name": "Rilly-la-Montagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51464",
+      "name": "Romain",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51465",
+      "name": "Romery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51466",
+      "name": "Romigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51468",
+      "name": "Rosnay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51469",
+      "name": "Rouffy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51471",
+      "name": "Sacy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51472",
+      "name": "Saint-Amand-sur-Fion",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51473",
+      "name": "Saint-Bon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51474",
+      "name": "Saint-Brice-Courcelles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51476",
+      "name": "Saint-Étienne-au-Temple",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51477",
+      "name": "Saint-Étienne-sur-Suippe",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51479",
+      "name": "Saint-Euphraise-et-Clairizet",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51480",
+      "name": "Sainte-Gemme",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51482",
+      "name": "Saint-Germain-la-Ville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51483",
+      "name": "Saint-Gibrien",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51484",
+      "name": "Saint-Gilles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51485",
+      "name": "Saint-Hilaire-au-Temple",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51486",
+      "name": "Saint-Hilaire-le-Grand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51487",
+      "name": "Saint-Hilaire-le-Petit",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51488",
+      "name": "Saint-Imoges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51490",
+      "name": "Saint-Jean-sur-Moivre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51492",
+      "name": "Saint-Just-Sauvage",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51493",
+      "name": "Saint-Léonard",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51495",
+      "name": "Saint-Loup",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51496",
+      "name": "Saint-Lumier-en-Champagne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51499",
+      "name": "Saint-Mard-lès-Rouffy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51502",
+      "name": "Saint-Martin-aux-Champs",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51503",
+      "name": "Saint-Martin-l'Heureux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51504",
+      "name": "Saint-Martin-sur-le-Pré",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51505",
+      "name": "Saint-Masmes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51506",
+      "name": "Saint-Memmie",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51509",
+      "name": "Saint-Pierre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51510",
+      "name": "Saint-Quentin-les-Marais",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51511",
+      "name": "Saint-Quentin-le-Verger",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51512",
+      "name": "Saint-Quentin-sur-Coole",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51514",
+      "name": "Saint-Remy-sous-Broyes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51516",
+      "name": "Saint-Saturnin",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51517",
+      "name": "Saint-Souplet-sur-Py",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51518",
+      "name": "Saint-Thierry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51523",
+      "name": "Sarcy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51524",
+      "name": "Saron-sur-Aube",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51525",
+      "name": "Sarry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51526",
+      "name": "Saudoy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51527",
+      "name": "Savigny-sur-Ardres",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51529",
+      "name": "Selles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51530",
+      "name": "Sept-Saulx",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51532",
+      "name": "Sermiers",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51534",
+      "name": "Serzy-et-Prin",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51535",
+      "name": "Sézanne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51536",
+      "name": "Sillery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51538",
+      "name": "Sogny-aux-Moulins",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51542",
+      "name": "Soizy-aux-Bois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51548",
+      "name": "Somme-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51552",
+      "name": "Songy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51553",
+      "name": "Souain-Perthes-lès-Hurlus",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51556",
+      "name": "Soudron",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51557",
+      "name": "Soulanges",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51558",
+      "name": "Soulières",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51559",
+      "name": "Suippes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51560",
+      "name": "Suizy-le-Franc",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51562",
+      "name": "Taissy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51563",
+      "name": "Talus-Saint-Prix",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51564",
+      "name": "Val de Livre",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51565",
+      "name": "Thaas",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51566",
+      "name": "Thibie",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51568",
+      "name": "Thil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51569",
+      "name": "Thillois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51570",
+      "name": "Thoult-Trosnay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51571",
+      "name": "Val-de-Vesle",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51573",
+      "name": "Tinqueux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51574",
+      "name": "Togny-aux-Bufs",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51576",
+      "name": "Tours-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51577",
+      "name": "Tramery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51578",
+      "name": "Trécon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51579",
+      "name": "Tréfols",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51580",
+      "name": "Trépail",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51581",
+      "name": "Treslon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51582",
+      "name": "Trigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51584",
+      "name": "Trois-Puits",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51585",
+      "name": "Troissy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51586",
+      "name": "Unchair",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51587",
+      "name": "Vadenay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51589",
+      "name": "Vanault-le-Châtel",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51590",
+      "name": "Vanault-les-Dames",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51591",
+      "name": "Vandeuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51592",
+      "name": "Vandières",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51594",
+      "name": "Vassimont-et-Chapelaine",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51595",
+      "name": "Vatry",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51596",
+      "name": "Vauchamps",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51597",
+      "name": "Vauciennes",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51599",
+      "name": "Vaudemange",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51600",
+      "name": "Vaudesincourt",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51601",
+      "name": "Vavray-le-Grand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51602",
+      "name": "Vavray-le-Petit",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51603",
+      "name": "Vélye",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51604",
+      "name": "Ventelay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51605",
+      "name": "Venteuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51607",
+      "name": "Verdon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51609",
+      "name": "Verneuil",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51611",
+      "name": "Vert-Toulon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51612",
+      "name": "Blancs-Coteaux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51613",
+      "name": "Verzenay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51614",
+      "name": "Verzy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51616",
+      "name": "Vésigneul-sur-Marne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51617",
+      "name": "Veuve",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51618",
+      "name": "Vézier",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51622",
+      "name": "Ville-Dommange",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51623",
+      "name": "Ville-en-Selve",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51624",
+      "name": "Ville-en-Tardenois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51625",
+      "name": "Villeneuve-la-Lionne",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51626",
+      "name": "Villeneuve-lès-Charleville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51627",
+      "name": "Villeneuve-Renneville-Chevigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51628",
+      "name": "Villeneuve-Saint-Vistre-et-Villevotte",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51629",
+      "name": "Villers-Allerand",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51630",
+      "name": "Villers-aux-Bois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51631",
+      "name": "Villers-aux-Nuds",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51633",
+      "name": "Villers-Franqueux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51634",
+      "name": "Villers-le-Château",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51636",
+      "name": "Villers-Marmery",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51637",
+      "name": "Villers-sous-Châtillon",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51638",
+      "name": "Villeseneux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51639",
+      "name": "Ville-sous-Orbais",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51641",
+      "name": "Villevenard",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51642",
+      "name": "Villiers-aux-Corneilles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51643",
+      "name": "Vinay",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51644",
+      "name": "Vincelles",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51645",
+      "name": "Vindey",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51647",
+      "name": "Vitry-en-Perthois",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51648",
+      "name": "Vitry-la-Ville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51649",
+      "name": "Vitry-le-François",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51651",
+      "name": "Voipreux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51652",
+      "name": "Vouarces",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51655",
+      "name": "Vouzy",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51656",
+      "name": "Vraux",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51657",
+      "name": "Vrigny",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51660",
+      "name": "Warmeriville",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51662",
+      "name": "Witry-lès-Reims",
+      "department": "MARNE"
+    },
+    {
+      "insee": "51663",
+      "name": "Magenta",
+      "department": "MARNE"
+    },
+    {
+      "insee": "52018",
+      "name": "Argentolles",
+      "department": "HAUTE-MARNE"
+    },
+    {
+      "insee": "52426",
+      "name": "Rizaucourt-Buchey",
+      "department": "HAUTE-MARNE"
+    },
+    {
+      "insee": "77117",
+      "name": "Citry",
+      "department": "SEINE-ET-MARNE"
+    },
+    {
+      "insee": "77290",
+      "name": "Méry-sur-Marne",
+      "department": "SEINE-ET-MARNE"
+    },
+    {
+      "insee": "77331",
+      "name": "Nanteuil-sur-Marne",
+      "department": "SEINE-ET-MARNE"
+    },
+    {
+      "insee": "77397",
+      "name": "Saâcy-sur-Marne",
+      "department": "SEINE-ET-MARNE"
+    },
+    {
+      "insee": "77401",
+      "name": "Sainte-Aulde",
+      "department": "SEINE-ET-MARNE"
+    }
+  ]
+}
