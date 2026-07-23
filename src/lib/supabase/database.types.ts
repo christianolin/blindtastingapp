@@ -760,6 +760,18 @@ export type Database = {
         Args: { p_wine_id: string };
         Returns: void;
       };
+      reveal_next_category: {
+        Args: { p_wine_id: string; p_expected_step: number };
+        Returns: number;
+      };
+      reveal_own_next_category: {
+        Args: { p_wine_id: string; p_expected_step: number };
+        Returns: number;
+      };
+      get_wine_reveal: {
+        Args: { p_wine_id: string };
+        Returns: unknown;
+      };
       search_appellations: {
         Args: { p_query: string; p_region_id?: string };
         Returns: { id: string; name: string }[];

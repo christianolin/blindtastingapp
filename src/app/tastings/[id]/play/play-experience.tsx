@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { GuessForm, type ExistingGuess } from "./guess-form";
 import { MatchGuessForm, type MatchGlass } from "./match-guess-form";
 import { RevealButton } from "./reveal-button";
+import { RevealControls } from "./reveal-controls";
+import { ProgressiveWineReveal } from "./progressive-wine-reveal";
 
 // One aligned row per scored attribute — the correct value, the taster's
 // guess, and the points — so the score reads as an auditable result sheet
@@ -100,6 +102,10 @@ export async function PlayExperience({
 
   const isHost = tasting.host_id === user.id;
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
+  const guidedLive =
+    tasting.timing_mode === "LIVE" &&
+    tasting.sequential_guessing &&
+    !isSemiBlind;
   // The host who provided all the wines set the answers — they host, they
   // don't guess. (In bring-your-own the host guesses everyone else's bottles.)
   const hostProvidesHost = tasting.wine_source === "HOST_PROVIDES" && isHost;
@@ -123,7 +129,7 @@ export async function PlayExperience({
   ] = await Promise.all([
     supabase
       .from("wines")
-      .select("id, position, is_revealed, contributor_participant_id")
+      .select("id, position, is_revealed, contributor_participant_id, reveal_step")
       .eq("tasting_id", tastingId)
       .order("position"),
     supabase.from("countries").select("id, name").order("name"),
@@ -617,16 +623,30 @@ export async function PlayExperience({
                 <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                  {/* Reveal lives on each wine card (its natural home now the
-                      left rail is gone) for the host, in every layout. */}
+                  {/* Guided live tastings get progressive controls (reveal one
+                      attribute at a time or skip to full); everything else the
+                      plain full-reveal button. */}
                   {isHost && !wine.is_revealed && !finished ? (
-                    <RevealButton tastingId={tastingId} wineId={wine.id} />
+                    guidedLive ? (
+                      <RevealControls
+                        wineId={wine.id}
+                        revealStep={wine.reveal_step ?? 0}
+                        started={(wine.reveal_step ?? 0) > 0}
+                      />
+                    ) : (
+                      <RevealButton tastingId={tastingId} wineId={wine.id} />
+                    )
                   ) : null}
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {resolved && answer ? (
+              {guidedLive && !wine.is_revealed && (wine.reveal_step ?? 0) > 0 ? (
+                <ProgressiveWineReveal
+                  wineId={wine.id}
+                  myParticipantId={myParticipant.id}
+                />
+              ) : resolved && answer ? (
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="mb-1 text-sm font-medium">Answer</h3>
