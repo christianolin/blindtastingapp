@@ -173,8 +173,8 @@
   {
     "canonical_key": "france.bourgogne",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:bourgogne-region-closed",
-    "normalized_checksum_sha256": "79DE4161D6E408F404CB83B00D53140DACF9517AE433CF2DA7BD6EEC7ED1ADD3",
+    "source_feature_id": "derived:bourgogne-region-covered2",
+    "normalized_checksum_sha256": "7194FC1549234CCD2CD594B01898C9762EDA4707959F7C210D33D08301355653",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -182,8 +182,8 @@
   {
     "canonical_key": "france.bourgogne.chablis",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:chablis-district-closed",
-    "normalized_checksum_sha256": "B6D1DE7C25BE39EBF2B5763D2C2BE14AFF200517BD862655146CFCB157675987",
+    "source_feature_id": "derived:chablis-district-covered",
+    "normalized_checksum_sha256": "45687C25D4B2FAB51290FDAFD89D09BE3DEFE107B7F8972060C8D9BFC69183F2",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -227,8 +227,8 @@
   {
     "canonical_key": "france.bourgogne.cote-chalonnaise",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:chalonnaise-district-closed",
-    "normalized_checksum_sha256": "E1405EFC8B37CA2C7FB0692873FCF705EC866F5510501C91E298E428F97869D6",
+    "source_feature_id": "derived:chalonnaise-district-covered",
+    "normalized_checksum_sha256": "A57C764145861981346797F225EA8375F2612D3ADABCCF984284F631247124AE",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -317,8 +317,8 @@
   {
     "canonical_key": "france.bourgogne.cote-de-beaune",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:cdb-district-closed",
-    "normalized_checksum_sha256": "6FC7AFCF757EF989BA746C82E52051E7E18F010A2DDADB102CDCDD3A69E9FD28",
+    "source_feature_id": "derived:cdb-district-covered",
+    "normalized_checksum_sha256": "F6E958944EB8BDEF7E693111A0801DE44F0CF2B721437D3D1808451E16BF67D7",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -686,8 +686,8 @@
   {
     "canonical_key": "france.bourgogne.cote-de-nuits",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:cdn-district-closed",
-    "normalized_checksum_sha256": "6D77F52A3776FB66C7AEC0770EC452A92E33ADA6D8DB99DA9A31FB8C2E958055",
+    "source_feature_id": "derived:cdn-district-covered",
+    "normalized_checksum_sha256": "07A563AEB79D554866245E048E00D7B159FA1806F951B47721BD086507738532",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -1163,8 +1163,8 @@
   {
     "canonical_key": "france.bourgogne.grand-auxerrois",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:auxerrois-district-closed",
-    "normalized_checksum_sha256": "FCB897E493F86DFB8FC860350264F8FAA232EC4C3DA856E55E0C123630FE07A3",
+    "source_feature_id": "derived:auxerrois-district-covered",
+    "normalized_checksum_sha256": "114AFFD57E9E7858B89217EA7D4F5E96C3FCB55DDB532B4B09C4215663BD7C5F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -1199,8 +1199,8 @@
   {
     "canonical_key": "france.bourgogne.maconnais",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:maconnais-district-closed",
-    "normalized_checksum_sha256": "87DD665E77AEDE97C7B0ACAFDCEA1FD2C4168EAB494133B5E082EE37C7881010",
+    "source_feature_id": "derived:maconnais-district-covered",
+    "normalized_checksum_sha256": "8D95C01A38608D599B621EAB0347BB95F2EB7FF3210126373051A931F8AFA604",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true

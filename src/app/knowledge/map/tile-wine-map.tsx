@@ -134,24 +134,21 @@ function selectedFilter(selectedKey: string | null) {
   return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
 }
 
-// Progressive labels: what matters at the current level — the selected
-// place, its direct children, AND its siblings (same parent), so a selected
-// Margaux still shows Pauillac and Saint-Julien for context. Regions only
-// when nothing is selected. Cuts clutter without losing orientation.
-function labelFilter(
-  selectedKey: string | null,
+// Labels are never hidden by selection (owner: dropping progressive
+// hiding) — everything renders and the collision engine trims only where
+// labels would overlap. Selection instead drives a three-tier weight
+// system: selected loudest, related places (children, siblings, the
+// parent) full presence, distant places lighter and last in collision.
+function relatedExpression(
   selectedId: string | null,
   selectedParentId: string | null,
 ) {
-  if (!selectedKey) {
-    return ["<=", ["get", "tier"], 1] as unknown as boolean;
-  }
   return [
     "any",
-    ["==", ["get", "key"], selectedKey],
     ["==", ["get", "parent_id"], selectedId ?? "__none__"],
     ["==", ["get", "parent_id"], selectedParentId ?? "__none__"],
-  ] as unknown as boolean;
+    ["==", ["get", "id"], selectedParentId ?? "__none__"],
+  ];
 }
 
 // Typography hierarchy: regions largest (uppercase, spaced), then steadily
@@ -162,31 +159,61 @@ function labelFilter(
 const LABEL_TIER_SIZE = [
   "match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10,
 ];
-function labelLayout(selectedKey: string | null) {
-  const sel = ["==", ["get", "key"], selectedKey ?? ""];
-  return {
+function labelLayout(
+  selectedKey: string | null,
+  selectedId: string | null,
+  selectedParentId: string | null,
+) {
+  const base = {
     "text-field": ["get", "name"] as unknown as string,
-    "text-size": [
-      "+", LABEL_TIER_SIZE, ["case", sel, 2.5, 0],
-    ] as unknown as number,
     "text-transform": [
       "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
     ] as unknown as "none",
     "text-letter-spacing": [
       "match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02,
     ] as unknown as number,
+  };
+  if (!selectedKey) {
+    return {
+      ...base,
+      "text-size": LABEL_TIER_SIZE as unknown as number,
+      "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
+    };
+  }
+  const sel = ["==", ["get", "key"], selectedKey];
+  const related = relatedExpression(selectedId, selectedParentId);
+  return {
+    ...base,
+    "text-size": [
+      "+", LABEL_TIER_SIZE, ["case", sel, 2.5, related, 0, -0.5],
+    ] as unknown as number,
     "symbol-sort-key": [
-      "case", sel, -1, ["-", 10, ["get", "tier"]],
+      "case", sel, -2, related, -1, ["-", 10, ["get", "tier"]],
     ] as unknown as number,
   };
 }
-function labelPaint(selectedKey: string | null) {
-  const sel = ["==", ["get", "key"], selectedKey ?? ""];
+function labelPaint(
+  selectedKey: string | null,
+  selectedId: string | null,
+  selectedParentId: string | null,
+) {
+  if (!selectedKey) {
+    return {
+      "text-color": "#2b0f18",
+      "text-opacity": 1 as unknown as number,
+      "text-halo-color": "#FFFDF7",
+      "text-halo-width": 1.7 as unknown as number,
+    };
+  }
+  const sel = ["==", ["get", "key"], selectedKey];
+  const related = relatedExpression(selectedId, selectedParentId);
   return {
-    "text-color": ["case", sel, "#1d0a11", "#6b5560"] as unknown as string,
-    "text-opacity": ["case", sel, 1, 0.92] as unknown as number,
+    "text-color": [
+      "case", sel, "#1d0a11", related, "#3a2830", "#7a666f",
+    ] as unknown as string,
+    "text-opacity": ["case", sel, 1, related, 0.95, 0.8] as unknown as number,
     "text-halo-color": "#FFFDF7",
-    "text-halo-width": ["case", sel, 2.2, 1.5] as unknown as number,
+    "text-halo-width": ["case", sel, 2.2, related, 1.7, 1.3] as unknown as number,
   };
 }
 
@@ -498,11 +525,9 @@ export function TileWineMap({
             id="world-labels"
             type="symbol"
             source-layer="labels"
-            filter={
-              ["all", worldFilter, labelFilter(selectedKey, selectedId, selectedParentId)] as unknown as boolean
-            }
-            layout={labelLayout(selectedKey)}
-            paint={labelPaint(selectedKey)}
+            filter={worldFilter}
+            layout={labelLayout(selectedKey, selectedId, selectedParentId)}
+            paint={labelPaint(selectedKey, selectedId, selectedParentId)}
           />
         </Source>
         {activeShard ? (
@@ -542,9 +567,8 @@ export function TileWineMap({
               id="shard-labels"
               type="symbol"
               source-layer="labels"
-              filter={labelFilter(selectedKey, selectedId, selectedParentId)}
-              layout={labelLayout(selectedKey)}
-              paint={labelPaint(selectedKey)}
+              layout={labelLayout(selectedKey, selectedId, selectedParentId)}
+              paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
           </Source>
         ) : null}

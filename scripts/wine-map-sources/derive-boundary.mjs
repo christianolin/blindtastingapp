@@ -66,9 +66,17 @@ try {
                 extensions.ST_SimplifyPreserveTopology(g, $2)), 3) g
        from closed
      ),
+     -- Coverage guarantee: union the processed shape back with the raw
+     -- children so no closing arc or simplification cut can ever slice
+     -- inside a child footprint (owner: "overlapping must not happen").
+     covered as (
+       select extensions.ST_CollectionExtract(extensions.ST_MakeValid(
+                extensions.ST_Union(s.g, u.g)), 3) g
+       from simplified s, u
+     ),
      parts as (
        select (extensions.ST_Dump(g)).geom part, extensions.ST_Area(g) total
-       from simplified
+       from covered
      )
      select extensions.ST_AsGeoJSON(
               extensions.ST_Multi(extensions.ST_Collect(part)), 4) geojson
@@ -84,6 +92,7 @@ try {
     simplify_tolerance: tolerance,
     closing,
     min_part_share: minPartShare,
+    coverage_union: true,
     coordinate_precision: 4,
     child_boundary_ids: children.rows.map(({ id }) => id),
   };
