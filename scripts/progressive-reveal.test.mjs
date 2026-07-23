@@ -133,3 +133,67 @@ test("schema: reveal_step + leaderboard_reveal exist with defaults", async () =>
     assert.equal(t.rows[0].leaderboard_reveal, "PER_ATTRIBUTE");
   });
 });
+
+test("reveal_next_category: advances one category, scores it, idempotent", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.hostUserId);
+    const r1 = await client.query(
+      "select reveal_next_category($1, $2::smallint) as step",
+      [s.wineId, 0],
+    );
+    assert.equal(r1.rows[0].step, 1);
+    const g = await client.query(
+      "select country_points, region_points from guesses where wine_id=$1",
+      [s.wineId],
+    );
+    for (const row of g.rows) assert.equal(row.country_points, 2);
+    for (const row of g.rows) assert.equal(row.region_points, null);
+    const w = await client.query(
+      "select reveal_step, is_revealed from wines where id=$1",
+      [s.wineId],
+    );
+    assert.equal(w.rows[0].reveal_step, 1);
+    assert.equal(w.rows[0].is_revealed, false);
+    const again = await client.query(
+      "select reveal_next_category($1, $2::smallint) as step",
+      [s.wineId, 0],
+    );
+    assert.equal(again.rows[0].step, 1);
+  });
+});
+
+test("reveal_next_category: full sequence matches reveal_wine + sets is_revealed", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.hostUserId);
+    let step = 0;
+    for (let i = 0; i < 5; i += 1) {
+      const r = await client.query(
+        "select reveal_next_category($1, $2::smallint) as step",
+        [s.wineId, step],
+      );
+      step = r.rows[0].step;
+    }
+    assert.equal(step, 5);
+    const w = await client.query("select is_revealed from wines where id=$1", [s.wineId]);
+    assert.equal(w.rows[0].is_revealed, true);
+    const g = await client.query(
+      "select total_points from guesses where wine_id=$1 order by total_points desc",
+      [s.wineId],
+    );
+    assert.equal(g.rows[0].total_points, 23);
+    assert.equal(g.rows[1].total_points, 11);
+  });
+});
+
+test("reveal_next_category: a plain guesser cannot advance a host-provided wine", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.p1UserId);
+    await assert.rejects(
+      client.query("select reveal_next_category($1, $2::smallint)", [s.wineId, 0]),
+      /host or the wine owner/,
+    );
+  });
+});
