@@ -241,6 +241,7 @@ export function TileWineMapExplorer({
               <TileWineMap
                 manifest={manifest}
                 selectedKey={selectedKey}
+                selectedId={context?.place.id ?? null}
                 cameraTarget={cameraTarget}
                 onSelect={select}
                 expanded={expanded}

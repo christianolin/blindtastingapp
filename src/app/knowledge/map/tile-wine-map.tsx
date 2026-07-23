@@ -123,9 +123,43 @@ function selectedFilter(selectedKey: string | null) {
   return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
 }
 
+// Progressive labels: only what matters at the current level — the selected
+// place and its direct children (tiles carry parent_id); regions only when
+// nothing is selected. Cuts label clutter without hiding shapes.
+function labelFilter(selectedKey: string | null, selectedId: string | null) {
+  if (!selectedKey) {
+    return ["<=", ["get", "tier"], 1] as unknown as boolean;
+  }
+  return [
+    "any",
+    ["==", ["get", "key"], selectedKey],
+    ["==", ["get", "parent_id"], selectedId ?? "__none__"],
+  ] as unknown as boolean;
+}
+
+// Typography hierarchy: regions largest (uppercase, spaced), then steadily
+// smaller through subregions, appellations and crus — the map itself
+// communicates depth.
+const LABEL_LAYOUT = {
+  "text-field": ["get", "name"] as unknown as string,
+  "text-size": [
+    "match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10,
+  ] as unknown as number,
+  "text-transform": [
+    "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
+  ] as unknown as "none",
+  "text-letter-spacing": [
+    "match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02,
+  ] as unknown as number,
+  // Deeper (smaller) places label first so commune names survive collision
+  // against their parent's label.
+  "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
+};
+
 export function TileWineMap({
   manifest,
   selectedKey,
+  selectedId,
   cameraTarget,
   onSelect,
   expanded,
@@ -133,6 +167,8 @@ export function TileWineMap({
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
+  /** The selected place's id — lets label/fade rules target its children. */
+  selectedId: string | null;
   cameraTarget: CameraTarget | null;
   onSelect: (key: string) => void;
   expanded: boolean;
@@ -219,50 +255,45 @@ export function TileWineMap({
   // parent included — as children appear, while outlines and labels persist
   // (spec: "the selected parent's fill fades while its outline and single
   // label remain").
-  const fillPaint = useMemo(
-    () => ({
+  const fillPaint = useMemo(() => {
+    const sel = ["==", ["get", "key"], selectedKey ?? ""];
+    const child = ["==", ["get", "parent_id"], selectedId ?? "__none__"];
+    const hasSelection = selectedKey !== null;
+    // Focus wrapper per zoom stop: the selection pops, its direct children
+    // keep full presence (you drill into them), everything else fades to
+    // 45% of its normal opacity. The selected fill still relaxes at deep
+    // zoom so children render readably on top of it.
+    const focus = (selectedOpacity: number, base: unknown) =>
+      hasSelection
+        ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
+        : ["case", sel, selectedOpacity, base];
+    return {
       "fill-color": fillColorExpression(paintGroups),
       "fill-opacity": [
         "interpolate",
         ["linear"],
         ["zoom"],
         5,
-        [
-          "case",
-          ["==", ["get", "key"], selectedKey ?? ""],
-          0.55,
-          ["min", 0.5, ["*", 0.16, ["get", "tier"]]],
-        ],
+        focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
         9,
-        [
-          "case",
-          ["==", ["get", "key"], selectedKey ?? ""],
-          0.18,
-          ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
-        ],
+        focus(0.25, ["min", 0.5, ["*", 0.08, ["get", "tier"]]]),
         10,
         // Classification palette takes over: crus read as solid plots,
         // village land stays a light regional wash.
-        [
-          "case",
-          ["==", ["get", "key"], selectedKey ?? ""],
-          0.4,
-          [
-            "match",
-            ["get", "level"],
-            "grand_cru",
-            0.55,
-            "premier_cru",
-            0.38,
-            "communal",
-            0.16,
-            0.1,
-          ],
-        ],
+        focus(0.32, [
+          "match",
+          ["get", "level"],
+          "grand_cru",
+          0.55,
+          "premier_cru",
+          0.38,
+          "communal",
+          0.16,
+          0.1,
+        ]),
       ] as unknown as number,
-    }),
-    [selectedKey, paintGroups],
-  );
+    };
+  }, [selectedKey, selectedId, paintGroups]);
 
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
@@ -415,8 +446,10 @@ export function TileWineMap({
             id="world-labels"
             type="symbol"
             source-layer="labels"
-            filter={worldFilter}
-            layout={{ "text-field": ["get", "name"], "text-size": 12 }}
+            filter={
+              ["all", worldFilter, labelFilter(selectedKey, selectedId)] as unknown as boolean
+            }
+            layout={LABEL_LAYOUT}
             paint={{
               "text-color": "#2b0f18",
               "text-halo-color": "#FFFDF7",
@@ -461,13 +494,8 @@ export function TileWineMap({
               id="shard-labels"
               type="symbol"
               source-layer="labels"
-              layout={{
-                "text-field": ["get", "name"],
-                "text-size": 12,
-                // Deeper (smaller) places label first so commune names
-                // survive collision against their parent's label.
-                "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
-              }}
+              filter={labelFilter(selectedKey, selectedId)}
+              layout={LABEL_LAYOUT}
               paint={{
                 // Strong near-white halo keeps names legible on the solid
                 // cru fills (owner: labels were muddy on dark red).
