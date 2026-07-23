@@ -300,3 +300,22 @@ test("get_wine_reveal: a non-participant gets null", async () => {
     assert.equal(r.rows[0].j, null);
   });
 });
+
+test("skip-to-full: reveal_wine forces reveal_step to the in-play count", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.hostUserId);
+    await client.query("select reveal_wine($1)", [s.wineId]);
+    const w = await client.query(
+      "select reveal_step, is_revealed from wines where id=$1",
+      [s.wineId],
+    );
+    assert.equal(w.rows[0].is_revealed, true);
+    assert.equal(w.rows[0].reveal_step, 5);
+    const r = await client.query(
+      "select reveal_next_category($1, $2::smallint) as step",
+      [s.wineId, 5],
+    );
+    assert.equal(r.rows[0].step, 5);
+  });
+});
