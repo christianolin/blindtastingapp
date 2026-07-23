@@ -202,7 +202,7 @@ export function HostControls({
           </p>
         )}
 
-        {showSequentialToggle ? (
+        {showSequentialToggle && notStarted ? (
           <form action={setSequentialGuessing} className="flex flex-col gap-2">
             <input type="hidden" name="tasting_id" value={tastingId} />
             <input

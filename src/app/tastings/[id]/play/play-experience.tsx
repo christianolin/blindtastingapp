@@ -190,6 +190,22 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     ? ((wines ?? []).find((w) => w.id === currentWineId)?.position ?? null)
     : null;
 
+  // The one wine the player should focus on now: the guided current wine, or
+  // (free mode) the first wine they can still guess. Its card gets the
+  // "Now tasting" spotlight; everything else reads as secondary.
+  const activeWineId =
+    isSemiBlind || finished
+      ? null
+      : sequential
+        ? currentWineId
+        : ((wines ?? []).find(
+            (w) =>
+              !w.is_revealed &&
+              !resolvedForMe(w.id, w.is_revealed) &&
+              w.contributor_participant_id !== myParticipant.id &&
+              !(tasting.wine_source === "HOST_PROVIDES" && isHost),
+          )?.id ?? null);
+
   const answerWineIds = [
     ...new Set(
       (wines ?? [])
@@ -250,6 +266,43 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
     .map((a) => ({ id: a.wine_id, name: describeAnswer(a) }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Live leaderboard: running totals across every revealed wine, plus the
+  // points each taster gained on the most recently revealed wine (the
+  // "this round" delta that makes reveals feel like they move the standings).
+  const lastRevealedWine = (wines ?? [])
+    .filter((w) => w.is_revealed)
+    .sort((a, b) => b.position - a.position)[0];
+  const leaderboard = (() => {
+    if (revealedWineIds.length === 0) return [];
+    const totals = new Map<string, number>();
+    const lastRound = new Map<string, number>();
+    for (const g of allRevealedGuesses ?? []) {
+      totals.set(
+        g.participant_id,
+        (totals.get(g.participant_id) ?? 0) + (g.total_points ?? 0),
+      );
+      if (lastRevealedWine && g.wine_id === lastRevealedWine.id) {
+        lastRound.set(g.participant_id, g.total_points ?? 0);
+      }
+    }
+    return joinedParticipants
+      .filter(
+        (p) =>
+          !(
+            tasting.wine_source === "HOST_PROVIDES" &&
+            p.user_id === tasting.host_id
+          ),
+      )
+      .map((p) => ({
+        participantId: p.id,
+        name: nameByParticipantId.get(p.id) ?? "Someone",
+        isMe: p.id === myParticipant.id,
+        total: totals.get(p.id) ?? 0,
+        delta: lastRound.get(p.id) ?? 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+  })();
+
   const breakdown = (g: Guess) => {
     const rows: { key: string; guessed: string; points: number }[] = [];
     const push = (key: string, guessed: string, points: number | null) => {
@@ -292,6 +345,56 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
               style={{ width: `${progressPct}%` }}
             />
           </div>
+        </div>
+      ) : null}
+
+      {/* Live leaderboard — updates on every reveal, with the points each
+          taster gained on the last wine so the standings feel alive. */}
+      {!isSemiBlind && leaderboard.length > 0 ? (
+        <div className="rounded-xl border">
+          <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2">
+            <span className="font-heading text-sm font-semibold">Leaderboard</span>
+            <span className="text-xs text-muted-foreground">
+              after {revealedCount} of {totalWines}
+            </span>
+          </div>
+          <ol className="flex flex-col">
+            {leaderboard.map((row, i) => (
+              <li
+                key={row.participantId}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2",
+                  i > 0 && "border-t border-border/60",
+                  row.isMe && "bg-primary/5",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+                    i === 0
+                      ? "bg-gold/20 text-gold-deep"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {i + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {row.name}
+                  {row.isMe ? (
+                    <span className="text-muted-foreground"> (you)</span>
+                  ) : null}
+                </span>
+                {row.delta > 0 ? (
+                  <span className="rounded-full bg-[#3f5b42]/12 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-[#3f5b42]">
+                    +{row.delta}
+                  </span>
+                ) : null}
+                <span className="w-12 text-right font-heading text-sm font-semibold tabular-nums">
+                  {row.total}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       ) : null}
 
@@ -378,9 +481,22 @@ export async function PlayExperience({ tastingId }: { tastingId: string }) {
               .sort((a, b) => (b.total_points ?? 0) - (a.total_points ?? 0))
           : [];
 
+        const isActive = wine.id === activeWineId;
+
         return (
-          <Card key={wine.id}>
+          <Card
+            key={wine.id}
+            className={cn(
+              isActive && "border-primary/50 shadow-md ring-1 ring-primary/30",
+              !isActive && !wine.is_revealed && !resolved && "opacity-80",
+            )}
+          >
             <CardHeader>
+              {isActive ? (
+                <span className="mb-1 w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+                  Now tasting
+                </span>
+              ) : null}
               <CardTitle className="flex items-center justify-between gap-2">
                 <span className="min-w-0 truncate">{wineTitle(wine)}</span>
                 <div className="flex items-center gap-2">
