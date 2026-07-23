@@ -891,6 +891,222 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.aux-beaux-bruns",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-aux-beaux-bruns",
+    "normalized_checksum_sha256": "850A39B57B8B8337FB8A497324EB5713D45D7D66C321F87BE152EAD680678B94",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132238Z/chambolle-musigny-1er-aux-beaux-bruns/fetch-manifest.json",
+    "raw_checksum_sha256": "1A0AED1DE7CEF4AB26E4DAA00721591C632E8CC6A236994D6C249237CFCC86B2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.aux-combottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-aux-combottes",
+    "normalized_checksum_sha256": "AF6B589F5B486F28BEB4F4183F4E16E6ED9FFDAA0C3CCD49FEA826D3EDDB3660",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132239Z/chambolle-musigny-1er-aux-combottes/fetch-manifest.json",
+    "raw_checksum_sha256": "2ED45E926BF3E8222AFDAF5BD97782A8CFE55FF35011F3D84F1E26E98132B142",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.aux-echanges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-aux-echanges",
+    "normalized_checksum_sha256": "F7C0A397F75888EB5030D69DA8B3C9154A749649B831850869B523A086860387",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132241Z/chambolle-musigny-1er-aux-echanges/fetch-manifest.json",
+    "raw_checksum_sha256": "288F6B3D49317A15A6410259E3DAF0DBD6E0283190A6A274E1FF85EBE31AB052",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.derriere-la-grange",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-derriere-la-grange",
+    "normalized_checksum_sha256": "A72C662113FFA28E6C718E41A63BF7767E0BA4BDBA69CD070D98AD0BE39A2E2A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132243Z/chambolle-musigny-1er-derriere-la-grange/fetch-manifest.json",
+    "raw_checksum_sha256": "B097CB4BFB05770FEE75DD7F55316493BC48171BD8DC1AA871153B2DC6F2DA13",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.la-combe-d-orveau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-la-combe-d-orveau",
+    "normalized_checksum_sha256": "12BEB7625D8769125982AD1BBA7485A3C7BD23992265E02E304B6F8BD41C4BE5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132245Z/chambolle-musigny-1er-la-combe-d-orveau/fetch-manifest.json",
+    "raw_checksum_sha256": "E1CCB0680C1C8512855EEF6288C48CA1776EB7E1CD196434B3FB9D44DE717A9E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-amoureuses",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-amoureuses",
+    "normalized_checksum_sha256": "73EDC8ABC13FE2B5F8555E974FE0D2D8397C4EE043BB67E4E63B8BFABE3A8DD2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132247Z/chambolle-musigny-1er-les-amoureuses/fetch-manifest.json",
+    "raw_checksum_sha256": "E3E41FFD2D28C16FC2594C956B9E09BB61727A7DE55F147DBAD82EC43C7C430A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-baudes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-baudes",
+    "normalized_checksum_sha256": "B596600C3772CD6BE1EC9A1BA89F594D58044696199548F861C83052A26A51C8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132249Z/chambolle-musigny-1er-les-baudes/fetch-manifest.json",
+    "raw_checksum_sha256": "F6D97F2B59BEDF4CB668C96E1DCFA7377DB0899A9B61CE984301E14D474B43CB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-borniques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-borniques",
+    "normalized_checksum_sha256": "8E998ADFCE7A6A8EF596E051DE595D628B85BC8B0A5185E8525B44B55F6C1899",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132250Z/chambolle-musigny-1er-les-borniques/fetch-manifest.json",
+    "raw_checksum_sha256": "2384EB588CF5075F95AEFD58B715F98DB71064E1A444B9E46E500FB14CDC1706",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-carrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-carrieres",
+    "normalized_checksum_sha256": "FD3DD3D33726674C5E21425129F1C14C7CBAEA2AF5842515399E964E33EDC62D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132252Z/chambolle-musigny-1er-les-carrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "73B67C0EF8B8E54BD4BC9D5D5AFA372753041FF189641A4BD262ADCAC9C18C26",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-chabiots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-chabiots",
+    "normalized_checksum_sha256": "FADCD9356FFE04FE947842FBF8275ADDDE53106E770AB56B40003A2206A6B6F2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132254Z/chambolle-musigny-1er-les-chabiots/fetch-manifest.json",
+    "raw_checksum_sha256": "BF3DB69EA9AE143A626C6EE64C0C70A11023DD09093E62F19DF5C9F7EEEA294A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-charmes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-charmes",
+    "normalized_checksum_sha256": "A663C828A9FFDBBC94DB6976FDF3805C09E6CBE0A78A389F6F9F77E95F8F3FFC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132256Z/chambolle-musigny-1er-les-charmes/fetch-manifest.json",
+    "raw_checksum_sha256": "58EE37A80E07525E629F53E1BDF58A476D9538F30D2A252C693477342FB25EC6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-chatelots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-chatelots",
+    "normalized_checksum_sha256": "AE56A90BA2E178E9B5119CFC6730D2279FAF6DFDEA19AA578D8624EB9F52DA21",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132257Z/chambolle-musigny-1er-les-chatelots/fetch-manifest.json",
+    "raw_checksum_sha256": "F4A4A852AC595D069547098AA2CABDA02DA8389F77BD3192E31C1ED29BB3BAED",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-combottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-combottes",
+    "normalized_checksum_sha256": "496163A0C8B1C389607555FA397BFE5FA8D08D53B0EEA989F3129FBCA483ACA4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132259Z/chambolle-musigny-1er-les-combottes/fetch-manifest.json",
+    "raw_checksum_sha256": "347CDB2C9402629D8B2D78B18211BEA3FAF5E32F0B5CBD53A6AF8B99B47E37CD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-cras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-cras",
+    "normalized_checksum_sha256": "A35ECDDFB6EF575D589C0D6BFCBF60B115FE452FDA2B9B792846649584344E90",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132301Z/chambolle-musigny-1er-les-cras/fetch-manifest.json",
+    "raw_checksum_sha256": "E7C3B403075B4D1D9C5E2095808647474BCCE9ABD0C29860D265E411E3652FDA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-feusselottes-ou-les-feusselotes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-feusselottes-ou-les-feusselotes",
+    "normalized_checksum_sha256": "65B7CC60E461C4B77DD9BBF77BE459EBB8724B9A06257E0154BA1CAA3E132285",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132302Z/chambolle-musigny-1er-les-feusselottes-ou-les-feusselotes/fetch-manifest.json",
+    "raw_checksum_sha256": "5FED7674844E8A4D902A65BF91A18BFBCCA733F236D103EA2B4C1DD19228E149",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-fuees",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-fuees",
+    "normalized_checksum_sha256": "EE36175E6E86D87AE9343569CA335A7D92B6D00D2B271D991ADBEC5170BF7AE5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132305Z/chambolle-musigny-1er-les-fuees/fetch-manifest.json",
+    "raw_checksum_sha256": "7CE0E63EDFF939D6B15C85E7E79731AEAADB28E561A76ACA3A47D1326719351F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-groseilles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-groseilles",
+    "normalized_checksum_sha256": "99FB2688251B6C2EDDD63EDB08A38DE762A2B6FACBCA5DC3A4997ACD914D8A0F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132307Z/chambolle-musigny-1er-les-groseilles/fetch-manifest.json",
+    "raw_checksum_sha256": "40CDD19BC8DCA625418A2796FB62298CEBF37C7B61EF61A55764231DD6F90FD5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-gruenchers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-gruenchers",
+    "normalized_checksum_sha256": "C2345020BBA96C64201B164984C68FA1440FC4321C9E6CB6A50F7E9E42DF8D18",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132308Z/chambolle-musigny-1er-les-gruenchers/fetch-manifest.json",
+    "raw_checksum_sha256": "AA21D719F072CBB6955DEF0E202E6F9C66FB78267ABD529C938382736D895601",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-hauts-doix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-hauts-doix",
+    "normalized_checksum_sha256": "8BA420B098425E3C105BC9F760A1F0D2115743B6795F4ED18A1D17F9B287F6F2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132310Z/chambolle-musigny-1er-les-hauts-doix/fetch-manifest.json",
+    "raw_checksum_sha256": "CC35EAAEBF87F70C86BF328838DDC7BB3261BCD609AD489D593D0CBF7267B1BB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-lavrottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-lavrottes",
+    "normalized_checksum_sha256": "BA8587D6FB02DD9A5D57991AABC3FF49DE8BF38C8E70C8904C40F99D7F5AE122",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132312Z/chambolle-musigny-1er-les-lavrottes/fetch-manifest.json",
+    "raw_checksum_sha256": "B1269C51F2CCE2CCC588CED633F1F5B3651D6196C0C9F29372F0D0A78A1C99E6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-noirots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-noirots",
+    "normalized_checksum_sha256": "ED38DC4AFEFF9529DF5922F3E07D95A2434C2AF8A02E45F43D957BB86BD0B377",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132314Z/chambolle-musigny-1er-les-noirots/fetch-manifest.json",
+    "raw_checksum_sha256": "A6C6A84D789C82ADEF1EF67DB69C20A91CEE582B567D030B21A9638C457073AA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-plantes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-plantes",
+    "normalized_checksum_sha256": "6F06C870DCEE03B9F38CA77DF9229390DA6733795A605822CDE8298BF2CCD1B2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132316Z/chambolle-musigny-1er-les-plantes/fetch-manifest.json",
+    "raw_checksum_sha256": "312EA9A6F57F62E88E34329E108F71E42EC0286CD3D78CADC645DD4EFA4EBCDD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-sentiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-sentiers",
+    "normalized_checksum_sha256": "D5E97FC337A71F37AC643E502E4CF22C4A638B723418D64C34E49EC7991FBB01",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132317Z/chambolle-musigny-1er-les-sentiers/fetch-manifest.json",
+    "raw_checksum_sha256": "ED1D1F7749E2E900381F834811053D4D16E2C28A6BD04580E9881A22A3649A06",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru.les-veroilles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chambolle-musigny-1er-les-veroilles",
+    "normalized_checksum_sha256": "04259623458E1DCBDC791DEEBC2538F01CB18DB394DCB34A127BE2B8735A51E9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132319Z/chambolle-musigny-1er-les-veroilles/fetch-manifest.json",
+    "raw_checksum_sha256": "87520B6B2B6413592EA22764C36B027ACA59863737E8B0FCBBA790B8A5930208",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-nuits.fixin",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:fixin-village",
@@ -906,6 +1122,60 @@
     "normalized_checksum_sha256": "1A1DBB6192A4CDDF06048BDAFEC7C5BF0D85D4C9EC60079B812227EBA7632C16",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123013Z/fixin-1er/fetch-manifest.json",
     "raw_checksum_sha256": "F9D9465A86501940498B4AFDF359B95B1CC52A267D895C1DD81D48839FEC8CDF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.arvelets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-arvelets",
+    "normalized_checksum_sha256": "6666290FFADF879ABA965CEBBD2FB2CEAFE8B4E5A53FBE525632DBEA433F9FF3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132050Z/fixin-1er-arvelets/fetch-manifest.json",
+    "raw_checksum_sha256": "3EEC0C76A40A38D75947D3871F423454BB9A8CB6D580A81C8348F6227B000D66",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.clos-de-la-perriere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-clos-de-la-perriere",
+    "normalized_checksum_sha256": "DAB009D54D2CBF7B63F6DD06506E7131A1E58E036E6C5FD42BB344C6736D2A4B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132058Z/fixin-1er-clos-de-la-perriere/fetch-manifest.json",
+    "raw_checksum_sha256": "2E6A30A8271A0BD5B51FB08731CC0C42D004173ADDC31CB581049A13C25AEB75",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.clos-du-chapitre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-clos-du-chapitre",
+    "normalized_checksum_sha256": "5FEFA89C425FB65CE8855323DA18C57A306514D1914CD8AAFC6E409983F3BA89",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132100Z/fixin-1er-clos-du-chapitre/fetch-manifest.json",
+    "raw_checksum_sha256": "E71789D93E1015B08F3707336F67E583E0D1BDD72B7B951037E6FF44B838FABE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.clos-napoleon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-clos-napoleon",
+    "normalized_checksum_sha256": "380E7E11D3909512A4766153FDA9AF1911CA41363BA33B09FA49989118CA55FB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132056Z/fixin-1er-clos-napoleon/fetch-manifest.json",
+    "raw_checksum_sha256": "A3382420BF484373E2A5CF8C0E4B5C08A646B5C26D5B32FE6C71F9F9FCDBD01A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.hervelets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-hervelets",
+    "normalized_checksum_sha256": "C3C02F8CFF43C9FA4C07A960C9AA6FCB7E5754E6743F31D8241D10CA745048FB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132102Z/fixin-1er-hervelets/fetch-manifest.json",
+    "raw_checksum_sha256": "395FA98B7DAB98EE5C9FA4879C99274D5CF4C1D5C58D6729925B685743925E0E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.fixin.premier-cru.les-meix-bas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fixin-1er-les-meix-bas",
+    "normalized_checksum_sha256": "28F22CB83F1E5D09E0E3232A037BB9241B4DF4044A21F8B9AA7426530B73EA4C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132105Z/fixin-1er-les-meix-bas/fetch-manifest.json",
+    "raw_checksum_sha256": "DD855698B893C332A41A640057811C888B1BBED3E376328CC159E3D0A9059D05",
     "documented": true
   },
   {
@@ -999,6 +1269,240 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.au-closeau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-au-closeau",
+    "normalized_checksum_sha256": "2FED91098779EF7FD84E3FDFB40BF35C01FFF8557A1A46C8823F1C1162DDD5E2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132109Z/gevrey-chambertin-1er-au-closeau/fetch-manifest.json",
+    "raw_checksum_sha256": "B87062C2E5E0300996358588FB547FCF6F741A0AE421FF53FD47131ABCE77A0F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.aux-combottes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-aux-combottes",
+    "normalized_checksum_sha256": "5EE28CB0551EEE78A375BEDAFEDEB32194F805A90CF563D55D898AEA32170CE3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132113Z/gevrey-chambertin-1er-aux-combottes/fetch-manifest.json",
+    "raw_checksum_sha256": "A2DE4E2D4FF756CAFD533045020D448CAA1C473924CCC14118EF475A8C737601",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.bel-air",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-bel-air",
+    "normalized_checksum_sha256": "10B6CEB0F8F69A669B31D2AD16928221CB5E44ED78C202616DC55D8F839D4EDF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132115Z/gevrey-chambertin-1er-bel-air/fetch-manifest.json",
+    "raw_checksum_sha256": "713469F178B0885B0EE8FA91E9DAC9298E5A485B20823B177C5B2045C12C680F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.champeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-champeaux",
+    "normalized_checksum_sha256": "3EBDBC9CF3443CC6F5433735DE7CA10373D36060ED79636B20B53776D7336E5B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132117Z/gevrey-chambertin-1er-champeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "A2848792F564FE2A82859603D57DF2A2B6EE55D959B02BF89026857E7C4BC6E0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.champonnet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-champonnet",
+    "normalized_checksum_sha256": "598EFD7D29F94AA006BEB076A55EA7525B9F7A5B829E4E3937DB578F2D8F1B05",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132119Z/gevrey-chambertin-1er-champonnet/fetch-manifest.json",
+    "raw_checksum_sha256": "06ED2D996CC6DE5D50B86757AF52F108DEC1AAFEDD851794B492D5D7622D05FE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.cherbaudes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-cherbaudes",
+    "normalized_checksum_sha256": "5327654DD024E5907A0333DE834A64AE7EBF1A95B389B2544338AB83A29B3A2F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132121Z/gevrey-chambertin-1er-cherbaudes/fetch-manifest.json",
+    "raw_checksum_sha256": "91DDFC49125BF8960AE19D863B65011C9F57EAF6173F87B1356A7C305D6DF668",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.clos-des-varoilles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-clos-des-varoilles",
+    "normalized_checksum_sha256": "ED567D83B629CB25872AC5756074DD3707CD00DBBDE741B311E41CCA75FA606F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132126Z/gevrey-chambertin-1er-clos-des-varoilles/fetch-manifest.json",
+    "raw_checksum_sha256": "1848ED2309B6C8441C3DF042619906797C3088D8E3558B62B940CD62250926FC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.clos-du-chapitre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-clos-du-chapitre",
+    "normalized_checksum_sha256": "DBA4EDC3BB5B29F91961CF04F2030D5CED8D9E4383E55E0BA3E0952C8BC2F72A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132128Z/gevrey-chambertin-1er-clos-du-chapitre/fetch-manifest.json",
+    "raw_checksum_sha256": "ACB1671B43FCC6971727790D899546F5FC9248CEF89038CEA3696C530896A465",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.clos-prieur",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-clos-prieur",
+    "normalized_checksum_sha256": "BE7E3A675BD837CAA8FFD3816ED8E48AD50341312E18A37A12A38B0EB902EBCF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132122Z/gevrey-chambertin-1er-clos-prieur/fetch-manifest.json",
+    "raw_checksum_sha256": "88939A7B2741D5BCBFDAB07122BF45DF65BAB65133B6CD5B8473366C4882E19A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.clos-saint-jacques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-clos-saint-jacques",
+    "normalized_checksum_sha256": "47529E36FB1549EC21AD0127CF03C83604416BD5ED623599D38BB633AF14CC2C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132124Z/gevrey-chambertin-1er-clos-saint-jacques/fetch-manifest.json",
+    "raw_checksum_sha256": "7994E90B22C8938BA0312BD8C51C2AE010598D0BCEB25A2AD2DD6C0E7A68603C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.combe-au-moine",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-combe-au-moine",
+    "normalized_checksum_sha256": "5C7D2895AC24014E39DF9CE9880749E8AE77F59BEBFC8883031D70523E2F8F27",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132130Z/gevrey-chambertin-1er-combe-au-moine/fetch-manifest.json",
+    "raw_checksum_sha256": "169ECCB0740649C0702A7A636F51377A3A83401C7FEB975153EF00BDD3C3013B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.craipillot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-craipillot",
+    "normalized_checksum_sha256": "E32D1BCA90A61330AE5B54A28D9060218DE56D3CD40501FF040085AC2249E488",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132132Z/gevrey-chambertin-1er-craipillot/fetch-manifest.json",
+    "raw_checksum_sha256": "C02D13A9986ECE62EEC4DD9864F25B4056ECDDD6C7892139A03071286BDE9B17",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.en-ergot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-en-ergot",
+    "normalized_checksum_sha256": "9403B8B5A95651122F49E37EB6C9805E7A2CA965C3D981CDC1E63A52D98118A5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132134Z/gevrey-chambertin-1er-en-ergot/fetch-manifest.json",
+    "raw_checksum_sha256": "79DBCDC9EE8CFE4CF657329629A62781E8477FF9F6F47D2C0D1367944C9DDA96",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.estournelles-saint-jacques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-estournelles-saint-jacques",
+    "normalized_checksum_sha256": "5ACDEC8236CB0F2F80FCB7B3E48F03BCDA3CC5655DEE9CE7120173390FE5DEBC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132135Z/gevrey-chambertin-1er-estournelles-saint-jacques/fetch-manifest.json",
+    "raw_checksum_sha256": "578E776A2BAC7957CE71EA496BF064CECC8B679AC72795995CF088B54CE35B6D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.fonteny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-fonteny",
+    "normalized_checksum_sha256": "4CFE8E383E6313A17A4F25F077713CA551ADDAD16A76DC8A7FC1B4B3BADABB7D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132137Z/gevrey-chambertin-1er-fonteny/fetch-manifest.json",
+    "raw_checksum_sha256": "4916A6A6CFE76B34DE6B25139B688B4E4774F7699DFCE285179CE041AA588829",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.issarts",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-issarts",
+    "normalized_checksum_sha256": "E4C00BF05DE2B17F834E2179FAFFE70405505FC1181204BBE1B0CC6F68BC6D50",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132140Z/gevrey-chambertin-1er-issarts/fetch-manifest.json",
+    "raw_checksum_sha256": "3BAFD83F6F20C385A0305ECB3EA8406384091400059351CD0F1D4C71282A889E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.la-bossiere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-la-bossiere",
+    "normalized_checksum_sha256": "73D60A92DB89F00B26536D7E04A56A43E1F4BF2FFAB1EA4387838D45A7C03150",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132142Z/gevrey-chambertin-1er-la-bossiere/fetch-manifest.json",
+    "raw_checksum_sha256": "8675025AE3319410E1BD3C60D0D2012EF0296E3D62ED00AF52C984C7436F3357",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.la-perriere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-la-perriere",
+    "normalized_checksum_sha256": "04DD028BC2C94934D8692664B033A87FD25F6ABC863A97EA2C46835E8C5D6DFB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132143Z/gevrey-chambertin-1er-la-perriere/fetch-manifest.json",
+    "raw_checksum_sha256": "7ADD65D630D39C28F3CB0B75028576320AC6858F6DBB8191C65DB9A26C73D9D6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.la-romanee",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-la-romanee",
+    "normalized_checksum_sha256": "3F9B1FD4C316CE1C93FB82744A88E1A43C72642761F30567ABCB6EE4F2747A02",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132145Z/gevrey-chambertin-1er-la-romanee/fetch-manifest.json",
+    "raw_checksum_sha256": "F1C2DBAE5C8465D55BDD9AADAD463CE57365E827A6997C983F74CF48C032E415",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.lavaut-saint-jacques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-lavaut-saint-jacques",
+    "normalized_checksum_sha256": "7B5406FEAE8618E7EDA1ECD8A06EF62B6095364820DF5ACA7024E5FB49C8EFB1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132147Z/gevrey-chambertin-1er-lavaut-saint-jacques/fetch-manifest.json",
+    "raw_checksum_sha256": "8FBE0C1750B7AFA4C418C9FC99D4BCB3B597A165C5A77A2529C7B193C871EEE0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.les-cazetiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-les-cazetiers",
+    "normalized_checksum_sha256": "F23B81B6B5926CBF2A5933C96E2D08CDF965BB00F965CC53F35B3E92B2F3BAFB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132149Z/gevrey-chambertin-1er-les-cazetiers/fetch-manifest.json",
+    "raw_checksum_sha256": "3982203FC80809DAAA5A260A70FD8708671962B365F3A6D788DE1CBA85787671",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.les-corbeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-les-corbeaux",
+    "normalized_checksum_sha256": "8AFAC6F7E03B80477D016254EFA1B883FB5D1213FFDF32E8988A2B087BD0E2A9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132151Z/gevrey-chambertin-1er-les-corbeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "156A3BB11F3284753652D15AEC3DE365CDC9F57CF6A420C43491EF84C9E280D1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.les-goulots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-les-goulots",
+    "normalized_checksum_sha256": "DF24A4D3B92CC069D7E807787E0BE2BDA314D85DE40FF20103983CDBBD928C18",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132154Z/gevrey-chambertin-1er-les-goulots/fetch-manifest.json",
+    "raw_checksum_sha256": "9DF72E1D70D091A5FE221EAC9030E359D13B2EEAD77856D7623D86FE049C2270",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.petite-chapelle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-petite-chapelle",
+    "normalized_checksum_sha256": "60239A44C84F0B6FD8F83AB431CFA1385E39EC2A04B79322DE93F0F360E26571",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132156Z/gevrey-chambertin-1er-petite-chapelle/fetch-manifest.json",
+    "raw_checksum_sha256": "20D3F8E3B0196E42143234F292421C1D8E7D76D69DFEDA95D28FCEF73B6FAE9B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.petits-cazetiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-petits-cazetiers",
+    "normalized_checksum_sha256": "887DE23747CBD1790D6BA0FED5237274005342190AA1C20457A594A6192F0061",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132157Z/gevrey-chambertin-1er-petits-cazetiers/fetch-manifest.json",
+    "raw_checksum_sha256": "BAAEC690A7F38B24ACF4169CD29B55ECA1DB8B441F05AB30A5EE68E335D9653A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.premier-cru.poissenot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gevrey-chambertin-1er-poissenot",
+    "normalized_checksum_sha256": "220F77E3F90122C99FA7DCE37BB1816E7716AEB73EAC4FA25A870FDBB3A7C29D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132159Z/gevrey-chambertin-1er-poissenot/fetch-manifest.json",
+    "raw_checksum_sha256": "C28FE5307F1394E62ABDD7E0F949746BD59130A12F317320A6E47F2B97049410",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-nuits.gevrey-chambertin.ruchottes-chambertin",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:gevrey-chambertin-gc-ruchottes-chambertin",
@@ -1071,6 +1575,186 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.aux-charmes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-aux-charmes",
+    "normalized_checksum_sha256": "812EE267CAD7E82B708113E8B02884E87D277415C82C0BCE491D0E990BB6AD39",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132201Z/morey-saint-denis-1er-aux-charmes/fetch-manifest.json",
+    "raw_checksum_sha256": "979B702E72B3FB56882CFA96D2E0A8B0810A69DCD1662CA51D618588166101C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.aux-cheseaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-aux-cheseaux",
+    "normalized_checksum_sha256": "D07B834B6ABF5F8CAE53B9FFF34ED6375E42CAF1A017CB44A7341F707B1D304E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132203Z/morey-saint-denis-1er-aux-cheseaux/fetch-manifest.json",
+    "raw_checksum_sha256": "85F9E887352FD9586D9D262D6BF15F4153E6E49DF0561037CF8206248DA0EAFB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.clos-baulet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-clos-baulet",
+    "normalized_checksum_sha256": "1DD3D12043108A1200FF065FBA2269ABA4092656EE7ECEF31BAA87E0D25CC09F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132205Z/morey-saint-denis-1er-clos-baulet/fetch-manifest.json",
+    "raw_checksum_sha256": "62F3F33FB2B33AA134BEE599BD9B30B8FE720295A0E766F09AB34745BD5673C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.clos-des-ormes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-clos-des-ormes",
+    "normalized_checksum_sha256": "93695E6BD225E199695AED35D7B21DD9528CB0D904F002DBCC77FC91A2CC0845",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132209Z/morey-saint-denis-1er-clos-des-ormes/fetch-manifest.json",
+    "raw_checksum_sha256": "91A725C0404CE40C626E2D1238AAA02267E5954B0543948479843E0E61281CD6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.clos-sorbe",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-clos-sorbe",
+    "normalized_checksum_sha256": "87E025099344DB412B10A358010A7BEBF7752B9CFF4D1F4DB06731409059B17C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132207Z/morey-saint-denis-1er-clos-sorbe/fetch-manifest.json",
+    "raw_checksum_sha256": "66124748515532FF787A129F3DA6045DC8176FC6456DBA57B6D364D01A5A81EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.cote-rotie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-cote-rotie",
+    "normalized_checksum_sha256": "494D0C9746B962881B2A1F84960B7247CC00E3537F6BBD0CD23F5BFD5D86E949",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132211Z/morey-saint-denis-1er-cote-rotie/fetch-manifest.json",
+    "raw_checksum_sha256": "10FAB2A94BA61583B5C2C9B0A91D536969F945614B2934BD402F50453AF6798E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.la-bussiere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-la-bussiere",
+    "normalized_checksum_sha256": "8D5059C7E51776919E877BEEA5AC871DC9E50542B236AB8848B3C600AD83CF01",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132212Z/morey-saint-denis-1er-la-bussiere/fetch-manifest.json",
+    "raw_checksum_sha256": "7E478E61C475434EDA077ADF8C15EEE06C1809557ABF83AB98C7CF174E71EE9B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.la-riotte",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-la-riotte",
+    "normalized_checksum_sha256": "49CF13A084D099C6570334CD19701E2837D7A1C23EDDC537EE9B9F794384F41E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132215Z/morey-saint-denis-1er-la-riotte/fetch-manifest.json",
+    "raw_checksum_sha256": "602ADA4542C93F16E0F3D32A9DD297EF955298BC0237C141FB8D4DA66AA3C919",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.le-village",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-le-village",
+    "normalized_checksum_sha256": "DB6E730B22DD0FB51BBE48BD024D74434A30573FFDA5C641122DD26906888DD7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132216Z/morey-saint-denis-1er-le-village/fetch-manifest.json",
+    "raw_checksum_sha256": "63D20D2C251CDE44A752A4F39ED6CE989CCB7ADA5DF8BC7EE387DBAC47CEA309",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-blanchards",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-blanchards",
+    "normalized_checksum_sha256": "A0E9F04595671A9B04192A49832EE617D68FD9DFBB658B0B4BF6B3476E30F63E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132218Z/morey-saint-denis-1er-les-blanchards/fetch-manifest.json",
+    "raw_checksum_sha256": "845508232D6F19B15F9BCA57D7407BA640F2B0DDAA95A06912605F17A2F18D0A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-chaffots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-chaffots",
+    "normalized_checksum_sha256": "4B6CA238E1927EBA0AFE2DA392107430A62E57C7BCC0E7DF079461A891AF5D7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132220Z/morey-saint-denis-1er-les-chaffots/fetch-manifest.json",
+    "raw_checksum_sha256": "FA94039CE6886CCBDF341843851D2FA8F345722739D6A562AAF707D9F4C69750",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-charrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-charrieres",
+    "normalized_checksum_sha256": "AB8D67A3CAA036B8B9868B6D78CD9AF9D10C23CA17624E26A73AC13BFCECABBB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132222Z/morey-saint-denis-1er-les-charrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "C96242CE29C79EE0AC0A672B062C5B127D3D8B25788697145568D4C40D403081",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-chenevery",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-chenevery",
+    "normalized_checksum_sha256": "D1677587F6A1FB4DC6565FF03B0C43BAB87F3417222BE1203A5F7ED99D10753D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132223Z/morey-saint-denis-1er-les-chenevery/fetch-manifest.json",
+    "raw_checksum_sha256": "AAD0C75E0CFEAB891C1F02794356B53525072BAD0F9B86D2DD3E8FAF1D0E49A5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-faconnieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-faconnieres",
+    "normalized_checksum_sha256": "598C6EFB016BE5916F479E6C52FB61EB3B2769B388D50FE5FA2A872D65115E35",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132225Z/morey-saint-denis-1er-les-faconnieres/fetch-manifest.json",
+    "raw_checksum_sha256": "AEEAA331E6A22CB86ADD15F85089F8383ED27FD3AB13257162540BFA09EB955F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-genavrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-genavrieres",
+    "normalized_checksum_sha256": "39F393EB329DF1ED3255EC964F2F78113EBC5798947E1312C3A721EC215EF5BC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132227Z/morey-saint-denis-1er-les-genavrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "8B98A2C275066AE26DA7D2B35F33B958DD5065A8231825F264C30F937F40F32D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-gruenchers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-gruenchers",
+    "normalized_checksum_sha256": "44096A20630E7F5963E46353E181951AF3E6EE99F3D49A4D5DFB8C417D8A58F9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132229Z/morey-saint-denis-1er-les-gruenchers/fetch-manifest.json",
+    "raw_checksum_sha256": "FA94751E606E762FDBA6E4ED480A722A8D9A5ECC86D6FE62C0CE55AD5C27E049",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-millandes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-millandes",
+    "normalized_checksum_sha256": "4EEC887480434D0E9A1B7BE3F2EC0C222396EF10431A823D0D500E8222B5A273",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132231Z/morey-saint-denis-1er-les-millandes/fetch-manifest.json",
+    "raw_checksum_sha256": "1C5B91560FBF07E34565F3CBBA569C48E548040BB4969E9EEDB598C3001DED26",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-ruchots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-ruchots",
+    "normalized_checksum_sha256": "3C0CF1648D097AC25065757C117DF684F54F58BFB3AF7B96D503149013F2C173",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132232Z/morey-saint-denis-1er-les-ruchots/fetch-manifest.json",
+    "raw_checksum_sha256": "405C867D5633B1293E92219E3391E91B9C41C5905ED6DD7FFE72F2C2FCB76016",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.les-sorbes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-les-sorbes",
+    "normalized_checksum_sha256": "05B9C09DBFD0F9238D9AB9B60355B9AA223EE24B9088E63696548E1B21FB2FDF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132234Z/morey-saint-denis-1er-les-sorbes/fetch-manifest.json",
+    "raw_checksum_sha256": "F56B7F256F8C0D0868C8A58E0D61E6C648FDB5F2E37431F238776F8EC39C2553",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru.monts-luisants",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morey-saint-denis-1er-monts-luisants",
+    "normalized_checksum_sha256": "7386FEEEC820C8D5EC38F97E4044F896195294F1D231EB227DB14B8159DB7598",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132236Z/morey-saint-denis-1er-monts-luisants/fetch-manifest.json",
+    "raw_checksum_sha256": "AD9FC7FE500EEEDDA7F19B0E60F36BF4EE7AAD9CDD1D03FD9B1FD62BB1AD104E",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:nuits-saint-georges-village",
@@ -1086,6 +1770,375 @@
     "normalized_checksum_sha256": "A8A122F4558473F275FCF2A31657AEBF52C805EF2358561F6CD5AAAF931A356F",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123152Z/nuits-saint-georges-1er/fetch-manifest.json",
     "raw_checksum_sha256": "06BDA8D294E3DB0F74A630FA17324E7BBC5A0600BE0DCA5FD0A27A67E81021E8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-argillas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-argillas",
+    "normalized_checksum_sha256": "E1D4A954C801F6FDE27D1953E0CAD2B3AE88707C8DFD4AA11A1776FCB0E88059",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132327Z/nuits-saint-georges-1er-aux-argillas/fetch-manifest.json",
+    "raw_checksum_sha256": "6151D0709CDC2E27DCB86B02573ECC1D9E01F0A89BC09B4504BE3A2C6B7DCA11",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-boudots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-boudots",
+    "normalized_checksum_sha256": "B55F8DEB7B82F8FF47EBD3020120C4C8DC82077A02BAA6E8CFE4DE3854DD3C4A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132329Z/nuits-saint-georges-1er-aux-boudots/fetch-manifest.json",
+    "raw_checksum_sha256": "2E9E9579AEAC154809EB9E8830CF912055A04E6DCA5E2F22BA663500E98F8D9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-bousselots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-bousselots",
+    "normalized_checksum_sha256": "5B2BBA40756350590F0BD8B77797ABF12C83274CA22180F80E5365470DB9FF99",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132331Z/nuits-saint-georges-1er-aux-bousselots/fetch-manifest.json",
+    "raw_checksum_sha256": "47E0BC70D462D37A872D74523F6D46A4CFC8CE565327C71A94430D8B6AAC6796",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-chaignots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-chaignots",
+    "normalized_checksum_sha256": "419C87976605E3A102DCC5CF84B13E5ADE816F8C027D4F1860B3E1C3C11B90F9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132333Z/nuits-saint-georges-1er-aux-chaignots/fetch-manifest.json",
+    "raw_checksum_sha256": "C44C9494D613592FAD1125D9D84CF3180A525584572395B115C924FEE9C080AC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-champs-perdrix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-champs-perdrix",
+    "normalized_checksum_sha256": "DB9AB9A7BCFC8445AEA790678E31D1359B5AC5E1BE98862E5BE77E4849ED01D1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132334Z/nuits-saint-georges-1er-aux-champs-perdrix/fetch-manifest.json",
+    "raw_checksum_sha256": "DEBF6EB11C81636F5E84EA580349E011487E309BD48E968B8E97FC0F33983ACC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-cras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-cras",
+    "normalized_checksum_sha256": "78A81B7130FCC9B811FDA99BA823CC5903DBE4F14E7AD7EEEA8F631F88FC43C2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132336Z/nuits-saint-georges-1er-aux-cras/fetch-manifest.json",
+    "raw_checksum_sha256": "7BD6B10C5B6A8DC5B33D02CF8053CB768F1AE7D6A02A6EDF19ACBA3BB3EF54EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-murgers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-murgers",
+    "normalized_checksum_sha256": "81CBA54BFD313322B034186BFAE5DBFE43BCE03A91834A7C7CFC666A3F5F19A4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132338Z/nuits-saint-georges-1er-aux-murgers/fetch-manifest.json",
+    "raw_checksum_sha256": "79DD1D740741964A732658106AF27D3BB69E6050FB9DE7E7AB76A448F6E2E7BC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-perdrix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-perdrix",
+    "normalized_checksum_sha256": "4886FA94237586A93C8E78012A1D591326120CDBEFD17A2CE09C5846FBA43229",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132340Z/nuits-saint-georges-1er-aux-perdrix/fetch-manifest.json",
+    "raw_checksum_sha256": "9C6711E081AD2BDE060930D4BE200449FABA423C1F0EE2CE2AA979DE4890C3A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-thorey",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-thorey",
+    "normalized_checksum_sha256": "649CD270F6E46A993D4E2CD00C9918383E4E8E61EAEF8D548554FC125201F692",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132342Z/nuits-saint-georges-1er-aux-thorey/fetch-manifest.json",
+    "raw_checksum_sha256": "C978BA1E84A6B189541A44A940DA1955F6B054B7D87ED69454F6A5EA20F94800",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.aux-vignerondes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-aux-vignerondes",
+    "normalized_checksum_sha256": "71665A9A8CC9B079CB0743C7E90E753D6ED43DF523D77052F5652B32AB2A8701",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132344Z/nuits-saint-georges-1er-aux-vignerondes/fetch-manifest.json",
+    "raw_checksum_sha256": "AEBFDAB0C545B33E5AA58659B8D583A4A2A3B1DB75BB9A8B5606859BD68857E8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.chaines-carteaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-chaines-carteaux",
+    "normalized_checksum_sha256": "0F41349F0CE9C5742BC9E9D4DB8C01A08113B0607EE7BB2D3882EC336E82E810",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132345Z/nuits-saint-georges-1er-chaines-carteaux/fetch-manifest.json",
+    "raw_checksum_sha256": "22BAF8520D58DA9A4CA89F40B61D589B3525636C4B70E5C7546A621E21726523",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.chateau-gris",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-chateau-gris",
+    "normalized_checksum_sha256": "E1CE8DF0B74D8AD827E578F4906BBE7C2083584E4DE56B2D08DDD403FE78B627",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132348Z/nuits-saint-georges-1er-chateau-gris/fetch-manifest.json",
+    "raw_checksum_sha256": "BBDDCF5287B1DFB19699C011CA7281ADC3DC1B450E55B80A2C7AF94FCC80E399",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-arlot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-arlot",
+    "normalized_checksum_sha256": "C73BD396FBA5EFEBAC511DB34763D97438F3EA0214B9A16ED82115A2A85DB61B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132351Z/nuits-saint-georges-1er-clos-arlot/fetch-manifest.json",
+    "raw_checksum_sha256": "8CC3EAFDDA53625172F368896A6F806704DD3D1F06BEFE8C5E13524577CEADF2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-de-la-marechale",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-de-la-marechale",
+    "normalized_checksum_sha256": "1B4C96EE328A8BCCF59307AB4B580F78B0449ADD51525856081217C4F43F706D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132354Z/nuits-saint-georges-1er-clos-de-la-marechale/fetch-manifest.json",
+    "raw_checksum_sha256": "BA03C27071626121B6994D396823EDF0CE5922242B7247E0F4447A3B2B0E3D51",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-argillieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-argillieres",
+    "normalized_checksum_sha256": "6B7B149D853C0706B0935ABFC4EA30C7C29719A17BD1D2B31AC0C124703A9609",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132357Z/nuits-saint-georges-1er-clos-des-argillieres/fetch-manifest.json",
+    "raw_checksum_sha256": "C488FE47ED0F3C3EC8BDC5E5704C67291DC01F0CE81CEAA4A6BC4ED59B00FADF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-corvees",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-corvees",
+    "normalized_checksum_sha256": "A62F71EAADB8D0BC141CB83CF79BCEE0FF68E5961495754FD8E813709BF872A1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132358Z/nuits-saint-georges-1er-clos-des-corvees/fetch-manifest.json",
+    "raw_checksum_sha256": "F218868401066C909BBCEAA18159810B2475B3814F0E9B7E1272C4B1F92499F5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-corvees-pagets",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-corvees-pagets",
+    "normalized_checksum_sha256": "8A9FA8D353F4DF65B5DB447164266926437A280E53F0BC00D31F81272FD5CB52",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132400Z/nuits-saint-georges-1er-clos-des-corvees-pagets/fetch-manifest.json",
+    "raw_checksum_sha256": "230E2ADF5A0D4F44A63DE00005E11738E77A92604CD442E2BBEBF16752ED1C8C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-forets-saint-georges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-forets-saint-georges",
+    "normalized_checksum_sha256": "7FD95592AD2FAD37CD8E96F42DF78B3EDB7CA85B9EF80D4722A3D6A98C74DD57",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132402Z/nuits-saint-georges-1er-clos-des-forets-saint-georges/fetch-manifest.json",
+    "raw_checksum_sha256": "18AE04A5B76AD2051DDA57F3250218D22FB070363EFD224B6E0B85CB2924058C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-grandes-vignes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-grandes-vignes",
+    "normalized_checksum_sha256": "D6FC37C9108593EF707B109D0755EE60D668F8E49049ACEF9359EABDEE5DD78B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132404Z/nuits-saint-georges-1er-clos-des-grandes-vignes/fetch-manifest.json",
+    "raw_checksum_sha256": "ABCC34536C0F9C758FB6344C99C9A8B335B64A6D68B9F925C8507A0AD6A47257",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-des-porrets-saint-georges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-des-porrets-saint-georges",
+    "normalized_checksum_sha256": "0D9DE03D1ABC539C4F9CCE9AC2BBD3351643164E2C271DB7B58FD1DBA69DFF93",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132405Z/nuits-saint-georges-1er-clos-des-porrets-saint-georges/fetch-manifest.json",
+    "raw_checksum_sha256": "8551CA08AAF66E3ABD9EAC06E442AC44C9DE4B60DE918A47FCDA3A94FDFDC54A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.clos-saint-marc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-clos-saint-marc",
+    "normalized_checksum_sha256": "A7DB136BC8CA5F6D3F4CF8851637B9459646C49002B85E76407B7FA92EEA515B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132353Z/nuits-saint-georges-1er-clos-saint-marc/fetch-manifest.json",
+    "raw_checksum_sha256": "73F40A864D93085FAD788A75AD05C7D0D35D2AEB3A50DCA48714E8AC15750529",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.en-la-perriere-noblot",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-en-la-perriere-noblot",
+    "normalized_checksum_sha256": "B9B96C182F8D935EF70ACCD9CDDA02E95CFCF808C6217C0CD34500ABCF66A54C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132407Z/nuits-saint-georges-1er-en-la-perriere-noblot/fetch-manifest.json",
+    "raw_checksum_sha256": "2642AAF2471BF5BDC93B706D18B27952DF51141827392A5E0F359463D8BD550A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.la-richemone",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-la-richemone",
+    "normalized_checksum_sha256": "96C6241495FF080561A569271E17F5E57ADF77E8A27532BCF8E48465E125EDED",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132409Z/nuits-saint-georges-1er-la-richemone/fetch-manifest.json",
+    "raw_checksum_sha256": "EA96483FE9D960AAD658724061AC768F49D0EAF59E28E42853263E54A7F1249A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-argillieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-argillieres",
+    "normalized_checksum_sha256": "FC83A49EBA7155918FDB24C2006335F6B6857133BC9846640A42AFEF20DA3B4C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132411Z/nuits-saint-georges-1er-les-argillieres/fetch-manifest.json",
+    "raw_checksum_sha256": "CF923C7DB4BED7DB45DFE4574AEC37DD24FBCC8333ECFEFFE06D2101D3F00470",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-cailles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-cailles",
+    "normalized_checksum_sha256": "568581DC8CD5AB3A242D36D7C7E8510461071D56171C36C1DF7A6978E7FE2032",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132413Z/nuits-saint-georges-1er-les-cailles/fetch-manifest.json",
+    "raw_checksum_sha256": "3760FA0C3F44B246AFA2AA26AE9F1B2A8103B9FB9FF75885A0A06292B0F1197F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-chab-ufs",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-chab-ufs",
+    "normalized_checksum_sha256": "18AAED9E3C203B9C450E1057F8E33120BE1D0D4FD5311054488A5C54C5DE6CF1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132415Z/nuits-saint-georges-1er-les-chab-ufs/fetch-manifest.json",
+    "raw_checksum_sha256": "6041EAB909AB4E5ADFD0A03DB5C2A05594098AC2276FED3FE68AC4FF0791E2C0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-crots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-crots",
+    "normalized_checksum_sha256": "66EC128D69272B7C283B696D34CE7E211E52E8B0D75DF2333699F9AC8C3202DC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132416Z/nuits-saint-georges-1er-les-crots/fetch-manifest.json",
+    "raw_checksum_sha256": "0C451D7A74A4A1481AB2FC73201E192062CDE16D110A114420EEDC57D234F57A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-damodes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-damodes",
+    "normalized_checksum_sha256": "051D2BF5782285204BE3163F2598FF9C31B1E77B9663000DAAC9E61F5BFF4AB4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132418Z/nuits-saint-georges-1er-les-damodes/fetch-manifest.json",
+    "raw_checksum_sha256": "555920A8F2A0E0DEF702560E3C83548101C32F5434007D4379A231FBB779AD9C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-didiers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-didiers",
+    "normalized_checksum_sha256": "AD61FA527B75CEE9A7CB54CEB85A13114E413A29E756AFD0E9EE3F32D65317BA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132420Z/nuits-saint-georges-1er-les-didiers/fetch-manifest.json",
+    "raw_checksum_sha256": "44F0AFCF8F60318E5C6FDD100701B24096C53CB83DE0FDF66913489991631DEB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-hauts-pruliers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-hauts-pruliers",
+    "normalized_checksum_sha256": "5F3E18C5903D0575D14E134925B83378C3965D6E6FE452AA86747E739DDF76EF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132422Z/nuits-saint-georges-1er-les-hauts-pruliers/fetch-manifest.json",
+    "raw_checksum_sha256": "ECA465F805B5A64B16F096AC1550538D787DB0AE8602B44FAD7307809F4AEBCE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-perrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-perrieres",
+    "normalized_checksum_sha256": "EE438A02B7586D263D468B7CA982D514DE03D18647A3C20DC461ED0907E7BE8C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132424Z/nuits-saint-georges-1er-les-perrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "7761A1B0AB5D78F1175AD6FF81625363BCE81088AA15E907196857DB135DA3F1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-porrets-saint-georges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-porrets-saint-georges",
+    "normalized_checksum_sha256": "48C83BFF8377D511E415C7F0CF772BFBA8FE93235872230A20981AE7B23A7F0C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132426Z/nuits-saint-georges-1er-les-porrets-saint-georges/fetch-manifest.json",
+    "raw_checksum_sha256": "251FFFCCDD0226195CBAAD9B8E76D124C15A793B7231AB7374EB226F141BC804",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-poulettes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-poulettes",
+    "normalized_checksum_sha256": "1B47356C28E4D2E46BB4F8850B32D36B5BCDDC779981D87CEEA051DCEDC7C29A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132427Z/nuits-saint-georges-1er-les-poulettes/fetch-manifest.json",
+    "raw_checksum_sha256": "8C0CDA4A631A83DED60B9A3D5D7905741C63AE4D5F06E5684869860904553141",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-proces",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-proces",
+    "normalized_checksum_sha256": "B841487C6398A0F8468F6C35CBE10D9D5003485E7795D1807291C30B2CB3622E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132429Z/nuits-saint-georges-1er-les-proces/fetch-manifest.json",
+    "raw_checksum_sha256": "09C7AFC715F9B4ED6ADF3B82A9BD726E0C274EA481D7646CC4E2C76FFFA8826B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-pruliers",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-pruliers",
+    "normalized_checksum_sha256": "48E76A4E3104AEB5C185D3CE9F34A136B2CF25F2EA9A371B6EA8160FA42F0AD6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132431Z/nuits-saint-georges-1er-les-pruliers/fetch-manifest.json",
+    "raw_checksum_sha256": "0689DDD60BC1C918FCAC719FE79E48CEAB984A8B3499121C2B3A781A5ADA3771",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-saints-georges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-saints-georges",
+    "normalized_checksum_sha256": "E1B42ED9FC56C62B1AF0885D5CDB5322FB26226D68E31F6586843E53D8B602B8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132433Z/nuits-saint-georges-1er-les-saints-georges/fetch-manifest.json",
+    "raw_checksum_sha256": "DC89E4182EFD00D0111EBC25E8120B21B7B5E5993D07C57ED8931ACE602BF517",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-terres-blanches",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-terres-blanches",
+    "normalized_checksum_sha256": "03DD32542914C92454A8F20860ECA4D37F7C89DDEE6141C71EAAEF052089CC5B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132435Z/nuits-saint-georges-1er-les-terres-blanches/fetch-manifest.json",
+    "raw_checksum_sha256": "D9D1148322DBB53C217418B54C6762E652201D623AA1A1401D936A603C2A674B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-vallerots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-vallerots",
+    "normalized_checksum_sha256": "4D05C1B328D17F8BA7461656DD6F6422566987B8FF13257E22A2FE4F203F7380",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132437Z/nuits-saint-georges-1er-les-vallerots/fetch-manifest.json",
+    "raw_checksum_sha256": "B8CBF8640EBC1A813DA0766CE0E07AECA3A03F236161EAE224E48CAEF901C4B0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.les-vaucrains",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-les-vaucrains",
+    "normalized_checksum_sha256": "FD9BDAAD72F283DE6C29A816EFC6BC186AD71ED78D0E5201FBC3D924CDE74515",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132439Z/nuits-saint-georges-1er-les-vaucrains/fetch-manifest.json",
+    "raw_checksum_sha256": "331EC5EBD8AE774623A6122B62763E7C684E4459F195DE18C0F0FAE0E5EF4413",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.ronciere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-ronciere",
+    "normalized_checksum_sha256": "3480F5FFFF66A849791B0F3BD1874EF662052289C528BC885A8BE6AC15AD6624",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132441Z/nuits-saint-georges-1er-ronciere/fetch-manifest.json",
+    "raw_checksum_sha256": "8980DB747469DF20EA0B57026DF9D3DE83742401F7D35A441BD8DD3E76D43C2E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru.rue-de-chaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:nuits-saint-georges-1er-rue-de-chaux",
+    "normalized_checksum_sha256": "04AB1B411A0411C5F407D42E6030C4BD1330A6DDBFC8C46ABC895CB2B51AC1E8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132442Z/nuits-saint-georges-1er-rue-de-chaux/fetch-manifest.json",
+    "raw_checksum_sha256": "1B7A1658D20D3B170D4EC55DBCA8263DBAAD0B1864F0B73C39A9F71649C51AB7",
     "documented": true
   },
   {
@@ -1320,6 +2373,42 @@
     "normalized_checksum_sha256": "33346FC878021F7496DCE8BD29BA584EB58BCBB9A7BDA5CB82A0A44849BA0D02",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123140Z/vougeot-1er/fetch-manifest.json",
     "raw_checksum_sha256": "6323309E43680EA33C10B59815E125DF597D687082ED15148EB782859BE36466",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vougeot.premier-cru.clos-de-la-perriere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vougeot-1er-clos-de-la-perriere",
+    "normalized_checksum_sha256": "649530718A9694C248200311A779A737A0507EE446704421A79232369ECDCC8D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132321Z/vougeot-1er-clos-de-la-perriere/fetch-manifest.json",
+    "raw_checksum_sha256": "F92FD1679CF0EDD575CCF9DFFAFCFFFA90F408D24B8A56AAB552EDE25DD3F66B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vougeot.premier-cru.le-clos-blanc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vougeot-1er-le-clos-blanc",
+    "normalized_checksum_sha256": "42E49D84FA10FB9F8222BC6ED1C2848241E3BCC456EC94B2AD6CE31DB7A49AFA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132322Z/vougeot-1er-le-clos-blanc/fetch-manifest.json",
+    "raw_checksum_sha256": "A2B1A09922A09A786898665BA05D1C7F50301D430CC2D81A7F072178ED0EBE28",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vougeot.premier-cru.les-cras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vougeot-1er-les-cras",
+    "normalized_checksum_sha256": "136CDD066446500F73F86CBB06A2E357C13E43812941CB6CC79A9C853770BD35",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132324Z/vougeot-1er-les-cras/fetch-manifest.json",
+    "raw_checksum_sha256": "6DB28F1C6B360F7D3AD0925476463B4C5F831798124594F578BE7D4C2A4DDA15",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vougeot.premier-cru.les-petits-vougeots",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vougeot-1er-les-petits-vougeots",
+    "normalized_checksum_sha256": "3579B0CED1F33BF36DFF8DDFC94884A83EED82C7697ED06DED47A7731F840EA9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T132326Z/vougeot-1er-les-petits-vougeots/fetch-manifest.json",
+    "raw_checksum_sha256": "32111808927E75A2262504A6EFCB8CA3C6D9274113B46FCB7FBD651F6D67E0AE",
     "documented": true
   },
   {

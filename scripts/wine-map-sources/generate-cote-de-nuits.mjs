@@ -148,6 +148,27 @@ const WAVES = {
       { name: "Saint-Véran", climats: false },
     ],
   },
+  // Individual premier-cru climats added under the existing verified group
+  // nodes (Vosne already has its 14, so it's excluded; Marsannay has no
+  // 1er cru). existingSubtree = live count under Côte de Nuits before this
+  // wave; the guard asserts it plus the newly-added climats.
+  "3f-cdn-climats": {
+    migration: "supabase/migrations/20260815100000_cote_de_nuits_climats.sql",
+    targetsFile: "cote-de-nuits-climats-targets.json",
+    climatsOnly: true,
+    insertDistrict: false,
+    sortBase: 500,
+    existingSubtree: 53,
+    expectedSubtree: null,
+    villages: [
+      { name: "Fixin" },
+      { name: "Gevrey-Chambertin" },
+      { name: "Morey-Saint-Denis" },
+      { name: "Chambolle-Musigny" },
+      { name: "Vougeot" },
+      { name: "Nuits-Saint-Georges" },
+    ],
+  },
 };
 const waveName = process.argv[2] ?? "5b";
 const wave = WAVES[waveName];
@@ -169,59 +190,72 @@ if (wave.insertDistrict) {
 }
 
 for (const village of wave.villages) {
-  assert.ok(village.name in membership, `village denom missing: ${village.name}`);
   const vSlug = slugify(village.name);
   const vKey = `${district.key}.${vSlug}`;
-  places.push({
-    parent: district.key, kind: "APPELLATION", key: vKey, name: village.name,
-    slug: vSlug, tier: 3, zoom: 10, isApp: true, system: "AOC/AOP",
-    level: "communal", sort: sort++,
-  });
-  targets.push({ slug: `${vSlug}-village`, key: vKey, members: [village.name], ...PRESETS.village });
+  const grpKey = `${vKey}.premier-cru`;
+  const groupDenom = `${village.name} premier cru`;
 
-  for (const gc of grandCrus.filter((g) => g.district === districtSlug && g.village === vSlug)) {
-    assert.ok(gc.denom in membership, `grand cru denom missing: ${gc.denom}`);
-    const gKey = `${vKey}.${slugify(gc.name)}`;
+  // A climats-only wave adds individual 1er-cru climats under group nodes
+  // that already exist and are verified; it must not re-emit the village,
+  // grands crus or group (they'd collide). Build waves emit the full subtree.
+  if (!wave.climatsOnly) {
+    assert.ok(village.name in membership, `village denom missing: ${village.name}`);
     places.push({
-      parent: vKey, kind: "APPELLATION", key: gKey, name: gc.name, slug: slugify(gc.name),
-      tier: 4, zoom: 13, isApp: true, system: "AOC/AOP", level: "grand_cru", sort: sort++,
+      parent: district.key, kind: "APPELLATION", key: vKey, name: village.name,
+      slug: vSlug, tier: 3, zoom: 10, isApp: true, system: "AOC/AOP",
+      level: "communal", sort: sort++,
     });
-    targets.push({ slug: `${vSlug}-gc-${slugify(gc.name)}`, key: gKey, members: [gc.denom], ...PRESETS.cru });
+    targets.push({ slug: `${vSlug}-village`, key: vKey, members: [village.name], ...PRESETS.village });
+
+    for (const gc of grandCrus.filter((g) => g.district === districtSlug && g.village === vSlug)) {
+      assert.ok(gc.denom in membership, `grand cru denom missing: ${gc.denom}`);
+      const gKey = `${vKey}.${slugify(gc.name)}`;
+      places.push({
+        parent: vKey, kind: "APPELLATION", key: gKey, name: gc.name, slug: slugify(gc.name),
+        tier: 4, zoom: 13, isApp: true, system: "AOC/AOP", level: "grand_cru", sort: sort++,
+      });
+      targets.push({ slug: `${vSlug}-gc-${slugify(gc.name)}`, key: gKey, members: [gc.denom], ...PRESETS.cru });
+    }
+
+    // 1er-cru group only where INAO defines the aggregate (Marsannay has none).
+    if (groupDenom in membership) {
+      places.push({
+        parent: vKey, kind: "SITE", key: grpKey, name: `${village.name} 1er Cru`, slug: "premier-cru",
+        tier: 4, zoom: 12, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
+      });
+      targets.push({ slug: `${vSlug}-1er`, key: grpKey, members: [groupDenom], ...PRESETS.group });
+    } else {
+      console.log(`note: no INAO 1er-cru aggregate for ${village.name} — group skipped`);
+    }
   }
 
-  // 1er-cru group only where INAO defines the aggregate (Marsannay has none).
-  const groupDenom = `${village.name} premier cru`;
-  if (groupDenom in membership) {
-    const grpKey = `${vKey}.premier-cru`;
-    places.push({
-      parent: vKey, kind: "SITE", key: grpKey, name: `${village.name} 1er Cru`, slug: "premier-cru",
-      tier: 4, zoom: 12, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
-    });
-    targets.push({ slug: `${vSlug}-1er`, key: grpKey, members: [groupDenom], ...PRESETS.group });
-
-    if (village.climats) {
-      const climats = Object.keys(membership)
-        .filter((k) => k.startsWith(`${groupDenom} `))
-        .sort();
-      for (const denom of climats) {
-        const climatName = denom.slice(groupDenom.length + 1);
-        const cKey = `${grpKey}.${slugify(climatName)}`;
-        places.push({
-          parent: grpKey, kind: "SITE", key: cKey, name: climatName, slug: slugify(climatName),
-          tier: 5, zoom: 14, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
-        });
-        targets.push({
-          slug: `${vSlug}-1er-${slugify(climatName)}`, key: cKey, members: [denom], ...PRESETS.cru,
-        });
-      }
+  if ((wave.climatsOnly || village.climats) && groupDenom in membership) {
+    const climats = Object.keys(membership)
+      .filter((k) => k.startsWith(`${groupDenom} `))
+      .sort();
+    for (const denom of climats) {
+      const climatName = denom.slice(groupDenom.length + 1);
+      const cKey = `${grpKey}.${slugify(climatName)}`;
+      places.push({
+        parent: grpKey, kind: "SITE", key: cKey, name: climatName, slug: slugify(climatName),
+        tier: 5, zoom: 14, isApp: true, system: "AOC/AOP", level: "premier_cru", sort: sort++,
+      });
+      targets.push({
+        slug: `${vSlug}-1er-${slugify(climatName)}`, key: cKey, members: [denom], ...PRESETS.cru,
+      });
     }
-  } else {
-    console.log(`note: no INAO 1er-cru aggregate for ${village.name} — group skipped`);
+  } else if (wave.climatsOnly && !(groupDenom in membership)) {
+    console.log(`note: no INAO 1er-cru aggregate for ${village.name} — skipped`);
   }
 }
 
 const expectedSubtree =
-  wave.expectedSubtree ?? (wave.insertDistrict ? places.length : 24 + places.length);
+  wave.expectedSubtree ??
+  (wave.climatsOnly
+    ? wave.existingSubtree + places.length
+    : wave.insertDistrict
+      ? places.length
+      : 24 + places.length);
 
 const lines = [
   `-- Burgundy wave ${waveName}: ${district.name} places as DRAFT. Boundaries are`,
