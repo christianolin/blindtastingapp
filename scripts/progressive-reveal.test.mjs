@@ -243,3 +243,60 @@ test("reveal_own_next_category: blocked in guided-live tastings", async () => {
     );
   });
 });
+
+test("get_wine_reveal: guided returns only <= reveal_step; no unrevealed answer leaks", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    await actAs(s.hostUserId);
+    await client.query("select reveal_next_category($1, $2::smallint)", [s.wineId, 0]);
+    await actAs(s.p2UserId);
+    const r = await client.query("select get_wine_reveal($1) as j", [s.wineId]);
+    const j = r.rows[0].j;
+    assert.equal(j.reveal_step, 1);
+    assert.deepEqual(j.revealed_keys, ["country"]);
+    assert.ok("country" in j.correct);
+    assert.ok(!("region" in j.correct));
+    assert.ok(!("producer" in j.correct));
+    assert.equal(j.guesses.length, 2);
+    for (const gg of j.guesses) {
+      assert.ok("country" in gg.values);
+      assert.ok(!("region" in gg.values));
+      assert.ok("country" in gg.points);
+    }
+    const ans = await client.query(
+      "select region_id, producer_id from wine_answers where wine_id=$1",
+      [s.wineId],
+    );
+    const blob = JSON.stringify(j);
+    assert.ok(!blob.includes(ans.rows[0].region_id), "region answer leaked");
+    assert.ok(!blob.includes(ans.rows[0].producer_id), "producer answer leaked");
+  });
+});
+
+test("get_wine_reveal: self-paced scopes to the caller only", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting({ timing: "ASYNC" });
+    await actAs(s.p2UserId);
+    await client.query("select reveal_own_next_category($1, $2::smallint)", [s.wineId, 0]);
+    const r = await client.query("select get_wine_reveal($1) as j", [s.wineId]);
+    const j = r.rows[0].j;
+    assert.equal(j.reveal_step, 1);
+    assert.equal(j.guesses.length, 1);
+    assert.equal(j.guesses[0].participant_id, s.p2);
+  });
+});
+
+test("get_wine_reveal: a non-participant gets null", async () => {
+  await withRollback(async () => {
+    const s = await seedTasting();
+    const outsider = (
+      await client.query(
+        "select id from profiles where id not in (select user_id from tasting_participants where tasting_id=$1) limit 1",
+        [s.tastingId],
+      )
+    ).rows[0].id;
+    await actAs(outsider);
+    const r = await client.query("select get_wine_reveal($1) as j", [s.wineId]);
+    assert.equal(r.rows[0].j, null);
+  });
+});
