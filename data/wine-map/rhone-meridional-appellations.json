@@ -1,0 +1,27 @@
+{
+  "region": "Vallée du Rhône — méridionale (Southern Rhône)",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline).",
+    "caveats": [
+      "Rasteau here is the dry red cru (member 'Rasteau', 271 parcels); the sweet 'Rasteau Vin Doux Naturel' (669) and 'Muscat de Beaumes-de-Venise' (400) are separate co-located VDN appellations - deferred.",
+      "VACQUEYRAS is NOT present as a standalone denomination in the pinned INAO membership file (verified absent), so it is deliberately omitted rather than guessed - it needs a manual source or a membership-file refresh before inclusion.",
+      "display names hyphenate 'Beaumes de Venise' -> Beaumes-de-Venise; members are the exact INAO names.",
+      "DEFERRED follow-ups: the france.rhone REGION outline (dissolve of 'Cotes du Rhone', ~18,181 parcels) and the sweet VDN/Muscat appellations."
+    ]
+  },
+  "modeling_decision": "These 8 are Southern Rhone communal crus: is_appellation=true, appellation_level=village, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.rhone, tier 2. Region place france.rhone (display 'Vallee du Rhone', tier 1) built later from the 'Cotes du Rhone' dissolve; optional france.rhone.septentrionale / .meridionale district split at build time (owner call). Grapes: Grenache/Syrah/Mourvedre (GSM) reds; Tavel is rose (Grenache-led). Scoring links: exact-name against live reference rows (never fuzzy); appellations without an exact scoring row stay PENDING. NOT run live - reviewable groundwork; the catalog/boundary/flip/links/content build waits on the owner shape-review gate.",
+  "region_window": { "minLon": 4.5, "minLat": 43.9, "maxLon": 5.2, "maxLat": 44.5 },
+  "targets": [
+    { "slug": "chateauneuf-du-pape", "key": "france.rhone.chateauneuf-du-pape", "name": "Châteauneuf-du-Pape", "level": "village", "members": ["Châteauneuf-du-Pape"], "parcels": 340, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "gigondas", "key": "france.rhone.gigondas", "name": "Gigondas", "level": "village", "members": ["Gigondas"], "parcels": 1237, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0009, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "vinsobres", "key": "france.rhone.vinsobres", "name": "Vinsobres", "level": "village", "members": ["Vinsobres"], "parcels": 320, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "cairanne", "key": "france.rhone.cairanne", "name": "Cairanne", "level": "village", "members": ["Cairanne"], "parcels": 247, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "rasteau", "key": "france.rhone.rasteau", "name": "Rasteau", "level": "village", "members": ["Rasteau"], "parcels": 271, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "beaumes-de-venise", "key": "france.rhone.beaumes-de-venise", "name": "Beaumes-de-Venise", "level": "village", "members": ["Beaumes de Venise"], "parcels": 358, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "lirac", "key": "france.rhone.lirac", "name": "Lirac", "level": "village", "members": ["Lirac"], "parcels": 277, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "tavel", "key": "france.rhone.tavel", "name": "Tavel", "level": "village", "members": ["Tavel"], "parcels": 122, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } }
+  ]
+}
