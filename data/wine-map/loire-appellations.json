@@ -1,0 +1,967 @@
+{
+  "region": "Vallée de la Loire",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "Vallee de la Loire is an AGGREGATE region spanning Pays Nantais -> Anjou-Saumur -> Touraine -> Centre-Loire; no single regional AOC, so france.loire is a multi-member aggregate outline (deferred). The cross-region style AOCs 'Cremant de Loire' (16536), 'Rose de Loire' (15457), Cabernet/Rose d'Anjou are excluded (styles, not geographies).",
+      "Comprehensive families captured by prefix: Muscadet (+ Sevre et Maine + crus communaux Clisson/Gorges/Le Pallet + Coteaux de la Loire + Cotes de Grandlieu), Anjou (+ Villages/Brissac/Coteaux de la Loire), Savennieres (+ Roche aux Moines), Coteaux du Layon (+ 6 villages + 1er cru Chaume), Saumur (+ Champigny), Touraine (+ 6 sub-appellations), Fiefs Vendeens (5). Plus the standalone AOCs.",
+      "Big base appellations (Anjou 8488, Touraine 8333, Muscadet 7897, Gros Plant 5602) are heavy LIKE fetches; expect strongly multi-component dissolves."
+    ]
+  },
+  "modeling_decision": "france.loire = aggregate region (tier 1, multi-member outline at flip time). Levels: the large sub-regional AOCs (Muscadet*, Anjou*, Touraine*, Saumur, Gros Plant, Haut-Poitou) = district; communal AOCs + sweet crus (Sancerre, Vouvray, Chinon, Bourgueil, Savennieres, Layon villages, Quarts de Chaume, Bonnezeaux, Pouilly-Fume, Menetou-Salon, Quincy, Reuilly...) = village. is_appellation=true, AOC, GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.loire. Grapes: Melon de Bourgogne (Muscadet), Chenin (Vouvray/Layon/Savennieres/Saumur), Cabernet Franc (Chinon/Bourgueil/Saumur-Champigny), Sauvignon Blanc (Sancerre/Pouilly-Fume/Touraine). Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending owner shape-review gate.",
+  "region_window": {
+    "minLon": -2.1,
+    "minLat": 46.2,
+    "maxLon": 3.2,
+    "maxLat": 48
+  },
+  "targets": [
+    {
+      "slug": "muscadet",
+      "key": "france.loire.muscadet",
+      "name": "Muscadet",
+      "level": "district",
+      "members": [
+        "Muscadet"
+      ],
+      "parcels": 7897,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-coteaux-de-la-loire",
+      "key": "france.loire.muscadet-coteaux-de-la-loire",
+      "name": "Muscadet Coteaux de la Loire",
+      "level": "district",
+      "members": [
+        "Muscadet Coteaux de la Loire"
+      ],
+      "parcels": 1111,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-cotes-de-grandlieu",
+      "key": "france.loire.muscadet-cotes-de-grandlieu",
+      "name": "Muscadet Côtes de Grandlieu",
+      "level": "district",
+      "members": [
+        "Muscadet Côtes de Grandlieu"
+      ],
+      "parcels": 932,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-sevre-et-maine",
+      "key": "france.loire.muscadet-sevre-et-maine",
+      "name": "Muscadet Sèvre et Maine",
+      "level": "district",
+      "members": [
+        "Muscadet Sèvre et Maine"
+      ],
+      "parcels": 5258,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-sevre-et-maine-clisson",
+      "key": "france.loire.muscadet-sevre-et-maine-clisson",
+      "name": "Muscadet Sèvre et Maine Clisson",
+      "level": "district",
+      "members": [
+        "Muscadet Sèvre et Maine Clisson"
+      ],
+      "parcels": 221,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-sevre-et-maine-gorges",
+      "key": "france.loire.muscadet-sevre-et-maine-gorges",
+      "name": "Muscadet Sèvre et Maine Gorges",
+      "level": "district",
+      "members": [
+        "Muscadet Sèvre et Maine Gorges"
+      ],
+      "parcels": 162,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscadet-sevre-et-maine-le-pallet",
+      "key": "france.loire.muscadet-sevre-et-maine-le-pallet",
+      "name": "Muscadet Sèvre et Maine Le Pallet",
+      "level": "district",
+      "members": [
+        "Muscadet Sèvre et Maine Le Pallet"
+      ],
+      "parcels": 141,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "gros-plant-du-pays-nantais",
+      "key": "france.loire.gros-plant-du-pays-nantais",
+      "name": "Gros Plant du Pays Nantais",
+      "level": "district",
+      "members": [
+        "Gros Plant du Pays Nantais"
+      ],
+      "parcels": 5602,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-d-ancenis",
+      "key": "france.loire.coteaux-d-ancenis",
+      "name": "Coteaux d'Ancenis",
+      "level": "village",
+      "members": [
+        "Coteaux d'Ancenis"
+      ],
+      "parcels": 1002,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fiefs-vendeens-brem",
+      "key": "france.loire.fiefs-vendeens-brem",
+      "name": "Fiefs Vendéens Brem",
+      "level": "village",
+      "members": [
+        "Fiefs Vendéens Brem"
+      ],
+      "parcels": 104,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fiefs-vendeens-chantonnay",
+      "key": "france.loire.fiefs-vendeens-chantonnay",
+      "name": "Fiefs Vendéens Chantonnay",
+      "level": "village",
+      "members": [
+        "Fiefs Vendéens Chantonnay"
+      ],
+      "parcels": 21,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fiefs-vendeens-mareuil",
+      "key": "france.loire.fiefs-vendeens-mareuil",
+      "name": "Fiefs Vendéens Mareuil",
+      "level": "village",
+      "members": [
+        "Fiefs Vendéens Mareuil"
+      ],
+      "parcels": 121,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fiefs-vendeens-pissotte",
+      "key": "france.loire.fiefs-vendeens-pissotte",
+      "name": "Fiefs Vendéens Pissotte",
+      "level": "village",
+      "members": [
+        "Fiefs Vendéens Pissotte"
+      ],
+      "parcels": 6,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fiefs-vendeens-vix",
+      "key": "france.loire.fiefs-vendeens-vix",
+      "name": "Fiefs Vendéens Vix",
+      "level": "village",
+      "members": [
+        "Fiefs Vendéens Vix"
+      ],
+      "parcels": 22,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "anjou",
+      "key": "france.loire.anjou",
+      "name": "Anjou",
+      "level": "district",
+      "members": [
+        "Anjou"
+      ],
+      "parcels": 8488,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "anjou-brissac",
+      "key": "france.loire.anjou-brissac",
+      "name": "Anjou Brissac",
+      "level": "district",
+      "members": [
+        "Anjou Brissac"
+      ],
+      "parcels": 580,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "anjou-villages",
+      "key": "france.loire.anjou-villages",
+      "name": "Anjou Villages",
+      "level": "district",
+      "members": [
+        "Anjou Villages"
+      ],
+      "parcels": 2907,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "anjou-coteaux-de-la-loire",
+      "key": "france.loire.anjou-coteaux-de-la-loire",
+      "name": "Anjou-Coteaux de la Loire",
+      "level": "district",
+      "members": [
+        "Anjou-Coteaux de la Loire"
+      ],
+      "parcels": 222,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "savennieres",
+      "key": "france.loire.savennieres",
+      "name": "Savennières",
+      "level": "village",
+      "members": [
+        "Savennières"
+      ],
+      "parcels": 65,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "savennieres-roche-aux-moines",
+      "key": "france.loire.savennieres-roche-aux-moines",
+      "name": "Savennières Roche aux Moines",
+      "level": "village",
+      "members": [
+        "Savennières Roche aux Moines"
+      ],
+      "parcels": 15,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon",
+      "key": "france.loire.coteaux-du-layon",
+      "name": "Coteaux du Layon",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon"
+      ],
+      "parcels": 1165,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-beaulieu-sur-layon-ou-beaulieu",
+      "key": "france.loire.coteaux-du-layon-beaulieu-sur-layon-ou-beaulieu",
+      "name": "Coteaux du Layon Beaulieu-sur-Layon ou Beaulieu",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Beaulieu-sur-Layon ou Beaulieu"
+      ],
+      "parcels": 83,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-faye-d-anjou-ou-faye",
+      "key": "france.loire.coteaux-du-layon-faye-d-anjou-ou-faye",
+      "name": "Coteaux du Layon Faye-d'Anjou ou Faye",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Faye-d'Anjou ou Faye"
+      ],
+      "parcels": 83,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-premier-cru-chaume",
+      "key": "france.loire.coteaux-du-layon-premier-cru-chaume",
+      "name": "Coteaux du Layon premier cru Chaume",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon premier cru Chaume"
+      ],
+      "parcels": 35,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-rablay-sur-layon-ou-rablay",
+      "key": "france.loire.coteaux-du-layon-rablay-sur-layon-ou-rablay",
+      "name": "Coteaux du Layon Rablay-sur-Layon ou Rablay",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Rablay-sur-Layon ou Rablay"
+      ],
+      "parcels": 37,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-rochefort-sur-loire-ou-rochefort",
+      "key": "france.loire.coteaux-du-layon-rochefort-sur-loire-ou-rochefort",
+      "name": "Coteaux du Layon Rochefort-sur-Loire ou Rochefort",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Rochefort-sur-Loire ou Rochefort"
+      ],
+      "parcels": 113,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-saint-aubin-de-luigne-ou-saint-aubin",
+      "key": "france.loire.coteaux-du-layon-saint-aubin-de-luigne-ou-saint-aubin",
+      "name": "Coteaux du Layon Saint-Aubin-de-Luigné ou Saint-Aubin",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Saint-Aubin-de-Luigné ou Saint-Aubin"
+      ],
+      "parcels": 149,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-layon-saint-lambert-du-lattay-ou-saint-lambert",
+      "key": "france.loire.coteaux-du-layon-saint-lambert-du-lattay-ou-saint-lambert",
+      "name": "Coteaux du Layon Saint-Lambert-du-Lattay ou Saint-Lambert",
+      "level": "village",
+      "members": [
+        "Coteaux du Layon Saint-Lambert-du-Lattay ou Saint-Lambert"
+      ],
+      "parcels": 126,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "quarts-de-chaume",
+      "key": "france.loire.quarts-de-chaume",
+      "name": "Quarts de Chaume",
+      "level": "village",
+      "members": [
+        "Quarts de Chaume"
+      ],
+      "parcels": 11,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "bonnezeaux",
+      "key": "france.loire.bonnezeaux",
+      "name": "Bonnezeaux",
+      "level": "village",
+      "members": [
+        "Bonnezeaux"
+      ],
+      "parcels": 35,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-de-l-aubance",
+      "key": "france.loire.coteaux-de-l-aubance",
+      "name": "Coteaux de l'Aubance",
+      "level": "village",
+      "members": [
+        "Coteaux de l'Aubance"
+      ],
+      "parcels": 242,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saumur",
+      "key": "france.loire.saumur",
+      "name": "Saumur",
+      "level": "district",
+      "members": [
+        "Saumur"
+      ],
+      "parcels": 3096,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saumur-champigny",
+      "key": "france.loire.saumur-champigny",
+      "name": "Saumur-Champigny",
+      "level": "district",
+      "members": [
+        "Saumur-Champigny"
+      ],
+      "parcels": 506,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine",
+      "key": "france.loire.touraine",
+      "name": "Touraine",
+      "level": "district",
+      "members": [
+        "Touraine"
+      ],
+      "parcels": 8333,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-amboise",
+      "key": "france.loire.touraine-amboise",
+      "name": "Touraine Amboise",
+      "level": "district",
+      "members": [
+        "Touraine Amboise"
+      ],
+      "parcels": 226,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-azay-le-rideau",
+      "key": "france.loire.touraine-azay-le-rideau",
+      "name": "Touraine Azay-le-Rideau",
+      "level": "district",
+      "members": [
+        "Touraine Azay-le-Rideau"
+      ],
+      "parcels": 252,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-chenonceaux",
+      "key": "france.loire.touraine-chenonceaux",
+      "name": "Touraine Chenonceaux",
+      "level": "district",
+      "members": [
+        "Touraine Chenonceaux"
+      ],
+      "parcels": 1048,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-mesland",
+      "key": "france.loire.touraine-mesland",
+      "name": "Touraine Mesland",
+      "level": "district",
+      "members": [
+        "Touraine Mesland"
+      ],
+      "parcels": 250,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-noble-joue",
+      "key": "france.loire.touraine-noble-joue",
+      "name": "Touraine Noble Joué",
+      "level": "district",
+      "members": [
+        "Touraine Noble Joué"
+      ],
+      "parcels": 69,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "touraine-oisly",
+      "key": "france.loire.touraine-oisly",
+      "name": "Touraine Oisly",
+      "level": "district",
+      "members": [
+        "Touraine Oisly"
+      ],
+      "parcels": 321,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "vouvray",
+      "key": "france.loire.vouvray",
+      "name": "Vouvray",
+      "level": "village",
+      "members": [
+        "Vouvray"
+      ],
+      "parcels": 575,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "montlouis-sur-loire",
+      "key": "france.loire.montlouis-sur-loire",
+      "name": "Montlouis-sur-Loire",
+      "level": "village",
+      "members": [
+        "Montlouis-sur-Loire"
+      ],
+      "parcels": 261,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chinon",
+      "key": "france.loire.chinon",
+      "name": "Chinon",
+      "level": "village",
+      "members": [
+        "Chinon"
+      ],
+      "parcels": 829,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "bourgueil",
+      "key": "france.loire.bourgueil",
+      "name": "Bourgueil",
+      "level": "village",
+      "members": [
+        "Bourgueil"
+      ],
+      "parcels": 587,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-nicolas-de-bourgueil",
+      "key": "france.loire.saint-nicolas-de-bourgueil",
+      "name": "Saint-Nicolas-de-Bourgueil",
+      "level": "village",
+      "members": [
+        "Saint-Nicolas-de-Bourgueil"
+      ],
+      "parcels": 199,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "jasnieres",
+      "key": "france.loire.jasnieres",
+      "name": "Jasnières",
+      "level": "village",
+      "members": [
+        "Jasnières"
+      ],
+      "parcels": 15,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-loir",
+      "key": "france.loire.coteaux-du-loir",
+      "name": "Coteaux du Loir",
+      "level": "village",
+      "members": [
+        "Coteaux du Loir"
+      ],
+      "parcels": 368,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cheverny",
+      "key": "france.loire.cheverny",
+      "name": "Cheverny",
+      "level": "village",
+      "members": [
+        "Cheverny"
+      ],
+      "parcels": 1101,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cour-cheverny",
+      "key": "france.loire.cour-cheverny",
+      "name": "Cour-Cheverny",
+      "level": "village",
+      "members": [
+        "Cour-Cheverny"
+      ],
+      "parcels": 748,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "valencay",
+      "key": "france.loire.valencay",
+      "name": "Valençay",
+      "level": "village",
+      "members": [
+        "Valençay"
+      ],
+      "parcels": 445,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "haut-poitou",
+      "key": "france.loire.haut-poitou",
+      "name": "Haut-Poitou",
+      "level": "district",
+      "members": [
+        "Haut-Poitou"
+      ],
+      "parcels": 385,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "sancerre",
+      "key": "france.loire.sancerre",
+      "name": "Sancerre",
+      "level": "village",
+      "members": [
+        "Sancerre"
+      ],
+      "parcels": 595,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pouilly-fume",
+      "key": "france.loire.pouilly-fume",
+      "name": "Pouilly-Fumé",
+      "level": "village",
+      "members": [
+        "Pouilly-Fumé ou Blanc Fumé de Pouilly"
+      ],
+      "parcels": 211,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pouilly-sur-loire",
+      "key": "france.loire.pouilly-sur-loire",
+      "name": "Pouilly-sur-Loire",
+      "level": "village",
+      "members": [
+        "Pouilly-sur-Loire"
+      ],
+      "parcels": 211,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "menetou-salon",
+      "key": "france.loire.menetou-salon",
+      "name": "Menetou-Salon",
+      "level": "village",
+      "members": [
+        "Menetou-Salon"
+      ],
+      "parcels": 107,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "quincy",
+      "key": "france.loire.quincy",
+      "name": "Quincy",
+      "level": "village",
+      "members": [
+        "Quincy"
+      ],
+      "parcels": 45,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "reuilly",
+      "key": "france.loire.reuilly",
+      "name": "Reuilly",
+      "level": "village",
+      "members": [
+        "Reuilly"
+      ],
+      "parcels": 44,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-giennois",
+      "key": "france.loire.coteaux-du-giennois",
+      "name": "Coteaux du Giennois",
+      "level": "village",
+      "members": [
+        "Coteaux du Giennois"
+      ],
+      "parcels": 110,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chateaumeillant",
+      "key": "france.loire.chateaumeillant",
+      "name": "Châteaumeillant",
+      "level": "village",
+      "members": [
+        "Châteaumeillant"
+      ],
+      "parcels": 78,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}

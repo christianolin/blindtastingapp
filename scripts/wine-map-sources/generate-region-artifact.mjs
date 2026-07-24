@@ -130,6 +130,50 @@ const CONFIGS = {
       { exact: "Buzet", level: "village" },
     ],
   },
+  loire: {
+    region: "Vallée de la Loire",
+    keyBase: "france.loire",
+    window: { minLon: -2.1, minLat: 46.2, maxLon: 3.2, maxLat: 48.0 },
+    caveats: [
+      "Vallee de la Loire is an AGGREGATE region spanning Pays Nantais -> Anjou-Saumur -> Touraine -> Centre-Loire; no single regional AOC, so france.loire is a multi-member aggregate outline (deferred). The cross-region style AOCs 'Cremant de Loire' (16536), 'Rose de Loire' (15457), Cabernet/Rose d'Anjou are excluded (styles, not geographies).",
+      "Comprehensive families captured by prefix: Muscadet (+ Sevre et Maine + crus communaux Clisson/Gorges/Le Pallet + Coteaux de la Loire + Cotes de Grandlieu), Anjou (+ Villages/Brissac/Coteaux de la Loire), Savennieres (+ Roche aux Moines), Coteaux du Layon (+ 6 villages + 1er cru Chaume), Saumur (+ Champigny), Touraine (+ 6 sub-appellations), Fiefs Vendeens (5). Plus the standalone AOCs.",
+      "Big base appellations (Anjou 8488, Touraine 8333, Muscadet 7897, Gros Plant 5602) are heavy LIKE fetches; expect strongly multi-component dissolves.",
+    ],
+    modeling: "france.loire = aggregate region (tier 1, multi-member outline at flip time). Levels: the large sub-regional AOCs (Muscadet*, Anjou*, Touraine*, Saumur, Gros Plant, Haut-Poitou) = district; communal AOCs + sweet crus (Sancerre, Vouvray, Chinon, Bourgueil, Savennieres, Layon villages, Quarts de Chaume, Bonnezeaux, Pouilly-Fume, Menetou-Salon, Quincy, Reuilly...) = village. is_appellation=true, AOC, GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.loire. Grapes: Melon de Bourgogne (Muscadet), Chenin (Vouvray/Layon/Savennieres/Saumur), Cabernet Franc (Chinon/Bourgueil/Saumur-Champigny), Sauvignon Blanc (Sancerre/Pouilly-Fume/Touraine). Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending owner shape-review gate.",
+    selectors: [
+      { prefix: "Muscadet", level: "district", keepName: true },
+      { exact: "Gros Plant du Pays Nantais", level: "district" },
+      { exact: "Coteaux d'Ancenis", level: "village" },
+      { prefix: "Fiefs Vendéens ", level: "village", keepName: true },
+      { prefix: "Anjou", level: "district", keepName: true },
+      { prefix: "Savennières", level: "village", keepName: true },
+      { prefix: "Coteaux du Layon", level: "village", keepName: true },
+      { exact: "Quarts de Chaume", level: "village" },
+      { exact: "Bonnezeaux", level: "village" },
+      { exact: "Coteaux de l'Aubance", level: "village" },
+      { prefix: "Saumur", level: "district", keepName: true },
+      { prefix: "Touraine", level: "district", keepName: true },
+      { exact: "Vouvray", level: "village" },
+      { exact: "Montlouis-sur-Loire", level: "village" },
+      { exact: "Chinon", level: "village" },
+      { exact: "Bourgueil", level: "village" },
+      { exact: "Saint-Nicolas-de-Bourgueil", level: "village" },
+      { exact: "Jasnières", level: "village" },
+      { exact: "Coteaux du Loir", level: "village" },
+      { prefix: "Cheverny", level: "village", keepName: true },
+      { exact: "Cour-Cheverny", level: "village" },
+      { exact: "Valençay", level: "village" },
+      { exact: "Haut-Poitou", level: "district" },
+      { exact: "Sancerre", level: "village" },
+      { exact: "Pouilly-Fumé ou Blanc Fumé de Pouilly", name: "Pouilly-Fumé", level: "village" },
+      { exact: "Pouilly-sur-Loire", level: "village" },
+      { exact: "Menetou-Salon", level: "village" },
+      { exact: "Quincy", level: "village" },
+      { exact: "Reuilly", level: "village" },
+      { exact: "Coteaux du Giennois", level: "village" },
+      { exact: "Châteaumeillant", level: "village" },
+    ],
+  },
 };
 
 const region = process.argv.find((a) => a.startsWith("--region="))?.split("=")[1];
@@ -150,7 +194,11 @@ for (const sel of cfg.selectors) {
     seen.add(key);
     const name = sel.regionPlace
       ? cfg.region
-      : (sel.name ?? (sel.prefix ? key.slice(sel.prefix.length) : key));
+      : sel.name
+        ? sel.name
+        : sel.prefix && !sel.keepName
+          ? key.slice(sel.prefix.length)
+          : key;
     const level = sel.regionPlace ? "region" : sel.level;
     const slug = slugify(name);
     targets.push({
