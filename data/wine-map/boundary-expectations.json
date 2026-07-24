@@ -7410,9 +7410,27 @@
     "canonical_key": "france.rhone",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:rhone",
-    "normalized_checksum_sha256": "65FB89A1EE54D5D14BF764D92B87056A4D1CB115621337AC6344628D98FD1B80",
+    "normalized_checksum_sha256": "135A0E51B277EAC87C3EA1A6FA29B7B4FAA616BEBDCC24A72E446080F811C4D8",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.beaumes-de-venise",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:beaumes-de-venise",
+    "normalized_checksum_sha256": "ACD5BA6595E44A627020E9ADC9FB62AA644805B4D0452193E31C8F424681D453",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093838Z/beaumes-de-venise/fetch-manifest.json",
+    "raw_checksum_sha256": "187AA186F111D74E3A32ABE5C00E16A51AB5DC2F727B6BC2B48D0377291413E8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.cairanne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cairanne",
+    "normalized_checksum_sha256": "3E0E94D7D24D3F5BDA8B9337EAC9C12C4FD3065B5E4CD646E5EDD676FCD8687B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093834Z/cairanne/fetch-manifest.json",
+    "raw_checksum_sha256": "1B5BCD01915DE91F0773690963BE3781757E277117A0F2876BBA6488C51D18D1",
     "documented": true
   },
   {
@@ -7422,6 +7440,15 @@
     "normalized_checksum_sha256": "C0FD434104CA9DF815C6D6AD914D5876E9169F21A4B744ACDB288669D08893CC",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082603Z/chateau-grillet/fetch-manifest.json",
     "raw_checksum_sha256": "499D2FB82E69835263B5B8D440159E0115596B862D381237E240B82681D59AB6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.chateauneuf-du-pape",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chateauneuf-du-pape",
+    "normalized_checksum_sha256": "75D27C14E881250FCCD54B96632905ECFD8ADDE9D1F11411CB50224E6EF4B6A2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093823Z/chateauneuf-du-pape/fetch-manifest.json",
+    "raw_checksum_sha256": "1DDFDD851180E0E8B25B831A9349A4C2E650AEA60FB9927CAB2FAE1D459AAF93",
     "documented": true
   },
   {
@@ -7461,12 +7488,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.rhone.gigondas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:gigondas",
+    "normalized_checksum_sha256": "FEF139864696BDC27912E6128758479C452A11A24F66D671B3D643BE27782923",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093828Z/gigondas/fetch-manifest.json",
+    "raw_checksum_sha256": "0C3EA70A536DF290496BD5F1E9E9A1855CD7756BDCC42C37048EDC9DC855E5FF",
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone.hermitage",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:hermitage",
     "normalized_checksum_sha256": "645B78B4A73E7204DB5651FAD2F42EBFA7FED79CEF74157718DF5C30CDBDC62C",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082612Z/hermitage/fetch-manifest.json",
     "raw_checksum_sha256": "0E6B29E1EA8F097F060627BBA4225EE0936316F5D61E9B50EEE80B7B7ECD4063",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.lirac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lirac",
+    "normalized_checksum_sha256": "079F20C579C41E61F4920C2B75D480BAD87249066019993B73658F044EE944D4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093842Z/lirac/fetch-manifest.json",
+    "raw_checksum_sha256": "EB60D223FA9248CDB6D55BAD4146A4E4A5B6F2BDFCD923F403280ACCA1FD81F5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.rasteau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:rasteau",
+    "normalized_checksum_sha256": "AF3ED1EE6EC29D9906A344F7189426236BB813151646B8B9B5C8CDF4513205A3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093836Z/rasteau/fetch-manifest.json",
+    "raw_checksum_sha256": "B230DADC819115EAB00358ACD4D29C7A6B96F4272B220B5D6D62B6109527E9F8",
     "documented": true
   },
   {
@@ -7485,6 +7539,24 @@
     "normalized_checksum_sha256": "4C114930904ECCC79D1DE764C0961B5C0F2B35033C43C1791520A88A608321E2",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082620Z/saint-peray/fetch-manifest.json",
     "raw_checksum_sha256": "598ACAFA4DA512A297C63F8EE465B1BD3061BB5B7CD5AED1303DC1D61252834F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.tavel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:tavel",
+    "normalized_checksum_sha256": "E70BFE7C021816F3987ADBB8D091B7A4A56B8F1DA6F5D4DD2D7D7EE496FE547B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093844Z/tavel/fetch-manifest.json",
+    "raw_checksum_sha256": "BDF388392D06A81AE18D0B86B8ABF6A5F4898F418FF26D3EDED0322CB80D954F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.vinsobres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:vinsobres",
+    "normalized_checksum_sha256": "751642694A779808010B46DEF76D54B1DF50131B5FB5E55E10D40C8F16E4A7F5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093832Z/vinsobres/fetch-manifest.json",
+    "raw_checksum_sha256": "034EBC729BEAB4CFA8D36840507C3D43E72004478A77ED6D6EA5DB57A29B3C5B",
     "documented": true
   }
 ]

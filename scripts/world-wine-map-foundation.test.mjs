@@ -795,6 +795,14 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Crozes-Hermitage AOP"], key: "france.rhone.crozes-hermitage" },
   { names: ["Cornas AOP"], key: "france.rhone.cornas" },
   { names: ["Saint-Peray AOP"], key: "france.rhone.saint-peray" },
+  { names: ["Châteauneuf-du-Pape AOP"], key: "france.rhone.chateauneuf-du-pape" },
+  { names: ["Gigondas AOP"], key: "france.rhone.gigondas" },
+  { names: ["Vinsobres AOP"], key: "france.rhone.vinsobres" },
+  { names: ["Cairanne AOP"], key: "france.rhone.cairanne" },
+  { names: ["Rasteau AOP"], key: "france.rhone.rasteau" },
+  { names: ["Beaumes de Venise AOP"], key: "france.rhone.beaumes-de-venise" },
+  { names: ["Lirac AOP"], key: "france.rhone.lirac" },
+  { names: ["Tavel AOP"], key: "france.rhone.tavel" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -839,17 +847,18 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    // +12 Beaujolais + 9 Vallee du Rhone + 17 Champagne Grand Cru villages
-    // (whole-commune footprints, MANUAL), all validated + current.
-    total: 898,
-    validated: 898,
-    current: 832,
-    valid: 898,
-    labelled: 898,
+    // Beaujolais 12 + Vallee du Rhone (16 crus + region re-derived from all 16)
+    // + Champagne region + 17 GC villages. total includes the retired region
+    // revision (kept as history, not current).
+    total: 907,
+    validated: 907,
+    current: 840,
+    valid: 907,
+    labelled: 907,
     // MANUAL = France + Champagne region + the 17 Champagne GC commune
     // footprints (Echelle des Crus villages, not INAO parcels).
     manual: 20,
-    generalized: 854,
+    generalized: 862,
     reproducible: 13,
   });
 
@@ -900,7 +909,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 898);
+  assert.equal(prov.linked_boundaries, 907);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -939,7 +948,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 138);
+  assert.equal(appellations.rows.length, 146);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -953,7 +962,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 5],
-    ["appellations", 138],
+    ["appellations", 146],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1063,8 +1072,8 @@ test("classification facts and legal relationship types", async () => {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC).
-      appellations: 808,
-      aoc: 808,
+      appellations: 816,
+      aoc: 816,
     missing_level: 0,
     france_plain: 1,
   });
