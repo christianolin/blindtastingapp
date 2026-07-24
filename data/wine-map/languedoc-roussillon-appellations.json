@@ -1,0 +1,935 @@
+{
+  "region": "Languedoc-Roussillon",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "The base 'Languedoc' AOC (53818) spans both Languedoc and Roussillon and is the dual-role region place. It plus the big VDN/regional AOCs (Corbieres 11203, Cotes du Roussillon 13562, Rivesaltes 14201, Grand Roussillon 15307, Muscat de Rivesaltes 15307) are HEAVY LIKE fetches - captured in the artifact but the full-geometry preview of those is deferred (run preview-inao-region --only=<slug> per shape).",
+      "Comprehensive families by prefix: Languedoc <terroir> (Cabrieres, Gres de Montpellier, La Mejanelle, Montpeyroux, Quatourze, Saint-Christol, Saint-Drezery, Saint-Georges-d'Orques, Saint-Saturnin), Corbieres (+Boutenac), Minervois (+La Liviniere), Saint-Chinian (+Berlou/Roquebrun), Clairette du Languedoc (+11 communes), Cotes du Roussillon (+Villages +4 named), Banyuls (+grand cru).",
+      "Clairette de Die belongs to the Rhone/Die, not Languedoc - excluded here."
+    ]
+  },
+  "modeling_decision": "france.languedoc-roussillon region (display 'Languedoc-Roussillon', tier 1): boundary = dissolve of 'Languedoc' at flip time. Big regional/VDN AOCs (Corbieres, Minervois, Cotes du Roussillon, Rivesaltes, Grand Roussillon, Costieres de Nimes, Limoux) = district; crus/terroirs/Muscats = village. is_appellation=true, AOC, GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.languedoc-roussillon. Grapes: Grenache/Syrah/Mourvedre/Carignan (reds), Picpoul (Pinet), Mauzac (Limoux), Grenache/Muscat (VDN Banyuls/Maury/Rivesaltes). Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending owner shape-review gate.",
+  "region_window": {
+    "minLon": 1.9,
+    "minLat": 42.3,
+    "maxLon": 4.7,
+    "maxLat": 44.1
+  },
+  "targets": [
+    {
+      "slug": "languedoc-roussillon",
+      "key": "france.languedoc-roussillon",
+      "name": "Languedoc-Roussillon",
+      "level": "region",
+      "members": [
+        "Languedoc"
+      ],
+      "parcels": 53818,
+      "concave": {
+        "gridSize": 0.06,
+        "simplifyTolerance": 0.002,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-cabrieres",
+      "key": "france.languedoc-roussillon.languedoc-cabrieres",
+      "name": "Languedoc Cabrières",
+      "level": "village",
+      "members": [
+        "Languedoc Cabrières"
+      ],
+      "parcels": 460,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-gres-de-montpellier",
+      "key": "france.languedoc-roussillon.languedoc-gres-de-montpellier",
+      "name": "Languedoc Grès de Montpellier",
+      "level": "village",
+      "members": [
+        "Languedoc Grès de Montpellier"
+      ],
+      "parcels": 1672,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-la-mejanelle",
+      "key": "france.languedoc-roussillon.languedoc-la-mejanelle",
+      "name": "Languedoc La Méjanelle",
+      "level": "village",
+      "members": [
+        "Languedoc La Méjanelle"
+      ],
+      "parcels": 139,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-montpeyroux",
+      "key": "france.languedoc-roussillon.languedoc-montpeyroux",
+      "name": "Languedoc Montpeyroux",
+      "level": "village",
+      "members": [
+        "Languedoc Montpeyroux"
+      ],
+      "parcels": 292,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-quatourze",
+      "key": "france.languedoc-roussillon.languedoc-quatourze",
+      "name": "Languedoc Quatourze",
+      "level": "village",
+      "members": [
+        "Languedoc Quatourze"
+      ],
+      "parcels": 33,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-saint-christol",
+      "key": "france.languedoc-roussillon.languedoc-saint-christol",
+      "name": "Languedoc Saint-Christol",
+      "level": "village",
+      "members": [
+        "Languedoc Saint-Christol"
+      ],
+      "parcels": 179,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-saint-drezery",
+      "key": "france.languedoc-roussillon.languedoc-saint-drezery",
+      "name": "Languedoc Saint-Drézéry",
+      "level": "village",
+      "members": [
+        "Languedoc Saint-Drézéry"
+      ],
+      "parcels": 103,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-saint-georges-d-orques",
+      "key": "france.languedoc-roussillon.languedoc-saint-georges-d-orques",
+      "name": "Languedoc Saint-Georges-d'Orques",
+      "level": "village",
+      "members": [
+        "Languedoc Saint-Georges-d'Orques"
+      ],
+      "parcels": 955,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "languedoc-saint-saturnin",
+      "key": "france.languedoc-roussillon.languedoc-saint-saturnin",
+      "name": "Languedoc Saint-Saturnin",
+      "level": "village",
+      "members": [
+        "Languedoc Saint-Saturnin"
+      ],
+      "parcels": 247,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "terrasses-du-larzac",
+      "key": "france.languedoc-roussillon.terrasses-du-larzac",
+      "name": "Terrasses du Larzac",
+      "level": "village",
+      "members": [
+        "Terrasses du Larzac"
+      ],
+      "parcels": 1953,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pic-saint-loup",
+      "key": "france.languedoc-roussillon.pic-saint-loup",
+      "name": "Pic Saint-Loup",
+      "level": "village",
+      "members": [
+        "Pic Saint-Loup"
+      ],
+      "parcels": 701,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "la-clape",
+      "key": "france.languedoc-roussillon.la-clape",
+      "name": "La Clape",
+      "level": "village",
+      "members": [
+        "La Clape"
+      ],
+      "parcels": 1165,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "picpoul-de-pinet",
+      "key": "france.languedoc-roussillon.picpoul-de-pinet",
+      "name": "Picpoul de Pinet",
+      "level": "village",
+      "members": [
+        "Picpoul de Pinet"
+      ],
+      "parcels": 511,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc",
+      "name": "Clairette du Languedoc",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc"
+      ],
+      "parcels": 2116,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-adissan",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-adissan",
+      "name": "Clairette du Languedoc Adissan",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Adissan"
+      ],
+      "parcels": 83,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-aspiran",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-aspiran",
+      "name": "Clairette du Languedoc Aspiran",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Aspiran"
+      ],
+      "parcels": 261,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-cabrieres",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-cabrieres",
+      "name": "Clairette du Languedoc Cabrières",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Cabrières"
+      ],
+      "parcels": 678,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-ceyras",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-ceyras",
+      "name": "Clairette du Languedoc Ceyras",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Ceyras"
+      ],
+      "parcels": 123,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-fontes",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-fontes",
+      "name": "Clairette du Languedoc Fontès",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Fontès"
+      ],
+      "parcels": 185,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-le-bosc",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-le-bosc",
+      "name": "Clairette du Languedoc Le Bosc",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Le Bosc"
+      ],
+      "parcels": 143,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-lieuran-cabrieres",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-lieuran-cabrieres",
+      "name": "Clairette du Languedoc Lieuran-Cabrières",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Lieuran-Cabrières"
+      ],
+      "parcels": 160,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-nizas",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-nizas",
+      "name": "Clairette du Languedoc Nizas",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Nizas"
+      ],
+      "parcels": 57,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-paulhan",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-paulhan",
+      "name": "Clairette du Languedoc Paulhan",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Paulhan"
+      ],
+      "parcels": 183,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-peret",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-peret",
+      "name": "Clairette du Languedoc Péret",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Péret"
+      ],
+      "parcels": 328,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-du-languedoc-saint-andre-de-sangonis",
+      "key": "france.languedoc-roussillon.clairette-du-languedoc-saint-andre-de-sangonis",
+      "name": "Clairette du Languedoc Saint-André-de-Sangonis",
+      "level": "village",
+      "members": [
+        "Clairette du Languedoc Saint-André-de-Sangonis"
+      ],
+      "parcels": 41,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "clairette-de-bellegarde",
+      "key": "france.languedoc-roussillon.clairette-de-bellegarde",
+      "name": "Clairette de Bellegarde",
+      "level": "village",
+      "members": [
+        "Clairette de Bellegarde"
+      ],
+      "parcels": 260,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "corbieres",
+      "key": "france.languedoc-roussillon.corbieres",
+      "name": "Corbières",
+      "level": "district",
+      "members": [
+        "Corbières"
+      ],
+      "parcels": 11203,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "corbieres-boutenac",
+      "key": "france.languedoc-roussillon.corbieres-boutenac",
+      "name": "Corbières-Boutenac",
+      "level": "district",
+      "members": [
+        "Corbières-Boutenac"
+      ],
+      "parcels": 942,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "minervois",
+      "key": "france.languedoc-roussillon.minervois",
+      "name": "Minervois",
+      "level": "district",
+      "members": [
+        "Minervois"
+      ],
+      "parcels": 4693,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "minervois-la-liviniere",
+      "key": "france.languedoc-roussillon.minervois-la-liviniere",
+      "name": "Minervois-La Livinière",
+      "level": "district",
+      "members": [
+        "Minervois-La Livinière"
+      ],
+      "parcels": 514,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-chinian",
+      "key": "france.languedoc-roussillon.saint-chinian",
+      "name": "Saint-Chinian",
+      "level": "village",
+      "members": [
+        "Saint-Chinian"
+      ],
+      "parcels": 3871,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-chinian-berlou",
+      "key": "france.languedoc-roussillon.saint-chinian-berlou",
+      "name": "Saint-Chinian Berlou",
+      "level": "village",
+      "members": [
+        "Saint-Chinian Berlou"
+      ],
+      "parcels": 242,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-chinian-roquebrun",
+      "key": "france.languedoc-roussillon.saint-chinian-roquebrun",
+      "name": "Saint-Chinian Roquebrun",
+      "level": "village",
+      "members": [
+        "Saint-Chinian Roquebrun"
+      ],
+      "parcels": 330,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "faugeres",
+      "key": "france.languedoc-roussillon.faugeres",
+      "name": "Faugères",
+      "level": "village",
+      "members": [
+        "Faugères"
+      ],
+      "parcels": 1112,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fitou",
+      "key": "france.languedoc-roussillon.fitou",
+      "name": "Fitou",
+      "level": "village",
+      "members": [
+        "Fitou"
+      ],
+      "parcels": 1791,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cabardes",
+      "key": "france.languedoc-roussillon.cabardes",
+      "name": "Cabardès",
+      "level": "village",
+      "members": [
+        "Cabardès"
+      ],
+      "parcels": 649,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "malepere",
+      "key": "france.languedoc-roussillon.malepere",
+      "name": "Malepère",
+      "level": "village",
+      "members": [
+        "Malepère"
+      ],
+      "parcels": 1095,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "limoux",
+      "key": "france.languedoc-roussillon.limoux",
+      "name": "Limoux",
+      "level": "district",
+      "members": [
+        "Limoux"
+      ],
+      "parcels": 2055,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "costieres-de-nimes",
+      "key": "france.languedoc-roussillon.costieres-de-nimes",
+      "name": "Costières de Nîmes",
+      "level": "district",
+      "members": [
+        "Costières de Nîmes"
+      ],
+      "parcels": 1497,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon",
+      "name": "Côtes du Roussillon",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon"
+      ],
+      "parcels": 13562,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon-villages",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon-villages",
+      "name": "Côtes du Roussillon Villages",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon Villages"
+      ],
+      "parcels": 6179,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon-villages-caramany",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon-villages-caramany",
+      "name": "Côtes du Roussillon Villages Caramany",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon Villages Caramany"
+      ],
+      "parcels": 846,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon-villages-les-aspres",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon-villages-les-aspres",
+      "name": "Côtes du Roussillon Villages Les Aspres",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon Villages Les Aspres"
+      ],
+      "parcels": 1349,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon-villages-lesquerde",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon-villages-lesquerde",
+      "name": "Côtes du Roussillon Villages Lesquerde",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon Villages Lesquerde"
+      ],
+      "parcels": 292,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-roussillon-villages-tautavel",
+      "key": "france.languedoc-roussillon.cotes-du-roussillon-villages-tautavel",
+      "name": "Côtes du Roussillon Villages Tautavel",
+      "level": "district",
+      "members": [
+        "Côtes du Roussillon Villages Tautavel"
+      ],
+      "parcels": 305,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "collioure",
+      "key": "france.languedoc-roussillon.collioure",
+      "name": "Collioure",
+      "level": "village",
+      "members": [
+        "Collioure"
+      ],
+      "parcels": 1103,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "banyuls",
+      "key": "france.languedoc-roussillon.banyuls",
+      "name": "Banyuls",
+      "level": "village",
+      "members": [
+        "Banyuls"
+      ],
+      "parcels": 1103,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "banyuls-grand-cru",
+      "key": "france.languedoc-roussillon.banyuls-grand-cru",
+      "name": "Banyuls grand cru",
+      "level": "village",
+      "members": [
+        "Banyuls grand cru"
+      ],
+      "parcels": 1103,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "maury",
+      "key": "france.languedoc-roussillon.maury",
+      "name": "Maury",
+      "level": "village",
+      "members": [
+        "Maury"
+      ],
+      "parcels": 486,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "rivesaltes",
+      "key": "france.languedoc-roussillon.rivesaltes",
+      "name": "Rivesaltes",
+      "level": "district",
+      "members": [
+        "Rivesaltes"
+      ],
+      "parcels": 14201,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "grand-roussillon",
+      "key": "france.languedoc-roussillon.grand-roussillon",
+      "name": "Grand Roussillon",
+      "level": "district",
+      "members": [
+        "Grand Roussillon"
+      ],
+      "parcels": 15307,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-de-rivesaltes",
+      "key": "france.languedoc-roussillon.muscat-de-rivesaltes",
+      "name": "Muscat de Rivesaltes",
+      "level": "village",
+      "members": [
+        "Muscat de Rivesaltes"
+      ],
+      "parcels": 15307,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-de-frontignan",
+      "key": "france.languedoc-roussillon.muscat-de-frontignan",
+      "name": "Muscat de Frontignan",
+      "level": "village",
+      "members": [
+        "Muscat de Frontignan ou Frontignan ou Vin de Frontignan"
+      ],
+      "parcels": 152,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-de-lunel",
+      "key": "france.languedoc-roussillon.muscat-de-lunel",
+      "name": "Muscat de Lunel",
+      "level": "village",
+      "members": [
+        "Muscat de Lunel"
+      ],
+      "parcels": 199,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-de-mireval",
+      "key": "france.languedoc-roussillon.muscat-de-mireval",
+      "name": "Muscat de Mireval",
+      "level": "village",
+      "members": [
+        "Muscat de Mireval"
+      ],
+      "parcels": 50,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-de-saint-jean-de-minervois",
+      "key": "france.languedoc-roussillon.muscat-de-saint-jean-de-minervois",
+      "name": "Muscat de Saint-Jean-de-Minervois",
+      "level": "village",
+      "members": [
+        "Muscat de Saint-Jean-de-Minervois"
+      ],
+      "parcels": 84,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}
