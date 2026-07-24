@@ -1,0 +1,856 @@
+{
+  "region": "Alsace",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline).",
+    "caveats": [
+      "Alsace is a dual-role region: the region place france.alsace IS the regional 'Alsace' AOC (single-entry member list), per the Phase 3 France design.",
+      "The 51 grands crus are each a full AOC (Alsace Grand Cru delimited lieu-dit): is_appellation=true, appellation_level=grand_cru, primary_parent=france.alsace.",
+      "Several grands crus are tiny (1-6 delimited parcels: Altenberg de Bergbieten, Bruderthal, Geisberg, Kessler, Kirchberg de Ribeauville, Wiebelsberg...) - their footprints are correspondingly small but valid.",
+      "Deferred to a later breadth/depth pass: 'Alsace suivi d'un nom de lieu-dit' (2541), the communal complements (Alsace Bergheim/Ottrott/Cote de Rouffach/Klevener de Heiligenstein...), and Cremant d'Alsace."
+    ]
+  },
+  "modeling_decision": "region france.alsace: is_appellation=true, appellation_level=region, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, tier 1, min_zoom ~4, boundary = dissolve of member 'Alsace' (2595 parcels). 51 grands crus: is_appellation=true, appellation_level=grand_cru, primary_parent=france.alsace, tier 2, boundary = dissolve of each 'Alsace grand cru <name>' member. Grapes: the four noble varieties (Riesling, Gewurztraminer, Pinot Gris, Muscat) dominate the grands crus; content per-cru later. Scoring links: exact-name against the live French reference rows (never fuzzy); crus without an exact scoring row stay PENDING. NOT run live - reviewable groundwork; the catalog/boundary/flip/links/content build waits on the owner shape-review gate.",
+  "region_window": {
+    "minLon": 6.9,
+    "minLat": 47.7,
+    "maxLon": 7.8,
+    "maxLat": 49.2
+  },
+  "targets": [
+    {
+      "slug": "alsace",
+      "key": "france.alsace",
+      "name": "Alsace",
+      "level": "region",
+      "members": [
+        "Alsace"
+      ],
+      "parcels": 2595,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.02,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "altenberg-de-bergbieten",
+      "key": "france.alsace.altenberg-de-bergbieten",
+      "name": "Altenberg de Bergbieten",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Altenberg de Bergbieten"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "altenberg-de-bergheim",
+      "key": "france.alsace.altenberg-de-bergheim",
+      "name": "Altenberg de Bergheim",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Altenberg de Bergheim"
+      ],
+      "parcels": 5,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "altenberg-de-wolxheim",
+      "key": "france.alsace.altenberg-de-wolxheim",
+      "name": "Altenberg de Wolxheim",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Altenberg de Wolxheim"
+      ],
+      "parcels": 16,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "brand",
+      "key": "france.alsace.brand",
+      "name": "Brand",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Brand"
+      ],
+      "parcels": 25,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "bruderthal",
+      "key": "france.alsace.bruderthal",
+      "name": "Bruderthal",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Bruderthal"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "eichberg",
+      "key": "france.alsace.eichberg",
+      "name": "Eichberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Eichberg"
+      ],
+      "parcels": 13,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "engelberg",
+      "key": "france.alsace.engelberg",
+      "name": "Engelberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Engelberg"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "florimont",
+      "key": "france.alsace.florimont",
+      "name": "Florimont",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Florimont"
+      ],
+      "parcels": 4,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "frankstein",
+      "key": "france.alsace.frankstein",
+      "name": "Frankstein",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Frankstein"
+      ],
+      "parcels": 6,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "froehn",
+      "key": "france.alsace.froehn",
+      "name": "Froehn",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Froehn"
+      ],
+      "parcels": 8,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "furstentum",
+      "key": "france.alsace.furstentum",
+      "name": "Furstentum",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Furstentum"
+      ],
+      "parcels": 5,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "geisberg",
+      "key": "france.alsace.geisberg",
+      "name": "Geisberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Geisberg"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "gloeckelberg",
+      "key": "france.alsace.gloeckelberg",
+      "name": "Gloeckelberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Gloeckelberg"
+      ],
+      "parcels": 23,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "goldert",
+      "key": "france.alsace.goldert",
+      "name": "Goldert",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Goldert"
+      ],
+      "parcels": 5,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "hatschbourg",
+      "key": "france.alsace.hatschbourg",
+      "name": "Hatschbourg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Hatschbourg"
+      ],
+      "parcels": 11,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "hengst",
+      "key": "france.alsace.hengst",
+      "name": "Hengst",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Hengst"
+      ],
+      "parcels": 14,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kaefferkopf",
+      "key": "france.alsace.kaefferkopf",
+      "name": "Kaefferkopf",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kaefferkopf"
+      ],
+      "parcels": 12,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kanzlerberg",
+      "key": "france.alsace.kanzlerberg",
+      "name": "Kanzlerberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kanzlerberg"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kastelberg",
+      "key": "france.alsace.kastelberg",
+      "name": "Kastelberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kastelberg"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kessler",
+      "key": "france.alsace.kessler",
+      "name": "Kessler",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kessler"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kirchberg-de-barr",
+      "key": "france.alsace.kirchberg-de-barr",
+      "name": "Kirchberg de Barr",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kirchberg de Barr"
+      ],
+      "parcels": 21,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kirchberg-de-ribeauville",
+      "key": "france.alsace.kirchberg-de-ribeauville",
+      "name": "Kirchberg de Ribeauvillé",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kirchberg de Ribeauvillé"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "kitterle",
+      "key": "france.alsace.kitterle",
+      "name": "Kitterlé",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Kitterlé"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "mambourg",
+      "key": "france.alsace.mambourg",
+      "name": "Mambourg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Mambourg"
+      ],
+      "parcels": 9,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "mandelberg",
+      "key": "france.alsace.mandelberg",
+      "name": "Mandelberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Mandelberg"
+      ],
+      "parcels": 4,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "marckrain",
+      "key": "france.alsace.marckrain",
+      "name": "Marckrain",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Marckrain"
+      ],
+      "parcels": 4,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "moenchberg",
+      "key": "france.alsace.moenchberg",
+      "name": "Moenchberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Moenchberg"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muenchberg",
+      "key": "france.alsace.muenchberg",
+      "name": "Muenchberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Muenchberg"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "ollwiller",
+      "key": "france.alsace.ollwiller",
+      "name": "Ollwiller",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Ollwiller"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "osterberg",
+      "key": "france.alsace.osterberg",
+      "name": "Osterberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Osterberg"
+      ],
+      "parcels": 4,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pfersigberg",
+      "key": "france.alsace.pfersigberg",
+      "name": "Pfersigberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Pfersigberg"
+      ],
+      "parcels": 18,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pfingstberg",
+      "key": "france.alsace.pfingstberg",
+      "name": "Pfingstberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Pfingstberg"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "praelatenberg",
+      "key": "france.alsace.praelatenberg",
+      "name": "Praelatenberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Praelatenberg"
+      ],
+      "parcels": 11,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "rangen",
+      "key": "france.alsace.rangen",
+      "name": "Rangen",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Rangen"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "rosacker",
+      "key": "france.alsace.rosacker",
+      "name": "Rosacker",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Rosacker"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saering",
+      "key": "france.alsace.saering",
+      "name": "Saering",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Saering"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "schlossberg",
+      "key": "france.alsace.schlossberg",
+      "name": "Schlossberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Schlossberg"
+      ],
+      "parcels": 12,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "schoenenbourg",
+      "key": "france.alsace.schoenenbourg",
+      "name": "Schoenenbourg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Schoenenbourg"
+      ],
+      "parcels": 9,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "sommerberg",
+      "key": "france.alsace.sommerberg",
+      "name": "Sommerberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Sommerberg"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "sonnenglanz",
+      "key": "france.alsace.sonnenglanz",
+      "name": "Sonnenglanz",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Sonnenglanz"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "spiegel",
+      "key": "france.alsace.spiegel",
+      "name": "Spiegel",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Spiegel"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "sporen",
+      "key": "france.alsace.sporen",
+      "name": "Sporen",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Sporen"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "steinert",
+      "key": "france.alsace.steinert",
+      "name": "Steinert",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Steinert"
+      ],
+      "parcels": 29,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "steingrubler",
+      "key": "france.alsace.steingrubler",
+      "name": "Steingrubler",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Steingrubler"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "steinklotz",
+      "key": "france.alsace.steinklotz",
+      "name": "Steinklotz",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Steinklotz"
+      ],
+      "parcels": 2,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "vorbourg",
+      "key": "france.alsace.vorbourg",
+      "name": "Vorbourg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Vorbourg"
+      ],
+      "parcels": 44,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "wiebelsberg",
+      "key": "france.alsace.wiebelsberg",
+      "name": "Wiebelsberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Wiebelsberg"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "wineck-schlossberg",
+      "key": "france.alsace.wineck-schlossberg",
+      "name": "Wineck-Schlossberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Wineck-Schlossberg"
+      ],
+      "parcels": 6,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "winzenberg",
+      "key": "france.alsace.winzenberg",
+      "name": "Winzenberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Winzenberg"
+      ],
+      "parcels": 4,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "zinnkoepfle",
+      "key": "france.alsace.zinnkoepfle",
+      "name": "Zinnkoepfle",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Zinnkoepfle"
+      ],
+      "parcels": 54,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "zotzenberg",
+      "key": "france.alsace.zotzenberg",
+      "name": "Zotzenberg",
+      "level": "grand_cru",
+      "members": [
+        "Alsace grand cru Zotzenberg"
+      ],
+      "parcels": 6,
+      "concave": {
+        "gridSize": 0.02,
+        "simplifyTolerance": 0.0004,
+        "minComponentShare": 0.05,
+        "concavity": 2
+      }
+    }
+  ]
+}
