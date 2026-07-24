@@ -7263,6 +7263,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.avenay-val-d-or",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51028",
+    "normalized_checksum_sha256": "DD7303D621E623DC41BD429634581A3900C3DB970CE9E4641BDDA10EA9A744E9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/avenay-val-d-or-raw.geojson",
+    "raw_checksum_sha256": "70965B3936E8A5EC32C433BA9F852D0CA0034AFF6BB5C327273C2F91E9FDC06F",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.avize",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51029",
@@ -7290,12 +7299,66 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.bergeres-les-vertus",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51049",
+    "normalized_checksum_sha256": "DDF85EED90F73804CAA331112E617229FEB76BCB92008A8291BC6EDE988BA5E2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/bergeres-les-vertus-raw.geojson",
+    "raw_checksum_sha256": "BA8D9922E149BBC206B152F6821AEB06115BC09C53EEAA3CFDFC43E76C97BA2D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.bezannes",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51058",
+    "normalized_checksum_sha256": "46B938E592DA94C576E8C945EE54DC0E0FB0CADFA542AE321BA4D16A17771603",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/bezannes-raw.geojson",
+    "raw_checksum_sha256": "A7CAF89EC6778E85D646E4088D35D3FEE048BF09F10540A2E7173CC9910FBBBF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.billy-le-grand",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51061",
+    "normalized_checksum_sha256": "2F6CC0C2FC1B344121402F75553E7AF4E2A770890969FCC0059F2223777D70BE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/billy-le-grand-raw.geojson",
+    "raw_checksum_sha256": "547A82F0B2738A100494FDD89D0D68ECB7FD3BCCDC2A83DB0B2C521512A1282F",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.bouzy",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51079",
     "normalized_checksum_sha256": "63984B4A417D85233AE604121A53A55C5A66C155C68838CC134431CBD4F392AF",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/bouzy-raw.geojson",
     "raw_checksum_sha256": "6B8350AE6D62136EBDDE317850B7872F87B7F864DB10B2CA2A1903798D10435F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.chamery",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51112",
+    "normalized_checksum_sha256": "67C5FED7D39BE6D4F7E139A96412AE13D8535DD88C53C462EEE96B3331F8C9E9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/chamery-raw.geojson",
+    "raw_checksum_sha256": "940F87ABA3C42E1946E7FF894AA713289C29D8CC32AE8684F81B5324E3DC0D25",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.champillon",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51119",
+    "normalized_checksum_sha256": "40E9C1989A69F7DED8CC1839D2127FAA64A46C474B323AD0DCB4502F220EDB93",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/champillon-raw.geojson",
+    "raw_checksum_sha256": "55238B0D7317BCCA64A07335EABC191426C5A436653A82075AB4540137D87C5E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.chigny-les-roses",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51152",
+    "normalized_checksum_sha256": "78FA4C9A727DAF8A0294AD6AFE25E325030BAA1011044620C64B223ED954051B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/chigny-les-roses-raw.geojson",
+    "raw_checksum_sha256": "E5C6A8D79DCFAFEF6F4D5AC86F094A1B2E674A390F7E36ECF04B9874E53EA47D",
     "documented": true
   },
   {
@@ -7308,12 +7371,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.coligny",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51158",
+    "normalized_checksum_sha256": "AE91EC31D836251039DF9FCBEE65C486F235C6055153777B51B45BC48575656E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/coligny-raw.geojson",
+    "raw_checksum_sha256": "714DB99C11E0258D396E9816D61AF08ECCBCBBA377010F158B7E73B30927C4B7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.cormontreuil",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51172",
+    "normalized_checksum_sha256": "EC3101FC74E1F3201B0E9B6B630C4A6A996705EC74AF59E5082AFEEEDFE7D10C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/cormontreuil-raw.geojson",
+    "raw_checksum_sha256": "15575F9F6162C1C369F2B2B7F62D9ABFE469418845ED8F5D76153E4BC1D10F8F",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.cote-des-blancs",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:cote-des-blancs",
-    "normalized_checksum_sha256": "9F3F4C83B75A4C32B938052557E73AC3F678BF2A4ABAF4B7BE0FC6C2D34FBFC1",
+    "normalized_checksum_sha256": "FE7CC51E9A4C244720052EB9DB9342DDE1AA28F4122BF410E6680FC06B0ECE31",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.coulommes-la-montagne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51177",
+    "normalized_checksum_sha256": "B69942D5C0453BF44982D76D269045156AB4077B7936855F0160BA0E0DCEE43F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/coulommes-la-montagne-raw.geojson",
+    "raw_checksum_sha256": "BD61A17BAA5FFC034B646A536861AA309C184E0F4C88C2ED6946BCF9F8737F19",
     "documented": true
   },
   {
@@ -7326,12 +7416,84 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.cuis",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51200",
+    "normalized_checksum_sha256": "4871C89DF36E0A6AD82BE0F8487979DBDD5FD47F878F85ACE8BE76B9D97FE859",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/cuis-raw.geojson",
+    "raw_checksum_sha256": "BC6C5A81FE68C0C12DE2F8B13B76FE95CC27AF0AA3FC7FF3FCAFF5CDA01182CE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.cumieres",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51202",
+    "normalized_checksum_sha256": "390CA8E7A96A12A3EEBDC577B4ABDBC5D3F38413E346CB3DE33EDE867203AEEF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/cumieres-raw.geojson",
+    "raw_checksum_sha256": "B2DF5FC6BC15B20CDA7F2B709E3D24ABEE84F8777F6425302AB1470592B54D0B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.dizy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51210",
+    "normalized_checksum_sha256": "523060CE08ED1760003E12393B77B25E5700E509CEF64626E43E3A300A1CA288",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/dizy-raw.geojson",
+    "raw_checksum_sha256": "C348A4B269E6F319F7F928AEFC1BCF275B778E05D221A5F5C831B90176B820A2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.ecueil",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51225",
+    "normalized_checksum_sha256": "2FD87F191817EE5AC07DDCF188C1BAE7EE6B060BB4234D76EA2D4E0E49B23E34",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/ecueil-raw.geojson",
+    "raw_checksum_sha256": "949016C206602488B6760935A714D884AC63D159F7E351147ABE5F6D1ED56DAB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.etrechy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51239",
+    "normalized_checksum_sha256": "A0528C0DED111077C1E1368E5F44AE5C31BE1116B6992B07BB2294D9221370AD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/etrechy-raw.geojson",
+    "raw_checksum_sha256": "6B9D836AAF5AF871836B3F57D9E2488319AF2B99449D8BA1991B39E3F34C3341",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.grande-vallee-de-la-marne",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:grande-vallee-de-la-marne",
-    "normalized_checksum_sha256": "FCA1C57334C1769ED239DD238F2E8BBF651CDD112A5389982852FF3E78F23BCD",
+    "normalized_checksum_sha256": "327FD2B3C5965B94E1874AFEAECCA26C149EF7A6089D5B986BA5A4B0B0C4F30F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.grauves",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51281",
+    "normalized_checksum_sha256": "44FEBD6FDA58126852E77FCE58650C88C25C84F787A23F864BC01EA89BB9A1F9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/grauves-raw.geojson",
+    "raw_checksum_sha256": "BE69F9682CCEDFD592C52F114746A7AC9B25089DF43584B798C90C577F7E6242",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.hautvillers",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51287",
+    "normalized_checksum_sha256": "87CEBB199DB2354421F9CB0773212B97B9136020CDF272E0AD9B12EE89A96844",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/hautvillers-raw.geojson",
+    "raw_checksum_sha256": "71F0F2EB3DA4DAAA2812588995B85A5C9993132A44B086949C4786C410F68CCC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.jouy-les-reims",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51310",
+    "normalized_checksum_sha256": "A0AF607F0DE7975140C0E82F355FAD4AAC1C0AC7F2E0B1488F91DE1D89658A32",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/jouy-les-reims-raw.geojson",
+    "raw_checksum_sha256": "7E2D9C16D5B853D0E62F22B4409DD1C3009EE9707D610C6AB6AFECAAA8AC81E8",
     "documented": true
   },
   {
@@ -7344,12 +7506,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.les-mesneux",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51365",
+    "normalized_checksum_sha256": "F78268DE5927C820CBEB12A2CA9E6900FF6DB0BE835A67279F417D4DA891BA59",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/les-mesneux-raw.geojson",
+    "raw_checksum_sha256": "CC7B81771B5547DB4CD30166210A863739F791E51442D31DE01ACD04D27F7603",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.louvois",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51331",
     "normalized_checksum_sha256": "716EE29FC9A65069A7C59D6F77C6F340FCE8EFC3F574051E9E9893718607E6AA",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/louvois-raw.geojson",
     "raw_checksum_sha256": "A5C35F67963952F6B41865F13CD32FF25BF777D5E921E07938E89D8BB99AE963",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.ludes",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51333",
+    "normalized_checksum_sha256": "833E7635F91E20078FC334236AFCAF9FB6309EAA0E6F2191C000300BD4284B6A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/ludes-raw.geojson",
+    "raw_checksum_sha256": "C010FF8D14E248E24BF8D36884479A37EDB6169E044A4CF436685301167FA8BC",
     "documented": true
   },
   {
@@ -7365,9 +7545,27 @@
     "canonical_key": "france.champagne.montagne-de-reims",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:montagne-de-reims",
-    "normalized_checksum_sha256": "530E7EEDFCB305DC21DB003B2D8F7D17ACFDD5F707C7BC386F7B739CDAEF6208",
+    "normalized_checksum_sha256": "49C428CA6267E41D5767041704181897FAE9A8E0412D9CB5AA2062FE598793CA",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.montbre",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51375",
+    "normalized_checksum_sha256": "11B77E2BF5CC1F286F88186052F3D8D0F8B687E2DAA8ECEB6FC87C42E4D29FBB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/montbre-raw.geojson",
+    "raw_checksum_sha256": "05BDCC62741F7579C98F67B5D075083A75102973FB1EC209DEEBCACBF51EE615",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.mutigny",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51392",
+    "normalized_checksum_sha256": "8667717AD583A5E246F32D394ECEB3243AC9006160A71161F1671C04A040D4A0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/mutigny-raw.geojson",
+    "raw_checksum_sha256": "282C1207E6919AA3AED9304FC012C8965C091AC6D4EE1DE6ECE83E263996B792",
     "documented": true
   },
   {
@@ -7389,12 +7587,57 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.pargny-les-reims",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51422",
+    "normalized_checksum_sha256": "1FCF0C42C46A55DE17A3CFACB434585F38CE06610BCD9BECC378492825587FFC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/pargny-les-reims-raw.geojson",
+    "raw_checksum_sha256": "F088FDFED8C083456E4ACB6BB51E7A34051E459ADE75EE42ACBFB56DA9025484",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.pierry",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51431",
+    "normalized_checksum_sha256": "157C8EFB0E3EBE698AEC269FC6DA20FC878EDEDF336E3C60F1861439277DC9E5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/pierry-raw.geojson",
+    "raw_checksum_sha256": "3FB36E717043042BF76A42B3ABE93D8A72B4ADABCCADAF7B1B209377398D21BD",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.puisieulx",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51450",
     "normalized_checksum_sha256": "697EE2CA1F9E70189E7AC783B4C1C8C88185BD7BF6E14D6CE2858828E9B32B18",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/puisieulx-raw.geojson",
     "raw_checksum_sha256": "FE43BE8A26056BDDD64921E1837CB9567630D653C1FC2615B6E589AA80AEEF6F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.rilly-la-montagne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51461",
+    "normalized_checksum_sha256": "16AD7A487C3EA4CB5F39F20D2F4242E01FC2D73409ADFA59FE898CA8A6693ABA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/rilly-la-montagne-raw.geojson",
+    "raw_checksum_sha256": "3569C6647F880FA71CA4AA122A7D30E7585C2B236568A5DEA42B499B69941777",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.sacy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51471",
+    "normalized_checksum_sha256": "FFB0408BFB805125951F428CA2415F4B8F6728F05CFD8A1456B956F53E559D28",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/sacy-raw.geojson",
+    "raw_checksum_sha256": "6D456C04C0AF69284903F8F38DC60A09909B966321E3965EE3F4DB93FBD8808C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.sermiers",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51532",
+    "normalized_checksum_sha256": "EFAF985E2AE4A5EFE5B3CDC14BFCAB6531BA97E874E378AE38C753B611990D2A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/sermiers-raw.geojson",
+    "raw_checksum_sha256": "6D789A409DA0A3643FA2540528AA664E7EF9916D05F0CB942B646C90847F7FBD",
     "documented": true
   },
   {
@@ -7407,12 +7650,48 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.taissy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51562",
+    "normalized_checksum_sha256": "8EAA65F9AAC69DAEE058074325FCCD5CD0B9AF5C169BA149B93C316D8CAB435A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/taissy-raw.geojson",
+    "raw_checksum_sha256": "56CA35AD61F98813C02086CEF29D409BDB1F04C7321E6A0891A0F4B6D4C88C89",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.tours-sur-marne",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51576",
     "normalized_checksum_sha256": "4FA7CB2992FCAA232F9062CA9374501A9A17118BC4965439FB63D250E151E72A",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/tours-sur-marne-raw.geojson",
     "raw_checksum_sha256": "4FFBB2476C53397AAB0509AA0C0D57BAE564F320DA5B6CF50E0716EFCF79DCF3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.trepail",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51580",
+    "normalized_checksum_sha256": "F6491C7AF4F29963645309ED59070E87B010F7E9B163E30B94667835252A8511",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/trepail-raw.geojson",
+    "raw_checksum_sha256": "B261EC6B2E6A1D8F0791A53CD99FE266DD93E7BDFB8BC1D467B2BEACF5AAA2EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.trois-puits",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51584",
+    "normalized_checksum_sha256": "7360F2018698BD57B4AEFB38C4A612C6671A5F231B265202E57B12576136E700",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/trois-puits-raw.geojson",
+    "raw_checksum_sha256": "103B8BB3B08A403FBECCC194950A708E1F844D9A42B2B65705A68B663B788763",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.vaudemange",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51599",
+    "normalized_checksum_sha256": "F59DC3CFECE41BAFC7241523D094B82B0F683210C134B10EEF073678005073C2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/vaudemange-raw.geojson",
+    "raw_checksum_sha256": "CB8216B20B4E833894C969C9FA035BBD7587FAE79860EE0F45F035038581FB40",
     "documented": true
   },
   {
@@ -7431,6 +7710,69 @@
     "normalized_checksum_sha256": "21796B090738FA309EEA4606F877ECC078431C7D30BBC9C487CCCBDE24665234",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/verzy-raw.geojson",
     "raw_checksum_sha256": "AF06772D7804A1EEF308EB2DEFC6A715C73A982CE19068E689C1332A861A20F2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.villedommange",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51622",
+    "normalized_checksum_sha256": "2BF3ADA407AAF9449739DCC582B94C5D2950CCAF2EB0928EC46DD341281BCFA8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/villedommange-raw.geojson",
+    "raw_checksum_sha256": "E6FB8DFE1A67819DF4253199149F0B28D5988039F1DAFBE38C3FA87360DC0159",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.villeneuve-renneville-chevigny",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51627",
+    "normalized_checksum_sha256": "18557249616D9FE818DAD92B2A0155DCA5C8C6B7E88F13E0D910E0FA5BA4B934",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/villeneuve-renneville-chevigny-raw.geojson",
+    "raw_checksum_sha256": "B629249C59B60DDEB0B775732AE9BB4659D4496EA11AD093FE3B41CD5D1A42D3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.villers-allerand",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51629",
+    "normalized_checksum_sha256": "6666C8C83E207D7C1D4F7C61927EC2D23F8AA78AD87B08606474A1B2E1C56A0E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/villers-allerand-raw.geojson",
+    "raw_checksum_sha256": "7C06A98BE1634E97314110B2A937501E97B152447F794B3F99B14CF142195EB2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.villers-aux-noeuds",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51631",
+    "normalized_checksum_sha256": "D5C1500DDEB92B26D42B08C78E8DAC031B6F80AABB9C4A60E8DFEB928FD77901",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/villers-aux-noeuds-raw.geojson",
+    "raw_checksum_sha256": "D93908C10B932B64EFE93EB5CE4921558655201328BEBA9F4D4F4E02A0427475",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.villers-marmery",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51636",
+    "normalized_checksum_sha256": "806B51ACED34E6F6F59F69C8833794695976EDD62490265F996311DC390B602C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/villers-marmery-raw.geojson",
+    "raw_checksum_sha256": "5BFDB8669E47E6232DA842ED636784221AFC99AD25381C13FCDC36E4A09BF36B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.voipreux",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51651",
+    "normalized_checksum_sha256": "D5FE17866B77DBABDB31D66AD41BF54966E410F57BFB9D528E2DFD1F93D47A79",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/voipreux-raw.geojson",
+    "raw_checksum_sha256": "D11CFFD87E6C5242478DB1E6DE4F580A607FBA1A8B54BAB9819B1916DEAF8677",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.vrigny",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51657",
+    "normalized_checksum_sha256": "6A971D0280F91D9B04D6691137A0E08D84745068B65CD7FA9C01FDFA135346C0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/vrigny-raw.geojson",
+    "raw_checksum_sha256": "D974F9F431D8FC306947E284A897BC1C95FA80763D91E56F7FE2882E19E8ECDC",
     "documented": true
   },
   {

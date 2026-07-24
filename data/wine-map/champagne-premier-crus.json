@@ -1,0 +1,248 @@
+{
+  "classification": "Champagne — Echelle des Crus, Premier Cru villages (90-99% rated)",
+  "provenance": {
+    "authority": "Echelle des Crus 1er cru villages (best-knowledge list); commune footprints from IGN Admin Express by INSEE (subset of champagne-communes.json, INAO Licence Ouverte).",
+    "reviewed_at": "2026-07-24",
+    "caveats": [
+      "A Champagne Premier Cru is a COMMUNE rating (90-99% on the Echelle des Crus), not a parcel AOC. The commune footprint is an over-approximation of the rated vineyard.",
+      "'Coligny' uses the Val-des-Marais commune-nouvelle footprint (51158), which over-includes non-cru villages."
+    ]
+  },
+  "modeling_decision": "kind=SITE, is_appellation=false, appellation_level=null, tier 3, primary_parent = the village's Champagne sub-region (Montagne de Reims / Cote des Blancs / Grande Vallee de la Marne). Same model as the 17 Grand Cru villages. Sub-regions are re-derived to include these after the flip.",
+  "village_count": 38,
+  "deferred": {
+    "Tauxieres-Mutry": "not present in champagne-communes.json (aire geographique)",
+    "Mareuil-sur-Ay, Bisseuil": "subsumed in the Ay Grand Cru commune-nouvelle footprint (51030) - would double-count",
+    "Vertus": "merged into the Blancs-Coteaux commune nouvelle - needs a deleguee footprint"
+  },
+  "villages": [
+    {
+      "slug": "bezannes",
+      "name": "Bezannes",
+      "insee": "51058",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "billy-le-grand",
+      "name": "Billy-le-Grand",
+      "insee": "51061",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "chamery",
+      "name": "Chamery",
+      "insee": "51112",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "chigny-les-roses",
+      "name": "Chigny-les-Roses",
+      "insee": "51152",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "cormontreuil",
+      "name": "Cormontreuil",
+      "insee": "51172",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "coulommes-la-montagne",
+      "name": "Coulommes-la-Montagne",
+      "insee": "51177",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "ecueil",
+      "name": "Écueil",
+      "insee": "51225",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "jouy-les-reims",
+      "name": "Jouy-lès-Reims",
+      "insee": "51310",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "les-mesneux",
+      "name": "Les Mesneux",
+      "insee": "51365",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "ludes",
+      "name": "Ludes",
+      "insee": "51333",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "montbre",
+      "name": "Montbré",
+      "insee": "51375",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "pargny-les-reims",
+      "name": "Pargny-lès-Reims",
+      "insee": "51422",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "rilly-la-montagne",
+      "name": "Rilly-la-Montagne",
+      "insee": "51461",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "sacy",
+      "name": "Sacy",
+      "insee": "51471",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "sermiers",
+      "name": "Sermiers",
+      "insee": "51532",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "taissy",
+      "name": "Taissy",
+      "insee": "51562",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "trepail",
+      "name": "Trépail",
+      "insee": "51580",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "trois-puits",
+      "name": "Trois-Puits",
+      "insee": "51584",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "vaudemange",
+      "name": "Vaudemange",
+      "insee": "51599",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "villedommange",
+      "name": "Villedommange",
+      "insee": "51622",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "villers-allerand",
+      "name": "Villers-Allerand",
+      "insee": "51629",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "villers-aux-noeuds",
+      "name": "Villers-aux-Nœuds",
+      "insee": "51631",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "villers-marmery",
+      "name": "Villers-Marmery",
+      "insee": "51636",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "vrigny",
+      "name": "Vrigny",
+      "insee": "51657",
+      "subregion": "montagne-de-reims"
+    },
+    {
+      "slug": "avenay-val-d-or",
+      "name": "Avenay-Val-d'Or",
+      "insee": "51028",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "champillon",
+      "name": "Champillon",
+      "insee": "51119",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "cumieres",
+      "name": "Cumières",
+      "insee": "51202",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "dizy",
+      "name": "Dizy",
+      "insee": "51210",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "hautvillers",
+      "name": "Hautvillers",
+      "insee": "51287",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "mutigny",
+      "name": "Mutigny",
+      "insee": "51392",
+      "subregion": "grande-vallee-de-la-marne"
+    },
+    {
+      "slug": "bergeres-les-vertus",
+      "name": "Bergères-lès-Vertus",
+      "insee": "51049",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "coligny",
+      "name": "Coligny",
+      "insee": "51158",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "cuis",
+      "name": "Cuis",
+      "insee": "51200",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "etrechy",
+      "name": "Étréchy",
+      "insee": "51239",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "grauves",
+      "name": "Grauves",
+      "insee": "51281",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "pierry",
+      "name": "Pierry",
+      "insee": "51431",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "villeneuve-renneville-chevigny",
+      "name": "Villeneuve-Renneville-Chevigny",
+      "insee": "51627",
+      "subregion": "cote-des-blancs"
+    },
+    {
+      "slug": "voipreux",
+      "name": "Voipreux",
+      "insee": "51651",
+      "subregion": "cote-des-blancs"
+    }
+  ]
+}
