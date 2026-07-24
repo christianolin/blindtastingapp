@@ -1,0 +1,26 @@
+{
+  "region": "Provence",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline).",
+    "caveats": [
+      "Provence is an AGGREGATE region (no single 'Provence' AOC): the region place france.provence outline is the multi-member dissolve of its constituent AOCs, built at flip time - deferred here (heavy fetch). This artifact previews the constituent appellations.",
+      "Cotes de Provence is a large sprawling AOC across the Var - expect several components (correct). 'Cotes de Provence Sainte-Victoire' is a named terroir WITHIN Cotes de Provence; other CdP terroirs (Frejus, La Londe, Pierrefeu, Notre-Dame des Anges) exist and are deferred/verify.",
+      "Other Provence AOCs not yet included (verify/deferred): Cassis, Bellet, Coteaux de Pierrevert.",
+      "Palette (58 parcels) and Les Baux de Provence (279) are small; Bandol (882) is the prestige Mourvedre cru near Toulon."
+    ]
+  },
+  "modeling_decision": "france.provence = aggregate region (tier 1, boundary = multi-member dissolve of the constituent AOCs, built at flip time). Constituents: the three large regional AOCs (Cotes de Provence, Coteaux d'Aix-en-Provence, Coteaux varois en Provence) modeled appellation_level=district; the smaller/prestige AOCs (Bandol, Les Baux de Provence, Palette) and the CdP terroir (Sainte-Victoire) modeled appellation_level=village. All is_appellation=true, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.provence. Grapes: rose-dominant (Grenache, Cinsault, Syrah, Mourvedre, Tibouren; Rolle/Vermentino for whites); Bandol is Mourvedre-led. Scoring links: exact-name against live reference rows (never fuzzy); appellations without an exact scoring row stay PENDING. NOT run live - reviewable groundwork; the catalog/boundary/flip/links/content build waits on the owner shape-review gate.",
+  "region_window": { "minLon": 4.5, "minLat": 42.9, "maxLon": 6.9, "maxLat": 44.0 },
+  "targets": [
+    { "slug": "cotes-de-provence", "key": "france.provence.cotes-de-provence", "name": "Côtes de Provence", "level": "district", "members": ["Côtes de Provence"], "parcels": 7742, "concave": { "gridSize": 0.05, "simplifyTolerance": 0.002, "minComponentShare": 0.015, "concavity": 2 } },
+    { "slug": "coteaux-daix-en-provence", "key": "france.provence.coteaux-daix-en-provence", "name": "Coteaux d'Aix-en-Provence", "level": "district", "members": ["Coteaux d'Aix-en-Provence"], "parcels": 1995, "concave": { "gridSize": 0.05, "simplifyTolerance": 0.0015, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "coteaux-varois-en-provence", "key": "france.provence.coteaux-varois-en-provence", "name": "Coteaux varois en Provence", "level": "district", "members": ["Coteaux varois en Provence"], "parcels": 2417, "concave": { "gridSize": 0.05, "simplifyTolerance": 0.0015, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "cotes-de-provence-sainte-victoire", "key": "france.provence.cotes-de-provence-sainte-victoire", "name": "Côtes de Provence Sainte-Victoire", "level": "village", "members": ["Côtes de Provence Sainte-Victoire"], "parcels": 833, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.001, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "bandol", "key": "france.provence.bandol", "name": "Bandol", "level": "village", "members": ["Bandol"], "parcels": 882, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "les-baux-de-provence", "key": "france.provence.les-baux-de-provence", "name": "Les Baux de Provence", "level": "village", "members": ["Les Baux de Provence"], "parcels": 279, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.03, "concavity": 2 } },
+    { "slug": "palette", "key": "france.provence.palette", "name": "Palette", "level": "village", "members": ["Palette"], "parcels": 58, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0005, "minComponentShare": 0.04, "concavity": 2 } }
+  ]
+}
