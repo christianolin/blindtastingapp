@@ -787,6 +787,14 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Moulin-a-Vent AOP"], key: "france.beaujolais.moulin-a-vent" },
   { names: ["Regnie AOP"], key: "france.beaujolais.regnie" },
   { names: ["Saint-Amour AOP"], key: "france.beaujolais.saint-amour" },
+  { names: ["Côte-Rôtie AOP"], key: "france.rhone.cote-rotie" },
+  { names: ["Condrieu AOP"], key: "france.rhone.condrieu" },
+  { names: ["Chateau-Grillet AOP"], key: "france.rhone.chateau-grillet" },
+  { names: ["Saint-Joseph AOP"], key: "france.rhone.saint-joseph" },
+  { names: ["Hermitage AOP"], key: "france.rhone.hermitage" },
+  { names: ["Crozes-Hermitage AOP"], key: "france.rhone.crozes-hermitage" },
+  { names: ["Cornas AOP"], key: "france.rhone.cornas" },
+  { names: ["Saint-Peray AOP"], key: "france.rhone.saint-peray" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -919,6 +927,7 @@ test("only exact current Bordeaux references are verified", async () => {
     { name: "Bordeaux", canonical_key: "france.bordeaux" },
     { name: "Bourgogne", canonical_key: "france.bourgogne" },
     { name: "Champagne", canonical_key: "france.champagne" },
+    { name: "Rhône", canonical_key: "france.rhone" },
   ]);
 
   const appellations = await client.query(
@@ -930,7 +939,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 130);
+  assert.equal(appellations.rows.length, 138);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -943,8 +952,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 4],
-    ["appellations", 130],
+    ["regions", 5],
+    ["appellations", 138],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -963,7 +972,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Phase 3E bordeaux migration: exact name match',
                     'Phase 3F chablis-climats migration: exact name match',
                     'Champagne region migration: exact name match',
-                    'Beaujolais region migration: exact name match'
+                    'Beaujolais region migration: exact name match',
+                    'Rhone region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
