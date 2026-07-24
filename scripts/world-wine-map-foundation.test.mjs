@@ -775,6 +775,18 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Valmur AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.valmur" },
   { names: ["Les Clos AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.les-clos" },
   { names: ["Blanchot AOP"], key: "france.bourgogne.chablis.chablis.chablis-grand-cru.blanchot" },
+  { names: ["Beaujolais AOP"], key: "france.beaujolais" },
+  { names: ["Beaujolais-Villages AOP"], key: "france.beaujolais.beaujolais-villages" },
+  { names: ["Brouilly AOP"], key: "france.beaujolais.brouilly" },
+  { names: ["Cote de Brouilly AOP"], key: "france.beaujolais.cote-de-brouilly" },
+  { names: ["Chenas AOP"], key: "france.beaujolais.chenas" },
+  { names: ["Chiroubles AOP"], key: "france.beaujolais.chiroubles" },
+  { names: ["Fleurie AOP"], key: "france.beaujolais.fleurie" },
+  { names: ["Julienas AOP"], key: "france.beaujolais.julienas" },
+  { names: ["Morgon AOP"], key: "france.beaujolais.morgon" },
+  { names: ["Moulin-a-Vent AOP"], key: "france.beaujolais.moulin-a-vent" },
+  { names: ["Regnie AOP"], key: "france.beaujolais.regnie" },
+  { names: ["Saint-Amour AOP"], key: "france.beaujolais.saint-amour" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -903,6 +915,7 @@ test("only exact current Bordeaux references are verified", async () => {
       order by p.canonical_key`,
   );
   assert.deepEqual(region.rows, [
+    { name: "Beaujolais", canonical_key: "france.beaujolais" },
     { name: "Bordeaux", canonical_key: "france.bordeaux" },
     { name: "Bourgogne", canonical_key: "france.bourgogne" },
     { name: "Champagne", canonical_key: "france.champagne" },
@@ -917,7 +930,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 118);
+  assert.equal(appellations.rows.length, 130);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -930,8 +943,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 3],
-    ["appellations", 118],
+    ["regions", 4],
+    ["appellations", 130],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -949,7 +962,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Phase 3D districts migration: exact name match',
                     'Phase 3E bordeaux migration: exact name match',
                     'Phase 3F chablis-climats migration: exact name match',
-                    'Champagne region migration: exact name match'
+                    'Champagne region migration: exact name match',
+                    'Beaujolais region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
