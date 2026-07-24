@@ -7308,12 +7308,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.cote-des-blancs",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:cote-des-blancs",
+    "normalized_checksum_sha256": "9F3F4C83B75A4C32B938052557E73AC3F678BF2A4ABAF4B7BE0FC6C2D34FBFC1",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.cramant",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51196",
     "normalized_checksum_sha256": "5A66662D3DD09F3A234199CC0E6B0A3F16BC2B8C63C558E67B7F6B432E4038E5",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/cramant-raw.geojson",
     "raw_checksum_sha256": "779925BDFD0A7F450360237125C9F3E79E4D1F6D94F406ACA76602C4671B1DC2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.grande-vallee-de-la-marne",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:grande-vallee-de-la-marne",
+    "normalized_checksum_sha256": "FCA1C57334C1769ED239DD238F2E8BBF651CDD112A5389982852FF3E78F23BCD",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {
@@ -7341,6 +7359,15 @@
     "normalized_checksum_sha256": "8F6B441A86971327E938A8A810C740E57EBFB580075A5949B41C49BE9C024109",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/mailly-champagne-raw.geojson",
     "raw_checksum_sha256": "610ED0F9AB94B746FB19C6A2A8C71D9CFD15BB48D3A89075D38F4AD56999A899",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.montagne-de-reims",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:montagne-de-reims",
+    "normalized_checksum_sha256": "530E7EEDFCB305DC21DB003B2D8F7D17ACFDD5F707C7BC386F7B739CDAEF6208",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {
