@@ -1,0 +1,103 @@
+{
+  "region": "Jura",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "Geographic AOCs only: Cotes du Jura (region-wide), Arbois, Arbois Pupillin (a named sub of Arbois), Chateau-Chalon (the vin jaune AOC, tiny - 12 parcels), L'Etoile.",
+      "Cremant du Jura (1720) and Macvin du Jura (1719) are product/style AOCs over essentially the Cotes du Jura footprint - better modeled as designations than as separate overlapping map places, so they are excluded here.",
+      "Cotes du Jura is a long scattered N-S strip along the Revermont - expect several components (correct)."
+    ]
+  },
+  "modeling_decision": "france.jura region (display 'Jura', tier 1): boundary = dissolve of 'Cotes du Jura' at flip time (the region-wide AOC). Cotes du Jura = appellation_level district; Arbois/Arbois Pupillin/Chateau-Chalon/L'Etoile = village. All is_appellation=true, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.jura. Grapes: Savagnin (vin jaune - Chateau-Chalon), Chardonnay, Poulsard/Trousseau (reds), Pinot Noir. Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending the owner shape-review gate.",
+  "region_window": {
+    "minLon": 5.3,
+    "minLat": 46.3,
+    "maxLon": 6,
+    "maxLat": 47.4
+  },
+  "targets": [
+    {
+      "slug": "jura",
+      "key": "france.jura",
+      "name": "Jura",
+      "level": "region",
+      "members": [
+        "Côtes du Jura"
+      ],
+      "parcels": 1720,
+      "concave": {
+        "gridSize": 0.06,
+        "simplifyTolerance": 0.002,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "arbois",
+      "key": "france.jura.arbois",
+      "name": "Arbois",
+      "level": "village",
+      "members": [
+        "Arbois"
+      ],
+      "parcels": 389,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "arbois-pupillin",
+      "key": "france.jura.arbois-pupillin",
+      "name": "Arbois Pupillin",
+      "level": "village",
+      "members": [
+        "Arbois Pupillin"
+      ],
+      "parcels": 5,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chateau-chalon",
+      "key": "france.jura.chateau-chalon",
+      "name": "Château-Chalon",
+      "level": "village",
+      "members": [
+        "Château-Chalon"
+      ],
+      "parcels": 12,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "l-etoile",
+      "key": "france.jura.l-etoile",
+      "name": "L'Étoile",
+      "level": "village",
+      "members": [
+        "L'Etoile"
+      ],
+      "parcels": 62,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+{
+  "region": "Savoie",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "Savoie vineyards are scattered pockets (Lake Geneva down through the Combe de Savoie) - the base 'Vin de Savoie' and 'Roussette de Savoie' dissolves are expected to be strongly MULTI-component (correct).",
+      "Comprehensive: base Vin de Savoie + Roussette de Savoie + Seyssel + all named Vin de Savoie crus (Apremont, Abymes, Chignin, Chignin-Bergeron, Chautagne, Cruet, Jongieux, Arbin, Crepy, Marin, Marignan, Montmelian, Ripaille, Ayze, Saint-Jean-de-la-Porte, Saint-Jeoire-Prieure) + Roussette de Savoie crus (Frangy, Marestel, Monterminod, Monthoux).",
+      "Bugey (in the Ain) is a separate neighbouring region, not modeled here."
+    ]
+  },
+  "modeling_decision": "france.savoie region (display 'Savoie', tier 1): boundary = dissolve of the base 'Vin de Savoie ou Savoie' at flip time. Base 'Vin de Savoie' + 'Roussette de Savoie' = appellation_level district; Seyssel + the named crus = village. All is_appellation=true, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.savoie. Grapes: Jacquere (Apremont/Abymes), Altesse (Roussette), Mondeuse (reds), Roussanne (Chignin-Bergeron). Scoring links exact-name (never fuzzy); no exact row -> PENDING. NOT run live - reviewable groundwork pending the owner shape-review gate.",
+  "region_window": {
+    "minLon": 5.6,
+    "minLat": 45.3,
+    "maxLon": 7,
+    "maxLat": 46.5
+  },
+  "targets": [
+    {
+      "slug": "savoie",
+      "key": "france.savoie",
+      "name": "Savoie",
+      "level": "region",
+      "members": [
+        "Vin de Savoie ou Savoie"
+      ],
+      "parcels": 1974,
+      "concave": {
+        "gridSize": 0.06,
+        "simplifyTolerance": 0.002,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "roussette-de-savoie",
+      "key": "france.savoie.roussette-de-savoie",
+      "name": "Roussette de Savoie",
+      "level": "district",
+      "members": [
+        "Roussette de Savoie"
+      ],
+      "parcels": 1749,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "seyssel",
+      "key": "france.savoie.seyssel",
+      "name": "Seyssel",
+      "level": "village",
+      "members": [
+        "Seyssel"
+      ],
+      "parcels": 400,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "abymes-ou-les-abymes",
+      "key": "france.savoie.abymes-ou-les-abymes",
+      "name": "Abymes ou Les Abymes",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Abymes ou Les Abymes"
+      ],
+      "parcels": 173,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "apremont",
+      "key": "france.savoie.apremont",
+      "name": "Apremont",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Apremont"
+      ],
+      "parcels": 166,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "arbin",
+      "key": "france.savoie.arbin",
+      "name": "Arbin",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Arbin"
+      ],
+      "parcels": 21,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "ayze",
+      "key": "france.savoie.ayze",
+      "name": "Ayze",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Ayze"
+      ],
+      "parcels": 88,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chautagne",
+      "key": "france.savoie.chautagne",
+      "name": "Chautagne",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Chautagne"
+      ],
+      "parcels": 214,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chignin",
+      "key": "france.savoie.chignin",
+      "name": "Chignin",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Chignin"
+      ],
+      "parcels": 31,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "chignin-bergeron",
+      "key": "france.savoie.chignin-bergeron",
+      "name": "Chignin-Bergeron",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Chignin-Bergeron"
+      ],
+      "parcels": 130,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "crepy",
+      "key": "france.savoie.crepy",
+      "name": "Crépy",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Crépy"
+      ],
+      "parcels": 17,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cruet",
+      "key": "france.savoie.cruet",
+      "name": "Cruet",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Cruet"
+      ],
+      "parcels": 69,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "jongieux",
+      "key": "france.savoie.jongieux",
+      "name": "Jongieux",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Jongieux"
+      ],
+      "parcels": 96,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "marignan",
+      "key": "france.savoie.marignan",
+      "name": "Marignan",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Marignan"
+      ],
+      "parcels": 9,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "marin",
+      "key": "france.savoie.marin",
+      "name": "Marin",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Marin"
+      ],
+      "parcels": 18,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "montmelian",
+      "key": "france.savoie.montmelian",
+      "name": "Montmélian",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Montmélian"
+      ],
+      "parcels": 35,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "ripaille",
+      "key": "france.savoie.ripaille",
+      "name": "Ripaille",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Ripaille"
+      ],
+      "parcels": 1,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-jean-de-la-porte",
+      "key": "france.savoie.saint-jean-de-la-porte",
+      "name": "Saint-Jean-de-la-Porte",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Saint-Jean-de-la-Porte"
+      ],
+      "parcels": 67,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saint-jeoire-prieure",
+      "key": "france.savoie.saint-jeoire-prieure",
+      "name": "Saint-Jeoire-Prieuré",
+      "level": "village",
+      "members": [
+        "Vin de Savoie Saint-Jeoire-Prieuré"
+      ],
+      "parcels": 31,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "frangy",
+      "key": "france.savoie.frangy",
+      "name": "Frangy",
+      "level": "village",
+      "members": [
+        "Roussette de Savoie Frangy"
+      ],
+      "parcels": 31,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "marestel",
+      "key": "france.savoie.marestel",
+      "name": "Marestel",
+      "level": "village",
+      "members": [
+        "Roussette de Savoie Marestel"
+      ],
+      "parcels": 14,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "monterminod",
+      "key": "france.savoie.monterminod",
+      "name": "Monterminod",
+      "level": "village",
+      "members": [
+        "Roussette de Savoie Monterminod"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "monthoux",
+      "key": "france.savoie.monthoux",
+      "name": "Monthoux",
+      "level": "village",
+      "members": [
+        "Roussette de Savoie Monthoux"
+      ],
+      "parcels": 3,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}
