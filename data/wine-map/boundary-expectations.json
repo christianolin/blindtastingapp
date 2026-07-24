@@ -9,6 +9,114 @@
     "documented": true
   },
   {
+    "canonical_key": "france.beaujolais",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:beaujolais",
+    "normalized_checksum_sha256": "F1E0095D05059BE4E84A87CAB019761F1B4901A3755F3357935552E158DC5224",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075107Z/beaujolais/fetch-manifest.json",
+    "raw_checksum_sha256": "1BD07B6654BD1C99099876074FA5F7A18E55D00E7AAAECCD07288AD76DA90DAB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.beaujolais-villages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:beaujolais-villages",
+    "normalized_checksum_sha256": "C1A3E4A72FFCD96B4BDD075209EE875675BA20C73A5ACF4842AF28D6D9828913",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075120Z/beaujolais-villages/fetch-manifest.json",
+    "raw_checksum_sha256": "82AA6B4843927DEFCF123B818DFCCD0A093B51ABADC84CEC7E6A52F769E8520F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.brouilly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:brouilly",
+    "normalized_checksum_sha256": "B8ACE03B89DD8E1281E0110BB36475DC8B34261741923A3C6855ED6E2912D7B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T074958Z/brouilly/fetch-manifest.json",
+    "raw_checksum_sha256": "8BBC3031FD9FB7450E11AB78C50FE78BBBC7ACE949C16996B82D5B3FA24FA491",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.chenas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chenas",
+    "normalized_checksum_sha256": "C2506BF827AD628E166FB82849FA17691654B8E501B236AD9A1A845801A9D000",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075004Z/chenas/fetch-manifest.json",
+    "raw_checksum_sha256": "5825F824B5A1DAB0A2A2B3AA6ADA289B1A2197DC53C02D6189378E7372FE0485",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.chiroubles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chiroubles",
+    "normalized_checksum_sha256": "ECB001C57E3BCD95D45B37091A2188F539EC63BA5192DBBC756F5D4952527431",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075007Z/chiroubles/fetch-manifest.json",
+    "raw_checksum_sha256": "DC8D22D0C722FC1B437140DD9878A55C43078CBF571AD588047C9738B1C1AEBE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.cote-de-brouilly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cote-de-brouilly",
+    "normalized_checksum_sha256": "186D88AD15147C6EC0EA8BB5E73BF519DF6E8B223AE474E784B511F7316331F2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075002Z/cote-de-brouilly/fetch-manifest.json",
+    "raw_checksum_sha256": "C841D3BB0699E9BD7685BC62B4EBC4F1AA9B22DA673E0E726FEF56580E7C7DD5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.fleurie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:fleurie",
+    "normalized_checksum_sha256": "BB69ACABC15C2D226976BF8512DD7C435420A13977C61363959CFF050CDF0D5F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075009Z/fleurie/fetch-manifest.json",
+    "raw_checksum_sha256": "9A9BAC8D9DDEDC21EDBAE17FC8D27E674772856E22D4699F2B0BCEB9005DF0CC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.julienas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:julienas",
+    "normalized_checksum_sha256": "B5EE1C520430F0DBE1F0A7990288BB7A04448FFDA0432E36866D98C58FAF9A08",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075011Z/julienas/fetch-manifest.json",
+    "raw_checksum_sha256": "54D76137EF19D2D32481A173CCB022F6759B3DD09434F1C51747979289D7F45A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.morgon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:morgon",
+    "normalized_checksum_sha256": "92EC13BC982ECC0D2F750C8FB15D5261949B7A82818BCBA9B0712BB85A383D11",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075013Z/morgon/fetch-manifest.json",
+    "raw_checksum_sha256": "D232ACDE0F3C7B84BA75A8CD7AC963F8BEC0C064CFD2287E0752CFBAEB753C6F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.moulin-a-vent",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:moulin-a-vent",
+    "normalized_checksum_sha256": "743854EF65B80B453F517881A64681D5AB0BCA12A9F400A43A7FA30E61FD85FF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075015Z/moulin-a-vent/fetch-manifest.json",
+    "raw_checksum_sha256": "AFDBED94A306BE4FE9DAB07E68963DDD51474AC46F0ACC22E3574E4C6B72EB7B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.regnie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:regnie",
+    "normalized_checksum_sha256": "6FBE20171AF4A40B088E6C7A53D0AB0D45D16E6F2068CAD32F9567CFDFFB0C52",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075019Z/regnie/fetch-manifest.json",
+    "raw_checksum_sha256": "A7C6B19D359B36EBF7959E66368E36DBD0FF32F31039866986204ECF771FDCE4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.beaujolais.saint-amour",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-amour",
+    "normalized_checksum_sha256": "2DAFE0AED7C6BB8EEA3A688129883D332D38906BD85A08C0C95EB7A70672D606",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T075021Z/saint-amour/fetch-manifest.json",
+    "raw_checksum_sha256": "5FF2C82BDD0CC4A797B9F13E9B81AA7967DEBFD41C7F284990176429D7F43706",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:bordeaux-region",

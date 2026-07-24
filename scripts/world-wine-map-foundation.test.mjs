@@ -819,15 +819,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    total: 860,
-    validated: 860,
-    current: 794,
-    valid: 860,
-    labelled: 860,
-    // +1 Champagne: a MANUAL commune-union outline (Champagne has no INAO
-    // parcel source), joining France as the second MANUAL boundary.
+    // +12 Beaujolais (region + Beaujolais-Villages + 10 crus): concave
+    // dissolves of the INAO parcel members, all validated + current.
+    total: 872,
+    validated: 872,
+    current: 806,
+    valid: 872,
+    labelled: 872,
+    // France + Champagne are the two MANUAL boundaries (Champagne has no INAO
+    // parcels); Beaujolais is GENERALIZED_FROM_OFFICIAL_SOURCE like Bordeaux.
     manual: 3,
-    generalized: 834,
+    generalized: 846,
     reproducible: 13,
   });
 
@@ -878,7 +880,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 860);
+  assert.equal(prov.linked_boundaries, 872);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1037,8 +1039,8 @@ test("classification facts and legal relationship types", async () => {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC).
-      appellations: 787,
-      aoc: 787,
+      appellations: 799,
+      aoc: 799,
     missing_level: 0,
     france_plain: 1,
   });
