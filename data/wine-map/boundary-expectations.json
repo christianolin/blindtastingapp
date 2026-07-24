@@ -7389,6 +7389,24 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.cote-de-sezanne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "aire-subregion:cote-de-sezanne",
+    "normalized_checksum_sha256": "42FBD5F871BB3BF7786B23CC23E8755EFA65E7D1115458759D5BDCFA71E1B946",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T105159Z/champagne-sub/cote-de-sezanne-raw.geojson",
+    "raw_checksum_sha256": "149A0A9AE0AF6C0915505CC7618E084EE98E14FA1ACA250AB1D4F74FF742571F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.cote-des-bar",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "aire-subregion:cote-des-bar",
+    "normalized_checksum_sha256": "49BAB517ABD14D2D8F2BCB4935483BA741FC42EB1BCD848AAEA8A03B440CDAC7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T105159Z/champagne-sub/cote-des-bar-raw.geojson",
+    "raw_checksum_sha256": "3AC7D213039BCFB5A5AA20D08EDEC33384469193E5F703A9C77113A7FA2BA24D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.cote-des-blancs",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:cote-des-blancs",
