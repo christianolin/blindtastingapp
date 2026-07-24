@@ -1,0 +1,167 @@
+{
+  "region": "Corse",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "Base 'Vin de Corse ou Corse' (6829) is the island-wide regional AOC (dual-role region place). Its five geographic denominations (Calvi, Coteaux du Cap Corse, Figari, Porto-Vecchio, Sartene) plus the standalone AOCs Ajaccio, Patrimonio and Muscat du Cap Corse complete the island.",
+      "INAO names carry the 'Vin de Corse X ou Corse X' legal variants; display names use the place (Calvi, Figari, Sartene...).",
+      "Corsican vineyards ring the island - the base dissolve is expected to be strongly MULTI-component (correct)."
+    ]
+  },
+  "modeling_decision": "france.corse region (display 'Corse', tier 1): boundary = dissolve of 'Vin de Corse ou Corse'. The five Vin de Corse geographic denominations + Ajaccio + Patrimonio + Muscat du Cap Corse = appellation_level village, primary_parent=france.corse. Grapes: Nielluccio (Patrimonio), Sciacarello (Ajaccio), Vermentino (whites), Muscat (Cap Corse). is_appellation=true, AOC, GENERALIZED_FROM_OFFICIAL_SOURCE. Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending owner shape-review gate.",
+  "region_window": {
+    "minLon": 8.4,
+    "minLat": 41.2,
+    "maxLon": 9.7,
+    "maxLat": 43.1
+  },
+  "targets": [
+    {
+      "slug": "corse",
+      "key": "france.corse",
+      "name": "Corse",
+      "level": "region",
+      "members": [
+        "Vin de Corse ou Corse"
+      ],
+      "parcels": 6829,
+      "concave": {
+        "gridSize": 0.06,
+        "simplifyTolerance": 0.002,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "calvi",
+      "key": "france.corse.calvi",
+      "name": "Calvi",
+      "level": "village",
+      "members": [
+        "Vin de Corse Calvi ou Corse Calvi"
+      ],
+      "parcels": 852,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "coteaux-du-cap-corse",
+      "key": "france.corse.coteaux-du-cap-corse",
+      "name": "Coteaux du Cap Corse",
+      "level": "village",
+      "members": [
+        "Vin de Corse Coteaux du Cap Corse ou Corse Coteaux du Cap Corse"
+      ],
+      "parcels": 1192,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "figari",
+      "key": "france.corse.figari",
+      "name": "Figari",
+      "level": "village",
+      "members": [
+        "Vin de Corse ou Corse Figari"
+      ],
+      "parcels": 1240,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "porto-vecchio",
+      "key": "france.corse.porto-vecchio",
+      "name": "Porto-Vecchio",
+      "level": "village",
+      "members": [
+        "Vin de Corse Porto-Vecchio ou Corse Porto-Vecchio"
+      ],
+      "parcels": 198,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "sartene",
+      "key": "france.corse.sartene",
+      "name": "Sartène",
+      "level": "village",
+      "members": [
+        "Vin de Corse Sartène ou Corse Sartène"
+      ],
+      "parcels": 404,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "ajaccio",
+      "key": "france.corse.ajaccio",
+      "name": "Ajaccio",
+      "level": "village",
+      "members": [
+        "Ajaccio"
+      ],
+      "parcels": 1565,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "patrimonio",
+      "key": "france.corse.patrimonio",
+      "name": "Patrimonio",
+      "level": "village",
+      "members": [
+        "Patrimonio"
+      ],
+      "parcels": 604,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "muscat-du-cap-corse",
+      "key": "france.corse.muscat-du-cap-corse",
+      "name": "Muscat du Cap Corse",
+      "level": "village",
+      "members": [
+        "Muscat du Cap Corse"
+      ],
+      "parcels": 1728,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}

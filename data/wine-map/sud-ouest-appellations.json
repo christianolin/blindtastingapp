@@ -1,0 +1,327 @@
+{
+  "region": "Sud-Ouest",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline). Denomination set extracted comprehensively from the pinned membership file by rule.",
+    "caveats": [
+      "Sud-Ouest is an AGGREGATE region of scattered appellations (Dordogne/Bergerac, Lot/Cahors, Tarn/Gaillac-Fronton, Gascony-Pyrenees/Madiran-Jurancon) - there is no single regional AOC, so france.sud-ouest is a multi-member aggregate outline (deferred to flip time). The appellations are far apart on the shared canvas (labels small); the per-target numeric report is the primary check.",
+      "Included (19): Bergerac, Monbazillac, Montravel, Pecharmant, Saussignac, Cotes de Duras, Cotes du Marmandais, Cahors, Gaillac, Gaillac premieres cotes, Fronton, Brulhois, Marcillac, Madiran, Pacherenc du Vic-Bilh, Jurancon, Bearn, Irouleguy, Buzet.",
+      "Further sub-AOCs seen in combos (Cotes de Bergerac, Cotes de Montravel/Haut-Montravel, Rosette, Saint-Mont, Coteaux du Quercy) - deferred/verify."
+    ]
+  },
+  "modeling_decision": "france.sud-ouest = aggregate region (tier 1, multi-member outline at flip time). Large AOCs (Cahors, Gaillac, Bergerac, Madiran, Bearn, Jurancon) = appellation_level district; smaller/sweet AOCs = village. All is_appellation=true, AOC, GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.sud-ouest. Grapes: Malbec/Cot (Cahors), Tannat (Madiran/Irouleguy), Negrette (Fronton), Duras/Braucol (Gaillac), Petit/Gros Manseng (Jurancon/Pacherenc). Scoring links exact-name; no exact row -> PENDING. NOT run live - reviewable groundwork pending owner shape-review gate.",
+  "region_window": {
+    "minLon": -1.6,
+    "minLat": 42.7,
+    "maxLon": 2.75,
+    "maxLat": 45.2
+  },
+  "targets": [
+    {
+      "slug": "bergerac",
+      "key": "france.sud-ouest.bergerac",
+      "name": "Bergerac",
+      "level": "district",
+      "members": [
+        "Bergerac"
+      ],
+      "parcels": 1181,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "monbazillac",
+      "key": "france.sud-ouest.monbazillac",
+      "name": "Monbazillac",
+      "level": "village",
+      "members": [
+        "Monbazillac"
+      ],
+      "parcels": 46,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "montravel",
+      "key": "france.sud-ouest.montravel",
+      "name": "Montravel",
+      "level": "village",
+      "members": [
+        "Montravel"
+      ],
+      "parcels": 186,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pecharmant",
+      "key": "france.sud-ouest.pecharmant",
+      "name": "Pécharmant",
+      "level": "village",
+      "members": [
+        "Pécharmant"
+      ],
+      "parcels": 50,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "saussignac",
+      "key": "france.sud-ouest.saussignac",
+      "name": "Saussignac",
+      "level": "village",
+      "members": [
+        "Saussignac"
+      ],
+      "parcels": 40,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-de-duras",
+      "key": "france.sud-ouest.cotes-de-duras",
+      "name": "Côtes de Duras",
+      "level": "village",
+      "members": [
+        "Côtes de Duras"
+      ],
+      "parcels": 180,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cotes-du-marmandais",
+      "key": "france.sud-ouest.cotes-du-marmandais",
+      "name": "Côtes du Marmandais",
+      "level": "village",
+      "members": [
+        "Côtes du Marmandais"
+      ],
+      "parcels": 242,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "cahors",
+      "key": "france.sud-ouest.cahors",
+      "name": "Cahors",
+      "level": "district",
+      "members": [
+        "Cahors"
+      ],
+      "parcels": 3027,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "gaillac",
+      "key": "france.sud-ouest.gaillac",
+      "name": "Gaillac",
+      "level": "district",
+      "members": [
+        "Gaillac"
+      ],
+      "parcels": 2777,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "gaillac-premieres-cotes",
+      "key": "france.sud-ouest.gaillac-premieres-cotes",
+      "name": "Gaillac premières côtes",
+      "level": "village",
+      "members": [
+        "Gaillac premières côtes"
+      ],
+      "parcels": 490,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "fronton",
+      "key": "france.sud-ouest.fronton",
+      "name": "Fronton",
+      "level": "village",
+      "members": [
+        "Fronton"
+      ],
+      "parcels": 839,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "brulhois",
+      "key": "france.sud-ouest.brulhois",
+      "name": "Brulhois",
+      "level": "village",
+      "members": [
+        "Brulhois"
+      ],
+      "parcels": 256,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "marcillac",
+      "key": "france.sud-ouest.marcillac",
+      "name": "Marcillac",
+      "level": "village",
+      "members": [
+        "Marcillac"
+      ],
+      "parcels": 806,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "madiran",
+      "key": "france.sud-ouest.madiran",
+      "name": "Madiran",
+      "level": "district",
+      "members": [
+        "Madiran"
+      ],
+      "parcels": 791,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "pacherenc-du-vic-bilh",
+      "key": "france.sud-ouest.pacherenc-du-vic-bilh",
+      "name": "Pacherenc du Vic-Bilh",
+      "level": "village",
+      "members": [
+        "Pacherenc du Vic-Bilh"
+      ],
+      "parcels": 812,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "jurancon",
+      "key": "france.sud-ouest.jurancon",
+      "name": "Jurançon",
+      "level": "district",
+      "members": [
+        "Jurançon"
+      ],
+      "parcels": 1353,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "bearn",
+      "key": "france.sud-ouest.bearn",
+      "name": "Béarn",
+      "level": "district",
+      "members": [
+        "Béarn"
+      ],
+      "parcels": 2181,
+      "concave": {
+        "gridSize": 0.05,
+        "simplifyTolerance": 0.0015,
+        "minComponentShare": 0.01,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "irouleguy",
+      "key": "france.sud-ouest.irouleguy",
+      "name": "Irouléguy",
+      "level": "village",
+      "members": [
+        "Irouléguy"
+      ],
+      "parcels": 169,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    },
+    {
+      "slug": "buzet",
+      "key": "france.sud-ouest.buzet",
+      "name": "Buzet",
+      "level": "village",
+      "members": [
+        "Buzet"
+      ],
+      "parcels": 172,
+      "concave": {
+        "gridSize": 0.03,
+        "simplifyTolerance": 0.0008,
+        "minComponentShare": 0.03,
+        "concavity": 2
+      }
+    }
+  ]
+}
