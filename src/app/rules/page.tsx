@@ -37,7 +37,7 @@ export default function RulesPage() {
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <div className="flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
         <KnowledgeTabs />
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">

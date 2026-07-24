@@ -57,7 +57,7 @@ export default async function TypeDesignationsPage({
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <div className="flex w-full max-w-[1500px] flex-1 flex-col gap-6 p-6 sm:p-8">
         <KnowledgeTabs />
 
         {/* Mobile search — the desktop search sits in the side nav (hidden

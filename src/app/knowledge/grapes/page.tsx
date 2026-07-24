@@ -81,7 +81,7 @@ export default async function GrapeLibraryPage({
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <div className="flex w-full max-w-[1500px] flex-1 flex-col gap-6 p-6 sm:p-8">
         <KnowledgeTabs />
 
         <div className="flex gap-8">
