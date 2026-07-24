@@ -831,17 +831,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    // +12 Beaujolais (region + Beaujolais-Villages + 10 crus): concave
-    // dissolves of the INAO parcel members, all validated + current.
-    total: 872,
-    validated: 872,
-    current: 806,
-    valid: 872,
-    labelled: 872,
-    // France + Champagne are the two MANUAL boundaries (Champagne has no INAO
-    // parcels); Beaujolais is GENERALIZED_FROM_OFFICIAL_SOURCE like Bordeaux.
+    // +12 Beaujolais + 9 Vallee du Rhone (8 crus GENERALIZED + 1 region
+    // DERIVED_FROM_DESCENDANTS = union of its crus), all validated + current.
+    total: 881,
+    validated: 881,
+    current: 815,
+    valid: 881,
+    labelled: 881,
+    // France + Champagne are the two MANUAL boundaries; Beaujolais + the 8
+    // Rhone crus are GENERALIZED; france.rhone is derived from its crus.
     manual: 3,
-    generalized: 846,
+    generalized: 854,
     reproducible: 13,
   });
 
@@ -892,7 +892,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 872);
+  assert.equal(prov.linked_boundaries, 881);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1053,8 +1053,8 @@ test("classification facts and legal relationship types", async () => {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC).
-      appellations: 799,
-      aoc: 799,
+      appellations: 808,
+      aoc: 808,
     missing_level: 0,
     france_plain: 1,
   });

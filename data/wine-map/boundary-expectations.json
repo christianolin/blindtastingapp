@@ -7252,5 +7252,86 @@
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260723T192110Z/champagne/raw-communes.geojson",
     "raw_checksum_sha256": "3BA45F0D6E9539A5AD36A37B157B3D7EB1967D952D0677537CF7232238C9AE00",
     "documented": true
+  },
+  {
+    "canonical_key": "france.rhone",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:rhone",
+    "normalized_checksum_sha256": "65FB89A1EE54D5D14BF764D92B87056A4D1CB115621337AC6344628D98FD1B80",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.chateau-grillet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:chateau-grillet",
+    "normalized_checksum_sha256": "C0FD434104CA9DF815C6D6AD914D5876E9169F21A4B744ACDB288669D08893CC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082603Z/chateau-grillet/fetch-manifest.json",
+    "raw_checksum_sha256": "499D2FB82E69835263B5B8D440159E0115596B862D381237E240B82681D59AB6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.condrieu",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:condrieu",
+    "normalized_checksum_sha256": "8E9DD6596FCADD408DED970D3D69C701A95922786026DFC151A09CA448F82D69",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082600Z/condrieu/fetch-manifest.json",
+    "raw_checksum_sha256": "F6671BCC3F37B4413E34733211511EDDF8C1CA8CE93CAF009E1D57DBA4D96BF3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.cornas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cornas",
+    "normalized_checksum_sha256": "3667BEC5364750CA58DB312289351142DD45F38E0389C8ADBD2D361E18094845",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082617Z/cornas/fetch-manifest.json",
+    "raw_checksum_sha256": "1A0BA8AB5F61E5FFD26FCB71B7E22C0FCDA49A29FDDB8DD1F7484E8F9B95BC54",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.cote-rotie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cote-rotie",
+    "normalized_checksum_sha256": "737DFEADFABFA62317789213F76189EE6F1298956C63E50B68060D9AAE3CFD9E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082556Z/cote-rotie/fetch-manifest.json",
+    "raw_checksum_sha256": "E55A86351F21BC0D52F9A4F9A418CCCFD1C871929DC929ECD9298EBFB6CF94E6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.crozes-hermitage",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:crozes-hermitage",
+    "normalized_checksum_sha256": "0C4ECAD389F3E77EE62BDF3377779FD6AC6F87D98CB3BB85104F4EC3CB66E342",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082615Z/crozes-hermitage/fetch-manifest.json",
+    "raw_checksum_sha256": "D2747F00CEB2BEC08E918716E679C7009AD8A9942C5192EC296656FAF3A05CDF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.hermitage",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:hermitage",
+    "normalized_checksum_sha256": "645B78B4A73E7204DB5651FAD2F42EBFA7FED79CEF74157718DF5C30CDBDC62C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082612Z/hermitage/fetch-manifest.json",
+    "raw_checksum_sha256": "0E6B29E1EA8F097F060627BBA4225EE0936316F5D61E9B50EEE80B7B7ECD4063",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.saint-joseph",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-joseph",
+    "normalized_checksum_sha256": "6E5101118B890843AC4784FC4B1F85BAA9CAB19302DF9710D2F5FB76C90DA183",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082606Z/saint-joseph/fetch-manifest.json",
+    "raw_checksum_sha256": "2DB9F076C33EFC6EA625299362872F7FD47CC0610C1CD5E3120094C77CAC5855",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.saint-peray",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-peray",
+    "normalized_checksum_sha256": "4C114930904ECCC79D1DE764C0961B5C0F2B35033C43C1791520A88A608321E2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T082620Z/saint-peray/fetch-manifest.json",
+    "raw_checksum_sha256": "598ACAFA4DA512A297C63F8EE465B1BD3061BB5B7CD5AED1303DC1D61252834F",
+    "documented": true
   }
 ]
