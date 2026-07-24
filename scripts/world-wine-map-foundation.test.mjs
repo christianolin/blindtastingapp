@@ -839,16 +839,16 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    // +12 Beaujolais + 9 Vallee du Rhone (8 crus GENERALIZED + 1 region
-    // DERIVED_FROM_DESCENDANTS = union of its crus), all validated + current.
-    total: 881,
-    validated: 881,
-    current: 815,
-    valid: 881,
-    labelled: 881,
-    // France + Champagne are the two MANUAL boundaries; Beaujolais + the 8
-    // Rhone crus are GENERALIZED; france.rhone is derived from its crus.
-    manual: 3,
+    // +12 Beaujolais + 9 Vallee du Rhone + 17 Champagne Grand Cru villages
+    // (whole-commune footprints, MANUAL), all validated + current.
+    total: 898,
+    validated: 898,
+    current: 832,
+    valid: 898,
+    labelled: 898,
+    // MANUAL = France + Champagne region + the 17 Champagne GC commune
+    // footprints (Echelle des Crus villages, not INAO parcels).
+    manual: 20,
     generalized: 854,
     reproducible: 13,
   });
@@ -900,7 +900,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 881);
+  assert.equal(prov.linked_boundaries, 898);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,

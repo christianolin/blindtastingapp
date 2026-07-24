@@ -7254,6 +7254,159 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.ambonnay",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51007",
+    "normalized_checksum_sha256": "783AC90C3025CDEA27A9C9EA732DB9D70F84D6F9B8219B59288DB269984B6613",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/ambonnay-raw.geojson",
+    "raw_checksum_sha256": "A826905CD0EA893A8BB2E7350D13476D3913D166B7D4786A0D5D92303337601D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.avize",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51029",
+    "normalized_checksum_sha256": "7489561B7E6619E82FE59990177CE5A140CE40B94B46E30C0691F2470E806D17",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/avize-raw.geojson",
+    "raw_checksum_sha256": "C3797CF7DCEA7537D8179138D81EAD09BCD0F8AA1616C5C25E3480E0A686C432",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.ay",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51030",
+    "normalized_checksum_sha256": "B38D93BAF5D3D8821CA17F57F609274AD86D6B6FA7F1DC135049DBDAF7AA6915",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/ay-raw.geojson",
+    "raw_checksum_sha256": "C1F79203A902B7D0CBF2A72E2D34252C3154DD72077146195817889C5CC53A76",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.beaumont-sur-vesle",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51044",
+    "normalized_checksum_sha256": "D95924F27E15900EC019C4C44E6740D0DB700369DB79A8316480C05368C58DE0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/beaumont-sur-vesle-raw.geojson",
+    "raw_checksum_sha256": "374661F1D0CA7AFEB934A2FBB54FE822B1FA9C3B1154971BDF190B7AA719C18E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.bouzy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51079",
+    "normalized_checksum_sha256": "63984B4A417D85233AE604121A53A55C5A66C155C68838CC134431CBD4F392AF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/bouzy-raw.geojson",
+    "raw_checksum_sha256": "6B8350AE6D62136EBDDE317850B7872F87B7F864DB10B2CA2A1903798D10435F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.chouilly",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51153",
+    "normalized_checksum_sha256": "60EE7C4A79BDDFB4EEC652F42101E8A0A8E9F229CCABBEDF3965772667CFA373",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/chouilly-raw.geojson",
+    "raw_checksum_sha256": "F04C418FDDDCD30E5576A7D174942670AA37F4C8C531ABB7FA77A49CF68FFF52",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.cramant",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51196",
+    "normalized_checksum_sha256": "5A66662D3DD09F3A234199CC0E6B0A3F16BC2B8C63C558E67B7F6B432E4038E5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/cramant-raw.geojson",
+    "raw_checksum_sha256": "779925BDFD0A7F450360237125C9F3E79E4D1F6D94F406ACA76602C4671B1DC2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.le-mesnil-sur-oger",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51367",
+    "normalized_checksum_sha256": "EE440BD0F29B844C9523A21E2654E4C47EFD50114142DF7FAEB231B53051C6A7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/le-mesnil-sur-oger-raw.geojson",
+    "raw_checksum_sha256": "E0527C98945787C54AD39E887C56775C79992D4381A84BE38DA159AE8BCE2F8E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.louvois",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51331",
+    "normalized_checksum_sha256": "716EE29FC9A65069A7C59D6F77C6F340FCE8EFC3F574051E9E9893718607E6AA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/louvois-raw.geojson",
+    "raw_checksum_sha256": "A5C35F67963952F6B41865F13CD32FF25BF777D5E921E07938E89D8BB99AE963",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.mailly-champagne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51338",
+    "normalized_checksum_sha256": "8F6B441A86971327E938A8A810C740E57EBFB580075A5949B41C49BE9C024109",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/mailly-champagne-raw.geojson",
+    "raw_checksum_sha256": "610ED0F9AB94B746FB19C6A2A8C71D9CFD15BB48D3A89075D38F4AD56999A899",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.oger",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51411",
+    "normalized_checksum_sha256": "59E147F6DDA1CB98BD005E3C2334FE76A1DC00FCA59A502C5C9BE9E652E684D2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/oger-raw.geojson",
+    "raw_checksum_sha256": "2CC8FB9AB60F3D8BE1F937EBBEC3A54E165783715D44E18DA683366B28ABB131",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.oiry",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51413",
+    "normalized_checksum_sha256": "CA84E257755F539D5B1D2371E3D0031CEFAAF7F771ADFDC3DB792A96959FC58C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/oiry-raw.geojson",
+    "raw_checksum_sha256": "6A294BECB9E0BFC98E2195A171631FB959DFDE15B9F59C11D91D7B9A7D6F088E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.puisieulx",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51450",
+    "normalized_checksum_sha256": "697EE2CA1F9E70189E7AC783B4C1C8C88185BD7BF6E14D6CE2858828E9B32B18",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/puisieulx-raw.geojson",
+    "raw_checksum_sha256": "FE43BE8A26056BDDD64921E1837CB9567630D653C1FC2615B6E589AA80AEEF6F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.sillery",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51536",
+    "normalized_checksum_sha256": "2EBA735301A1923B08DFCA9EEE5A12C3AFEBEAFE8286D626CD1F2A2279922598",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/sillery-raw.geojson",
+    "raw_checksum_sha256": "CB7EFC4DA61864259AAB26A3FF79255A3725937ADADF1E808AEAC6EE1404965D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.tours-sur-marne",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51576",
+    "normalized_checksum_sha256": "4FA7CB2992FCAA232F9062CA9374501A9A17118BC4965439FB63D250E151E72A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/tours-sur-marne-raw.geojson",
+    "raw_checksum_sha256": "4FFBB2476C53397AAB0509AA0C0D57BAE564F320DA5B6CF50E0716EFCF79DCF3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.verzenay",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51613",
+    "normalized_checksum_sha256": "84A2457474DADB98E52E5CDE19BEDFE21707BDE7CC4AD6904312A71D2197E9F5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/verzenay-raw.geojson",
+    "raw_checksum_sha256": "8AF0FF74794A0C3F219C47A4C3A5B23106E5F25FDE94B2C3044A7E52CAA45192",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.verzy",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-grand-cru:51614",
+    "normalized_checksum_sha256": "21796B090738FA309EEA4606F877ECC078431C7D30BBC9C487CCCBDE24665234",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/verzy-raw.geojson",
+    "raw_checksum_sha256": "AF06772D7804A1EEF308EB2DEFC6A715C73A982CE19068E689C1332A861A20F2",
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:rhone",
