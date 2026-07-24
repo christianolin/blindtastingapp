@@ -1,0 +1,27 @@
+{
+  "region": "Vallée du Rhône — septentrionale (Northern Rhône)",
+  "provenance": {
+    "authority": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels), Licence Ouverte Etalab",
+    "membership_source": "data/wine-map/inao-denomination-membership.json (exact member names + parcel counts, pinned in-repo)",
+    "reviewed_at": "2026-07-24",
+    "method": "GENERALIZED_FROM_OFFICIAL_SOURCE - server-side denom LIKE bound, client-side exact membership match, client-side concave dissolve (same engine as the live pipeline).",
+    "caveats": [
+      "member names are the exact INAO legal denominations (kept verbatim so membership matching is exact); display names drop the 'ou ...' variants: 'Cote Rotie' -> Cote-Rotie, 'Hermitage ou Ermitage ou l'Hermitage ou l'Ermitage' -> Hermitage, 'Crozes-Hermitage ou Crozes-Ermitage' -> Crozes-Hermitage.",
+      "Saint-Joseph is a long discontinuous strip down the west bank (984 parcels) - expect several components, which is correct.",
+      "Chateau-Grillet (6 parcels) is a tiny monopole; Hermitage (16 parcels) is the single delimited hill - both dissolve to small footprints.",
+      "DEFERRED follow-ups: the france.rhone REGION outline (dissolve of 'Cotes du Rhone', ~18,181 parcels - a heavy fetch) and the Southern Rhone crus (Chateauneuf-du-Pape, Gigondas, Vacqueyras, Tavel, Lirac...)."
+    ]
+  },
+  "modeling_decision": "These 8 are the Northern Rhone communal crus: is_appellation=true, appellation_level=village, appellation_system=AOC, classification=GENERALIZED_FROM_OFFICIAL_SOURCE, primary_parent=france.rhone, tier 2. The region place france.rhone (display 'Vallee du Rhone', tier 1) is built later from the 'Cotes du Rhone' dissolve; an optional france.rhone.septentrionale / .meridionale district split can group N vs S at build time (owner call). Grapes: Syrah (all reds), Viognier (Condrieu, Chateau-Grillet), Marsanne/Roussanne (Hermitage/Crozes/Saint-Joseph/Saint-Peray whites). Scoring links: exact-name against live reference rows (never fuzzy); appellations without an exact scoring row stay PENDING. NOT run live - reviewable groundwork; the catalog/boundary/flip/links/content build waits on the owner shape-review gate.",
+  "region_window": { "minLon": 4.5, "minLat": 44.7, "maxLon": 5.1, "maxLat": 45.7 },
+  "targets": [
+    { "slug": "cote-rotie", "key": "france.rhone.cote-rotie", "name": "Côte-Rôtie", "level": "village", "members": ["Côte Rôtie"], "parcels": 109, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "condrieu", "key": "france.rhone.condrieu", "name": "Condrieu", "level": "village", "members": ["Condrieu"], "parcels": 149, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "chateau-grillet", "key": "france.rhone.chateau-grillet", "name": "Château-Grillet", "level": "village", "members": ["Château-Grillet"], "parcels": 6, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0004, "minComponentShare": 0.05, "concavity": 2 } },
+    { "slug": "saint-joseph", "key": "france.rhone.saint-joseph", "name": "Saint-Joseph", "level": "village", "members": ["Saint-Joseph"], "parcels": 984, "concave": { "gridSize": 0.04, "simplifyTolerance": 0.001, "minComponentShare": 0.01, "concavity": 2 } },
+    { "slug": "hermitage", "key": "france.rhone.hermitage", "name": "Hermitage", "level": "village", "members": ["Hermitage ou Ermitage ou l'Hermitage ou l'Ermitage"], "parcels": 16, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0005, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "crozes-hermitage", "key": "france.rhone.crozes-hermitage", "name": "Crozes-Hermitage", "level": "village", "members": ["Crozes-Hermitage ou Crozes-Ermitage"], "parcels": 420, "concave": { "gridSize": 0.04, "simplifyTolerance": 0.001, "minComponentShare": 0.02, "concavity": 2 } },
+    { "slug": "cornas", "key": "france.rhone.cornas", "name": "Cornas", "level": "village", "members": ["Cornas"], "parcels": 69, "concave": { "gridSize": 0.02, "simplifyTolerance": 0.0006, "minComponentShare": 0.04, "concavity": 2 } },
+    { "slug": "saint-peray", "key": "france.rhone.saint-peray", "name": "Saint-Péray", "level": "village", "members": ["Saint-Péray"], "parcels": 351, "concave": { "gridSize": 0.03, "simplifyTolerance": 0.0008, "minComponentShare": 0.02, "concavity": 2 } }
+  ]
+}
