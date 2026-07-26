@@ -13,7 +13,11 @@ const args = process.argv.slice(2);
 const targetsFile = args.find((a) => a.endsWith(".json")) ?? "cote-de-nuits-targets.json";
 const targetsPath = path.join(workDir, targetsFile);
 const targets = JSON.parse(await readFile(targetsPath, "utf8"));
-const only = args.find((a) => !a.endsWith(".json")) ?? null; // optional slug substring filter
+// optional slug substring filter (bare arg) + resume-scope prefix (--prefix=)
+const only = args.find((a) => !a.endsWith(".json") && !a.startsWith("--")) ?? null;
+const prefix =
+  args.find((a) => a.startsWith("--prefix="))?.slice("--prefix=".length) ??
+  "france.bourgogne.cote-de-nuits";
 
 const client = new pg.Client(pgConfig());
 await client.connect();
@@ -23,7 +27,8 @@ const staged = new Set(
       `select p.canonical_key
          from wine_places p
          join wine_place_boundaries b on b.wine_place_id = p.id and b.quality_status = 'DRAFT'
-        where p.canonical_key like 'france.bourgogne.cote-de-nuits%'`,
+        where p.canonical_key like $1`,
+      [`${prefix}%`],
     )
   ).rows.map((r) => r.canonical_key),
 );
@@ -57,14 +62,17 @@ for (const t of targets) {
       "--slug", t.slug, "--target-key", t.key, "--members", t.members.join(";"),
     ]);
   }
-  run("build-boundary.mjs", [
+  const buildArgs = [
     "--slug", t.slug, "--target-key", t.key,
-    "--presimplify", String(t.presimplify),
+    "--presimplify", String(t.presimplify ?? 0.0005),
     "--tolerance", String(t.tolerance),
     "--min-share", String(t.minShare),
-    "--min-part-share", String(t.minPartShare),
+    "--min-part-share", String(t.minPartShare ?? 0),
     "--closing", String(t.closing ?? 0.02),
-  ]);
+  ];
+  if (t.engine) buildArgs.push("--engine", t.engine);
+  if (t.gridSize != null) buildArgs.push("--grid-size", String(t.gridSize));
+  run("build-boundary.mjs", buildArgs);
   done += 1;
 }
 console.log(`TARGETS DONE (${done} built this run)`);

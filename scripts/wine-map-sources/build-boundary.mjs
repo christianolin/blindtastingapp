@@ -30,6 +30,10 @@ const minPartShare = Number(arg("min-part-share", "0"));
 // Pre-union simplification: below the closing buffer and final tolerance,
 // so the output shape is unchanged while union cost collapses.
 const presimplify = Number(arg("presimplify", "0.0005"));
+// Concave-engine cluster grid (degrees): vineyard-scale target sets use a
+// finer grid than the 0.05 region default so separated parcel groups keep
+// separate envelopes (matches the owner-previewed artifact params).
+const gridSize = Number(arg("grid-size", "0.05"));
 const engine = arg("engine", "dissolve");
 assert.ok(["dissolve", "concave"].includes(engine), "--engine must be dissolve|concave");
 
@@ -52,6 +56,7 @@ if (engine === "concave") {
     buildConcaveGeometry(parcels, {
       minComponentShare: minShare,
       simplifyTolerance: tolerance,
+      gridSize,
     }),
   );
   console.log(`concave engine done (${Math.round((Date.now() - started) / 1000)}s)`);
@@ -60,7 +65,7 @@ const generation = clientGeojson
   ? {
       engine: "concave",
       concavity: 2,
-      cluster_grid_size: 0.05,
+      cluster_grid_size: gridSize,
       min_component_area_share: minShare,
       min_part_area_share: minPartShare,
       simplify_tolerance: tolerance,
