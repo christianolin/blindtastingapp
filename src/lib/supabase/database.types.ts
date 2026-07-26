@@ -574,6 +574,8 @@ export type Database = {
           name: string;
           appellation_system: string | null;
           description: string;
+          display_group: string | null;
+          sort_order: number;
           editorial_status: WineArticleStatus;
           created_at: string;
         };
@@ -583,11 +585,49 @@ export type Database = {
           name: string;
           appellation_system?: string | null;
           description: string;
+          display_group?: string | null;
+          sort_order?: number;
           editorial_status?: WineArticleStatus;
           created_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_designations"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_designation_members: {
+        Row: {
+          id: string;
+          designation_id: string;
+          member_kind: "ESTATE" | "SITE";
+          name: string;
+          tier: string | null;
+          tier_rank: number;
+          commune: string | null;
+          sort_order: number;
+          producer_id: string | null;
+          wine_place_id: string | null;
+          local_note: string | null;
+          editorial_status: WineArticleStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          designation_id: string;
+          member_kind: "ESTATE" | "SITE";
+          name: string;
+          tier?: string | null;
+          tier_rank?: number;
+          commune?: string | null;
+          sort_order?: number;
+          producer_id?: string | null;
+          wine_place_id?: string | null;
+          local_note?: string | null;
+          editorial_status?: WineArticleStatus;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_designation_members"]["Insert"]
         >;
         Relationships: [];
       };
