@@ -885,6 +885,14 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Ajaccio AOP"], key: "france.corse.ajaccio" },
   { names: ["Patrimonio AOP"], key: "france.corse.patrimonio" },
   { names: ["Muscat de Cap Corse AOP"], key: "france.corse.muscat-du-cap-corse" },
+  { names: ["Provence AOP"], key: "france.provence" },
+  { names: ["Côtes de Provence AOP"], key: "france.provence.cotes-de-provence" },
+  { names: ["Coteaux d'Aix-en-Provence AOP"], key: "france.provence.coteaux-daix-en-provence" },
+  { names: ["Coteaux Varois en Provence AOP"], key: "france.provence.coteaux-varois-en-provence" },
+  { names: ["Sainte-Victoire AOP"], key: "france.provence.cotes-de-provence-sainte-victoire" },
+  { names: ["Bandol AOP"], key: "france.provence.bandol" },
+  { names: ["Les Baux-de-Provence AOP"], key: "france.provence.les-baux-de-provence" },
+  { names: ["Palette AOP"], key: "france.provence.palette" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -932,17 +940,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 55
     // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
     // dissolves) + Jura (region + 4 villages) + Savoie (region + 22
-    // children) + Corse (region + 8 villages). total/validated include
-    // retired revisions.
-    total: 1042,
-    validated: 1042,
-    current: 972,
-    valid: 1042,
-    labelled: 1042,
+    // children) + Corse (region + 8 villages) + Provence (7 constituents +
+    // derived aggregate region). total/validated include retired revisions.
+    total: 1050,
+    validated: 1050,
+    current: 980,
+    valid: 1050,
+    labelled: 1050,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
     manual: 60,
-    generalized: 951,
+    generalized: 958,
     reproducible: 13,
   });
 
@@ -993,7 +1001,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1042);
+  assert.equal(prov.linked_boundaries, 1050);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1023,6 +1031,7 @@ test("only exact current Bordeaux references are verified", async () => {
     { name: "Champagne", canonical_key: "france.champagne" },
     { name: "Corsica", canonical_key: "france.corse" },
     { name: "Jura", canonical_key: "france.jura" },
+    { name: "Provence", canonical_key: "france.provence" },
     { name: "Rhône", canonical_key: "france.rhone" },
     { name: "Savoie", canonical_key: "france.savoie" },
   ]);
@@ -1036,7 +1045,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 228);
+  assert.equal(appellations.rows.length, 236);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1049,8 +1058,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 9],
-    ["appellations", 228],
+    ["regions", 10],
+    ["appellations", 236],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1074,7 +1083,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Alsace region migration: exact name match',
                     'Jura region migration: exact name match',
                     'Savoie region migration: exact name match',
-                    'Corse region migration: exact name match'
+                    'Corse region migration: exact name match',
+                    'Provence region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1165,8 +1175,8 @@ test("classification facts and legal relationship types", async () => {
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus).
-      appellations: 905,
-      aoc: 905,
+      appellations: 913,
+      aoc: 913,
     missing_level: 0,
     france_plain: 1,
   });

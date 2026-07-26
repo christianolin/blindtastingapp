@@ -8388,6 +8388,78 @@
     "documented": true
   },
   {
+    "canonical_key": "france.provence",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:provence-region",
+    "normalized_checksum_sha256": "604731B6C45CA263A493D54AF7D7D6808C197ED593033D9FA2A86CE0450BDB3D",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.bandol",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-bandol",
+    "normalized_checksum_sha256": "B89C05A7471CEC879C86D7E1F43BF1C8F4040E1246B666A55107CD6EB20F4059",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182415Z/provence-bandol/fetch-manifest.json",
+    "raw_checksum_sha256": "3A24E535F07BB370B54420CBDDC759872E5B57EE0E988B2D045ADE144E9DA409",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.coteaux-daix-en-provence",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-coteaux-daix-en-provence",
+    "normalized_checksum_sha256": "5C3BAAE145ECFBD6258E04BA0265EC748DCC69A50CDC7CCACBBDBDB6A66E934C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182404Z/provence-coteaux-daix-en-provence/fetch-manifest.json",
+    "raw_checksum_sha256": "4789B39F0D6A3E588DFD4137AE07D9E0DF915D07699D01480DF96A0BD32CD207",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.coteaux-varois-en-provence",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-coteaux-varois-en-provence",
+    "normalized_checksum_sha256": "0952AE2489C367347F8F03DB7392ED6299D9D86F322432840F9FAA394094B1C0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182409Z/provence-coteaux-varois-en-provence/fetch-manifest.json",
+    "raw_checksum_sha256": "57D10B3D52356024AF0A65FFF98D1A7BBBA1136D9647A1F29F7A16296C6734F5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.cotes-de-provence",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-cotes-de-provence",
+    "normalized_checksum_sha256": "BBD0B839D5FA748F69B609BF7CD3CB588A1FB854BD3383F61DA40871B68A53FC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182352Z/provence-cotes-de-provence/fetch-manifest.json",
+    "raw_checksum_sha256": "076ECE0D5EEE22C29CAC682B069D7F5D40CBECC23F2CEF053ACC75F0E03A479B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.cotes-de-provence-sainte-victoire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-cotes-de-provence-sainte-victoire",
+    "normalized_checksum_sha256": "488101289FC8CEF06EA3D4E0571883939AE96B0FAF16DFEDFE761863DC3EA7E8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182413Z/provence-cotes-de-provence-sainte-victoire/fetch-manifest.json",
+    "raw_checksum_sha256": "B1CD5ED8AFD923C14A93A35DAB56C50864CA4D0A75EC55535F1AC4A0370B2199",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.les-baux-de-provence",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-les-baux-de-provence",
+    "normalized_checksum_sha256": "F53DE069AC1CD389C983B27DD2BE1F4B4D06510E6A7936549E7A1DBAEE199E6F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182418Z/provence-les-baux-de-provence/fetch-manifest.json",
+    "raw_checksum_sha256": "873712A33CB16B2269E342290D7D68A73DEAC72CF67F7AA81B164616115846E3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.palette",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:provence-palette",
+    "normalized_checksum_sha256": "A4DC326D92A36B7984AD17DB19BA4F1FFA80B232B8F4D8DB7CD135A8A9C23DC3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182421Z/provence-palette/fetch-manifest.json",
+    "raw_checksum_sha256": "834DFA01EDD562460B495F7E503357CAB7F47BD04E6F267CC97B3063F7CF1500",
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:rhone",
