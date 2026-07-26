@@ -8458,5 +8458,212 @@
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093832Z/vinsobres/fetch-manifest.json",
     "raw_checksum_sha256": "034EBC729BEAB4CFA8D36840507C3D43E72004478A77ED6D6EA5DB57A29B3C5B",
     "documented": true
+  },
+  {
+    "canonical_key": "france.savoie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-region",
+    "normalized_checksum_sha256": "1DBA3D30CBD42767EC784F80C1BAC89E7FF0856713F13273347BCCE3B5DD25E9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180246Z/savoie-region/fetch-manifest.json",
+    "raw_checksum_sha256": "854AAB7342BC397C1F8C4C877D9ACF3679302F65AD047744D7D98E4AD0E93671",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.abymes-ou-les-abymes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-abymes-ou-les-abymes",
+    "normalized_checksum_sha256": "7585369A8B3287AEA6E3A2FE25DA88072FB883C25650A44E2E4AD5782E176D90",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180302Z/savoie-abymes-ou-les-abymes/fetch-manifest.json",
+    "raw_checksum_sha256": "1AAC2882FC460E174FFF6DECF011ABBFFECC45CD3B05D0A0C2E08FCF4F73FB9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.apremont",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-apremont",
+    "normalized_checksum_sha256": "82AA5C776E7F8877AC58D0955864080292413FE1EEEE86488C9131FE7F4112CE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180305Z/savoie-apremont/fetch-manifest.json",
+    "raw_checksum_sha256": "F991DF785422C4FB540AC717B9871AF6E42942D719AEA3D1C60E09DFB89491F2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.arbin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-arbin",
+    "normalized_checksum_sha256": "4F35715F60257CF2DEB2EFAEF8A357D3E50A1948E27C12CEE92C51AA255ECED9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180307Z/savoie-arbin/fetch-manifest.json",
+    "raw_checksum_sha256": "85EE30A168F51290CBBF65B01500DF6EFECF519017C3E24C7221549815D8B89A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.ayze",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-ayze",
+    "normalized_checksum_sha256": "62D0CB1E578ABF25F8187142AFDA5580DBD4682D57DB6C05C7A7B8AC22C84D91",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180309Z/savoie-ayze/fetch-manifest.json",
+    "raw_checksum_sha256": "78FABE2D9B5816EB94965F4BB4D4F7C5ACB94E52336D29D73641CC2E96F5ECCB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.chautagne",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-chautagne",
+    "normalized_checksum_sha256": "C75C79A40A0488C8479665C2031C9F60B903BF4C54AFE00C0AFEB97E0C6B503C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180311Z/savoie-chautagne/fetch-manifest.json",
+    "raw_checksum_sha256": "F7FC47D798B8C45FA4A244119082B5AC322D56B8DFBE9FC2B781C6CAD622327F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.chignin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-chignin",
+    "normalized_checksum_sha256": "AECECA4562DCE213F4F61A90746EA67E124F233CC3C02FD00A71F19FC7FF13B8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180315Z/savoie-chignin/fetch-manifest.json",
+    "raw_checksum_sha256": "C47E15D78CF627A7F5393FFE7528F923598AFC07C72923C7E1A9B074A04A482B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.chignin-bergeron",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-chignin-bergeron",
+    "normalized_checksum_sha256": "0DA3C113C29D009285B42442969B7EAB71DEEE8E8CB22A040D4915645D33EB15",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180317Z/savoie-chignin-bergeron/fetch-manifest.json",
+    "raw_checksum_sha256": "B264EC28AF7C15D8F67924C17A06B890281ABAB5A6AA7103EA11DA8306D1E395",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.crepy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-crepy",
+    "normalized_checksum_sha256": "74FF392B5108D6B5CAA197224001E97B62BCF9B2B73280E2FEF8D78DF8BC0279",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180319Z/savoie-crepy/fetch-manifest.json",
+    "raw_checksum_sha256": "485BBD78A1530341BAC247C217BC82674690CE22A594571A65979309860E7148",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.cruet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-cruet",
+    "normalized_checksum_sha256": "10EC056F8C80D4B350C0DB6C5783FC6A9AE81572371284356AB6179E85CA01E8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180321Z/savoie-cruet/fetch-manifest.json",
+    "raw_checksum_sha256": "CB9B6872DC3509A71CA399B72FC5C5CE3702730E5E63605BE3FB275095A7287D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.frangy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-frangy",
+    "normalized_checksum_sha256": "A4D04C6C09BF483C3EEFB74B3F02ED10FF3E050498B1799251ECA1AB35B5A087",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180336Z/savoie-frangy/fetch-manifest.json",
+    "raw_checksum_sha256": "9EC6A5EF2383E022D52D5536A4EB9117C0CB299AF3A7199CCF065ED018885564",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.jongieux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-jongieux",
+    "normalized_checksum_sha256": "0FD862ACEC967EC0D0A9464D01DE4721EE15EEAA0E1D979800C585D13BB83E5D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180323Z/savoie-jongieux/fetch-manifest.json",
+    "raw_checksum_sha256": "4F8EFDAE62CBF07B51617CB7BBA6A359F79A70402DC95ECE9AF31780E91A15DD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.marestel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-marestel",
+    "normalized_checksum_sha256": "1EE1D2396FAE3B5B2046BA9F2FD218A00DC160C128A19D2CEC82C26A8EE7864A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180338Z/savoie-marestel/fetch-manifest.json",
+    "raw_checksum_sha256": "3D4C54BA54842698ABA6180A1986B8A4EDBCC0C8CAE38E58E7E647D4DEF1421B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.marignan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-marignan",
+    "normalized_checksum_sha256": "58EA65C538C4158ADCB1378C1AB45FCDF71E61724F7E6870634386BB76377339",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180325Z/savoie-marignan/fetch-manifest.json",
+    "raw_checksum_sha256": "E76B9CC73F7C19761BFCE66A2BAD980D33D1843ECFB6F34B165C6333F25DA890",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.marin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-marin",
+    "normalized_checksum_sha256": "F7E2DE71F890E2BC98C3FBB9786290FE44381E91733029E9426E1D66FF451446",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180327Z/savoie-marin/fetch-manifest.json",
+    "raw_checksum_sha256": "02B8F67196B88035A68CA1D044EF9F24E28F2872AFFD79ADA48B5BEDA8AB6DD9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.monterminod",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-monterminod",
+    "normalized_checksum_sha256": "B7FFD61901380168D43DCE83BBC6B674DF559F5BF8BB701CC91998E089CE7EAE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180340Z/savoie-monterminod/fetch-manifest.json",
+    "raw_checksum_sha256": "3ED98D3437BF46A4BF340F635F6D838E62A62F42F36A5CD90E430092F4851C08",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.monthoux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-monthoux",
+    "normalized_checksum_sha256": "8753F297C494787B517F738A2928228BE873751B32444965C55C70A1CC647B15",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180343Z/savoie-monthoux/fetch-manifest.json",
+    "raw_checksum_sha256": "D385819F172C78510E57B4A827016D9DD17C3F1EEDB4665C4388700FE838DF7D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.montmelian",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-montmelian",
+    "normalized_checksum_sha256": "925A985DD38FFAFC8F95F7A1905C4A7595634297A5765F50F023AE6DB3409F8B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180329Z/savoie-montmelian/fetch-manifest.json",
+    "raw_checksum_sha256": "0B4209039492F76CDD01F7773167F1175922BB147CB4FED863E160ACEF0EAA34",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.ripaille",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-ripaille",
+    "normalized_checksum_sha256": "C4403E7CA55A6EDBB26D8B04B39784044ECB96FF4AB434ED7B76005EDE16CC3C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180330Z/savoie-ripaille/fetch-manifest.json",
+    "raw_checksum_sha256": "C3944BA9D1967C80844789D24181BA639740D34617EDF35E35D0EB437DA386F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.roussette-de-savoie",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-roussette-de-savoie",
+    "normalized_checksum_sha256": "EC2DF5B5E172C25F27F90D934FBF8821218930F4B3B12B9741C2AC8440957A31",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180254Z/savoie-roussette-de-savoie/fetch-manifest.json",
+    "raw_checksum_sha256": "C45178354B466F6D940CA5D024294815D569F68ED5F1C9FF8E52C259166E55F6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.saint-jean-de-la-porte",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-saint-jean-de-la-porte",
+    "normalized_checksum_sha256": "A7F89CED0E741B78206A7CDE8814A5526EDE3824DD05E5975A960E8E0FFBFF27",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180332Z/savoie-saint-jean-de-la-porte/fetch-manifest.json",
+    "raw_checksum_sha256": "3AC6B7FC024D7DA7E8E1D78F838FB43A0EBDF17798B2C7CAD55186D39734B729",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.saint-jeoire-prieure",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-saint-jeoire-prieure",
+    "normalized_checksum_sha256": "2416AD8B73A7D8251B4644748CE082D7A56AC20902596498150B45DEC324DA9E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180334Z/savoie-saint-jeoire-prieure/fetch-manifest.json",
+    "raw_checksum_sha256": "CBA36B42DDC6657BDD8A3CD92EA4733944E838A110D6F0446FBBC879326F6C52",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.savoie.seyssel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:savoie-seyssel",
+    "normalized_checksum_sha256": "711689394D4E6297345DC90CADA0F535789928F2739F7BFEC266F47E2684ADF0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180259Z/savoie-seyssel/fetch-manifest.json",
+    "raw_checksum_sha256": "D3792B4ADD87AD0B694CEDD4992DDDDCF3E9D2ED44F41D50B8028622CE3B1BE9",
+    "documented": true
   }
 ]

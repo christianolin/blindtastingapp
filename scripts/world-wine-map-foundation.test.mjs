@@ -861,6 +861,20 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Arbois Pupillin AOP"], key: "france.jura.arbois-pupillin" },
   { names: ["Château-Chalon AOP"], key: "france.jura.chateau-chalon" },
   { names: ["L'Etoile AOP"], key: "france.jura.l-etoile" },
+  { names: ["Savoie AOP"], key: "france.savoie" },
+  { names: ["Vin de Savoie AOP"], key: "france.savoie" },
+  { names: ["Roussette de Savoie AOP"], key: "france.savoie.roussette-de-savoie" },
+  { names: ["Apremont AOP"], key: "france.savoie.apremont" },
+  { names: ["Arbin AOP"], key: "france.savoie.arbin" },
+  { names: ["Ayze AOP"], key: "france.savoie.ayze" },
+  { names: ["Chautagne AOP"], key: "france.savoie.chautagne" },
+  { names: ["Chignin AOP"], key: "france.savoie.chignin" },
+  { names: ["Chignin-Bergeron AOP"], key: "france.savoie.chignin-bergeron" },
+  { names: ["Frangy AOP"], key: "france.savoie.frangy" },
+  { names: ["Jongieux AOP"], key: "france.savoie.jongieux" },
+  { names: ["Les Abymes AOP"], key: "france.savoie.abymes-ou-les-abymes" },
+  { names: ["Monterminod AOP"], key: "france.savoie.monterminod" },
+  { names: ["Monthoux AOP"], key: "france.savoie.monthoux" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -907,17 +921,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   assert.deepEqual(result.rows[0], {
     // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 55
     // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
-    // dissolves) + Jura (region + 4 villages). total/validated include
-    // retired revisions.
-    total: 1010,
-    validated: 1010,
-    current: 940,
-    valid: 1010,
-    labelled: 1010,
+    // dissolves) + Jura (region + 4 villages) + Savoie (region + 22
+    // children). total/validated include retired revisions.
+    total: 1033,
+    validated: 1033,
+    current: 963,
+    valid: 1033,
+    labelled: 1033,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
     manual: 60,
-    generalized: 919,
+    generalized: 942,
     reproducible: 13,
   });
 
@@ -968,7 +982,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1010);
+  assert.equal(prov.linked_boundaries, 1033);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -998,6 +1012,7 @@ test("only exact current Bordeaux references are verified", async () => {
     { name: "Champagne", canonical_key: "france.champagne" },
     { name: "Jura", canonical_key: "france.jura" },
     { name: "Rhône", canonical_key: "france.rhone" },
+    { name: "Savoie", canonical_key: "france.savoie" },
   ]);
 
   const appellations = await client.query(
@@ -1009,7 +1024,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 204);
+  assert.equal(appellations.rows.length, 218);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1022,8 +1037,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 7],
-    ["appellations", 204],
+    ["regions", 8],
+    ["appellations", 218],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1045,7 +1060,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Beaujolais region migration: exact name match',
                     'Rhone region migration: exact name match',
                     'Alsace region migration: exact name match',
-                    'Jura region migration: exact name match'
+                    'Jura region migration: exact name match',
+                    'Savoie region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1136,8 +1152,8 @@ test("classification facts and legal relationship types", async () => {
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus).
-      appellations: 873,
-      aoc: 873,
+      appellations: 896,
+      aoc: 896,
     missing_level: 0,
     france_plain: 1,
   });
