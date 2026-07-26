@@ -8262,6 +8262,87 @@
     "documented": true
   },
   {
+    "canonical_key": "france.corse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-region",
+    "normalized_checksum_sha256": "16ED4B5B555C7C5FCBEB70A5DD9089932506D5B03064121723B4201C1D874F58",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181237Z/corse-region/fetch-manifest.json",
+    "raw_checksum_sha256": "5E55978EE65720630C741A2F3CC62EA87F78F881E3F90D1547342D98F9D55B12",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.ajaccio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-ajaccio",
+    "normalized_checksum_sha256": "C8276142B5B2F274CD7948E1D2EFDB214DA3F743305EA4E73CB36DAA1E338272",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181331Z/corse-ajaccio/fetch-manifest.json",
+    "raw_checksum_sha256": "DF534B0F3C8B810F337394C1325D2F974A8FEF3F1F8508CEECEAFB25A6090729",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.calvi",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-calvi",
+    "normalized_checksum_sha256": "805AAB4AE41571BC02F2D57A48F9EC161266EA5CEBCDBEC8F5ECC05266CABFDB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181302Z/corse-calvi/fetch-manifest.json",
+    "raw_checksum_sha256": "E2542928FF29B6EAE4C467839821FD2C12BE0F3BA770117CD5E81E27503830EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.coteaux-du-cap-corse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-coteaux-du-cap-corse",
+    "normalized_checksum_sha256": "BEB95E96E3F26AF9D0E6405DFA4AA06C340F19B14353FDCDBB060091304D68CE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181309Z/corse-coteaux-du-cap-corse/fetch-manifest.json",
+    "raw_checksum_sha256": "C550DF708C4375B1AF58D781837D4218BD7AFE6C581471D57085E4946EE3744F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.figari",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-figari",
+    "normalized_checksum_sha256": "C26264E0C8D91EC63927012C096B2D9767721029BC2A7849483ED1AAB17E053E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181316Z/corse-figari/fetch-manifest.json",
+    "raw_checksum_sha256": "82352DB2F878760E4AB8DDC5D9B05EDDAF52D4BAEE3D13A4BB5CE9B87E80D927",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.muscat-du-cap-corse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-muscat-du-cap-corse",
+    "normalized_checksum_sha256": "27F2C48C183C39CA278D5EE2FD3919736D94D0A0133DE6EE92120867A4F12B2E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181345Z/corse-muscat-du-cap-corse/fetch-manifest.json",
+    "raw_checksum_sha256": "A36A9D70DBDD8F4CE7D45A94EEB009387FAB7720354DFC1C27AF1797338861AF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.patrimonio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-patrimonio",
+    "normalized_checksum_sha256": "53B4DBCF77DE9D3226C4A710119CA98189CCCA1F3B52ED3674D9EBBF2F99C64E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181340Z/corse-patrimonio/fetch-manifest.json",
+    "raw_checksum_sha256": "8370C8775EB8DE42969A39DAA813F1148394E8040B7F288F4071079EF5850FA7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.porto-vecchio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-porto-vecchio",
+    "normalized_checksum_sha256": "A3526F1547113D823110BA8350DE80F4B7F80F559E710FEF066BB8F493CF6339",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181321Z/corse-porto-vecchio/fetch-manifest.json",
+    "raw_checksum_sha256": "331E37FBA96D961D02EA33C955A1D64C706E969AC17D7B63A535929848644D5C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.corse.sartene",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:corse-sartene",
+    "normalized_checksum_sha256": "0572A3CC52D7A27B31C624361189524A4855BE5C2E515D59C308236A7E1C424C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181326Z/corse-sartene/fetch-manifest.json",
+    "raw_checksum_sha256": "16971D1368D8748B4D77CF61DA0BEBEB920CA66246C8B6E4D80AA341FF1B00F0",
+    "documented": true
+  },
+  {
     "canonical_key": "france.jura",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:jura-region",
