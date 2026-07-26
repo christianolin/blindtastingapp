@@ -8388,6 +8388,546 @@
     "documented": true
   },
   {
+    "canonical_key": "france.loire",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:loire-region",
+    "normalized_checksum_sha256": "1B964CE9983853559A05B724642991E2B6075BE49E679A2FA97BEA07F6941768",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.anjou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-anjou",
+    "normalized_checksum_sha256": "391F4166A9C7EE09816351A8538AA1FEE3044DCEC640CD97BB83E5403E933376",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184949Z/loire-anjou/fetch-manifest.json",
+    "raw_checksum_sha256": "7D858C2EB44D0EE5900060AE4506317015042BD31280B7A68DDDAB77E793499D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.anjou-brissac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-anjou-brissac",
+    "normalized_checksum_sha256": "09F106FAC080A922F213A36D3A15DEA0E3687162C44972FA5CA4BB092B61EE33",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184958Z/loire-anjou-brissac/fetch-manifest.json",
+    "raw_checksum_sha256": "3CD89C28FB332F15BE6424ADD67161C709D8348FE1400AFE685A8363F778BAE5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.anjou-coteaux-de-la-loire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-anjou-coteaux-de-la-loire",
+    "normalized_checksum_sha256": "04564DEF039DC23075B3645286C363ADE057DECE14A14419F93F6C9619DFF60C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185004Z/loire-anjou-coteaux-de-la-loire/fetch-manifest.json",
+    "raw_checksum_sha256": "B434F7412C35C5178181BF1624A31EE166CE692F723CD6CB4958D9F448C10006",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.anjou-villages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-anjou-villages",
+    "normalized_checksum_sha256": "4A0308DD4F4523720744D62114EEFFC529A8F39EF46F472BDED8E918FEF2F767",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185000Z/loire-anjou-villages/fetch-manifest.json",
+    "raw_checksum_sha256": "5BAF43D997022692BE56DC6DC0559388A9494E5689380C2D0108D6F7F7E8B0C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.bonnezeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-bonnezeaux",
+    "normalized_checksum_sha256": "CD48566219121F649271820D68E8F90E2518531D6C3DEFBA2B4486FE13C66B48",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185030Z/loire-bonnezeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "7953FD5C18427DC16E9DA234280265062EDE9A0FCE4AA41F1D2652F1F53DD80A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.bourgueil",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-bourgueil",
+    "normalized_checksum_sha256": "3987695188E5535CBC1727457F9D3D7BDED8823DBA95FEB4533F9DB488476025",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185107Z/loire-bourgueil/fetch-manifest.json",
+    "raw_checksum_sha256": "9FFD209E16C09684C6EA0DA4DC174CA858F41B3F8852696115970E447A186AAF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.chateaumeillant",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-chateaumeillant",
+    "normalized_checksum_sha256": "E07D379AF836D10B128A170944BE81F88C41204429223AA9352793344D1A1F3A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185141Z/loire-chateaumeillant/fetch-manifest.json",
+    "raw_checksum_sha256": "8D80F1F8C075A6587D7B7744216B0041A9478B59CEC4BCA8A0041E08DDCB3FFA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.cheverny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-cheverny",
+    "normalized_checksum_sha256": "0088CF62EA2874D76DA59EEE5A912F96A3284AE0471F694CFD73FB153A6B9453",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185117Z/loire-cheverny/fetch-manifest.json",
+    "raw_checksum_sha256": "4323E3521D64F0AA61988276D1770F1E4832EDC73DCAF3CDF2F2158034E3408A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.chinon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-chinon",
+    "normalized_checksum_sha256": "EEA400DBF1AE0E13B5ACEF69762116373DCCF0AD9AAB4FED191EA1A27AD3085D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185105Z/loire-chinon/fetch-manifest.json",
+    "raw_checksum_sha256": "9628020E8033571CA71F702176575421252EDE4FDD1860BB1C5ABF781AD6F16B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-d-ancenis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-d-ancenis",
+    "normalized_checksum_sha256": "B4422DF4896B5F28F756DE15C0CF22B15E2843296373AB07F798BFCB8A77F73F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184936Z/loire-coteaux-d-ancenis/fetch-manifest.json",
+    "raw_checksum_sha256": "C3C43A6F32E84E5E4F6D74970F5AF5DDAEBB47AFCECAA5C38F70B15EC6D04E38",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-de-l-aubance",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-de-l-aubance",
+    "normalized_checksum_sha256": "6E1A0062BFE1BB4F1A72F27137D2FA82E352B5D77056D771A4659C300E74D249",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185032Z/loire-coteaux-de-l-aubance/fetch-manifest.json",
+    "raw_checksum_sha256": "A42E75FF8572D4F4152FC1651F0438A44CF92FC248FEE58B56FFE8058CF763E7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-giennois",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-giennois",
+    "normalized_checksum_sha256": "9297B1E8CDE4FB58307F2B1444A8B7C30BA7B39E4A5233F499EA14EA9DBBD810",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185139Z/loire-coteaux-du-giennois/fetch-manifest.json",
+    "raw_checksum_sha256": "A01557A0E8361776A6EBACFBE4BDF5850813BC97E8F140B40498CC6C5CF7E885",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon",
+    "normalized_checksum_sha256": "3496161F2A2EFC651D4B0524DEB997922A955886C844C37D5AA010E9386496B5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185009Z/loire-coteaux-du-layon/fetch-manifest.json",
+    "raw_checksum_sha256": "36E496C0BA2F67A8AB7B0BE127094F0F46497D6D75C7E6910CEF7BA034D6532C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-beaulieu-sur-layon-ou-beaulieu",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-beaulieu-sur-layon-ou-beaulieu",
+    "normalized_checksum_sha256": "F16946ABDE83D8594E28D2F84B932708EFDAD0A1F3DEA455A981D3FE78DC593C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185012Z/loire-coteaux-du-layon-beaulieu-sur-layon-ou-beaulieu/fetch-manifest.json",
+    "raw_checksum_sha256": "B7703F8C1695E17CD5B6A8C1AD90DBE68F1F6B0CEC10DB65B9EDD53B86732DBC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-faye-d-anjou-ou-faye",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-faye-d-anjou-ou-faye",
+    "normalized_checksum_sha256": "52C6A1ADEDF4256E2E4E03155E59350120F82624C0A78C4AE345B2874E63B3BE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185014Z/loire-coteaux-du-layon-faye-d-anjou-ou-faye/fetch-manifest.json",
+    "raw_checksum_sha256": "B6CC530C12FA288E0F2BB50F20A872F1C8CF0149EFCD610E3B49C0429F501BB7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-premier-cru-chaume",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-premier-cru-chaume",
+    "normalized_checksum_sha256": "8726A738DFD659578404DB06B848DCB94531EC41629B709E063D3E6B8047921A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185017Z/loire-coteaux-du-layon-premier-cru-chaume/fetch-manifest.json",
+    "raw_checksum_sha256": "AB3961C8842549655B98FAD319E766D9993548C7C9B8BC0CA95A79EAE9898299",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-rablay-sur-layon-ou-rablay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-rablay-sur-layon-ou-rablay",
+    "normalized_checksum_sha256": "FA742B6953B3EADD0ADE27A6C7A9CE62AFA52566A4933253B12E5E2AEC2E5B25",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185019Z/loire-coteaux-du-layon-rablay-sur-layon-ou-rablay/fetch-manifest.json",
+    "raw_checksum_sha256": "CFD4CD95870ED215DB4E355CAA11119F8E55BC4E8D4C79998840457397D7D5DB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-rochefort-sur-loire-ou-rochefort",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-rochefort-sur-loire-ou-rochefort",
+    "normalized_checksum_sha256": "2254AC518D4B536FF6500FB16668956A13028FA89269D14F13BE0B654E21809A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185021Z/loire-coteaux-du-layon-rochefort-sur-loire-ou-rochefort/fetch-manifest.json",
+    "raw_checksum_sha256": "361DE80C34B5D7C2B39F0DC8FB0712F1E1F0E1637162E19B5E089D2C38D5E8C1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-saint-aubin-de-luigne-ou-saint-aubin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-saint-aubin-de-luigne-ou-saint-aubin",
+    "normalized_checksum_sha256": "5C3A3498A985306F61E4AA61CC4FF14D40D0F65267AABDEF1238BF8EC4A2A7AB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185024Z/loire-coteaux-du-layon-saint-aubin-de-luigne-ou-saint-aubin/fetch-manifest.json",
+    "raw_checksum_sha256": "D200B36027EE744D6C347B3C9B9209E391805536A7F4F65E6505695A1C7319A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-layon-saint-lambert-du-lattay-ou-saint-lambert",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-layon-saint-lambert-du-lattay-ou-saint-lambert",
+    "normalized_checksum_sha256": "9EB702FB9A11007B4F996C4B4251A5D2586F118C57F4819C03FF3D09BBD9EDCB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185026Z/loire-coteaux-du-layon-saint-lambert-du-lattay-ou-saint-lambert/fetch-manifest.json",
+    "raw_checksum_sha256": "6C891662BE182EBF8C793DE838A85EAA7D9579F424457870643305CE5D6D2C03",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.coteaux-du-loir",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-coteaux-du-loir",
+    "normalized_checksum_sha256": "187F69E02AFF68A863BBD1A370B5E01C444A0A27ED141F83E5D879E42FF6986D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185114Z/loire-coteaux-du-loir/fetch-manifest.json",
+    "raw_checksum_sha256": "0A24E77040AA5E9133A07379D491C13E57F3B3156D407A79BDCF943B77F8283F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.cour-cheverny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-cour-cheverny",
+    "normalized_checksum_sha256": "AC1918F2817299401BB982945078C3B7C0342748ADDBDAF1FD604E0348E91051",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185119Z/loire-cour-cheverny/fetch-manifest.json",
+    "raw_checksum_sha256": "0B1B8696AE985B54E9F0BD07DF1BF99548A2C2913A25A5A3FDFD02B3A740C7EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.fiefs-vendeens-brem",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-fiefs-vendeens-brem",
+    "normalized_checksum_sha256": "B0A3B4C4FA52CAFA092098704624EC712E8CE2BB3266EDF56529DC42C4EA7A29",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184938Z/loire-fiefs-vendeens-brem/fetch-manifest.json",
+    "raw_checksum_sha256": "49B71899E7624ACD6A3BA5D18356A045CD0A89E1ECEC0248099DB55920E3D480",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.fiefs-vendeens-chantonnay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-fiefs-vendeens-chantonnay",
+    "normalized_checksum_sha256": "6B08A4604A17007F909541402C9AA005398B2A6DF1F790575AC38A89E6FE6757",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184941Z/loire-fiefs-vendeens-chantonnay/fetch-manifest.json",
+    "raw_checksum_sha256": "A474D59462E3459325C043A1E931B89BE380398167107E0A176DDFD6E5D1D355",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.fiefs-vendeens-mareuil",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-fiefs-vendeens-mareuil",
+    "normalized_checksum_sha256": "4F03430D99DA73E8A8D8ED1348C810DD026CD53ECA38FE7AA502DDE22B8F704E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184943Z/loire-fiefs-vendeens-mareuil/fetch-manifest.json",
+    "raw_checksum_sha256": "211D91698C0DD0D1DAF8C4A9B449221A5914E689C189C6A9470AA30489C38D59",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.fiefs-vendeens-pissotte",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-fiefs-vendeens-pissotte",
+    "normalized_checksum_sha256": "5B4EE2760911E62426DD859E828A5734D06EBD8FC4A3CFFFF555CAE283912369",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184945Z/loire-fiefs-vendeens-pissotte/fetch-manifest.json",
+    "raw_checksum_sha256": "C86C39D1D8BC3155A737C3811B9430F0E3393CFAA32C5E95DEB9EF47CA96A11B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.fiefs-vendeens-vix",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-fiefs-vendeens-vix",
+    "normalized_checksum_sha256": "5D5FCE8F78ED805EF18DDC5554070C0771139C84286E035D5515C9FE996D3771",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184947Z/loire-fiefs-vendeens-vix/fetch-manifest.json",
+    "raw_checksum_sha256": "0A949086735EF8EED38FECCBAFE53FC0B20593DB77629D040843EA5E0FBFEC7F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.gros-plant-du-pays-nantais",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-gros-plant-du-pays-nantais",
+    "normalized_checksum_sha256": "4BA2171685C0A846A269BE7AF63D8DE08A2837CAE232EDB5C50AAF60FFB87D00",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184931Z/loire-gros-plant-du-pays-nantais/fetch-manifest.json",
+    "raw_checksum_sha256": "64F2AA988C7D6DEBE7B9BD5BE2C589537A056466062C68A72E46670DD71C74D6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.haut-poitou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-haut-poitou",
+    "normalized_checksum_sha256": "5699FFE5998E2094857C89AD5162A1FAB5D400B7A2A75B46871BB31189505AC7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185123Z/loire-haut-poitou/fetch-manifest.json",
+    "raw_checksum_sha256": "98DBB84B795DF9CA4B92A57D9A500B12E5B92D0151E84BAE10AD21C67ABE9B0D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.jasnieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-jasnieres",
+    "normalized_checksum_sha256": "966CA7476F0F88B8F156997F1F0FBA86FA1D83F10AB71F3BDDE6B8B380A35129",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185113Z/loire-jasnieres/fetch-manifest.json",
+    "raw_checksum_sha256": "8EFD2BC08B5C19C3DB6FDD2EAAD716F3EA9C617E20F94BAD5AAD137E8E3CB806",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.menetou-salon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-menetou-salon",
+    "normalized_checksum_sha256": "4A466A385BA0D3B60E92C16BEFB1B1C695C6339E4AD39B0403C8E9012FA9036D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185133Z/loire-menetou-salon/fetch-manifest.json",
+    "raw_checksum_sha256": "F9E78DF3EB89D7B0C1D0465F3676602279F8197A5402FC52341AF23B8F0D5041",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.montlouis-sur-loire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-montlouis-sur-loire",
+    "normalized_checksum_sha256": "304B6D8C193C4CF1A5B5217176C9076A8EBAFCB3E097DE4C0FC828AC5DD6A33B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185102Z/loire-montlouis-sur-loire/fetch-manifest.json",
+    "raw_checksum_sha256": "8D0413F4808CDEAA8FC66CA2CEEF99326A9EAC3A35D88FA7053D2667D5C58CFE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet",
+    "normalized_checksum_sha256": "E6CA3AC1D9CEC185E4A21F93D4B172943137A5FE2F3D72EA41E66925B44EEE8A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184908Z/loire-muscadet/fetch-manifest.json",
+    "raw_checksum_sha256": "ADFDE8650C74000AE3F010070B68AC1E8FAD2F90B700CD8438E7811B0F6C133E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-coteaux-de-la-loire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-coteaux-de-la-loire",
+    "normalized_checksum_sha256": "10BEFA2887012C9CAE39F73519A2D5BE907C0FE3BFF40C0B07B8A788807A7907",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184915Z/loire-muscadet-coteaux-de-la-loire/fetch-manifest.json",
+    "raw_checksum_sha256": "25D0C51A60CBF6CD43DD600A2082501113EF6EFE3860D95CF9E7307AB1410C16",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-cotes-de-grandlieu",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-cotes-de-grandlieu",
+    "normalized_checksum_sha256": "9DBE63ACC6473051DA94B1E1BC81846AE0B391678BFFDADC78FACD8EA47EAA2D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184918Z/loire-muscadet-cotes-de-grandlieu/fetch-manifest.json",
+    "raw_checksum_sha256": "2D48AD72D1D86FEC7714298417B8F510AC2C31349C29F9E086A2366643CBA801",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-sevre-et-maine",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-sevre-et-maine",
+    "normalized_checksum_sha256": "0EE7AA09126E65FA03001B7992C5788B142BE314C729D657DA348904F333FA06",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184920Z/loire-muscadet-sevre-et-maine/fetch-manifest.json",
+    "raw_checksum_sha256": "72E5733C7DE9B2623896E1FB99BF0CAA603CBC4FE7D58BA381D61948A1457A60",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-sevre-et-maine-clisson",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-sevre-et-maine-clisson",
+    "normalized_checksum_sha256": "EC35C213A73F93AEEB124D470BC2B0BF087748878052CDF463D55B469C898532",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184925Z/loire-muscadet-sevre-et-maine-clisson/fetch-manifest.json",
+    "raw_checksum_sha256": "B12B2DF963A82BB23F9B8A3C79D0DCB79C426FF459F0A045F201ECFA5762FC6B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-sevre-et-maine-gorges",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-sevre-et-maine-gorges",
+    "normalized_checksum_sha256": "7F40EA6C49BFC3970FEB83CE2AF36A301DD4B97981B611858BC317E64C975CD4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184927Z/loire-muscadet-sevre-et-maine-gorges/fetch-manifest.json",
+    "raw_checksum_sha256": "51DFF448B1E801700044311C03B37D221E5A61CC59185243E0CAEC5A1587D04D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.muscadet-sevre-et-maine-le-pallet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-muscadet-sevre-et-maine-le-pallet",
+    "normalized_checksum_sha256": "AF5B08679A230601CAFA8CD70ECD1EBCE300C55B8CD2490187FC6005694460F6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T184929Z/loire-muscadet-sevre-et-maine-le-pallet/fetch-manifest.json",
+    "raw_checksum_sha256": "9C9EC0787925730E8B2BDDD22748E1CAF8EE7DAB2FA4E1DB17227186A8110CB2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.pouilly-fume",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-pouilly-fume",
+    "normalized_checksum_sha256": "44B9B28149969A88383918E50684F066E1A689D74C5841316DC721AD2D0654D3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185128Z/loire-pouilly-fume/fetch-manifest.json",
+    "raw_checksum_sha256": "4FAFDEE74143FC817D777DCC8A7FBA73CB902212CA10A17012A5BC5203F7DE85",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.pouilly-sur-loire",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-pouilly-sur-loire",
+    "normalized_checksum_sha256": "9638767AF67DE9B2A975A1D027E80DF1A74F1B5B012A95DBA80898CABBE6E815",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185130Z/loire-pouilly-sur-loire/fetch-manifest.json",
+    "raw_checksum_sha256": "A533478069D1586514144F08F5500BD67AB3EB71DDC6990D9C53BE926108A609",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.quarts-de-chaume",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-quarts-de-chaume",
+    "normalized_checksum_sha256": "BE5946F1616041F711FE985B8516E44628242A2851963CD98211A669208200DB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185028Z/loire-quarts-de-chaume/fetch-manifest.json",
+    "raw_checksum_sha256": "235153BC691BACBDE246FBA8049F0CF6AA07DCFDE67D70EA98488D34668B5355",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.quincy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-quincy",
+    "normalized_checksum_sha256": "97599B86F374ED3FB0FD6CAD9F46136998EF55FC7BF3C09503563E81A029483C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185135Z/loire-quincy/fetch-manifest.json",
+    "raw_checksum_sha256": "20C4A9591FABF2F2FE50B783B21DEBD33BB300073D48FBF51A69AA811F0C7398",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.reuilly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-reuilly",
+    "normalized_checksum_sha256": "16BD035D0307AB98DE75AD78F3679C0EE7FF08315C20434721936AC1E4025475",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185137Z/loire-reuilly/fetch-manifest.json",
+    "raw_checksum_sha256": "78D204D3993CD7C14213438981C16F2032BE25E4D92F9E5ECDD19003EA009F5A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.saint-nicolas-de-bourgueil",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-saint-nicolas-de-bourgueil",
+    "normalized_checksum_sha256": "2DD2F0118834FF8CFCD8E035093D8066AC50DD57C3086E9DCF7E41A0C9E18247",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185110Z/loire-saint-nicolas-de-bourgueil/fetch-manifest.json",
+    "raw_checksum_sha256": "1FC39DDB6550E5D44134FC968F711AF3A270D7BFE409B9DF4BDD1F14FB97B565",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.sancerre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-sancerre",
+    "normalized_checksum_sha256": "5DCF164723EFD45757996E150DFE8C632A008147F090F2E84D1B5C22A612357E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185125Z/loire-sancerre/fetch-manifest.json",
+    "raw_checksum_sha256": "7A4794E86040CDCB54F427437B3315F2390D37E2B4C282DCF7E9F44ABAB2ABA5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.saumur",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-saumur",
+    "normalized_checksum_sha256": "C1F9034D8D515940EC98A2DCDB8BB44090132A423E86B789AAA98B5E99D75C7E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185035Z/loire-saumur/fetch-manifest.json",
+    "raw_checksum_sha256": "2B8311714A69F59516A22BFF0B9465C17AA1C73CE443C777D65CBC9B4FD43C6A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.saumur-champigny",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-saumur-champigny",
+    "normalized_checksum_sha256": "CCD0B339E3E5F2A00EE15E4BBFA8AA1968F820AACBF93A4162BB2EAD2D6B4F5E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185038Z/loire-saumur-champigny/fetch-manifest.json",
+    "raw_checksum_sha256": "B269CF85B328933EAF6120EC948216528FF78398D089118A22C18F8B6651B5FA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.savennieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-savennieres",
+    "normalized_checksum_sha256": "AE2D65D633628B4BC5EE08D6CC9BF29C6FEDA770CC98CD4E4D5708D08D061AC7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185006Z/loire-savennieres/fetch-manifest.json",
+    "raw_checksum_sha256": "74658AAEF45C787C0CE7D3B9762148AF561EE1C324F2F3790452F46828CDC76F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.savennieres-roche-aux-moines",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-savennieres-roche-aux-moines",
+    "normalized_checksum_sha256": "F310E7F4AD81B650A0D8EEAFEF63636179EF39F1B50C9FA019A513267F488C5E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185008Z/loire-savennieres-roche-aux-moines/fetch-manifest.json",
+    "raw_checksum_sha256": "4DF078A81B58A37CAF01A1261E75FB6189BA714DCFFE1ABFC8518C237BDB6B35",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine",
+    "normalized_checksum_sha256": "54B48B4A05CD2E279C215B7A1AD8B910033312D77DC8FE9C6598E082C5F3D635",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185041Z/loire-touraine/fetch-manifest.json",
+    "raw_checksum_sha256": "3806F733FA25DC92E2569C4D7E56744D82EAD285361D50CD29D8B7E505F32C0B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-amboise",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-amboise",
+    "normalized_checksum_sha256": "469F18AD1898B691BAFFB6685AB2B33694E2EECFDC84E85CE4D53078A226ED0A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185047Z/loire-touraine-amboise/fetch-manifest.json",
+    "raw_checksum_sha256": "36789E346F7620DFF1243F3E69F382DB5B225F4D4FB0191EB0CADA9A5052FBC4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-azay-le-rideau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-azay-le-rideau",
+    "normalized_checksum_sha256": "8BAFBEA6C06F532C5AEFF62A74D6377EAFF1BADB483C9347DDD93E0AEBA69DA4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185049Z/loire-touraine-azay-le-rideau/fetch-manifest.json",
+    "raw_checksum_sha256": "D8776A3D1CEAF1AF1945A5F6740645C0B7639D836081C3FA7062F85B40B829F3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-chenonceaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-chenonceaux",
+    "normalized_checksum_sha256": "2DF179A9F5563E34698812C8AAF10B3974690D3D3175DEA001947001BAEC628B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185051Z/loire-touraine-chenonceaux/fetch-manifest.json",
+    "raw_checksum_sha256": "EFEE01AD1EDDD849B9B68AA48597F33A2875D532372E95F41C83EAFDE831A9CC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-mesland",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-mesland",
+    "normalized_checksum_sha256": "562F43FC7A68CC621F09F7252A90C29B2F571EC4B40073DA3541FC41A2EA859C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185054Z/loire-touraine-mesland/fetch-manifest.json",
+    "raw_checksum_sha256": "2AD4BF7F2EDB0D2BD59A8ECC893F38F49710082C87166647EA3C58C784D3B9DD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-noble-joue",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-noble-joue",
+    "normalized_checksum_sha256": "D17261427E953758E4CEC163F539B20BA28B489C417254B5DA1BBD912CB7685F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185056Z/loire-touraine-noble-joue/fetch-manifest.json",
+    "raw_checksum_sha256": "91326373A598834D9BD27BE5BE73C8A66637CC1F7E6111E2B51857665458F163",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-oisly",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-touraine-oisly",
+    "normalized_checksum_sha256": "BA12E63B0A9E5E0F0D46E2C2A1AF63A646D06C27185FA638A2C12E74EB5C02A1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185058Z/loire-touraine-oisly/fetch-manifest.json",
+    "raw_checksum_sha256": "2E1D5E42496226DD08432CA0D260CE9AFE60BF0877276ED395DA0984BC89530A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.valencay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-valencay",
+    "normalized_checksum_sha256": "B4EBDDE791689BE4ED349457E1ED8C127B07C7F2917A101950EA82FA5E2B2A40",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185121Z/loire-valencay/fetch-manifest.json",
+    "raw_checksum_sha256": "7CA1775F57E8807BCB5558115539A4272979AA3118AFC4FE453659B83AB69723",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.vouvray",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:loire-vouvray",
+    "normalized_checksum_sha256": "2F53D470B88A06119ABEEA9B75F6CA2A4E5A5AAC0097DC12C983CE241B4F20FD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185100Z/loire-vouvray/fetch-manifest.json",
+    "raw_checksum_sha256": "70391C7F9560B2BE6880F00C8ECEBCFCEF8CF88DEFCC1BB42A518ADBC9EC9DBF",
+    "documented": true
+  },
+  {
     "canonical_key": "france.provence",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:provence-region",
