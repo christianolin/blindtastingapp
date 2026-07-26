@@ -855,6 +855,12 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Beaumes de Venise AOP"], key: "france.rhone.beaumes-de-venise" },
   { names: ["Lirac AOP"], key: "france.rhone.lirac" },
   { names: ["Tavel AOP"], key: "france.rhone.tavel" },
+  { names: ["Jura"], key: "france.jura" },
+  { names: ["Cotes du Jura AOP"], key: "france.jura" },
+  { names: ["Arbois AOP"], key: "france.jura.arbois" },
+  { names: ["Arbois Pupillin AOP"], key: "france.jura.arbois-pupillin" },
+  { names: ["Château-Chalon AOP"], key: "france.jura.chateau-chalon" },
+  { names: ["L'Etoile AOP"], key: "france.jura.l-etoile" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -901,16 +907,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   assert.deepEqual(result.rows[0], {
     // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 55
     // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
-    // dissolves). total/validated include retired revisions.
-    total: 1005,
-    validated: 1005,
-    current: 935,
-    valid: 1005,
-    labelled: 1005,
+    // dissolves) + Jura (region + 4 villages). total/validated include
+    // retired revisions.
+    total: 1010,
+    validated: 1010,
+    current: 940,
+    valid: 1010,
+    labelled: 1010,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
     manual: 60,
-    generalized: 914,
+    generalized: 919,
     reproducible: 13,
   });
 
@@ -961,7 +968,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1005);
+  assert.equal(prov.linked_boundaries, 1010);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -989,6 +996,7 @@ test("only exact current Bordeaux references are verified", async () => {
     { name: "Bordeaux", canonical_key: "france.bordeaux" },
     { name: "Bourgogne", canonical_key: "france.bourgogne" },
     { name: "Champagne", canonical_key: "france.champagne" },
+    { name: "Jura", canonical_key: "france.jura" },
     { name: "Rhône", canonical_key: "france.rhone" },
   ]);
 
@@ -1001,7 +1009,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 198);
+  assert.equal(appellations.rows.length, 204);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1014,8 +1022,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 6],
-    ["appellations", 198],
+    ["regions", 7],
+    ["appellations", 204],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1036,7 +1044,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Champagne region migration: exact name match',
                     'Beaujolais region migration: exact name match',
                     'Rhone region migration: exact name match',
-                    'Alsace region migration: exact name match'
+                    'Alsace region migration: exact name match',
+                    'Jura region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1127,8 +1136,8 @@ test("classification facts and legal relationship types", async () => {
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus).
-      appellations: 868,
-      aoc: 868,
+      appellations: 873,
+      aoc: 873,
     missing_level: 0,
     france_plain: 1,
   });
