@@ -8818,5 +8818,185 @@
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180259Z/savoie-seyssel/fetch-manifest.json",
     "raw_checksum_sha256": "D3792B4ADD87AD0B694CEDD4992DDDDCF3E9D2ED44F41D50B8028622CE3B1BE9",
     "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:sud-ouest-region",
+    "normalized_checksum_sha256": "D58678AC9FEB61BFD3B1036A8BFD69B137405D4BDF1D1F3C4A817E18E9EAA1C7",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.bearn",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-bearn",
+    "normalized_checksum_sha256": "C66986EAA4C026E8C6D5FD95483AEF8203835BBA87A0242ACCFAC3E450C52276",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183734Z/sud-ouest-bearn/fetch-manifest.json",
+    "raw_checksum_sha256": "B472FE1BC0F2F419EF4ACFF392C04649EBF04D3F34580E610B791E89FF01EFEB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.bergerac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-bergerac",
+    "normalized_checksum_sha256": "7DAC0AE892E304FD86F8525CC3D91610C1FE1096560B03F2498BD025DC64FF54",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183643Z/sud-ouest-bergerac/fetch-manifest.json",
+    "raw_checksum_sha256": "5EE5521575C41B68942E0B7C7DD9FE9AA48F3C8F0EF5E6475D4A2B894DD69884",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.brulhois",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-brulhois",
+    "normalized_checksum_sha256": "7775305AF0EC3C6939A42A1C2799E8E6B0056F4CAF9D08D4F1F48EED2D448733",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183719Z/sud-ouest-brulhois/fetch-manifest.json",
+    "raw_checksum_sha256": "9D4450A18552C7DCB08255042CC5DC0F8A38A37F34ED8A536F5D005DAFF51C7C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.buzet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-buzet",
+    "normalized_checksum_sha256": "5EA2E9F5A57B781D76D507E6A9A1F446935B742CCEC943EFF8BEE901F0CB8283",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183739Z/sud-ouest-buzet/fetch-manifest.json",
+    "raw_checksum_sha256": "A6B948363050EB730FC0444D44A70ED20081395AC6E4F7570D420A97D3B40149",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.cahors",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-cahors",
+    "normalized_checksum_sha256": "4529FF8D416E5CB10FC48942E15064D90FBA0D7E8CD4EF93370DB327E829BD50",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183706Z/sud-ouest-cahors/fetch-manifest.json",
+    "raw_checksum_sha256": "8CA80803F838400DBC3C2F393B2234D09FD4A99E3FF8D52DCCE959239945B7F0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.cotes-de-duras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-cotes-de-duras",
+    "normalized_checksum_sha256": "0C196992A0A85A1362C3F627E2A9F7801CFCD9B71EE9B8815F6FAC406A64A0F8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183701Z/sud-ouest-cotes-de-duras/fetch-manifest.json",
+    "raw_checksum_sha256": "D48A5A18435C410394DBBBEB43BB33B3D8AC2FB0B6D4CF339589CDB07BBD7F26",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.cotes-du-marmandais",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-cotes-du-marmandais",
+    "normalized_checksum_sha256": "BC89B0E9ABD6C41CA29ECD5CF150FA474DF1D8E2EAA8980693EBB52DFE9E87CE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183703Z/sud-ouest-cotes-du-marmandais/fetch-manifest.json",
+    "raw_checksum_sha256": "AA7E7153ECDE8AA28E0726874D54C4CF0EAA40F6D1B27B839662D95D552D6D66",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.fronton",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-fronton",
+    "normalized_checksum_sha256": "B265DC33C9DC64DCC00567674167A857DF770EEEBFDC7C4E637998B2D7AEF1A0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183716Z/sud-ouest-fronton/fetch-manifest.json",
+    "raw_checksum_sha256": "AC9D67FF3480104A42FB9D1355FAD3A041DBC6ABD848DFC62AD3B09DB12F2B8A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.gaillac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-gaillac",
+    "normalized_checksum_sha256": "A9B2D37FC262EB0787E582D34F1FC89730229DA5F72D8B67BE48779C2859557E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183710Z/sud-ouest-gaillac/fetch-manifest.json",
+    "raw_checksum_sha256": "7E1A9FAE7C8DFC27CAF8EB0E284C20EC46C067E66F6918889DEB1618CABCB43C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.gaillac-premieres-cotes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-gaillac-premieres-cotes",
+    "normalized_checksum_sha256": "C35E49BC13077704E88295675939E614555DB67034029C391C5BB83D20DAAE37",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183714Z/sud-ouest-gaillac-premieres-cotes/fetch-manifest.json",
+    "raw_checksum_sha256": "8EA976F61BC3C24F6B6B0E51A1CAB0A201DF6564FC8F2657ED8E6C6DA1CFC9FB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.irouleguy",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-irouleguy",
+    "normalized_checksum_sha256": "AFCEC44B5C0B2C24ADCA0D82302A2C918B681791F1D311F2F3AA4F6B0394412A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183737Z/sud-ouest-irouleguy/fetch-manifest.json",
+    "raw_checksum_sha256": "F2CF314BAC807F8D614DE9E6BADE01509FE67296EC87CE885DF12254AC080A93",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.jurancon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-jurancon",
+    "normalized_checksum_sha256": "DD93919C7F01AB2A0BA2861917A815AD8913636CBE8D75D13C9EE4AC45DC017E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183730Z/sud-ouest-jurancon/fetch-manifest.json",
+    "raw_checksum_sha256": "C73F81C5F957D38388B1EC35B217A91FFE605EC4128C1F9A56E7D040DE392DF4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.madiran",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-madiran",
+    "normalized_checksum_sha256": "E16365F168AB5F7FD0770DFC12B9B7FC784363AE0D2B97CCC89BF2BD9D28F7A5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183725Z/sud-ouest-madiran/fetch-manifest.json",
+    "raw_checksum_sha256": "6B6FF8D60EDDB3A9A0E5B867533D928BB0B9544381485AB32A53B35AB6B76BCE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.marcillac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-marcillac",
+    "normalized_checksum_sha256": "3B50A73F0C548E099FC4675E8FB6A42979108C32433BE991B69511C815A387CD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183722Z/sud-ouest-marcillac/fetch-manifest.json",
+    "raw_checksum_sha256": "2D4DC990AE28C4F17AA1A9E234165063C792B29A6F8423DD69E5BE0A1459D5BF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.monbazillac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-monbazillac",
+    "normalized_checksum_sha256": "C8F91D871C7930930EE4B841044C11D534F8914BC78D30D78195D7E1FA3945C1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183649Z/sud-ouest-monbazillac/fetch-manifest.json",
+    "raw_checksum_sha256": "B0DD79FE05DC9836E90999933E27972162280628F8CE14FE2591C96AD4C44ECD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.montravel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-montravel",
+    "normalized_checksum_sha256": "3B8DBB68D7F3CBF140210DE81E47AE6DF411FDF8EB2540C79AE60D90155B73C5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183652Z/sud-ouest-montravel/fetch-manifest.json",
+    "raw_checksum_sha256": "DF32E525F2D9080B5412DE561221618C6DDD42EA1837F2CB5688ABD32859FACD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.pacherenc-du-vic-bilh",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-pacherenc-du-vic-bilh",
+    "normalized_checksum_sha256": "C1400943EC5975868FBD3050CCCFD49F1BFDF15D12A4C45BC5B5B15756DAAA83",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183728Z/sud-ouest-pacherenc-du-vic-bilh/fetch-manifest.json",
+    "raw_checksum_sha256": "D00E9680A275D1390D093DE25B62856EEF7581686B8F021BDCEE4FF137123BBC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.pecharmant",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-pecharmant",
+    "normalized_checksum_sha256": "869897EAE2F4168BBA09F477DC6D0C671B2D1E823037152A5BDA8084E48DD84B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183655Z/sud-ouest-pecharmant/fetch-manifest.json",
+    "raw_checksum_sha256": "934296AE2904F5D8BEDA17D19A48A68479352E078B17825E30FE9E9F55662096",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.saussignac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:sud-ouest-saussignac",
+    "normalized_checksum_sha256": "C5B562DFFE4905C9891C201196D76274A22841A6E017B712CCB5F182FD8D28F2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183658Z/sud-ouest-saussignac/fetch-manifest.json",
+    "raw_checksum_sha256": "1B1EE0CB6B375200FD6F34BAC508C7F7B4EB26486F3F4C50A93DECE3DFD252CB",
+    "documented": true
   }
 ]
