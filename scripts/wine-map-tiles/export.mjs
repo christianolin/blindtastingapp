@@ -76,6 +76,23 @@ for (const row of rows) {
   assert.equal(JSON.parse(row.label_point).type, "Point", `${row.canonical_key}: unexpected label type`);
 }
 
+// The canonical label anchor (release.expected, and validate's probe tile)
+// must sit where the RANK-1 label actually renders. PointOnSurface of a
+// MultiPolygon can land on a minor island — Provence's does — and since
+// secondary islands' labels are zoom-gated past the world archive's max,
+// the probed tile would be labelless. Tier >= 2 places keep the canonical
+// point: they emit exactly one label there.
+for (const row of rows) {
+  if (
+    row.display_tier <= 1 &&
+    Array.isArray(row.component_labels) &&
+    row.component_labels.length > 0
+  ) {
+    row.label_lon = row.component_labels[0][0];
+    row.label_lat = row.component_labels[0][1];
+  }
+}
+
 // Third key segment = the region's top areas (medoc, graves, pomerol…),
 // carried on every deeper feature for district colouring + the dynamic
 // legend. group_name resolves from the ancestor row itself — every ancestor
