@@ -8388,6 +8388,519 @@
     "documented": true
   },
   {
+    "canonical_key": "france.languedoc-roussillon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-region",
+    "normalized_checksum_sha256": "2754620DFF2E65DF0A3A7C0BC8FCE18AE8355A1396277521B53258EBE693A4B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190347Z/lr-region/fetch-manifest.json",
+    "raw_checksum_sha256": "F94506114DEFB377F710A3CBA2900FF87F86726BE7FDCB2E377371A9EF4A6E4F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.banyuls",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-banyuls",
+    "normalized_checksum_sha256": "C0738C8FF3E436F486801DB82F3D225F0C504C724A8C86EB0CBAEF1D1CEA1323",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190758Z/lr-banyuls/fetch-manifest.json",
+    "raw_checksum_sha256": "926EB0C11F43103FC1EC51E1C5550CD13F3BE804E2B70CB2E9D9DAE1B43A0D10",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.banyuls-grand-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-banyuls-grand-cru",
+    "normalized_checksum_sha256": "B48328B42EE3DE0E85256265AE246E0F7EFB58A4F7BAF3A46C83A412FDBB0A01",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190801Z/lr-banyuls-grand-cru/fetch-manifest.json",
+    "raw_checksum_sha256": "8C5B1A955D39D3BBC3290EAECC84C13A45B82ED0D897A1301A8EADEF13762397",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cabardes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cabardes",
+    "normalized_checksum_sha256": "7D7BC6F9F7EC5D1883436BD5B8F98926D44EBD6E89E8A1DE043BF7B93E51BFE2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190707Z/lr-cabardes/fetch-manifest.json",
+    "raw_checksum_sha256": "7DA2AAC98664F854ED599423ADAACD04E21A098E0761D399764F5E8054ABD570",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-de-bellegarde",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-de-bellegarde",
+    "normalized_checksum_sha256": "CC422E08F687622B8A3B27DD3AE5F1D88A23F8C5097BB61345822F4BF01A6FF0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190626Z/lr-clairette-de-bellegarde/fetch-manifest.json",
+    "raw_checksum_sha256": "38DBDC79C547D2A43673C9C220FD5C9B7B04AE7A296F44F5D81380B9EB5CFB0F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc",
+    "normalized_checksum_sha256": "D6FC235B903D773A5722A4676BDD278EA3B12595FE72A0F8A8FEFFC75D1ED0C5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190559Z/lr-clairette-du-languedoc/fetch-manifest.json",
+    "raw_checksum_sha256": "C2BEC8B5046312B09207FE2E8B3B9A75A677B2B885C71FDCF6532075AECF5508",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-adissan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-adissan",
+    "normalized_checksum_sha256": "E48AB4B4102084A735943A8FCAB6FBF875E2CFA3E73EC8420313662D5C065514",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190603Z/lr-clairette-du-languedoc-adissan/fetch-manifest.json",
+    "raw_checksum_sha256": "B40000DF780F0C75858E0FF06C915A51DDDA20697EAEEC665A9B604834A3F3A0",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-aspiran",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-aspiran",
+    "normalized_checksum_sha256": "5990BF257B36F11C8A647AEFC544A90EFA3A5174BD0211DF5C0353E0F611FFFF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190605Z/lr-clairette-du-languedoc-aspiran/fetch-manifest.json",
+    "raw_checksum_sha256": "B3413DBEC6442B1E70F4F84891C48FE68909E1930F9E5C17D30CB919A9D3A4C9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-cabrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-cabrieres",
+    "normalized_checksum_sha256": "F531A74917857F26B67A17FF5AF79D56535BBD5BA15DAA6EEF2978ED9AD387A4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190607Z/lr-clairette-du-languedoc-cabrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "18320750B210C1D42B75E9784267807699C4661FCFAEC308521B4A5F6EF4DDCD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-ceyras",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-ceyras",
+    "normalized_checksum_sha256": "E2E1D4D31B4D811D17602097D67BE1AA61BC8E9D46FDAC9BD9BC88BA0D11C48B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190610Z/lr-clairette-du-languedoc-ceyras/fetch-manifest.json",
+    "raw_checksum_sha256": "E4D96C072A75497B3231491EAD06FD80A16F80B6B44623BBEC9A8962B87E6F32",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-fontes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-fontes",
+    "normalized_checksum_sha256": "9B354DF16F3D642B34316553030F970F769DF825230120FF1CB47F5DF177947B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190612Z/lr-clairette-du-languedoc-fontes/fetch-manifest.json",
+    "raw_checksum_sha256": "3F9D8F5A7D958C44CD72A96356A1EBBDDC4E2BF980632B7AD5D2AD56BEB9E1B3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-le-bosc",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-le-bosc",
+    "normalized_checksum_sha256": "47F3A4EB42C1746ACD03500308D1A25C1183EDD5A5FB77E8DFC09708F54C106B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190614Z/lr-clairette-du-languedoc-le-bosc/fetch-manifest.json",
+    "raw_checksum_sha256": "365D40CEFCDB36AA6868254EE3F88B1817F4F3743A313B1FF228D5F942889477",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-lieuran-cabrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-lieuran-cabrieres",
+    "normalized_checksum_sha256": "2808879D23C17CC90CC0D9344FFEB3D7A49EDA7759314951B49135FAAD1CD6AA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190616Z/lr-clairette-du-languedoc-lieuran-cabrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "85149AD18D6EE0B6D054E5026A77FF20AF34F5A23F55856CB56B15D5EE9F6BC9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-nizas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-nizas",
+    "normalized_checksum_sha256": "8D361F538F93B7D50927A1744371AC2CCA0041787517AB459A91DEF5DD9F32B7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190618Z/lr-clairette-du-languedoc-nizas/fetch-manifest.json",
+    "raw_checksum_sha256": "79038D0B989AE127A4C2A7DECEBAC7543DF82864C40971DB7746A1B6473F7E70",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-paulhan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-paulhan",
+    "normalized_checksum_sha256": "B48F3C65AD0CD8A42E4748EBC9587EA66F7075E2AD91748EEA4E72D874A093F1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190620Z/lr-clairette-du-languedoc-paulhan/fetch-manifest.json",
+    "raw_checksum_sha256": "345047E4546FDBDAAF212C9675CEEC87E7FE58492DE31B164756E32CDB7CA417",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-peret",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-peret",
+    "normalized_checksum_sha256": "5912EB506D00B53CAEAC0979AB1AE213A95E41113FFD6482B55DC421F1D6EBE3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190622Z/lr-clairette-du-languedoc-peret/fetch-manifest.json",
+    "raw_checksum_sha256": "8CAC54A9229EDAD0884134991C4010FBFBA6E5059975E637989683470C3E0570",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.clairette-du-languedoc-saint-andre-de-sangonis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-clairette-du-languedoc-saint-andre-de-sangonis",
+    "normalized_checksum_sha256": "BD690BF2BEE9EC0527F2E8DA5C82CA38620E8381570D21C200E7946B52679FAE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190624Z/lr-clairette-du-languedoc-saint-andre-de-sangonis/fetch-manifest.json",
+    "raw_checksum_sha256": "FBA83F02CFCB8EF8E7FD3D0829C4395776EC2F4BCF0A47852E0D47204DE9FD07",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.collioure",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-collioure",
+    "normalized_checksum_sha256": "432765F8228FFF40172A46AA5C62D13970F40C44DE18E48F6F8E1DDBA1D9B604",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190755Z/lr-collioure/fetch-manifest.json",
+    "raw_checksum_sha256": "71C5A63FBB197D90A47FDF4AB13969FE4A67B4A3E31905D3C02992E5F4E9F36A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.corbieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-corbieres",
+    "normalized_checksum_sha256": "666D011C8A24CD844CA24814550E93A825D6C853C2D0794EAF4E84B58C914AB4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190628Z/lr-corbieres/fetch-manifest.json",
+    "raw_checksum_sha256": "F0EE036980F38C44CA2A29C20674D9FD08659D050BBEA2571D260873B4FB7ED7",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.corbieres-boutenac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-corbieres-boutenac",
+    "normalized_checksum_sha256": "7F30E70F687B88806C5EE14DF9C730D0996ABBB599A2B69CC4B2BE7C3122DE22",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190639Z/lr-corbieres-boutenac/fetch-manifest.json",
+    "raw_checksum_sha256": "AAB1272F11D44080E8AF4786E39262FA6DD4934BAE6191A7ABA0B3F7A8044E7F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.costieres-de-nimes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-costieres-de-nimes",
+    "normalized_checksum_sha256": "3BA33492D7C4296D1C9E11541654D21057D53F79A861CB7EABAA2C1AE12086D3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190717Z/lr-costieres-de-nimes/fetch-manifest.json",
+    "raw_checksum_sha256": "42470193892E479CF3754EF5E8059451808796DC0E6B9820242CF7293D5E3B8D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon",
+    "normalized_checksum_sha256": "6CDCCE59CAF443646B9D402D43F15978E59219A906BC8A889A8A75DFF81F798D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190720Z/lr-cotes-du-roussillon/fetch-manifest.json",
+    "raw_checksum_sha256": "06124A16627147973A747205B9DBACE7F02557699F2D3996CA89310B52E85A36",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon-villages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon-villages",
+    "normalized_checksum_sha256": "829BBF476E33EFDD2948C6A1D614C8299B267BF0B26AD88ECC7C6E498399EFA6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190736Z/lr-cotes-du-roussillon-villages/fetch-manifest.json",
+    "raw_checksum_sha256": "252C1B457BCDCC32904A47C181492CEEEAC3CEC57EEF5FDF6E777138E1F5F98D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon-villages-caramany",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon-villages-caramany",
+    "normalized_checksum_sha256": "61D6AECFEF0D72B31FF785176D8946EDEF8057A11083F5288C640AA92A19F536",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190746Z/lr-cotes-du-roussillon-villages-caramany/fetch-manifest.json",
+    "raw_checksum_sha256": "C3693AE071CE66F64299FA794D66431FDB0122260912878F10AB5D5CF4142AF2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon-villages-les-aspres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon-villages-les-aspres",
+    "normalized_checksum_sha256": "613DC81B3BE768DC204AC83E11FB0E8EA5E018E955AD8527868D160E4815AE97",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190748Z/lr-cotes-du-roussillon-villages-les-aspres/fetch-manifest.json",
+    "raw_checksum_sha256": "F187DC63A954C87791E2512A1F9BAA11FFA5CE2F54BE8F1E89D2C6218F90623E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon-villages-lesquerde",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon-villages-lesquerde",
+    "normalized_checksum_sha256": "428A2A1CEB9565D37542B91C702536763C3AFBB9BB18EA3852D0D5A2D487D1A0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190750Z/lr-cotes-du-roussillon-villages-lesquerde/fetch-manifest.json",
+    "raw_checksum_sha256": "12853BEB3A901B4993F51F46CDEB36B359FBEC667A9741F2BB403EC933EEE2B4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.cotes-du-roussillon-villages-tautavel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-cotes-du-roussillon-villages-tautavel",
+    "normalized_checksum_sha256": "1B3A7C7B62F7D69B60266949E2CDDF7A2DE4B3381AF4F3D5FECA1E28ED8BC590",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190752Z/lr-cotes-du-roussillon-villages-tautavel/fetch-manifest.json",
+    "raw_checksum_sha256": "5D10AA8F08C48EAD6ACAC71A54FDB63665A85FEDAE7F5B271C0E2AACD08B3D85",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.faugeres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-faugeres",
+    "normalized_checksum_sha256": "A072831751CC0309916D3283D638F4F755955DF52700DFD8C5FA2357288E4CA8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190701Z/lr-faugeres/fetch-manifest.json",
+    "raw_checksum_sha256": "E078879157FC1A31D0B56402E4B3625E94627BAF607CA1923784839CDA9FCBBD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.fitou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-fitou",
+    "normalized_checksum_sha256": "0328CA89DEEC05015154735AA2BC7728DE5147827F1C332F521915626E4A3E30",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190704Z/lr-fitou/fetch-manifest.json",
+    "raw_checksum_sha256": "001089D147D7A61E16CC4DD1E5BAF5E34A8DF13892C225DAB985A17892E9BF01",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.grand-roussillon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-grand-roussillon",
+    "normalized_checksum_sha256": "C4E64CC08B3F12854438C0868803FB07D88031E60E2EDD5DB73F771B9B2B5CBB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190826Z/lr-grand-roussillon/fetch-manifest.json",
+    "raw_checksum_sha256": "4490273536430D518B064A46399BA1AC0E6ADEE0BD895AFD38456311AD1F4BBA",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.la-clape",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-la-clape",
+    "normalized_checksum_sha256": "45E510258EBF9208E625C4388AD89D787B2901D37D80296628F71B2EF85F252F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190554Z/lr-la-clape/fetch-manifest.json",
+    "raw_checksum_sha256": "D17A271CA9001B3F363AA0875A85DC029B10CCED54F673259D22A25682B814D3",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-cabrieres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-cabrieres",
+    "normalized_checksum_sha256": "8057D694C22034DD95448421D7EDA26FCFB9B3AEEEF36F6F36960FC7E4309062",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190510Z/lr-languedoc-cabrieres/fetch-manifest.json",
+    "raw_checksum_sha256": "AA3178D3F5CBAD42F900B39B1C03EE59237C388715D8CB4A148DD6361195657C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-gres-de-montpellier",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-gres-de-montpellier",
+    "normalized_checksum_sha256": "9852331516723E44D8141E2BFB2DE8B6DF60B1FD7B5554373E3F5B2FF035BBA9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190515Z/lr-languedoc-gres-de-montpellier/fetch-manifest.json",
+    "raw_checksum_sha256": "93E946D89F59F0220C3C2E9D6D8592E05A5065A5DAFF04C86B797FA562087DCF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-la-mejanelle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-la-mejanelle",
+    "normalized_checksum_sha256": "F4E65DB9BC83F50F6BB00E27F15591F5F413B260DF92E97CA6250F4EB6B50218",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190520Z/lr-languedoc-la-mejanelle/fetch-manifest.json",
+    "raw_checksum_sha256": "4D24BA6BB043DE92F8EB2B3A88D4699560DC02889EDD82485D4CA3998A1417AB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-montpeyroux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-montpeyroux",
+    "normalized_checksum_sha256": "FE4A740B71D6BCC0CA90FA72015837140E41167D404649086B1E0CA5B11AB676",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190524Z/lr-languedoc-montpeyroux/fetch-manifest.json",
+    "raw_checksum_sha256": "0290986E54ACFBE70AB715944A19D0B8B5C20078D2C2AD3C5715AB8D72478597",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-quatourze",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-quatourze",
+    "normalized_checksum_sha256": "DDF4DC5B0520038FB6E284C3FE1B85C31E1C26EAD192BFA33F6CEE1D83625622",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190527Z/lr-languedoc-quatourze/fetch-manifest.json",
+    "raw_checksum_sha256": "22593C8B40283859AEF13B09762BBA6A9EFA9B1BBF6213825970B15EEB8AEDEF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-saint-christol",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-saint-christol",
+    "normalized_checksum_sha256": "A1C9DDA075A65EF940C8CD54BAAF795620639AA2230641460FDF74459508955C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190531Z/lr-languedoc-saint-christol/fetch-manifest.json",
+    "raw_checksum_sha256": "2AF192E6982831D62D15789A5A2F6CB33ED558EA3FC593E861CD8C1383526A7C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-saint-drezery",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-saint-drezery",
+    "normalized_checksum_sha256": "5EF6C2E07E0A150A2FF5745A56D771112531DF236D0CF5B9EAC92797EB3F664C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190535Z/lr-languedoc-saint-drezery/fetch-manifest.json",
+    "raw_checksum_sha256": "B9AC88EC8CE1413D17165E5DFDA68F6D095FFC1AEDC28582A804415C5C251307",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-saint-georges-d-orques",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-saint-georges-d-orques",
+    "normalized_checksum_sha256": "040D80539C46B8C230065B32A6FF8556286E4CD7D7C803E962503C86F7EFC4DD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190539Z/lr-languedoc-saint-georges-d-orques/fetch-manifest.json",
+    "raw_checksum_sha256": "3D82D0F9944AB0E1AFC23A6CB69426D00E28DF439FADAAFB687D9BFA273D81BF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.languedoc-saint-saturnin",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-languedoc-saint-saturnin",
+    "normalized_checksum_sha256": "2EDD34B159958653AB6B5D488CFE1DB68184BF3CCFD6D65FBF3095895D816752",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190543Z/lr-languedoc-saint-saturnin/fetch-manifest.json",
+    "raw_checksum_sha256": "40FBA751C20A1A811EAA29EFB415EE85B7BCD5D8EDFB6244AE13D50FE901CD24",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.limoux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-limoux",
+    "normalized_checksum_sha256": "524F4A0B3D57E736D854C69D4B0D8F3B573388AC14E14AF95D3EE2A96732E9CA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190713Z/lr-limoux/fetch-manifest.json",
+    "raw_checksum_sha256": "56AB3E7E5052365213C7E4C2DC901AA9D932DE043D3D6BBFF3F45A50C4E8CB8D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.malepere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-malepere",
+    "normalized_checksum_sha256": "98486B1EAA85C0833FB7C94DAFFDB56E28D6578925BF06C84F84DF85968C1585",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190710Z/lr-malepere/fetch-manifest.json",
+    "raw_checksum_sha256": "483662B9296B325F52CB04DEB0B14C05F82726D039F898217E64ECE17A7166F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.maury",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-maury",
+    "normalized_checksum_sha256": "28909392F619FA9DE1AC8DA249085CA7285FB7DE8D4F0326BC1225B7D9536E13",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190804Z/lr-maury/fetch-manifest.json",
+    "raw_checksum_sha256": "3C1C86B51B0BEE9D7BE6EEEEEC840E1350ED76AE63CD60835639888198AED9D5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.minervois",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-minervois",
+    "normalized_checksum_sha256": "6311C343DFCB30F4E3889F14B1A0A0916A86AC7AB7A96E993DE83C0E72124D6B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190641Z/lr-minervois/fetch-manifest.json",
+    "raw_checksum_sha256": "9AAA202E9F3750B274FA639A8C86D7923C69966543993C21E2481AE729721547",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.minervois-la-liviniere",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-minervois-la-liviniere",
+    "normalized_checksum_sha256": "3FEF06165AAA9CC5144907BFF8BCF155731413DE69E5938A69636C45DEF095DE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190647Z/lr-minervois-la-liviniere/fetch-manifest.json",
+    "raw_checksum_sha256": "C40C2A44721D5E6AB0733F87D5630A14F107E54A960E5145AE948E031F3B6337",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.muscat-de-frontignan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-muscat-de-frontignan",
+    "normalized_checksum_sha256": "213C78F25D6E57530B49AD2C0895396D6DB5CB4047B554E50AC8A8B0EFC11DF1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190905Z/lr-muscat-de-frontignan/fetch-manifest.json",
+    "raw_checksum_sha256": "90E3F85A71076EEC6BE051D978608F5786E316EE7807660A7308C2CCBC6438F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.muscat-de-lunel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-muscat-de-lunel",
+    "normalized_checksum_sha256": "5F62CFBE0D1355E81736B94066DD53A3C34D465F6F0E601B3FFD5AF55C765336",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190908Z/lr-muscat-de-lunel/fetch-manifest.json",
+    "raw_checksum_sha256": "BACD40C58AEDA72D973F203A75E518319C3489E880FF9B9891525EDF78887D1B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.muscat-de-mireval",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-muscat-de-mireval",
+    "normalized_checksum_sha256": "38CE579913F6FAF063938FAEFB336653D1EA3733BB368AB9F8698F789AFD3839",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190911Z/lr-muscat-de-mireval/fetch-manifest.json",
+    "raw_checksum_sha256": "4E86FE9A78CB6B5DB7AF64F13D014460C16F5E5130B9F6DCC1834A70AA667C57",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.muscat-de-rivesaltes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-muscat-de-rivesaltes",
+    "normalized_checksum_sha256": "7BCD286BF7B8DCD33DEF2F3E3795C5EF97561E0483B8725063ACF5106B85A777",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190845Z/lr-muscat-de-rivesaltes/fetch-manifest.json",
+    "raw_checksum_sha256": "BAE311A9EC356CE1D2DCB05D5E4CBA4777B1C5C6CE97DBFBAAF7187DBE186FE1",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.muscat-de-saint-jean-de-minervois",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-muscat-de-saint-jean-de-minervois",
+    "normalized_checksum_sha256": "22FE72B72B299AF6CE8312E8D8EAC8D96AE64B8A8309117C131DAB9B10BCA581",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190913Z/lr-muscat-de-saint-jean-de-minervois/fetch-manifest.json",
+    "raw_checksum_sha256": "B78DBCD2CBF652863E98899777537DA03DDFAA7A361942F5767E28A5E42B894A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.pic-saint-loup",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-pic-saint-loup",
+    "normalized_checksum_sha256": "04A588F15C651DF37B25E2191E5416CDCCF6FBFD97E23D0746E2DCA8732D76C4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190551Z/lr-pic-saint-loup/fetch-manifest.json",
+    "raw_checksum_sha256": "31C11DAE72D63E0964DFCC505E5F34D1D28F70A8E9A3ADA552E6E67224BCA60E",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.picpoul-de-pinet",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-picpoul-de-pinet",
+    "normalized_checksum_sha256": "645388ACE9E869EC967017B2B6E5B0D7E43C259D5665A6DC17895484027D39FD",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190557Z/lr-picpoul-de-pinet/fetch-manifest.json",
+    "raw_checksum_sha256": "1D38838C033AFF97404FF715DF26A63D9FE8D8710560AC57C65C4917E6F26923",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.rivesaltes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-rivesaltes",
+    "normalized_checksum_sha256": "0443B0A93C5530C8453997C4BED10615F058E13433E7521069C4D44ABFDEF470",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190807Z/lr-rivesaltes/fetch-manifest.json",
+    "raw_checksum_sha256": "2A866D097679244D83E7E6750634B1C4ADC9397A30F17741BA6A171144F41A26",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.saint-chinian",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-saint-chinian",
+    "normalized_checksum_sha256": "413084C7131FBAAF59A41646F11E1FF4FEC9AFF264078DA6392B1761EDFA2197",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190649Z/lr-saint-chinian/fetch-manifest.json",
+    "raw_checksum_sha256": "FA0DC97D1983B37C52BAAB436A4B12C4D1CED3A88EB3313BFA9DB07FDAE8664D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.saint-chinian-berlou",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-saint-chinian-berlou",
+    "normalized_checksum_sha256": "01FD4F3BC1A2CB28BFA1E6F9D9822D4D870804A3BDDBD0FFEDF893C77EA04FC4",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190656Z/lr-saint-chinian-berlou/fetch-manifest.json",
+    "raw_checksum_sha256": "AD1BD79506D93ABD1001132E209AA12FACF913864C192FD005B53CEAF5C34AA5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.saint-chinian-roquebrun",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-saint-chinian-roquebrun",
+    "normalized_checksum_sha256": "6B4520730F8907E019AD8CA02150C29473790521F3A568C28F5607DECF12F1CF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190658Z/lr-saint-chinian-roquebrun/fetch-manifest.json",
+    "raw_checksum_sha256": "99D9A1A56A671B63455AEB9CFF5B0CC2CB3C2E6F515F9120362D8E75CA5BB705",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.languedoc-roussillon.terrasses-du-larzac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:lr-terrasses-du-larzac",
+    "normalized_checksum_sha256": "88AB6AFBC47B4892212D24CC727E0C4BBA29F5B2EB648DC720525CF8278FBF9D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190548Z/lr-terrasses-du-larzac/fetch-manifest.json",
+    "raw_checksum_sha256": "84F1BB8DD38EA96D6E93B1A29CA63F08ECB4556BFFB30258F926490CC4FCBF08",
+    "documented": true
+  },
+  {
     "canonical_key": "france.loire",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:loire-region",

@@ -946,6 +946,39 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Reuilly AOP"], key: "france.loire.reuilly" },
   { names: ["Coteaux du Giennois AOP"], key: "france.loire.coteaux-du-giennois" },
   { names: ["Chateaumeillant AOP"], key: "france.loire.chateaumeillant" },
+  { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
+  { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
+  { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
+  { names: ["Montpeyroux AOP"], key: "france.languedoc-roussillon.languedoc-montpeyroux" },
+  { names: ["Terrasses du Larzac AOP"], key: "france.languedoc-roussillon.terrasses-du-larzac" },
+  { names: ["Pic Saint Loup AOP"], key: "france.languedoc-roussillon.pic-saint-loup" },
+  { names: ["La Clape AOP"], key: "france.languedoc-roussillon.la-clape" },
+  { names: ["Picpoul de Pinet AOP"], key: "france.languedoc-roussillon.picpoul-de-pinet" },
+  { names: ["Clairette du Languedoc AOP"], key: "france.languedoc-roussillon.clairette-du-languedoc" },
+  { names: ["Clairette de Bellegarde AOP"], key: "france.languedoc-roussillon.clairette-de-bellegarde" },
+  { names: ["Corbières AOP"], key: "france.languedoc-roussillon.corbieres" },
+  { names: ["Minervois AOP"], key: "france.languedoc-roussillon.minervois" },
+  { names: ["Saint Chinian AOP"], key: "france.languedoc-roussillon.saint-chinian" },
+  { names: ["Faugères AOP"], key: "france.languedoc-roussillon.faugeres" },
+  { names: ["Fitou AOP"], key: "france.languedoc-roussillon.fitou" },
+  { names: ["Cabardes AOP"], key: "france.languedoc-roussillon.cabardes" },
+  { names: ["Malepere AOP"], key: "france.languedoc-roussillon.malepere" },
+  { names: ["Limoux AOP"], key: "france.languedoc-roussillon.limoux" },
+  { names: ["Costieres de Nimes AOP"], key: "france.languedoc-roussillon.costieres-de-nimes" },
+  { names: ["Cotes du Roussillon AOP"], key: "france.languedoc-roussillon.cotes-du-roussillon" },
+  { names: ["Cotes du Roussillon-Villages AOP"], key: "france.languedoc-roussillon.cotes-du-roussillon-villages" },
+  { names: ["Caramany AOP"], key: "france.languedoc-roussillon.cotes-du-roussillon-villages-caramany" },
+  { names: ["Lesquerde AOP"], key: "france.languedoc-roussillon.cotes-du-roussillon-villages-lesquerde" },
+  { names: ["Tautavel AOP"], key: "france.languedoc-roussillon.cotes-du-roussillon-villages-tautavel" },
+  { names: ["Collioure AOP"], key: "france.languedoc-roussillon.collioure" },
+  { names: ["Banyuls AOP"], key: "france.languedoc-roussillon.banyuls" },
+  { names: ["Banyuls Grand Cru AOP"], key: "france.languedoc-roussillon.banyuls-grand-cru" },
+  { names: ["Maury AOP"], key: "france.languedoc-roussillon.maury" },
+  { names: ["Maury Sec AOP"], key: "france.languedoc-roussillon.maury" },
+  { names: ["Rivesaltes AOP"], key: "france.languedoc-roussillon.rivesaltes" },
+  { names: ["Muscat de Rivesaltes AOP"], key: "france.languedoc-roussillon.muscat-de-rivesaltes" },
+  { names: ["Muscat de Lunel AOP"], key: "france.languedoc-roussillon.muscat-de-lunel" },
+  { names: ["Muscat de Saint Jean de Minervois AOP"], key: "france.languedoc-roussillon.muscat-de-saint-jean-de-minervois" },
 ];
 
 // Post-review current-boundary set: pinned from the live reviewed state by
@@ -996,16 +1029,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // children) + Corse (region + 8 villages) + Provence (7 constituents +
     // derived aggregate region) + Sud-Ouest (19 constituents + derived
     // aggregate region) + Loire (59 constituents + derived aggregate
-    // region). total/validated include retired revisions.
-    total: 1130,
-    validated: 1130,
-    current: 1060,
-    valid: 1130,
-    labelled: 1130,
+    // region) + Languedoc-Roussillon (dual-role region + 56 constituents).
+    // total/validated include retired revisions.
+    total: 1187,
+    validated: 1187,
+    current: 1117,
+    valid: 1187,
+    labelled: 1187,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
     manual: 60,
-    generalized: 1036,
+    generalized: 1093,
     reproducible: 13,
   });
 
@@ -1056,7 +1090,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1130);
+  assert.equal(prov.linked_boundaries, 1187);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1076,7 +1110,7 @@ test("only exact current Bordeaux references are verified", async () => {
     `select r.name, p.canonical_key
        from regions r join wine_places p on p.id = r.wine_place_id
       where r.map_status = 'VERIFIED'
-      order by p.canonical_key`,
+      order by p.canonical_key, r.name`,
   );
   assert.deepEqual(region.rows, [
     { name: "Alsace", canonical_key: "france.alsace" },
@@ -1086,6 +1120,8 @@ test("only exact current Bordeaux references are verified", async () => {
     { name: "Champagne", canonical_key: "france.champagne" },
     { name: "Corsica", canonical_key: "france.corse" },
     { name: "Jura", canonical_key: "france.jura" },
+    { name: "Languedoc", canonical_key: "france.languedoc-roussillon" },
+    { name: "Roussillon", canonical_key: "france.languedoc-roussillon" },
     { name: "Loire", canonical_key: "france.loire" },
     { name: "Provence", canonical_key: "france.provence" },
     { name: "Rhône", canonical_key: "france.rhone" },
@@ -1102,7 +1138,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 289);
+  assert.equal(appellations.rows.length, 322);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1115,8 +1151,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 12],
-    ["appellations", 289],
+    ["regions", 14],
+    ["appellations", 322],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1143,7 +1179,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Corse region migration: exact name match',
                     'Provence region migration: exact name match',
                     'Sud-Ouest region migration: exact name match',
-                    'Loire region migration: exact name match'
+                    'Loire region migration: exact name match',
+                    'Languedoc-Roussillon region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1234,8 +1271,8 @@ test("classification facts and legal relationship types", async () => {
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus).
-      appellations: 993,
-      aoc: 993,
+      appellations: 1050,
+      aoc: 1050,
     missing_level: 0,
     france_plain: 1,
   });
