@@ -657,6 +657,58 @@ test(
 );
 
 const EXPECTED_APPELLATION_LINKS = [
+  { names: ["Alsace AOP"], key: "france.alsace" },
+  { names: ["Altenberg de Bergbieten AOP"], key: "france.alsace.altenberg-de-bergbieten" },
+  { names: ["Altenberg de Bergheim AOP"], key: "france.alsace.altenberg-de-bergheim" },
+  { names: ["Altenberg de Wolxheim AOP"], key: "france.alsace.altenberg-de-wolxheim" },
+  { names: ["Brand AOP"], key: "france.alsace.brand" },
+  { names: ["Bruderthal AOP"], key: "france.alsace.bruderthal" },
+  { names: ["Eichberg AOP"], key: "france.alsace.eichberg" },
+  { names: ["Engelberg AOP"], key: "france.alsace.engelberg" },
+  { names: ["Florimont AOP"], key: "france.alsace.florimont" },
+  { names: ["Frankstein AOP"], key: "france.alsace.frankstein" },
+  { names: ["Froehn AOP"], key: "france.alsace.froehn" },
+  { names: ["Furstentum AOP"], key: "france.alsace.furstentum" },
+  { names: ["Geisberg AOP"], key: "france.alsace.geisberg" },
+  { names: ["Gloeckelberg AOP"], key: "france.alsace.gloeckelberg" },
+  { names: ["Goldert AOP"], key: "france.alsace.goldert" },
+  { names: ["Hatschbourg AOP"], key: "france.alsace.hatschbourg" },
+  { names: ["Hengst AOP"], key: "france.alsace.hengst" },
+  { names: ["Kaefferkopf AOP"], key: "france.alsace.kaefferkopf" },
+  { names: ["Kanzlerberg AOP"], key: "france.alsace.kanzlerberg" },
+  { names: ["Kastelberg AOP"], key: "france.alsace.kastelberg" },
+  { names: ["Kessler AOP"], key: "france.alsace.kessler" },
+  { names: ["Kirchberg De Barr AOP"], key: "france.alsace.kirchberg-de-barr" },
+  { names: ["Kirchberg de Ribeauville AOP"], key: "france.alsace.kirchberg-de-ribeauville" },
+  { names: ["Kitterle AOP"], key: "france.alsace.kitterle" },
+  { names: ["Mambourg AOP"], key: "france.alsace.mambourg" },
+  { names: ["Mandelberg AOP"], key: "france.alsace.mandelberg" },
+  { names: ["Marckrain AOP"], key: "france.alsace.marckrain" },
+  { names: ["Moenchberg AOP"], key: "france.alsace.moenchberg" },
+  { names: ["Muenchberg AOP"], key: "france.alsace.muenchberg" },
+  { names: ["Ollwiller AOP"], key: "france.alsace.ollwiller" },
+  { names: ["Osterberg AOP"], key: "france.alsace.osterberg" },
+  { names: ["Pfersigberg AOP"], key: "france.alsace.pfersigberg" },
+  { names: ["Pfingstberg AOP"], key: "france.alsace.pfingstberg" },
+  { names: ["Praelatenberg AOP"], key: "france.alsace.praelatenberg" },
+  { names: ["Rangen AOP"], key: "france.alsace.rangen" },
+  { names: ["Rosacker AOP"], key: "france.alsace.rosacker" },
+  { names: ["Saering AOP"], key: "france.alsace.saering" },
+  { names: ["Schlossberg AOP"], key: "france.alsace.schlossberg" },
+  { names: ["Schoenenbourg AOP"], key: "france.alsace.schoenenbourg" },
+  { names: ["Sommerberg AOP"], key: "france.alsace.sommerberg" },
+  { names: ["Sonnenglanz AOP"], key: "france.alsace.sonnenglanz" },
+  { names: ["Spiegel AOP"], key: "france.alsace.spiegel" },
+  { names: ["Sporen AOP"], key: "france.alsace.sporen" },
+  { names: ["Steinert AOP"], key: "france.alsace.steinert" },
+  { names: ["Steingrubler AOP"], key: "france.alsace.steingrubler" },
+  { names: ["Steinklotz AOP"], key: "france.alsace.steinklotz" },
+  { names: ["Vorbourg AOP"], key: "france.alsace.vorbourg" },
+  { names: ["Wiebelsberg AOP"], key: "france.alsace.wiebelsberg" },
+  { names: ["Wineck Schlossberg AOP"], key: "france.alsace.wineck-schlossberg" },
+  { names: ["Winzenberg AOP"], key: "france.alsace.winzenberg" },
+  { names: ["Zinnkoepfle AOP"], key: "france.alsace.zinnkoepfle" },
+  { names: ["Zotzenberg AOP"], key: "france.alsace.zotzenberg" },
   { names: ["Barsac AOP", "Barsac"], key: "france.bordeaux.sauternes.barsac" },
   { names: ["Graves AOP", "Graves"], key: "france.bordeaux.graves" },
   { names: ["Haut-Médoc AOP", "Haut-Médoc"], key: "france.bordeaux.haut-medoc" },
@@ -848,16 +900,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
     // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 55
-    // GC/1er-cru villages). total/validated include retired revisions.
-    total: 953,
-    validated: 953,
-    current: 883,
-    valid: 953,
-    labelled: 953,
+    // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
+    // dissolves). total/validated include retired revisions.
+    total: 1005,
+    validated: 1005,
+    current: 935,
+    valid: 1005,
+    labelled: 1005,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
     manual: 60,
-    generalized: 862,
+    generalized: 914,
     reproducible: 13,
   });
 
@@ -908,7 +961,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 953);
+  assert.equal(prov.linked_boundaries, 1005);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -931,6 +984,7 @@ test("only exact current Bordeaux references are verified", async () => {
       order by p.canonical_key`,
   );
   assert.deepEqual(region.rows, [
+    { name: "Alsace", canonical_key: "france.alsace" },
     { name: "Beaujolais", canonical_key: "france.beaujolais" },
     { name: "Bordeaux", canonical_key: "france.bordeaux" },
     { name: "Bourgogne", canonical_key: "france.bourgogne" },
@@ -947,7 +1001,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 146);
+  assert.equal(appellations.rows.length, 198);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -960,8 +1014,8 @@ test("only exact current Bordeaux references are verified", async () => {
 
   for (const [table, expectedVerified] of [
     ["countries", 1],
-    ["regions", 5],
-    ["appellations", 146],
+    ["regions", 6],
+    ["appellations", 198],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -981,7 +1035,8 @@ test("only exact current Bordeaux references are verified", async () => {
                     'Phase 3F chablis-climats migration: exact name match',
                     'Champagne region migration: exact name match',
                     'Beaujolais region migration: exact name match',
-                    'Rhone region migration: exact name match'
+                    'Rhone region migration: exact name match',
+                    'Alsace region migration: exact name match'
                   )
               )::int reviewed,
               count(*) filter (
@@ -1070,9 +1125,10 @@ test("classification facts and legal relationship types", async () => {
   assert.deepEqual(facts.rows[0], {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
-      // +1 Champagne (region == regional AOC).
-      appellations: 816,
-      aoc: 816,
+      // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
+      // + 51 grands crus).
+      appellations: 868,
+      aoc: 868,
     missing_level: 0,
     france_plain: 1,
   });

@@ -9,6 +9,474 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-region",
+    "normalized_checksum_sha256": "D7C07754AE05A47AD875600DE97C2A85622813D83550AD60CC3EEF26B2F50873",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163452Z/alsace-region/fetch-manifest.json",
+    "raw_checksum_sha256": "D98F7A30BCC9F2F970EDFF41228788970A1C41B04A087B0B7209F4A179913432",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.altenberg-de-bergbieten",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-altenberg-de-bergbieten",
+    "normalized_checksum_sha256": "BCC7CEA488AE2DB301749048E64058A9DBEC03003D595F48C871DDA5054AC9EB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163459Z/alsace-altenberg-de-bergbieten/fetch-manifest.json",
+    "raw_checksum_sha256": "6739FBA21EC367543C5546B8A4E5AD7B0D41AE185511E8098EE44CF173929D44",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.altenberg-de-bergheim",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-altenberg-de-bergheim",
+    "normalized_checksum_sha256": "D7D09FF4C952BBC830E996DBD9250E0095036ADBEB6CE1D2CD31892B950D3E66",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163502Z/alsace-altenberg-de-bergheim/fetch-manifest.json",
+    "raw_checksum_sha256": "08EE81E657460AE3FE4C8662E9413A10A465B36A7BA77E8EDDCB436753263D4B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.altenberg-de-wolxheim",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-altenberg-de-wolxheim",
+    "normalized_checksum_sha256": "F0481BA5B31638A112DFD77F8011D18A362BCA996CA19E26BF9EBB5574C096F0",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163505Z/alsace-altenberg-de-wolxheim/fetch-manifest.json",
+    "raw_checksum_sha256": "27CA582855B3F3C16734AE80B659AD4B33760405343367DA3E8E540C0FF70D6C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.brand",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-brand",
+    "normalized_checksum_sha256": "C47A195F2A39BA60A74D32E87A31CFE878008AC8D4F15943A75088CA4806922E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163507Z/alsace-brand/fetch-manifest.json",
+    "raw_checksum_sha256": "E79A7D9DE618041DE4D47C91A031D4CC79006906447FFC354DF4B6DF525F358B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.bruderthal",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-bruderthal",
+    "normalized_checksum_sha256": "8CCDDCC1B5943080A660FA350AFF7E112120D68E7F1970EAC71A58E039074F94",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163509Z/alsace-bruderthal/fetch-manifest.json",
+    "raw_checksum_sha256": "9116D822351D575685DF6DF9208CA4F0A8609928C5BAAC8093EFD90E8487A7B9",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.eichberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-eichberg",
+    "normalized_checksum_sha256": "8D0B08BDA19D23A4593F59F2ACB9F727F8405789F531A903352D6FF0EA0D7A02",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163510Z/alsace-eichberg/fetch-manifest.json",
+    "raw_checksum_sha256": "3AA3F4E66166DA5E3AD1D60584178CCF3A5B4DAC20C18A59D10A7BF9883F6E1A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.engelberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-engelberg",
+    "normalized_checksum_sha256": "F20CB499D6E3A052B1F27A31CFEFB63C41D03FD140C5070B6703A55C5C7496B6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163512Z/alsace-engelberg/fetch-manifest.json",
+    "raw_checksum_sha256": "D49B4CE8572B446E2EB9C062CF8D85EFDBA1C7C4B43EC4BD8C160D0BE8C05B59",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.florimont",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-florimont",
+    "normalized_checksum_sha256": "4F9F47E7F442D1BA0D66DA5D21A21910D10574BE880FB732D7A5099C6AFC083A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163514Z/alsace-florimont/fetch-manifest.json",
+    "raw_checksum_sha256": "ED7CB7F73594A62FD1746D1CA760F2B208C3D086D8A696D5112D9B3CAA212B6D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.frankstein",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-frankstein",
+    "normalized_checksum_sha256": "F028C91A4A966E370D72064478394CE4E0DB6BF3DFA1F1F7B057A47220675E60",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163515Z/alsace-frankstein/fetch-manifest.json",
+    "raw_checksum_sha256": "B9070B6E4C7F49A1E79DD1578B0A1B400D5AE6C71ABD8FDF1EE39F1A29680BCE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.froehn",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-froehn",
+    "normalized_checksum_sha256": "D11062B03C9E57F330888E33C49D68578F8E9203C7BCA53D66B6E186339885D7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163517Z/alsace-froehn/fetch-manifest.json",
+    "raw_checksum_sha256": "CD43D4A338E96FF181D355C278F21E312C09B0E1C8060EC12814AF8416678F3C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.furstentum",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-furstentum",
+    "normalized_checksum_sha256": "86946CE59269BEA345F548A05248FAE07597FEA83497B8E127145988D254FB43",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163518Z/alsace-furstentum/fetch-manifest.json",
+    "raw_checksum_sha256": "FF19C67207A0E74F41A58E433B426BE28E13A8A2FF998BAA7F3554999FD0D36F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.geisberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-geisberg",
+    "normalized_checksum_sha256": "F1D207CB6A7B2B6CBF8493D73F636247061C09BA1C395358ABB1A55832BD14E8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163520Z/alsace-geisberg/fetch-manifest.json",
+    "raw_checksum_sha256": "9AEE06458D21800B79D0F7BFAFE13DB671945B631791071908F882333A0D6D17",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.gloeckelberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-gloeckelberg",
+    "normalized_checksum_sha256": "109E7922D3F7C75A668921F517DB5CFA0A41F5101A781794FB1B425497E63A77",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163521Z/alsace-gloeckelberg/fetch-manifest.json",
+    "raw_checksum_sha256": "910E3948EC3B10FF9D537A92780E1D9FDE3DAE6ED305EADAF6301C2BC103FA00",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.goldert",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-goldert",
+    "normalized_checksum_sha256": "F52D06B084FEE3DB48169528E003F4A10CB7EFDFCD321BC86E5A9969DC974618",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163523Z/alsace-goldert/fetch-manifest.json",
+    "raw_checksum_sha256": "62034A10B5D5A8737EBD55A4213C45F466E2E299116F4E7F22B07B0AE0087989",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.hatschbourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-hatschbourg",
+    "normalized_checksum_sha256": "35381E7E74313BF84F45E1B8ADEAB2AE1F9F883032DA9F109BE90C1A0CEA013A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163525Z/alsace-hatschbourg/fetch-manifest.json",
+    "raw_checksum_sha256": "7433465E2A707BC25CF4405CB4FAE582C550C69FAEEA12B17D70DFAF4031289A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.hengst",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-hengst",
+    "normalized_checksum_sha256": "4C366373A07D2AAAE5A75061C1BBB829A2DA7BC0C5DC3657A511563CCE571922",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163527Z/alsace-hengst/fetch-manifest.json",
+    "raw_checksum_sha256": "1C1D18D135A056ADDEC6F53F552F0E27422E38BC8586690FA31E25C662498D6B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kaefferkopf",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kaefferkopf",
+    "normalized_checksum_sha256": "FC86952C82C37DAB68AF1BEFE98AA2DCBB6267DC4787F8140D3C4C149EEE6D73",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163528Z/alsace-kaefferkopf/fetch-manifest.json",
+    "raw_checksum_sha256": "ABB431C7B2E16D3E7EC4202DFA3CDB9EEE0425CB62C28DCFDED27A6BAA806EE2",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kanzlerberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kanzlerberg",
+    "normalized_checksum_sha256": "C771B8A05BF9FF0E5DEC87F14C87E63C85FD35313F4A83B157063EE8D10CBF7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163530Z/alsace-kanzlerberg/fetch-manifest.json",
+    "raw_checksum_sha256": "9024F26F124B2EA2EA0B37EEEB824061BA43ADBF0163427B3ABD1FFA3F7AA84D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kastelberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kastelberg",
+    "normalized_checksum_sha256": "ADA86B63841AFBD581D57DE7056A2E67647E832D5C70844C966613FF1934D65F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163531Z/alsace-kastelberg/fetch-manifest.json",
+    "raw_checksum_sha256": "CABCC234F42EA340DC08D786274D2EF1C3B755D4525AF3480F578849461FED99",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kessler",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kessler",
+    "normalized_checksum_sha256": "C1F282C7C291486452FC66AFB77BCCB08A3A4F0100C89E8049A7FB069E59CF44",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163533Z/alsace-kessler/fetch-manifest.json",
+    "raw_checksum_sha256": "2DEC88700E22E98C24340145295360FAA3E26B87B19DB2CF439C707B85D60848",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kirchberg-de-barr",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kirchberg-de-barr",
+    "normalized_checksum_sha256": "1484E3D962CCEC6649CB5EBCA010B35EEEF158526066507174DE8ACE6992F5AC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163535Z/alsace-kirchberg-de-barr/fetch-manifest.json",
+    "raw_checksum_sha256": "BB6CD783D2F9E4A097872CCA3F9F8755CFBCED7E398BECE94299E8E315298234",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kirchberg-de-ribeauville",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kirchberg-de-ribeauville",
+    "normalized_checksum_sha256": "8F24B3CA7512A3B987827766E72A65DFA10FE8DF36EDB705D254660C3CD61E56",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163537Z/alsace-kirchberg-de-ribeauville/fetch-manifest.json",
+    "raw_checksum_sha256": "DF7C817C4A9B337E46876B0AE0A24606340552EBAE153F22D6EB946846D31BD6",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kitterle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-kitterle",
+    "normalized_checksum_sha256": "90A875AF8B6FD6077FCA89904300722665FF2C490BB4E3068B88A852A4240559",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163538Z/alsace-kitterle/fetch-manifest.json",
+    "raw_checksum_sha256": "58BA39EA03AA6A2379CC03E78E4698F908416F41B5C5C23B5AC104E81D6C1049",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.mambourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-mambourg",
+    "normalized_checksum_sha256": "9CAA9F1946CAB01FC4130F3D4DD60F9B6B2E383C0A7E5F170F407453C185A0E3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163540Z/alsace-mambourg/fetch-manifest.json",
+    "raw_checksum_sha256": "04D92CBD1F6C0F1A857550CEC907BF02BF47B6BC8258F08C5CCFB79903379B68",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.mandelberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-mandelberg",
+    "normalized_checksum_sha256": "B5C2FF9E2A13EBE183278FDEEA8477094ECC34306472433159B7D6C62208EFD2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163541Z/alsace-mandelberg/fetch-manifest.json",
+    "raw_checksum_sha256": "235EB51A10428C3803C61B60EB67EB4DA8151F06ED2776493045EABA9D0788BC",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.marckrain",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-marckrain",
+    "normalized_checksum_sha256": "D6CD0A67731D9CA1F02A1F9347BFFEB6120538D3AA7013BB1D6062CF828B73BC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163543Z/alsace-marckrain/fetch-manifest.json",
+    "raw_checksum_sha256": "AE0775D406DB98F44C19C78DE42FBDA8DD1258158D868ACD86B9C4365CC5733A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.moenchberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-moenchberg",
+    "normalized_checksum_sha256": "0BCB294FDBF5BD0D9CD17C7C7C01133FF1678748749D39F08BC8DA4F09CA3171",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163544Z/alsace-moenchberg/fetch-manifest.json",
+    "raw_checksum_sha256": "5B66298010D6426B9DD2D3C6FD879C8CC03A8D93A7ED16A5900CE608EF9F9A62",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.muenchberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-muenchberg",
+    "normalized_checksum_sha256": "07785D3BB748665EF41BADBAFA36627D84EDFFC199B98512F789D8EA2A3B3D63",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163546Z/alsace-muenchberg/fetch-manifest.json",
+    "raw_checksum_sha256": "9670E2386EA1619E0EE2AC4D67BFF5D8755E22E8014E8B7C40CFC252C66FAC35",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.ollwiller",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-ollwiller",
+    "normalized_checksum_sha256": "F2AF58FBA5F06B5B2426D72D053BEF8B0F9CA5E3D7FBC6C0EB153EEA2BB57644",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163547Z/alsace-ollwiller/fetch-manifest.json",
+    "raw_checksum_sha256": "A25C487716617D3184DFC56FEF4F1C2B73F01A7C99F8427C1391D3DE697F76A4",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.osterberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-osterberg",
+    "normalized_checksum_sha256": "83005B6FDB29199F08E9A33FD91E630816FFF29584273ADC93583FB936813AD5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163550Z/alsace-osterberg/fetch-manifest.json",
+    "raw_checksum_sha256": "F2720953BAAFD8ABD0F4FE23447E87C7DAEC86D28A92123B850EBEFA3A3AD607",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.pfersigberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-pfersigberg",
+    "normalized_checksum_sha256": "FFB30E4ED40776EB124D6E6926EFF4C0A788721E9085BC0906BBC4D3CDEEAE84",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163551Z/alsace-pfersigberg/fetch-manifest.json",
+    "raw_checksum_sha256": "68BBF19E98FD612E230C5D7F13AB2DFAB1883CB460179B4F8FCF1582E4E5F893",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.pfingstberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-pfingstberg",
+    "normalized_checksum_sha256": "4616C2A23DB6263DCB6DD84471509C9D406B4CF1AECD2CAB25388CB82ED426C6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163553Z/alsace-pfingstberg/fetch-manifest.json",
+    "raw_checksum_sha256": "8B3A8CC83EB44D1742B6F7D3B4E622EA87DCF56C86E783B816F2BB3FEE9C2DC5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.praelatenberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-praelatenberg",
+    "normalized_checksum_sha256": "B3849C20F57A27544CDEF3B165DA8F38DAEA7A53C77E2F24B2281A06FE6E27AF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163554Z/alsace-praelatenberg/fetch-manifest.json",
+    "raw_checksum_sha256": "ABBC359389BDCDC3A8991089D863E0D83F8C69ACF220679C07E2784B5A397272",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.rangen",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-rangen",
+    "normalized_checksum_sha256": "5382B4CE56A0E6D0890824C605CC6BADE12DD55C29AFA676EC46C153D4D3E436",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163556Z/alsace-rangen/fetch-manifest.json",
+    "raw_checksum_sha256": "C2038138E3E185EFD4F8FFD3D883DA7AE99A8A440093131BC9E2FFA8B5AF5F14",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.rosacker",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-rosacker",
+    "normalized_checksum_sha256": "623037DC53A2572F8848285D748DA57F24F1FDA8CA9470336998EEBB47D176A5",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163557Z/alsace-rosacker/fetch-manifest.json",
+    "raw_checksum_sha256": "0195C62546217FEF8316A4CF59E0EC71FD8D5D69C81A672DA5965ADCD5C7979B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.saering",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-saering",
+    "normalized_checksum_sha256": "6B0885640B45FC6F33513E5A9C0F1FA74E3F320D8A61579996BFEA3050C65D42",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163559Z/alsace-saering/fetch-manifest.json",
+    "raw_checksum_sha256": "43B69F913CAAB2D22114C27FC6B3DB94228BA2235E35D0B7618D77795D1C1BAE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.schlossberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-schlossberg",
+    "normalized_checksum_sha256": "C334EF0A3DBB95BAA649711F3128F4E111BFE221A67A132CF85303A5AEAFDBAA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163601Z/alsace-schlossberg/fetch-manifest.json",
+    "raw_checksum_sha256": "9B78966BD5870F7E89F49598944A5505F99E44DA46B66BC88455776917219D43",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.schoenenbourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-schoenenbourg",
+    "normalized_checksum_sha256": "FF8277233ED1CE83C18B38612CD69400BE67A1C1B0D93C40A8C16F8D845A6632",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163602Z/alsace-schoenenbourg/fetch-manifest.json",
+    "raw_checksum_sha256": "CA117437848B6A842CF541901A7393C7CF9B65B0512A6638B64B8DEA3D7C6A9C",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.sommerberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-sommerberg",
+    "normalized_checksum_sha256": "CB2A57DE1D86273F931717527FAB07B7F03781705F4B79E1843BF548E705860F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163604Z/alsace-sommerberg/fetch-manifest.json",
+    "raw_checksum_sha256": "269B240CFD3235408BD2E2A6669FD198996EED826EA844447EB0C69AC93490DD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.sonnenglanz",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-sonnenglanz",
+    "normalized_checksum_sha256": "661A42F70FB261AC60B7E577241BC6E8C68DF90FC613A1EDC65E2E0FF31980E8",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163606Z/alsace-sonnenglanz/fetch-manifest.json",
+    "raw_checksum_sha256": "B41F56AE51F11EE049140043E1278BD2896730C86C90EB37C5F8D4A4063B52C5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.spiegel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-spiegel",
+    "normalized_checksum_sha256": "D7F83C2AA456B7AAEF815CC1A8AB0EC58A7BF518958B05A0191A3079006D8A21",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163607Z/alsace-spiegel/fetch-manifest.json",
+    "raw_checksum_sha256": "79736F7B99106DD40DBC27FEB37D8BAF4D9F090C1275669C80A3DC32063A6594",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.sporen",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-sporen",
+    "normalized_checksum_sha256": "A87F5D4090F26F0474C3A947EAF800A7BA5E390E58374D4AF7974E4887B74E8B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163609Z/alsace-sporen/fetch-manifest.json",
+    "raw_checksum_sha256": "C9B485E856F4A33BDFFC4AD83854CAF1B94852FAD8713A044FFA1B3F34671928",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.steinert",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-steinert",
+    "normalized_checksum_sha256": "4BBAE0C00335ABE8AECCA0E01608578A55D04CFC58B500BBC2FDE31B88DA3580",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163610Z/alsace-steinert/fetch-manifest.json",
+    "raw_checksum_sha256": "A2A1850FA7FBDDBC7828B1E11D504A10A6884A3637E4A9D1428D44C111FEA331",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.steingrubler",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-steingrubler",
+    "normalized_checksum_sha256": "52EF193E1133C8F7129C8A569316C827755961E532CD39B4ADFF168A8B02D52B",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163612Z/alsace-steingrubler/fetch-manifest.json",
+    "raw_checksum_sha256": "4CC3D675B3F04FB09DFE7341178386F1CBD3476A99F445609526BAE718F37C84",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.steinklotz",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-steinklotz",
+    "normalized_checksum_sha256": "1B6D6A99ACAE978DEDECAA5994F1671B431A568FF8CD652FCAEEFCA62D998AAC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163614Z/alsace-steinklotz/fetch-manifest.json",
+    "raw_checksum_sha256": "E718E5BC2CE5CB4C9660B0425BAFFFE1346A9273F79F3AB541C3D64B318EDEDD",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.vorbourg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-vorbourg",
+    "normalized_checksum_sha256": "259A2256C3C6E5812DE1FBAE22FF050784F02CF6F51BA52BA1CCA043448F6FC6",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163615Z/alsace-vorbourg/fetch-manifest.json",
+    "raw_checksum_sha256": "C6D6E38F4A578C01EFADC2387E2AD63B8B16AA8D0ED622D9A8614BE3E25933EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.wiebelsberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-wiebelsberg",
+    "normalized_checksum_sha256": "B0046FF03EEBCE48FB39597580D1AAA5025EB841877B8F8959C54966F00B7730",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163617Z/alsace-wiebelsberg/fetch-manifest.json",
+    "raw_checksum_sha256": "5E4CEA73461DA027C8566B50EBB378CB834AC368C47D836AB643854A86835679",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.wineck-schlossberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-wineck-schlossberg",
+    "normalized_checksum_sha256": "47A1B1E01FF67F34D6F588AE806AC67772D808F5CF7D2C207C816697AAA91461",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163619Z/alsace-wineck-schlossberg/fetch-manifest.json",
+    "raw_checksum_sha256": "FD025D377AC406EF6E219F0940CF837376A57C54E1D9D23818056A25F42E00F8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.winzenberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-winzenberg",
+    "normalized_checksum_sha256": "8F10EFDAA4E4671742D374626D8D0D998F50C005ABB54A97BE1EE3E875C2FAB7",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163620Z/alsace-winzenberg/fetch-manifest.json",
+    "raw_checksum_sha256": "ED88A62D3B2F15917EF1489F96195A6ABF8B218B110B9B3670A692951B81E012",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.zinnkoepfle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-zinnkoepfle",
+    "normalized_checksum_sha256": "4ECBEC73AD8D8A96ED4BAB90569075F1DB5C64A6A77C6FC5EC53061B00165941",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163622Z/alsace-zinnkoepfle/fetch-manifest.json",
+    "raw_checksum_sha256": "9F2A24988687C770AA3DC49CA7774676F8DC8E87EE041E1FC3F9702B9EB75F06",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.zotzenberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:alsace-zotzenberg",
+    "normalized_checksum_sha256": "C60C01E5BB711E5D5F7DD1B06C6B2F255D0A89B3FE9AF97CBF20F1386377A8DB",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163624Z/alsace-zotzenberg/fetch-manifest.json",
+    "raw_checksum_sha256": "C4C6183320BF8ECCE00F956954CA6407B5BDFD9529CD56CB21D30D1455E1A726",
+    "documented": true
+  },
+  {
     "canonical_key": "france.beaujolais",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:beaujolais",

@@ -118,7 +118,7 @@ test("ESTATE members: producer link deferred, commune always present", async () 
   assert.equal(bad.rows[0].n, 0);
 });
 
-test("SITE members: Burgundy linked (except La Grande Rue), Alsace unlinked", async () => {
+test("SITE members: Burgundy + Alsace linked (except La Grande Rue)", async () => {
   const burgundy = await client.query(
     `select m.name, m.wine_place_id
        from wine_designation_members m
@@ -138,7 +138,7 @@ test("SITE members: Burgundy linked (except La Grande Rue), Alsace unlinked", as
        join wine_designations d on d.id = m.designation_id
       where d.key = 'alsace-grand-cru'`,
   );
-  assert.deepEqual(alsace.rows[0], { n: 51, linked: 0 });
+  assert.deepEqual(alsace.rows[0], { n: 51, linked: 51 });
 });
 
 test("Burgundy drift guard: members agree with wine_place_designations", async () => {
