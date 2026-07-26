@@ -7752,9 +7752,9 @@
     "canonical_key": "france.champagne.ay",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51030",
-    "normalized_checksum_sha256": "B38D93BAF5D3D8821CA17F57F609274AD86D6B6FA7F1DC135049DBDAF7AA6915",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T090432Z/champagne-gc/ay-raw.geojson",
-    "raw_checksum_sha256": "C1F79203A902B7D0CBF2A72E2D34252C3154DD72077146195817889C5CC53A76",
+    "normalized_checksum_sha256": "225A31EA0101521B7425792D3A8B333A70DCB8FB1201692D8FFAE82F9ACAFE46",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260726T194712Z/ay-deleguee/raw-deleguee.geojson",
+    "raw_checksum_sha256": "DDF76B6CC1268D84A73A5A6F21F9C232808CAE538805C4C43E178F6E43D84947",
     "documented": true
   },
   {
@@ -7791,6 +7791,15 @@
     "normalized_checksum_sha256": "2F6CC0C2FC1B344121402F75553E7AF4E2A770890969FCC0059F2223777D70BE",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/billy-le-grand-raw.geojson",
     "raw_checksum_sha256": "547A82F0B2738A100494FDD89D0D68ECB7FD3BCCDC2A83DB0B2C521512A1282F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.bisseuil",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51064",
+    "normalized_checksum_sha256": "AA82DC44477E0C646CA9E262230E29DA444A55279FC659A441E443A82A65971A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260726T194712Z/bisseuil/raw-deleguee.geojson",
+    "raw_checksum_sha256": "E84E43FF78EB93FE3A664834AB20EA24BC230A6D81C82C471CD7889A97766122",
     "documented": true
   },
   {
@@ -8028,6 +8037,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.mareuil-sur-ay",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51347",
+    "normalized_checksum_sha256": "66E2E59BAC82543AD3C1F7197415C79DE512EFF0742DB4FD7FC02428464759CF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260726T194712Z/mareuil-sur-ay/raw-deleguee.geojson",
+    "raw_checksum_sha256": "606C7EE4699459781098D1E043154A20EF4D7EDC8BFCAF192EF2DFA267745EA1",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.montagne-de-reims",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:montagne-de-reims",
@@ -8145,6 +8163,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.champagne.tauxieres-mutry",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51564",
+    "normalized_checksum_sha256": "B55AD5C90ACCF20CEDE6D08916DFB9B839C4AF205DAB38E333367E5E876BDF2C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260726T194712Z/tauxieres-mutry/raw-deleguee.geojson",
+    "raw_checksum_sha256": "32DC98A4261D92B6B5CBA6C0FE96AAA2CCC200FC191C3364899C77A114DC8EF6",
+    "documented": true
+  },
+  {
     "canonical_key": "france.champagne.tours-sur-marne",
     "boundary_method": "MANUAL",
     "source_feature_id": "echelle-grand-cru:51576",
@@ -8178,6 +8205,15 @@
     "normalized_checksum_sha256": "F59DC3CFECE41BAFC7241523D094B82B0F683210C134B10EEF073678005073C2",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T102311Z/champagne-1er/vaudemange-raw.geojson",
     "raw_checksum_sha256": "CB8216B20B4E833894C969C9FA035BBD7587FAE79860EE0F45F035038581FB40",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.champagne.vertus",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "echelle-premier-cru:51612",
+    "normalized_checksum_sha256": "512A4E048C60E02B7AC261475ACABC2000812A39515D6E727EE2090E4DD6C341",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260726T194712Z/vertus/raw-deleguee.geojson",
+    "raw_checksum_sha256": "0F81BE0E76FDE73CEBD8E6829D50D0065EBAE9511D5345AE4E52AF213C7ADC14",
     "documented": true
   },
   {

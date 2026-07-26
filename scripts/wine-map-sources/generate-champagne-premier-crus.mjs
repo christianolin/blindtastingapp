@@ -1,8 +1,11 @@
 // Generate data/wine-map/champagne-premier-crus.json: the buildable Champagne
 // Premier Cru villages, matched to real INAO communes (champagne-communes.json)
 // for INSEE + assigned to their sub-region. Best-knowledge Echelle des Crus 1er
-// cru list; villages whose commune merged away (Vertus, Mareuil-sur-Ay, Bisseuil)
-// or that are absent are deferred (see `deferred`). Re-derivable.
+// cru list. The four villages whose communes merged away (Mareuil-sur-Ay,
+// Bisseuil, Tauxieres-Mutry, Vertus) are NOT in `villages` — they were
+// completed separately from IGN Admin Express commune-DELEGUEE footprints
+// (see `completed_via_deleguees`; migrations 20260829131000-133000), which
+// also refined the Ay Grand Cru to its historic deleguee outline. Re-derivable.
 //   node scripts/wine-map-sources/generate-champagne-premier-crus.mjs
 import { readFile, writeFile } from "node:fs/promises";
 
@@ -63,10 +66,12 @@ const artifact = {
   },
   modeling_decision: "kind=SITE, is_appellation=false, appellation_level=null, tier 3, primary_parent = the village's Champagne sub-region (Montagne de Reims / Cote des Blancs / Grande Vallee de la Marne). Same model as the 17 Grand Cru villages. Sub-regions are re-derived to include these after the flip.",
   village_count: villages.length,
-  deferred: {
-    "Tauxieres-Mutry": "not present in champagne-communes.json (aire geographique)",
-    "Mareuil-sur-Ay, Bisseuil": "subsumed in the Ay Grand Cru commune-nouvelle footprint (51030) - would double-count",
-    "Vertus": "merged into the Blancs-Coteaux commune nouvelle - needs a deleguee footprint",
+  completed_via_deleguees: {
+    note: "These four Premier Cru villages are LIVE, staged from IGN Admin Express LIMITES_ADMINISTRATIVES_EXPRESS:commune_associee_ou_deleguee (migrations 20260829131000-133000) rather than the commune layer this list feeds; the same wave refined the Ay Grand Cru from the Ay-Champagne commune-nouvelle footprint to the historic Ay deleguee (51030).",
+    "Mareuil-sur-Ay": "deleguee 51347 (Ay-Champagne)",
+    Bisseuil: "deleguee 51064 (Ay-Champagne)",
+    "Tauxieres-Mutry": "deleguee 51564 (the Val de Livre commune nouvelle reuses 51564)",
+    Vertus: "deleguee 51612 (Blancs-Coteaux reuses 51612)",
   },
   villages,
 };

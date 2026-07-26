@@ -1023,22 +1023,24 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
   assert.deepEqual(result.rows[0], {
-    // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 55
+    // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 59
     // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
     // dissolves) + Jura (region + 4 villages) + Savoie (region + 22
     // children) + Corse (region + 8 villages) + Provence (7 constituents +
     // derived aggregate region) + Sud-Ouest (19 constituents + derived
     // aggregate region) + Loire (59 constituents + derived aggregate
-    // region) + Languedoc-Roussillon (dual-role region + 56 constituents).
-    // total/validated include retired revisions.
-    total: 1187,
-    validated: 1187,
-    current: 1117,
-    valid: 1187,
-    labelled: 1187,
+    // region) + Languedoc-Roussillon (dual-role region + 56 constituents)
+    // + the Champagne premier-cru completion (4 deleguee villages + the Ay
+    // deleguee refinement). total/validated include retired revisions.
+    total: 1192,
+    validated: 1192,
+    current: 1121,
+    valid: 1192,
+    labelled: 1192,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
-    // (Sezanne/Bar) + 55 village commune footprints (17 GC + 38 Premier Cru).
-    manual: 60,
+    // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
+    // four of them deleguees) + the retired Ay commune-nouvelle revision.
+    manual: 65,
     generalized: 1093,
     reproducible: 13,
   });
@@ -1090,7 +1092,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1187);
+  assert.equal(prov.linked_boundaries, 1192);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
