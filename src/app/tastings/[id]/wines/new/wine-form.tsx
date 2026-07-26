@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CalendarClock, Fingerprint, MapPin } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -165,6 +166,15 @@ export function WineForm({
         <input type="hidden" name="wine_id" value={wineId} />
       ) : null}
 
+      {/* Same category grouping as the guess form: bordered fieldsets with
+          the legend in the border notch, so the answer key reads in the same
+          Location / Identity / Age structure players score against. */}
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <MapPin className="size-3.5" />
+          Location
+        </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
       <div className="flex flex-col gap-2">
         <Label>Country</Label>
         <ReferenceCombobox
@@ -224,7 +234,15 @@ export function WineForm({
           allowClear
         />
       </div>
+        </div>
+      </fieldset>
 
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <Fingerprint className="size-3.5" />
+          Identity
+        </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
       <div className="flex flex-col gap-2">
         <Label>Primary grape</Label>
         <ReferenceCombobox
@@ -300,21 +318,15 @@ export function WineForm({
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Photo (optional)</Label>
-        <p className="text-xs text-muted-foreground">
-          Revealed alongside the rest of the answer — not shown until then.
-        </p>
-        <ImageUploader
-          name="image_url"
-          bucket="wine-images"
-          folder={tastingId}
-          label="Add a photo"
-          aspectClassName="aspect-square max-w-48"
-          initialUrl={initial?.image_url ?? null}
-        />
-      </div>
+        </div>
+      </fieldset>
 
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <CalendarClock className="size-3.5" />
+          Age
+        </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
       <div className="flex flex-col gap-2">
         <Label htmlFor="vintage_kind">Vintage</Label>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -383,6 +395,23 @@ export function WineForm({
         ) : null}
         </>
         )}
+      </div>
+        </div>
+      </fieldset>
+
+      <div className="flex flex-col gap-2">
+        <Label>Photo (optional)</Label>
+        <p className="text-xs text-muted-foreground">
+          Revealed alongside the rest of the answer — not shown until then.
+        </p>
+        <ImageUploader
+          name="image_url"
+          bucket="wine-images"
+          folder={tastingId}
+          label="Add a photo"
+          aspectClassName="aspect-square max-w-48"
+          initialUrl={initial?.image_url ?? null}
+        />
       </div>
 
       {state?.error ? (

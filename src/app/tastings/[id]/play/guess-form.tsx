@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CalendarClock, Fingerprint, MapPin } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -176,11 +177,15 @@ export function GuessForm({
         </p>
       </div>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+      {/* Each scoring category is a real bordered fieldset: the legend sits
+          in the border notch, so the dropdowns below unmistakably belong to
+          the group. */}
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <MapPin className="size-3.5" />
           Location
-          <span className="h-px flex-1 bg-border" />
         </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
         <div className="flex flex-col gap-2">
           <Label>Country (2 pts)</Label>
           <ReferenceCombobox
@@ -226,13 +231,15 @@ export function GuessForm({
             />
           </div>
         ) : null}
+        </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <Fingerprint className="size-3.5" />
           Identity
-          <span className="h-px flex-1 bg-border" />
         </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
         <div className="flex flex-col gap-2">
           <Label>Primary grape (8 pts)</Label>
           <ReferenceCombobox
@@ -285,13 +292,15 @@ export function GuessForm({
             onValueChange={setTypeDesignationId}
           />
         </div>
+        </div>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 flex w-full items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="flex items-center gap-1.5 px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          <CalendarClock className="size-3.5" />
           Age
-          <span className="h-px flex-1 bg-border" />
         </legend>
+        <div className="flex flex-col gap-3 pt-1.5">
         <div className="flex flex-col gap-2">
         <Label htmlFor={`vintage_kind_${wineId}`}>
           Vintage (2 pts exact, 1 pt if off by 1 year)
@@ -343,6 +352,7 @@ export function GuessForm({
             </SelectContent>
           </Select>
         ) : null}
+        </div>
         </div>
       </fieldset>
 
