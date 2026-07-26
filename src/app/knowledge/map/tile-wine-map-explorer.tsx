@@ -202,7 +202,9 @@ export function TileWineMapExplorer({
           <Card className="order-3 lg:order-1 lg:w-[280px] lg:shrink-0">
             <CardContent
               className={`flex flex-col pt-4 ${
-                expanded ? "h-full min-h-0" : "h-[70vh] min-h-[420px]"
+                expanded
+                  ? "h-[70vh] min-h-0 lg:h-full"
+                  : "h-[70vh] min-h-[420px]"
               }`}
             >
               <div className="mb-2 flex items-center justify-between">
@@ -246,7 +248,17 @@ export function TileWineMapExplorer({
           <CardContent
             className={`pt-4 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
           >
-            <div className={expanded ? "min-h-0 flex-1" : "h-[70vh] min-h-[420px]"}>
+            {/* Expanded on mobile needs a definite height: the lg full-view
+                relies on a flex-1/min-h-0 chain that only exists in the
+                lg:flex-row layout — in the phone column the hierarchy card's
+                natural height swallowed it and the map collapsed to zero. */}
+            <div
+              className={
+                expanded
+                  ? "h-[calc(100dvh-7rem)] lg:h-auto lg:min-h-0 lg:flex-1"
+                  : "h-[70vh] min-h-[420px]"
+              }
+            >
             {manifest ? (
               <TileWineMap
                 manifest={manifest}

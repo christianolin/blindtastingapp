@@ -7,7 +7,6 @@ import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
-import { shardKeyFor } from "@/lib/wine-map/shard";
 
 // Free, un-keyed Carto vector basemap — same as the legacy map.
 const BASEMAP_STYLE =
@@ -246,13 +245,20 @@ export function TileWineMap({
   // mounted (plus the always-on world archive), so entering a region fetches
   // just that shard. Viewport-driven loading via each shard's bbox is a
   // documented follow-up.
-  const activeShardKey = selectedKey ? shardKeyFor(selectedKey) : null;
-  // Transitional: the live v1 manifest exposes a single "france" shard; fall
-  // back to it until the first v2 promote publishes per-region shards.
-  const activeShard =
-    (activeShardKey ? manifest.shards[activeShardKey] : undefined) ??
-    manifest.shards.france ??
-    null;
+  // Every region shard is mounted permanently: pmtiles is range-requested,
+  // so a shard whose bbox is off-screen fetches nothing, and per-feature
+  // reveal zooms baked into the tiles progressively expose districts,
+  // villages and crus as the user zooms — no selection required (the old
+  // selection-gated mounting meant zoom alone never revealed a region's
+  // interior, which read as a bug on touch devices).
+  const shardEntries = useMemo(
+    () => Object.entries(manifest.shards).sort(([a], [b]) => a.localeCompare(b)),
+    [manifest],
+  );
+  const shardKeys = useMemo(
+    () => shardEntries.map(([key]) => key),
+    [shardEntries],
+  );
 
   // What's actually on screen — drives the dynamic legend (sections only
   // where they apply) and the district colours. Scanned on map idle; the
@@ -270,7 +276,10 @@ export function TileWineMap({
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const layers = ["shard-fills", "world-fills"].filter((l) => map.getLayer(l));
+    const layers = [
+      "world-fills",
+      ...shardKeys.map((key) => `shard-fills-${key}`),
+    ].filter((l) => map.getLayer(l));
     if (layers.length === 0) return;
     const regions = new Set<string>();
     const groups = new globalThis.Map<string, string>();
@@ -425,16 +434,17 @@ export function TileWineMap({
     [manifest],
   );
 
-  // World layers show the country (tier 0) and every region NOT already
-  // rendered by the mounted shard — so France's regions are always visible.
+  // World layers show the country (tier 0) and any region NOT served by a
+  // mounted shard — with every shard mounted that means the shards own all
+  // region rendering and the world archive only contributes France itself.
   const worldFilter = useMemo(
     () =>
       [
         "any",
         ["==", ["get", "tier"], 0],
-        ["!=", ["get", "region"], activeShardKey ?? ""],
+        ["!", ["in", ["get", "region"], ["literal", shardKeys]]],
       ] as unknown as boolean,
-    [activeShardKey],
+    [shardKeys],
   );
 
   // Legend regions follow the viewport once the first scan lands; the
@@ -464,7 +474,10 @@ export function TileWineMap({
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
         initialViewState={{ longitude: 2.4, latitude: 46.6, zoom: 4.4 }}
-        interactiveLayerIds={["shard-fills", "world-fills"]}
+        interactiveLayerIds={[
+          "world-fills",
+          ...shardKeys.map((key) => `shard-fills-${key}`),
+        ]}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
           // it so only the "i" toggle shows until the user opens it.
@@ -582,16 +595,21 @@ export function TileWineMap({
             paint={labelPaint(selectedKey, selectedId, selectedParentId)}
           />
         </Source>
-        {activeShard ? (
-          <Source id="wine-shard" type="vector" url={`pmtiles://${activeShard.url}`}>
+        {shardEntries.map(([key, shard]) => (
+          <Source
+            key={key}
+            id={`wine-shard-${key}`}
+            type="vector"
+            url={`pmtiles://${shard.url}`}
+          >
             <Layer
-              id="shard-fills"
+              id={`shard-fills-${key}`}
               type="fill"
               source-layer="places"
               paint={fillPaint}
             />
             <Layer
-              id="shard-outlines"
+              id={`shard-outlines-${key}`}
               type="line"
               source-layer="places"
               paint={{
@@ -602,28 +620,28 @@ export function TileWineMap({
               }}
             />
             <Layer
-              id="shard-selected-casing"
+              id={`shard-selected-casing-${key}`}
               type="line"
               source-layer="places"
               filter={selectedFilter(selectedKey)}
               paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
             />
             <Layer
-              id="shard-selected-ring"
+              id={`shard-selected-ring-${key}`}
               type="line"
               source-layer="places"
               filter={selectedFilter(selectedKey)}
               paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
             />
             <Layer
-              id="shard-labels"
+              id={`shard-labels-${key}`}
               type="symbol"
               source-layer="labels"
               layout={labelLayout(selectedKey, selectedId, selectedParentId)}
               paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
           </Source>
-        ) : null}
+        ))}
       </Map>
       <div className="pointer-events-none absolute bottom-2 left-2 rounded-md border border-border bg-background/85 px-2.5 py-2 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
         <p className="mb-1 font-medium text-foreground">Regions</p>
