@@ -195,7 +195,10 @@ export function TileWineMapExplorer({
     >
       <div
         className={`flex flex-col gap-4 lg:flex-row lg:items-stretch ${
-          expanded ? "min-h-0 flex-1" : ""
+          // Height-lock the row on desktop only. On mobile the expanded view
+          // is a normal scrolling column (map first, near-fullscreen), so the
+          // flex algorithm can never crush the map card to zero height.
+          expanded ? "lg:min-h-0 lg:flex-1" : ""
         }`}
       >
         {treeOpen ? (
@@ -244,7 +247,17 @@ export function TileWineMapExplorer({
           </button>
         )}
 
-        <Card className="order-1 min-w-0 flex-1 overflow-hidden lg:order-2">
+        <Card
+          className={
+            // overflow-hidden gives this flex item a zero minimum size, so in
+            // the mobile expanded column flex-1 would let it be crushed to
+            // nothing (the "map disappears" bug): full view opts out of
+            // shrinking below lg and sizes from the map's fixed height.
+            expanded
+              ? "order-1 min-w-0 shrink-0 overflow-hidden lg:order-2 lg:flex-1 lg:shrink"
+              : "order-1 min-w-0 flex-1 overflow-hidden lg:order-2"
+          }
+        >
           <CardContent
             className={`pt-4 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
           >
