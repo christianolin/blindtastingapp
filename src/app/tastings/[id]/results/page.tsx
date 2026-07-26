@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Crown, Medal } from "lucide-react";
+import { ChevronDown, Crown, Medal } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -317,23 +317,33 @@ export default async function ResultsPage({
                 <div className="flex flex-col gap-3">
                   {wineGuesses.map((g) => {
                     return (
-                      <div
+                      // Native disclosure per player: the summary row (name +
+                      // score) always shows; tapping it folds the category
+                      // breakdown away so a wine can be skimmed as final
+                      // scores only. Open by default — collapsing is the
+                      // reader's choice, one player at a time.
+                      <details
                         key={g.id}
-                        className="rounded-lg border border-border/70 p-3"
+                        open
+                        className="group rounded-lg border border-border/70"
                       >
-                        <div className="mb-2 flex items-center justify-between">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 [&::-webkit-details-marker]:hidden">
                           <span className="font-medium">
                             {displayNameByParticipantId.get(g.participant_id) ??
                               "Unknown"}
                           </span>
-                          <span className="font-heading text-base font-semibold tabular-nums">
-                            {isSemiBlind
-                              ? g.total_points
-                                ? "✓ correct"
-                                : "✗ wrong"
-                              : `${g.total_points ?? 0} pts`}
+                          <span className="flex items-center gap-2">
+                            <span className="font-heading text-base font-semibold tabular-nums">
+                              {isSemiBlind
+                                ? g.total_points
+                                  ? "✓ correct"
+                                  : "✗ wrong"
+                                : `${g.total_points ?? 0} pts`}
+                            </span>
+                            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                           </span>
-                        </div>
+                        </summary>
+                        <div className="px-3 pb-3">
                         {isSemiBlind ? (
                           <p className="text-sm text-muted-foreground">
                             {g.guessed_wine_id
@@ -374,7 +384,8 @@ export default async function ResultsPage({
                             ))}
                           </div>
                         )}
-                      </div>
+                        </div>
+                      </details>
                     );
                   })}
                 </div>
