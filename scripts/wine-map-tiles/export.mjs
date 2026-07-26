@@ -42,8 +42,9 @@ const EXPORT_SQL = `
     (
       select json_agg(json_build_array(
         round(extensions.ST_X(extensions.ST_PointOnSurface(d.geom))::numeric, 6),
-        round(extensions.ST_Y(extensions.ST_PointOnSurface(d.geom))::numeric, 6)
-      ))
+        round(extensions.ST_Y(extensions.ST_PointOnSurface(d.geom))::numeric, 6),
+        round(extensions.ST_Area(d.geom)::numeric, 8)
+      ) order by extensions.ST_Area(d.geom) desc)
       from extensions.ST_Dump(b.display_geometry) d
     ) as component_labels
   from wine_places p
@@ -137,9 +138,10 @@ for (const [key, bucket] of Object.entries(shards)) {
     `${key}-labels.geojson`,
     featureCollection(
       bucket.rows.flatMap((row) =>
-        // Per-island labels only for countries/regions (tier <= 1): a
-        // district or appellation gets exactly one canonical label point
-        // (owner brief: "only have the label once").
+        // Ranked per-island labels only for countries/regions (tier <= 1):
+        // rank 1 = the dominant island at everyday zooms, deeper ranks
+        // reveal when zoomed into that island (see labelFeatures). A
+        // district or appellation gets exactly one canonical label point.
         row.display_tier <= 1
           ? labelFeatures(row)
           : labelFeatures({ ...row, component_labels: null }),

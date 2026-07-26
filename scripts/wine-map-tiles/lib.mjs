@@ -127,21 +127,49 @@ export function placeFeature(row) {
   };
 }
 
-// One label feature per polygon component (owner directive: multi-island
-// regions label every island). Falls back to the canonical label point when
-// the export row carries no per-component list (unit fixtures).
+// Ranked per-island labels (owner brief: one label per region at everyday
+// zooms). Components arrive largest-first ([lon, lat, area] from the export
+// SQL); rank 1 — in practice the region's best-known heartland (Côte d'Or
+// for Bourgogne, not the Chablis island) — labels from label_min_zoom like
+// before. The other islands' labels are baked in SECONDARY_LABEL_ZOOM_OFFSET
+// zooms deeper, so "Bourgogne" appears over Chablis only once the camera is
+// close enough that the heartland is off-screen. Components under
+// MIN_LABEL_COMPONENT_SHARE of the footprint never get a label (slivers).
+// Bare [lon, lat] fixtures rank by list order and are all kept. Falls back
+// to the canonical label point when the row has no per-component list.
+export const SECONDARY_LABEL_ZOOM_OFFSET = 5;
+export const MIN_LABEL_COMPONENT_SHARE = 0.02;
+
 export function labelFeatures(row) {
   const properties = tileProperties(row);
-  const minzoom = Math.max(0, Math.floor(Number(row.label_min_zoom)));
-  const points = Array.isArray(row.component_labels) && row.component_labels.length > 0
-    ? row.component_labels
-    : [JSON.parse(row.label_point).coordinates];
-  return points.map((coordinates) => ({
-    type: "Feature",
-    properties,
-    tippecanoe: { minzoom },
-    geometry: { type: "Point", coordinates },
-  }));
+  const baseMinzoom = Math.max(0, Math.floor(Number(row.label_min_zoom)));
+  if (!Array.isArray(row.component_labels) || row.component_labels.length === 0) {
+    return [{
+      type: "Feature",
+      properties: { ...properties, label_rank: 1 },
+      tippecanoe: { minzoom: baseMinzoom },
+      geometry: { type: "Point", coordinates: JSON.parse(row.label_point).coordinates },
+    }];
+  }
+  const totalArea = row.component_labels.reduce(
+    (sum, entry) => sum + (Number(entry[2]) || 0),
+    0,
+  );
+  return row.component_labels
+    .filter((entry, index) => {
+      if (index === 0 || totalArea === 0) return true;
+      return (Number(entry[2]) || 0) / totalArea >= MIN_LABEL_COMPONENT_SHARE;
+    })
+    .map(([lon, lat], index) => ({
+      type: "Feature",
+      properties: { ...properties, label_rank: index + 1 },
+      tippecanoe: {
+        minzoom: index === 0
+          ? baseMinzoom
+          : baseMinzoom + SECONDARY_LABEL_ZOOM_OFFSET,
+      },
+      geometry: { type: "Point", coordinates: [lon, lat] },
+    }));
 }
 
 export function featureCollection(features) {

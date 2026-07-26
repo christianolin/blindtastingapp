@@ -104,16 +104,43 @@ test("labelFeatures fall back to the canonical label point", () => {
   assert.deepEqual(features[0].geometry, { type: "Point", coordinates: [-0.58, 44.84] });
   assert.deepEqual(features[0].tippecanoe, { minzoom: 4 });
   assert.equal(features[0].properties.id, EXPORT_ROW.id);
+  assert.equal(features[0].properties.label_rank, 1);
 });
 
-test("labelFeatures emit one point per island component", () => {
+test("labelFeatures rank islands by area and zoom-gate the minor ones", () => {
+  const features = labelFeatures({
+    ...EXPORT_ROW,
+    component_labels: [
+      [4.7, 47.9, 0.5],
+      [3.6, 47.7, 0.1],
+      [4.8, 46.8, 0.005],
+    ],
+  });
+  // The 0.005 sliver is under MIN_LABEL_COMPONENT_SHARE of the footprint.
+  assert.equal(features.length, 2);
+  assert.equal(features[0].properties.label_rank, 1);
+  assert.deepEqual(features[0].geometry, { type: "Point", coordinates: [4.7, 47.9] });
+  assert.deepEqual(features[0].tippecanoe, { minzoom: 4 });
+  assert.equal(features[1].properties.label_rank, 2);
+  assert.deepEqual(features[1].tippecanoe, { minzoom: 9 });
+  assert.ok(features.every((f) => f.properties.id === EXPORT_ROW.id));
+});
+
+test("labelFeatures keep bare fixture points, ranked by order", () => {
   const features = labelFeatures({
     ...EXPORT_ROW,
     component_labels: [[4.7, 47.9], [3.6, 47.7], [4.8, 46.8]],
   });
   assert.equal(features.length, 3);
   assert.deepEqual(features[1].geometry, { type: "Point", coordinates: [3.6, 47.7] });
-  assert.ok(features.every((f) => f.properties.id === EXPORT_ROW.id));
+  assert.deepEqual(
+    features.map((f) => f.properties.label_rank),
+    [1, 2, 3],
+  );
+  assert.deepEqual(
+    features.map((f) => f.tippecanoe.minzoom),
+    [4, 9, 9],
+  );
 });
 
 test("fractional min_zoom floors and never goes below zero", () => {
