@@ -980,6 +980,10 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Clisson AOP"], key: "france.loire.muscadet-sevre-et-maine-clisson" },
   { names: ["Gorges AOP"], key: "france.loire.muscadet-sevre-et-maine-gorges" },
   { names: ["Savennières AOP"], key: "france.loire.savennieres" },
+  { names: ["Alsace Grand Cru Rangen"], key: "france.alsace.rangen" },
+  { names: ["Alsace Grand Cru Schlossberg"], key: "france.alsace.schlossberg" },
+  { names: ["Chablis Premier Cru"], key: "france.bourgogne.chablis.chablis.premier-cru" },
+  { names: ["La Grande Rue AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.la-grande-rue" },
   { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
   { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
   { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
@@ -1073,18 +1077,19 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Muscat BdV) and the meridional + region re-derive revisions.
     // Loire wave 2: +4 derived sub-region boundaries (Pays Nantais /
     // Anjou-Saumur / Touraine / Centre-Loire).
-    total: 1234,
-    validated: 1234,
-    current: 1158,
-    valid: 1234,
-    labelled: 1234,
+    // Wave 3a: +1 La Grande Rue dissolve (the missing Vosne grand cru).
+    total: 1235,
+    validated: 1235,
+    current: 1159,
+    valid: 1235,
+    labelled: 1235,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
     // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
     manual: 67,
-    generalized: 1123,
+    generalized: 1124,
     reproducible: 13,
   });
 
@@ -1135,7 +1140,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1234);
+  assert.equal(prov.linked_boundaries, 1235);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1183,7 +1188,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 356);
+  assert.equal(appellations.rows.length, 360);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1197,7 +1202,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 356],
+    ["appellations", 360],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1317,8 +1322,8 @@ test("classification facts and legal relationship types", async () => {
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
       // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1081,
-      aoc: 1081,
+      appellations: 1082,
+      aoc: 1082,
     missing_level: 0,
     france_plain: 1,
   });

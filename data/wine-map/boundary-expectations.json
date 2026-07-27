@@ -7164,6 +7164,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.la-grande-rue",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:la-grande-rue",
+    "normalized_checksum_sha256": "F317E900426222AFAA14F96E663280AD87F8A0418CC42F74A87DEFBE3FBE051A",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T125503Z/la-grande-rue/fetch-manifest.json",
+    "raw_checksum_sha256": "9B797CE7112C67A912F5CFD8626BF85F3AA40021F19073AE531DC035369ABA01",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-nuits.vosne-romanee.la-romanee",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:vosne-romanee-gc-la-romanee",

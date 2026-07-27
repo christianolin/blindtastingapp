@@ -118,7 +118,7 @@ test("ESTATE members: producer link deferred, commune always present", async () 
   assert.equal(bad.rows[0].n, 0);
 });
 
-test("SITE members: Burgundy + Alsace linked (except La Grande Rue)", async () => {
+test("SITE members: Burgundy + Alsace fully linked", async () => {
   const burgundy = await client.query(
     `select m.name, m.wine_place_id
        from wine_designation_members m
@@ -126,11 +126,10 @@ test("SITE members: Burgundy + Alsace linked (except La Grande Rue)", async () =
       where d.key = 'burgundy-grand-cru' order by m.name`,
   );
   assert.equal(burgundy.rowCount, 33);
+  // La Grande Rue was the one pre-place member; linked in 20260829170000
+  // once its place + boundary shipped.
   const unlinked = burgundy.rows.filter((r) => r.wine_place_id === null);
-  assert.deepEqual(
-    unlinked.map((r) => r.name),
-    ["La Grande Rue"],
-  );
+  assert.deepEqual(unlinked.map((r) => r.name), []);
 
   const alsace = await client.query(
     `select count(*)::int n, count(wine_place_id)::int linked
