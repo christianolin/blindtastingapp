@@ -984,6 +984,17 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Alsace Grand Cru Schlossberg"], key: "france.alsace.schlossberg" },
   { names: ["Chablis Premier Cru"], key: "france.bourgogne.chablis.chablis.premier-cru" },
   { names: ["La Grande Rue AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.la-grande-rue" },
+  { names: ["Cremant de Loire AOP"], key: "france.loire.cremant-de-loire" },
+  { names: ["Rose de Loire AOP"], key: "france.loire.rose-de-loire" },
+  { names: ["Cabernet d'Anjou AOP"], key: "france.loire.cabernet-d-anjou" },
+  { names: ["Rose d’Anjou AOP"], key: "france.loire.rose-d-anjou" },
+  { names: ["Coteaux de Saumur AOP"], key: "france.loire.coteaux-de-saumur" },
+  { names: ["Coteaux du Vendomois AOP"], key: "france.loire.coteaux-du-vendomois" },
+  { names: ["Orleans AOP"], key: "france.loire.orleans" },
+  { names: ["Orleans-Clery AOP"], key: "france.loire.orleans-clery" },
+  { names: ["Cote Roannaise AOP"], key: "france.loire.cote-roannaise" },
+  { names: ["Cotes du Forez AOP"], key: "france.loire.cotes-du-forez" },
+  { names: ["Saint Pourcain AOP"], key: "france.loire.saint-pourcain" },
   { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
   { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
   { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
@@ -1078,18 +1089,21 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Loire wave 2: +4 derived sub-region boundaries (Pays Nantais /
     // Anjou-Saumur / Touraine / Centre-Loire).
     // Wave 3a: +1 La Grande Rue dissolve (the missing Vosne grand cru).
-    total: 1235,
-    validated: 1235,
-    current: 1159,
-    valid: 1235,
-    labelled: 1235,
+    // Loire wave 3b: +11 dissolves (Crémant/Rosé de Loire, Anjou styles,
+    // Saumur/Vendômois/Orléans + upper-Loire satellites) and the 3 sub-region
+    // + region re-derive revisions.
+    total: 1250,
+    validated: 1250,
+    current: 1170,
+    valid: 1250,
+    labelled: 1250,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
     // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
     manual: 67,
-    generalized: 1124,
+    generalized: 1135,
     reproducible: 13,
   });
 
@@ -1140,7 +1154,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1235);
+  assert.equal(prov.linked_boundaries, 1250);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1188,7 +1202,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 360);
+  assert.equal(appellations.rows.length, 371);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1202,7 +1216,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 360],
+    ["appellations", 371],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1322,8 +1336,8 @@ test("classification facts and legal relationship types", async () => {
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
       // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1082,
-      aoc: 1082,
+      appellations: 1093,
+      aoc: 1093,
     missing_level: 0,
     france_plain: 1,
   });

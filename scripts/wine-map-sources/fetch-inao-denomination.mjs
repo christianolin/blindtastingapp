@@ -56,9 +56,26 @@ for (const member of members) {
   let startIndex = 0;
   for (;;) {
     const url = wfsPageUrl(member, startIndex);
-    const response = await fetch(url);
-    assert.equal(response.status, 200, `WFS ${response.status} for ${member}`);
-    const text = await response.text();
+    // Big LIKE pages (5-8 MB of JSON) occasionally arrive truncated from the
+    // WFS; parse BEFORE retaining so a corrupt body is never stored, with
+    // three attempts per page (Rosé de Loire died mid-body without this).
+    let text;
+    let parsed;
+    for (let attempt = 1; ; attempt += 1) {
+      const response = await fetch(url);
+      assert.equal(response.status, 200, `WFS ${response.status} for ${member}`);
+      text = await response.text();
+      try {
+        parsed = JSON.parse(text);
+        break;
+      } catch (error) {
+        if (attempt >= 3) throw error;
+        console.warn(
+          `  malformed WFS page for ${member} @${startIndex} (attempt ${attempt}); retrying`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+      }
+    }
     // Raw pages are retained gzipped: regional LIKE bounds pull hundreds of
     // MB of GeoJSON, ~8-10x smaller compressed. The checksum covers the
     // stored (gzipped) bytes; the page is still the unmodified response —
@@ -70,7 +87,7 @@ for (const member of members) {
       `${memberSlug}-page-${startIndex / PAGE_SIZE}.json.gz`,
     );
     await uploadRawObject(objectPath, gzipped, { contentType: "application/gzip" });
-    const page = JSON.parse(text);
+    const page = parsed;
     const features = page.features ?? [];
     const probe = features[0]?.geometry?.coordinates?.flat(3) ?? [];
     if (probe.length >= 2) {
