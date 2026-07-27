@@ -224,13 +224,32 @@ export function storageBucket() {
   }).storage.from(BUCKET);
 }
 
+// Storage uploads can fail transiently (run #46 died on a bare "Bad Request"
+// that succeeded on manual re-run): three attempts with backoff, real HTTP
+// status in the error. A retry after a written-but-timed-out attempt surfaces
+// as 409 (upsert=false); publish re-validates every archive through the
+// public URLs afterwards, so that counts as uploaded.
 export async function uploadObject(objectPath, body, { contentType, cacheControlSeconds, upsert = false }) {
-  const { error } = await storageBucket().upload(objectPath, body, {
-    contentType,
-    cacheControl: String(cacheControlSeconds),
-    upsert,
-  });
-  if (error) throw new Error(`Upload ${objectPath} failed: ${error.message}`);
+  const attempts = 3;
+  for (let attempt = 1; ; attempt += 1) {
+    const { error } = await storageBucket().upload(objectPath, body, {
+      contentType,
+      cacheControl: String(cacheControlSeconds),
+      upsert,
+    });
+    if (!error) return;
+    const status = error.status ?? error.statusCode ?? "unknown";
+    if (attempt > 1 && String(status) === "409") return;
+    if (attempt >= attempts) {
+      throw new Error(
+        `Upload ${objectPath} failed after ${attempts} attempts: ${error.message} (status ${status})`,
+      );
+    }
+    console.warn(
+      `Upload ${objectPath} attempt ${attempt} failed: ${error.message} (status ${status}); retrying...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, attempt * 2000));
+  }
 }
 
 // Args are relative paths run with cwd=WORK_DIR so tippecanoe's embedded
