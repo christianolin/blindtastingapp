@@ -1005,6 +1005,22 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Graves Superieures AOP"], key: "france.bordeaux.graves.graves-superieures" },
   { names: ["Premieres Cotes de Bordeaux AOP"], key: "france.bordeaux.premieres-cotes-de-bordeaux" },
   { names: ["Saint-Émilion Grand Cru AOP"], key: "france.bordeaux.saint-emilion.saint-emilion-grand-cru" },
+  { names: ["Bourgogne AOP"], key: "france.bourgogne" },
+  { names: ["Bourgogne Aligote AOP"], key: "france.bourgogne" },
+  { names: ["Bourgogne Passe-tout-grains AOP"], key: "france.bourgogne" },
+  { names: ["Cremant de Bourgogne AOP"], key: "france.bourgogne" },
+  { names: ["Cote de Beaune AOP"], key: "france.bourgogne.cote-de-beaune.cote-de-beaune" },
+  { names: ["Cote de Beaune-Villages AOP"], key: "france.bourgogne.cote-de-beaune.cote-de-beaune-villages" },
+  { names: ["Macon-Villages AOP"], key: "france.bourgogne.maconnais.macon-villages" },
+  { names: ["Cremant de Limoux AOP"], key: "france.languedoc-roussillon.limoux" },
+  { names: ["Cremant du Jura AOP"], key: "france.jura" },
+  { names: ["Macvin du Jura AOP"], key: "france.jura" },
+  { names: ["Pierrevert AOP"], key: "france.provence.pierrevert" },
+  { names: ["Cotes de Bergerac AOP"], key: "france.sud-ouest.cotes-de-bergerac" },
+  { names: ["Cotes de Montravel AOP"], key: "france.sud-ouest.cotes-de-montravel" },
+  { names: ["Haut-Montravel AOP"], key: "france.sud-ouest.haut-montravel" },
+  { names: ["Saint-Mont AOP"], key: "france.sud-ouest.saint-mont" },
+  { names: ["Tursan AOP"], key: "france.sud-ouest.tursan" },
   { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
   { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
   { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
@@ -1104,18 +1120,20 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // + region re-derive revisions.
     // Bordeaux wave 3c: +5 dissolves (Côtes de Bordeaux, Graves de Vayres,
     // Graves Supérieures, Premières Côtes de Bordeaux, Saint-Émilion GC).
-    total: 1255,
-    validated: 1255,
-    current: 1175,
-    valid: 1255,
-    labelled: 1255,
+    // Wave 3d: +9 dissolves (Sud-Ouest five, Pierrevert, Côte de Beaune
+    // AOC + Villages, Mâcon-Villages) and the SO/Provence re-derives.
+    total: 1266,
+    validated: 1266,
+    current: 1184,
+    valid: 1266,
+    labelled: 1266,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
     // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
     manual: 67,
-    generalized: 1140,
+    generalized: 1149,
     reproducible: 13,
   });
 
@@ -1166,7 +1184,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1255);
+  assert.equal(prov.linked_boundaries, 1266);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1214,7 +1232,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 381);
+  assert.equal(appellations.rows.length, 397);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1228,7 +1246,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 381],
+    ["appellations", 397],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1348,8 +1366,8 @@ test("classification facts and legal relationship types", async () => {
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
       // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1098,
-      aoc: 1098,
+      appellations: 1107,
+      aoc: 1107,
     missing_level: 0,
     france_plain: 1,
   });

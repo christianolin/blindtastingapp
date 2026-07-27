@@ -3861,6 +3861,24 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.cote-de-beaune.cote-de-beaune",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cote-de-beaune-aoc",
+    "normalized_checksum_sha256": "AF8CEED1FAD814E3C7442696E61CE0F2F65577CF45E5AFA4AAB692FFA65F8D46",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191338Z/cote-de-beaune-aoc/fetch-manifest.json",
+    "raw_checksum_sha256": "62B5307BE36EE156031540FF26DA013AAB2E842F0A5E888D422ED084C84A9681",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bourgogne.cote-de-beaune.cote-de-beaune-villages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cote-de-beaune-villages",
+    "normalized_checksum_sha256": "C602B1D85738D63EB6F74E30DC2EA4880B88220B6766253ED0DB2570684B25DC",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191341Z/cote-de-beaune-villages/fetch-manifest.json",
+    "raw_checksum_sha256": "1CAEE0BF0DE345540CEF5201DD47E75E2F4251E483154282BECFCE473B800671",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.cote-de-beaune.ladoix",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:ladoix-village",
@@ -7515,6 +7533,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bourgogne.maconnais.macon-villages",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:macon-villages",
+    "normalized_checksum_sha256": "16B789485550472481F616175F2F92B2768058C1E738E06FA7470C18CB3E183F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191344Z/macon-villages/fetch-manifest.json",
+    "raw_checksum_sha256": "0FDA10F7702F03AECEE1D687DD931C233B88166C38C6879A33B4A322FB3856F5",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bourgogne.maconnais.pouilly-fuisse",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:pouilly-fuisse-village",
@@ -9668,8 +9695,8 @@
   {
     "canonical_key": "france.provence",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:provence-region",
-    "normalized_checksum_sha256": "604731B6C45CA263A493D54AF7D7D6808C197ED593033D9FA2A86CE0450BDB3D",
+    "source_feature_id": "derived:provence",
+    "normalized_checksum_sha256": "B589F3C713B0F0DFDAF5D3BEA2CF540B4A337E39A1B98BC6F79EBBB83BCF8ED7",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -9735,6 +9762,15 @@
     "normalized_checksum_sha256": "A4DC326D92A36B7984AD17DB19BA4F1FFA80B232B8F4D8DB7CD135A8A9C23DC3",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T182421Z/provence-palette/fetch-manifest.json",
     "raw_checksum_sha256": "834DFA01EDD562460B495F7E503357CAB7F47BD04E6F267CC97B3063F7CF1500",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.provence.pierrevert",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:pierrevert",
+    "normalized_checksum_sha256": "89CFACB8F7D49657576D4F8C25BDC5AC13E4A1026736CD3732F66F8711CAD12D",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191335Z/pierrevert/fetch-manifest.json",
+    "raw_checksum_sha256": "EC2E47EA8CBFC5A9942944CED74BBFEC62CBC4F910F66F2B35B61FC61A525467",
     "documented": true
   },
   {
@@ -10397,8 +10433,8 @@
   {
     "canonical_key": "france.sud-ouest",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:sud-ouest-region",
-    "normalized_checksum_sha256": "D58678AC9FEB61BFD3B1036A8BFD69B137405D4BDF1D1F3C4A817E18E9EAA1C7",
+    "source_feature_id": "derived:sud-ouest",
+    "normalized_checksum_sha256": "5E73E1C859BCA8BF97003449B7ECD14355AC321E9DED9AC4476C2F16751A6724",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -10449,12 +10485,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.sud-ouest.cotes-de-bergerac",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-de-bergerac",
+    "normalized_checksum_sha256": "67B4906C74FC08E1639DAFEA06E68AD95941E86CE21282E6FE0C3935A431CE69",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191316Z/cotes-de-bergerac/fetch-manifest.json",
+    "raw_checksum_sha256": "C2B44551B3ECFDFF69763F65BB857423C73AFCF94C3BF0B33397723FCF4F5AF8",
+    "documented": true
+  },
+  {
     "canonical_key": "france.sud-ouest.cotes-de-duras",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:sud-ouest-cotes-de-duras",
     "normalized_checksum_sha256": "0C196992A0A85A1362C3F627E2A9F7801CFCD9B71EE9B8815F6FAC406A64A0F8",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183701Z/sud-ouest-cotes-de-duras/fetch-manifest.json",
     "raw_checksum_sha256": "D48A5A18435C410394DBBBEB43BB33B3D8AC2FB0B6D4CF339589CDB07BBD7F26",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.cotes-de-montravel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-de-montravel",
+    "normalized_checksum_sha256": "AEB04159B0AA9B33D464A2C0B488F18F02EE7B08938662B64D74C668035529B3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191322Z/cotes-de-montravel/fetch-manifest.json",
+    "raw_checksum_sha256": "33321805EEF7C70F55BDF9E4D6176190CE4FEF7D6456F3AA0AAC8577A08A0DDA",
     "documented": true
   },
   {
@@ -10491,6 +10545,15 @@
     "normalized_checksum_sha256": "C35E49BC13077704E88295675939E614555DB67034029C391C5BB83D20DAAE37",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183714Z/sud-ouest-gaillac-premieres-cotes/fetch-manifest.json",
     "raw_checksum_sha256": "8EA976F61BC3C24F6B6B0E51A1CAB0A201DF6564FC8F2657ED8E6C6DA1CFC9FB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.haut-montravel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:haut-montravel",
+    "normalized_checksum_sha256": "3245828B6DCB3971949729CA13F32EA9900E6493A2DA2EB00D3281FA162E0EAA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191326Z/haut-montravel/fetch-manifest.json",
+    "raw_checksum_sha256": "648F50EE9266E111079111F2F76F2EB1E856701097270610FB57A7071AECDC23",
     "documented": true
   },
   {
@@ -10566,12 +10629,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.sud-ouest.saint-mont",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-mont",
+    "normalized_checksum_sha256": "F9F8A20AD3DA94583B9F813224D5E1C1A86ACA72D2E906E497049602442069E1",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191329Z/saint-mont/fetch-manifest.json",
+    "raw_checksum_sha256": "D7029551D8603ECE7FFF50D7D2701B50C844A16ED3D1AD90801F92977E7F2D0A",
+    "documented": true
+  },
+  {
     "canonical_key": "france.sud-ouest.saussignac",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:sud-ouest-saussignac",
     "normalized_checksum_sha256": "C5B562DFFE4905C9891C201196D76274A22841A6E017B712CCB5F182FD8D28F2",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T183658Z/sud-ouest-saussignac/fetch-manifest.json",
     "raw_checksum_sha256": "1B1EE0CB6B375200FD6F34BAC508C7F7B4EB26486F3F4C50A93DECE3DFD252CB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.sud-ouest.tursan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:tursan",
+    "normalized_checksum_sha256": "D9FA8A64190580C33635BCD0DE2D92B3244EF8EA19243C9E5ED910B0AFC9223E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T191333Z/tursan/fetch-manifest.json",
+    "raw_checksum_sha256": "7E8A8CB8B14F69C18AAE8EBDE58D25E8ECAA09E413B17C1C8C6CE5346EE78C70",
     "documented": true
   }
 ]

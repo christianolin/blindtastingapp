@@ -199,7 +199,7 @@ test("burgundy depth chain resolves to the climat level", async () => {
 test("place tree returns every verified place with parent links", async () => {
   const result = await client.query("select get_wine_place_tree() tree");
   const tree = result.rows[0].tree;
-  assert.equal(tree.length, 1175);
+  assert.equal(tree.length, 1184);
   const byKey = new Map(tree.map((node) => [node.key, node]));
   assert.equal(byKey.get("france").parent_key, null);
   assert.equal(
