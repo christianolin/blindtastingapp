@@ -72,6 +72,7 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     kind: "REGION",
     tier: 1,
     level: "regional",
+    classification: "regional",
     parent_id: EXPORT_ROW.primary_parent_id,
     has_children: true,
     rank: 0,
