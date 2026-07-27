@@ -154,3 +154,193 @@ test("catalog_wines has exactly the read + insert policies", async () => {
     [["catalog insert", "INSERT"], ["catalog read", "SELECT"]],
   );
 });
+
+// ---- Task 2: wset_notes + wset_note_aromas + hue trigger ----
+
+// Two distinct profiles for cross-author RLS probes. referenceIds().profile
+// is the first by id, so pair[1] is a different author.
+let cachedProfilePair = null;
+async function profilePair() {
+  if (cachedProfilePair) return cachedProfilePair;
+  const result = await client.query("select id from profiles order by id limit 2");
+  assert.equal(result.rowCount, 2, "need at least two profiles");
+  cachedProfilePair = [result.rows[0].id, result.rows[1].id];
+  return cachedProfilePair;
+}
+
+async function insertCatalog(ids) {
+  const result = await client.query(`${CATALOG_INSERT} returning id`, catalogParams(ids));
+  return result.rows[0].id;
+}
+
+// RLS write probes need the authenticated role AND a JWT sub so auth.uid()
+// resolves (set_config pattern from scripts/progressive-reveal.test.mjs).
+// Both are transaction-local, so withRollback undoes them.
+async function actAsAuthenticated(userId) {
+  await client.query(
+    "select set_config('request.jwt.claims', $1, true)",
+    [JSON.stringify({ sub: userId })],
+  );
+  await client.query("set local role authenticated");
+}
+
+test("authenticated taster can insert their own note; defaults apply", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    await actAsAuthenticated(ids.profile);
+    const note = await client.query(
+      `insert into wset_notes (catalog_wine_id, author_id)
+       values ($1, $2)
+       returning taster_notes, observations::text[] as observations,
+                 faults::text[] as faults, tasted_on, quality_score`,
+      [catalogWineId, ids.profile],
+    );
+    assert.equal(note.rowCount, 1);
+    assert.equal(note.rows[0].taster_notes, "");
+    assert.deepEqual(note.rows[0].observations, []);
+    assert.deepEqual(note.rows[0].faults, []);
+    assert.ok(note.rows[0].tasted_on instanceof Date);
+    assert.equal(note.rows[0].quality_score, null);
+  });
+});
+
+test("insert with another profile's author_id is rejected by RLS", async () => {
+  const ids = await referenceIds();
+  const [selfId, otherId] = await profilePair();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    await actAsAuthenticated(selfId);
+    await assert.rejects(
+      client.query(
+        "insert into wset_notes (catalog_wine_id, author_id) values ($1, $2)",
+        [catalogWineId, otherId],
+      ),
+      (error) => {
+        assert.equal(error.code, "42501");
+        assert.match(error.message, /row-level security/);
+        return true;
+      },
+    );
+  });
+});
+
+test("another author's note is visible under authenticated (public read)", async () => {
+  const ids = await referenceIds();
+  const [selfId, otherId] = await profilePair();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    // Seeded as the pooled owner role, which bypasses RLS.
+    const note = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1, $2) returning id",
+      [catalogWineId, otherId],
+    );
+    await actAsAuthenticated(selfId);
+    const visible = await client.query(
+      "select author_id from wset_notes where id = $1",
+      [note.rows[0].id],
+    );
+    assert.equal(visible.rowCount, 1);
+    assert.equal(visible.rows[0].author_id, otherId);
+  });
+});
+
+test("updating another author's note affects 0 rows, leaves it unchanged", async () => {
+  const ids = await referenceIds();
+  const [selfId, otherId] = await profilePair();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    const note = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1, $2) returning id",
+      [catalogWineId, otherId],
+    );
+    const noteId = note.rows[0].id;
+    await actAsAuthenticated(selfId);
+    // Default-deny RLS: the update policy's using() hides the row, so the
+    // statement matches nothing rather than erroring (same shape as the
+    // catalog immutability test above).
+    const updated = await client.query(
+      "update wset_notes set taster_notes = 'not mine' where id = $1",
+      [noteId],
+    );
+    assert.equal(updated.rowCount, 0);
+    await client.query("reset role");
+    const after = await client.query(
+      "select taster_notes from wset_notes where id = $1",
+      [noteId],
+    );
+    assert.equal(after.rows[0].taster_notes, "");
+  });
+});
+
+test("quality_score outside 50..100 is rejected by the check constraint", async () => {
+  const ids = await referenceIds();
+  // One rollback block per bad value: the failed insert aborts the
+  // transaction, so nothing can follow it inside the same block.
+  for (const badScore of [49, 101]) {
+    await withRollback(async () => {
+      const catalogWineId = await insertCatalog(ids);
+      await assert.rejects(
+        client.query(
+          `insert into wset_notes (catalog_wine_id, author_id, quality_score)
+           values ($1, $2, $3)`,
+          [catalogWineId, ids.profile, badScore],
+        ),
+        (error) => {
+          assert.equal(error.code, "23514");
+          assert.match(error.message, /wset_notes_quality_score_range/);
+          return true;
+        },
+      );
+    });
+  }
+});
+
+test("hue trigger: RUBY passes on a RED wine, PINK raises", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids); // CATALOG_INSERT is a RED wine
+    const ok = await client.query(
+      `insert into wset_notes (catalog_wine_id, author_id, colour_hue)
+       values ($1, $2, 'RUBY') returning colour_hue`,
+      [catalogWineId, ids.profile],
+    );
+    assert.equal(ok.rows[0].colour_hue, "RUBY");
+    await assert.rejects(
+      client.query(
+        `insert into wset_notes (catalog_wine_id, author_id, colour_hue)
+         values ($1, $2, 'PINK')`,
+        [catalogWineId, ids.profile],
+      ),
+      (error) => {
+        assert.equal(error.code, "23514");
+        assert.match(error.message, /colour_hue PINK not valid for RED wine/);
+        return true;
+      },
+    );
+  });
+});
+
+test("note-aroma with neither nose nor palate sensed is rejected", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    const note = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1, $2) returning id",
+      [catalogWineId, ids.profile],
+    );
+    // term_id has no FK until the terms table lands in 20260829195000, so a
+    // random uuid is enough to probe the check constraint.
+    await assert.rejects(
+      client.query(
+        "insert into wset_note_aromas (note_id, term_id) values ($1, gen_random_uuid())",
+        [note.rows[0].id],
+      ),
+      (error) => {
+        assert.equal(error.code, "23514");
+        assert.match(error.message, /wset_note_aromas_sensed_somewhere/);
+        return true;
+      },
+    );
+  });
+});
