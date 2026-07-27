@@ -102,6 +102,19 @@ export function ReferenceCombobox({
               value={search}
               onValueChange={setSearch}
             />
+            {allowClear && value ? (
+              // Pinned between the search box and the scrolling list, so
+              // Clear stays reachable however far down the options you are
+              // (and while a search filter is active).
+              <button
+                type="button"
+                onClick={() => selectOption("")}
+                className="flex w-full items-center gap-2 border-b border-border px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-4" />
+                Clear
+              </button>
+            ) : null}
             <CommandList>
               <CommandEmpty>
                 {onCreate && trimmedSearch ? (
@@ -119,12 +132,6 @@ export function ReferenceCombobox({
                 )}
               </CommandEmpty>
               <CommandGroup>
-                {allowClear && value ? (
-                  <CommandItem value="" onSelect={() => selectOption("")}>
-                    <X className="mr-2 size-4" />
-                    <span className="text-muted-foreground">Clear</span>
-                  </CommandItem>
-                ) : null}
                 {options.map((option) => (
                   <CommandItem
                     key={option.id}
