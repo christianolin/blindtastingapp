@@ -28,6 +28,13 @@ import {
 } from "@/lib/wine-map/tree";
 import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
+import { ReferenceCombobox } from "@/components/reference-combobox";
+import {
+  fetchGrapeOptions,
+  fetchPlaceGrapeLinks,
+  grapeVisibleKeys,
+  type GrapeOption,
+} from "@/lib/wine-map/grape-filter";
 import type { CameraTarget } from "./tile-wine-map";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
@@ -83,6 +90,37 @@ export function TileWineMapExplorer({
       cancelled = true;
     };
   }, [supabase]);
+
+  // Map filters (grape today; styles/designations will share the plumbing):
+  // one selected grape becomes a visible-key set via wine_place_grapes +
+  // nearest-ancestor inheritance, and the map hides every other polygon.
+  const [grapeOptions, setGrapeOptions] = useState<GrapeOption[]>([]);
+  const [grapeLinks, setGrapeLinks] = useState<Map<string, Set<string>> | null>(
+    null,
+  );
+  const [grapeFilterId, setGrapeFilterId] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchGrapeOptions(supabase), fetchPlaceGrapeLinks(supabase)])
+      .then(([options, links]) => {
+        if (cancelled) return;
+        setGrapeOptions(options);
+        setGrapeLinks(links);
+      })
+      .catch(() => {
+        // The filter control simply stays disabled; the map is unaffected.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+  const visibleKeys = useMemo(
+    () =>
+      grapeFilterId && tree && grapeLinks
+        ? grapeVisibleKeys(tree, grapeLinks, grapeFilterId)
+        : null,
+    [grapeFilterId, tree, grapeLinks],
+  );
 
   // Expanded ("full view") keeps the tree and details visible but
   // collapsible; Escape exits.
@@ -261,6 +299,34 @@ export function TileWineMapExplorer({
           <CardContent
             className={`pt-4 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
           >
+            {/* Map filters: pick a grape and only places using it stay on
+                the map (France's outline remains as context). More filter
+                kinds will join this bar. */}
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Filter
+              </span>
+              <div className="w-64 max-w-full">
+                <ReferenceCombobox
+                  formFieldName="map_grape_filter"
+                  options={grapeOptions}
+                  value={grapeFilterId}
+                  onValueChange={setGrapeFilterId}
+                  placeholder={
+                    grapeOptions.length === 0
+                      ? "Loading grapes…"
+                      : "Grape — only places using it"
+                  }
+                  disabled={grapeOptions.length === 0}
+                  allowClear
+                />
+              </div>
+              {visibleKeys ? (
+                <Badge variant="secondary">
+                  {visibleKeys.length} place{visibleKeys.length === 1 ? "" : "s"}
+                </Badge>
+              ) : null}
+            </div>
             {/* Expanded on mobile needs a definite height: the lg full-view
                 relies on a flex-1/min-h-0 chain that only exists in the
                 lg:flex-row layout — in the phone column the hierarchy card's
@@ -280,6 +346,7 @@ export function TileWineMapExplorer({
                 selectedParentId={context?.ancestors.at(-1)?.id ?? null}
                 cameraTarget={cameraTarget}
                 onSelect={select}
+                visibleKeys={visibleKeys}
                 expanded={expanded}
                 onToggleExpanded={() => setExpanded((value) => !value)}
               />

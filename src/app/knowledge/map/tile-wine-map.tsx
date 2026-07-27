@@ -227,6 +227,7 @@ export function TileWineMap({
   onSelect,
   expanded,
   onToggleExpanded,
+  visibleKeys = null,
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
@@ -238,6 +239,10 @@ export function TileWineMap({
   onSelect: (key: string) => void;
   expanded: boolean;
   onToggleExpanded: () => void;
+  /** When non-null, only these canonical keys render (the country outline
+      stays for context). Computed by the explorer's filters — grapes today,
+      styles/designations later — so hiding needs no tile rebuild. */
+  visibleKeys?: string[] | null;
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
@@ -447,6 +452,34 @@ export function TileWineMap({
     [shardKeys],
   );
 
+  // Attribute filters (grape today, styles/designations later): when a
+  // visible-key set is active, only those canonical keys render — fills,
+  // outlines and labels alike — while the country outline (tier 0) stays as
+  // geographic context. null = no filtering.
+  const keyGate = useMemo(
+    () =>
+      visibleKeys == null
+        ? null
+        : ([
+            "any",
+            ["==", ["get", "tier"], 0],
+            ["in", ["get", "key"], ["literal", visibleKeys]],
+          ] as unknown as boolean),
+    [visibleKeys],
+  );
+  const gatedWorldFilter = useMemo(
+    () =>
+      (keyGate ? ["all", worldFilter, keyGate] : worldFilter) as unknown as boolean,
+    [worldFilter, keyGate],
+  );
+  const selectedGate = useMemo(
+    () =>
+      (keyGate
+        ? ["all", selectedFilter(selectedKey), keyGate]
+        : selectedFilter(selectedKey)) as unknown as boolean,
+    [selectedKey, keyGate],
+  );
+
   // Legend regions follow the viewport once the first scan lands; the
   // manifest's shard list covers the initial paint.
   const legendRegions = useMemo(() => {
@@ -546,7 +579,7 @@ export function TileWineMap({
             id="world-fills"
             type="fill"
             source-layer="places"
-            filter={worldFilter}
+            filter={gatedWorldFilter}
             paint={{
               "fill-color": regionColor,
               "fill-opacity": [
@@ -566,7 +599,7 @@ export function TileWineMap({
             id="world-outlines"
             type="line"
             source-layer="places"
-            filter={worldFilter}
+            filter={gatedWorldFilter}
             paint={{
               "line-color": regionColor,
               "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
@@ -576,21 +609,21 @@ export function TileWineMap({
             id="world-selected-casing"
             type="line"
             source-layer="places"
-            filter={selectedFilter(selectedKey)}
+            filter={selectedGate}
             paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
           />
           <Layer
             id="world-selected-ring"
             type="line"
             source-layer="places"
-            filter={selectedFilter(selectedKey)}
+            filter={selectedGate}
             paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
           />
           <Layer
             id="world-labels"
             type="symbol"
             source-layer="labels"
-            filter={worldFilter}
+            filter={gatedWorldFilter}
             layout={labelLayout(selectedKey, selectedId, selectedParentId)}
             paint={labelPaint(selectedKey, selectedId, selectedParentId)}
           />
@@ -606,12 +639,14 @@ export function TileWineMap({
               id={`shard-fills-${key}`}
               type="fill"
               source-layer="places"
+              filter={keyGate ?? undefined}
               paint={fillPaint}
             />
             <Layer
               id={`shard-outlines-${key}`}
               type="line"
               source-layer="places"
+              filter={keyGate ?? undefined}
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
@@ -623,20 +658,21 @@ export function TileWineMap({
               id={`shard-selected-casing-${key}`}
               type="line"
               source-layer="places"
-              filter={selectedFilter(selectedKey)}
+              filter={selectedGate}
               paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
             />
             <Layer
               id={`shard-selected-ring-${key}`}
               type="line"
               source-layer="places"
-              filter={selectedFilter(selectedKey)}
+              filter={selectedGate}
               paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
             />
             <Layer
               id={`shard-labels-${key}`}
               type="symbol"
               source-layer="labels"
+              filter={keyGate ?? undefined}
               layout={labelLayout(selectedKey, selectedId, selectedParentId)}
               paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
