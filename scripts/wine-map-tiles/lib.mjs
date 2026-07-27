@@ -107,9 +107,12 @@ function tileProperties(row) {
     // Planar deg² of the footprint: click resolution picks the smallest
     // overlapping shape so enclaves (Canon-Fronsac in Fronsac) stay clickable.
     area: Number(row.area ?? 0),
-    // Legal classification drives the village-zoom palette (grand cru dark
-    // red, premier cru lighter, communal sand); null for non-appellations.
+    // Legal appellation level; null for non-appellations.
     level: row.level ?? null,
+    // Classification for the border language on the map: appellation_level
+    // where it exists, else derived from échelle provenance so Champagne's
+    // rated villages (not appellations) still carry grand/premier cru.
+    classification: row.classification ?? row.level ?? null,
     // Third key segment — a region's top-level areas (medoc, graves,
     // pomerol…). District-mode regions colour and legend by it; computed in
     // export.mjs from the full row set (needs the ancestor's display name).

@@ -25,6 +25,13 @@ const EXPORT_SQL = `
     p.kind::text as kind,
     p.display_tier,
     p.appellation_level as level,
+    coalesce(
+      p.appellation_level,
+      case
+        when s.source_feature_id like 'echelle-grand-cru:%' then 'grand_cru'
+        when s.source_feature_id like 'echelle-premier-cru:%' then 'premier_cru'
+      end
+    ) as classification,
     p.primary_parent_id::text as primary_parent_id,
     p.min_zoom,
     p.label_min_zoom,
