@@ -344,3 +344,72 @@ test("note-aroma with neither nose nor palate sensed is rejected", async () => {
     );
   });
 });
+
+// ---- Task 3: wset_aroma_terms lexicon (89-term seed) ----
+
+test("aroma lexicon holds exactly 89 terms", async () => {
+  const result = await client.query(
+    "select count(*)::int as n from wset_aroma_terms",
+  );
+  assert.equal(result.rows[0].n, 89);
+});
+
+test("per-family term counts match the WSET sheet", async () => {
+  const result = await client.query(
+    "select family::text, count(*)::int as n from wset_aroma_terms group by family",
+  );
+  const counts = Object.fromEntries(result.rows.map((r) => [r.family, r.n]));
+  assert.deepEqual(counts, {
+    FRUIT: 28,
+    FLORAL: 5,
+    SPICE: 9,
+    VEGETAL_OAK: 23,
+    OTHER: 24,
+  });
+});
+
+test("terms span 21 distinct groups", async () => {
+  const result = await client.query(
+    "select count(distinct group_name)::int as n from wset_aroma_terms",
+  );
+  assert.equal(result.rows[0].n, 21);
+});
+
+test("duplicate term is rejected by the unique constraint", async () => {
+  await withRollback(async () => {
+    await client.query("set local role authenticated");
+    await assert.rejects(
+      client.query(
+        `insert into wset_aroma_terms (family, group_name, term, sort_order)
+         values ('FRUIT', 'Citrus', 'lemon', 90)`,
+      ),
+      (error) => {
+        assert.equal(error.code, "23505");
+        assert.match(error.message, /wset_aroma_terms_term_key/);
+        return true;
+      },
+    );
+  });
+});
+
+test("note-aroma row inserts with a real term id, sensed on the nose", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const catalogWineId = await insertCatalog(ids);
+    const note = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1, $2) returning id",
+      [catalogWineId, ids.profile],
+    );
+    const term = await client.query(
+      "select id from wset_aroma_terms where term = 'lemon'",
+    );
+    assert.equal(term.rowCount, 1);
+    const inserted = await client.query(
+      `insert into wset_note_aromas (note_id, term_id, sensed_on_nose)
+       values ($1, $2, true) returning sensed_on_nose, sensed_on_palate`,
+      [note.rows[0].id, term.rows[0].id],
+    );
+    assert.equal(inserted.rows[0].sensed_on_nose, true);
+    assert.equal(inserted.rows[0].sensed_on_palate, false);
+  });
+});
