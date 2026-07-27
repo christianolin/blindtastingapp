@@ -855,6 +855,8 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Beaumes de Venise AOP"], key: "france.rhone.beaumes-de-venise" },
   { names: ["Lirac AOP"], key: "france.rhone.lirac" },
   { names: ["Tavel AOP"], key: "france.rhone.tavel" },
+  { names: ["Cotes du Rhone AOP"], key: "france.rhone.cotes-du-rhone" },
+  { names: ["Vacqueyras AOP"], key: "france.rhone.vacqueyras" },
   { names: ["Jura"], key: "france.jura" },
   { names: ["Cotes du Jura AOP"], key: "france.jura" },
   { names: ["Arbois AOP"], key: "france.jura.arbois" },
@@ -1031,18 +1033,22 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // aggregate region) + Loire (59 constituents + derived aggregate
     // region) + Languedoc-Roussillon (dual-role region + 56 constituents)
     // + the Champagne premier-cru completion (4 deleguee villages + the Ay
-    // deleguee refinement). total/validated include retired revisions.
-    total: 1193,
-    validated: 1193,
-    current: 1121,
-    valid: 1193,
-    labelled: 1193,
+    // deleguee refinement) + the Rhone restructure (2 derived sub-regions,
+    // the Cotes du Rhone regional dissolve, the Vacqueyras commune-union and
+    // the meridional + region re-derives). total/validated include retired
+    // revisions.
+    total: 1199,
+    validated: 1199,
+    current: 1125,
+    valid: 1199,
+    labelled: 1199,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
-    // + the France Admin Express outline (its retired NE revision included).
-    manual: 66,
-    generalized: 1093,
+    // + the France Admin Express outline (its retired NE revision included)
+    // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
+    manual: 67,
+    generalized: 1094,
     reproducible: 13,
   });
 
@@ -1093,7 +1099,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1193);
+  assert.equal(prov.linked_boundaries, 1199);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1141,7 +1147,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 322);
+  assert.equal(appellations.rows.length, 324);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1155,7 +1161,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 322],
+    ["appellations", 324],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1273,9 +1279,10 @@ test("classification facts and legal relationship types", async () => {
       // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
       // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
-      // + 51 grands crus).
-      appellations: 1050,
-      aoc: 1050,
+      // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
+      // the 2 Rhone SUBREGIONs are not appellations).
+      appellations: 1052,
+      aoc: 1052,
     missing_level: 0,
     france_plain: 1,
   });

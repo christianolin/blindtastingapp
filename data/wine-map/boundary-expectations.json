@@ -9552,7 +9552,7 @@
     "canonical_key": "france.rhone",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "derived:rhone",
-    "normalized_checksum_sha256": "135A0E51B277EAC87C3EA1A6FA29B7B4FAA616BEBDCC24A72E446080F811C4D8",
+    "normalized_checksum_sha256": "23DBAE43D7C7775FF7001BA9A790CFFDF4A2AD8BC814E78F66683DF98A12CF68",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -9621,6 +9621,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.rhone.cotes-du-rhone",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-du-rhone",
+    "normalized_checksum_sha256": "DB2251DE79BB7A79A068BC006CACC60065DE6D0DCB5ED846807F2AE99AF4AF4F",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T113655Z/cotes-du-rhone/fetch-manifest.json",
+    "raw_checksum_sha256": "908C78CF08EAA39DA368D98A5FDC72D9F7E402C634F8592FC2431795C6D5774D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone.crozes-hermitage",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:crozes-hermitage",
@@ -9657,6 +9666,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.rhone.meridional",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:rhone-meridional",
+    "normalized_checksum_sha256": "23B6097E01E07C49279D37BC6C7DEB2EDD7D314DC0016793B79DDAED11E41DE9",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone.rasteau",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:rasteau",
@@ -9684,12 +9702,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.rhone.septentrional",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:rhone-septentrional",
+    "normalized_checksum_sha256": "5BE704A542D2D97561E6BD557E0ECD4944DD4BA8290C98F121B9188F75D95187",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone.tavel",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:tavel",
     "normalized_checksum_sha256": "E70BFE7C021816F3987ADBB8D091B7A4A56B8F1DA6F5D4DD2D7D7EE496FE547B",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260724T093844Z/tavel/fetch-manifest.json",
     "raw_checksum_sha256": "BDF388392D06A81AE18D0B86B8ABF6A5F4898F418FF26D3EDED0322CB80D954F",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.rhone.vacqueyras",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "aire-geographique:vacqueyras",
+    "normalized_checksum_sha256": "20F0E221211DF7D54045AE18A78A146EE21A15BAA0187C30F568890ACAFB4ED2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260727T113651Z/vacqueyras/raw-communes.geojson",
+    "raw_checksum_sha256": "B678408CC5B7AD338065BCC6DC95DEDA70A9454C953153942656485819A438FF",
     "documented": true
   },
   {

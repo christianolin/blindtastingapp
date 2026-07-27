@@ -1,0 +1,18 @@
+{
+  "aire_geographique": "Vacqueyras",
+  "provenance": {
+    "authority": "INAO (Institut national de l'origine et de la qualité)",
+    "dataset": "Aires géographiques des AOC/AOP",
+    "dataset_slug": "aires-geographiques-des-aoc-aop",
+    "resource_url": "https://static.data.gouv.fr/resources/aires-geographiques-des-aoc-aop/20251009-122320/2025-10-09-comagri-communes-aires-ao.csv",
+    "licence": "Licence Ouverte / Open Licence (fr-lo)",
+    "retrieved_at": "2026-07-27",
+    "note": "Vacqueyras AOC has no parcels in the IGN AOC-VITICOLES:aire_parcellaire layer (verified: denom LIKE '%acqueyras%' matches 0); its footprint is the 2-commune aire géographique union (IDA 1313), the same commune-union model as Champagne."
+  },
+  "commune_count": 2,
+  "department_breakdown": { "VAUCLUSE": 2 },
+  "communes": [
+    { "insee": "84122", "name": "Sarrians", "department": "VAUCLUSE" },
+    { "insee": "84136", "name": "Vacqueyras", "department": "VAUCLUSE" }
+  ]
+}
