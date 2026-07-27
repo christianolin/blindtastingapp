@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Layers,
@@ -178,8 +178,12 @@ export function TileWineMapExplorer({
   // Selection updates the URL in place (shareable deep links) while
   // preserving any other params — including ?map=tiles during the opt-in
   // phase — without a Next navigation round-trip.
+  // Rides along into cameraTarget: map taps never move the camera, only
+  // tree/search/details navigation flies (deep links keep the "ui" default).
+  const selectSourceRef = useRef<"map" | "ui">("ui");
   const select = useCallback(
-    (key: string) => {
+    (key: string, source: "map" | "ui" = "ui") => {
+      selectSourceRef.current = source;
       // Same-key selection must be a no-op: the context effect only re-runs
       // when selectedKey changes, so setting "loading" here would never
       // resolve.
@@ -215,7 +219,12 @@ export function TileWineMapExplorer({
       childZooms.length > 0
         ? 0
         : Math.min(context.place.min_zoom + 0.35, maxZoom);
-    return { bbox: context.boundary.bbox, minZoom, maxZoom };
+    return {
+      bbox: context.boundary.bbox,
+      minZoom,
+      maxZoom,
+      source: selectSourceRef.current,
+    };
   }, [context]);
 
   const article =

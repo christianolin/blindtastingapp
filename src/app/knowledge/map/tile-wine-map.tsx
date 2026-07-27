@@ -31,6 +31,11 @@ export type CameraTarget = {
   /** Never end below this — a small feature's reveal zoom, so it renders. */
   minZoom: number;
   maxZoom: number;
+  /** Where the selection came from. A tap on the map itself never moves the
+      camera (the tapped feature is by definition on screen — owner: mobile
+      recenter-and-zoom-out on tap was "quite annoying"); only tree/search/
+      details navigation may fly. */
+  source: "map" | "ui";
 };
 
 // Deterministic colour per region (canonical-key segment carried as the
@@ -308,7 +313,7 @@ export function TileWineMap({
   /** The selected place's parent id — keeps sibling labels visible. */
   selectedParentId: string | null;
   cameraTarget: CameraTarget | null;
-  onSelect: (key: string) => void;
+  onSelect: (key: string, source?: "map" | "ui") => void;
   expanded: boolean;
   onToggleExpanded: () => void;
   /** When non-null, only these canonical keys render (the country outline
@@ -411,6 +416,9 @@ export function TileWineMap({
 
   useEffect(() => {
     if (!cameraTarget) return;
+    // Map-originated selections never reframe: you tapped the shape, so it
+    // is on screen; the gold ring appearing is feedback enough.
+    if (cameraTarget.source === "map") return;
     const map = mapRef.current;
     const [minX, minY, maxX, maxY] = cameraTarget.bbox;
     const bounds: [[number, number], [number, number]] = [
@@ -666,7 +674,7 @@ export function TileWineMap({
           // the camera out. Once you're past region zoom, ignore country
           // selection — reach France via the tree instead.
           if (best.tier === 0 && (mapRef.current?.getZoom() ?? 0) > 5) return;
-          onSelect(best.key);
+          onSelect(best.key, "map");
         }}
         onIdle={scanView}
         onMouseMove={(e) => {
