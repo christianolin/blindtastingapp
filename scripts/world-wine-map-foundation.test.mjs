@@ -1124,11 +1124,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // AOC + Villages, Mâcon-Villages) and the SO/Provence re-derives.
     // Bordeaux sub-region split: +2 derived outlines (Libournais, Blaye &
     // Bourg).
-    total: 1268,
-    validated: 1268,
-    current: 1186,
-    valid: 1268,
-    labelled: 1268,
+    // Languedoc/Roussillon + Sud-Ouest sub-region splits: +6 derived
+    // outlines.
+    total: 1274,
+    validated: 1274,
+    current: 1192,
+    valid: 1274,
+    labelled: 1274,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1186,7 +1188,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1268);
+  assert.equal(prov.linked_boundaries, 1274);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
