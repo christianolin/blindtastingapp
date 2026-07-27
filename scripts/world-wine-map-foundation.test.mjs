@@ -1122,11 +1122,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Graves Supérieures, Premières Côtes de Bordeaux, Saint-Émilion GC).
     // Wave 3d: +9 dissolves (Sud-Ouest five, Pierrevert, Côte de Beaune
     // AOC + Villages, Mâcon-Villages) and the SO/Provence re-derives.
-    total: 1266,
-    validated: 1266,
-    current: 1184,
-    valid: 1266,
-    labelled: 1266,
+    // Bordeaux sub-region split: +2 derived outlines (Libournais, Blaye &
+    // Bourg).
+    total: 1268,
+    validated: 1268,
+    current: 1186,
+    valid: 1268,
+    labelled: 1268,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1184,7 +1186,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1266);
+  assert.equal(prov.linked_boundaries, 1268);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,

@@ -603,6 +603,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.blaye-bourg",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:bordeaux-blaye-bourg",
+    "normalized_checksum_sha256": "BB0FB70E596F0474373D5BFE0CD6CD38FBEB0619180403EBFF59E14176810703",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.cadillac",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:cadillac",
@@ -762,6 +771,15 @@
     "normalized_checksum_sha256": "82629A7568129522B7257954EEAD6033613031B86D1784B816FEFF747138AF33",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260723T124939Z/lalande-de-pomerol/fetch-manifest.json",
     "raw_checksum_sha256": "2E317FF805FA3807C4DFC05C864FA9906829095BC18F1D1AAB1EDAB999D495C8",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.libournais",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:bordeaux-libournais",
+    "normalized_checksum_sha256": "19A52A9AB8468E3A53CA99E862139FAE920A672E9CEB3D9441DDE7021D068535",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {

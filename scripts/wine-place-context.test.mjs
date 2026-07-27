@@ -88,7 +88,7 @@ test("bordeaux context has the full contract shape", async () => {
     ["france"],
   );
   // Table-owning pooler role: RLS does not filter, so DRAFT places count.
-  assert.equal(ctx.children.length, 22);
+  assert.equal(ctx.children.length, 6);
   assert.ok(ctx.children.every((c) => typeof c.min_zoom === "number"));
   assert.equal(ctx.article.editorial_status, "PUBLISHED");
   assert.equal(ctx.boundary.bbox.length, 4);
@@ -112,6 +112,7 @@ test("nested appellation ancestors are outermost first", async () => {
       "france.bordeaux.pessac-leognan",
       "france.bordeaux.sauternes",
       "france.bordeaux.graves.graves-superieures",
+      "france.bordeaux.cerons",
     ],
   );
 });
@@ -140,7 +141,7 @@ test("authenticated role sees verified content through RLS", async () => {
     assert.ok(ctx.boundary, "boundary should be visible to authenticated");
     // After the Task 6 flip the 5 new appellations are VERIFIED, so the
     // authenticated role now sees all 9 Bordeaux children.
-    assert.equal(ctx.children.length, 22);
+    assert.equal(ctx.children.length, 6);
   });
 });
 
@@ -199,7 +200,7 @@ test("burgundy depth chain resolves to the climat level", async () => {
 test("place tree returns every verified place with parent links", async () => {
   const result = await client.query("select get_wine_place_tree() tree");
   const tree = result.rows[0].tree;
-  assert.equal(tree.length, 1184);
+  assert.equal(tree.length, 1186);
   const byKey = new Map(tree.map((node) => [node.key, node]));
   assert.equal(byKey.get("france").parent_key, null);
   assert.equal(
