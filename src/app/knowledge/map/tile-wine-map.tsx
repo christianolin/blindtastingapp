@@ -34,16 +34,35 @@ export type CameraTarget = {
 };
 
 // Deterministic colour per region (canonical-key segment carried as the
-// `region` tile property); unknown regions fall back to the brand base.
+// `region` tile property). Every live region is named — the fallback used to
+// equal Bordeaux's claret, which painted Sud-Ouest/Beaujolais/Jura/etc. the
+// identical maroon (owner: "Sud-Ouest and Bordeaux are too similar").
+// Neighbouring regions get contrasting hue families: Bordeaux claret vs
+// Sud-Ouest amber, Rhône rust vs Provence olive-gold, Bourgogne petrol vs
+// Beaujolais plum.
 export const REGION_COLORS: Record<string, string> = {
+  france: "#6B6257",
+  alsace: "#44548C",
+  beaujolais: "#9A4E7A",
   bordeaux: "#5C1A2B",
   bourgogne: "#1F4E5F",
   champagne: "#8A6D3B",
+  corse: "#A34D2B",
+  jura: "#7A4E8C",
+  "languedoc-roussillon": "#2F7A78",
   loire: "#2F6B4F",
+  provence: "#9A6A2F",
   rhone: "#7A3B2E",
-  alsace: "#44548C",
+  savoie: "#5C7A3B",
+  "sud-ouest": "#B0722C",
 };
-const FALLBACK_COLOR = "#5C1A2B";
+const REGION_LABELS: Record<string, string> = {
+  france: "France",
+  "languedoc-roussillon": "Languedoc-Roussillon",
+  rhone: "Rhône",
+  "sud-ouest": "Sud-Ouest",
+};
+const FALLBACK_COLOR = "#6B6257";
 const SELECTED_COLOR = "#B78E42";
 
 const regionMatch = [
@@ -118,9 +137,12 @@ function shade(hex: string, lightness: number, saturation = 0) {
   return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
 }
 export function classificationShades(hex: string) {
+  // Owner: the previous 0.52/0.74 steps read too alike at wash opacity —
+  // grand cru now drops to 45% lightness with a strong saturation push,
+  // premier cru sits clearly between it and the plain village hue.
   return {
-    grand_cru: shade(hex, 0.52, 0.22),
-    premier_cru: shade(hex, 0.74, 0.1),
+    grand_cru: shade(hex, 0.45, 0.3),
+    premier_cru: shade(hex, 0.68, 0.14),
     base: hex,
   };
 }
@@ -137,11 +159,15 @@ const regionColor = regionMatch as unknown as string;
 
 // Camera ("zoom") expressions must sit at the top level of a paint property,
 // so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(areaSlugs: string[]) {
+function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
   // From z8 every area (Burgundy village, Champagne sub-region, Bordeaux
   // district) gets its own hue, and WITHIN the hue classification reads as
   // intensity: grand cru darkest, premier cru mid, village land plain.
   // Region hue covers areas not yet observed by the viewport scan.
+  // The intensity ramp is RELATIVE: it only applies when at least two
+  // classification levels are actually in view — an all-grand-cru region
+  // like Alsace has nothing to be darker THAN, so its vineyards keep the
+  // plain area hue (owner: "darkest doesn't make sense there").
   const areaMatch = areaSlugs.length
     ? [
         "match",
@@ -150,15 +176,17 @@ function fillColorExpression(areaSlugs: string[]) {
           const shades = classificationShades(districtColor(slug));
           return [
             slug,
-            [
-              "match",
-              classificationExpr,
-              "grand_cru",
-              shades.grand_cru,
-              "premier_cru",
-              shades.premier_cru,
-              shades.base,
-            ],
+            rampEnabled
+              ? [
+                  "match",
+                  classificationExpr,
+                  "grand_cru",
+                  shades.grand_cru,
+                  "premier_cru",
+                  shades.premier_cru,
+                  shades.base,
+                ]
+              : shades.base,
           ];
         }),
         regionMatch,
@@ -441,6 +469,12 @@ export function TileWineMap({
   // parent included — as children appear, while outlines and labels persist
   // (spec: "the selected parent's fill fades while its outline and single
   // label remain").
+  // The classification ramp is comparative by nature: with only one level in
+  // view (all-grand-cru Alsace) there is nothing to be darker than, so the
+  // ramp switches off and every plot keeps its plain area hue at a uniform
+  // mid opacity.
+  const rampEnabled = viewInfo.classifications.length >= 2;
+
   const fillPaint = useMemo(() => {
     const sel = ["==", ["get", "key"], selectedKey ?? ""];
     const child = ["==", ["get", "parent_id"], selectedId ?? "__none__"];
@@ -454,7 +488,7 @@ export function TileWineMap({
         ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
         : ["case", sel, selectedOpacity, base];
     return {
-      "fill-color": fillColorExpression(paintGroups),
+      "fill-color": fillColorExpression(paintGroups, rampEnabled),
       "fill-opacity": [
         "interpolate",
         ["linear"],
@@ -469,16 +503,16 @@ export function TileWineMap({
           "match",
           classificationExpr,
           "grand_cru",
-          0.6,
+          rampEnabled ? 0.65 : 0.4,
           "premier_cru",
-          0.42,
+          rampEnabled ? 0.45 : 0.4,
           "communal",
-          0.2,
+          rampEnabled ? 0.18 : 0.4,
           ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
         ]),
       ] as unknown as number,
     };
-  }, [selectedKey, selectedId, paintGroups]);
+  }, [selectedKey, selectedId, paintGroups, rampEnabled]);
 
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
@@ -541,7 +575,7 @@ export function TileWineMap({
       : Object.keys(manifest.shards).sort();
     return keys.map((key) => ({
       key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
+      label: REGION_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1),
       color: REGION_COLORS[key] ?? FALLBACK_COLOR,
     }));
   }, [manifest, viewInfo.regions]);
@@ -572,6 +606,26 @@ export function TileWineMap({
             .querySelector("details.maplibregl-ctrl-attrib");
           details?.classList.remove("maplibregl-compact-show");
           details?.removeAttribute("open");
+          // Give the wine labels the low-zoom stage: MapLibre places lower
+          // (basemap) symbol layers first, so Positron's own "FRANCE" and
+          // city names were winning collisions against our region labels
+          // (BORDEAUX/BOURGOGNE/BEAUJOLAIS silently dropped). Push the
+          // basemap's place labels to z7+, where they return as useful
+          // village-zoom context (Épernay, Châlons…) and our tier-1 labels
+          // are no longer contending.
+          for (const layer of e.target.getStyle().layers ?? []) {
+            if (
+              layer.type === "symbol" &&
+              "source-layer" in layer &&
+              layer["source-layer"] === "place"
+            ) {
+              e.target.setLayerZoomRange(
+                layer.id,
+                Math.max(7, layer.minzoom ?? 0),
+                layer.maxzoom ?? 24,
+              );
+            }
+          }
         }}
         onClick={(e) => {
           // Smallest-wins: deepest tier first, then the smallest footprint —
@@ -708,7 +762,7 @@ export function TileWineMap({
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
-                "line-color": fillColorExpression(paintGroups),
+                "line-color": fillColorExpression(paintGroups, rampEnabled),
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
@@ -792,16 +846,24 @@ export function TileWineMap({
                       <li className="flex items-center gap-1.5">
                         <span
                           className="inline-block size-2.5 rounded-sm"
-                          style={{ backgroundColor: shades.grand_cru }}
+                          style={{
+                            backgroundColor: rampEnabled
+                              ? shades.grand_cru
+                              : shades.base,
+                          }}
                         />
-                        Grand cru (darkest)
+                        {rampEnabled ? "Grand cru (darkest)" : "Grand cru"}
                       </li>
                     ) : null}
                     {viewInfo.classifications.includes("premier_cru") ? (
                       <li className="flex items-center gap-1.5">
                         <span
                           className="inline-block size-2.5 rounded-sm"
-                          style={{ backgroundColor: shades.premier_cru }}
+                          style={{
+                            backgroundColor: rampEnabled
+                              ? shades.premier_cru
+                              : shades.base,
+                          }}
                         />
                         Premier cru
                       </li>
