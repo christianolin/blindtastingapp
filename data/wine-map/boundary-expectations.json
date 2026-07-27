@@ -630,6 +630,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.cotes-de-bordeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:cotes-de-bordeaux",
+    "normalized_checksum_sha256": "1049A0B34D455B71BA6AB4D8950CCD774D1A589C8391018F1E5F67C6AF844AF2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T133126Z/cotes-de-bordeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "9D960C7F65BBE75B9C2C4713D54065D17CFBE9B5FB13AAB7D04FE7EC208EEA2A",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.cotes-de-bordeaux-saint-macaire",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:cotes-de-bordeaux-saint-macaire",
@@ -672,6 +681,24 @@
     "normalized_checksum_sha256": "17FB774CA4E9F080742F92991868C0EFAEF876DEF489D2E2A7E4C7596F4AF74C",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260721T222950Z/graves-grouping/fetch-manifest.json",
     "raw_checksum_sha256": "C21174CC48312366060575E2901F777C57561C01AA7292B3F24E2F3FA0EFB20B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.graves-de-vayres",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:graves-de-vayres",
+    "normalized_checksum_sha256": "D558F114C6D9507983CCFE89CB0661ACCF43634BBD89D11FA2D7C65DED5A6F15",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T133135Z/graves-de-vayres/fetch-manifest.json",
+    "raw_checksum_sha256": "FE203F5DB873F978ECBE330BA989891888E171229C9DF2D510BCEE6654C01578",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.graves.graves-superieures",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:graves-superieures",
+    "normalized_checksum_sha256": "06B8C8199391F8692601328D0E7AB427A6CD904F7EA3E571B6F1CB8F568F52AF",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T133137Z/graves-superieures/fetch-manifest.json",
+    "raw_checksum_sha256": "9DB422B2BDA6F7B7E62A4E9DBE50A848E7BF8D50376CECDEB63C6336B47A20CA",
     "documented": true
   },
   {
@@ -792,6 +819,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.bordeaux.premieres-cotes-de-bordeaux",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:premieres-cotes-de-bordeaux",
+    "normalized_checksum_sha256": "D13538CE877F70DCEDC96A660CBE9CEBEA7EAA100ADB933CEF5AB6BD22EE3AC2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T133143Z/premieres-cotes-de-bordeaux/fetch-manifest.json",
+    "raw_checksum_sha256": "982647E3553556C8C40F799F18F24BC5686C20C78628E68F47DA9BDA9670F3F6",
+    "documented": true
+  },
+  {
     "canonical_key": "france.bordeaux.puisseguin-saint-emilion",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:puisseguin-saint-emilion",
@@ -807,6 +843,15 @@
     "normalized_checksum_sha256": "B197FB23F8D784E77B72BDBE599AFAC6C822DA06423CFBD1EA501E3340833177",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "france.bordeaux.saint-emilion.saint-emilion-grand-cru",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "denomset:saint-emilion-grand-cru",
+    "normalized_checksum_sha256": "0AC1CC247BCC2B64495E2FDB930D845BC8927CB86116181D47F722ED74AF773C",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260727T133147Z/saint-emilion-grand-cru/fetch-manifest.json",
+    "raw_checksum_sha256": "515F33F27C9E9B45C450039D5B1513DD6E04F803115124F302E2D5C7FEBEF200",
     "documented": true
   },
   {

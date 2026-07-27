@@ -995,6 +995,16 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Cote Roannaise AOP"], key: "france.loire.cote-roannaise" },
   { names: ["Cotes du Forez AOP"], key: "france.loire.cotes-du-forez" },
   { names: ["Saint Pourcain AOP"], key: "france.loire.saint-pourcain" },
+  { names: ["Bordeaux AOP"], key: "france.bordeaux" },
+  { names: ["Bordeaux Superieur AOP"], key: "france.bordeaux" },
+  { names: ["Cremant de Bordeaux AOP"], key: "france.bordeaux" },
+  { names: ["Blaye AOP"], key: "france.bordeaux.blaye" },
+  { names: ["Cotes de Bordeaux Saint-Macaire AOP"], key: "france.bordeaux.cotes-de-bordeaux-saint-macaire" },
+  { names: ["Cotes de Bordeaux AOP"], key: "france.bordeaux.cotes-de-bordeaux" },
+  { names: ["Graves de Vayres AOP"], key: "france.bordeaux.graves-de-vayres" },
+  { names: ["Graves Superieures AOP"], key: "france.bordeaux.graves.graves-superieures" },
+  { names: ["Premieres Cotes de Bordeaux AOP"], key: "france.bordeaux.premieres-cotes-de-bordeaux" },
+  { names: ["Saint-Émilion Grand Cru AOP"], key: "france.bordeaux.saint-emilion.saint-emilion-grand-cru" },
   { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
   { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
   { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
@@ -1092,18 +1102,20 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Loire wave 3b: +11 dissolves (Crémant/Rosé de Loire, Anjou styles,
     // Saumur/Vendômois/Orléans + upper-Loire satellites) and the 3 sub-region
     // + region re-derive revisions.
-    total: 1250,
-    validated: 1250,
-    current: 1170,
-    valid: 1250,
-    labelled: 1250,
+    // Bordeaux wave 3c: +5 dissolves (Côtes de Bordeaux, Graves de Vayres,
+    // Graves Supérieures, Premières Côtes de Bordeaux, Saint-Émilion GC).
+    total: 1255,
+    validated: 1255,
+    current: 1175,
+    valid: 1255,
+    labelled: 1255,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
     // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
     manual: 67,
-    generalized: 1135,
+    generalized: 1140,
     reproducible: 13,
   });
 
@@ -1154,7 +1166,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1250);
+  assert.equal(prov.linked_boundaries, 1255);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1202,7 +1214,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 371);
+  assert.equal(appellations.rows.length, 381);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1216,7 +1228,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 371],
+    ["appellations", 381],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1336,8 +1348,8 @@ test("classification facts and legal relationship types", async () => {
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
       // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1093,
-      aoc: 1093,
+      appellations: 1098,
+      aoc: 1098,
     missing_level: 0,
     france_plain: 1,
   });
