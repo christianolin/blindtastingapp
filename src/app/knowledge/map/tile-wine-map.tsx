@@ -67,6 +67,11 @@ const classificationExpr = [
   "",
 ];
 
+// The no-filter state for layers whose filter is sometimes absent. MapLibre
+// rejects `undefined` in addLayer (the layer then never mounts), so "no
+// filter" must be an always-true expression instead.
+const PASS_FILTER = ["boolean", true] as unknown as boolean;
+
 // Curated palette for district colouring; slug-hashed so a group keeps its
 // colour across sessions and republish cycles.
 const DISTRICT_PALETTE = [
@@ -412,6 +417,12 @@ export function TileWineMap({
   // visible-key set is active, only those canonical keys render — fills,
   // outlines and labels alike — while the country outline (tier 0) stays as
   // geographic context. null = no filtering.
+  //
+  // No-filter must be an ALWAYS-TRUE expression, never `undefined`:
+  // react-map-gl feeds the filter prop straight into addLayer, and MapLibre's
+  // style validation rejects undefined — the layer then silently never
+  // mounts, which blanked the whole map until a filter change forced a
+  // re-add (the "only France until I toggle the grape filter" bug).
   const keyGate = useMemo(
     () =>
       visibleKeys == null
@@ -609,14 +620,14 @@ export function TileWineMap({
               id={`shard-fills-${key}`}
               type="fill"
               source-layer="places"
-              filter={keyGate ?? undefined}
+              filter={keyGate ?? PASS_FILTER}
               paint={fillPaint}
             />
             <Layer
               id={`shard-outlines-${key}`}
               type="line"
               source-layer="places"
-              filter={keyGate ?? undefined}
+              filter={keyGate ?? PASS_FILTER}
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
@@ -670,7 +681,7 @@ export function TileWineMap({
               id={`shard-labels-${key}`}
               type="symbol"
               source-layer="labels"
-              filter={keyGate ?? undefined}
+              filter={keyGate ?? PASS_FILTER}
               layout={labelLayout(selectedKey, selectedId, selectedParentId)}
               paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
