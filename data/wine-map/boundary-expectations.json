@@ -8973,6 +8973,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.loire.anjou-saumur",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:loire-anjou-saumur",
+    "normalized_checksum_sha256": "CC7D9D4A9FBEAB9F9F38E0BC37E4D9FE5B414EEA8B518BC1804D97D03ABE040B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.loire.anjou-villages",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:loire-anjou-villages",
@@ -8997,6 +9006,15 @@
     "normalized_checksum_sha256": "3987695188E5535CBC1727457F9D3D7BDED8823DBA95FEB4533F9DB488476025",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185107Z/loire-bourgueil/fetch-manifest.json",
     "raw_checksum_sha256": "9FFD209E16C09684C6EA0DA4DC174CA858F41B3F8852696115970E447A186AAF",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.centre-loire",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:loire-centre",
+    "normalized_checksum_sha256": "4D18BA0BF3524688FECBB3F23F92658796DE7C9ADD1D9AA703C1640AC6AA6BE3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {
@@ -9297,6 +9315,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.loire.pays-nantais",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:loire-pays-nantais",
+    "normalized_checksum_sha256": "BC90A1CE757F1F73BA1B4368ACC91566647ABB0FA7DBDEF6EFE408B6BF4530D3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.loire.pouilly-fume",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:loire-pouilly-fume",
@@ -9456,6 +9483,15 @@
     "normalized_checksum_sha256": "BA12E63B0A9E5E0F0D46E2C2A1AF63A646D06C27185FA638A2C12E74EB5C02A1",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T185058Z/loire-touraine-oisly/fetch-manifest.json",
     "raw_checksum_sha256": "2E1D5E42496226DD08432CA0D260CE9AFE60BF0877276ED395DA0984BC89530A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.loire.touraine-region",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:loire-touraine",
+    "normalized_checksum_sha256": "85D9ECD157F94BCCE10B0C84E19EB410197764F48C0CA7F90BA7991B857F11E2",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {

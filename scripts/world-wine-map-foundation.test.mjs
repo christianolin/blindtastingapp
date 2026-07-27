@@ -972,6 +972,14 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Reuilly AOP"], key: "france.loire.reuilly" },
   { names: ["Coteaux du Giennois AOP"], key: "france.loire.coteaux-du-giennois" },
   { names: ["Chateaumeillant AOP"], key: "france.loire.chateaumeillant" },
+  { names: ["Amboise AOP"], key: "france.loire.touraine-amboise" },
+  { names: ["Azay-le Rideau AOP"], key: "france.loire.touraine-azay-le-rideau" },
+  { names: ["Chenonceaux AOP"], key: "france.loire.touraine-chenonceaux" },
+  { names: ["Mesland AOP"], key: "france.loire.touraine-mesland" },
+  { names: ["Oisly AOP"], key: "france.loire.touraine-oisly" },
+  { names: ["Clisson AOP"], key: "france.loire.muscadet-sevre-et-maine-clisson" },
+  { names: ["Gorges AOP"], key: "france.loire.muscadet-sevre-et-maine-gorges" },
+  { names: ["Savennières AOP"], key: "france.loire.savennieres" },
   { names: ["Languedoc AOP"], key: "france.languedoc-roussillon" },
   { names: ["Roussillon AOP"], key: "france.languedoc-roussillon" },
   { names: ["Gres de Montpellier AOP"], key: "france.languedoc-roussillon.languedoc-gres-de-montpellier" },
@@ -1063,11 +1071,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // revisions.
     // Rhone wave 1: +29 dissolves (CdRV + 21 named villages + 6 satellites +
     // Muscat BdV) and the meridional + region re-derive revisions.
-    total: 1230,
-    validated: 1230,
-    current: 1154,
-    valid: 1230,
-    labelled: 1230,
+    // Loire wave 2: +4 derived sub-region boundaries (Pays Nantais /
+    // Anjou-Saumur / Touraine / Centre-Loire).
+    total: 1234,
+    validated: 1234,
+    current: 1158,
+    valid: 1234,
+    labelled: 1234,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1125,7 +1135,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1230);
+  assert.equal(prov.linked_boundaries, 1234);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1173,7 +1183,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 348);
+  assert.equal(appellations.rows.length, 356);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1187,7 +1197,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 348],
+    ["appellations", 356],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
