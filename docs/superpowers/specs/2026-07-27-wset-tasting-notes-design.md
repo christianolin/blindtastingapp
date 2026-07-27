@@ -71,8 +71,8 @@ forever; averages are computed at lookup.
 
 `family wset_aroma_family` (FRUIT, FLORAL, SPICE, VEGETAL_OAK, OTHER),
 `group_name text` (Citrus, Green fruit, … Ripeness), `term text unique`,
-`sort_order`. Seeded in-migration from the handoff lexicon — exactly 90
-terms (28 fruit, 5 floral, 9 spice, 24 vegetal & oak, 24 other).
+`sort_order`. Seeded in-migration from the handoff lexicon — exactly 89
+terms (28 fruit, 5 floral, 9 spice, 23 vegetal & oak, 24 other).
 Insert-only. This table is the future join point for term → grape/region
 mappings (training room, map archetypes).
 
@@ -222,7 +222,7 @@ pure-function tests with no DB:
 - `scripts/wset-notes.test.mjs` — schema + RLS: insert-only catalog;
   public-read/owner-write notes; ownership-gated aroma rows; every check
   constraint rejects a bad row; `save_wset_note` atomicity + owner gating.
-- Aroma seed — pinned term count (90), family/group structure, uniqueness.
+- Aroma seed — pinned term count (89), family/group structure, uniqueness.
 - Aggregation — `catalog_wine_ratings` avg/count across multiple users and
   re-tastings; null scores excluded.
 - `quality-curve.test.mjs` — breakpoint round-trips (50→0%, 80→20%,
