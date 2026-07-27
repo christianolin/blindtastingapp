@@ -113,6 +113,32 @@ for (const row of rows) {
     : null;
 }
 
+// Area = the hue-grouping unit for the map's fill palette: the place's
+// tier-3 ancestor-or-self where one exists (a Burgundy VILLAGE — so Morey
+// and Chambolle separate while their climats inherit), else tier-2
+// (a district, or a Champagne SUB-REGION — villages there hang directly off
+// the region by key but parent onto their sub-region). Walked via parent
+// ids because Champagne's canonical keys skip the sub-region segment.
+{
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const areaAncestor = (row) => {
+    let tier2 = null;
+    for (let cursor = row; cursor; cursor = byId.get(cursor.primary_parent_id)) {
+      if (cursor.display_tier === 3) return cursor;
+      if (cursor.display_tier === 2) tier2 = cursor;
+      if (cursor.display_tier < 2) break;
+    }
+    return tier2;
+  };
+  for (const row of rows) {
+    const area = row.display_tier >= 2 ? areaAncestor(row) : null;
+    // area_key, NOT area: `area` is already the numeric footprint size used
+    // for smallest-wins click resolution.
+    row.area_key = area ? area.canonical_key.split(".").at(-1) : row.group;
+    row.area_name = area ? area.name : row.group_name;
+  }
+}
+
 function extendBbox(bbox, geojson) {
   for (const polygon of geojson.coordinates) {
     for (const ring of polygon) {

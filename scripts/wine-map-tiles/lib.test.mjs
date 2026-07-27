@@ -83,6 +83,8 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     area: 0.042,
     group: null,
     group_name: null,
+    area_key: null,
+    area_name: null,
   });
   assert.deepEqual(feature.tippecanoe, { minzoom: 4 });
   assert.equal(feature.geometry.type, "MultiPolygon");

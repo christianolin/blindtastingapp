@@ -118,6 +118,12 @@ function tileProperties(row) {
     // export.mjs from the full row set (needs the ancestor's display name).
     group: row.group ?? null,
     group_name: row.group_name ?? null,
+    // Hue-grouping unit for fills (NOT `area`, which is the numeric
+    // footprint size above): the tier-3 ancestor (village) where one exists,
+    // else the tier-2 district/sub-region; falls back to the key-segment
+    // group for fixture rows.
+    area_key: row.area_key ?? row.group ?? null,
+    area_name: row.area_name ?? row.group_name ?? null,
   };
 }
 

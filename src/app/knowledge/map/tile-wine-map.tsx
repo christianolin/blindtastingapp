@@ -53,13 +53,11 @@ const regionMatch = [
   FALLBACK_COLOR,
 ];
 
-// Classification is a BORDER language, not a fill (owner: drop the cru
-// recolouring; every region keeps the standard palette). Gold solid = grand
-// cru, gold dashed = premier cru, the ordinary thin outline = village. Reads
-// `classification` from the tiles (appellation level, or Champagne's échelle
-// village rating) and falls back to `level` for tiles from before the
-// property existed.
-const CLASSIFICATION_GOLD = "#B78E42";
+// Classification source: the `classification` tile property (appellation
+// level, or Champagne's échelle village rating), falling back to `level`
+// for tiles from before the property existed. It drives the fill-intensity
+// ramp — darker, more saturated shades of the area hue for higher
+// classifications — leaving gold reserved for selection alone.
 const classificationExpr = [
   "coalesce",
   ["get", "classification"],
@@ -84,6 +82,54 @@ export function districtColor(slug: string) {
   return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length];
 }
 
+// Classification reads as INTENSITY of the area hue (vineyard-atlas style):
+// grand cru darkest and most saturated, premier cru a step lighter, village
+// land the plain hue. Shades are computed here in JS because MapLibre
+// expressions cannot manipulate colours.
+function shade(hex: string, lightness: number, saturation = 0) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  const l = (max + min) / 2;
+  const d = max - min;
+  let s = 0;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const l2 = Math.max(0, Math.min(1, l * lightness));
+  const s2 = Math.max(0, Math.min(1, s + saturation));
+  const c = (1 - Math.abs(2 * l2 - 1)) * s2;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l2 - c / 2;
+  const [r2, g2, b2] =
+    h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
+    : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+  const toHex = (v: number) =>
+    Math.round((v + m) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
+}
+export function classificationShades(hex: string) {
+  return {
+    grand_cru: shade(hex, 0.52, 0.22),
+    premier_cru: shade(hex, 0.74, 0.1),
+    base: hex,
+  };
+}
+
+// Hue-grouping unit: village-level in Burgundy, sub-region in Champagne
+// (the `area_key` tile property), falling back to the district group for
+// tiles from before the property existed.
+const areaExpr = ["coalesce", ["get", "area_key"], ["get", "group"], ""];
+
 // Selection no longer recolours the shape — places keep their true palette
 // colour and selection reads as a gold outline ring drawn above everything
 // (plus a slight opacity lift in fillPaint).
@@ -91,16 +137,30 @@ const regionColor = regionMatch as unknown as string;
 
 // Camera ("zoom") expressions must sit at the top level of a paint property,
 // so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(groupSlugs: string[]) {
-  // From z8 the palette is area-aware EVERYWHERE: districts colour by group
-  // (Bordeaux's Médoc/Graves…, Burgundy's Côte de Nuits/Chablis…), with the
-  // region hue for groups not yet observed or tiles predating the property.
-  // Classification is the gold border layers' job, never the fill's.
-  const groupMatch = groupSlugs.length
+function fillColorExpression(areaSlugs: string[]) {
+  // From z8 every area (Burgundy village, Champagne sub-region, Bordeaux
+  // district) gets its own hue, and WITHIN the hue classification reads as
+  // intensity: grand cru darkest, premier cru mid, village land plain.
+  // Region hue covers areas not yet observed by the viewport scan.
+  const areaMatch = areaSlugs.length
     ? [
         "match",
-        ["get", "group"],
-        ...groupSlugs.flatMap((slug) => [slug, districtColor(slug)]),
+        areaExpr,
+        ...areaSlugs.flatMap((slug) => {
+          const shades = classificationShades(districtColor(slug));
+          return [
+            slug,
+            [
+              "match",
+              classificationExpr,
+              "grand_cru",
+              shades.grand_cru,
+              "premier_cru",
+              shades.premier_cru,
+              shades.base,
+            ],
+          ];
+        }),
         regionMatch,
       ]
     : regionMatch;
@@ -109,7 +169,7 @@ function fillColorExpression(groupSlugs: string[]) {
     ["zoom"],
     regionMatch,
     8,
-    groupMatch,
+    areaMatch,
   ] as unknown as string;
 }
 
@@ -287,8 +347,20 @@ export function TileWineMap({
       if (cls === "grand_cru" || cls === "premier_cru" || cls === "communal") {
         classifications.add(cls);
       }
-      if (region && typeof p.group === "string" && p.group) {
-        groups.set(p.group, typeof p.group_name === "string" ? p.group_name : p.group);
+      const areaKey =
+        typeof p.area_key === "string" && p.area_key
+          ? p.area_key
+          : typeof p.group === "string" && p.group
+            ? p.group
+            : null;
+      if (region && areaKey) {
+        const areaName =
+          typeof p.area_name === "string" && p.area_name
+            ? p.area_name
+            : typeof p.group_name === "string" && p.group_name
+              ? p.group_name
+              : areaKey;
+        groups.set(areaKey, areaName);
       }
     }
     for (const [slug, name] of groups) allGroupsRef.current.set(slug, name);
@@ -390,7 +462,20 @@ export function TileWineMap({
         5,
         focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
         9,
-        focus(0.25, ["min", 0.5, ["*", 0.08, ["get", "tier"]]]),
+        // Classification intensity: grand cru plots read solid, premier cru
+        // firm, village land a light wash — the darkness ramp IS the
+        // classification signal (paired with the shaded fill hue).
+        focus(0.3, [
+          "match",
+          classificationExpr,
+          "grand_cru",
+          0.6,
+          "premier_cru",
+          0.42,
+          "communal",
+          0.2,
+          ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
+        ]),
       ] as unknown as number,
     };
   }, [selectedKey, selectedId, paintGroups]);
@@ -446,15 +531,7 @@ export function TileWineMap({
         : selectedFilter(selectedKey)) as unknown as boolean,
     [selectedKey, keyGate],
   );
-  // Border-language filter per classification, composed with the visible-key
-  // gate so filtered-out places lose their gold borders too.
-  const classGate = useCallback(
-    (cls: string) =>
-      (keyGate
-        ? ["all", ["==", classificationExpr, cls], keyGate]
-        : ["==", classificationExpr, cls]) as unknown as boolean,
-    [keyGate],
-  );
+
 
   // Legend regions follow the viewport once the first scan lands; the
   // manifest's shard list covers the initial paint.
@@ -635,34 +712,6 @@ export function TileWineMap({
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
-            {/* Classification borders — gold solid for grand cru, gold
-                dashed for premier cru; villages keep the ordinary outline.
-                Per-feature tile minzooms stop them speckling country views. */}
-            <Layer
-              id={`shard-grand-cru-${key}`}
-              type="line"
-              source-layer="places"
-              filter={classGate("grand_cru")}
-              paint={{
-                "line-color": CLASSIFICATION_GOLD,
-                "line-width": [
-                  "interpolate", ["linear"], ["zoom"], 7, 1.1, 11, 2.6,
-                ] as unknown as number,
-              }}
-            />
-            <Layer
-              id={`shard-premier-cru-${key}`}
-              type="line"
-              source-layer="places"
-              filter={classGate("premier_cru")}
-              paint={{
-                "line-color": CLASSIFICATION_GOLD,
-                "line-dasharray": [2, 1.6] as unknown as number[],
-                "line-width": [
-                  "interpolate", ["linear"], ["zoom"], 7, 0.9, 11, 1.6,
-                ] as unknown as number,
-              }}
-            />
             <Layer
               id={`shard-selected-casing-${key}`}
               type="line"
@@ -724,37 +773,53 @@ export function TileWineMap({
             </ul>
           </>
         ) : null}
-        {viewInfo.classifications.length > 0 ? (
-          <>
-            <p className="mb-1 mt-2 font-medium text-foreground">Classification</p>
-            <ul className="flex flex-col gap-0.5">
-              {viewInfo.classifications.includes("grand_cru") ? (
-                <li className="flex items-center gap-1.5">
-                  <span
-                    className="inline-block w-5"
-                    style={{ borderTop: `2.5px solid ${CLASSIFICATION_GOLD}` }}
-                  />
-                  Grand cru
-                </li>
-              ) : null}
-              {viewInfo.classifications.includes("premier_cru") ? (
-                <li className="flex items-center gap-1.5">
-                  <span
-                    className="inline-block w-5"
-                    style={{ borderTop: `1.5px dashed ${CLASSIFICATION_GOLD}` }}
-                  />
-                  Premier cru
-                </li>
-              ) : null}
-              {viewInfo.classifications.includes("communal") ? (
-                <li className="flex items-center gap-1.5">
-                  <span className="inline-block w-5 border-t border-border" />
-                  Village
-                </li>
-              ) : null}
-            </ul>
-          </>
-        ) : null}
+        {viewInfo.classifications.length > 0
+          ? (() => {
+              // Shade chips borrow the first visible area's hue so the
+              // legend ramp matches what's on screen: darker = higher
+              // classification.
+              const sample = viewInfo.groups[0]
+                ? districtColor(viewInfo.groups[0].slug)
+                : FALLBACK_COLOR;
+              const shades = classificationShades(sample);
+              return (
+                <>
+                  <p className="mb-1 mt-2 font-medium text-foreground">
+                    Classification
+                  </p>
+                  <ul className="flex flex-col gap-0.5">
+                    {viewInfo.classifications.includes("grand_cru") ? (
+                      <li className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block size-2.5 rounded-sm"
+                          style={{ backgroundColor: shades.grand_cru }}
+                        />
+                        Grand cru (darkest)
+                      </li>
+                    ) : null}
+                    {viewInfo.classifications.includes("premier_cru") ? (
+                      <li className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block size-2.5 rounded-sm"
+                          style={{ backgroundColor: shades.premier_cru }}
+                        />
+                        Premier cru
+                      </li>
+                    ) : null}
+                    {viewInfo.classifications.includes("communal") ? (
+                      <li className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block size-2.5 rounded-sm opacity-60"
+                          style={{ backgroundColor: shades.base }}
+                        />
+                        Village
+                      </li>
+                    ) : null}
+                  </ul>
+                </>
+              );
+            })()
+          : null}
       </div>
     </div>
   );
