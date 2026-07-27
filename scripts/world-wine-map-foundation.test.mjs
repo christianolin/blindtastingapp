@@ -857,6 +857,30 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Tavel AOP"], key: "france.rhone.tavel" },
   { names: ["Cotes du Rhone AOP"], key: "france.rhone.cotes-du-rhone" },
   { names: ["Vacqueyras AOP"], key: "france.rhone.vacqueyras" },
+  { names: ["Cotes du Rhone Villages AOP"], key: "france.rhone.cotes-du-rhone-villages" },
+  { names: ["Chusclan AOP"], key: "france.rhone.cotes-du-rhone-villages.chusclan" },
+  { names: ["Laudun AOP"], key: "france.rhone.cotes-du-rhone-villages.laudun" },
+  { names: ["Massif d'Uchaux AOP"], key: "france.rhone.cotes-du-rhone-villages.massif-d-uchaux" },
+  { names: ["Plan de Dieu AOP"], key: "france.rhone.cotes-du-rhone-villages.plan-de-dieu" },
+  { names: ["Roaix AOP"], key: "france.rhone.cotes-du-rhone-villages.roaix" },
+  { names: ["Rochegude AOP"], key: "france.rhone.cotes-du-rhone-villages.rochegude" },
+  { names: ["Rousset-les-Vignes AOP"], key: "france.rhone.cotes-du-rhone-villages.rousset-les-vignes" },
+  { names: ["Sablet AOP"], key: "france.rhone.cotes-du-rhone-villages.sablet" },
+  { names: ["Saint-Gervais AOP"], key: "france.rhone.cotes-du-rhone-villages.saint-gervais" },
+  { names: ["Saint-Maurice AOP"], key: "france.rhone.cotes-du-rhone-villages.saint-maurice" },
+  { names: ["Sainte-Cecile AOP"], key: "france.rhone.cotes-du-rhone-villages.sainte-cecile" },
+  { names: ["Seguret AOP"], key: "france.rhone.cotes-du-rhone-villages.seguret" },
+  { names: ["Signargues AOP"], key: "france.rhone.cotes-du-rhone-villages.signargues" },
+  { names: ["Suza la Rousse AOP"], key: "france.rhone.cotes-du-rhone-villages.suze-la-rousse" },
+  { names: ["Vaison le Romaine AOP"], key: "france.rhone.cotes-du-rhone-villages.vaison-la-romaine" },
+  { names: ["Valreas AOP"], key: "france.rhone.cotes-du-rhone-villages.valreas" },
+  { names: ["Ventoux AOP"], key: "france.rhone.ventoux" },
+  { names: ["Luberon AOP"], key: "france.rhone.luberon" },
+  { names: ["Grignan-les-Adhemar AOP"], key: "france.rhone.grignan-les-adhemar" },
+  { names: ["Cotes du Vivarais AOP"], key: "france.rhone.cotes-du-vivarais" },
+  { names: ["Clairette de Die AOP"], key: "france.rhone.clairette-de-die" },
+  { names: ["Cremant de Die AOP"], key: "france.rhone.cremant-de-die" },
+  { names: ["Muscat de Beaumes de Venise AOP"], key: "france.rhone.muscat-de-beaumes-de-venise" },
   { names: ["Jura"], key: "france.jura" },
   { names: ["Cotes du Jura AOP"], key: "france.jura" },
   { names: ["Arbois AOP"], key: "france.jura.arbois" },
@@ -1037,18 +1061,20 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // the Cotes du Rhone regional dissolve, the Vacqueyras commune-union and
     // the meridional + region re-derives). total/validated include retired
     // revisions.
-    total: 1199,
-    validated: 1199,
-    current: 1125,
-    valid: 1199,
-    labelled: 1199,
+    // Rhone wave 1: +29 dissolves (CdRV + 21 named villages + 6 satellites +
+    // Muscat BdV) and the meridional + region re-derive revisions.
+    total: 1230,
+    validated: 1230,
+    current: 1154,
+    valid: 1230,
+    labelled: 1230,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
     // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
     manual: 67,
-    generalized: 1094,
+    generalized: 1123,
     reproducible: 13,
   });
 
@@ -1099,7 +1125,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1199);
+  assert.equal(prov.linked_boundaries, 1230);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1147,7 +1173,7 @@ test("only exact current Bordeaux references are verified", async () => {
       where a.map_status = 'VERIFIED'
        order by a.id`,
   );
-  assert.equal(appellations.rows.length, 324);
+  assert.equal(appellations.rows.length, 348);
   const actualAppellations = new Map(
     appellations.rows.map(({ name, canonical_key }) => [name, canonical_key]),
   );
@@ -1161,7 +1187,7 @@ test("only exact current Bordeaux references are verified", async () => {
   for (const [table, expectedVerified] of [
     ["countries", 1],
     ["regions", 14],
-    ["appellations", 324],
+    ["appellations", 348],
   ]) {
     const statuses = await client.query(
       `select count(*)::int total,
@@ -1281,8 +1307,8 @@ test("classification facts and legal relationship types", async () => {
       // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
       // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
       // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1052,
-      aoc: 1052,
+      appellations: 1081,
+      aoc: 1081,
     missing_level: 0,
     france_plain: 1,
   });
