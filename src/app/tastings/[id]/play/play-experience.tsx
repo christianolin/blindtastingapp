@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
@@ -666,25 +667,34 @@ export async function PlayExperience({
                     ) : (
                       <div className="flex flex-col gap-2">
                         {everyone.map((g) => (
-                          <div
+                          // Native disclosure per player: tap the name+score
+                          // row to fold the attribute sheet away, so a wine
+                          // can be skimmed as final scores only. Open by
+                          // default; collapsing is per player.
+                          <details
                             key={g.id}
-                            className="rounded-lg border border-border/70 p-2.5"
+                            open
+                            className="group rounded-lg border border-border/70"
                           >
-                            <div className="mb-1.5 flex items-center justify-between">
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-2.5 [&::-webkit-details-marker]:hidden">
                               <span className="text-sm font-medium">
                                 {nameByParticipantId.get(g.participant_id)}
                                 {g.participant_id === myParticipant.id
                                   ? " (you)"
                                   : ""}
                               </span>
-                              <span className="font-heading text-sm font-semibold tabular-nums">
-                                {isSemiBlind
-                                  ? g.total_points
-                                    ? "✓"
-                                    : "✗"
-                                  : `${g.total_points ?? 0} pts`}
+                              <span className="flex items-center gap-1.5">
+                                <span className="font-heading text-sm font-semibold tabular-nums">
+                                  {isSemiBlind
+                                    ? g.total_points
+                                      ? "✓"
+                                      : "✗"
+                                    : `${g.total_points ?? 0} pts`}
+                                </span>
+                                <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                               </span>
-                            </div>
+                            </summary>
+                            <div className="px-2.5 pb-2.5">
                             {isSemiBlind ? (
                               <p className="text-xs text-muted-foreground">
                                 {g.guessed_wine_id
@@ -702,7 +712,8 @@ export async function PlayExperience({
                             ) : (
                               <AttributeSheet rows={scoredRows(answer, g)} />
                             )}
-                          </div>
+                            </div>
+                          </details>
                         ))}
                       </div>
                     )

@@ -1032,15 +1032,16 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // region) + Languedoc-Roussillon (dual-role region + 56 constituents)
     // + the Champagne premier-cru completion (4 deleguee villages + the Ay
     // deleguee refinement). total/validated include retired revisions.
-    total: 1192,
-    validated: 1192,
+    total: 1193,
+    validated: 1193,
     current: 1121,
-    valid: 1192,
-    labelled: 1192,
+    valid: 1193,
+    labelled: 1193,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
-    manual: 65,
+    // + the France Admin Express outline (its retired NE revision included).
+    manual: 66,
     generalized: 1093,
     reproducible: 13,
   });
@@ -1092,7 +1093,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1192);
+  assert.equal(prov.linked_boundaries, 1193);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,

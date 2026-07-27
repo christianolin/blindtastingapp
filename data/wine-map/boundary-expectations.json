@@ -2,10 +2,10 @@
   {
     "canonical_key": "france",
     "boundary_method": "MANUAL",
-    "source_feature_id": "ne_50m_admin_0_countries:FRA",
-    "normalized_checksum_sha256": "3AEBD6EBF53C1FC35649BCB4DC09B71FC75923A11B5BF92178D8338764A2FCB0",
-    "raw_snapshot_uri": "https://raw.githubusercontent.com/christianolin/blindtastingapp/6257e2ae3bd2982482cc756465108fe6ef7ed615/data/wine-map/france-ne50m-raw.geojson",
-    "raw_checksum_sha256": "9E891251F9AE6543E4ED3501AF46CA17D432F3ED1C8E09DF89336D9CC6118469",
+    "source_feature_id": "admin-express:regions-metropole",
+    "normalized_checksum_sha256": "5D073F132CE999266396FE4411EB057CEA589AB7AEA37B1E3EF814C4F2B19000",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260727T063625Z/france/fetch-manifest.json",
+    "raw_checksum_sha256": "EBF4CDF2A5291DCC936C6070770E6A74B6653AF67F18C8C40CF83DF8B0046E87",
     "documented": true
   },
   {
