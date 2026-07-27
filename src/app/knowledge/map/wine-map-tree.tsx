@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Search } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Search,
+} from "lucide-react";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 
 // Folder-style hierarchy of every verified place. The selected path is
@@ -72,15 +78,28 @@ export function WineMapTree({
     return searchKeep ?? filterKeep;
   }, [searchKeep, filterKeep]);
 
+  // Ancestors come from the tree's parent links, NOT from key segments:
+  // canonical keys can skip re-parented levels (a Champagne village's key is
+  // france.champagne.ay but its tree parent is the sub-region node), so a
+  // dot-split would miss those rows and leave the selection hidden.
+  const parentByKey = useMemo(() => {
+    const map = new Map<string, string | null>();
+    const walk = (node: WinePlaceTreeNode, parent: string | null) => {
+      map.set(node.key, parent);
+      for (const child of node.children) walk(child, node.key);
+    };
+    for (const root of roots) walk(root, null);
+    return map;
+  }, [roots]);
+
   const selectedPath = useMemo(() => {
     const path = new Set<string>();
     if (!selectedKey) return path;
-    const segments = selectedKey.split(".");
-    for (let i = 1; i <= segments.length; i += 1) {
-      path.add(segments.slice(0, i).join("."));
+    for (let key: string | null = selectedKey; key; key = parentByKey.get(key) ?? null) {
+      path.add(key);
     }
     return path;
-  }, [selectedKey]);
+  }, [selectedKey, parentByKey]);
 
   // Map -> tree alignment: whenever the selection changes (e.g. a map click
   // on Saint-Julien), scroll the selected row into view. Expansion of the
@@ -103,6 +122,45 @@ export function WineMapTree({
       return next;
     });
   }
+
+  // One-layer expand/collapse across the whole tree: collect the rows that
+  // are actually rendered (stop below a collapsed node, respect the map
+  // filter), then open the shallowest collapsed ring or close the deepest
+  // expanded one. Repeated presses walk the hierarchy one level at a time —
+  // the quick way "back up" from a deep dive. Search force-expands every
+  // row, so the buttons are disabled while a query is active.
+  const collectRenderedParents = () => {
+    const out: { key: string; depth: number; isCollapsed: boolean }[] = [];
+    const walk = (node: WinePlaceTreeNode, depth: number) => {
+      if (visibleKeys && !visibleKeys.has(node.key)) return;
+      if (node.children.length === 0) return;
+      const isCollapsed = collapsed[node.key] ?? node.tier >= 1;
+      out.push({ key: node.key, depth, isCollapsed });
+      if (!isCollapsed) for (const child of node.children) walk(child, depth + 1);
+    };
+    for (const root of roots) walk(root, 0);
+    return out;
+  };
+  const expandOneLayer = () => {
+    const rows = collectRenderedParents().filter((row) => row.isCollapsed);
+    if (rows.length === 0) return;
+    const depth = Math.min(...rows.map((row) => row.depth));
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const row of rows) if (row.depth === depth) next[row.key] = false;
+      return next;
+    });
+  };
+  const collapseOneLayer = () => {
+    const rows = collectRenderedParents().filter((row) => !row.isCollapsed);
+    if (rows.length === 0) return;
+    const depth = Math.max(...rows.map((row) => row.depth));
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      for (const row of rows) if (row.depth === depth) next[row.key] = true;
+      return next;
+    });
+  };
 
   const renderNode = (node: WinePlaceTreeNode, depth: number) => {
     if (visibleKeys && !visibleKeys.has(node.key)) return null;
@@ -163,16 +221,38 @@ export function WineMapTree({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <label className="flex items-center gap-2 rounded-md border border-border px-2 py-1.5">
-        <Search className="size-3.5 shrink-0 text-muted-foreground" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search regions, appellations…"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        />
-      </label>
+      <div className="flex items-center gap-1.5">
+        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border px-2 py-1.5">
+          <Search className="size-3.5 shrink-0 text-muted-foreground" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search regions, appellations…"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </label>
+        <button
+          type="button"
+          aria-label="Expand one level"
+          title="Expand one level"
+          disabled={Boolean(searchKeep)}
+          onClick={expandOneLayer}
+          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronsUpDown className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          aria-label="Collapse one level"
+          title="Collapse one level"
+          disabled={Boolean(searchKeep)}
+          onClick={collapseOneLayer}
+          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronsDownUp className="size-3.5" />
+        </button>
+      </div>
       <ul className="min-h-0 flex-1 overflow-y-auto pr-1">
         {roots.map((root) => renderNode(root, 0))}
         {visibleKeys && visibleKeys.size === 0 ? (
