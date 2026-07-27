@@ -667,13 +667,12 @@ export async function PlayExperience({
                     ) : (
                       <div className="flex flex-col gap-2">
                         {everyone.map((g) => (
-                          // Native disclosure per player: tap the name+score
-                          // row to fold the attribute sheet away, so a wine
-                          // can be skimmed as final scores only. Open by
-                          // default; collapsing is per player.
+                          // Native disclosure per player: the name+score row
+                          // is the summary; tap to expand the attribute
+                          // sheet. Collapsed by default so a revealed wine
+                          // reads as a compact list of final scores.
                           <details
                             key={g.id}
-                            open
                             className="group rounded-lg border border-border/70"
                           >
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-2.5 [&::-webkit-details-marker]:hidden">

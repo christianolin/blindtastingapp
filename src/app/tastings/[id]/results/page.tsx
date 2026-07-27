@@ -318,13 +318,11 @@ export default async function ResultsPage({
                   {wineGuesses.map((g) => {
                     return (
                       // Native disclosure per player: the summary row (name +
-                      // score) always shows; tapping it folds the category
-                      // breakdown away so a wine can be skimmed as final
-                      // scores only. Open by default — collapsing is the
-                      // reader's choice, one player at a time.
+                      // score) always shows; tapping it expands the category
+                      // breakdown. Collapsed by default so a wine reads as a
+                      // compact list of final scores.
                       <details
                         key={g.id}
-                        open
                         className="group rounded-lg border border-border/70"
                       >
                         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 [&::-webkit-details-marker]:hidden">
