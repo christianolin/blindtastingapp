@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Map, { Layer, Source, type MapRef } from "react-map-gl/maplibre";
+import Map, {
+  Layer,
+  NavigationControl,
+  Source,
+  type MapRef,
+} from "react-map-gl/maplibre";
 import { Maximize2, Minimize2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
@@ -571,6 +576,11 @@ export function TileWineMap({
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
       >
+        {/* Zoom +/- plus a pitch-aware compass: drag the compass to rotate
+            the bearing, click it to reset north and level the camera
+            (visualizePitch shows the current tilt). Top-left keeps clear of
+            the expand button (top-right) and the legend (bottom-left). */}
+        <NavigationControl position="top-left" visualizePitch />
         <Source id="wine-world" type="vector" url={`pmtiles://${manifest.world.url}`}>
           {/* The world archive carries the country plus every region, so
               selecting France shows all its regions. A region already served

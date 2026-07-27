@@ -11,10 +11,14 @@ export function WineMapTree({
   roots,
   selectedKey,
   onSelect,
+  filterKeys = null,
 }: {
   roots: WinePlaceTreeNode[];
   selectedKey: string | null;
   onSelect: (key: string) => void;
+  /** Map-filter keys (e.g. the grape filter): when set, the tree shows only
+      these places plus their ancestors, mirroring what the map renders. */
+  filterKeys?: string[] | null;
 }) {
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -25,7 +29,7 @@ export function WineMapTree({
   const normalizedQuery = fold(query.trim());
 
   // Keys kept by the search: matches plus every ancestor of a match.
-  const visibleKeys = useMemo(() => {
+  const searchKeep = useMemo(() => {
     if (!normalizedQuery) return null;
     const keep = new Set<string>();
     const walk = (node: WinePlaceTreeNode, ancestors: string[]) => {
@@ -38,6 +42,35 @@ export function WineMapTree({
     for (const root of roots) walk(root, []);
     return keep;
   }, [roots, normalizedQuery]);
+
+  // Keys kept by the map filter (grape today): matched places plus their
+  // ancestors, so a hit stays reachable through its path even when the
+  // ancestor itself doesn't match (Loire stays on the way to Sancerre under
+  // a Pinot Noir filter).
+  const filterKeep = useMemo(() => {
+    if (!filterKeys) return null;
+    const matches = new Set(filterKeys);
+    const keep = new Set<string>();
+    const walk = (node: WinePlaceTreeNode, ancestors: string[]) => {
+      if (matches.has(node.key)) {
+        keep.add(node.key);
+        for (const ancestor of ancestors) keep.add(ancestor);
+      }
+      for (const child of node.children) walk(child, [...ancestors, node.key]);
+    };
+    for (const root of roots) walk(root, []);
+    return keep;
+  }, [roots, filterKeys]);
+
+  // Search and map filter must both agree when both are active; ancestors of
+  // a doubly-matching node sit in both keeps, so its path survives the
+  // intersection.
+  const visibleKeys = useMemo(() => {
+    if (searchKeep && filterKeep) {
+      return new Set([...searchKeep].filter((key) => filterKeep.has(key)));
+    }
+    return searchKeep ?? filterKeep;
+  }, [searchKeep, filterKeep]);
 
   const selectedPath = useMemo(() => {
     const path = new Set<string>();
@@ -74,10 +107,11 @@ export function WineMapTree({
   const renderNode = (node: WinePlaceTreeNode, depth: number) => {
     if (visibleKeys && !visibleKeys.has(node.key)) return null;
     const isSelected = node.key === selectedKey;
-    // Search results render expanded; otherwise honour the manual toggle
-    // (collapsed by default below tier 1). The selected path was expanded once
-    // when it was picked (above) — not pinned open.
-    const isCollapsed = visibleKeys
+    // Search results render expanded; a map filter alone keeps the manual
+    // toggles (force-expanding hundreds of grape matches would flood the
+    // list). The selected path was expanded once when it was picked (above)
+    // — not pinned open.
+    const isCollapsed = searchKeep
       ? false
       : (collapsed[node.key] ?? node.tier >= 1);
     const hasVisibleChildren = node.children.length > 0;
@@ -143,7 +177,9 @@ export function WineMapTree({
         {roots.map((root) => renderNode(root, 0))}
         {visibleKeys && visibleKeys.size === 0 ? (
           <li className="px-1.5 py-2 text-sm text-muted-foreground">
-            No places match &ldquo;{query.trim()}&rdquo;.
+            {normalizedQuery
+              ? `No places match "${query.trim()}".`
+              : "No places match the map filter."}
           </li>
         ) : null}
       </ul>

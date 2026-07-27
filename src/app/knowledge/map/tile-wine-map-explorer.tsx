@@ -269,6 +269,7 @@ export function TileWineMapExplorer({
                     roots={tree}
                     selectedKey={selectedKey}
                     onSelect={select}
+                    filterKeys={visibleKeys}
                   />
                 )}
               </div>
