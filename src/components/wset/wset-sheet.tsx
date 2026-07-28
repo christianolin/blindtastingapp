@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { WsetNoteState, CatalogWine, AromaTerm } from "@/lib/wset/types";
+import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
   LABELS,
   APPEARANCE_INTENSITY_STOPS,
@@ -134,7 +134,7 @@ export function WsetSheet({
   initial,
   onSave,
 }: {
-  wine: CatalogWine;
+  wine: { colour: WineColour; style: WineStyle };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
