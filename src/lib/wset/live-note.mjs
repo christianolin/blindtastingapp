@@ -12,10 +12,12 @@ function sentence(head) {
 
 // Join scale terms with ", ", append an aroma list after " — ", and any
 // observation-style trailing list after "; ", then end with a period.
-function line({ scales, aromas, trailer }) {
+function line({ scales = [], aromas = [], trailer = [] }) {
+  // The first non-empty list becomes the head, so an aromas- or
+  // observations-only section never starts with a stray "— " / "; ".
   let out = scales.join(", ");
-  if (aromas && aromas.length) out += ` — ${aromas.join(", ")}`;
-  if (trailer && trailer.length) out += `; ${trailer.join(", ")}`;
+  if (aromas.length) out += out ? ` — ${aromas.join(", ")}` : aromas.join(", ");
+  if (trailer.length) out += out ? `; ${trailer.join(", ")}` : trailer.join(", ");
   return `${sentence(out)}.`;
 }
 
@@ -30,10 +32,6 @@ function termList(ids, termLabels) {
 export function composeLiveNote(state, termLabels, labels) {
   const out = {};
 
-  const appScales = labelList(
-    [state.clarity, state.appearanceIntensity, state.colourHue],
-    labels,
-  );
   // "medium(+) intensity" reads better than a bare "medium(+)".
   const appParts = [];
   if (state.clarity != null) appParts.push(labels[state.clarity]);

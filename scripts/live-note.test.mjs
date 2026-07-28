@@ -72,6 +72,29 @@ test("nose line joins scales then aromas after an em-dash", () => {
   );
 });
 
+test("palate joins structure scales then flavour aromas (handoff format)", () => {
+  const state = {
+    ...empty,
+    sweetness: "DRY",
+    acidity: "MEDIUM_PLUS",
+    palateTermIds: ["t-blackcurrant", "t-black-cherry"],
+  };
+  const out = composeLiveNote(state, termLabels, LABELS);
+  assert.equal(
+    out.palate,
+    "Dry, medium(+) acidity — blackcurrant, black cherry.",
+  );
+});
+
+test("observations-only appearance has no stray leading separator", () => {
+  const out = composeLiveNote(
+    { ...empty, observations: ["LEGS_TEARS"] },
+    termLabels,
+    LABELS,
+  );
+  assert.equal(out.appearance, "Legs / tears.");
+});
+
 test("conclusions render score with band, lower-cased", () => {
   const out = composeLiveNote({ ...empty, qualityScore: 89 }, termLabels, LABELS);
   assert.equal(out.conclusions, "89 points (very good).");
