@@ -878,8 +878,8 @@ export type Database = {
         Row: {
           id: string;
           country_id: string;
-          region_id: string;
-          appellation_id: string;
+          region_id: string | null;
+          appellation_id: string | null;
           primary_grape_id: string;
           secondary_grape_id: string | null;
           producer_id: string;
@@ -897,8 +897,8 @@ export type Database = {
         Insert: {
           id?: string;
           country_id: string;
-          region_id: string;
-          appellation_id: string;
+          region_id?: string | null;
+          appellation_id?: string | null;
           primary_grape_id: string;
           secondary_grape_id?: string | null;
           producer_id: string;

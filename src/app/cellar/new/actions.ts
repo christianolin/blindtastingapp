@@ -42,10 +42,7 @@ export async function createAppellation(regionId: string, name: string): Promise
 export type NewCatalogWine = {
   countryId: string;
   regionId: string;
-  // Required for now — catalog_wines.appellation_id is NOT NULL (mirrored from
-  // wine_answers). Making it optional is a tracked follow-up (needs a
-  // nullable migration).
-  appellationId: string;
+  appellationId: string | null;
   primaryGrapeId: string;
   secondaryGrapeId: string | null;
   producerId: string;

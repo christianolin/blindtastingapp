@@ -65,8 +65,8 @@ export function NewWineForm({
 
   async function submit() {
     setError(null);
-    if (!countryId || !regionId || !appellationId || !primaryGrapeId || !producerId || !colour || !style) {
-      setError("Country, region, appellation, primary grape, producer, colour and style are required.");
+    if (!countryId || !regionId || !primaryGrapeId || !producerId || !colour || !style) {
+      setError("Country, region, primary grape, producer, colour and style are required.");
       return;
     }
     if (vintageKind === "YEAR" && !vintageYear) {
@@ -78,7 +78,7 @@ export function NewWineForm({
       const { id } = await createCatalogWine({
         countryId,
         regionId,
-        appellationId,
+        appellationId: appellationId || null,
         primaryGrapeId,
         secondaryGrapeId: secondaryGrapeId || null,
         producerId,
