@@ -62,6 +62,96 @@ export type WineMapReleaseStatus =
   | "RETIRED"
   | "FAILED";
 
+// --- Cellar catalog + WSET tasting-note enums --------------------------------
+export type WineColour = "WHITE" | "ROSE" | "RED";
+export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED";
+export type WsetClarity = "CLEAR" | "HAZY";
+export type WsetCondition = "CLEAN" | "UNCLEAN";
+export type WsetAppearanceIntensity =
+  | "PALE"
+  | "MEDIUM_MINUS"
+  | "MEDIUM"
+  | "MEDIUM_PLUS"
+  | "DEEP";
+export type WsetIntensity =
+  | "LIGHT"
+  | "MEDIUM_MINUS"
+  | "MEDIUM"
+  | "MEDIUM_PLUS"
+  | "PRONOUNCED";
+export type WsetDevelopment =
+  | "YOUTHFUL"
+  | "DEVELOPING"
+  | "FULLY_DEVELOPED"
+  | "TIRED_PAST_BEST";
+export type WsetSweetness =
+  | "DRY"
+  | "OFF_DRY"
+  | "MEDIUM_DRY"
+  | "MEDIUM"
+  | "MEDIUM_SWEET"
+  | "SWEET"
+  | "LUSCIOUS";
+export type WsetLevel =
+  | "LOW"
+  | "MEDIUM_MINUS"
+  | "MEDIUM"
+  | "MEDIUM_PLUS"
+  | "HIGH";
+export type WsetBody =
+  | "LIGHT"
+  | "MEDIUM_MINUS"
+  | "MEDIUM"
+  | "MEDIUM_PLUS"
+  | "FULL";
+export type WsetFinish =
+  | "SHORT"
+  | "MEDIUM_MINUS"
+  | "MEDIUM"
+  | "MEDIUM_PLUS"
+  | "LONG";
+export type WsetMousse = "DELICATE" | "CREAMY" | "AGGRESSIVE";
+export type WsetColourHue =
+  | "LEMON_GREEN"
+  | "LEMON"
+  | "GOLD"
+  | "AMBER"
+  | "BROWN"
+  | "PINK"
+  | "SALMON"
+  | "ORANGE"
+  | "PURPLE"
+  | "RUBY"
+  | "GARNET"
+  | "TAWNY";
+export type WsetObservation =
+  | "LEGS_TEARS"
+  | "DEPOSIT"
+  | "PETILLANCE"
+  | "RIM_VARIATION"
+  | "TINTS_HIGHLIGHTS";
+export type WsetFault =
+  | "OXIDISED"
+  | "OUT_OF_CONDITION"
+  | "CORK_TAINT"
+  | "OTHER";
+export type WsetPriceCategory =
+  | "INEXPENSIVE"
+  | "MID_PRICED"
+  | "HIGH_PRICED"
+  | "PREMIUM";
+export type WsetReadiness =
+  | "NEEDS_TIME"
+  | "READY_CAN_IMPROVE"
+  | "READY_WONT_IMPROVE"
+  | "TOO_OLD";
+export type WsetAromaFamily =
+  | "FRUIT"
+  | "FLORAL"
+  | "SPICE"
+  | "VEGETAL_OAK"
+  | "OTHER";
+
 type ReferenceMapFields = {
   wine_place_id: string | null;
   map_status: WineReferenceMapStatus;
@@ -297,6 +387,7 @@ export type Database = {
           is_revealed: boolean;
           reveal_step: number;
           created_at: string;
+          catalog_wine_id: string | null;
         };
         Insert: {
           id?: string;
@@ -306,6 +397,7 @@ export type Database = {
           is_revealed?: boolean;
           reveal_step?: number;
           created_at?: string;
+          catalog_wine_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
@@ -781,8 +873,161 @@ export type Database = {
         >;
         Relationships: [];
       };
+
+      catalog_wines: {
+        Row: {
+          id: string;
+          country_id: string;
+          region_id: string;
+          appellation_id: string;
+          primary_grape_id: string;
+          secondary_grape_id: string | null;
+          producer_id: string;
+          type_designation_id: string | null;
+          vintage_kind: VintageKind;
+          vintage_year: number | null;
+          vintage_tawny_years: number | null;
+          colour: WineColour;
+          style: WineStyle;
+          cuvee: string | null;
+          bottle_size_ml: number;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          country_id: string;
+          region_id: string;
+          appellation_id: string;
+          primary_grape_id: string;
+          secondary_grape_id?: string | null;
+          producer_id: string;
+          type_designation_id?: string | null;
+          vintage_kind: VintageKind;
+          vintage_year?: number | null;
+          vintage_tawny_years?: number | null;
+          colour: WineColour;
+          style: WineStyle;
+          cuvee?: string | null;
+          bottle_size_ml?: number;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["catalog_wines"]["Insert"]>;
+        Relationships: [];
+      };
+
+      wset_notes: {
+        Row: {
+          id: string;
+          catalog_wine_id: string;
+          author_id: string;
+          tasted_on: string;
+          clarity: WsetClarity | null;
+          appearance_intensity: WsetAppearanceIntensity | null;
+          colour_hue: WsetColourHue | null;
+          observations: WsetObservation[];
+          condition: WsetCondition | null;
+          faults: WsetFault[];
+          nose_intensity: WsetIntensity | null;
+          development: WsetDevelopment | null;
+          sweetness: WsetSweetness | null;
+          acidity: WsetLevel | null;
+          tannin: WsetLevel | null;
+          alcohol: WsetLevel | null;
+          body: WsetBody | null;
+          mousse: WsetMousse | null;
+          flavour_intensity: WsetIntensity | null;
+          finish: WsetFinish | null;
+          quality_score: number | null;
+          price_category: WsetPriceCategory | null;
+          readiness: WsetReadiness | null;
+          taster_notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          catalog_wine_id: string;
+          author_id: string;
+          tasted_on?: string;
+          clarity?: WsetClarity | null;
+          appearance_intensity?: WsetAppearanceIntensity | null;
+          colour_hue?: WsetColourHue | null;
+          observations?: WsetObservation[];
+          condition?: WsetCondition | null;
+          faults?: WsetFault[];
+          nose_intensity?: WsetIntensity | null;
+          development?: WsetDevelopment | null;
+          sweetness?: WsetSweetness | null;
+          acidity?: WsetLevel | null;
+          tannin?: WsetLevel | null;
+          alcohol?: WsetLevel | null;
+          body?: WsetBody | null;
+          mousse?: WsetMousse | null;
+          flavour_intensity?: WsetIntensity | null;
+          finish?: WsetFinish | null;
+          quality_score?: number | null;
+          price_category?: WsetPriceCategory | null;
+          readiness?: WsetReadiness | null;
+          taster_notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["wset_notes"]["Insert"]>;
+        Relationships: [];
+      };
+
+      wset_note_aromas: {
+        Row: {
+          note_id: string;
+          term_id: string;
+          sensed_on_nose: boolean;
+          sensed_on_palate: boolean;
+        };
+        Insert: {
+          note_id: string;
+          term_id: string;
+          sensed_on_nose?: boolean;
+          sensed_on_palate?: boolean;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wset_note_aromas"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+      wset_aroma_terms: {
+        Row: {
+          id: string;
+          family: WsetAromaFamily;
+          group_name: string;
+          term: string;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          family: WsetAromaFamily;
+          group_name: string;
+          term: string;
+          sort_order: number;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wset_aroma_terms"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      catalog_wine_ratings: {
+        Row: {
+          catalog_wine_id: string | null;
+          avg_score: number | null;
+          note_count: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       get_wine_place_context: {
         Args: { p_place_key: string };
@@ -823,6 +1068,10 @@ export type Database = {
       tasting_guess_status: {
         Args: { p_tasting_id: string };
         Returns: { wine_id: string; participant_id: string }[];
+      };
+      save_wset_note: {
+        Args: { p_note: unknown; p_aromas: unknown };
+        Returns: string;
       };
     };
   };

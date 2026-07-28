@@ -97,7 +97,19 @@ export type FoundationRelationshipsContract = Expect<
   >
 >;
 export type ViewsContract = Expect<
-  Equal<Database["public"]["Views"], Record<string, never>>
+  Equal<
+    Database["public"]["Views"],
+    {
+      catalog_wine_ratings: {
+        Row: {
+          catalog_wine_id: string | null;
+          avg_score: number | null;
+          note_count: number | null;
+        };
+        Relationships: [];
+      };
+    }
+  >
 >;
 export type BoundaryMethodValuesContract = Expect<
   Equal<
