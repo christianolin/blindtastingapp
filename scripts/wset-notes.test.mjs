@@ -413,3 +413,135 @@ test("note-aroma row inserts with a real term id, sensed on the nose", async () 
     assert.equal(inserted.rows[0].sensed_on_palate, false);
   });
 });
+
+test("save_wset_note inserts a note with its aromas for the caller", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const wineId = await insertCatalog(ids);
+    const terms = await client.query(
+      "select id, term from wset_aroma_terms where term in ('lemon', 'rose')",
+    );
+    const lemonId = terms.rows.find((r) => r.term === "lemon").id;
+    await actAsAuthenticated(ids.profile);
+    const saved = await client.query(
+      "select save_wset_note($1::jsonb, $2::jsonb) as id",
+      [
+        JSON.stringify({ catalog_wine_id: wineId, quality_score: 90, clarity: "CLEAR" }),
+        JSON.stringify([{ term_id: lemonId, sensed_on_nose: true }]),
+      ],
+    );
+    const noteId = saved.rows[0].id;
+    assert.ok(noteId, "returns the new note id");
+    const note = await client.query(
+      "select author_id, quality_score, clarity from wset_notes where id = $1",
+      [noteId],
+    );
+    assert.equal(note.rows[0].author_id, ids.profile, "author_id set from auth.uid()");
+    assert.equal(note.rows[0].quality_score, 90);
+    assert.equal(note.rows[0].clarity, "CLEAR");
+    const aromas = await client.query(
+      "select term_id, sensed_on_nose from wset_note_aromas where note_id = $1",
+      [noteId],
+    );
+    assert.equal(aromas.rowCount, 1);
+    assert.equal(aromas.rows[0].term_id, lemonId);
+    assert.equal(aromas.rows[0].sensed_on_nose, true);
+  });
+});
+
+test("save_wset_note updates scalars and REPLACES the aroma set", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const wineId = await insertCatalog(ids);
+    const terms = await client.query(
+      "select id, term from wset_aroma_terms where term in ('lemon', 'rose')",
+    );
+    const lemonId = terms.rows.find((r) => r.term === "lemon").id;
+    const roseId = terms.rows.find((r) => r.term === "rose").id;
+    await actAsAuthenticated(ids.profile);
+    const first = await client.query(
+      "select save_wset_note($1::jsonb, $2::jsonb) as id",
+      [
+        JSON.stringify({ catalog_wine_id: wineId, quality_score: 90 }),
+        JSON.stringify([{ term_id: lemonId, sensed_on_nose: true }]),
+      ],
+    );
+    const noteId = first.rows[0].id;
+    await client.query("select save_wset_note($1::jsonb, $2::jsonb)", [
+      JSON.stringify({ id: noteId, catalog_wine_id: wineId, quality_score: 88 }),
+      JSON.stringify([{ term_id: roseId, sensed_on_palate: true }]),
+    ]);
+    const note = await client.query(
+      "select quality_score from wset_notes where id = $1",
+      [noteId],
+    );
+    assert.equal(note.rows[0].quality_score, 88, "same note updated, not duplicated");
+    const aromas = await client.query(
+      "select term_id, sensed_on_palate from wset_note_aromas where note_id = $1",
+      [noteId],
+    );
+    assert.equal(aromas.rowCount, 1, "old aroma removed, not merged");
+    assert.equal(aromas.rows[0].term_id, roseId);
+    assert.equal(aromas.rows[0].sensed_on_palate, true);
+  });
+});
+
+test("save_wset_note cannot hijack another author's note id", async () => {
+  const ids = await referenceIds();
+  const [authorA, authorB] = await profilePair();
+  await withRollback(async () => {
+    const wineId = await insertCatalog(ids);
+    await actAsAuthenticated(authorA);
+    const saved = await client.query(
+      "select save_wset_note($1::jsonb, '[]'::jsonb) as id",
+      [JSON.stringify({ catalog_wine_id: wineId, quality_score: 90 })],
+    );
+    const noteId = saved.rows[0].id;
+    await client.query("reset role");
+    await actAsAuthenticated(authorB);
+    await assert.rejects(
+      () =>
+        client.query("select save_wset_note($1::jsonb, '[]'::jsonb)", [
+          JSON.stringify({ id: noteId, catalog_wine_id: wineId, quality_score: 55 }),
+        ]),
+      // B falls through to the insert branch and collides on A's primary key:
+      // pin the unique_violation SQLSTATE so any rejection can't fake a pass.
+      (err) => err.code === "23505",
+    );
+  });
+});
+
+test("catalog_wine_ratings averages scored notes across authors and re-tastings", async () => {
+  const ids = await referenceIds();
+  const [authorA, authorB] = await profilePair();
+  await withRollback(async () => {
+    const wineId = await insertCatalog(ids);
+    await actAsAuthenticated(authorA);
+    await client.query("select save_wset_note($1::jsonb, '[]'::jsonb)", [
+      JSON.stringify({ catalog_wine_id: wineId, quality_score: 90 }),
+    ]);
+    await client.query("reset role");
+    await actAsAuthenticated(authorB);
+    await client.query("select save_wset_note($1::jsonb, '[]'::jsonb)", [
+      JSON.stringify({ catalog_wine_id: wineId, quality_score: 80 }),
+    ]);
+    await client.query("reset role");
+    await actAsAuthenticated(authorA);
+    // A scoreless note must not move the average...
+    await client.query("select save_wset_note($1::jsonb, '[]'::jsonb)", [
+      JSON.stringify({ catalog_wine_id: wineId }),
+    ]);
+    // ...and a re-tasting is its own data point (all history counts).
+    await client.query("select save_wset_note($1::jsonb, '[]'::jsonb)", [
+      JSON.stringify({ catalog_wine_id: wineId, quality_score: 70 }),
+    ]);
+    await client.query("reset role");
+    const view = await client.query(
+      "select avg_score, note_count from catalog_wine_ratings where catalog_wine_id = $1",
+      [wineId],
+    );
+    assert.equal(view.rowCount, 1);
+    assert.equal(Number(view.rows[0].avg_score), 80, "(90 + 80 + 70) / 3");
+    assert.equal(view.rows[0].note_count, 3, "scoreless note excluded");
+  });
+});
