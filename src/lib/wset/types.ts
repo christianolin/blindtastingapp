@@ -71,13 +71,17 @@ export type PriceCategory =
   | "INEXPENSIVE"
   | "MID_PRICED"
   | "HIGH_PRICED"
-  | "PREMIUM";
+  | "PREMIUM"
+  | "DONT_KNOW";
 export type Readiness =
   | "NEEDS_TIME"
   | "READY_CAN_IMPROVE"
   | "READY_WONT_IMPROVE"
   | "TOO_OLD";
 export type AromaFamily = "FRUIT" | "FLORAL" | "SPICE" | "VEGETAL_OAK" | "OTHER";
+// How an aroma arises: PRIMARY (grape & fermentation), SECONDARY (winemaking),
+// TERTIARY (ageing). See 20260829198000_wset_aroma_origin.sql.
+export type AromaOrigin = "PRIMARY" | "SECONDARY" | "TERTIARY";
 
 // The full editable state of one WSET note. Scalars are null until rated,
 // arrays start empty, tasterNotes starts "". Mirrors the wset_notes columns
@@ -148,6 +152,7 @@ export type CatalogWine = {
 export type AromaTerm = {
   id: string;
   family: AromaFamily;
+  origin: AromaOrigin;
   groupName: string;
   term: string;
   sortOrder: number;

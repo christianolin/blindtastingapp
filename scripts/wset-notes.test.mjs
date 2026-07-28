@@ -368,6 +368,18 @@ test("per-family term counts match the WSET sheet", async () => {
   });
 });
 
+test("per-origin term counts match the P/S/T mapping", async () => {
+  const result = await client.query(
+    "select origin::text, count(*)::int as n from wset_aroma_terms group by origin",
+  );
+  const counts = Object.fromEntries(result.rows.map((r) => [r.origin, r.n]));
+  assert.deepEqual(counts, {
+    PRIMARY: 45,
+    SECONDARY: 21,
+    TERTIARY: 23,
+  });
+});
+
 test("terms span 21 distinct groups", async () => {
   const result = await client.query(
     "select count(distinct group_name)::int as n from wset_aroma_terms",
@@ -380,8 +392,8 @@ test("duplicate term is rejected by the unique constraint", async () => {
     await client.query("set local role authenticated");
     await assert.rejects(
       client.query(
-        `insert into wset_aroma_terms (family, group_name, term, sort_order)
-         values ('FRUIT', 'Citrus', 'lemon', 90)`,
+        `insert into wset_aroma_terms (family, origin, group_name, term, sort_order)
+         values ('FRUIT', 'PRIMARY', 'Citrus', 'lemon', 90)`,
       ),
       (error) => {
         assert.equal(error.code, "23505");

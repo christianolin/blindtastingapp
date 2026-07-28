@@ -29,7 +29,7 @@ const CONDITION = ["CLEAN", "UNCLEAN"] as const;
 const OBSERVATIONS = ["LEGS_TEARS", "DEPOSIT", "PETILLANCE", "RIM_VARIATION", "TINTS_HIGHLIGHTS"] as const;
 const FAULTS = ["OXIDISED", "OUT_OF_CONDITION", "CORK_TAINT", "OTHER"] as const;
 const MOUSSE = ["DELICATE", "CREAMY", "AGGRESSIVE"] as const;
-const PRICE = ["INEXPENSIVE", "MID_PRICED", "HIGH_PRICED", "PREMIUM"] as const;
+const PRICE = ["INEXPENSIVE", "MID_PRICED", "HIGH_PRICED", "PREMIUM", "DONT_KNOW"] as const;
 const READINESS = ["NEEDS_TIME", "READY_CAN_IMPROVE", "READY_WONT_IMPROVE", "TOO_OLD"] as const;
 
 const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; caption: string }[] = [
@@ -41,7 +41,7 @@ const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; caption: s
 ];
 
 function label(value: string | null): string {
-  return value ? LABELS[value] ?? value : "—";
+  return value ? LABELS[value] ?? value : "not set";
 }
 
 function Row({
@@ -172,7 +172,7 @@ export function WsetSheet({
   const jump = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 84, behavior: "smooth" });
+      window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 114, behavior: "smooth" });
     }
   }, []);
 
@@ -212,7 +212,7 @@ export function WsetSheet({
       <div
         style={{
           position: "sticky",
-          top: 0,
+          top: 57,
           zIndex: 30,
           display: "flex",
           alignItems: "center",
@@ -228,7 +228,7 @@ export function WsetSheet({
           {title}
         </span>
         <span style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
-          <b style={{ color: WSET.ink }}>{done}</b> of {total} rated
+          <b style={{ color: WSET.ink }}>{done}</b> of {total} assessed
         </span>
         <button
           type="button"
@@ -250,7 +250,7 @@ export function WsetSheet({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "264px 1fr", gap: 24, alignItems: "start" }}>
-        <aside style={{ position: "sticky", top: 82, display: "flex", flexDirection: "column", gap: 16 }}>
+        <aside style={{ position: "sticky", top: 114, display: "flex", flexDirection: "column", gap: 16 }}>
           <SectionNav sections={navItems} activeId={activeId} onJump={jump} />
           <LiveTastingNote sections={noteSections} />
           <p style={{ fontSize: 10.5, color: WSET.faint }}>
@@ -259,7 +259,7 @@ export function WsetSheet({
         </aside>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} rated`}>
+          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`}>
             <Row label="Clarity" sub={label(state.clarity)}>
               <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
             </Row>
@@ -274,7 +274,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} rated`}>
+          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`}>
             <Row label="Condition" sub={label(state.condition)}>
               <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
             </Row>
@@ -293,7 +293,7 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} rated`}>
+          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`}>
             <Row label="Sweetness" sub={label(state.sweetness)}>
               <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
             </Row>
@@ -335,7 +335,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} rated`}>
+          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`}>
             <Row label="Quality" sub="100-point scale">
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
             </Row>

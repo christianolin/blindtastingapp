@@ -38,11 +38,12 @@ export default async function EditNotePage({
 
   const { data: termRows } = await supabase
     .from("wset_aroma_terms")
-    .select("id, family, group_name, term, sort_order")
+    .select("id, family, origin, group_name, term, sort_order")
     .order("sort_order");
   const terms: AromaTerm[] = (termRows ?? []).map((t) => ({
     id: t.id,
     family: t.family,
+    origin: t.origin,
     groupName: t.group_name,
     term: t.term,
     sortOrder: t.sort_order,

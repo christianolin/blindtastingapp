@@ -1,22 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AromaTerm, AromaFamily } from "@/lib/wset/types";
+import type { AromaTerm, AromaOrigin } from "@/lib/wset/types";
 import { WSET } from "./tokens";
 
-const FAMILIES: { family: AromaFamily; label: string }[] = [
-  { family: "FRUIT", label: "Fruit" },
-  { family: "FLORAL", label: "Floral" },
-  { family: "SPICE", label: "Spice" },
-  { family: "VEGETAL_OAK", label: "Vegetal & oak" },
-  { family: "OTHER", label: "Other" },
+const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
+  { origin: "PRIMARY", label: "Primary", caption: "grape & terroir" },
+  { origin: "SECONDARY", label: "Secondary", caption: "winemaking" },
+  { origin: "TERTIARY", label: "Tertiary", caption: "ageing" },
 ];
 
-// Multi-select aroma/flavour picker over the seeded WSET lexicon. Family
-// tabs carry a per-family selected count; the active family shows its groups
-// (caption + wrapped pills in sort order); a summary strip lists every
-// selection with remove/clear. The palate instance passes `copyFrom` to
-// surface a "Copy from nose" button that unions the nose selections in.
+// Multi-select aroma/flavour picker over the seeded WSET lexicon. Origin tabs
+// (Primary / Secondary / Tertiary — how the aroma arises) carry a per-origin
+// selected count; the active tab shows its clusters (caption + wrapped pills in
+// sort order); a summary strip lists every selection with remove/clear. The
+// palate instance passes `copyFrom` to surface a "Copy from nose" button that
+// unions the nose selections in.
 export function AromaPicker({
   terms,
   selectedIds,
@@ -28,32 +27,32 @@ export function AromaPicker({
   onChange: (ids: string[]) => void;
   copyFrom?: { label: string; ids: string[] };
 }) {
-  const [activeFamily, setActiveFamily] = useState<AromaFamily>("FRUIT");
+  const [activeOrigin, setActiveOrigin] = useState<AromaOrigin>("PRIMARY");
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(terms.map((t) => [t.id, t])), [terms]);
 
-  const countByFamily = useMemo(() => {
+  const countByOrigin = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const id of selectedIds) {
       const term = byId.get(id);
-      if (term) counts[term.family] = (counts[term.family] ?? 0) + 1;
+      if (term) counts[term.origin] = (counts[term.origin] ?? 0) + 1;
     }
     return counts;
   }, [selectedIds, byId]);
 
-  // Groups of the active family, in sort order, caption preserved.
+  // Clusters of the active origin, in sort order, caption preserved.
   const groups = useMemo(() => {
-    const inFamily = terms
-      .filter((t) => t.family === activeFamily)
+    const inOrigin = terms
+      .filter((t) => t.origin === activeOrigin)
       .sort((a, b) => a.sortOrder - b.sortOrder);
     const out: { name: string; items: AromaTerm[] }[] = [];
-    for (const t of inFamily) {
+    for (const t of inOrigin) {
       const last = out[out.length - 1];
       if (last && last.name === t.groupName) last.items.push(t);
       else out.push({ name: t.groupName, items: [t] });
     }
     return out;
-  }, [terms, activeFamily]);
+  }, [terms, activeOrigin]);
 
   const toggle = (id: string) => {
     if (selected.has(id)) onChange(selectedIds.filter((x) => x !== id));
@@ -62,18 +61,18 @@ export function AromaPicker({
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 18, borderBottom: `1px solid ${WSET.hairline}`, marginBottom: 12 }}>
-        {FAMILIES.map(({ family, label }) => {
-          const active = family === activeFamily;
-          const count = countByFamily[family] ?? 0;
+      <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}`, marginBottom: 12 }}>
+        {ORIGINS.map(({ origin, label, caption }) => {
+          const active = origin === activeOrigin;
+          const count = countByOrigin[origin] ?? 0;
           return (
             <button
-              key={family}
+              key={origin}
               type="button"
-              onClick={() => setActiveFamily(family)}
+              onClick={() => setActiveOrigin(origin)}
               style={{
                 display: "inline-flex",
-                alignItems: "center",
+                alignItems: "baseline",
                 gap: 6,
                 padding: "0 0 8px",
                 fontSize: 13,
@@ -84,9 +83,11 @@ export function AromaPicker({
                 marginBottom: -1,
                 fontWeight: active ? 600 : 500,
                 color: active ? WSET.ink : WSET.muted,
+                textAlign: "left",
               }}
             >
               {label}
+              <span style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2 }}>{caption}</span>
               {count > 0 ? (
                 <span
                   style={{
@@ -107,7 +108,7 @@ export function AromaPicker({
       </div>
 
       {groups.map((group) => (
-        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "110px 1fr", gap: 8, marginBottom: 12 }}>
+        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 10, marginBottom: 10 }}>
           <span style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, color: WSET.gold, paddingTop: 7 }}>
             {group.name}
           </span>

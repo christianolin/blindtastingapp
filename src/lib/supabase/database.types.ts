@@ -139,7 +139,8 @@ export type WsetPriceCategory =
   | "INEXPENSIVE"
   | "MID_PRICED"
   | "HIGH_PRICED"
-  | "PREMIUM";
+  | "PREMIUM"
+  | "DONT_KNOW";
 export type WsetReadiness =
   | "NEEDS_TIME"
   | "READY_CAN_IMPROVE"
@@ -151,6 +152,7 @@ export type WsetAromaFamily =
   | "SPICE"
   | "VEGETAL_OAK"
   | "OTHER";
+export type WsetAromaOrigin = "PRIMARY" | "SECONDARY" | "TERTIARY";
 
 type ReferenceMapFields = {
   wine_place_id: string | null;
@@ -1001,6 +1003,7 @@ export type Database = {
         Row: {
           id: string;
           family: WsetAromaFamily;
+          origin: WsetAromaOrigin;
           group_name: string;
           term: string;
           sort_order: number;
@@ -1008,6 +1011,7 @@ export type Database = {
         Insert: {
           id?: string;
           family: WsetAromaFamily;
+          origin: WsetAromaOrigin;
           group_name: string;
           term: string;
           sort_order: number;

@@ -96,6 +96,7 @@ export const LABELS: Record<string, string> = {
   MID_PRICED: "mid-priced",
   HIGH_PRICED: "high-priced",
   PREMIUM: "premium",
+  DONT_KNOW: "don't know",
   // wset_readiness
   NEEDS_TIME: "needs time to develop",
   READY_CAN_IMPROVE: "ready — can improve",

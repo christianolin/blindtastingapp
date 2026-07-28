@@ -95,26 +95,25 @@ export function SnapSlider<T extends string>({
             />
           );
         })}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: `${index === null ? 50 : pct(index)}%`,
-            transform: "translate(-50%, -50%)",
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            transition: "left 80ms",
-            pointerEvents: "none",
-            background: index === null ? "transparent" : WSET.burgundy,
-            border:
-              index === null
-                ? `2px dashed ${WSET.ghost}`
-                : `3px solid ${WSET.cream}`,
-            boxShadow: index === null ? "none" : "0 1px 5px rgba(70,25,40,0.35)",
-          }}
-        />
+        {index !== null ? (
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: `${pct(index)}%`,
+              transform: "translate(-50%, -50%)",
+              width: 22,
+              height: 22,
+              borderRadius: "50%",
+              transition: "left 80ms",
+              pointerEvents: "none",
+              background: WSET.burgundy,
+              border: `3px solid ${WSET.cream}`,
+              boxShadow: "0 1px 5px rgba(70,25,40,0.35)",
+            }}
+          />
+        ) : null}
       </div>
       <div style={{ position: "relative", height: useStagger ? 32 : 18, marginTop: 8 }}>
         {stops.map((stop, i) => {
