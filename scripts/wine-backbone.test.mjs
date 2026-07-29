@@ -577,3 +577,62 @@ test("search_catalog_wines requires every query token to match", async () => {
     assert.equal(miss.rowCount, 0, "an unmatched token excludes it");
   });
 });
+
+test("resolve_unidentified_wine repoints answers and tombstones the record", async () => {
+  const ids = await referenceIds();
+  const [me, host] = await profilePair();
+  await withRollback(async () => {
+    const target = await insertCatalog(ids, me, { wineName: "Resolved Target" });
+    const u = await client.query(
+      "insert into catalog_wines_unidentified (country_id, region_id, primary_grape_id, created_by) values ($1,$2,$3,$4) returning id",
+      [ids.country, ids.region, ids.grape, me],
+    );
+    const uid = u.rows[0].id;
+    const tasting = await client.query(
+      "insert into tastings (name, host_id, timing_mode, wine_source) values ('bb', $1, 'LIVE', 'HOST_PROVIDES') returning id",
+      [host],
+    );
+    const wine = await client.query(
+      "insert into wines (tasting_id, position) values ($1, 1) returning id",
+      [tasting.rows[0].id],
+    );
+    await client.query(
+      `insert into wine_answers (wine_id, country_id, region_id, primary_grape_id, producer_id, vintage_kind, vintage_year, unidentified_wine_id)
+       values ($1,$2,$3,$4,$5,'YEAR',2019,$6)`,
+      [wine.rows[0].id, ids.country, ids.region, ids.grape, ids.producer, uid],
+    );
+
+    await actAs(me);
+    await client.query("select resolve_unidentified_wine($1,$2)", [uid, target]);
+    await client.query("reset role");
+
+    const a = await client.query(
+      "select catalog_wine_id, unidentified_wine_id from wine_answers where wine_id=$1",
+      [wine.rows[0].id],
+    );
+    assert.equal(a.rows[0].catalog_wine_id, target, "answer repointed to the catalog wine");
+    assert.equal(a.rows[0].unidentified_wine_id, null, "unidentified link cleared");
+    const t = await client.query(
+      "select resolved_into_catalog_wine_id from catalog_wines_unidentified where id=$1",
+      [uid],
+    );
+    assert.equal(t.rows[0].resolved_into_catalog_wine_id, target, "unidentified tombstoned");
+  });
+});
+
+test("resolve_unidentified_wine rejects a non-creator non-curator", async () => {
+  const ids = await referenceIds();
+  const [me, other] = await profilePair();
+  await withRollback(async () => {
+    const target = await insertCatalog(ids, me, { wineName: "Resolve Guard Target" });
+    const u = await client.query(
+      "insert into catalog_wines_unidentified (created_by) values ($1) returning id",
+      [me],
+    );
+    await actAs(other);
+    await assert.rejects(
+      client.query("select resolve_unidentified_wine($1,$2)", [u.rows[0].id, target]),
+      (e) => /not authorised/.test(e.message),
+    );
+  });
+});

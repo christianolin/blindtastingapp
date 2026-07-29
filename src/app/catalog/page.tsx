@@ -30,6 +30,12 @@ export default async function CatalogPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_curator")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: wines } = await supabase
     .from("catalog_wines")
     .select(
@@ -71,6 +77,14 @@ export default async function CatalogPage() {
           <p className="text-sm text-muted-foreground">
             Taste &amp; review wines with the WSET Level 4 approach.
           </p>
+          {profile?.is_curator ? (
+            <Link
+              href="/catalog/unidentified"
+              className="text-xs text-muted-foreground underline underline-offset-4"
+            >
+              Unidentified bottles queue
+            </Link>
+          ) : null}
         </div>
         <Link
           href="/catalog/new"

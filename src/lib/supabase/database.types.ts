@@ -280,6 +280,7 @@ export type Database = {
           location: string | null;
           phone: string | null;
           favorite_wine_type: string | null;
+          is_curator: boolean;
           created_at: string;
         };
         Insert: {
@@ -291,6 +292,7 @@ export type Database = {
           location?: string | null;
           phone?: string | null;
           favorite_wine_type?: string | null;
+          is_curator?: boolean;
           created_at?: string;
         };
         Update: Partial<{
@@ -302,6 +304,7 @@ export type Database = {
           location: string | null;
           phone: string | null;
           favorite_wine_type: string | null;
+          is_curator: boolean;
           created_at: string;
         }>;
         Relationships: [];
@@ -1171,6 +1174,10 @@ export type Database = {
           vintage_year: number | null;
           vintage_tawny_years: number | null;
         }[];
+      };
+      resolve_unidentified_wine: {
+        Args: { p_unidentified_id: string; p_catalog_wine_id: string };
+        Returns: void;
       };
       catalog_wine_guess_stats: {
         Args: { p_catalog_wine_id: string };
