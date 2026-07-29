@@ -153,6 +153,16 @@ export type WsetAromaFamily =
   | "VEGETAL_OAK"
   | "OTHER";
 export type WsetAromaOrigin = "PRIMARY" | "SECONDARY" | "TERTIARY";
+export type WsetTanninNature =
+  | "RIPE"
+  | "SOFT"
+  | "SMOOTH"
+  | "UNRIPE"
+  | "GREEN"
+  | "COARSE"
+  | "STALKY"
+  | "CHALKY"
+  | "FINE_GRAINED";
 
 type ReferenceMapFields = {
   wine_place_id: string | null;
@@ -936,6 +946,7 @@ export type Database = {
           sweetness: WsetSweetness | null;
           acidity: WsetLevel | null;
           tannin: WsetLevel | null;
+          tannin_nature: WsetTanninNature[];
           alcohol: WsetLevel | null;
           body: WsetBody | null;
           mousse: WsetMousse | null;
@@ -964,6 +975,7 @@ export type Database = {
           sweetness?: WsetSweetness | null;
           acidity?: WsetLevel | null;
           tannin?: WsetLevel | null;
+          tannin_nature?: WsetTanninNature[];
           alcohol?: WsetLevel | null;
           body?: WsetBody | null;
           mousse?: WsetMousse | null;

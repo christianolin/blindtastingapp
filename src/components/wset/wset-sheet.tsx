@@ -9,6 +9,7 @@ import {
   DEVELOPMENT_STOPS,
   SWEETNESS_STOPS,
   LEVEL_STOPS,
+  TANNIN_NATURE,
   ALCOHOL_STOPS,
   FORTIFIED_ALCOHOL_STOPS,
   BODY_STOPS,
@@ -318,6 +319,9 @@ export function WsetSheet({
             </Row>
             <Row label="Tannin" sub={label(state.tannin)}>
               <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.tannin} onChange={(v) => set("tannin", v)} />
+            </Row>
+            <Row label="Tannin nature" sub="optional">
+              <PillGroup multi options={TANNIN_NATURE} labels={LABELS} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
             </Row>
             <Row label="Alcohol" sub={label(state.alcohol)}>
               <SnapSlider

@@ -39,6 +39,18 @@ export type Sweetness =
   | "SWEET"
   | "LUSCIOUS";
 export type Level = "LOW" | "MEDIUM_MINUS" | "MEDIUM" | "MEDIUM_PLUS" | "HIGH";
+// wset_notes.tannin_nature — L4's descriptive tannin line; multi-select,
+// optional, never counts toward progress. See 20260829202000_wset_tannin_nature.
+export type TanninNature =
+  | "RIPE"
+  | "SOFT"
+  | "SMOOTH"
+  | "UNRIPE"
+  | "GREEN"
+  | "COARSE"
+  | "STALKY"
+  | "CHALKY"
+  | "FINE_GRAINED";
 export type Body = "LIGHT" | "MEDIUM_MINUS" | "MEDIUM" | "MEDIUM_PLUS" | "FULL";
 export type Finish =
   | "SHORT"
@@ -102,6 +114,7 @@ export type WsetNoteState = {
   sweetness: Sweetness | null;
   acidity: Level | null;
   tannin: Level | null;
+  tanninNature: TanninNature[];
   alcohol: Level | null;
   body: Body | null;
   mousse: Mousse | null;

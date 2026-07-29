@@ -47,6 +47,7 @@ export function NoteEditor({
         sweetness: state.sweetness,
         acidity: state.acidity,
         tannin: state.tannin,
+        tannin_nature: state.tanninNature,
         alcohol: state.alcohol,
         body: state.body,
         mousse: state.mousse,

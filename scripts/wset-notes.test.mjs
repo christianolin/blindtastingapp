@@ -347,25 +347,23 @@ test("note-aroma with neither nose nor palate sensed is rejected", async () => {
 
 // ---- Task 3: wset_aroma_terms lexicon (89-term seed) ----
 
-test("aroma lexicon holds exactly 89 terms", async () => {
+test("aroma lexicon holds exactly 143 terms", async () => {
   const result = await client.query(
     "select count(*)::int as n from wset_aroma_terms",
   );
-  assert.equal(result.rows[0].n, 89);
+  assert.equal(result.rows[0].n, 143);
 });
 
-test("per-family term counts match the WSET sheet", async () => {
+test("every term carries a legacy family from the WSET five", async () => {
   const result = await client.query(
-    "select family::text, count(*)::int as n from wset_aroma_terms group by family",
+    "select distinct family::text as family from wset_aroma_terms order by family",
   );
-  const counts = Object.fromEntries(result.rows.map((r) => [r.family, r.n]));
-  assert.deepEqual(counts, {
-    FRUIT: 28,
-    FLORAL: 5,
-    SPICE: 9,
-    VEGETAL_OAK: 23,
-    OTHER: 24,
-  });
+  // family is legacy (the picker now groups by origin -> cluster); assert the
+  // set is intact rather than brittle per-family counts.
+  assert.deepEqual(
+    result.rows.map((r) => r.family),
+    ["FLORAL", "FRUIT", "OTHER", "SPICE", "VEGETAL_OAK"],
+  );
 });
 
 test("per-origin term counts match the P/S/T mapping", async () => {
@@ -374,30 +372,32 @@ test("per-origin term counts match the P/S/T mapping", async () => {
   );
   const counts = Object.fromEntries(result.rows.map((r) => [r.origin, r.n]));
   assert.deepEqual(counts, {
-    PRIMARY: 46,
-    SECONDARY: 17,
-    TERTIARY: 26,
+    PRIMARY: 68,
+    SECONDARY: 25,
+    TERTIARY: 50,
   });
 });
 
-test("terms span 21 distinct groups", async () => {
+test("terms span 18 distinct groups", async () => {
   const result = await client.query(
     "select count(distinct group_name)::int as n from wset_aroma_terms",
   );
-  assert.equal(result.rows[0].n, 21);
+  assert.equal(result.rows[0].n, 18);
 });
 
-test("duplicate term is rejected by the unique constraint", async () => {
+test("duplicate (origin, group, term) is rejected by the natural key", async () => {
   await withRollback(async () => {
     await client.query("set local role authenticated");
+    // 'lemon' already exists as (PRIMARY, 'Citrus fruit'); a term may now repeat
+    // across clusters, but not within one.
     await assert.rejects(
       client.query(
         `insert into wset_aroma_terms (family, origin, group_name, term, sort_order)
-         values ('FRUIT', 'PRIMARY', 'Citrus', 'lemon', 90)`,
+         values ('FRUIT', 'PRIMARY', 'Citrus fruit', 'lemon', 200)`,
       ),
       (error) => {
         assert.equal(error.code, "23505");
-        assert.match(error.message, /wset_aroma_terms_term_key/);
+        assert.match(error.message, /wset_aroma_terms_natural_key/);
         return true;
       },
     );
@@ -495,6 +495,23 @@ test("save_wset_note updates scalars and REPLACES the aroma set", async () => {
     assert.equal(aromas.rowCount, 1, "old aroma removed, not merged");
     assert.equal(aromas.rows[0].term_id, roseId);
     assert.equal(aromas.rows[0].sensed_on_palate, true);
+  });
+});
+
+test("save_wset_note persists the tannin_nature array", async () => {
+  const ids = await referenceIds();
+  await withRollback(async () => {
+    const wineId = await insertCatalog(ids);
+    await actAsAuthenticated(ids.profile);
+    const saved = await client.query(
+      "select save_wset_note($1::jsonb, '[]'::jsonb) as id",
+      [JSON.stringify({ catalog_wine_id: wineId, tannin_nature: ["RIPE", "FINE_GRAINED"] })],
+    );
+    const note = await client.query(
+      "select tannin_nature::text[] as tannin_nature from wset_notes where id = $1",
+      [saved.rows[0].id],
+    );
+    assert.deepEqual(note.rows[0].tannin_nature, ["RIPE", "FINE_GRAINED"]);
   });
 });
 

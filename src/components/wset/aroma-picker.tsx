@@ -108,11 +108,11 @@ export function AromaPicker({
       </div>
 
       {groups.map((group) => (
-        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 10, marginBottom: 10 }}>
-          <span style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, color: WSET.gold, paddingTop: 7 }}>
+        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, marginBottom: 5 }}>
+          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, paddingTop: 3 }}>
             {group.name}
           </span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {group.items.map((term) => {
               const isSel = selected.has(term.id);
               return (
@@ -123,8 +123,9 @@ export function AromaPicker({
                   onClick={() => toggle(term.id)}
                   style={{
                     borderRadius: 999,
-                    padding: "7px 14px",
-                    fontSize: 12.5,
+                    padding: "2px 9px",
+                    fontSize: 11.5,
+                    lineHeight: 1.35,
                     cursor: "pointer",
                     background: isSel ? WSET.burgundy : WSET.pillBg,
                     border: `1px solid ${WSET.pillBorder}`,

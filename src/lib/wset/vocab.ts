@@ -12,6 +12,7 @@ import type {
   Intensity,
   Level,
   Sweetness,
+  TanninNature,
   WineColour,
   WineStyle,
   WsetNoteState,
@@ -58,6 +59,16 @@ export const LABELS: Record<string, string> = {
   // wset_level (acidity, tannin, alcohol)
   LOW: "low",
   HIGH: "high",
+  // wset_tannin_nature (L4 descriptive tannin line)
+  RIPE: "ripe",
+  SOFT: "soft",
+  SMOOTH: "smooth",
+  UNRIPE: "unripe",
+  GREEN: "green",
+  COARSE: "coarse",
+  STALKY: "stalky",
+  CHALKY: "chalky",
+  FINE_GRAINED: "fine-grained",
   // wset_body
   FULL: "full",
   // wset_finish
@@ -167,6 +178,20 @@ export const DEVELOPMENT_STOPS: Development[] = [
   "DEVELOPING",
   "FULLY_DEVELOPED",
   "TIRED_PAST_BEST",
+];
+
+// wset_notes.tannin_nature options — multi-select pills under the Tannin row.
+// Descriptive (WSET's "e.g." line), so it never counts toward progress.
+export const TANNIN_NATURE: TanninNature[] = [
+  "RIPE",
+  "SOFT",
+  "SMOOTH",
+  "UNRIPE",
+  "GREEN",
+  "COARSE",
+  "STALKY",
+  "CHALKY",
+  "FINE_GRAINED",
 ];
 
 // The hues valid for each wine colour, ordered light → dark for the colour
