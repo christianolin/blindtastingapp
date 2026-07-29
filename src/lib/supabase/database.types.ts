@@ -1089,6 +1089,10 @@ export type Database = {
         Args: { p_note: unknown; p_aromas: unknown };
         Returns: string;
       };
+      find_or_create_catalog_wine: {
+        Args: { p: unknown };
+        Returns: string;
+      };
     };
   };
 };

@@ -240,6 +240,32 @@ export async function addWine(
     return { error: wineError?.message ?? "Could not add the wine." };
   }
 
+  // Resolve (or create) the canonical catalog wine this answer describes, so
+  // every blind wine links to one source-of-truth entry. The link lives on the
+  // protected wine_answers row — invisible to participants until reveal.
+  const answerSnapshot = {
+    country_id: countryId,
+    region_id: regionId,
+    appellation_id: appellationId,
+    primary_grape_id: primaryGrapeId,
+    secondary_grape_id: secondaryGrapeId,
+    producer_id: producerUnknown ? null : producerId,
+    type_designation_id: typeDesignationId,
+    vintage_kind: vintageUnknown ? null : vintageKind,
+    vintage_year: vintageYear,
+    vintage_tawny_years: vintageTawnyYears,
+  };
+  const { data: catalogWineId, error: catalogError } = await supabase.rpc(
+    "find_or_create_catalog_wine",
+    { p: answerSnapshot },
+  );
+  if (catalogError || !catalogWineId) {
+    await supabase.from("wines").delete().eq("id", wine.id);
+    return {
+      error: catalogError?.message ?? "Could not link the wine to the catalog.",
+    };
+  }
+
   const { error: answerError } = await supabase.from("wine_answers").insert({
     wine_id: wine.id,
     country_id: countryId,
@@ -253,6 +279,7 @@ export async function addWine(
     vintage_kind: vintageUnknown ? null : vintageKind,
     vintage_year: vintageYear,
     vintage_tawny_years: vintageTawnyYears,
+    catalog_wine_id: catalogWineId,
   });
   if (answerError) {
     await supabase.from("wines").delete().eq("id", wine.id);
@@ -365,6 +392,29 @@ export async function updateWine(
     return { error: "Only whoever added this wine can edit it." };
   }
 
+  // Re-resolve the catalog link so it follows any answer edit.
+  const answerSnapshot = {
+    country_id: countryId,
+    region_id: regionId,
+    appellation_id: appellationId,
+    primary_grape_id: primaryGrapeId,
+    secondary_grape_id: secondaryGrapeId,
+    producer_id: producerUnknown ? null : producerId,
+    type_designation_id: typeDesignationId,
+    vintage_kind: vintageUnknown ? null : vintageKind,
+    vintage_year: vintageYear,
+    vintage_tawny_years: vintageTawnyYears,
+  };
+  const { data: catalogWineId, error: catalogError } = await supabase.rpc(
+    "find_or_create_catalog_wine",
+    { p: answerSnapshot },
+  );
+  if (catalogError || !catalogWineId) {
+    return {
+      error: catalogError?.message ?? "Could not link the wine to the catalog.",
+    };
+  }
+
   const { error: answerError } = await supabase
     .from("wine_answers")
     .update({
@@ -379,6 +429,7 @@ export async function updateWine(
       vintage_kind: vintageUnknown ? null : vintageKind,
       vintage_year: vintageYear,
       vintage_tawny_years: vintageTawnyYears,
+      catalog_wine_id: catalogWineId,
     })
     .eq("wine_id", wineId);
   if (answerError) {
