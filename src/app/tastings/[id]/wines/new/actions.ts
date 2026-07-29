@@ -160,19 +160,22 @@ export async function addWine(
   const vintageTawnyYearsRaw = String(
     formData.get("vintage_tawny_years") ?? "",
   );
-  // "Unknown" checkboxes: the host can record a wine without knowing its
-  // producer or vintage — the answer stores null and scoring gives the
-  // category null points (excluded), same as a wine with no appellation.
-  const producerUnknown = formData.get("producer_unknown") === "on";
-  const vintageUnknown = formData.get("vintage_unknown") === "on";
+  const wineName = String(formData.get("wine_name") ?? "").trim();
+  const colour = String(formData.get("colour") ?? "");
+  const style = String(formData.get("style") ?? "");
+  // Catalog-first: every tasting wine is a fully-identified real wine, so the old
+  // producer/vintage "unknown" escape hatches are gone.
+  const producerUnknown = false;
+  const vintageUnknown = false;
 
   if (
-    !countryId ||
-    !regionId ||
-    !primaryGrapeId ||
-    (!producerId && !producerUnknown)
+    !countryId || !regionId || !appellationId || !primaryGrapeId ||
+    !producerId || !wineName || !colour || !style
   ) {
-    return { error: "Please fill in all required fields." };
+    return {
+      error:
+        "Fully identify the wine — everything except secondary grape and type designation is required.",
+    };
   }
   if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
     return { error: "Choose a vintage type." };
@@ -249,11 +252,14 @@ export async function addWine(
     appellation_id: appellationId,
     primary_grape_id: primaryGrapeId,
     secondary_grape_id: secondaryGrapeId,
-    producer_id: producerUnknown ? null : producerId,
+    producer_id: producerId,
     type_designation_id: typeDesignationId,
-    vintage_kind: vintageUnknown ? null : vintageKind,
+    vintage_kind: vintageKind,
     vintage_year: vintageYear,
     vintage_tawny_years: vintageTawnyYears,
+    wine_name: wineName,
+    colour,
+    style,
   };
   const { data: catalogWineId, error: catalogError } = await supabase.rpc(
     "find_or_create_catalog_wine",
@@ -321,19 +327,22 @@ export async function updateWine(
   const vintageTawnyYearsRaw = String(
     formData.get("vintage_tawny_years") ?? "",
   );
-  // "Unknown" checkboxes: the host can record a wine without knowing its
-  // producer or vintage — the answer stores null and scoring gives the
-  // category null points (excluded), same as a wine with no appellation.
-  const producerUnknown = formData.get("producer_unknown") === "on";
-  const vintageUnknown = formData.get("vintage_unknown") === "on";
+  const wineName = String(formData.get("wine_name") ?? "").trim();
+  const colour = String(formData.get("colour") ?? "");
+  const style = String(formData.get("style") ?? "");
+  // Catalog-first: every tasting wine is a fully-identified real wine, so the old
+  // producer/vintage "unknown" escape hatches are gone.
+  const producerUnknown = false;
+  const vintageUnknown = false;
 
   if (
-    !countryId ||
-    !regionId ||
-    !primaryGrapeId ||
-    (!producerId && !producerUnknown)
+    !countryId || !regionId || !appellationId || !primaryGrapeId ||
+    !producerId || !wineName || !colour || !style
   ) {
-    return { error: "Please fill in all required fields." };
+    return {
+      error:
+        "Fully identify the wine — everything except secondary grape and type designation is required.",
+    };
   }
   if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
     return { error: "Choose a vintage type." };
@@ -399,11 +408,14 @@ export async function updateWine(
     appellation_id: appellationId,
     primary_grape_id: primaryGrapeId,
     secondary_grape_id: secondaryGrapeId,
-    producer_id: producerUnknown ? null : producerId,
+    producer_id: producerId,
     type_designation_id: typeDesignationId,
-    vintage_kind: vintageUnknown ? null : vintageKind,
+    vintage_kind: vintageKind,
     vintage_year: vintageYear,
     vintage_tawny_years: vintageTawnyYears,
+    wine_name: wineName,
+    colour,
+    style,
   };
   const { data: catalogWineId, error: catalogError } = await supabase.rpc(
     "find_or_create_catalog_wine",

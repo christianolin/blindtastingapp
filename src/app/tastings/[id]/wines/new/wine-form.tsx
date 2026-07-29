@@ -51,6 +51,9 @@ export type WineFormInitial = {
   vintage_year: number | null;
   vintage_tawny_years: number | null;
   image_url: string | null;
+  wine_name: string | null;
+  colour: "WHITE" | "ROSE" | "RED" | null;
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
 };
 
 const VINTAGE_KIND_ITEMS = {
@@ -65,6 +68,9 @@ const TAWNY_YEARS_ITEMS = {
   "30": "30 years",
   "40": "40+ years",
 };
+
+const COLOUR_ITEMS = { WHITE: "White", ROSE: "Rosé", RED: "Red" };
+const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", FORTIFIED: "Fortified" };
 
 export function WineForm({
   tastingId,
@@ -118,14 +124,9 @@ export function WineForm({
   const [vintageKind, setVintageKind] = useState(
     initial?.vintage_kind ?? "YEAR",
   );
-  // "Unknown" toggles — editing a wine whose answer already stores null
-  // starts with the box ticked.
-  const [producerUnknown, setProducerUnknown] = useState(
-    Boolean(isEditing && initial && initial.producer_id === null),
-  );
-  const [vintageUnknown, setVintageUnknown] = useState(
-    Boolean(isEditing && initial && initial.vintage_kind === null),
-  );
+  const [wineName, setWineName] = useState(initial?.wine_name ?? "");
+  const [colour, setColour] = useState<string>(initial?.colour ?? "");
+  const [style, setStyle] = useState<string>(initial?.style ?? "");
 
   // Appellations are too large to preload in full (LWIN import), but an
   // appellation only ever belongs to one region (Pauillac is Bordeaux, full
@@ -214,7 +215,7 @@ export function WineForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>District / Appellation (optional)</Label>
+        <Label>Appellation</Label>
         <ReferenceCombobox
           formFieldName="appellation_id"
           options={appellations}
@@ -276,31 +277,18 @@ export function WineForm({
         <Label>Producer</Label>
         <SearchableCombobox
           formFieldName="producer_id"
-          value={producerUnknown ? "" : producerId}
-          selectedLabel={producerUnknown ? null : producerLabel}
+          value={producerId}
+          selectedLabel={producerLabel}
           onValueChange={(id, label) => {
             setProducerId(id);
             setProducerLabel(label || null);
           }}
           search={searchProducersGrouped}
-          placeholder={
-            producerUnknown ? "Producer unknown" : "Search for the producer"
-          }
+          placeholder="Search for the producer"
           createLabel="producer"
           onCreate={regionId ? (name) => createProducer(regionId, name) : undefined}
           emptyQueryHint={regionId ? "Type to search all producers" : undefined}
-          disabled={producerUnknown}
         />
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input
-            type="checkbox"
-            name="producer_unknown"
-            checked={producerUnknown}
-            onChange={(e) => setProducerUnknown(e.target.checked)}
-            className="size-4 accent-primary"
-          />
-          Producer unknown
-        </label>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -318,6 +306,44 @@ export function WineForm({
         />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <Label>Wine name</Label>
+        <Input
+          name="wine_name"
+          value={wineName}
+          onChange={(e) => setWineName(e.target.value)}
+          placeholder="e.g. Chateau Lascombes, or Clos Sainte-Hune"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Colour</Label>
+        <Select name="colour" items={COLOUR_ITEMS} value={colour} onValueChange={(v) => setColour(v ?? "")} required>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choose the colour" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="WHITE">White</SelectItem>
+            <SelectItem value="ROSE">Rosé</SelectItem>
+            <SelectItem value="RED">Red</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Style</Label>
+        <Select name="style" items={STYLE_ITEMS} value={style} onValueChange={(v) => setStyle(v ?? "")} required>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choose the style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="STILL">Still</SelectItem>
+            <SelectItem value="SPARKLING">Sparkling</SelectItem>
+            <SelectItem value="FORTIFIED">Fortified</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
         </div>
       </fieldset>
 
@@ -329,18 +355,6 @@ export function WineForm({
         <div className="flex flex-col gap-3 pt-1.5">
       <div className="flex flex-col gap-2">
         <Label htmlFor="vintage_kind">Vintage</Label>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input
-            type="checkbox"
-            name="vintage_unknown"
-            checked={vintageUnknown}
-            onChange={(e) => setVintageUnknown(e.target.checked)}
-            className="size-4 accent-primary"
-          />
-          Vintage unknown
-        </label>
-        {vintageUnknown ? null : (
-        <>
         <Select
           name="vintage_kind"
           items={VINTAGE_KIND_ITEMS}
@@ -393,8 +407,6 @@ export function WineForm({
             </SelectContent>
           </Select>
         ) : null}
-        </>
-        )}
       </div>
         </div>
       </fieldset>

@@ -95,6 +95,7 @@ export default async function EditWinePage({
     { data: grapes },
     { data: typeDesignations },
     nameById,
+    { data: catalogWine },
   ] = await Promise.all([
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
@@ -108,6 +109,13 @@ export default async function EditWinePage({
       appellationIds: [],
       producerIds: [answer.producer_id],
     }),
+    answer.catalog_wine_id
+      ? supabase
+          .from("catalog_wines")
+          .select("wine_name, colour, style")
+          .eq("id", answer.catalog_wine_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   return (
@@ -140,6 +148,9 @@ export default async function EditWinePage({
               vintage_year: answer.vintage_year,
               vintage_tawny_years: answer.vintage_tawny_years,
               image_url: answer.image_url,
+              wine_name: catalogWine?.wine_name ?? null,
+              colour: (catalogWine?.colour as "WHITE" | "ROSE" | "RED" | null) ?? null,
+              style: (catalogWine?.style as "STILL" | "SPARKLING" | "FORTIFIED" | null) ?? null,
             }}
           />
         </CardContent>
