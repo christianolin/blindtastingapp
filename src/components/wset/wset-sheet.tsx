@@ -9,6 +9,7 @@ import {
   DEVELOPMENT_STOPS,
   SWEETNESS_STOPS,
   LEVEL_STOPS,
+  ALCOHOL_STOPS,
   FORTIFIED_ALCOHOL_STOPS,
   BODY_STOPS,
   FINISH_STOPS,
@@ -227,7 +228,7 @@ export function WsetSheet({
       <div
         style={{
           position: "sticky",
-          top: 57,
+          top: 56,
           zIndex: 30,
           display: "flex",
           alignItems: "center",
@@ -269,7 +270,7 @@ export function WsetSheet({
           <SectionNav sections={navItems} activeId={activeId} onJump={jump} />
           <LiveTastingNote sections={noteSections} />
           <p style={{ fontSize: 10.5, color: WSET.faint }}>
-            Follows the WSET Level 3 Systematic Approach to Tasting Wine.
+            Follows the WSET Level 4 Systematic Approach to Tasting Wine.
           </p>
         </aside>
 
@@ -320,7 +321,7 @@ export function WsetSheet({
             </Row>
             <Row label="Alcohol" sub={label(state.alcohol)}>
               <SnapSlider
-                stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : LEVEL_STOPS}
+                stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
                 labels={LABELS}
                 value={state.alcohol}
                 onChange={(v) => set("alcohol", v)}

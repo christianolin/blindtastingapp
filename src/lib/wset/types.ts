@@ -1,4 +1,4 @@
-// Single source of the WSET Level 3 SAT vocabulary as TypeScript. Every enum
+// Single source of the WSET Level 4 SAT vocabulary as TypeScript. Every enum
 // below is a string-literal union whose members match the Postgres enum values
 // verbatim — see supabase/migrations/20260829193000_cellar_catalog.sql
 // (wine_colour, wine_style), 20260829194000_wset_notes.sql (all wset_* scale

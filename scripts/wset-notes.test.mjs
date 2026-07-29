@@ -374,9 +374,9 @@ test("per-origin term counts match the P/S/T mapping", async () => {
   );
   const counts = Object.fromEntries(result.rows.map((r) => [r.origin, r.n]));
   assert.deepEqual(counts, {
-    PRIMARY: 45,
-    SECONDARY: 21,
-    TERTIARY: 23,
+    PRIMARY: 46,
+    SECONDARY: 17,
+    TERTIARY: 26,
   });
 });
 

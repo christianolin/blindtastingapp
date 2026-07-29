@@ -113,9 +113,7 @@ export const LABELS: Record<string, string> = {
 // snapping sliders. A slider stores its value as an index into one of these.
 export const APPEARANCE_INTENSITY_STOPS: AppearanceIntensity[] = [
   "PALE",
-  "MEDIUM_MINUS",
   "MEDIUM",
-  "MEDIUM_PLUS",
   "DEEP",
 ];
 export const INTENSITY_STOPS: Intensity[] = [
@@ -129,7 +127,6 @@ export const SWEETNESS_STOPS: Sweetness[] = [
   "DRY",
   "OFF_DRY",
   "MEDIUM_DRY",
-  "MEDIUM",
   "MEDIUM_SWEET",
   "SWEET",
   "LUSCIOUS",
@@ -141,8 +138,16 @@ export const LEVEL_STOPS: Level[] = [
   "MEDIUM_PLUS",
   "HIGH",
 ];
-// Fortified wines restrict the alcohol slider to three stops (WSET SAT).
-export const FORTIFIED_ALCOHOL_STOPS: Level[] = ["LOW", "MEDIUM", "HIGH"];
+// Alcohol (WSET SAT): unfortified wines use low / medium / high; fortified
+// wines use the full 5-point scale.
+export const ALCOHOL_STOPS: Level[] = ["LOW", "MEDIUM", "HIGH"];
+export const FORTIFIED_ALCOHOL_STOPS: Level[] = [
+  "LOW",
+  "MEDIUM_MINUS",
+  "MEDIUM",
+  "MEDIUM_PLUS",
+  "HIGH",
+];
 export const BODY_STOPS: Body[] = [
   "LIGHT",
   "MEDIUM_MINUS",

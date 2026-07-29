@@ -56,6 +56,10 @@ export function SnapSlider<T extends string>({
           borderRadius: 3,
           background: WSET.track,
           cursor: "pointer",
+          // Unrated sliders fade back so it's obvious at a glance which scales
+          // still need a value; picking one snaps it to full strength.
+          opacity: index === null ? 0.4 : 1,
+          transition: "opacity 120ms",
         }}
       >
         {index !== null && index > 0 ? (

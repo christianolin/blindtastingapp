@@ -69,7 +69,7 @@ export default async function CellarPage() {
         <div>
           <h1 className="font-heading text-2xl font-semibold">Cellar</h1>
           <p className="text-sm text-muted-foreground">
-            Taste &amp; review wines with the WSET Level 3 approach.
+            Taste &amp; review wines with the WSET Level 4 approach.
           </p>
         </div>
         <Link
