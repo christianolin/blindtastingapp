@@ -1043,6 +1043,16 @@ export type Database = {
         };
         Relationships: [];
       };
+      catalog_wine_descriptors: {
+        Row: {
+          catalog_wine_id: string | null;
+          term_id: string | null;
+          term: string | null;
+          origin: string | null;
+          mentions: number | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       get_wine_place_context: {
@@ -1092,6 +1102,21 @@ export type Database = {
       find_or_create_catalog_wine: {
         Args: { p: unknown };
         Returns: string;
+      };
+      catalog_wine_guess_stats: {
+        Args: { p_catalog_wine_id: string };
+        Returns: {
+          appearances: number;
+          guess_count: number;
+          country_correct: number;
+          region_correct: number;
+          appellation_correct: number;
+          primary_grape_correct: number;
+          secondary_grape_correct: number;
+          producer_correct: number;
+          type_designation_correct: number;
+          vintage_correct: number;
+        }[];
       };
     };
   };

@@ -108,6 +108,16 @@ export type ViewsContract = Expect<
         };
         Relationships: [];
       };
+      catalog_wine_descriptors: {
+        Row: {
+          catalog_wine_id: string | null;
+          term_id: string | null;
+          term: string | null;
+          origin: string | null;
+          mentions: number | null;
+        };
+        Relationships: [];
+      };
     }
   >
 >;
