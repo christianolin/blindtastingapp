@@ -309,6 +309,15 @@ export default async function ResultsPage({
                 )}
               </div>
 
+              {answer.catalog_wine_id ? (
+                <Link
+                  href={`/catalog/${answer.catalog_wine_id}/notes/new`}
+                  className="self-start text-sm font-medium text-primary underline underline-offset-4"
+                >
+                  Write a tasting note for this wine →
+                </Link>
+              ) : null}
+
               {wineGuesses.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No one guessed this wine.
