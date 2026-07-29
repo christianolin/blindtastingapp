@@ -108,9 +108,9 @@ export function AromaPicker({
       </div>
 
       {groups.map((group) => (
-        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, marginBottom: 5, alignItems: "start" }}>
-          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, paddingTop: 3 }}>
-            {group.name}
+        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 8, marginBottom: 5, alignItems: "start" }}>
+          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, paddingTop: 3, whiteSpace: "nowrap" }}>
+            {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
           </span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {group.items.map((term) => {
