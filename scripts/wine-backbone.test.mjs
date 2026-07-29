@@ -562,3 +562,18 @@ test("a wset_note can reference an unidentified wine (dual-FK CHECK)", async () 
     );
   });
 });
+
+test("search_catalog_wines requires every query token to match", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    const id = await insertCatalog(ids, me, { wineName: "Zzq Unique Bottling" });
+    const hit = await client.query("select id from search_catalog_wines('Zzq', 20) where id=$1", [id]);
+    assert.equal(hit.rowCount, 1, "a matching token finds the wine");
+    const miss = await client.query(
+      "select id from search_catalog_wines('Zzq notarealtoken', 20) where id=$1",
+      [id],
+    );
+    assert.equal(miss.rowCount, 0, "an unmatched token excludes it");
+  });
+});

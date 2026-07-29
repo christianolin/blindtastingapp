@@ -1103,6 +1103,22 @@ export type Database = {
         Args: { p: unknown };
         Returns: string;
       };
+      search_catalog_wines: {
+        Args: { p_query: string; p_limit?: number };
+        Returns: {
+          id: string;
+          wine_name: string;
+          producer: string;
+          appellation: string;
+          region: string;
+          country: string;
+          colour: string;
+          style: string;
+          vintage_kind: string;
+          vintage_year: number | null;
+          vintage_tawny_years: number | null;
+        }[];
+      };
       catalog_wine_guess_stats: {
         Args: { p_catalog_wine_id: string };
         Returns: {
