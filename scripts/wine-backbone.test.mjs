@@ -191,3 +191,65 @@ test("find_or_create sets created_by to the caller", async () => {
     assert.equal(r.rows[0].created_by, me);
   });
 });
+
+// ---- Task 3: protected wine_answers.catalog_wine_id ----
+
+async function insertAnswerWine(ids, hostId) {
+  const tasting = await client.query(
+    "insert into tastings (name, host_id, timing_mode, wine_source) values ('bb', $1, 'LIVE', 'HOST_PROVIDES') returning id",
+    [hostId],
+  );
+  const wine = await client.query(
+    "insert into wines (tasting_id, position) values ($1, 1) returning id",
+    [tasting.rows[0].id],
+  );
+  await client.query(
+    `insert into wine_answers
+       (wine_id, country_id, region_id, appellation_id, primary_grape_id, producer_id, vintage_kind, vintage_year)
+     values ($1,$2,$3,$4,$5,$6,'YEAR',2019)`,
+    [wine.rows[0].id, ids.country, ids.region, ids.appellation, ids.grape, ids.producer],
+  );
+  return wine.rows[0].id;
+}
+
+test("the catalog link lives on wine_answers, not wines", async () => {
+  const onAnswers = await client.query(
+    "select 1 from information_schema.columns where table_name='wine_answers' and column_name='catalog_wine_id'",
+  );
+  const onWines = await client.query(
+    "select 1 from information_schema.columns where table_name='wines' and column_name='catalog_wine_id'",
+  );
+  assert.equal(onAnswers.rowCount, 1, "wine_answers has catalog_wine_id");
+  assert.equal(onWines.rowCount, 0, "wines.catalog_wine_id was dropped");
+});
+
+test("an answer can hold a catalog id; a bad id fails the FK", async () => {
+  const ids = await referenceIds();
+  const [host] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, host);
+    const wineId = await insertAnswerWine(ids, host);
+    const upd = await client.query(
+      "update wine_answers set catalog_wine_id=$1 where wine_id=$2 returning catalog_wine_id",
+      [catalogId, wineId],
+    );
+    assert.equal(upd.rows[0].catalog_wine_id, catalogId);
+    await assert.rejects(
+      client.query("update wine_answers set catalog_wine_id=gen_random_uuid() where wine_id=$1", [wineId]),
+      (e) => e.code === "23503",
+    );
+  });
+});
+
+test("an outsider cannot read an unrevealed answer (so the link is hidden)", async () => {
+  const ids = await referenceIds();
+  const [host, outsider] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, host);
+    const wineId = await insertAnswerWine(ids, host);
+    await client.query("update wine_answers set catalog_wine_id=$1 where wine_id=$2", [catalogId, wineId]);
+    await actAs(outsider);
+    const r = await client.query("select catalog_wine_id from wine_answers where wine_id=$1", [wineId]);
+    assert.equal(r.rowCount, 0, "unrevealed answer and its catalog link are invisible to an outsider");
+  });
+});

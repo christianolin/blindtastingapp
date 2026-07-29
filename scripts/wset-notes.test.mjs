@@ -116,34 +116,10 @@ test("bad vintage shape is rejected by the check constraint", async () => {
   );
 });
 
-test("wines.catalog_wine_id accepts null and a real catalog id", async () => {
-  const ids = await referenceIds();
-  await withRollback(async () => {
-    const catalog = await client.query(
-      `${CATALOG_INSERT} returning id`,
-      catalogParams(ids),
-    );
-    const catalogWineId = catalog.rows[0].id;
-    const tasting = await client.query(
-      `insert into tastings (name, host_id, timing_mode, wine_source)
-       values ('wset-notes test', $1, 'LIVE', 'HOST_PROVIDES') returning id`,
-      [ids.profile],
-    );
-    const wine = await client.query(
-      `insert into wines (tasting_id, position)
-       values ($1, 1) returning id, catalog_wine_id`,
-      [tasting.rows[0].id],
-    );
-    assert.equal(wine.rows[0].catalog_wine_id, null);
-    const linked = await client.query(
-      "update wines set catalog_wine_id = $1 where id = $2 returning catalog_wine_id",
-      [catalogWineId, wine.rows[0].id],
-    );
-    assert.equal(linked.rows[0].catalog_wine_id, catalogWineId);
-  });
-});
+// (Removed: the blind→catalog link moved from wines.catalog_wine_id to the
+// protected wine_answers.catalog_wine_id — see scripts/wine-backbone.test.mjs.)
 
-test("catalog_wines has exactly the read + insert policies", async () => {
+test("catalog_wines has read + insert + curator-update policies", async () => {
   const policies = await client.query(
     `select policyname, cmd from pg_policies
      where schemaname = 'public' and tablename = 'catalog_wines'
@@ -151,7 +127,11 @@ test("catalog_wines has exactly the read + insert policies", async () => {
   );
   assert.deepEqual(
     policies.rows.map((r) => [r.policyname, r.cmd]),
-    [["catalog insert", "INSERT"], ["catalog read", "SELECT"]],
+    [
+      ["catalog insert", "INSERT"],
+      ["catalog read", "SELECT"],
+      ["catalog update", "UPDATE"],
+    ],
   );
 });
 

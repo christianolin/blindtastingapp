@@ -399,7 +399,6 @@ export type Database = {
           is_revealed: boolean;
           reveal_step: number;
           created_at: string;
-          catalog_wine_id: string | null;
         };
         Insert: {
           id?: string;
@@ -409,7 +408,6 @@ export type Database = {
           is_revealed?: boolean;
           reveal_step?: number;
           created_at?: string;
-          catalog_wine_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
@@ -429,6 +427,7 @@ export type Database = {
           vintage_year: number | null;
           vintage_tawny_years: number | null;
           image_url: string | null;
+          catalog_wine_id: string | null;
         };
         Insert: {
           wine_id: string;
@@ -443,6 +442,7 @@ export type Database = {
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
           image_url?: string | null;
+          catalog_wine_id?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_answers"]["Insert"]
