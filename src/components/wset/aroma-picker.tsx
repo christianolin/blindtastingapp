@@ -108,7 +108,7 @@ export function AromaPicker({
       </div>
 
       {groups.map((group) => (
-        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, marginBottom: 5 }}>
+        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 8, marginBottom: 5, alignItems: "start" }}>
           <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, paddingTop: 3 }}>
             {group.name}
           </span>
