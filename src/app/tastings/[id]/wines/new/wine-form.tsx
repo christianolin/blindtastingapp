@@ -27,6 +27,7 @@ import { listAppellationsForRegions, searchProducers } from "@/lib/reference-sea
 import {
   addWine,
   addWineFromCatalog,
+  addWineUnidentified,
   updateWine,
   createAppellation,
   createCountry,
@@ -97,6 +98,10 @@ export function WineForm({
     AddWineFormState,
     FormData
   >(isEditing ? updateWine : addWine, null);
+  const [uState, uAction, uPending] = useActionState<AddWineFormState, FormData>(
+    addWineUnidentified,
+    null,
+  );
 
   const [countries, setCountries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
@@ -132,6 +137,7 @@ export function WineForm({
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
+  const [unidentified, setUnidentified] = useState(false);
   const [pickedWine, setPickedWine] = useState<{ id: string; label: string } | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
   const [pickPending, startPick] = useTransition();
@@ -217,10 +223,30 @@ export function WineForm({
       ) : null}
 
       {isEditing || manualMode ? (
-        <form action={formAction} className="flex flex-col gap-6">
+        <form action={unidentified ? uAction : formAction} className="flex flex-col gap-6">
       <input type="hidden" name="tasting_id" value={tastingId} />
       {isEditing ? (
         <input type="hidden" name="wine_id" value={wineId} />
+      ) : null}
+
+      {!isEditing ? (
+        <label className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={unidentified}
+            onChange={(e) => setUnidentified(e.target.checked)}
+            className="size-4 accent-primary"
+          />
+          I can&apos;t identify this bottle
+        </label>
+      ) : null}
+      {unidentified ? (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+          Unidentified wines are kept out of the shared catalog — no community
+          rating, not searchable, excluded from stats. Only country, region and
+          grape are required. Use this only when the bottle genuinely can&apos;t be
+          identified.
+        </p>
       ) : null}
 
       {/* Same category grouping as the guess form: bordered fieldsets with
@@ -374,7 +400,7 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>Colour</Label>
-        <Select name="colour" items={COLOUR_ITEMS} value={colour} onValueChange={(v) => setColour(v ?? "")} required>
+        <Select name="colour" items={COLOUR_ITEMS} value={colour} onValueChange={(v) => setColour(v ?? "")} required={!unidentified}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose the colour" />
           </SelectTrigger>
@@ -388,7 +414,7 @@ export function WineForm({
 
       <div className="flex flex-col gap-2">
         <Label>Style</Label>
-        <Select name="style" items={STYLE_ITEMS} value={style} onValueChange={(v) => setStyle(v ?? "")} required>
+        <Select name="style" items={STYLE_ITEMS} value={style} onValueChange={(v) => setStyle(v ?? "")} required={!unidentified}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose the style" />
           </SelectTrigger>
@@ -482,17 +508,19 @@ export function WineForm({
         />
       </div>
 
-      {state?.error ? (
-        <p className="text-sm text-destructive">{state.error}</p>
+      {state?.error || uState?.error ? (
+        <p className="text-sm text-destructive">{state?.error ?? uState?.error}</p>
       ) : null}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? (
+      <Button type="submit" disabled={pending || uPending}>
+        {pending || uPending ? (
           <>
             <WineGlassLoader /> {isEditing ? "Saving…" : "Adding wine…"}
           </>
         ) : isEditing ? (
           "Save changes"
+        ) : unidentified ? (
+          "Add unidentified wine"
         ) : (
           "Add wine"
         )}

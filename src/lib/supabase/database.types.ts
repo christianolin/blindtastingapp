@@ -428,6 +428,7 @@ export type Database = {
           vintage_tawny_years: number | null;
           image_url: string | null;
           catalog_wine_id: string | null;
+          unidentified_wine_id: string | null;
         };
         Insert: {
           wine_id: string;
@@ -443,6 +444,7 @@ export type Database = {
           vintage_tawny_years?: number | null;
           image_url?: string | null;
           catalog_wine_id?: string | null;
+          unidentified_wine_id?: string | null;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_answers"]["Insert"]
@@ -926,6 +928,57 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["catalog_wines"]["Insert"]>;
+        Relationships: [];
+      };
+
+      catalog_wines_unidentified: {
+        Row: {
+          id: string;
+          country_id: string | null;
+          region_id: string | null;
+          appellation_id: string | null;
+          primary_grape_id: string | null;
+          secondary_grape_id: string | null;
+          producer_id: string | null;
+          type_designation_id: string | null;
+          vintage_kind: VintageKind | null;
+          vintage_year: number | null;
+          vintage_tawny_years: number | null;
+          colour: WineColour | null;
+          style: WineStyle | null;
+          wine_name: string | null;
+          bottle_size_ml: number;
+          reason: string | null;
+          created_by: string;
+          resolved_into_catalog_wine_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          country_id?: string | null;
+          region_id?: string | null;
+          appellation_id?: string | null;
+          primary_grape_id?: string | null;
+          secondary_grape_id?: string | null;
+          producer_id?: string | null;
+          type_designation_id?: string | null;
+          vintage_kind?: VintageKind | null;
+          vintage_year?: number | null;
+          vintage_tawny_years?: number | null;
+          colour?: WineColour | null;
+          style?: WineStyle | null;
+          wine_name?: string | null;
+          bottle_size_ml?: number;
+          reason?: string | null;
+          created_by: string;
+          resolved_into_catalog_wine_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["catalog_wines_unidentified"]["Insert"]
+        >;
         Relationships: [];
       };
 

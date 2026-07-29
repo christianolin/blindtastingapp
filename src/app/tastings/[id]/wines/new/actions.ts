@@ -555,3 +555,135 @@ export async function addWineFromCatalog(
   }
   redirect(`/tastings/${tastingId}`);
 }
+
+// The deliberate escape hatch: a bottle that genuinely can't be identified. It
+// still needs the blind-answer floor (country/region/grape/vintage) to be
+// guessable, but skips wine_name/colour/style/producer and lives in the separate
+// catalog_wines_unidentified table — never in the shared catalog.
+export async function addWineUnidentified(
+  _prevState: AddWineFormState,
+  formData: FormData,
+): Promise<AddWineFormState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const countryId = String(formData.get("country_id") ?? "");
+  const regionId = String(formData.get("region_id") ?? "");
+  const appellationId = String(formData.get("appellation_id") ?? "") || null;
+  const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
+  const secondaryGrapeId = String(formData.get("secondary_grape_id") ?? "") || null;
+  const producerId = String(formData.get("producer_id") ?? "") || null;
+  const typeDesignationId = String(formData.get("type_designation_id") ?? "") || null;
+  const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
+  const wineName = String(formData.get("wine_name") ?? "").trim() || null;
+  const colour = (String(formData.get("colour") ?? "") || null) as
+    | "WHITE" | "ROSE" | "RED" | null;
+  const style = (String(formData.get("style") ?? "") || null) as
+    | "STILL" | "SPARKLING" | "FORTIFIED" | null;
+  const vintageKind = String(formData.get("vintage_kind") ?? "") as VintageKind;
+
+  if (!countryId || !regionId || !primaryGrapeId) {
+    return {
+      error:
+        "Even an unidentified bottle needs a country, region and grape to guess against.",
+    };
+  }
+  if (!["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
+    return { error: "Choose a vintage type." };
+  }
+  let vintageYear: number | null = null;
+  let vintageTawnyYears: number | null = null;
+  if (vintageKind === "YEAR") {
+    vintageYear = parseInt(String(formData.get("vintage_year") ?? ""), 10);
+    if (!Number.isFinite(vintageYear)) return { error: "Enter a vintage year." };
+  } else if (vintageKind === "TAWNY") {
+    vintageTawnyYears = parseInt(String(formData.get("vintage_tawny_years") ?? ""), 10);
+    if (!Number.isFinite(vintageTawnyYears)) return { error: "Choose the tawny age statement." };
+  }
+
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("id, host_id, wine_source")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) return { error: "Tasting not found." };
+  let contributorParticipantId: string | null = null;
+  if (tasting.wine_source === "PARTICIPANT_CONTRIBUTED") {
+    const { data: participant } = await supabase
+      .from("tasting_participants")
+      .select("id")
+      .eq("tasting_id", tastingId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!participant) return { error: "You're not a participant in this tasting." };
+    contributorParticipantId = participant.id;
+  } else if (tasting.host_id !== user.id) {
+    return { error: "Only the host can add wines to this tasting." };
+  }
+
+  const { data: unidentified, error: unidError } = await supabase
+    .from("catalog_wines_unidentified")
+    .insert({
+      country_id: countryId,
+      region_id: regionId,
+      appellation_id: appellationId,
+      primary_grape_id: primaryGrapeId,
+      secondary_grape_id: secondaryGrapeId,
+      producer_id: producerId,
+      type_designation_id: typeDesignationId,
+      vintage_kind: vintageKind,
+      vintage_year: vintageYear,
+      vintage_tawny_years: vintageTawnyYears,
+      colour,
+      style,
+      wine_name: wineName,
+      reason: "Added as an unidentified bottle during a tasting.",
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+  if (unidError || !unidentified) {
+    return { error: unidError?.message ?? "Could not save the unidentified wine." };
+  }
+
+  const { count } = await supabase
+    .from("wines")
+    .select("id", { count: "exact", head: true })
+    .eq("tasting_id", tastingId);
+  const { data: wine, error: wineError } = await supabase
+    .from("wines")
+    .insert({
+      tasting_id: tastingId,
+      position: (count ?? 0) + 1,
+      contributor_participant_id: contributorParticipantId,
+    })
+    .select()
+    .single();
+  if (wineError || !wine) return { error: wineError?.message ?? "Could not add the wine." };
+
+  const { error: answerError } = await supabase.from("wine_answers").insert({
+    wine_id: wine.id,
+    country_id: countryId,
+    region_id: regionId,
+    appellation_id: appellationId,
+    primary_grape_id: primaryGrapeId,
+    secondary_grape_id: secondaryGrapeId,
+    producer_id: producerId,
+    type_designation_id: typeDesignationId,
+    image_url: imageUrl,
+    vintage_kind: vintageKind,
+    vintage_year: vintageYear,
+    vintage_tawny_years: vintageTawnyYears,
+    unidentified_wine_id: unidentified.id,
+  });
+  if (answerError) {
+    await supabase.from("wines").delete().eq("id", wine.id);
+    await supabase.from("catalog_wines_unidentified").delete().eq("id", unidentified.id);
+    return { error: answerError.message };
+  }
+  redirect(`/tastings/${tastingId}`);
+}
