@@ -294,3 +294,27 @@ test("a new answer without a catalog link is rejected", async () => {
     );
   });
 });
+
+// ---- Task 6: wset_notes context ----
+
+test("wset_notes context defaults to OPEN and accepts BLIND + tasting_wine_id", async () => {
+  const ids = await referenceIds();
+  const [me, host] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, me);
+    const openNote = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1,$2) returning context_kind, tasting_wine_id",
+      [catalogId, me],
+    );
+    assert.equal(openNote.rows[0].context_kind, "OPEN");
+    assert.equal(openNote.rows[0].tasting_wine_id, null);
+
+    const wineId = await insertAnswerWine(ids, host);
+    const blindNote = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id, context_kind, tasting_wine_id) values ($1,$2,'BLIND',$3) returning context_kind, tasting_wine_id",
+      [catalogId, me, wineId],
+    );
+    assert.equal(blindNote.rows[0].context_kind, "BLIND");
+    assert.equal(blindNote.rows[0].tasting_wine_id, wineId);
+  });
+});
