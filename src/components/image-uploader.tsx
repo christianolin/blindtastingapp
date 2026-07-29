@@ -16,6 +16,7 @@ export function ImageUploader({
   initialUrl,
   label = "Add a photo",
   aspectClassName = "aspect-video",
+  onChange,
 }: {
   name: string;
   bucket: string;
@@ -23,6 +24,7 @@ export function ImageUploader({
   initialUrl?: string | null;
   label?: string;
   aspectClassName?: string;
+  onChange?: (url: string | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState<string | null>(initialUrl ?? null);
@@ -52,6 +54,7 @@ export function ImageUploader({
     } = supabase.storage.from(bucket).getPublicUrl(path);
 
     setUrl(publicUrl);
+    onChange?.(publicUrl);
     setPending(false);
   }
 

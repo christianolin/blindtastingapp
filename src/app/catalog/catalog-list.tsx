@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Wine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export type CatalogRow = {
@@ -9,13 +10,13 @@ export type CatalogRow = {
   title: string;
   colour: "WHITE" | "ROSE" | "RED" | null;
   style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
+  imageUrl: string | null;
   avgScore: number | null;
   noteCount: number;
 };
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
-// Iteration 1 keeps search client-side over the loaded page (no server search).
 export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
@@ -36,9 +37,21 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             <li key={r.id}>
               <Link
                 href={`/catalog/${r.id}`}
-                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 hover:bg-muted"
+                className="flex items-center gap-3 rounded-md border border-border px-3 py-2 hover:bg-muted"
               >
-                <span className="min-w-0">
+                {r.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={r.imageUrl}
+                    alt=""
+                    className="size-11 shrink-0 rounded-md border border-border object-cover"
+                  />
+                ) : (
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                    <Wine className="size-5" />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{r.title}</span>
                   <span className="text-xs text-muted-foreground">
                     {[r.colour, r.style].filter(Boolean).map((s) => cap(s!)).join(" · ") || "—"}

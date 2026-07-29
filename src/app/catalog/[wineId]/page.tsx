@@ -10,6 +10,7 @@ import {
   fetchWineGuessStats,
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
+import { WineImage } from "./wine-image";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -59,6 +60,8 @@ export default async function CatalogWinePage({
           {grapes ? ` — ${grapes}` : ""}
         </p>
       </div>
+
+      <WineImage wineId={wineId} initialUrl={wine.imageUrl} />
 
       <Card>
         <CardContent className="flex items-center justify-between pt-6">
