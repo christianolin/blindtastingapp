@@ -56,30 +56,33 @@ async function actAs(userId) {
   await client.query("set local role authenticated");
 }
 
+let catalogSeq = 0;
 async function insertCatalog(ids, createdBy, opts = {}) {
   const colour = opts.colour === undefined ? "RED" : opts.colour;
   const style = opts.style === undefined ? "STILL" : opts.style;
   const producer = opts.producer === undefined ? ids.producer : opts.producer;
+  // Unique per call so the bottle-identity index doesn't reject repeat inserts.
+  const wineName = opts.wineName === undefined ? `Test Wine ${++catalogSeq}` : opts.wineName;
   const r = await client.query(
     `insert into catalog_wines
        (country_id, region_id, appellation_id, primary_grape_id, producer_id,
-        vintage_kind, vintage_year, colour, style, created_by)
-     values ($1,$2,$3,$4,$5,'YEAR',2019,$6,$7,$8) returning id`,
-    [ids.country, ids.region, ids.appellation, ids.grape, producer, colour, style, createdBy],
+        vintage_kind, vintage_year, colour, style, wine_name, created_by)
+     values ($1,$2,$3,$4,$5,'YEAR',2019,$6,$7,$8,$9) returning id`,
+    [ids.country, ids.region, ids.appellation, ids.grape, producer, colour, style, wineName, createdBy],
   );
   return r.rows[0].id;
 }
 
 // ---- Task 1: catalog curation ----
 
-test("colour and style accept null (a blind-born catalog wine)", async () => {
+test("colour is required — the strict catalog rejects null", async () => {
   const ids = await referenceIds();
   const [me] = await profilePair();
   await withRollback(async () => {
-    const id = await insertCatalog(ids, me, { colour: null, style: null });
-    const r = await client.query("select colour, style from catalog_wines where id=$1", [id]);
-    assert.equal(r.rows[0].colour, null);
-    assert.equal(r.rows[0].style, null);
+    await assert.rejects(
+      insertCatalog(ids, me, { colour: null }),
+      (e) => e.code === "23502",
+    );
   });
 });
 
@@ -89,7 +92,7 @@ test("creator can update their own catalog wine", async () => {
   await withRollback(async () => {
     const id = await insertCatalog(ids, me);
     await actAs(me);
-    const upd = await client.query("update catalog_wines set cuvee='mine' where id=$1", [id]);
+    const upd = await client.query("update catalog_wines set wine_name='mine' where id=$1", [id]);
     assert.equal(upd.rowCount, 1);
   });
 });
@@ -100,7 +103,7 @@ test("non-creator non-curator update affects 0 rows", async () => {
   await withRollback(async () => {
     const id = await insertCatalog(ids, me);
     await actAs(other);
-    const upd = await client.query("update catalog_wines set cuvee='hax' where id=$1", [id]);
+    const upd = await client.query("update catalog_wines set wine_name='hax' where id=$1", [id]);
     assert.equal(upd.rowCount, 0);
   });
 });
@@ -112,7 +115,7 @@ test("a curator can update another author's catalog wine", async () => {
     const id = await insertCatalog(ids, me);
     await client.query("update profiles set is_curator=true where id=$1", [other]);
     await actAs(other);
-    const upd = await client.query("update catalog_wines set cuvee='curated' where id=$1", [id]);
+    const upd = await client.query("update catalog_wines set wine_name='curated' where id=$1", [id]);
     assert.equal(upd.rowCount, 1);
   });
 });
@@ -123,15 +126,15 @@ test("an update writes exactly one catalog_wine_edits audit row", async () => {
   await withRollback(async () => {
     const id = await insertCatalog(ids, me);
     await actAs(me);
-    await client.query("update catalog_wines set cuvee='audited' where id=$1", [id]);
+    await client.query("update catalog_wines set wine_name='audited' where id=$1", [id]);
     await client.query("reset role");
     const r = await client.query(
-      "select editor_id, after->>'cuvee' as cuvee from catalog_wine_edits where catalog_wine_id=$1",
+      "select editor_id, after->>'wine_name' as wine_name from catalog_wine_edits where catalog_wine_id=$1",
       [id],
     );
     assert.equal(r.rowCount, 1);
     assert.equal(r.rows[0].editor_id, me);
-    assert.equal(r.rows[0].cuvee, "audited");
+    assert.equal(r.rows[0].wine_name, "audited");
   });
 });
 
@@ -146,6 +149,9 @@ function snapshot(ids, over = {}) {
     producer_id: ids.producer,
     vintage_kind: "YEAR",
     vintage_year: 2019,
+    wine_name: "Snapshot Wine",
+    colour: "RED",
+    style: "STILL",
     ...over,
   });
 }
@@ -257,11 +263,17 @@ test("an outsider cannot read an unrevealed answer (so the link is hidden)", asy
 
 // ---- Task 5: backfill + enforce NOT NULL ----
 
-test("wine_answers.catalog_wine_id is NOT NULL after backfill", async () => {
-  const r = await client.query(
-    "select is_nullable from information_schema.columns where table_name='wine_answers' and column_name='catalog_wine_id'",
+test("every wine_answers row resolves to exactly one identity", async () => {
+  // catalog_wine_id is nullable now — an unidentified pour sets unidentified_wine_id
+  // instead; the wine_answers_one_identity CHECK enforces that exactly one is set.
+  const check = await client.query(
+    "select 1 from pg_constraint where conname='wine_answers_one_identity'",
   );
-  assert.equal(r.rows[0].is_nullable, "NO");
+  assert.equal(check.rowCount, 1, "the exactly-one-identity check exists");
+  const bad = await client.query(
+    "select count(*)::int n from wine_answers where num_nonnulls(catalog_wine_id, unidentified_wine_id) <> 1",
+  );
+  assert.equal(bad.rows[0].n, 0, "no answer violates the one-identity invariant");
 });
 
 test("every wine_answers row is linked to a catalog wine", async () => {
@@ -290,7 +302,7 @@ test("a new answer without a catalog link is rejected", async () => {
          values ($1,$2,$3,$4,$5,'YEAR',2019)`,
         [wine.rows[0].id, ids.country, ids.region, ids.grape, ids.producer],
       ),
-      (e) => e.code === "23502",
+      (e) => e.code === "23514",
     );
   });
 });
@@ -490,5 +502,63 @@ test("catalog_wine_guess_stats excludes unrevealed wines and unscored guesses", 
     assert.equal(s.appearances, 1);
     assert.equal(s.guess_count, 0);
     assert.equal(s.country_correct, 0);
+  });
+});
+
+// ---- P5: strict catalog + unidentified wines ----
+
+test("catalog_wines identity columns are all NOT NULL", async () => {
+  const r = await client.query(
+    `select column_name from information_schema.columns
+     where table_name='catalog_wines'
+       and column_name in ('country_id','region_id','appellation_id','wine_name','producer_id','primary_grape_id','vintage_kind','colour','style')
+       and is_nullable='YES'`,
+  );
+  assert.equal(r.rowCount, 0, "no identity column is nullable");
+});
+
+test("find_or_create makes distinct wines for distinct wine names", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    await actAs(me);
+    const a = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids, { wine_name: "Cuvee Alpha" })]);
+    const b = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids, { wine_name: "Cuvee Beta" })]);
+    assert.notEqual(a.rows[0].id, b.rows[0].id);
+  });
+});
+
+test("the bottle-identity index rejects a duplicate wine", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    await insertCatalog(ids, me, { wineName: "Dupe Wine" });
+    await assert.rejects(
+      insertCatalog(ids, me, { wineName: "Dupe Wine" }),
+      (e) => e.code === "23505",
+    );
+  });
+});
+
+test("a wset_note can reference an unidentified wine (dual-FK CHECK)", async () => {
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    const u = await client.query(
+      "insert into catalog_wines_unidentified (created_by, reason) values ($1, 'mystery bottle') returning id",
+      [me],
+    );
+    // the unidentified identity alone -> accepted
+    const n = await client.query(
+      "insert into wset_notes (author_id, unidentified_wine_id) values ($1, $2) returning catalog_wine_id, unidentified_wine_id",
+      [me, u.rows[0].id],
+    );
+    assert.equal(n.rows[0].catalog_wine_id, null);
+    assert.equal(n.rows[0].unidentified_wine_id, u.rows[0].id);
+    // neither identity -> rejected by the one-identity CHECK. Runs last: the failed
+    // statement aborts the transaction, which withRollback then unwinds.
+    await assert.rejects(
+      client.query("insert into wset_notes (author_id) values ($1)", [me]),
+      (e) => e.code === "23514",
+    );
   });
 });

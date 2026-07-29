@@ -52,8 +52,8 @@ async function referenceIds() {
 const CATALOG_INSERT = `
   insert into catalog_wines
     (country_id, region_id, appellation_id, primary_grape_id, producer_id,
-     vintage_kind, vintage_year, colour, style, created_by)
-  values ($1, $2, $3, $4, $5, 'YEAR', 2019, 'RED', 'STILL', $6)`;
+     vintage_kind, vintage_year, colour, style, wine_name, created_by)
+  values ($1, $2, $3, $4, $5, 'YEAR', 2019, 'RED', 'STILL', 'Test ' || gen_random_uuid()::text, $6)`;
 
 function catalogParams(ids) {
   return [ids.country, ids.region, ids.appellation, ids.grape, ids.producer, ids.profile];
@@ -64,12 +64,12 @@ test("catalog insert succeeds; bottle_size_ml defaults to 750", async () => {
   await withRollback(async () => {
     const inserted = await client.query(
       `${CATALOG_INSERT}
-       returning bottle_size_ml, cuvee, secondary_grape_id, type_designation_id, vintage_kind`,
+       returning bottle_size_ml, wine_name, secondary_grape_id, type_designation_id, vintage_kind`,
       catalogParams(ids),
     );
     const row = inserted.rows[0];
     assert.equal(row.bottle_size_ml, 750);
-    assert.equal(row.cuvee, null);
+    assert.ok(row.wine_name);
     assert.equal(row.secondary_grape_id, null);
     assert.equal(row.type_designation_id, null);
     assert.equal(row.vintage_kind, "YEAR");
@@ -87,14 +87,14 @@ test("catalog rows are immutable for authenticated (no update policy)", async ()
     await client.query("set local role authenticated");
     // Default-deny RLS: with no update policy, the update sees zero rows
     // (authenticated holds the table-level UPDATE grant, so no error).
-    const updated = await client.query("update catalog_wines set cuvee = 'x'");
+    const updated = await client.query("update catalog_wines set wine_name = 'x'");
     assert.equal(updated.rowCount, 0);
     await client.query("reset role");
     const rows = await client.query(
-      "select cuvee from catalog_wines where id = $1",
+      "select wine_name from catalog_wines where id = $1",
       [insertedId],
     );
-    assert.equal(rows.rows[0].cuvee, null);
+    assert.notEqual(rows.rows[0].wine_name, "x");
   });
 });
 
@@ -104,8 +104,8 @@ test("bad vintage shape is rejected by the check constraint", async () => {
     client.query(
       `insert into catalog_wines
          (country_id, region_id, appellation_id, primary_grape_id, producer_id,
-          vintage_kind, vintage_year, colour, style, created_by)
-       values ($1, $2, $3, $4, $5, 'YEAR', null, 'RED', 'STILL', $6)`,
+          vintage_kind, vintage_year, colour, style, wine_name, created_by)
+       values ($1, $2, $3, $4, $5, 'YEAR', null, 'RED', 'STILL', 'Test ' || gen_random_uuid()::text, $6)`,
       catalogParams(ids),
     ),
     (error) => {

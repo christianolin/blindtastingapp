@@ -901,7 +901,7 @@ export type Database = {
           vintage_tawny_years: number | null;
           colour: WineColour;
           style: WineStyle;
-          cuvee: string | null;
+          wine_name: string | null;
           bottle_size_ml: number;
           created_by: string;
           created_at: string;
@@ -920,7 +920,7 @@ export type Database = {
           vintage_tawny_years?: number | null;
           colour: WineColour;
           style: WineStyle;
-          cuvee?: string | null;
+          wine_name?: string | null;
           bottle_size_ml?: number;
           created_by: string;
           created_at?: string;

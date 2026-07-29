@@ -7,7 +7,7 @@ export type CellarWine = {
   id: string;
   colour: WineColour | null;
   style: WineStyle | null;
-  cuvee: string | null;
+  wineName: string | null;
   vintageKind: VintageKind;
   vintageYear: number | null;
   vintageTawnyYears: number | null;
@@ -23,7 +23,7 @@ export type CellarWine = {
 };
 
 const SELECT =
-  "id, colour, style, cuvee, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, colour, style, wine_name, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -43,7 +43,7 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     id: row.id as string,
     colour: (row.colour as WineColour | null) ?? null,
     style: (row.style as WineStyle | null) ?? null,
-    cuvee: (row.cuvee as string | null) ?? null,
+    wineName: (row.wine_name as string | null) ?? null,
     vintageKind: row.vintage_kind as VintageKind,
     vintageYear: (row.vintage_year as number | null) ?? null,
     vintageTawnyYears: (row.vintage_tawny_years as number | null) ?? null,
@@ -59,9 +59,11 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
   };
 }
 
+// Builds a readable title, collapsing exact repeats — a wine whose name equals its
+// producer (e.g. "Château Lascombes") renders once, not twice.
 export function catalogWineTitle(wine: {
   producerName: string | null;
-  cuvee: string | null;
+  wineName: string | null;
   vintageKind: VintageKind;
   vintageYear: number | null;
   vintageTawnyYears: number | null;
@@ -71,11 +73,17 @@ export function catalogWineTitle(wine: {
     wine.vintageKind === "YEAR" ? (wine.vintageYear ? String(wine.vintageYear) : null)
     : wine.vintageKind === "TAWNY" ? (wine.vintageTawnyYears ? `${wine.vintageTawnyYears}yo` : "Tawny")
     : "NV";
-  return (
-    [wine.producerName, wine.cuvee, wine.appellationName, vintage]
-      .filter(Boolean)
-      .join(" ") || "Untitled wine"
-  );
+  const parts = [wine.producerName, wine.wineName, wine.appellationName, vintage].filter(
+    Boolean,
+  ) as string[];
+  const seen = new Set<string>();
+  const deduped = parts.filter((p) => {
+    const key = p.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return deduped.join(" ") || "Untitled wine";
 }
 
 export async function fetchCatalogWine(

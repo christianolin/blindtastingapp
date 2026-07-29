@@ -146,7 +146,7 @@ export type CatalogWine = {
   vintageTawnyYears: number | null;
   colour: WineColour;
   style: WineStyle;
-  cuvee: string | null;
+  wineName: string | null;
   bottleSizeMl: number;
   createdBy: string;
   createdAt: string;

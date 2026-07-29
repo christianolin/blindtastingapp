@@ -50,7 +50,7 @@ export function NewWineForm({
   const [typeDesignationId, setTypeDesignationId] = useState("");
   const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(null);
   const [style, setStyle] = useState<(typeof STYLES)[number] | null>(null);
-  const [cuvee, setCuvee] = useState("");
+  const [wineName, setWineName] = useState("");
   const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">("YEAR");
   const [vintageYear, setVintageYear] = useState("");
   const [tawnyYears, setTawnyYears] = useState("");
@@ -65,8 +65,13 @@ export function NewWineForm({
 
   async function submit() {
     setError(null);
-    if (!countryId || !regionId || !primaryGrapeId || !producerId || !colour || !style) {
-      setError("Country, region, primary grape, producer, colour and style are required.");
+    if (
+      !countryId || !regionId || !appellationId || !primaryGrapeId ||
+      !producerId || !colour || !style || !wineName.trim()
+    ) {
+      setError(
+        "Wine name, country, region, appellation, primary grape, producer, colour and style are required.",
+      );
       return;
     }
     if (vintageKind === "YEAR" && !vintageYear) {
@@ -78,14 +83,14 @@ export function NewWineForm({
       const { id } = await createCatalogWine({
         countryId,
         regionId,
-        appellationId: appellationId || null,
+        appellationId,
         primaryGrapeId,
         secondaryGrapeId: secondaryGrapeId || null,
         producerId,
         typeDesignationId: typeDesignationId || null,
         colour,
         style,
-        cuvee: cuvee.trim() || null,
+        wineName: wineName.trim(),
         vintageKind,
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
@@ -204,8 +209,8 @@ export function NewWineForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Cuvée / wine name (optional)</Label>
-            <Input value={cuvee} onChange={(e) => setCuvee(e.target.value)} placeholder="e.g. Clos Sainte-Hune" />
+            <Label>Wine name</Label>
+            <Input value={wineName} onChange={(e) => setWineName(e.target.value)} placeholder="e.g. Chateau Lascombes, or Clos Sainte-Hune" />
           </div>
           {typeDesignations.length > 0 ? (
             <div className="flex flex-col gap-2">

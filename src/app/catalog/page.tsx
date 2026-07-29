@@ -9,7 +9,7 @@ type WineRow = {
   id: string;
   colour: "WHITE" | "ROSE" | "RED" | null;
   style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
-  cuvee: string | null;
+  wine_name: string | null;
   vintage_kind: "YEAR" | "NV" | "TAWNY";
   vintage_year: number | null;
   vintage_tawny_years: number | null;
@@ -33,7 +33,7 @@ export default async function CatalogPage() {
   const { data: wines } = await supabase
     .from("catalog_wines")
     .select(
-      "id, colour, style, cuvee, vintage_kind, vintage_year, vintage_tawny_years, " +
+      "id, colour, style, wine_name, vintage_kind, vintage_year, vintage_tawny_years, " +
         "producer:producers(name), appellation:appellations(name)",
     )
     .order("created_at", { ascending: false })
@@ -50,7 +50,7 @@ export default async function CatalogPage() {
       id: w.id,
       title: catalogWineTitle({
         producerName: relName(w.producer),
-        cuvee: w.cuvee,
+        wineName: w.wine_name,
         vintageKind: w.vintage_kind,
         vintageYear: w.vintage_year,
         vintageTawnyYears: w.vintage_tawny_years,

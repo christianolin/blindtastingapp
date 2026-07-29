@@ -42,14 +42,14 @@ export async function createAppellation(regionId: string, name: string): Promise
 export type NewCatalogWine = {
   countryId: string;
   regionId: string;
-  appellationId: string | null;
+  appellationId: string;
   primaryGrapeId: string;
   secondaryGrapeId: string | null;
   producerId: string;
   typeDesignationId: string | null;
   colour: "WHITE" | "ROSE" | "RED";
   style: "STILL" | "SPARKLING" | "FORTIFIED";
-  cuvee: string | null;
+  wineName: string;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   vintageTawnyYears: number | null;
@@ -73,7 +73,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       type_designation_id: input.typeDesignationId,
       colour: input.colour,
       style: input.style,
-      cuvee: input.cuvee,
+      wine_name: input.wineName,
       vintage_kind: input.vintageKind,
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,
