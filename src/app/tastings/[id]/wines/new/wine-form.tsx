@@ -26,6 +26,7 @@ import { ImageUploader } from "@/components/image-uploader";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import {
   addWine,
+  addWineFromCatalog,
   updateWine,
   createAppellation,
   createCountry,
@@ -33,6 +34,7 @@ import {
   createProducer,
   createRegion,
   createTypeDesignation,
+  searchCatalogWines,
   type AddWineFormState,
 } from "./actions";
 
@@ -128,6 +130,21 @@ export function WineForm({
   const [colour, setColour] = useState<string>(initial?.colour ?? "");
   const [style, setStyle] = useState<string>(initial?.style ?? "");
 
+  // Catalog-first: pick an existing wine (default), or reveal the full creator.
+  const [manualMode, setManualMode] = useState(false);
+  const [pickedWine, setPickedWine] = useState<{ id: string; label: string } | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
+  const [pickPending, startPick] = useTransition();
+
+  function submitPick() {
+    if (!pickedWine) return;
+    setPickError(null);
+    startPick(async () => {
+      const result = await addWineFromCatalog(tastingId, pickedWine.id);
+      if (result?.error) setPickError(result.error);
+    });
+  }
+
   // Appellations are too large to preload in full (LWIN import), but an
   // appellation only ever belongs to one region (Pauillac is Bordeaux, full
   // stop) so scoping by region keeps the list small enough to just list in
@@ -161,7 +178,46 @@ export function WineForm({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
+      {!isEditing ? (
+        <div className="flex flex-col gap-3">
+          <Label>Which wine is this?</Label>
+          <SearchableCombobox
+            formFieldName="catalog_pick"
+            value={pickedWine?.id ?? ""}
+            selectedLabel={pickedWine?.label ?? null}
+            onValueChange={(id, label) =>
+              setPickedWine(id ? { id, label: label ?? "" } : null)
+            }
+            search={searchCatalogWines}
+            placeholder="Search the catalog — producer, wine, appellation…"
+          />
+          {pickedWine && !manualMode ? (
+            <Button type="button" onClick={submitPick} disabled={pickPending}>
+              {pickPending ? (
+                <>
+                  <WineGlassLoader /> Adding…
+                </>
+              ) : (
+                "Add this wine to the tasting"
+              )}
+            </Button>
+          ) : null}
+          {pickError ? <p className="text-sm text-destructive">{pickError}</p> : null}
+          <button
+            type="button"
+            onClick={() => setManualMode((m) => !m)}
+            className="self-start text-sm text-muted-foreground underline underline-offset-4"
+          >
+            {manualMode
+              ? "← Back to catalog search"
+              : "Not in the catalog? Add it manually"}
+          </button>
+        </div>
+      ) : null}
+
+      {isEditing || manualMode ? (
+        <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="tasting_id" value={tastingId} />
       {isEditing ? (
         <input type="hidden" name="wine_id" value={wineId} />
@@ -442,5 +498,7 @@ export function WineForm({
         )}
       </Button>
     </form>
+      ) : null}
+    </div>
   );
 }

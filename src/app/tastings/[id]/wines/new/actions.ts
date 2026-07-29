@@ -450,3 +450,108 @@ export async function updateWine(
 
   redirect(`/tastings/${tastingId}`);
 }
+
+// --- Catalog-first pick: search the catalog, then add a wine by picking it ---
+
+const cap = (s: string) => (s ? s[0] + s.slice(1).toLowerCase() : s);
+
+export async function searchCatalogWines(query: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("search_catalog_wines", {
+    p_query: query,
+    p_limit: 20,
+  });
+  return (data ?? []).map((w) => {
+    const vintage =
+      w.vintage_kind === "YEAR" ? (w.vintage_year ? String(w.vintage_year) : "")
+      : w.vintage_kind === "TAWNY" ? (w.vintage_tawny_years ? `${w.vintage_tawny_years}yo` : "Tawny")
+      : "NV";
+    const seen = new Set<string>();
+    const label = [w.producer, w.wine_name, w.appellation, vintage]
+      .filter(Boolean)
+      .filter((p) => {
+        const k = p.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .join(" ");
+    return { id: w.id, name: label, group: `${cap(w.colour)} · ${cap(w.style)}` };
+  });
+}
+
+export async function addWineFromCatalog(
+  tastingId: string,
+  catalogWineId: string,
+): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("id, host_id, wine_source")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) return { error: "Tasting not found." };
+
+  let contributorParticipantId: string | null = null;
+  if (tasting.wine_source === "PARTICIPANT_CONTRIBUTED") {
+    const { data: participant } = await supabase
+      .from("tasting_participants")
+      .select("id")
+      .eq("tasting_id", tastingId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!participant) return { error: "You're not a participant in this tasting." };
+    contributorParticipantId = participant.id;
+  } else if (tasting.host_id !== user.id) {
+    return { error: "Only the host can add wines to this tasting." };
+  }
+
+  const { data: cw } = await supabase
+    .from("catalog_wines")
+    .select(
+      "country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, producer_id, type_designation_id, vintage_kind, vintage_year, vintage_tawny_years",
+    )
+    .eq("id", catalogWineId)
+    .maybeSingle();
+  if (!cw) return { error: "That catalog wine no longer exists." };
+
+  const { count } = await supabase
+    .from("wines")
+    .select("id", { count: "exact", head: true })
+    .eq("tasting_id", tastingId);
+  const { data: wine, error: wineError } = await supabase
+    .from("wines")
+    .insert({
+      tasting_id: tastingId,
+      position: (count ?? 0) + 1,
+      contributor_participant_id: contributorParticipantId,
+    })
+    .select()
+    .single();
+  if (wineError || !wine) return { error: wineError?.message ?? "Could not add the wine." };
+
+  const { error: answerError } = await supabase.from("wine_answers").insert({
+    wine_id: wine.id,
+    country_id: cw.country_id,
+    region_id: cw.region_id,
+    appellation_id: cw.appellation_id,
+    primary_grape_id: cw.primary_grape_id,
+    secondary_grape_id: cw.secondary_grape_id,
+    producer_id: cw.producer_id,
+    type_designation_id: cw.type_designation_id,
+    vintage_kind: cw.vintage_kind,
+    vintage_year: cw.vintage_year,
+    vintage_tawny_years: cw.vintage_tawny_years,
+    catalog_wine_id: catalogWineId,
+  });
+  if (answerError) {
+    await supabase.from("wines").delete().eq("id", wine.id);
+    return { error: answerError.message };
+  }
+  redirect(`/tastings/${tastingId}`);
+}

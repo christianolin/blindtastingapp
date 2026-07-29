@@ -890,8 +890,8 @@ export type Database = {
         Row: {
           id: string;
           country_id: string;
-          region_id: string | null;
-          appellation_id: string | null;
+          region_id: string;
+          appellation_id: string;
           primary_grape_id: string;
           secondary_grape_id: string | null;
           producer_id: string;
@@ -901,7 +901,7 @@ export type Database = {
           vintage_tawny_years: number | null;
           colour: WineColour;
           style: WineStyle;
-          wine_name: string | null;
+          wine_name: string;
           bottle_size_ml: number;
           created_by: string;
           created_at: string;
@@ -909,8 +909,8 @@ export type Database = {
         Insert: {
           id?: string;
           country_id: string;
-          region_id?: string | null;
-          appellation_id?: string | null;
+          region_id: string;
+          appellation_id: string;
           primary_grape_id: string;
           secondary_grape_id?: string | null;
           producer_id: string;
@@ -920,7 +920,7 @@ export type Database = {
           vintage_tawny_years?: number | null;
           colour: WineColour;
           style: WineStyle;
-          wine_name?: string | null;
+          wine_name: string;
           bottle_size_ml?: number;
           created_by: string;
           created_at?: string;
