@@ -377,3 +377,118 @@ test("merge by a non-creator non-curator is rejected", async () => {
     );
   });
 });
+
+// ---- P3: wine-hub aggregates ----
+
+// Builds one revealed appearance of `catalogId` with a single scored guess whose
+// per-field points come from `points`. The reveal trigger blocks guess writes on
+// a revealed wine, so the guess (with its points + scored_at) is inserted while
+// the wine is still unrevealed, then the wine is revealed.
+async function insertScoredAppearance(ids, hostId, guesserId, catalogId, points, opts = {}) {
+  const revealed = opts.revealed === undefined ? true : opts.revealed;
+  const scored = opts.scored === undefined ? true : opts.scored;
+  const tasting = await client.query(
+    "insert into tastings (name, host_id, timing_mode, wine_source) values ('gs', $1, 'LIVE', 'HOST_PROVIDES') returning id",
+    [hostId],
+  );
+  const tid = tasting.rows[0].id;
+  const wine = await client.query(
+    "insert into wines (tasting_id, position) values ($1, 1) returning id",
+    [tid],
+  );
+  const wid = wine.rows[0].id;
+  await client.query(
+    `insert into wine_answers
+       (wine_id, country_id, region_id, appellation_id, primary_grape_id, producer_id, vintage_kind, vintage_year, catalog_wine_id)
+     values ($1,$2,$3,$4,$5,$6,'YEAR',2019,$7)`,
+    [wid, ids.country, ids.region, ids.appellation, ids.grape, ids.producer, catalogId],
+  );
+  const part = await client.query(
+    "insert into tasting_participants (tasting_id, user_id) values ($1,$2) returning id",
+    [tid, guesserId],
+  );
+  await client.query(
+    `insert into guesses
+       (wine_id, participant_id, country_points, region_points, appellation_points,
+        primary_grape_points, secondary_grape_points, producer_points,
+        type_designation_points, vintage_points, total_points, scored_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+    [
+      wid, part.rows[0].id,
+      points.country ?? 0, points.region ?? 0, points.appellation ?? 0,
+      points.primary_grape ?? 0, points.secondary_grape ?? 0, points.producer ?? 0,
+      points.type_designation ?? 0, points.vintage ?? 0, points.total ?? 0,
+      scored ? new Date().toISOString() : null,
+    ],
+  );
+  if (revealed) {
+    await client.query("update wines set is_revealed=true where id=$1", [wid]);
+  }
+  return { tastingId: tid, wineId: wid };
+}
+
+test("catalog_wine_descriptors counts term mentions across notes", async () => {
+  const ids = await referenceIds();
+  const [me, other] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, me);
+    const terms = await client.query("select id from wset_aroma_terms order by id limit 2");
+    const [t1, t2] = [terms.rows[0].id, terms.rows[1].id];
+    const n1 = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1,$2) returning id",
+      [catalogId, me],
+    );
+    const n2 = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1,$2) returning id",
+      [catalogId, other],
+    );
+    // t1 flagged by both notes, t2 by one
+    await client.query(
+      "insert into wset_note_aromas (note_id, term_id, sensed_on_nose) values ($1,$3,true),($2,$3,true)",
+      [n1.rows[0].id, n2.rows[0].id, t1],
+    );
+    await client.query(
+      "insert into wset_note_aromas (note_id, term_id, sensed_on_palate) values ($1,$2,true)",
+      [n1.rows[0].id, t2],
+    );
+    const r = await client.query(
+      "select term_id, mentions from catalog_wine_descriptors where catalog_wine_id=$1 order by mentions desc",
+      [catalogId],
+    );
+    assert.equal(r.rows[0].term_id, t1);
+    assert.equal(r.rows[0].mentions, 2);
+    assert.equal(r.rows.find((x) => x.term_id === t2).mentions, 1);
+  });
+});
+
+test("catalog_wine_guess_stats counts correct fields over revealed scored guesses", async () => {
+  const ids = await referenceIds();
+  const [host, guesser] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, host);
+    await insertScoredAppearance(ids, host, guesser, catalogId, { country: 2, region: 2, total: 4 });
+    await insertScoredAppearance(ids, host, guesser, catalogId, { country: 2, total: 2 });
+    const r = await client.query("select * from catalog_wine_guess_stats($1)", [catalogId]);
+    const s = r.rows[0];
+    assert.equal(s.appearances, 2);
+    assert.equal(s.guess_count, 2);
+    assert.equal(s.country_correct, 2);
+    assert.equal(s.region_correct, 1);
+    assert.equal(s.appellation_correct, 0);
+  });
+});
+
+test("catalog_wine_guess_stats excludes unrevealed wines and unscored guesses", async () => {
+  const ids = await referenceIds();
+  const [host, guesser] = await profilePair();
+  await withRollback(async () => {
+    const catalogId = await insertCatalog(ids, host);
+    await insertScoredAppearance(ids, host, guesser, catalogId, { country: 2, total: 2 }, { revealed: false });
+    await insertScoredAppearance(ids, host, guesser, catalogId, { country: 2, total: 2 }, { scored: false });
+    const r = await client.query("select * from catalog_wine_guess_stats($1)", [catalogId]);
+    const s = r.rows[0];
+    assert.equal(s.appearances, 1);
+    assert.equal(s.guess_count, 0);
+    assert.equal(s.country_correct, 0);
+  });
+});
