@@ -37,7 +37,7 @@ export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
       {options.map((opt) => {
         const selected = isSelected(opt);
         return (
@@ -48,8 +48,9 @@ export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T
             onClick={() => toggle(opt)}
             style={{
               borderRadius: 999,
-              padding: "7px 15px",
-              fontSize: 12.5,
+              padding: "2px 9px",
+              fontSize: 11.5,
+              lineHeight: 1.35,
               cursor: "pointer",
               transition: "transform 120ms, box-shadow 120ms",
               background: selected ? WSET.burgundy : WSET.pillBg,
