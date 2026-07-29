@@ -134,3 +134,60 @@ test("an update writes exactly one catalog_wine_edits audit row", async () => {
     assert.equal(r.rows[0].cuvee, "audited");
   });
 });
+
+// ---- Task 2: find_or_create_catalog_wine ----
+
+function snapshot(ids, over = {}) {
+  return JSON.stringify({
+    country_id: ids.country,
+    region_id: ids.region,
+    appellation_id: ids.appellation,
+    primary_grape_id: ids.grape,
+    producer_id: ids.producer,
+    vintage_kind: "YEAR",
+    vintage_year: 2019,
+    ...over,
+  });
+}
+
+test("find_or_create dedups on the identity tuple", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    await actAs(me);
+    const a = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids)]);
+    const b = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids)]);
+    assert.equal(a.rows[0].id, b.rows[0].id, "same identity resolves to one wine");
+  });
+});
+
+test("find_or_create makes a distinct wine for a different producer", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  const p2r = await client.query(
+    "select id from producers where id <> $1 order by id limit 1",
+    [ids.producer],
+  );
+  assert.equal(p2r.rowCount, 1, "need a second producer");
+  await withRollback(async () => {
+    await actAs(me);
+    const a = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids)]);
+    const b = await client.query(
+      "select find_or_create_catalog_wine($1::jsonb) as id",
+      [snapshot(ids, { producer_id: p2r.rows[0].id })],
+    );
+    assert.notEqual(a.rows[0].id, b.rows[0].id);
+  });
+});
+
+test("find_or_create sets created_by to the caller", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    await actAs(me);
+    const a = await client.query("select find_or_create_catalog_wine($1::jsonb) as id", [snapshot(ids)]);
+    await client.query("reset role");
+    const r = await client.query("select created_by from catalog_wines where id=$1", [a.rows[0].id]);
+    assert.equal(r.rows[0].created_by, me);
+  });
+});
