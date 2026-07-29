@@ -170,11 +170,11 @@ export async function addWine(
 
   if (
     !countryId || !regionId || !appellationId || !primaryGrapeId ||
-    !producerId || !wineName || !colour || !style
+    !producerId || !colour || !style
   ) {
     return {
       error:
-        "Fully identify the wine — everything except secondary grape and type designation is required.",
+        "Country, region, appellation, grape, producer, colour and style are required.",
     };
   }
   if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {
@@ -337,11 +337,11 @@ export async function updateWine(
 
   if (
     !countryId || !regionId || !appellationId || !primaryGrapeId ||
-    !producerId || !wineName || !colour || !style
+    !producerId || !colour || !style
   ) {
     return {
       error:
-        "Fully identify the wine — everything except secondary grape and type designation is required.",
+        "Country, region, appellation, grape, producer, colour and style are required.",
     };
   }
   if (!vintageUnknown && !["YEAR", "NV", "TAWNY"].includes(vintageKind)) {

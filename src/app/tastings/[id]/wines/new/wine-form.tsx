@@ -389,7 +389,7 @@ export function WineForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Wine name</Label>
+        <Label>Wine name (optional)</Label>
         <Input
           name="wine_name"
           value={wineName}

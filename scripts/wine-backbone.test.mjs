@@ -511,7 +511,7 @@ test("catalog_wines identity columns are all NOT NULL", async () => {
   const r = await client.query(
     `select column_name from information_schema.columns
      where table_name='catalog_wines'
-       and column_name in ('country_id','region_id','appellation_id','wine_name','producer_id','primary_grape_id','vintage_kind','colour','style')
+       and column_name in ('country_id','region_id','appellation_id','producer_id','primary_grape_id','vintage_kind','colour','style')
        and is_nullable='YES'`,
   );
   assert.equal(r.rowCount, 0, "no identity column is nullable");

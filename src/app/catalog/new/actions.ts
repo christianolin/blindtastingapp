@@ -49,7 +49,7 @@ export type NewCatalogWine = {
   typeDesignationId: string | null;
   colour: "WHITE" | "ROSE" | "RED";
   style: "STILL" | "SPARKLING" | "FORTIFIED";
-  wineName: string;
+  wineName: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   vintageTawnyYears: number | null;

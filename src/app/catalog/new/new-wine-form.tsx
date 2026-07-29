@@ -67,10 +67,10 @@ export function NewWineForm({
     setError(null);
     if (
       !countryId || !regionId || !appellationId || !primaryGrapeId ||
-      !producerId || !colour || !style || !wineName.trim()
+      !producerId || !colour || !style
     ) {
       setError(
-        "Wine name, country, region, appellation, primary grape, producer, colour and style are required.",
+        "Country, region, appellation, primary grape, producer, colour and style are required.",
       );
       return;
     }
@@ -90,7 +90,7 @@ export function NewWineForm({
         typeDesignationId: typeDesignationId || null,
         colour,
         style,
-        wineName: wineName.trim(),
+        wineName: wineName.trim() || null,
         vintageKind,
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
@@ -209,7 +209,7 @@ export function NewWineForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Wine name</Label>
+            <Label>Wine name (optional)</Label>
             <Input value={wineName} onChange={(e) => setWineName(e.target.value)} placeholder="e.g. Chateau Lascombes, or Clos Sainte-Hune" />
           </div>
           {typeDesignations.length > 0 ? (
