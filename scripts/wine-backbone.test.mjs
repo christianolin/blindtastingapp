@@ -318,3 +318,62 @@ test("wset_notes context defaults to OPEN and accepts BLIND + tasting_wine_id", 
     assert.equal(blindNote.rows[0].tasting_wine_id, wineId);
   });
 });
+
+// ---- Task 7: merge_catalog_wines ----
+
+test("merge repoints notes and answers, tombstones the loser, keeps the snapshot", async () => {
+  const ids = await referenceIds();
+  const [me, host] = await profilePair();
+  await withRollback(async () => {
+    const loser = await insertCatalog(ids, me);
+    const winner = await insertCatalog(ids, me);
+    const note = await client.query(
+      "insert into wset_notes (catalog_wine_id, author_id) values ($1,$2) returning id",
+      [loser, me],
+    );
+    const tasting = await client.query(
+      "insert into tastings (name, host_id, timing_mode, wine_source) values ('bb', $1, 'LIVE', 'HOST_PROVIDES') returning id",
+      [host],
+    );
+    const wine = await client.query(
+      "insert into wines (tasting_id, position) values ($1, 1) returning id",
+      [tasting.rows[0].id],
+    );
+    await client.query(
+      `insert into wine_answers
+         (wine_id, country_id, region_id, primary_grape_id, producer_id, vintage_kind, vintage_year, catalog_wine_id)
+       values ($1,$2,$3,$4,$5,'YEAR',2019,$6)`,
+      [wine.rows[0].id, ids.country, ids.region, ids.grape, ids.producer, loser],
+    );
+
+    await actAs(me);
+    await client.query("select merge_catalog_wines($1,$2)", [loser, winner]);
+    await client.query("reset role");
+
+    const n = await client.query("select catalog_wine_id from wset_notes where id=$1", [note.rows[0].id]);
+    assert.equal(n.rows[0].catalog_wine_id, winner, "note repointed to winner");
+    const a = await client.query(
+      "select catalog_wine_id, country_id, producer_id from wine_answers where wine_id=$1",
+      [wine.rows[0].id],
+    );
+    assert.equal(a.rows[0].catalog_wine_id, winner, "answer link repointed");
+    assert.equal(a.rows[0].country_id, ids.country, "snapshot country untouched");
+    assert.equal(a.rows[0].producer_id, ids.producer, "snapshot producer untouched");
+    const l = await client.query("select merged_into from catalog_wines where id=$1", [loser]);
+    assert.equal(l.rows[0].merged_into, winner, "loser tombstoned");
+  });
+});
+
+test("merge by a non-creator non-curator is rejected", async () => {
+  const ids = await referenceIds();
+  const [me, other] = await profilePair();
+  await withRollback(async () => {
+    const loser = await insertCatalog(ids, me);
+    const winner = await insertCatalog(ids, me);
+    await actAs(other);
+    await assert.rejects(
+      client.query("select merge_catalog_wines($1,$2)", [loser, winner]),
+      (e) => /not authorised/.test(e.message),
+    );
+  });
+});
