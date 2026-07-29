@@ -15,6 +15,8 @@ type WineRow = {
   vintage_year: number | null;
   vintage_tawny_years: number | null;
   producer: Rel;
+  country: Rel;
+  region: Rel;
   appellation: Rel;
 };
 
@@ -42,10 +44,10 @@ export default async function CatalogPage() {
       .from("catalog_wines")
       .select(
         "id, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
-          "producer:producers(name), appellation:appellations(name)",
+          "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name)",
       )
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(500),
     supabase.from("catalog_wine_ratings").select("catalog_wine_id, avg_score, note_count"),
     supabase
       .from("catalog_wines")
@@ -81,6 +83,9 @@ export default async function CatalogPage() {
       }),
       colour: w.colour,
       style: w.style,
+      country: relName(w.country),
+      region: relName(w.region),
+      appellation: relName(w.appellation),
       imageUrl: w.image_url,
       avgScore: rating ? Number(rating.avg_score) : null,
       noteCount: rating?.note_count ?? 0,
