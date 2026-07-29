@@ -71,7 +71,7 @@ export function NoteEditor({
       if (error) throw new Error(error.message);
       const savedId = data as unknown as string;
       if (!state.id && savedId) {
-        router.replace(`/cellar/${wineId}/notes/${savedId}`);
+        router.replace(`/catalog/${wineId}/notes/${savedId}`);
       }
       router.refresh();
     },

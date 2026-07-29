@@ -21,8 +21,8 @@ export default async function NewCellarWinePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-6">
-      <Link href="/cellar" className="text-sm text-muted-foreground underline underline-offset-4">
-        ← Back to cellar
+      <Link href="/catalog" className="text-sm text-muted-foreground underline underline-offset-4">
+        ← Back to catalog
       </Link>
       <Card>
         <CardHeader>

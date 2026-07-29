@@ -90,7 +90,7 @@ export function NewWineForm({
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
       });
-      router.push(`/cellar/${id}`);
+      router.push(`/catalog/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add the wine.");
       setPending(false);

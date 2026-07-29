@@ -4,11 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 
-export type CellarRow = {
+export type CatalogRow = {
   id: string;
   title: string;
-  colour: "WHITE" | "ROSE" | "RED";
-  style: "STILL" | "SPARKLING" | "FORTIFIED";
+  colour: "WHITE" | "ROSE" | "RED" | null;
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
   avgScore: number | null;
   noteCount: number;
 };
@@ -16,7 +16,7 @@ export type CellarRow = {
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
 // Iteration 1 keeps search client-side over the loaded page (no server search).
-export function CellarList({ rows }: { rows: CellarRow[] }) {
+export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
   const filtered = needle
@@ -28,20 +28,20 @@ export function CellarList({ rows }: { rows: CellarRow[] }) {
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by name…" />
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {rows.length === 0 ? "No wines in the cellar yet." : "No wines match that filter."}
+          {rows.length === 0 ? "No wines in the catalog yet." : "No wines match that filter."}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {filtered.map((r) => (
             <li key={r.id}>
               <Link
-                href={`/cellar/${r.id}`}
+                href={`/catalog/${r.id}`}
                 className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 hover:bg-muted"
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{r.title}</span>
                   <span className="text-xs text-muted-foreground">
-                    {cap(r.colour)} · {cap(r.style)}
+                    {[r.colour, r.style].filter(Boolean).map((s) => cap(s!)).join(" · ") || "—"}
                   </span>
                 </span>
                 <span className="shrink-0 text-sm">

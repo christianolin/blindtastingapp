@@ -17,7 +17,7 @@ export const NAV_LINKS: NavLink[] = [
     label: "Knowledge",
     match: ["/knowledge", "/rules"],
   },
-  { href: "/cellar", label: "Cellar", match: ["/cellar"] },
+  { href: "/catalog", label: "Catalog", match: ["/catalog"] },
   { href: "/people", label: "Friends", match: ["/people", "/friends"] },
 ];
 

@@ -37,7 +37,7 @@ export default async function NewNotePage({
     <div className="mx-auto w-full max-w-5xl p-6">
       <NoteEditor
         wineId={wineId}
-        wine={{ colour: wine.colour, style: wine.style }}
+        wine={{ colour: wine.colour ?? "RED", style: wine.style ?? "STILL" }}
         title={catalogWineTitle(wine)}
         terms={terms}
         initial={emptyNoteState()}
