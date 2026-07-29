@@ -48,11 +48,26 @@ function Row({
   label: rowLabel,
   sub,
   children,
+  wide,
 }: {
   label: string;
   sub?: string;
   children: React.ReactNode;
+  wide?: boolean;
 }) {
+  if (wide) {
+    return (
+      <div style={{ padding: "16px 0", borderTop: `1px solid ${WSET.hairline}` }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</span>
+          {sub !== undefined ? (
+            <span style={{ fontSize: 11.5, color: WSET.muted2 }}>{sub}</span>
+          ) : null}
+        </div>
+        {children}
+      </div>
+    );
+  }
   return (
     <div
       style={{
@@ -289,7 +304,7 @@ export function WsetSheet({
             <Row label="Development" sub={label(state.development)}>
               <SnapSlider stops={DEVELOPMENT_STOPS} labels={LABELS} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
-            <Row label="Aroma characteristics" sub="select all that apply">
+            <Row wide label="Aroma characteristics" sub="select all that apply">
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} />
             </Row>
           </SectionCard>
@@ -322,7 +337,7 @@ export function WsetSheet({
             <Row label="Flavour intensity" sub={label(state.flavourIntensity)}>
               <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
             </Row>
-            <Row label="Flavour characteristics" sub="what you taste, not just smell">
+            <Row wide label="Flavour characteristics" sub="what you taste, not just smell">
               <AromaPicker
                 terms={terms}
                 selectedIds={state.palateTermIds}
