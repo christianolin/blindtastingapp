@@ -6,6 +6,7 @@ import { composeLiveNote } from "../src/lib/wset/live-note.mjs";
 // dependency-free by taking labels as a parameter).
 const LABELS = {
   CLEAR: "clear",
+  MEDIUM: "medium",
   MEDIUM_PLUS: "medium(+)",
   RUBY: "ruby",
   LEGS_TEARS: "legs / tears",
@@ -72,17 +73,21 @@ test("nose line joins scales then aromas after an em-dash", () => {
   );
 });
 
-test("palate joins structure scales then flavour aromas (handoff format)", () => {
+test("palate is attribute-led so no level is bare or ambiguous", () => {
   const state = {
     ...empty,
     sweetness: "DRY",
     acidity: "MEDIUM_PLUS",
+    tannin: "MEDIUM",
+    alcohol: "MEDIUM",
+    body: "MEDIUM_PLUS",
     palateTermIds: ["t-blackcurrant", "t-black-cherry"],
   };
   const out = composeLiveNote(state, termLabels, LABELS);
   assert.equal(
     out.palate,
-    "Dry, medium(+) acidity — blackcurrant, black cherry.",
+    "Dry, acidity medium(+), tannin medium, alcohol medium, body medium(+) " +
+      "— blackcurrant, black cherry.",
   );
 });
 

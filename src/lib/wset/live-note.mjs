@@ -62,20 +62,21 @@ export function composeLiveNote(state, termLabels, labels) {
     });
   }
 
+  // Sweetness leads as its own word (dry / medium-sweet …). Every other
+  // structural attribute is attribute-led ("tannin medium(+)") so a run of
+  // "medium" levels stays scannable instead of a wall of bare, ambiguous ones.
   const palParts = [];
-  for (const key of [
-    "sweetness", "acidity", "tannin", "alcohol", "body",
-    "flavourIntensity", "finish", "mousse",
+  if (state.sweetness != null) palParts.push(labels[state.sweetness]);
+  for (const [key, name] of [
+    ["acidity", "acidity"],
+    ["tannin", "tannin"],
+    ["alcohol", "alcohol"],
+    ["body", "body"],
+    ["flavourIntensity", "flavour"],
+    ["finish", "finish"],
+    ["mousse", "mousse"],
   ]) {
-    if (state[key] != null) {
-      const suffix =
-        key === "acidity" ? " acidity"
-        : key === "tannin" ? " tannin"
-        : key === "flavourIntensity" ? " flavour"
-        : key === "finish" ? " finish"
-        : "";
-      palParts.push(`${labels[state[key]]}${suffix}`);
-    }
+    if (state[key] != null) palParts.push(`${name} ${labels[state[key]]}`);
   }
   const palAromas = termList(state.palateTermIds, termLabels);
   if (palParts.length || palAromas.length) {
