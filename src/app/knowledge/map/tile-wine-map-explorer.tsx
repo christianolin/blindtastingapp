@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import {
   Layers,
   PanelLeftClose,
@@ -42,6 +41,7 @@ import {
   fetchArchetypesForPlace,
   type ArchetypeListItem,
 } from "@/lib/wset/queries";
+import { ArchetypeModal } from "@/components/wset/archetype-modal";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
 const TileWineMap = dynamic(
@@ -188,6 +188,9 @@ export function TileWineMapExplorer({
     key: string;
     rows: ArchetypeListItem[];
   } | null>(null);
+  const [openArchetype, setOpenArchetype] = useState<ArchetypeListItem | null>(
+    null,
+  );
   useEffect(() => {
     if (!selectedKey) return;
     let cancelled = false;
@@ -463,14 +466,15 @@ export function TileWineMapExplorer({
                     </p>
                     <div className="flex flex-col gap-1.5">
                       {archetypes.map((a) => (
-                        <Link
+                        <button
                           key={a.id}
-                          href={`/knowledge/archetypes/${a.id}`}
-                          className="flex items-center justify-between rounded-lg border border-border/70 px-2.5 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+                          type="button"
+                          onClick={() => setOpenArchetype(a)}
+                          className="flex items-center justify-between rounded-lg border border-border/70 px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/60"
                         >
                           {a.name}
                           <span className="text-muted-foreground">→</span>
-                        </Link>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -557,6 +561,13 @@ export function TileWineMapExplorer({
           </button>
         )}
       </div>
+      {openArchetype ? (
+        <ArchetypeModal
+          id={openArchetype.id}
+          name={openArchetype.name}
+          onClose={() => setOpenArchetype(null)}
+        />
+      ) : null}
     </div>
   );
 }
