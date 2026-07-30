@@ -283,6 +283,7 @@ export type Database = {
           favorite_wine_type: string | null;
           is_curator: boolean;
           role: UserRole;
+          preferred_currency: string;
           created_at: string;
         };
         Insert: {
@@ -296,6 +297,7 @@ export type Database = {
           favorite_wine_type?: string | null;
           is_curator?: boolean;
           role?: UserRole;
+          preferred_currency?: string;
           created_at?: string;
         };
         Update: Partial<{
@@ -309,6 +311,7 @@ export type Database = {
           favorite_wine_type: string | null;
           is_curator: boolean;
           role: UserRole;
+          preferred_currency: string;
           created_at: string;
         }>;
         Relationships: [];
@@ -1176,6 +1179,46 @@ export type Database = {
         >;
         Relationships: [];
       };
+      cellar_lots: {
+        Row: {
+          id: string;
+          owner_id: string;
+          catalog_wine_id: string;
+          bottle_size_ml: number;
+          quantity: number;
+          purchased_quantity: number;
+          price_per_bottle: number | null;
+          currency: string;
+          purchased_on: string | null;
+          purchase_source: string | null;
+          drink_from: number | null;
+          drink_to: number | null;
+          storage_location: string | null;
+          lot_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          catalog_wine_id: string;
+          bottle_size_ml?: number;
+          quantity: number;
+          purchased_quantity: number;
+          price_per_bottle?: number | null;
+          currency?: string;
+          purchased_on?: string | null;
+          purchase_source?: string | null;
+          drink_from?: number | null;
+          drink_to?: number | null;
+          storage_location?: string | null;
+          lot_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cellar_lots"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
@@ -1284,6 +1327,10 @@ export type Database = {
           type_designation_correct: number;
           vintage_correct: number;
         }[];
+      };
+      add_cellar_lot: {
+        Args: { p: unknown };
+        Returns: string;
       };
     };
   };
