@@ -201,6 +201,7 @@ export const HUES_BY_COLOUR: Record<WineColour, ColourHue[]> = {
   WHITE: ["LEMON_GREEN", "LEMON", "GOLD", "AMBER", "BROWN"],
   ROSE: ["PINK", "SALMON", "ORANGE"],
   RED: ["PURPLE", "RUBY", "GARNET", "TAWNY", "BROWN"],
+  ORANGE: ["GOLD", "AMBER", "BROWN"],
 };
 
 // Swatch hex per hue, from the handoff colour-slider stops. Keyed by colour
@@ -226,6 +227,11 @@ export const HUE_HEX: Record<WineColour, Partial<Record<ColourHue, string>>> = {
     GARNET: "#833024",
     TAWNY: "#9A5A2C",
     BROWN: "#6E4826",
+  },
+  ORANGE: {
+    GOLD: "#DDB855",
+    AMBER: "#C08B3E",
+    BROWN: "#8F6236",
   },
 };
 

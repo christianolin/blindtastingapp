@@ -47,8 +47,8 @@ export type NewCatalogWine = {
   secondaryGrapeId: string | null;
   producerId: string;
   typeDesignationId: string | null;
-  colour: "WHITE" | "ROSE" | "RED";
-  style: "STILL" | "SPARKLING" | "FORTIFIED";
+  colour: "WHITE" | "ROSE" | "RED" | "ORANGE";
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
   wineName: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;

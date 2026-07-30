@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 export type CatalogRow = {
   id: string;
   title: string;
-  colour: "WHITE" | "ROSE" | "RED" | null;
-  style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
+  colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null;
   country: string | null;
   region: string | null;
   appellation: string | null;

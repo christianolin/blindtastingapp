@@ -63,8 +63,8 @@ export type WineMapReleaseStatus =
   | "FAILED";
 
 // --- Cellar catalog + WSET tasting-note enums --------------------------------
-export type WineColour = "WHITE" | "ROSE" | "RED";
-export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED";
+export type WineColour = "WHITE" | "ROSE" | "RED" | "ORANGE";
+export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
 export type WsetClarity = "CLEAR" | "HAZY";
 export type WsetCondition = "CLEAN" | "UNCLEAN";
 export type WsetAppearanceIntensity =

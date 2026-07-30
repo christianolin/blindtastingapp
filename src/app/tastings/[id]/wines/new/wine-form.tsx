@@ -55,8 +55,8 @@ export type WineFormInitial = {
   vintage_tawny_years: number | null;
   image_url: string | null;
   wine_name: string | null;
-  colour: "WHITE" | "ROSE" | "RED" | null;
-  style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
+  colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null;
 };
 
 const VINTAGE_KIND_ITEMS = {
@@ -72,8 +72,8 @@ const TAWNY_YEARS_ITEMS = {
   "40": "40+ years",
 };
 
-const COLOUR_ITEMS = { WHITE: "White", ROSE: "Rosé", RED: "Red" };
-const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", FORTIFIED: "Fortified" };
+const COLOUR_ITEMS = { WHITE: "White", ORANGE: "Orange", ROSE: "Rosé", RED: "Red" };
+const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FORTIFIED: "Fortified" };
 
 export function WineForm({
   tastingId,
@@ -406,6 +406,7 @@ export function WineForm({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="WHITE">White</SelectItem>
+            <SelectItem value="ORANGE">Orange</SelectItem>
             <SelectItem value="ROSE">Rosé</SelectItem>
             <SelectItem value="RED">Red</SelectItem>
           </SelectContent>
@@ -421,6 +422,7 @@ export function WineForm({
           <SelectContent>
             <SelectItem value="STILL">Still</SelectItem>
             <SelectItem value="SPARKLING">Sparkling</SelectItem>
+            <SelectItem value="SWEET">Sweet</SelectItem>
             <SelectItem value="FORTIFIED">Fortified</SelectItem>
           </SelectContent>
         </Select>

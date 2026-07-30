@@ -17,10 +17,10 @@ import {
   createRegion,
 } from "./actions";
 
-const COLOURS = ["WHITE", "ROSE", "RED"] as const;
-const STYLES = ["STILL", "SPARKLING", "FORTIFIED"] as const;
-const COLOUR_LABELS = { WHITE: "White", ROSE: "Rosé", RED: "Red" };
-const STYLE_LABELS = { STILL: "Still", SPARKLING: "Sparkling", FORTIFIED: "Fortified" };
+const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
+const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
+const COLOUR_LABELS = { WHITE: "White", ORANGE: "Orange", ROSE: "Rosé", RED: "Red" };
+const STYLE_LABELS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FORTIFIED: "Fortified" };
 
 export function NewWineForm({
   countries: initialCountries,

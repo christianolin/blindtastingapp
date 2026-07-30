@@ -7,8 +7,8 @@ import { CatalogList, type CatalogRow } from "./catalog-list";
 type Rel = { name: string } | { name: string }[] | null;
 type WineRow = {
   id: string;
-  colour: "WHITE" | "ROSE" | "RED" | null;
-  style: "STILL" | "SPARKLING" | "FORTIFIED" | null;
+  colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null;
   wine_name: string | null;
   image_url: string | null;
   vintage_kind: "YEAR" | "NV" | "TAWNY";

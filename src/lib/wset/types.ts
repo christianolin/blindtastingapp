@@ -7,8 +7,8 @@
 import type { VintageKind } from "@/lib/supabase/database.types";
 
 // catalog_wines.colour / catalog_wines.style
-export type WineColour = "WHITE" | "ROSE" | "RED";
-export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED";
+export type WineColour = "WHITE" | "ROSE" | "RED" | "ORANGE";
+export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
 
 // wset_notes scale enums (every one nullable on a note until rated)
 export type Clarity = "CLEAR" | "HAZY";

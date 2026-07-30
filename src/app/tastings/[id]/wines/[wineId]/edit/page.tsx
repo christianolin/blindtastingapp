@@ -149,8 +149,8 @@ export default async function EditWinePage({
               vintage_tawny_years: answer.vintage_tawny_years,
               image_url: answer.image_url,
               wine_name: catalogWine?.wine_name ?? null,
-              colour: (catalogWine?.colour as "WHITE" | "ROSE" | "RED" | null) ?? null,
-              style: (catalogWine?.style as "STILL" | "SPARKLING" | "FORTIFIED" | null) ?? null,
+              colour: (catalogWine?.colour as "WHITE" | "ROSE" | "RED" | "ORANGE" | null) ?? null,
+              style: (catalogWine?.style as "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null) ?? null,
             }}
           />
         </CardContent>

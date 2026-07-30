@@ -6,10 +6,11 @@ import { WSET } from "./tokens";
 
 const COLOUR_LABEL: Record<WineColour, string> = {
   WHITE: "White",
+  ORANGE: "Orange",
   ROSE: "Rosé",
   RED: "Red",
 };
-const COLOURS: WineColour[] = ["WHITE", "ROSE", "RED"];
+const COLOURS: WineColour[] = ["WHITE", "ORANGE", "ROSE", "RED"];
 
 // Colour is the wine's identity (set on the catalog wine), so the segmented
 // control is read-only here — it shows which family this wine is. The hue
