@@ -34,5 +34,5 @@ export async function setPassword(
       .eq("id", userData.user.id);
   }
 
-  redirect("/dashboard");
+  redirect("/taste");
 }

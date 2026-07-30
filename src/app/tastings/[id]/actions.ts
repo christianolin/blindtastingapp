@@ -82,7 +82,7 @@ export async function finishTasting(
   if (error) return { error: error.message };
 
   revalidatePath(`/tastings/${tastingId}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/taste");
   return { success: "Tasting finished — moved to History." };
 }
 
@@ -95,7 +95,7 @@ export async function deleteTasting(formData: FormData): Promise<void> {
   if (!tasting) return;
 
   await supabase.from("tastings").delete().eq("id", tastingId);
-  redirect("/dashboard");
+  redirect("/taste");
 }
 
 // Host edits the scheduled date/time. Allowed any time (harmless).
@@ -273,5 +273,5 @@ export async function respondToInvite(formData: FormData): Promise<void> {
     .eq("user_id", user.id);
 
   revalidatePath(`/tastings/${tastingId}`);
-  revalidatePath("/dashboard");
+  revalidatePath("/taste");
 }

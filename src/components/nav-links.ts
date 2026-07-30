@@ -10,7 +10,7 @@ export type NavLink = { href: string; label: string; match: string[] };
 // destination uses in-page tabs for its subsections. Profile isn't a link here —
 // it's the avatar chip in AppHeader.
 export const NAV_LINKS: NavLink[] = [
-  { href: "/dashboard", label: "Tastings", match: ["/dashboard", "/tastings"] },
+  { href: "/taste", label: "Taste", match: ["/taste", "/tastings"] },
   {
     href: "/knowledge/map",
     label: "Knowledge",

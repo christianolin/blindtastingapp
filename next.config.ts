@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/cellar", destination: "/catalog", permanent: false },
       { source: "/cellar/:path*", destination: "/catalog/:path*", permanent: false },
+      // /dashboard became the Taste pillar (P4); 307 so old links/bookmarks resolve.
+      { source: "/dashboard", destination: "/taste", permanent: false },
+      { source: "/dashboard/:path*", destination: "/taste/:path*", permanent: false },
     ];
   },
 };

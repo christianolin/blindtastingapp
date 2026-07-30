@@ -22,5 +22,5 @@ export async function signIn(
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  redirect("/taste");
 }

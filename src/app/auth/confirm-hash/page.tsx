@@ -17,7 +17,7 @@ function ConfirmHash() {
 
   useEffect(() => {
     async function confirm() {
-      const next = searchParams.get("next") ?? "/dashboard";
+      const next = searchParams.get("next") ?? "/taste";
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");

@@ -12,7 +12,7 @@ const TAB_KEYS: TabKey[] = ["invited", "hosting", "attending", "history"];
  * server-rendered card lists passed in as nodes; this only owns which one is
  * visible.
  *
- * The active tab is URL-addressable (`/dashboard?tab=history`), matching the
+ * The active tab is URL-addressable (`/taste?tab=history`), matching the
  * Knowledge section tabs: a refresh or shared link lands on the same tab and
  * browser back/forward move between tabs. Active is derived from the URL via
  * `useSearchParams`; clicking pushes a new history entry with
@@ -42,8 +42,8 @@ export function TastingsTabs({
     : fallback;
 
   const select = (key: TabKey) => {
-    // Keep the default tab as a clean `/dashboard` URL; others carry `?tab=`.
-    const url = key === fallback ? "/dashboard" : `/dashboard?tab=${key}`;
+    // Keep the default tab as a clean `/taste` URL; others carry `?tab=`.
+    const url = key === fallback ? "/taste" : `/taste?tab=${key}`;
     window.history.pushState(null, "", url);
   };
 

@@ -42,7 +42,7 @@ export async function requireAdmin(): Promise<Gate> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const role = await getRole(supabase, user.id);
-  if (role !== "ADMIN") redirect("/dashboard");
+  if (role !== "ADMIN") redirect("/taste");
   return { supabase, user, role };
 }
 
@@ -54,6 +54,6 @@ export async function requireContributor(): Promise<Gate> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const role = await getRole(supabase, user.id);
-  if (role !== "ADMIN" && role !== "CONTRIBUTOR") redirect("/dashboard");
+  if (role !== "ADMIN" && role !== "CONTRIBUTOR") redirect("/taste");
   return { supabase, user, role };
 }
