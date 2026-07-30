@@ -989,6 +989,56 @@ export type Database = {
         Relationships: [];
       };
 
+      wine_archetypes: {
+        Row: {
+          id: string;
+          wine_place_id: string;
+          name: string;
+          colour: WineColour;
+          style: WineStyle;
+          primary_grape_id: string | null;
+          secondary_grape_id: string | null;
+          description: string | null;
+          sat: { [key: string]: [string, string] };
+          quality_low: number | null;
+          quality_high: number | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wine_place_id: string;
+          name: string;
+          colour: WineColour;
+          style?: WineStyle;
+          primary_grape_id?: string | null;
+          secondary_grape_id?: string | null;
+          description?: string | null;
+          sat?: { [key: string]: [string, string] };
+          quality_low?: number | null;
+          quality_high?: number | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["wine_archetypes"]["Insert"]>;
+        Relationships: [];
+      };
+
+      wine_archetype_aromas: {
+        Row: {
+          archetype_id: string;
+          term_id: string;
+        };
+        Insert: {
+          archetype_id: string;
+          term_id: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_archetype_aromas"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
       wset_notes: {
         Row: {
           id: string;

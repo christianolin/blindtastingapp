@@ -46,7 +46,7 @@ function label(value: string | null): string {
   return value ? LABELS[value] ?? value : "not set";
 }
 
-function Row({
+export function Row({
   label: rowLabel,
   sub,
   children,
@@ -91,7 +91,7 @@ function Row({
   );
 }
 
-function SectionCard({
+export function SectionCard({
   id,
   numeral,
   title,

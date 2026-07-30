@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { WineColour, WineStyle } from "@/lib/wset/types";
 import type { VintageKind } from "@/lib/supabase/database.types";
+import type { ArchetypeView } from "@/components/wset/archetype-sheet";
 
 export type CellarWine = {
   id: string;
@@ -188,4 +189,94 @@ export async function fetchWineGuessStats(
     { key: "vintage", label: "Vintage", correct: row.vintage_correct ?? 0 },
   ].map((f) => ({ ...f, pct: pct(f.correct) }));
   return { appearances: row.appearances ?? 0, guessCount: gc, fields };
+}
+
+// --- Wine-style archetypes (A) ----------------------------------------------
+
+export type ArchetypeListItem = {
+  id: string;
+  name: string;
+  colour: WineColour;
+  style: WineStyle;
+};
+
+// A single "typical wine from here" reference profile, assembled for the
+// read-only ArchetypeSheet. Place name, grape names and aroma terms are looked
+// up separately (small reference set) to sidestep embed-relationship typing.
+export async function fetchArchetype(
+  supabase: SupabaseClient<Database>,
+  id: string,
+): Promise<ArchetypeView | null> {
+  const { data: row } = await supabase
+    .from("wine_archetypes")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (!row) return null;
+
+  const grapeIds = [row.primary_grape_id, row.secondary_grape_id].filter(
+    (v): v is string => Boolean(v),
+  );
+  const [placeRes, grapesRes, linkRes] = await Promise.all([
+    supabase.from("wine_places").select("name").eq("id", row.wine_place_id).maybeSingle(),
+    grapeIds.length
+      ? supabase.from("grapes").select("id, name").in("id", grapeIds)
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    supabase.from("wine_archetype_aromas").select("term_id").eq("archetype_id", id),
+  ]);
+
+  const grapeName = new Map((grapesRes.data ?? []).map((g) => [g.id, g.name] as const));
+  const grapes = [row.primary_grape_id, row.secondary_grape_id]
+    .map((gid) => (gid ? grapeName.get(gid) : null))
+    .filter((v): v is string => Boolean(v))
+    .join(" · ");
+
+  const termIds = (linkRes.data ?? []).map((l) => l.term_id);
+  let aromas: string[] = [];
+  if (termIds.length > 0) {
+    const { data: terms } = await supabase
+      .from("wset_aroma_terms")
+      .select("term, sort_order")
+      .in("id", termIds)
+      .order("sort_order");
+    aromas = (terms ?? []).map((t) => t.term);
+  }
+
+  return {
+    name: row.name,
+    colour: row.colour,
+    style: row.style,
+    placeName: placeRes.data?.name ?? "",
+    grapes,
+    description: row.description,
+    qualityLow: row.quality_low,
+    qualityHigh: row.quality_high,
+    sat: row.sat,
+    aromas,
+  };
+}
+
+// The archetypes hung off a map place (canonical key), curated order — powers
+// the map's "typical wines from here" deep-links.
+export async function fetchArchetypesForPlace(
+  supabase: SupabaseClient<Database>,
+  canonicalKey: string,
+): Promise<ArchetypeListItem[]> {
+  const { data: place } = await supabase
+    .from("wine_places")
+    .select("id")
+    .eq("canonical_key", canonicalKey)
+    .maybeSingle();
+  if (!place) return [];
+  const { data } = await supabase
+    .from("wine_archetypes")
+    .select("id, name, colour, style")
+    .eq("wine_place_id", place.id)
+    .order("sort_order");
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    colour: r.colour,
+    style: r.style,
+  }));
 }
