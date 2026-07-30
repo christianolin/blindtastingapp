@@ -48,61 +48,112 @@ export default async function CatalogWinePage({
   const grapes = formatBlend(blend);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-6">
-      <Link href="/catalog" className="text-sm text-muted-foreground underline underline-offset-4">
-        ← Catalog
-      </Link>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
+      <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+        <Link href="/catalog" className="hover:text-foreground">
+          Catalog
+        </Link>
+        {[wine.countryName, wine.regionName, wine.appellationName]
+          .filter(Boolean)
+          .map((x) => (
+            <span key={x} className="flex items-center gap-1.5">
+              <span className="opacity-50">/</span>
+              {x}
+            </span>
+          ))}
+      </nav>
 
-      <div>
-        <div className="mb-1.5 flex flex-wrap gap-1.5">
-          {wine.colour ? <Badge variant="secondary">{cap(wine.colour)}</Badge> : null}
-          {wine.style ? <Badge variant="secondary">{cap(wine.style)}</Badge> : null}
-        </div>
-        <h1 className="font-heading text-2xl font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">
-          {[wine.regionName, wine.countryName].filter(Boolean).join(", ")}
-          {grapes ? ` — ${grapes}` : ""}
-        </p>
-        {wine.appellationPlaceKey && wine.appellationName ? (
-          <Link
-            href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
-            className="mt-1 inline-block text-sm text-primary underline underline-offset-4"
-          >
-            View {wine.appellationName} on the map →
-          </Link>
-        ) : null}
-      </div>
-
-      <WineImage wineId={wineId} initialUrl={wine.imageUrl} />
-
-      <Card>
-        <CardContent className="flex items-center justify-between pt-6">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Community rating</p>
-            {wine.avgScore != null ? (
-              <p className="font-heading text-xl font-semibold">
-                {wine.avgScore.toFixed(1)}{" "}
-                <span className="text-sm font-normal text-muted-foreground">
-                  {qualityBand(Math.round(wine.avgScore))} · {wine.noteCount}{" "}
-                  {wine.noteCount === 1 ? "note" : "notes"}
-                </span>
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">No ratings yet — be the first.</p>
-            )}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-5 sm:flex-row lg:col-span-2">
+          <div className="w-full sm:w-48 sm:shrink-0">
+            <WineImage wineId={wineId} initialUrl={wine.imageUrl} />
           </div>
-          <Link
-            href={`/catalog/${wineId}/notes/new`}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            New tasting note
-          </Link>
-        </CardContent>
-      </Card>
+          <div className="min-w-0">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {title}
+            </h1>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {wine.countryName ? (
+                <Badge variant="secondary">{wine.countryName}</Badge>
+              ) : null}
+              {wine.regionName ? (
+                <Badge variant="secondary">{wine.regionName}</Badge>
+              ) : null}
+              {wine.appellationName ? (
+                <Badge variant="secondary">{wine.appellationName}</Badge>
+              ) : null}
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Grape blend</p>
+                <p className="mt-0.5 text-sm">{grapes || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Wine style</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {wine.colour ? (
+                    <Badge variant="secondary">{cap(wine.colour)}</Badge>
+                  ) : null}
+                  {wine.style ? (
+                    <Badge variant="secondary">{cap(wine.style)}</Badge>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {wine.appellationPlaceKey && wine.appellationName ? (
+              <Link
+                href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
+                className="mt-3 inline-block text-sm text-primary underline underline-offset-4"
+              >
+                View {wine.appellationName} on the map →
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        <Card className="lg:self-start">
+          <CardContent className="flex flex-col gap-4 pt-6">
+            {wine.avgScore != null ? (
+              <div>
+                <p className="font-heading text-4xl font-semibold tabular-nums">
+                  {wine.avgScore.toFixed(1)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {qualityBand(Math.round(wine.avgScore))} · avg community score
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No ratings yet — be the first.
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
+              <div>
+                <p className="font-heading text-lg font-semibold tabular-nums">
+                  {wine.noteCount}
+                </p>
+                <p className="text-xs text-muted-foreground">Tasting notes</p>
+              </div>
+              <div>
+                <p className="font-heading text-lg font-semibold tabular-nums">
+                  {guessStats?.appearances ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground">Blind tastings</p>
+              </div>
+            </div>
+            <Link
+              href={`/catalog/${wineId}/notes/new`}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              New tasting note
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
 
       {descriptors.length > 0 ? (
         <div>
-          <p className="mb-2 text-xs font-medium text-muted-foreground">What people find</p>
+          <p className="mb-2 text-sm font-medium">What people find</p>
           <div className="flex flex-wrap gap-1.5">
             {descriptors.map((d) => (
               <span
@@ -110,7 +161,9 @@ export default async function CatalogWinePage({
                 className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
               >
                 {d.term}
-                {d.mentions > 1 ? <span className="text-muted-foreground">{d.mentions}</span> : null}
+                {d.mentions > 1 ? (
+                  <span className="text-muted-foreground">{d.mentions}</span>
+                ) : null}
               </span>
             ))}
           </div>
@@ -119,13 +172,14 @@ export default async function CatalogWinePage({
 
       {guessStats && guessStats.appearances > 0 ? (
         <div>
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Blind-tasting track record</p>
+          <p className="mb-2 text-sm font-medium">Blind-tasting track record</p>
           <Card>
             <CardContent className="pt-6">
               <p className="mb-3 text-sm">
                 Poured blind in{" "}
                 <span className="font-medium">
-                  {guessStats.appearances} {guessStats.appearances === 1 ? "tasting" : "tastings"}
+                  {guessStats.appearances}{" "}
+                  {guessStats.appearances === 1 ? "tasting" : "tastings"}
                 </span>
                 {guessStats.guessCount > 0
                   ? ` · ${guessStats.guessCount} scored ${
@@ -138,9 +192,13 @@ export default async function CatalogWinePage({
                 <ul className="flex flex-col gap-1.5">
                   {guessStats.fields.map((f) => (
                     <li key={f.key} className="flex items-center gap-3 text-sm">
-                      <span className="w-24 shrink-0 text-muted-foreground">{f.label}</span>
+                      <span className="w-24 shrink-0 text-muted-foreground">
+                        {f.label}
+                      </span>
                       <Progress value={f.pct} className="flex-1" />
-                      <span className="w-10 shrink-0 text-right font-medium">{f.pct}%</span>
+                      <span className="w-10 shrink-0 text-right font-medium">
+                        {f.pct}%
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -153,14 +211,14 @@ export default async function CatalogWinePage({
       ) : null}
 
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Your notes</p>
+        <p className="mb-2 text-sm font-medium">Your notes</p>
         {myNotes && myNotes.length > 0 ? (
           <ul className="flex flex-col gap-2">
             {myNotes.map((n) => (
               <li key={n.id}>
                 <Link
                   href={`/catalog/${wineId}/notes/${n.id}`}
-                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
                 >
                   <span className="flex items-center gap-2">
                     {n.tasted_on}
@@ -178,7 +236,9 @@ export default async function CatalogWinePage({
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">You haven&apos;t tasted this wine yet.</p>
+          <p className="text-sm text-muted-foreground">
+            You haven&apos;t tasted this wine yet.
+          </p>
         )}
       </div>
     </div>
