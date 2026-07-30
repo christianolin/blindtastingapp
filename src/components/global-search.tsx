@@ -18,7 +18,6 @@ const GROUPS: { kind: string; heading: string }[] = [
   { kind: "wine", heading: "Wines" },
   { kind: "place", heading: "Regions & places" },
   { kind: "grape", heading: "Grapes" },
-  { kind: "producer", heading: "Producers" },
 ];
 
 function hrefFor(h: Hit): string {
@@ -29,8 +28,6 @@ function hrefFor(h: Hit): string {
       return `/knowledge/map?place=${encodeURIComponent(h.href_key)}`;
     case "grape":
       return `/knowledge/grapes?q=${encodeURIComponent(h.href_key)}`;
-    case "producer":
-      return `/catalog?producer=${encodeURIComponent(h.href_key)}`;
     default:
       return "/catalog";
   }

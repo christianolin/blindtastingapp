@@ -33,7 +33,7 @@ test("finds a place by name", async () => {
 
 test("caps each kind at the limit", async () => {
   const rows = await search("a", 2);
-  for (const kind of ["wine", "place", "grape", "producer"]) {
+  for (const kind of ["wine", "place", "grape"]) {
     const n = rows.filter((r) => r.kind === kind).length;
     assert.ok(n <= 2, `${kind} count ${n} exceeds limit`);
   }
@@ -43,7 +43,7 @@ test("returns the uniform (kind,label,href_key) shape", async () => {
   const rows = await search("Bordeaux", 3);
   assert.ok(rows.length > 0, "expected some results for Bordeaux");
   for (const r of rows) {
-    assert.ok(["wine", "place", "grape", "producer"].includes(r.kind));
+    assert.ok(["wine", "place", "grape"].includes(r.kind));
     assert.ok(r.label);
     assert.ok(r.href_key);
   }
