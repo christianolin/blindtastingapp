@@ -16,6 +16,7 @@ export type CellarWine = {
   countryName: string | null;
   regionName: string | null;
   appellationName: string | null;
+  appellationPlaceKey?: string | null;
   primaryGrapeName: string | null;
   secondaryGrapeName: string | null;
   typeDesignationName: string | null;
@@ -24,7 +25,7 @@ export type CellarWine = {
 };
 
 const SELECT =
-  "id, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, appellation_id, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -88,22 +89,48 @@ export function catalogWineTitle(wine: {
   return deduped.join(" ") || "Untitled wine";
 }
 
+// The map place (canonical key) linked to a wine's appellation, if any — powers
+// the "view on the map" deep-link. Separate, individually-failing lookups so a
+// miss never breaks the wine page.
+async function appellationMapKey(
+  supabase: SupabaseClient<Database>,
+  appellationId: string | null,
+): Promise<string | null> {
+  if (!appellationId) return null;
+  const { data: ap } = await supabase
+    .from("appellations")
+    .select("wine_place_id")
+    .eq("id", appellationId)
+    .maybeSingle();
+  const placeId = ap?.wine_place_id ?? null;
+  if (!placeId) return null;
+  const { data: pl } = await supabase
+    .from("wine_places")
+    .select("canonical_key")
+    .eq("id", placeId)
+    .maybeSingle();
+  return pl?.canonical_key ?? null;
+}
+
 export async function fetchCatalogWine(
   supabase: SupabaseClient<Database>,
   wineId: string,
 ): Promise<CellarWine | null> {
   const { data } = await supabase.from("catalog_wines").select(SELECT).eq("id", wineId).maybeSingle();
   if (!data) return null;
-  const { data: rating } = await supabase
-    .from("catalog_wine_ratings")
-    .select("avg_score, note_count")
-    .eq("catalog_wine_id", wineId)
-    .maybeSingle();
-  return shape(
-    data as unknown as Record<string, unknown>,
-    rating ? Number(rating.avg_score) : null,
-    rating?.note_count ?? 0,
-  );
+  const row = data as unknown as Record<string, unknown>;
+  const [{ data: rating }, appellationPlaceKey] = await Promise.all([
+    supabase
+      .from("catalog_wine_ratings")
+      .select("avg_score, note_count")
+      .eq("catalog_wine_id", wineId)
+      .maybeSingle(),
+    appellationMapKey(supabase, (row.appellation_id as string | null) ?? null),
+  ]);
+  return {
+    ...shape(row, rating ? Number(rating.avg_score) : null, rating?.note_count ?? 0),
+    appellationPlaceKey,
+  };
 }
 
 // --- Wine-hub aggregates (P3) -----------------------------------------------

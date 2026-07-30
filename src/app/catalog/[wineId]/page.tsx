@@ -59,6 +59,14 @@ export default async function CatalogWinePage({
           {[wine.regionName, wine.countryName].filter(Boolean).join(", ")}
           {grapes ? ` — ${grapes}` : ""}
         </p>
+        {wine.appellationPlaceKey && wine.appellationName ? (
+          <Link
+            href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
+            className="mt-1 inline-block text-sm text-primary underline underline-offset-4"
+          >
+            View {wine.appellationName} on the map →
+          </Link>
+        ) : null}
       </div>
 
       <WineImage wineId={wineId} initialUrl={wine.imageUrl} />
