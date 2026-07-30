@@ -50,6 +50,12 @@ export async function AppHeader({
 
   const name = displayName ?? "";
   const invites = await getPendingInvites();
+  const { data: roleRow } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  const isAdmin = roleRow?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
@@ -59,6 +65,11 @@ export async function AppHeader({
 
       <nav className="hidden items-center gap-4 text-sm md:flex">
         <AppNav />
+        {isAdmin ? (
+          <Link href="/admin" className="hover:underline">
+            Admin
+          </Link>
+        ) : null}
         <Link
           href={`/u/${userId}`}
           className="flex items-center gap-2 hover:underline"
