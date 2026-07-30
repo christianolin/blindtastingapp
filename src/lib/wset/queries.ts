@@ -222,7 +222,7 @@ export async function fetchArchetype(
     grapeIds.length
       ? supabase.from("grapes").select("id, name").in("id", grapeIds)
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
-    supabase.from("wine_archetype_aromas").select("term_id").eq("archetype_id", id),
+    supabase.from("wine_archetype_aromas").select("term_id, kind").eq("archetype_id", id),
   ]);
 
   const grapeName = new Map((grapesRes.data ?? []).map((g) => [g.id, g.name] as const));
@@ -231,16 +231,24 @@ export async function fetchArchetype(
     .filter((v): v is string => Boolean(v))
     .join(" · ");
 
-  const termIds = (linkRes.data ?? []).map((l) => l.term_id);
-  let aromas: string[] = [];
-  if (termIds.length > 0) {
+  const links = linkRes.data ?? [];
+  const noseIds = links.filter((l) => l.kind === "NOSE").map((l) => l.term_id);
+  const palateIds = links.filter((l) => l.kind === "PALATE").map((l) => l.term_id);
+  const allIds = Array.from(new Set([...noseIds, ...palateIds]));
+  const termById = new Map<string, { term: string; sort_order: number }>();
+  if (allIds.length > 0) {
     const { data: terms } = await supabase
       .from("wset_aroma_terms")
-      .select("term, sort_order")
-      .in("id", termIds)
-      .order("sort_order");
-    aromas = (terms ?? []).map((t) => t.term);
+      .select("id, term, sort_order")
+      .in("id", allIds);
+    for (const t of terms ?? []) termById.set(t.id, { term: t.term, sort_order: t.sort_order });
   }
+  const sortedTerms = (ids: string[]) =>
+    ids
+      .map((tid) => termById.get(tid))
+      .filter((t): t is { term: string; sort_order: number } => Boolean(t))
+      .sort((x, y) => x.sort_order - y.sort_order)
+      .map((t) => t.term);
 
   return {
     name: row.name,
@@ -252,7 +260,8 @@ export async function fetchArchetype(
     qualityLow: row.quality_low,
     qualityHigh: row.quality_high,
     sat: row.sat,
-    aromas,
+    aromas: sortedTerms(noseIds),
+    flavours: sortedTerms(palateIds),
   };
 }
 

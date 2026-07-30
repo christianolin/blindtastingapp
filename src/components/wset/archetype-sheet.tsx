@@ -32,6 +32,7 @@ export type ArchetypeView = {
   qualityHigh: number | null;
   sat: Record<string, Range | undefined>;
   aromas: string[];
+  flavours: string[];
 };
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
@@ -54,6 +55,28 @@ function RangeSlider({ stops, range }: { stops: readonly string[]; range: Range 
       range={range as readonly [string, string]}
       readOnly
     />
+  );
+}
+
+// Read-only aroma / flavour pills, shared by the Nose and Palate sections.
+function AromaPills({ terms }: { terms: string[] }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {terms.map((t) => (
+        <span
+          key={t}
+          style={{
+            borderRadius: 999,
+            padding: "2px 9px",
+            fontSize: 11.5,
+            background: WSET.burgundy,
+            color: WSET.creamText,
+          }}
+        >
+          {t}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -97,24 +120,11 @@ export function ArchetypeSheet({ a }: { a: ArchetypeView }) {
           <Row label="Development" sub={rangeLabel(sat.development)}>
             <RangeSlider stops={DEVELOPMENT_STOPS} range={sat.development} />
           </Row>
-          <Row wide label="Aroma characteristics" sub="typical">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-              {a.aromas.map((t) => (
-                <span
-                  key={t}
-                  style={{
-                    borderRadius: 999,
-                    padding: "2px 9px",
-                    fontSize: 11.5,
-                    background: WSET.burgundy,
-                    color: WSET.creamText,
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </Row>
+          {a.aromas.length > 0 ? (
+            <Row wide label="Aroma characteristics" sub="typical">
+              <AromaPills terms={a.aromas} />
+            </Row>
+          ) : null}
         </SectionCard>
 
         <SectionCard id="palate" numeral="III" title="Palate" rated="typical">
@@ -141,6 +151,11 @@ export function ArchetypeSheet({ a }: { a: ArchetypeView }) {
           <Row label="Flavour intensity" sub={rangeLabel(sat.flavourIntensity)}>
             <RangeSlider stops={INTENSITY_STOPS} range={sat.flavourIntensity} />
           </Row>
+          {a.flavours.length > 0 ? (
+            <Row wide label="Flavour characteristics" sub="typical">
+              <AromaPills terms={a.flavours} />
+            </Row>
+          ) : null}
           <Row label="Finish" sub={rangeLabel(sat.finish)}>
             <RangeSlider stops={FINISH_STOPS} range={sat.finish} />
           </Row>

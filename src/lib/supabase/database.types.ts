@@ -1032,10 +1032,12 @@ export type Database = {
         Row: {
           archetype_id: string;
           term_id: string;
+          kind: "NOSE" | "PALATE";
         };
         Insert: {
           archetype_id: string;
           term_id: string;
+          kind?: "NOSE" | "PALATE";
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_archetype_aromas"]["Insert"]
