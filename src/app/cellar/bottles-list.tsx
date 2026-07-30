@@ -88,13 +88,13 @@ export function BottlesList({
                       <>
                         <Link
                           href={`/cellar/${lot.id}/drink`}
-                          className="text-xs underline underline-offset-4 hover:text-foreground"
+                          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                         >
                           Drink
                         </Link>
                         <Link
                           href={`/cellar/${lot.id}/edit`}
-                          className="text-xs underline underline-offset-4 hover:text-foreground"
+                          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                         >
                           Edit
                         </Link>

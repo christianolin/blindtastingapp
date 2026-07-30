@@ -70,7 +70,7 @@ export default async function DrinkLotPage({
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6">
       <Link
         href="/cellar"
-        className="text-sm text-muted-foreground underline underline-offset-4"
+        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         ← Back to cellar
       </Link>

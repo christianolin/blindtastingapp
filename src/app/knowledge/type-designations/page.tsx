@@ -256,7 +256,7 @@ export default async function TypeDesignationsPage({
                                                     {place ? (
                                                       <Link
                                                         href={`/knowledge/map?place=${place.canonical_key}`}
-                                                        className="font-medium underline-offset-4 hover:underline"
+                                                        className="font-medium text-primary transition-colors hover:text-primary/80"
                                                       >
                                                         {m.name}
                                                       </Link>

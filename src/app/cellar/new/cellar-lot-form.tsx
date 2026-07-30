@@ -196,7 +196,7 @@ export function CellarLotForm({
               setCatalogWineId("");
               setCatalogWineLabel(null);
             }}
-            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Change
           </button>

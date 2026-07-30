@@ -38,7 +38,7 @@ export function LoginForm() {
       </Button>
       <p className="text-sm text-muted-foreground">
         No account yet?{" "}
-        <Link href="/signup" className="underline underline-offset-4">
+        <Link href="/signup" className="font-medium text-primary transition-colors hover:text-primary/80">
           Sign up
         </Link>
       </p>

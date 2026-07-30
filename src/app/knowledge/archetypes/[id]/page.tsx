@@ -23,7 +23,7 @@ export default async function ArchetypePage({
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 p-6">
       <Link
         href="/knowledge/map"
-        className="text-sm text-muted-foreground underline underline-offset-4"
+        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         ← Map
       </Link>

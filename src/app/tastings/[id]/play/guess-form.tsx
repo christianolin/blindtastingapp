@@ -167,7 +167,7 @@ export function GuessForm({
           href="/rules"
           target="_blank"
           rel="noreferrer"
-          className="text-xs text-muted-foreground underline underline-offset-4"
+          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           How scoring works ↗
         </a>

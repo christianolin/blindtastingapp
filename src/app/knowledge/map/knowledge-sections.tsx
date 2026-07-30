@@ -201,7 +201,7 @@ function GrapeModal({
         ) : null}
         <Link
           href="/knowledge/grapes"
-          className="text-sm text-muted-foreground underline underline-offset-4"
+          className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
         >
           Browse in Grape Library
         </Link>
@@ -251,7 +251,7 @@ export function KnowledgeSections({
   }, [supabase, placeId]);
 
   const chipButton =
-    "underline underline-offset-4 hover:text-foreground";
+    "transition-colors hover:text-foreground";
 
   return (
     <>

@@ -35,7 +35,7 @@ export default async function PlayPage({
   const back = (
     <Link
       href={`/tastings/${tastingId}`}
-      className="text-sm text-muted-foreground underline underline-offset-4"
+      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
       ← Back to tasting
     </Link>

@@ -166,7 +166,7 @@ export default async function ProfileTastingHistoryPage({
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
         <Link
           href={`/u/${profile.id}`}
-          className="text-sm text-muted-foreground underline underline-offset-4"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           ← Back to {profile.display_name}&apos;s profile
         </Link>

@@ -67,7 +67,7 @@ export function ImportForm() {
           ) : null}
           <a
             href="/cellar"
-            className="mt-1 text-xs underline underline-offset-4 hover:text-foreground"
+            className="mt-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
           >
             Go to your cellar
           </a>

@@ -77,7 +77,7 @@ export function GrapeBlendEditor({
       <button
         type="button"
         onClick={add}
-        className="inline-flex w-fit items-center gap-1 text-xs text-primary hover:underline"
+        className="inline-flex w-fit items-center gap-1 text-xs text-primary transition-colors hover:text-primary/80"
       >
         <Plus className="size-3.5" /> Add grape
       </button>

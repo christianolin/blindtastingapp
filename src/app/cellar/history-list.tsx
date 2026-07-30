@@ -50,7 +50,7 @@ export function HistoryList({ rows }: { rows: HistoryRow[] }) {
           {r.wsetNoteId ? (
             <Link
               href={`/catalog/${r.catalogWineId}/notes/${r.wsetNoteId}`}
-              className="shrink-0 text-xs underline underline-offset-4 hover:text-foreground"
+              className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Note
             </Link>

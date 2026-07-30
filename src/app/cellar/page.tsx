@@ -258,7 +258,7 @@ export default async function CellarPage({
             <div className="flex items-center gap-2">
               <Link
                 href="/cellar/import"
-                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 Import
               </Link>

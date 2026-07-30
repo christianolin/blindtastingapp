@@ -500,7 +500,7 @@ export default async function TastingPage({
             ·{" "}
             <Link
               href="/rules"
-              className="underline underline-offset-4 hover:text-foreground"
+              className="text-primary transition-colors hover:text-primary/80"
             >
               {tasting.reveal_mode === "SEMI_BLIND"
                 ? "Semi-blind scoring"

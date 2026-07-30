@@ -36,7 +36,7 @@ export default async function NewWinePage({
           <p>Only the host adds wines for this tasting.</p>
           <Link
             href={`/tastings/${tastingId}`}
-            className="text-sm underline underline-offset-4"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Back to tasting
           </Link>
@@ -82,7 +82,7 @@ export default async function NewWinePage({
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-8">
       <Link
         href={`/tastings/${tastingId}`}
-        className="text-sm text-muted-foreground underline underline-offset-4"
+        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         ← Back to tasting
       </Link>

@@ -201,7 +201,7 @@ export function AromaPicker({
                 background: "none",
                 border: "none",
                 color: WSET.muted,
-                textDecoration: "underline dotted",
+                textDecoration: "none",
               }}
             >
               clear

@@ -213,7 +213,7 @@ export function WineForm({
           <button
             type="button"
             onClick={() => setManualMode((m) => !m)}
-            className="self-start text-sm text-muted-foreground underline underline-offset-4"
+            className="self-start text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             {manualMode
               ? "← Back to catalog search"

@@ -157,7 +157,7 @@ export function NewTastingForm({
           </span>
           <Link
             href="/taste"
-            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             Change
           </Link>

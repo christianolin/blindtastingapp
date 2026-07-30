@@ -276,7 +276,7 @@ export default async function GrapeLibraryPage({
                               <span key={p.key}>
                                 {i > 0 ? " · " : ""}
                                 <Link
-                                  className="underline underline-offset-4 hover:text-foreground"
+                                  className="text-primary transition-colors hover:text-primary/80"
                                   href={`/knowledge/map?place=${p.key}`}
                                 >
                                   {p.name}

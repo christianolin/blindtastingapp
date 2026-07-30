@@ -22,7 +22,7 @@ export default async function AdminUsersPage() {
       <div>
         <Link
           href="/admin"
-          className="text-sm text-muted-foreground underline underline-offset-4"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           ← Admin
         </Link>

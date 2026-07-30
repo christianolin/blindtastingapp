@@ -211,7 +211,7 @@ export function ArchetypeEditor({
                 <button
                   type="button"
                   onClick={() => clearRange(sc.key)}
-                  className="text-[10px] text-muted-foreground underline"
+                  className="text-[10px] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   clear
                 </button>

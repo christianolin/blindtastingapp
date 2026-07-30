@@ -207,7 +207,7 @@ export default async function ResultsPage({
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <Link
         href={`/tastings/${tastingId}`}
-        className="text-sm text-muted-foreground underline underline-offset-4"
+        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         ← Back to tasting
       </Link>
@@ -312,7 +312,7 @@ export default async function ResultsPage({
               {answer.catalog_wine_id ? (
                 <Link
                   href={`/catalog/${answer.catalog_wine_id}/notes/new?blindWine=${wine.id}`}
-                  className="self-start text-sm font-medium text-primary underline underline-offset-4"
+                  className="self-start text-sm font-medium text-primary transition-colors hover:text-primary/80"
                 >
                   Write a tasting note for this wine →
                 </Link>

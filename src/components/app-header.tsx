@@ -79,7 +79,7 @@ export async function AppHeader({
         <AppNav links={navLinks} />
         <Link
           href={`/u/${userId}`}
-          className="flex items-center gap-2 hover:underline"
+          className="flex items-center gap-2 transition-opacity hover:opacity-80"
         >
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
