@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { CatalogList, type CatalogRow } from "./catalog-list";
+import { PageHeader } from "@/components/patterns/page-header";
+import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
+import { Wine, FileText, Star } from "lucide-react";
 
 type Rel = { name: string } | { name: string }[] | null;
 type WineRow = {
@@ -94,45 +97,38 @@ export default async function CatalogPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Catalog</h1>
-          <p className="text-sm text-muted-foreground">
-            Taste &amp; review wines with the WSET Level 4 approach.
-          </p>
-          {profile?.is_curator ? (
+      <PageHeader
+        title="Catalog"
+        subtitle="Explore the shared wine database curated by the community."
+        actions={
+          <>
+            {profile?.is_curator ? (
+              <Link
+                href="/catalog/unidentified"
+                className="text-sm text-muted-foreground underline underline-offset-4"
+              >
+                Unidentified queue
+              </Link>
+            ) : null}
             <Link
-              href="/catalog/unidentified"
-              className="text-xs text-muted-foreground underline underline-offset-4"
+              href="/catalog/new"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Unidentified bottles queue
+              Add a wine
             </Link>
-          ) : null}
-        </div>
-        <Link
-          href="/catalog/new"
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Add a wine
-        </Link>
-      </div>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg border border-border bg-muted/30 px-4 py-2.5 text-sm">
-        <span>
-          <span className="font-heading text-base font-semibold">{totalWines ?? 0}</span>{" "}
-          <span className="text-muted-foreground">wines</span>
-        </span>
-        <span>
-          <span className="font-heading text-base font-semibold">{totalNotes}</span>{" "}
-          <span className="text-muted-foreground">tasting notes</span>
-        </span>
-        {avgScore != null ? (
-          <span>
-            <span className="font-heading text-base font-semibold">{avgScore}</span>{" "}
-            <span className="text-muted-foreground">avg community score</span>
-          </span>
-        ) : null}
-      </div>
+      <StatStrip className="sm:grid-cols-3">
+        <StatTile icon={Wine} value={totalWines ?? 0} label="wines in catalog" />
+        <StatTile icon={FileText} value={totalNotes} label="tasting notes" />
+        <StatTile
+          icon={Star}
+          value={avgScore != null ? avgScore : "—"}
+          label="avg community score"
+        />
+      </StatStrip>
 
       <CatalogList rows={rows} />
     </div>
