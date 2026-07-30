@@ -1375,6 +1375,14 @@ export type Database = {
         Args: { p_owner: string };
         Returns: boolean;
       };
+      import_cellar_lot: {
+        Args: { p: unknown };
+        Returns: string;
+      };
+      import_cellar_lots: {
+        Args: { rows: unknown };
+        Returns: unknown;
+      };
     };
   };
 };

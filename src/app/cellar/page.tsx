@@ -269,6 +269,12 @@ export default async function CellarPage({
           >
             Add a wine
           </Link>
+          <Link
+            href="/cellar/import"
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Import CSV
+          </Link>
           <CellarVisibilityControl userId={user.id} current={visibility} />
         </div>
       </div>
