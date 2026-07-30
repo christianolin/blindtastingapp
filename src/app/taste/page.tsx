@@ -160,10 +160,10 @@ export default async function TastePage() {
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-8">
         <div>
           <h1 className="font-heading text-4xl font-semibold tracking-tight">
-            Welcome back, {profile?.display_name ?? user.email}
+            What are you tasting today?
           </h1>
           <p className="mt-1 text-muted-foreground">
-            What are you tasting today?
+            Choose a tasting mode and start exploring.
           </p>
         </div>
 
