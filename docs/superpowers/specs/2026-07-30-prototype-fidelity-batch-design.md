@@ -1,7 +1,7 @@
 # Prototype-fidelity batch — wine hub, uploads, catalog, tastings, pagination
 
 Date: 2026-07-30
-Status: Draft for owner review
+Status: Approved 2026-07-30 — implementing
 
 ## Context
 
@@ -116,6 +116,29 @@ cover-photo dropzone labelled "JPG, PNG up to 5MB", Cancel / Create-tasting foot
 NO changes to the submit action, field `name`s, or validation — visual only. (Its
 photo upload targets the `tasting-images` bucket, which is already correctly
 scoped, so item 1 does not affect it.)
+
+### 9. Real country flags — SVG, not emoji (supersedes the shipped emoji flags)
+
+We are NOT missing flags in the DB — there is no flag data in the DB. `countryFlag()`
+returns Unicode regional-indicator emoji (🇫🇷); Windows browsers ship no country-flag
+glyphs, so they fall back to the two letters ("FR", "US"). Fix by rendering real SVG
+flags keyed by ISO 3166-1 alpha-2: add `flag-icons` (fallback: `country-flag-icons`),
+a `countryCode(name)` name→ISO2 helper (reusing the existing name map), and a
+`<CountryFlag code>` component. Swap all flag sites: catalog table + mobile card +
+country filter dropdown, wine-hub country badge, results reveal. No DB migration;
+nothing to "populate."
+
+### 10. Cellar import as a button
+
+`app/cellar/page.tsx`: replace the "Import" text link with an outline Button labelled
+**"Import CSV from CellarTracker"**, linking to `/cellar/import`.
+
+### 11. Add a bottle photo while creating a catalog wine
+
+`app/catalog/new/new-wine-form.tsx` (+ `actions.ts`): add an `ImageUploader` to the
+create form, uploading to `catalog/staging/{uid}/…` (allowed by the item-1 `catalog/`
+storage policy) and persisting the URL as `catalog_wines.image_url` on insert — so a
+photo can be added during creation, not only afterward on the hub.
 
 ## Testing & delivery
 
