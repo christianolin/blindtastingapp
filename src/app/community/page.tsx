@@ -37,7 +37,7 @@ export default async function PeoplePage({
         displayName={me?.display_name ?? user.email ?? ""}
         avatarUrl={me?.avatar_url ?? null}
       />
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6 sm:p-8">
         <PageHeader
           title="Community"
           subtitle="Connect with fellow wine lovers."

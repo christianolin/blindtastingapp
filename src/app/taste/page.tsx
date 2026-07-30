@@ -157,7 +157,7 @@ export default async function TastePage() {
         displayName={profile?.display_name ?? user.email ?? ""}
         avatarUrl={profile?.avatar_url ?? null}
       />
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 p-6 sm:p-8">
         <div>
           <h1 className="font-heading text-4xl font-semibold tracking-tight">
             What are you tasting today?
