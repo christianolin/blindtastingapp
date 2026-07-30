@@ -1373,6 +1373,16 @@ export type Database = {
         Args: { p_unidentified_id: string; p_catalog_wine_id: string };
         Returns: void;
       };
+      search_all: {
+        Args: { p_query: string; p_limit?: number };
+        Returns: {
+          kind: string;
+          id: string;
+          label: string;
+          sublabel: string | null;
+          href_key: string;
+        }[];
+      };
       catalog_wine_guess_stats: {
         Args: { p_catalog_wine_id: string };
         Returns: {

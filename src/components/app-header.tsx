@@ -8,6 +8,7 @@ import { NAV_LINKS } from "@/components/nav-links";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { touchLastSeen } from "@/lib/last-seen";
+import { GlobalSearch } from "@/components/global-search";
 import { signOut } from "@/app/actions";
 
 /**
@@ -69,6 +70,10 @@ export async function AppHeader({
       <Link href="/taste" className="flex items-center">
         <BlindrLockup size={30} gap={8} />
       </Link>
+
+      <div className="mx-4 hidden max-w-sm flex-1 justify-center md:flex">
+        <GlobalSearch />
+      </div>
 
       <nav className="hidden items-center gap-4 text-sm md:flex">
         <AppNav links={navLinks} />
