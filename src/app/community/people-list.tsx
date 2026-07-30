@@ -5,8 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FriendButton } from "@/components/friend-button";
+import { Avatar } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
+
+function activeLabel(iso: string | null): { text: string; fresh: boolean } | null {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / 86400000);
+  return {
+    text: ms < 3600000 ? "Active now" : days < 1 ? "Active today" : `Active ${days}d ago`,
+    fresh: ms < 86400000,
+  };
+}
 
 // The "People" tab of /community: the full member directory with search.
 export async function PeopleList({ q, userId }: { q?: string; userId: string }) {
@@ -14,7 +26,7 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
 
   let query = supabase
     .from("profiles")
-    .select("id, display_name, bio, avatar_url, location, created_at")
+    .select("id, display_name, bio, avatar_url, location, created_at, last_seen_at")
     .order("display_name");
   if (q) {
     query = query.ilike("display_name", `%${q}%`);
@@ -40,6 +52,7 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
         {(profiles ?? []).map((p) => {
           const isMe = p.id === userId;
           const stats = statsByUserId.get(p.id);
+          const active = activeLabel(p.last_seen_at);
           const joined = new Date(p.created_at).toLocaleDateString(undefined, {
             month: "short",
             year: "numeric",
@@ -51,18 +64,7 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
                   href={`/u/${p.id}`}
                   className="flex min-w-0 items-center gap-3"
                 >
-                  {p.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.avatar_url}
-                      alt=""
-                      className="size-10 shrink-0 rounded-full object-cover ring-1 ring-border"
-                    />
-                  ) : (
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary">
-                      {p.display_name.slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
+                  <Avatar src={p.avatar_url} name={p.display_name} size="lg" />
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-medium">
                       {p.display_name}
@@ -81,6 +83,17 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
                         </span>
                       ) : null}
                       <span>Joined {joined}</span>
+                      {active ? (
+                        <span className="flex items-center gap-1">
+                          <span
+                            className={cn(
+                              "size-1.5 rounded-full",
+                              active.fresh ? "bg-green-600" : "bg-muted-foreground/40",
+                            )}
+                          />
+                          {active.text}
+                        </span>
+                      ) : null}
                       {stats && stats.winesGuessed > 0 ? (
                         <span>
                           {stats.tastingsAttended} tasting
