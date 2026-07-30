@@ -64,6 +64,15 @@ const KIND_LABELS: Record<string, string> = {
   VINEYARD: "Vineyard",
 };
 
+// The wine-glass tint per wine colour, so a typical-wine pill reads at a glance
+// as red / white / rosé / orange.
+const WINE_COLOUR_HEX: Record<string, string> = {
+  RED: "#8E1F3B",
+  WHITE: "#B78E42",
+  ROSE: "#D98A9E",
+  ORANGE: "#C0692E",
+};
+
 export function TileWineMapExplorer({
   initialPlaceKey,
 }: {
@@ -470,9 +479,15 @@ export function TileWineMapExplorer({
                           key={a.id}
                           type="button"
                           onClick={() => setOpenArchetype(a)}
-                          className="flex items-center justify-between rounded-lg border border-border/70 px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/60"
+                          className="flex items-center justify-between gap-2 rounded-lg border border-border/70 px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/60"
                         >
-                          {a.name}
+                          <span className="flex min-w-0 items-center gap-2">
+                            <Wine
+                              className="size-4 shrink-0"
+                              style={{ color: WINE_COLOUR_HEX[a.colour] ?? "#8A8A85" }}
+                            />
+                            <span className="truncate">{a.name}</span>
+                          </span>
                           <span className="text-muted-foreground">→</span>
                         </button>
                       ))}
