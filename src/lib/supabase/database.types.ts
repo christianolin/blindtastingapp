@@ -65,6 +65,7 @@ export type WineMapReleaseStatus =
 // --- Cellar catalog + WSET tasting-note enums --------------------------------
 export type WineColour = "WHITE" | "ROSE" | "RED" | "ORANGE";
 export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
+export type UserRole = "ADMIN" | "MEMBER";
 export type WsetClarity = "CLEAR" | "HAZY";
 export type WsetCondition = "CLEAN" | "UNCLEAN";
 export type WsetAppearanceIntensity =
@@ -281,6 +282,7 @@ export type Database = {
           phone: string | null;
           favorite_wine_type: string | null;
           is_curator: boolean;
+          role: UserRole;
           created_at: string;
         };
         Insert: {
@@ -293,6 +295,7 @@ export type Database = {
           phone?: string | null;
           favorite_wine_type?: string | null;
           is_curator?: boolean;
+          role?: UserRole;
           created_at?: string;
         };
         Update: Partial<{
@@ -305,6 +308,7 @@ export type Database = {
           phone: string | null;
           favorite_wine_type: string | null;
           is_curator: boolean;
+          role: UserRole;
           created_at: string;
         }>;
         Relationships: [];
