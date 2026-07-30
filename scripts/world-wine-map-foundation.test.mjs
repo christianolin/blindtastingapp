@@ -1126,11 +1126,13 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Bourg).
     // Languedoc/Roussillon + Sud-Ouest sub-region splits: +6 derived
     // outlines.
-    total: 1274,
-    validated: 1274,
-    current: 1192,
-    valid: 1274,
-    labelled: 1274,
+    // Rhône proper grouping: +3 boundary rows (méridional + region re-derives,
+    // new Diois subregion) and +1 current (the new Diois subregion).
+    total: 1277,
+    validated: 1277,
+    current: 1193,
+    valid: 1277,
+    labelled: 1277,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1188,7 +1190,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1274);
+  assert.equal(prov.linked_boundaries, 1277);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,

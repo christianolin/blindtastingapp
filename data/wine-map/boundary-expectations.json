@@ -9812,8 +9812,8 @@
   {
     "canonical_key": "france.rhone",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:rhone",
-    "normalized_checksum_sha256": "1F413F812AA0ACB0DDB639E1DFB6BA502B59E88F7D4B344D365B649F1D64E1CD",
+    "source_feature_id": "derived:rhone-region-regroup",
+    "normalized_checksum_sha256": "A98C8621200BBB8570C23F35A7CA8A8724C2AE4B2F92F4515145638634E14058",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -10125,6 +10125,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.rhone.diois",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:rhone-diois",
+    "normalized_checksum_sha256": "271DCD6D0568B004D663A0E0C8D9AB2144AF583C091F7B32B9173B5919403747",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "france.rhone.gigondas",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:gigondas",
@@ -10172,8 +10181,8 @@
   {
     "canonical_key": "france.rhone.meridional",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:rhone-meridional",
-    "normalized_checksum_sha256": "9C7AC262926B6E030C06F4965C05D1E04C4E509DF785F4E4ED0D05E19427A17B",
+    "source_feature_id": "derived:rhone-meridional-regroup",
+    "normalized_checksum_sha256": "F7CFA854A05009E895BB3EAAFFFF6A4981DE2FB61D7237887FF8A38CC4BADD22",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
