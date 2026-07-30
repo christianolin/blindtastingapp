@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { PeopleList } from "./people-list";
 import { FriendsList } from "./friends-list";
 
-// People & Friends — one page, two tabs (?tab=friends selects the second).
-// Reached from the Tastings menu; /friends redirects here.
+// Community — one page, two tabs (?tab=friends selects the second). Reached from
+// the nav; /people and /friends redirect here.
 export default async function PeoplePage({
   searchParams,
 }: {
@@ -48,14 +48,14 @@ export default async function PeoplePage({
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            People &amp; Friends
+            Community
           </h1>
           <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-            <Link href="/people" className={tabClass(tab === "people")}>
+            <Link href="/community" className={tabClass(tab === "people")}>
               People
             </Link>
             <Link
-              href="/people?tab=friends"
+              href="/community?tab=friends"
               className={tabClass(tab === "friends")}
             >
               Friends

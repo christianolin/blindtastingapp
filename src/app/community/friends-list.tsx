@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FriendButton } from "@/components/friend-button";
 import { createClient } from "@/lib/supabase/server";
 
-// The "Friends" tab of /people: just your added friends.
+// The "Friends" tab of /community: just your added friends.
 export async function FriendsList({ userId }: { userId: string }) {
   const supabase = await createClient();
 

@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/dashboard", destination: "/taste", permanent: false },
       { source: "/dashboard/:path*", destination: "/taste/:path*", permanent: false },
+      // People & Friends became the Community pillar (P6).
+      { source: "/people", destination: "/community", permanent: false },
+      { source: "/people/:path*", destination: "/community/:path*", permanent: false },
     ];
   },
 };

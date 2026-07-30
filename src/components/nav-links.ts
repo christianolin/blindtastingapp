@@ -18,7 +18,11 @@ export const NAV_LINKS: NavLink[] = [
     label: "Knowledge",
     match: ["/knowledge", "/rules"],
   },
-  { href: "/people", label: "Friends", match: ["/people", "/friends"] },
+  {
+    href: "/community",
+    label: "Community",
+    match: ["/community", "/people", "/friends"],
+  },
 ];
 
 // A link is active when the current path is one of its section roots or sits

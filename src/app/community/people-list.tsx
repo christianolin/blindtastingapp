@@ -8,7 +8,7 @@ import { FriendButton } from "@/components/friend-button";
 import { createClient } from "@/lib/supabase/server";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 
-// The "People" tab of /people: the full member directory with search.
+// The "People" tab of /community: the full member directory with search.
 export async function PeopleList({ q, userId }: { q?: string; userId: string }) {
   const supabase = await createClient();
 

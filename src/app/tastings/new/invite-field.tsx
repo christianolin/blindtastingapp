@@ -94,7 +94,7 @@ export function InviteField({
         ) : (
           <p className="text-sm text-muted-foreground">
             You haven&apos;t added any friends yet —{" "}
-            <a href="/people" className="underline underline-offset-4">
+            <a href="/community" className="underline underline-offset-4">
               browse People
             </a>{" "}
             to add some, then they&apos;ll show up here.
