@@ -1254,6 +1254,28 @@ export type Database = {
         >;
         Relationships: [];
       };
+      catalog_wine_grapes: {
+        Row: {
+          id: string;
+          catalog_wine_id: string;
+          grape_id: string;
+          percentage: number | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          catalog_wine_id: string;
+          grape_id: string;
+          percentage?: number | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["catalog_wine_grapes"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
