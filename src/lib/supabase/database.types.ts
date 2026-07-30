@@ -65,7 +65,7 @@ export type WineMapReleaseStatus =
 // --- Cellar catalog + WSET tasting-note enums --------------------------------
 export type WineColour = "WHITE" | "ROSE" | "RED" | "ORANGE";
 export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
-export type UserRole = "ADMIN" | "MEMBER";
+export type UserRole = "ADMIN" | "CONTRIBUTOR" | "MEMBER";
 export type WsetClarity = "CLEAR" | "HAZY";
 export type WsetCondition = "CLEAN" | "UNCLEAN";
 export type WsetAppearanceIntensity =
@@ -1198,6 +1198,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_set_user_role: {
+        Args: { p_user_id: string; p_role: UserRole };
+        Returns: void;
+      };
       get_wine_place_context: {
         Args: { p_place_key: string };
         Returns: unknown;

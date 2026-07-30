@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/roles";
+import { requireContributor } from "@/lib/auth/roles";
 import { AppHeader } from "@/components/app-header";
 
 export default async function AdminLayout({
@@ -6,7 +6,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdmin();
+  await requireContributor();
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader />

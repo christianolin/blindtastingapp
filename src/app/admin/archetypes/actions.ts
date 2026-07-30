@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/auth/roles";
+import { isContributor } from "@/lib/auth/roles";
 
 export type PlaceHit = { id: string; name: string; kind: string; canonicalKey: string };
 
@@ -26,12 +26,12 @@ export async function searchPlaces(query: string): Promise<PlaceHit[]> {
   }));
 }
 
-async function ensureAdmin() {
+async function ensureContributor() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !(await isAdmin(supabase, user.id))) return null;
+  if (!user || !(await isContributor(supabase, user.id))) return null;
   return supabase;
 }
 
@@ -39,8 +39,8 @@ export async function addPlacement(
   archetypeId: string,
   placeId: string,
 ): Promise<{ error: string } | { ok: true }> {
-  const supabase = await ensureAdmin();
-  if (!supabase) return { error: "Admins only." };
+  const supabase = await ensureContributor();
+  if (!supabase) return { error: "You don't have permission." };
   const { error } = await supabase
     .from("wine_archetype_placements")
     .insert({ archetype_id: archetypeId, wine_place_id: placeId });
@@ -53,8 +53,8 @@ export async function removePlacement(
   archetypeId: string,
   placeId: string,
 ): Promise<{ error: string } | { ok: true }> {
-  const supabase = await ensureAdmin();
-  if (!supabase) return { error: "Admins only." };
+  const supabase = await ensureContributor();
+  if (!supabase) return { error: "You don't have permission." };
   const { error } = await supabase
     .from("wine_archetype_placements")
     .delete()

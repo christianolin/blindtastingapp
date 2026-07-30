@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
-import { type NavLink, isNavActive } from "@/components/app-nav";
+import { type NavLink, isNavActive } from "@/components/nav-links";
 
 /**
  * Hamburger + slide-in drawer for the app nav on phones (the desktop nav in

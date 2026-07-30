@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { BlindrLockup } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { AppNav, NAV_LINKS } from "@/components/app-nav";
+import { AppNav } from "@/components/app-nav";
+import { NAV_LINKS } from "@/components/nav-links";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { signOut } from "@/app/actions";
@@ -55,8 +56,9 @@ export async function AppHeader({
     .select("role")
     .eq("id", userId)
     .maybeSingle();
-  const isAdmin = roleRow?.role === "ADMIN";
-  const navLinks = isAdmin
+  const canManage =
+    roleRow?.role === "ADMIN" || roleRow?.role === "CONTRIBUTOR";
+  const navLinks = canManage
     ? [...NAV_LINKS, { href: "/admin", label: "Admin", match: ["/admin"] }]
     : NAV_LINKS;
 
