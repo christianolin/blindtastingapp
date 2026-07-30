@@ -22,6 +22,7 @@ export function NoteEditor({
   initial,
   contextKind = null,
   tastingWineId = null,
+  consumptionId = null,
 }: {
   wineId: string;
   wine: { colour: WineColour; style: WineStyle };
@@ -30,6 +31,7 @@ export function NoteEditor({
   initial: WsetNoteState;
   contextKind?: string | null;
   tastingWineId?: string | null;
+  consumptionId?: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -76,12 +78,19 @@ export function NoteEditor({
       });
       if (error) throw new Error(error.message);
       const savedId = data as unknown as string;
+      // Back-link a cellar drink to the note it produced (owner-only via RLS).
+      if (consumptionId && savedId) {
+        await supabase
+          .from("cellar_consumptions")
+          .update({ wset_note_id: savedId })
+          .eq("id", consumptionId);
+      }
       if (!state.id && savedId) {
         router.replace(`/catalog/${wineId}/notes/${savedId}`);
       }
       router.refresh();
     },
-    [supabase, wineId, router, contextKind, tastingWineId],
+    [supabase, wineId, router, contextKind, tastingWineId, consumptionId],
   );
 
   return (

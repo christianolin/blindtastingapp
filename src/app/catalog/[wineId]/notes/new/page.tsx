@@ -10,10 +10,10 @@ export default async function NewNotePage({
   searchParams,
 }: {
   params: Promise<{ wineId: string }>;
-  searchParams: Promise<{ blindWine?: string }>;
+  searchParams: Promise<{ blindWine?: string; consumption?: string }>;
 }) {
   const { wineId } = await params;
-  const { blindWine } = await searchParams;
+  const { blindWine, consumption } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,6 +46,7 @@ export default async function NewNotePage({
         initial={emptyNoteState()}
         contextKind={blindWine ? "BLIND" : null}
         tastingWineId={blindWine ?? null}
+        consumptionId={consumption ?? null}
       />
     </div>
   );
