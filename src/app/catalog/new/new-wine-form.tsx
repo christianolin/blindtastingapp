@@ -13,9 +13,9 @@ import {
   createAppellation,
   createCatalogWine,
   createCountry,
-  createGrape,
   createRegion,
 } from "./actions";
+import { GrapeBlendEditor, type BlendRow } from "./grape-blend-editor";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
 const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
@@ -43,8 +43,7 @@ export function NewWineForm({
   const [countryId, setCountryId] = useState("");
   const [regionId, setRegionId] = useState("");
   const [appellationId, setAppellationId] = useState("");
-  const [primaryGrapeId, setPrimaryGrapeId] = useState("");
-  const [secondaryGrapeId, setSecondaryGrapeId] = useState("");
+  const [blend, setBlend] = useState<BlendRow[]>([{ grapeId: "", percentage: "" }]);
   const [producerId, setProducerId] = useState("");
   const [producerLabel, setProducerLabel] = useState<string | null>(null);
   const [typeDesignationId, setTypeDesignationId] = useState("");
@@ -66,7 +65,7 @@ export function NewWineForm({
   async function submit() {
     setError(null);
     if (
-      !countryId || !regionId || !appellationId || !primaryGrapeId ||
+      !countryId || !regionId || !appellationId || !blend[0]?.grapeId ||
       !producerId || !colour || !style
     ) {
       setError(
@@ -80,12 +79,17 @@ export function NewWineForm({
     }
     setPending(true);
     try {
+      const filled = blend.filter((r) => r.grapeId);
       const { id } = await createCatalogWine({
         countryId,
         regionId,
         appellationId,
-        primaryGrapeId,
-        secondaryGrapeId: secondaryGrapeId || null,
+        primaryGrapeId: filled[0].grapeId,
+        secondaryGrapeId: filled[1]?.grapeId ?? null,
+        grapes: filled.map((r) => ({
+          grapeId: r.grapeId,
+          percentage: r.percentage.trim() ? Number(r.percentage) : null,
+        })),
         producerId,
         typeDesignationId: typeDesignationId || null,
         colour,
@@ -166,30 +170,12 @@ export function NewWineForm({
         </legend>
         <div className="flex flex-col gap-3 pt-1.5">
           <div className="flex flex-col gap-2">
-            <Label>Primary grape</Label>
-            <ReferenceCombobox
-              formFieldName="primary_grape_id"
-              options={grapes}
-              value={primaryGrapeId}
-              onValueChange={setPrimaryGrapeId}
-              onOptionCreated={(o) => setGrapes((g) => [...g, o])}
-              placeholder="Select the primary grape"
-              createLabel="grape"
-              onCreate={createGrape}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Secondary grape (optional)</Label>
-            <ReferenceCombobox
-              formFieldName="secondary_grape_id"
-              options={grapes}
-              value={secondaryGrapeId}
-              onValueChange={setSecondaryGrapeId}
-              onOptionCreated={(o) => setGrapes((g) => [...g, o])}
-              placeholder="None"
-              createLabel="grape"
-              onCreate={createGrape}
-              allowClear
+            <Label>Grapes &amp; blend</Label>
+            <GrapeBlendEditor
+              grapes={grapes}
+              onGrapeCreated={(o) => setGrapes((g) => [...g, o])}
+              value={blend}
+              onChange={setBlend}
             />
           </div>
           <div className="flex flex-col gap-2">

@@ -45,6 +45,7 @@ export type NewCatalogWine = {
   appellationId: string;
   primaryGrapeId: string;
   secondaryGrapeId: string | null;
+  grapes?: { grapeId: string; percentage: number | null }[];
   producerId: string;
   typeDesignationId: string | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE";
@@ -82,5 +83,18 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
     .select("id")
     .single();
   if (error) throw new Error(error.message);
-  return { id: data.id };
+  const id = data.id;
+  if (input.grapes && input.grapes.length > 0) {
+    await supabase.from("catalog_wine_grapes").delete().eq("catalog_wine_id", id);
+    const { error: grapeError } = await supabase.from("catalog_wine_grapes").insert(
+      input.grapes.map((g, i) => ({
+        catalog_wine_id: id,
+        grape_id: g.grapeId,
+        percentage: g.percentage,
+        sort_order: i,
+      })),
+    );
+    if (grapeError) throw new Error(grapeError.message);
+  }
+  return { id };
 }
