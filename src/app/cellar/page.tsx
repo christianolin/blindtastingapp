@@ -5,6 +5,7 @@ import { catalogWineTitle } from "@/lib/wset/queries";
 import { cn } from "@/lib/utils";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
+import { HistoryList, type HistoryRow } from "./history-list";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -44,7 +45,12 @@ export default async function CellarPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
-  const tab = tabParam === "notes" ? "notes" : "bottles";
+  const tab =
+    tabParam === "notes"
+      ? "notes"
+      : tabParam === "history"
+        ? "history"
+        : "bottles";
 
   const supabase = await createClient();
   const {
@@ -144,6 +150,39 @@ export default async function CellarPage({
     }));
   }
 
+  let history: HistoryRow[] = [];
+  if (tab === "history") {
+    const { data: consRows } = await supabase
+      .from("cellar_consumptions")
+      .select(
+        "id, quantity, reason, consumed_on, occasion, wset_note_id, catalog_wine_id, " +
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
+      )
+      .order("consumed_on", { ascending: false })
+      .order("created_at", { ascending: false });
+    history = (
+      (consRows ?? []) as unknown as Array<{
+        id: string;
+        quantity: number;
+        reason: "DRANK" | "GIFTED" | "LOST" | "OTHER";
+        consumed_on: string;
+        occasion: string | null;
+        wset_note_id: string | null;
+        catalog_wine_id: string;
+        catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
+      }>
+    ).map((r) => ({
+      id: r.id,
+      title: embedTitle(unwrap(r.catalog_wines)),
+      quantity: r.quantity,
+      reason: r.reason,
+      consumedOn: r.consumed_on,
+      occasion: r.occasion,
+      wsetNoteId: r.wset_note_id,
+      catalogWineId: r.catalog_wine_id,
+    }));
+  }
+
   const tabClass = (active: boolean) =>
     cn(
       "rounded-md px-3 py-1.5 text-sm transition-colors",
@@ -195,12 +234,17 @@ export default async function CellarPage({
         <Link href="/cellar?tab=notes" className={tabClass(tab === "notes")}>
           My notes
         </Link>
+        <Link href="/cellar?tab=history" className={tabClass(tab === "history")}>
+          History
+        </Link>
       </div>
 
       {tab === "bottles" ? (
         <BottlesList groups={groups} />
-      ) : (
+      ) : tab === "notes" ? (
         <MyNotesList notes={notes} />
+      ) : (
+        <HistoryList rows={history} />
       )}
     </div>
   );
