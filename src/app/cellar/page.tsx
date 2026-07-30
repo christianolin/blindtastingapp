@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
-import { cn } from "@/lib/utils";
+import { Tabs } from "@/components/ui/tabs";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -245,14 +245,6 @@ export default async function CellarPage({
     stats = computeCellarStats(lots, preferredCurrency, new Date().getUTCFullYear());
   }
 
-  const tabClass = (active: boolean) =>
-    cn(
-      "rounded-md px-3 py-1.5 text-sm transition-colors",
-      active
-        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-        : "text-muted-foreground hover:text-foreground",
-    );
-
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
       <div className="flex items-center justify-between gap-3">
@@ -298,20 +290,16 @@ export default async function CellarPage({
         ) : null}
       </div>
 
-      <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-        <Link href="/cellar" className={tabClass(tab === "bottles")}>
-          Bottles
-        </Link>
-        <Link href="/cellar?tab=notes" className={tabClass(tab === "notes")}>
-          My notes
-        </Link>
-        <Link href="/cellar?tab=history" className={tabClass(tab === "history")}>
-          History
-        </Link>
-        <Link href="/cellar?tab=stats" className={tabClass(tab === "stats")}>
-          Stats
-        </Link>
-      </div>
+      <Tabs
+        variant="underline"
+        activeKey={tab}
+        items={[
+          { key: "bottles", label: "Bottles", href: "/cellar" },
+          { key: "notes", label: "My notes", href: "/cellar?tab=notes" },
+          { key: "history", label: "History", href: "/cellar?tab=history" },
+          { key: "stats", label: "Stats", href: "/cellar?tab=stats" },
+        ]}
+      />
 
       {tab === "bottles" ? (
         <BottlesList groups={groups} />
