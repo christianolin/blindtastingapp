@@ -12,8 +12,8 @@ export const metadata = {
   title: "Type Designations · Knowledge · Blindr",
 };
 
-// Same category grouping used for scoring (type_designations.category) — see
-// the type-designation-field.tsx picker used in the answer-key/guess forms.
+// Scoring category grouping (type_designations.category) — see the picker in
+// the answer-key / guess forms.
 const CATEGORY_ORDER = [
   "Prädikat",
   "Quality Classification",
@@ -33,9 +33,7 @@ export default async function TypeDesignationsPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   let query = supabase
     .from("type_designations")
@@ -57,26 +55,24 @@ export default async function TypeDesignationsPage({
   ];
   const total = (designations ?? []).length;
 
-  // Classification systems (wine_designations) with their ranked members
-  // (wine_designation_members) — RLS exposes PUBLISHED rows only. Two queries
-  // joined in JS, same pattern as the grape page's map links. Hidden while
-  // searching: the search box filters the glossary only.
+  // Classification systems (wine_designations) + their ranked members. Each
+  // system links to the glossary term it deep-dives (type_designation_id), so a
+  // term like "Grand Cru Classé" expands inline into the château/vineyard ranks
+  // — no separate Classifications section. RLS exposes PUBLISHED rows only.
   const { data: systems } = await supabase
     .from("wine_designations")
-    .select("id, key, name, description, display_group, sort_order")
+    .select("id, key, name, description, type_designation_id, sort_order")
     .order("sort_order");
   const { data: members } = await supabase
     .from("wine_designation_members")
     .select(
-      "id, designation_id, member_kind, name, tier, tier_rank, commune, sort_order, wine_place_id, local_note",
+      "id, designation_id, member_kind, name, tier, tier_rank, commune, sort_order, wine_place_id",
     )
     .order("tier_rank")
     .order("sort_order");
   const memberPlaceIds = [
     ...new Set(
-      (members ?? []).flatMap((m) =>
-        m.wine_place_id ? [m.wine_place_id] : [],
-      ),
+      (members ?? []).flatMap((m) => (m.wine_place_id ? [m.wine_place_id] : [])),
     ),
   ];
   const { data: memberPlaces } =
@@ -95,16 +91,17 @@ export default async function TypeDesignationsPage({
       m,
     ]);
   }
-  // Only systems with members become expandable cards, grouped by
-  // display_group (Bordeaux / Burgundy / Alsace) in sort_order.
-  const classificationGroups = new Map<string, NonNullable<typeof systems>>();
+  // Systems (with members) grouped by the glossary term they deep-dive.
+  const systemsByDesignation = new Map<string, NonNullable<typeof systems>>();
   for (const s of systems ?? []) {
-    if (!membersBySystem.has(s.id)) continue;
-    const g = s.display_group ?? "Other";
-    classificationGroups.set(g, [...(classificationGroups.get(g) ?? []), s]);
+    if (!s.type_designation_id || !membersBySystem.has(s.id)) continue;
+    systemsByDesignation.set(s.type_designation_id, [
+      ...(systemsByDesignation.get(s.type_designation_id) ?? []),
+      s,
+    ]);
   }
-  // Members arrive sorted by tier_rank then sort_order, so tiers fall out of
-  // one linear pass.
+  // Members arrive sorted by tier_rank then sort_order, so tiers fall out of one
+  // linear pass.
   const tiersFor = (systemId: string) => {
     const list = membersBySystem.get(systemId) ?? [];
     const tiers: { tier: string; members: typeof list }[] = [];
@@ -123,50 +120,22 @@ export default async function TypeDesignationsPage({
       <div className="flex w-full max-w-[1500px] flex-1 flex-col gap-6 p-6 sm:p-8">
         <KnowledgeTabs />
 
-        {/* Mobile search — the desktop search sits in the side nav (hidden
-            below lg). */}
+        {/* Mobile search — desktop search sits in the side nav. */}
         <form method="GET" className="lg:hidden">
-          <Input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Search designations"
-          />
+          <Input name="q" defaultValue={q ?? ""} placeholder="Search designations" />
         </form>
 
         <div className="flex gap-8">
-          {/* Side nav: search + a scrollable jump list grouped by category;
-              click a name to scroll to its card. */}
+          {/* Side nav: search + a category jump list (a dot marks terms that
+              expand into a classification deep-dive). */}
           <nav className="sticky top-20 hidden h-[calc(100vh-6rem)] w-56 shrink-0 flex-col overflow-y-auto lg:flex">
             <form method="GET" className="mb-3">
-              <Input
-                name="q"
-                defaultValue={q ?? ""}
-                placeholder="Search designations"
-              />
+              <Input name="q" defaultValue={q ?? ""} placeholder="Search designations" />
             </form>
             <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">
               {total} designation{total === 1 ? "" : "s"}
             </p>
             <div className="flex flex-col gap-3">
-              {!q && classificationGroups.size > 0 ? (
-                <div>
-                  <p className="px-2 pb-1 text-xs font-semibold text-muted-foreground">
-                    Classifications
-                  </p>
-                  <ul className="flex flex-col">
-                    {[...classificationGroups.values()].flat().map((s) => (
-                      <li key={s.id}>
-                        <a
-                          href={`#classification-${s.key}`}
-                          className="block truncate rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-                        >
-                          {s.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
               {categories.map((category) => (
                 <div key={category}>
                   <p className="px-2 pb-1 text-xs font-semibold text-muted-foreground">
@@ -180,6 +149,9 @@ export default async function TypeDesignationsPage({
                           className="block truncate rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
                           {d.name}
+                          {systemsByDesignation.has(d.id) ? (
+                            <span className="text-primary"> ·</span>
+                          ) : null}
                         </a>
                       </li>
                     ))}
@@ -196,114 +168,15 @@ export default async function TypeDesignationsPage({
               </h1>
               <p className="mt-2 text-muted-foreground">
                 Terms like Kabinett, Grand Cru, or Tawny describe a wine&apos;s
-                quality tier, aging, sweetness, or style — grouped here by
-                category.
+                quality tier, aging, sweetness, or style. A few — marked with a
+                dot — <span className="text-primary">expand</span> into the real
+                ranked systems behind them (the 1855 classification, the Burgundy
+                grand crus…).
               </p>
             </div>
 
-            {!q && classificationGroups.size > 0 ? (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <h2 className="font-heading text-xl font-semibold tracking-tight">
-                    Classifications
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    The real systems behind terms like Grand Cru Classé —
-                    expand one to see every ranked château or vineyard.
-                  </p>
-                </div>
-                {[...classificationGroups.entries()].map(
-                  ([group, groupSystems]) => (
-                    <div key={group} className="flex flex-col gap-3">
-                      <p className="text-xs font-semibold text-muted-foreground">
-                        {group}
-                      </p>
-                      {groupSystems.map((s) => {
-                        const tiers = tiersFor(s.id);
-                        const systemMembers = membersBySystem.get(s.id) ?? [];
-                        const noun =
-                          systemMembers[0]?.member_kind === "SITE"
-                            ? "vineyards"
-                            : "châteaux";
-                        return (
-                          <details
-                            key={s.id}
-                            id={`classification-${s.key}`}
-                            className="group scroll-mt-20 overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10"
-                          >
-                            <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-4 [&::-webkit-details-marker]:hidden">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-heading text-base font-medium">
-                                  {s.name}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {tiers.length > 1
-                                    ? `${tiers.length} tiers · `
-                                    : ""}
-                                  {systemMembers.length} {noun}
-                                </p>
-                              </div>
-                              <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                            </summary>
-                            <div className="flex flex-col gap-4 border-t border-border px-4 pt-3 pb-4">
-                              <p className="text-sm text-muted-foreground">
-                                {s.description}
-                              </p>
-                              {tiers.map(({ tier, members: tierMembers }) => (
-                                <div key={tier}>
-                                  <div className="mb-2 flex items-center gap-2">
-                                    <p className="text-sm font-medium">
-                                      {tier}
-                                    </p>
-                                    <Badge variant="secondary">
-                                      {tierMembers.length}
-                                    </Badge>
-                                  </div>
-                                  <ul className="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
-                                    {tierMembers.map((m) => {
-                                      const place = m.wine_place_id
-                                        ? memberPlaceById.get(m.wine_place_id)
-                                        : undefined;
-                                      return (
-                                        <li key={m.id} className="text-sm">
-                                          {place ? (
-                                            <Link
-                                              href={`/knowledge/map?place=${place.canonical_key}`}
-                                              className="font-medium underline-offset-4 hover:underline"
-                                            >
-                                              {m.name}
-                                            </Link>
-                                          ) : (
-                                            <span className="font-medium">
-                                              {m.name}
-                                            </span>
-                                          )}
-                                          {m.commune ? (
-                                            <span className="text-muted-foreground">
-                                              {" "}
-                                              — {m.commune}
-                                            </span>
-                                          ) : null}
-                                        </li>
-                                      );
-                                    })}
-                                  </ul>
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        );
-                      })}
-                    </div>
-                  ),
-                )}
-              </div>
-            ) : null}
-
             {total === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No designations found.
-              </p>
+              <p className="text-sm text-muted-foreground">No designations found.</p>
             ) : (
               categories.map((category) => (
                 <Card key={category}>
@@ -312,18 +185,105 @@ export default async function TypeDesignationsPage({
                   </CardHeader>
                   <CardContent>
                     <ul className="flex flex-col divide-y divide-border">
-                      {(byCategory.get(category) ?? []).map((d) => (
-                        <li
-                          key={d.id}
-                          id={`designation-${d.id}`}
-                          className="scroll-mt-20 py-2.5 first:pt-0 last:pb-0"
-                        >
-                          <p className="font-medium">{d.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {d.description ?? "No description yet."}
-                          </p>
-                        </li>
-                      ))}
+                      {(byCategory.get(category) ?? []).map((d) => {
+                        const dSystems = systemsByDesignation.get(d.id) ?? [];
+                        return (
+                          <li
+                            key={d.id}
+                            id={`designation-${d.id}`}
+                            className="scroll-mt-20 py-2.5 first:pt-0 last:pb-0"
+                          >
+                            {dSystems.length === 0 ? (
+                              <>
+                                <p className="font-medium">{d.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {d.description ?? "No description yet."}
+                                </p>
+                              </>
+                            ) : (
+                              <details className="group">
+                                <summary className="flex cursor-pointer list-none items-start gap-2 [&::-webkit-details-marker]:hidden">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-medium">
+                                      {d.name}{" "}
+                                      <span className="text-xs font-normal text-primary">
+                                        · deep dive
+                                      </span>
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {d.description ?? "No description yet."}
+                                    </p>
+                                  </div>
+                                  <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                                </summary>
+                                <div className="mt-3 flex flex-col gap-4 border-l-2 border-border pl-4">
+                                  {dSystems.map((s) => {
+                                    const tiers = tiersFor(s.id);
+                                    const sysMembers = membersBySystem.get(s.id) ?? [];
+                                    const noun =
+                                      sysMembers[0]?.member_kind === "SITE"
+                                        ? "vineyards"
+                                        : "châteaux";
+                                    return (
+                                      <div
+                                        key={s.id}
+                                        id={`classification-${s.key}`}
+                                        className="scroll-mt-20"
+                                      >
+                                        <p className="font-heading text-sm font-medium">
+                                          {s.name}
+                                        </p>
+                                        <p className="mb-2 text-xs text-muted-foreground">
+                                          {tiers.length > 1 ? `${tiers.length} tiers · ` : ""}
+                                          {sysMembers.length} {noun}
+                                          {s.description ? ` — ${s.description}` : ""}
+                                        </p>
+                                        {tiers.map(({ tier, members: tierMembers }) => (
+                                          <div key={tier} className="mb-2">
+                                            <div className="mb-1 flex items-center gap-2">
+                                              <p className="text-xs font-medium">{tier}</p>
+                                              <Badge variant="secondary">
+                                                {tierMembers.length}
+                                              </Badge>
+                                            </div>
+                                            <ul className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+                                              {tierMembers.map((m) => {
+                                                const place = m.wine_place_id
+                                                  ? memberPlaceById.get(m.wine_place_id)
+                                                  : undefined;
+                                                return (
+                                                  <li key={m.id} className="text-sm">
+                                                    {place ? (
+                                                      <Link
+                                                        href={`/knowledge/map?place=${place.canonical_key}`}
+                                                        className="font-medium underline-offset-4 hover:underline"
+                                                      >
+                                                        {m.name}
+                                                      </Link>
+                                                    ) : (
+                                                      <span className="font-medium">{m.name}</span>
+                                                    )}
+                                                    {m.commune ? (
+                                                      <span className="text-muted-foreground">
+                                                        {" "}
+                                                        — {m.commune}
+                                                      </span>
+                                                    ) : null}
+                                                  </li>
+                                                );
+                                              })}
+                                            </ul>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </details>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </CardContent>
                 </Card>

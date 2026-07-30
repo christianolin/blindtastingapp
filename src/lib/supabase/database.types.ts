@@ -684,6 +684,7 @@ export type Database = {
           appellation_system: string | null;
           description: string;
           display_group: string | null;
+          type_designation_id: string | null;
           sort_order: number;
           editorial_status: WineArticleStatus;
           created_at: string;
@@ -695,6 +696,7 @@ export type Database = {
           appellation_system?: string | null;
           description: string;
           display_group?: string | null;
+          type_designation_id?: string | null;
           sort_order?: number;
           editorial_status?: WineArticleStatus;
           created_at?: string;
