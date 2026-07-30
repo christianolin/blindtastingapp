@@ -920,8 +920,8 @@
   {
     "canonical_key": "france.bourgogne",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:bourgogne-region-covered2",
-    "normalized_checksum_sha256": "7194FC1549234CCD2CD594B01898C9762EDA4707959F7C210D33D08301355653",
+    "source_feature_id": "derived:bourgogne-rederive-c",
+    "normalized_checksum_sha256": "0070780D1A121E3C952AC912CBDE8D6510E748CB3C847E0C76A468DA759E9138",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -2468,8 +2468,8 @@
   {
     "canonical_key": "france.bourgogne.cote-de-beaune",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:cdb-district-covered",
-    "normalized_checksum_sha256": "F6E958944EB8BDEF7E693111A0801DE44F0CF2B721437D3D1808451E16BF67D7",
+    "source_feature_id": "derived:cote-de-beaune-rederive-b",
+    "normalized_checksum_sha256": "2D903310968991E3DC7E7847AC22306A7B84A55F1137CB3EFD4588142974B901",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -7544,8 +7544,8 @@
   {
     "canonical_key": "france.bourgogne.maconnais",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:maconnais-district-covered",
-    "normalized_checksum_sha256": "8D95C01A38608D599B621EAB0347BB95F2EB7FF3210126373051A931F8AFA604",
+    "source_feature_id": "derived:maconnais-rederive-b",
+    "normalized_checksum_sha256": "6018F77FACFEE8B61C3A4FAD464021DD5A253DB3A35A3AB2F33342AFEEE51613",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -7994,8 +7994,8 @@
   {
     "canonical_key": "france.champagne.cote-des-blancs",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:cote-des-blancs",
-    "normalized_checksum_sha256": "FE7CC51E9A4C244720052EB9DB9342DDE1AA28F4122BF410E6680FC06B0ECE31",
+    "source_feature_id": "derived:cote-des-blancs-rederive",
+    "normalized_checksum_sha256": "8AC12825A5B7A4CC3FDACAB195935C08FD3C7E3A5BAE9D436F7ECE2200364770",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -8156,8 +8156,8 @@
   {
     "canonical_key": "france.champagne.montagne-de-reims",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:montagne-de-reims",
-    "normalized_checksum_sha256": "49C428CA6267E41D5767041704181897FAE9A8E0412D9CB5AA2062FE598793CA",
+    "source_feature_id": "derived:montagne-de-reims-rederive",
+    "normalized_checksum_sha256": "4EAA5477DB36EE4AF91457098ECF9B8E7893D8412AEF0AB4C4B44012C78B352D",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -8407,11 +8407,11 @@
   },
   {
     "canonical_key": "france.corse",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "denomset:corse-region",
-    "normalized_checksum_sha256": "16ED4B5B555C7C5FCBEB70A5DD9089932506D5B03064121723B4201C1D874F58",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T181237Z/corse-region/fetch-manifest.json",
-    "raw_checksum_sha256": "5E55978EE65720630C741A2F3CC62EA87F78F881E3F90D1547342D98F9D55B12",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:corse-agg",
+    "normalized_checksum_sha256": "F33E7FC7C84FC459EBD669EE929BFD8A444D2D119CC294CE7AB92D4A69FBB926",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {
@@ -8533,11 +8533,11 @@
   },
   {
     "canonical_key": "france.languedoc-roussillon",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "denomset:lr-region",
-    "normalized_checksum_sha256": "2754620DFF2E65DF0A3A7C0BC8FCE18AE8355A1396277521B53258EBE693A4B9",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T190347Z/lr-region/fetch-manifest.json",
-    "raw_checksum_sha256": "F94506114DEFB377F710A3CBA2900FF87F86726BE7FDCB2E377371A9EF4A6E4F",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:languedoc-roussillon-agg",
+    "normalized_checksum_sha256": "C86EB955A7CB6AB244F67105F0E80C62F31ABF6A648862294D0B4FEDF8BB9B8F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {
@@ -9065,8 +9065,8 @@
   {
     "canonical_key": "france.loire",
     "boundary_method": "DERIVED_FROM_DESCENDANTS",
-    "source_feature_id": "derived:loire",
-    "normalized_checksum_sha256": "2A03F11E8016218C9E37F61E1C8E978D88681295954B33EF216759D9914D7987",
+    "source_feature_id": "derived:loire-rederive-b",
+    "normalized_checksum_sha256": "F26419B701EA92037BEBFD57ABA04A259CCCBC2944A8623486C0E3B75EA92A79",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -10279,11 +10279,11 @@
   },
   {
     "canonical_key": "france.savoie",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "denomset:savoie-region",
-    "normalized_checksum_sha256": "1DBA3D30CBD42767EC784F80C1BAC89E7FF0856713F13273347BCCE3B5DD25E9",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T180246Z/savoie-region/fetch-manifest.json",
-    "raw_checksum_sha256": "854AAB7342BC397C1F8C4C877D9ACF3679302F65AD047744D7D98E4AD0E93671",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:savoie-agg",
+    "normalized_checksum_sha256": "6E2914BF971CABF2A7DFEADA8E9EF2EBA64BAE2D1E80B7589DF39F8020CC6747",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
     "documented": true
   },
   {

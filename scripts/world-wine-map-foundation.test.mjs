@@ -1130,11 +1130,15 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // new Diois subregion) and +1 current (the new Diois subregion). Bordeaux
     // Entre-Deux-Mers restructure: +1 boundary + place (the subregion outline;
     // the AOC split into a nested node keeping the moved official boundary).
-    total: 1278,
-    validated: 1278,
+    // Audit coverage re-derives: +9 boundary rows (Savoie / Corse / Languedoc-
+    // Roussillon aggregates, Loire + Bourgogne region refreshes, Côte de Beaune,
+    // Mâconnais, Montagne de Reims, Côte des Blancs). Current unchanged (all
+    // revision replacements); the 3 retired generalized outlines keep generalized.
+    total: 1287,
+    validated: 1287,
     current: 1194,
-    valid: 1278,
-    labelled: 1278,
+    valid: 1287,
+    labelled: 1287,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1192,7 +1196,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1278);
+  assert.equal(prov.linked_boundaries, 1287);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
