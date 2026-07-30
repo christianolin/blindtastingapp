@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import {
   Layers,
   PanelLeftClose,
@@ -10,6 +11,7 @@ import {
   PanelRightOpen,
   Sparkles,
   Thermometer,
+  Wine,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +38,10 @@ import {
   type GrapeOption,
 } from "@/lib/wine-map/grape-filter";
 import type { CameraTarget } from "./tile-wine-map";
+import {
+  fetchArchetypesForPlace,
+  type ArchetypeListItem,
+} from "@/lib/wset/queries";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
 const TileWineMap = dynamic(
@@ -174,6 +180,30 @@ export function TileWineMapExplorer({
       cancelled = true;
     };
   }, [supabase, selectedKey]);
+
+  // "A typical wine from here" — the archetypes hung off this place. Tagged
+  // with the key they belong to so a stale set never flashes under a newly
+  // selected place while the next fetch is in flight.
+  const [archetypeData, setArchetypeData] = useState<{
+    key: string;
+    rows: ArchetypeListItem[];
+  } | null>(null);
+  useEffect(() => {
+    if (!selectedKey) return;
+    let cancelled = false;
+    fetchArchetypesForPlace(supabase, selectedKey)
+      .then((rows) => {
+        if (!cancelled) setArchetypeData({ key: selectedKey, rows });
+      })
+      .catch(() => {
+        if (!cancelled) setArchetypeData({ key: selectedKey, rows: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, selectedKey]);
+  const archetypes =
+    archetypeData && archetypeData.key === selectedKey ? archetypeData.rows : [];
 
   // Selection updates the URL in place (shareable deep links) while
   // preserving any other params — including ?map=tiles during the opt-in
@@ -425,6 +455,26 @@ export function TileWineMapExplorer({
                     {context.place.name}
                   </h2>
                 </div>
+                {archetypes.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Wine className="size-3.5" />
+                      Typical wine
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {archetypes.map((a) => (
+                        <Link
+                          key={a.id}
+                          href={`/knowledge/archetypes/${a.id}`}
+                          className="flex items-center justify-between rounded-lg border border-border/70 px-2.5 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+                        >
+                          {a.name}
+                          <span className="text-muted-foreground">→</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {article ? (
                   <>
                     {article.description ? (
