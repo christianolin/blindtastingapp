@@ -661,6 +661,7 @@ export type Database = {
           id: string;
           wine_place_id: string;
           style: WineStyleKind;
+          colour: WineColour | null;
           note: string | null;
           sort_order: number;
           editorial_status: WineArticleStatus;
@@ -670,6 +671,7 @@ export type Database = {
           id?: string;
           wine_place_id: string;
           style: WineStyleKind;
+          colour?: WineColour | null;
           note?: string | null;
           sort_order?: number;
           editorial_status?: WineArticleStatus;

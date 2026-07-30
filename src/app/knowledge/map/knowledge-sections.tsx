@@ -39,6 +39,34 @@ export function grapeIconColor(color: string | null) {
   return "#8A8A85";
 }
 
+// Wine-style pills read as colour + method (e.g. "White sparkling") once a place
+// carries the colour dimension; still wines keep their bare colour label.
+const METHOD_STYLES = new Set(["SPARKLING", "SWEET", "FORTIFIED"]);
+const COLOUR_LABELS: Record<string, string> = {
+  WHITE: "White",
+  ROSE: "Rosé",
+  RED: "Red",
+  ORANGE: "Orange",
+};
+const COLOUR_HEX: Record<string, string> = {
+  RED: "#8E1F3B",
+  WHITE: "#B78E42",
+  ROSE: "#D98A9E",
+  ORANGE: "#C0692E",
+};
+type StyleRow = { style: string; colour: string | null; note: string | null };
+
+function styleLabel(style: string, colour: string | null): string {
+  const base = STYLE_LABELS[style] ?? style;
+  return colour && METHOD_STYLES.has(style)
+    ? `${COLOUR_LABELS[colour] ?? colour} ${base.toLowerCase()}`
+    : base;
+}
+function styleIconColor(style: string, colour: string | null): string {
+  if (colour) return COLOUR_HEX[colour] ?? STYLE_COLORS[style] ?? "#8A8A85";
+  return STYLE_COLORS[style] ?? "#8A8A85";
+}
+
 function SectionHeading({
   icon: Icon,
   children,
@@ -192,37 +220,63 @@ export function KnowledgeSections({
   context: WinePlaceContext;
   onSelect: (key: string) => void;
 }) {
+  const supabase = useMemo(() => createClient(), []);
   const [openGrape, setOpenGrape] = useState<WinePlaceGrape | null>(null);
-  const { grapes, styles, designations, nearby, dual_labels: dualLabels } =
-    context;
+  const { grapes, designations, nearby, dual_labels: dualLabels } = context;
+
+  // Wine styles are refetched with their colour dimension (the context RPC
+  // predates it) so a place can show "White sparkling" and "Rosé sparkling".
+  const placeId = context.place.id;
+  const [styleRows, setStyleRows] = useState<StyleRow[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("wine_place_styles")
+      .select("style, colour, note, sort_order")
+      .eq("wine_place_id", placeId)
+      .order("sort_order")
+      .then(({ data }) => {
+        if (cancelled) return;
+        setStyleRows(
+          (data ?? []).map((r) => ({
+            style: r.style as string,
+            colour: (r.colour as string | null) ?? null,
+            note: (r.note as string | null) ?? null,
+          })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, placeId]);
 
   const chipButton =
     "underline underline-offset-4 hover:text-foreground";
 
   return (
     <>
-      {styles.length > 0 ? (
+      {styleRows.length > 0 ? (
         <div>
           <SectionHeading icon={Wine}>Wine styles</SectionHeading>
           <div className="flex flex-wrap gap-1.5">
-            {styles.map((s) => (
+            {styleRows.map((s, i) => (
               <span
-                key={s.style}
+                key={`${s.style}-${s.colour ?? ""}-${i}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-2.5 py-1 text-xs font-medium"
               >
                 <Wine
                   className="size-3.5"
-                  style={{ color: STYLE_COLORS[s.style] ?? "#8A8A85" }}
+                  style={{ color: styleIconColor(s.style, s.colour) }}
                 />
-                {STYLE_LABELS[s.style] ?? s.style}
+                {styleLabel(s.style, s.colour)}
               </span>
             ))}
           </div>
-          {styles
+          {styleRows
             .filter((s) => s.note)
-            .map((s) => (
-              <p key={s.style} className="mt-1 text-xs text-muted-foreground">
-                {STYLE_LABELS[s.style] ?? s.style}: {s.note}
+            .map((s, i) => (
+              <p key={`note-${i}`} className="mt-1 text-xs text-muted-foreground">
+                {styleLabel(s.style, s.colour)}: {s.note}
               </p>
             ))}
         </div>
