@@ -66,6 +66,7 @@ export default async function CellarPage({
       "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, " +
         "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
     )
+    .gt("quantity", 0)
     .order("created_at", { ascending: false });
 
   const groupsMap = new Map<string, LotGroup>();

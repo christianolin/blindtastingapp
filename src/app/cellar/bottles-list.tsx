@@ -79,6 +79,12 @@ export function BottlesList({ groups }: { groups: LotGroup[] }) {
                       </span>
                     ) : null}
                     <Link
+                      href={`/cellar/${lot.id}/drink`}
+                      className="text-xs underline underline-offset-4 hover:text-foreground"
+                    >
+                      Drink
+                    </Link>
+                    <Link
                       href={`/cellar/${lot.id}/edit`}
                       className="text-xs underline underline-offset-4 hover:text-foreground"
                     >
