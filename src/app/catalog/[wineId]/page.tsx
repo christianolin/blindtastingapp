@@ -8,6 +8,8 @@ import {
   catalogWineTitle,
   fetchWineDescriptors,
   fetchWineGuessStats,
+  fetchWineBlend,
+  formatBlend,
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
@@ -29,7 +31,7 @@ export default async function CatalogWinePage({
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
-  const [{ data: myNotes }, descriptors, guessStats] = await Promise.all([
+  const [{ data: myNotes }, descriptors, guessStats, blend] = await Promise.all([
     supabase
       .from("wset_notes")
       .select("id, tasted_on, quality_score, context_kind")
@@ -38,10 +40,11 @@ export default async function CatalogWinePage({
       .order("tasted_on", { ascending: false }),
     fetchWineDescriptors(supabase, wineId),
     fetchWineGuessStats(supabase, wineId),
+    fetchWineBlend(supabase, wineId),
   ]);
 
   const title = catalogWineTitle(wine);
-  const grapes = [wine.primaryGrapeName, wine.secondaryGrapeName].filter(Boolean).join(" · ");
+  const grapes = formatBlend(blend);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-6">

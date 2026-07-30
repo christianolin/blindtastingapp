@@ -90,6 +90,44 @@ export function catalogWineTitle(wine: {
   return deduped.join(" ") || "Untitled wine";
 }
 
+export type BlendGrape = { name: string; percentage: number | null };
+
+// A wine's full grape blend, ordered by percentage (desc) when any is set, else
+// by sort_order — the same rule the derived primary/secondary columns use.
+export async function fetchWineBlend(
+  supabase: SupabaseClient<Database>,
+  wineId: string,
+): Promise<BlendGrape[]> {
+  const { data } = await supabase
+    .from("catalog_wine_grapes")
+    .select("percentage, sort_order, grapes(name)")
+    .eq("catalog_wine_id", wineId)
+    .order("sort_order");
+  const rows = (
+    (data ?? []) as unknown as Array<{
+      percentage: number | null;
+      sort_order: number;
+      grapes: { name: string } | { name: string }[] | null;
+    }>
+  ).map((r) => {
+    const g = r.grapes;
+    const name = Array.isArray(g) ? (g[0]?.name ?? "") : (g?.name ?? "");
+    return { name, percentage: r.percentage == null ? null : Number(r.percentage) };
+  });
+  const anyPct = rows.some((r) => r.percentage != null);
+  return anyPct
+    ? rows.sort((a, b) => (b.percentage ?? -1) - (a.percentage ?? -1))
+    : rows;
+}
+
+// "87% Cabernet Sauvignon, 8% Merlot, 5% Petit Verdot" — or a plain comma list
+// when no percentages are recorded.
+export function formatBlend(grapes: BlendGrape[]): string {
+  return grapes
+    .map((g) => (g.percentage != null ? `${g.percentage}% ${g.name}` : g.name))
+    .join(", ");
+}
+
 // The map place (canonical key) linked to a wine's appellation, if any — powers
 // the "view on the map" deep-link. Separate, individually-failing lookups so a
 // miss never breaks the wine page.
