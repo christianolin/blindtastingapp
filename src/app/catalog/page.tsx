@@ -35,12 +35,6 @@ export default async function CatalogPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_curator")
-    .eq("id", user.id)
-    .maybeSingle();
-
   const [{ data: wines }, { data: ratings }, { count: totalWines }, { count: totalCountries }] =
     await Promise.all([
       supabase
@@ -150,22 +144,12 @@ export default async function CatalogPage() {
         title="Catalog"
         subtitle="Explore the shared wine database curated by the community."
         actions={
-          <>
-            {profile?.is_curator ? (
-              <Link
-                href="/catalog/unidentified"
-                className="text-sm text-muted-foreground underline underline-offset-4"
-              >
-                Unidentified queue
-              </Link>
-            ) : null}
-            <Link
-              href="/catalog/new"
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Add a wine <Plus className="size-4" />
-            </Link>
-          </>
+          <Link
+            href="/catalog/new"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Add a wine <Plus className="size-4" />
+          </Link>
         }
       />
 

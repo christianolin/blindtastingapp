@@ -194,7 +194,59 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div className="flex flex-col gap-2 md:hidden">
+        {pageRows.map((r) => (
+          <Link
+            key={r.id}
+            href={`/catalog/${r.id}`}
+            className="flex items-center gap-3 rounded-xl border border-border p-3"
+          >
+            {r.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={r.imageUrl}
+                alt=""
+                className="size-11 shrink-0 rounded-md border border-border object-cover"
+              />
+            ) : (
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                <Wine className="size-5" />
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">{r.title}</span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {[r.colour && cap(r.colour), r.style && cap(r.style), r.vintage]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </span>
+            <span className="shrink-0 text-right text-sm">
+              {r.avgScore != null ? (
+                <span className="inline-flex items-center gap-1 font-medium text-gold-deep">
+                  <Star className="size-3.5" />
+                  {r.avgScore.toFixed(1)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
+              <span className="block text-xs text-muted-foreground">{r.noteCount} notes</span>
+            </span>
+          </Link>
+        ))}
+        {filtered.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            {rows.length === 0
+              ? "No wines in the catalog yet."
+              : "No wines match those filters."}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-border md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
