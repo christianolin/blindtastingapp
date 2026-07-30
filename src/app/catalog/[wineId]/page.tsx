@@ -14,7 +14,7 @@ import {
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
-import { countryFlag } from "@/lib/country-flag";
+import { CountryFlag } from "@/components/country-flag";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -75,8 +75,9 @@ export default async function CatalogWinePage({
             </h1>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {wine.countryName ? (
-                <Badge variant="secondary">
-                  {countryFlag(wine.countryName)} {wine.countryName}
+                <Badge variant="secondary" className="gap-1">
+                  <CountryFlag name={wine.countryName} />
+                  {wine.countryName}
                 </Badge>
               ) : null}
               {wine.regionName ? (

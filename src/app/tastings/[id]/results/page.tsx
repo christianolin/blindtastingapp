@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
-import { countryFlag } from "@/lib/country-flag";
+import { CountryFlag } from "@/components/country-flag";
 
 const CATEGORY_MAX: Record<string, number> = {
   country: 2,
@@ -285,7 +285,8 @@ export default async function ResultsPage({
                 <p className="mb-0.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   The wine
                 </p>
-                {[countryFlag(name(answer.country_id as string)), name(answer.country_id as string)].filter(Boolean).join(" ")} ·{" "}
+                {answer.country_id ? <CountryFlag name={name(answer.country_id as string)} className="mr-1" /> : null}
+                {name(answer.country_id as string)} ·{" "}
                 {name(answer.region_id as string)}
                 {answer.appellation_id
                   ? ` · ${name(answer.appellation_id as string)}`

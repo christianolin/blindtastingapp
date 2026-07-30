@@ -7,7 +7,7 @@ import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search } from "lucide-r
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { countryFlag } from "@/lib/country-flag";
+import { CountryFlag } from "@/components/country-flag";
 
 export type CatalogRow = {
   id: string;
@@ -147,7 +147,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           <option value={ALL}>All countries</option>
           {countries.map((c) => (
             <option key={c} value={c}>
-              {[countryFlag(c), c].filter(Boolean).join(" ")}
+              {c}
             </option>
           ))}
         </select>
@@ -220,7 +220,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{r.title}</span>
               <span className="block truncate text-xs text-muted-foreground">
-                {[r.region, [countryFlag(r.country), r.country].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—"}
+                {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
+                {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
               </span>
               <span className="block truncate text-xs text-muted-foreground">
                 {[r.colour && cap(r.colour), r.style && cap(r.style), r.vintage]
@@ -306,7 +307,14 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {[countryFlag(r.country), r.country].filter(Boolean).join(" ") || "—"}
+                    {r.country ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <CountryFlag name={r.country} />
+                        {r.country}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {r.grapes.length ? r.grapes.slice(0, 3).join(", ") : "—"}
