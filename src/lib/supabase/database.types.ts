@@ -287,6 +287,7 @@ export type Database = {
           role: UserRole;
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
+          last_seen_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -302,6 +303,7 @@ export type Database = {
           role?: UserRole;
           preferred_currency?: string;
           cellar_visibility?: CellarVisibility;
+          last_seen_at?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -317,6 +319,7 @@ export type Database = {
           role: UserRole;
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
+          last_seen_at: string | null;
           created_at: string;
         }>;
         Relationships: [];

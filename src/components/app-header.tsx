@@ -7,6 +7,7 @@ import { AppNav } from "@/components/app-nav";
 import { NAV_LINKS } from "@/components/nav-links";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
+import { touchLastSeen } from "@/lib/last-seen";
 import { signOut } from "@/app/actions";
 
 /**
@@ -53,9 +54,10 @@ export async function AppHeader({
   const invites = await getPendingInvites();
   const { data: roleRow } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, last_seen_at")
     .eq("id", userId)
     .maybeSingle();
+  await touchLastSeen(supabase, userId, roleRow?.last_seen_at ?? null);
   const canManage =
     roleRow?.role === "ADMIN" || roleRow?.role === "CONTRIBUTOR";
   const navLinks = canManage
