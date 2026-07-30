@@ -724,7 +724,7 @@ const EXPECTED_APPELLATION_LINKS = [
   { names: ["Fronsac AOP", "Fronsac"], key: "france.bordeaux.fronsac" },
   { names: ["Canon-Fronsac AOP", "Canon-Fronsac"], key: "france.bordeaux.canon-fronsac" },
   { names: ["Côtes de Bourg AOP", "Côtes de Bourg"], key: "france.bordeaux.cotes-de-bourg" },
-  { names: ["Entre-Deux-Mers AOP", "Entre-deux-Mers"], key: "france.bordeaux.entre-deux-mers" },
+  { names: ["Entre-Deux-Mers AOP", "Entre-deux-Mers"], key: "france.bordeaux.entre-deux-mers.entre-deux-mers" },
   { names: ["Vosne-Romanée AOP", "Vosne-Romanée"], key: "france.bourgogne.cote-de-nuits.vosne-romanee" },
   { names: ["Échezeaux AOP", "Échezeaux"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.echezeaux" },
   { names: ["Grands Échezeaux AOP", "Grands-Échezeaux AOP"], key: "france.bourgogne.cote-de-nuits.vosne-romanee.grands-echezeaux" },
@@ -1127,12 +1127,14 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Languedoc/Roussillon + Sud-Ouest sub-region splits: +6 derived
     // outlines.
     // Rhône proper grouping: +3 boundary rows (méridional + region re-derives,
-    // new Diois subregion) and +1 current (the new Diois subregion).
-    total: 1277,
-    validated: 1277,
-    current: 1193,
-    valid: 1277,
-    labelled: 1277,
+    // new Diois subregion) and +1 current (the new Diois subregion). Bordeaux
+    // Entre-Deux-Mers restructure: +1 boundary + place (the subregion outline;
+    // the AOC split into a nested node keeping the moved official boundary).
+    total: 1278,
+    validated: 1278,
+    current: 1194,
+    valid: 1278,
+    labelled: 1278,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1190,7 +1192,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1277);
+  assert.equal(prov.linked_boundaries, 1278);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
