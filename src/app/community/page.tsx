@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { PageHeader } from "@/components/patterns/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import { PeopleList } from "./people-list";
 import { FriendsList } from "./friends-list";
 
@@ -30,14 +30,6 @@ export default async function PeoplePage({
     .eq("id", user.id)
     .single();
 
-  const tabClass = (active: boolean) =>
-    cn(
-      "rounded-md px-3 py-1.5 text-sm transition-colors",
-      active
-        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
-        : "text-muted-foreground hover:text-foreground",
-    );
-
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
@@ -46,22 +38,20 @@ export default async function PeoplePage({
         avatarUrl={me?.avatar_url ?? null}
       />
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            Community
-          </h1>
-          <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-            <Link href="/community" className={tabClass(tab === "people")}>
-              People
-            </Link>
-            <Link
-              href="/community?tab=friends"
-              className={tabClass(tab === "friends")}
-            >
-              Friends
-            </Link>
-          </div>
-        </div>
+        <PageHeader
+          title="Community"
+          subtitle="Connect with fellow wine lovers."
+          actions={
+            <Tabs
+              variant="segmented"
+              activeKey={tab}
+              items={[
+                { key: "people", label: "People", href: "/community" },
+                { key: "friends", label: "Friends", href: "/community?tab=friends" },
+              ]}
+            />
+          }
+        />
         {tab === "people" ? (
           <PeopleList q={q} userId={user.id} />
         ) : (
