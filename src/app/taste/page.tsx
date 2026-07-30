@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Sparkles, Wine, Target, Trophy } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { BlindrMark } from "@/components/logo";
@@ -9,8 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfileStats } from "@/lib/profile-stats";
 import { TastingsTabs } from "./tastings-tabs";
 import { TastingCard, type TastingCardData } from "./tasting-card";
+import { ModeTiles } from "./mode-tiles";
 
-export default async function DashboardPage() {
+export default async function TastePage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -164,9 +163,11 @@ export default async function DashboardPage() {
             Welcome back, {profile?.display_name ?? user.email}
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Ready to guess some wine?
+            What are you tasting today?
           </p>
         </div>
+
+        <ModeTiles />
 
         {stats.summary.winesGuessed > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -191,16 +192,7 @@ export default async function DashboardPage() {
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between">
-          <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
-          <Button
-            nativeButton={false}
-            render={<Link href="/tastings/new" />}
-            className="shadow-sm"
-          >
-            New tasting
-          </Button>
-        </div>
+        <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
 
         {(tastings ?? []).length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border py-16 text-center">
@@ -210,12 +202,9 @@ export default async function DashboardPage() {
                 No tastings yet
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Create one and invite some friends to start guessing.
+                Pick a mode above to start your first tasting.
               </p>
             </div>
-            <Button nativeButton={false} render={<Link href="/tastings/new" />}>
-              Create your first tasting
-            </Button>
           </div>
         ) : (
           <TastingsTabs

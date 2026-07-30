@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { RevealMode, TimingMode } from "@/lib/supabase/database.types";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,6 @@ const WINE_SOURCE_ITEMS = {
   PARTICIPANT_CONTRIBUTED: "Everyone brings wines",
 };
 
-const REVEAL_MODE_ITEMS = {
-  BLIND: "Blind",
-  SEMI_BLIND: "Semi-blind",
-};
-
 const FLOW_ITEMS = {
   GUIDED: "Guided",
   FREE: "Free",
@@ -51,16 +47,17 @@ const ASYNC_REVEAL_ITEMS = {
 export function NewTastingForm({
   friends,
   userId,
+  reveal,
 }: {
   friends: { id: string; display_name: string; email: string }[];
   userId: string;
+  reveal: RevealMode;
 }) {
   const [state, formAction, pending] = useActionState<
     CreateTastingFormState,
     FormData
   >(createTasting, null);
   const [timing, setTiming] = useState<TimingMode>("LIVE");
-  const [reveal, setReveal] = useState<RevealMode>("BLIND");
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -151,29 +148,26 @@ export function NewTastingForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="reveal_mode">Blindness</Label>
-        <Select
-          name="reveal_mode"
-          items={REVEAL_MODE_ITEMS}
-          value={reveal}
-          onValueChange={(v) => setReveal(v as RevealMode)}
-          required
-        >
-          <SelectTrigger id="reveal_mode" className="w-full">
-            <SelectValue placeholder="Choose how blind it is" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="BLIND">{REVEAL_MODE_ITEMS.BLIND}</SelectItem>
-            <SelectItem value="SEMI_BLIND">
-              {REVEAL_MODE_ITEMS.SEMI_BLIND}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2">
+          <span className="text-sm">
+            <span className="text-muted-foreground">Mode</span>{" "}
+            <span className="font-medium">
+              {reveal === "BLIND" ? "Blind" : "Semi-blind"}
+            </span>
+          </span>
+          <Link
+            href="/taste"
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Change
+          </Link>
+        </div>
         <p className="text-xs text-muted-foreground">
           {reveal === "BLIND"
             ? "Nothing is known ahead of time — guess each wine from scratch."
             : "The full wine list is shown up front; match each glass to a wine."}
         </p>
+        <input type="hidden" name="reveal_mode" value={reveal} />
       </div>
 
       {reveal === "BLIND" ? (

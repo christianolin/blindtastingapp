@@ -143,9 +143,13 @@ Old paths keep working via redirects so shared links don't break.
   trigram/FTS — one RPC + a header box. People deferred (privacy nuance).
 
 ### 4.3 Semi-blind & note context
-- **Semi-blind is a tasting setting, not a mode:** which answer fields are
-  disclosed up front (e.g. country shown, rest hidden). Reuses the existing
-  reveal machinery — no second code path.
+- **Semi-blind is chosen at the launcher (P4 update):** the Taste pillar
+  (`/taste`) offers four entry tiles — Open note · Blind · Semi-blind ·
+  Training room (later) — and the tile you pick sets `reveal_mode`; the
+  new-tasting form shows it as a locked chip, not an editable field. Semi-blind
+  keeps its shipped meaning — the full wine list is shown up front and you match
+  each glass to a bottle (existing reveal machinery, no second code path),
+  superseding the earlier "which answer fields are disclosed" idea.
 - The blind play flow writes a `wset_notes` row with `context_kind=BLIND` +
   `tasting_wine_id` when a taster uses the SAT sheet during a tasting. The
   training room later extends the same shape.

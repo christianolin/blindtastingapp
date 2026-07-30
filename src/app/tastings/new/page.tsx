@@ -3,7 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { NewTastingForm } from "./new-tasting-form";
 
-export default async function NewTastingPage() {
+export default async function NewTastingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string }>;
+}) {
+  const { mode } = await searchParams;
+  const reveal = mode === "semi-blind" ? "SEMI_BLIND" : "BLIND";
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,10 +33,16 @@ export default async function NewTastingPage() {
     <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>New tasting</CardTitle>
+          <CardTitle>
+            New {reveal === "BLIND" ? "blind" : "semi-blind"} tasting
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <NewTastingForm friends={friends ?? []} userId={user.id} />
+          <NewTastingForm
+            friends={friends ?? []}
+            userId={user.id}
+            reveal={reveal}
+          />
         </CardContent>
       </Card>
     </div>
