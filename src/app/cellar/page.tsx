@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
+import { StatsPanel } from "./stats-panel";
+import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -50,7 +52,9 @@ export default async function CellarPage({
       ? "notes"
       : tabParam === "history"
         ? "history"
-        : "bottles";
+        : tabParam === "stats"
+          ? "stats"
+          : "bottles";
 
   const supabase = await createClient();
   const {
@@ -183,6 +187,62 @@ export default async function CellarPage({
     }));
   }
 
+  let stats: CellarStats | null = null;
+  if (tab === "stats") {
+    const { data: statRows } = await supabase
+      .from("cellar_lots")
+      .select(
+        "quantity, purchased_quantity, price_per_bottle, currency, purchased_on, drink_from, drink_to, catalog_wine_id, " +
+          "catalog_wines(colour, vintage_kind, vintage_year, country:countries(name), region:regions(name))",
+      );
+    const lots: StatLotRow[] = (
+      (statRows ?? []) as unknown as Array<{
+        quantity: number;
+        purchased_quantity: number;
+        price_per_bottle: number | null;
+        currency: string;
+        purchased_on: string | null;
+        drink_from: number | null;
+        drink_to: number | null;
+        catalog_wine_id: string;
+        catalog_wines:
+          | {
+              colour: string | null;
+              vintage_kind: "YEAR" | "NV" | "TAWNY";
+              vintage_year: number | null;
+              country: Rel;
+              region: Rel;
+            }
+          | Array<{
+              colour: string | null;
+              vintage_kind: "YEAR" | "NV" | "TAWNY";
+              vintage_year: number | null;
+              country: Rel;
+              region: Rel;
+            }>
+          | null;
+      }>
+    ).map((r) => {
+      const c = unwrap(r.catalog_wines);
+      return {
+        quantity: r.quantity,
+        purchasedQuantity: r.purchased_quantity,
+        pricePerBottle: r.price_per_bottle == null ? null : Number(r.price_per_bottle),
+        currency: r.currency,
+        purchasedOn: r.purchased_on,
+        drinkFrom: r.drink_from,
+        drinkTo: r.drink_to,
+        catalogWineId: r.catalog_wine_id,
+        colour: c?.colour ?? null,
+        vintageKind: c?.vintage_kind ?? "NV",
+        vintageYear: c?.vintage_year ?? null,
+        regionName: relName(c?.region ?? null),
+        countryName: relName(c?.country ?? null),
+      };
+    });
+    stats = computeCellarStats(lots, preferredCurrency, new Date().getUTCFullYear());
+  }
+
   const tabClass = (active: boolean) =>
     cn(
       "rounded-md px-3 py-1.5 text-sm transition-colors",
@@ -237,15 +297,20 @@ export default async function CellarPage({
         <Link href="/cellar?tab=history" className={tabClass(tab === "history")}>
           History
         </Link>
+        <Link href="/cellar?tab=stats" className={tabClass(tab === "stats")}>
+          Stats
+        </Link>
       </div>
 
       {tab === "bottles" ? (
         <BottlesList groups={groups} />
       ) : tab === "notes" ? (
         <MyNotesList notes={notes} />
-      ) : (
+      ) : tab === "history" ? (
         <HistoryList rows={history} />
-      )}
+      ) : stats ? (
+        <StatsPanel stats={stats} />
+      ) : null}
     </div>
   );
 }
