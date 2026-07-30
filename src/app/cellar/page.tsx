@@ -5,7 +5,7 @@ import { catalogWineTitle } from "@/lib/wset/queries";
 import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
-import { Wine, Boxes, Coins } from "lucide-react";
+import { Wine, Boxes, Coins, FileUp } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -255,12 +255,13 @@ export default async function CellarPage({
         subtitle="The wines you own — bottles, drink windows and value."
         actions={
           <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Link
                 href="/cellar/import"
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
               >
-                Import
+                <FileUp className="size-4" />
+                Import CSV from CellarTracker
               </Link>
               <Link
                 href="/cellar/new"
