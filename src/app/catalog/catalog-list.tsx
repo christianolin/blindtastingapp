@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -123,15 +123,18 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Search by wine name, producer, region, grape…"
-          className="min-w-56 flex-1"
-        />
+        <div className="relative min-w-56 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search by wine name, producer, region, grape…"
+            className="w-full pl-9"
+          />
+        </div>
         <select
           className={selectCls}
           value={country}
@@ -144,7 +147,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           <option value={ALL}>All countries</option>
           {countries.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {[countryFlag(c), c].filter(Boolean).join(" ")}
             </option>
           ))}
         </select>
@@ -217,7 +220,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             <span className="min-w-0 flex-1">
               <span className="block truncate font-medium">{r.title}</span>
               <span className="block truncate text-xs text-muted-foreground">
-                {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
+                {[r.region, [countryFlag(r.country), r.country].filter(Boolean).join(" ")].filter(Boolean).join(" · ") || "—"}
               </span>
               <span className="block truncate text-xs text-muted-foreground">
                 {[r.colour && cap(r.colour), r.style && cap(r.style), r.vintage]

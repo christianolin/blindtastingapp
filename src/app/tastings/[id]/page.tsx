@@ -548,7 +548,7 @@ export default async function TastingPage({
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {(wines ?? []).map((w, i) => (
                   <a
                     key={w.id}
