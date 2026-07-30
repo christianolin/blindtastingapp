@@ -17,6 +17,7 @@ export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type WineLeaderboardReveal = "PER_ATTRIBUTE" | "PER_WINE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
+export type CellarConsumptionReason = "DRANK" | "GIFTED" | "LOST" | "OTHER";
 export type GrapeColor = "RED" | "WHITE";
 export type WinePlaceKind =
   | "COUNTRY"
@@ -1219,6 +1220,36 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["cellar_lots"]["Insert"]>;
         Relationships: [];
       };
+      cellar_consumptions: {
+        Row: {
+          id: string;
+          owner_id: string;
+          lot_id: string | null;
+          catalog_wine_id: string;
+          quantity: number;
+          reason: CellarConsumptionReason;
+          consumed_on: string;
+          occasion: string | null;
+          wset_note_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          lot_id?: string | null;
+          catalog_wine_id: string;
+          quantity: number;
+          reason?: CellarConsumptionReason;
+          consumed_on?: string;
+          occasion?: string | null;
+          wset_note_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["cellar_consumptions"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
@@ -1329,6 +1360,10 @@ export type Database = {
         }[];
       };
       add_cellar_lot: {
+        Args: { p: unknown };
+        Returns: string;
+      };
+      consume_cellar_lot: {
         Args: { p: unknown };
         Returns: string;
       };
