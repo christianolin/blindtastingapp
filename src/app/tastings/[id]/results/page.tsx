@@ -311,7 +311,7 @@ export default async function ResultsPage({
 
               {answer.catalog_wine_id ? (
                 <Link
-                  href={`/catalog/${answer.catalog_wine_id}/notes/new`}
+                  href={`/catalog/${answer.catalog_wine_id}/notes/new?blindWine=${wine.id}`}
                   className="self-start text-sm font-medium text-primary underline underline-offset-4"
                 >
                   Write a tasting note for this wine →

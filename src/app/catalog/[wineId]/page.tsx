@@ -32,7 +32,7 @@ export default async function CatalogWinePage({
   const [{ data: myNotes }, descriptors, guessStats] = await Promise.all([
     supabase
       .from("wset_notes")
-      .select("id, tasted_on, quality_score")
+      .select("id, tasted_on, quality_score, context_kind")
       .eq("catalog_wine_id", wineId)
       .eq("author_id", user.id)
       .order("tasted_on", { ascending: false }),
@@ -163,7 +163,14 @@ export default async function CatalogWinePage({
                   href={`/catalog/${wineId}/notes/${n.id}`}
                   className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
                 >
-                  <span>{n.tasted_on}</span>
+                  <span className="flex items-center gap-2">
+                    {n.tasted_on}
+                    {n.context_kind === "BLIND" ? (
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-primary uppercase">
+                        blind
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="font-medium">
                     {n.quality_score != null ? `${n.quality_score} pts` : "unscored"}
                   </span>

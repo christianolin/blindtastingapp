@@ -20,12 +20,16 @@ export function NoteEditor({
   title,
   terms,
   initial,
+  contextKind = null,
+  tastingWineId = null,
 }: {
   wineId: string;
   wine: { colour: WineColour; style: WineStyle };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
+  contextKind?: string | null;
+  tastingWineId?: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -35,6 +39,8 @@ export function NoteEditor({
       const pNote = {
         id: state.id,
         catalog_wine_id: wineId,
+        context_kind: contextKind,
+        tasting_wine_id: tastingWineId,
         tasted_on: state.tastedOn,
         clarity: state.clarity,
         appearance_intensity: state.appearanceIntensity,
@@ -75,7 +81,7 @@ export function NoteEditor({
       }
       router.refresh();
     },
-    [supabase, wineId, router],
+    [supabase, wineId, router, contextKind, tastingWineId],
   );
 
   return (

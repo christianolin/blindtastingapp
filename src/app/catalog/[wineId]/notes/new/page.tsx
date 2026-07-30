@@ -7,10 +7,13 @@ import { NoteEditor } from "../note-editor";
 
 export default async function NewNotePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ wineId: string }>;
+  searchParams: Promise<{ blindWine?: string }>;
 }) {
   const { wineId } = await params;
+  const { blindWine } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -41,6 +44,8 @@ export default async function NewNotePage({
         title={catalogWineTitle(wine)}
         terms={terms}
         initial={emptyNoteState()}
+        contextKind={blindWine ? "BLIND" : null}
+        tastingWineId={blindWine ?? null}
       />
     </div>
   );

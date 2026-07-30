@@ -991,6 +991,8 @@ export type Database = {
         Row: {
           id: string;
           catalog_wine_id: string;
+          context_kind: "OPEN" | "BLIND" | "TRAINING";
+          tasting_wine_id: string | null;
           author_id: string;
           tasted_on: string;
           clarity: WsetClarity | null;
@@ -1020,6 +1022,8 @@ export type Database = {
         Insert: {
           id?: string;
           catalog_wine_id: string;
+          context_kind?: "OPEN" | "BLIND" | "TRAINING";
+          tasting_wine_id?: string | null;
           author_id: string;
           tasted_on?: string;
           clarity?: WsetClarity | null;
