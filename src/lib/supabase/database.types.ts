@@ -1043,6 +1043,27 @@ export type Database = {
         Relationships: [];
       };
 
+      wine_archetype_placements: {
+        Row: {
+          id: string;
+          archetype_id: string;
+          wine_place_id: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          archetype_id: string;
+          wine_place_id: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_archetype_placements"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
       wset_notes: {
         Row: {
           id: string;

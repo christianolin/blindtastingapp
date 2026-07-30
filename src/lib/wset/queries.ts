@@ -268,15 +268,21 @@ export async function fetchArchetypesForPlace(
     .eq("canonical_key", canonicalKey)
     .maybeSingle();
   if (!place) return [];
+  const { data: placements } = await supabase
+    .from("wine_archetype_placements")
+    .select("archetype_id, sort_order")
+    .eq("wine_place_id", place.id)
+    .order("sort_order");
+  const ids = (placements ?? []).map((p) => p.archetype_id);
+  if (ids.length === 0) return [];
   const { data } = await supabase
     .from("wine_archetypes")
     .select("id, name, colour, style")
-    .eq("wine_place_id", place.id)
-    .order("sort_order");
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    name: r.name,
-    colour: r.colour,
-    style: r.style,
-  }));
+    .in("id", ids);
+  const byId = new Map((data ?? []).map((r) => [r.id, r] as const));
+  // Preserve the placement order (admin-controlled per place).
+  return ids
+    .map((id) => byId.get(id))
+    .filter((r): r is NonNullable<typeof r> => Boolean(r))
+    .map((r) => ({ id: r.id, name: r.name, colour: r.colour, style: r.style }));
 }
