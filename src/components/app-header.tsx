@@ -56,6 +56,9 @@ export async function AppHeader({
     .eq("id", userId)
     .maybeSingle();
   const isAdmin = roleRow?.role === "ADMIN";
+  const navLinks = isAdmin
+    ? [...NAV_LINKS, { href: "/admin", label: "Admin", match: ["/admin"] }]
+    : NAV_LINKS;
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
@@ -64,12 +67,7 @@ export async function AppHeader({
       </Link>
 
       <nav className="hidden items-center gap-4 text-sm md:flex">
-        <AppNav />
-        {isAdmin ? (
-          <Link href="/admin" className="hover:underline">
-            Admin
-          </Link>
-        ) : null}
+        <AppNav links={navLinks} />
         <Link
           href={`/u/${userId}`}
           className="flex items-center gap-2 hover:underline"
@@ -100,7 +98,7 @@ export async function AppHeader({
         userId={userId}
         displayName={name}
         avatarUrl={avatarUrl}
-        links={NAV_LINKS}
+        links={navLinks}
         notifications={<NotificationsBell invites={invites} />}
       />
     </header>

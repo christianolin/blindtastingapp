@@ -35,7 +35,7 @@ export function isNavActive(pathname: string, link: NavLink) {
 // prefetch and a click waits on the server; we optimistically light the
 // clicked link immediately and drop the override once the path settles (a
 // render-phase reset, not an effect, to stay clear of set-state-in-effect).
-export function AppNav() {
+export function AppNav({ links = NAV_LINKS }: { links?: NavLink[] }) {
   const pathname = usePathname();
   const [clicked, setClicked] = useState<string | null>(null);
   const [seenPath, setSeenPath] = useState(pathname);
@@ -46,7 +46,7 @@ export function AppNav() {
 
   return (
     <>
-      {NAV_LINKS.map((link) => {
+      {links.map((link) => {
         const active = clicked
           ? clicked === link.href
           : isNavActive(pathname, link);

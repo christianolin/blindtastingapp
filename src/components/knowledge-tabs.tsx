@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const TABS: { href: string; label: string }[] = [
   { href: "/knowledge/map", label: "Wine Map" },
+  { href: "/knowledge/archetypes", label: "Typical wines" },
   { href: "/knowledge/grapes", label: "Grapes" },
   { href: "/knowledge/type-designations", label: "Designations" },
   { href: "/rules", label: "Rules" },
