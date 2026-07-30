@@ -1,20 +1,31 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth/roles";
+import { requireContributor } from "@/lib/auth/roles";
+import type { AromaTerm } from "@/lib/wset/types";
 import { PlacementEditor, type ArchetypeAdmin } from "./placement-editor";
 
-export const metadata = { title: "Typical-wine placements · Admin · Blindr" };
+export const metadata = { title: "Typical wines · Admin · Blindr" };
 
-export default async function ArchetypePlacementsPage() {
-  const { supabase } = await requireAdmin();
+export default async function ArchetypesAdminPage() {
+  const { supabase } = await requireContributor();
 
-  const [{ data: archetypes }, { data: placements }] = await Promise.all([
+  const [
+    { data: archetypes },
+    { data: placements },
+    { data: aromaLinks },
+    { data: termRows },
+  ] = await Promise.all([
     supabase
       .from("wine_archetypes")
-      .select("id, name, colour, style")
+      .select("id, name, colour, style, description, quality_low, quality_high, sat")
       .order("sort_order"),
     supabase
       .from("wine_archetype_placements")
       .select("archetype_id, wine_place_id, sort_order")
+      .order("sort_order"),
+    supabase.from("wine_archetype_aromas").select("archetype_id, term_id, kind"),
+    supabase
+      .from("wset_aroma_terms")
+      .select("id, family, origin, group_name, term, sort_order")
       .order("sort_order"),
   ]);
 
@@ -39,11 +50,31 @@ export default async function ArchetypePlacementsPage() {
     }
   }
 
+  const terms: AromaTerm[] = (termRows ?? []).map((t) => ({
+    id: t.id,
+    family: t.family,
+    origin: t.origin,
+    groupName: t.group_name,
+    term: t.term,
+    sortOrder: t.sort_order,
+  }));
+
+  const links = aromaLinks ?? [];
   const items: ArchetypeAdmin[] = (archetypes ?? []).map((a) => ({
     id: a.id,
     name: a.name,
     colour: a.colour,
     style: a.style,
+    description: a.description,
+    qualityLow: a.quality_low,
+    qualityHigh: a.quality_high,
+    sat: a.sat,
+    noseTermIds: links
+      .filter((l) => l.archetype_id === a.id && l.kind === "NOSE")
+      .map((l) => l.term_id),
+    palateTermIds: links
+      .filter((l) => l.archetype_id === a.id && l.kind === "PALATE")
+      .map((l) => l.term_id),
     placements: (placements ?? [])
       .filter((pl) => pl.archetype_id === a.id)
       .map((pl) => {
@@ -68,14 +99,15 @@ export default async function ArchetypePlacementsPage() {
           ← Admin
         </Link>
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          Typical-wine placements
+          Typical wines
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Each typical wine appears on the map places listed under it. Add a place
-          to surface the wine there; remove to hide it.
+          Edit each typical wine&apos;s tasting-sheet profile — appearance, nose,
+          palate and quality ranges plus aromas — and choose which map places
+          surface it.
         </p>
       </div>
-      <PlacementEditor archetypes={items} />
+      <PlacementEditor archetypes={items} terms={terms} />
     </div>
   );
 }

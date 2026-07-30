@@ -17,10 +17,10 @@ export default async function AdminHome() {
         href="/admin/archetypes"
         className="rounded-lg border border-border p-4 transition-colors hover:bg-muted"
       >
-        <div className="font-medium">Typical-wine placements</div>
+        <div className="font-medium">Typical wines</div>
         <p className="text-sm text-muted-foreground">
-          Choose which typical wines appear on which regions, subregions and
-          appellations in the map hierarchy.
+          Edit each typical wine&apos;s tasting-sheet profile and choose which map
+          places surface it.
         </p>
       </Link>
       {role === "ADMIN" ? (

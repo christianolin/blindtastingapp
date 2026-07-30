@@ -2,13 +2,15 @@
 
 import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Wine, X } from "lucide-react";
+import { Pencil, Search, Wine, X } from "lucide-react";
 import {
   searchPlaces,
   addPlacement,
   removePlacement,
   type PlaceHit,
 } from "./actions";
+import { ArchetypeEditor, type ArchetypeProfile } from "./archetype-editor";
+import type { AromaTerm } from "@/lib/wset/types";
 
 export type PlacementView = {
   placeId: string;
@@ -17,11 +19,7 @@ export type PlacementView = {
   canonicalKey: string;
   sortOrder: number;
 };
-export type ArchetypeAdmin = {
-  id: string;
-  name: string;
-  colour: string;
-  style: string;
+export type ArchetypeAdmin = ArchetypeProfile & {
   placements: PlacementView[];
 };
 
@@ -125,11 +123,14 @@ function AddPlace({
 
 export function PlacementEditor({
   archetypes,
+  terms,
 }: {
   archetypes: ArchetypeAdmin[];
+  terms: AromaTerm[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const remove = (archetypeId: string, placeId: string) =>
     startTransition(async () => {
@@ -141,13 +142,26 @@ export function PlacementEditor({
     <div className="flex flex-col gap-4">
       {archetypes.map((a) => (
         <div key={a.id} className="rounded-lg border border-border p-4">
-          <div className="mb-2 flex items-center gap-2">
-            <Wine
-              className="size-4 shrink-0"
-              style={{ color: COLOUR_HEX[a.colour] ?? "#8A8A85" }}
-            />
-            <span className="font-medium">{a.name}</span>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <Wine
+                className="size-4 shrink-0"
+                style={{ color: COLOUR_HEX[a.colour] ?? "#8A8A85" }}
+              />
+              <span className="truncate font-medium">{a.name}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpenId(openId === a.id ? null : a.id)}
+              className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Pencil className="size-3.5" />
+              {openId === a.id ? "Close" : "Edit profile"}
+            </button>
           </div>
+          <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            Shown on
+          </p>
           <div className="flex flex-wrap items-center gap-1.5">
             {a.placements.length === 0 ? (
               <span className="text-xs text-muted-foreground">No places yet.</span>
@@ -180,6 +194,10 @@ export function PlacementEditor({
               onDone={() => router.refresh()}
             />
           </div>
+
+          {openId === a.id ? (
+            <ArchetypeEditor archetype={a} terms={terms} />
+          ) : null}
         </div>
       ))}
     </div>
