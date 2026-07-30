@@ -249,7 +249,7 @@ export default async function CellarPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-6">
       <PageHeader
         title="Cellar"
         subtitle="The wines you own — bottles, drink windows and value."
@@ -275,10 +275,11 @@ export default async function CellarPage({
       />
 
       <StatStrip className="sm:grid-cols-3">
-        <StatTile icon={Wine} value={totalBottles} label="bottles" />
-        <StatTile icon={Boxes} value={groups.length} label="wines" />
+        <StatTile icon={Wine} tint="rose" value={totalBottles} label="bottles" />
+        <StatTile icon={Boxes} tint="amber" value={groups.length} label="wines" />
         <StatTile
           icon={Coins}
+          tint="gold"
           value={hasValue ? Math.round(totalValue).toLocaleString() : "—"}
           label={`${preferredCurrency} value`}
         />

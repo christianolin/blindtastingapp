@@ -3,8 +3,17 @@ import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "@/components/ui/tooltip";
 
-// Responsive wrapper for a row of StatTiles. Default 2→4 columns; pass
-// `className` (e.g. `sm:grid-cols-5`) to override for a specific page.
+// Soft tinted icon chips — what makes the stat rows feel alive in the prototypes.
+const TINTS = {
+  muted: "bg-muted text-muted-foreground",
+  rose: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  amber: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  gold: "bg-gold/15 text-gold-deep",
+  blue: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  purple: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
+  green: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
+} as const;
+
 export function StatStrip({
   children,
   className,
@@ -28,6 +37,7 @@ export function StatTile({
   label,
   sub,
   hint,
+  tint = "muted",
   className,
 }: {
   icon?: ComponentType<{ className?: string }>;
@@ -35,6 +45,7 @@ export function StatTile({
   label: ReactNode;
   sub?: ReactNode;
   hint?: ReactNode;
+  tint?: keyof typeof TINTS;
   className?: string;
 }) {
   return (
@@ -46,7 +57,12 @@ export function StatTile({
       )}
     >
       {Icon ? (
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <span
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-lg",
+            TINTS[tint],
+          )}
+        >
           <Icon className="size-5" />
         </span>
       ) : null}
