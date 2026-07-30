@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchCatalogWine,
@@ -138,12 +139,7 @@ export default async function CatalogWinePage({
                   {guessStats.fields.map((f) => (
                     <li key={f.key} className="flex items-center gap-3 text-sm">
                       <span className="w-24 shrink-0 text-muted-foreground">{f.label}</span>
-                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                        <span
-                          className="block h-full rounded-full bg-primary"
-                          style={{ width: `${f.pct}%` }}
-                        />
-                      </span>
+                      <Progress value={f.pct} className="flex-1" />
                       <span className="w-10 shrink-0 text-right font-medium">{f.pct}%</span>
                     </li>
                   ))}
