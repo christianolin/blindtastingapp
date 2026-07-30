@@ -11,12 +11,13 @@ export type NavLink = { href: string; label: string; match: string[] };
 // it's the avatar chip in AppHeader.
 export const NAV_LINKS: NavLink[] = [
   { href: "/taste", label: "Taste", match: ["/taste", "/tastings"] },
+  { href: "/catalog", label: "Catalog", match: ["/catalog"] },
+  { href: "/cellar", label: "Cellar", match: ["/cellar"] },
   {
     href: "/knowledge/map",
     label: "Knowledge",
     match: ["/knowledge", "/rules"],
   },
-  { href: "/catalog", label: "Catalog", match: ["/catalog"] },
   { href: "/people", label: "Friends", match: ["/people", "/friends"] },
 ];
 
