@@ -1792,7 +1792,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-chalonnaise.montagny.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:montagny-1er",
     "normalized_checksum_sha256": "07C6C10B8D4A525E1759BDA16A82EC397F46E8160B45E9EEC380507C50B78BF9",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190921Z/montagny-1er/fetch-manifest.json",
@@ -2251,7 +2251,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-chalonnaise.rully.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:rully-1er",
     "normalized_checksum_sha256": "F66CAF7C74A8DEE1EE257B48E7E337EAEC39D533FD0C7F0B74D20F62326AFFE9",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T190907Z/rully-1er/fetch-manifest.json",
@@ -3376,7 +3376,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.chassagne-montrachet.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:chassagne-montrachet-1er",
     "normalized_checksum_sha256": "3C0650EED8C43B73F72F71735E90AB6C5AA9919B93839B4D365F2A0869CA70D7",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184558Z/chassagne-montrachet-1er/fetch-manifest.json",
@@ -3916,7 +3916,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.ladoix.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:ladoix-1er",
     "normalized_checksum_sha256": "13AD233F0854D0ACB5FA8A77AC6A44DF42DDCA9A23CE54324274832963D32BDF",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184354Z/ladoix-1er/fetch-manifest.json",
@@ -4114,7 +4114,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.meursault.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:meursault-1er",
     "normalized_checksum_sha256": "368F93CE6AEE607DAEF1F2DD541E938578CED09A90792AEA64F2AC4581C32D4C",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184523Z/meursault-1er/fetch-manifest.json",
@@ -4303,7 +4303,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.monthelie.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:monthelie-1er",
     "normalized_checksum_sha256": "B329474405BC405F70E9D810AE00922C3D87311AD0FC287D2921E70949DAB17B",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184504Z/monthelie-1er/fetch-manifest.json",
@@ -4546,7 +4546,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.pommard.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:pommard-1er",
     "normalized_checksum_sha256": "706D5DCB09D4611E906D6F7A2DE498261C04B03FE437B57349C886C39195DACA",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184449Z/pommard-1er/fetch-manifest.json",
@@ -4852,7 +4852,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.puligny-montrachet.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:puligny-montrachet-1er",
     "normalized_checksum_sha256": "0E1E7520BBE63A4D74E94188EE85465536A5B856835C765FED128BA30DF5CC05",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184546Z/puligny-montrachet-1er/fetch-manifest.json",
@@ -5662,7 +5662,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-beaune.volnay.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:volnay-1er",
     "normalized_checksum_sha256": "3271B8613390972612533552AAA01C6FC93E27CBD5C726A382809A2E609D8D84",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T184457Z/volnay-1er/fetch-manifest.json",
@@ -5968,7 +5968,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-nuits.chambolle-musigny.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:chambolle-musigny-1er",
     "normalized_checksum_sha256": "251251B08BE5E3883733FA47AB08B37DB62243C462E518F585D39B06848B0BE1",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123129Z/chambolle-musigny-1er/fetch-manifest.json",
@@ -6652,7 +6652,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-nuits.morey-saint-denis.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:morey-saint-denis-1er",
     "normalized_checksum_sha256": "3B90F24FC820D7C5C63968E3549CB25EA4A72C02C8945434A318329F9A7215F4",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123115Z/morey-saint-denis-1er/fetch-manifest.json",
@@ -6850,7 +6850,7 @@
   },
   {
     "canonical_key": "france.bourgogne.cote-de-nuits.nuits-saint-georges.premier-cru",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
     "source_feature_id": "denomset:nuits-saint-georges-1er",
     "normalized_checksum_sha256": "A8A122F4558473F275FCF2A31657AEBF52C805EF2358561F6CD5AAAF931A356F",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260722T123152Z/nuits-saint-georges-1er/fetch-manifest.json",

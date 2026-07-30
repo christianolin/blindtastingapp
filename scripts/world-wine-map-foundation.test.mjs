@@ -1134,11 +1134,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // Roussillon aggregates, Loire + Bourgogne region refreshes, Côte de Beaune,
     // Mâconnais, Montagne de Reims, Côte des Blancs). Current unchanged (all
     // revision replacements); the 3 retired generalized outlines keep generalized.
-    total: 1287,
-    validated: 1287,
+    // Burgundy premier-cru union polish: +12 DERIVED_FROM_DESCENDANTS revisions
+    // (12 village 1er-cru groupings re-derived as generic parcel + named-climat
+    // union so each encloses its climat children on drill-down; Givry/Chablis left
+    // accurate-but-open — their 1er cru extends past the village and would need a
+    // multi-level cascade). Current unchanged (revision replacements); the new rows
+    // are validated + valid + labelled but neither manual nor generalized.
+    total: 1299,
+    validated: 1299,
     current: 1194,
-    valid: 1287,
-    labelled: 1287,
+    valid: 1299,
+    labelled: 1299,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
@@ -1196,7 +1202,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1287);
+  assert.equal(prov.linked_boundaries, 1299);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
