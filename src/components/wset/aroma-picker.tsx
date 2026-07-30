@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AromaTerm, AromaOrigin } from "@/lib/wset/types";
+import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
+import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { WSET } from "./tokens";
 
 const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
@@ -21,11 +22,13 @@ export function AromaPicker({
   selectedIds,
   onChange,
   copyFrom,
+  colour,
 }: {
   terms: AromaTerm[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   copyFrom?: { label: string; ids: string[] };
+  colour?: WineColour | null;
 }) {
   const [activeOrigin, setActiveOrigin] = useState<AromaOrigin>("PRIMARY");
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -43,7 +46,7 @@ export function AromaPicker({
   // Clusters of the active origin, in sort order, caption preserved.
   const groups = useMemo(() => {
     const inOrigin = terms
-      .filter((t) => t.origin === activeOrigin)
+      .filter((t) => t.origin === activeOrigin && aromaVisibleFor(colour, t.groupName, t.term))
       .sort((a, b) => a.sortOrder - b.sortOrder);
     const out: { name: string; items: AromaTerm[] }[] = [];
     for (const t of inOrigin) {
@@ -52,7 +55,7 @@ export function AromaPicker({
       else out.push({ name: t.groupName, items: [t] });
     }
     return out;
-  }, [terms, activeOrigin]);
+  }, [terms, activeOrigin, colour]);
 
   const toggle = (id: string) => {
     if (selected.has(id)) onChange(selectedIds.filter((x) => x !== id));

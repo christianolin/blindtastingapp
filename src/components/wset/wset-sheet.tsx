@@ -307,7 +307,7 @@ export function WsetSheet({
               <SnapSlider stops={DEVELOPMENT_STOPS} labels={LABELS} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
             <Row wide label="Aroma characteristics" sub="select all that apply">
-              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} />
+              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} />
             </Row>
           </SectionCard>
           <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`}>
@@ -348,6 +348,7 @@ export function WsetSheet({
                 selectedIds={state.palateTermIds}
                 onChange={(ids) => set("palateTermIds", ids)}
                 copyFrom={{ label: "Copy from nose", ids: state.noseTermIds }}
+                colour={wine.colour}
               />
             </Row>
             <Row label="Finish" sub={label(state.finish)}>

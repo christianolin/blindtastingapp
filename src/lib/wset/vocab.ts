@@ -235,6 +235,43 @@ export const HUE_HEX: Record<WineColour, Partial<Record<ColourHue, string>>> = {
   },
 };
 
+// --- Aroma colour filtering ------------------------------------------------
+// Which wine colours a cluster is plausibly relevant to, so the picker can hide
+// options that never apply (a red hiding citrus/stone/tropical whites; a white
+// hiding red/black fruit). ROSE / ORANGE (and unknown) show everything — they
+// are legitimate crossovers. Floral is per-term. Guidance, easily tweaked.
+const CLUSTER_AFFINITY: Record<string, "WHITE" | "RED" | "BOTH"> = {
+  "Green fruit": "WHITE",
+  "Citrus fruit": "WHITE",
+  "Stone fruit": "WHITE",
+  "Tropical fruit": "WHITE",
+  "Red fruit": "RED",
+  "Black fruit": "RED",
+  "Red wine": "RED",
+  "White wine": "WHITE",
+};
+
+function aromaAffinity(groupName: string, term: string): "WHITE" | "RED" | "BOTH" {
+  if (groupName === "Floral") {
+    const t = term.toLowerCase();
+    if (t === "violet") return "RED";
+    if (t === "rose") return "BOTH";
+    return "WHITE";
+  }
+  return CLUSTER_AFFINITY[groupName] ?? "BOTH";
+}
+
+// Whether an aroma term should show for a wine of the given colour.
+export function aromaVisibleFor(
+  colour: WineColour | null | undefined,
+  groupName: string,
+  term: string,
+): boolean {
+  if (colour !== "RED" && colour !== "WHITE") return true;
+  const a = aromaAffinity(groupName, term);
+  return a === "BOTH" || a === colour;
+}
+
 // Per-section "N of M rated" progress, driving the handoff's done/total
 // counters. Required fields come from the spec's Validation section:
 // Appearance (3) = clarity + appearance intensity + colour hue; Nose (4) =
