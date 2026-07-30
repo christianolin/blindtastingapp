@@ -8,6 +8,7 @@ import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
 import { StatsPanel } from "./stats-panel";
 import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
+import { CellarVisibilityControl } from "./cellar-visibility-control";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -64,10 +65,11 @@ export default async function CellarPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("preferred_currency")
+    .select("preferred_currency, cellar_visibility")
     .eq("id", user.id)
     .maybeSingle();
   const preferredCurrency = profile?.preferred_currency ?? "DKK";
+  const visibility = profile?.cellar_visibility ?? "PRIVATE";
 
   // Lots drive both the Bottles list and the summary bar (shown on both tabs).
   const { data: lotRows } = await supabase
@@ -260,12 +262,15 @@ export default async function CellarPage({
             The wines you own — bottles, drink windows and value.
           </p>
         </div>
-        <Link
-          href="/cellar/new"
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Add a wine
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Link
+            href="/cellar/new"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Add a wine
+          </Link>
+          <CellarVisibilityControl userId={user.id} current={visibility} />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg border border-border bg-muted/30 px-4 py-2.5 text-sm">

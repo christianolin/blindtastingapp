@@ -121,17 +121,30 @@ export default async function ProfilePage({
                 })}
               </p>
             </div>
-            {isOwnProfile ? (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {isOwnProfile ? (
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href="/profile/edit" />}
+                >
+                  Edit profile
+                </Button>
+              ) : (
+                <FriendButton friendId={profile.id} isFriend={isFriend} />
+              )}
               <Button
                 variant="outline"
                 nativeButton={false}
-                render={<Link href="/profile/edit" />}
+                render={
+                  <Link
+                    href={isOwnProfile ? "/cellar" : `/u/${profile.id}/cellar`}
+                  />
+                }
               >
-                Edit profile
+                View cellar
               </Button>
-            ) : (
-              <FriendButton friendId={profile.id} isFriend={isFriend} />
-            )}
+            </div>
           </CardContent>
         </Card>
 

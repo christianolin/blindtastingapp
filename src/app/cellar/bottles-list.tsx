@@ -30,7 +30,13 @@ function drinkWindow(from: number | null, to: number | null): string | null {
   return `drink ${from ?? "?"}\u2013${to ?? "?"}`;
 }
 
-export function BottlesList({ groups }: { groups: LotGroup[] }) {
+export function BottlesList({
+  groups,
+  readOnly = false,
+}: {
+  groups: LotGroup[];
+  readOnly?: boolean;
+}) {
   if (groups.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
@@ -78,18 +84,22 @@ export function BottlesList({ groups }: { groups: LotGroup[] }) {
                         {lot.pricePerBottle} {lot.currency}
                       </span>
                     ) : null}
-                    <Link
-                      href={`/cellar/${lot.id}/drink`}
-                      className="text-xs underline underline-offset-4 hover:text-foreground"
-                    >
-                      Drink
-                    </Link>
-                    <Link
-                      href={`/cellar/${lot.id}/edit`}
-                      className="text-xs underline underline-offset-4 hover:text-foreground"
-                    >
-                      Edit
-                    </Link>
+                    {!readOnly ? (
+                      <>
+                        <Link
+                          href={`/cellar/${lot.id}/drink`}
+                          className="text-xs underline underline-offset-4 hover:text-foreground"
+                        >
+                          Drink
+                        </Link>
+                        <Link
+                          href={`/cellar/${lot.id}/edit`}
+                          className="text-xs underline underline-offset-4 hover:text-foreground"
+                        >
+                          Edit
+                        </Link>
+                      </>
+                    ) : null}
                   </span>
                 </li>
               );

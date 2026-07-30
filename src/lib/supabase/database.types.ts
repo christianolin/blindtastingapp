@@ -18,6 +18,7 @@ export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";
 export type WineLeaderboardReveal = "PER_ATTRIBUTE" | "PER_WINE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 export type CellarConsumptionReason = "DRANK" | "GIFTED" | "LOST" | "OTHER";
+export type CellarVisibility = "PRIVATE" | "FRIENDS" | "PUBLIC";
 export type GrapeColor = "RED" | "WHITE";
 export type WinePlaceKind =
   | "COUNTRY"
@@ -285,6 +286,7 @@ export type Database = {
           is_curator: boolean;
           role: UserRole;
           preferred_currency: string;
+          cellar_visibility: CellarVisibility;
           created_at: string;
         };
         Insert: {
@@ -299,6 +301,7 @@ export type Database = {
           is_curator?: boolean;
           role?: UserRole;
           preferred_currency?: string;
+          cellar_visibility?: CellarVisibility;
           created_at?: string;
         };
         Update: Partial<{
@@ -313,6 +316,7 @@ export type Database = {
           is_curator: boolean;
           role: UserRole;
           preferred_currency: string;
+          cellar_visibility: CellarVisibility;
           created_at: string;
         }>;
         Relationships: [];
@@ -1366,6 +1370,10 @@ export type Database = {
       consume_cellar_lot: {
         Args: { p: unknown };
         Returns: string;
+      };
+      can_view_cellar: {
+        Args: { p_owner: string };
+        Returns: boolean;
       };
     };
   };
