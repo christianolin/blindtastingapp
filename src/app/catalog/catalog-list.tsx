@@ -7,6 +7,7 @@ import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { countryFlag } from "@/lib/country-flag";
 
 export type CatalogRow = {
   id: string;
@@ -187,14 +188,14 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               setColour(ALL);
               setPage(1);
             }}
-            className="text-sm text-primary hover:underline"
+            className="text-sm font-medium text-primary hover:text-primary/80"
           >
             Clear filters
           </button>
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {pageRows.map((r) => (
           <Link
             key={r.id}
@@ -246,9 +247,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
+        <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
                 <Th onClick={() => toggleSort("title")}>Wine {sortIcon("title")}</Th>
@@ -302,7 +302,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                       <span className="block text-xs">{r.appellation}</span>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{r.country ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {[countryFlag(r.country), r.country].filter(Boolean).join(" ") || "—"}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {r.grapes.length ? r.grapes.slice(0, 3).join(", ") : "—"}
                   </td>
@@ -324,7 +326,6 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               ))}
             </tbody>
           </table>
-        </div>
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
             {rows.length === 0

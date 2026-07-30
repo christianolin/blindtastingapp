@@ -14,6 +14,7 @@ import {
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
+import { countryFlag } from "@/lib/country-flag";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -74,7 +75,9 @@ export default async function CatalogWinePage({
             </h1>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {wine.countryName ? (
-                <Badge variant="secondary">{wine.countryName}</Badge>
+                <Badge variant="secondary">
+                  {countryFlag(wine.countryName)} {wine.countryName}
+                </Badge>
               ) : null}
               {wine.regionName ? (
                 <Badge variant="secondary">{wine.regionName}</Badge>
@@ -103,7 +106,7 @@ export default async function CatalogWinePage({
             {wine.appellationPlaceKey && wine.appellationName ? (
               <Link
                 href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
-                className="mt-3 inline-block text-sm text-primary underline underline-offset-4"
+                className="mt-3 inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
               >
                 View {wine.appellationName} on the map →
               </Link>
