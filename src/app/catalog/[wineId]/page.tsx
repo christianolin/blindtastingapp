@@ -15,6 +15,7 @@ import {
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
 import { CountryFlag } from "@/components/country-flag";
+import { MapPin } from "lucide-react";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -107,9 +108,10 @@ export default async function CatalogWinePage({
             {wine.appellationPlaceKey && wine.appellationName ? (
               <Link
                 href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
-                className="mt-3 inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
               >
-                View {wine.appellationName} on the map →
+                <MapPin className="size-3.5" />
+                View {wine.appellationName} on the map
               </Link>
             ) : null}
           </div>
