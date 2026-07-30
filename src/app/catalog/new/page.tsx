@@ -34,6 +34,7 @@ export default async function NewCellarWinePage() {
             regions={regions ?? []}
             grapes={grapes ?? []}
             typeDesignations={typeDesignations ?? []}
+            userId={user.id}
           />
         </CardContent>
       </Card>

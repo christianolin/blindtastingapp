@@ -54,6 +54,7 @@ export type NewCatalogWine = {
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   vintageTawnyYears: number | null;
+  imageUrl?: string | null;
 };
 
 export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: string }> {
@@ -78,6 +79,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       vintage_kind: input.vintageKind,
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,
+      image_url: input.imageUrl ?? null,
       created_by: user.id,
     })
     .select("id")

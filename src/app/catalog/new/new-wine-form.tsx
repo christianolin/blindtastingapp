@@ -16,6 +16,7 @@ import {
   createRegion,
 } from "./actions";
 import { GrapeBlendEditor, type BlendRow } from "./grape-blend-editor";
+import { ImageUploader } from "@/components/image-uploader";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
 const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
@@ -27,11 +28,13 @@ export function NewWineForm({
   regions: initialRegions,
   grapes: initialGrapes,
   typeDesignations,
+  userId,
 }: {
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
   typeDesignations: ReferenceOption[];
+  userId: string;
 }) {
   const router = useRouter();
   const [countries, setCountries] = useState(initialCountries);
@@ -55,6 +58,7 @@ export function NewWineForm({
   const [tawnyYears, setTawnyYears] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     startAppellations(async () => {
@@ -98,6 +102,7 @@ export function NewWineForm({
         vintageKind,
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
+        imageUrl,
       });
       router.push(`/catalog/${id}`);
     } catch (e) {
@@ -219,6 +224,22 @@ export function NewWineForm({
             <Label>Style</Label>
             <PillGroup options={STYLES} labels={STYLE_LABELS} value={style} onChange={setStyle} />
           </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="rounded-lg border border-border px-3 pb-4">
+        <legend className="px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          Photo
+        </legend>
+        <div className="pt-1.5">
+          <ImageUploader
+            name="catalog_image"
+            bucket="wine-images"
+            folder={`catalog/staging/${userId}`}
+            label="Add a bottle photo"
+            aspectClassName="aspect-[3/4] max-w-40"
+            onChange={setImageUrl}
+          />
         </div>
       </fieldset>
 
