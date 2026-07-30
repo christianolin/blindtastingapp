@@ -157,9 +157,11 @@ export function QualitySlider({
         </div>
       </div>
       <p style={{ marginTop: 8, fontSize: 11, color: WSET.muted2 }}>
-        Weighted scale — 50–84 is compressed into the left of the bar; 85–92,
-        where most good wines land, gets the widest stretch; 95+ sits in the
-        rarefied right edge.
+        We&apos;ve swapped WSET&apos;s word scale (faulty → outstanding) for the
+        classic 100-point score used by critics like Parker: 50 is the floor,
+        ~85+ is good-to-excellent, 95+ is exceptional. The bar is weighted —
+        50–84 is compressed to the left; 85–92, where most good wines land, gets
+        the widest stretch; 95+ sits at the rarefied right edge.
       </p>
     </div>
   );

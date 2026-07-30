@@ -356,7 +356,7 @@ export function WsetSheet({
           </SectionCard>
 
           <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`}>
-            <Row label="Quality" sub="100-point scale">
+            <Row label="Point Score" sub="100-point scale">
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
             </Row>
             <Row label="Price category" sub={label(state.priceCategory)}>

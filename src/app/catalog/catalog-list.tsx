@@ -19,6 +19,8 @@ export type CatalogRow = {
 };
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
+// Diacritic-insensitive so "cha" matches "Châteauneuf", "rose" matches "Rosé".
+const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const ALL = "__all__";
 const selectCls =
   "h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground";
@@ -50,16 +52,15 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
     [rows],
   );
 
-  const needle = q.trim().toLowerCase();
+  const needle = fold(q.trim());
   const filtered = rows.filter((r) => {
     if (country !== ALL && r.country !== country) return false;
     if (region !== ALL && r.region !== region) return false;
     if (colour !== ALL && r.colour !== colour) return false;
     if (needle) {
-      const hay = [r.title, r.country, r.region, r.appellation]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+      const hay = fold(
+        [r.title, r.country, r.region, r.appellation].filter(Boolean).join(" "),
+      );
       if (!hay.includes(needle)) return false;
     }
     return true;
