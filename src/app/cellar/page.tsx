@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { Tabs } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/patterns/page-header";
+import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
+import { Wine, Boxes, Coins } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -247,48 +250,39 @@ export default async function CellarPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Cellar</h1>
-          <p className="text-sm text-muted-foreground">
-            The wines you own — bottles, drink windows and value.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <Link
-            href="/cellar/new"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Add a wine
-          </Link>
-          <Link
-            href="/cellar/import"
-            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-          >
-            Import CSV
-          </Link>
-          <CellarVisibilityControl userId={user.id} current={visibility} />
-        </div>
-      </div>
+      <PageHeader
+        title="Cellar"
+        subtitle="The wines you own — bottles, drink windows and value."
+        actions={
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/cellar/import"
+                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Import
+              </Link>
+              <Link
+                href="/cellar/new"
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Add a wine
+              </Link>
+            </div>
+            <CellarVisibilityControl userId={user.id} current={visibility} />
+          </div>
+        }
+      />
 
-      <div className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg border border-border bg-muted/30 px-4 py-2.5 text-sm">
-        <span>
-          <span className="font-heading text-base font-semibold">{totalBottles}</span>{" "}
-          <span className="text-muted-foreground">bottles</span>
-        </span>
-        <span>
-          <span className="font-heading text-base font-semibold">{groups.length}</span>{" "}
-          <span className="text-muted-foreground">wines</span>
-        </span>
-        {hasValue ? (
-          <span>
-            <span className="font-heading text-base font-semibold">
-              {Math.round(totalValue).toLocaleString()}
-            </span>{" "}
-            <span className="text-muted-foreground">{preferredCurrency} value</span>
-          </span>
-        ) : null}
-      </div>
+      <StatStrip className="sm:grid-cols-3">
+        <StatTile icon={Wine} value={totalBottles} label="bottles" />
+        <StatTile icon={Boxes} value={groups.length} label="wines" />
+        <StatTile
+          icon={Coins}
+          value={hasValue ? Math.round(totalValue).toLocaleString() : "—"}
+          label={`${preferredCurrency} value`}
+        />
+      </StatStrip>
 
       <Tabs
         variant="underline"
