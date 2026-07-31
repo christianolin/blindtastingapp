@@ -30,10 +30,11 @@ export default async function WineMapPage({
         <KnowledgeTabs />
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            Wine Map
+            Knowledge Explorer
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Click through from country to region to appellation.
+            Explore the world of wine through places, grapes, styles and the
+            rules that shape them.
           </p>
         </div>
 
