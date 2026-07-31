@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
+import { AppShell } from "@/components/app-shell";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -32,7 +33,9 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

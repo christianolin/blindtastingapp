@@ -1,25 +1,17 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { BlindrLockup } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { AppNav } from "@/components/app-nav";
-import { NAV_LINKS } from "@/components/nav-links";
+import { navWithAdmin } from "@/components/nav-links";
 import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { touchLastSeen } from "@/lib/last-seen";
 import { GlobalSearch } from "@/components/global-search";
-import { signOut } from "@/app/actions";
 
 /**
- * The app's persistent top bar — shown on every authenticated page. Callers
- * that already have the user/profile in hand can pass them to skip a refetch;
- * everywhere else just renders `<AppHeader />` and lets it fetch. Renders
- * nothing when logged out (those pages redirect to /login anyway).
- *
- * Desktop shows the nav inline; below `md` it collapses into MobileNav's
- * hamburger drawer so navigation is always reachable, never "use the browser
- * back button."
+ * The app's top bar — rendered inside the main column, to the right of the
+ * persistent AppSidebar. Holds the global search + notifications on desktop, and
+ * the MobileNav hamburger drawer below `md` (where the sidebar is hidden). The
+ * nav, logo, user chip and sign-out now live in the sidebar. Renders nothing
+ * when logged out (those pages redirect to /login anyway).
  */
 export async function AppHeader({
   userId: userIdProp,
@@ -61,48 +53,10 @@ export async function AppHeader({
   await touchLastSeen(supabase, userId, roleRow?.last_seen_at ?? null);
   const canManage =
     roleRow?.role === "ADMIN" || roleRow?.role === "CONTRIBUTOR";
-  const navLinks = canManage
-    ? [...NAV_LINKS, { href: "/admin", label: "Admin", match: ["/admin"] }]
-    : NAV_LINKS;
+  const navLinks = navWithAdmin(canManage);
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
-      <Link href="/taste" className="flex items-center">
-        <BlindrLockup size={30} gap={8} />
-      </Link>
-
-      <div className="mx-4 hidden max-w-sm flex-1 justify-center md:flex">
-        <GlobalSearch />
-      </div>
-
-      <nav className="hidden items-center gap-4 text-sm md:flex">
-        <AppNav links={navLinks} />
-        <Link
-          href={`/u/${userId}`}
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-6 rounded-full object-cover ring-1 ring-border"
-            />
-          ) : (
-            <span className="flex size-6 items-center justify-center rounded-full bg-secondary text-xs">
-              {name.slice(0, 1).toUpperCase()}
-            </span>
-          )}
-          {name}
-        </Link>
-        <NotificationsBell invites={invites} />
-        <form action={signOut}>
-          <Button variant="outline" size="sm" type="submit">
-            Sign out
-          </Button>
-        </form>
-      </nav>
-
+    <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
       <MobileNav
         userId={userId}
         displayName={name}
@@ -110,6 +64,12 @@ export async function AppHeader({
         links={navLinks}
         notifications={<NotificationsBell invites={invites} />}
       />
+      <div className="hidden max-w-md flex-1 md:flex">
+        <GlobalSearch />
+      </div>
+      <div className="ml-auto hidden items-center md:flex">
+        <NotificationsBell invites={invites} />
+      </div>
     </header>
   );
 }
