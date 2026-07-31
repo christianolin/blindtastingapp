@@ -14,6 +14,7 @@ import {
   createCatalogWine,
   createCountry,
   createRegion,
+  updateCatalogWine,
 } from "./actions";
 import { GrapeBlendEditor, type BlendRow } from "./grape-blend-editor";
 import { ImageUploader } from "@/components/image-uploader";
@@ -23,6 +24,27 @@ const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
 const COLOUR_LABELS = { WHITE: "White", ORANGE: "Orange", ROSE: "Rosé", RED: "Red" };
 const STYLE_LABELS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FORTIFIED: "Fortified" };
 
+// Pre-filled values for edit mode (every field the form owns). BlendRow, the
+// producer label and the region's appellations are resolved by the caller so
+// the comboboxes render their current selections immediately.
+export type WineFormInitial = {
+  countryId: string;
+  regionId: string;
+  appellationId: string;
+  blend: BlendRow[];
+  producerId: string;
+  producerLabel: string | null;
+  typeDesignationId: string;
+  colour: (typeof COLOURS)[number] | null;
+  style: (typeof STYLES)[number] | null;
+  wineName: string;
+  vintageKind: "YEAR" | "NV" | "TAWNY";
+  vintageYear: string;
+  tawnyYears: string;
+  imageUrl: string | null;
+  appellations: ReferenceOption[];
+};
+
 export function NewWineForm({
   countries: initialCountries,
   regions: initialRegions,
@@ -30,6 +52,9 @@ export function NewWineForm({
   typeDesignations,
   userId,
   onCreated,
+  wineId,
+  initialWine,
+  onSaved,
 }: {
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
@@ -39,30 +64,49 @@ export function NewWineForm({
   // When set (e.g. rendered inside the Add-wine popup), called with the new
   // wine's id instead of navigating — the modal decides what happens next.
   onCreated?: (id: string) => void;
+  // Edit mode: the wine id to update + its current values. When absent the form
+  // creates. onSaved fires after an edit (like onCreated after a create).
+  wineId?: string;
+  initialWine?: WineFormInitial;
+  onSaved?: (id: string) => void;
 }) {
   const router = useRouter();
   const [countries, setCountries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
   const [grapes, setGrapes] = useState(initialGrapes);
-  const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
+  const [appellations, setAppellations] = useState<ReferenceOption[]>(
+    initialWine?.appellations ?? [],
+  );
   const [, startAppellations] = useTransition();
 
-  const [countryId, setCountryId] = useState("");
-  const [regionId, setRegionId] = useState("");
-  const [appellationId, setAppellationId] = useState("");
-  const [blend, setBlend] = useState<BlendRow[]>([{ grapeId: "", percentage: "" }]);
-  const [producerId, setProducerId] = useState("");
-  const [producerLabel, setProducerLabel] = useState<string | null>(null);
-  const [typeDesignationId, setTypeDesignationId] = useState("");
-  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(null);
-  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(null);
-  const [wineName, setWineName] = useState("");
-  const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">("YEAR");
-  const [vintageYear, setVintageYear] = useState("");
-  const [tawnyYears, setTawnyYears] = useState("");
+  const [countryId, setCountryId] = useState(initialWine?.countryId ?? "");
+  const [regionId, setRegionId] = useState(initialWine?.regionId ?? "");
+  const [appellationId, setAppellationId] = useState(initialWine?.appellationId ?? "");
+  const [blend, setBlend] = useState<BlendRow[]>(
+    initialWine?.blend ?? [{ grapeId: "", percentage: "" }],
+  );
+  const [producerId, setProducerId] = useState(initialWine?.producerId ?? "");
+  const [producerLabel, setProducerLabel] = useState<string | null>(
+    initialWine?.producerLabel ?? null,
+  );
+  const [typeDesignationId, setTypeDesignationId] = useState(
+    initialWine?.typeDesignationId ?? "",
+  );
+  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(
+    initialWine?.colour ?? null,
+  );
+  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(
+    initialWine?.style ?? null,
+  );
+  const [wineName, setWineName] = useState(initialWine?.wineName ?? "");
+  const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">(
+    initialWine?.vintageKind ?? "YEAR",
+  );
+  const [vintageYear, setVintageYear] = useState(initialWine?.vintageYear ?? "");
+  const [tawnyYears, setTawnyYears] = useState(initialWine?.tawnyYears ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(initialWine?.imageUrl ?? null);
 
   useEffect(() => {
     startAppellations(async () => {
@@ -88,7 +132,7 @@ export function NewWineForm({
     setPending(true);
     try {
       const filled = blend.filter((r) => r.grapeId);
-      const { id } = await createCatalogWine({
+      const payload = {
         countryId,
         regionId,
         appellationId,
@@ -107,9 +151,16 @@ export function NewWineForm({
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
         imageUrl,
-      });
-      if (onCreated) onCreated(id);
-      else router.push(`/catalog/${id}`);
+      };
+      if (wineId) {
+        await updateCatalogWine(wineId, payload);
+        if (onSaved) onSaved(wineId);
+        else router.push(`/catalog/${wineId}`);
+      } else {
+        const { id } = await createCatalogWine(payload);
+        if (onCreated) onCreated(id);
+        else router.push(`/catalog/${id}`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add the wine.");
       setPending(false);
@@ -243,6 +294,7 @@ export function NewWineForm({
             folder={`catalog/staging/${userId}`}
             label="Add a bottle photo"
             aspectClassName="aspect-[3/4] max-w-40"
+            initialUrl={imageUrl ?? undefined}
             onChange={setImageUrl}
           />
         </div>

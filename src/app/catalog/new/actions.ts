@@ -100,3 +100,51 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
   }
   return { id };
 }
+
+// Curator/creator edit of an existing catalog wine. RLS ("catalog update")
+// gates who may write; the audit trigger records before/after. Because cellars
+// reference the wine by id, this edit updates everyone's cellar view.
+export async function updateCatalogWine(
+  id: string,
+  input: NewCatalogWine,
+): Promise<{ id: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be signed in to edit a wine.");
+  const { error } = await supabase
+    .from("catalog_wines")
+    .update({
+      country_id: input.countryId,
+      region_id: input.regionId,
+      appellation_id: input.appellationId,
+      primary_grape_id: input.primaryGrapeId,
+      secondary_grape_id: input.secondaryGrapeId,
+      producer_id: input.producerId,
+      type_designation_id: input.typeDesignationId,
+      colour: input.colour,
+      style: input.style,
+      wine_name: input.wineName,
+      vintage_kind: input.vintageKind,
+      vintage_year: input.vintageYear,
+      vintage_tawny_years: input.vintageTawnyYears,
+      image_url: input.imageUrl ?? null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  // Re-sync the grape blend (mirrors create: replace the set).
+  await supabase.from("catalog_wine_grapes").delete().eq("catalog_wine_id", id);
+  if (input.grapes && input.grapes.length > 0) {
+    const { error: grapeError } = await supabase.from("catalog_wine_grapes").insert(
+      input.grapes.map((g, i) => ({
+        catalog_wine_id: id,
+        grape_id: g.grapeId,
+        percentage: g.percentage,
+        sort_order: i,
+      })),
+    );
+    if (grapeError) throw new Error(grapeError.message);
+  }
+  return { id };
+}
