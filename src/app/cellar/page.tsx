@@ -33,6 +33,9 @@ type CatalogEmbed = {
   appellation: Rel;
   region?: Rel;
   country?: Rel;
+  colour?: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  primary_grape?: Rel;
+  secondary_grape?: Rel;
 };
 
 function embedTitle(c: CatalogEmbed | null): string {
@@ -162,7 +165,11 @@ export default async function CellarPage({
       .from("wset_notes")
       .select(
         "id, tasted_on, quality_score, context_kind, catalog_wine_id, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
+          "producer:producers(name), appellation:appellations(name), " +
+          "region:regions(name), country:countries(name), " +
+          "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
+          "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
       )
       .eq("author_id", user.id)
       .order("tasted_on", { ascending: false });
@@ -175,14 +182,23 @@ export default async function CellarPage({
         catalog_wine_id: string;
         catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
       }>
-    ).map((n) => ({
-      id: n.id,
-      catalogWineId: n.catalog_wine_id,
-      title: embedTitle(unwrap(n.catalog_wines)),
-      tastedOn: n.tasted_on,
-      qualityScore: n.quality_score,
-      contextKind: n.context_kind,
-    }));
+    ).map((n) => {
+      const c = unwrap(n.catalog_wines);
+      return {
+        id: n.id,
+        catalogWineId: n.catalog_wine_id,
+        title: embedTitle(c),
+        subtitle: embedSubtitle(c),
+        grapes:
+          [relName(c?.primary_grape ?? null), relName(c?.secondary_grape ?? null)]
+            .filter(Boolean)
+            .join(", ") || null,
+        colour: c?.colour ?? null,
+        tastedOn: n.tasted_on,
+        qualityScore: n.quality_score,
+        contextKind: n.context_kind,
+      };
+    });
   }
 
   let history: HistoryRow[] = [];

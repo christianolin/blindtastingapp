@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { WineColour, WineStyle } from "@/lib/wset/types";
+import type { WineColour, WineStyle, WsetNoteState } from "@/lib/wset/types";
 import type { VintageKind } from "@/lib/supabase/database.types";
+import { noteStateFromRow } from "@/lib/wset/note-state";
 import type { ArchetypeView } from "@/components/wset/archetype-sheet";
 
 export type CellarWine = {
@@ -169,6 +170,97 @@ export async function fetchCatalogWine(
   return {
     ...shape(row, rating ? Number(rating.avg_score) : null, rating?.note_count ?? 0),
     appellationPlaceKey,
+  };
+}
+
+// --- Saved-note read view (Cellar "My notes" popup) -------------------------
+
+export type NoteContextKind = "OPEN" | "BLIND" | "TRAINING";
+
+// Everything the read-only note popup needs: the wine's display title + origin,
+// the full rated state, and a term-id -> label map so composeLiveNote can turn
+// the note into prose without loading the whole aroma vocabulary.
+export type NoteView = {
+  id: string;
+  catalogWineId: string;
+  title: string;
+  subtitle: string | null;
+  colour: WineColour | null;
+  contextKind: NoteContextKind;
+  tastedOn: string;
+  state: WsetNoteState;
+  termLabels: Map<string, string>;
+};
+
+// Loaded lazily when a note is opened (client-side; RLS scopes it to the
+// author): note row + wine header + aroma-term labels in a few round-trips.
+export async function fetchNoteView(
+  supabase: SupabaseClient<Database>,
+  noteId: string,
+): Promise<NoteView | null> {
+  const { data: note } = await supabase
+    .from("wset_notes")
+    .select("*")
+    .eq("id", noteId)
+    .maybeSingle();
+  if (!note) return null;
+  const [wineRes, aromaRes] = await Promise.all([
+    supabase
+      .from("catalog_wines")
+      .select(
+        "wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
+          "producer:producers(name), appellation:appellations(name), " +
+          "region:regions(name), country:countries(name)",
+      )
+      .eq("id", note.catalog_wine_id)
+      .maybeSingle(),
+    supabase
+      .from("wset_note_aromas")
+      .select("term_id, sensed_on_nose, sensed_on_palate")
+      .eq("note_id", noteId),
+  ]);
+
+  const aromaRows = (aromaRes.data ?? []) as Array<{
+    term_id: string;
+    sensed_on_nose: boolean;
+    sensed_on_palate: boolean;
+  }>;
+
+  const termLabels = new Map<string, string>();
+  const termIds = aromaRows.map((a) => a.term_id);
+  if (termIds.length > 0) {
+    const { data: termRows } = await supabase
+      .from("wset_aroma_terms")
+      .select("id, term")
+      .in("id", termIds);
+    for (const t of termRows ?? []) termLabels.set(t.id, t.term);
+  }
+
+  const wine = wineRes.data as Record<string, unknown> | null;
+  const title = wine
+    ? catalogWineTitle({
+        producerName: name(wine.producer),
+        wineName: (wine.wine_name as string | null) ?? null,
+        vintageKind: wine.vintage_kind as VintageKind,
+        vintageYear: (wine.vintage_year as number | null) ?? null,
+        vintageTawnyYears: (wine.vintage_tawny_years as number | null) ?? null,
+        appellationName: name(wine.appellation),
+      })
+    : "Untitled wine";
+  const subtitle = wine
+    ? [name(wine.region), name(wine.country)].filter(Boolean).join(" · ") || null
+    : null;
+
+  return {
+    id: note.id,
+    catalogWineId: note.catalog_wine_id,
+    title,
+    subtitle,
+    colour: (wine?.colour as WineColour | null) ?? null,
+    contextKind: note.context_kind as NoteContextKind,
+    tastedOn: note.tasted_on,
+    state: noteStateFromRow(note, aromaRows),
+    termLabels,
   };
 }
 
