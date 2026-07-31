@@ -271,8 +271,20 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
-        <table className="w-full text-sm">
+      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
+        <table className="w-full table-fixed text-sm">
+            <colgroup>
+              <col />
+              <col className="w-[6rem]" />
+              <col className="w-[6rem]" />
+              <col className="w-[6rem]" />
+              <col className="w-[5.5rem]" />
+              <col className="w-[5rem]" />
+              <col className="w-[4.5rem]" />
+              <col className="w-[5rem]" />
+              <col className="w-[5.5rem]" />
+              <col className="w-[5.5rem]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
                 <Th onClick={() => toggleSort("title")}>Wine {sortIcon("title")}</Th>
@@ -304,7 +316,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   className="border-b border-border last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-4 py-3">
-                    <Link href={`/catalog/${r.id}`} className="flex max-w-xs items-center gap-3">
+                    <Link href={`/catalog/${r.id}`} className="flex items-center gap-3">
                       {r.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -318,7 +330,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                         </span>
                       )}
                       <span className="min-w-0">
-                        <span className="block truncate font-medium text-foreground">
+                        <span className="line-clamp-2 font-medium text-foreground">
                           {r.title}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
