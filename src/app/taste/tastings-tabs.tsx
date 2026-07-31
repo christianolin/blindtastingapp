@@ -65,7 +65,7 @@ export function TastingsTabs({
     <div className="flex flex-col gap-5">
       {/* Underlined tabs — deliberately distinct from the Knowledge section's
           pill/segmented control so the two navigation styles don't blur. */}
-      <div className="flex gap-6 overflow-x-auto border-b border-border">
+      <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-border">
         {tabs.map((t) => {
           const isActive = active === t.key;
           return (

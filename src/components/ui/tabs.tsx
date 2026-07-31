@@ -11,7 +11,7 @@ export type TabItem = { key: string; label: string; href: string; count?: number
 const listVariants = cva("flex", {
   variants: {
     variant: {
-      underline: "gap-6 overflow-x-auto border-b border-border",
+      underline: "gap-6 overflow-x-auto no-scrollbar border-b border-border",
       segmented: "gap-1 rounded-lg bg-muted/60 p-1",
     },
   },

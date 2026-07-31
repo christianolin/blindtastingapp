@@ -45,7 +45,7 @@ export function KnowledgeTabs() {
   const active = clicked ?? settled;
 
   return (
-    <div className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-lg bg-muted/60 p-1">
+    <div className="flex w-fit max-w-full gap-1 overflow-x-auto no-scrollbar rounded-lg bg-muted/60 p-1">
       {TABS.map((t) => (
         <Link
           key={t.href}
