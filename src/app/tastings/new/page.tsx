@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { NewTastingForm } from "./new-tasting-form";
 
@@ -30,14 +32,23 @@ export default async function NewTastingPage({
     .order("display_name");
 
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle>
-            New {reveal === "BLIND" ? "blind" : "semi-blind"} tasting
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6 sm:p-8">
+      <Link
+        href="/taste"
+        className="inline-flex items-center gap-1 self-start text-sm font-medium text-primary transition-colors hover:text-primary/80"
+      >
+        <ChevronLeft className="size-4" /> Back to tastings
+      </Link>
+      <div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">
+          New {reveal === "BLIND" ? "blind" : "semi-blind"} tasting
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          Set up the details and invite your group.
+        </p>
+      </div>
+      <Card>
+        <CardContent className="pt-6">
           <NewTastingForm
             friends={friends ?? []}
             userId={user.id}

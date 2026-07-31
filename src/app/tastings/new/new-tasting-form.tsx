@@ -18,6 +18,7 @@ import {
 import { ImageUploader } from "@/components/image-uploader";
 import { createTasting, type CreateTastingFormState } from "./actions";
 import { InviteField } from "./invite-field";
+import { Users, Wine, Workflow, Trophy, Image as ImageIcon, EyeOff } from "lucide-react";
 
 const TIMING_MODE_ITEMS = {
   LIVE: "Live",
@@ -86,17 +87,22 @@ export function NewTastingForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Cover photo (optional)</Label>
+        <Label className="flex items-center gap-1.5">
+          <ImageIcon className="size-3.5 text-muted-foreground" /> Cover photo (optional)
+        </Label>
         <ImageUploader
           name="image_url"
           bucket="tasting-images"
           folder={userId}
           label="Add a cover photo"
         />
+        <p className="text-xs text-muted-foreground">JPG, PNG up to 5MB.</p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="timing_mode">Format</Label>
+        <Label htmlFor="timing_mode" className="flex items-center gap-1.5">
+          <Users className="size-3.5 text-muted-foreground" /> Format
+        </Label>
         <Select
           name="timing_mode"
           items={TIMING_MODE_ITEMS}
@@ -122,7 +128,9 @@ export function NewTastingForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="wine_source">Wines</Label>
+        <Label htmlFor="wine_source" className="flex items-center gap-1.5">
+          <Wine className="size-3.5 text-muted-foreground" /> Wines
+        </Label>
         <Select
           name="wine_source"
           items={WINE_SOURCE_ITEMS}
@@ -149,10 +157,13 @@ export function NewTastingForm({
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2">
-          <span className="text-sm">
-            <span className="text-muted-foreground">Mode</span>{" "}
-            <span className="font-medium">
-              {reveal === "BLIND" ? "Blind" : "Semi-blind"}
+          <span className="flex items-center gap-1.5 text-sm">
+            <EyeOff className="size-3.5 text-muted-foreground" />
+            <span>
+              <span className="text-muted-foreground">Mode</span>{" "}
+              <span className="font-medium">
+                {reveal === "BLIND" ? "Blind" : "Semi-blind"}
+              </span>
             </span>
           </span>
           <Link
@@ -172,7 +183,9 @@ export function NewTastingForm({
 
       {reveal === "BLIND" ? (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="flow">Flow</Label>
+          <Label htmlFor="flow" className="flex items-center gap-1.5">
+            <Workflow className="size-3.5 text-muted-foreground" /> Flow
+          </Label>
           <Select name="flow" items={FLOW_ITEMS} defaultValue="GUIDED" required>
             <SelectTrigger id="flow" className="w-full">
               <SelectValue placeholder="Choose a flow" />
@@ -191,7 +204,9 @@ export function NewTastingForm({
 
       {reveal === "BLIND" ? (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="leaderboard_reveal">Leaderboard</Label>
+          <Label htmlFor="leaderboard_reveal" className="flex items-center gap-1.5">
+            <Trophy className="size-3.5 text-muted-foreground" /> Leaderboard
+          </Label>
           <Select
             name="leaderboard_reveal"
             items={LEADERBOARD_REVEAL_ITEMS}
@@ -247,15 +262,23 @@ export function NewTastingForm({
         <p className="text-sm text-destructive">{state.error}</p>
       ) : null}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? (
-          <>
-            <WineGlassLoader /> Creating…
-          </>
-        ) : (
-          "Create tasting"
-        )}
-      </Button>
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+        <Link
+          href="/taste"
+          className="inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+        >
+          Cancel
+        </Link>
+        <Button type="submit" disabled={pending}>
+          {pending ? (
+            <>
+              <WineGlassLoader /> Creating…
+            </>
+          ) : (
+            "Create tasting"
+          )}
+        </Button>
+      </div>
     </form>
   );
 }
