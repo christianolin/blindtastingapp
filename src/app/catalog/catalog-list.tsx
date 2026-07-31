@@ -22,6 +22,7 @@ export type CatalogRow = {
   imageUrl: string | null;
   avgScore: number | null;
   noteCount: number;
+  appearances: number;
   addedAt: string;
 };
 
@@ -35,7 +36,7 @@ const selectCls =
   "h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground";
 const PAGE = 20;
 
-type SortKey = "title" | "region" | "country" | "vintage" | "avgScore" | "noteCount" | "added";
+type SortKey = "title" | "region" | "country" | "vintage" | "avgScore" | "noteCount" | "appearances" | "added";
 
 export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [q, setQ] = useState("");
@@ -92,6 +93,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           return ((a.avgScore ?? -1) - (b.avgScore ?? -1)) * dir;
         case "noteCount":
           return (a.noteCount - b.noteCount) * dir;
+        case "appearances":
+          return (a.appearances - b.appearances) * dir;
         case "vintage":
           return a.vintage.localeCompare(b.vintage) * dir;
         case "region":
@@ -247,6 +250,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 <span className="text-muted-foreground">—</span>
               )}
               <span className="block text-xs text-muted-foreground">{r.noteCount} notes</span>
+              <span className="block text-xs text-muted-foreground">
+                {r.appearances} {r.appearances === 1 ? "tasting" : "tastings"}
+              </span>
             </span>
           </Link>
         ))}
@@ -273,6 +279,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 </Th>
                 <Th align="right" onClick={() => toggleSort("noteCount")}>
                   Notes {sortIcon("noteCount")}
+                </Th>
+                <Th align="right" onClick={() => toggleSort("appearances")}>
+                  Blind tastings {sortIcon("appearances")}
                 </Th>
                 <Th align="right" onClick={() => toggleSort("added")}>
                   Added {sortIcon("added")}
@@ -343,6 +352,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {r.noteCount}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {r.appearances}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
                     {fmtDate(r.addedAt)}

@@ -1422,6 +1422,13 @@ export type Database = {
         Args: { p_id: string };
         Returns: undefined;
       };
+      catalog_wine_appearances: {
+        Args: { p_ids: string[] };
+        Returns: {
+          catalog_wine_id: string;
+          appearances: number;
+        }[];
+      };
       add_cellar_lot: {
         Args: { p: unknown };
         Returns: string;
