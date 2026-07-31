@@ -1,0 +1,82 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { createClient } from "@/lib/supabase/client";
+import { WineForm } from "./wines/new/wine-form";
+import type { ReferenceOption } from "@/components/reference-combobox";
+import type { TypeDesignationOption } from "@/components/type-designation-field";
+
+type RefData = {
+  countries: ReferenceOption[];
+  regions: (ReferenceOption & { country_id: string })[];
+  grapes: ReferenceOption[];
+  typeDesignations: TypeDesignationOption[];
+};
+
+// Add a wine to this tasting as a popup — reuses the real wine form (which
+// redirects back to the tasting on submit, closing the modal). Reference data
+// is fetched on open.
+export function TastingAddWineModal({
+  tastingId,
+  label,
+  onClose,
+}: {
+  tastingId: string;
+  label: string;
+  onClose: () => void;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const [ref, setRef] = useState<RefData | null | "loading">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [c, r, g, t] = await Promise.all([
+        supabase.from("countries").select("id, name").order("name"),
+        supabase.from("regions").select("id, name, country_id").order("name"),
+        supabase.from("grapes").select("id, name").order("name"),
+        supabase
+          .from("type_designations")
+          .select("id, name, category, country_id")
+          .eq("is_active", true)
+          .order("sort_order"),
+      ]);
+      if (cancelled) return;
+      setRef({
+        countries: c.data ?? [],
+        regions: (r.data ?? []) as (ReferenceOption & { country_id: string })[],
+        grapes: g.data ?? [],
+        typeDesignations: (t.data ?? []) as TypeDesignationOption[],
+      });
+    })().catch(() => {
+      if (!cancelled) setRef(null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogTitle>{label}</DialogTitle>
+        {ref === "loading" ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+        ) : !ref ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Couldn&apos;t load the form right now.
+          </p>
+        ) : (
+          <WineForm
+            tastingId={tastingId}
+            countries={ref.countries}
+            regions={ref.regions}
+            grapes={ref.grapes}
+            typeDesignations={ref.typeDesignations}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

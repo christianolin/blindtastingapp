@@ -14,6 +14,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
 import { HostControlsMenu } from "./host-controls-menu";
 import { StandingsPanel } from "./standings-panel";
+import { TastingAddWineButton } from "./tasting-add-wine-button";
 import { RevealButton } from "./play/reveal-button";
 import { PlayExperience } from "./play/play-experience";
 import { respondToInvite, moveWine } from "./actions";
@@ -232,13 +233,10 @@ export default async function TastingPage({
         <CardTitle className="flex items-center justify-between">
           Wines
           {canAddWine ? (
-            <Button
-              size="sm"
-              nativeButton={false}
-              render={<Link href={`/tastings/${id}/wines/new`} />}
-            >
-              {tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine"}
-            </Button>
+            <TastingAddWineButton
+              tastingId={id}
+              label={tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine"}
+            />
           ) : null}
         </CardTitle>
       </CardHeader>
