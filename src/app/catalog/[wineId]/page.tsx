@@ -18,6 +18,7 @@ import { WineImage } from "./wine-image";
 import { CountryFlag } from "@/components/country-flag";
 import { MapPin } from "lucide-react";
 import { WineStructure } from "./wine-structure";
+import { WineAdminControls } from "./wine-admin-controls";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -36,7 +37,15 @@ export default async function CatalogWinePage({
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
-  const [{ data: myNotes }, descriptors, guessStats, blend, structure] = await Promise.all([
+  const [
+    { data: myNotes },
+    descriptors,
+    guessStats,
+    blend,
+    structure,
+    { data: profile },
+    { data: usageRows },
+  ] = await Promise.all([
     supabase
       .from("wset_notes")
       .select("id, tasted_on, quality_score, context_kind")
@@ -47,10 +56,22 @@ export default async function CatalogWinePage({
     fetchWineGuessStats(supabase, wineId),
     fetchWineBlend(supabase, wineId),
     fetchWineStructure(supabase, wineId),
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+    supabase.rpc("catalog_wine_usage", { p_id: wineId }),
   ]);
 
   const title = catalogWineTitle(wine);
   const grapes = formatBlend(blend);
+  const isManager =
+    profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
+  const usage = usageRows?.[0] ?? {
+    holders: 0,
+    bottles: 0,
+    lot_count: 0,
+    note_count: 0,
+    appearance_count: 0,
+    consumption_count: 0,
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
@@ -150,12 +171,26 @@ export default async function CatalogWinePage({
                 <p className="text-xs text-muted-foreground">Blind tastings</p>
               </div>
             </div>
+            <p className="text-sm text-muted-foreground">
+              {usage.holders > 0
+                ? `In ${usage.holders} ${usage.holders === 1 ? "cellar" : "cellars"} · ${usage.bottles} ${usage.bottles === 1 ? "bottle" : "bottles"}`
+                : "Not in anyone's cellar yet"}
+            </p>
             <Link
               href={`/catalog/${wineId}/notes/new`}
               className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               New tasting note
             </Link>
+            {isManager ? (
+              <div className="border-t border-border pt-4">
+                <WineAdminControls
+                  wineId={wineId}
+                  userId={user.id}
+                  usage={usage}
+                />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>
