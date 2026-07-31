@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
-import { Wine, Boxes, Coins, FileUp, CalendarCheck, FileText } from "lucide-react";
+import { Wine, Boxes, Coins, FileUp, CalendarCheck, FileText, Plus, Sparkles } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -44,6 +45,13 @@ function embedTitle(c: CatalogEmbed | null): string {
     appellationName: relName(c.appellation),
   });
 }
+
+const SECTIONS = [
+  { key: "bottles", label: "Bottles", href: "/cellar", icon: Wine },
+  { key: "notes", label: "My notes", href: "/cellar?tab=notes", icon: FileText },
+  { key: "history", label: "History", href: "/cellar?tab=history", icon: CalendarCheck },
+  { key: "stats", label: "Stats", href: "/cellar?tab=stats", icon: Sparkles },
+] as const;
 
 export default async function CellarPage({
   searchParams,
@@ -263,12 +271,53 @@ export default async function CellarPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-6">
+    <div className="mx-auto w-full max-w-6xl flex-1 p-6">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[13rem_1fr] lg:gap-8">
+        <aside className="hidden lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-4 lg:self-start">
+          <p className="font-heading text-lg font-semibold">My cellar</p>
+          <nav className="flex flex-col gap-0.5">
+            {SECTIONS.map((s) => (
+              <Link
+                key={s.key}
+                href={s.href}
+                aria-current={tab === s.key ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  tab === s.key
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <s.icon className="size-4" />
+                {s.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex flex-col gap-2 border-t border-border pt-4">
+            <Link
+              href="/cellar/new"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="size-4" /> Add a wine
+            </Link>
+            <Link
+              href="/cellar/import"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <FileUp className="size-4" /> Import CSV
+            </Link>
+          </div>
+          <div className="border-t border-border pt-4">
+            <CellarVisibilityControl userId={user.id} current={visibility} />
+          </div>
+        </aside>
+
+        <div className="flex min-w-0 flex-col gap-4">
       <PageHeader
         title="Cellar"
         subtitle="The wines you own — bottles, drink windows and value."
         actions={
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-2 lg:hidden">
             <div className="flex flex-wrap items-center justify-end gap-2">
               <Link
                 href="/cellar/import"
@@ -313,16 +362,18 @@ export default async function CellarPage({
         />
       </StatStrip>
 
-      <Tabs
-        variant="underline"
-        activeKey={tab}
-        items={[
-          { key: "bottles", label: "Bottles", href: "/cellar" },
-          { key: "notes", label: "My notes", href: "/cellar?tab=notes" },
-          { key: "history", label: "History", href: "/cellar?tab=history" },
-          { key: "stats", label: "Stats", href: "/cellar?tab=stats" },
-        ]}
-      />
+      <div className="lg:hidden">
+        <Tabs
+          variant="underline"
+          activeKey={tab}
+          items={[
+            { key: "bottles", label: "Bottles", href: "/cellar" },
+            { key: "notes", label: "My notes", href: "/cellar?tab=notes" },
+            { key: "history", label: "History", href: "/cellar?tab=history" },
+            { key: "stats", label: "Stats", href: "/cellar?tab=stats" },
+          ]}
+        />
+      </div>
 
       {tab === "bottles" ? (
         <BottlesList groups={groups} />
@@ -333,6 +384,8 @@ export default async function CellarPage({
       ) : stats ? (
         <StatsPanel stats={stats} />
       ) : null}
+        </div>
+      </div>
     </div>
   );
 }
