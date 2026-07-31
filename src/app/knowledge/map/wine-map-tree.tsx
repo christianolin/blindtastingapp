@@ -106,7 +106,30 @@ export function WineMapTree({
   // path is derived below, so the row is guaranteed to be rendered.
   const selectedRowRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    selectedRowRef.current?.scrollIntoView({ block: "nearest" });
+    const row = selectedRowRef.current;
+    if (!row) return;
+    // Reveal the selected row WITHIN the tree's own scroll area only — never
+    // scroll the window. scrollIntoView bubbles to the page, which on mobile
+    // jumped the whole screen down to the detail box on a map click.
+    let parent = row.parentElement;
+    while (parent) {
+      const oy = getComputedStyle(parent).overflowY;
+      if (
+        (oy === "auto" || oy === "scroll") &&
+        parent.scrollHeight > parent.clientHeight
+      ) {
+        break;
+      }
+      parent = parent.parentElement;
+    }
+    if (!parent) return;
+    const rowRect = row.getBoundingClientRect();
+    const parRect = parent.getBoundingClientRect();
+    if (rowRect.top < parRect.top) {
+      parent.scrollTop -= parRect.top - rowRect.top;
+    } else if (rowRect.bottom > parRect.bottom) {
+      parent.scrollTop += rowRect.bottom - parRect.bottom;
+    }
   }, [selectedKey]);
 
   // Expand the selected place's ancestors when the selection CHANGES (a map

@@ -172,19 +172,24 @@ export default async function CatalogPage() {
         }
       />
 
-      <div className="flex flex-col divide-y divide-border rounded-xl border border-border sm:flex-row sm:divide-x sm:divide-y-0">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-0 sm:overflow-hidden sm:rounded-xl sm:border sm:border-border sm:divide-x sm:divide-border">
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-1 items-center gap-3 p-4">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <div
+            key={s.label}
+            className="flex flex-1 items-center gap-2.5 rounded-xl border border-border p-2.5 sm:gap-3 sm:rounded-none sm:border-0 sm:p-4"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:size-9">
               <s.icon className="size-4" />
             </span>
             <div className="min-w-0">
-              <div className="font-heading text-xl leading-none font-semibold tabular-nums">
+              <div className="font-heading text-base leading-none font-semibold tabular-nums sm:text-xl">
                 {s.value}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
               {s.sub ? (
-                <div className="text-[11px] text-muted-foreground/70">{s.sub}</div>
+                <div className="hidden text-[11px] text-muted-foreground/70 sm:block">
+                  {s.sub}
+                </div>
               ) : null}
             </div>
           </div>
