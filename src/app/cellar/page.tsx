@@ -5,7 +5,7 @@ import { catalogWineTitle } from "@/lib/wset/queries";
 import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
-import { Wine, Boxes, Coins, FileUp } from "lucide-react";
+import { Wine, Boxes, Coins, FileUp, CalendarCheck, FileText } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -85,9 +85,11 @@ export default async function CellarPage({
     .order("created_at", { ascending: false });
 
   const groupsMap = new Map<string, LotGroup>();
+  const currentYear = new Date().getUTCFullYear();
   let totalBottles = 0;
   let totalValue = 0;
   let hasValue = false;
+  let readyBottles = 0;
   for (const row of (lotRows ?? []) as unknown as Array<{
     id: string;
     bottle_size_ml: number;
@@ -111,6 +113,13 @@ export default async function CellarPage({
       storageLocation: row.storage_location,
     };
     totalBottles += row.quantity;
+    if (
+      row.drink_from != null &&
+      currentYear >= row.drink_from &&
+      (row.drink_to == null || currentYear <= row.drink_to)
+    ) {
+      readyBottles += row.quantity;
+    }
     if (lot.pricePerBottle != null && row.currency === preferredCurrency) {
       totalValue += row.quantity * lot.pricePerBottle;
       hasValue = true;
@@ -129,6 +138,11 @@ export default async function CellarPage({
     group.totalQuantity += row.quantity;
   }
   const groups = [...groupsMap.values()];
+
+  const { count: notesCount } = await supabase
+    .from("wset_notes")
+    .select("id", { count: "exact", head: true })
+    .eq("author_id", user.id);
 
   let notes: NoteRow[] = [];
   if (tab === "notes") {
@@ -275,14 +289,27 @@ export default async function CellarPage({
         }
       />
 
-      <StatStrip className="sm:grid-cols-3">
-        <StatTile icon={Wine} tint="rose" value={totalBottles} label="bottles" />
+      <StatStrip className="sm:grid-cols-3 lg:grid-cols-5">
         <StatTile icon={Boxes} tint="amber" value={groups.length} label="wines" />
+        <StatTile icon={Wine} tint="rose" value={totalBottles} label="bottles" />
         <StatTile
           icon={Coins}
           tint="gold"
           value={hasValue ? Math.round(totalValue).toLocaleString() : "—"}
           label={`${preferredCurrency} value`}
+        />
+        <StatTile
+          icon={CalendarCheck}
+          tint="green"
+          value={readyBottles}
+          label="ready to drink"
+          sub="in your window"
+        />
+        <StatTile
+          icon={FileText}
+          tint="purple"
+          value={notesCount ?? 0}
+          label="notes written"
         />
       </StatStrip>
 
