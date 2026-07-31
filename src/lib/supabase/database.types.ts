@@ -1398,6 +1398,15 @@ export type Database = {
           vintage_correct: number;
         }[];
       };
+      catalog_wine_structure: {
+        Args: { p_catalog_wine_id: string };
+        Returns: {
+          dimension: string;
+          avg_index: number;
+          max_index: number;
+          n: number;
+        }[];
+      };
       add_cellar_lot: {
         Args: { p: unknown };
         Returns: string;

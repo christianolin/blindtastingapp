@@ -10,12 +10,14 @@ import {
   fetchWineDescriptors,
   fetchWineGuessStats,
   fetchWineBlend,
+  fetchWineStructure,
   formatBlend,
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
 import { CountryFlag } from "@/components/country-flag";
 import { MapPin } from "lucide-react";
+import { WineStructure } from "./wine-structure";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -34,7 +36,7 @@ export default async function CatalogWinePage({
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
-  const [{ data: myNotes }, descriptors, guessStats, blend] = await Promise.all([
+  const [{ data: myNotes }, descriptors, guessStats, blend, structure] = await Promise.all([
     supabase
       .from("wset_notes")
       .select("id, tasted_on, quality_score, context_kind")
@@ -44,6 +46,7 @@ export default async function CatalogWinePage({
     fetchWineDescriptors(supabase, wineId),
     fetchWineGuessStats(supabase, wineId),
     fetchWineBlend(supabase, wineId),
+    fetchWineStructure(supabase, wineId),
   ]);
 
   const title = catalogWineTitle(wine);
@@ -157,22 +160,27 @@ export default async function CatalogWinePage({
         </Card>
       </div>
 
-      {descriptors.length > 0 ? (
-        <div>
-          <p className="mb-2 text-sm font-medium">What people find</p>
-          <div className="flex flex-wrap gap-1.5">
-            {descriptors.map((d) => (
-              <span
-                key={d.term}
-                className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
-              >
-                {d.term}
-                {d.mentions > 1 ? (
-                  <span className="text-muted-foreground">{d.mentions}</span>
-                ) : null}
-              </span>
-            ))}
-          </div>
+      {descriptors.length > 0 || structure.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          {descriptors.length > 0 ? (
+            <div>
+              <p className="mb-2 text-sm font-medium">What people find</p>
+              <div className="flex flex-wrap gap-1.5">
+                {descriptors.map((d) => (
+                  <span
+                    key={d.term}
+                    className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
+                  >
+                    {d.term}
+                    {d.mentions > 1 ? (
+                      <span className="text-muted-foreground">{d.mentions}</span>
+                    ) : null}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <WineStructure rows={structure} />
         </div>
       ) : null}
 

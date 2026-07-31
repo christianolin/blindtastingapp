@@ -229,6 +229,31 @@ export async function fetchWineGuessStats(
   return { appearances: row.appearances ?? 0, guessCount: gc, fields };
 }
 
+export type WineStructureDimension = {
+  dimension: string;
+  avgIndex: number;
+  maxIndex: number;
+  n: number;
+};
+
+// Community-averaged nose/palate structure for a wine (SECURITY DEFINER RPC;
+// aggregates the ordinal SAT fields across all authors). Returned in WSET order
+// nose -> finish; dimensions with no data are already omitted server-side.
+export async function fetchWineStructure(
+  supabase: SupabaseClient<Database>,
+  wineId: string,
+): Promise<WineStructureDimension[]> {
+  const { data } = await supabase.rpc("catalog_wine_structure", {
+    p_catalog_wine_id: wineId,
+  });
+  return (data ?? []).map((r) => ({
+    dimension: r.dimension as string,
+    avgIndex: Number(r.avg_index),
+    maxIndex: Number(r.max_index),
+    n: Number(r.n),
+  }));
+}
+
 // --- Wine-style archetypes (A) ----------------------------------------------
 
 export type ArchetypeListItem = {
