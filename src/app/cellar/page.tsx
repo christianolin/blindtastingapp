@@ -32,6 +32,8 @@ type CatalogEmbed = {
   vintage_tawny_years: number | null;
   producer: Rel;
   appellation: Rel;
+  region?: Rel;
+  country?: Rel;
 };
 
 function embedTitle(c: CatalogEmbed | null): string {
@@ -44,6 +46,15 @@ function embedTitle(c: CatalogEmbed | null): string {
     vintageTawnyYears: c.vintage_tawny_years,
     appellationName: relName(c.appellation),
   });
+}
+
+function embedSubtitle(c: CatalogEmbed | null): string | null {
+  if (!c) return null;
+  return (
+    [relName(c.region ?? null), relName(c.country ?? null)]
+      .filter(Boolean)
+      .join(" · ") || null
+  );
 }
 
 const SECTIONS = [
@@ -87,7 +98,7 @@ export default async function CellarPage({
     .from("cellar_lots")
     .select(
       "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, " +
-        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
+        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name))",
     )
     .gt("quantity", 0)
     .order("created_at", { ascending: false });
@@ -137,6 +148,7 @@ export default async function CellarPage({
       group = {
         catalogWineId: row.catalog_wine_id,
         title: embedTitle(unwrap(row.catalog_wines)),
+        subtitle: embedSubtitle(unwrap(row.catalog_wines)),
         totalQuantity: 0,
         lots: [],
       };

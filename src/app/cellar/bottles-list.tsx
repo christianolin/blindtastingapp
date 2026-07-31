@@ -14,6 +14,7 @@ export type LotRow = {
 export type LotGroup = {
   catalogWineId: string;
   title: string;
+  subtitle?: string | null;
   totalQuantity: number;
   lots: LotRow[];
 };
@@ -58,7 +59,12 @@ export function BottlesList({
       {groups.map((g) => (
         <div key={g.catalogWineId} className="rounded-xl border border-border p-4">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-heading font-medium">{g.title}</h3>
+            <div className="min-w-0">
+              <h3 className="font-heading font-medium">{g.title}</h3>
+              {g.subtitle ? (
+                <p className="text-xs text-muted-foreground">{g.subtitle}</p>
+              ) : null}
+            </div>
             <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
               {g.totalQuantity} btl
             </span>
