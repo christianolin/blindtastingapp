@@ -22,17 +22,20 @@ export type CatalogRow = {
   imageUrl: string | null;
   avgScore: number | null;
   noteCount: number;
+  addedAt: string;
 };
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 const ALL = "__all__";
 const selectCls =
   "h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground";
 const PAGE = 20;
 
-type SortKey = "title" | "region" | "country" | "vintage" | "avgScore" | "noteCount";
+type SortKey = "title" | "region" | "country" | "vintage" | "avgScore" | "noteCount" | "added";
 
 export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [q, setQ] = useState("");
@@ -95,6 +98,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           return (a.region ?? "").localeCompare(b.region ?? "") * dir;
         case "country":
           return (a.country ?? "").localeCompare(b.country ?? "") * dir;
+        case "added":
+          return a.addedAt.localeCompare(b.addedAt) * dir;
         default:
           return a.title.localeCompare(b.title) * dir;
       }
@@ -228,6 +233,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   .filter(Boolean)
                   .join(" · ")}
               </span>
+              <span className="block truncate text-[0.7rem] text-muted-foreground/80">
+                Added {fmtDate(r.addedAt)}
+              </span>
             </span>
             <span className="shrink-0 text-right text-sm">
               {r.avgScore != null ? (
@@ -265,6 +273,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 </Th>
                 <Th align="right" onClick={() => toggleSort("noteCount")}>
                   Notes {sortIcon("noteCount")}
+                </Th>
+                <Th align="right" onClick={() => toggleSort("added")}>
+                  Added {sortIcon("added")}
                 </Th>
               </tr>
             </thead>
@@ -332,6 +343,9 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {r.noteCount}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+                    {fmtDate(r.addedAt)}
                   </td>
                 </tr>
               ))}

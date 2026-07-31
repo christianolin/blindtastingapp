@@ -20,6 +20,7 @@ type WineRow = {
   country: Rel;
   region: Rel;
   appellation: Rel;
+  created_at: string;
 };
 
 function relName(rel: Rel): string | null {
@@ -40,7 +41,7 @@ export default async function CatalogPage() {
       supabase
         .from("catalog_wines")
         .select(
-          "id, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
+          "id, created_at, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
             "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name)",
         )
         .is("merged_into", null)
@@ -128,6 +129,7 @@ export default async function CatalogPage() {
       imageUrl: w.image_url,
       avgScore: rating ? Number(rating.avg_score) : null,
       noteCount: rating?.note_count ?? 0,
+      addedAt: w.created_at,
     };
   });
 
