@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AddWineProvider } from "@/components/add-wine-context";
+import { TasteLauncherProvider } from "@/components/taste-launcher-context";
 
 // The authenticated app shell: a persistent left sidebar + the page as the main
 // column. Rendered once at the root so every signed-in page gets the nav and
@@ -21,17 +22,19 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <AddWineProvider userId={user.id}>
-      <div className="flex min-h-screen">
-        <AppSidebar
-          isManager={isManager}
-          user={{
-            id: user.id,
-            name: profile?.display_name ?? user.email ?? "",
-            avatarUrl: profile?.avatar_url ?? null,
-          }}
-        />
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
-      </div>
+      <TasteLauncherProvider userId={user.id}>
+        <div className="flex min-h-screen">
+          <AppSidebar
+            isManager={isManager}
+            user={{
+              id: user.id,
+              name: profile?.display_name ?? user.email ?? "",
+              avatarUrl: profile?.avatar_url ?? null,
+            }}
+          />
+          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        </div>
+      </TasteLauncherProvider>
     </AddWineProvider>
   );
 }

@@ -4,7 +4,11 @@
 // across the server boundary becomes a client reference and isn't iterable
 // server-side.
 
-export type NavChild = { href: string; label: string; modal?: "catalog" | "cellar" };
+export type NavChild = {
+  href: string;
+  label: string;
+  modal?: "catalog" | "cellar" | "taste-blind" | "taste-semi-blind" | "taste-rate";
+};
 export type NavLink = {
   key: string;
   href: string;
@@ -16,7 +20,23 @@ export type NavLink = {
 
 // The five pillars (owner UX brief). Sub-nav lists only pages that exist today.
 export const NAV_LINKS: NavLink[] = [
-  { key: "taste", href: "/taste", label: "Taste", match: ["/taste", "/tastings"] },
+  {
+    key: "taste",
+    href: "/taste",
+    label: "Taste",
+    match: ["/taste", "/tastings"],
+    children: [
+      { href: "/taste", label: "Overview" },
+      { href: "/tastings/new?mode=blind", label: "Taste Blind", modal: "taste-blind" },
+      {
+        href: "/tastings/new?mode=semi-blind",
+        label: "Taste Semi-Blind",
+        modal: "taste-semi-blind",
+      },
+      { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
+      { href: "/taste", label: "Training Room" },
+    ],
+  },
   {
     key: "learn",
     href: "/knowledge/map",

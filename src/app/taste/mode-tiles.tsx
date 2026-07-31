@@ -1,15 +1,14 @@
-import Link from "next/link";
+"use client";
+
 import { NotebookPen, EyeOff, ScanEye, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTasteLauncher, type TasteKind } from "@/components/taste-launcher-context";
 
-// The Taste launcher. Picking a tile *is* choosing the mode — the blind/
-// semi-blind decision moved here from a selector inside the new-tasting form
-// (P4). Open note and Training room are solo; Blind and Semi-blind start a
-// session. The blindness tiles carry it as a `?mode=` param the new-tasting
-// page reads and locks. Training room has no destination yet — it's a teaser
+// The Taste launcher. Each tile opens a popup: Taste Blind / Taste Semi-Blind
+// start a session; Taste & Rate finds a wine to note. Training Room is a teaser
 // so the pillar reads complete.
 type Mode = {
-  href: string;
+  kind: TasteKind;
   icon: typeof NotebookPen;
   title: string;
   body: string;
@@ -18,36 +17,38 @@ type Mode = {
 
 const MODES: Mode[] = [
   {
-    href: "/catalog",
-    icon: NotebookPen,
-    title: "Open note",
-    body: "Bottle open, label in view. Capture a full WSET Level 4 note.",
-    tint: "bg-primary/10 text-primary",
-  },
-  {
-    href: "/tastings/new?mode=blind",
+    kind: "blind",
     icon: EyeOff,
-    title: "Blind",
+    title: "Taste Blind",
     body: "Nothing given away. Call every wine from the glass alone.",
     tint: "bg-gold/15 text-gold-deep",
   },
   {
-    href: "/tastings/new?mode=semi-blind",
+    kind: "semi-blind",
     icon: ScanEye,
-    title: "Semi-blind",
+    title: "Taste Semi-Blind",
     body: "The line-up's on the table. Match each pour to a bottle.",
+    tint: "bg-primary/10 text-primary",
+  },
+  {
+    kind: "rate",
+    icon: NotebookPen,
+    title: "Taste & Rate",
+    body: "Bottle open, label in view. Capture a full WSET Level 4 note.",
     tint: "bg-primary/10 text-primary",
   },
 ];
 
 export function ModeTiles() {
+  const { openTaste } = useTasteLauncher();
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {MODES.map((m) => (
-        <Link
-          key={m.href}
-          href={m.href}
-          className="group flex flex-col gap-3 rounded-xl border border-border p-5 transition-colors hover:border-primary/40 hover:bg-muted/40"
+        <button
+          key={m.kind}
+          type="button"
+          onClick={() => openTaste(m.kind)}
+          className="group flex flex-col gap-3 rounded-xl border border-border p-5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
         >
           <span
             className={cn(
@@ -59,14 +60,14 @@ export function ModeTiles() {
           </span>
           <span className="font-heading text-lg font-medium">{m.title}</span>
           <span className="text-sm text-muted-foreground">{m.body}</span>
-        </Link>
+        </button>
       ))}
       <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border p-5 opacity-60">
         <span className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <Target className="size-5" strokeWidth={2} />
         </span>
         <span className="flex items-center gap-2 font-heading text-lg font-medium">
-          Training room
+          Training Room
           <span className="rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
             Soon
           </span>

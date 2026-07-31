@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wine, BookOpen, Boxes, GraduationCap, Users, Shield, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navWithAdmin, isNavActive } from "@/components/nav-links";
+import { navWithAdmin, isNavActive, type NavChild } from "@/components/nav-links";
 import { useAddWine } from "@/components/add-wine-context";
+import { useTasteLauncher } from "@/components/taste-launcher-context";
 import { signOut } from "@/app/actions";
 import { BlindrMark } from "@/components/logo";
 
@@ -32,6 +33,13 @@ export function AppSidebar({
   const pathname = usePathname();
   const links = navWithAdmin(isManager);
   const { openAddWine } = useAddWine();
+  const { openTaste } = useTasteLauncher();
+  const openModal = (kind: NonNullable<NavChild["modal"]>) => {
+    if (kind === "catalog" || kind === "cellar") openAddWine(kind);
+    else if (kind === "taste-blind") openTaste("blind");
+    else if (kind === "taste-semi-blind") openTaste("semi-blind");
+    else openTaste("rate");
+  };
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-primary text-primary-foreground md:flex">
@@ -79,7 +87,7 @@ export function AppSidebar({
                       <button
                         key={child.href}
                         type="button"
-                        onClick={() => openAddWine(child.modal!)}
+                        onClick={() => openModal(child.modal!)}
                         className={childClass}
                       >
                         {child.label}
