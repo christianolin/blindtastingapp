@@ -31,7 +31,9 @@ const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  new Date(iso)
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .replace(",", "");
 const ALL = "__all__";
 const selectCls =
   "h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground";
@@ -310,7 +312,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               <col className="w-[4.5rem]" />
               <col className="w-[5rem]" />
               <col className="w-[6.5rem]" />
-              <col className="w-[5.5rem]" />
+              <col className="w-[6.5rem]" />
             </colgroup>
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -407,7 +409,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {r.cellarBottles}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {fmtDate(r.addedAt)}
                   </td>
                 </tr>
