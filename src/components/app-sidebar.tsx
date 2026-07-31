@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { navWithAdmin, isNavActive } from "@/components/nav-links";
 import { useAddWine } from "@/components/add-wine-context";
 import { signOut } from "@/app/actions";
+import { BlindrMark } from "@/components/logo";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   taste: Wine,
@@ -35,7 +36,8 @@ export function AppSidebar({
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-primary text-primary-foreground md:flex">
       <div className="px-5 pt-4 pb-2">
-        <Link href="/taste" className="flex items-center transition-opacity hover:opacity-90">
+        <Link href="/taste" className="flex items-center gap-2 transition-opacity hover:opacity-90">
+          <BlindrMark size={26} onDark />
           <span className="font-heading text-xl font-semibold tracking-tight">Blindr</span>
         </Link>
       </div>

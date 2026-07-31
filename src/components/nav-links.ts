@@ -18,6 +18,19 @@ export type NavLink = {
 export const NAV_LINKS: NavLink[] = [
   { key: "taste", href: "/taste", label: "Taste", match: ["/taste", "/tastings"] },
   {
+    key: "learn",
+    href: "/knowledge/map",
+    label: "Learn",
+    match: ["/knowledge", "/rules"],
+    children: [
+      { href: "/knowledge/map", label: "Wine map" },
+      { href: "/knowledge/archetypes", label: "Typical wines" },
+      { href: "/knowledge/grapes", label: "Grapes" },
+      { href: "/knowledge/type-designations", label: "Designations" },
+      { href: "/rules", label: "Rules" },
+    ],
+  },
+  {
     key: "catalog",
     href: "/catalog",
     label: "Catalog",
@@ -36,19 +49,6 @@ export const NAV_LINKS: NavLink[] = [
       { href: "/cellar", label: "Cellar Inventory" },
       { href: "/cellar/new", label: "Add a wine" },
       { href: "/cellar/import", label: "Import CSV" },
-    ],
-  },
-  {
-    key: "learn",
-    href: "/knowledge/map",
-    label: "Learn",
-    match: ["/knowledge", "/rules"],
-    children: [
-      { href: "/knowledge/map", label: "Wine map" },
-      { href: "/knowledge/archetypes", label: "Typical wines" },
-      { href: "/knowledge/grapes", label: "Grapes" },
-      { href: "/knowledge/type-designations", label: "Designations" },
-      { href: "/rules", label: "Rules" },
     ],
   },
   {
