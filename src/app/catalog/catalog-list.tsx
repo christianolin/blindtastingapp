@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -367,25 +367,36 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             {Math.min(clampedPage * PAGE, filtered.length)} of {filtered.length} wines
           </span>
           {pageCount > 1 ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                aria-label="Previous page"
                 disabled={clampedPage <= 1}
                 onClick={() => setPage(clampedPage - 1)}
-                className="rounded-md border border-border px-2 py-1 hover:bg-muted disabled:opacity-40"
+                className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
-                ‹
+                <ChevronLeft className="size-4" />
               </button>
-              <span className="px-2 tabular-nums">
-                {clampedPage} / {pageCount}
-              </span>
+              <select
+                aria-label="Go to page"
+                value={clampedPage}
+                onChange={(e) => setPage(Number(e.target.value))}
+                className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
+              >
+                {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+                  <option key={p} value={p}>
+                    Page {p} of {pageCount}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
+                aria-label="Next page"
                 disabled={clampedPage >= pageCount}
                 onClick={() => setPage(clampedPage + 1)}
-                className="rounded-md border border-border px-2 py-1 hover:bg-muted disabled:opacity-40"
+                className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
-                ›
+                <ChevronRight className="size-4" />
               </button>
             </div>
           ) : null}
