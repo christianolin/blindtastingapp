@@ -52,22 +52,22 @@ export function StatTile({
     <div
       data-slot="stat-tile"
       className={cn(
-        "flex items-center gap-3 rounded-xl border border-border bg-card p-4",
+        "flex items-center gap-2.5 rounded-xl border border-border bg-card p-3 sm:gap-3 sm:p-4",
         className,
       )}
     >
       {Icon ? (
         <span
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-lg",
+            "flex size-8 shrink-0 items-center justify-center rounded-lg sm:size-10",
             TINTS[tint],
           )}
         >
-          <Icon className="size-5" />
+          <Icon className="size-4 sm:size-5" />
         </span>
       ) : null}
       <div className="min-w-0">
-        <div className="font-heading text-2xl leading-none font-semibold tabular-nums">
+        <div className="font-heading text-lg leading-none font-semibold tabular-nums sm:text-2xl">
           {value}
         </div>
         <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">

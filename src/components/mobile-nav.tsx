@@ -60,7 +60,7 @@ export function MobileNav({
               className="animate-in fade-in absolute inset-0 bg-black/40 duration-150"
               onClick={close}
             />
-            <div className="animate-in slide-in-from-right absolute top-0 right-0 flex h-full w-64 flex-col gap-1 bg-background p-4 shadow-xl duration-200">
+            <div className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-64 flex-col gap-1 bg-background p-4 shadow-xl duration-200">
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-heading text-lg font-semibold">Menu</span>
                 <Button

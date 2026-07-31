@@ -65,7 +65,7 @@ export function NotificationsBell({
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg">
+          <div className="fixed inset-x-3 top-16 z-50 rounded-xl border border-border bg-popover p-2 shadow-lg md:absolute md:inset-x-auto md:top-auto md:right-0 md:mt-2 md:w-72">
             <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
               Invitations
             </p>
