@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
+  ChevronUp,
   Layers,
   PanelLeftClose,
   PanelLeftOpen,
@@ -13,6 +14,7 @@ import {
   Wine,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -142,6 +144,7 @@ export function TileWineMapExplorer({
   const [expanded, setExpanded] = useState(false);
   const [treeOpen, setTreeOpen] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
   useEffect(() => {
     if (!expanded) return;
     const onKey = (event: KeyboardEvent) => {
@@ -431,12 +434,44 @@ export function TileWineMapExplorer({
 
         {detailsOpen ? (
         <Card
-          className={`order-2 lg:order-3 lg:w-[320px] lg:shrink-0 ${
-            expanded ? "lg:overflow-y-auto" : ""
-          }`}
+          className={cn(
+            "lg:order-3 lg:w-[320px] lg:shrink-0",
+            // On phones this panel detaches into a frozen sheet pinned to the
+            // bottom of the screen; tapping its bar folds it open into a
+            // near-fullscreen scrollable profile and back down again.
+            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-t max-lg:border-border max-lg:shadow-[0_-8px_24px_rgba(0,0,0,0.10)]",
+            sheetOpen ? "max-lg:top-14 max-lg:flex max-lg:flex-col" : "",
+            expanded ? "lg:overflow-y-auto" : "",
+          )}
         >
-          <CardContent className="flex flex-col gap-3 pt-4">
-            <div className="flex items-center justify-between">
+          <CardContent
+            className={cn(
+              "flex flex-col gap-3 pt-4",
+              sheetOpen ? "max-lg:h-full max-lg:min-h-0" : "",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setSheetOpen((open) => !open)}
+              aria-expanded={sheetOpen}
+              className="flex items-center justify-between gap-2 text-left lg:hidden"
+            >
+              <span className="flex min-w-0 flex-col">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Details
+                </span>
+                <span className="truncate text-sm font-medium">
+                  {context ? context.place.name : "Click on areas to learn more"}
+                </span>
+              </span>
+              <ChevronUp
+                className={cn(
+                  "size-4 shrink-0 text-muted-foreground transition-transform",
+                  sheetOpen ? "rotate-180" : "",
+                )}
+              />
+            </button>
+            <div className="hidden items-center justify-between lg:flex">
               <span className="text-xs font-medium text-muted-foreground">
                 Details
               </span>
@@ -449,6 +484,14 @@ export function TileWineMapExplorer({
                 <PanelRightClose className="size-4" />
               </button>
             </div>
+            <div
+              className={cn(
+                "flex flex-col gap-3",
+                sheetOpen
+                  ? "max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto"
+                  : "max-lg:hidden",
+              )}
+            >
             {!selectedKey ? (
               <p className="text-sm text-muted-foreground">
                 Pick a region on the map or in the hierarchy to explore it.
@@ -569,9 +612,11 @@ export function TileWineMapExplorer({
                 <KnowledgeSections context={context} onSelect={select} />
               </>
             )}
+            </div>
           </CardContent>
         </Card>
-        ) : (
+        ) : null}
+        {!detailsOpen ? (
           <button
             type="button"
             aria-label="Show details"
@@ -580,8 +625,11 @@ export function TileWineMapExplorer({
           >
             <PanelRightOpen className="size-4" />
           </button>
-        )}
+        ) : null}
       </div>
+      {/* Reserve room so the frozen mobile sheet's bar never hides the last
+          of the page content beneath it. */}
+      <div aria-hidden className="h-20 lg:hidden" />
       {openArchetype ? (
         <ArchetypeModal
           id={openArchetype.id}
