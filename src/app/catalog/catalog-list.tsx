@@ -220,22 +220,21 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             </option>
           ))}
         </select>
-        {hasFilter ? (
-          <button
-            type="button"
-            onClick={() => {
-              setQ("");
-              setCountry(ALL);
-              setRegion(ALL);
-              setColour(ALL);
-              setGrape(ALL);
-              setPage(1);
-            }}
-            className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Clear filters
-          </button>
-        ) : null}
+        <button
+          type="button"
+          disabled={!hasFilter}
+          onClick={() => {
+            setQ("");
+            setCountry(ALL);
+            setRegion(ALL);
+            setColour(ALL);
+            setGrape(ALL);
+            setPage(1);
+          }}
+          className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          Clear filters
+        </button>
       </div>
 
       <div className="flex flex-col gap-2 lg:hidden">
