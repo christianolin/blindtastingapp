@@ -72,11 +72,25 @@ export function AppSidebar({
               {link.children ? (
                 <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
                   {link.children.map((child) => {
+                    if (child.soon) {
+                      return (
+                        <span
+                          key={child.label}
+                          className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-primary-foreground/35"
+                        >
+                          {child.label}
+                          <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
+                            Soon
+                          </span>
+                        </span>
+                      );
+                    }
                     const childActive =
-                      child.href === link.href
+                      !child.modal &&
+                      (child.href === link.href
                         ? pathname === child.href
                         : pathname === child.href ||
-                          pathname.startsWith(`${child.href}/`);
+                          pathname.startsWith(`${child.href}/`));
                     const childClass = cn(
                       "rounded-md px-2.5 py-1.5 text-left text-sm transition-colors",
                       childActive

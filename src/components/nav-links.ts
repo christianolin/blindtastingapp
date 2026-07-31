@@ -8,6 +8,8 @@ export type NavChild = {
   href: string;
   label: string;
   modal?: "catalog" | "cellar" | "taste-blind" | "taste-semi-blind" | "taste-rate";
+  // A teaser sub-item: rendered greyed-out with a "Soon" tag, not clickable.
+  soon?: boolean;
 };
 export type NavLink = {
   key: string;
@@ -34,7 +36,7 @@ export const NAV_LINKS: NavLink[] = [
         modal: "taste-semi-blind",
       },
       { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
-      { href: "/taste", label: "Training Room" },
+      { href: "/taste", label: "Training Room", soon: true },
     ],
   },
   {

@@ -343,7 +343,13 @@ export function NewWineForm({
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" onClick={submit} disabled={pending}>
-        {pending ? "Adding wine…" : "Add wine"}
+        {pending
+          ? wineId
+            ? "Saving…"
+            : "Adding wine…"
+          : wineId
+            ? "Save changes"
+            : "Add wine"}
       </Button>
     </div>
   );

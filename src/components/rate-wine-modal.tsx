@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCatalogWines } from "@/app/tastings/[id]/wines/new/actions";
 import { useAddWine } from "@/components/add-wine-context";
@@ -85,9 +86,9 @@ export function RateWineModal({ onClose }: { onClose: () => void }) {
             onClose();
             openAddWine("catalog");
           }}
-          className="self-start text-sm font-medium text-primary transition-colors hover:text-primary/80"
+          className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
         >
-          Can&apos;t find it? Add a new wine
+          <Plus className="size-4" /> Can&apos;t find it? Add a new wine
         </button>
       </DialogContent>
     </Dialog>
