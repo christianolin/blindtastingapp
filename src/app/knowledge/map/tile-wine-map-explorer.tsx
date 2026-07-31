@@ -291,7 +291,11 @@ export function TileWineMapExplorer({
         }`}
       >
         {treeOpen ? (
-          <Card className="order-3 lg:order-1 lg:w-[280px] lg:shrink-0">
+          <Card
+            className={`order-3 lg:order-1 lg:w-[280px] lg:shrink-0 ${
+              expanded ? "" : "lg:sticky lg:top-6 lg:self-start"
+            }`}
+          >
             <CardContent
               className={`flex flex-col pt-4 ${
                 expanded
@@ -301,7 +305,7 @@ export function TileWineMapExplorer({
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Hierarchy
+                  Explorer
                 </span>
                 <button
                   type="button"
@@ -331,7 +335,9 @@ export function TileWineMapExplorer({
             type="button"
             aria-label="Show hierarchy"
             onClick={() => setTreeOpen(true)}
-            className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-1 lg:flex lg:w-9 lg:items-start lg:justify-center"
+            className={`order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-1 lg:flex lg:w-9 lg:items-start lg:justify-center ${
+              expanded ? "" : "lg:sticky lg:top-6 lg:self-start"
+            }`}
           >
             <PanelLeftOpen className="size-4" />
           </button>
