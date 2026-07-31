@@ -63,9 +63,8 @@ export function TastingsTabs({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Underlined tabs — deliberately distinct from the Knowledge section's
-          pill/segmented control so the two navigation styles don't blur. */}
-      <div className="flex gap-6 overflow-x-auto no-scrollbar border-b border-border">
+      {/* Segmented pill tabs — richer than a plain underline. */}
+      <div className="flex w-fit max-w-full gap-1 overflow-x-auto no-scrollbar rounded-lg bg-muted/60 p-1">
         {tabs.map((t) => {
           const isActive = active === t.key;
           return (
@@ -75,10 +74,10 @@ export function TastingsTabs({
               onClick={() => select(t.key)}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative -mb-px flex shrink-0 items-center gap-2 border-b-2 px-0.5 pb-2.5 text-sm font-medium transition-colors",
+                "flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}
