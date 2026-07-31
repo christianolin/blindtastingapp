@@ -1,4 +1,5 @@
-import { Crown, Medal, Trophy } from "lucide-react";
+import Link from "next/link";
+import { Crown, Medal, Scale, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
@@ -268,6 +269,19 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
             ) : null}
           </div>
         ) : null}
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Scale className="size-3.5" />
+            {isSemiBlind ? "Semi-blind scoring" : "Danish Championship scoring"}
+          </span>
+          <Link
+            href="/rules"
+            className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            Learn more
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

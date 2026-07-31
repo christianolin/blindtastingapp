@@ -75,6 +75,9 @@ export default async function TastingPage({
   const revealedCount = (wines ?? []).filter((w) => w.is_revealed).length;
   const progressPct =
     wineCount > 0 ? Math.round((revealedCount / wineCount) * 100) : 0;
+  // The wine currently in play (first not-yet-revealed) — its chip gets the
+  // filled "active" treatment in the navigator, matching the prototype.
+  const activeChipId = (wines ?? []).find((w) => !w.is_revealed)?.id ?? null;
   const participantCount = (participantRows ?? []).length;
   // Derived session state — "All revealed" and "Completed" are real phases,
   // not "In progress" sitting at 100% (owner: status must reflect actual state).
@@ -531,46 +534,51 @@ export default async function TastingPage({
         <>
           {/* Compact progress + wine navigator — replaces the old left rail. */}
           {wineCount > 0 ? (
-            <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-heading text-sm font-semibold">
+            <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3.5">
+              <div className="flex flex-wrap gap-2">
+                {(wines ?? []).map((w, i) => {
+                  const active =
+                    derivedStatus !== "Completed" && w.id === activeChipId;
+                  return (
+                    <a
+                      key={w.id}
+                      href={`#wine-${w.id}`}
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : w.is_revealed
+                            ? "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10"
+                            : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          active
+                            ? "bg-primary-foreground"
+                            : w.is_revealed
+                              ? "bg-primary"
+                              : "bg-muted-foreground/40",
+                        )}
+                      />
+                      Wine {i + 1}
+                    </a>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-500"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
                   {derivedStatus === "Completed"
                     ? "Completed"
-                    : `${revealedCount} of ${wineCount} revealed`}
+                    : `${revealedCount} of ${wineCount} wines`}
                 </span>
-                <span className="text-sm tabular-nums text-muted-foreground">
-                  {progressPct}%
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-500"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(wines ?? []).map((w, i) => (
-                  <a
-                    key={w.id}
-                    href={`#wine-${w.id}`}
-                    className={cn(
-                      "flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                      w.is_revealed
-                        ? "border-primary/30 bg-primary/5 text-foreground"
-                        : "border-border text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "size-1.5 rounded-full",
-                        w.is_revealed
-                          ? "bg-primary"
-                          : "bg-muted-foreground/40",
-                      )}
-                    />
-                    Wine {i + 1}
-                  </a>
-                ))}
               </div>
             </div>
           ) : null}
