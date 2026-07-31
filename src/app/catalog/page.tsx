@@ -36,7 +36,7 @@ export default async function CatalogPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: wines }, { data: ratings }, { count: totalWines }, { count: totalCountries }] =
+  const [{ data: wines }, { data: ratings }, { count: totalWines }, { data: countryRows }] =
     await Promise.all([
       supabase
         .from("catalog_wines")
@@ -52,8 +52,12 @@ export default async function CatalogPage() {
         .from("catalog_wines")
         .select("id", { count: "exact", head: true })
         .is("merged_into", null),
-      supabase.from("countries").select("id", { count: "exact", head: true }),
+      supabase.from("catalog_wines").select("country_id").is("merged_into", null),
     ]);
+
+  const totalCountries = new Set(
+    (countryRows ?? []).map((r) => r.country_id).filter(Boolean),
+  ).size;
 
   const wineList = (wines ?? []) as unknown as WineRow[];
   const wineIds = wineList.map((w) => w.id);

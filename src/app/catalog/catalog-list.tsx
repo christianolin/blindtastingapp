@@ -265,7 +265,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
+      <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
         <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
@@ -295,7 +295,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   className="border-b border-border last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-4 py-3">
-                    <Link href={`/catalog/${r.id}`} className="flex items-center gap-3">
+                    <Link href={`/catalog/${r.id}`} className="flex max-w-xs items-center gap-3">
                       {r.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
