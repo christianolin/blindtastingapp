@@ -31,13 +31,17 @@ import {
   updateWine,
   createAppellation,
   createCountry,
-  createGrape,
   createProducer,
   createRegion,
   createTypeDesignation,
   searchCatalogWines,
   type AddWineFormState,
 } from "./actions";
+import {
+  GrapeBlendEditor,
+  type BlendRow,
+} from "@/app/catalog/new/grape-blend-editor";
+import { orderedBlend } from "@/lib/wine-blend";
 
 // Pre-filled values for edit mode — the wine's current answer key, plus the
 // producer's display name (SearchableCombobox can't derive it from the id).
@@ -115,11 +119,15 @@ export function WineForm({
   const [appellationId, setAppellationId] = useState(
     initial?.appellation_id ?? "",
   );
-  const [primaryGrapeId, setPrimaryGrapeId] = useState(
-    initial?.primary_grape_id ?? "",
-  );
-  const [secondaryGrapeId, setSecondaryGrapeId] = useState(
-    initial?.secondary_grape_id ?? "",
+  const [blend, setBlend] = useState<BlendRow[]>(
+    initial?.primary_grape_id
+      ? [
+          { grapeId: initial.primary_grape_id, percentage: "" },
+          ...(initial.secondary_grape_id
+            ? [{ grapeId: initial.secondary_grape_id, percentage: "" }]
+            : []),
+        ]
+      : [{ grapeId: "", percentage: "" }],
   );
   const [producerId, setProducerId] = useState(initial?.producer_id ?? "");
   const [producerLabel, setProducerLabel] = useState<string | null>(
@@ -327,31 +335,17 @@ export function WineForm({
         </legend>
         <div className="flex flex-col gap-3 pt-1.5">
       <div className="flex flex-col gap-2">
-        <Label>Primary grape</Label>
-        <ReferenceCombobox
-          formFieldName="primary_grape_id"
-          options={grapes}
-          value={primaryGrapeId}
-          onValueChange={setPrimaryGrapeId}
-          onOptionCreated={(o) => setGrapes((g) => [...g, o])}
-          placeholder="Select the primary grape"
-          createLabel="grape"
-          onCreate={createGrape}
+        <Label>Grapes &amp; blend</Label>
+        <GrapeBlendEditor
+          grapes={grapes}
+          onGrapeCreated={(o) => setGrapes((g) => [...g, o])}
+          value={blend}
+          onChange={setBlend}
         />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>Secondary grape (optional, blends only)</Label>
-        <ReferenceCombobox
-          formFieldName="secondary_grape_id"
-          options={grapes}
-          value={secondaryGrapeId}
-          onValueChange={setSecondaryGrapeId}
-          onOptionCreated={(o) => setGrapes((g) => [...g, o])}
-          placeholder="None"
-          createLabel="grape"
-          onCreate={createGrape}
-          allowClear
+        <input
+          type="hidden"
+          name="grape_blend"
+          value={JSON.stringify(orderedBlend(blend))}
         />
       </div>
 

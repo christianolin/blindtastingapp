@@ -130,6 +130,56 @@ export async function createAppellation(regionId: string, name: string) {
   );
 }
 
+type BlendGrape = { grapeId: string; percentage: number | null };
+
+// The wine forms submit the grape blend as one JSON field (grape_blend). The
+// lead entry is the primary grape, the next the secondary — no form shows a raw
+// primary/secondary picker outside blind guessing + scoring.
+function parseBlend(formData: FormData): BlendGrape[] {
+  try {
+    const arr = JSON.parse(String(formData.get("grape_blend") ?? "[]"));
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((g) => g && typeof g.grapeId === "string" && g.grapeId)
+      .map((g) => ({
+        grapeId: g.grapeId as string,
+        percentage: typeof g.percentage === "number" ? g.percentage : null,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+// Persist the full blend on the catalog wine (its trigger recomputes the lead
+// grape as primary/secondary). Only a wine this user owns is touched, so a
+// deduped/existing wine keeps its own blend.
+async function syncCatalogBlend(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  catalogWineId: string,
+  userId: string,
+  blend: BlendGrape[],
+) {
+  if (blend.length === 0) return;
+  const { data: cw } = await supabase
+    .from("catalog_wines")
+    .select("created_by")
+    .eq("id", catalogWineId)
+    .maybeSingle();
+  if (cw?.created_by !== userId) return;
+  await supabase
+    .from("catalog_wine_grapes")
+    .delete()
+    .eq("catalog_wine_id", catalogWineId);
+  await supabase.from("catalog_wine_grapes").insert(
+    blend.map((g, i) => ({
+      catalog_wine_id: catalogWineId,
+      grape_id: g.grapeId,
+      percentage: g.percentage,
+      sort_order: i,
+    })),
+  );
+}
+
 export type AddWineFormState = { error: string } | null;
 
 export async function addWine(
@@ -148,9 +198,9 @@ export async function addWine(
   const countryId = String(formData.get("country_id") ?? "");
   const regionId = String(formData.get("region_id") ?? "");
   const appellationId = String(formData.get("appellation_id") ?? "") || null;
-  const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
-  const secondaryGrapeId =
-    String(formData.get("secondary_grape_id") ?? "") || null;
+  const blend = parseBlend(formData);
+  const primaryGrapeId = blend[0]?.grapeId ?? "";
+  const secondaryGrapeId = blend[1]?.grapeId ?? null;
   const producerId = String(formData.get("producer_id") ?? "");
   const typeDesignationId =
     String(formData.get("type_designation_id") ?? "") || null;
@@ -292,6 +342,7 @@ export async function addWine(
     return { error: answerError.message };
   }
 
+  await syncCatalogBlend(supabase, catalogWineId, user.id, blend);
   redirect(`/tastings/${tastingId}`);
 }
 
@@ -315,9 +366,9 @@ export async function updateWine(
   const countryId = String(formData.get("country_id") ?? "");
   const regionId = String(formData.get("region_id") ?? "");
   const appellationId = String(formData.get("appellation_id") ?? "") || null;
-  const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
-  const secondaryGrapeId =
-    String(formData.get("secondary_grape_id") ?? "") || null;
+  const blend = parseBlend(formData);
+  const primaryGrapeId = blend[0]?.grapeId ?? "";
+  const secondaryGrapeId = blend[1]?.grapeId ?? null;
   const producerId = String(formData.get("producer_id") ?? "");
   const typeDesignationId =
     String(formData.get("type_designation_id") ?? "") || null;
@@ -448,6 +499,7 @@ export async function updateWine(
     return { error: answerError.message };
   }
 
+  await syncCatalogBlend(supabase, catalogWineId, user.id, blend);
   redirect(`/tastings/${tastingId}`);
 }
 
@@ -574,8 +626,9 @@ export async function addWineUnidentified(
   const countryId = String(formData.get("country_id") ?? "");
   const regionId = String(formData.get("region_id") ?? "");
   const appellationId = String(formData.get("appellation_id") ?? "") || null;
-  const primaryGrapeId = String(formData.get("primary_grape_id") ?? "");
-  const secondaryGrapeId = String(formData.get("secondary_grape_id") ?? "") || null;
+  const blend = parseBlend(formData);
+  const primaryGrapeId = blend[0]?.grapeId ?? "";
+  const secondaryGrapeId = blend[1]?.grapeId ?? null;
   const producerId = String(formData.get("producer_id") ?? "") || null;
   const typeDesignationId = String(formData.get("type_designation_id") ?? "") || null;
   const imageUrl = String(formData.get("image_url") ?? "").trim() || null;
