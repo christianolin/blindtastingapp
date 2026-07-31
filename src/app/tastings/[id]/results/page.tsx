@@ -7,6 +7,8 @@ import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
+import { Badge } from "@/components/ui/badge";
+import { LocalDateTime } from "@/components/local-date-time";
 
 const CATEGORY_MAX: Record<string, number> = {
   country: 2,
@@ -204,21 +206,104 @@ export default async function ResultsPage({
     return rows;
   }
 
+  const wineCount = (wines ?? []).length;
+  const participantCount = (participants ?? []).length;
+  const maxTotal = leaderboard[0]?.total ?? 0;
+  const progressPct = Math.round(
+    (revealedWines.length / Math.max(1, wineCount)) * 100,
+  );
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
-      <Link
-        href={`/tastings/${tastingId}`}
-        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ← Back to tasting
-      </Link>
-      <h1 className="font-heading text-3xl font-semibold tracking-tight">
-        {tasting.name} — results
-      </h1>
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      {tasting.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={tasting.image_url}
+          alt=""
+          className="aspect-[3/1] w-full rounded-xl object-cover"
+        />
+      ) : null}
+
+      <div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">
+          {tasting.name}
+        </h1>
+        {tasting.description ? (
+          <p className="mt-1.5 text-muted-foreground">{tasting.description}</p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <Badge>Completed</Badge>
+          <span className="text-muted-foreground">
+            {wineCount} {wineCount === 1 ? "wine" : "wines"} · {participantCount}{" "}
+            {participantCount === 1 ? "participant" : "participants"}
+            {tasting.scheduled_at ? (
+              <>
+                {" · "}
+                <LocalDateTime iso={tasting.scheduled_at} />
+              </>
+            ) : null}
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {tasting.timing_mode === "LIVE" ? "Live session" : "Self-paced"} ·{" "}
+          {tasting.wine_source === "HOST_PROVIDES"
+            ? "Host-selected wines"
+            : "Everyone brings wines"}{" "}
+          ·{" "}
+          <Link
+            href="/rules"
+            className="text-primary transition-colors hover:text-primary/80"
+          >
+            {tasting.reveal_mode === "SEMI_BLIND"
+              ? "Semi-blind scoring"
+              : "Danish Championship scoring"}
+          </Link>
+        </p>
+      </div>
+
+      {revealedWines.length > 0 ? (
+        <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-heading text-sm font-semibold">Completed</span>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {progressPct}%
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(wines ?? []).map((w, i) => (
+              <a
+                key={w.id}
+                href={`#wine-${w.id}`}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                  w.is_revealed
+                    ? "border-primary/30 bg-primary/5 text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    w.is_revealed ? "bg-primary" : "bg-muted-foreground/40",
+                  )}
+                />
+                Wine {i + 1}
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <Card className="overflow-hidden py-0">
-        <CardHeader className="border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
-          <CardTitle className="font-heading text-xl">Leaderboard</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
+          <CardTitle className="font-heading text-xl">Standings</CardTitle>
+          <Badge variant="secondary">Final</Badge>
         </CardHeader>
         <CardContent className="p-3">
           {revealedWines.length === 0 ? (
@@ -246,7 +331,19 @@ export default async function ResultsPage({
                       </span>
                     )}
                   </span>
-                  <span className="flex-1 font-medium">{row.name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{row.name}</span>
+                    {!isSemiBlind ? (
+                      <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
+                        <span
+                          className="block h-full rounded-full bg-gold-deep"
+                          style={{
+                            width: `${maxTotal > 0 ? (row.total / maxTotal) * 100 : 0}%`,
+                          }}
+                        />
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="font-heading text-lg font-semibold tabular-nums">
                     {isSemiBlind
                       ? `${row.total}/${revealedWines.length}`
@@ -268,9 +365,9 @@ export default async function ResultsPage({
           );
         if (!answer) return null;
         return (
-          <Card key={wine.id}>
+          <Card key={wine.id} id={`wine-${wine.id}`} className="scroll-mt-6">
             <CardHeader>
-              <CardTitle className="text-lg">{wineLabel(wine)}</CardTitle>
+              <CardTitle className="text-lg">{wineLabel(wine)} results</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               {answer.image_url ? (
@@ -403,6 +500,15 @@ export default async function ResultsPage({
           </Card>
         );
       })}
+
+      <div className="pt-2 text-center">
+        <Link
+          href={`/tastings/${tastingId}`}
+          className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
+        >
+          ← Back to tasting overview
+        </Link>
+      </div>
     </div>
   );
 }
