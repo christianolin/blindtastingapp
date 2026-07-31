@@ -199,7 +199,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               setColour(ALL);
               setPage(1);
             }}
-            className="text-sm font-medium text-primary hover:text-primary/80"
+            className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Clear filters
           </button>

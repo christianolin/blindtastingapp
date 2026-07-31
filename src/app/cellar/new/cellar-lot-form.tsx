@@ -201,7 +201,7 @@ export function CellarLotForm({
               setCatalogWineId("");
               setCatalogWineLabel(null);
             }}
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Change
           </button>
