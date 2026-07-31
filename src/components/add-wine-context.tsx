@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { CatalogAddWineModal } from "./catalog-add-wine-modal";
+import { CellarAddWineModal } from "./cellar-add-wine-modal";
 
 // Which add-wine popup to show. Cellar + tasting plug in here as they land; the
 // provider simply renders nothing for a kind it doesn't handle yet.
@@ -32,6 +33,9 @@ export function AddWineProvider({
       {children}
       {open === "catalog" ? (
         <CatalogAddWineModal userId={userId} onClose={() => setOpen(null)} />
+      ) : null}
+      {open === "cellar" ? (
+        <CellarAddWineModal userId={userId} onClose={() => setOpen(null)} />
       ) : null}
     </AddWineCtx.Provider>
   );

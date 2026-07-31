@@ -46,12 +46,16 @@ export function CellarLotForm({
   grapes: initialGrapes,
   typeDesignations,
   defaultCurrency,
+  onAdded,
 }: {
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
   typeDesignations: ReferenceOption[];
   defaultCurrency: string;
+  // When set (rendered in the Add-wine popup), called after a successful add
+  // instead of navigating — the modal closes + refreshes.
+  onAdded?: () => void;
 }) {
   const router = useRouter();
   const [countries, setCountries] = useState(initialCountries);
@@ -156,7 +160,8 @@ export function CellarLotForm({
         storageLocation: storageLocation.trim() || null,
         lotNote: lotNote.trim() || null,
       });
-      router.push("/cellar");
+      if (onAdded) onAdded();
+      else router.push("/cellar");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add the wine.");
       setPending(false);

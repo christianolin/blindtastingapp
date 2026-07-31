@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddWineButton } from "@/components/add-wine-button";
 
 export type LotRow = {
   id: string;
@@ -45,12 +46,12 @@ export function BottlesList({
         <p className="text-sm text-muted-foreground">
           Add the wines you own to track bottles, drink windows and value.
         </p>
-        <Link
-          href="/cellar/new"
+        <AddWineButton
+          kind="cellar"
           className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Add a wine
-        </Link>
+        </AddWineButton>
       </div>
     );
   }

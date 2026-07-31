@@ -8,6 +8,7 @@ import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
 import { Wine, Boxes, Coins, FileUp, CalendarCheck, FileText } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
+import { AddWineButton } from "@/components/add-wine-button";
 import { HistoryList, type HistoryRow } from "./history-list";
 import { StatsPanel } from "./stats-panel";
 import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
@@ -305,12 +306,12 @@ export default async function CellarPage({
                 <FileUp className="size-4" />
                 Import CSV from CellarTracker
               </Link>
-              <Link
-                href="/cellar/new"
+              <AddWineButton
+                kind="cellar"
                 className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Add a wine
-              </Link>
+              </AddWineButton>
             </div>
             <CellarVisibilityControl userId={user.id} current={visibility} />
           </div>
