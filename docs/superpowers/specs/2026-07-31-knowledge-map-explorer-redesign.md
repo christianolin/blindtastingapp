@@ -19,7 +19,7 @@ Vercel `master`; the owner previews and screenshots back before the next increme
 
 Match the Knowledge Explorer prototype **without changing map behavior**: rename the
 header, move the region tree into a fixed-width, full-height **sticky left sidebar**
-(collapsible, with a tree search), and lightly restyle the filter bar + detail
+(collapsible; keeping the tree's built-in search), and lightly restyle the filter bar + detail
 panel — leaving the maplibre engine and all data fetching untouched.
 
 ## Current state
@@ -33,8 +33,9 @@ panel — leaving the maplibre engine and all data fetching untouched.
   Also: grape filter (`visibleKeys`), an `expanded` full-view mode, `detailsOpen`.
   Code comments flag flex-sizing bugs ("the map collapses to zero") if the
   flex-1 / min-h-0 chain is broken.
-- `wine-map-tree.tsx`: the tree (no text search today). `tile-wine-map.tsx`: the
-  maplibre engine — OUT OF SCOPE.
+- `wine-map-tree.tsx`: the tree — **already includes its own search box** +
+  one-level expand/collapse controls ("Search regions, appellations…").
+  `tile-wine-map.tsx`: the maplibre engine — OUT OF SCOPE.
 
 ## Changes
 
@@ -47,11 +48,11 @@ Restructure the explorer shell into two zones: a fixed-width (~15rem) **sticky,
 full-height** left sidebar (`lg:sticky lg:top-6 lg:self-start`, mirroring the
 Cellar sidebar) + a right main zone holding the map and detail panel.
 
-Sidebar contents: an "Explorer" heading with the **collapse toggle kept** (collapses
-to the existing thin `PanelLeftOpen` button so the map can take the full width); a
-**search input** that filters the tree by place name (client-side — matched nodes
-and their ancestors stay visible); then `WineMapTree` (unchanged props:
-roots / selectedKey / onSelect / filterKeys).
+Sidebar contents: an "Explorer" heading (renamed from "Hierarchy") with the
+**collapse toggle kept** (collapses to the existing thin `PanelLeftOpen` button so
+the map can take the full width), then `WineMapTree` unchanged. NOTE: the tree
+**already ships its own search box** + expand/collapse-level controls, so this
+increment adds NO new search — it is purely the sticky re-anchoring + heading rename.
 
 Hard constraint: preserve the map's flex-1 / min-h-0 sizing chain so the map never
 collapses to zero (the documented bug). On mobile the sidebar stacks above the map
@@ -71,8 +72,8 @@ mobile stacking. No changes to `tile-wine-map.tsx` or any `lib/wine-map/*` fetch
 ## Build increments (each pushed to Vercel → owner screenshot → next)
 
 - **a. Header rename** (`page.tsx`). Trivial.
-- **b. Sticky sidebar + tree search** — the core change; screenshot-verify the map
-  still sizes correctly (no collapse-to-zero).
+- **b. Sticky re-anchor + "Explorer" rename** — the core change; screenshot-verify
+  the map still sizes correctly (no collapse-to-zero).
 - **c. Filter bar + detail panel styling** polish.
 
 ## Verification & delivery
