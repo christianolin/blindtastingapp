@@ -25,6 +25,7 @@ import { QualitySlider } from "./quality-slider";
 import { SectionNav, type SectionNavItem } from "./section-nav";
 import { LiveTastingNote } from "./live-tasting-note";
 import { WSET } from "./tokens";
+import { cn } from "@/lib/utils";
 
 const CLARITY = ["CLEAR", "HAZY"] as const;
 const CONDITION = ["CLEAN", "UNCLEAN"] as const;
@@ -71,15 +72,7 @@ export function Row({
     );
   }
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "150px 1fr",
-        gap: 24,
-        padding: "16px 0",
-        borderTop: `1px solid ${WSET.hairline}`,
-      }}
-    >
+    <div className="wset-row">
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</div>
         {sub !== undefined ? (
@@ -270,9 +263,14 @@ export function WsetSheet({
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: embedded ? "minmax(0,1fr)" : "264px 1fr", gap: 24, alignItems: "start" }}>
+      <div
+        className={cn(
+          "grid items-start gap-6",
+          !embedded && "lg:grid-cols-[264px_minmax(0,1fr)]",
+        )}
+      >
         {embedded ? null : (
-        <aside style={{ position: "sticky", top: 114, display: "flex", flexDirection: "column", gap: 16 }}>
+        <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
           <SectionNav sections={navItems} activeId={activeId} onJump={jump} />
           <LiveTastingNote sections={noteSections} />
           <p style={{ fontSize: 10.5, color: WSET.faint }}>

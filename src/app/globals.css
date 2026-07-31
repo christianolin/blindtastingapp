@@ -232,3 +232,18 @@
   visibility: visible;
   animation: rise-in 0.25s 0.15s ease both;
 }
+
+/* WSET tasting-sheet attribute rows: label + control side-by-side on tablet+,
+   stacked (control full-width, so sliders/pills aren't squished) on phones. */
+.wset-row {
+  display: grid;
+  gap: 0.75rem;
+  padding: 16px 0;
+  border-top: 1px solid #f0e6d1;
+}
+@media (min-width: 640px) {
+  .wset-row {
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 24px;
+  }
+}
