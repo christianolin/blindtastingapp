@@ -62,15 +62,20 @@ export default async function CatalogPage() {
   const wineList = (wines ?? []) as unknown as WineRow[];
   const wineIds = wineList.map((w) => w.id);
 
-  const [{ data: grapeRows }, { data: appearanceRows }] = await Promise.all([
-    supabase
-      .from("catalog_wine_grapes")
-      .select("catalog_wine_id, percentage, sort_order, grapes(name)")
-      .in("catalog_wine_id", wineIds.length ? wineIds : [""]),
-    supabase.rpc("catalog_wine_appearances", { p_ids: wineIds }),
-  ]);
+  const [{ data: grapeRows }, { data: appearanceRows }, { data: holdingRows }] =
+    await Promise.all([
+      supabase
+        .from("catalog_wine_grapes")
+        .select("catalog_wine_id, percentage, sort_order, grapes(name)")
+        .in("catalog_wine_id", wineIds.length ? wineIds : [""]),
+      supabase.rpc("catalog_wine_appearances", { p_ids: wineIds }),
+      supabase.rpc("catalog_wine_holdings", { p_ids: wineIds }),
+    ]);
   const appearancesByWine = new Map(
     (appearanceRows ?? []).map((r) => [r.catalog_wine_id, r.appearances]),
+  );
+  const bottlesByWine = new Map(
+    (holdingRows ?? []).map((r) => [r.catalog_wine_id, r.bottles]),
   );
   const grapesByWine = new Map<string, { name: string; pct: number | null; sort: number }[]>();
   for (const g of (grapeRows ?? []) as unknown as Array<{
@@ -140,6 +145,7 @@ export default async function CatalogPage() {
       avgScore: rating ? Number(rating.avg_score) : null,
       noteCount: rating?.note_count ?? 0,
       appearances: appearancesByWine.get(w.id) ?? 0,
+      cellarBottles: bottlesByWine.get(w.id) ?? 0,
       addedAt: w.created_at,
     };
   });

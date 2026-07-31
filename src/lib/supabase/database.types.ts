@@ -1429,6 +1429,14 @@ export type Database = {
           appearances: number;
         }[];
       };
+      catalog_wine_holdings: {
+        Args: { p_ids: string[] };
+        Returns: {
+          catalog_wine_id: string;
+          holders: number;
+          bottles: number;
+        }[];
+      };
       add_cellar_lot: {
         Args: { p: unknown };
         Returns: string;
