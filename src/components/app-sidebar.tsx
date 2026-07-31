@@ -61,7 +61,10 @@ export function AppSidebar({
                 <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
                   {link.children.map((child) => {
                     const childActive =
-                      pathname === child.href || pathname.startsWith(`${child.href}/`);
+                      child.href === link.href
+                        ? pathname === child.href
+                        : pathname === child.href ||
+                          pathname.startsWith(`${child.href}/`);
                     return (
                       <Link
                         key={child.href}

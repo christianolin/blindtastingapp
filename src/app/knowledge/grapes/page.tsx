@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/app-header";
-import { KnowledgeTabs } from "@/components/knowledge-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import type { GrapeColor } from "@/lib/supabase/database.types";
@@ -82,7 +81,6 @@ export default async function GrapeLibraryPage({
     <div className="flex flex-1 flex-col">
       <AppHeader />
       <div className="flex w-full max-w-[1500px] flex-1 flex-col gap-6 p-6 sm:p-8">
-        <KnowledgeTabs />
 
         <div className="flex gap-8">
           {/* Side nav: search + a dense, scrollable jump list (icon + name) so

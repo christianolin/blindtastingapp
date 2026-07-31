@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
-import { KnowledgeTabs } from "@/components/knowledge-tabs";
 
 export const metadata = {
   title: "Scoring — Danish Championship rules · Blindr",
@@ -38,7 +37,6 @@ export default function RulesPage() {
     <div className="flex flex-1 flex-col">
       <AppHeader />
       <div className="flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
-        <KnowledgeTabs />
         <div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
             Danish Championship scoring

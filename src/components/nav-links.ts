@@ -22,7 +22,10 @@ export const NAV_LINKS: NavLink[] = [
     href: "/catalog",
     label: "Catalog",
     match: ["/catalog"],
-    children: [{ href: "/catalog/new", label: "Add a wine" }],
+    children: [
+      { href: "/catalog", label: "Wine Catalog" },
+      { href: "/catalog/new", label: "Add a wine" },
+    ],
   },
   {
     key: "cellar",
@@ -30,6 +33,7 @@ export const NAV_LINKS: NavLink[] = [
     label: "Cellar",
     match: ["/cellar"],
     children: [
+      { href: "/cellar", label: "Cellar Inventory" },
       { href: "/cellar/new", label: "Add a wine" },
       { href: "/cellar/import", label: "Import CSV" },
     ],
@@ -40,6 +44,7 @@ export const NAV_LINKS: NavLink[] = [
     label: "Learn",
     match: ["/knowledge", "/rules"],
     children: [
+      { href: "/knowledge/map", label: "Wine map" },
       { href: "/knowledge/archetypes", label: "Typical wines" },
       { href: "/knowledge/grapes", label: "Grapes" },
       { href: "/knowledge/type-designations", label: "Designations" },
