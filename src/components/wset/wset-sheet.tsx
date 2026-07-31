@@ -150,12 +150,16 @@ export function WsetSheet({
   terms,
   initial,
   onSave,
+  embedded = false,
 }: {
   wine: { colour: WineColour; style: WineStyle };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
   onSave: (state: WsetNoteState) => Promise<void>;
+  // In a dialog: single column (no scroll-spy rail), header sticks to the
+  // popup top instead of below the app header.
+  embedded?: boolean;
 }) {
   const [state, setState] = useState<WsetNoteState>(initial);
   const [activeId, setActiveId] = useState<string>("appearance");
@@ -229,12 +233,12 @@ export function WsetSheet({
       <div
         style={{
           position: "sticky",
-          top: 56,
+          top: embedded ? 0 : 56,
           zIndex: 30,
           display: "flex",
           alignItems: "center",
           gap: 12,
-          padding: "12px 4px",
+          padding: embedded ? "12px 44px 12px 4px" : "12px 4px",
           marginBottom: 16,
           background: "rgba(247,239,224,0.94)",
           backdropFilter: "blur(8px)",
@@ -266,7 +270,8 @@ export function WsetSheet({
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "264px 1fr", gap: 24, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: embedded ? "minmax(0,1fr)" : "264px 1fr", gap: 24, alignItems: "start" }}>
+        {embedded ? null : (
         <aside style={{ position: "sticky", top: 114, display: "flex", flexDirection: "column", gap: 16 }}>
           <SectionNav sections={navItems} activeId={activeId} onJump={jump} />
           <LiveTastingNote sections={noteSections} />
@@ -274,6 +279,7 @@ export function WsetSheet({
             Follows the WSET Level 4 Systematic Approach to Tasting Wine.
           </p>
         </aside>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`}>

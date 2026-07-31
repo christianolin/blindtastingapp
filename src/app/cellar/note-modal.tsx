@@ -1,31 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { fetchNoteView, type NoteView } from "@/lib/wset/queries";
-import { composeLiveNote } from "@/lib/wset/live-note.mjs";
-import { qualityBand } from "@/lib/wset/quality-curve.mjs";
-import { LABELS } from "@/lib/wset/vocab";
+import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
+import { noteStateFromRow } from "@/lib/wset/note-state";
+import type {
+  AromaTerm,
+  WineColour,
+  WineStyle,
+  WsetNoteState,
+} from "@/lib/wset/types";
+import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
 
-const CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; caption: string }[] = [
-  { key: "appearance", caption: "Appearance" },
-  { key: "nose", caption: "Nose" },
-  { key: "palate", caption: "Palate" },
-  { key: "conclusions", caption: "Conclusions" },
-  { key: "taster", caption: "Taster's notes" },
-];
-
-const CONTEXT_LABEL: Record<string, string> = {
-  OPEN: "Open tasting",
-  BLIND: "Blind",
-  TRAINING: "Training",
+type EditData = {
+  wine: { colour: WineColour; style: WineStyle };
+  title: string;
+  terms: AromaTerm[];
+  initial: WsetNoteState;
 };
 
-// Read-only view of a saved WSET note, shown in-place from the Cellar "My
-// notes" list. Only the note + wine id are carried, so the note is fetched on
-// open (like ArchetypeModal) and composed into prose by the live-note engine.
+// Opens a saved note as the full WSET sheet — the very editor the note page
+// uses — so a taster can review AND edit it in place from the cellar. Data is
+// fetched on open (RLS scopes it to the author); NoteEditor owns saving.
 export function NoteModal({
   noteId,
   wineId,
@@ -36,29 +33,49 @@ export function NoteModal({
   onClose: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const [view, setView] = useState<NoteView | null | "loading">("loading");
+  const [data, setData] = useState<EditData | null | "loading">("loading");
 
   useEffect(() => {
     let cancelled = false;
-    fetchNoteView(supabase, noteId)
-      .then((v) => {
-        if (!cancelled) setView(v ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) setView(null);
+    (async () => {
+      const [wine, noteRes, aromaRes, termRes] = await Promise.all([
+        fetchCatalogWine(supabase, wineId),
+        supabase.from("wset_notes").select("*").eq("id", noteId).maybeSingle(),
+        supabase
+          .from("wset_note_aromas")
+          .select("term_id, sensed_on_nose, sensed_on_palate")
+          .eq("note_id", noteId),
+        supabase
+          .from("wset_aroma_terms")
+          .select("id, family, origin, group_name, term, sort_order")
+          .order("sort_order"),
+      ]);
+      if (cancelled) return;
+      if (!wine || !noteRes.data) {
+        setData(null);
+        return;
+      }
+      const terms: AromaTerm[] = (termRes.data ?? []).map((t) => ({
+        id: t.id,
+        family: t.family,
+        origin: t.origin,
+        groupName: t.group_name,
+        term: t.term,
+        sortOrder: t.sort_order,
+      }));
+      setData({
+        wine: { colour: wine.colour ?? "RED", style: wine.style ?? "STILL" },
+        title: catalogWineTitle(wine),
+        terms,
+        initial: noteStateFromRow(noteRes.data, aromaRes.data ?? []),
       });
+    })().catch(() => {
+      if (!cancelled) setData(null);
+    });
     return () => {
       cancelled = true;
     };
-  }, [supabase, noteId]);
-
-  const sections = useMemo(() => {
-    if (!view || view === "loading") return [];
-    const composed = composeLiveNote(view.state, view.termLabels, LABELS);
-    return CAPTIONS.flatMap(({ key, caption }) =>
-      composed[key] ? [{ caption, prose: composed[key] as string }] : [],
-    );
-  }, [view]);
+  }, [supabase, noteId, wineId]);
 
   return (
     <Dialog
@@ -67,80 +84,25 @@ export function NoteModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-lg">
-        {view === "loading" || !view ? (
-          <>
-            <DialogTitle className="sr-only">Tasting note</DialogTitle>
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {view === "loading"
-                ? "Loading note…"
-                : "Couldn't load this note right now."}
-            </p>
-          </>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogTitle className="sr-only">Tasting note</DialogTitle>
+        {data === "loading" ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Loading note…
+          </p>
+        ) : !data ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Couldn&apos;t load this note right now.
+          </p>
         ) : (
-          <div className="flex max-h-[80vh] flex-col">
-            <div className="flex items-start justify-between gap-3 pr-8">
-              <div className="min-w-0">
-                <DialogTitle className="text-lg leading-snug">{view.title}</DialogTitle>
-                {view.subtitle ? (
-                  <p className="mt-0.5 text-xs text-muted-foreground">{view.subtitle}</p>
-                ) : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>
-                    {new Date(view.tastedOn).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide">
-                    {CONTEXT_LABEL[view.contextKind] ?? view.contextKind}
-                  </span>
-                </div>
-              </div>
-              {view.state.qualityScore != null ? (
-                <div className="shrink-0 text-right">
-                  <div className="font-heading text-2xl leading-none tabular-nums">
-                    {view.state.qualityScore}
-                  </div>
-                  <div className="mt-1 text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                    {qualityBand(view.state.qualityScore)}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-4 flex-1 overflow-y-auto pr-1">
-              {sections.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  This note has no ratings yet.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {sections.map((s) => (
-                    <div
-                      key={s.caption}
-                      className="rounded-lg border border-border bg-muted/30 p-3"
-                    >
-                      <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                        {s.caption}
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed">{s.prose}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 flex justify-end border-t border-border pt-3">
-              <Link
-                href={`/catalog/${wineId}/notes/${noteId}`}
-                className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Open full note
-              </Link>
-            </div>
-          </div>
+          <NoteEditor
+            wineId={wineId}
+            wine={data.wine}
+            title={data.title}
+            terms={data.terms}
+            initial={data.initial}
+            embedded
+          />
         )}
       </DialogContent>
     </Dialog>

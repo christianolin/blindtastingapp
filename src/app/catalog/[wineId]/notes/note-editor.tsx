@@ -23,6 +23,7 @@ export function NoteEditor({
   contextKind = null,
   tastingWineId = null,
   consumptionId = null,
+  embedded = false,
 }: {
   wineId: string;
   wine: { colour: WineColour; style: WineStyle };
@@ -32,6 +33,7 @@ export function NoteEditor({
   contextKind?: string | null;
   tastingWineId?: string | null;
   consumptionId?: string | null;
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -94,6 +96,6 @@ export function NoteEditor({
   );
 
   return (
-    <WsetSheet wine={wine} title={title} terms={terms} initial={initial} onSave={onSave} />
+    <WsetSheet wine={wine} title={title} terms={terms} initial={initial} onSave={onSave} embedded={embedded} />
   );
 }
