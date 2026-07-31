@@ -21,6 +21,7 @@ import {
   inviteToTasting,
   deleteTasting,
   finishTasting,
+  reopenTasting,
   setSequentialGuessing,
   setLeaderboardReveal,
   type LobbyActionState,
@@ -80,6 +81,10 @@ export function HostControls({
   );
   const [finishState, finishAction, finishPending] = useActionState(
     finishTasting,
+    null,
+  );
+  const [reopenState, reopenAction, reopenPending] = useActionState(
+    reopenTasting,
     null,
   );
   const [scheduleState, scheduleAction, schedulePending] = useActionState(
@@ -291,9 +296,30 @@ export function HostControls({
           <StateMessage state={finishState} />
         </form>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          This tasting is finished. Results stay available below.
-        </p>
+        <form action={reopenAction} className="flex flex-col gap-2">
+          <input type="hidden" name="tasting_id" value={tastingId} />
+          <p className="text-sm text-muted-foreground">
+            This tasting is finished. Reopen it to add wines or keep tasting —
+            all guesses and scores stay intact.
+          </p>
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={reopenPending}
+            className="w-full justify-start gap-1.5"
+          >
+            {reopenPending ? (
+              <>
+                <WineGlassLoader /> Reopening…
+              </>
+            ) : (
+              <>
+                <Play className="size-4" /> Reopen tasting
+              </>
+            )}
+          </Button>
+          <StateMessage state={reopenState} />
+        </form>
       )}
       {deleteForm}
     </div>

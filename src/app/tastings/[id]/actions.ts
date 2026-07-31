@@ -86,6 +86,33 @@ export async function finishTasting(
   return { success: "Tasting finished — moved to History." };
 }
 
+// Host reopens a finished tasting — CLOSED -> IN_PROGRESS. Everything (guesses,
+// scores, answers, reveals) is preserved; it just becomes live/continuable
+// again, so wines can be added or more guessing happen.
+export async function reopenTasting(
+  _prev: LobbyActionState,
+  formData: FormData,
+): Promise<LobbyActionState> {
+  const { supabase, user } = await requireUser();
+  const tastingId = String(formData.get("tasting_id") ?? "");
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return { error: "Only the host can reopen this tasting." };
+  if (tasting.status !== "CLOSED") {
+    return { error: "Only a finished tasting can be reopened." };
+  }
+
+  const { error } = await supabase
+    .from("tastings")
+    .update({ status: "IN_PROGRESS" })
+    .eq("id", tastingId)
+    .eq("status", "CLOSED");
+  if (error) return { error: error.message };
+
+  revalidatePath(`/tastings/${tastingId}`);
+  revalidatePath("/taste");
+  return { success: "Tasting reopened — it's live again." };
+}
+
 // Host deletes the whole tasting (cascades to wines/answers/guesses/
 // participants via FK on delete cascade). Redirects to the dashboard.
 export async function deleteTasting(formData: FormData): Promise<void> {

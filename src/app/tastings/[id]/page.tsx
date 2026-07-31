@@ -581,6 +581,19 @@ export default async function TastingPage({
             </div>
           ) : null}
 
+          {canAddWine ? (
+            <div className="flex justify-end">
+              <TastingAddWineButton
+                tastingId={id}
+                label={
+                  tasting.wine_source === "HOST_PROVIDES"
+                    ? "Add wine"
+                    : "Add a wine"
+                }
+              />
+            </div>
+          ) : null}
+
           {/* Results (~70%) + standings (~30%). */}
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
             <div className="flex min-w-0 flex-col gap-6">
