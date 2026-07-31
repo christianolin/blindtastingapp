@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Wine, BookOpen, Boxes, GraduationCap, Users, Shield, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navWithAdmin, isNavActive } from "@/components/nav-links";
+import { useAddWine } from "@/components/add-wine-context";
 import { signOut } from "@/app/actions";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
@@ -29,6 +30,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const links = navWithAdmin(isManager);
+  const { openAddWine } = useAddWine();
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-primary text-primary-foreground md:flex">
@@ -65,17 +67,27 @@ export function AppSidebar({
                         ? pathname === child.href
                         : pathname === child.href ||
                           pathname.startsWith(`${child.href}/`);
-                    return (
+                    const childClass = cn(
+                      "rounded-md px-2.5 py-1.5 text-left text-sm transition-colors",
+                      childActive
+                        ? "font-medium text-primary-foreground"
+                        : "text-primary-foreground/55 hover:text-primary-foreground",
+                    );
+                    return child.modal ? (
+                      <button
+                        key={child.href}
+                        type="button"
+                        onClick={() => openAddWine(child.modal!)}
+                        className={childClass}
+                      >
+                        {child.label}
+                      </button>
+                    ) : (
                       <Link
                         key={child.href}
                         href={child.href}
                         aria-current={childActive ? "page" : undefined}
-                        className={cn(
-                          "rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                          childActive
-                            ? "font-medium text-primary-foreground"
-                            : "text-primary-foreground/55 hover:text-primary-foreground",
-                        )}
+                        className={childClass}
                       >
                         {child.label}
                       </Link>

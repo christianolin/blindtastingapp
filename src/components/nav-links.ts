@@ -4,7 +4,7 @@
 // across the server boundary becomes a client reference and isn't iterable
 // server-side.
 
-export type NavChild = { href: string; label: string };
+export type NavChild = { href: string; label: string; modal?: "catalog" | "cellar" };
 export type NavLink = {
   key: string;
   href: string;
@@ -24,7 +24,7 @@ export const NAV_LINKS: NavLink[] = [
     match: ["/catalog"],
     children: [
       { href: "/catalog", label: "Wine Catalog" },
-      { href: "/catalog/new", label: "Add a wine" },
+      { href: "/catalog/new", label: "Add a wine", modal: "catalog" },
     ],
   },
   {

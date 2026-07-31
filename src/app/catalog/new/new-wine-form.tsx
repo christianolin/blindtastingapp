@@ -29,12 +29,16 @@ export function NewWineForm({
   grapes: initialGrapes,
   typeDesignations,
   userId,
+  onCreated,
 }: {
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
   typeDesignations: ReferenceOption[];
   userId: string;
+  // When set (e.g. rendered inside the Add-wine popup), called with the new
+  // wine's id instead of navigating — the modal decides what happens next.
+  onCreated?: (id: string) => void;
 }) {
   const router = useRouter();
   const [countries, setCountries] = useState(initialCountries);
@@ -104,7 +108,8 @@ export function NewWineForm({
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
         imageUrl,
       });
-      router.push(`/catalog/${id}`);
+      if (onCreated) onCreated(id);
+      else router.push(`/catalog/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add the wine.");
       setPending(false);

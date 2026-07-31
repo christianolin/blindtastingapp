@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AddWineButton } from "@/components/add-wine-button";
 import { redirect } from "next/navigation";
 import { Wine, FileText, Users, Globe, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -146,12 +146,12 @@ export default async function CatalogPage() {
         title="Catalog"
         subtitle="Explore the shared wine database curated by the community."
         actions={
-          <Link
-            href="/catalog/new"
+          <AddWineButton
+            kind="catalog"
             className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Add a wine <Plus className="size-4" />
-          </Link>
+          </AddWineButton>
         }
       />
 
