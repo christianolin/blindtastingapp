@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/actions";
 import { cn } from "@/lib/utils";
 
-import { type NavLink, isNavActive } from "@/components/nav-links";
+import { type NavLink, type NavChild, isNavActive } from "@/components/nav-links";
+import { useAddWine } from "@/components/add-wine-context";
+import { useTasteLauncher } from "@/components/taste-launcher-context";
 
 /**
  * Hamburger + slide-in drawer for the app nav on phones (the desktop nav in
@@ -39,6 +41,15 @@ export function MobileNav({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const close = () => setOpen(false);
+  const { openAddWine } = useAddWine();
+  const { openTaste } = useTasteLauncher();
+  const openModal = (kind: NonNullable<NavChild["modal"]>) => {
+    close();
+    if (kind === "catalog" || kind === "cellar") openAddWine(kind);
+    else if (kind === "taste-blind") openTaste("blind");
+    else if (kind === "taste-semi-blind") openTaste("semi-blind");
+    else openTaste("rate");
+  };
 
   const drawer =
     open && typeof document !== "undefined"
@@ -83,17 +94,53 @@ export function MobileNav({
               </Link>
 
               {links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  onClick={close}
-                  className={cn(
-                    "block rounded-lg px-3 py-2 text-sm hover:bg-muted",
-                    isNavActive(pathname, l) && "bg-muted font-medium",
-                  )}
-                >
-                  {l.label}
-                </Link>
+                <div key={l.href} className="flex flex-col">
+                  <Link
+                    href={l.href}
+                    onClick={close}
+                    className={cn(
+                      "block rounded-lg px-3 py-2 text-sm hover:bg-muted",
+                      isNavActive(pathname, l) && "bg-muted font-medium",
+                    )}
+                  >
+                    {l.label}
+                  </Link>
+                  {l.children ? (
+                    <div className="mb-1 ml-3 flex flex-col border-l border-border pl-2">
+                      {l.children.map((child) =>
+                        child.soon ? (
+                          <span
+                            key={child.label}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground/50"
+                          >
+                            {child.label}
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide">
+                              Soon
+                            </span>
+                          </span>
+                        ) : child.modal ? (
+                          <button
+                            key={child.href}
+                            type="button"
+                            onClick={() => openModal(child.modal!)}
+                            className="rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                          >
+                            {child.label}
+                          </button>
+                        ) : (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={close}
+                            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                          >
+                            {child.label}
+                          </Link>
+                        ),
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               ))}
 
               <form action={signOut} className="mt-2">
