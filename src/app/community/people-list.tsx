@@ -1,14 +1,18 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import { FriendButton } from "@/components/friend-button";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
+import { PeopleSort } from "./people-sort";
+
+const PAGE = 10;
 
 function activeLabel(iso: string | null): { text: string; fresh: boolean } | null {
   if (!iso) return null;
@@ -21,17 +25,50 @@ function activeLabel(iso: string | null): { text: string; fresh: boolean } | nul
 }
 
 // The "People" tab of /community: the full member directory with search.
-export async function PeopleList({ q, userId }: { q?: string; userId: string }) {
+export async function PeopleList({
+  q,
+  sort,
+  page,
+  userId,
+}: {
+  q?: string;
+  sort?: string;
+  page: number;
+  userId: string;
+}) {
   const supabase = await createClient();
+  const sortKey = sort === "name" ? "name" : sort === "joined" ? "joined" : "active";
 
   let query = supabase
     .from("profiles")
-    .select("id, display_name, bio, avatar_url, location, created_at, last_seen_at")
-    .order("display_name");
+    .select(
+      "id, display_name, bio, avatar_url, location, created_at, last_seen_at",
+      { count: "exact" },
+    );
   if (q) {
-    query = query.ilike("display_name", `%${q}%`);
+    query = query.or(
+      `display_name.ilike.%${q}%,bio.ilike.%${q}%,location.ilike.%${q}%`,
+    );
   }
-  const { data: profiles } = await query;
+  query =
+    sortKey === "name"
+      ? query.order("display_name", { ascending: true })
+      : sortKey === "joined"
+        ? query.order("created_at", { ascending: false })
+        : query.order("last_seen_at", { ascending: false, nullsFirst: false });
+
+  const from = (page - 1) * PAGE;
+  const { data: profiles, count } = await query.range(from, from + PAGE - 1);
+  const total = count ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE));
+  const hrefFor = (p: number) => {
+    const sp = new URLSearchParams();
+    if (q) sp.set("q", q);
+    if (sort) sp.set("sort", sort);
+    if (p > 1) sp.set("page", String(p));
+    const qs = sp.toString();
+    return qs ? `/community?${qs}` : "/community";
+  };
 
   const { data: friendRows } = await supabase
     .from("friendships")
@@ -45,9 +82,22 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
 
   return (
     <>
-      <form method="GET" className="flex gap-2">
-        <Input name="q" defaultValue={q ?? ""} placeholder="Search by name" />
+      <form method="GET" className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder="Search by name, location or bio…"
+          className="w-full pl-9"
+        />
+        {sort ? <input type="hidden" name="sort" value={sort} /> : null}
       </form>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          Showing {total} {total === 1 ? "person" : "people"}
+        </p>
+        <PeopleSort value={sortKey} q={q} />
+      </div>
       <div className="flex flex-col gap-3">
         {(profiles ?? []).map((p) => {
           const isMe = p.id === userId;
@@ -127,6 +177,7 @@ export async function PeopleList({ q, userId }: { q?: string; userId: string }) 
           <p className="text-sm text-muted-foreground">No one found.</p>
         ) : null}
       </div>
+      <Pagination page={page} pageCount={pageCount} hrefFor={hrefFor} />
     </>
   );
 }

@@ -11,10 +11,11 @@ import { FriendsList } from "./friends-list";
 export default async function PeoplePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tab?: string }>;
+  searchParams: Promise<{ q?: string; tab?: string; sort?: string; page?: string }>;
 }) {
-  const { q, tab: tabParam } = await searchParams;
+  const { q, tab: tabParam, sort, page: pageParam } = await searchParams;
   const tab = tabParam === "friends" ? "friends" : "people";
+  const page = Math.max(1, Number(pageParam) || 1);
 
   const supabase = await createClient();
   const {
@@ -39,8 +40,8 @@ export default async function PeoplePage({
       />
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6 sm:p-8">
         <PageHeader
-          title="Community"
-          subtitle="Connect with fellow wine lovers."
+          title="People & Friends"
+          subtitle="Connect with fellow wine lovers and grow your community."
           actions={
             <Tabs
               variant="segmented"
@@ -53,7 +54,7 @@ export default async function PeoplePage({
           }
         />
         {tab === "people" ? (
-          <PeopleList q={q} userId={user.id} />
+          <PeopleList q={q} sort={sort} page={page} userId={user.id} />
         ) : (
           <FriendsList userId={user.id} />
         )}
