@@ -44,6 +44,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [country, setCountry] = useState(ALL);
   const [region, setRegion] = useState(ALL);
   const [colour, setColour] = useState(ALL);
+  const [grape, setGrape] = useState(ALL);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "title",
     dir: "asc",
@@ -70,6 +71,10 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
     () => [...new Set(rows.map((r) => r.colour).filter(Boolean) as string[])],
     [rows],
   );
+  const grapeOptions = useMemo(
+    () => [...new Set(rows.flatMap((r) => r.grapes))].sort(),
+    [rows],
+  );
 
   const needle = fold(q.trim());
   const filtered = useMemo(() => {
@@ -77,6 +82,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
       if (country !== ALL && r.country !== country) return false;
       if (region !== ALL && r.region !== region) return false;
       if (colour !== ALL && r.colour !== colour) return false;
+      if (grape !== ALL && !r.grapes.includes(grape)) return false;
       if (needle) {
         const hay = fold(
           [r.title, r.country, r.region, r.appellation, ...r.grapes]
@@ -111,12 +117,17 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
       }
     };
     return [...list].sort(cmp);
-  }, [rows, country, region, colour, needle, sort]);
+  }, [rows, country, region, colour, grape, needle, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE));
   const clampedPage = Math.min(page, pageCount);
   const pageRows = filtered.slice((clampedPage - 1) * PAGE, clampedPage * PAGE);
-  const hasFilter = q !== "" || country !== ALL || region !== ALL || colour !== ALL;
+  const hasFilter =
+    q !== "" ||
+    country !== ALL ||
+    region !== ALL ||
+    colour !== ALL ||
+    grape !== ALL;
 
   const toggleSort = (key: SortKey) => {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
@@ -192,6 +203,21 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             </option>
           ))}
         </select>
+        <select
+          className={selectCls}
+          value={grape}
+          onChange={(e) => {
+            setGrape(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value={ALL}>All grapes</option>
+          {grapeOptions.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
         {hasFilter ? (
           <button
             type="button"
@@ -200,6 +226,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               setCountry(ALL);
               setRegion(ALL);
               setColour(ALL);
+              setGrape(ALL);
               setPage(1);
             }}
             className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -282,11 +309,11 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               <col className="w-[5rem]" />
               <col className="w-[4.5rem]" />
               <col className="w-[5rem]" />
-              <col className="w-[5.5rem]" />
+              <col className="w-[6.5rem]" />
               <col className="w-[5.5rem]" />
             </colgroup>
             <thead>
-              <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
+              <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
                 <Th onClick={() => toggleSort("title")}>Wine {sortIcon("title")}</Th>
                 <Th onClick={() => toggleSort("region")}>Region {sortIcon("region")}</Th>
                 <Th onClick={() => toggleSort("country")}>Country {sortIcon("country")}</Th>
@@ -302,7 +329,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   Blind tastings {sortIcon("appearances")}
                 </Th>
                 <Th align="right" onClick={() => toggleSort("bottles")}>
-                  Bottles {sortIcon("bottles")}
+                  Bottles in cellars {sortIcon("bottles")}
                 </Th>
                 <Th align="right" onClick={() => toggleSort("added")}>
                   Added {sortIcon("added")}
