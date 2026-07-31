@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +76,25 @@ export async function PeopleList({
     .eq("user_id", userId);
   const friendIds = new Set((friendRows ?? []).map((f) => f.friend_id));
 
+  const pageIds = (profiles ?? []).map((p) => p.id);
+  const { data: theirFriendRows } = await supabase
+    .from("friendships")
+    .select("user_id, friend_id")
+    .in("user_id", pageIds.length > 0 ? pageIds : [""]);
+  const friendsByUser = new Map<string, Set<string>>();
+  for (const r of theirFriendRows ?? []) {
+    const set = friendsByUser.get(r.user_id) ?? new Set<string>();
+    set.add(r.friend_id);
+    friendsByUser.set(r.user_id, set);
+  }
+  const mutualCount = (pid: string): number => {
+    const theirs = friendsByUser.get(pid);
+    if (!theirs) return 0;
+    let n = 0;
+    for (const f of theirs) if (friendIds.has(f)) n += 1;
+    return n;
+  };
+
   const statsByUserId = await getBulkProfileSummaries(
     (profiles ?? []).map((p) => p.id),
   );
@@ -103,6 +122,7 @@ export async function PeopleList({
           const isMe = p.id === userId;
           const stats = statsByUserId.get(p.id);
           const active = activeLabel(p.last_seen_at);
+          const mutual = isMe ? 0 : mutualCount(p.id);
           const joined = new Date(p.created_at).toLocaleDateString(undefined, {
             month: "short",
             year: "numeric",
@@ -142,6 +162,12 @@ export async function PeopleList({
                             )}
                           />
                           {active.text}
+                        </span>
+                      ) : null}
+                      {mutual > 0 ? (
+                        <span className="flex items-center gap-1">
+                          <Users className="size-3" />
+                          {mutual} mutual
                         </span>
                       ) : null}
                       {stats && stats.winesGuessed > 0 ? (
