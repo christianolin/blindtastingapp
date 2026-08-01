@@ -232,62 +232,63 @@ export function WsetSheet({
   return (
     <div className="wset-sheet" style={{ color: WSET.body }}>
       <div
+        className="sticky z-30 mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
         style={{
-          position: "sticky",
           top: embedded ? 0 : 56,
-          zIndex: 30,
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
           padding: embedded ? "12px 44px 12px 4px" : "12px 4px",
-          marginBottom: 16,
           background: "rgba(247,239,224,0.94)",
           backdropFilter: "blur(8px)",
           borderBottom: `1px solid ${WSET.border}`,
         }}
       >
-        <span className="font-heading" style={{ fontSize: 16, fontWeight: 700, color: WSET.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold sm:text-base"
+          style={{ color: WSET.ink }}
+        >
           {title}
         </span>
-        <span className="max-[430px]:hidden" style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
-          <b style={{ color: WSET.ink }}>{done}</b> of {total} assessed
-        </span>
-        {onDiscard ? (
+        <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end sm:gap-2.5">
+          <span style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
+            <b style={{ color: WSET.ink }}>{done}</b> of {total} assessed
+          </span>
+          {onDiscard ? (
+            <button
+              type="button"
+              onClick={() => (dirty ? setConfirmDiscard(true) : onDiscard())}
+              style={{
+                borderRadius: 999,
+                padding: "8px 14px",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                border: `1px solid ${WSET.border}`,
+                background: "transparent",
+                color: WSET.muted,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Discard
+            </button>
+          ) : null}
           <button
             type="button"
-            onClick={() => (dirty ? setConfirmDiscard(true) : onDiscard())}
+            onClick={handleSave}
+            disabled={saveState === "saving"}
             style={{
               borderRadius: 999,
-              padding: "9px 15px",
+              padding: "8px 16px",
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
-              border: `1px solid ${WSET.border}`,
-              background: "transparent",
-              color: WSET.muted,
+              border: "none",
+              background: saveState === "saved" ? WSET.gold : WSET.burgundy,
+              color: WSET.creamText,
               whiteSpace: "nowrap",
             }}
           >
-            Discard
+            {saveLabel}
           </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saveState === "saving"}
-          style={{
-            borderRadius: 999,
-            padding: "9px 18px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            border: "none",
-            background: saveState === "saved" ? WSET.gold : WSET.burgundy,
-            color: WSET.creamText,
-          }}
-        >
-          {saveLabel}
-        </button>
+        </div>
       </div>
 
       <div
