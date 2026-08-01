@@ -6,7 +6,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatTile } from "@/components/patterns/stat-tile";
 import { Wine, Boxes, Coins, FileUp, MapPin } from "lucide-react";
-import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
+import { CellarBottlesTable, type BottleRow } from "./cellar-bottles-table";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
 import { HistoryList, type HistoryRow } from "./history-list";
@@ -35,6 +35,7 @@ type CatalogEmbed = {
   region?: Rel;
   country?: Rel;
   colour?: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  image_url?: string | null;
   primary_grape?: Rel;
   secondary_grape?: Rel;
 };
@@ -93,13 +94,35 @@ export default async function CellarPage({
   const { data: lotRows } = await supabase
     .from("cellar_lots")
     .select(
-      "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, " +
-        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name))",
+      "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, created_at, " +
+        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, " +
+        "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
+        "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
+        "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
     )
     .gt("quantity", 0)
     .order("created_at", { ascending: false });
 
-  const groupsMap = new Map<string, LotGroup>();
+  // Best (highest-scored) tasting note per wine, for the Tasting note column.
+  const { data: scoreRows } = await supabase
+    .from("wset_notes")
+    .select("id, catalog_wine_id, quality_score")
+    .eq("author_id", user.id)
+    .not("quality_score", "is", null);
+  const bestNote = new Map<string, { id: string; score: number }>();
+  for (const n of (scoreRows ?? []) as unknown as Array<{
+    id: string;
+    catalog_wine_id: string;
+    quality_score: number;
+  }>) {
+    const prev = bestNote.get(n.catalog_wine_id);
+    if (!prev || n.quality_score > prev.score) {
+      bestNote.set(n.catalog_wine_id, { id: n.id, score: n.quality_score });
+    }
+  }
+
+  const bottleRows: BottleRow[] = [];
+  const uniqueWines = new Set<string>();
   const regionCounts = new Map<string, number>();
   let totalBottles = 0;
   let totalValue = 0;
@@ -114,42 +137,47 @@ export default async function CellarPage({
     drink_to: number | null;
     storage_location: string | null;
     catalog_wine_id: string;
+    created_at: string;
     catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
   }>) {
-    const lot: LotRow = {
-      id: row.id,
-      bottleSizeMl: row.bottle_size_ml,
-      quantity: row.quantity,
-      pricePerBottle: row.price_per_bottle == null ? null : Number(row.price_per_bottle),
-      currency: row.currency,
-      drinkFrom: row.drink_from,
-      drinkTo: row.drink_to,
-      storageLocation: row.storage_location,
-    };
-    totalBottles += row.quantity;
     const cw = unwrap(row.catalog_wines);
+    const pricePerBottle =
+      row.price_per_bottle == null ? null : Number(row.price_per_bottle);
+    totalBottles += row.quantity;
+    uniqueWines.add(row.catalog_wine_id);
     const regionName =
       relName(cw?.region ?? null) ?? relName(cw?.country ?? null) ?? "Unknown";
     regionCounts.set(regionName, (regionCounts.get(regionName) ?? 0) + row.quantity);
-    if (lot.pricePerBottle != null && row.currency === preferredCurrency) {
-      totalValue += row.quantity * lot.pricePerBottle;
+    if (pricePerBottle != null && row.currency === preferredCurrency) {
+      totalValue += row.quantity * pricePerBottle;
       hasValue = true;
     }
-    let group = groupsMap.get(row.catalog_wine_id);
-    if (!group) {
-      group = {
-        catalogWineId: row.catalog_wine_id,
-        title: embedTitle(cw),
-        subtitle: embedSubtitle(cw),
-        totalQuantity: 0,
-        lots: [],
-      };
-      groupsMap.set(row.catalog_wine_id, group);
-    }
-    group.lots.push(lot);
-    group.totalQuantity += row.quantity;
+    const best = bestNote.get(row.catalog_wine_id) ?? null;
+    bottleRows.push({
+      lotId: row.id,
+      catalogWineId: row.catalog_wine_id,
+      title: embedTitle(cw),
+      colour: cw?.colour ?? null,
+      grapes: [
+        relName(cw?.primary_grape ?? null),
+        relName(cw?.secondary_grape ?? null),
+      ].filter(Boolean) as string[],
+      region: relName(cw?.region ?? null),
+      country: relName(cw?.country ?? null),
+      appellation: relName(cw?.appellation ?? null),
+      imageUrl: cw?.image_url ?? null,
+      bottleSizeMl: row.bottle_size_ml,
+      quantity: row.quantity,
+      drinkFrom: row.drink_from,
+      drinkTo: row.drink_to,
+      storageLocation: row.storage_location,
+      pricePerBottle,
+      currency: row.currency,
+      addedAt: row.created_at,
+      bestScore: best?.score ?? null,
+      bestNoteId: best?.id ?? null,
+    });
   }
-  const groups = [...groupsMap.values()];
   const topRegions = [...regionCounts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
@@ -318,7 +346,7 @@ export default async function CellarPage({
       <div className="rounded-xl border border-border bg-card p-4 sm:hidden">
         <div className="grid grid-cols-3 gap-x-2 gap-y-3">
           {[
-            { value: groups.length, label: "unique wines" },
+            { value: uniqueWines.size, label: "unique wines" },
             { value: totalBottles, label: "total bottles" },
             {
               value: hasValue ? Math.round(totalValue).toLocaleString() : "—",
@@ -358,7 +386,7 @@ export default async function CellarPage({
       </div>
 
       <div className="hidden gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 lg:items-start">
-        <StatTile icon={Boxes} tint="amber" value={groups.length} label="unique wines" />
+        <StatTile icon={Boxes} tint="amber" value={uniqueWines.size} label="unique wines" />
         <StatTile icon={Wine} tint="rose" value={totalBottles} label="total bottles" />
         <StatTile
           icon={Coins}
@@ -403,7 +431,7 @@ export default async function CellarPage({
       />
 
       {tab === "bottles" ? (
-        <BottlesList groups={groups} />
+        <CellarBottlesTable rows={bottleRows} currency={preferredCurrency} />
       ) : tab === "notes" ? (
         <MyNotesList notes={notes} />
       ) : tab === "history" ? (
