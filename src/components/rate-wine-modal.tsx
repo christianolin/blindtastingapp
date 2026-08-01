@@ -13,7 +13,15 @@ type Hit = { id: string; name: string };
 // "Taste & Rate" as a popup: find the wine you're drinking, then jump straight
 // into its WSET note. A note needs a catalog wine, so this is a search picker;
 // "add a new wine" hands off to the Add-wine popup.
-export function RateWineModal({ onClose }: { onClose: () => void }) {
+export function RateWineModal({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  // When provided, the launcher opens the note as a popup for this wine instead
+  // of the modal navigating to the note page.
+  onPick?: (wineId: string) => void;
+}) {
   const router = useRouter();
   const { openAddWine } = useAddWine();
   const [q, setQ] = useState("");
@@ -69,8 +77,13 @@ export function RateWineModal({ onClose }: { onClose: () => void }) {
                   <button
                     type="button"
                     onClick={() => {
-                      onClose();
-                      router.push(`/catalog/${h.id}/notes/new`);
+                      // Hand the pick back so the launcher can open the note as
+                      // a popup; fall back to the note page if used standalone.
+                      if (onPick) onPick(h.id);
+                      else {
+                        onClose();
+                        router.push(`/catalog/${h.id}/notes/new`);
+                      }
                     }}
                     className="w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
                   >

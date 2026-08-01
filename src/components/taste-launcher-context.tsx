@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { NewTastingModal } from "./new-tasting-modal";
 import { RateWineModal } from "./rate-wine-modal";
+import { NewNoteModal } from "./new-note-modal";
 
 // Which Taste flow to launch. Blind / semi-blind open a tasting-creation popup;
 // rate opens the "find a wine to note" picker.
@@ -27,6 +28,7 @@ export function TasteLauncherProvider({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState<TasteKind | null>(null);
+  const [rateWineId, setRateWineId] = useState<string | null>(null);
   return (
     <TasteCtx.Provider value={{ openTaste: setOpen }}>
       {children}
@@ -36,7 +38,18 @@ export function TasteLauncherProvider({
       {open === "semi-blind" ? (
         <NewTastingModal reveal="SEMI_BLIND" userId={userId} onClose={() => setOpen(null)} />
       ) : null}
-      {open === "rate" ? <RateWineModal onClose={() => setOpen(null)} /> : null}
+      {open === "rate" ? (
+        <RateWineModal
+          onClose={() => setOpen(null)}
+          onPick={(wineId) => {
+            setOpen(null);
+            setRateWineId(wineId);
+          }}
+        />
+      ) : null}
+      {rateWineId ? (
+        <NewNoteModal wineId={rateWineId} onClose={() => setRateWineId(null)} />
+      ) : null}
     </TasteCtx.Provider>
   );
 }
