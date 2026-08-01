@@ -230,15 +230,18 @@ export function WsetSheet({
     : "Save note";
 
   return (
-    <div className="wset-sheet" style={{ color: WSET.body }}>
+    <div className="wset-sheet min-w-0" style={{ color: WSET.body }}>
       <div
         className={cn(
           "sticky z-30 mb-4 flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3",
-          // Full-bleed on phones: break out to the viewport edges so the bar
-          // spans the whole screen like a real app header. The calc trick
-          // works regardless of the page/modal side padding it's nested in.
-          "max-sm:mx-[calc(50%-50vw)] max-sm:px-4",
-          embedded ? "max-sm:pr-12 sm:pl-1 sm:pr-11" : "sm:px-1",
+          // Full-bleed on phones so the bar spans the whole screen like a real
+          // app header. A modal is a full-screen box with a known p-4, so a
+          // plain -mx-4 reaches the edges without any viewport math (the 50vw
+          // calc misbehaves inside the fixed, scrolling modal); the note page,
+          // whose nesting/padding is unknown, uses the viewport calc.
+          embedded
+            ? "max-sm:-mx-4 max-sm:px-4 max-sm:pr-4 sm:pl-1 sm:pr-1"
+            : "max-sm:mx-[calc(50%-50vw)] max-sm:px-4 sm:px-1",
         )}
         style={{
           top: embedded ? 0 : 56,

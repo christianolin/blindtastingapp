@@ -84,7 +84,10 @@ export function NoteModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="inset-0 max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[90vh] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl">
+      <DialogContent
+        showCloseButton={false}
+        className="inset-0 block max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[90vh] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl"
+      >
         <DialogTitle className="sr-only">Tasting note</DialogTitle>
         {data === "loading" ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
