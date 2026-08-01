@@ -302,7 +302,10 @@ export function WsetSheet({
 
       <div
         className={cn(
-          "grid items-start gap-6",
+          // grid-cols-1 (=minmax(0,1fr)) so the single column can't be
+          // inflated past the container by a card's intrinsic content width —
+          // the section boxes stay within the modal's padding on phones.
+          "grid grid-cols-1 items-start gap-6",
           !embedded && "lg:grid-cols-[264px_minmax(0,1fr)]",
         )}
       >
@@ -316,7 +319,7 @@ export function WsetSheet({
         </aside>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
+        <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
           <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`}>
             <Row label="Clarity" sub={label(state.clarity)}>
               <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
