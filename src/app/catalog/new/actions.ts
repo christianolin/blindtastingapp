@@ -39,6 +39,30 @@ export async function createAppellation(regionId: string, name: string): Promise
   return data;
 }
 
+export async function createProducer(
+  name: string,
+  regionId: string | null,
+): Promise<ReferenceOption> {
+  const supabase = await createClient();
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Producer name is required.");
+  // Reuse an exact-name match if one already exists, so re-adding a known
+  // producer never spawns a duplicate row.
+  const existing = await supabase
+    .from("producers")
+    .select("id, name")
+    .eq("name", trimmed)
+    .maybeSingle();
+  if (existing.data) return existing.data;
+  const { data, error } = await supabase
+    .from("producers")
+    .insert({ name: trimmed, region_id: regionId })
+    .select("id, name")
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export type NewCatalogWine = {
   countryId: string;
   regionId: string;

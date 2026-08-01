@@ -13,6 +13,7 @@ import {
   createAppellation,
   createCatalogWine,
   createCountry,
+  createProducer,
   createRegion,
   updateCatalogWine,
 } from "./actions";
@@ -252,6 +253,8 @@ export function NewWineForm({
               search={async (q) =>
                 (await searchProducers(q, regionId || undefined)).map(({ id, name }) => ({ id, name }))
               }
+              createLabel="producer"
+              onCreate={(name) => createProducer(name, regionId || null)}
               placeholder="Search for the producer"
             />
           </div>
