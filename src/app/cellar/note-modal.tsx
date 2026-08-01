@@ -101,6 +101,7 @@ export function NoteModal({
             title={data.title}
             terms={data.terms}
             initial={data.initial}
+            onClose={onClose}
             embedded
           />
         )}

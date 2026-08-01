@@ -143,6 +143,7 @@ export function WsetSheet({
   terms,
   initial,
   onSave,
+  onDiscard,
   embedded = false,
 }: {
   wine: { colour: WineColour; style: WineStyle };
@@ -150,6 +151,8 @@ export function WsetSheet({
   terms: AromaTerm[];
   initial: WsetNoteState;
   onSave: (state: WsetNoteState) => Promise<void>;
+  /** Exit without saving; renders a Discard button (confirms when dirty). */
+  onDiscard?: () => void;
   // In a dialog: single column (no scroll-spy rail), header sticks to the
   // popup top instead of below the app header.
   embedded?: boolean;
@@ -157,6 +160,11 @@ export function WsetSheet({
   const [state, setState] = useState<WsetNoteState>(initial);
   const [activeId, setActiveId] = useState<string>("appearance");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const dirty = useMemo(
+    () => JSON.stringify(state) !== JSON.stringify(initial),
+    [state, initial],
+  );
 
   const set = useCallback(
     <K extends keyof WsetNoteState>(key: K, value: WsetNoteState[K]) =>
@@ -241,9 +249,28 @@ export function WsetSheet({
         <span className="font-heading" style={{ fontSize: 16, fontWeight: 700, color: WSET.ink, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </span>
-        <span style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
+        <span className="max-[430px]:hidden" style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
           <b style={{ color: WSET.ink }}>{done}</b> of {total} assessed
         </span>
+        {onDiscard ? (
+          <button
+            type="button"
+            onClick={() => (dirty ? setConfirmDiscard(true) : onDiscard())}
+            style={{
+              borderRadius: 999,
+              padding: "9px 15px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              border: `1px solid ${WSET.border}`,
+              background: "transparent",
+              color: WSET.muted,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Discard
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={handleSave}
@@ -392,6 +419,62 @@ export function WsetSheet({
           </SectionCard>
         </div>
       </div>
+      {confirmDiscard ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setConfirmDiscard(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            background: "rgba(30,10,17,0.45)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 360,
+              background: WSET.cream,
+              border: `1px solid ${WSET.border}`,
+              borderRadius: 16,
+              padding: 20,
+              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+            }}
+          >
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+              Discard this tasting note?
+            </h3>
+            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: 18 }}>
+              Your changes haven&apos;t been saved and will be lost.
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDiscard(false)}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+              >
+                Keep editing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmDiscard(false);
+                  onDiscard?.();
+                }}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: WSET.burgundy, color: WSET.creamText }}
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

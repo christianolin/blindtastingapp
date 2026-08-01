@@ -24,6 +24,7 @@ export function NoteEditor({
   tastingWineId = null,
   consumptionId = null,
   embedded = false,
+  onClose,
 }: {
   wineId: string;
   wine: { colour: WineColour; style: WineStyle };
@@ -34,6 +35,8 @@ export function NoteEditor({
   tastingWineId?: string | null;
   consumptionId?: string | null;
   embedded?: boolean;
+  /** Close/exit the editor (modal close, or route back) — used by Discard. */
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -95,7 +98,19 @@ export function NoteEditor({
     [supabase, wineId, router, contextKind, tastingWineId, consumptionId],
   );
 
+  // Exit without saving. In a modal the parent supplies onClose; as a full
+  // route we step back to wherever the taster came from.
+  const onDiscard = onClose ?? (() => router.back());
+
   return (
-    <WsetSheet wine={wine} title={title} terms={terms} initial={initial} onSave={onSave} embedded={embedded} />
+    <WsetSheet
+      wine={wine}
+      title={title}
+      terms={terms}
+      initial={initial}
+      onSave={onSave}
+      onDiscard={onDiscard}
+      embedded={embedded}
+    />
   );
 }
