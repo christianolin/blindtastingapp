@@ -318,7 +318,32 @@ export default async function CellarPage({
         }
       />
 
-      <StatStrip className="sm:grid-cols-3 lg:grid-cols-5">
+      {/* Phones get a single compact summary card — five full stat tiles ate
+          the screen, and just shrinking them wasn't enough. Desktop keeps the
+          roomy tiles. */}
+      <div className="grid grid-cols-3 gap-x-2 gap-y-3 rounded-xl border border-border bg-card p-4 sm:hidden">
+        {[
+          { value: groups.length, label: "wines" },
+          { value: totalBottles, label: "bottles" },
+          {
+            value: hasValue ? Math.round(totalValue).toLocaleString() : "—",
+            label: `${preferredCurrency} value`,
+          },
+          { value: readyBottles, label: "ready" },
+          { value: notesCount ?? 0, label: "notes" },
+        ].map((s) => (
+          <div key={s.label} className="flex flex-col items-center text-center">
+            <span className="font-heading text-lg font-semibold leading-none tabular-nums">
+              {s.value}
+            </span>
+            <span className="mt-1 text-[11px] leading-tight text-muted-foreground">
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <StatStrip className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5">
         <StatTile icon={Boxes} tint="amber" value={groups.length} label="wines" />
         <StatTile icon={Wine} tint="rose" value={totalBottles} label="bottles" />
         <StatTile

@@ -232,10 +232,16 @@ export function WsetSheet({
   return (
     <div className="wset-sheet" style={{ color: WSET.body }}>
       <div
-        className="sticky z-30 mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+        className={cn(
+          "sticky z-30 mb-4 flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3",
+          // Full-bleed on phones: break out to the viewport edges so the bar
+          // spans the whole screen like a real app header. The calc trick
+          // works regardless of the page/modal side padding it's nested in.
+          "max-sm:mx-[calc(50%-50vw)] max-sm:px-4",
+          embedded ? "max-sm:pr-12 sm:pl-1 sm:pr-11" : "sm:px-1",
+        )}
         style={{
           top: embedded ? 0 : 56,
-          padding: embedded ? "12px 44px 12px 4px" : "12px 4px",
           background: "rgba(247,239,224,0.94)",
           backdropFilter: "blur(8px)",
           borderBottom: `1px solid ${WSET.border}`,

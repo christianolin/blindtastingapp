@@ -46,9 +46,9 @@ export function RateWineModal({ onClose }: { onClose: () => void }) {
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       {/* On phones the keyboard covers a vertically-centred dialog, cropping
-          the search field and results. Anchor near the top instead so the
-          input and first hits stay above the keyboard; centre on desktop. */}
-      <DialogContent className="top-4 max-h-[calc(100dvh-2rem)] translate-y-0 overflow-hidden sm:top-1/2 sm:max-h-[85vh] sm:max-w-lg sm:-translate-y-1/2">
+          the search field and results. Anchor near the top ONLY below sm
+          (max-sm:) so the desktop popup is byte-for-byte unchanged — centred. */}
+      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg max-sm:top-4 max-sm:max-h-[calc(100dvh-2rem)] max-sm:translate-y-0">
         <DialogTitle>Taste &amp; rate a wine</DialogTitle>
         <p className="text-sm text-muted-foreground">
           Find the wine you&apos;re tasting to write a WSET note.
