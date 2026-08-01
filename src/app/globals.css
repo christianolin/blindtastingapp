@@ -247,3 +247,24 @@
     gap: 24px;
   }
 }
+
+/* WSET sheet scale: the section cards, numerals and headings read a touch
+   large on phones. These custom properties (consumed by inline styles in
+   wset-sheet.tsx) shrink the heavy elements below sm while desktop keeps the
+   roomier sizes. */
+.wset-sheet {
+  --wset-card-px: 26px;
+  --wset-card-pt: 22px;
+  --wset-title: 22px;
+  --wset-numeral: 30px;
+  --wset-gap: 18px;
+}
+@media (max-width: 639px) {
+  .wset-sheet {
+    --wset-card-px: 15px;
+    --wset-card-pt: 16px;
+    --wset-title: 18px;
+    --wset-numeral: 26px;
+    --wset-gap: 13px;
+  }
+}

@@ -104,7 +104,7 @@ export function SectionCard({
         background: WSET.cream,
         border: `1px solid ${WSET.border}`,
         borderRadius: 18,
-        padding: "22px 26px 8px",
+        padding: "var(--wset-card-pt,22px) var(--wset-card-px,26px) 8px",
         boxShadow: "0 1px 2px rgba(70,25,40,0.04)",
       }}
     >
@@ -115,8 +115,8 @@ export function SectionCard({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 30,
-            height: 30,
+            width: "var(--wset-numeral,30px)",
+            height: "var(--wset-numeral,30px)",
             borderRadius: 8,
             fontSize: 14,
             background: WSET.burgundy,
@@ -125,7 +125,7 @@ export function SectionCard({
         >
           {numeral}
         </span>
-        <h2 className="font-heading" style={{ flex: 1, fontSize: 22, fontWeight: 700, color: WSET.ink }}>
+        <h2 className="font-heading" style={{ flex: 1, fontSize: "var(--wset-title,22px)", fontWeight: 700, color: WSET.ink }}>
           {title}
         </h2>
         <span style={{ fontSize: 11.5, color: WSET.muted2 }}>{rated}</span>
@@ -222,7 +222,7 @@ export function WsetSheet({
     : "Save note";
 
   return (
-    <div style={{ color: WSET.body }}>
+    <div className="wset-sheet" style={{ color: WSET.body }}>
       <div
         style={{
           position: "sticky",
@@ -279,7 +279,7 @@ export function WsetSheet({
         </aside>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
           <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`}>
             <Row label="Clarity" sub={label(state.clarity)}>
               <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
