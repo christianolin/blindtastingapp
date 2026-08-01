@@ -638,11 +638,14 @@ export function TileWineMap({
           }
         }}
         onClick={(e) => {
-          // Smallest-wins: deepest tier first, then the smallest footprint —
-          // so a click inside an enclave (Canon-Fronsac within Fronsac's
-          // envelope, La Tâche under the village) always hits the most
-          // specific shape. min_zoom breaks residual ties on old tiles
-          // without the area property.
+          // Smallest-wins: the smallest footprint under the click is the most
+          // specific place the user aimed at, so AREA leads and tier/min_zoom
+          // only break ties. An enclave (Canon-Fronsac within Fronsac, La Tâche
+          // under the village) is smaller so it still wins — but a superimposed
+          // blanket appellation like Graves Supérieures (a deep tier that
+          // legally covers the whole of Graves, larger than Pessac-Léognan
+          // sitting inside it) no longer shadows the specific appellations
+          // beneath it (owner: "can't click Pessac-Léognan, only Graves Sup.").
           let best: {
             key: string;
             tier: number;
@@ -662,10 +665,10 @@ export function TileWineMap({
             const minZoom = p.min_zoom ?? 0;
             if (
               !best ||
-              tier > best.tier ||
-              (tier === best.tier &&
-                (area < best.area ||
-                  (area === best.area && minZoom > best.minZoom)))
+              area < best.area ||
+              (area === best.area &&
+                (tier > best.tier ||
+                  (tier === best.tier && minZoom > best.minZoom)))
             ) {
               best = { key: p.key, tier, area, minZoom };
             }
