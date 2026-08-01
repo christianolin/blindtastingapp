@@ -594,7 +594,9 @@ export function TileWineMap({
         type="button"
         onClick={onToggleExpanded}
         aria-label={expanded ? "Exit full view" : "Full view"}
-        className="absolute right-2 top-2 z-10 rounded-md border border-border bg-background/85 p-1.5 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+        // Full view is a desktop affordance only — on phones it just swaps one
+        // stacked column for another, so it's hidden below lg.
+        className="absolute right-2 top-2 z-10 hidden rounded-md border border-border bg-background/85 p-1.5 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground lg:block"
       >
         {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
       </button>

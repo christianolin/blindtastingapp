@@ -61,7 +61,7 @@ export function MobileNav({
               onClick={close}
             />
             <div className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-64 flex-col gap-1 bg-background p-4 shadow-xl duration-200">
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex shrink-0 items-center justify-between">
                 <span className="font-heading text-lg font-semibold">Menu</span>
                 <Button
                   variant="ghost"
@@ -73,6 +73,10 @@ export function MobileNav({
                 </Button>
               </div>
 
+              {/* Only this middle region scrolls, so the profile + full nav
+                  are always reachable while the header and Sign out stay put —
+                  no more hunting for items below the fold. */}
+              <div className="-mr-2 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-2">
               <Link
                 href={`/u/${userId}`}
                 onClick={close}
@@ -143,7 +147,9 @@ export function MobileNav({
                 </div>
               ))}
 
-              <form action={signOut} className="mt-2">
+              </div>
+
+              <form action={signOut} className="mt-2 shrink-0">
                 <Button variant="outline" type="submit" className="w-full">
                   Sign out
                 </Button>

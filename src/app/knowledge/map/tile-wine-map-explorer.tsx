@@ -314,7 +314,9 @@ export function TileWineMapExplorer({
                   type="button"
                   aria-label="Collapse hierarchy"
                   onClick={() => setTreeOpen(false)}
-                  className="text-muted-foreground hover:text-foreground"
+                  // No collapse on phones: the reopen tab is desktop-only, so
+                  // collapsing there left the hierarchy gone with no way back.
+                  className="text-muted-foreground hover:text-foreground max-lg:hidden"
                 >
                   <PanelLeftClose className="size-4" />
                 </button>
