@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/patterns/page-header";
-import { StatStrip, StatTile } from "@/components/patterns/stat-tile";
-import { Wine, Boxes, Coins, FileUp, CalendarCheck, FileText } from "lucide-react";
+import { StatTile } from "@/components/patterns/stat-tile";
+import { Wine, Boxes, Coins, FileUp, MapPin } from "lucide-react";
 import { BottlesList, type LotGroup, type LotRow } from "./bottles-list";
 import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
@@ -100,11 +100,10 @@ export default async function CellarPage({
     .order("created_at", { ascending: false });
 
   const groupsMap = new Map<string, LotGroup>();
-  const currentYear = new Date().getUTCFullYear();
+  const regionCounts = new Map<string, number>();
   let totalBottles = 0;
   let totalValue = 0;
   let hasValue = false;
-  let readyBottles = 0;
   for (const row of (lotRows ?? []) as unknown as Array<{
     id: string;
     bottle_size_ml: number;
@@ -128,13 +127,10 @@ export default async function CellarPage({
       storageLocation: row.storage_location,
     };
     totalBottles += row.quantity;
-    if (
-      row.drink_from != null &&
-      currentYear >= row.drink_from &&
-      (row.drink_to == null || currentYear <= row.drink_to)
-    ) {
-      readyBottles += row.quantity;
-    }
+    const cw = unwrap(row.catalog_wines);
+    const regionName =
+      relName(cw?.region ?? null) ?? relName(cw?.country ?? null) ?? "Unknown";
+    regionCounts.set(regionName, (regionCounts.get(regionName) ?? 0) + row.quantity);
     if (lot.pricePerBottle != null && row.currency === preferredCurrency) {
       totalValue += row.quantity * lot.pricePerBottle;
       hasValue = true;
@@ -143,8 +139,8 @@ export default async function CellarPage({
     if (!group) {
       group = {
         catalogWineId: row.catalog_wine_id,
-        title: embedTitle(unwrap(row.catalog_wines)),
-        subtitle: embedSubtitle(unwrap(row.catalog_wines)),
+        title: embedTitle(cw),
+        subtitle: embedSubtitle(cw),
         totalQuantity: 0,
         lots: [],
       };
@@ -154,11 +150,10 @@ export default async function CellarPage({
     group.totalQuantity += row.quantity;
   }
   const groups = [...groupsMap.values()];
-
-  const { count: notesCount } = await supabase
-    .from("wset_notes")
-    .select("id", { count: "exact", head: true })
-    .eq("author_id", user.id);
+  const topRegions = [...regionCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, bottles]) => ({ name, bottles }));
 
   let notes: NoteRow[] = [];
   if (tab === "notes") {
@@ -318,54 +313,83 @@ export default async function CellarPage({
         }
       />
 
-      {/* Phones get a single compact summary card — five full stat tiles ate
-          the screen, and just shrinking them wasn't enough. Desktop keeps the
-          roomy tiles. */}
-      <div className="grid grid-cols-3 gap-x-2 gap-y-3 rounded-xl border border-border bg-card p-4 sm:hidden">
-        {[
-          { value: groups.length, label: "wines" },
-          { value: totalBottles, label: "bottles" },
-          {
-            value: hasValue ? Math.round(totalValue).toLocaleString() : "—",
-            label: `${preferredCurrency} value`,
-          },
-          { value: readyBottles, label: "ready" },
-          { value: notesCount ?? 0, label: "notes" },
-        ].map((s) => (
-          <div key={s.label} className="flex flex-col items-center text-center">
-            <span className="font-heading text-lg font-semibold leading-none tabular-nums">
-              {s.value}
-            </span>
-            <span className="mt-1 text-[11px] leading-tight text-muted-foreground">
-              {s.label}
-            </span>
+      {/* Phones get a compact summary card; desktop gets roomy tiles. Both
+          finish with a Top-regions card (bottle count per region). */}
+      <div className="rounded-xl border border-border bg-card p-4 sm:hidden">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-3">
+          {[
+            { value: groups.length, label: "unique wines" },
+            { value: totalBottles, label: "total bottles" },
+            {
+              value: hasValue ? Math.round(totalValue).toLocaleString() : "—",
+              label: `${preferredCurrency} value`,
+            },
+          ].map((s) => (
+            <div key={s.label} className="flex flex-col items-center text-center">
+              <span className="font-heading text-lg font-semibold leading-none tabular-nums">
+                {s.value}
+              </span>
+              <span className="mt-1 text-[11px] leading-tight text-muted-foreground">
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+        {topRegions.length > 0 ? (
+          <div className="mt-3 border-t border-border pt-3">
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Top regions
+            </p>
+            <ul className="flex flex-col gap-1">
+              {topRegions.map((r) => (
+                <li
+                  key={r.name}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="truncate">{r.name}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {r.bottles}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        ))}
+        ) : null}
       </div>
 
-      <StatStrip className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5">
-        <StatTile icon={Boxes} tint="amber" value={groups.length} label="wines" />
-        <StatTile icon={Wine} tint="rose" value={totalBottles} label="bottles" />
+      <div className="hidden gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 lg:items-start">
+        <StatTile icon={Boxes} tint="amber" value={groups.length} label="unique wines" />
+        <StatTile icon={Wine} tint="rose" value={totalBottles} label="total bottles" />
         <StatTile
           icon={Coins}
           tint="gold"
           value={hasValue ? Math.round(totalValue).toLocaleString() : "—"}
           label={`${preferredCurrency} value`}
         />
-        <StatTile
-          icon={CalendarCheck}
-          tint="green"
-          value={readyBottles}
-          label="ready to drink"
-          sub="in your window"
-        />
-        <StatTile
-          icon={FileText}
-          tint="purple"
-          value={notesCount ?? 0}
-          label="notes written"
-        />
-      </StatStrip>
+        <div className="rounded-xl border border-border bg-card p-4 sm:col-span-3 lg:col-span-1">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <MapPin className="size-3.5" />
+            Top regions
+          </p>
+          {topRegions.length > 0 ? (
+            <ul className="flex flex-col gap-1.5">
+              {topRegions.map((r) => (
+                <li
+                  key={r.name}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="truncate">{r.name}</span>
+                  <span className="shrink-0 font-medium tabular-nums">
+                    {r.bottles}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No regions yet.</p>
+          )}
+        </div>
+      </div>
 
       <Tabs
         variant="underline"
