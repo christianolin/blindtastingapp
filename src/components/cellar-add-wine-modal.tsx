@@ -80,6 +80,7 @@ export function CellarAddWineModal({
             grapes={ref.grapes}
             typeDesignations={ref.typeDesignations}
             defaultCurrency={ref.currency}
+            userId={userId}
             onAdded={() => {
               onClose();
               router.refresh();

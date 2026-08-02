@@ -52,6 +52,7 @@ export default async function NewCellarLotPage() {
             grapes={grapes ?? []}
             typeDesignations={typeDesignations ?? []}
             defaultCurrency={profile?.preferred_currency ?? "DKK"}
+            userId={user.id}
           />
         </CardContent>
       </Card>

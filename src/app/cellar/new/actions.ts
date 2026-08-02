@@ -17,6 +17,7 @@ export type CellarLotInput = {
   vintageKind?: "YEAR" | "NV" | "TAWNY";
   vintageYear?: number | null;
   vintageTawnyYears?: number | null;
+  imageUrl?: string | null;
   // lot
   quantity: number;
   bottleSizeMl: number;
@@ -74,10 +75,11 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
   if (error) throw new Error(error.message);
   const lotId = data as string;
 
-  // Persist the full blend on a newly-created catalog wine — its trigger then
-  // recomputes the lead grape as primary. Only a wine this user owns is touched
-  // (an existing/deduped wine keeps its own blend).
-  if (!input.catalogWineId && input.grapes && input.grapes.length > 0) {
+  // A newly-created catalog wine owned by this user gets its full blend (its
+  // trigger recomputes the lead grape as primary) and its bottle photo. An
+  // existing/deduped wine (or one created by someone else) is left untouched.
+  const hasBlend = !!(input.grapes && input.grapes.length > 0);
+  if (!input.catalogWineId && (hasBlend || input.imageUrl)) {
     const { data: lot } = await supabase
       .from("cellar_lots")
       .select("catalog_wine_id")
@@ -91,18 +93,26 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
         .eq("id", catalogWineId)
         .maybeSingle();
       if (cw?.created_by === user.id) {
-        await supabase
-          .from("catalog_wine_grapes")
-          .delete()
-          .eq("catalog_wine_id", catalogWineId);
-        await supabase.from("catalog_wine_grapes").insert(
-          input.grapes.map((g, i) => ({
-            catalog_wine_id: catalogWineId,
-            grape_id: g.grapeId,
-            percentage: g.percentage,
-            sort_order: i,
-          })),
-        );
+        if (input.imageUrl) {
+          await supabase
+            .from("catalog_wines")
+            .update({ image_url: input.imageUrl })
+            .eq("id", catalogWineId);
+        }
+        if (hasBlend && input.grapes) {
+          await supabase
+            .from("catalog_wine_grapes")
+            .delete()
+            .eq("catalog_wine_id", catalogWineId);
+          await supabase.from("catalog_wine_grapes").insert(
+            input.grapes.map((g, i) => ({
+              catalog_wine_id: catalogWineId,
+              grape_id: g.grapeId,
+              percentage: g.percentage,
+              sort_order: i,
+            })),
+          );
+        }
       }
     }
   }

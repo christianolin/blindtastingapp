@@ -25,6 +25,7 @@ import {
   type BlendRow,
 } from "@/app/catalog/new/grape-blend-editor";
 import { orderedBlend } from "@/lib/wine-blend";
+import { ImageUploader } from "@/components/image-uploader";
 import { addCellarLot, searchCellarCatalog } from "./actions";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
@@ -50,6 +51,7 @@ export function CellarLotForm({
   grapes: initialGrapes,
   typeDesignations,
   defaultCurrency,
+  userId,
   onAdded,
 }: {
   countries: ReferenceOption[];
@@ -57,6 +59,7 @@ export function CellarLotForm({
   grapes: ReferenceOption[];
   typeDesignations: ReferenceOption[];
   defaultCurrency: string;
+  userId: string;
   // When set (rendered in the Add-wine popup), called after a successful add
   // instead of navigating — the modal closes + refreshes.
   onAdded?: () => void;
@@ -86,6 +89,7 @@ export function CellarLotForm({
   const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">("YEAR");
   const [vintageYear, setVintageYear] = useState("");
   const [tawnyYears, setTawnyYears] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState("1");
   const [bottleSize, setBottleSize] = useState(750);
@@ -153,6 +157,7 @@ export function CellarLotForm({
           vintageKind === "YEAR" && vintageYear ? Number(vintageYear) : null,
         vintageTawnyYears:
           vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
+        imageUrl,
         quantity: qty,
         bottleSizeMl: bottleSize,
         pricePerBottle: price ? Number(price) : null,
@@ -391,6 +396,22 @@ export function CellarLotForm({
                   />
                 ) : null}
               </div>
+            </div>
+          </fieldset>
+          <fieldset className="rounded-lg border border-border px-3 pb-4">
+            <legend className="px-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+              Photo
+            </legend>
+            <div className="pt-1.5">
+              <ImageUploader
+                name="cellar_catalog_image"
+                bucket="wine-images"
+                folder={`catalog/staging/${userId}`}
+                label="Add a bottle photo"
+                aspectClassName="aspect-[3/4] max-w-40"
+                initialUrl={imageUrl ?? undefined}
+                onChange={setImageUrl}
+              />
             </div>
           </fieldset>
         </>
