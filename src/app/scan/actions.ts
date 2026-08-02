@@ -80,16 +80,37 @@ export async function resolveWinePrefill(
   const supabase = await createClient();
 
   let countryId = "";
-  if (extracted.country) {
-    const { data } = await supabase.from("countries").select("id, name");
-    countryId =
-      (data ?? []).find((c) => fold(c.name) === fold(extracted.country!))?.id ?? "";
+  let regionId = "";
+  let appellationId = "";
+
+  // The appellation is the most specific clue on most labels and pins down the
+  // region + country, so resolve it first and backfill upward from it.
+  if (extracted.appellation) {
+    const hits = await searchAppellations(extracted.appellation);
+    const needle = fold(extracted.appellation);
+    const pick = hits.find((a) => fold(a.name).startsWith(needle)) ?? hits[0];
+    if (pick) {
+      appellationId = pick.id;
+      const { data: appRow } = await supabase
+        .from("appellations")
+        .select("region_id")
+        .eq("id", pick.id)
+        .maybeSingle();
+      if (appRow?.region_id) {
+        regionId = appRow.region_id;
+        const { data: regRow } = await supabase
+          .from("regions")
+          .select("country_id")
+          .eq("id", regionId)
+          .maybeSingle();
+        if (regRow?.country_id) countryId = regRow.country_id;
+      }
+    }
   }
 
-  let regionId = "";
-  if (extracted.region) {
-    const q = supabase.from("regions").select("id, name, country_id");
-    const { data } = countryId ? await q.eq("country_id", countryId) : await q;
+  // Fall back to the label's region text when the appellation didn't resolve.
+  if (!regionId && extracted.region) {
+    const { data } = await supabase.from("regions").select("id, name, country_id");
     const hit = (data ?? []).find((r) => fold(r.name) === fold(extracted.region!));
     if (hit) {
       regionId = hit.id;
@@ -97,15 +118,11 @@ export async function resolveWinePrefill(
     }
   }
 
-  let appellationId = "";
-  if (extracted.appellation) {
-    const hits = await searchAppellations(
-      extracted.appellation,
-      regionId || undefined,
-    );
-    const needle = fold(extracted.appellation);
-    appellationId =
-      (hits.find((a) => fold(a.name).startsWith(needle)) ?? hits[0])?.id ?? "";
+  // And the country text as a last resort.
+  if (!countryId && extracted.country) {
+    const { data } = await supabase.from("countries").select("id, name");
+    countryId =
+      (data ?? []).find((c) => fold(c.name) === fold(extracted.country!))?.id ?? "";
   }
 
   let producerId = "";
@@ -125,8 +142,26 @@ export async function resolveWinePrefill(
     const { data } = await supabase.from("grapes").select("id, name");
     const all = data ?? [];
     for (const g of extracted.grapes) {
-      const hit = all.find((x) => fold(x.name) === fold(g));
-      if (hit) blend.push({ grapeId: hit.id, percentage: "" });
+      let hit = all.find((x) => fold(x.name) === fold(g.name));
+      if (!hit) {
+        // Find-or-create so a well-known blend grape the catalog lacks (e.g.
+        // Rondinella for Amarone) still prefills instead of being dropped.
+        const { data: created } = await supabase
+          .from("grapes")
+          .insert({ name: g.name })
+          .select("id, name")
+          .single();
+        if (created) {
+          hit = created;
+          all.push(created);
+        }
+      }
+      if (hit) {
+        blend.push({
+          grapeId: hit.id,
+          percentage: g.percentage != null ? String(g.percentage) : "",
+        });
+      }
     }
   }
 

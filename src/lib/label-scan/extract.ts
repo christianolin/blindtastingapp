@@ -14,7 +14,7 @@ export type ExtractedLabel = {
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
-  grapes: string[];
+  grapes: { name: string; percentage: number | null }[];
   description: string | null;
   confidence: "high" | "medium" | "low";
   rawText: string;
@@ -28,12 +28,12 @@ Return ONLY a single JSON object — no prose, no markdown code fences — with 
 "producer": winery / producer name, or null
 "wineName": the cuvee / special bottling name (not the producer, not the appellation), or null
 "appellation": appellation / AOC / DOC / DOCG / etc., or null
-"region": wine region, or null
-"country": country, or null
+"region": the wine region — infer it from the appellation or producer even when it is not printed (e.g. Amarone della Valpolicella -> Veneto), or null
+"country": the country — infer it too (e.g. -> Italy), or null
 "vintageKind": "YEAR" if a vintage year is shown, "NV" for non-vintage, "TAWNY" for an "X years" tawny
 "vintageYear": the 4-digit vintage year as a number, or null
 "colour": one of "WHITE","ROSE","RED","ORANGE", or null if unclear
-"grapes": array of grape variety names printed on the label or well-known for this wine (may be empty)
+"grapes": array of objects {"name": string, "percentage": number or null} for the wine's grape blend. Include ALL the major grapes, not just the primary one. Use blend percentages printed on the label; otherwise the typical proportions well-known for this wine or its appellation, or null when they are genuinely unknown.
 "description": a 2-4 sentence description for a wine catalog, combining the label text with well-known facts about this wine / producer / appellation. This is an editable draft; general knowledge is fine, but do not fabricate specific claims you are unsure of.
 "confidence": "high", "medium", or "low" — how clearly you could read the label
 "rawText": all text you can read on the label, verbatim
@@ -66,7 +66,23 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
     vintageYear: Number.isInteger(year) && year > 1900 && year < 2100 ? year : null,
     colour,
     grapes: Array.isArray(o.grapes)
-      ? o.grapes.map((g) => str(g)).filter((g): g is string => !!g)
+      ? o.grapes
+          .map((g) => {
+            if (typeof g === "string") return { name: g.trim(), percentage: null };
+            const gg = (g ?? {}) as Record<string, unknown>;
+            const nm = str(gg.name);
+            if (!nm) return null;
+            const pctRaw =
+              typeof gg.percentage === "number"
+                ? gg.percentage
+                : Number(gg.percentage);
+            const percentage =
+              Number.isFinite(pctRaw) && pctRaw > 0 && pctRaw <= 100
+                ? pctRaw
+                : null;
+            return { name: nm, percentage };
+          })
+          .filter((g): g is { name: string; percentage: number | null } => !!g)
       : [],
     description: str(o.description),
     confidence,
