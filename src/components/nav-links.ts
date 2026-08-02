@@ -53,16 +53,6 @@ export const NAV_LINKS: NavLink[] = [
     ],
   },
   {
-    key: "catalog",
-    href: "/catalog",
-    label: "Catalog",
-    match: ["/catalog"],
-    children: [
-      { href: "/catalog", label: "Wine Catalog" },
-      { href: "/catalog/new", label: "Add a wine", modal: "catalog" },
-    ],
-  },
-  {
     key: "cellar",
     href: "/cellar",
     label: "Cellar",
@@ -71,6 +61,16 @@ export const NAV_LINKS: NavLink[] = [
       { href: "/cellar", label: "Cellar Inventory" },
       { href: "/cellar/new", label: "Add a wine", modal: "cellar" },
       { href: "/cellar/import", label: "Import CSV" },
+    ],
+  },
+  {
+    key: "catalog",
+    href: "/catalog",
+    label: "Catalog",
+    match: ["/catalog"],
+    children: [
+      { href: "/catalog", label: "Wine Catalog" },
+      { href: "/catalog/new", label: "Add a wine", modal: "catalog" },
     ],
   },
   {
