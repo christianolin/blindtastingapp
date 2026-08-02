@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPendingInvites } from "@/lib/notifications";
 import { touchLastSeen } from "@/lib/last-seen";
 import { GlobalSearch } from "@/components/global-search";
+import { ScanButton } from "@/components/scan/scan-button";
 
 /**
  * The app's top bar — rendered inside the main column, to the right of the
@@ -67,8 +68,11 @@ export async function AppHeader({
       <div className="hidden max-w-md flex-1 md:flex">
         <GlobalSearch />
       </div>
-      <div className="ml-auto hidden items-center md:flex">
-        <NotificationsBell invites={invites} />
+      <div className="ml-auto flex items-center gap-1">
+        <ScanButton userId={userId} />
+        <div className="hidden items-center md:flex">
+          <NotificationsBell invites={invites} />
+        </div>
       </div>
     </header>
   );

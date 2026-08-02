@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { NewWineForm } from "@/app/catalog/new/new-wine-form";
+import { NewWineForm, type WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import type { ReferenceOption } from "@/components/reference-combobox";
 
 type RefData = {
@@ -20,9 +20,11 @@ type RefData = {
 export function CatalogAddWineModal({
   userId,
   onClose,
+  initialWine,
 }: {
   userId: string;
   onClose: () => void;
+  initialWine?: WineFormInitial;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -75,6 +77,7 @@ export function CatalogAddWineModal({
             grapes={ref.grapes}
             typeDesignations={ref.typeDesignations}
             userId={userId}
+            initialWine={initialWine}
             onCreated={(id) => {
               onClose();
               router.push(`/catalog/${id}`);

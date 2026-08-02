@@ -2,6 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
+import {
+  listAppellationsForRegions,
+  searchAppellations,
+  searchProducers,
+} from "@/lib/reference-search";
+import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 
 export type ScanMatch = { id: string; name: string };
 export type ScanResult = { extracted: ExtractedLabel; matches: ScanMatch[] };
@@ -59,4 +65,91 @@ export async function identifyWineFromLabel(
   }
 
   return { extracted, matches };
+}
+
+const fold = (s: string) =>
+  s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+
+// Best-effort map of a label read to the catalog form's shape, so "Add as new"
+// opens pre-populated. Names are matched (accent-insensitively) to existing
+// reference rows; anything unmatched stays blank for the user to pick or create
+// via the form's own find-or-create. The scan photo is attached by the caller.
+export async function resolveWinePrefill(
+  extracted: ExtractedLabel,
+): Promise<WineFormInitial> {
+  const supabase = await createClient();
+
+  let countryId = "";
+  if (extracted.country) {
+    const { data } = await supabase.from("countries").select("id, name");
+    countryId =
+      (data ?? []).find((c) => fold(c.name) === fold(extracted.country!))?.id ?? "";
+  }
+
+  let regionId = "";
+  if (extracted.region) {
+    const q = supabase.from("regions").select("id, name, country_id");
+    const { data } = countryId ? await q.eq("country_id", countryId) : await q;
+    const hit = (data ?? []).find((r) => fold(r.name) === fold(extracted.region!));
+    if (hit) {
+      regionId = hit.id;
+      if (!countryId) countryId = hit.country_id;
+    }
+  }
+
+  let appellationId = "";
+  if (extracted.appellation) {
+    const hits = await searchAppellations(
+      extracted.appellation,
+      regionId || undefined,
+    );
+    const needle = fold(extracted.appellation);
+    appellationId =
+      (hits.find((a) => fold(a.name).startsWith(needle)) ?? hits[0])?.id ?? "";
+  }
+
+  let producerId = "";
+  let producerLabel: string | null = null;
+  if (extracted.producer) {
+    const hits = await searchProducers(extracted.producer, regionId || undefined);
+    const needle = fold(extracted.producer);
+    const pick = hits.find((p) => fold(p.name) === needle) ?? hits[0];
+    if (pick) {
+      producerId = pick.id;
+      producerLabel = pick.name;
+    }
+  }
+
+  const blend: { grapeId: string; percentage: string }[] = [];
+  if (extracted.grapes.length > 0) {
+    const { data } = await supabase.from("grapes").select("id, name");
+    const all = data ?? [];
+    for (const g of extracted.grapes) {
+      const hit = all.find((x) => fold(x.name) === fold(g));
+      if (hit) blend.push({ grapeId: hit.id, percentage: "" });
+    }
+  }
+
+  const appellations = regionId
+    ? await listAppellationsForRegions([regionId])
+    : [];
+
+  return {
+    countryId,
+    regionId,
+    appellationId,
+    blend: blend.length > 0 ? blend : [{ grapeId: "", percentage: "" }],
+    producerId,
+    producerLabel,
+    typeDesignationId: "",
+    colour: extracted.colour,
+    style: null,
+    wineName: extracted.wineName ?? "",
+    description: extracted.description,
+    vintageKind: extracted.vintageKind,
+    vintageYear: extracted.vintageYear != null ? String(extracted.vintageYear) : "",
+    tawnyYears: "",
+    imageUrl: null,
+    appellations,
+  };
 }
