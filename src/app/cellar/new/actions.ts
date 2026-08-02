@@ -18,6 +18,7 @@ export type CellarLotInput = {
   vintageYear?: number | null;
   vintageTawnyYears?: number | null;
   imageUrl?: string | null;
+  description?: string | null;
   // lot
   quantity: number;
   bottleSizeMl: number;
@@ -79,7 +80,7 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
   // trigger recomputes the lead grape as primary) and its bottle photo. An
   // existing/deduped wine (or one created by someone else) is left untouched.
   const hasBlend = !!(input.grapes && input.grapes.length > 0);
-  if (!input.catalogWineId && (hasBlend || input.imageUrl)) {
+  if (!input.catalogWineId && (hasBlend || input.imageUrl || input.description)) {
     const { data: lot } = await supabase
       .from("cellar_lots")
       .select("catalog_wine_id")
@@ -93,10 +94,13 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
         .eq("id", catalogWineId)
         .maybeSingle();
       if (cw?.created_by === user.id) {
-        if (input.imageUrl) {
+        const wineFields: { image_url?: string; description?: string } = {};
+        if (input.imageUrl) wineFields.image_url = input.imageUrl;
+        if (input.description) wineFields.description = input.description;
+        if (Object.keys(wineFields).length > 0) {
           await supabase
             .from("catalog_wines")
-            .update({ image_url: input.imageUrl })
+            .update(wineFields)
             .eq("id", catalogWineId);
         }
         if (hasBlend && input.grapes) {

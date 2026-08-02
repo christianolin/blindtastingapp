@@ -86,6 +86,7 @@ export function CellarLotForm({
   const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(null);
   const [style, setStyle] = useState<(typeof STYLES)[number] | null>(null);
   const [wineName, setWineName] = useState("");
+  const [description, setDescription] = useState("");
   const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">("YEAR");
   const [vintageYear, setVintageYear] = useState("");
   const [tawnyYears, setTawnyYears] = useState("");
@@ -152,6 +153,7 @@ export function CellarLotForm({
         colour: colour ?? undefined,
         style: style ?? undefined,
         wineName: wineName.trim() || null,
+        description: description.trim() || null,
         vintageKind,
         vintageYear:
           vintageKind === "YEAR" && vintageYear ? Number(vintageYear) : null,
@@ -321,6 +323,16 @@ export function CellarLotForm({
                   value={wineName}
                   onChange={(e) => setWineName(e.target.value)}
                   placeholder="e.g. Clos Sainte-Hune"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="cellar_wine_description">Description (optional)</Label>
+                <textarea
+                  id="cellar_wine_description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Background on the wine — style, vineyard, story…"
+                  className="min-h-24 rounded-md border border-border bg-background px-3 py-2 text-sm"
                 />
               </div>
               {typeDesignations.length > 0 ? (
