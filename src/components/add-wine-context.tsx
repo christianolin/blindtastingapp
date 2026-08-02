@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { CatalogAddWineModal } from "./catalog-add-wine-modal";
 import { CellarAddWineModal } from "./cellar-add-wine-modal";
+import { ScanModal } from "./scan/scan-modal";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 
 // Which add-wine popup to show. Cellar + tasting plug in here as they land; the
@@ -17,6 +18,7 @@ export type AddWineOpts = {
 };
 type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
+  openScan: () => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
 
@@ -38,24 +40,25 @@ export function AddWineProvider({
 }) {
   const [open, setOpen] = useState<AddWineKind | null>(null);
   const [opts, setOpts] = useState<AddWineOpts>({});
+  const [scanOpen, setScanOpen] = useState(false);
   const close = () => {
     setOpen(null);
     setOpts({});
   };
+  const openAddWine = (kind: AddWineKind, o?: AddWineOpts) => {
+    setOpts(o ?? {});
+    setOpen(kind);
+  };
   return (
     <AddWineCtx.Provider
-      value={{
-        openAddWine: (kind, o) => {
-          setOpts(o ?? {});
-          setOpen(kind);
-        },
-      }}
+      value={{ openAddWine, openScan: () => setScanOpen(true) }}
     >
       {children}
       {open === "catalog" ? (
         <CatalogAddWineModal
           userId={userId}
           initialWine={opts.catalog}
+          onScan={() => setScanOpen(true)}
           onClose={close}
         />
       ) : null}
@@ -64,7 +67,16 @@ export function AddWineProvider({
           userId={userId}
           initialCatalogWineId={opts.cellarWine?.id}
           initialCatalogWineLabel={opts.cellarWine?.label}
+          onScan={() => setScanOpen(true)}
           onClose={close}
+        />
+      ) : null}
+      {scanOpen ? (
+        <ScanModal
+          userId={userId}
+          onClose={() => setScanOpen(false)}
+          onAddNew={(catalog) => openAddWine("catalog", { catalog })}
+          onAddToCellar={(cellarWine) => openAddWine("cellar", { cellarWine })}
         />
       ) : null}
     </AddWineCtx.Provider>

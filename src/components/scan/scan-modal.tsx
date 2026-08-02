@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Camera, Wine } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
-import { useAddWine } from "@/components/add-wine-context";
 import { NewNoteModal } from "@/components/new-note-modal";
+import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import {
   identifyWineFromLabel,
   resolveWinePrefill,
@@ -21,13 +21,16 @@ type Step = "capture" | "identifying" | "results" | "error";
 export function ScanModal({
   userId,
   onClose,
+  onAddNew,
+  onAddToCellar,
 }: {
   userId: string;
   onClose: () => void;
+  onAddNew: (catalog: WineFormInitial) => void;
+  onAddToCellar: (wine: { id: string; label: string }) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
-  const { openAddWine } = useAddWine();
   const [step, setStep] = useState<Step>("capture");
   const [scanUrl, setScanUrl] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -67,7 +70,7 @@ export function ScanModal({
     setAddingNew(true);
     try {
       const prefill = await resolveWinePrefill(result.extracted);
-      openAddWine("catalog", { catalog: { ...prefill, imageUrl: scanUrl } });
+      onAddNew({ ...prefill, imageUrl: scanUrl });
       onClose();
     } catch {
       setAddingNew(false);
@@ -178,9 +181,7 @@ export function ScanModal({
                       <button
                         type="button"
                         onClick={() => {
-                          openAddWine("cellar", {
-                            cellarWine: { id: m.id, label: m.name },
-                          });
+                          onAddToCellar({ id: m.id, label: m.name });
                           onClose();
                         }}
                         className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"

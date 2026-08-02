@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
+import { Camera } from "lucide-react";
 import { CellarLotForm } from "@/app/cellar/new/cellar-lot-form";
 import type { ReferenceOption } from "@/components/reference-combobox";
 
@@ -23,11 +24,13 @@ export function CellarAddWineModal({
   onClose,
   initialCatalogWineId,
   initialCatalogWineLabel,
+  onScan,
 }: {
   userId: string;
   onClose: () => void;
   initialCatalogWineId?: string;
   initialCatalogWineLabel?: string | null;
+  onScan?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -71,6 +74,18 @@ export function CellarAddWineModal({
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogTitle>Add a wine to your cellar</DialogTitle>
+        {onScan && !initialCatalogWineId ? (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onScan();
+            }}
+            className="inline-flex w-fit items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Camera className="size-4" /> Scan the label instead
+          </button>
+        ) : null}
         {ref === "loading" ? (
           <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
         ) : !ref ? (

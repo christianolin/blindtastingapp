@@ -69,7 +69,7 @@ export async function AppHeader({
         <GlobalSearch />
       </div>
       <div className="ml-auto flex items-center gap-1">
-        <ScanButton userId={userId} />
+        <ScanButton />
         <div className="hidden items-center md:flex">
           <NotificationsBell invites={invites} />
         </div>

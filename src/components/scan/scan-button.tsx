@@ -1,24 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScanModal } from "./scan-modal";
+import { useAddWine } from "@/components/add-wine-context";
 
-// The app-wide entry point for the label scanner (mounted in AppHeader).
-export function ScanButton({ userId }: { userId: string }) {
-  const [open, setOpen] = useState(false);
+// App-wide entry point for the label scanner. The scan popup itself lives in
+// AddWineProvider so it's shared with the Add-a-wine flow.
+export function ScanButton() {
+  const { openScan } = useAddWine();
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Scan a wine label"
-        onClick={() => setOpen(true)}
-      >
-        <Camera />
-      </Button>
-      {open ? <ScanModal userId={userId} onClose={() => setOpen(false)} /> : null}
-    </>
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label="Scan a wine label"
+      onClick={openScan}
+    >
+      <Camera />
+    </Button>
   );
 }
