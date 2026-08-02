@@ -9,8 +9,14 @@ import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 // provider simply renders nothing for a kind it doesn't handle yet.
 export type AddWineKind = "catalog" | "cellar" | "tasting";
 
+export type AddWineOpts = {
+  // Prefill the catalog form (e.g. a label scan's "add as new").
+  catalog?: WineFormInitial;
+  // Preselect an existing catalog wine in the cellar form (e.g. a scan match).
+  cellarWine?: { id: string; label: string };
+};
 type Ctx = {
-  openAddWine: (kind: AddWineKind, initial?: WineFormInitial) => void;
+  openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
 
@@ -31,16 +37,16 @@ export function AddWineProvider({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState<AddWineKind | null>(null);
-  const [initial, setInitial] = useState<WineFormInitial | undefined>(undefined);
+  const [opts, setOpts] = useState<AddWineOpts>({});
   const close = () => {
     setOpen(null);
-    setInitial(undefined);
+    setOpts({});
   };
   return (
     <AddWineCtx.Provider
       value={{
-        openAddWine: (kind, init) => {
-          setInitial(init);
+        openAddWine: (kind, o) => {
+          setOpts(o ?? {});
           setOpen(kind);
         },
       }}
@@ -49,12 +55,17 @@ export function AddWineProvider({
       {open === "catalog" ? (
         <CatalogAddWineModal
           userId={userId}
-          initialWine={initial}
+          initialWine={opts.catalog}
           onClose={close}
         />
       ) : null}
       {open === "cellar" ? (
-        <CellarAddWineModal userId={userId} onClose={close} />
+        <CellarAddWineModal
+          userId={userId}
+          initialCatalogWineId={opts.cellarWine?.id}
+          initialCatalogWineLabel={opts.cellarWine?.label}
+          onClose={close}
+        />
       ) : null}
     </AddWineCtx.Provider>
   );

@@ -52,6 +52,8 @@ export function CellarLotForm({
   typeDesignations,
   defaultCurrency,
   userId,
+  initialCatalogWineId,
+  initialCatalogWineLabel,
   onAdded,
 }: {
   countries: ReferenceOption[];
@@ -60,6 +62,10 @@ export function CellarLotForm({
   typeDesignations: ReferenceOption[];
   defaultCurrency: string;
   userId: string;
+  // Preselect an existing catalog wine (e.g. from a label scan match) so the
+  // user only fills the lot details.
+  initialCatalogWineId?: string;
+  initialCatalogWineLabel?: string | null;
   // When set (rendered in the Add-wine popup), called after a successful add
   // instead of navigating — the modal closes + refreshes.
   onAdded?: () => void;
@@ -71,8 +77,10 @@ export function CellarLotForm({
   const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
   const [, startAppellations] = useTransition();
 
-  const [catalogWineId, setCatalogWineId] = useState("");
-  const [catalogWineLabel, setCatalogWineLabel] = useState<string | null>(null);
+  const [catalogWineId, setCatalogWineId] = useState(initialCatalogWineId ?? "");
+  const [catalogWineLabel, setCatalogWineLabel] = useState<string | null>(
+    initialCatalogWineLabel ?? null,
+  );
 
   const [countryId, setCountryId] = useState("");
   const [regionId, setRegionId] = useState("");

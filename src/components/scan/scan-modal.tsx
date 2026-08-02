@@ -67,7 +67,7 @@ export function ScanModal({
     setAddingNew(true);
     try {
       const prefill = await resolveWinePrefill(result.extracted);
-      openAddWine("catalog", { ...prefill, imageUrl: scanUrl });
+      openAddWine("catalog", { catalog: { ...prefill, imageUrl: scanUrl } });
       onClose();
     } catch {
       setAddingNew(false);
@@ -167,13 +167,25 @@ export function ScanModal({
                     className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
                   >
                     <span className="min-w-0 truncate text-sm">{m.name}</span>
-                    <span className="flex shrink-0 items-center gap-1.5">
+                    <span className="flex shrink-0 items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setNoteWineId(m.id)}
                         className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
                       >
-                        Taste &amp; Rate
+                        Rate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAddWine("cellar", {
+                            cellarWine: { id: m.id, label: m.name },
+                          });
+                          onClose();
+                        }}
+                        className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                      >
+                        Cellar
                       </button>
                       <Link
                         href={`/catalog/${m.id}`}

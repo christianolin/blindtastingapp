@@ -21,9 +21,13 @@ type RefData = {
 export function CellarAddWineModal({
   userId,
   onClose,
+  initialCatalogWineId,
+  initialCatalogWineLabel,
 }: {
   userId: string;
   onClose: () => void;
+  initialCatalogWineId?: string;
+  initialCatalogWineLabel?: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -81,6 +85,8 @@ export function CellarAddWineModal({
             typeDesignations={ref.typeDesignations}
             defaultCurrency={ref.currency}
             userId={userId}
+            initialCatalogWineId={initialCatalogWineId}
+            initialCatalogWineLabel={initialCatalogWineLabel}
             onAdded={() => {
               onClose();
               router.refresh();
