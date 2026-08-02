@@ -10,6 +10,7 @@ export type CellarWine = {
   colour: WineColour | null;
   style: WineStyle | null;
   wineName: string | null;
+  description: string | null;
   imageUrl: string | null;
   vintageKind: VintageKind;
   vintageYear: number | null;
@@ -27,7 +28,7 @@ export type CellarWine = {
 };
 
 const SELECT =
-  "id, appellation_id, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, appellation_id, colour, style, wine_name, description, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -49,6 +50,7 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     style: (row.style as WineStyle | null) ?? null,
     wineName: (row.wine_name as string | null) ?? null,
     imageUrl: (row.image_url as string | null) ?? null,
+    description: (row.description as string | null) ?? null,
     vintageKind: row.vintage_kind as VintageKind,
     vintageYear: (row.vintage_year as number | null) ?? null,
     vintageTawnyYears: (row.vintage_tawny_years as number | null) ?? null,

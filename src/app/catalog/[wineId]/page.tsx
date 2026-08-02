@@ -195,6 +195,15 @@ export default async function CatalogWinePage({
         </Card>
       </div>
 
+      {wine.description ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">About this wine</p>
+          <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+            {wine.description}
+          </p>
+        </div>
+      ) : null}
+
       {descriptors.length > 0 || structure.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">
           {descriptors.length > 0 ? (
