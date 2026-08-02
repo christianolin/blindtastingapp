@@ -47,7 +47,7 @@ export function EditWineModal({
         supabase
           .from("catalog_wines")
           .select(
-            "country_id, region_id, appellation_id, producer_id, type_designation_id, colour, style, wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url",
+            "country_id, region_id, appellation_id, producer_id, type_designation_id, colour, style, wine_name, description, vintage_kind, vintage_year, vintage_tawny_years, image_url",
           )
           .eq("id", wineId)
           .maybeSingle(),
@@ -96,6 +96,7 @@ export function EditWineModal({
           colour: w.colour as WineFormInitial["colour"],
           style: w.style as WineFormInitial["style"],
           wineName: w.wine_name ?? "",
+          description: w.description ?? null,
           vintageKind: (w.vintage_kind ?? "YEAR") as "YEAR" | "NV" | "TAWNY",
           vintageYear: w.vintage_year == null ? "" : String(w.vintage_year),
           tawnyYears: w.vintage_tawny_years == null ? "" : String(w.vintage_tawny_years),

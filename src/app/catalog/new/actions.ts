@@ -75,6 +75,7 @@ export type NewCatalogWine = {
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE";
   style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
   wineName: string | null;
+  description?: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   vintageTawnyYears: number | null;
@@ -100,6 +101,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       colour: input.colour,
       style: input.style,
       wine_name: input.wineName,
+      description: input.description ?? null,
       vintage_kind: input.vintageKind,
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,
@@ -150,6 +152,7 @@ export async function updateCatalogWine(
       colour: input.colour,
       style: input.style,
       wine_name: input.wineName,
+      description: input.description ?? null,
       vintage_kind: input.vintageKind,
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,

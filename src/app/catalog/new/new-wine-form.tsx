@@ -39,6 +39,7 @@ export type WineFormInitial = {
   colour: (typeof COLOURS)[number] | null;
   style: (typeof STYLES)[number] | null;
   wineName: string;
+  description: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
@@ -100,6 +101,7 @@ export function NewWineForm({
     initialWine?.style ?? null,
   );
   const [wineName, setWineName] = useState(initialWine?.wineName ?? "");
+  const [description, setDescription] = useState(initialWine?.description ?? "");
   const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">(
     initialWine?.vintageKind ?? "YEAR",
   );
@@ -148,6 +150,7 @@ export function NewWineForm({
         colour,
         style,
         wineName: wineName.trim() || null,
+        description: description.trim() || null,
         vintageKind,
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
@@ -261,6 +264,16 @@ export function NewWineForm({
           <div className="flex flex-col gap-2">
             <Label>Wine name (optional)</Label>
             <Input value={wineName} onChange={(e) => setWineName(e.target.value)} placeholder="e.g. Chateau Lascombes, or Clos Sainte-Hune" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="wine_description">Description (optional)</Label>
+            <textarea
+              id="wine_description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Background on the wine — style, vineyard, story…"
+              className="min-h-24 rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {typeDesignations.length > 0 ? (
             <div className="flex flex-col gap-2">

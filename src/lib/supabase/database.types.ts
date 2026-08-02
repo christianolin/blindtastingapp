@@ -926,6 +926,7 @@ export type Database = {
           colour: WineColour;
           style: WineStyle;
           wine_name: string | null;
+          description: string | null;
           image_url: string | null;
           bottle_size_ml: number;
           created_by: string;
@@ -946,6 +947,7 @@ export type Database = {
           colour: WineColour;
           style: WineStyle;
           wine_name?: string | null;
+          description?: string | null;
           image_url?: string | null;
           bottle_size_ml?: number;
           created_by: string;
