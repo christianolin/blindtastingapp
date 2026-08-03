@@ -100,6 +100,7 @@ export default async function CellarPage({
         "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
         "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
     )
+    .eq("owner_id", user.id)
     .gt("quantity", 0)
     .order("created_at", { ascending: false });
 
@@ -265,7 +266,8 @@ export default async function CellarPage({
       .select(
         "quantity, purchased_quantity, price_per_bottle, currency, purchased_on, drink_from, drink_to, catalog_wine_id, " +
           "catalog_wines(colour, vintage_kind, vintage_year, country:countries(name), region:regions(name))",
-      );
+      )
+      .eq("owner_id", user.id);
     const lots: StatLotRow[] = (
       (statRows ?? []) as unknown as Array<{
         quantity: number;
