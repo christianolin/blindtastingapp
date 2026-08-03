@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Globe,
@@ -34,6 +34,46 @@ import { BurgundyPyramid } from "./burgundy-pyramid";
 const WHY_ICONS = [Landmark, ScrollText, Layers, Sparkles];
 const VARIATION_ICONS = [Globe, MapIcon, Home, Grape];
 
+type SearchEntry = { label: string; sub: string; tab: string; norm: string };
+
+// Punctuation/accent-insensitive so "cote de nuits" finds "Côte de Nuits" and
+// hyphenated crus match spaced queries (mirrors the DB search normalisation).
+const normText = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+// Flat search index across every tab: systems + their members, glossary terms,
+// and all Burgundy vineyards — each tagged with the tab that hosts it.
+function buildIndex(data: DesignationsPageData): SearchEntry[] {
+  const out: SearchEntry[] = [];
+  const push = (label: string, sub: string, tab: string) =>
+    out.push({ label, sub, tab, norm: normText(label) });
+  for (const t of DESIGNATION_TABS) {
+    if (t.kind === "systems") {
+      for (const key of t.systemKeys ?? []) {
+        const sys = data.systems.find((s) => s.key === key);
+        if (!sys) continue;
+        push(sys.name, t.label, t.slug);
+        for (const m of sys.members) push(m.name, sys.name, t.slug);
+      }
+    }
+    for (const term of t.glossaryTerms ?? []) push(term, t.label, t.slug);
+  }
+  for (const tier of data.burgundy.tiers) {
+    for (const sr of tier.subregions) {
+      for (const v of sr.villages) {
+        for (const vy of v.vineyards) {
+          push(vy.name, `${tier.label} · ${sr.subregion}`, "burgundy");
+        }
+      }
+    }
+  }
+  return out;
+}
+
 // Single-page Designations: one client tab shell that switches content from
 // already-loaded props (no navigation/refetch). The tab bar wraps; `?tab=` is
 // kept in sync via history.replaceState so links are shareable without reload.
@@ -48,6 +88,11 @@ export function DesignationsTabs({
     ? initialTab
     : "overview";
   const [active, setActive] = useState(valid);
+  const [query, setQuery] = useState("");
+  const index = useMemo(() => buildIndex(data), [data]);
+  const q = normText(query.trim());
+  const results =
+    q.length >= 2 ? index.filter((e) => e.norm.includes(q)).slice(0, 14) : [];
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -67,6 +112,35 @@ export function DesignationsTabs({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="relative">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search designations, classifications, crus…"
+          className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        />
+        {results.length > 0 ? (
+          <ul className="absolute z-20 mt-1 max-h-80 w-full max-w-md overflow-y-auto rounded-lg border border-border bg-background shadow-md">
+            {results.map((r, i) => (
+              <li key={`${r.tab}-${r.label}-${i}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActive(r.tab);
+                    setQuery("");
+                  }}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-muted/40"
+                >
+                  <span className="font-medium">{r.label}</span>
+                  <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+                    {r.sub}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
       <div className="flex flex-wrap gap-2 border-b border-border pb-3">
         {DESIGNATION_TABS.map((t) => (
           <button
