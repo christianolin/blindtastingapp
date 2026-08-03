@@ -242,6 +242,17 @@ export function TileWineMapExplorer({
     [selectedKey],
   );
 
+  // Respond to a new ?place from a SAME-route navigation (e.g. the global search
+  // while already on the map): the map page re-renders with a new initialPlaceKey,
+  // so select it. Guarded so the initial mount (selectedKey already equals
+  // initialPlaceKey) and same-key pushes are no-ops.
+  useEffect(() => {
+    if (initialPlaceKey && initialPlaceKey !== selectedKey) {
+      select(initialPlaceKey);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPlaceKey]);
+
   // Drill-down camera: selecting a place zooms far enough that ALL its
   // children's reveal zooms are reached (deepest child + headroom). Leaf
   // places instead zoom to their own footprint — bbox fitting decides, with
