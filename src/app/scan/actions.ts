@@ -3,7 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
 import { canonicalGrapeName } from "@/lib/label-scan/grape-canonical";
-import { canonicalRegionName } from "@/lib/label-scan/region-canonical";
+import {
+  canonicalCountryName,
+  canonicalRegionName,
+} from "@/lib/label-scan/region-canonical";
 import {
   listAppellationsForRegions,
   searchAppellations,
@@ -152,7 +155,10 @@ export async function resolveWinePrefill(
     // The scanner names regions in English ("Burgundy"), the catalog stores
     // canonical names ("Bourgogne") — map through the synonym table, then match
     // accent-insensitively (the raw name is kept as a fallback).
-    const canonical = canonicalRegionName(extracted.region);
+    const canonicalCountry = extracted.country
+      ? canonicalCountryName(extracted.country)
+      : undefined;
+    const canonical = canonicalRegionName(extracted.region, canonicalCountry);
     const wanted = [fold(canonical), fold(extracted.region)];
     const { data } = await supabase.from("regions").select("id, name, country_id");
     const hit = (data ?? []).find((r) => wanted.includes(fold(r.name)));
@@ -162,11 +168,13 @@ export async function resolveWinePrefill(
     }
   }
 
-  // And the country text as a last resort.
+  // And the country text as a last resort (canonicalising "USA" ->
+  // "United States", etc.).
   if (!countryId && extracted.country) {
+    const canonical = canonicalCountryName(extracted.country);
+    const wanted = [fold(canonical), fold(extracted.country)];
     const { data } = await supabase.from("countries").select("id, name");
-    countryId =
-      (data ?? []).find((c) => fold(c.name) === fold(extracted.country!))?.id ?? "";
+    countryId = (data ?? []).find((c) => wanted.includes(fold(c.name)))?.id ?? "";
   }
 
   let producerId = "";
