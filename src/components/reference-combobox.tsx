@@ -92,13 +92,15 @@ export function ReferenceCombobox({
           }
         >
           {selected ? (
-            selected.name
+            <span className="min-w-0 flex-1 truncate text-left">{selected.name}</span>
           ) : selectedLabel ? (
-            selectedLabel
+            <span className="min-w-0 flex-1 truncate text-left">{selectedLabel}</span>
           ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">
+              {placeholder}
+            </span>
           )}
-          <ChevronsUpDown className="opacity-50" />
+          <ChevronsUpDown className="shrink-0 opacity-50" />
         </PopoverTrigger>
         <PopoverContent className="w-(--anchor-width) p-0">
           <Command>

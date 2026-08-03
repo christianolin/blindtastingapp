@@ -248,8 +248,8 @@ export function CellarLotForm({
       </div>
 
       {catalogWineId ? (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
-          <span>
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+          <span className="min-w-0 break-words">
             <span className="text-muted-foreground">Wine:</span>{" "}
             <span className="font-medium">{catalogWineLabel}</span>
           </span>
@@ -259,7 +259,7 @@ export function CellarLotForm({
               setCatalogWineId("");
               setCatalogWineLabel(null);
             }}
-            className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="shrink-0 rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Change
           </button>
