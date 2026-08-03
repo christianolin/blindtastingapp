@@ -8,6 +8,8 @@ import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, Ch
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { CountryFlag } from "@/components/country-flag";
+import { useAddWine } from "@/components/add-wine-context";
+import { NewNoteModal } from "@/components/new-note-modal";
 
 export type CatalogRow = {
   id: string;
@@ -52,6 +54,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
     dir: "asc",
   });
   const [page, setPage] = useState(1);
+  const [noteWineId, setNoteWineId] = useState<string | null>(null);
+  const { openAddWine } = useAddWine();
 
   const countries = useMemo(
     () => [...new Set(rows.map((r) => r.country).filter(Boolean) as string[])].sort(),
@@ -220,6 +224,28 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             </option>
           ))}
         </select>
+        {/* Header-click sorting only exists on the desktop table, so phones get
+            an explicit Sort control (mirrors the cellar list). */}
+        <select
+          aria-label="Sort by"
+          className={cn(selectCls, "lg:hidden")}
+          value={`${sort.key}:${sort.dir}`}
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":") as [
+              SortKey,
+              "asc" | "desc",
+            ];
+            setSort({ key, dir });
+            setPage(1);
+          }}
+        >
+          <option value="title:asc">Wine A–Z</option>
+          <option value="added:desc">Added (newest)</option>
+          <option value="added:asc">Added (oldest)</option>
+          <option value="avgScore:desc">Avg score (high)</option>
+          <option value="noteCount:desc">Notes (high)</option>
+          <option value="bottles:desc">Bottles in cellars (high)</option>
+        </select>
         <button
           type="button"
           disabled={!hasFilter}
@@ -239,11 +265,14 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
 
       <div className="flex flex-col gap-2 lg:hidden">
         {pageRows.map((r) => (
-          <Link
+          <div
             key={r.id}
-            href={`/catalog/${r.id}`}
-            className="flex items-center gap-3 rounded-xl border border-border p-3"
+            className="flex flex-col gap-2 rounded-xl border border-border p-3"
           >
+            <Link
+              href={`/catalog/${r.id}`}
+              className="flex items-center gap-3"
+            >
             {r.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -288,7 +317,16 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 {r.cellarBottles} {r.cellarBottles === 1 ? "bottle" : "bottles"} in cellars
               </span>
             </span>
-          </Link>
+            </Link>
+            <RowActions
+              onCellar={() =>
+                openAddWine("cellar", {
+                  cellarWine: { id: r.id, label: r.title },
+                })
+              }
+              onRate={() => setNoteWineId(r.id)}
+            />
+          </div>
         ))}
         {filtered.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -299,8 +337,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
-        <table className="w-full table-fixed text-sm">
+      <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
+        <table className="w-full min-w-[74rem] table-fixed text-sm">
             <colgroup>
               <col />
               <col className="w-[6rem]" />
@@ -312,6 +350,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               <col className="w-[5rem]" />
               <col className="w-[6.5rem]" />
               <col className="w-[6.5rem]" />
+              <col className="w-[7.5rem]" />
             </colgroup>
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -335,6 +374,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 <Th align="right" onClick={() => toggleSort("added")}>
                   Added {sortIcon("added")}
                 </Th>
+                <Th align="right">Actions</Th>
               </tr>
             </thead>
             <tbody>
@@ -411,6 +451,17 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {fmtDate(r.addedAt)}
                   </td>
+                  <td className="px-4 py-3">
+                    <RowActions
+                      stack
+                      onCellar={() =>
+                        openAddWine("cellar", {
+                          cellarWine: { id: r.id, label: r.title },
+                        })
+                      }
+                      onRate={() => setNoteWineId(r.id)}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -466,6 +517,41 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           ) : null}
         </div>
       ) : null}
+
+      {noteWineId ? (
+        <NewNoteModal wineId={noteWineId} onClose={() => setNoteWineId(null)} />
+      ) : null}
+    </div>
+  );
+}
+
+// Per-row quick actions, mirroring the cellar list: add the wine to your cellar
+// (opens the cellar form preselected to this catalog wine) or open the WSET
+// note editor to rate it. "View" is the row/title link itself.
+function RowActions({
+  onCellar,
+  onRate,
+  stack,
+}: {
+  onCellar: () => void;
+  onRate: () => void;
+  stack?: boolean;
+}) {
+  const cls =
+    "rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors hover:bg-muted";
+  return (
+    <div
+      className={cn(
+        "flex gap-1.5",
+        stack ? "flex-col items-stretch" : "flex-wrap items-center",
+      )}
+    >
+      <button type="button" onClick={onCellar} className={cls}>
+        Add to cellar
+      </button>
+      <button type="button" onClick={onRate} className={cls}>
+        Rate
+      </button>
     </div>
   );
 }
