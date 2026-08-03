@@ -145,6 +145,9 @@ export function WineForm({
   const [wineName, setWineName] = useState(initial?.wine_name ?? "");
   const [colour, setColour] = useState<string>(initial?.colour ?? "");
   const [style, setStyle] = useState<string>(initial?.style ?? "");
+  const [vintageYear, setVintageYear] = useState<string>(
+    initial?.vintage_year != null ? String(initial.vintage_year) : "",
+  );
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
@@ -253,9 +256,24 @@ export function WineForm({
                   if (r?.error) setPickError(r.error);
                 });
               }}
-              onAddNew={() => {
+              onAddNew={(catalog) => {
+                // Prefill the manual form from the scan so "add as new" isn't a
+                // blank form. Tawny age + photo aren't carried here yet; an
+                // unmatched producer arrives as a label to pick or create.
                 setScanning(false);
                 setManualMode(true);
+                setCountryId(catalog.countryId);
+                setRegionId(catalog.regionId);
+                setAppellationId(catalog.appellationId);
+                setBlend(catalog.blend);
+                setProducerId(catalog.producerId);
+                setProducerLabel(catalog.producerLabel);
+                setTypeDesignationId(catalog.typeDesignationId);
+                setWineName(catalog.wineName);
+                setColour(catalog.colour ?? "");
+                setStyle(catalog.style ?? "");
+                setVintageKind(catalog.vintageKind);
+                setVintageYear(catalog.vintageYear);
               }}
             />
           ) : null}
@@ -489,7 +507,8 @@ export function WineForm({
             placeholder="e.g. 2018"
             min={1900}
             max={2100}
-            defaultValue={initial?.vintage_year ?? undefined}
+            value={vintageYear}
+            onChange={(e) => setVintageYear(e.target.value)}
             required
           />
         ) : null}
