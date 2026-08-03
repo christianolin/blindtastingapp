@@ -148,6 +148,9 @@ export function WineForm({
   const [vintageYear, setVintageYear] = useState<string>(
     initial?.vintage_year != null ? String(initial.vintage_year) : "",
   );
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    initial?.image_url ?? null,
+  );
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
@@ -258,8 +261,8 @@ export function WineForm({
               }}
               onAddNew={(catalog) => {
                 // Prefill the manual form from the scan so "add as new" isn't a
-                // blank form. Tawny age + photo aren't carried here yet; an
-                // unmatched producer arrives as a label to pick or create.
+                // blank form — including the label photo. An unmatched producer
+                // arrives as a label to pick or create.
                 setScanning(false);
                 setManualMode(true);
                 setCountryId(catalog.countryId);
@@ -274,6 +277,7 @@ export function WineForm({
                 setStyle(catalog.style ?? "");
                 setVintageKind(catalog.vintageKind);
                 setVintageYear(catalog.vintageYear);
+                setImageUrl(catalog.imageUrl);
               }}
             />
           ) : null}
@@ -551,7 +555,7 @@ export function WineForm({
           folder={tastingId}
           label="Add a photo"
           aspectClassName="aspect-square max-w-48"
-          initialUrl={initial?.image_url ?? null}
+          initialUrl={imageUrl}
         />
       </div>
 

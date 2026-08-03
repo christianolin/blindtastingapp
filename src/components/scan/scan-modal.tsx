@@ -174,10 +174,10 @@ export function ScanModal({
                 {result.matches.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+                    className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2"
                   >
-                    <span className="min-w-0 truncate text-sm">{m.name}</span>
-                    <span className="flex shrink-0 items-center gap-1">
+                    <span className="text-sm">{m.name}</span>
+                    <span className="flex flex-wrap items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setNoteWineId(m.id)}

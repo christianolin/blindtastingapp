@@ -41,32 +41,51 @@ export async function identifyWineFromLabel(
       p_query: query,
       p_limit: 5,
     });
-    matches = (
-      (data ?? []) as Array<{
-        id: string;
-        wine_name: string;
-        producer: string;
-        appellation: string;
-        vintage_kind: string;
-        vintage_year: number | null;
-        vintage_tawny_years: number | null;
-      }>
-    ).map((w) => {
-      const vintage =
-        w.vintage_kind === "YEAR"
-          ? w.vintage_year
-            ? String(w.vintage_year)
-            : ""
-          : w.vintage_kind === "TAWNY"
-            ? w.vintage_tawny_years
-              ? `${w.vintage_tawny_years}yo`
-              : "Tawny"
-            : "NV";
-      const name = [w.producer, w.wine_name, w.appellation, vintage]
-        .filter(Boolean)
-        .join(" ");
-      return { id: w.id, name: name || "Untitled wine" };
-    });
+    const rows = (data ?? []) as Array<{
+      id: string;
+      wine_name: string;
+      producer: string;
+      appellation: string;
+      colour: string;
+      vintage_kind: string;
+      vintage_year: number | null;
+      vintage_tawny_years: number | null;
+    }>;
+    // A label scan must only offer a match that is really the SAME bottle.
+    // search_catalog_wines ranks purely on producer/name text, so for a
+    // many-cuvee producer it would otherwise return a different colour or
+    // vintage (e.g. El Enemigo 2018 Chardonnay for a 2019 Cabernet Franc).
+    // Require the colour and (when we read it) the vintage to line up.
+    const vintageMatches = (w: {
+      vintage_kind: string;
+      vintage_year: number | null;
+    }) =>
+      extracted.vintageKind === "YEAR"
+        ? extracted.vintageYear == null ||
+          (w.vintage_kind === "YEAR" && w.vintage_year === extracted.vintageYear)
+        : w.vintage_kind === extracted.vintageKind;
+    matches = rows
+      .filter(
+        (w) =>
+          (!extracted.colour || w.colour === extracted.colour) &&
+          vintageMatches(w),
+      )
+      .map((w) => {
+        const vintage =
+          w.vintage_kind === "YEAR"
+            ? w.vintage_year
+              ? String(w.vintage_year)
+              : ""
+            : w.vintage_kind === "TAWNY"
+              ? w.vintage_tawny_years
+                ? `${w.vintage_tawny_years}yo`
+                : "Tawny"
+              : "NV";
+        const name = [w.producer, w.wine_name, w.appellation, vintage]
+          .filter(Boolean)
+          .join(" ");
+        return { id: w.id, name: name || "Untitled wine" };
+      });
   }
 
   return { extracted, matches };
