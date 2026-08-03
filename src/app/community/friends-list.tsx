@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { FriendButton } from "@/components/friend-button";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -28,7 +29,7 @@ export async function FriendsList({ userId }: { userId: string }) {
 
   const { data: friends } = await supabase
     .from("profiles")
-    .select("id, display_name, bio, avatar_url, last_seen_at")
+    .select("id, display_name, bio, avatar_url, last_seen_at, cellar_visibility")
     .in("id", friendIds.length > 0 ? friendIds : [""])
     .order("display_name");
 
@@ -68,7 +69,19 @@ export async function FriendsList({ userId }: { userId: string }) {
                   ) : null}
                 </div>
               </Link>
-              <FriendButton friendId={f.id} isFriend={true} />
+              <div className="flex shrink-0 items-center gap-2">
+                {f.cellar_visibility !== "PRIVATE" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    nativeButton={false}
+                    render={<Link href={`/u/${f.id}/cellar`} />}
+                  >
+                    Cellar
+                  </Button>
+                ) : null}
+                <FriendButton friendId={f.id} isFriend={true} />
+              </div>
             </CardContent>
           </Card>
         );

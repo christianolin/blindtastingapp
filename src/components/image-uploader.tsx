@@ -14,7 +14,6 @@ export function ImageUploader({
   bucket,
   folder,
   initialUrl,
-  label = "Add a photo",
   aspectClassName = "aspect-video",
   onChange,
 }: {
@@ -89,7 +88,13 @@ export function ImageUploader({
         ) : url ? (
           "Change photo"
         ) : (
-          label
+          <>
+            {/* Phones can take a new photo or pick an existing one; desktop
+                only uploads. The file input (accept image/*, no capture) already
+                offers both — this just labels it clearly. */}
+            <span className="sm:hidden">Take or upload image</span>
+            <span className="hidden sm:inline">Upload image</span>
+          </>
         )}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

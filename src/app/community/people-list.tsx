@@ -42,7 +42,7 @@ export async function PeopleList({
   let query = supabase
     .from("profiles")
     .select(
-      "id, display_name, bio, avatar_url, location, created_at, last_seen_at",
+      "id, display_name, bio, avatar_url, location, created_at, last_seen_at, cellar_visibility",
       { count: "exact" },
     );
   if (q) {
@@ -191,6 +191,16 @@ export async function PeopleList({
                   >
                     Go to profile
                   </Button>
+                  {!isMe && p.cellar_visibility !== "PRIVATE" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={<Link href={`/u/${p.id}/cellar`} />}
+                    >
+                      Cellar
+                    </Button>
+                  ) : null}
                   {isMe ? null : (
                     <FriendButton friendId={p.id} isFriend={friendIds.has(p.id)} />
                   )}
