@@ -37,6 +37,15 @@ export default async function CatalogWinePage({
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
+  // Blind-tasting privacy: a wine that exists only as an unrevealed tasting
+  // answer is hidden from the catalog until it's revealed in the tasting.
+  const { data: blindRow } = await supabase
+    .from("catalog_wines")
+    .select("blind_pending")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (blindRow?.blind_pending) notFound();
+
   const [
     { data: myNotes },
     descriptors,

@@ -931,6 +931,7 @@ export type Database = {
           bottle_size_ml: number;
           created_by: string;
           created_at: string;
+          blind_pending: boolean;
         };
         Insert: {
           id?: string;
@@ -952,6 +953,7 @@ export type Database = {
           bottle_size_ml?: number;
           created_by: string;
           created_at?: string;
+          blind_pending?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["catalog_wines"]["Insert"]>;
         Relationships: [];

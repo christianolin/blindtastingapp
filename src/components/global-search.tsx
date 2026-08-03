@@ -60,8 +60,21 @@ export function GlobalSearch() {
     setLoading(true);
     const t = setTimeout(async () => {
       const { data } = await supabase.rpc("search_all", { p_query: q, p_limit: 6 });
+      let list = (data as Hit[] | null) ?? [];
+      // Drop blind-pending wines (unrevealed tasting answers) so the search
+      // can't reveal a wine before the tasting does.
+      const wineIds = list.filter((h) => h.kind === "wine").map((h) => h.id);
+      if (wineIds.length > 0) {
+        const { data: hidden } = await supabase
+          .from("catalog_wines")
+          .select("id")
+          .in("id", wineIds)
+          .eq("blind_pending", true);
+        const hiddenIds = new Set((hidden ?? []).map((r) => r.id));
+        list = list.filter((h) => h.kind !== "wine" || !hiddenIds.has(h.id));
+      }
       if (seq.current !== mine) return;
-      setHits((data as Hit[] | null) ?? []);
+      setHits(list);
       setLoading(false);
     }, 200);
     return () => clearTimeout(t);

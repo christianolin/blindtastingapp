@@ -45,13 +45,15 @@ export default async function CatalogPage() {
             "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name)",
         )
         .is("merged_into", null)
+        .eq("blind_pending", false)
         .order("created_at", { ascending: false })
         .limit(500),
       supabase.from("catalog_wine_ratings").select("catalog_wine_id, avg_score, note_count"),
       supabase
         .from("catalog_wines")
         .select("id", { count: "exact", head: true })
-        .is("merged_into", null),
+        .is("merged_into", null)
+        .eq("blind_pending", false),
       supabase.from("catalog_wines").select("country_id").is("merged_into", null),
     ]);
 
