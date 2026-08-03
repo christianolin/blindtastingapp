@@ -52,6 +52,7 @@ const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const selectCls =
   "h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground";
+const ALL = "__all__";
 
 function formatSize(ml: number): string {
   if (ml % 1000 === 0) return `${ml / 1000} L`;
@@ -101,22 +102,59 @@ export function CellarBottlesTable({
     null,
   );
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [country, setCountry] = useState(ALL);
+  const [region, setRegion] = useState(ALL);
+  const [colour, setColour] = useState(ALL);
+  const [grape, setGrape] = useState(ALL);
 
   const lotValue = (r: BottleRow) =>
     r.pricePerBottle != null && r.currency === currency
       ? r.pricePerBottle * r.quantity
       : null;
 
+  const countries = useMemo(
+    () => [...new Set(rows.map((r) => r.country).filter(Boolean) as string[])].sort(),
+    [rows],
+  );
+  const regions = useMemo(
+    () =>
+      [
+        ...new Set(
+          rows
+            .filter((r) => country === ALL || r.country === country)
+            .map((r) => r.region)
+            .filter(Boolean) as string[],
+        ),
+      ].sort(),
+    [rows, country],
+  );
+  const colours = useMemo(
+    () => [...new Set(rows.map((r) => r.colour).filter(Boolean) as string[])],
+    [rows],
+  );
+  const grapeOptions = useMemo(
+    () => [...new Set(rows.flatMap((r) => r.grapes))].sort(),
+    [rows],
+  );
+  const hasFilter =
+    country !== ALL || region !== ALL || colour !== ALL || grape !== ALL;
+
   const needle = fold(q.trim());
   const filtered = useMemo(() => {
     const list = rows.filter((r) => {
-      if (!needle) return true;
-      const hay = fold(
-        [r.title, r.region, r.country, r.appellation, r.storageLocation, ...r.grapes]
-          .filter(Boolean)
-          .join(" "),
-      );
-      return hay.includes(needle);
+      if (country !== ALL && r.country !== country) return false;
+      if (region !== ALL && r.region !== region) return false;
+      if (colour !== ALL && r.colour !== colour) return false;
+      if (grape !== ALL && !r.grapes.includes(grape)) return false;
+      if (needle) {
+        const hay = fold(
+          [r.title, r.region, r.country, r.appellation, r.storageLocation, ...r.grapes]
+            .filter(Boolean)
+            .join(" "),
+        );
+        if (!hay.includes(needle)) return false;
+      }
+      return true;
     });
     const dir = sort.dir === "asc" ? 1 : -1;
     const val = (r: BottleRow) =>
@@ -144,7 +182,7 @@ export function CellarBottlesTable({
       }
     };
     return [...list].sort(cmp);
-  }, [rows, needle, sort, currency]);
+  }, [rows, needle, sort, currency, country, region, colour, grape]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const clampedPage = Math.min(page, pageCount);
@@ -229,6 +267,82 @@ export function CellarBottlesTable({
             ))}
           </select>
         </label>
+        <select
+          className={selectCls}
+          value={country}
+          onChange={(e) => {
+            setCountry(e.target.value);
+            setRegion(ALL);
+            setPage(1);
+          }}
+        >
+          <option value={ALL}>All countries</option>
+          {countries.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
+          className={selectCls}
+          value={region}
+          onChange={(e) => {
+            setRegion(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value={ALL}>All regions</option>
+          {regions.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </select>
+        <select
+          className={selectCls}
+          value={colour}
+          onChange={(e) => {
+            setColour(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value={ALL}>All colours</option>
+          {colours.map((c) => (
+            <option key={c} value={c}>
+              {cap(c)}
+            </option>
+          ))}
+        </select>
+        <select
+          className={selectCls}
+          value={grape}
+          onChange={(e) => {
+            setGrape(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value={ALL}>All grapes</option>
+          {grapeOptions.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+        {hasFilter ? (
+          <button
+            type="button"
+            onClick={() => {
+              setCountry(ALL);
+              setRegion(ALL);
+              setColour(ALL);
+              setGrape(ALL);
+              setPage(1);
+            }}
+            className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Clear filters
+          </button>
+        ) : null}
       </div>
 
       {/* Mobile: a card per row (the wide table only appears at lg+). */}
