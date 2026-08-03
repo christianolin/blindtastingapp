@@ -15,6 +15,7 @@ import { HostControls } from "./host-controls";
 import { HostControlsMenu } from "./host-controls-menu";
 import { StandingsPanel } from "./standings-panel";
 import { TastingAddWineButton } from "./tasting-add-wine-button";
+import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { RevealButton } from "./play/reveal-button";
 import { PlayExperience } from "./play/play-experience";
 import { respondToInvite, moveWine } from "./actions";
@@ -458,6 +459,9 @@ export default async function TastingPage({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
       {hasStarted ? <AutoRefresh /> : null}
+      {canAddWine && !hasStarted ? (
+        <TastingScanRegistrar tastingId={id} />
+      ) : null}
       {tasting.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

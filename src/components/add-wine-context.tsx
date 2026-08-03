@@ -4,6 +4,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { CatalogAddWineModal } from "./catalog-add-wine-modal";
 import { CellarAddWineModal } from "./cellar-add-wine-modal";
 import { ScanModal } from "./scan/scan-modal";
+import { TastingAddWineModal } from "@/app/tastings/[id]/tasting-add-wine-modal";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 
 // Which add-wine popup to show. Cellar + tasting plug in here as they land; the
@@ -22,6 +23,11 @@ export type AddWineOpts = {
 type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
   openScan: (target?: "catalog" | "cellar" | "choose") => void;
+  // The addable (DRAFT) tasting the user is currently viewing, if any — set by
+  // the tasting page so the app-header scan can add a bottle straight to it.
+  activeTasting: { tastingId: string } | null;
+  setActiveTasting: (t: { tastingId: string } | null) => void;
+  openTastingScan: () => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
 
@@ -47,6 +53,11 @@ export function AddWineProvider({
   const [scanTarget, setScanTarget] = useState<"catalog" | "cellar" | "choose">(
     "catalog",
   );
+  const [activeTasting, setActiveTasting] = useState<{
+    tastingId: string;
+  } | null>(null);
+  const [tastingScanOpen, setTastingScanOpen] = useState(false);
+  const openTastingScan = () => setTastingScanOpen(true);
   const close = () => {
     setOpen(null);
     setOpts({});
@@ -60,7 +71,15 @@ export function AddWineProvider({
     setScanOpen(true);
   };
   return (
-    <AddWineCtx.Provider value={{ openAddWine, openScan }}>
+    <AddWineCtx.Provider
+      value={{
+        openAddWine,
+        openScan,
+        activeTasting,
+        setActiveTasting,
+        openTastingScan,
+      }}
+    >
       {children}
       {open === "catalog" ? (
         <CatalogAddWineModal
@@ -95,6 +114,14 @@ export function AddWineProvider({
               : undefined
           }
           onAddToCellar={(cellarWine) => openAddWine("cellar", { cellarWine })}
+        />
+      ) : null}
+      {tastingScanOpen && activeTasting ? (
+        <TastingAddWineModal
+          tastingId={activeTasting.tastingId}
+          label="Add a wine to this tasting"
+          autoScan
+          onClose={() => setTastingScanOpen(false)}
         />
       ) : null}
     </AddWineCtx.Provider>

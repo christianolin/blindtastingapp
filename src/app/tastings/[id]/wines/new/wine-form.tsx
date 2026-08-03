@@ -89,6 +89,7 @@ export function WineForm({
   typeDesignations: initialTypeDesignations,
   wineId,
   initial,
+  autoScan,
 }: {
   tastingId: string;
   userId?: string;
@@ -99,6 +100,8 @@ export function WineForm({
   /** When set (with `initial`), the form edits this wine instead of adding one. */
   wineId?: string;
   initial?: WineFormInitial;
+  /** Open the label scanner immediately (app-header scan into this tasting). */
+  autoScan?: boolean;
 }) {
   const isEditing = Boolean(wineId && initial);
   const [state, formAction, pending] = useActionState<
@@ -154,7 +157,7 @@ export function WineForm({
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
-  const [scanning, setScanning] = useState(false);
+  const [scanning, setScanning] = useState(Boolean(autoScan));
   const [unidentified, setUnidentified] = useState(false);
   const [pickedWine, setPickedWine] = useState<{ id: string; label: string } | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);

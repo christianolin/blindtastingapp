@@ -20,10 +20,12 @@ type RefData = {
 export function TastingAddWineModal({
   tastingId,
   label,
+  autoScan,
   onClose,
 }: {
   tastingId: string;
   label: string;
+  autoScan?: boolean;
   onClose: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -78,6 +80,7 @@ export function TastingAddWineModal({
             regions={ref.regions}
             grapes={ref.grapes}
             typeDesignations={ref.typeDesignations}
+            autoScan={autoScan}
           />
         )}
       </DialogContent>
