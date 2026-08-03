@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { glossaryTermTab, systemTab } from "@/lib/designations/tabs";
 
 type Hit = {
   kind: string;
@@ -18,6 +19,7 @@ const GROUPS: { kind: string; heading: string }[] = [
   { kind: "wine", heading: "Wines" },
   { kind: "place", heading: "Regions & places" },
   { kind: "grape", heading: "Grapes" },
+  { kind: "designation", heading: "Classifications & terms" },
 ];
 
 function hrefFor(h: Hit): string {
@@ -28,6 +30,10 @@ function hrefFor(h: Hit): string {
       return `/knowledge/map?place=${encodeURIComponent(h.href_key)}`;
     case "grape":
       return `/knowledge/grapes?q=${encodeURIComponent(h.href_key)}`;
+    case "designation": {
+      const slug = systemTab(h.href_key) ?? glossaryTermTab(h.href_key);
+      return `/knowledge/designations${slug ? `?tab=${slug}` : ""}`;
+    }
     default:
       return "/catalog";
   }

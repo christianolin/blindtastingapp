@@ -127,3 +127,11 @@ export function glossaryTermTab(name: string): string | null {
   }
   return null;
 }
+
+// Reverse lookup: which tab hosts a given classification system (by key)?
+export function systemTab(key: string): string | null {
+  for (const tab of DESIGNATION_TABS) {
+    if (tab.systemKeys?.includes(key)) return tab.slug;
+  }
+  return null;
+}
