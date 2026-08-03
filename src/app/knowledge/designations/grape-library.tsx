@@ -62,6 +62,30 @@ export function GrapeLibrary({
         </p>
       </div>
 
+      <div className="flex gap-8">
+        <nav className="sticky top-20 hidden h-[calc(100vh-6rem)] w-52 shrink-0 flex-col overflow-y-auto lg:flex">
+          <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">
+            {filtered.length} grape{filtered.length === 1 ? "" : "s"}
+          </p>
+          <ul className="flex flex-col">
+            {filtered.map((g) => (
+              <li key={g.id}>
+                <a
+                  href={`#grape-${g.id}`}
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <GrapeIcon
+                    className="size-4 shrink-0"
+                    style={{ color: dot(g.color) }}
+                  />
+                  <span className="truncate">{g.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           value={q}
@@ -93,7 +117,7 @@ export function GrapeLibrary({
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((g) => (
-            <Card key={g.id}>
+            <Card key={g.id} id={`grape-${g.id}`} className="scroll-mt-24">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <GrapeIcon
@@ -201,6 +225,8 @@ export function GrapeLibrary({
           ))}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
