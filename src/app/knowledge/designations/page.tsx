@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { getDesignationsPageData } from "@/lib/designations/page-data";
 import { DesignationsTabs } from "./designations-tabs";
+import { LibraryNav } from "@/components/library-nav";
 
 export const metadata = { title: "Designations · Library · Blindr" };
 
@@ -39,6 +40,7 @@ export default async function DesignationsPage({
             Designations
           </h1>
         </div>
+        <LibraryNav />
         <DesignationsTabs data={data} initialTab={tab ?? "overview"} />
       </div>
     </div>

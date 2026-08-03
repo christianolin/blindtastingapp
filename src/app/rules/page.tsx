@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
+import { LibraryNav } from "@/components/library-nav";
 
 export const metadata = {
   title: "Scoring — Danish Championship rules · Blindr",
@@ -47,6 +48,8 @@ export default function RulesPage() {
             you earn points per category you guess correctly:
           </p>
         </div>
+
+        <LibraryNav />
 
         <Card>
           <CardHeader>

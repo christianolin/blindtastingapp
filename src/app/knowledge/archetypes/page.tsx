@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { LibraryNav } from "@/components/library-nav";
 import { createClient } from "@/lib/supabase/server";
 import { ArchetypeBrowser, type ArchetypeCard } from "./archetype-browser";
 
@@ -50,6 +51,7 @@ export default async function ArchetypesPage() {
             style. Tap one to explore its typical appearance, nose and palate.
           </p>
         </div>
+        <LibraryNav />
         <ArchetypeBrowser items={items} />
       </div>
     </div>
