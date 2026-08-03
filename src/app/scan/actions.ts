@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
 import { canonicalGrapeName } from "@/lib/label-scan/grape-canonical";
+import { canonicalRegionName } from "@/lib/label-scan/region-canonical";
 import {
   listAppellationsForRegions,
   searchAppellations,
@@ -71,6 +72,16 @@ export async function identifyWineFromLabel(
 const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
 
+// Burgundy/Alsace labels print "<name> Grand Cru" / "<name> Premier Cru", but
+// the catalog stores the base AOC ("Corton Grand Cru" -> "Corton AOC"). Strip a
+// trailing cru qualifier so the search can fall back to the base appellation.
+function stripCruQualifier(name: string): string {
+  return name
+    .replace(/\b(grand|premier|1\s*er|1\s*ère|1\s*re)\s+crus?\b.*$/i, "")
+    .replace(/[\s,;·-]+$/u, "")
+    .trim();
+}
+
 // Best-effort map of a label read to the catalog form's shape, so "Add as new"
 // opens pre-populated. Names are matched (accent-insensitively) to existing
 // reference rows; anything unmatched stays blank for the user to pick or create
@@ -87,9 +98,36 @@ export async function resolveWinePrefill(
   // The appellation is the most specific clue on most labels and pins down the
   // region + country, so resolve it first and backfill upward from it.
   if (extracted.appellation) {
-    const hits = await searchAppellations(extracted.appellation);
-    const needle = fold(extracted.appellation);
-    const pick = hits.find((a) => fold(a.name).startsWith(needle)) ?? hits[0];
+    // Search the label's appellation; if that finds nothing (Grand/Premier Cru
+    // labels rarely match the base AOC by trigram), retry with the cru
+    // qualifier stripped ("Corton Grand Cru" -> "Corton" -> "Corton AOC").
+    const stripped = stripCruQualifier(extracted.appellation);
+    let hits = await searchAppellations(extracted.appellation);
+    if (
+      hits.length === 0 &&
+      stripped &&
+      fold(stripped) !== fold(extracted.appellation)
+    ) {
+      hits = await searchAppellations(stripped);
+    }
+    const needles = [fold(extracted.appellation), fold(stripped)].filter(Boolean);
+    const pick =
+      hits.find((a) =>
+        needles.some(
+          (n) =>
+            fold(a.name) === n ||
+            fold(a.name) === `${n} aoc` ||
+            fold(a.name) === `${n} aop`,
+        ),
+      ) ??
+      hits.find((a) =>
+        needles.some(
+          (n) =>
+            fold(a.name).startsWith(`${n} `) || fold(a.name).startsWith(`${n}-`),
+        ),
+      ) ??
+      hits.find((a) => needles.some((n) => fold(a.name).startsWith(n))) ??
+      hits[0];
     if (pick) {
       appellationId = pick.id;
       const { data: appRow } = await supabase
@@ -111,8 +149,13 @@ export async function resolveWinePrefill(
 
   // Fall back to the label's region text when the appellation didn't resolve.
   if (!regionId && extracted.region) {
+    // The scanner names regions in English ("Burgundy"), the catalog stores
+    // canonical names ("Bourgogne") — map through the synonym table, then match
+    // accent-insensitively (the raw name is kept as a fallback).
+    const canonical = canonicalRegionName(extracted.region);
+    const wanted = [fold(canonical), fold(extracted.region)];
     const { data } = await supabase.from("regions").select("id, name, country_id");
-    const hit = (data ?? []).find((r) => fold(r.name) === fold(extracted.region!));
+    const hit = (data ?? []).find((r) => wanted.includes(fold(r.name)));
     if (hit) {
       regionId = hit.id;
       if (!countryId) countryId = hit.country_id;

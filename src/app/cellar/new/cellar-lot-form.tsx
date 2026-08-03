@@ -544,6 +544,7 @@ export function CellarLotForm({
               <Input
                 id="purchased_on"
                 type="date"
+                className="appearance-none"
                 value={purchasedOn}
                 onChange={(e) => setPurchasedOn(e.target.value)}
               />
