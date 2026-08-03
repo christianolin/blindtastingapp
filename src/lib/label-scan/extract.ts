@@ -14,6 +14,7 @@ export type ExtractedLabel = {
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
+  style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
   grapes: { name: string; percentage: number | null }[];
   description: string | null;
   confidence: "high" | "medium" | "low";
@@ -33,6 +34,7 @@ Return ONLY a single JSON object — no prose, no markdown code fences — with 
 "vintageKind": "YEAR" if a vintage year is shown, "NV" for non-vintage, "TAWNY" for an "X years" tawny
 "vintageYear": the 4-digit vintage year as a number, or null
 "colour": one of "WHITE","ROSE","RED","ORANGE", or null if unclear
+"style": one of "STILL" (a normal still wine — most reds/whites, including Amarone), "SPARKLING" (Champagne, Prosecco, Cava…), "SWEET" (dessert / late-harvest, e.g. Sauternes, Tokaji, Port is FORTIFIED not SWEET), "FORTIFIED" (Port, Sherry, Madeira, VDN), or null if unclear
 "grapes": array of objects {"name": string, "percentage": number or null} for the wine's grape blend. Include ALL the major grapes, not just the primary one. Use blend percentages printed on the label; otherwise the typical proportions well-known for this wine or its appellation, or null when they are genuinely unknown.
 "description": a 2-4 sentence description for a wine catalog, combining the label text with well-known facts about this wine / producer / appellation. This is an editable draft; general knowledge is fine, but do not fabricate specific claims you are unsure of.
 "confidence": "high", "medium", or "low" — how clearly you could read the label
@@ -51,6 +53,11 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
   const col = o.colour;
   const colour =
     col === "WHITE" || col === "ROSE" || col === "RED" || col === "ORANGE" ? col : null;
+  const sty = o.style;
+  const style =
+    sty === "STILL" || sty === "SPARKLING" || sty === "SWEET" || sty === "FORTIFIED"
+      ? sty
+      : null;
   const conf = o.confidence;
   const confidence =
     conf === "high" || conf === "medium" || conf === "low" ? conf : "low";
@@ -65,6 +72,7 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
     vintageKind,
     vintageYear: Number.isInteger(year) && year > 1900 && year < 2100 ? year : null,
     colour,
+    style,
     grapes: Array.isArray(o.grapes)
       ? o.grapes
           .map((g) => {

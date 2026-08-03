@@ -178,7 +178,7 @@ export async function resolveWinePrefill(
     producerLabel,
     typeDesignationId: "",
     colour: extracted.colour,
-    style: null,
+    style: extracted.style,
     wineName: extracted.wineName ?? "",
     description: extracted.description,
     vintageKind: extracted.vintageKind,
