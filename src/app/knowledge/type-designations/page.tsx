@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 // The old Designations route now lives under the Library at
-// /knowledge/designations. Permanent client-visible redirect for any bookmarks.
+// /knowledge/designations. Permanent (308) redirect for any old bookmarks.
 export default function TypeDesignationsRedirect() {
-  redirect("/knowledge/designations");
+  permanentRedirect("/knowledge/designations");
 }

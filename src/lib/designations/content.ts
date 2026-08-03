@@ -1,7 +1,16 @@
+export type PyramidTier = {
+  name: string;
+  pct?: string;
+  count?: string;
+  labelling?: string;
+  color: string;
+  textColor?: string;
+};
+
 export type DesignationContent = {
   hero?: { src: string; alt: string };
   intro?: string;
-  hierarchy?: { tier: string; label: string; count?: string; note?: string }[];
+  pyramid?: PyramidTier[];
 };
 
 // Keyed by wine_designations.key. Only flagships need entries; other systems
@@ -19,12 +28,11 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
     },
     intro:
       "Burgundy's Grand Cru vineyards represent the finest expression of the region. 33 sites are recognized for their exceptional terroir and tradition.",
-    hierarchy: [
-      { tier: "grand-cru", label: "Grand Cru", count: "33 vineyards" },
-      { tier: "premier-cru", label: "Premier Cru", count: "~640 vineyards" },
-      { tier: "village", label: "Village / Communal", count: "44 appellations" },
-      { tier: "regional", label: "Regional", count: "23 appellations" },
-      { tier: "bourgogne", label: "Bourgogne", note: "Regional blend" },
+    pyramid: [
+      { name: "Grand Cru", pct: "~2% of production", count: "33 AOCs", labelling: "Vineyard + Grand Cru", color: "#5C1A2B" },
+      { name: "Premier Cru", pct: "~12% of production", count: "640+ climats", labelling: "Village + Premier Cru + Vineyard", color: "#8A3D52" },
+      { name: "Village", pct: "~36% of production", count: "44 AOCs", labelling: "Village name", color: "#9A7B4F" },
+      { name: "Regional", pct: "~50% of production", count: "23 AOCs", labelling: "Bourgogne (Burgundy)", color: "#B78E42", textColor: "#2b0f18" },
     ],
   },
 };

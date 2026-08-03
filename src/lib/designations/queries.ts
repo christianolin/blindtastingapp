@@ -25,14 +25,18 @@ export type DesignationMemberRow = {
   placeName: string | null;
 };
 
-export type SubregionCount = { subregion: string; canonicalKey: string; count: number };
+export type SubregionCount = {
+  subregion: string;
+  canonicalKey: string;
+  count: number;
+  members: string[];
+};
 
 export type DesignationSystemDetail = {
   system: DesignationSystemRow;
   members: DesignationMemberRow[];
   hasPlaces: boolean;
   subregions: SubregionCount[];
-  visibleKeys: string[];
 };
 
 export type DirectoryGroup = {
@@ -60,7 +64,7 @@ export function categorySlug(name: string): string {
 // walking wine_places.primary_parent_id. `places` is the region subtree.
 // Returns counts (desc) plus the SUBREGION canonical keys, for map visibleKeys.
 export function groupBySubregion(
-  members: { winePlaceId: string | null }[],
+  members: { winePlaceId: string | null; name: string }[],
   places: {
     id: string;
     primary_parent_id: string | null;
@@ -70,7 +74,7 @@ export function groupBySubregion(
   }[],
 ): { subregions: SubregionCount[]; subregionKeys: string[] } {
   const byId = new Map(places.map((p) => [p.id, p]));
-  const counts = new Map<string, { name: string; key: string; count: number }>();
+  const groups = new Map<string, { name: string; key: string; members: string[] }>();
   for (const m of members) {
     let node = m.winePlaceId ? byId.get(m.winePlaceId) : undefined;
     while (node && node.kind !== "SUBREGION") {
@@ -78,12 +82,17 @@ export function groupBySubregion(
     }
     if (!node) continue;
     const entry =
-      counts.get(node.id) ?? { name: node.name, key: node.canonical_key, count: 0 };
-    entry.count += 1;
-    counts.set(node.id, entry);
+      groups.get(node.id) ?? { name: node.name, key: node.canonical_key, members: [] };
+    entry.members.push(m.name);
+    groups.set(node.id, entry);
   }
-  const subregions = [...counts.values()]
-    .map((e) => ({ subregion: e.name, canonicalKey: e.key, count: e.count }))
+  const subregions = [...groups.values()]
+    .map((e) => ({
+      subregion: e.name,
+      canonicalKey: e.key,
+      count: e.members.length,
+      members: e.members,
+    }))
     .sort((a, b) => b.count - a.count || a.subregion.localeCompare(b.subregion));
   return { subregions, subregionKeys: subregions.map((s) => s.canonicalKey) };
 }
@@ -137,7 +146,6 @@ export async function getDesignationSystem(
   const hasPlaces = members.some((m) => m.winePlaceId);
 
   let subregions: SubregionCount[] = [];
-  let visibleKeys: string[] = [];
   if (hasPlaces) {
     const memberKeys = members
       .map((m) => m.canonicalKey)
@@ -147,15 +155,12 @@ export async function getDesignationSystem(
       const { data: subtree } = await supabase
         .from("wine_places")
         .select("id, primary_parent_id, kind, name, canonical_key")
-        .like("canonical_key", `${regionPrefix}%`);
+        .like("canonical_key", `${regionPrefix}.%`);
       const grouped = groupBySubregion(
-        members.map((m) => ({ winePlaceId: m.winePlaceId })),
+        members.map((m) => ({ winePlaceId: m.winePlaceId, name: m.name })),
         subtree ?? [],
       );
       subregions = grouped.subregions;
-      visibleKeys = [regionPrefix, ...grouped.subregionKeys, ...memberKeys];
-    } else {
-      visibleKeys = memberKeys;
     }
   }
 
@@ -172,7 +177,6 @@ export async function getDesignationSystem(
     members,
     hasPlaces,
     subregions,
-    visibleKeys,
   };
 }
 

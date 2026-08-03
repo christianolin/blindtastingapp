@@ -55,44 +55,6 @@ export default async function DesignationsOverviewPage() {
           <p className="mt-2 max-w-2xl text-muted-foreground">{OVERVIEW_INTRO}</p>
         </div>
 
-        <section className="flex flex-col gap-4">
-          <h2 className="font-heading text-xl font-semibold">Why designations matter</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {WHY_CARDS.map((c, i) => {
-              const Icon = WHY_ICONS[i];
-              return (
-                <div key={c.title} className="flex flex-col gap-2">
-                  <Icon className="size-6 text-primary" />
-                  <h3 className="font-medium">{c.title}</h3>
-                  <p className="text-sm text-muted-foreground">{c.body}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-4">
-          <h2 className="font-heading text-xl font-semibold">Variation in wine</h2>
-          <p className="max-w-2xl text-sm text-muted-foreground">{VARIATION_INTRO}</p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {VARIATION_CARDS.map((c, i) => {
-              const Icon = VARIATION_ICONS[i];
-              return (
-                <div key={c.title} className="flex flex-col gap-2">
-                  <Icon className="size-6 text-primary" />
-                  <h3 className="font-medium">{c.title}</h3>
-                  <p className="text-sm text-muted-foreground">{c.body}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-4">
-          <Info className="mt-0.5 size-5 shrink-0 text-primary" />
-          <p className="text-sm text-muted-foreground">{BLIND_TASTING_NOTE}</p>
-        </div>
-
         <section className="flex flex-col gap-6">
           <h2 className="font-heading text-xl font-semibold">Browse designations</h2>
           {groups.map((group) => (
@@ -138,6 +100,45 @@ export default async function DesignationsOverviewPage() {
             </div>
           ) : null}
         </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="font-heading text-xl font-semibold">Why designations matter</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {WHY_CARDS.map((c, i) => {
+              const Icon = WHY_ICONS[i];
+              return (
+                <div key={c.title} className="flex flex-col gap-2">
+                  <Icon className="size-6 text-primary" />
+                  <h3 className="font-medium">{c.title}</h3>
+                  <p className="text-sm text-muted-foreground">{c.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="font-heading text-xl font-semibold">Variation in wine</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">{VARIATION_INTRO}</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {VARIATION_CARDS.map((c, i) => {
+              const Icon = VARIATION_ICONS[i];
+              return (
+                <div key={c.title} className="flex flex-col gap-2">
+                  <Icon className="size-6 text-primary" />
+                  <h3 className="font-medium">{c.title}</h3>
+                  <p className="text-sm text-muted-foreground">{c.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-4">
+          <Info className="mt-0.5 size-5 shrink-0 text-primary" />
+          <p className="text-sm text-muted-foreground">{BLIND_TASTING_NOTE}</p>
+        </div>
+
       </div>
     </div>
   );
