@@ -18,6 +18,7 @@ import {
   type ReferenceOption,
 } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
+import { ScanModal } from "@/components/scan/scan-modal";
 import {
   TypeDesignationField,
   type TypeDesignationOption,
@@ -81,6 +82,7 @@ const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FO
 
 export function WineForm({
   tastingId,
+  userId,
   countries: initialCountries,
   regions: initialRegions,
   grapes: initialGrapes,
@@ -89,6 +91,7 @@ export function WineForm({
   initial,
 }: {
   tastingId: string;
+  userId?: string;
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
@@ -145,6 +148,7 @@ export function WineForm({
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [unidentified, setUnidentified] = useState(false);
   const [pickedWine, setPickedWine] = useState<{ id: string; label: string } | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
@@ -227,6 +231,34 @@ export function WineForm({
               ? "← Back to catalog search"
               : "Not in the catalog? Add it manually"}
           </button>
+          {userId && !manualMode ? (
+            <button
+              type="button"
+              onClick={() => setScanning(true)}
+              className="self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              Scan the label instead
+            </button>
+          ) : null}
+          {scanning && userId ? (
+            <ScanModal
+              userId={userId}
+              pickLabel="Add to tasting"
+              onClose={() => setScanning(false)}
+              onAddToCellar={(wine) => {
+                setScanning(false);
+                setPickError(null);
+                startPick(async () => {
+                  const r = await addWineFromCatalog(tastingId, wine.id);
+                  if (r?.error) setPickError(r.error);
+                });
+              }}
+              onAddNew={() => {
+                setScanning(false);
+                setManualMode(true);
+              }}
+            />
+          ) : null}
         </div>
       ) : null}
 

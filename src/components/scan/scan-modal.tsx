@@ -23,11 +23,15 @@ export function ScanModal({
   onClose,
   onAddNew,
   onAddToCellar,
+  pickLabel = "Cellar",
 }: {
   userId: string;
   onClose: () => void;
   onAddNew: (catalog: WineFormInitial) => void;
   onAddToCellar: (wine: { id: string; label: string }) => void;
+  /** Label for the "use this matched wine" action (default "Cellar"; the
+   *  tasting flow passes "Add to tasting"). */
+  pickLabel?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -186,7 +190,7 @@ export function ScanModal({
                         }}
                         className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
                       >
-                        Cellar
+                        {pickLabel}
                       </button>
                       <Link
                         href={`/catalog/${m.id}`}
