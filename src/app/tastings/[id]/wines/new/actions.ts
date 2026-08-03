@@ -153,19 +153,30 @@ function parseBlend(formData: FormData): BlendGrape[] {
 // Persist the full blend on the catalog wine (its trigger recomputes the lead
 // grape as primary/secondary). Only a wine this user owns is touched, so a
 // deduped/existing wine keeps its own blend.
-async function syncCatalogBlend(
+async function syncCatalogWine(
   supabase: Awaited<ReturnType<typeof createClient>>,
   catalogWineId: string,
   userId: string,
   blend: BlendGrape[],
+  imageUrl: string | null,
 ) {
-  if (blend.length === 0) return;
   const { data: cw } = await supabase
     .from("catalog_wines")
-    .select("created_by")
+    .select("created_by, image_url")
     .eq("id", catalogWineId)
     .maybeSingle();
+  // Only the wine's creator may edit it — a deduped/existing wine keeps its own
+  // blend + photo (we never overwrite someone else's catalog entry).
   if (cw?.created_by !== userId) return;
+  // Put the label photo on the shared catalog wine too, so it shows in the
+  // catalog and results — not only on the post-reveal answer row.
+  if (imageUrl && !cw.image_url) {
+    await supabase
+      .from("catalog_wines")
+      .update({ image_url: imageUrl })
+      .eq("id", catalogWineId);
+  }
+  if (blend.length === 0) return;
   await supabase
     .from("catalog_wine_grapes")
     .delete()
@@ -342,7 +353,7 @@ export async function addWine(
     return { error: answerError.message };
   }
 
-  await syncCatalogBlend(supabase, catalogWineId, user.id, blend);
+  await syncCatalogWine(supabase, catalogWineId, user.id, blend, imageUrl);
   redirect(`/tastings/${tastingId}`);
 }
 
@@ -499,7 +510,7 @@ export async function updateWine(
     return { error: answerError.message };
   }
 
-  await syncCatalogBlend(supabase, catalogWineId, user.id, blend);
+  await syncCatalogWine(supabase, catalogWineId, user.id, blend, imageUrl);
   redirect(`/tastings/${tastingId}`);
 }
 
