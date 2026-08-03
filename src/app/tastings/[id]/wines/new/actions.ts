@@ -513,7 +513,7 @@ export async function searchCatalogWines(query: string) {
     p_query: query,
     p_limit: 20,
   });
-  return (data ?? []).map((w) => {
+  const mapped = (data ?? []).map((w) => {
     const vintage =
       w.vintage_kind === "YEAR" ? (w.vintage_year ? String(w.vintage_year) : "")
       : w.vintage_kind === "TAWNY" ? (w.vintage_tawny_years ? `${w.vintage_tawny_years}yo` : "Tawny")
@@ -530,6 +530,10 @@ export async function searchCatalogWines(query: string) {
       .join(" ");
     return { id: w.id, name: label, group: `${cap(w.colour)} · ${cap(w.style)}` };
   });
+  // The dropdown buckets CONSECUTIVE results by group, so identical colour·style
+  // groups must be adjacent or the same header repeats. Sort by group (stable,
+  // so the RPC's relevance order is preserved within each group).
+  return mapped.sort((a, b) => a.group.localeCompare(b.group));
 }
 
 export async function addWineFromCatalog(
