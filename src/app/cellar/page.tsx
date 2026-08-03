@@ -2,15 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
-import { Tabs } from "@/components/ui/tabs";
+import { CellarTabs } from "./cellar-tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { StatTile } from "@/components/patterns/stat-tile";
 import { Wine, Boxes, Coins, FileUp, MapPin } from "lucide-react";
-import { CellarBottlesTable, type BottleRow } from "./cellar-bottles-table";
-import { MyNotesList, type NoteRow } from "./my-notes-list";
+import { type BottleRow } from "./cellar-bottles-table";
+import { type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
-import { HistoryList, type HistoryRow } from "./history-list";
-import { StatsPanel } from "./stats-panel";
+import { type HistoryRow } from "./history-list";
 import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
 import { CellarVisibilityControl } from "./cellar-visibility-control";
 
@@ -184,8 +183,10 @@ export default async function CellarPage({
     .slice(0, 5)
     .map(([name, bottles]) => ({ name, bottles }));
 
+  // Notes, history and stats all load up front so CellarTabs can switch
+  // between them instantly, with no navigation.
   let notes: NoteRow[] = [];
-  if (tab === "notes") {
+  {
     const { data: noteRows } = await supabase
       .from("wset_notes")
       .select(
@@ -227,7 +228,7 @@ export default async function CellarPage({
   }
 
   let history: HistoryRow[] = [];
-  if (tab === "history") {
+  {
     const { data: consRows } = await supabase
       .from("cellar_consumptions")
       .select(
@@ -260,7 +261,7 @@ export default async function CellarPage({
   }
 
   let stats: CellarStats | null = null;
-  if (tab === "stats") {
+  {
     const { data: statRows } = await supabase
       .from("cellar_lots")
       .select(
@@ -421,26 +422,14 @@ export default async function CellarPage({
         </div>
       </div>
 
-      <Tabs
-        variant="underline"
-        activeKey={tab}
-        items={[
-          { key: "bottles", label: "Bottles", href: "/cellar" },
-          { key: "notes", label: "My notes", href: "/cellar?tab=notes" },
-          { key: "history", label: "History", href: "/cellar?tab=history" },
-          { key: "stats", label: "Stats", href: "/cellar?tab=stats" },
-        ]}
+      <CellarTabs
+        bottles={bottleRows}
+        notes={notes}
+        history={history}
+        stats={stats}
+        currency={preferredCurrency}
+        initialTab={tab}
       />
-
-      {tab === "bottles" ? (
-        <CellarBottlesTable rows={bottleRows} currency={preferredCurrency} />
-      ) : tab === "notes" ? (
-        <MyNotesList notes={notes} />
-      ) : tab === "history" ? (
-        <HistoryList rows={history} />
-      ) : stats ? (
-        <StatsPanel stats={stats} />
-      ) : null}
     </div>
   );
 }
