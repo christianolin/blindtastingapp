@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { CellarTabs } from "./cellar-tabs";
 import { PageHeader } from "@/components/patterns/page-header";
-import { StatTile } from "@/components/patterns/stat-tile";
-import { Wine, Boxes, Coins, FileUp, MapPin } from "lucide-react";
+import { CellarSummary } from "./cellar-summary";
+import { FileUp } from "lucide-react";
 import { type BottleRow } from "./cellar-bottles-table";
 import { type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
@@ -344,83 +344,14 @@ export default async function CellarPage({
         }
       />
 
-      {/* Phones get a compact summary card; desktop gets roomy tiles. Both
-          finish with a Top-regions card (bottle count per region). */}
-      <div className="rounded-xl border border-border bg-card p-4 sm:hidden">
-        <div className="grid grid-cols-3 gap-x-2 gap-y-3">
-          {[
-            { value: uniqueWines.size, label: "unique wines" },
-            { value: totalBottles, label: "total bottles" },
-            {
-              value: hasValue ? Math.round(totalValue).toLocaleString() : "—",
-              label: `${preferredCurrency} value`,
-            },
-          ].map((s) => (
-            <div key={s.label} className="flex flex-col items-center text-center">
-              <span className="font-heading text-lg font-semibold leading-none tabular-nums">
-                {s.value}
-              </span>
-              <span className="mt-1 text-[11px] leading-tight text-muted-foreground">
-                {s.label}
-              </span>
-            </div>
-          ))}
-        </div>
-        {topRegions.length > 0 ? (
-          <div className="mt-3 border-t border-border pt-3">
-            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Top regions
-            </p>
-            <ul className="flex flex-col gap-1">
-              {topRegions.map((r) => (
-                <li
-                  key={r.name}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <span className="truncate">{r.name}</span>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">
-                    {r.bottles}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="hidden gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 lg:items-start">
-        <StatTile icon={Boxes} tint="amber" value={uniqueWines.size} label="unique wines" />
-        <StatTile icon={Wine} tint="rose" value={totalBottles} label="total bottles" />
-        <StatTile
-          icon={Coins}
-          tint="gold"
-          value={hasValue ? Math.round(totalValue).toLocaleString() : "—"}
-          label={`${preferredCurrency} value`}
-        />
-        <div className="rounded-xl border border-border bg-card p-4 sm:col-span-3 lg:col-span-1">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <MapPin className="size-3.5" />
-            Top regions
-          </p>
-          {topRegions.length > 0 ? (
-            <ul className="flex flex-col gap-1.5">
-              {topRegions.map((r) => (
-                <li
-                  key={r.name}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <span className="truncate">{r.name}</span>
-                  <span className="shrink-0 font-medium tabular-nums">
-                    {r.bottles}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">No regions yet.</p>
-          )}
-        </div>
-      </div>
+      <CellarSummary
+        uniqueWines={uniqueWines.size}
+        totalBottles={totalBottles}
+        totalValue={totalValue}
+        hasValue={hasValue}
+        topRegions={topRegions}
+        currency={preferredCurrency}
+      />
 
       <CellarTabs
         bottles={bottleRows}

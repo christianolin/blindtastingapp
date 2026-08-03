@@ -84,9 +84,11 @@ const SORT_PRESETS: { label: string; key: SortKey; dir: "asc" | "desc" }[] = [
 export function CellarBottlesTable({
   rows,
   currency,
+  readOnly = false,
 }: {
   rows: BottleRow[];
   currency: string;
+  readOnly?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
@@ -171,16 +173,22 @@ export function CellarBottlesTable({
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-        <p className="font-heading text-lg font-medium">Your cellar is empty</p>
-        <p className="text-sm text-muted-foreground">
-          Add the wines you own to track bottles, drink windows and value.
+        <p className="font-heading text-lg font-medium">
+          {readOnly ? "No bottles to show" : "Your cellar is empty"}
         </p>
-        <AddWineButton
-          kind="cellar"
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Add a wine
-        </AddWineButton>
+        {!readOnly ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Add the wines you own to track bottles, drink windows and value.
+            </p>
+            <AddWineButton
+              kind="cellar"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Add a wine
+            </AddWineButton>
+          </>
+        ) : null}
       </div>
     );
   }
@@ -279,6 +287,7 @@ export function CellarBottlesTable({
                 </span>
               ) : null}
             </div>
+            {!readOnly ? (
             <div className="flex items-center gap-2">
               <Link
                 href={`/cellar/${r.lotId}/drink`}
@@ -304,6 +313,7 @@ export function CellarBottlesTable({
                 </button>
               ) : null}
             </div>
+            ) : null}
           </div>
         ))}
         {filtered.length === 0 ? (
@@ -325,7 +335,7 @@ export function CellarBottlesTable({
             <col className="w-[6rem]" />
             <col className="w-[6.5rem]" />
             <col className="w-[8rem]" />
-            <col className="w-[5.5rem]" />
+            {!readOnly ? <col className="w-[5.5rem]" /> : null}
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -347,7 +357,7 @@ export function CellarBottlesTable({
               <Th align="right" onClick={() => toggleSort("score")}>
                 Tasting note {sortIcon("score")}
               </Th>
-              <Th align="right">Actions</Th>
+              {!readOnly ? <Th align="right">Actions</Th> : null}
             </tr>
           </thead>
           <tbody>
@@ -438,6 +448,7 @@ export function CellarBottlesTable({
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
+                  {!readOnly ? (
                   <td className="px-3 py-3">
                     <div className="flex flex-col items-stretch gap-1">
                       <Link
@@ -503,6 +514,7 @@ export function CellarBottlesTable({
                       </div>
                     </div>
                   </td>
+                  ) : null}
                 </tr>
               );
             })}
