@@ -22,15 +22,18 @@ export function ScanModal({
   userId,
   onClose,
   onAddNew,
+  onAddNewToCellar,
   onAddToCellar,
   pickLabel = "Cellar",
 }: {
   userId: string;
   onClose: () => void;
   onAddNew: (catalog: WineFormInitial) => void;
+  /** When set, the "add as new" step offers a second choice that routes the
+   *  scanned wine into the cellar form (used by the global scan, where you
+   *  actively pick catalog vs cellar rather than defaulting). */
+  onAddNewToCellar?: (catalog: WineFormInitial) => void;
   onAddToCellar: (wine: { id: string; label: string }) => void;
-  /** Label for the "use this matched wine" action (default "Cellar"; the
-   *  tasting flow passes "Add to tasting"). */
   pickLabel?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,12 +72,12 @@ export function ScanModal({
     }
   }
 
-  async function addAsNew() {
+  async function addAsNew(handler: (catalog: WineFormInitial) => void) {
     if (!result) return;
     setAddingNew(true);
     try {
       const prefill = await resolveWinePrefill(result.extracted);
-      onAddNew({ ...prefill, imageUrl: scanUrl });
+      handler({ ...prefill, imageUrl: scanUrl });
       onClose();
     } catch {
       setAddingNew(false);
@@ -209,19 +212,49 @@ export function ScanModal({
               </p>
             )}
 
-            <button
-              type="button"
-              disabled={addingNew}
-              onClick={addAsNew}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-            >
-              <Wine className="size-4" />
-              {addingNew
-                ? "Preparing…"
-                : result && result.matches.length > 0
-                  ? "None of these — add as new"
-                  : "Add this wine"}
-            </button>
+            {onAddNewToCellar ? (
+              // Global scan: the user actively picks where a new wine goes — the
+              // cellar (which also creates the catalog entry) or the shared
+              // catalog only. Nothing is added until one is tapped.
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">
+                  {result && result.matches.length > 0
+                    ? "None of these? Add it as a new wine:"
+                    : "Add this wine:"}
+                </p>
+                <button
+                  type="button"
+                  disabled={addingNew}
+                  onClick={() => addAsNew(onAddNewToCellar)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                >
+                  <Wine className="size-4" />
+                  {addingNew ? "Preparing…" : "Add to my cellar"}
+                </button>
+                <button
+                  type="button"
+                  disabled={addingNew}
+                  onClick={() => addAsNew(onAddNew)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
+                >
+                  Add to the catalog only
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={addingNew}
+                onClick={() => addAsNew(onAddNew)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
+                <Wine className="size-4" />
+                {addingNew
+                  ? "Preparing…"
+                  : result && result.matches.length > 0
+                    ? "None of these — add as new"
+                    : "Add this wine"}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setStep("capture")}

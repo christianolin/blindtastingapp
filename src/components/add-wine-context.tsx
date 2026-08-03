@@ -21,7 +21,7 @@ export type AddWineOpts = {
 };
 type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
-  openScan: (target?: "catalog" | "cellar") => void;
+  openScan: (target?: "catalog" | "cellar" | "choose") => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
 
@@ -44,7 +44,9 @@ export function AddWineProvider({
   const [open, setOpen] = useState<AddWineKind | null>(null);
   const [opts, setOpts] = useState<AddWineOpts>({});
   const [scanOpen, setScanOpen] = useState(false);
-  const [scanTarget, setScanTarget] = useState<"catalog" | "cellar">("catalog");
+  const [scanTarget, setScanTarget] = useState<"catalog" | "cellar" | "choose">(
+    "catalog",
+  );
   const close = () => {
     setOpen(null);
     setOpts({});
@@ -53,7 +55,7 @@ export function AddWineProvider({
     setOpts(o ?? {});
     setOpen(kind);
   };
-  const openScan = (target: "catalog" | "cellar" = "catalog") => {
+  const openScan = (target: "catalog" | "cellar" | "choose" = "catalog") => {
     setScanTarget(target);
     setScanOpen(true);
   };
@@ -86,6 +88,11 @@ export function AddWineProvider({
             scanTarget === "cellar"
               ? openAddWine("cellar", { cellarNew: prefill })
               : openAddWine("catalog", { catalog: prefill })
+          }
+          onAddNewToCellar={
+            scanTarget === "choose"
+              ? (prefill) => openAddWine("cellar", { cellarNew: prefill })
+              : undefined
           }
           onAddToCellar={(cellarWine) => openAddWine("cellar", { cellarWine })}
         />
