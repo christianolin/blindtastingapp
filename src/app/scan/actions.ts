@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
+import { canonicalGrapeName } from "@/lib/label-scan/grape-canonical";
 import {
   listAppellationsForRegions,
   searchAppellations,
@@ -149,17 +150,23 @@ export async function resolveWinePrefill(
     const { data } = await supabase.from("grapes").select("id, name");
     const all = data ?? [];
     for (const g of extracted.grapes) {
-      const hit = all.find((x) => fold(x.name) === fold(g.name));
+      // Canonicalise the scanned name — strip clone/qualifier parentheticals
+      // and map well-known local names (Brunello, Garnacha, Shiraz…) to the
+      // canonical variety — so a match is found instead of proposing a
+      // duplicate. Fall back to the raw name for an exact match too.
+      const canonical = canonicalGrapeName(g.name);
+      const needle = fold(canonical);
+      const hit =
+        all.find((x) => fold(x.name) === needle) ??
+        all.find((x) => fold(x.name) === fold(g.name));
       const percentage = g.percentage != null ? String(g.percentage) : "";
       if (hit) {
         blend.push({ grapeId: hit.id, percentage });
       } else {
-        // No match: keep the scanned grape as a PENDING row (created only on
-        // save), mirroring the producer handling — so a misread or local
-        // variant name (e.g. "Brunello" for Sangiovese) never spawns a stray
-        // grape just from scanning. The user reviews it and can pick the
-        // canonical grape instead before saving.
-        blend.push({ grapeId: "", percentage, pendingName: g.name });
+        // No match even after canonicalising: keep it as a PENDING row (created
+        // only on save) under the cleaned canonical name, mirroring the producer
+        // handling — a misread never spawns a stray grape just from scanning.
+        blend.push({ grapeId: "", percentage, pendingName: canonical });
       }
     }
   }
