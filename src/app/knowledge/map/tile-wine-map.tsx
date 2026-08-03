@@ -7,11 +7,12 @@ import Map, {
   Source,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { ChevronUp, Maximize2, Minimize2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
+import { cn } from "@/lib/utils";
 
 // Free, un-keyed Carto vector basemap — same as the legacy map.
 const BASEMAP_STYLE =
@@ -353,6 +354,14 @@ export function TileWineMap({
   // globalThis: `Map` in this module is the react-map-gl component.
   const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
   const [paintGroups, setPaintGroups] = useState<string[]>([]);
+  // The legend covers much of a phone screen (owner screenshots), so make it
+  // collapsible: collapsed by default below lg, expanded from lg up. The map is
+  // dynamic ssr:false, so `window` exists at first render (no hydration flash).
+  const [legendOpen, setLegendOpen] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches,
+  );
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -804,8 +813,28 @@ export function TileWineMap({
           </Source>
         ))}
       </Map>
-      <div className="pointer-events-none absolute bottom-2 left-2 rounded-md border border-border bg-background/85 px-2.5 py-2 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
-        <p className="mb-1 font-medium text-foreground">Regions</p>
+      <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={() => setLegendOpen((o) => !o)}
+          aria-expanded={legendOpen}
+          className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left font-medium text-foreground"
+        >
+          <ChevronUp
+            className={cn(
+              "size-3.5 transition-transform",
+              legendOpen ? "" : "rotate-180",
+            )}
+          />
+          Legend
+        </button>
+        <div
+          className={cn(
+            "max-h-[45vh] overflow-y-auto px-2.5 pb-2",
+            legendOpen ? "" : "hidden",
+          )}
+        >
+          <p className="mb-1 font-medium text-foreground">Regions</p>
         <ul className="flex flex-col gap-0.5">
           {legendRegions.map((region) => (
             <li key={region.key} className="flex items-center gap-1.5">
@@ -895,6 +924,7 @@ export function TileWineMap({
               );
             })()
           : null}
+        </div>
       </div>
     </div>
   );
