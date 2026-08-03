@@ -119,9 +119,10 @@ export function NewWineForm({
 
   async function submit() {
     setError(null);
+    const hasProducer = Boolean(producerId || producerLabel?.trim());
     if (
       !countryId || !regionId || !appellationId || !blend[0]?.grapeId ||
-      !producerId || !colour || !style
+      !hasProducer || !colour || !style
     ) {
       setError(
         "Country, region, appellation, primary grape, producer, colour and style are required.",
@@ -134,6 +135,15 @@ export function NewWineForm({
     }
     setPending(true);
     try {
+      // A scanned-but-unmatched producer is pending (label set, no id): create
+      // it now, on save, so opening the scanner never spawns a possibly-misread
+      // winery. createProducer is find-or-create, so an existing exact name is
+      // reused rather than duplicated.
+      let resolvedProducerId = producerId;
+      if (!resolvedProducerId && producerLabel?.trim()) {
+        const created = await createProducer(producerLabel.trim(), regionId || null);
+        resolvedProducerId = created.id;
+      }
       const filled = blend.filter((r) => r.grapeId);
       const payload = {
         countryId,
@@ -145,7 +155,7 @@ export function NewWineForm({
           grapeId: r.grapeId,
           percentage: r.percentage.trim() ? Number(r.percentage) : null,
         })),
-        producerId,
+        producerId: resolvedProducerId,
         typeDesignationId: typeDesignationId || null,
         colour,
         style,
@@ -260,6 +270,12 @@ export function NewWineForm({
               onCreate={(name) => createProducer(name, regionId || null)}
               placeholder="Search for the producer"
             />
+            {!producerId && producerLabel?.trim() ? (
+              <p className="text-xs text-muted-foreground">
+                New producer — we&apos;ll add it when you save, or search above
+                to pick an existing one.
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label>Wine name (optional)</Label>

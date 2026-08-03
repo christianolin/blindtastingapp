@@ -130,10 +130,16 @@ export async function resolveWinePrefill(
   if (extracted.producer) {
     const hits = await searchProducers(extracted.producer, regionId || undefined);
     const needle = fold(extracted.producer);
-    const pick = hits.find((p) => fold(p.name) === needle) ?? hits[0];
-    if (pick) {
-      producerId = pick.id;
-      producerLabel = pick.name;
+    const exact = hits.find((p) => fold(p.name) === needle);
+    if (exact) {
+      producerId = exact.id;
+      producerLabel = exact.name;
+    } else {
+      // No exact match: surface the scanned name as a PENDING producer (label
+      // set, id empty). We never auto-pick a fuzzy hit or silently create a
+      // possibly-misread winery — the user reviews it and it's created only on
+      // save. The form still lets them pick an existing near-match instead.
+      producerLabel = extracted.producer;
     }
   }
 

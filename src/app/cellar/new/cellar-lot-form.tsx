@@ -18,6 +18,7 @@ import {
 import {
   createAppellation,
   createCountry,
+  createProducer,
   createRegion,
 } from "@/app/catalog/new/actions";
 import {
@@ -151,9 +152,10 @@ export function CellarLotForm({
       return;
     }
     if (!catalogWineId) {
+      const hasProducer = Boolean(producerId || producerLabel?.trim());
       if (
         !countryId || !regionId || !appellationId || !blend[0]?.grapeId ||
-        !producerId || !colour || !style
+        !hasProducer || !colour || !style
       ) {
         setError(
           "Pick an existing wine, or fill country, region, appellation, primary grape, producer, colour and style.",
@@ -171,13 +173,20 @@ export function CellarLotForm({
     }
     setPending(true);
     try {
+      // Create a scanned-but-unmatched (pending) producer on save — only when
+      // adding a new wine, since an existing catalog pick ignores these fields.
+      let resolvedProducerId = producerId;
+      if (!catalogWineId && !resolvedProducerId && producerLabel?.trim()) {
+        const created = await createProducer(producerLabel.trim(), regionId || null);
+        resolvedProducerId = created.id;
+      }
       await addCellarLot({
         catalogWineId: catalogWineId || null,
         countryId,
         regionId,
         appellationId,
         grapes: orderedBlend(blend),
-        producerId,
+        producerId: resolvedProducerId,
         typeDesignationId: typeDesignationId || null,
         colour: colour ?? undefined,
         style: style ?? undefined,
@@ -343,8 +352,16 @@ export function CellarLotForm({
                       ({ id, name }) => ({ id, name }),
                     )
                   }
+                  createLabel="producer"
+                  onCreate={(name) => createProducer(name, regionId || null)}
                   placeholder="Search for the producer"
                 />
+                {!producerId && producerLabel?.trim() ? (
+                  <p className="text-xs text-muted-foreground">
+                    New producer — we&apos;ll add it when you save, or search
+                    above to pick an existing one.
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Wine name (optional)</Label>
