@@ -46,7 +46,7 @@ export const NAV_LINKS: NavLink[] = [
     match: ["/knowledge", "/rules"],
     children: [
       { href: "/knowledge/map", label: "Wine map" },
-      { href: "/knowledge", label: "Library" },
+      { href: "/knowledge/designations", label: "Library" },
     ],
   },
   {
