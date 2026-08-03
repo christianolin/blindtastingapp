@@ -337,8 +337,8 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
-        <table className="w-full min-w-[74rem] table-fixed text-sm">
+      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
+        <table className="w-full table-fixed text-sm">
             <colgroup>
               <col />
               <col className="w-[6rem]" />
@@ -350,7 +350,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               <col className="w-[5rem]" />
               <col className="w-[6.5rem]" />
               <col className="w-[6.5rem]" />
-              <col className="w-[7.5rem]" />
+              <col className="w-[5rem]" />
             </colgroup>
             <thead>
               <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -451,7 +451,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                     {fmtDate(r.addedAt)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <RowActions
                       stack
                       onCellar={() =>
@@ -547,7 +547,7 @@ function RowActions({
       )}
     >
       <button type="button" onClick={onCellar} className={cls}>
-        Add to cellar
+        {stack ? "Cellar" : "Add to cellar"}
       </button>
       <button type="button" onClick={onRate} className={cls}>
         Rate

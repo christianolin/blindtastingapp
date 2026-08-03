@@ -328,21 +328,20 @@ export function CellarBottlesTable({
             </option>
           ))}
         </select>
-        {hasFilter ? (
-          <button
-            type="button"
-            onClick={() => {
-              setCountry(ALL);
-              setRegion(ALL);
-              setColour(ALL);
-              setGrape(ALL);
-              setPage(1);
-            }}
-            className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Clear filters
-          </button>
-        ) : null}
+        <button
+          type="button"
+          disabled={!hasFilter}
+          onClick={() => {
+            setCountry(ALL);
+            setRegion(ALL);
+            setColour(ALL);
+            setGrape(ALL);
+            setPage(1);
+          }}
+          className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          Clear filters
+        </button>
       </div>
 
       {/* Mobile: a card per row (the wide table only appears at lg+). */}
