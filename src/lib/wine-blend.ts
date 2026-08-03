@@ -20,3 +20,24 @@ export function orderedBlend(
     ? [...parsed].sort((a, b) => (b.percentage ?? -1) - (a.percentage ?? -1))
     : parsed;
 }
+
+// Resolve any pending (scanned-but-unmatched) grape rows into real grape ids,
+// preserving row order. A pending row has no grapeId but carries pendingName;
+// `create` (the createGrape server action, find-or-create) runs only now, on
+// save, so scanning a label never spawns a stray/variant grape (e.g. "Brunello"
+// for Sangiovese) until the user commits. Empty rows are dropped.
+export async function resolvePendingBlend(
+  rows: { grapeId: string; percentage: string; pendingName?: string }[],
+  create: (name: string) => Promise<{ id: string }>,
+): Promise<{ grapeId: string; percentage: string }[]> {
+  const out: { grapeId: string; percentage: string }[] = [];
+  for (const r of rows) {
+    if (r.grapeId) {
+      out.push({ grapeId: r.grapeId, percentage: r.percentage });
+    } else if (r.pendingName?.trim()) {
+      const created = await create(r.pendingName.trim());
+      out.push({ grapeId: created.id, percentage: r.percentage });
+    }
+  }
+  return out;
+}

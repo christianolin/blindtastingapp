@@ -12,7 +12,14 @@ import { createGrape } from "./actions";
 // One row per grape: the grape itself + an optional percentage. The first row is
 // the primary grape (required); the rest build the blend. Percentages are
 // optional — blind tasting falls back to row order when they're absent.
-export type BlendRow = { grapeId: string; percentage: string };
+// A row may be "pending": a scanned grape name not yet matched to a grape in
+// the catalog. pendingName carries that label until the row is replaced with a
+// real grape or created (find-or-create) on save.
+export type BlendRow = {
+  grapeId: string;
+  percentage: string;
+  pendingName?: string;
+};
 
 export function GrapeBlendEditor({
   grapes,
@@ -36,42 +43,53 @@ export function GrapeBlendEditor({
   return (
     <div className="flex flex-col gap-2">
       {value.map((r, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <ReferenceCombobox
-              formFieldName={`grape_${i}`}
-              options={grapes}
-              value={r.grapeId}
-              onValueChange={(id) => setRow(i, { grapeId: id })}
-              onOptionCreated={onGrapeCreated}
-              placeholder={i === 0 ? "Primary grape" : "Grape"}
-              createLabel="grape"
-              onCreate={createGrape}
+        <div key={i} className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <ReferenceCombobox
+                formFieldName={`grape_${i}`}
+                options={grapes}
+                value={r.grapeId}
+                selectedLabel={r.pendingName ?? null}
+                onValueChange={(id) =>
+                  setRow(i, { grapeId: id, pendingName: undefined })
+                }
+                onOptionCreated={onGrapeCreated}
+                placeholder={i === 0 ? "Primary grape" : "Grape"}
+                createLabel="grape"
+                onCreate={createGrape}
+              />
+            </div>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step="0.5"
+              value={r.percentage}
+              onChange={(e) => setRow(i, { percentage: e.target.value })}
+              placeholder="%"
+              className="w-20"
+              aria-label={`Grape ${i + 1} percentage`}
             />
+            {value.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label="Remove grape"
+                className="text-muted-foreground transition-colors hover:text-destructive"
+              >
+                <X className="size-4" />
+              </button>
+            ) : (
+              <span className="w-4" />
+            )}
           </div>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step="0.5"
-            value={r.percentage}
-            onChange={(e) => setRow(i, { percentage: e.target.value })}
-            placeholder="%"
-            className="w-20"
-            aria-label={`Grape ${i + 1} percentage`}
-          />
-          {value.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              aria-label="Remove grape"
-              className="text-muted-foreground transition-colors hover:text-destructive"
-            >
-              <X className="size-4" />
-            </button>
-          ) : (
-            <span className="w-4" />
-          )}
+          {!r.grapeId && r.pendingName?.trim() ? (
+            <p className="text-xs text-muted-foreground">
+              New grape — we&apos;ll add it when you save, or pick an existing
+              one above.
+            </p>
+          ) : null}
         </div>
       ))}
       <button

@@ -143,30 +143,23 @@ export async function resolveWinePrefill(
     }
   }
 
-  const blend: { grapeId: string; percentage: string }[] = [];
+  const blend: { grapeId: string; percentage: string; pendingName?: string }[] =
+    [];
   if (extracted.grapes.length > 0) {
     const { data } = await supabase.from("grapes").select("id, name");
     const all = data ?? [];
     for (const g of extracted.grapes) {
-      let hit = all.find((x) => fold(x.name) === fold(g.name));
-      if (!hit) {
-        // Find-or-create so a well-known blend grape the catalog lacks (e.g.
-        // Rondinella for Amarone) still prefills instead of being dropped.
-        const { data: created } = await supabase
-          .from("grapes")
-          .insert({ name: g.name })
-          .select("id, name")
-          .single();
-        if (created) {
-          hit = created;
-          all.push(created);
-        }
-      }
+      const hit = all.find((x) => fold(x.name) === fold(g.name));
+      const percentage = g.percentage != null ? String(g.percentage) : "";
       if (hit) {
-        blend.push({
-          grapeId: hit.id,
-          percentage: g.percentage != null ? String(g.percentage) : "",
-        });
+        blend.push({ grapeId: hit.id, percentage });
+      } else {
+        // No match: keep the scanned grape as a PENDING row (created only on
+        // save), mirroring the producer handling — so a misread or local
+        // variant name (e.g. "Brunello" for Sangiovese) never spawns a stray
+        // grape just from scanning. The user reviews it and can pick the
+        // canonical grape instead before saving.
+        blend.push({ grapeId: "", percentage, pendingName: g.name });
       }
     }
   }

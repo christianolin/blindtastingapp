@@ -18,6 +18,7 @@ import {
 import {
   createAppellation,
   createCountry,
+  createGrape,
   createProducer,
   createRegion,
 } from "@/app/catalog/new/actions";
@@ -25,7 +26,7 @@ import {
   GrapeBlendEditor,
   type BlendRow,
 } from "@/app/catalog/new/grape-blend-editor";
-import { orderedBlend } from "@/lib/wine-blend";
+import { orderedBlend, resolvePendingBlend } from "@/lib/wine-blend";
 import { ImageUploader } from "@/components/image-uploader";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import { addCellarLot, searchCellarCatalog } from "./actions";
@@ -153,8 +154,11 @@ export function CellarLotForm({
     }
     if (!catalogWineId) {
       const hasProducer = Boolean(producerId || producerLabel?.trim());
+      const hasPrimaryGrape = Boolean(
+        blend[0]?.grapeId || blend[0]?.pendingName?.trim(),
+      );
       if (
-        !countryId || !regionId || !appellationId || !blend[0]?.grapeId ||
+        !countryId || !regionId || !appellationId || !hasPrimaryGrape ||
         !hasProducer || !colour || !style
       ) {
         setError(
@@ -180,12 +184,17 @@ export function CellarLotForm({
         const created = await createProducer(producerLabel.trim(), regionId || null);
         resolvedProducerId = created.id;
       }
+      // Same for pending (scanned-but-unmatched) grapes — resolved to real ids
+      // only for a new wine; an existing catalog pick ignores the blend.
+      const resolvedGrapes = catalogWineId
+        ? []
+        : orderedBlend(await resolvePendingBlend(blend, createGrape));
       await addCellarLot({
         catalogWineId: catalogWineId || null,
         countryId,
         regionId,
         appellationId,
-        grapes: orderedBlend(blend),
+        grapes: resolvedGrapes,
         producerId: resolvedProducerId,
         typeDesignationId: typeDesignationId || null,
         colour: colour ?? undefined,

@@ -20,6 +20,7 @@ export function ReferenceCombobox({
   formFieldName,
   options,
   value,
+  selectedLabel,
   onValueChange,
   onOptionCreated,
   placeholder,
@@ -31,6 +32,9 @@ export function ReferenceCombobox({
   formFieldName: string;
   options: ReferenceOption[];
   value: string;
+  /** Fallback label shown when value is empty — e.g. a pending scanned grape
+   *  not yet created. Ignored once value matches a real option. */
+  selectedLabel?: string | null;
   onValueChange: (id: string) => void;
   onOptionCreated?: (option: ReferenceOption) => void;
   placeholder: string;
@@ -89,6 +93,8 @@ export function ReferenceCombobox({
         >
           {selected ? (
             selected.name
+          ) : selectedLabel ? (
+            selectedLabel
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
           )}

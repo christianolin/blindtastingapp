@@ -13,11 +13,13 @@ import {
   createAppellation,
   createCatalogWine,
   createCountry,
+  createGrape,
   createProducer,
   createRegion,
   updateCatalogWine,
 } from "./actions";
 import { GrapeBlendEditor, type BlendRow } from "./grape-blend-editor";
+import { resolvePendingBlend } from "@/lib/wine-blend";
 import { ImageUploader } from "@/components/image-uploader";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
@@ -120,8 +122,11 @@ export function NewWineForm({
   async function submit() {
     setError(null);
     const hasProducer = Boolean(producerId || producerLabel?.trim());
+    const hasPrimaryGrape = Boolean(
+      blend[0]?.grapeId || blend[0]?.pendingName?.trim(),
+    );
     if (
-      !countryId || !regionId || !appellationId || !blend[0]?.grapeId ||
+      !countryId || !regionId || !appellationId || !hasPrimaryGrape ||
       !hasProducer || !colour || !style
     ) {
       setError(
@@ -144,14 +149,17 @@ export function NewWineForm({
         const created = await createProducer(producerLabel.trim(), regionId || null);
         resolvedProducerId = created.id;
       }
-      const filled = blend.filter((r) => r.grapeId);
+      // Turn any pending (scanned-but-unmatched) grapes into real ids now, on
+      // save — mirrors the producer handling. Row order is preserved; the
+      // catalog_wine_grapes trigger recomputes the primary grape.
+      const resolvedBlend = await resolvePendingBlend(blend, createGrape);
       const payload = {
         countryId,
         regionId,
         appellationId,
-        primaryGrapeId: filled[0].grapeId,
-        secondaryGrapeId: filled[1]?.grapeId ?? null,
-        grapes: filled.map((r) => ({
+        primaryGrapeId: resolvedBlend[0].grapeId,
+        secondaryGrapeId: resolvedBlend[1]?.grapeId ?? null,
+        grapes: resolvedBlend.map((r) => ({
           grapeId: r.grapeId,
           percentage: r.percentage.trim() ? Number(r.percentage) : null,
         })),

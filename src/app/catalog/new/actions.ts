@@ -12,7 +12,21 @@ export async function createCountry(name: string): Promise<ReferenceOption> {
 
 export async function createGrape(name: string): Promise<ReferenceOption> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("grapes").insert({ name }).select("id, name").single();
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Grape name is required.");
+  // Reuse an exact-name match so re-adding a known grape — or saving a pending
+  // scanned grape whose name already exists — never spawns a duplicate row.
+  const existing = await supabase
+    .from("grapes")
+    .select("id, name")
+    .eq("name", trimmed)
+    .maybeSingle();
+  if (existing.data) return existing.data;
+  const { data, error } = await supabase
+    .from("grapes")
+    .insert({ name: trimmed })
+    .select("id, name")
+    .single();
   if (error) throw new Error(error.message);
   return data;
 }
