@@ -75,7 +75,7 @@ export function CellarAddWineModal({
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg max-sm:top-4 max-sm:max-h-[calc(100dvh-2rem)] max-sm:translate-y-0">
         <DialogTitle>Add a wine to your cellar</DialogTitle>
         {onScan && !initialCatalogWineId ? (
           <button
