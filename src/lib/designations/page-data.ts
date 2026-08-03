@@ -1,0 +1,64 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+import { getBurgundyHierarchy, type BurgundyHierarchy } from "./burgundy";
+
+// Everything the single tabbed Designations page needs, loaded once server-side
+// and handed to the client tab shell so switching tabs is instant (no refetch).
+export type TabSystemMember = {
+  name: string;
+  tier: string | null;
+  commune: string | null;
+};
+export type TabSystem = { key: string; name: string; members: TabSystemMember[] };
+export type TabGlossaryTerm = { name: string; description: string | null };
+export type DesignationsPageData = {
+  systems: TabSystem[];
+  glossary: TabGlossaryTerm[];
+  burgundy: BurgundyHierarchy;
+};
+
+export async function getDesignationsPageData(
+  supabase: SupabaseClient<Database>,
+): Promise<DesignationsPageData> {
+  const [{ data: sys }, { data: mem }, { data: gloss }, burgundy] =
+    await Promise.all([
+      supabase.from("wine_designations").select("id, key, name").order("sort_order"),
+      supabase
+        .from("wine_designation_members")
+        .select("designation_id, name, tier, commune")
+        .order("tier_rank", { ascending: true })
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("type_designations")
+        .select("name, description")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+      getBurgundyHierarchy(supabase),
+    ]);
+
+  const keyById = new Map((sys ?? []).map((s) => [s.id, s.key]));
+  const membersByKey = new Map<string, TabSystemMember[]>();
+  for (const m of mem ?? []) {
+    const key = keyById.get(m.designation_id);
+    if (!key) continue;
+    const list = membersByKey.get(key) ?? [];
+    list.push({
+      name: m.name,
+      tier: m.tier == null ? null : String(m.tier),
+      commune: m.commune,
+    });
+    membersByKey.set(key, list);
+  }
+
+  const systems: TabSystem[] = (sys ?? []).map((s) => ({
+    key: s.key,
+    name: s.name,
+    members: membersByKey.get(s.key) ?? [],
+  }));
+  const glossary: TabGlossaryTerm[] = (gloss ?? []).map((g) => ({
+    name: g.name,
+    description: g.description,
+  }));
+
+  return { systems, glossary, burgundy };
+}
