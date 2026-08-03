@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Camera } from "lucide-react";
 import { CellarLotForm } from "@/app/cellar/new/cellar-lot-form";
 import type { ReferenceOption } from "@/components/reference-combobox";
+import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 
 type RefData = {
   countries: ReferenceOption[];
@@ -24,12 +25,14 @@ export function CellarAddWineModal({
   onClose,
   initialCatalogWineId,
   initialCatalogWineLabel,
+  initialWine,
   onScan,
 }: {
   userId: string;
   onClose: () => void;
   initialCatalogWineId?: string;
   initialCatalogWineLabel?: string | null;
+  initialWine?: WineFormInitial;
   onScan?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -102,6 +105,7 @@ export function CellarAddWineModal({
             userId={userId}
             initialCatalogWineId={initialCatalogWineId}
             initialCatalogWineLabel={initialCatalogWineLabel}
+            initialWine={initialWine}
             onAdded={() => {
               onClose();
               router.refresh();

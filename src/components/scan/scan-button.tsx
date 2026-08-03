@@ -13,7 +13,7 @@ export function ScanButton() {
       variant="ghost"
       size="icon"
       aria-label="Scan a wine label"
-      onClick={openScan}
+      onClick={() => openScan()}
     >
       <Camera />
     </Button>

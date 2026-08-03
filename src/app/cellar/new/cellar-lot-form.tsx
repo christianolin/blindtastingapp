@@ -26,6 +26,7 @@ import {
 } from "@/app/catalog/new/grape-blend-editor";
 import { orderedBlend } from "@/lib/wine-blend";
 import { ImageUploader } from "@/components/image-uploader";
+import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import { addCellarLot, searchCellarCatalog } from "./actions";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
@@ -54,6 +55,7 @@ export function CellarLotForm({
   userId,
   initialCatalogWineId,
   initialCatalogWineLabel,
+  initialWine,
   onAdded,
 }: {
   countries: ReferenceOption[];
@@ -66,6 +68,9 @@ export function CellarLotForm({
   // user only fills the lot details.
   initialCatalogWineId?: string;
   initialCatalogWineLabel?: string | null;
+  // Prefill the NEW-wine fields (e.g. a label scan's "add as new" launched from
+  // the cellar flow) so the user reviews the wine + fills the lot, then saves.
+  initialWine?: WineFormInitial;
   // When set (rendered in the Add-wine popup), called after a successful add
   // instead of navigating — the modal closes + refreshes.
   onAdded?: () => void;
@@ -74,7 +79,9 @@ export function CellarLotForm({
   const [countries, setCountries] = useState(initialCountries);
   const [regions, setRegions] = useState(initialRegions);
   const [grapes, setGrapes] = useState(initialGrapes);
-  const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
+  const [appellations, setAppellations] = useState<ReferenceOption[]>(
+    initialWine?.appellations ?? [],
+  );
   const [, startAppellations] = useTransition();
 
   const [catalogWineId, setCatalogWineId] = useState(initialCatalogWineId ?? "");
@@ -82,23 +89,37 @@ export function CellarLotForm({
     initialCatalogWineLabel ?? null,
   );
 
-  const [countryId, setCountryId] = useState("");
-  const [regionId, setRegionId] = useState("");
-  const [appellationId, setAppellationId] = useState("");
-  const [blend, setBlend] = useState<BlendRow[]>([
-    { grapeId: "", percentage: "" },
-  ]);
-  const [producerId, setProducerId] = useState("");
-  const [producerLabel, setProducerLabel] = useState<string | null>(null);
-  const [typeDesignationId, setTypeDesignationId] = useState("");
-  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(null);
-  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(null);
-  const [wineName, setWineName] = useState("");
-  const [description, setDescription] = useState("");
-  const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">("YEAR");
-  const [vintageYear, setVintageYear] = useState("");
-  const [tawnyYears, setTawnyYears] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [countryId, setCountryId] = useState(initialWine?.countryId ?? "");
+  const [regionId, setRegionId] = useState(initialWine?.regionId ?? "");
+  const [appellationId, setAppellationId] = useState(
+    initialWine?.appellationId ?? "",
+  );
+  const [blend, setBlend] = useState<BlendRow[]>(
+    initialWine?.blend ?? [{ grapeId: "", percentage: "" }],
+  );
+  const [producerId, setProducerId] = useState(initialWine?.producerId ?? "");
+  const [producerLabel, setProducerLabel] = useState<string | null>(
+    initialWine?.producerLabel ?? null,
+  );
+  const [typeDesignationId, setTypeDesignationId] = useState(
+    initialWine?.typeDesignationId ?? "",
+  );
+  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(
+    initialWine?.colour ?? null,
+  );
+  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(
+    initialWine?.style ?? null,
+  );
+  const [wineName, setWineName] = useState(initialWine?.wineName ?? "");
+  const [description, setDescription] = useState(initialWine?.description ?? "");
+  const [vintageKind, setVintageKind] = useState<"YEAR" | "NV" | "TAWNY">(
+    initialWine?.vintageKind ?? "YEAR",
+  );
+  const [vintageYear, setVintageYear] = useState(initialWine?.vintageYear ?? "");
+  const [tawnyYears, setTawnyYears] = useState(initialWine?.tawnyYears ?? "");
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    initialWine?.imageUrl ?? null,
+  );
 
   const [quantity, setQuantity] = useState("1");
   const [bottleSize, setBottleSize] = useState(750);

@@ -13,12 +13,15 @@ export type AddWineKind = "catalog" | "cellar" | "tasting";
 export type AddWineOpts = {
   // Prefill the catalog form (e.g. a label scan's "add as new").
   catalog?: WineFormInitial;
+  // Prefill the cellar form's new-wine fields (a scan's "add as new" launched
+  // from the cellar flow — it creates the wine and adds a lot on save).
+  cellarNew?: WineFormInitial;
   // Preselect an existing catalog wine in the cellar form (e.g. a scan match).
   cellarWine?: { id: string; label: string };
 };
 type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
-  openScan: () => void;
+  openScan: (target?: "catalog" | "cellar") => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
 
@@ -41,6 +44,7 @@ export function AddWineProvider({
   const [open, setOpen] = useState<AddWineKind | null>(null);
   const [opts, setOpts] = useState<AddWineOpts>({});
   const [scanOpen, setScanOpen] = useState(false);
+  const [scanTarget, setScanTarget] = useState<"catalog" | "cellar">("catalog");
   const close = () => {
     setOpen(null);
     setOpts({});
@@ -49,16 +53,18 @@ export function AddWineProvider({
     setOpts(o ?? {});
     setOpen(kind);
   };
+  const openScan = (target: "catalog" | "cellar" = "catalog") => {
+    setScanTarget(target);
+    setScanOpen(true);
+  };
   return (
-    <AddWineCtx.Provider
-      value={{ openAddWine, openScan: () => setScanOpen(true) }}
-    >
+    <AddWineCtx.Provider value={{ openAddWine, openScan }}>
       {children}
       {open === "catalog" ? (
         <CatalogAddWineModal
           userId={userId}
           initialWine={opts.catalog}
-          onScan={() => setScanOpen(true)}
+          onScan={() => openScan("catalog")}
           onClose={close}
         />
       ) : null}
@@ -67,7 +73,8 @@ export function AddWineProvider({
           userId={userId}
           initialCatalogWineId={opts.cellarWine?.id}
           initialCatalogWineLabel={opts.cellarWine?.label}
-          onScan={() => setScanOpen(true)}
+          initialWine={opts.cellarNew}
+          onScan={() => openScan("cellar")}
           onClose={close}
         />
       ) : null}
@@ -75,7 +82,11 @@ export function AddWineProvider({
         <ScanModal
           userId={userId}
           onClose={() => setScanOpen(false)}
-          onAddNew={(catalog) => openAddWine("catalog", { catalog })}
+          onAddNew={(prefill) =>
+            scanTarget === "cellar"
+              ? openAddWine("cellar", { cellarNew: prefill })
+              : openAddWine("catalog", { catalog: prefill })
+          }
           onAddToCellar={(cellarWine) => openAddWine("cellar", { cellarWine })}
         />
       ) : null}
