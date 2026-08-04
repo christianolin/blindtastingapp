@@ -27,9 +27,11 @@ type Data = {
 export function NewNoteModal({
   wineId,
   onClose,
+  cellarConsume = null,
 }: {
   wineId: string;
   onClose: () => void;
+  cellarConsume?: { lotId: string } | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<Data | null | "loading">("loading");
@@ -100,7 +102,19 @@ export function NewNoteModal({
             initial={data.initial}
             embedded
             onClose={onClose}
-            onSaved={onClose}
+            onSaved={async (savedId) => {
+              if (cellarConsume && savedId) {
+                await supabase.rpc("consume_cellar_lot", {
+                  p: {
+                    lot_id: cellarConsume.lotId,
+                    quantity: 1,
+                    reason: "DRANK",
+                    wset_note_id: savedId,
+                  },
+                });
+              }
+              onClose();
+            }}
           />
         )}
       </DialogContent>

@@ -28,7 +28,11 @@ export function TasteLauncherProvider({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState<TasteKind | null>(null);
-  const [rateWineId, setRateWineId] = useState<string | null>(null);
+  const [ratePick, setRatePick] = useState<{
+    catalogWineId: string;
+    lotId?: string;
+    consume?: boolean;
+  } | null>(null);
   return (
     <TasteCtx.Provider value={{ openTaste: setOpen }}>
       {children}
@@ -41,14 +45,20 @@ export function TasteLauncherProvider({
       {open === "rate" ? (
         <RateWineModal
           onClose={() => setOpen(null)}
-          onPick={(wineId) => {
+          onPick={(pick) => {
             setOpen(null);
-            setRateWineId(wineId);
+            setRatePick(pick);
           }}
         />
       ) : null}
-      {rateWineId ? (
-        <NewNoteModal wineId={rateWineId} onClose={() => setRateWineId(null)} />
+      {ratePick ? (
+        <NewNoteModal
+          wineId={ratePick.catalogWineId}
+          cellarConsume={
+            ratePick.consume && ratePick.lotId ? { lotId: ratePick.lotId } : null
+          }
+          onClose={() => setRatePick(null)}
+        />
       ) : null}
     </TasteCtx.Provider>
   );

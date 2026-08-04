@@ -38,9 +38,9 @@ export function NoteEditor({
   embedded?: boolean;
   /** Close/exit the editor (modal close, or route back) — used by Discard. */
   onClose?: () => void;
-  /** Called after a successful save; a modal uses it to close itself (and skip
-      the route swap the standalone page does). */
-  onSaved?: () => void;
+  /** Called after a successful save (with the saved note id); a modal uses it
+      to close itself (and skip the route swap the standalone page does). */
+  onSaved?: (savedId?: string) => void;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -97,7 +97,7 @@ export function NoteEditor({
       // A modal (Taste & Rate) closes itself after saving; the standalone
       // route instead swaps to the saved note's own URL.
       if (onSaved) {
-        onSaved();
+        onSaved(savedId);
       } else if (!state.id && savedId) {
         router.replace(`/catalog/${wineId}/notes/${savedId}`);
       }
