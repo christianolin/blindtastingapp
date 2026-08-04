@@ -82,18 +82,20 @@ export function BordeauxClassification({
         <p className="max-w-2xl text-sm text-muted-foreground">{intro}</p>
       ) : null}
 
-      <PyramidBands
-        bands={tiers.map((t, i) => ({
-          key: t.tier,
-          label: t.tier,
-          count: `${t.members.length} châteaux`,
-          color: meta[i]?.color ?? "#8A3D52",
-          textColor: meta[i]?.textColor,
-        }))}
-        activeKey={activeTier}
-        onSelect={(key) => setActiveTier(activeTier === key ? null : key)}
-      />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
+        <PyramidBands
+          bands={tiers.map((t, i) => ({
+            key: t.tier,
+            label: t.tier,
+            count: `${t.members.length} châteaux`,
+            color: meta[i]?.color ?? "#8A3D52",
+            textColor: meta[i]?.textColor,
+          }))}
+          activeKey={activeTier}
+          onSelect={(key) => setActiveTier(activeTier === key ? null : key)}
+        />
 
+        <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <input
           value={query}
@@ -162,6 +164,8 @@ export function BordeauxClassification({
             ))}
           </tbody>
         </table>
+      </div>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-muted/30 p-4">
