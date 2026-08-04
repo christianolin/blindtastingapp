@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { VintageKind } from "@/lib/supabase/database.types";
+import { catalogWineTitle } from "@/lib/wset/queries";
 
 export type CellarLotInput = {
   catalogWineId?: string | null;
@@ -225,4 +227,70 @@ export async function searchCellarCatalog(
       .join(" ");
     return { id: w.id, name: name || "Untitled wine" };
   });
+}
+
+export type CellarLotOption = {
+  lotId: string;
+  catalogWineId: string;
+  label: string;
+  bottleSizeMl: number;
+  storageLocation: string | null;
+  quantity: number;
+};
+
+// The caller's in-stock lots (quantity > 0) with a readable wine label — feeds
+// the "add from my cellar" pickers in tastings and Taste & Rate.
+export async function listMyCellarLots(): Promise<CellarLotOption[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("cellar_lots")
+    .select(
+      "id, catalog_wine_id, bottle_size_ml, quantity, storage_location, " +
+        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, " +
+        "producer:producers(name), appellation:appellations(name))",
+    )
+    .eq("owner_id", user.id)
+    .gt("quantity", 0);
+  const rows = (data ?? []) as unknown as Array<{
+    id: string;
+    catalog_wine_id: string;
+    bottle_size_ml: number;
+    quantity: number;
+    storage_location: string | null;
+    catalog_wines: Record<string, unknown> | Record<string, unknown>[] | null;
+  }>;
+  const relName = (rel: unknown): string | null => {
+    if (!rel) return null;
+    const row = Array.isArray(rel) ? rel[0] : rel;
+    return (row as { name?: string } | undefined)?.name ?? null;
+  };
+  return rows
+    .map((l) => {
+      const cw = (Array.isArray(l.catalog_wines)
+        ? l.catalog_wines[0]
+        : l.catalog_wines) as Record<string, unknown> | null;
+      const label = cw
+        ? catalogWineTitle({
+            producerName: relName(cw.producer),
+            wineName: (cw.wine_name as string | null) ?? null,
+            vintageKind: cw.vintage_kind as VintageKind,
+            vintageYear: (cw.vintage_year as number | null) ?? null,
+            vintageTawnyYears: (cw.vintage_tawny_years as number | null) ?? null,
+            appellationName: relName(cw.appellation),
+          })
+        : "Untitled wine";
+      return {
+        lotId: l.id,
+        catalogWineId: l.catalog_wine_id,
+        label,
+        bottleSizeMl: l.bottle_size_ml,
+        storageLocation: l.storage_location,
+        quantity: l.quantity,
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
