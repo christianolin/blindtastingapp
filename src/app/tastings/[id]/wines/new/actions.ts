@@ -160,10 +160,11 @@ async function syncCatalogWine(
   userId: string,
   blend: BlendGrape[],
   imageUrl: string | null,
+  description: string | null,
 ) {
   const { data: cw } = await supabase
     .from("catalog_wines")
-    .select("created_by, image_url")
+    .select("created_by, image_url, description")
     .eq("id", catalogWineId)
     .maybeSingle();
   // Only the wine's creator may edit it — a deduped/existing wine keeps its own
@@ -175,6 +176,14 @@ async function syncCatalogWine(
     await supabase
       .from("catalog_wines")
       .update({ image_url: imageUrl })
+      .eq("id", catalogWineId);
+  }
+  // Seed the wine's description on the creator's catalog entry when it has none
+  // yet — never clobbering an existing writeup (mirrors the photo rule above).
+  if (description && !cw.description) {
+    await supabase
+      .from("catalog_wines")
+      .update({ description })
       .eq("id", catalogWineId);
   }
   if (blend.length === 0) return;
@@ -354,7 +363,14 @@ export async function addWine(
     return { error: answerError.message };
   }
 
-  await syncCatalogWine(supabase, catalogWineId, user.id, blend, imageUrl);
+  await syncCatalogWine(
+    supabase,
+    catalogWineId,
+    user.id,
+    blend,
+    imageUrl,
+    String(formData.get("description") ?? "").trim() || null,
+  );
   redirect(`/tastings/${tastingId}`);
 }
 
@@ -511,7 +527,14 @@ export async function updateWine(
     return { error: answerError.message };
   }
 
-  await syncCatalogWine(supabase, catalogWineId, user.id, blend, imageUrl);
+  await syncCatalogWine(
+    supabase,
+    catalogWineId,
+    user.id,
+    blend,
+    imageUrl,
+    String(formData.get("description") ?? "").trim() || null,
+  );
   redirect(`/tastings/${tastingId}`);
 }
 
