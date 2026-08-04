@@ -43,6 +43,7 @@ export type WineFormInitial = {
   wine_name: string | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
   style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null;
+  description: string | null;
 };
 
 const VINTAGE_KIND_ITEMS = {
@@ -127,6 +128,7 @@ export function WineForm({
     initial?.vintage_kind ?? "YEAR",
   );
   const [wineName, setWineName] = useState(initial?.wine_name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
   const [colour, setColour] = useState<string>(initial?.colour ?? "");
   const [style, setStyle] = useState<string>(initial?.style ?? "");
   const [vintageYear, setVintageYear] = useState<string>(
@@ -266,6 +268,7 @@ export function WineForm({
                 setProducerLabel(catalog.producerLabel);
                 setTypeDesignationId(catalog.typeDesignationId);
                 setWineName(catalog.wineName);
+                setDescription(catalog.description ?? "");
                 setColour(catalog.colour ?? "");
                 setStyle(catalog.style ?? "");
                 setVintageKind(catalog.vintageKind);
@@ -394,6 +397,8 @@ export function WineForm({
         setTypeDesignationId={setTypeDesignationId}
         wineName={wineName}
         setWineName={setWineName}
+        description={description}
+        setDescription={setDescription}
         colour={colour}
         setColour={setColour}
         style={style}

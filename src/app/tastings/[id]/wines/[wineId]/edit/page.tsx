@@ -112,7 +112,7 @@ export default async function EditWinePage({
     answer.catalog_wine_id
       ? supabase
           .from("catalog_wines")
-          .select("wine_name, colour, style")
+          .select("wine_name, colour, style, description")
           .eq("id", answer.catalog_wine_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -151,6 +151,7 @@ export default async function EditWinePage({
               wine_name: catalogWine?.wine_name ?? null,
               colour: (catalogWine?.colour as "WHITE" | "ROSE" | "RED" | "ORANGE" | null) ?? null,
               style: (catalogWine?.style as "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null) ?? null,
+              description: catalogWine?.description ?? null,
             }}
           />
         </CardContent>
