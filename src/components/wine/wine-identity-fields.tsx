@@ -86,6 +86,8 @@ export function WineIdentityFields({
   vintageYear,
   setVintageYear,
   tawnyInitial,
+  tawnyYears,
+  setTawnyYears,
   unidentified = false,
   imageFolder,
   imageInitialUrl,
@@ -131,6 +133,8 @@ export function WineIdentityFields({
   vintageYear: string;
   setVintageYear: (v: string) => void;
   tawnyInitial?: number | null;
+  tawnyYears?: string;
+  setTawnyYears?: (v: string) => void;
   unidentified?: boolean;
   imageFolder: string;
   imageInitialUrl: string | null;
@@ -388,7 +392,15 @@ export function WineIdentityFields({
               <Select
                 name="vintage_tawny_years"
                 items={TAWNY_YEARS_ITEMS}
-                defaultValue={tawnyInitial != null ? String(tawnyInitial) : undefined}
+                value={setTawnyYears ? (tawnyYears ?? "") : undefined}
+                onValueChange={
+                  setTawnyYears ? (v) => setTawnyYears(v ?? "") : undefined
+                }
+                defaultValue={
+                  setTawnyYears || tawnyInitial == null
+                    ? undefined
+                    : String(tawnyInitial)
+                }
                 required
               >
                 <SelectTrigger className="w-full">
