@@ -88,8 +88,12 @@ export function WineIdentityFields({
   unidentified = false,
   imageFolder,
   imageInitialUrl,
+  imageAspect,
+  imageLabel,
   onImageChange,
   photoHint,
+  description,
+  setDescription,
 }: {
   countries: ReferenceOption[];
   setCountries: React.Dispatch<React.SetStateAction<ReferenceOption[]>>;
@@ -128,8 +132,12 @@ export function WineIdentityFields({
   unidentified?: boolean;
   imageFolder: string;
   imageInitialUrl: string | null;
+  imageAspect?: string;
+  imageLabel?: string;
   onImageChange?: (url: string | null) => void;
   photoHint?: string;
+  description?: string;
+  setDescription?: (v: string) => void;
 }) {
   const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
   const [appellationsPending, startAppellations] = useTransition();
@@ -279,6 +287,19 @@ export function WineIdentityFields({
               placeholder="e.g. Chateau Lascombes, or Clos Sainte-Hune"
             />
           </div>
+          {setDescription ? (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="wine_description">Description (optional)</Label>
+              <textarea
+                id="wine_description"
+                name="description"
+                value={description ?? ""}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Background on the wine — style, vineyard, story…"
+                className="min-h-24 rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          ) : null}
           <div className="flex flex-col gap-2">
             <Label>Colour</Label>
             <Select
@@ -390,8 +411,8 @@ export function WineIdentityFields({
           name="image_url"
           bucket="wine-images"
           folder={imageFolder}
-          label="Add a photo"
-          aspectClassName="aspect-square max-w-48"
+          label={imageLabel ?? "Add a photo"}
+          aspectClassName={imageAspect ?? "aspect-square max-w-48"}
           initialUrl={imageInitialUrl}
           onChange={onImageChange}
         />
