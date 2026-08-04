@@ -54,7 +54,7 @@ export async function createGrape(name: string) {
   );
 }
 
-export async function createProducer(regionId: string, name: string) {
+export async function createProducer(regionId: string | null, name: string) {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required.");
   const supabase = await createClient();

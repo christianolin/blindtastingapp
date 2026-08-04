@@ -72,6 +72,7 @@ export function WineIdentityFields({
   producerId,
   producerLabel,
   onProducerChange,
+  pendingProducerHint,
   typeDesignationId,
   setTypeDesignationId,
   wineName,
@@ -116,6 +117,7 @@ export function WineIdentityFields({
   producerId: string;
   producerLabel: string | null;
   onProducerChange: (id: string, label: string | null) => void;
+  pendingProducerHint?: string;
   typeDesignationId: string;
   setTypeDesignationId: (id: string) => void;
   wineName: string;
@@ -260,9 +262,12 @@ export function WineIdentityFields({
               search={searchProducersGrouped}
               placeholder="Search for the producer"
               createLabel="producer"
-              onCreate={regionId ? (name) => createProducer(regionId, name) : undefined}
+              onCreate={(name) => createProducer(regionId || null, name)}
               emptyQueryHint={regionId ? "Type to search all producers" : undefined}
             />
+            {pendingProducerHint && !producerId && producerLabel?.trim() ? (
+              <p className="text-xs text-muted-foreground">{pendingProducerHint}</p>
+            ) : null}
           </div>
           <div className="flex flex-col gap-2">
             <Label>Type designation (optional)</Label>
