@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Wine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCatalogWines } from "@/app/tastings/[id]/wines/new/actions";
 import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
+import { CellarLotPicker } from "@/components/cellar-lot-picker";
 import { useAddWine } from "@/components/add-wine-context";
 
 type Hit = { id: string; name: string };
@@ -108,9 +109,10 @@ export function RateWineModal({
           <button
             type="button"
             onClick={() => setCellarOpen((o) => !o)}
-            className="self-start text-sm font-medium text-primary hover:underline"
+            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
-            {cellarOpen ? "← Hide my cellar" : "…or choose from my cellar"}
+            <Wine className="size-4" />{" "}
+            {cellarOpen ? "Hide my cellar" : "Choose from my cellar"}
           </button>
           {cellarOpen ? (
             <>
@@ -122,36 +124,16 @@ export function RateWineModal({
                 />
                 Remove a bottle from my cellar
               </label>
-              {cellarLots === null ? (
-                <p className="py-2 text-sm text-muted-foreground">Loading…</p>
-              ) : cellarLots.length === 0 ? (
-                <p className="py-2 text-sm text-muted-foreground">
-                  Your cellar has no bottles in stock.
-                </p>
-              ) : (
-                <ul className="flex max-h-[40vh] flex-col overflow-y-auto">
-                  {cellarLots.map((l) => (
-                    <li key={l.lotId}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onPick?.({
-                            catalogWineId: l.catalogWineId,
-                            lotId: l.lotId,
-                            consume,
-                          })
-                        }
-                        className="w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-                      >
-                        {l.label}
-                        <span className="text-muted-foreground">
-                          {l.storageLocation ? ` · ${l.storageLocation}` : ""} · {l.quantity} btl
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <CellarLotPicker
+                lots={cellarLots}
+                onPick={(l) =>
+                  onPick?.({
+                    catalogWineId: l.catalogWineId,
+                    lotId: l.lotId,
+                    consume,
+                  })
+                }
+              />
             </>
           ) : null}
         </div>

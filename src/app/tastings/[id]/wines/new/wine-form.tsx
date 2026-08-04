@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CalendarClock, Fingerprint, MapPin } from "lucide-react";
+import { CalendarClock, Fingerprint, MapPin, Wine } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,7 @@ import {
   type AddWineFormState,
 } from "./actions";
 import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
+import { CellarLotPicker } from "@/components/cellar-lot-picker";
 import {
   GrapeBlendEditor,
   type BlendRow,
@@ -338,32 +339,13 @@ export function WineForm({
           ) : null}
           {cellarMode && userId ? (
             <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
-              {cellarLots === null ? (
-                <p className="text-sm text-muted-foreground">Loading your cellar…</p>
-              ) : cellarLots.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Your cellar has no bottles in stock.{" "}
-                  <a href="/cellar" className="text-primary hover:underline">
-                    Add some
-                  </a>
-                  .
-                </p>
-              ) : (
+              <CellarLotPicker
+                lots={cellarLots}
+                selectedLotId={selectedLotId}
+                onPick={(l) => setSelectedLotId(l.lotId)}
+              />
+              {cellarLots && cellarLots.length > 0 ? (
                 <>
-                  <select
-                    value={selectedLotId}
-                    onChange={(e) => setSelectedLotId(e.target.value)}
-                    className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-                  >
-                    <option value="">Pick a bottle from your cellar…</option>
-                    {cellarLots.map((l) => (
-                      <option key={l.lotId} value={l.lotId}>
-                        {l.label}
-                        {l.bottleSizeMl !== 750 ? ` · ${l.bottleSizeMl} ml` : ""}
-                        {l.storageLocation ? ` · ${l.storageLocation}` : ""} · {l.quantity} btl
-                      </option>
-                    ))}
-                  </select>
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -373,15 +355,19 @@ export function WineForm({
                     Remove a bottle from my cellar
                   </label>
                   {cellarWarning ? (
-                    <p className="text-sm text-amber-600">
-                      Added to the tasting — {cellarWarning}{" "}
-                      <a
-                        href={`/tastings/${tastingId}`}
-                        className="text-primary hover:underline"
+                    <div className="flex flex-col gap-2 text-sm text-amber-600">
+                      <span>Added to the tasting — {cellarWarning}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          router.push(`/tastings/${tastingId}`);
+                          router.refresh();
+                        }}
                       >
                         Go to the tasting
-                      </a>
-                    </p>
+                      </Button>
+                    </div>
                   ) : (
                     <Button
                       type="button"
@@ -401,7 +387,7 @@ export function WineForm({
                     <p className="text-sm text-destructive">{cellarError}</p>
                   ) : null}
                 </>
-              )}
+              ) : null}
             </div>
           ) : null}
         </div>
