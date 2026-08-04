@@ -6,7 +6,7 @@ import { getAppStats } from "@/lib/app-stats";
 import { TastingsTabs } from "./tastings-tabs";
 import { TastingCard, type TastingCardData } from "./tasting-card";
 import { AppStatsCards } from "./app-stats-cards";
-import { ModeTiles } from "./mode-tiles";
+import { OverviewHero } from "./overview-hero";
 
 export default async function TastePage() {
   const supabase = await createClient();
@@ -128,16 +128,7 @@ export default async function TastePage() {
         avatarUrl={profile?.avatar_url ?? null}
       />
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 p-6 sm:p-8">
-        <div>
-          <h1 className="font-heading text-4xl font-semibold tracking-tight">
-            What are you tasting today?
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Choose a tasting mode and start exploring.
-          </p>
-        </div>
-
-        <ModeTiles />
+        <OverviewHero />
 
         <AppStatsCards stats={appStats} />
 
