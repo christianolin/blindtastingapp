@@ -128,7 +128,7 @@ export default async function TastePage() {
         displayName={profile?.display_name ?? user.email ?? ""}
         avatarUrl={profile?.avatar_url ?? null}
       />
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 p-6 sm:p-8">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 p-6 sm:p-8">
         <OverviewHero />
 
         <AppStatsCards stats={appStats} />

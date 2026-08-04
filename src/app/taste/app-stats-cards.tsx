@@ -28,7 +28,7 @@ export function AppStatsCards({ stats }: { stats: AppStats }) {
         >
           <CardContent className="flex flex-col gap-1.5 px-4">
             <t.icon className="size-4 text-gold-deep" strokeWidth={2} />
-            <span className="font-heading text-2xl font-semibold tabular-nums">
+            <span className="font-heading text-3xl font-semibold tracking-tight">
               {formatCount(t.value)}
             </span>
             <span className="text-xs text-muted-foreground">{t.label}</span>
