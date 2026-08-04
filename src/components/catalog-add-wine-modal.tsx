@@ -72,7 +72,7 @@ export function CatalogAddWineModal({
               onClose();
               onScan();
             }}
-            className="inline-flex w-fit items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+            className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <Camera className="size-4" /> Scan the label instead
           </button>

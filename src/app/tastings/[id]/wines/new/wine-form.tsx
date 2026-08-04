@@ -295,7 +295,7 @@ export function WineForm({
             <button
               type="button"
               onClick={() => setScanning(true)}
-              className="inline-flex items-center gap-1.5 self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1.5 self-start rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Camera className="size-4" /> Scan the label instead
             </button>
