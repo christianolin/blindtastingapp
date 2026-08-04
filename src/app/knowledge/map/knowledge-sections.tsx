@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Award, Grape, MapPin, Tags, Wine } from "lucide-react";
+import { Award, Grape, MapPin, Medal, Tags, Wine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -11,7 +11,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import type { WinePlaceContext, WinePlaceGrape } from "@/lib/wine-map/context";
+import type {
+  WineClassifiedMember,
+  WinePlaceContext,
+  WinePlaceGrape,
+} from "@/lib/wine-map/context";
 
 const STYLE_LABELS: Record<string, string> = {
   RED: "Red",
@@ -37,6 +41,31 @@ export function grapeIconColor(color: string | null) {
   if (color === "RED") return "#7E1B26";
   if (color === "WHITE") return "#B78E42";
   return "#8A8A85";
+}
+
+// Group classified growths by system, then tier, preserving the RPC's order
+// (system sort_order → tier_rank → member sort_order).
+function groupClassified(members: WineClassifiedMember[]) {
+  const bySys = new Map<
+    string,
+    { systemName: string; tiers: Map<string, string[]> }
+  >();
+  for (const m of members) {
+    let s = bySys.get(m.system_key);
+    if (!s) {
+      s = { systemName: m.system_name, tiers: new Map() };
+      bySys.set(m.system_key, s);
+    }
+    const label = m.tier ?? "Classified";
+    const names = s.tiers.get(label) ?? [];
+    names.push(m.name);
+    s.tiers.set(label, names);
+  }
+  return [...bySys.entries()].map(([systemKey, s]) => ({
+    systemKey,
+    systemName: s.systemName,
+    tiers: [...s.tiers.entries()].map(([tier, names]) => ({ tier, names })),
+  }));
 }
 
 // Wine-style pills read as colour + method (e.g. "White sparkling") once a place
@@ -222,7 +251,13 @@ export function KnowledgeSections({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [openGrape, setOpenGrape] = useState<WinePlaceGrape | null>(null);
-  const { grapes, designations, nearby, dual_labels: dualLabels } = context;
+  const {
+    grapes,
+    designations,
+    nearby,
+    dual_labels: dualLabels,
+    classified_members: classifiedMembers,
+  } = context;
 
   // Wine styles are refetched with their colour dimension (the context RPC
   // predates it) so a place can show "White sparkling" and "Rosé sparkling".
@@ -336,6 +371,25 @@ export function KnowledgeSections({
                 {d.local_note ? (
                   <span className="text-muted-foreground"> {d.local_note}</span>
                 ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {classifiedMembers.length > 0 ? (
+        <div>
+          <SectionHeading icon={Medal}>Classified growths</SectionHeading>
+          <div className="flex flex-col gap-3 text-sm">
+            {groupClassified(classifiedMembers).map((sys) => (
+              <div key={sys.systemKey}>
+                <p className="font-medium">{sys.systemName}</p>
+                {sys.tiers.map((t) => (
+                  <p key={t.tier} className="text-muted-foreground">
+                    <span className="text-foreground">{t.tier}:</span>{" "}
+                    {t.names.join(", ")}
+                  </p>
+                ))}
               </div>
             ))}
           </div>

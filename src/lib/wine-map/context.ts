@@ -46,6 +46,15 @@ export type WineDualLabel = WinePlaceSummary & {
   note: string | null;
 };
 
+export type WineClassifiedMember = {
+  name: string;
+  tier: string | null;
+  tier_rank: number;
+  system_key: string;
+  system_name: string;
+  local_note: string | null;
+};
+
 export type WinePlaceContext = {
   place: WinePlaceSummary & {
     tier: number;
@@ -65,6 +74,7 @@ export type WinePlaceContext = {
   designations: WinePlaceDesignation[];
   nearby: WinePlaceSummary[];
   dual_labels: WineDualLabel[];
+  classified_members: WineClassifiedMember[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -114,5 +124,6 @@ export async function fetchWinePlaceContext(
     designations: data.designations ?? [],
     nearby: data.nearby ?? [],
     dual_labels: data.dual_labels ?? [],
+    classified_members: data.classified_members ?? [],
   };
 }
