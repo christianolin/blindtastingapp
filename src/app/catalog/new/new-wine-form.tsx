@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -383,6 +384,7 @@ export function NewWineForm({
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" onClick={submit} disabled={pending}>
+        <Plus />
         {pending
           ? wineId
             ? "Saving…"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { parseCellarTrackerCsv } from "./parse-cellartracker";
@@ -79,6 +80,7 @@ export function ImportForm() {
             onClick={submit}
             disabled={pending || parsed.length === 0}
           >
+            <FileUp />
             {pending ? "Importing…" : "Import"}
           </Button>
           {parsed.length > 0 ? (

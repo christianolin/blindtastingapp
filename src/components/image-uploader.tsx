@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { createClient } from "@/lib/supabase/client";
@@ -85,15 +86,20 @@ export function ImageUploader({
           <>
             <WineGlassLoader /> Uploading…
           </>
-        ) : url ? (
-          "Change photo"
         ) : (
           <>
-            {/* Phones can take a new photo or pick an existing one; desktop
-                only uploads. The file input (accept image/*, no capture) already
-                offers both — this just labels it clearly. */}
-            <span className="sm:hidden">Take or upload image</span>
-            <span className="hidden sm:inline">Upload image</span>
+            <ImageUp />
+            {url ? (
+              "Change photo"
+            ) : (
+              <>
+                {/* Phones can take a new photo or pick an existing one; desktop
+                    only uploads. The file input (accept image/*, no capture)
+                    already offers both — this just labels it clearly. */}
+                <span className="sm:hidden">Take or upload image</span>
+                <span className="hidden sm:inline">Upload image</span>
+              </>
+            )}
           </>
         )}
       </Button>

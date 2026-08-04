@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TastingAddWineModal } from "./tasting-add-wine-modal";
 
@@ -16,6 +17,7 @@ export function TastingAddWineButton({
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
+        <Plus />
         {label}
       </Button>
       {open ? (

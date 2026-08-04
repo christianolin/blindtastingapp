@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Warehouse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -303,9 +304,9 @@ export function CellarLotForm({
               setCatalogWineId("");
               setCatalogWineLabel(null);
             }}
-            className="shrink-0 rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            Change
+            <Pencil className="size-3.5" /> Change
           </button>
         </div>
       ) : (
@@ -690,6 +691,7 @@ export function CellarLotForm({
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {duplicateLots ? null : (
         <Button type="button" onClick={submit} disabled={pending}>
+          <Warehouse />
           {pending ? "Adding…" : "Add to cellar"}
         </Button>
       )}

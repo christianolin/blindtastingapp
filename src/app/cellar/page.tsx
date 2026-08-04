@@ -5,7 +5,7 @@ import { catalogWineTitle } from "@/lib/wset/queries";
 import { CellarTabs } from "./cellar-tabs";
 import { PageHeader } from "@/components/patterns/page-header";
 import { CellarSummary } from "./cellar-summary";
-import { FileUp } from "lucide-react";
+import { FileUp, Plus } from "lucide-react";
 import { type BottleRow } from "./cellar-bottles-table";
 import { type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
@@ -334,8 +334,9 @@ export default async function CellarPage({
               </Link>
               <AddWineButton
                 kind="cellar"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
+                <Plus className="size-4" />
                 Add a wine
               </AddWineButton>
             </div>

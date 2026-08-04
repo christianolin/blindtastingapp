@@ -16,6 +16,7 @@ import {
   ExternalLink,
   FileText,
   Pencil,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -222,8 +223,9 @@ export function CellarBottlesTable({
             </p>
             <AddWineButton
               kind="cellar"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
+              <Plus className="size-4" />
               Add a wine
             </AddWineButton>
           </>

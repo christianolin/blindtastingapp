@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { createClient } from "@/lib/supabase/client";
@@ -94,7 +95,9 @@ export function AvatarUploader({
             <WineGlassLoader /> Uploading…
           </>
         ) : (
-          "Change photo"
+          <>
+            <ImageUp /> Change photo
+          </>
         )}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
