@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { listAppellationsForRegions, searchProducers } from "@/lib/reference-sea
 import {
   addWine,
   addWineFromCatalog,
+  addTastingWineFromCellarLot,
   addWineUnidentified,
   updateWine,
   createAppellation,
@@ -38,6 +40,7 @@ import {
   searchCatalogWines,
   type AddWineFormState,
 } from "./actions";
+import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
 import {
   GrapeBlendEditor,
   type BlendRow,
@@ -172,6 +175,46 @@ export function WineForm({
     });
   }
 
+  const router = useRouter();
+  const [cellarMode, setCellarMode] = useState(false);
+  const [cellarLots, setCellarLots] = useState<CellarLotOption[] | null>(null);
+  const [selectedLotId, setSelectedLotId] = useState("");
+  const [consumeBottle, setConsumeBottle] = useState(false);
+  const [cellarError, setCellarError] = useState<string | null>(null);
+  const [cellarWarning, setCellarWarning] = useState<string | null>(null);
+  const [cellarPending, startCellar] = useTransition();
+
+  function openCellar() {
+    setCellarMode(true);
+    setCellarError(null);
+    if (cellarLots === null) {
+      startCellar(async () => {
+        setCellarLots(await listMyCellarLots());
+      });
+    }
+  }
+
+  function submitCellar() {
+    if (!selectedLotId) return;
+    setCellarError(null);
+    setCellarWarning(null);
+    startCellar(async () => {
+      const r = await addTastingWineFromCellarLot(tastingId, selectedLotId, {
+        consume: consumeBottle,
+      });
+      if (r && "error" in r && r.error) {
+        setCellarError(r.error);
+        return;
+      }
+      if (r && "warning" in r && r.warning) {
+        setCellarWarning(r.warning);
+        return;
+      }
+      router.push(`/tastings/${tastingId}`);
+      router.refresh();
+    });
+  }
+
   // Appellations are too large to preload in full (LWIN import), but an
   // appellation only ever belongs to one region (Pauillac is Bordeaux, full
   // stop) so scoping by region keeps the list small enough to just list in
@@ -283,6 +326,83 @@ export function WineForm({
                 setImageUrl(catalog.imageUrl);
               }}
             />
+          ) : null}
+          {userId && !manualMode ? (
+            <button
+              type="button"
+              onClick={() => (cellarMode ? setCellarMode(false) : openCellar())}
+              className="self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {cellarMode ? "← Hide my cellar" : "Choose from my cellar"}
+            </button>
+          ) : null}
+          {cellarMode && userId ? (
+            <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+              {cellarLots === null ? (
+                <p className="text-sm text-muted-foreground">Loading your cellar…</p>
+              ) : cellarLots.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Your cellar has no bottles in stock.{" "}
+                  <a href="/cellar" className="text-primary hover:underline">
+                    Add some
+                  </a>
+                  .
+                </p>
+              ) : (
+                <>
+                  <select
+                    value={selectedLotId}
+                    onChange={(e) => setSelectedLotId(e.target.value)}
+                    className="h-10 rounded-md border border-border bg-background px-3 text-sm"
+                  >
+                    <option value="">Pick a bottle from your cellar…</option>
+                    {cellarLots.map((l) => (
+                      <option key={l.lotId} value={l.lotId}>
+                        {l.label}
+                        {l.bottleSizeMl !== 750 ? ` · ${l.bottleSizeMl} ml` : ""}
+                        {l.storageLocation ? ` · ${l.storageLocation}` : ""} · {l.quantity} btl
+                      </option>
+                    ))}
+                  </select>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={consumeBottle}
+                      onChange={(e) => setConsumeBottle(e.target.checked)}
+                    />
+                    Remove a bottle from my cellar
+                  </label>
+                  {cellarWarning ? (
+                    <p className="text-sm text-amber-600">
+                      Added to the tasting — {cellarWarning}{" "}
+                      <a
+                        href={`/tastings/${tastingId}`}
+                        className="text-primary hover:underline"
+                      >
+                        Go to the tasting
+                      </a>
+                    </p>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={submitCellar}
+                      disabled={cellarPending || !selectedLotId}
+                    >
+                      {cellarPending ? (
+                        <>
+                          <WineGlassLoader /> Adding…
+                        </>
+                      ) : (
+                        "Add this bottle to the tasting"
+                      )}
+                    </Button>
+                  )}
+                  {cellarError ? (
+                    <p className="text-sm text-destructive">{cellarError}</p>
+                  ) : null}
+                </>
+              )}
+            </div>
           ) : null}
         </div>
       ) : null}
