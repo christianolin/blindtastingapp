@@ -7,6 +7,7 @@ import { TastingsTabs } from "./tastings-tabs";
 import { TastingCard, type TastingCardData } from "./tasting-card";
 import { AppStatsCards } from "./app-stats-cards";
 import { OverviewHero } from "./overview-hero";
+import { ExplainerCards } from "./explainer-cards";
 
 export default async function TastePage() {
   const supabase = await createClient();
@@ -132,6 +133,8 @@ export default async function TastePage() {
 
         <AppStatsCards stats={appStats} />
 
+        <ExplainerCards />
+
         <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
 
         {(tastings ?? []).length === 0 ? (
@@ -142,7 +145,7 @@ export default async function TastePage() {
                 No tastings yet
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Pick a mode above to start your first tasting.
+                Use Start tasting above to begin your first tasting.
               </p>
             </div>
           </div>
