@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
-import { Sparkles, Wine, Target, Trophy } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { BlindrMark } from "@/components/logo";
 import { createClient } from "@/lib/supabase/server";
-import { getProfileStats } from "@/lib/profile-stats";
+import { getAppStats } from "@/lib/app-stats";
 import { TastingsTabs } from "./tastings-tabs";
 import { TastingCard, type TastingCardData } from "./tasting-card";
+import { AppStatsCards } from "./app-stats-cards";
 import { ModeTiles } from "./mode-tiles";
 
 export default async function TastePage() {
@@ -31,7 +30,7 @@ export default async function TastePage() {
     .eq("user_id", user.id);
 
   const tastingIds = (participantRows ?? []).map((p) => p.tasting_id);
-  const [{ data: tastings }, { data: allParticipants }, { data: wines }, stats] =
+  const [{ data: tastings }, { data: allParticipants }, { data: wines }, appStats] =
     await Promise.all([
       supabase
         .from("tastings")
@@ -46,7 +45,7 @@ export default async function TastePage() {
         .from("wines")
         .select("tasting_id, is_revealed")
         .in("tasting_id", tastingIds.length > 0 ? tastingIds : [""]),
-      getProfileStats(user.id),
+      getAppStats(),
     ]);
 
   const statusByTastingId = new Map(
@@ -67,8 +66,6 @@ export default async function TastePage() {
     if (w.is_revealed) entry.revealed++;
     wineCountByTastingId.set(w.tasting_id, entry);
   }
-
-  const hostedCount = (tastings ?? []).filter((t) => t.host_id === user.id).length;
 
   // Dashboard buckets. Host rows are always JOINED participants, so a
   // hosted tasting would also match "attending" — keep it only under Hosting.
@@ -123,33 +120,6 @@ export default async function TastePage() {
       </div>
     );
 
-  const statTiles = [
-    {
-      icon: Sparkles,
-      label: "Tastings",
-      value: stats.summary.tastingsAttended,
-      sub: `${hostedCount} hosted`,
-    },
-    {
-      icon: Wine,
-      label: "Wines guessed",
-      value: stats.summary.winesGuessed,
-      sub: null,
-    },
-    {
-      icon: Target,
-      label: "Avg points / wine",
-      value: stats.summary.averagePoints.toFixed(1),
-      sub: null,
-    },
-    {
-      icon: Trophy,
-      label: "Total points",
-      value: stats.summary.totalPoints,
-      sub: null,
-    },
-  ];
-
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
@@ -169,28 +139,7 @@ export default async function TastePage() {
 
         <ModeTiles />
 
-        {stats.summary.winesGuessed > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {statTiles.map((tile, i) => (
-              <Card
-                key={tile.label}
-                className="animate-rise-in gap-2 overflow-hidden py-4"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <CardContent className="flex flex-col gap-1.5 px-4">
-                  <tile.icon className="size-4 text-gold-deep" strokeWidth={2} />
-                  <span className="font-heading text-2xl font-semibold tabular-nums">
-                    {tile.value}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {tile.label}
-                    {tile.sub ? ` · ${tile.sub}` : ""}
-                  </span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : null}
+        <AppStatsCards stats={appStats} />
 
         <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
 

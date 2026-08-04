@@ -1311,6 +1311,15 @@ export type Database = {
         Args: { p_user_id: string; p_role: UserRole };
         Returns: void;
       };
+      get_app_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          members: number;
+          tastings: number;
+          wines_catalogued: number;
+          notes_created: number;
+        }[];
+      };
       get_wine_place_context: {
         Args: { p_place_key: string };
         Returns: unknown;
