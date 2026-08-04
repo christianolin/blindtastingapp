@@ -5,11 +5,12 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BurgundyHierarchy } from "@/lib/designations/burgundy";
 import type { PyramidTier } from "@/lib/designations/content";
+import { PyramidBands } from "./pyramid-bands";
 
-// Interactive Burgundy quality ladder: a true-pointed SVG pyramid whose tiers
-// (and the labels beside them) are clickable; the selected tier expands below
-// into its vineyards grouped by sub-region → village, collapsed by default so
-// the ~650 Premier Cru climats never dump at once.
+// Interactive Burgundy quality ladder: the shared band pyramid (tier label +
+// count set inside each band); selecting a tier expands its vineyards below,
+// grouped by sub-region → village, collapsed by default so the ~640 Premier
+// Cru climats never dump at once.
 export function BurgundyPyramid({
   hierarchy,
   meta,
@@ -20,105 +21,53 @@ export function BurgundyPyramid({
   const tiers = hierarchy.tiers;
   const [active, setActive] = useState(0);
   const [openSub, setOpenSub] = useState<string | null>(null);
-
-  const n = tiers.length;
-  const W = 300;
-  const H = 300;
-  const bandH = H / n;
-  const halfAt = (y: number) => (W / 2) * (y / H); // pointed apex at y=0
-  const cx = W / 2;
-  const select = (i: number) => {
-    setActive(i);
-    setOpenSub(null);
-  };
   const activeTier = tiers[active];
+  const activeMeta = meta[active];
+
+  const bands = tiers.map((t, i) => ({
+    key: t.key,
+    label: t.label,
+    count: t.count > 0 ? `${t.count} vineyards` : meta[i]?.count ?? "",
+    color: meta[i]?.color ?? "#8A3D52",
+    textColor: meta[i]?.textColor,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          className="h-auto w-full max-w-[300px]"
-          role="img"
-          aria-label="Burgundy quality pyramid"
-        >
-          {tiers.map((t, i) => {
-            const yTop = i * bandH;
-            const yBot = (i + 1) * bandH;
-            const hwTop = halfAt(yTop);
-            const hwBot = halfAt(yBot);
-            const m = meta[i];
-            return (
-              <polygon
-                key={t.key}
-                points={`${cx - hwTop},${yTop} ${cx + hwTop},${yTop} ${cx + hwBot},${yBot} ${cx - hwBot},${yBot}`}
-                fill={m?.color ?? "#8A3D52"}
-                stroke="#ffffff"
-                strokeWidth={2}
-                opacity={i === active ? 1 : 0.8}
-                className="cursor-pointer transition-opacity hover:opacity-100"
-                onClick={() => select(i)}
-              />
-            );
-          })}
-        </svg>
-
-        <ul className="flex flex-col gap-2">
-          {tiers.map((t, i) => {
-            const m = meta[i];
-            return (
-              <li key={t.key}>
-                <button
-                  type="button"
-                  onClick={() => select(i)}
-                  className={cn(
-                    "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors",
-                    i === active
-                      ? "border-primary bg-muted/40"
-                      : "border-border hover:bg-muted/30",
-                  )}
-                >
-                  <span
-                    className="mt-1 size-3 shrink-0 rounded-sm"
-                    style={{ backgroundColor: m?.color }}
-                  />
-                  <span className="min-w-0">
-                    <span className="text-sm font-medium">
-                      {t.label}
-                      <span className="font-normal text-muted-foreground">
-                        {" "}
-                        · {t.count > 0 ? `${t.count} vineyards` : m?.count}
-                      </span>
-                    </span>
-                    {m?.pct ? (
-                      <span className="block text-xs text-muted-foreground">
-                        {m.pct}
-                      </span>
-                    ) : null}
-                    {m?.labelling ? (
-                      <span className="block text-xs text-muted-foreground">
-                        On the label: {m.labelling}
-                      </span>
-                    ) : null}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <PyramidBands
+        bands={bands}
+        activeKey={activeTier?.key ?? null}
+        onSelect={(key) => {
+          const i = tiers.findIndex((t) => t.key === key);
+          if (i >= 0) {
+            setActive(i);
+            setOpenSub(null);
+          }
+        }}
+      />
 
       <div className="flex flex-col gap-3">
-        <h3 className="font-heading text-lg font-semibold">
-          {activeTier.label}
-          <span className="font-normal text-muted-foreground">
-            {" "}
-            —{" "}
-            {activeTier.count > 0
-              ? `${activeTier.count} vineyards`
-              : "regional appellations"}
-          </span>
-        </h3>
+        <div>
+          <h3 className="font-heading text-lg font-semibold">
+            {activeTier.label}
+            <span className="font-normal text-muted-foreground">
+              {" "}
+              —{" "}
+              {activeTier.count > 0
+                ? `${activeTier.count} vineyards`
+                : "regional appellations"}
+            </span>
+          </h3>
+          {activeMeta?.pct || activeMeta?.labelling ? (
+            <p className="text-xs text-muted-foreground">
+              {activeMeta?.pct}
+              {activeMeta?.pct && activeMeta?.labelling ? " · " : ""}
+              {activeMeta?.labelling
+                ? `On the label: ${activeMeta.labelling}`
+                : ""}
+            </p>
+          ) : null}
+        </div>
         {activeTier.subregions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Regional (Bourgogne) wines are blended from across the region rather

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { CRU_BOURGEOIS, DESIGNATION_CONTENT } from "@/lib/designations/content";
 import type { TabSystem, TabSystemMember } from "@/lib/designations/page-data";
+import { PyramidBands } from "./pyramid-bands";
 
 type BordeauxTier = { tier: string; members: TabSystemMember[] };
 
@@ -81,38 +82,17 @@ export function BordeauxClassification({
         <p className="max-w-2xl text-sm text-muted-foreground">{intro}</p>
       ) : null}
 
-      <div className="flex flex-col items-center gap-1">
-        {tiers.map((t, i) => {
-          const m = meta[i];
-          const width =
-            tiers.length === 1
-              ? 70
-              : 46 + (48 * i) / Math.max(tiers.length - 1, 1);
-          const isActive = activeTier === t.tier;
-          return (
-            <button
-              key={t.tier}
-              type="button"
-              onClick={() => setActiveTier(isActive ? null : t.tier)}
-              style={{
-                width: `${width}%`,
-                backgroundColor: m?.color ?? "#8A3D52",
-                color: m?.textColor ?? "#ffffff",
-                outline: isActive
-                  ? "2px solid #2b0f18"
-                  : "2px solid transparent",
-                outlineOffset: "2px",
-              }}
-              className="flex items-center justify-between gap-3 rounded-md px-4 py-3 font-heading transition-transform hover:-translate-y-px"
-            >
-              <span className="font-semibold">{t.tier}</span>
-              <span className="text-xs opacity-90">
-                {t.members.length} châteaux
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <PyramidBands
+        bands={tiers.map((t, i) => ({
+          key: t.tier,
+          label: t.tier,
+          count: `${t.members.length} châteaux`,
+          color: meta[i]?.color ?? "#8A3D52",
+          textColor: meta[i]?.textColor,
+        }))}
+        activeKey={activeTier}
+        onSelect={(key) => setActiveTier(activeTier === key ? null : key)}
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <input
