@@ -1,6 +1,7 @@
 export type DesignationTabKind =
   | "overview"
   | "burgundy"
+  | "bordeaux"
   | "systems"
   | "glossary"
   | "champagne";
@@ -22,7 +23,7 @@ export const DESIGNATION_TABS: DesignationTab[] = [
   {
     slug: "bordeaux",
     label: "Bordeaux",
-    kind: "systems",
+    kind: "bordeaux",
     systemKeys: [
       "medoc-1855",
       "sauternes-1855",

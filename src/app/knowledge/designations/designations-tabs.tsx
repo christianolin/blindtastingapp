@@ -30,6 +30,7 @@ import {
   WHY_CARDS,
 } from "@/lib/designations/content";
 import { BurgundyPyramid } from "./burgundy-pyramid";
+import { BordeauxClassification } from "./bordeaux-classification";
 
 const WHY_ICONS = [Landmark, ScrollText, Layers, Sparkles];
 const VARIATION_ICONS = [Globe, MapIcon, Home, Grape];
@@ -52,7 +53,7 @@ function buildIndex(data: DesignationsPageData): SearchEntry[] {
   const push = (label: string, sub: string, tab: string) =>
     out.push({ label, sub, tab, norm: normText(label) });
   for (const t of DESIGNATION_TABS) {
-    if (t.kind === "systems") {
+    if (t.kind === "systems" || t.kind === "bordeaux") {
       for (const key of t.systemKeys ?? []) {
         const sys = data.systems.find((s) => s.key === key);
         if (!sys) continue;
@@ -169,6 +170,14 @@ export function DesignationsTabs({
         />
       ) : tab.kind === "champagne" ? (
         <ChampagnePanel />
+      ) : tab.kind === "bordeaux" ? (
+        <div className="flex flex-col gap-8">
+          <BordeauxClassification
+            systems={data.systems}
+            systemKeys={tab.systemKeys ?? []}
+          />
+          <GlossaryList tab={tab} glossaryByName={glossaryByName} />
+        </div>
       ) : tab.kind === "systems" ? (
         <SystemsPanel
           tab={tab}
