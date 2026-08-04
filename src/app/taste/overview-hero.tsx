@@ -10,7 +10,7 @@ export function OverviewHero() {
       {/* Blurred hero photo on the right, fading into the card on the left. */}
       <div className="pointer-events-none absolute inset-y-0 right-0 w-full sm:w-3/5 lg:w-[55%]">
         <img
-          src="/hero/romanee-conti-1945.jpg"
+          src="/hero/romanee.webp"
           alt=""
           aria-hidden
           className="h-full w-full object-cover object-center blur-[2px]"
