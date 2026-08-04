@@ -89,17 +89,10 @@ export function ImageUploader({
         ) : (
           <>
             <ImageUp />
-            {url ? (
-              "Change photo"
-            ) : (
-              <>
-                {/* Phones can take a new photo or pick an existing one; desktop
-                    only uploads. The file input (accept image/*, no capture)
-                    already offers both — this just labels it clearly. */}
-                <span className="sm:hidden">Take or upload image</span>
-                <span className="hidden sm:inline">Upload image</span>
-              </>
-            )}
+            {/* Phones can take a new photo or pick an existing one (accept
+                image/*, no capture); desktop only uploads — label to match. */}
+            <span className="sm:hidden">Take or choose picture</span>
+            <span className="hidden sm:inline">Upload picture</span>
           </>
         )}
       </Button>

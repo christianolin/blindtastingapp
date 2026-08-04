@@ -96,7 +96,9 @@ export function AvatarUploader({
           </>
         ) : (
           <>
-            <ImageUp /> Change photo
+            <ImageUp />
+            <span className="sm:hidden">Take or choose picture</span>
+            <span className="hidden sm:inline">Upload picture</span>
           </>
         )}
       </Button>
