@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 
@@ -547,16 +548,17 @@ export async function searchCatalogWines(query: string) {
   return mapped.sort((a, b) => a.group.localeCompare(b.group));
 }
 
-export async function addWineFromCatalog(
+type TastingDb = Awaited<ReturnType<typeof createClient>>;
+
+// The insert half of "add a catalog wine to a tasting" (wines + wine_answers),
+// with NO redirect — so callers that must run more work afterwards (drawing a
+// cellar bottle down) can. Caller resolves auth first.
+async function insertTastingWineFromCatalog(
+  supabase: TastingDb,
+  userId: string,
   tastingId: string,
   catalogWineId: string,
-): Promise<{ error: string } | void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
+): Promise<{ error: string } | { ok: true }> {
   const { data: tasting } = await supabase
     .from("tastings")
     .select("id, host_id, wine_source")
@@ -570,11 +572,11 @@ export async function addWineFromCatalog(
       .from("tasting_participants")
       .select("id")
       .eq("tasting_id", tastingId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
     if (!participant) return { error: "You're not a participant in this tasting." };
     contributorParticipantId = participant.id;
-  } else if (tasting.host_id !== user.id) {
+  } else if (tasting.host_id !== userId) {
     return { error: "Only the host can add wines to this tasting." };
   }
 
@@ -620,7 +622,69 @@ export async function addWineFromCatalog(
     await supabase.from("wines").delete().eq("id", wine.id);
     return { error: answerError.message };
   }
+  return { ok: true };
+}
+
+export async function addWineFromCatalog(
+  tastingId: string,
+  catalogWineId: string,
+): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const r = await insertTastingWineFromCatalog(supabase, user.id, tastingId, catalogWineId);
+  if ("error" in r) return { error: r.error };
   redirect(`/tastings/${tastingId}`);
+}
+
+// Add a wine to a tasting from one of the caller's cellar lots, optionally
+// drawing one bottle down. Returns (no redirect) so the client can show a
+// best-effort draw-down warning and then navigate.
+export async function addTastingWineFromCellarLot(
+  tastingId: string,
+  lotId: string,
+  opts: { consume: boolean },
+): Promise<{ error: string } | { ok: true; warning?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "You must be signed in." };
+
+  const { data: lot } = await supabase
+    .from("cellar_lots")
+    .select("id, owner_id, catalog_wine_id, quantity")
+    .eq("id", lotId)
+    .maybeSingle();
+  if (!lot || lot.owner_id !== user.id) return { error: "That lot is not in your cellar." };
+  if (lot.quantity < 1) return { error: "That lot has no bottles left." };
+
+  const r = await insertTastingWineFromCatalog(
+    supabase,
+    user.id,
+    tastingId,
+    lot.catalog_wine_id,
+  );
+  if ("error" in r) return { error: r.error };
+
+  let warning: string | undefined;
+  if (opts.consume) {
+    const { data: t } = await supabase
+      .from("tastings")
+      .select("name")
+      .eq("id", tastingId)
+      .maybeSingle();
+    const { error: consumeError } = await supabase.rpc("consume_cellar_lot", {
+      p: { lot_id: lotId, quantity: 1, reason: "DRANK", occasion: t?.name ?? "Tasting" },
+    });
+    if (consumeError) {
+      warning = "couldn't update your cellar (the bottle wasn't drawn down).";
+    }
+  }
+  revalidatePath(`/tastings/${tastingId}`);
+  return { ok: true, warning };
 }
 
 // The deliberate escape hatch: a bottle that genuinely can't be identified. It
