@@ -735,6 +735,7 @@ export type Database = {
           sort_order: number;
           producer_id: string | null;
           wine_place_id: string | null;
+          appellation_wine_place_id: string | null;
           local_note: string | null;
           editorial_status: WineArticleStatus;
           created_at: string;
@@ -750,6 +751,7 @@ export type Database = {
           sort_order?: number;
           producer_id?: string | null;
           wine_place_id?: string | null;
+          appellation_wine_place_id?: string | null;
           local_note?: string | null;
           editorial_status?: WineArticleStatus;
           created_at?: string;
