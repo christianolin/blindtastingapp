@@ -86,6 +86,7 @@ export function DrinkForm({
           <Input
             id="consumed_on"
             type="date"
+            className="appearance-none"
             value={consumedOn}
             onChange={(e) => setConsumedOn(e.target.value)}
           />

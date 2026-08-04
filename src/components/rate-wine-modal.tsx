@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Warehouse } from "lucide-react";
+import { Camera, Plus, Warehouse } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCatalogWines } from "@/app/tastings/[id]/wines/new/actions";
 import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
@@ -25,7 +25,7 @@ export function RateWineModal({
   onPick?: (pick: { catalogWineId: string; lotId?: string; consume?: boolean }) => void;
 }) {
   const router = useRouter();
-  const { openAddWine } = useAddWine();
+  const { openAddWine, openScan } = useAddWine();
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,6 +70,16 @@ export function RateWineModal({
         <p className="text-sm text-muted-foreground">
           Find the wine you&apos;re tasting to write a WSET note.
         </p>
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            openScan();
+          }}
+          className="inline-flex w-fit items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Camera className="size-4" /> Scan a label
+        </button>
         <Input
           autoFocus
           placeholder="Search by wine, producer or region…"
