@@ -20,6 +20,36 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
     hero: { src: "/designations/medoc-1855.jpg", alt: "A château in the Médoc" },
     intro:
       "The Classification of 1855 was created for the Exposition Universelle in Paris. It ranks the top châteaux of the Médoc into five growths based on reputation and market price at the time.",
+    pyramid: [
+      { name: "Premier Cru", color: "#5C1A2B" },
+      { name: "Deuxième Cru", color: "#7A2A3D" },
+      { name: "Troisième Cru", color: "#8A3D52" },
+      { name: "Quatrième Cru", color: "#9A7B4F" },
+      { name: "Cinquième Cru", color: "#B78E42", textColor: "#2b0f18" },
+    ],
+  },
+  "sauternes-1855": {
+    intro:
+      "The 1855 ranking also classified the sweet wines of Sauternes and Barsac: one Premier Cru Supérieur (Château d'Yquem), then the Premiers Crus and the Deuxièmes Crus.",
+    pyramid: [
+      { name: "Premier Cru Supérieur", color: "#5C1A2B" },
+      { name: "Premier Cru", color: "#8A3D52" },
+      { name: "Deuxième Cru", color: "#B78E42", textColor: "#2b0f18" },
+    ],
+  },
+  "saint-emilion-grand-cru-classe": {
+    intro:
+      "Saint-Émilion's classification is revised roughly every ten years. It runs from Premier Grand Cru Classé A, to Premier Grand Cru Classé B, to Grand Cru Classé.",
+    pyramid: [
+      { name: "Premier Grand Cru Classé A", color: "#5C1A2B" },
+      { name: "Premier Grand Cru Classé B", color: "#8A3D52" },
+      { name: "Grand Cru Classé", color: "#B78E42", textColor: "#2b0f18" },
+    ],
+  },
+  "graves-cru-classe": {
+    intro:
+      "The Cru Classé de Graves (1959) is a single flat tier — châteaux classified for red wine, white wine, or both. All lie within what is now Pessac-Léognan.",
+    pyramid: [{ name: "Cru Classé", color: "#5C1A2B" }],
   },
   "burgundy-grand-cru": {
     hero: {
@@ -35,6 +65,12 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
       { name: "Regional", pct: "~50% of production", count: "23 AOCs", labelling: "Bourgogne (Burgundy)", color: "#B78E42", textColor: "#2b0f18" },
     ],
   },
+};
+
+export const CRU_BOURGEOIS = {
+  title: "Cru Bourgeois du Médoc",
+  body:
+    "A separate Médoc classification sitting below the 1855 growths, re-ranked on a rolling basis (currently every five years) — so its roster changes too often to fix here. Since 2020 it has three levels, from the top: Cru Bourgeois Exceptionnel, Cru Bourgeois Supérieur, and Cru Bourgeois, awarded on quality and production standards rather than 1855's historic hierarchy.",
 };
 
 export const OVERVIEW_INTRO =
