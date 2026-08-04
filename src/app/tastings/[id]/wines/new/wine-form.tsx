@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CalendarClock, Fingerprint, MapPin, Wine } from "lucide-react";
+import {
+  CalendarClock,
+  Camera,
+  Fingerprint,
+  MapPin,
+  Warehouse,
+  Wine,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -288,9 +295,9 @@ export function WineForm({
             <button
               type="button"
               onClick={() => setScanning(true)}
-              className="self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1.5 self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              Scan the label instead
+              <Camera className="size-4" /> Scan the label instead
             </button>
           ) : null}
           {scanning && userId ? (
@@ -332,9 +339,10 @@ export function WineForm({
             <button
               type="button"
               onClick={() => (cellarMode ? setCellarMode(false) : openCellar())}
-              className="self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex items-center gap-1.5 self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              {cellarMode ? "← Hide my cellar" : "Choose from my cellar"}
+              <Warehouse className="size-4" />{" "}
+              {cellarMode ? "Hide my cellar" : "Choose from my cellar"}
             </button>
           ) : null}
           {cellarMode && userId ? (

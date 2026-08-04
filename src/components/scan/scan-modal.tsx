@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Camera, Wine } from "lucide-react";
+import { Camera, Eye, NotebookPen, Plus, RotateCcw, Warehouse, Wine } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { NewNoteModal } from "@/components/new-note-modal";
@@ -181,9 +181,9 @@ export function ScanModal({
                       <button
                         type="button"
                         onClick={() => setNoteWineId(m.id)}
-                        className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
                       >
-                        Rate
+                        <NotebookPen className="size-3.5" /> Rate
                       </button>
                       <button
                         type="button"
@@ -191,16 +191,16 @@ export function ScanModal({
                           onAddToCellar({ id: m.id, label: m.name });
                           onClose();
                         }}
-                        className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
                       >
-                        {pickLabel}
+                        <Plus className="size-3.5" /> {pickLabel}
                       </button>
                       <Link
                         href={`/catalog/${m.id}`}
                         onClick={onClose}
-                        className="rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
                       >
-                        View
+                        <Eye className="size-3.5" /> View
                       </Link>
                     </span>
                   </div>
@@ -228,7 +228,7 @@ export function ScanModal({
                   onClick={() => addAsNew(onAddNewToCellar)}
                   className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                 >
-                  <Wine className="size-4" />
+                  <Warehouse className="size-4" />
                   {addingNew ? "Preparing…" : "Add to my cellar"}
                 </button>
                 <button
@@ -237,7 +237,7 @@ export function ScanModal({
                   onClick={() => addAsNew(onAddNew)}
                   className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
                 >
-                  Add to the catalog only
+                  <Plus className="size-4" /> Add to the catalog only
                 </button>
               </div>
             ) : (
@@ -258,9 +258,9 @@ export function ScanModal({
             <button
               type="button"
               onClick={() => setStep("capture")}
-              className="self-center text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex items-center gap-1 self-center text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              Rescan
+              <RotateCcw className="size-3.5" /> Rescan
             </button>
           </div>
         ) : null}

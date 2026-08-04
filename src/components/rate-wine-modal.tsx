@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Wine } from "lucide-react";
+import { Plus, Warehouse } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCatalogWines } from "@/app/tastings/[id]/wines/new/actions";
 import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
@@ -111,7 +111,7 @@ export function RateWineModal({
             onClick={() => setCellarOpen((o) => !o)}
             className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
-            <Wine className="size-4" />{" "}
+            <Warehouse className="size-4" />{" "}
             {cellarOpen ? "Hide my cellar" : "Choose from my cellar"}
           </button>
           {cellarOpen ? (

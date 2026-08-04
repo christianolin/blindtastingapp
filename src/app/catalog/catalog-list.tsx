@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Warehouse, NotebookPen } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -538,7 +538,7 @@ function RowActions({
   stack?: boolean;
 }) {
   const cls =
-    "rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors hover:bg-muted";
+    "inline-flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors hover:bg-muted";
   return (
     <div
       className={cn(
@@ -547,9 +547,11 @@ function RowActions({
       )}
     >
       <button type="button" onClick={onCellar} className={cls}>
+        <Warehouse className="size-3.5" />
         {stack ? "Cellar" : "Add to cellar"}
       </button>
       <button type="button" onClick={onRate} className={cls}>
+        <NotebookPen className="size-3.5" />
         Rate
       </button>
     </div>

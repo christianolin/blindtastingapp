@@ -15,6 +15,7 @@ import {
   MoreHorizontal,
   ExternalLink,
   FileText,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -404,15 +405,15 @@ export function CellarBottlesTable({
             <div className="flex items-center gap-2">
               <Link
                 href={`/cellar/${r.lotId}/drink`}
-                className="rounded-md border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
               >
-                Drink
+                <Wine className="size-3.5" /> Drink
               </Link>
               <Link
                 href={`/cellar/${r.lotId}/edit`}
-                className="rounded-md border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1 text-xs font-medium transition-colors hover:bg-muted"
               >
-                Edit
+                <Pencil className="size-3.5" /> Edit
               </Link>
               {r.bestNoteId ? (
                 <button
@@ -566,15 +567,15 @@ export function CellarBottlesTable({
                     <div className="flex flex-col items-stretch gap-1">
                       <Link
                         href={`/cellar/${r.lotId}/drink`}
-                        className="rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
+                        className="inline-flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
                       >
-                        Drink
+                        <Wine className="size-3.5" /> Drink
                       </Link>
                       <Link
                         href={`/cellar/${r.lotId}/edit`}
-                        className="rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
+                        className="inline-flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
                       >
-                        Edit
+                        <Pencil className="size-3.5" /> Edit
                       </Link>
                       <div className="relative">
                         <button
