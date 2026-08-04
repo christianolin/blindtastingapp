@@ -108,7 +108,9 @@ export function ScanModal({
               onClick={() => inputRef.current?.click()}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              <Camera className="size-5" /> Take / choose photo
+              <Camera className="size-5" />
+              <span className="sm:hidden">Take or choose picture</span>
+              <span className="hidden sm:inline">Upload picture</span>
             </button>
           </div>
         ) : null}
@@ -269,7 +271,6 @@ export function ScanModal({
           ref={inputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           className="hidden"
           onChange={onFile}
         />
