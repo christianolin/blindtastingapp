@@ -123,6 +123,72 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
   return { id: lotId };
 }
 
+// The caller's lots (quantity > 0) for a catalog wine, so the add form can warn
+// before silently creating a duplicate lot.
+export async function findMyCellarLotsForWine(catalogWineId: string): Promise<
+  {
+    id: string;
+    quantity: number;
+    bottleSizeMl: number;
+    storageLocation: string | null;
+    createdAt: string;
+  }[]
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !catalogWineId) return [];
+  const { data } = await supabase
+    .from("cellar_lots")
+    .select("id, quantity, bottle_size_ml, storage_location, created_at")
+    .eq("owner_id", user.id)
+    .eq("catalog_wine_id", catalogWineId)
+    .gt("quantity", 0)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((l) => ({
+    id: l.id,
+    quantity: l.quantity,
+    bottleSizeMl: l.bottle_size_ml,
+    storageLocation: l.storage_location,
+    createdAt: l.created_at,
+  }));
+}
+
+// Add bottles to an existing lot (increase on-hand + purchased together so the
+// consumed = purchased - quantity stat stays consistent).
+export async function increaseCellarLotQuantity(
+  lotId: string,
+  addQuantity: number,
+): Promise<{ id: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be signed in.");
+  const add = Math.floor(addQuantity);
+  if (!Number.isFinite(add) || add < 1) {
+    throw new Error("Enter at least one bottle to add.");
+  }
+  const { data: lot } = await supabase
+    .from("cellar_lots")
+    .select("quantity, purchased_quantity, owner_id")
+    .eq("id", lotId)
+    .maybeSingle();
+  if (!lot || lot.owner_id !== user.id) {
+    throw new Error("That lot is not in your cellar.");
+  }
+  const { error } = await supabase
+    .from("cellar_lots")
+    .update({
+      quantity: lot.quantity + add,
+      purchased_quantity: lot.purchased_quantity + add,
+    })
+    .eq("id", lotId);
+  if (error) throw new Error(error.message);
+  return { id: lotId };
+}
+
 // Search the shared catalog for the "already added?" picker.
 export async function searchCellarCatalog(
   query: string,

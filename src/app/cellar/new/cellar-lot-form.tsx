@@ -29,7 +29,12 @@ import {
 import { orderedBlend, resolvePendingBlend } from "@/lib/wine-blend";
 import { ImageUploader } from "@/components/image-uploader";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
-import { addCellarLot, searchCellarCatalog } from "./actions";
+import {
+  addCellarLot,
+  findMyCellarLotsForWine,
+  increaseCellarLotQuantity,
+  searchCellarCatalog,
+} from "./actions";
 
 const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
 const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
@@ -136,6 +141,10 @@ export function CellarLotForm({
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateLots, setDuplicateLots] = useState<
+    Awaited<ReturnType<typeof findMyCellarLotsForWine>> | null
+  >(null);
+  const [mergeTargetLotId, setMergeTargetLotId] = useState("");
 
   useEffect(() => {
     startAppellations(async () => {
@@ -173,6 +182,24 @@ export function CellarLotForm({
     }
     if (drinkFrom && drinkTo && Number(drinkTo) < Number(drinkFrom)) {
       setError("Drink-to year can't be before drink-from.");
+      return;
+    }
+    // Warn before silently creating a duplicate lot of a wine already held.
+    if (catalogWineId) {
+      const lots = await findMyCellarLotsForWine(catalogWineId);
+      if (lots.length > 0) {
+        setDuplicateLots(lots);
+        setMergeTargetLotId(lots[0].id);
+        return;
+      }
+    }
+    await doCreateLot();
+  }
+
+  async function doCreateLot() {
+    const qty = Number(quantity);
+    if (!qty || qty < 1) {
+      setError("Enter how many bottles you have (at least 1).");
       return;
     }
     setPending(true);
@@ -222,6 +249,23 @@ export function CellarLotForm({
       else router.push("/cellar");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add the wine.");
+      setPending(false);
+    }
+  }
+
+  async function mergeIntoLot() {
+    const qty = Number(quantity);
+    if (!qty || qty < 1) {
+      setError("Enter how many bottles to add (at least 1).");
+      return;
+    }
+    setPending(true);
+    try {
+      await increaseCellarLotQuantity(mergeTargetLotId, qty);
+      if (onAdded) onAdded();
+      else router.push("/cellar");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update the lot.");
       setPending(false);
     }
   }
@@ -605,10 +649,50 @@ export function CellarLotForm({
         </div>
       </fieldset>
 
+      {duplicateLots && duplicateLots.length > 0 ? (
+        <div className="flex flex-col gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <div>
+            <p className="font-medium">You already have this wine in your cellar.</p>
+            <p className="mt-1 text-muted-foreground">
+              Add {quantity} bottle{Number(quantity) === 1 ? "" : "s"} to an
+              existing lot, or keep it as a separate lot?
+            </p>
+          </div>
+          {duplicateLots.length > 1 ? (
+            <select
+              value={mergeTargetLotId}
+              onChange={(e) => setMergeTargetLotId(e.target.value)}
+              className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+            >
+              {duplicateLots.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.quantity} × {SIZE_LABELS[l.bottleSizeMl] ?? `${l.bottleSizeMl} ml`}
+                  {l.storageLocation ? ` · ${l.storageLocation}` : ""}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={mergeIntoLot} disabled={pending}>
+              {pending ? "Adding…" : "Add to existing lot"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={doCreateLot}
+              disabled={pending}
+            >
+              Create a separate lot
+            </Button>
+          </div>
+        </div>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="button" onClick={submit} disabled={pending}>
-        {pending ? "Adding…" : "Add to cellar"}
-      </Button>
+      {duplicateLots ? null : (
+        <Button type="button" onClick={submit} disabled={pending}>
+          {pending ? "Adding…" : "Add to cellar"}
+        </Button>
+      )}
     </div>
   );
 }
