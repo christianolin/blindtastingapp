@@ -22,7 +22,6 @@ export function ImageUploader({
   bucket: string;
   folder: string;
   initialUrl?: string | null;
-  label?: string;
   aspectClassName?: string;
   onChange?: (url: string | null) => void;
 }) {
@@ -90,9 +89,9 @@ export function ImageUploader({
           <>
             <ImageUp />
             {/* Phones can take a new photo or pick an existing one (accept
-                image/*, no capture); desktop only uploads — label to match. */}
-            <span className="sm:hidden">Take or choose picture</span>
-            <span className="hidden sm:inline">Upload picture</span>
+                image/*, no capture); a PC only ever uploads — wording to match. */}
+            <span className="sm:hidden">Take or choose image</span>
+            <span className="hidden sm:inline">Upload image</span>
           </>
         )}
       </Button>

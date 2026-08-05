@@ -94,7 +94,6 @@ export function NewTastingForm({
           name="image_url"
           bucket="tasting-images"
           folder={userId}
-          label="Add a cover photo"
         />
         <p className="text-xs text-muted-foreground">JPG, PNG up to 5MB.</p>
       </div>

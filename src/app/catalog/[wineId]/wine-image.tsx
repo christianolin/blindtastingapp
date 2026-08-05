@@ -24,7 +24,6 @@ export function WineImage({
         bucket="wine-images"
         folder={`catalog/${wineId}`}
         initialUrl={initialUrl}
-        label="Add a bottle photo"
         aspectClassName="aspect-[3/4] max-w-40"
         onChange={async (url) => {
           setError(null);

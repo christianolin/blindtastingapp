@@ -331,7 +331,6 @@ export function CellarLotForm({
             imageFolder={`catalog/staging/${userId}`}
             imageInitialUrl={imageUrl}
             imageAspect="aspect-[3/4] max-w-40"
-            imageLabel="Add a bottle photo"
             onImageChange={setImageUrl}
           />
         </>

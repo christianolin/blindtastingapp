@@ -92,7 +92,6 @@ export function WineIdentityFields({
   imageFolder,
   imageInitialUrl,
   imageAspect,
-  imageLabel,
   onImageChange,
   photoHint,
   description,
@@ -139,7 +138,6 @@ export function WineIdentityFields({
   imageFolder: string;
   imageInitialUrl: string | null;
   imageAspect?: string;
-  imageLabel?: string;
   onImageChange?: (url: string | null) => void;
   photoHint?: string;
   description?: string;
@@ -428,7 +426,6 @@ export function WineIdentityFields({
           name="image_url"
           bucket="wine-images"
           folder={imageFolder}
-          label={imageLabel ?? "Add a photo"}
           aspectClassName={imageAspect ?? "aspect-square max-w-48"}
           initialUrl={imageInitialUrl}
           onChange={onImageChange}
