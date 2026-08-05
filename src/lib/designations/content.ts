@@ -24,7 +24,7 @@ export type DesignationContent = {
 export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
   "medoc-1855": {
     hero: {
-      src: "/hero/1855_fivefirstgrowthsbottles.jpeg",
+      src: "/hero/1stGrowths-bordeaux_legends_grande.webp",
       alt: "The five Médoc first growths",
     },
     inset: {

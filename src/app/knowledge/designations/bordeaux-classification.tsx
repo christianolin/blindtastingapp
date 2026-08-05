@@ -56,8 +56,26 @@ export function BordeauxClassification({
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-2">
+    <div className="relative flex flex-col gap-6">
+      {/* Blurred backdrop for the whole classification — it runs behind the
+          pyramid on purpose, bleeding to the right edge and dissolving into the
+          parchment, like the overview hero. */}
+      {DESIGNATION_CONTENT[system.key]?.hero ? (
+        <div className="pointer-events-none absolute -top-6 right-0 -mr-6 hidden h-[560px] w-[62%] max-w-[760px] overflow-hidden sm:-mr-8 sm:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={DESIGNATION_CONTENT[system.key]!.hero!.src}
+            alt=""
+            aria-hidden
+            // Scaled up slightly so the blur has bleed to work with and never
+            // exposes a soft edge inside the box.
+            className="size-full scale-110 object-cover object-center blur-[3px] mix-blend-multiply"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/55 via-30% to-transparent to-80%" />
+          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
+        </div>
+      ) : null}
+      <div className="relative flex flex-wrap gap-2">
         {chosen.map((s) => (
           <button
             key={s.key}
@@ -79,13 +97,14 @@ export function BordeauxClassification({
         ))}
       </div>
 
-      <DesignationHero
-        hero={DESIGNATION_CONTENT[system.key]?.hero}
-        inset={DESIGNATION_CONTENT[system.key]?.inset}
-        intro={intro}
-      />
+      <div className="relative">
+        <DesignationHero
+          inset={DESIGNATION_CONTENT[system.key]?.inset}
+          intro={intro}
+        />
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
+      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <PyramidBands
           bands={tiers.map((t, i) => ({
             key: t.tier,
