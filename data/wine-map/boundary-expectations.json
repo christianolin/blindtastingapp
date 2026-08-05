@@ -45,6 +45,87 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.ammerschwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68005",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.andlau",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67010",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.barr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67021",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.beblenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68023",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.bennwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68026",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.bergbieten",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67030",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.bergheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68028",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.bergholtz",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68029",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.blienschwiller",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67051",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.brand",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-brand",
@@ -63,12 +144,48 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.dahlenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67081",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.dambach-la-ville",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67084",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.eguisheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68078",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.eichberg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-eichberg",
     "normalized_checksum_sha256": "8D0B08BDA19D23A4593F59F2ACB9F727F8405789F531A903352D6FF0EA0D7A02",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163510Z/alsace-eichberg/fetch-manifest.json",
     "raw_checksum_sha256": "3AA3F4E66166DA5E3AD1D60584178CCF3A5B4DAC20C18A59D10A7BF9883F6E1A",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.eichhoffen",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67120",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -144,6 +261,24 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.gueberschwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68111",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.guebwiller",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68112",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.hatschbourg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-hatschbourg",
@@ -153,12 +288,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.hattstatt",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68123",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.hengst",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-hengst",
     "normalized_checksum_sha256": "4C366373A07D2AAAE5A75061C1BBB829A2DA7BC0C5DC3657A511563CCE571922",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163527Z/alsace-hengst/fetch-manifest.json",
     "raw_checksum_sha256": "1C1D18D135A056ADDEC6F53F552F0E27422E38BC8586690FA31E25C662498D6B",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.hunawihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68147",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.ingersheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68155",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -189,12 +351,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.katzenthal",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68161",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.kessler",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-kessler",
     "normalized_checksum_sha256": "C1F282C7C291486452FC66AFB77BCCB08A3A4F0100C89E8049A7FB069E59CF44",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163533Z/alsace-kessler/fetch-manifest.json",
     "raw_checksum_sha256": "2DEC88700E22E98C24340145295360FAA3E26B87B19DB2CF439C707B85D60848",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kientzheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68164",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.kintzheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67239",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -252,12 +441,48 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.marlenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67282",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.mittelbergheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67295",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.mittelwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68209",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.moenchberg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-moenchberg",
     "normalized_checksum_sha256": "0BCB294FDBF5BD0D9CD17C7C7C01133FF1678748749D39F08BC8DA4F09CA3171",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163544Z/alsace-moenchberg/fetch-manifest.json",
     "raw_checksum_sha256": "5B66298010D6426B9DD2D3C6FD879C8CC03A8D93A7ED16A5900CE608EF9F9A62",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.molsheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67300",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -270,6 +495,24 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.niedermorschwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68237",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.nothalten",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67337",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.ollwiller",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-ollwiller",
@@ -279,12 +522,30 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.orschwihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68250",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.osterberg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-osterberg",
     "normalized_checksum_sha256": "83005B6FDB29199F08E9A33FD91E630816FFF29584273ADC93583FB936813AD5",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163550Z/alsace-osterberg/fetch-manifest.json",
     "raw_checksum_sha256": "F2720953BAAFD8ABD0F4FE23447E87C7DAEC86D28A92123B850EBEFA3A3AD607",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.pfaffenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68255",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -324,6 +585,33 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.ribeauville",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68269",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.riquewihr",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68277",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.rodern",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68280",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.rosacker",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-rosacker",
@@ -333,12 +621,39 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.rouffach",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68287",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.saering",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-saering",
     "normalized_checksum_sha256": "6B0885640B45FC6F33513E5A9C0F1FA74E3F320D8A61579996BFEA3050C65D42",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163559Z/alsace-saering/fetch-manifest.json",
     "raw_checksum_sha256": "43B69F913CAAB2D22114C27FC6B3DB94228BA2235E35D0B7618D77795D1C1BAE",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.saint-hippolyte",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68296",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.scharrachbergheim-irmstett",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67442",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -360,6 +675,15 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.sigolsheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68310",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.sommerberg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-sommerberg",
@@ -375,6 +699,15 @@
     "normalized_checksum_sha256": "661A42F70FB261AC60B7E577241BC6E8C68DF90FC613A1EDC65E2E0FF31980E8",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163606Z/alsace-sonnenglanz/fetch-manifest.json",
     "raw_checksum_sha256": "B41F56AE51F11EE049140043E1278BD2896730C86C90EB37C5F8D4A4063B52C5",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.soultzmatt",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68318",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -423,12 +756,66 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.thann",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68334",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.turckheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68338",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.vieux-thann",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68348",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.voegtlinshoffen",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68350",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.vorbourg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-vorbourg",
     "normalized_checksum_sha256": "259A2256C3C6E5812DE1FBAE22FF050784F02CF6F51BA52BA1CCA043448F6FC6",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163615Z/alsace-vorbourg/fetch-manifest.json",
     "raw_checksum_sha256": "C6D6E38F4A578C01EFADC2387E2AD63B8B16AA8D0ED622D9A8614BE3E25933EB",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.westhalten",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68364",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.wettolsheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68365",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {
@@ -450,12 +837,48 @@
     "documented": true
   },
   {
+    "canonical_key": "france.alsace.wintzenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68374",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
     "canonical_key": "france.alsace.winzenberg",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "denomset:alsace-winzenberg",
     "normalized_checksum_sha256": "8F10EFDAA4E4671742D374626D8D0D998F50C005ABB54A97BE1EE3E875C2FAB7",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_INAO_AOC_VITICOLES/20260726T163620Z/alsace-winzenberg/fetch-manifest.json",
     "raw_checksum_sha256": "ED88A62D3B2F15917EF1489F96195A6ABF8B218B110B9B3670A692951B81E012",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.wolxheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:67554",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.wuenheim",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68381",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
+    "documented": true
+  },
+  {
+    "canonical_key": "france.alsace.zellenberg",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "commune:68383",
+    "normalized_checksum_sha256": "D8B025FA3ACAD19508DF9B21EB82E1ED167CF1AB87E0994DE8B284E25B2A3CB2",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260805T194437Z/alsace-communes/raw-communes.geojson",
+    "raw_checksum_sha256": "517ABB17A3D7B12FC48CF10833C749E11C567D6C8AC4D0A438885403FA7AAA9D",
     "documented": true
   },
   {

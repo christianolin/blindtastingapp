@@ -1140,17 +1140,22 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // accurate-but-open — their 1er cru extends past the village and would need a
     // multi-level cascade). Current unchanged (revision replacements); the new rows
     // are validated + valid + labelled but neither manual nor generalized.
-    total: 1299,
-    validated: 1299,
-    current: 1194,
-    valid: 1299,
-    labelled: 1299,
+    // Alsace communes: +47 commune footprints (IGN Admin Express by INSEE,
+    // two of them communes deleguees since the 2016 Kaysersberg Vignoble
+    // merger), all validated + current, giving the 51 grands crus a village
+    // level to hang off (they moved to tier 3 in the same flip).
+    total: 1346,
+    validated: 1346,
+    current: 1241,
+    valid: 1346,
+    labelled: 1346,
     // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
     // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
     // four of them deleguees) + the retired Ay commune-nouvelle revision.
     // + the France Admin Express outline (its retired NE revision included)
-    // + the Vacqueyras 2-commune union (its aire has no INAO parcels).
-    manual: 67,
+    // + the Vacqueyras 2-commune union (its aire has no INAO parcels)
+    // + the 47 Alsace commune footprints.
+    manual: 114,
     generalized: 1149,
     reproducible: 13,
   });
@@ -1202,7 +1207,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1299);
+  assert.equal(prov.linked_boundaries, 1346);
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
