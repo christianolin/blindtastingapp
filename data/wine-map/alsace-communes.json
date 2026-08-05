@@ -1,0 +1,1376 @@
+{
+  "aire_geographique": "Alsace grand cru",
+  "provenance": {
+    "authority": "INAO (Institut national de l'origine et de la qualité) / IGN",
+    "commune_membership": {
+      "dataset": "Aires géographiques des AOC/AOP",
+      "dataset_slug": "aires-geographiques-des-aoc-aop",
+      "resource_url": "https://static.data.gouv.fr/resources/aires-geographiques-des-aoc-aop/20251009-122320/2025-10-09-comagri-communes-aires-ao.csv",
+      "licence": "Licence Ouverte / Open Licence (fr-lo)",
+      "note": "All 51 \"Alsace grand cru <name>\" aires list the same 47 communes: the file records the collective aire géographique of the AOC, not a per-cru delimitation."
+    },
+    "cru_delimitation": {
+      "layer": "IGN Geoplateforme WFS AOC-VITICOLES:aire_parcellaire (INAO delimited AOC parcels)",
+      "licence": "Licence Ouverte Etalab",
+      "note": "Per-cru parcels unioned, then intersected with the commune polygons to measure how each delimited area splits across commune lines. Same layer the live cru boundaries were built from."
+    },
+    "commune_geometry": {
+      "layers": [
+        "LIMITES_ADMINISTRATIVES_EXPRESS.LATEST:commune",
+        "LIMITES_ADMINISTRATIVES_EXPRESS.LATEST:commune_associee_ou_deleguee"
+      ],
+      "licence": "Licence Ouverte / Open Licence (Etalab)",
+      "note": "Commune names are taken from IGN nom_officiel, not from the INAO CSV: that export is Windows-1252 and drops the œ ligature (Vœgtlinshoffen)."
+    },
+    "retrieved_at": "2026-08-05",
+    "cross_check": "The communes holding >= 0.5% of some cru's delimited area are exactly the 47 of INAO's aire géographique — two independent sources, identical answer. Asserted by this script."
+  },
+  "modeling_decision": "Communes become kind=SITE, is_appellation=false, display_tier 2, min_zoom/label_min_zoom 8, parented to france.alsace — the Champagne village model (a commune is a place, not an appellation). The 51 grands crus move from tier 2 to tier 3, each parented to the commune holding the largest share of its delimited area. A cru still crosses commune lines; the full split is recorded per cru so the approximation stays auditable.",
+  "caveats": [
+    "Kientzheim (68164) and Sigolsheim (68310) were merged into Kaysersberg Vignoble (68162) in 2016 and exist only in the commune_associee_ou_deleguee layer. Their déléguée polygons are the correct pre-merger footprints; imported under their wine names.",
+    "Kaysersberg is NOT created: 1.3% of Schlossberg falls inside the Kaysersberg déléguée, but INAO's aire omits Kaysersberg while listing Kientzheim and Sigolsheim. We follow INAO.",
+    "Shares below 0.5% are boundary-line digitisation noise, not membership: the real spills bottom out at 0.56% while the slivers top out at 0.019%.",
+    "5 of the 47 communes (Saint-Hippolyte, Scharrachbergheim-Irmstett, Soultzmatt, Vieux-Thann, Vœgtlinshoffen) host cru land whose majority lies in a neighbouring commune, so they are childless places. They really do contain grand cru vines."
+  ],
+  "membership_threshold": 0.005,
+  "commune_count": 47,
+  "department_breakdown": {
+    "67": 14,
+    "68": 33
+  },
+  "parent_commune_count": 42,
+  "communes": [
+    {
+      "insee": "68005",
+      "slug": "ammerschwihr",
+      "name": "Ammerschwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "kaefferkopf"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67010",
+      "slug": "andlau",
+      "name": "Andlau",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "kastelberg",
+        "wiebelsberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67021",
+      "slug": "barr",
+      "name": "Barr",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "kirchberg-de-barr"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68023",
+      "slug": "beblenheim",
+      "name": "Beblenheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "sonnenglanz"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68026",
+      "slug": "bennwihr",
+      "name": "Bennwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "marckrain"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67030",
+      "slug": "bergbieten",
+      "name": "Bergbieten",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "altenberg-de-bergbieten"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68028",
+      "slug": "bergheim",
+      "name": "Bergheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "altenberg-de-bergheim",
+        "kanzlerberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68029",
+      "slug": "bergholtz",
+      "name": "Bergholtz",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "spiegel"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67051",
+      "slug": "blienschwiller",
+      "name": "Blienschwiller",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "winzenberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67081",
+      "slug": "dahlenheim",
+      "name": "Dahlenheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "engelberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67084",
+      "slug": "dambach-la-ville",
+      "name": "Dambach-la-Ville",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "frankstein"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68078",
+      "slug": "eguisheim",
+      "name": "Eguisheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "eichberg",
+        "pfersigberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67120",
+      "slug": "eichhoffen",
+      "name": "Eichhoffen",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "moenchberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68111",
+      "slug": "gueberschwihr",
+      "name": "Gueberschwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "goldert"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68112",
+      "slug": "guebwiller",
+      "name": "Guebwiller",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "kessler",
+        "kitterle",
+        "saering"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68123",
+      "slug": "hattstatt",
+      "name": "Hattstatt",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "hatschbourg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68147",
+      "slug": "hunawihr",
+      "name": "Hunawihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "rosacker"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68155",
+      "slug": "ingersheim",
+      "name": "Ingersheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "florimont"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68161",
+      "slug": "katzenthal",
+      "name": "Katzenthal",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "wineck-schlossberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68164",
+      "slug": "kientzheim",
+      "name": "Kientzheim",
+      "department": "68",
+      "layer": "commune_associee_ou_deleguee",
+      "crus": [
+        "furstentum",
+        "schlossberg"
+      ],
+      "note": "Merged into the commune nouvelle Kaysersberg Vignoble (68162) on 1 January 2016; exists today only as a commune déléguée. INAO still lists it separately and the wine name is what labels and textbooks use."
+    },
+    {
+      "insee": "67239",
+      "slug": "kintzheim",
+      "name": "Kintzheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "praelatenberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67282",
+      "slug": "marlenheim",
+      "name": "Marlenheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "steinklotz"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67295",
+      "slug": "mittelbergheim",
+      "name": "Mittelbergheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "zotzenberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68209",
+      "slug": "mittelwihr",
+      "name": "Mittelwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "mandelberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67300",
+      "slug": "molsheim",
+      "name": "Molsheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "bruderthal"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68237",
+      "slug": "niedermorschwihr",
+      "name": "Niedermorschwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "sommerberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67337",
+      "slug": "nothalten",
+      "name": "Nothalten",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "muenchberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68250",
+      "slug": "orschwihr",
+      "name": "Orschwihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "pfingstberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68255",
+      "slug": "pfaffenheim",
+      "name": "Pfaffenheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "steinert"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68269",
+      "slug": "ribeauville",
+      "name": "Ribeauvillé",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "geisberg",
+        "kirchberg-de-ribeauville",
+        "osterberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68277",
+      "slug": "riquewihr",
+      "name": "Riquewihr",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "schoenenbourg",
+        "sporen"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68280",
+      "slug": "rodern",
+      "name": "Rodern",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "gloeckelberg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68287",
+      "slug": "rouffach",
+      "name": "Rouffach",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "vorbourg"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68296",
+      "slug": "saint-hippolyte",
+      "name": "Saint-Hippolyte",
+      "department": "68",
+      "layer": "commune",
+      "crus": [],
+      "note": null
+    },
+    {
+      "insee": "67442",
+      "slug": "scharrachbergheim-irmstett",
+      "name": "Scharrachbergheim-Irmstett",
+      "department": "67",
+      "layer": "commune",
+      "crus": [],
+      "note": null
+    },
+    {
+      "insee": "68310",
+      "slug": "sigolsheim",
+      "name": "Sigolsheim",
+      "department": "68",
+      "layer": "commune_associee_ou_deleguee",
+      "crus": [
+        "mambourg"
+      ],
+      "note": "Merged into the commune nouvelle Kaysersberg Vignoble (68162) on 1 January 2016; exists today only as a commune déléguée. INAO still lists it separately and the wine name is what labels and textbooks use."
+    },
+    {
+      "insee": "68318",
+      "slug": "soultzmatt",
+      "name": "Soultzmatt",
+      "department": "68",
+      "layer": "commune",
+      "crus": [],
+      "note": null
+    },
+    {
+      "insee": "68334",
+      "slug": "thann",
+      "name": "Thann",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "rangen"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68338",
+      "slug": "turckheim",
+      "name": "Turckheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "brand"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68348",
+      "slug": "vieux-thann",
+      "name": "Vieux-Thann",
+      "department": "68",
+      "layer": "commune",
+      "crus": [],
+      "note": null
+    },
+    {
+      "insee": "68350",
+      "slug": "voegtlinshoffen",
+      "name": "Vœgtlinshoffen",
+      "department": "68",
+      "layer": "commune",
+      "crus": [],
+      "note": null
+    },
+    {
+      "insee": "68364",
+      "slug": "westhalten",
+      "name": "Westhalten",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "zinnkoepfle"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68365",
+      "slug": "wettolsheim",
+      "name": "Wettolsheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "steingrubler"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68374",
+      "slug": "wintzenheim",
+      "name": "Wintzenheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "hengst"
+      ],
+      "note": null
+    },
+    {
+      "insee": "67554",
+      "slug": "wolxheim",
+      "name": "Wolxheim",
+      "department": "67",
+      "layer": "commune",
+      "crus": [
+        "altenberg-de-wolxheim"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68381",
+      "slug": "wuenheim",
+      "name": "Wuenheim",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "ollwiller"
+      ],
+      "note": null
+    },
+    {
+      "insee": "68383",
+      "slug": "zellenberg",
+      "name": "Zellenberg",
+      "department": "68",
+      "layer": "commune",
+      "crus": [
+        "froehn"
+      ],
+      "note": null
+    }
+  ],
+  "crus": [
+    {
+      "slug": "altenberg-de-bergbieten",
+      "name": "Altenberg de Bergbieten",
+      "parcels": 1,
+      "parent_insee": "67030",
+      "parent": "Bergbieten",
+      "communes": [
+        {
+          "insee": "67030",
+          "name": "Bergbieten",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "altenberg-de-bergheim",
+      "name": "Altenberg de Bergheim",
+      "parcels": 5,
+      "parent_insee": "68028",
+      "parent": "Bergheim",
+      "communes": [
+        {
+          "insee": "68028",
+          "name": "Bergheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "altenberg-de-wolxheim",
+      "name": "Altenberg de Wolxheim",
+      "parcels": 16,
+      "parent_insee": "67554",
+      "parent": "Wolxheim",
+      "communes": [
+        {
+          "insee": "67554",
+          "name": "Wolxheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "brand",
+      "name": "Brand",
+      "parcels": 25,
+      "parent_insee": "68338",
+      "parent": "Turckheim",
+      "communes": [
+        {
+          "insee": "68338",
+          "name": "Turckheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "bruderthal",
+      "name": "Bruderthal",
+      "parcels": 1,
+      "parent_insee": "67300",
+      "parent": "Molsheim",
+      "communes": [
+        {
+          "insee": "67300",
+          "name": "Molsheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "eichberg",
+      "name": "Eichberg",
+      "parcels": 13,
+      "parent_insee": "68078",
+      "parent": "Eguisheim",
+      "communes": [
+        {
+          "insee": "68078",
+          "name": "Eguisheim",
+          "share": 0.99886
+        }
+      ]
+    },
+    {
+      "slug": "engelberg",
+      "name": "Engelberg",
+      "parcels": 3,
+      "parent_insee": "67081",
+      "parent": "Dahlenheim",
+      "communes": [
+        {
+          "insee": "67081",
+          "name": "Dahlenheim",
+          "share": 0.6471
+        },
+        {
+          "insee": "67442",
+          "name": "Scharrachbergheim-Irmstett",
+          "share": 0.3529
+        }
+      ]
+    },
+    {
+      "slug": "florimont",
+      "name": "Florimont",
+      "parcels": 4,
+      "parent_insee": "68155",
+      "parent": "Ingersheim",
+      "communes": [
+        {
+          "insee": "68155",
+          "name": "Ingersheim",
+          "share": 0.91874
+        },
+        {
+          "insee": "68161",
+          "name": "Katzenthal",
+          "share": 0.08126
+        }
+      ]
+    },
+    {
+      "slug": "frankstein",
+      "name": "Frankstein",
+      "parcels": 6,
+      "parent_insee": "67084",
+      "parent": "Dambach-la-Ville",
+      "communes": [
+        {
+          "insee": "67084",
+          "name": "Dambach-la-Ville",
+          "share": 0.99977
+        }
+      ]
+    },
+    {
+      "slug": "froehn",
+      "name": "Froehn",
+      "parcels": 8,
+      "parent_insee": "68383",
+      "parent": "Zellenberg",
+      "communes": [
+        {
+          "insee": "68383",
+          "name": "Zellenberg",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "furstentum",
+      "name": "Furstentum",
+      "parcels": 5,
+      "parent_insee": "68164",
+      "parent": "Kientzheim",
+      "communes": [
+        {
+          "insee": "68164",
+          "name": "Kientzheim",
+          "share": 0.5229
+        },
+        {
+          "insee": "68310",
+          "name": "Sigolsheim",
+          "share": 0.4771
+        }
+      ]
+    },
+    {
+      "slug": "geisberg",
+      "name": "Geisberg",
+      "parcels": 1,
+      "parent_insee": "68269",
+      "parent": "Ribeauvillé",
+      "communes": [
+        {
+          "insee": "68269",
+          "name": "Ribeauvillé",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "gloeckelberg",
+      "name": "Gloeckelberg",
+      "parcels": 23,
+      "parent_insee": "68280",
+      "parent": "Rodern",
+      "communes": [
+        {
+          "insee": "68280",
+          "name": "Rodern",
+          "share": 0.98594
+        },
+        {
+          "insee": "68296",
+          "name": "Saint-Hippolyte",
+          "share": 0.01406
+        }
+      ]
+    },
+    {
+      "slug": "goldert",
+      "name": "Goldert",
+      "parcels": 5,
+      "parent_insee": "68111",
+      "parent": "Gueberschwihr",
+      "communes": [
+        {
+          "insee": "68111",
+          "name": "Gueberschwihr",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "hatschbourg",
+      "name": "Hatschbourg",
+      "parcels": 11,
+      "parent_insee": "68123",
+      "parent": "Hattstatt",
+      "communes": [
+        {
+          "insee": "68123",
+          "name": "Hattstatt",
+          "share": 0.58542
+        },
+        {
+          "insee": "68350",
+          "name": "Vœgtlinshoffen",
+          "share": 0.41458
+        }
+      ]
+    },
+    {
+      "slug": "hengst",
+      "name": "Hengst",
+      "parcels": 14,
+      "parent_insee": "68374",
+      "parent": "Wintzenheim",
+      "communes": [
+        {
+          "insee": "68374",
+          "name": "Wintzenheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "kaefferkopf",
+      "name": "Kaefferkopf",
+      "parcels": 12,
+      "parent_insee": "68005",
+      "parent": "Ammerschwihr",
+      "communes": [
+        {
+          "insee": "68005",
+          "name": "Ammerschwihr",
+          "share": 0.99999
+        }
+      ]
+    },
+    {
+      "slug": "kanzlerberg",
+      "name": "Kanzlerberg",
+      "parcels": 2,
+      "parent_insee": "68028",
+      "parent": "Bergheim",
+      "communes": [
+        {
+          "insee": "68028",
+          "name": "Bergheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "kastelberg",
+      "name": "Kastelberg",
+      "parcels": 2,
+      "parent_insee": "67010",
+      "parent": "Andlau",
+      "communes": [
+        {
+          "insee": "67010",
+          "name": "Andlau",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "kessler",
+      "name": "Kessler",
+      "parcels": 1,
+      "parent_insee": "68112",
+      "parent": "Guebwiller",
+      "communes": [
+        {
+          "insee": "68112",
+          "name": "Guebwiller",
+          "share": 0.96468
+        },
+        {
+          "insee": "68029",
+          "name": "Bergholtz",
+          "share": 0.03532
+        }
+      ]
+    },
+    {
+      "slug": "kirchberg-de-barr",
+      "name": "Kirchberg de Barr",
+      "parcels": 21,
+      "parent_insee": "67021",
+      "parent": "Barr",
+      "communes": [
+        {
+          "insee": "67021",
+          "name": "Barr",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "kirchberg-de-ribeauville",
+      "name": "Kirchberg de Ribeauvillé",
+      "parcels": 1,
+      "parent_insee": "68269",
+      "parent": "Ribeauvillé",
+      "communes": [
+        {
+          "insee": "68269",
+          "name": "Ribeauvillé",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "kitterle",
+      "name": "Kitterlé",
+      "parcels": 2,
+      "parent_insee": "68112",
+      "parent": "Guebwiller",
+      "communes": [
+        {
+          "insee": "68112",
+          "name": "Guebwiller",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "mambourg",
+      "name": "Mambourg",
+      "parcels": 9,
+      "parent_insee": "68310",
+      "parent": "Sigolsheim",
+      "communes": [
+        {
+          "insee": "68310",
+          "name": "Sigolsheim",
+          "share": 0.99991
+        }
+      ]
+    },
+    {
+      "slug": "mandelberg",
+      "name": "Mandelberg",
+      "parcels": 4,
+      "parent_insee": "68209",
+      "parent": "Mittelwihr",
+      "communes": [
+        {
+          "insee": "68209",
+          "name": "Mittelwihr",
+          "share": 0.75624
+        },
+        {
+          "insee": "68023",
+          "name": "Beblenheim",
+          "share": 0.24376
+        }
+      ]
+    },
+    {
+      "slug": "marckrain",
+      "name": "Marckrain",
+      "parcels": 4,
+      "parent_insee": "68026",
+      "parent": "Bennwihr",
+      "communes": [
+        {
+          "insee": "68026",
+          "name": "Bennwihr",
+          "share": 0.84229
+        },
+        {
+          "insee": "68310",
+          "name": "Sigolsheim",
+          "share": 0.15771
+        }
+      ]
+    },
+    {
+      "slug": "moenchberg",
+      "name": "Moenchberg",
+      "parcels": 2,
+      "parent_insee": "67120",
+      "parent": "Eichhoffen",
+      "communes": [
+        {
+          "insee": "67120",
+          "name": "Eichhoffen",
+          "share": 0.81456
+        },
+        {
+          "insee": "67010",
+          "name": "Andlau",
+          "share": 0.18544
+        }
+      ]
+    },
+    {
+      "slug": "muenchberg",
+      "name": "Muenchberg",
+      "parcels": 2,
+      "parent_insee": "67337",
+      "parent": "Nothalten",
+      "communes": [
+        {
+          "insee": "67337",
+          "name": "Nothalten",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "ollwiller",
+      "name": "Ollwiller",
+      "parcels": 2,
+      "parent_insee": "68381",
+      "parent": "Wuenheim",
+      "communes": [
+        {
+          "insee": "68381",
+          "name": "Wuenheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "osterberg",
+      "name": "Osterberg",
+      "parcels": 4,
+      "parent_insee": "68269",
+      "parent": "Ribeauvillé",
+      "communes": [
+        {
+          "insee": "68269",
+          "name": "Ribeauvillé",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "pfersigberg",
+      "name": "Pfersigberg",
+      "parcels": 18,
+      "parent_insee": "68078",
+      "parent": "Eguisheim",
+      "communes": [
+        {
+          "insee": "68078",
+          "name": "Eguisheim",
+          "share": 0.9199
+        },
+        {
+          "insee": "68365",
+          "name": "Wettolsheim",
+          "share": 0.08006
+        }
+      ]
+    },
+    {
+      "slug": "pfingstberg",
+      "name": "Pfingstberg",
+      "parcels": 2,
+      "parent_insee": "68250",
+      "parent": "Orschwihr",
+      "communes": [
+        {
+          "insee": "68250",
+          "name": "Orschwihr",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "praelatenberg",
+      "name": "Praelatenberg",
+      "parcels": 11,
+      "parent_insee": "67239",
+      "parent": "Kintzheim",
+      "communes": [
+        {
+          "insee": "67239",
+          "name": "Kintzheim",
+          "share": 0.99982
+        }
+      ]
+    },
+    {
+      "slug": "rangen",
+      "name": "Rangen",
+      "parcels": 3,
+      "parent_insee": "68334",
+      "parent": "Thann",
+      "communes": [
+        {
+          "insee": "68334",
+          "name": "Thann",
+          "share": 0.65164
+        },
+        {
+          "insee": "68348",
+          "name": "Vieux-Thann",
+          "share": 0.34836
+        }
+      ]
+    },
+    {
+      "slug": "rosacker",
+      "name": "Rosacker",
+      "parcels": 3,
+      "parent_insee": "68147",
+      "parent": "Hunawihr",
+      "communes": [
+        {
+          "insee": "68147",
+          "name": "Hunawihr",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "saering",
+      "name": "Saering",
+      "parcels": 3,
+      "parent_insee": "68112",
+      "parent": "Guebwiller",
+      "communes": [
+        {
+          "insee": "68112",
+          "name": "Guebwiller",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "schlossberg",
+      "name": "Schlossberg",
+      "parcels": 12,
+      "parent_insee": "68164",
+      "parent": "Kientzheim",
+      "communes": [
+        {
+          "insee": "68164",
+          "name": "Kientzheim",
+          "share": 0.9866
+        },
+        {
+          "insee": "68162",
+          "name": "Kaysersberg",
+          "share": 0.0134
+        }
+      ]
+    },
+    {
+      "slug": "schoenenbourg",
+      "name": "Schoenenbourg",
+      "parcels": 9,
+      "parent_insee": "68277",
+      "parent": "Riquewihr",
+      "communes": [
+        {
+          "insee": "68277",
+          "name": "Riquewihr",
+          "share": 0.70987
+        },
+        {
+          "insee": "68383",
+          "name": "Zellenberg",
+          "share": 0.29013
+        }
+      ]
+    },
+    {
+      "slug": "sommerberg",
+      "name": "Sommerberg",
+      "parcels": 3,
+      "parent_insee": "68237",
+      "parent": "Niedermorschwihr",
+      "communes": [
+        {
+          "insee": "68237",
+          "name": "Niedermorschwihr",
+          "share": 0.95754
+        },
+        {
+          "insee": "68161",
+          "name": "Katzenthal",
+          "share": 0.04246
+        }
+      ]
+    },
+    {
+      "slug": "sonnenglanz",
+      "name": "Sonnenglanz",
+      "parcels": 2,
+      "parent_insee": "68023",
+      "parent": "Beblenheim",
+      "communes": [
+        {
+          "insee": "68023",
+          "name": "Beblenheim",
+          "share": 0.99993
+        }
+      ]
+    },
+    {
+      "slug": "spiegel",
+      "name": "Spiegel",
+      "parcels": 3,
+      "parent_insee": "68029",
+      "parent": "Bergholtz",
+      "communes": [
+        {
+          "insee": "68029",
+          "name": "Bergholtz",
+          "share": 0.71149
+        },
+        {
+          "insee": "68112",
+          "name": "Guebwiller",
+          "share": 0.28851
+        }
+      ]
+    },
+    {
+      "slug": "sporen",
+      "name": "Sporen",
+      "parcels": 3,
+      "parent_insee": "68277",
+      "parent": "Riquewihr",
+      "communes": [
+        {
+          "insee": "68277",
+          "name": "Riquewihr",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "steinert",
+      "name": "Steinert",
+      "parcels": 29,
+      "parent_insee": "68255",
+      "parent": "Pfaffenheim",
+      "communes": [
+        {
+          "insee": "68255",
+          "name": "Pfaffenheim",
+          "share": 0.98473
+        },
+        {
+          "insee": "68364",
+          "name": "Westhalten",
+          "share": 0.01527
+        }
+      ]
+    },
+    {
+      "slug": "steingrubler",
+      "name": "Steingrubler",
+      "parcels": 3,
+      "parent_insee": "68365",
+      "parent": "Wettolsheim",
+      "communes": [
+        {
+          "insee": "68365",
+          "name": "Wettolsheim",
+          "share": 0.99441
+        },
+        {
+          "insee": "68374",
+          "name": "Wintzenheim",
+          "share": 0.00559
+        }
+      ]
+    },
+    {
+      "slug": "steinklotz",
+      "name": "Steinklotz",
+      "parcels": 2,
+      "parent_insee": "67282",
+      "parent": "Marlenheim",
+      "communes": [
+        {
+          "insee": "67282",
+          "name": "Marlenheim",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "vorbourg",
+      "name": "Vorbourg",
+      "parcels": 44,
+      "parent_insee": "68287",
+      "parent": "Rouffach",
+      "communes": [
+        {
+          "insee": "68287",
+          "name": "Rouffach",
+          "share": 0.94114
+        },
+        {
+          "insee": "68364",
+          "name": "Westhalten",
+          "share": 0.05886
+        }
+      ]
+    },
+    {
+      "slug": "wiebelsberg",
+      "name": "Wiebelsberg",
+      "parcels": 1,
+      "parent_insee": "67010",
+      "parent": "Andlau",
+      "communes": [
+        {
+          "insee": "67010",
+          "name": "Andlau",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "wineck-schlossberg",
+      "name": "Wineck-Schlossberg",
+      "parcels": 6,
+      "parent_insee": "68161",
+      "parent": "Katzenthal",
+      "communes": [
+        {
+          "insee": "68161",
+          "name": "Katzenthal",
+          "share": 0.77038
+        },
+        {
+          "insee": "68005",
+          "name": "Ammerschwihr",
+          "share": 0.22962
+        }
+      ]
+    },
+    {
+      "slug": "winzenberg",
+      "name": "Winzenberg",
+      "parcels": 4,
+      "parent_insee": "67051",
+      "parent": "Blienschwiller",
+      "communes": [
+        {
+          "insee": "67051",
+          "name": "Blienschwiller",
+          "share": 1
+        }
+      ]
+    },
+    {
+      "slug": "zinnkoepfle",
+      "name": "Zinnkoepfle",
+      "parcels": 54,
+      "parent_insee": "68364",
+      "parent": "Westhalten",
+      "communes": [
+        {
+          "insee": "68364",
+          "name": "Westhalten",
+          "share": 0.53069
+        },
+        {
+          "insee": "68318",
+          "name": "Soultzmatt",
+          "share": 0.46931
+        }
+      ]
+    },
+    {
+      "slug": "zotzenberg",
+      "name": "Zotzenberg",
+      "parcels": 6,
+      "parent_insee": "67295",
+      "parent": "Mittelbergheim",
+      "communes": [
+        {
+          "insee": "67295",
+          "name": "Mittelbergheim",
+          "share": 1
+        }
+      ]
+    }
+  ]
+}
