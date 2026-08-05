@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { Camera } from "lucide-react";
+import { Camera, Layers } from "lucide-react";
+import { useAddWine } from "@/components/add-wine-context";
 import { CellarLotForm } from "@/app/cellar/new/cellar-lot-form";
 import type { ReferenceOption } from "@/components/reference-combobox";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
@@ -37,6 +38,7 @@ export function CellarAddWineModal({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
+  const { openBulkScan } = useAddWine();
   const [ref, setRef] = useState<RefData | null | "loading">("loading");
 
   useEffect(() => {
@@ -78,16 +80,28 @@ export function CellarAddWineModal({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg max-sm:top-4 max-sm:max-h-[calc(100dvh-2rem)] max-sm:translate-y-0">
         <DialogTitle>Add a wine to your cellar</DialogTitle>
         {onScan && !initialCatalogWineId ? (
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onScan();
-            }}
-            className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Camera className="size-4" /> Scan the label instead
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onScan();
+              }}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Camera className="size-4" /> Scan the label instead
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                openBulkScan();
+              }}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <Layers className="size-4" /> Scan several labels
+            </button>
+          </div>
         ) : null}
         {ref === "loading" ? (
           <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>

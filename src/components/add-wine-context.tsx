@@ -4,6 +4,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { CatalogAddWineModal } from "./catalog-add-wine-modal";
 import { CellarAddWineModal } from "./cellar-add-wine-modal";
 import { ScanModal } from "./scan/scan-modal";
+import { BulkImportFlow } from "./scan/bulk-import-flow";
 import { TastingAddWineModal } from "@/app/tastings/[id]/tasting-add-wine-modal";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 
@@ -23,6 +24,8 @@ export type AddWineOpts = {
 type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
   openScan: (target?: "catalog" | "cellar" | "choose") => void;
+  // Scan a stack of labels, then add them all to the cellar in one pass.
+  openBulkScan: () => void;
   // The addable (DRAFT) tasting the user is currently viewing, if any — set by
   // the tasting page so the app-header scan can add a bottle straight to it.
   activeTasting: { tastingId: string } | null;
@@ -57,7 +60,9 @@ export function AddWineProvider({
     tastingId: string;
   } | null>(null);
   const [tastingScanOpen, setTastingScanOpen] = useState(false);
+  const [bulkScanOpen, setBulkScanOpen] = useState(false);
   const openTastingScan = () => setTastingScanOpen(true);
+  const openBulkScan = () => setBulkScanOpen(true);
   const close = () => {
     setOpen(null);
     setOpts({});
@@ -75,6 +80,7 @@ export function AddWineProvider({
       value={{
         openAddWine,
         openScan,
+        openBulkScan,
         activeTasting,
         setActiveTasting,
         openTastingScan,
@@ -114,6 +120,12 @@ export function AddWineProvider({
               : undefined
           }
           onAddToCellar={(cellarWine) => openAddWine("cellar", { cellarWine })}
+        />
+      ) : null}
+      {bulkScanOpen ? (
+        <BulkImportFlow
+          userId={userId}
+          onClose={() => setBulkScanOpen(false)}
         />
       ) : null}
       {tastingScanOpen && activeTasting ? (
