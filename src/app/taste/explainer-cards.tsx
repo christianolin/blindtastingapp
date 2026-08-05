@@ -30,16 +30,18 @@ export function ExplainerCards() {
   return (
     <div className="relative grid grid-cols-1 divide-border rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
       {CARDS.map((c) => (
-        <div key={c.title} className="flex flex-col gap-1.5 p-4">
-          <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <div key={c.title} className="flex gap-3 p-4">
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-primary/10">
             <c.icon className="size-4" strokeWidth={2} />
           </span>
-          <span className="font-heading text-[0.95rem] font-medium leading-snug">
-            {c.title}
-          </span>
-          <span className="text-[0.8rem] leading-relaxed text-muted-foreground">
-            {c.body}
-          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="font-heading text-[1.05rem] font-medium leading-snug">
+              {c.title}
+            </span>
+            <span className="text-[0.8rem] leading-relaxed text-muted-foreground">
+              {c.body}
+            </span>
+          </div>
         </div>
       ))}
     </div>

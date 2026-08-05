@@ -28,9 +28,11 @@ export function AppStatsRow({ stats }: { stats: AppStats }) {
             i > 0 ? "border-l border-border pl-6 sm:pl-8" : ""
           }`}
         >
-          <it.icon className="size-5 shrink-0 text-gold-deep" strokeWidth={1.5} />
-          <div className="flex flex-col">
-            <span className="font-heading text-xl font-semibold leading-none tracking-tight">
+          <it.icon className="size-6 shrink-0 text-gold-deep" strokeWidth={1.5} />
+          <div className="flex flex-col gap-0.5">
+            {/* `lining-nums`: Cormorant defaults to old-style figures, which
+                render 1/4/9 at mismatched heights — wrong for a stat readout. */}
+            <span className="font-heading text-2xl font-semibold leading-none tracking-tight lining-nums tabular-nums">
               {formatCount(it.value)}
             </span>
             <span className="text-xs text-muted-foreground">{it.label}</span>
