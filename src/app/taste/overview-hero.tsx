@@ -37,16 +37,18 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
       </div>
       <div className="relative flex max-w-2xl flex-col justify-center gap-5 px-6 py-8 sm:min-h-[500px] sm:gap-6 sm:pl-0 sm:pr-6 sm:py-12">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <h1 className="max-w-[10ch] font-heading text-[2rem] font-semibold leading-[1.05] tracking-tight sm:max-w-[15ch] sm:text-5xl">
+          {/* The character cap keeps the title in tidy stacked lines while the
+              photo is beside it; from xl there's room to run it on one line. */}
+          <h1 className="max-w-[10ch] font-heading text-[2rem] font-semibold leading-[1.05] tracking-tight sm:max-w-[15ch] sm:text-5xl xl:max-w-none">
             Understand what&apos;s in the glass.
           </h1>
-          <p className="max-w-lg text-[0.82rem] leading-relaxed text-muted-foreground sm:text-sm">
+          <p className="max-w-lg text-[0.82rem] leading-relaxed text-muted-foreground sm:max-w-xl sm:text-sm xl:max-w-2xl">
             We believe wine deserves more than a quick score. By giving people a
             structured way to observe, describe, compare and learn, Blindr helps
             curious drinkers develop their palate, appreciate complexity and build
             real wine knowledge over time.
           </p>
-          <p className="max-w-lg text-[0.82rem] font-medium leading-relaxed sm:text-sm">
+          <p className="max-w-lg text-[0.82rem] font-medium leading-relaxed sm:max-w-xl sm:text-sm xl:max-w-2xl">
             We built Blindr for wine enthusiasts, committed beginners, blind
             tasters, collectors and professionals who want to learn more from every
             bottle — and share that with a community of like-minded people.
