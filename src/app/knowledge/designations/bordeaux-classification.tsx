@@ -1,13 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CRU_BOURGEOIS, DESIGNATION_CONTENT } from "@/lib/designations/content";
 import type { TabSystem, TabSystemMember } from "@/lib/designations/page-data";
 import { PyramidBands } from "./pyramid-bands";
 import { DesignationHero } from "./designation-hero";
+import { ClassificationTable } from "./classification-table";
 
 type BordeauxTier = { tier: string; members: TabSystemMember[] };
 
@@ -122,78 +121,26 @@ export function BordeauxClassification({
           onSelect={(key) => setActiveTier(activeTier === key ? null : key)}
         />
 
-        <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search châteaux…"
-          className="min-w-[180px] flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        <ClassificationTable
+          columns={["Château", "Growth", "Commune"]}
+          rows={rows.map((m, i) => ({
+            id: `${m.name}-${i}`,
+            cells: [m.name, m.tier, m.commune],
+            note: m.localNote,
+            placeKey: m.appellationKey,
+            placeLabel: m.appellationName ?? m.commune ?? "Map",
+          }))}
+          query={query}
+          onQueryChange={setQuery}
+          searchPlaceholder="Search châteaux…"
+          summary={
+            activeTier
+              ? `${rows.length} · ${activeTier}`
+              : `All ${system.members.length} châteaux`
+          }
+          onClearFilter={activeTier ? () => setActiveTier(null) : undefined}
+          mapColumnLabel="Appellation"
         />
-        <span className="text-sm font-medium text-primary">
-          {activeTier
-            ? `${rows.length} · ${activeTier}`
-            : `All ${system.members.length} châteaux`}
-        </span>
-        {activeTier ? (
-          <button
-            type="button"
-            onClick={() => setActiveTier(null)}
-            className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:bg-muted"
-          >
-            Show all
-          </button>
-        ) : null}
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-3 py-2 font-medium">Growth</th>
-              <th className="px-3 py-2 font-medium">Château</th>
-              <th className="px-3 py-2 font-medium">Commune</th>
-              <th className="px-3 py-2 font-medium">Appellation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((m, i) => (
-              <tr key={`${m.name}-${i}`} className="border-t border-border">
-                <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
-                  {m.tier}
-                </td>
-                <td className="px-3 py-2">
-                  <span className="font-medium">{m.name}</span>
-                  {m.localNote ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {m.localNote}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
-                  {m.commune ?? "—"}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2">
-                  {m.appellationKey ? (
-                    <Link
-                      href={`/knowledge/map?place=${encodeURIComponent(m.appellationKey)}`}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
-                    >
-                      <MapPin className="size-3.5" />
-                      {m.appellationName ?? m.commune}
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      {m.commune ?? "—"}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-muted/30 p-4">
