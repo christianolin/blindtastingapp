@@ -41,6 +41,7 @@ export function CellarLotForm({
   initialCatalogWineId,
   initialCatalogWineLabel,
   initialWine,
+  initialLot,
   onAdded,
 }: {
   countries: ReferenceOption[];
@@ -56,6 +57,18 @@ export function CellarLotForm({
   // Prefill the NEW-wine fields (e.g. a label scan's "add as new" launched from
   // the cellar flow) so the user reviews the wine + fills the lot, then saves.
   initialWine?: WineFormInitial;
+  // Prefill the lot details (bulk scan import applies one set of defaults to
+  // every wine in the batch). Every field is optional; blanks stay blank.
+  initialLot?: {
+    bottleSizeMl?: number;
+    pricePerBottle?: string;
+    currency?: string;
+    purchasedOn?: string;
+    purchaseSource?: string;
+    storageLocation?: string;
+    drinkFrom?: string;
+    drinkTo?: string;
+  };
   // When set (rendered in the Add-wine popup), called after a successful add
   // instead of navigating — the modal closes + refreshes.
   onAdded?: () => void;
@@ -111,14 +124,20 @@ export function CellarLotForm({
   );
 
   const [quantity, setQuantity] = useState("1");
-  const [bottleSize, setBottleSize] = useState(750);
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState(defaultCurrency);
-  const [purchasedOn, setPurchasedOn] = useState("");
-  const [purchaseSource, setPurchaseSource] = useState("");
-  const [drinkFrom, setDrinkFrom] = useState("");
-  const [drinkTo, setDrinkTo] = useState("");
-  const [storageLocation, setStorageLocation] = useState("");
+  const [bottleSize, setBottleSize] = useState(initialLot?.bottleSizeMl ?? 750);
+  const [price, setPrice] = useState(initialLot?.pricePerBottle ?? "");
+  const [currency, setCurrency] = useState(
+    initialLot?.currency || defaultCurrency,
+  );
+  const [purchasedOn, setPurchasedOn] = useState(initialLot?.purchasedOn ?? "");
+  const [purchaseSource, setPurchaseSource] = useState(
+    initialLot?.purchaseSource ?? "",
+  );
+  const [drinkFrom, setDrinkFrom] = useState(initialLot?.drinkFrom ?? "");
+  const [drinkTo, setDrinkTo] = useState(initialLot?.drinkTo ?? "");
+  const [storageLocation, setStorageLocation] = useState(
+    initialLot?.storageLocation ?? "",
+  );
   const [lotNote, setLotNote] = useState("");
 
   const [pending, setPending] = useState(false);
