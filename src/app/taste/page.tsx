@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getAppStats } from "@/lib/app-stats";
 import { TastingsTabs } from "./tastings-tabs";
 import { TastingCard, type TastingCardData } from "./tasting-card";
-import { AppStatsCards } from "./app-stats-cards";
 import { OverviewHero } from "./overview-hero";
 import { ExplainerCards } from "./explainer-cards";
 
@@ -128,10 +127,8 @@ export default async function TastePage() {
         displayName={profile?.display_name ?? user.email ?? ""}
         avatarUrl={profile?.avatar_url ?? null}
       />
-      <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-8 p-6 sm:p-8">
-        <OverviewHero />
-
-        <AppStatsCards stats={appStats} />
+      <div className="flex w-full flex-1 flex-col gap-6 p-6 sm:p-8">
+        <OverviewHero stats={appStats} />
 
         <ExplainerCards />
 
