@@ -29,8 +29,10 @@ import {
   VARIATION_INTRO,
   WHY_CARDS,
 } from "@/lib/designations/content";
+import { TAB_FIGURES } from "@/lib/designations/scales";
 import { BurgundyPyramid } from "./burgundy-pyramid";
 import { BordeauxClassification } from "./bordeaux-classification";
+import { ScaleFigure } from "./scale-figure";
 
 const WHY_ICONS = [Landmark, ScrollText, Layers, Sparkles];
 const VARIATION_ICONS = [Globe, MapIcon, Home, Grape];
@@ -320,11 +322,21 @@ function GlossaryList({
   const terms = (tab.glossaryTerms ?? [])
     .map((n) => glossaryByName.get(n))
     .filter((t): t is TabGlossaryTerm => !!t);
-  if (terms.length === 0) return null;
+  const figures = TAB_FIGURES[tab.slug] ?? [];
+  if (terms.length === 0 && figures.length === 0) return null;
   return (
-    <div className="flex flex-col gap-3">
-      {!bare ? (
-        <h2 className="font-heading text-xl font-semibold">Related terms</h2>
+    <div className="flex flex-col gap-6">
+      {/* The figure first: it gives the ordering and the measured bands, so the
+          definitions below read as detail rather than a flat glossary. */}
+      {figures.map((f) => (
+        <ScaleFigure key={f.title} {...f} />
+      ))}
+      {terms.length === 0 ? null : (
+        <div className="flex flex-col gap-3">
+      {!bare || figures.length > 0 ? (
+        <h2 className="font-heading text-xl font-semibold">
+          {figures.length > 0 ? "The terms in detail" : "Related terms"}
+        </h2>
       ) : null}
       {terms.map((t) => (
         <Card key={t.name}>
@@ -336,6 +348,8 @@ function GlossaryList({
           </CardContent>
         </Card>
       ))}
+        </div>
+      )}
     </div>
   );
 }
