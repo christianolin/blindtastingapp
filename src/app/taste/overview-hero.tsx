@@ -14,11 +14,11 @@ import { AppStatsRow } from "./app-stats-row";
 // bottles read; the gradient then fades its left edge behind the copy.
 export function OverviewHero({ stats }: { stats: AppStats }) {
   return (
-    <section className="relative -mr-6 -mt-6 bg-background sm:-mr-8 sm:-mt-8">
+    <section className="relative -mx-6 -mt-6 bg-background sm:ml-0 sm:-mr-8 sm:-mt-8">
       {/* The photo runs past the hero's bottom edge so the whole base of the
           bottles stays in frame; the explainer cards below deliberately overlap
           its lower part (they're `relative`, so they paint over this layer). */}
-      <div className="pointer-events-none absolute -bottom-24 right-0 top-0 hidden w-[62%] sm:block lg:w-[56%]">
+      <div className="pointer-events-none absolute inset-0 sm:-bottom-24 sm:left-auto sm:w-[62%] lg:w-[56%]">
         <img
           src="/hero/romanee.webp"
           alt=""
@@ -29,21 +29,24 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
             left fade ramps evenly (rather than dropping off fast) so there's no
             visible seam, and clears before the label at ~40% across. The bottom
             fade is short: it only has to soften the spill below the hero. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/55 via-16% to-transparent to-36%" />
+        {/* Phone: the photo sits behind the whole hero as a background, so it
+            needs an even veil to keep the copy legible rather than a side fade. */}
+        <div className="absolute inset-0 bg-background/75 sm:hidden" />
+        <div className="absolute inset-0 hidden bg-gradient-to-r from-background from-0% via-background/55 via-16% to-transparent to-36% sm:block" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </div>
-      <div className="relative flex min-h-[440px] max-w-2xl flex-col justify-center gap-6 py-10 pr-6 sm:min-h-[500px] sm:py-12">
-        <div className="flex flex-col gap-4">
-          <h1 className="max-w-[15ch] font-heading text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+      <div className="relative flex max-w-2xl flex-col justify-center gap-5 px-6 py-8 sm:min-h-[500px] sm:gap-6 sm:pl-0 sm:pr-6 sm:py-12">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <h1 className="max-w-[10ch] font-heading text-[2rem] font-semibold leading-[1.05] tracking-tight sm:max-w-[15ch] sm:text-5xl">
             Understand what&apos;s in the glass.
           </h1>
-          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-lg text-[0.82rem] leading-relaxed text-muted-foreground sm:text-sm">
             We believe wine deserves more than a quick score. By giving people a
             structured way to observe, describe, compare and learn, Blindr helps
             curious drinkers develop their palate, appreciate complexity and build
             real wine knowledge over time.
           </p>
-          <p className="max-w-lg text-sm font-medium leading-relaxed">
+          <p className="max-w-lg text-[0.82rem] font-medium leading-relaxed sm:text-sm">
             We built Blindr for wine enthusiasts, committed beginners, blind
             tasters, collectors and professionals who want to learn more from every
             bottle — and share that with a community of like-minded people.

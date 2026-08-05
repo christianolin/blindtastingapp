@@ -20,12 +20,14 @@ export function AppStatsRow({ stats }: { stats: AppStats }) {
     { icon: NotebookPen, label: "Notes created", value: stats.notesCreated },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-y-4">
+    // Phone: a plain 2x2 grid — the hairline dividers only make sense when the
+    // four sit on one line, and they leave stray edges once the row wraps.
+    <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:flex sm:flex-wrap sm:items-center">
       {items.map((it, i) => (
         <div
           key={it.label}
-          className={`flex items-center gap-2.5 pr-6 sm:pr-8 ${
-            i > 0 ? "border-l border-border pl-6 sm:pl-8" : ""
+          className={`flex items-center gap-2.5 sm:pr-8 ${
+            i > 0 ? "sm:border-l sm:border-border sm:pl-8" : ""
           }`}
         >
           <it.icon className="size-6 shrink-0 text-gold-deep" strokeWidth={1.5} />
