@@ -104,6 +104,19 @@ function stripCruQualifier(name: string): string {
     .trim();
 }
 
+// Drop the quality-scheme suffix so a label's EU term matches the catalog's
+// traditional one: Italian bottles print IGP/DOP for what the catalog (and
+// every wine list) calls IGT/DOC/DOCG, so "Puglia IGP" must find "Puglia IGT".
+function stripClassSuffix(folded: string): string {
+  return folded
+    .replace(
+      /\b(a\.?o\.?c\.?|aop|d\.?o\.?c\.?g\.?|d\.?o\.?c\.?|docg|doca|dop|do|i\.?g\.?t\.?|i\.?g\.?p\.?|pdo|pgi|ava|g\.?i\.?)\b/g,
+      " ",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Best-effort map of a label read to the catalog form's shape, so "Add as new"
 // opens pre-populated. Names are matched (accent-insensitively) to existing
 // reference rows; anything unmatched stays blank for the user to pick or create
@@ -133,6 +146,9 @@ export async function resolveWinePrefill(
       hits = await searchAppellations(stripped);
     }
     const needles = [fold(extracted.appellation), fold(stripped)].filter(Boolean);
+    // Compare with the quality-scheme suffix removed on both sides, so the
+    // label's term and the catalog's spelling of the same denomination agree.
+    const bases = needles.map(stripClassSuffix).filter(Boolean);
     const pick =
       hits.find((a) =>
         needles.some(
@@ -141,6 +157,9 @@ export async function resolveWinePrefill(
             fold(a.name) === `${n} aoc` ||
             fold(a.name) === `${n} aop`,
         ),
+      ) ??
+      hits.find((a) =>
+        bases.some((b) => stripClassSuffix(fold(a.name)) === b),
       ) ??
       hits.find((a) =>
         needles.some(
@@ -184,6 +203,31 @@ export async function resolveWinePrefill(
     if (hit) {
       regionId = hit.id;
       if (!countryId) countryId = hit.country_id;
+    }
+  }
+
+  // Last resort for the appellation: a wine sold under a regional PGI prints
+  // only the region's name ("PUGLIA · Indicazione Geografica Protetta"), which
+  // reads as a region rather than a denomination. If the region resolved but
+  // the appellation didn't, take that region's own regional appellation when
+  // one exists ("Puglia" -> "Puglia IGT"), rather than leaving the field blank
+  // and blocking the save.
+  if (!appellationId && regionId) {
+    const { data: regionApps } = await supabase
+      .from("appellations")
+      .select("id, name")
+      .eq("region_id", regionId);
+    const { data: regRow } = await supabase
+      .from("regions")
+      .select("name")
+      .eq("id", regionId)
+      .maybeSingle();
+    const regionBase = regRow?.name ? fold(regRow.name) : "";
+    if (regionBase) {
+      const selfNamed = (regionApps ?? []).find(
+        (a) => stripClassSuffix(fold(a.name)) === regionBase,
+      );
+      if (selfNamed) appellationId = selfNamed.id;
     }
   }
 

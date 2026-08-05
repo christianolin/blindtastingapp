@@ -28,7 +28,7 @@ const PROMPT = `You are a wine expert reading a wine bottle label from a photo.
 Return ONLY a single JSON object — no prose, no markdown code fences — with exactly these keys:
 "producer": winery / producer name, or null
 "wineName": the cuvee / special bottling name (not the producer, not the appellation), or null
-"appellation": appellation / AOC / DOC / DOCG / etc., or null
+"appellation": the wine's geographic denomination — AOC/AOP, DOC/DOCG, DO/DOCa, IGT/IGP, PDO/PGI, AVA, etc. A regional PGI counts: a label printing "PUGLIA — Indicazione Geografica Protetta" IS the appellation "Puglia IGT". Italian labels print the EU term (IGP/DOP) for what wine lists still call IGT/DOC/DOCG — return the traditional form ("Puglia IGT", not "Puglia IGP"). Repeat the name here even when it is the same word as the region. Return null ONLY when the wine truly carries no geographic indication (Vin de France, Vino d'Italia, Deutscher Wein, generic table wine)
 "region": the wine region — infer it from the appellation or producer even when it is not printed (e.g. Amarone della Valpolicella -> Veneto), or null
 "country": the country — infer it too (e.g. -> Italy), or null
 "vintageKind": "YEAR" if a vintage year is shown, "NV" for non-vintage, "TAWNY" for an "X years" tawny
