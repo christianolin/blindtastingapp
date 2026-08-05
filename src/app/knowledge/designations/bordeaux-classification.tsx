@@ -143,12 +143,17 @@ export function BordeauxClassification({
         />
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/30 p-4">
-        <h3 className="font-heading text-lg font-semibold">
-          {CRU_BOURGEOIS.title}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">{CRU_BOURGEOIS.body}</p>
-      </div>
+      {/* Bordeaux-only footnote — this view also serves Alsace. */}
+      {systemKeys.includes("medoc-1855") ? (
+        <div className="relative rounded-lg border border-border bg-muted/30 p-4">
+          <h3 className="font-heading text-lg font-semibold">
+            {CRU_BOURGEOIS.title}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {CRU_BOURGEOIS.body}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -251,6 +251,20 @@ function SystemsPanel({
     .map((k) => systems.find((s) => s.key === k))
     .filter((s): s is TabSystem => !!s && s.members.length > 0);
 
+  // A system with classified members reads best the same way Bordeaux does —
+  // pyramid on the left, searchable table with map links on the right.
+  if (chosen.length > 0) {
+    return (
+      <div className="flex flex-col gap-8">
+        <BordeauxClassification
+          systems={systems}
+          systemKeys={chosen.map((s) => s.key)}
+        />
+        <GlossaryList tab={tab} glossaryByName={glossaryByName} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {chosen.map((s) => {
