@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CRU_BOURGEOIS, DESIGNATION_CONTENT } from "@/lib/designations/content";
 import type { TabSystem, TabSystemMember } from "@/lib/designations/page-data";
@@ -175,10 +176,11 @@ export function BordeauxClassification({
                 <td className="whitespace-nowrap px-3 py-2">
                   {m.appellationKey ? (
                     <Link
-                      href={`/knowledge/map?place=${m.appellationKey}`}
-                      className="text-primary hover:text-primary/80"
+                      href={`/knowledge/map?place=${encodeURIComponent(m.appellationKey)}`}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
                     >
-                      {m.appellationName ?? m.commune} →
+                      <MapPin className="size-3.5" />
+                      {m.appellationName ?? m.commune}
                     </Link>
                   ) : (
                     <span className="text-muted-foreground">
