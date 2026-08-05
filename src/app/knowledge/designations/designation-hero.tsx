@@ -1,12 +1,13 @@
 import type { DesignationContent } from "@/lib/designations/content";
 
-// Intro band for a classification: the artefact framed on the left, the text
-// beside it, and an atmospheric photo dissolving into the card on the right —
-// the same treatment as the overview hero.
+// Intro band for a classification. Like the overview hero, the imagery sits on
+// the page rather than inside a card: it bleeds past the page padding and
+// dissolves into the parchment (`mix-blend-multiply` drops the photos' white
+// studio/paper grounds), so nothing reads as a pasted-in box.
 //
-// These source images are small (a few hundred pixels), so nothing is stretched
-// to fill the band: the hero is capped near its natural size and anchored to
-// the right edge, with the fade doing the work instead of scale.
+// The source images are small (a few hundred pixels), so they're capped near
+// their natural size and anchored to the edges — the fade carries the width,
+// not scale.
 export function DesignationHero({
   hero,
   inset,
@@ -18,9 +19,9 @@ export function DesignationHero({
 }) {
   if (!intro && !hero && !inset) return null;
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+    <section className="relative -mx-6 overflow-hidden sm:-mx-8 sm:min-h-[210px]">
       {hero ? (
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] max-w-[320px] sm:block">
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] max-w-[300px] sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={hero.src}
@@ -28,17 +29,17 @@ export function DesignationHero({
             aria-hidden
             className="size-full object-contain object-right mix-blend-multiply"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-card from-0% via-card/50 via-20% to-transparent to-55%" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/45 via-25% to-transparent to-60%" />
         </div>
       ) : null}
-      <div className="relative flex items-start gap-4 p-4 sm:p-5">
+      <div className="relative flex items-center gap-5 px-6 py-5 sm:px-8">
         {inset ? (
-          <figure className="hidden w-[104px] shrink-0 flex-col gap-1.5 sm:flex">
+          <figure className="hidden w-[112px] shrink-0 flex-col gap-1.5 sm:flex">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={inset.src}
               alt={inset.alt}
-              className="w-full rounded-md border border-border object-cover shadow-sm"
+              className="w-full mix-blend-multiply"
             />
             {inset.caption ? (
               <figcaption className="text-[0.65rem] leading-tight text-muted-foreground">
@@ -53,6 +54,6 @@ export function DesignationHero({
           </p>
         ) : null}
       </div>
-    </div>
+    </section>
   );
 }
