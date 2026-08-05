@@ -20,12 +20,12 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
           src="/hero/romanee.webp"
           alt=""
           aria-hidden
-          className="size-full object-cover object-[center_30%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
+          className="size-full object-cover object-[center_62%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
         />
-        {/* Fade the photo's left and bottom edges into the page so it reads as
-            a background wash rather than a pasted-in panel. */}
+        {/* Fade only the photo's left edge into the page, so it sits behind the
+            copy without a pasted-in seam. The bottom is left crisp — the crop
+            through the bottles is the intended framing. */}
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background to-transparent" />
       </div>
       <div className="relative flex min-h-[440px] max-w-2xl flex-col justify-center gap-6 py-10 pr-6 sm:min-h-[500px] sm:py-12">
         <div className="flex flex-col gap-4">
