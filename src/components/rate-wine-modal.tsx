@@ -70,16 +70,39 @@ export function RateWineModal({
         <p className="text-sm text-muted-foreground">
           Find the wine you&apos;re tasting to write a WSET note.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            openScan();
-          }}
-          className="inline-flex w-fit items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Camera className="size-4" /> Scan a label
-        </button>
+        {/* All three ways in to a wine sit together above the search field: on a
+            phone the keyboard covers the lower half of the dialog, so nothing
+            actionable may live below it. */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openScan();
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Camera className="size-4" /> Scan a label
+          </button>
+          <button
+            type="button"
+            onClick={() => setCellarOpen((o) => !o)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Warehouse className="size-4" />{" "}
+            {cellarOpen ? "Hide my cellar" : "From my cellar"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openAddWine("catalog");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Plus className="size-4" /> Add manually
+          </button>
+        </div>
         <Input
           autoFocus
           placeholder="Search by wine, producer or region…"
@@ -87,7 +110,28 @@ export function RateWineModal({
           onChange={(e) => setQ(e.target.value)}
         />
         <div className="min-h-24 max-h-[50vh] overflow-y-auto">
-          {loading ? (
+          {cellarOpen ? (
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={consume}
+                  onChange={(e) => setConsume(e.target.checked)}
+                />
+                Remove a bottle from my cellar
+              </label>
+              <CellarLotPicker
+                lots={cellarLots}
+                onPick={(l) =>
+                  onPick?.({
+                    catalogWineId: l.catalogWineId,
+                    lotId: l.lotId,
+                    consume,
+                  })
+                }
+              />
+            </div>
+          ) : loading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Searching…</p>
           ) : hits.length > 0 ? (
             <ul className="flex flex-col">
@@ -115,48 +159,6 @@ export function RateWineModal({
             <p className="py-6 text-center text-sm text-muted-foreground">No matches.</p>
           ) : null}
         </div>
-        <div className="flex flex-col gap-2 border-t border-border pt-3">
-          <button
-            type="button"
-            onClick={() => setCellarOpen((o) => !o)}
-            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            <Warehouse className="size-4" />{" "}
-            {cellarOpen ? "Hide my cellar" : "Choose from my cellar"}
-          </button>
-          {cellarOpen ? (
-            <>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={consume}
-                  onChange={(e) => setConsume(e.target.checked)}
-                />
-                Remove a bottle from my cellar
-              </label>
-              <CellarLotPicker
-                lots={cellarLots}
-                onPick={(l) =>
-                  onPick?.({
-                    catalogWineId: l.catalogWineId,
-                    lotId: l.lotId,
-                    consume,
-                  })
-                }
-              />
-            </>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            openAddWine("catalog");
-          }}
-          className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-        >
-          <Plus className="size-4" /> Can&apos;t find it? Add a new wine
-        </button>
       </DialogContent>
     </Dialog>
   );
