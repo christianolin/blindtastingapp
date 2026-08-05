@@ -61,10 +61,24 @@ export function BordeauxClassification({
         ? "grand crus"
         : "châteaux";
   const q = query.trim().toLowerCase();
-  const rows = system.members.filter(
+  const sortRows = (list: TabSystemMember[]) =>
+    // Alsace has a single tier, so tier order says nothing: sort by commune to
+    // group the crus that share one (Guebwiller holds three, Andlau three…).
+    system.key === "alsace-grand-cru"
+      ? [...list].sort(
+          (a, b) =>
+            (a.commune ?? "").localeCompare(b.commune ?? "") ||
+            a.name.localeCompare(b.name),
+        )
+      : list;
+  const rows = sortRows(system.members).filter(
     (m) =>
       (!activeTier || m.tier === activeTier) &&
-      (!q || m.name.toLowerCase().includes(q)),
+      // Search the commune too, so "Guebwiller" finds its three grand crus and
+      // "Pauillac" finds its châteaux.
+      (!q ||
+        m.name.toLowerCase().includes(q) ||
+        (m.commune ?? "").toLowerCase().includes(q)),
   );
 
   return (
