@@ -25,12 +25,12 @@ after(async () => {
   await client.end();
 });
 
-test("designation catalogue: 9 systems, member-bearing ones grouped", async () => {
+test("designation catalogue: 10 systems, member-bearing ones grouped", async () => {
   const systems = await client.query(
     `select key, editorial_status, display_group
        from wine_designations order by key`,
   );
-  assert.equal(systems.rowCount, 9);
+  assert.equal(systems.rowCount, 10);
   const byKey = new Map(systems.rows.map((r) => [r.key, r]));
   for (const key of [
     "medoc-1855",
@@ -43,6 +43,13 @@ test("designation catalogue: 9 systems, member-bearing ones grouped", async () =
   assert.equal(byKey.get("burgundy-grand-cru")?.display_group, "Burgundy");
   assert.equal(byKey.get("alsace-grand-cru")?.display_group, "Alsace");
   assert.equal(byKey.get("alsace-grand-cru")?.editorial_status, "PUBLISHED");
+  // The Echelle des Crus became a real classification (17 GC + 42 1er cru
+  // villages) rather than prose, so Champagne joins the grouped systems.
+  assert.equal(byKey.get("champagne-echelle-des-crus")?.display_group, "Champagne");
+  assert.equal(
+    byKey.get("champagne-echelle-des-crus")?.editorial_status,
+    "PUBLISHED",
+  );
   // Member-less systems stay out of the Classifications section.
   for (const key of ["burgundy-village", "burgundy-premier-cru", "cru-bourgeois-medoc"]) {
     assert.equal(byKey.get(key)?.display_group, null, key);
@@ -61,6 +68,7 @@ test("per-system member counts and totals", async () => {
     {
       "alsace-grand-cru": 51,
       "burgundy-grand-cru": 33,
+      "champagne-echelle-des-crus": 59,
       "graves-cru-classe": 16,
       "medoc-1855": 61,
       "saint-emilion-grand-cru-classe": 85,
@@ -74,10 +82,12 @@ test("per-system member counts and totals", async () => {
             count(*) filter (where editorial_status <> 'PUBLISHED')::int unpublished
        from wine_designation_members`,
   );
+  // +59 SITE members when the Echelle des Crus landed (17 Grand Cru + 42
+  // Premier Cru villages); ESTATE members are still the 189 Bordeaux growths.
   assert.deepEqual(totals.rows[0], {
-    total: 273,
+    total: 332,
     estates: 189,
-    sites: 84,
+    sites: 143,
     unpublished: 0,
   });
 });
@@ -94,6 +104,11 @@ test("tier composition per classification", async () => {
   assert.deepEqual(rows, [
     ["alsace-grand-cru", "Grand Cru", 1, 51],
     ["burgundy-grand-cru", "Grand Cru", 1, 33],
+    // The Echelle des Crus rates whole villages, and its Grand Cru band sits
+    // ABOVE Premier Cru, so it takes tier_rank 0 rather than pushing the
+    // premiers to 2 (rank drives pyramid order, and 1 was already taken).
+    ["champagne-echelle-des-crus", "Grand Cru", 0, 17],
+    ["champagne-echelle-des-crus", "Premier Cru", 1, 42],
     ["graves-cru-classe", "Cru Classé", 1, 16],
     ["medoc-1855", "Premier Cru", 1, 5],
     ["medoc-1855", "Deuxième Cru", 2, 14],
