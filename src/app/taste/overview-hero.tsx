@@ -15,18 +15,21 @@ import { AppStatsRow } from "./app-stats-row";
 export function OverviewHero({ stats }: { stats: AppStats }) {
   return (
     <section className="relative isolate -mr-6 -mt-6 overflow-hidden bg-background sm:-mr-8 sm:-mt-8">
-      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[55%] sm:block">
+      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] sm:block lg:w-[48%]">
         <img
           src="/hero/romanee.webp"
           alt=""
           aria-hidden
-          className="ml-auto h-full w-auto object-contain object-right mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
+          className="size-full object-cover object-[center_30%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+        {/* Fade the photo's left and bottom edges into the page so it reads as
+            a background wash rather than a pasted-in panel. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background to-transparent" />
       </div>
-      <div className="relative flex max-w-2xl flex-col gap-6 py-10 pr-6 sm:py-12">
+      <div className="relative flex min-h-[440px] max-w-2xl flex-col justify-center gap-6 py-10 pr-6 sm:min-h-[500px] sm:py-12">
         <div className="flex flex-col gap-4">
-          <h1 className="font-heading text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+          <h1 className="max-w-[15ch] font-heading text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
             Understand what&apos;s in the glass.
           </h1>
           <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
