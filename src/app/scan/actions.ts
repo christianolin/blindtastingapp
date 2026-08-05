@@ -240,6 +240,31 @@ export async function resolveWinePrefill(
     countryId = (data ?? []).find((c) => wanted.includes(fold(c.name)))?.id ?? "";
   }
 
+  // Wine with no geographic indication at all (Vin de France, Vino d'Italia,
+  // Deutscher Wein): the label names a country and nothing else. Point it at
+  // that country's sentinel "None" region/appellation so it can actually be
+  // saved. Only when the read named no region either — a region we merely
+  // failed to match must stay blank for the user to pick, not be recorded as
+  // "None".
+  if (countryId && !regionId && !extracted.region && !extracted.appellation) {
+    const { data: noneRegion } = await supabase
+      .from("regions")
+      .select("id")
+      .eq("country_id", countryId)
+      .eq("name", "None")
+      .maybeSingle();
+    if (noneRegion) {
+      regionId = noneRegion.id;
+      const { data: noneApp } = await supabase
+        .from("appellations")
+        .select("id")
+        .eq("region_id", noneRegion.id)
+        .eq("name", "None")
+        .maybeSingle();
+      if (noneApp) appellationId = noneApp.id;
+    }
+  }
+
   let producerId = "";
   let producerLabel: string | null = null;
   if (extracted.producer) {
