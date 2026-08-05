@@ -28,7 +28,7 @@ const CARDS = [
 
 export function ExplainerCards() {
   return (
-    <div className="grid grid-cols-1 divide-border rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
+    <div className="relative grid grid-cols-1 divide-border rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
       {CARDS.map((c) => (
         <div key={c.title} className="flex flex-col gap-1.5 p-4">
           <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">

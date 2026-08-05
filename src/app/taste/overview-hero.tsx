@@ -14,13 +14,16 @@ import { AppStatsRow } from "./app-stats-row";
 // bottles read; the gradient then fades its left edge behind the copy.
 export function OverviewHero({ stats }: { stats: AppStats }) {
   return (
-    <section className="relative isolate -mr-6 -mt-6 overflow-hidden bg-background sm:-mr-8 sm:-mt-8">
-      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] sm:block lg:w-[48%]">
+    <section className="relative -mr-6 -mt-6 bg-background sm:-mr-8 sm:-mt-8">
+      {/* The photo runs past the hero's bottom edge so the whole base of the
+          bottles stays in frame; the explainer cards below deliberately overlap
+          its lower part (they're `relative`, so they paint over this layer). */}
+      <div className="pointer-events-none absolute -bottom-40 right-0 top-0 hidden w-[52%] sm:block lg:w-[48%]">
         <img
           src="/hero/romanee.webp"
           alt=""
           aria-hidden
-          className="size-full object-cover object-[center_62%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
+          className="size-full object-cover object-[center_82%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
         />
         {/* Fade only the photo's left edge into the page, so it sits behind the
             copy without a pasted-in seam. The bottom is left crisp — the crop
