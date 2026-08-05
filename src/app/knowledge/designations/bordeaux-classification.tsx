@@ -61,17 +61,20 @@ export function BordeauxClassification({
           pyramid on purpose, bleeding to the right edge and dissolving into the
           parchment, like the overview hero. */}
       {DESIGNATION_CONTENT[system.key]?.hero ? (
-        <div className="pointer-events-none absolute -top-6 right-0 -mr-6 hidden h-[560px] w-[62%] max-w-[760px] overflow-hidden sm:-mr-8 sm:block">
+        <div className="pointer-events-none absolute -top-6 right-0 -mr-6 hidden h-[540px] w-[52%] max-w-[620px] overflow-hidden sm:-mr-8 sm:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={DESIGNATION_CONTENT[system.key]!.hero!.src}
             alt=""
             aria-hidden
-            // Scaled up slightly so the blur has bleed to work with and never
-            // exposes a soft edge inside the box.
-            className="size-full scale-110 object-cover object-center blur-[3px] mix-blend-multiply"
+            // Kept sharp: the overview hero's effect is the multiply blend and
+            // the fade, not blur — and this source is small enough that any
+            // blur on top of the upscale just turns it to mush.
+            className="size-full object-cover object-center mix-blend-multiply [filter:sepia(0.25)_saturate(0.9)_brightness(1.04)]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/55 via-30% to-transparent to-80%" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/55 via-30% to-transparent to-85%" />
+          {/* Keeps the château table legible where it overlaps the photo. */}
+          <div className="absolute inset-0 bg-background/35" />
           <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
         </div>
       ) : null}

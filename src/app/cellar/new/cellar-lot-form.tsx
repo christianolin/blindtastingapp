@@ -159,12 +159,20 @@ export function CellarLotForm({
       const hasPrimaryGrape = Boolean(
         blend[0]?.grapeId || blend[0]?.pendingName?.trim(),
       );
-      if (
-        !countryId || !regionId || !appellationId || !hasPrimaryGrape ||
-        !hasProducer || !colour || !style
-      ) {
+      // Name what's actually missing: a label scan often resolves only part of
+      // the identity, and "fill in these seven fields" doesn't say which.
+      const missing = [
+        !countryId && "country",
+        !regionId && "region",
+        !appellationId && "appellation",
+        !hasPrimaryGrape && "primary grape",
+        !hasProducer && "producer",
+        !colour && "colour",
+        !style && "style",
+      ].filter(Boolean) as string[];
+      if (missing.length > 0) {
         setError(
-          "Pick an existing wine, or fill country, region, appellation, primary grape, producer, colour and style.",
+          `Still missing: ${missing.join(", ")}. Fill these in, or pick an existing wine above.`,
         );
         return;
       }
@@ -209,7 +217,7 @@ export function CellarLotForm({
       const resolvedGrapes = catalogWineId
         ? []
         : orderedBlend(await resolvePendingBlend(blend, createGrape));
-      await addCellarLot({
+      const result = await addCellarLot({
         catalogWineId: catalogWineId || null,
         countryId,
         regionId,
@@ -238,10 +246,23 @@ export function CellarLotForm({
         storageLocation: storageLocation.trim() || null,
         lotNote: lotNote.trim() || null,
       });
+      if ("error" in result) {
+        setError(result.error);
+        setPending(false);
+        return;
+      }
       if (onAdded) onAdded();
       else router.push("/cellar");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add the wine.");
+      // Anything still thrown out of a server action (creating the pending
+      // producer/grape) reaches us with its message redacted by Next in
+      // production — don't show the user that placeholder.
+      const msg = e instanceof Error ? e.message : "";
+      setError(
+        !msg || msg.includes("Server Components render")
+          ? "Couldn't save this wine. Please try again — if it keeps failing, check the producer and grape names."
+          : msg,
+      );
       setPending(false);
     }
   }

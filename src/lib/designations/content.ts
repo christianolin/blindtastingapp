@@ -27,11 +27,6 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
       src: "/hero/1stGrowths-bordeaux_legends_grande.webp",
       alt: "The five Médoc first growths",
     },
-    inset: {
-      src: "/hero/1855crupaper.jpeg",
-      alt: "The original handwritten 1855 classification",
-      caption: "The original 1855 list",
-    },
     intro:
       "The Classification of 1855 was created for the Exposition Universelle in Paris. It ranks the top châteaux of the Médoc into five growths based on reputation and market price at the time.",
     pyramid: [

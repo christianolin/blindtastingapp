@@ -37,12 +37,20 @@ export type CellarLotInput = {
 // Add a lot to the caller's cellar. Reuses the catalog find-or-create via the
 // add_cellar_lot RPC: pass catalog_wine_id to attach to an existing wine, or the
 // identity fields to resolve/create one. RLS + auth.uid() are enforced in the RPC.
-export async function addCellarLot(input: CellarLotInput): Promise<{ id: string }> {
+//
+// Failures are RETURNED, not thrown: Next redacts the message of any error
+// thrown out of a server action in production ("An error occurred in the Server
+// Components render…"), which hid the real Postgres reason from the user and
+// from us. The database message is genuinely useful here — it names the column
+// or constraint that rejected the row.
+export async function addCellarLot(
+  input: CellarLotInput,
+): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("You must be signed in to add a wine.");
+  if (!user) return { error: "You must be signed in to add a wine." };
 
   const p: Record<string, unknown> = {
     quantity: input.quantity,
@@ -75,7 +83,12 @@ export async function addCellarLot(input: CellarLotInput): Promise<{ id: string 
   }
 
   const { data, error } = await supabase.rpc("add_cellar_lot", { p });
-  if (error) throw new Error(error.message);
+  if (error) {
+    // Logged server-side too, so the cause is in the Vercel runtime logs even
+    // when the user only reports "it wouldn't save".
+    console.error("addCellarLot failed", { error, payload: p });
+    return { error: error.message };
+  }
   const lotId = data as string;
 
   // A newly-created catalog wine owned by this user gets its full blend (its
