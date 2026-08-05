@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Wine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
@@ -643,18 +643,26 @@ export async function PlayExperience({
               ) : resolved && answer ? (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="mb-1 text-sm font-medium">Answer</h3>
-                    {answer.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={answer.image_url}
-                        alt=""
-                        className="mb-2 max-h-64 rounded-lg object-cover"
-                      />
-                    ) : null}
-                    <p className="text-sm text-muted-foreground">
-                      {describeAnswer(answer)}
-                    </p>
+                    <h3 className="mb-1.5 text-sm font-medium">Answer</h3>
+                    {/* Label photo as a left thumbnail (blank bottle when there
+                        is none), matching the cellar and catalog rows. */}
+                    <div className="flex items-start gap-3">
+                      {answer.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={answer.image_url}
+                          alt=""
+                          className="size-16 shrink-0 rounded-md border border-border object-cover"
+                        />
+                      ) : (
+                        <span className="flex size-16 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                          <Wine className="size-6" />
+                        </span>
+                      )}
+                      <p className="min-w-0 text-sm text-muted-foreground">
+                        {describeAnswer(answer)}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Once globally revealed, show everyone's result; otherwise

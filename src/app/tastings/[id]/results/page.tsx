@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronDown, Crown, Medal } from "lucide-react";
+import { ChevronDown, Crown, Medal, Wine } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -370,15 +370,22 @@ export default async function ResultsPage({
               <CardTitle className="text-lg">{wineLabel(wine)} results</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {answer.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={answer.image_url as string}
-                  alt=""
-                  className="max-h-64 rounded-lg object-cover"
-                />
-              ) : null}
-              <div className="rounded-lg bg-muted/50 p-3 text-sm">
+              <div className="flex items-start gap-3">
+                {/* Label photo as a left thumbnail (blank bottle when there is
+                    none), matching the cellar and catalog rows. */}
+                {answer.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={answer.image_url as string}
+                    alt=""
+                    className="size-16 shrink-0 rounded-md border border-border object-cover"
+                  />
+                ) : (
+                  <span className="flex size-16 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                    <Wine className="size-6" />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1 rounded-lg bg-muted/50 p-3 text-sm">
                 <p className="mb-0.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   The wine
                 </p>
@@ -406,6 +413,7 @@ export default async function ResultsPage({
                     vintage_tawny_years: number | null;
                   },
                 )}
+                </div>
               </div>
 
               {answer.catalog_wine_id ? (

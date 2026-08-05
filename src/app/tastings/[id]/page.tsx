@@ -462,19 +462,21 @@ export default async function TastingPage({
       {canAddWine && !hasStarted ? (
         <TastingScanRegistrar tastingId={id} />
       ) : null}
-      {tasting.image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={tasting.image_url}
-          alt=""
-          className="aspect-[3/1] w-full rounded-xl object-cover"
-        />
-      ) : null}
-
       {/* Header: title + host settings, one prominent status, and secondary
-          metadata as inline text rather than a row of equal-weight pills. */}
+          metadata as inline text rather than a row of equal-weight pills. The
+          tasting photo rides alongside the title as a thumbnail — as a full
+          3:1 banner it ate the whole first screen for very little information. */}
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          {tasting.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={tasting.image_url}
+              alt=""
+              className="size-16 shrink-0 rounded-xl border border-border object-cover sm:size-20"
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
             {tasting.name}
           </h1>
@@ -512,6 +514,7 @@ export default async function TastingPage({
                 : "Danish Championship scoring"}
             </Link>
           </p>
+          </div>
         </div>
         {isHost ? (
           <div className="shrink-0">
