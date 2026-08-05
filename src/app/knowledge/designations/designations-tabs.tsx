@@ -170,8 +170,6 @@ export function DesignationsTabs({
           hierarchy={data.burgundy}
           meta={DESIGNATION_CONTENT["burgundy-grand-cru"]?.pyramid ?? []}
         />
-      ) : tab.kind === "champagne" ? (
-        <ChampagnePanel />
       ) : tab.kind === "bordeaux" ? (
         <div className="flex flex-col gap-8">
           <BordeauxClassification
@@ -354,19 +352,4 @@ function GlossaryList({
   );
 }
 
-function ChampagnePanel() {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="max-w-2xl text-sm text-muted-foreground">
-        Champagne is ranked by the Échelle des Crus — its Grand Cru and Premier
-        Cru villages are mapped on the wine map.
-      </p>
-      <Link
-        href="/knowledge/map?place=france.champagne"
-        className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
-      >
-        Explore Champagne on the wine map →
-      </Link>
-    </div>
-  );
-}
+

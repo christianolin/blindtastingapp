@@ -48,6 +48,18 @@ export function BordeauxClassification({
 
   const meta = DESIGNATION_CONTENT[system.key]?.pyramid ?? [];
   const intro = DESIGNATION_CONTENT[system.key]?.intro;
+  // Champagne classifies villages and Alsace classifies vineyards, so each
+  // member already IS a place on the map; the Bordeaux systems classify
+  // châteaux, which merely sit inside one.
+  const selfPlaced =
+    system.key === "champagne-echelle-des-crus" ||
+    system.key === "alsace-grand-cru";
+  const unitPlural =
+    system.key === "champagne-echelle-des-crus"
+      ? "villages"
+      : system.key === "alsace-grand-cru"
+        ? "grand crus"
+        : "châteaux";
   const q = query.trim().toLowerCase();
   const rows = system.members.filter(
     (m) =>
@@ -122,24 +134,34 @@ export function BordeauxClassification({
         />
 
         <ClassificationTable
-          columns={["Château", "Growth", "Commune"]}
+          columns={
+            // The classified unit differs by system: a château in the Médoc, a
+            // whole village in Champagne, a single vineyard in Alsace.
+            system.key === "champagne-echelle-des-crus"
+              ? ["Village", "Rank", "Sub-region"]
+              : system.key === "alsace-grand-cru"
+                ? ["Grand Cru", "Rank", "Commune"]
+                : ["Château", "Growth", "Commune"]
+          }
           rows={rows.map((m, i) => ({
             id: `${m.name}-${i}`,
             cells: [m.name, m.tier, m.commune],
             note: m.localNote,
             placeKey: m.appellationKey,
-            placeLabel: m.appellationName ?? m.commune ?? "Map",
+            // Where the member IS the place, the button would just repeat the
+            // name in the first column — say "Map" instead.
+            placeLabel: selfPlaced ? "Map" : (m.appellationName ?? m.commune ?? "Map"),
           }))}
           query={query}
           onQueryChange={setQuery}
-          searchPlaceholder="Search châteaux…"
+          searchPlaceholder={`Search ${unitPlural}…`}
           summary={
             activeTier
               ? `${rows.length} · ${activeTier}`
-              : `All ${system.members.length} châteaux`
+              : `All ${system.members.length} ${unitPlural}`
           }
           onClearFilter={activeTier ? () => setActiveTier(null) : undefined}
-          mapColumnLabel="Appellation"
+          mapColumnLabel={selfPlaced ? "Map" : "Appellation"}
         />
       </div>
 

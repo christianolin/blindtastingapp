@@ -3,8 +3,7 @@ export type DesignationTabKind =
   | "burgundy"
   | "bordeaux"
   | "systems"
-  | "glossary"
-  | "champagne";
+  | "glossary";
 
 export type DesignationTab = {
   slug: string;
@@ -46,7 +45,12 @@ export const DESIGNATION_TABS: DesignationTab[] = [
     systemKeys: ["alsace-grand-cru"],
     glossaryTerms: ["Vendange Tardive", "Sélection de Grains Nobles"],
   },
-  { slug: "champagne", label: "Champagne", kind: "champagne" },
+  {
+    slug: "champagne",
+    label: "Champagne",
+    kind: "systems",
+    systemKeys: ["champagne-echelle-des-crus"],
+  },
   {
     slug: "germany",
     label: "Germany",

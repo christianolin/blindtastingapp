@@ -55,6 +55,14 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
       { name: "Grand Cru Classé", color: "#B78E42", textColor: "#2b0f18" },
     ],
   },
+  "champagne-echelle-des-crus": {
+    intro:
+      "Champagne ranks whole villages rather than individual estates. The échelle (\u201cladder\u201d) once set grape prices as a percentage of the going rate: 100% villages were Grand Cru, 90\u201399% Premier Cru. The price scale was abandoned in the 2000s, but the 17 Grand Cru and 42 Premier Cru villages remain, and the terms still appear on labels.",
+    pyramid: [
+      { name: "Grand Cru", rank: "100%", color: "#5C1A2B" },
+      { name: "Premier Cru", rank: "90–99%", color: "#B78E42", textColor: "#2b0f18" },
+    ],
+  },
   "graves-cru-classe": {
     intro:
       "The Cru Classé de Graves (1959) is a single flat tier — châteaux classified for red wine, white wine, or both. All lie within what is now Pessac-Léognan.",
