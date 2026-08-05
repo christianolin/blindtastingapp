@@ -1,28 +1,19 @@
 import Link from "next/link";
-import { Crown, Medal, Scale, Trophy } from "lucide-react";
+import { Crown, Scale, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-const RANK_STYLES = [
-  {
-    badge:
-      "bg-gradient-to-br from-[#e8c777] to-[#b78e42] text-[#3a2508] ring-2 ring-[#f0d896]",
-    bar: "from-[#c3a25b] to-[#e8c777]",
-  },
-  {
-    badge:
-      "bg-gradient-to-br from-[#e4e7ec] to-[#a9b0bb] text-[#33383f] ring-2 ring-[#f1f3f5]",
-    bar: "from-[#9aa1ab] to-[#d4d8dd]",
-  },
-  {
-    badge:
-      "bg-gradient-to-br from-[#d99a66] to-[#9c5f34] text-[#2e1a0c] ring-2 ring-[#e8b98c]",
-    bar: "from-[#9c5f34] to-[#d99a66]",
-  },
-];
+// Rank marks in the app's own palette — bordeaux for the winner, a gilt tint
+// for the rest of the podium. (This used to be metallic gold/silver/bronze
+// gradients, which put a cool grey-blue on an otherwise warm parchment page.)
+function rankBadgeClass(rank: number, completed: boolean) {
+  if (!completed || rank > 2) return "bg-muted text-muted-foreground";
+  if (rank === 0) return "bg-primary text-primary-foreground";
+  return "bg-gold/20 text-gold-deep ring-1 ring-gold/40";
+}
 
 /**
  * Participants + leaderboard merged into one right-rail panel. Joined
@@ -88,9 +79,9 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
 
   return (
     <Card className="overflow-hidden py-0">
-      <CardHeader className="border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
-        <CardTitle className="flex items-center gap-2 font-heading text-xl">
-          <Trophy className="size-5 text-gold-deep" strokeWidth={2} />
+      <CardHeader className="border-b border-border/70 py-3.5">
+        <CardTitle className="flex items-center gap-2 font-heading text-lg font-medium">
+          <Trophy className="size-4 text-gold-deep" strokeWidth={2} />
           Standings
         </CardTitle>
       </CardHeader>
@@ -103,7 +94,6 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
           <ol className="flex flex-col gap-1">
             {competitors.map((row, i) => {
               const isMe = row.userId === user?.id;
-              const rankStyle = completed ? RANK_STYLES[i] : undefined;
               const pct = Math.max(4, Math.round((row.total / maxTotal) * 100));
               return (
                 <li
@@ -117,16 +107,12 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                   <div className="flex items-center gap-2.5">
                     <span
                       className={cn(
-                        "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
-                        rankStyle
-                          ? rankStyle.badge
-                          : "bg-muted text-muted-foreground",
+                        "flex size-7 shrink-0 items-center justify-center rounded-full font-heading text-sm font-semibold lining-nums",
+                        rankBadgeClass(i, completed),
                       )}
                     >
                       {completed && i === 0 ? (
                         <Crown className="size-3.5" strokeWidth={2.5} />
-                      ) : completed && i < 3 ? (
-                        <Medal className="size-3.5" strokeWidth={2.5} />
                       ) : (
                         i + 1
                       )}
@@ -151,10 +137,13 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                         </span>
                       ) : null}
                     </span>
-                    <span className="shrink-0 font-heading text-lg font-semibold tabular-nums">
+                    <span className="shrink-0 font-heading text-lg font-semibold lining-nums tabular-nums">
                       {isSemiBlind
                         ? `${row.total}/${row.totalWines}`
                         : row.total}
+                      <span className="ml-0.5 font-sans text-[0.65rem] font-medium text-muted-foreground">
+                        pts
+                      </span>
                     </span>
                   </div>
                   <div className="mt-0.5 ml-9.5 flex items-center gap-2 text-xs text-muted-foreground">
@@ -179,11 +168,11 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                       </span>
                     ) : null}
                   </div>
-                  <div className="mt-1.5 ml-9.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="mt-1.5 ml-9.5 h-1 overflow-hidden rounded-full bg-border/60">
                     <div
                       className={cn(
-                        "animate-fill-bar h-full rounded-full bg-gradient-to-r",
-                        rankStyle ? rankStyle.bar : "from-gold-deep to-gold",
+                        "animate-fill-bar h-full rounded-full",
+                        isMe ? "bg-primary" : "bg-gold-deep/70",
                       )}
                       style={{
                         width: `${pct}%`,
