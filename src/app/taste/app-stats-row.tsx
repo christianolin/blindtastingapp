@@ -22,22 +22,27 @@ export function AppStatsRow({ stats }: { stats: AppStats }) {
   return (
     // Phone: a plain 2x2 grid — the hairline dividers only make sense when the
     // four sit on one line, and they leave stray edges once the row wraps.
-    <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:flex sm:flex-wrap sm:items-center">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-4 lg:flex lg:flex-nowrap lg:items-center">
       {items.map((it, i) => (
         <div
           key={it.label}
-          className={`flex items-center gap-2.5 sm:pr-8 ${
-            i > 0 ? "sm:border-l sm:border-border sm:pl-8" : ""
+          className={`flex items-center gap-2.5 lg:pr-4 xl:pr-5 ${
+            i > 0 ? "lg:border-l lg:border-border lg:pl-4 xl:pl-5" : ""
           }`}
         >
-          <it.icon className="size-6 shrink-0 text-gold-deep" strokeWidth={1.5} />
+          <it.icon
+            className="size-6 shrink-0 text-gold-deep lg:size-5 xl:size-6"
+            strokeWidth={1.5}
+          />
           <div className="flex flex-col gap-0.5">
             {/* `lining-nums`: Cormorant defaults to old-style figures, which
                 render 1/4/9 at mismatched heights — wrong for a stat readout. */}
-            <span className="font-heading text-2xl font-semibold leading-none tracking-tight lining-nums tabular-nums">
+            <span className="font-heading text-2xl font-semibold leading-none tracking-tight lining-nums tabular-nums lg:text-xl xl:text-2xl">
               {formatCount(it.value)}
             </span>
-            <span className="text-xs text-muted-foreground">{it.label}</span>
+            <span className="text-xs text-muted-foreground lg:whitespace-nowrap">
+              {it.label}
+            </span>
           </div>
         </div>
       ))}
