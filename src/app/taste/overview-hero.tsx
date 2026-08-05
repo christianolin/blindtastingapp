@@ -18,17 +18,18 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
       {/* The photo runs past the hero's bottom edge so the whole base of the
           bottles stays in frame; the explainer cards below deliberately overlap
           its lower part (they're `relative`, so they paint over this layer). */}
-      <div className="pointer-events-none absolute -bottom-40 right-0 top-0 hidden w-[52%] sm:block lg:w-[48%]">
+      <div className="pointer-events-none absolute -bottom-24 right-0 top-0 hidden w-[52%] sm:block lg:w-[48%]">
         <img
           src="/hero/romanee.webp"
           alt=""
           aria-hidden
-          className="size-full object-cover object-[center_82%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
+          className="size-full object-cover object-[center_95%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
         />
-        {/* Fade only the photo's left edge into the page, so it sits behind the
-            copy without a pasted-in seam. The bottom is left crisp — the crop
-            through the bottles is the intended framing. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
+        {/* Dissolve the photo's edges into the page — no straight lines. The
+            left fade is deliberately short (done by ~30% across) so the label
+            stays crisp; the bottom fade covers the spill below the hero. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/40 via-10% to-transparent to-30%" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent" />
       </div>
       <div className="relative flex min-h-[440px] max-w-2xl flex-col justify-center gap-6 py-10 pr-6 sm:min-h-[500px] sm:py-12">
         <div className="flex flex-col gap-4">
