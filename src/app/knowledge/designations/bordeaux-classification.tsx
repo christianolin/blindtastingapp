@@ -90,6 +90,7 @@ export function BordeauxClassification({
             count: `${t.members.length} châteaux`,
             color: meta[i]?.color ?? "#8A3D52",
             textColor: meta[i]?.textColor,
+            rank: meta[i]?.rank,
           }))}
           activeKey={activeTier}
           onSelect={(key) => setActiveTier(activeTier === key ? null : key)}

@@ -1,5 +1,8 @@
 export type PyramidTier = {
   name: string;
+  // Short ordinal shown as a marker on the band (the 1855 growths are widely
+  // referred to as 1er, 2ème … rather than by their full tier name).
+  rank?: string;
   pct?: string;
   count?: string;
   labelling?: string;
@@ -21,11 +24,11 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
     intro:
       "The Classification of 1855 was created for the Exposition Universelle in Paris. It ranks the top châteaux of the Médoc into five growths based on reputation and market price at the time.",
     pyramid: [
-      { name: "Premier Cru", color: "#5C1A2B" },
-      { name: "Deuxième Cru", color: "#7A2A3D" },
-      { name: "Troisième Cru", color: "#8A3D52" },
-      { name: "Quatrième Cru", color: "#9A7B4F" },
-      { name: "Cinquième Cru", color: "#B78E42", textColor: "#2b0f18" },
+      { name: "Premier Cru", rank: "1er", color: "#5C1A2B" },
+      { name: "Deuxième Cru", rank: "2ème", color: "#7A2A3D" },
+      { name: "Troisième Cru", rank: "3ème", color: "#8A3D52" },
+      { name: "Quatrième Cru", rank: "4ème", color: "#9A7B4F" },
+      { name: "Cinquième Cru", rank: "5ème", color: "#B78E42", textColor: "#2b0f18" },
     ],
   },
   "sauternes-1855": {
