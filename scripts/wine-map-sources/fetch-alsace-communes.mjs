@@ -45,10 +45,13 @@ const LICENCE = "Licence Ouverte / Open Licence (Etalab)";
 // The region_window of data/wine-map/alsace-appellations.json, the same guard
 // the Alsace boundary flip uses.
 const WINDOW = { minLon: 6.9, minLat: 47.7, maxLon: 7.8, maxLat: 49.2 };
-// Communes are two orders of magnitude smaller than the Champagne region
-// dissolve (0.0012), so they need a correspondingly finer tolerance to keep
-// their outlines honest at zoom 8.
-const TOLERANCE = Number(arg("tolerance", "0.0004"));
+// ~7.4 m at this latitude (1 deg lon = 74.1 km at 48.3 N), matching the fine
+// preset the crus and Burgundy climats use. A commune is drawn UNDER its crus
+// all the way to z16, so a coarser village-grade tolerance (~30 m) would leave
+// a blocky outline wrapped around crisp cru shapes. Costs 6.4k vertices across
+// the 47 against 29.3k unsimplified — still lighter per deg² than the Champagne
+// villages already in the tiles.
+const TOLERANCE = Number(arg("tolerance", "0.0001"));
 const OUT_DIR = ".superpowers/sdd";
 const BATCH = 40;
 const revision = releaseVersion();
