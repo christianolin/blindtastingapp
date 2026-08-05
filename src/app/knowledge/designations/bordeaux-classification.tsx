@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { CRU_BOURGEOIS, DESIGNATION_CONTENT } from "@/lib/designations/content";
 import type { TabSystem, TabSystemMember } from "@/lib/designations/page-data";
 import { PyramidBands } from "./pyramid-bands";
+import { DesignationHero } from "./designation-hero";
 
 type BordeauxTier = { tier: string; members: TabSystemMember[] };
 
@@ -78,9 +79,11 @@ export function BordeauxClassification({
         ))}
       </div>
 
-      {intro ? (
-        <p className="max-w-2xl text-sm text-muted-foreground">{intro}</p>
-      ) : null}
+      <DesignationHero
+        hero={DESIGNATION_CONTENT[system.key]?.hero}
+        inset={DESIGNATION_CONTENT[system.key]?.inset}
+        intro={intro}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <PyramidBands

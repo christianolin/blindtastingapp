@@ -12,6 +12,9 @@ export type PyramidTier = {
 
 export type DesignationContent = {
   hero?: { src: string; alt: string };
+  // A second, smaller image shown framed beside the intro (an artefact or
+  // document, where the hero is atmospheric).
+  inset?: { src: string; alt: string; caption?: string };
   intro?: string;
   pyramid?: PyramidTier[];
 };
@@ -20,7 +23,15 @@ export type DesignationContent = {
 // fall back to their DB `description` and get no hero/pyramid.
 export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
   "medoc-1855": {
-    hero: { src: "/designations/medoc-1855.jpg", alt: "A château in the Médoc" },
+    hero: {
+      src: "/hero/1855_fivefirstgrowthsbottles.jpeg",
+      alt: "The five Médoc first growths",
+    },
+    inset: {
+      src: "/hero/1855crupaper.jpeg",
+      alt: "The original handwritten 1855 classification",
+      caption: "The original 1855 list",
+    },
     intro:
       "The Classification of 1855 was created for the Exposition Universelle in Paris. It ranks the top châteaux of the Médoc into five growths based on reputation and market price at the time.",
     pyramid: [
@@ -55,10 +66,6 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
     pyramid: [{ name: "Cru Classé", color: "#5C1A2B" }],
   },
   "burgundy-grand-cru": {
-    hero: {
-      src: "/designations/burgundy-grand-cru.jpg",
-      alt: "Grand Cru vineyards in Burgundy",
-    },
     intro:
       "Burgundy's Grand Cru vineyards represent the finest expression of the region. 33 sites are recognized for their exceptional terroir and tradition.",
     pyramid: [
