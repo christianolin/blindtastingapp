@@ -101,6 +101,26 @@ export default async function ResultsPage({
       : { data: [] };
   const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
 
+  // A wine picked from the catalog carries no photo on its own answer row, so
+  // fall back to the linked catalog entry's label photo.
+  const catalogIdsNeedingImage = [
+    ...new Set(
+      (answers ?? [])
+        .filter((a) => !a.image_url && a.catalog_wine_id)
+        .map((a) => a.catalog_wine_id as string),
+    ),
+  ];
+  const { data: catalogImages } =
+    catalogIdsNeedingImage.length > 0
+      ? await supabase
+          .from("catalog_wines")
+          .select("id, image_url")
+          .in("id", catalogIdsNeedingImage)
+      : { data: [] };
+  const catalogImageById = new Map(
+    (catalogImages ?? []).map((c) => [c.id, c.image_url]),
+  );
+
   // Names for appellations/producers referenced by either the answers or any
   // participant's guess (so we can show what each person guessed, not just an
   // id).
@@ -373,10 +393,18 @@ export default async function ResultsPage({
               <div className="flex items-start gap-3">
                 {/* Label photo as a left thumbnail (blank bottle when there is
                     none), matching the cellar and catalog rows. */}
-                {answer.image_url ? (
+                {(answer.image_url as string | null) ??
+                (answer.catalog_wine_id
+                  ? catalogImageById.get(answer.catalog_wine_id as string)
+                  : null) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={answer.image_url as string}
+                    src={
+                      (answer.image_url as string | null) ??
+                      (catalogImageById.get(
+                        answer.catalog_wine_id as string,
+                      ) as string)
+                    }
                     alt=""
                     className="size-16 shrink-0 rounded-md border border-border object-cover"
                   />
