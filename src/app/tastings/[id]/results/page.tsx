@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ChevronDown, Crown, Medal, Wine } from "lucide-react";
+import { AnswerFacts } from "../answer-facts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -413,34 +414,67 @@ export default async function ResultsPage({
                     <Wine className="size-6" />
                   </span>
                 )}
-                <div className="min-w-0 flex-1 rounded-lg bg-muted/50 p-3 text-sm">
-                <p className="mb-0.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  The wine
-                </p>
-                {answer.country_id ? <CountryFlag name={name(answer.country_id as string)} className="mr-1" /> : null}
-                {name(answer.country_id as string)} ·{" "}
-                {name(answer.region_id as string)}
-                {answer.appellation_id
-                  ? ` · ${name(answer.appellation_id as string)}`
-                  : ""}
-                <br />
-                {name(answer.primary_grape_id as string)}
-                {answer.secondary_grape_id
-                  ? ` / ${name(answer.secondary_grape_id as string)}`
-                  : ""}
-                {" — "}
-                {name(answer.producer_id as string)}
-                {answer.type_designation_id
-                  ? ` (${name(answer.type_designation_id as string)})`
-                  : ""}
-                {" — "}
-                {vintageLabel(
-                  answer as unknown as {
-                    vintage_kind: string | null;
-                    vintage_year: number | null;
-                    vintage_tawny_years: number | null;
-                  },
-                )}
+                <div className="min-w-0 flex-1 rounded-lg bg-muted/50 p-3">
+                  <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    The wine
+                  </p>
+                  <AnswerFacts
+                    facts={[
+                      {
+                        label: "Country",
+                        value: (
+                          <span className="inline-flex items-center gap-1">
+                            <CountryFlag
+                              name={name(answer.country_id as string)}
+                            />
+                            {name(answer.country_id as string)}
+                          </span>
+                        ),
+                      },
+                      { label: "Region", value: name(answer.region_id as string) },
+                      ...(answer.appellation_id
+                        ? [
+                            {
+                              label: "Appellation",
+                              value: name(answer.appellation_id as string),
+                            },
+                          ]
+                        : []),
+                      {
+                        label: answer.secondary_grape_id ? "Grapes" : "Grape",
+                        value: [
+                          name(answer.primary_grape_id as string),
+                          answer.secondary_grape_id
+                            ? name(answer.secondary_grape_id as string)
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" / "),
+                      },
+                      {
+                        label: "Producer",
+                        value: name(answer.producer_id as string),
+                      },
+                      ...(answer.type_designation_id
+                        ? [
+                            {
+                              label: "Designation",
+                              value: name(answer.type_designation_id as string),
+                            },
+                          ]
+                        : []),
+                      {
+                        label: "Vintage",
+                        value: vintageLabel(
+                          answer as unknown as {
+                            vintage_kind: string | null;
+                            vintage_year: number | null;
+                            vintage_tawny_years: number | null;
+                          },
+                        ),
+                      },
+                    ]}
+                  />
                 </div>
               </div>
 

@@ -1,4 +1,5 @@
 import { ChevronDown, Wine } from "lucide-react";
+import { AnswerFacts, type AnswerFact } from "../answer-facts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
@@ -184,6 +185,33 @@ export async function PlayExperience({
     );
   }
   const name = (id: string | null) => (id ? (nameById.get(id) ?? "—") : "—");
+
+  // Same answer, as labelled columns for the post-reveal card.
+  function answerFacts(answer: Parameters<typeof describeAnswer>[0]): AnswerFact[] {
+    const grapes = [answer.primary_grape_id, answer.secondary_grape_id]
+      .filter(Boolean)
+      .map((id) => name(id as string))
+      .join(" / ");
+    return [
+      { label: "Country", value: name(answer.country_id) },
+      { label: "Region", value: name(answer.region_id) },
+      ...(answer.appellation_id
+        ? [{ label: "Appellation", value: name(answer.appellation_id) }]
+        : []),
+      {
+        label: answer.secondary_grape_id ? "Grapes" : "Grape",
+        value: grapes,
+      },
+      {
+        label: "Producer",
+        value: answer.producer_id ? name(answer.producer_id) : "Unknown",
+      },
+      ...(answer.type_designation_id
+        ? [{ label: "Designation", value: name(answer.type_designation_id) }]
+        : []),
+      { label: "Vintage", value: vintageLabel(answer) },
+    ];
+  }
 
   const wineIds = (wines ?? []).map((w) => w.id);
   const { data: myGuesses } = await supabase
@@ -687,9 +715,9 @@ export async function PlayExperience({
                           <Wine className="size-6" />
                         </span>
                       )}
-                      <p className="min-w-0 text-sm text-muted-foreground">
-                        {describeAnswer(answer)}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <AnswerFacts facts={answerFacts(answer)} />
+                      </div>
                     </div>
                   </div>
 
