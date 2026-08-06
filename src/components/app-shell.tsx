@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AddWineProvider } from "@/components/add-wine-context";
 import { TasteLauncherProvider } from "@/components/taste-launcher-context";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
 
 // The authenticated app shell: a persistent left sidebar + the page as the main
 // column. Rendered once at the root so every signed-in page gets the nav and
@@ -31,7 +32,15 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               avatarUrl: profile?.avatar_url ?? null,
             }}
           />
-          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            {/* Verify-later: the account already works, so this nudges rather
+                than blocks. emailVerified rides along on the session, so it
+                costs no extra query. */}
+            {user.emailVerified ? null : (
+              <VerifyEmailBanner email={user.email} />
+            )}
+            {children}
+          </div>
         </div>
       </TasteLauncherProvider>
     </AddWineProvider>

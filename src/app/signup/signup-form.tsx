@@ -14,14 +14,9 @@ export function SignUpForm() {
     FormData
   >(signUp, null);
 
-  if (state && "success" in state) {
-    return (
-      <p className="text-sm">
-        Check your email for a confirmation link to finish signing up.
-      </p>
-    );
-  }
-
+  // No "check your email" branch: signing up now signs you straight in
+  // (verify-later), so the action redirects and never returns a success state.
+  // The confirmation nudge lives in the app shell's banner instead.
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
