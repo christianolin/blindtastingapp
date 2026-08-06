@@ -63,7 +63,13 @@ export async function resolveSession(
           and last_seen_at < now() - $3::interval`,
       [hashed, String(SESSION_TTL_DAYS), SLIDE_AFTER],
     )
-    .catch(() => {});
+    .catch((error: unknown) => {
+      // Deliberately not rethrown: a failed slide must never fail the request
+      // the user is actually making. But it must not vanish either — if this
+      // query breaks, sessions silently stop sliding and degrade to a hard
+      // 30-day expiry with nothing to show for it.
+      console.error("session slide failed", error);
+    });
 
   return { userId: rows[0].user_id as string, sessionId: rows[0].id as string };
 }
