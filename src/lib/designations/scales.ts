@@ -314,56 +314,94 @@ export const SPAIN_AGEING: ScaleFigureContent = {
     "Set by the Consejo Regulador of DOCa Rioja and exact for Rioja only. Other Spanish DOs use the same words with their own minimums — a Ribera del Duero Reserva is not a Rioja Reserva. Rioja's sparkling wines run on a separate ladder: Espumoso 15 months on lees, Reserva 24, Gran Añada 36.",
 };
 
+// Italy gets TWO figures, because the words and the numbers are different
+// problems. "Riserva" is a relative term with no national definition, so a
+// single combined table would imply a ladder that does not exist.
+export const ITALY_TERMS: ScaleFigureContent = {
+  title: "Italy — what the words mean (and don't)",
+  axisFrom: "Youngest",
+  axisTo: "Most selected",
+  columns: 3,
+  steps: [
+    {
+      name: "Novello",
+      note: "Not an ageing term — its opposite. A young, fruity wine from carbonic maceration, released weeks after harvest. Italy's answer to Beaujolais Nouveau.",
+    },
+    {
+      name: "Annata / base",
+      note: "The standard bottling of an appellation, sometimes called 'annata' (vintage) where a Riserva also exists. Carries that appellation's shortest ageing minimum.",
+    },
+    {
+      name: "Superiore",
+      note: "Stricter rules than the base wine of the SAME appellation — usually a higher minimum alcohol and a lower yield, often with extra ageing. Relative, never absolute.",
+    },
+    {
+      name: "Riserva",
+      note: "Longer ageing than the base wine of the same appellation. There is no national figure: each disciplinare sets its own, and they range from 2 years to over 5.",
+    },
+    {
+      name: "Gran Selezione",
+      note: "Chianti Classico only, introduced in 2014. Estate-grown fruit, a higher Sangiovese minimum and the longest ageing in the zone.",
+    },
+    {
+      name: "Classico",
+      note: "The trap: this is a PLACE, not a time. It marks the historic heartland of a zone (Chianti Classico, Soave Classico) and says nothing about ageing.",
+    },
+  ],
+  source:
+    "Riserva and Superiore are comparative terms defined inside each appellation's disciplinare, not by Italian national law. A Chianti Classico Riserva (24 months) and a Barolo Riserva (62 months) share a word and nothing else — so the term is only informative once you know which appellation you are reading. The figure below gives the actual minimums for the best-known DOCGs.",
+};
+
 export const ITALY_AGEING: ScaleFigureContent = {
-  title: "Italy — ageing terms, by appellation",
+  title: "Italy — ageing minimums, appellation by appellation",
   axisFrom: "Shortest",
   axisTo: "Longest",
   columns: 4,
   units: [MONTHS],
   steps: [
     {
-      name: "Novello",
-      value: "released same year",
-      note: "Young, fresh and fruity, made by carbonic maceration and sold within weeks of harvest — Italy's answer to Beaujolais Nouveau. Not an ageing tier at all; it is the opposite of one.",
+      name: "Rosso di Montalcino",
+      value: "released 1 September",
+      note: "Sangiovese from the same Montalcino vineyards as Brunello, but released the September after harvest. Min 12% abv.",
     },
     {
       name: "Chianti Classico Annata",
       value: "12 months",
-      note: "The base wine of the zone, released the autumn after harvest.",
-    },
-    {
-      name: "Superiore",
-      value: "varies by appellation",
-      note: "Not a fixed period: it means the wine met stricter rules than the base version — usually a higher minimum alcohol, a lower yield, and often extra ageing. Like Riserva, it only means something once you know which DOC you are reading.",
+      note: "Min 12% abv; at least 80% Sangiovese, up to 20% other authorised red grapes.",
     },
     {
       name: "Chianti Classico Riserva",
       value: "24 months",
-      note: "Including at least 3 months in bottle.",
+      note: "Of which at least 3 in bottle. Min 12.5% abv; same grape rule as Annata.",
     },
     {
       name: "Barbaresco",
       value: "26 months",
-      note: "Including at least 9 in wood. Riserva: 50 months.",
+      note: "Of which at least 9 in oak, counted from 1 November after harvest. 100% Nebbiolo. Riserva: 50 months.",
     },
     {
       name: "Chianti Classico Gran Selezione",
       value: "30 months",
-      note: "The top tier since 2014; estate fruit only.",
+      note: "Of which at least 3 in bottle. Min 13% abv, estate-grown fruit only, and since the 2023 revision at least 90% Sangiovese with up to 10% indigenous reds.",
     },
     {
       name: "Barolo",
       value: "38 months",
-      note: "Including at least 18 in wood. Riserva: 62 months.",
+      note: "Of which at least 18 in oak, counted from 1 November after harvest. 100% Nebbiolo. Riserva: 62 months.",
     },
     {
       name: "Brunello di Montalcino",
-      value: "60 months",
-      note: "Including at least 24 in oak. Riserva: 72 months.",
+      value: "~5 years, by release date",
+      note: "Not a month count: it may not be sold before 1 January following the end of the fifth year after harvest, and within that must spend at least 2 years in oak and 4 months in bottle. Min 12.5% abv, 100% Sangiovese.",
+    },
+    {
+      name: "Brunello di Montalcino Riserva",
+      value: "~6 years, by release date",
+      note: "Released a year later than Brunello, with at least 6 months in bottle rather than 4.",
     },
   ],
   source:
-    "There is no national Italian meaning for 'Riserva' — each DOC and DOCG sets its own minimum in its disciplinare, so the term is only informative once you know the appellation. A Chianti Classico Riserva (24 months) and a Barolo Riserva (62 months) share a word and nothing else. Figures are the current disciplinare minimums; treat them as textbook reference rather than a legal citation.",
+    "Figures from each consortium's own published rules: Consorzio Vino Chianti Classico, Consorzio di tutela Barolo Barbaresco Alba Langhe e Dogliani, and Consorzio del Vino Brunello di Montalcino. Note the two different mechanisms — Piedmont counts months from 1 November after harvest, while Montalcino fixes a calendar release date and sets minimums for oak and bottle inside it. That is why 'Brunello is 5 years' is a useful approximation rather than the rule itself.",
 };
 
 export const PORTUGAL_AGEING: ScaleFigureContent = {
@@ -473,7 +511,7 @@ export const TAB_FIGURES: Record<string, ScaleFigureContent[]> = {
   alsace: [ALSACE_LATE_HARVEST],
   germany: [PRADIKAT, GERMAN_SWEETNESS, VDP_TIERS],
   austria: [WACHAU_CATEGORIES],
-  ageing: [SPAIN_AGEING, ITALY_AGEING, PORTUGAL_AGEING],
+  ageing: [SPAIN_AGEING, ITALY_TERMS, ITALY_AGEING, PORTUGAL_AGEING],
   fortified: [FORTIFIED_STYLES, PORT_STYLES],
   sparkling: [SPARKLING_DOSAGE],
 };
