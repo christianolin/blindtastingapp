@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Globe,
   Grape,
@@ -25,6 +24,7 @@ import {
   BLIND_TASTING_NOTE,
   DESIGNATION_CONTENT,
   OVERVIEW_INTRO,
+  TAB_INTRO,
   VARIATION_CARDS,
   VARIATION_INTRO,
   WHY_CARDS,
@@ -162,6 +162,16 @@ export function DesignationsTabs({
           </button>
         ))}
       </div>
+
+      {/* Every tab leads with what its system actually classifies — land,
+          producers, villages, ripeness or time. Without that, the shared
+          vocabulary ("Grand Cru", "Reserva") reads as one hierarchy when it is
+          several unrelated ones. Overview carries its own copy. */}
+      {tab.kind !== "overview" && TAB_INTRO[tab.slug] ? (
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          {TAB_INTRO[tab.slug]}
+        </p>
+      ) : null}
 
       {tab.kind === "overview" ? (
         <OverviewPanel />

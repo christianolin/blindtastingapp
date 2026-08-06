@@ -14,6 +14,15 @@ export type ScaleStep = {
 //
 // `source` is not decoration: several of these scales are legally fixed while
 // others vary by region, and a figure that shows numbers has to say which it is.
+export type ScaleUnit = {
+  /** As it appears in the figure, e.g. "g/L". */
+  symbol: string;
+  /** Spelled out, e.g. "grams per litre". */
+  name: string;
+  /** What the number actually measures, in plain language. */
+  explanation: string;
+};
+
 export function ScaleFigure({
   title,
   axisFrom,
@@ -21,6 +30,7 @@ export function ScaleFigure({
   steps,
   source,
   columns,
+  units,
 }: {
   title: string;
   axisFrom: string;
@@ -28,6 +38,7 @@ export function ScaleFigure({
   steps: ScaleStep[];
   source: string;
   columns?: number;
+  units?: ScaleUnit[];
 }) {
   return (
     <figure className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -42,6 +53,26 @@ export function ScaleFigure({
           <span>{axisTo}</span>
         </div>
       </figcaption>
+
+      {/* Above the steps, not below: a reader meeting "83–100 °Oe" for the
+          first time needs the unit before the numbers, not after them. */}
+      {units && units.length > 0 ? (
+        <dl className="flex flex-col gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
+          {units.map((u) => (
+            <div key={u.symbol} className="flex flex-col gap-0.5">
+              <dt className="text-xs font-semibold">
+                <span className="tabular-nums lining-nums text-primary">
+                  {u.symbol}
+                </span>
+                <span className="text-muted-foreground"> — {u.name}</span>
+              </dt>
+              <dd className="text-xs leading-snug text-muted-foreground">
+                {u.explanation}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
       <ol
         className={cn(

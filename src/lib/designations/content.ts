@@ -80,6 +80,35 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
   },
 };
 
+// A short standing explainer at the top of every tab, keyed by tab slug.
+//
+// The single most confusing thing about French classification is that the
+// systems classify DIFFERENT KINDS OF THING under the same vocabulary: Bordeaux
+// ranks producers, Burgundy and Alsace rank land, Champagne ranks whole
+// villages. "Grand Cru" therefore means three unrelated things depending on
+// where you are, and a reader who does not know that will mis-read every label.
+// Each intro below says plainly what its system classifies before anything else.
+export const TAB_INTRO: Record<string, string> = {
+  burgundy:
+    "Burgundy classifies LAND, not producers. Every plot is ranked in its own right, and the rank stays with the vineyard no matter who owns or makes it — which is why dozens of growers can each bottle the same Grand Cru. The ladder runs Regional → Village → Premier Cru → Grand Cru, narrowing from a whole region to a single named plot. A Premier Cru is a named climat within a village and is labelled village-first (Chambolle-Musigny 1er Cru Les Amoureuses); a Grand Cru has outgrown its village and is an appellation on its own, labelled by the vineyard name alone (Musigny). Ownership is fragmented by inheritance law, so quality within one Grand Cru varies enormously by producer.",
+  bordeaux:
+    "Bordeaux classifies PRODUCERS — châteaux — not vineyards. A château's rank belongs to the estate and its brand, so it travels with the name: if the estate buys neighbouring land, that land is generally sold under the classified label too. This is the opposite of Burgundy, where the rank is fixed to the ground. The 1855 Médoc ranking was drawn up from broker price lists for the Paris Exposition and has changed only once since; Saint-Émilion by contrast re-ranks roughly every decade, and estates are promoted and demoted. The appellation (Pauillac, Margaux) tells you where the wine is from; the classification tells you the estate's historic standing within it.",
+  alsace:
+    "Alsace classifies SITES. Each of the 51 Grands Crus is a delimited parcel of land that is its own AOC, with its own rules on grape, yield and ripeness — closer to Burgundy than to Bordeaux, since the rank belongs to the ground rather than the grower. There is no Premier Cru tier: a wine is either from a Grand Cru site or it is not. Each cru lies within one or more communes (villages), and the commune is shown here because labels and merchants use it to place the cru. Crus are usually labelled with the grape as well as the site, which is unusual in France.",
+  champagne:
+    "Champagne classifies WHOLE VILLAGES, not vineyards or producers. Under the Échelle des Crus — the 'ladder of growths' — each of the 300-odd villages was rated as a percentage, and that percentage set the price growers were paid for their grapes: 100% villages were Grand Cru, 90–99% Premier Cru. Because it rates a whole commune, every vineyard inside a Grand Cru village carries the rating, good plot or bad. The price scale was abandoned in the 2000s and the ratings no longer fix what anyone is paid, but the 17 Grand Cru and 42 Premier Cru villages are unchanged and the terms still appear on labels. Most Champagne is blended across many villages, so a single-village bottling is a deliberate statement.",
+  germany:
+    "Germany classifies RIPENESS AT HARVEST, not land or producers — the one major system on this page that measures the fruit rather than ranking a place. The Prädikat ladder records how much sugar the grapes held when picked, from Kabinett up to Trockenbeerenauslese. Crucially, ripeness is not sweetness: a Spätlese can be fermented bone dry, so the label also carries a separate dryness term (trocken, halbtrocken). A parallel vineyard classification does exist — the VDP growers' association ranks sites as Grosse Lage and Erste Lage, with Grosses Gewächs for dry wines from the top sites — but that is an association's private scheme, not German wine law.",
+  austria:
+    "Austria's national system classifies by region and style, but the Wachau runs its own ladder, and it is the one you meet on labels. Steinfeder, Federspiel and Smaragd sort dry wines by ripeness and body, measured in alcohol. It is not Austrian wine law at all: it is the Codex of Vinea Wachau, a growers' association, and the terms may be used only in the Wachau — a producer twenty kilometres downstream cannot use them. All three are dry. Elsewhere in Austria, look instead for DAC, which ties a region's name to a defined style.",
+  ageing:
+    "These terms classify TIME — how long a wine was held before release, and in what vessel. They are the most misread words on a wine label, because the same word carries different legal force in each country and often in each appellation. 'Reserva' in Rioja is a specific, enforceable minimum; 'Riserva' in Italy means whatever that individual DOCG's rules say, so a Chianti Classico Riserva and a Barolo Riserva are nearly three years apart. Elsewhere — much of the New World — 'Reserve' has no legal meaning whatsoever and is purely marketing. The tables below are therefore split by country, and each figure names the appellation it applies to.",
+  fortified:
+    "Fortified wines are classified by HOW THEY WERE AGED, not by where they grew or how ripe the fruit was. Sherry's styles turn on one question: did the wine mature under flor, the living yeast veil that seals it from air, or in contact with air? That single fork produces everything from pale, bracing Fino to dark, nutty Oloroso. Port splits the same way — Ruby styles mature in bottle and keep their fruit, Tawny styles mature in cask and go amber and nutty. Both are fortified with grape spirit, but the timing differs: for Port it happens mid-fermentation, which is what leaves the wine sweet.",
+  sparkling:
+    "Sparkling wine is classified by SWEETNESS — specifically by dosage, the small amount of sugar added after disgorgement to balance the wine's acidity. The scale is fixed EU-wide, so unlike most terms on this page these mean the same thing everywhere from Champagne to Cava to Prosecco. The one trap is the naming: Extra Dry is sweeter than Brut, not drier, a survival from the nineteenth century when Champagne was sweetened far more heavily and 'dry' was relative. Adjacent categories overlap by design, so a producer near a boundary can choose either term.",
+};
+
 export const CRU_BOURGEOIS = {
   title: "Cru Bourgeois du Médoc",
   body:
