@@ -50,16 +50,29 @@ test("all four auth tables exist with RLS on and no policies", async () => {
   assert.equal(policies.rows[0].n, 0, "auth tables must carry no policies");
 });
 
-test("anon and authenticated hold no grants on the auth tables", async () => {
+test("no API role holds grants on the auth tables", async () => {
   const { rows } = await client.query(
-    `select count(*)::int n
+    `select coalesce(string_agg(distinct table_name || ':' || grantee, ', '), '') leaked
        from information_schema.role_table_grants
       where table_schema = 'public'
         and table_name = any($1::text[])
-        and grantee in ('anon', 'authenticated')`,
+        and grantee in ('anon', 'authenticated', 'service_role')`,
     [TABLES],
   );
-  assert.equal(rows[0].n, 0);
+  assert.equal(rows[0].leaked, "", "an API role can still reach the auth tables");
+});
+
+test("postgres keeps SELECT so the auth layer can read its own tables", async () => {
+  const { rows } = await client.query(
+    `select count(distinct table_name)::int n
+       from information_schema.role_table_grants
+      where table_schema = 'public'
+        and table_name = any($1::text[])
+        and grantee = 'postgres'
+        and privilege_type = 'SELECT'`,
+    [TABLES],
+  );
+  assert.equal(rows[0].n, 4);
 });
 
 test("credential email is unique case-insensitively", async () => {
