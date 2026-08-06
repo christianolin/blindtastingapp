@@ -1379,7 +1379,10 @@ export async function signOut() {
 npx eslint src/app/login/actions.ts src/app/actions.ts src/lib/auth/rate-limit.ts
 ```
 
-`npx tsc --noEmit` still reports the un-swept files from Task 5 — expected.
+`npx tsc --noEmit` must exit 0. (The plan originally predicted a red build from
+Task 5 to Task 11; that prediction was wrong — see the note under Task 5. The
+un-swept call sites still compile, so a non-zero exit here is a real defect, not
+expected churn.)
 
 ```bash
 git add src/app/login/actions.ts src/app/actions.ts src/lib/auth/rate-limit.ts scripts/auth-rate-limit.test.mjs
@@ -2165,20 +2168,26 @@ file used `user.email`, read it from `profiles` — our session carries only
 
 - [ ] **Step 3: Verify nothing is left**
 
+There is no compiler signal for this sweep — un-swept files compile and work.
+Grep IS the gate:
+
 ```powershell
-Select-String -Path "src\**\*.ts","src\**\*.tsx" -Pattern "supabase\.auth\." |
-  Where-Object { $_.Path -notmatch "lib\\auth" }
+$files = Get-ChildItem -Path src -Recurse -Include *.ts,*.tsx |
+  Where-Object { $_.FullName -notmatch '\\lib\\auth\\' }
+$hits = $files | Select-String -Pattern "supabase\.auth\.|admin\.auth\."
+"occurrences: $($hits.Count)  files: $(($hits | Select-Object -ExpandProperty Path -Unique).Count)"
 ```
 
-Expected: **no output** except `src/lib/supabase/client.ts` if it still
-references auth for the browser client.
+Baseline entering this task: **67 occurrences across 54 files**. Expected after
+the sweep: **0 and 0**. Anything above zero means the sweep is incomplete, and
+nothing else will tell you.
+
+Then confirm the build is still clean:
 
 ```powershell
 Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 npx tsc --noEmit
 ```
-
-Expected: `EXIT=0` — the first time since Task 5.
 
 - [ ] **Step 4: Also update `src/lib/auth/roles.ts`**
 
@@ -2413,5 +2422,5 @@ Every user is logged out. Tell them once, before they discover it.
 
 - **Spec coverage:** schema (T2), passwords (T3), sessions (T4), JWT/DAL/proxy (T5), login (T6), email (T7), signup+verify (T8), reset (T9), invites (T10), the sweep (T11), browser bridge (T12), cutover (T13). Every spec section maps to a task.
 - **Ordering:** the linchpin test is Task 1 by design — the approach is proven or abandoned before anything is built on it.
-- **`tsc` is red from Task 5 to Task 11.** That is expected and called out in both tasks; it goes green again at Task 11 Step 3.
+- **`tsc` never goes red** (a Task 5 finding that overturned the original plan); it goes green again at Task 11 Step 3.
 - **Known unverified:** whether `@supabase/ssr` 0.12.0 accepts the `accessToken` option (Task 12 Step 2 says to check, not assume), and whether `@node-rs/argon2` deploys on Vercel (post-cutover check).
