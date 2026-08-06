@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { AppStats } from "@/lib/app-stats";
@@ -19,11 +20,19 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
           bottles stays in frame; the explainer cards below deliberately overlap
           its lower part (they're `relative`, so they paint over this layer). */}
       <div className="pointer-events-none absolute inset-0 sm:-bottom-24 sm:left-auto sm:w-[62%] lg:w-[56%]">
-        <img
+        {/* `fill` against the positioned wrapper above, so the layout is
+            unchanged from the raw <img>. `priority` because this is the
+            overview's LCP element — it must not lazy-load. `sizes` matches the
+            wrapper's own breakpoints so the optimiser serves a sensibly-sized
+            file instead of the full-width default. */}
+        <Image
           src="/hero/romanee.webp"
           alt=""
           aria-hidden
-          className="size-full object-cover object-[center_84%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
+          fill
+          priority
+          sizes="(min-width: 1024px) 56vw, (min-width: 640px) 62vw, 100vw"
+          className="object-cover object-[center_84%] mix-blend-multiply [filter:sepia(0.3)_saturate(0.85)_brightness(1.05)]"
         />
         {/* Dissolve the photo's edges into the page — no straight lines. The
             left fade ramps evenly (rather than dropping off fast) so there's no

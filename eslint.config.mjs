@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Gitignored scratch: one-off probes and migration generators written
+    // during a task and thrown away. Linting them fails the repo-wide run on
+    // throwaway code that is not in version control.
+    ".superpowers/**",
+    ".tiles-build/**",
   ]),
 ]);
 

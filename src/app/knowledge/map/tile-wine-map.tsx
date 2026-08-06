@@ -421,7 +421,12 @@ export function TileWineMap({
     setViewInfo((prev) =>
       JSON.stringify(prev) === JSON.stringify(next) ? prev : next,
     );
-  }, []);
+    // shardKeys is genuinely needed: with an empty dep array this closed over
+    // the first render's value, which is [] until the manifest resolves — so
+    // the scan would only ever look at world-fills and the legend would never
+    // see a shard layer. shardKeys is memoized off the manifest, so it changes
+    // once; scanView is passed straight to onIdle, which re-binds for free.
+  }, [shardKeys]);
 
   useEffect(() => {
     if (!cameraTarget) return;

@@ -243,15 +243,26 @@ export function TileWineMapExplorer({
   );
 
   // Respond to a new ?place from a SAME-route navigation (e.g. the global search
-  // while already on the map): the map page re-renders with a new initialPlaceKey,
-  // so select it. Guarded so the initial mount (selectedKey already equals
-  // initialPlaceKey) and same-key pushes are no-ops.
-  useEffect(() => {
-    if (initialPlaceKey && initialPlaceKey !== selectedKey) {
-      select(initialPlaceKey);
+  // while already on the map): the map page re-renders with a new
+  // initialPlaceKey, so select it. Guarded so the initial mount (selectedKey
+  // already equals initialPlaceKey) and same-key pushes are no-ops.
+  //
+  // Adjusted during render rather than in an effect. This is state derived from
+  // a prop, which is React's documented case for the pattern, and it avoids the
+  // extra commit-then-rerender pass an effect would cost. No history write is
+  // needed on this path either: the router has ALREADY put the new key in the
+  // URL, so select()'s replaceState would only rewrite what is there.
+  const [lastInitialKey, setLastInitialKey] = useState(initialPlaceKey);
+  if (initialPlaceKey && initialPlaceKey !== lastInitialKey) {
+    setLastInitialKey(initialPlaceKey);
+    if (initialPlaceKey !== selectedKey) {
+      // Navigation-driven selection flies the camera, exactly as select() does
+      // for tree/search clicks; only map taps hold it still.
+      selectSourceRef.current = "ui";
+      setContextState("loading");
+      setSelectedKey(initialPlaceKey);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialPlaceKey]);
+  }
 
   // Drill-down camera: selecting a place zooms far enough that ALL its
   // children's reveal zooms are reached (deepest child + headroom). Leaf

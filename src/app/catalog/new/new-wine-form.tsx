@@ -16,8 +16,10 @@ import {
 import { type BlendRow } from "./grape-blend-editor";
 import { resolvePendingBlend } from "@/lib/wine-blend";
 
-const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
-const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
+// Types, not values: the option lists themselves live in the shared
+// WineIdentityFields control, so a runtime array here was never read.
+type Colour = "WHITE" | "ORANGE" | "ROSE" | "RED";
+type Style = "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
 
 // Pre-filled values for edit mode (every field the form owns). BlendRow, the
 // producer label and the region's appellations are resolved by the caller so
@@ -30,8 +32,8 @@ export type WineFormInitial = {
   producerId: string;
   producerLabel: string | null;
   typeDesignationId: string;
-  colour: (typeof COLOURS)[number] | null;
-  style: (typeof STYLES)[number] | null;
+  colour: Colour | null;
+  style: Style | null;
   wineName: string;
   description: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
@@ -92,10 +94,10 @@ export function NewWineForm({
   const [typeDesignationId, setTypeDesignationId] = useState(
     initialWine?.typeDesignationId ?? "",
   );
-  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(
+  const [colour, setColour] = useState<Colour | null>(
     initialWine?.colour ?? null,
   );
-  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(
+  const [style, setStyle] = useState<Style | null>(
     initialWine?.style ?? null,
   );
   const [wineName, setWineName] = useState(initialWine?.wineName ?? "");
@@ -212,9 +214,9 @@ export function NewWineForm({
         description={description}
         setDescription={setDescription}
         colour={colour ?? ""}
-        setColour={(v) => setColour((v || null) as (typeof COLOURS)[number] | null)}
+        setColour={(v) => setColour((v || null) as Colour | null)}
         style={style ?? ""}
-        setStyle={(v) => setStyle((v || null) as (typeof STYLES)[number] | null)}
+        setStyle={(v) => setStyle((v || null) as Style | null)}
         vintageKind={vintageKind}
         setVintageKind={setVintageKind}
         vintageYear={vintageYear}

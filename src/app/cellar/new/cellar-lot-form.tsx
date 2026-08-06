@@ -21,8 +21,10 @@ import {
   searchCellarCatalog,
 } from "./actions";
 
-const COLOURS = ["WHITE", "ORANGE", "ROSE", "RED"] as const;
-const STYLES = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"] as const;
+// Types, not values: the option lists themselves live in the shared
+// WineIdentityFields control, so a runtime array here was never read.
+type Colour = "WHITE" | "ORANGE" | "ROSE" | "RED";
+type Style = "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
 const SIZES = [375, 750, 1500, 3000];
 const SIZE_LABELS: Record<number, string> = {
   375: "375 ml",
@@ -106,10 +108,10 @@ export function CellarLotForm({
   const [typeDesignationId, setTypeDesignationId] = useState(
     initialWine?.typeDesignationId ?? "",
   );
-  const [colour, setColour] = useState<(typeof COLOURS)[number] | null>(
+  const [colour, setColour] = useState<Colour | null>(
     initialWine?.colour ?? null,
   );
-  const [style, setStyle] = useState<(typeof STYLES)[number] | null>(
+  const [style, setStyle] = useState<Style | null>(
     initialWine?.style ?? null,
   );
   const [wineName, setWineName] = useState(initialWine?.wineName ?? "");
@@ -356,11 +358,11 @@ export function CellarLotForm({
             setDescription={setDescription}
             colour={colour ?? ""}
             setColour={(v) =>
-              setColour((v || null) as (typeof COLOURS)[number] | null)
+              setColour((v || null) as Colour | null)
             }
             style={style ?? ""}
             setStyle={(v) =>
-              setStyle((v || null) as (typeof STYLES)[number] | null)
+              setStyle((v || null) as Style | null)
             }
             vintageKind={vintageKind}
             setVintageKind={setVintageKind}

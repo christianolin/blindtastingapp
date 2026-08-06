@@ -27,11 +27,23 @@ export function RateWineModal({
   const router = useRouter();
   const { openAddWine, openScan } = useAddWine();
   const [q, setQ] = useState("");
-  const [hits, setHits] = useState<Hit[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Results are stored WITH the query that produced them, so "nothing found
+  // yet for what is currently typed" is derived rather than written. The effect
+  // then never clears state synchronously on its way out — which is what the
+  // compiler flagged, and what cost an extra render on every keystroke.
+  const [result, setResult] = useState<{ query: string; hits: Hit[] }>({
+    query: "",
+    hits: [],
+  });
   const [cellarOpen, setCellarOpen] = useState(false);
   const [cellarLots, setCellarLots] = useState<CellarLotOption[] | null>(null);
   const [consume, setConsume] = useState(false);
+
+  const trimmed = q.trim();
+  // Under 2 characters nothing is searched, so nothing is shown.
+  const hits = trimmed.length >= 2 ? result.hits : [];
+  // Still loading while the stored results belong to an older query.
+  const loading = trimmed.length >= 2 && result.query !== trimmed;
 
   useEffect(() => {
     if (cellarOpen && cellarLots === null) listMyCellarLots().then(setCellarLots);
@@ -39,20 +51,11 @@ export function RateWineModal({
 
   useEffect(() => {
     const query = q.trim();
-    if (query.length < 2) {
-      setHits([]);
-      setLoading(false);
-      return;
-    }
+    if (query.length < 2) return;
     let cancelled = false;
-    setLoading(true);
     const timer = setTimeout(async () => {
-      try {
-        const res = await searchCatalogWines(query);
-        if (!cancelled) setHits(res);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      const res = await searchCatalogWines(query);
+      if (!cancelled) setResult({ query, hits: res });
     }, 200);
     return () => {
       cancelled = true;

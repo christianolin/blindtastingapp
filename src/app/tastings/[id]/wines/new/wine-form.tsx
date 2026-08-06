@@ -4,7 +4,6 @@ import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Warehouse } from "lucide-react";
 import { type ReferenceOption } from "@/components/reference-combobox";
@@ -45,22 +44,6 @@ export type WineFormInitial = {
   style: "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET" | null;
   description: string | null;
 };
-
-const VINTAGE_KIND_ITEMS = {
-  YEAR: "A specific vintage year",
-  NV: "NV — non-vintage",
-  TAWNY: "XX years tawny",
-};
-
-const TAWNY_YEARS_ITEMS = {
-  "10": "10 years",
-  "20": "20 years",
-  "30": "30 years",
-  "40": "40+ years",
-};
-
-const COLOUR_ITEMS = { WHITE: "White", ORANGE: "Orange", ROSE: "Rosé", RED: "Red" };
-const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FORTIFIED: "Fortified" };
 
 export function WineForm({
   tastingId,

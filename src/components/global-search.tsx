@@ -43,21 +43,28 @@ export function GlobalSearch() {
   const router = useRouter();
   const supabase = createClient();
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<Hit[]>([]);
+  // The results are stored WITH the query that produced them. "no results yet
+  // for what is currently typed" is then derivable, so the effect never has to
+  // synchronously clear state on its way out — which is what the compiler was
+  // objecting to (and what caused an extra render pass on every keystroke).
+  const [result, setResult] = useState<{ query: string; hits: Hit[] }>({
+    query: "",
+    hits: [],
+  });
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const seq = useRef(0);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const trimmed = query.trim();
+  // Below the 2-character threshold nothing is searched, so nothing is shown.
+  const hits = trimmed.length >= 2 ? result.hits : [];
+  // Still loading whenever the stored results are for an older query.
+  const loading = trimmed.length >= 2 && result.query !== trimmed;
+
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
-      setHits([]);
-      setLoading(false);
-      return;
-    }
+    if (q.length < 2) return;
     const mine = ++seq.current;
-    setLoading(true);
     const t = setTimeout(async () => {
       const { data } = await supabase.rpc("search_all", { p_query: q, p_limit: 6 });
       let list = (data as Hit[] | null) ?? [];
@@ -74,8 +81,7 @@ export function GlobalSearch() {
         list = list.filter((h) => h.kind !== "wine" || !hiddenIds.has(h.id));
       }
       if (seq.current !== mine) return;
-      setHits(list);
-      setLoading(false);
+      setResult({ query: q, hits: list });
     }, 200);
     return () => clearTimeout(t);
   }, [query, supabase]);
@@ -92,8 +98,9 @@ export function GlobalSearch() {
 
   const go = (h: Hit) => {
     setOpen(false);
+    // Clearing the query drops it below the 2-character threshold, so `hits`
+    // derives to [] on its own — no separate reset to keep in sync.
     setQuery("");
-    setHits([]);
     router.push(hrefFor(h));
   };
 
