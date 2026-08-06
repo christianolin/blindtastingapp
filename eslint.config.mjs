@@ -52,12 +52,6 @@ const eslintConfig = defineConfig([
   // matches nothing.
   {
     files: [
-      "src/app/signup/actions.ts", // Task 8
-      "src/app/auth/callback/route.ts", // Task 8 deletes this file
-      "src/app/auth/confirm-hash/page.tsx", // Task 10 deletes this file
-      "src/app/auth/set-password/**", // Task 10
-      "src/app/tastings/new/actions.ts", // Task 10 (inviteUserByEmail)
-      "src/app/tastings/**/actions.ts", // Task 10 (inviteUserByEmail)
       // Browser components: they cannot import the server-only DAL, so they
       // wait for Task 12's short-lived browser token.
       "src/app/tastings/**/tasting-add-wine-modal.tsx",

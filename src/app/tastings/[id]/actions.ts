@@ -3,16 +3,17 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireUser as requireAuthUser } from "@/lib/auth/dal";
+// Aliased: this module already exports a server action named inviteToTasting.
+import { inviteToTasting as inviteParticipant } from "@/lib/auth/invite";
 
 export type LobbyActionState = { error: string } | { success: string } | null;
 
+// Identity comes from our own session; the Supabase client is still needed for
+// the data reads and writes below it. Every action in this file destructures
+// { supabase, user }, so keeping that shape localises the change to one place.
 async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const [supabase, user] = await Promise.all([createClient(), requireAuthUser()]);
   return { supabase, user };
 }
 
@@ -23,7 +24,7 @@ async function assertHost(
 ) {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status")
+    .select("id, name, host_id, status")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== userId) return null;
@@ -174,30 +175,17 @@ export async function inviteToTasting(
 
   if (emails.length === 0) return { error: "Add at least one person." };
 
-  const admin = createAdminClient();
   let added = 0;
   for (const email of emails) {
-    let participantUserId: string | null = null;
-
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (existingProfile) {
-      participantUserId = existingProfile.id;
-    } else {
-      const { data: invited, error: inviteError } =
-        await admin.auth.admin.inviteUserByEmail(email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm-hash?next=/tastings/${tastingId}`,
-        });
-      if (inviteError) {
-        console.error(`Failed to invite ${email}:`, inviteError.message);
-        continue;
-      }
-      participantUserId = invited.user.id;
-    }
+    // Resolves an existing account or creates a passwordless one and emails a
+    // set-password link. Returns null when the invite could not be sent, so a
+    // single bad address does not abort the rest.
+    const participantUserId = await inviteParticipant({
+      email,
+      tastingId,
+      tastingName: tasting.name ?? "a tasting",
+      hostName: user.displayName,
+    });
 
     if (participantUserId) {
       // Ignore duplicates (unique on tasting_id+user_id).

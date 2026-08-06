@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { setPassword, type SetPasswordFormState } from "./actions";
 
 export function SetPasswordForm({
+  token,
   suggestedName,
 }: {
+  token: string;
   suggestedName: string;
 }) {
   const [state, formAction, pending] = useActionState<
@@ -19,6 +21,8 @@ export function SetPasswordForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {/* The token IS the authorisation here — the invitee has no session yet. */}
+      <input type="hidden" name="token" value={token} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="display_name">Your name</Label>
         <Input
@@ -36,7 +40,7 @@ export function SetPasswordForm({
           name="password"
           type="password"
           required
-          minLength={6}
+          minLength={8}
         />
       </div>
       {state?.error ? (

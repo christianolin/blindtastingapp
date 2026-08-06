@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";import { requireUser } from "@/lib/auth/dal";
+import { inviteToTasting as sendTastingInvite } from "@/lib/auth/invite";
 import type {
   AsyncRevealPolicy,
   RevealMode,
@@ -16,13 +16,7 @@ export async function createTasting(
   _prevState: CreateTastingFormState,
   formData: FormData,
 ): Promise<CreateTastingFormState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
+  const [supabase, user] = await Promise.all([createClient(), requireUser()]);
 
   const name = String(formData.get("name") ?? "").trim();
   const timingMode = String(formData.get("timing_mode") ?? "") as TimingMode;
@@ -107,29 +101,14 @@ export async function createTasting(
     return { error: hostParticipantError.message };
   }
 
-  const admin = createAdminClient();
   for (const email of emails) {
-    let participantUserId: string | null = null;
-
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (existingProfile) {
-      participantUserId = existingProfile.id;
-    } else {
-      const { data: invited, error: inviteError } =
-        await admin.auth.admin.inviteUserByEmail(email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm-hash?next=/tastings/${tasting.id}`,
-        });
-      if (inviteError) {
-        console.error(`Failed to invite ${email}:`, inviteError.message);
-        continue;
-      }
-      participantUserId = invited.user.id;
-    }
+    const participantUserId = await sendTastingInvite({
+      email,
+      tastingId: tasting.id,
+      tastingName: name,
+      hostName: user.displayName,
+    });
+    if (!participantUserId) continue;
 
     if (participantUserId) {
       const { error: participantError } = await supabase
