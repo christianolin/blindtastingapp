@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:auth": "node --experimental-strip-types --conditions=react-server --test scripts/auth-jwt.test.mjs scripts/auth-password.test.mjs scripts/auth-schema.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

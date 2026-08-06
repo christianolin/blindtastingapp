@@ -233,7 +233,7 @@ Get-Content .env.local | ForEach-Object {
     [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2].Trim('"'))
   }
 }
-node --test scripts/auth-jwt.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-jwt.test.mjs
 ```
 
 Expected: **4 tests, 4 pass.**
@@ -443,7 +443,7 @@ test("credential email is unique case-insensitively", async () => {
 ```powershell
 $env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265000_auth_tables.sql --mode live
-node --test scripts/auth-schema.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-schema.test.mjs
 ```
 
 Expected: `LIVE-APPLIED 20260829265000 auth_tables`, then 3 tests passing.
@@ -529,7 +529,7 @@ test("a malformed hash verifies false rather than throwing", async () => {
 - [ ] **Step 3: Run it — expect failure**
 
 ```bash
-node --test scripts/auth-password.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-password.test.mjs
 ```
 
 Expected: FAIL — `Cannot find package '@node-rs/argon2'` if Step 1 was skipped; otherwise it should pass, since the test carries its own implementation. Confirm 4 passing before writing the module.
@@ -760,7 +760,7 @@ test("sliding renews expiry and last_seen_at", async () => {
 
 ```powershell
 $env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
-node --test scripts/auth-session.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-session.test.mjs
 ```
 
 Expected: PASS (6 tests) — the table exists from Task 2 and the test carries its
@@ -1254,7 +1254,7 @@ Run:
 
 ```powershell
 $env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
-node --test scripts/auth-rate-limit.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-rate-limit.test.mjs
 ```
 
 Expected: 2 tests passing.
@@ -1516,7 +1516,7 @@ test("an expired token does not consume", async () => {
 
 ```powershell
 $env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
-node --test scripts/auth-tokens.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-tokens.test.mjs
 ```
 
 Expected: 4 passing.
@@ -2362,7 +2362,7 @@ $$;
 ```powershell
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265200_auth_cutover.sql --mode dry
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265200_auth_cutover.sql --mode live
-node --test scripts/auth-jwt.test.mjs scripts/auth-schema.test.mjs scripts/auth-session.test.mjs scripts/auth-tokens.test.mjs scripts/auth-password.test.mjs
+node --experimental-strip-types --conditions=react-server --test scripts/auth-jwt.test.mjs scripts/auth-schema.test.mjs scripts/auth-session.test.mjs scripts/auth-tokens.test.mjs scripts/auth-password.test.mjs
 node --test scripts/world-wine-map-foundation.test.mjs scripts/designation-members.test.mjs
 ```
 
