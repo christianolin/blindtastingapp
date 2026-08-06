@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, currentUserId } from "@/lib/supabase/client";
 import { WineForm } from "./wines/new/wine-form";
 import type { ReferenceOption } from "@/components/reference-combobox";
 import type { TypeDesignationOption } from "@/components/type-designation-field";
@@ -35,7 +35,7 @@ export function TastingAddWineModal({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [c, r, g, t, u] = await Promise.all([
+      const [c, r, g, t, me] = await Promise.all([
         supabase.from("countries").select("id, name").order("name"),
         supabase.from("regions").select("id, name, country_id").order("name"),
         supabase.from("grapes").select("id, name").order("name"),
@@ -44,10 +44,13 @@ export function TastingAddWineModal({
           .select("id, name, category, country_id")
           .eq("is_active", true)
           .order("sort_order"),
-        supabase.auth.getUser(),
+        // Identity now comes from our own session, not GoTrue. The same
+        // endpoint mints the token the queries above authenticate with, so
+        // this costs nothing extra.
+        currentUserId(),
       ]);
       if (cancelled) return;
-      setUserId(u.data.user?.id);
+      setUserId(me ?? undefined);
       setRef({
         countries: c.data ?? [],
         regions: (r.data ?? []) as (ReferenceOption & { country_id: string })[],

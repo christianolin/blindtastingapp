@@ -43,21 +43,9 @@ const eslintConfig = defineConfig([
     },
   },
 
-  // Temporary exemptions: the remaining GoTrue surface, each owned by a named
-  // task. Delete each entry as its task lands — an empty list here is the
-  // completion signal for the auth migration.
-  //
-  // Paths use ** rather than the literal route segment: eslint globs treat
-  // `[id]` as a character class, so "src/app/tastings/[id]/actions.ts" silently
-  // matches nothing.
-  {
-    files: [
-      // Browser components: they cannot import the server-only DAL, so they
-      // wait for Task 12's short-lived browser token.
-      "src/app/tastings/**/tasting-add-wine-modal.tsx",
-    ],
-    rules: { "no-restricted-syntax": "off" },
-  },
+  // The exemption list is empty, and that is the completion signal: no file
+  // outside src/lib/auth touches Supabase Auth any more. Leaving the (now
+  // unconditional) rule in place is what stops it coming back.
 ]);
 
 export default eslintConfig;
