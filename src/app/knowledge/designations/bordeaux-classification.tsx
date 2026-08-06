@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CRU_BOURGEOIS, DESIGNATION_CONTENT } from "@/lib/designations/content";
 import type { TabSystem, TabSystemMember } from "@/lib/designations/page-data";
@@ -42,9 +42,14 @@ export function BordeauxClassification({
   const [query, setQuery] = useState("");
 
   const system = chosen.find((s) => s.key === activeKey) ?? chosen[0];
-  const tiers = useMemo(() => (system ? tiersOf(system) : []), [system]);
 
   if (!system) return null;
+
+  // Not memoized: `chosen` is rebuilt every render, so `system` was never a
+  // stable dependency and the useMemo here could not hold anyway (the compiler
+  // flagged exactly that). Grouping ≤85 members is cheap, and the React
+  // Compiler memoizes what is actually worth memoizing.
+  const tiers = tiersOf(system);
 
   const meta = DESIGNATION_CONTENT[system.key]?.pyramid ?? [];
   const intro = DESIGNATION_CONTENT[system.key]?.intro;
