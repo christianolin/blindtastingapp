@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:auth": "node --experimental-strip-types --conditions=react-server --test scripts/auth-jwt.test.mjs scripts/auth-password.test.mjs scripts/auth-schema.test.mjs"
+    "test:auth": "node --experimental-strip-types --conditions=react-server --test scripts/auth-jwt.test.mjs scripts/auth-password.test.mjs scripts/auth-schema.test.mjs scripts/auth-session.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -23,6 +23,7 @@
     "lucide-react": "^1.24.0",
     "maplibre-gl": "^5.24.0",
     "next": "16.2.10",
+    "pg": "^8.22.0",
     "pmtiles": "^4.4.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -38,13 +39,13 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^20",
+    "@types/pg": "^8.20.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "concaveman": "^2.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "pbf": "^5.1.2",
-    "pg": "^8.22.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "xlsx": "^0.18.5"
