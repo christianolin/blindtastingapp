@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:auth": "node --experimental-strip-types --conditions=react-server --test scripts/auth-dal.test.mjs scripts/auth-jwt.test.mjs scripts/auth-password.test.mjs scripts/auth-schema.test.mjs scripts/auth-session.test.mjs scripts/auth-rate-limit.test.mjs scripts/auth-login-flow.test.mjs"
+    "test:auth": "node --experimental-strip-types --conditions=react-server --test-concurrency=1 --test scripts/auth-dal.test.mjs scripts/auth-jwt.test.mjs scripts/auth-password.test.mjs scripts/auth-schema.test.mjs scripts/auth-session.test.mjs scripts/auth-rate-limit.test.mjs scripts/auth-login-flow.test.mjs scripts/auth-tokens.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -28,6 +28,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-map-gl": "^8.1.1",
+    "resend": "^6.18.1",
     "server-only": "^0.0.1",
     "shadcn": "^4.13.0",
     "tailwind-merge": "^3.6.0",
