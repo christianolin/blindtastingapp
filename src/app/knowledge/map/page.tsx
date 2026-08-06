@@ -1,6 +1,6 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { createClient } from "@/lib/supabase/server";
 import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 
 export const metadata = {
@@ -12,10 +12,7 @@ export default async function WineMapPage({
 }: {
   searchParams: Promise<{ place?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

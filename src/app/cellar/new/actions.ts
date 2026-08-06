@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
@@ -47,9 +48,7 @@ export async function addCellarLot(
   input: CellarLotInput,
 ): Promise<{ id: string } | { error: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return { error: "You must be signed in to add a wine." };
 
   const p: Record<string, unknown> = {
@@ -150,9 +149,7 @@ export async function findMyCellarLotsForWine(catalogWineId: string): Promise<
   }[]
 > {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user || !catalogWineId) return [];
   const { data } = await supabase
     .from("cellar_lots")
@@ -177,9 +174,7 @@ export async function increaseCellarLotQuantity(
   addQuantity: number,
 ): Promise<{ id: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in.");
   const add = Math.floor(addQuantity);
   if (!Number.isFinite(add) || add < 1) {
@@ -255,9 +250,7 @@ export type CellarLotOption = {
 // the "add from my cellar" pickers in tastings and Taste & Rate.
 export async function listMyCellarLots(): Promise<CellarLotOption[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return [];
   const { data } = await supabase
     .from("cellar_lots")

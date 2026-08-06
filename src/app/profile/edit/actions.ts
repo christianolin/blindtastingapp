@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -11,9 +12,7 @@ export async function updateProfile(
   formData: FormData,
 ): Promise<EditProfileFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

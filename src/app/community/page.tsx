@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { PageHeader } from "@/components/patterns/page-header";
@@ -18,9 +19,7 @@ export default async function PeoplePage({
   const page = Math.max(1, Number(pageParam) || 1);
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

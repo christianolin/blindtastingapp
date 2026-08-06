@@ -1,5 +1,5 @@
+import { requireUser } from "@/lib/auth/dal";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { CellarTabs } from "./cellar-tabs";
@@ -76,10 +76,7 @@ export default async function CellarPage({
           : "bottles";
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const { data: profile } = await supabase
     .from("profiles")

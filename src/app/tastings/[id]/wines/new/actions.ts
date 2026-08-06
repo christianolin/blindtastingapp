@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser, requireUser } from "@/lib/auth/dal";
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -208,9 +209,7 @@ export async function addWine(
   formData: FormData,
 ): Promise<AddWineFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }
@@ -382,9 +381,7 @@ export async function updateWine(
   formData: FormData,
 ): Promise<AddWineFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }
@@ -653,10 +650,7 @@ export async function addWineFromCatalog(
   catalogWineId: string,
 ): Promise<{ error: string } | void> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
   const r = await insertTastingWineFromCatalog(supabase, user.id, tastingId, catalogWineId);
   if ("error" in r) return { error: r.error };
   redirect(`/tastings/${tastingId}`);
@@ -671,9 +665,7 @@ export async function addTastingWineFromCellarLot(
   opts: { consume: boolean },
 ): Promise<{ error: string } | { ok: true; warning?: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return { error: "You must be signed in." };
 
   const { data: lot } = await supabase
@@ -719,10 +711,7 @@ export async function addWineUnidentified(
   formData: FormData,
 ): Promise<AddWineFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const tastingId = String(formData.get("tasting_id") ?? "");
   const countryId = String(formData.get("country_id") ?? "");

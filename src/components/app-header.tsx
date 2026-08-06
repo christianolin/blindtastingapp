@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { navWithAdmin } from "@/components/nav-links";
@@ -30,9 +31,7 @@ export async function AppHeader({
   let avatarUrl = avatarUrlProp ?? null;
 
   if (!userId) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getOptionalUser();
     if (!user) return null;
     userId = user.id;
     const { data: profile } = await supabase

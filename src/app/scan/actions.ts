@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
@@ -23,9 +24,7 @@ export async function identifyWineFromLabel(
   imageUrl: string,
 ): Promise<ScanResult> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in to scan a label.");
 
   const extracted = await extractLabel(imageUrl);

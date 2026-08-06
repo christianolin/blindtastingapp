@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Crown, Scale, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOptionalUser } from "@/lib/auth/dal";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -24,17 +25,15 @@ function rankBadgeClass(rank: number, completed: boolean) {
  */
 export async function StandingsPanel({ tastingId }: { tastingId: string }) {
   const supabase = await createClient();
-  const [leaderboard, { data: userData }, { data: tasting }] =
-    await Promise.all([
-      getTastingLeaderboard(tastingId),
-      supabase.auth.getUser(),
-      supabase
-        .from("tastings")
-        .select("reveal_mode, wine_source, host_id, status")
-        .eq("id", tastingId)
-        .maybeSingle(),
-    ]);
-  const user = userData.user;
+  const [leaderboard, user, { data: tasting }] = await Promise.all([
+    getTastingLeaderboard(tastingId),
+    getOptionalUser(),
+    supabase
+      .from("tastings")
+      .select("reveal_mode, wine_source, host_id, status")
+      .eq("id", tastingId)
+      .maybeSingle(),
+  ]);
 
   const { data: participants } = await supabase
     .from("tasting_participants")

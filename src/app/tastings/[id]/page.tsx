@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, MapPin, Wine } from "lucide-react";
@@ -27,9 +28,7 @@ export default async function TastingPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

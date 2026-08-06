@@ -1,4 +1,5 @@
-import { notFound, redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth/dal";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
 import { emptyNoteState } from "@/lib/wset/note-state";
@@ -15,10 +16,7 @@ export default async function NewNotePage({
   const { wineId } = await params;
   const { blindWine, consumption } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  await requireUser();
 
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();

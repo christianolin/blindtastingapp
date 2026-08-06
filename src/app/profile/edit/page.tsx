@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
@@ -7,9 +8,7 @@ import { EditProfileForm } from "./edit-profile-form";
 
 export default async function EditProfilePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

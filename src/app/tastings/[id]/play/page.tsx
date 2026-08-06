@@ -1,5 +1,6 @@
+import { requireUser } from "@/lib/auth/dal";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PlayExperience } from "./play-experience";
 
@@ -13,10 +14,7 @@ export default async function PlayPage({
 }) {
   const { id: tastingId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const { data: tasting } = await supabase
     .from("tastings")

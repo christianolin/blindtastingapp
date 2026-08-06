@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { ResolveRow } from "./resolve-row";
 
@@ -11,10 +11,7 @@ function rel(r: Rel): string | null {
 
 export default async function UnidentifiedQueuePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const { data: profile } = await supabase
     .from("profiles")

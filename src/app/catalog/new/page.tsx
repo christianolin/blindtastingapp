@@ -1,15 +1,12 @@
+import { requireUser } from "@/lib/auth/dal";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { NewWineForm } from "./new-wine-form";
 
 export default async function NewCellarWinePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const [{ data: countries }, { data: regions }, { data: grapes }, { data: typeDesignations }] =
     await Promise.all([

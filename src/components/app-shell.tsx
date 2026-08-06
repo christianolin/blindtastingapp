@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AddWineProvider } from "@/components/add-wine-context";
@@ -8,9 +9,7 @@ import { TasteLauncherProvider } from "@/components/taste-launcher-context";
 // none can be missed. Logged out (login / signup), it renders children bare.
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return <>{children}</>;
 
   const { data: profile } = await supabase

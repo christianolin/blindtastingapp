@@ -1,5 +1,6 @@
+import { requireUser } from "@/lib/auth/dal";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -29,10 +30,7 @@ export default async function CatalogWinePage({
 }) {
   const { wineId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();

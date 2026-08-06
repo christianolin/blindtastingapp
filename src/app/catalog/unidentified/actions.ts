@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -35,9 +36,7 @@ export async function resolveUnidentifiedWine(
   catalogWineId: string,
 ): Promise<{ error: string } | { ok: true }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return { error: "You must be signed in." };
   const { error } = await supabase.rpc("resolve_unidentified_wine", {
     p_unidentified_id: unidentifiedId,

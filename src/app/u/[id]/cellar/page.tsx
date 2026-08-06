@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth/dal";
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
@@ -58,10 +59,7 @@ export default async function UserCellarPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
   if (id === user.id) redirect("/cellar");
 
   const { data: profile } = await supabase

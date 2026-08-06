@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth/dal";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { getDesignationsPageData } from "@/lib/designations/page-data";
@@ -15,10 +15,7 @@ export default async function LibraryPage({
 }) {
   const { tab, libtab } = await searchParams;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  await requireUser();
 
   const [designations, grapesRes, linksRes, archRes] = await Promise.all([
     getDesignationsPageData(supabase),

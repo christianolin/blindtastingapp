@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,9 +16,7 @@ export type InviteNotification = {
 // page reload.
 export async function getPendingInvites(): Promise<InviteNotification[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return [];
 
   const { data: invitedRows } = await supabase

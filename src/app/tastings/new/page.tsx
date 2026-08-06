@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -13,9 +14,7 @@ export default async function NewTastingPage({
   const { mode } = await searchParams;
   const reveal = mode === "semi-blind" ? "SEMI_BLIND" : "BLIND";
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

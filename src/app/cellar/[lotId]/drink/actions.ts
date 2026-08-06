@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,9 +16,7 @@ export type ConsumeInput = {
 // RLS + auth.uid() enforced inside). Returns the new consumption id.
 export async function consumeLot(input: ConsumeInput): Promise<{ id: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in.");
 
   const p: Record<string, unknown> = {

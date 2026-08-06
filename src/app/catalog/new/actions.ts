@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 import type { ReferenceOption } from "@/components/reference-combobox";
@@ -98,9 +99,7 @@ export type NewCatalogWine = {
 
 export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in to add a wine.");
   const { data, error } = await supabase
     .from("catalog_wines")
@@ -149,9 +148,7 @@ export async function updateCatalogWine(
   input: NewCatalogWine,
 ): Promise<{ id: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in to edit a wine.");
   const { error } = await supabase
     .from("catalog_wines")

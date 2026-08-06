@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { ChevronDown, Wine } from "lucide-react";
 import { AnswerFacts, type AnswerFact } from "../answer-facts";
 import { Badge } from "@/components/ui/badge";
@@ -91,9 +92,7 @@ export async function PlayExperience({
   embedded?: boolean;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) return null;
 
   const { data: tasting } = await supabase

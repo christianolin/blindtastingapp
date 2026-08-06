@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth/dal";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,10 +46,7 @@ export default async function EditLotPage({
 }) {
   const { lotId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  await requireUser();
 
   const { data } = await supabase
     .from("cellar_lots")

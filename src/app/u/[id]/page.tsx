@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import Link from "next/link";
 import { MapPin, Wine as WineIcon } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
@@ -28,9 +29,7 @@ export default async function ProfilePage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

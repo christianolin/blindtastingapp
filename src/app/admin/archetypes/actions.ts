@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -29,9 +30,7 @@ export async function searchPlaces(query: string): Promise<PlaceHit[]> {
 
 async function ensureContributor() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user || !(await isContributor(supabase, user.id))) return null;
   return supabase;
 }

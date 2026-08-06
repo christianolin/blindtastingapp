@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -6,9 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function addFriend(friendId: string) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }
@@ -23,9 +22,7 @@ export async function addFriend(friendId: string) {
 
 export async function removeFriend(friendId: string) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

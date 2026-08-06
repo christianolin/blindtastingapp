@@ -1,5 +1,5 @@
+import { requireUser } from "@/lib/auth/dal";
 import { AddWineButton } from "@/components/add-wine-button";
-import { redirect } from "next/navigation";
 import { Wine, FileText, Users, Globe, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
@@ -31,10 +31,7 @@ function relName(rel: Rel): string | null {
 
 export default async function CatalogPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  await requireUser();
 
   const [{ data: wines }, { data: ratings }, { count: totalWines }, { data: countryRows }] =
     await Promise.all([

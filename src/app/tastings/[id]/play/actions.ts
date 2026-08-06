@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -99,9 +100,7 @@ export async function submitGuess(
   formData: FormData,
 ): Promise<GuessFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }
@@ -197,9 +196,7 @@ export async function submitAllMatchGuesses(
   formData: FormData,
 ): Promise<GuessFormState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }

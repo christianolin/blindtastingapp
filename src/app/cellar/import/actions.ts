@@ -1,4 +1,5 @@
 "use server";
+import { getOptionalUser } from "@/lib/auth/dal";
 
 import { createClient } from "@/lib/supabase/server";
 import type { ImportRow } from "./parse-cellartracker";
@@ -13,9 +14,7 @@ export type ImportSummary = {
 // so a bad row is reported but never sinks the batch).
 export async function importCellarCsv(rows: ImportRow[]): Promise<ImportSummary> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) throw new Error("You must be signed in to import.");
   if (rows.length === 0) return { imported: 0, failed: 0, errors: [] };
 

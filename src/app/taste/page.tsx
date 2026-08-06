@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { BlindrMark } from "@/components/logo";
@@ -10,9 +11,7 @@ import { ExplainerCards } from "./explainer-cards";
 
 export default async function TastePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
 
   if (!user) {
     redirect("/login");

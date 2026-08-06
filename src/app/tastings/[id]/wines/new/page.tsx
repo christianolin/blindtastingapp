@@ -1,3 +1,4 @@
+import { getOptionalUser } from "@/lib/auth/dal";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +12,7 @@ export default async function NewWinePage({
 }) {
   const { id: tastingId } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getOptionalUser();
   if (!user) {
     redirect("/login");
   }
