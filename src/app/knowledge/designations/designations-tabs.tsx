@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { DESIGNATION_TABS, type DesignationTab } from "@/lib/designations/tabs";
 import type {
   DesignationsPageData,
-  TabGlossaryTerm,
   TabSystem,
 } from "@/lib/designations/page-data";
 import {
@@ -111,7 +110,6 @@ export function DesignationsTabs({
 
   const tab =
     DESIGNATION_TABS.find((t) => t.slug === active) ?? DESIGNATION_TABS[0];
-  const glossaryByName = new Map(data.glossary.map((g) => [g.name, g]));
 
   return (
     <div className="flex flex-col gap-6">
@@ -186,16 +184,12 @@ export function DesignationsTabs({
             systems={data.systems}
             systemKeys={tab.systemKeys ?? []}
           />
-          <GlossaryList tab={tab} glossaryByName={glossaryByName} />
+          <TabFigures slug={tab.slug} />
         </div>
       ) : tab.kind === "systems" ? (
-        <SystemsPanel
-          tab={tab}
-          systems={data.systems}
-          glossaryByName={glossaryByName}
-        />
+        <SystemsPanel tab={tab} systems={data.systems} />
       ) : (
-        <GlossaryList tab={tab} glossaryByName={glossaryByName} bare />
+        <TabFigures slug={tab.slug} />
       )}
     </div>
   );
@@ -251,11 +245,9 @@ function OverviewPanel() {
 function SystemsPanel({
   tab,
   systems,
-  glossaryByName,
 }: {
   tab: DesignationTab;
   systems: TabSystem[];
-  glossaryByName: Map<string, TabGlossaryTerm>;
 }) {
   const chosen = (tab.systemKeys ?? [])
     .map((k) => systems.find((s) => s.key === k))
@@ -270,7 +262,7 @@ function SystemsPanel({
           systems={systems}
           systemKeys={chosen.map((s) => s.key)}
         />
-        <GlossaryList tab={tab} glossaryByName={glossaryByName} />
+        <TabFigures slug={tab.slug} />
       </div>
     );
   }
@@ -313,51 +305,25 @@ function SystemsPanel({
           </section>
         );
       })}
-      <GlossaryList tab={tab} glossaryByName={glossaryByName} />
+      <TabFigures slug={tab.slug} />
     </div>
   );
 }
 
-function GlossaryList({
-  tab,
-  glossaryByName,
-  bare,
-}: {
-  tab: DesignationTab;
-  glossaryByName: Map<string, TabGlossaryTerm>;
-  bare?: boolean;
-}) {
-  const terms = (tab.glossaryTerms ?? [])
-    .map((n) => glossaryByName.get(n))
-    .filter((t): t is TabGlossaryTerm => !!t);
-  const figures = TAB_FIGURES[tab.slug] ?? [];
-  if (terms.length === 0 && figures.length === 0) return null;
+// The tab's figures, and nothing else. There used to be a "terms in detail"
+// glossary underneath, which restated in prose what the figure had already
+// said in a table — two places to read, two places to keep correct, and they
+// had already drifted (the glossary's Crianza said "commonly 2 years" while
+// the figure said 24 months with the oak split). Every term the glossary
+// carried now lives as a step in the figure above.
+function TabFigures({ slug }: { slug: string }) {
+  const figures = TAB_FIGURES[slug] ?? [];
+  if (figures.length === 0) return null;
   return (
     <div className="flex flex-col gap-6">
-      {/* The figure first: it gives the ordering and the measured bands, so the
-          definitions below read as detail rather than a flat glossary. */}
       {figures.map((f) => (
         <ScaleFigure key={f.title} {...f} />
       ))}
-      {terms.length === 0 ? null : (
-        <div className="flex flex-col gap-3">
-      {!bare || figures.length > 0 ? (
-        <h2 className="font-heading text-xl font-semibold">
-          {figures.length > 0 ? "The terms in detail" : "Related terms"}
-        </h2>
-      ) : null}
-      {terms.map((t) => (
-        <Card key={t.name}>
-          <CardContent className="flex flex-col gap-1 pt-6">
-            <h3 className="font-heading text-lg font-semibold">{t.name}</h3>
-            {t.description ? (
-              <p className="text-sm text-muted-foreground">{t.description}</p>
-            ) : null}
-          </CardContent>
-        </Card>
-      ))}
-        </div>
-      )}
     </div>
   );
 }
