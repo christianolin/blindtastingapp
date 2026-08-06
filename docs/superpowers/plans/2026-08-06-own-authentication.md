@@ -41,6 +41,21 @@ This is the linchpin. If a token we sign is not accepted by PostgREST with
 `auth.uid()` resolving, the entire design is invalid and every later task is
 wasted work. Nothing else gets built until this passes.
 
+> **Correction applied during execution.** The test code below originally used
+> `cellar_lots`, which is the wrong table: its SELECT policy is
+> `(owner_id = auth.uid()) OR can_view_cellar(owner_id)`, so a user also sees
+> other people's *shared* cellars and any row-count assertion is meaningless —
+> it failed with 38 rows against an expected 33. The table under test must have
+> a **pure** `= auth.uid()` policy. `friendships` does: `(user_id = auth.uid())`.
+> The shipped `scripts/auth-jwt.test.mjs` uses `friendships` and additionally
+> asserts that policy text up front, so the test fails loudly if the table ever
+> stops being purely owner-scoped rather than silently becoming a no-op.
+>
+> Two further notes for anyone re-running: the secret is used as a **raw UTF-8
+> string**, not base64-decoded (decoding it yields 401), and `assert`'s message
+> argument is evaluated eagerly — `assert.equal(res.status, 200, await
+> res.text())` consumes the body before `res.json()` can read it.
+
 **Files:**
 - Create: `scripts/auth-jwt.test.mjs`
 - Modify: `package.json` (add `jose`)
@@ -63,6 +78,13 @@ Create `scripts/auth-jwt.test.mjs`:
 // Linchpin: a JWT WE sign must be accepted by PostgREST, with auth.uid()
 // resolving to our `sub` claim, so the existing 113 RLS policies keep working
 // unchanged. If this fails, the own-auth design is wrong.
+//
+// The table under test must have a PURE `= auth.uid()` policy. `friendships`
+// qualifies: `(user_id = auth.uid())`, no disjunction. `cellar_lots` looks like
+// the obvious choice and is not — its policy is
+// `(owner_id = auth.uid()) OR can_view_cellar(owner_id)`, so a user also sees
+// other people's shared cellars and any row-count assertion is meaningless.
+//
 // Env: DB_PASSWORD, SUPABASE_JWT_SECRET, NEXT_PUBLIC_SUPABASE_URL,
 // NEXT_PUBLIC_SUPABASE_ANON_KEY. Read-only.
 import assert from "node:assert/strict";
@@ -92,14 +114,10 @@ async function mint(userId, ttlSeconds = 600) {
     .sign(secret);
 }
 
-function rest(path, token) {
-  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: {
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${token}`,
-    },
+const rest = (path, token) =>
+  fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` },
   });
-}
 
 const client = new pg.Client({
   host: process.env.DB_HOST ?? "aws-0-eu-central-1.pooler.supabase.com",
@@ -110,23 +128,36 @@ const client = new pg.Client({
   ssl: { rejectUnauthorized: false },
 });
 
-let ownerA;
-let ownerB;
-let lotsOfA;
+let userA;
+let userB;
+let countA;
+let countB;
 
 before(async () => {
   await client.connect();
-  // Two distinct profiles that own cellar lots — cellar_lots is owner-scoped by
-  // RLS, so it proves the token both grants and withholds access.
-  const { rows } = await client.query(
-    `select owner_id, count(*)::int n
-       from cellar_lots group by owner_id having count(*) > 0
-       order by n desc limit 2`,
+
+  // Fail loudly if the chosen table stops being purely owner-scoped — that
+  // would silently turn the assertions below into no-ops.
+  const { rows: pol } = await client.query(
+    `select qual from pg_policies
+      where schemaname = 'public' and tablename = 'friendships'
+        and cmd = 'SELECT'`,
   );
-  assert.equal(rows.length, 2, "need two profiles owning cellar lots");
-  ownerA = rows[0].owner_id;
-  ownerB = rows[1].owner_id;
-  lotsOfA = rows[0].n;
+  assert.equal(pol.length, 1, "expected exactly one SELECT policy on friendships");
+  assert.equal(
+    pol[0].qual.replace(/\s+/g, " ").trim(),
+    "(user_id = auth.uid())",
+    "friendships is no longer purely owner-scoped; pick another table",
+  );
+
+  const { rows } = await client.query(
+    `select user_id, count(*)::int n from friendships
+      group by user_id order by n desc limit 2`,
+  );
+  assert.equal(rows.length, 2, "need two users owning friendship rows");
+  [userA, userB] = rows.map((r) => r.user_id);
+  [countA, countB] = rows.map((r) => r.n);
+  assert.notEqual(userA, userB);
 });
 
 after(async () => {
@@ -134,51 +165,62 @@ after(async () => {
 });
 
 test("our signed token is accepted and auth.uid() resolves", async () => {
-  const res = await rest("cellar_lots?select=id,owner_id", await mint(ownerA));
-  assert.equal(res.status, 200, await res.text());
-  const rows = await res.json();
+  const res = await rest("friendships?select=user_id", await mint(userA));
+  // Read the body ONCE: assert's message argument is evaluated eagerly, so
+  // `await res.text()` inline would consume the stream even when it passes.
+  const body = await res.text();
+  assert.equal(res.status, 200, body);
+  const rows = JSON.parse(body);
   assert.ok(rows.length > 0, "RLS returned nothing — auth.uid() did not resolve");
-  assert.equal(rows.length, lotsOfA);
+  assert.equal(rows.length, countA, "row count does not match this user's own rows");
   assert.ok(
-    rows.every((r) => r.owner_id === ownerA),
-    "another owner's lots leaked through",
+    rows.every((r) => r.user_id === userA),
+    "a row belonging to somebody else came back",
   );
 });
 
-test("the token withholds another user's rows", async () => {
-  const res = await rest("cellar_lots?select=id,owner_id", await mint(ownerB));
+test("a different subject sees its own rows, not the first user's", async () => {
+  const res = await rest("friendships?select=user_id", await mint(userB));
   assert.equal(res.status, 200);
   const rows = await res.json();
+  assert.equal(rows.length, countB);
   assert.ok(
-    rows.every((r) => r.owner_id === ownerB),
-    "user B saw user A's lots",
+    rows.every((r) => r.user_id === userB),
+    "user B saw user A's rows — RLS is not scoping by our sub",
   );
+});
+
+test("an unauthenticated request sees nothing", async () => {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/friendships?select=user_id`, {
+    headers: { apikey: ANON_KEY },
+  });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), [], "anon must see no friendships");
 });
 
 test("an expired token is rejected", async () => {
+  const now = Math.floor(Date.now() / 1000);
   const expired = await new SignJWT({ role: "authenticated" })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setSubject(ownerA)
+    .setSubject(userA)
     .setAudience("authenticated")
     .setIssuer("supabase")
-    .setIssuedAt(Math.floor(Date.now() / 1000) - 3600)
-    .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
+    .setIssuedAt(now - 3600)
+    .setExpirationTime(now - 60)
     .sign(secret);
-  const res = await rest("cellar_lots?select=id", expired);
-  assert.equal(res.status, 401);
+  assert.equal((await rest("friendships?select=user_id", expired)).status, 401);
 });
 
 test("a token signed with the wrong secret is rejected", async () => {
   const bad = await new SignJWT({ role: "authenticated" })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setSubject(ownerA)
+    .setSubject(userA)
     .setAudience("authenticated")
     .setIssuer("supabase")
     .setIssuedAt()
     .setExpirationTime("10m")
     .sign(new TextEncoder().encode("not-the-real-secret-not-the-real-secret"));
-  const res = await rest("cellar_lots?select=id", bad);
-  assert.equal(res.status, 401);
+  assert.equal((await rest("friendships?select=user_id", bad)).status, 401);
 });
 ```
 
