@@ -21,7 +21,15 @@ export function LoginForm() {
         <Input id="email" name="email" type="email" required autoFocus />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-baseline justify-between gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Input id="password" name="password" type="password" required />
       </div>
       {state?.error ? (
