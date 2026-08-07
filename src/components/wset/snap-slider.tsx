@@ -48,7 +48,18 @@ export function SnapSlider<T extends string>({
   );
 
   return (
-    <div style={{ padding: "0 46px", userSelect: "none", touchAction: "none" }}>
+    // Phones drop the per-stop label row and instead frame the track with the
+    // two endpoint labels (Low ○──●──○ High); the chosen value is shown by the
+    // row title. Desktop keeps the full label row below the track.
+    <div className="px-0 sm:px-[46px]" style={{ userSelect: "none", touchAction: "none" }}>
+      <div className="flex items-center gap-2.5">
+        <span
+          className="sm:hidden"
+          style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2, whiteSpace: "nowrap" }}
+        >
+          {labels[stops[0]] ?? stops[0]}
+        </span>
+        <div className="min-w-0 flex-1">
       <div
         ref={trackRef}
         onPointerDown={
@@ -167,7 +178,15 @@ export function SnapSlider<T extends string>({
           />
         ) : null}
       </div>
-      <div style={{ position: "relative", height: useStagger ? 32 : 18, marginTop: 8 }}>
+        </div>
+        <span
+          className="sm:hidden"
+          style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2, whiteSpace: "nowrap" }}
+        >
+          {labels[stops[n - 1]] ?? stops[n - 1]}
+        </span>
+      </div>
+      <div className="max-sm:hidden" style={{ position: "relative", height: useStagger ? 32 : 18, marginTop: 8 }}>
         {stops.map((stop, i) => {
           const active = range !== null ? i === rLo || i === rHi : index === i;
           const lower = useStagger && i % 2 === 1;

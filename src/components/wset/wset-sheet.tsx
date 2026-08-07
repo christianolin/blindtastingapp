@@ -43,42 +43,55 @@ const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; caption: s
   { key: "taster", caption: "Taster" },
 ];
 
-function label(value: string | null): string {
-  return value ? LABELS[value] ?? value : "not set";
+// The selected value's display label, or nothing. An empty control already
+// says "not set" — spelling it out on every unrated row was pure noise.
+function valueLabel(value: string | null): string | undefined {
+  return value ? LABELS[value] ?? value : undefined;
 }
 
 export function Row({
   label: rowLabel,
   sub,
+  value,
   children,
   wide,
 }: {
   label: string;
   sub?: string;
+  /** The chosen value, shown emphasised beside the title: "Acidity · high". */
+  value?: string;
   children: React.ReactNode;
   wide?: boolean;
 }) {
+  const heading = (
+    <div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</span>
+        {value !== undefined ? (
+          <>
+            <span aria-hidden style={{ fontSize: 12, color: WSET.muted2 }}>
+              ·
+            </span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: WSET.burgundy }}>{value}</span>
+          </>
+        ) : null}
+      </div>
+      {sub !== undefined ? (
+        <div style={{ fontSize: 11.5, color: WSET.muted2, marginTop: 2 }}>{sub}</div>
+      ) : null}
+    </div>
+  );
   if (wide) {
     return (
       <div style={{ padding: "16px 0", borderTop: `1px solid ${WSET.hairline}` }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</span>
-          {sub !== undefined ? (
-            <span style={{ fontSize: 11.5, color: WSET.muted2 }}>{sub}</span>
-          ) : null}
-        </div>
+        <div style={{ marginBottom: 12 }}>{heading}</div>
         {children}
       </div>
     );
   }
   return (
     <div className="wset-row">
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</div>
-        {sub !== undefined ? (
-          <div style={{ fontSize: 11.5, color: WSET.muted2, marginTop: 2 }}>{sub}</div>
-        ) : null}
-      </div>
+      {heading}
       <div>{children}</div>
     </div>
   );
@@ -89,17 +102,22 @@ export function SectionCard({
   numeral,
   title,
   rated,
+  className,
   children,
 }: {
   id: string;
   numeral: string;
   title: string;
   rated: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
       id={id}
+      // scroll-mt clears the taller mobile sticky bar (header + section tabs)
+      // when a section is scrolled into view on switch.
+      className={cn("scroll-mt-[118px] sm:scroll-mt-0", className)}
       style={{
         background: WSET.cream,
         border: `1px solid ${WSET.border}`,
@@ -161,6 +179,11 @@ export function WsetSheet({
   const [activeId, setActiveId] = useState<string>("appearance");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  // Phones show one WSET section at a time (progressive disclosure); desktop
+  // still stacks all four with the scroll-spy rail.
+  const [mobileSection, setMobileSection] =
+    useState<(typeof SECTION_IDS)[number]>("appearance");
+  const [menuOpen, setMenuOpen] = useState(false);
   const dirty = useMemo(
     () => JSON.stringify(state) !== JSON.stringify(initial),
     [state, initial],
@@ -228,12 +251,22 @@ export function WsetSheet({
     : saveState === "saved" ? "Saved ✓"
     : saveState === "error" ? "Retry save"
     : "Save note";
+  const saveLabelShort =
+    saveState === "saving" ? "Saving…"
+    : saveState === "saved" ? "Saved ✓"
+    : saveState === "error" ? "Retry"
+    : "Save";
+
+  const discard = useCallback(() => {
+    if (dirty) setConfirmDiscard(true);
+    else onDiscard?.();
+  }, [dirty, onDiscard]);
 
   return (
     <div className="wset-sheet min-w-0" style={{ color: WSET.body }}>
       <div
         className={cn(
-          "sticky z-30 mb-4 flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3",
+          "sticky z-30 mb-4 py-2.5 sm:py-3",
           // Full-bleed on phones so the bar spans the whole screen like a real
           // app header. A modal is a full-screen box with a known p-4, so a
           // plain -mx-4 reaches the edges without any viewport math (the 50vw
@@ -250,20 +283,29 @@ export function WsetSheet({
           borderBottom: `1px solid ${WSET.border}`,
         }}
       >
-        <span
-          className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold sm:text-base"
-          style={{ color: WSET.ink }}
-        >
-          {title}
-        </span>
-        <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end sm:gap-2.5">
-          <span style={{ fontSize: 12.5, color: WSET.muted, whiteSpace: "nowrap" }}>
-            <b style={{ color: WSET.ink }}>{done}</b> of {total} assessed
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span
+            className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold sm:text-base"
+            style={{ color: WSET.ink }}
+          >
+            {title}
+          </span>
+          <span
+            className="text-[11.5px] sm:text-[12.5px]"
+            style={{ color: WSET.muted, whiteSpace: "nowrap" }}
+          >
+            <b style={{ color: WSET.ink }}>{done}</b>
+            <span className="max-sm:hidden"> of </span>
+            <span className="sm:hidden">/</span>
+            {total} assessed
           </span>
           {onDiscard ? (
+            // Desktop keeps the Discard button; on phones it moves into the
+            // ⋯ menu so Save doesn't share weight with a rare action.
             <button
               type="button"
-              onClick={() => (dirty ? setConfirmDiscard(true) : onDiscard())}
+              className="max-sm:hidden"
+              onClick={discard}
               style={{
                 borderRadius: 999,
                 padding: "8px 14px",
@@ -283,9 +325,9 @@ export function WsetSheet({
             type="button"
             onClick={handleSave}
             disabled={saveState === "saving"}
+            className="px-3.5 py-1.5 sm:px-4 sm:py-2"
             style={{
               borderRadius: 999,
-              padding: "8px 16px",
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
@@ -295,8 +337,130 @@ export function WsetSheet({
               whiteSpace: "nowrap",
             }}
           >
-            {saveLabel}
+            <span className="sm:hidden">{saveLabelShort}</span>
+            <span className="max-sm:hidden">{saveLabel}</span>
           </button>
+          {onDiscard ? (
+            <div className="relative sm:hidden">
+              <button
+                type="button"
+                aria-label="More actions"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((o) => !o)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  border: `1px solid ${WSET.border}`,
+                  background: "transparent",
+                  color: WSET.muted,
+                  fontSize: 16,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                }}
+              >
+                ⋯
+              </button>
+              {menuOpen ? (
+                <>
+                  <div
+                    aria-hidden
+                    onClick={() => setMenuOpen(false)}
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                  />
+                  <div
+                    role="menu"
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 6px)",
+                      zIndex: 41,
+                      minWidth: 150,
+                      padding: 5,
+                      background: WSET.cream,
+                      border: `1px solid ${WSET.border}`,
+                      borderRadius: 12,
+                      boxShadow: "0 8px 28px rgba(70,25,40,0.18)",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        discard();
+                      }}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "9px 12px",
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        border: "none",
+                        background: "none",
+                        color: WSET.ink,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Discard note
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-1 sm:hidden">
+          {navItems.map((s) => {
+            const active = s.id === mobileSection;
+            const complete = s.total > 0 && s.done >= s.total;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  setMobileSection(s.id as (typeof SECTION_IDS)[number]);
+                  // After the hidden card mounts, line its top up under the bar.
+                  requestAnimationFrame(() =>
+                    document.getElementById(s.id)?.scrollIntoView(),
+                  );
+                }}
+                style={{
+                  borderRadius: 10,
+                  padding: "5px 2px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: active ? WSET.burgundy : "#F3EAD6",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: active ? WSET.creamText : WSET.ink,
+                  }}
+                >
+                  {s.name === "Conclusions" ? "Conclusion" : s.name}
+                </span>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 9.5,
+                    fontWeight: 600,
+                    color: active ? WSET.creamText : complete ? WSET.gold : WSET.faint,
+                  }}
+                >
+                  {complete ? "✓" : `${s.done}/${s.total}`}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -320,14 +484,14 @@ export function WsetSheet({
         )}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`}>
-            <Row label="Clarity" sub={label(state.clarity)}>
+          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={mobileSection !== "appearance" ? "max-sm:hidden" : undefined}>
+            <Row label="Clarity" value={valueLabel(state.clarity)}>
               <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
             </Row>
-            <Row label="Intensity" sub={label(state.appearanceIntensity)}>
+            <Row label="Intensity" value={valueLabel(state.appearanceIntensity)}>
               <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={LABELS} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
             </Row>
-            <Row label="Colour" sub={label(state.colourHue)}>
+            <Row label="Colour" value={valueLabel(state.colourHue)}>
               <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} />
             </Row>
             <Row label="Other observations" sub="optional">
@@ -335,8 +499,8 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`}>
-            <Row label="Condition" sub={label(state.condition)}>
+          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={mobileSection !== "nose" ? "max-sm:hidden" : undefined}>
+            <Row label="Condition" value={valueLabel(state.condition)}>
               <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
             </Row>
             {state.condition === "UNCLEAN" ? (
@@ -344,30 +508,30 @@ export function WsetSheet({
                 <PillGroup multi options={FAULTS} labels={LABELS} value={state.faults} onChange={(v) => set("faults", v)} />
               </Row>
             ) : null}
-            <Row label="Intensity" sub={label(state.noseIntensity)}>
+            <Row label="Intensity" value={valueLabel(state.noseIntensity)}>
               <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
             </Row>
-            <Row label="Development" sub={label(state.development)}>
+            <Row label="Development" value={valueLabel(state.development)}>
               <SnapSlider stops={DEVELOPMENT_STOPS} labels={LABELS} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
             <Row wide label="Aroma characteristics" sub="select all that apply">
-              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} />
+              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle="Aroma characteristics" />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`}>
-            <Row label="Sweetness" sub={label(state.sweetness)}>
+          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={mobileSection !== "palate" ? "max-sm:hidden" : undefined}>
+            <Row label="Sweetness" value={valueLabel(state.sweetness)}>
               <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
             </Row>
-            <Row label="Acidity" sub={label(state.acidity)}>
+            <Row label="Acidity" value={valueLabel(state.acidity)}>
               <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.acidity} onChange={(v) => set("acidity", v)} />
             </Row>
-            <Row label="Tannin" sub={label(state.tannin)}>
+            <Row label="Tannin" value={valueLabel(state.tannin)}>
               <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.tannin} onChange={(v) => set("tannin", v)} />
             </Row>
             <Row label="Tannin nature" sub="optional">
               <PillGroup multi options={TANNIN_NATURE} labels={LABELS} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
             </Row>
-            <Row label="Alcohol" sub={label(state.alcohol)}>
+            <Row label="Alcohol" value={valueLabel(state.alcohol)}>
               <SnapSlider
                 stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
                 labels={LABELS}
@@ -375,15 +539,15 @@ export function WsetSheet({
                 onChange={(v) => set("alcohol", v)}
               />
             </Row>
-            <Row label="Body" sub={label(state.body)}>
+            <Row label="Body" value={valueLabel(state.body)}>
               <SnapSlider stops={BODY_STOPS} labels={LABELS} value={state.body} onChange={(v) => set("body", v)} />
             </Row>
             {wine.style === "SPARKLING" ? (
-              <Row label="Mousse" sub={state.mousse ? label(state.mousse) : "required — sparkling"}>
+              <Row label="Mousse" value={valueLabel(state.mousse)} sub={state.mousse ? undefined : "required — sparkling"}>
                 <PillGroup options={MOUSSE} labels={LABELS} value={state.mousse} onChange={(v) => set("mousse", v)} />
               </Row>
             ) : null}
-            <Row label="Flavour intensity" sub={label(state.flavourIntensity)}>
+            <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
               <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
             </Row>
             <Row wide label="Flavour characteristics" sub="what you taste, not just smell">
@@ -393,21 +557,22 @@ export function WsetSheet({
                 onChange={(ids) => set("palateTermIds", ids)}
                 copyFrom={{ label: "Copy from nose", ids: state.noseTermIds }}
                 colour={wine.colour}
+                sheetTitle="Flavour characteristics"
               />
             </Row>
-            <Row label="Finish" sub={label(state.finish)}>
+            <Row label="Finish" value={valueLabel(state.finish)}>
               <SnapSlider stops={FINISH_STOPS} labels={LABELS} value={state.finish} onChange={(v) => set("finish", v)} />
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`}>
+          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={mobileSection !== "conclusions" ? "max-sm:hidden" : undefined}>
             <Row label="Point Score" sub="100-point scale">
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
             </Row>
-            <Row label="Price category" sub={label(state.priceCategory)}>
+            <Row label="Price category" value={valueLabel(state.priceCategory)}>
               <PillGroup options={PRICE} labels={LABELS} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
             </Row>
-            <Row label="Readiness" sub={label(state.readiness)}>
+            <Row label="Readiness" value={valueLabel(state.readiness)}>
               <PillGroup options={READINESS} labels={LABELS} value={state.readiness} onChange={(v) => set("readiness", v)} />
             </Row>
             <Row label="Taster's notes" sub="free text">

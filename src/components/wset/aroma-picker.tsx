@@ -17,20 +17,31 @@ const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
 // sort order); a summary strip lists every selection with remove/clear. The
 // palate instance passes `copyFrom` to surface a "Copy from nose" button that
 // unions the nose selections in.
+//
+// Phones don't get the whole vocabulary inline — the tasting sheet shows only
+// the selected chips plus "+ Add", which opens a bottom sheet where the
+// clusters stack vertically and collapse (ones holding selections stay open).
 export function AromaPicker({
   terms,
   selectedIds,
   onChange,
   copyFrom,
   colour,
+  sheetTitle = "Aromas & flavours",
 }: {
   terms: AromaTerm[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   copyFrom?: { label: string; ids: string[] };
   colour?: WineColour | null;
+  /** Heading of the mobile bottom-sheet picker. */
+  sheetTitle?: string;
 }) {
   const [activeOrigin, setActiveOrigin] = useState<AromaOrigin>("PRIMARY");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // Cluster open/closed in the mobile sheet: explicit taps win; otherwise a
+  // cluster is open exactly when something in it is selected.
+  const [openOverrides, setOpenOverrides] = useState<Record<string, boolean>>({});
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(terms.map((t) => [t.id, t])), [terms]);
 
@@ -64,6 +75,53 @@ export function AromaPicker({
 
   return (
     <div>
+      {/* Phones: selection summary + Add. The vocabulary itself lives in the
+          bottom sheet so the tasting note stays compact. */}
+      <div className="sm:hidden">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
+          {selectedIds.map((id) => {
+            const term = byId.get(id);
+            if (!term) return null;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-label={`Remove ${term.term}`}
+                onClick={() => toggle(id)}
+                style={{
+                  borderRadius: 999,
+                  padding: "4px 11px",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  background: WSET.burgundy,
+                  border: "none",
+                  color: WSET.creamText,
+                }}
+              >
+                {term.term} ×
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            style={{
+              borderRadius: 999,
+              padding: "4px 12px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              background: "transparent",
+              border: `1.5px dashed ${WSET.dotBorder}`,
+              color: "#7A5F35",
+            }}
+          >
+            + Add
+          </button>
+        </div>
+      </div>
+
+      <div className="max-sm:hidden">
       <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}`, marginBottom: 12 }}>
         {ORIGINS.map(({ origin, label, caption }) => {
           const active = origin === activeOrigin;
@@ -206,6 +264,231 @@ export function AromaPicker({
             >
               clear
             </button>
+          </div>
+        </div>
+      ) : null}
+      </div>
+
+      {sheetOpen ? (
+        <div
+          className="sm:hidden"
+          role="dialog"
+          aria-modal="true"
+          style={{ position: "fixed", inset: 0, zIndex: 70 }}
+        >
+          <div
+            onClick={() => setSheetOpen(false)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(30,10,17,0.45)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              maxHeight: "88dvh",
+              display: "flex",
+              flexDirection: "column",
+              background: WSET.cream,
+              borderRadius: "20px 20px 0 0",
+              boxShadow: "0 -12px 40px rgba(70,25,40,0.3)",
+            }}
+          >
+            <div style={{ padding: "12px 16px 0", borderBottom: `1px solid ${WSET.hairline}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span
+                  className="font-heading"
+                  style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: WSET.ink }}
+                >
+                  {sheetTitle}
+                </span>
+                <span style={{ fontSize: 11.5, color: WSET.muted2, whiteSpace: "nowrap" }}>
+                  {selectedIds.length} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  style={{
+                    borderRadius: 999,
+                    padding: "7px 16px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    border: "none",
+                    background: WSET.burgundy,
+                    color: WSET.creamText,
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+              {/* Origin tabs: names only here — the active tab's meaning sits
+                  once below, instead of six concepts in one cramped row. */}
+              <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
+                {ORIGINS.map(({ origin, label }) => {
+                  const active = origin === activeOrigin;
+                  const count = countByOrigin[origin] ?? 0;
+                  return (
+                    <button
+                      key={origin}
+                      type="button"
+                      onClick={() => setActiveOrigin(origin)}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "baseline",
+                        gap: 6,
+                        padding: "0 0 8px",
+                        fontSize: 13.5,
+                        cursor: "pointer",
+                        background: "none",
+                        border: "none",
+                        borderBottom: active ? `2px solid ${WSET.burgundy}` : "2px solid transparent",
+                        marginBottom: -1,
+                        fontWeight: active ? 600 : 500,
+                        color: active ? WSET.ink : WSET.muted,
+                      }}
+                    >
+                      {label}
+                      {count > 0 ? (
+                        <span
+                          style={{
+                            borderRadius: 999,
+                            background: WSET.goldSoft,
+                            color: WSET.pillText,
+                            fontSize: 10.5,
+                            fontWeight: 600,
+                            padding: "1px 7px",
+                          }}
+                        >
+                          {count}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ padding: "8px 16px 0", fontSize: 11, color: WSET.muted2 }}>
+              {(() => {
+                const c = ORIGINS.find((o) => o.origin === activeOrigin)!.caption;
+                return c.charAt(0).toUpperCase() + c.slice(1);
+              })()}
+            </div>
+            {copyFrom && copyFrom.ids.length > 0 ? (
+              <div style={{ padding: "8px 16px 0" }}>
+                <button
+                  type="button"
+                  onClick={() => onChange([...new Set([...selectedIds, ...copyFrom.ids])])}
+                  style={{
+                    borderRadius: 999,
+                    padding: "5px 12px",
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: `1px solid ${WSET.pillBorder}`,
+                    color: "#7A5F35",
+                  }}
+                >
+                  {copyFrom.label}
+                </button>
+              </div>
+            ) : null}
+            <div
+              style={{
+                overflowY: "auto",
+                overscrollBehavior: "contain",
+                padding: "4px 16px 28px",
+              }}
+            >
+              {groups.map((group) => {
+                const key = `${activeOrigin}:${group.name}`;
+                const selCount = group.items.filter((t) => selected.has(t.id)).length;
+                const open = openOverrides[key] ?? selCount > 0;
+                return (
+                  <div key={group.name} style={{ borderBottom: `1px solid ${WSET.hairline}` }}>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() => setOpenOverrides((o) => ({ ...o, [key]: !open }))}
+                      style={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "11px 0",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span
+                        style={{
+                          flex: 1,
+                          textAlign: "left",
+                          fontSize: 11,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.07em",
+                          fontWeight: 600,
+                          color: WSET.gold,
+                        }}
+                      >
+                        {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
+                      </span>
+                      {selCount > 0 ? (
+                        <span
+                          style={{
+                            borderRadius: 999,
+                            background: WSET.goldSoft,
+                            color: WSET.pillText,
+                            fontSize: 10.5,
+                            fontWeight: 600,
+                            padding: "1px 7px",
+                          }}
+                        >
+                          {selCount}
+                        </span>
+                      ) : null}
+                      <span aria-hidden style={{ fontSize: 11, color: WSET.muted2 }}>
+                        {open ? "▾" : "▸"}
+                      </span>
+                    </button>
+                    {open ? (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 0 12px" }}>
+                        {group.items.map((term) => {
+                          const isSel = selected.has(term.id);
+                          return (
+                            <button
+                              key={term.id}
+                              type="button"
+                              aria-pressed={isSel}
+                              onClick={() => toggle(term.id)}
+                              style={{
+                                borderRadius: 999,
+                                padding: "6px 13px",
+                                fontSize: 12.5,
+                                lineHeight: 1.35,
+                                cursor: "pointer",
+                                background: isSel ? WSET.burgundy : WSET.pillBg,
+                                border: `1px solid ${WSET.pillBorder}`,
+                                color: isSel ? WSET.creamText : WSET.pillText,
+                                fontWeight: isSel ? 600 : 500,
+                              }}
+                            >
+                              {term.term}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : null}
