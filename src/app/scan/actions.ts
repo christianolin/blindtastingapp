@@ -265,6 +265,26 @@ export async function resolveWinePrefill(
     }
   }
 
+  // Designation ("Gran Reserva", "Kabinett", "Brut Nature"…) → the reference
+  // row the form's picker uses. Exact accent-insensitive name match only — a
+  // fuzzy hit here would quietly relabel the wine's legal tier. A row scoped to
+  // the wine's country beats a global one ("Reserva" exists for several
+  // countries with different rules).
+  let typeDesignationId = "";
+  if (extracted.designation) {
+    const { data: tds } = await supabase
+      .from("type_designations")
+      .select("id, name, country_id")
+      .eq("is_active", true);
+    const needle = fold(extracted.designation);
+    const hits = (tds ?? []).filter((t) => fold(t.name) === needle);
+    const pick =
+      (countryId && hits.find((t) => t.country_id === countryId)) ||
+      hits.find((t) => !t.country_id) ||
+      (hits.length === 1 ? hits[0] : undefined);
+    if (pick) typeDesignationId = pick.id;
+  }
+
   let producerId = "";
   let producerLabel: string | null = null;
   if (extracted.producer) {
@@ -321,11 +341,13 @@ export async function resolveWinePrefill(
     blend: blend.length > 0 ? blend : [{ grapeId: "", percentage: "" }],
     producerId,
     producerLabel,
-    typeDesignationId: "",
+    typeDesignationId,
     colour: extracted.colour,
     style: extracted.style,
     wineName: extracted.wineName ?? "",
     description: extracted.description,
+    estimatedPrice:
+      extracted.estimatedPriceDkk != null ? String(extracted.estimatedPriceDkk) : "",
     vintageKind: extracted.vintageKind,
     vintageYear: extracted.vintageYear != null ? String(extracted.vintageYear) : "",
     tawnyYears: "",

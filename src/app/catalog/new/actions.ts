@@ -94,6 +94,8 @@ export type NewCatalogWine = {
   vintageYear: number | null;
   vintageTawnyYears: number | null;
   imageUrl?: string | null;
+  /** Estimated market price per bottle in DKK — scan-suggested, user-editable. */
+  estimatedPrice?: number | null;
 };
 
 export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: string }> {
@@ -120,6 +122,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,
       image_url: input.imageUrl ?? null,
+      estimated_price: input.estimatedPrice ?? null,
       created_by: user.id,
     })
     .select("id")
@@ -171,6 +174,7 @@ export async function updateCatalogWine(
       vintage_year: input.vintageYear,
       vintage_tawny_years: input.vintageTawnyYears,
       image_url: input.imageUrl ?? null,
+      estimated_price: input.estimatedPrice ?? null,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);

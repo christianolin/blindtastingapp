@@ -37,6 +37,8 @@ type CatalogEmbed = {
   image_url?: string | null;
   primary_grape?: Rel;
   secondary_grape?: Rel;
+  estimated_price?: number | string | null;
+  estimated_price_currency?: string | null;
 };
 
 function embedTitle(c: CatalogEmbed | null): string {
@@ -94,7 +96,7 @@ export default async function CellarPage({
     .from("cellar_lots")
     .select(
       "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, created_at, " +
-        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, " +
+        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, estimated_price, estimated_price_currency, " +
         "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
         "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
         "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
@@ -148,7 +150,19 @@ export default async function CellarPage({
     const regionName =
       relName(cw?.region ?? null) ?? relName(cw?.country ?? null) ?? "Unknown";
     regionCounts.set(regionName, (regionCounts.get(regionName) ?? 0) + row.quantity);
-    if (pricePerBottle != null && row.currency === preferredCurrency) {
+    // Value prefers the wine's market estimate over what this lot happened to
+    // cost (owner decision): purchase price is history, the estimate is worth.
+    // Each candidate still has to be in the viewer's currency — no conversion.
+    const estimate =
+      cw?.estimated_price == null ? null : Number(cw.estimated_price);
+    const estimateUsable =
+      estimate != null &&
+      Number.isFinite(estimate) &&
+      (cw?.estimated_price_currency ?? "DKK") === preferredCurrency;
+    if (estimateUsable) {
+      totalValue += row.quantity * estimate;
+      hasValue = true;
+    } else if (pricePerBottle != null && row.currency === preferredCurrency) {
       totalValue += row.quantity * pricePerBottle;
       hasValue = true;
     }
@@ -266,9 +280,18 @@ export default async function CellarPage({
       .from("cellar_lots")
       .select(
         "quantity, purchased_quantity, price_per_bottle, currency, purchased_on, drink_from, drink_to, catalog_wine_id, " +
-          "catalog_wines(colour, vintage_kind, vintage_year, country:countries(name), region:regions(name))",
+          "catalog_wines(colour, vintage_kind, vintage_year, estimated_price, estimated_price_currency, country:countries(name), region:regions(name))",
       )
       .eq("owner_id", user.id);
+    type StatEmbed = {
+      colour: string | null;
+      vintage_kind: "YEAR" | "NV" | "TAWNY";
+      vintage_year: number | null;
+      estimated_price: number | string | null;
+      estimated_price_currency: string | null;
+      country: Rel;
+      region: Rel;
+    };
     const lots: StatLotRow[] = (
       (statRows ?? []) as unknown as Array<{
         quantity: number;
@@ -279,22 +302,7 @@ export default async function CellarPage({
         drink_from: number | null;
         drink_to: number | null;
         catalog_wine_id: string;
-        catalog_wines:
-          | {
-              colour: string | null;
-              vintage_kind: "YEAR" | "NV" | "TAWNY";
-              vintage_year: number | null;
-              country: Rel;
-              region: Rel;
-            }
-          | Array<{
-              colour: string | null;
-              vintage_kind: "YEAR" | "NV" | "TAWNY";
-              vintage_year: number | null;
-              country: Rel;
-              region: Rel;
-            }>
-          | null;
+        catalog_wines: StatEmbed | StatEmbed[] | null;
       }>
     ).map((r) => {
       const c = unwrap(r.catalog_wines);
@@ -303,6 +311,9 @@ export default async function CellarPage({
         purchasedQuantity: r.purchased_quantity,
         pricePerBottle: r.price_per_bottle == null ? null : Number(r.price_per_bottle),
         currency: r.currency,
+        estimatedPrice:
+          c?.estimated_price == null ? null : Number(c.estimated_price),
+        estimatedPriceCurrency: c?.estimated_price_currency ?? "DKK",
         purchasedOn: r.purchased_on,
         drinkFrom: r.drink_from,
         drinkTo: r.drink_to,

@@ -33,6 +33,8 @@ type CatalogEmbed = {
   image_url?: string | null;
   primary_grape?: Rel;
   secondary_grape?: Rel;
+  estimated_price?: number | string | null;
+  estimated_price_currency?: string | null;
 };
 
 function embedTitle(c: CatalogEmbed | null): string {
@@ -86,7 +88,7 @@ export default async function UserCellarPage({
       .from("cellar_lots")
       .select(
         "id, bottle_size_ml, quantity, price_per_bottle, currency, drink_from, drink_to, storage_location, catalog_wine_id, created_at, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, " +
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, estimated_price, estimated_price_currency, " +
           "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
           "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
           "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
@@ -115,7 +117,18 @@ export default async function UserCellarPage({
       const regionName =
         relName(cw?.region ?? null) ?? relName(cw?.country ?? null) ?? "Unknown";
       regionCounts.set(regionName, (regionCounts.get(regionName) ?? 0) + row.quantity);
-      if (pricePerBottle != null && row.currency === currency) {
+      // Same estimate-first rule as the owner's own cellar page, valued in the
+      // OWNER's preferred currency (it is their cellar being summed).
+      const estimate =
+        cw?.estimated_price == null ? null : Number(cw.estimated_price);
+      const estimateUsable =
+        estimate != null &&
+        Number.isFinite(estimate) &&
+        (cw?.estimated_price_currency ?? "DKK") === currency;
+      if (estimateUsable) {
+        totalValue += row.quantity * estimate;
+        hasValue = true;
+      } else if (pricePerBottle != null && row.currency === currency) {
         totalValue += row.quantity * pricePerBottle;
         hasValue = true;
       }

@@ -29,7 +29,9 @@ export function CellarSummary({
             { value: totalBottles, label: "total bottles" },
             {
               value: hasValue ? Math.round(totalValue).toLocaleString() : "\u2014",
-              label: `${currency} value`,
+              // "est." because the sum now prefers per-wine market estimates
+              // over purchase prices — it is a valuation, not a receipt.
+              label: `${currency} est. value`,
             },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center text-center">
@@ -71,7 +73,7 @@ export function CellarSummary({
           icon={Coins}
           tint="gold"
           value={hasValue ? Math.round(totalValue).toLocaleString() : "\u2014"}
-          label={`${currency} value`}
+          label={`${currency} est. value`}
         />
         <div className="rounded-xl border border-border bg-card p-4 sm:col-span-3 lg:col-span-1">
           <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">

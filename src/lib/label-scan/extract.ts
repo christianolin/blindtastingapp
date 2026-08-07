@@ -2,8 +2,9 @@ import "server-only";
 
 // Structured wine-label read for the Scan feature. Calls the Anthropic Messages
 // API directly over fetch (no SDK dependency) with the uploaded label image URL
-// and a strict-JSON prompt, then normalises the result into ExtractedLabel.
-// Server-only: the API key never reaches the browser.
+// and a FORCED TOOL CALL, so the reply is schema-valid JSON by construction —
+// there is no "return only JSON" prompt to disobey and nothing to slice out of
+// prose. Server-only: the API key never reaches the browser.
 
 export type ExtractedLabel = {
   producer: string | null;
@@ -11,45 +12,161 @@ export type ExtractedLabel = {
   appellation: string | null;
   region: string | null;
   country: string | null;
+  /** The label's quality/ageing/style term (Gran Reserva, Kabinett…), canonical form. */
+  designation: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: number | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
   style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
   grapes: { name: string; percentage: number | null }[];
   description: string | null;
+  /** Typical current retail price in DKK — an estimate, editable, never summed as fact. */
+  estimatedPriceDkk: number | null;
   confidence: "high" | "medium" | "low";
   rawText: string;
 };
 
 // Owner-provided, vision-capable. Swap here if a newer model is preferred.
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-sonnet-5";
 
-const PROMPT = `You are a wine expert reading a wine bottle label from a photo.
-Return ONLY a single JSON object — no prose, no markdown code fences — with exactly these keys:
-"producer": winery / producer name, or null
-"wineName": the cuvee / special bottling name (not the producer, not the appellation), or null
-"appellation": the wine's geographic denomination — AOC/AOP, DOC/DOCG, DO/DOCa, IGT/IGP, PDO/PGI, AVA, etc. A regional PGI counts: a label printing "PUGLIA — Indicazione Geografica Protetta" IS the appellation "Puglia IGT". Italian labels print the EU term (IGP/DOP) for what wine lists still call IGT/DOC/DOCG — return the traditional form ("Puglia IGT", not "Puglia IGP"). Repeat the name here even when it is the same word as the region. Return null ONLY when the wine truly carries no geographic indication (Vin de France, Vino d'Italia, Deutscher Wein, generic table wine)
-"region": the wine region — infer it from the appellation or producer even when it is not printed (e.g. Amarone della Valpolicella -> Veneto), or null
-"country": the country — infer it too (e.g. -> Italy), or null
-"vintageKind": "YEAR" if a vintage year is shown, "NV" for non-vintage, "TAWNY" for an "X years" tawny
-"vintageYear": the 4-digit vintage year as a number, or null
-"colour": one of "WHITE","ROSE","RED","ORANGE", or null if unclear
-"style": one of "STILL" (a normal still wine — most reds/whites, including Amarone), "SPARKLING" (Champagne, Prosecco, Cava…), "SWEET" (dessert / late-harvest, e.g. Sauternes, Tokaji, Port is FORTIFIED not SWEET), "FORTIFIED" (Port, Sherry, Madeira, VDN), or null if unclear
-"grapes": array of objects {"name": string, "percentage": number or null} for the wine's grape blend. Include ALL the major grapes, not just the primary one. Name each grape by its canonical international variety name — NOT a local synonym, clone or translation, and with no parenthetical qualifier (e.g. "Sangiovese" not "Brunello"/"Sangiovese Grosso"/"Prugnolo Gentile"; "Grenache" not "Garnacha"/"Cannonau"; "Syrah" not "Shiraz"; "Pinot Noir" not "Pinot Nero"/"Spätburgunder"). Use blend percentages printed on the label; otherwise the typical proportions well-known for this wine or its appellation, or null when they are genuinely unknown.
-"description": a 2-4 sentence description for a wine catalog, combining the label text with well-known facts about this wine / producer / appellation. This is an editable draft; general knowledge is fine, but do not fabricate specific claims you are unsure of.
-"confidence": "high", "medium", or "low" — how clearly you could read the label
-"rawText": all text you can read on the label, verbatim
-If the image is not a wine label, set every field to null/empty, "confidence" to "low", and briefly say so in "rawText".`;
+// The schema IS the prompt: each field's description carries its extraction
+// rules, so the guidance sits exactly where the model fills the value in.
+const LABEL_TOOL = {
+  name: "record_wine_label",
+  description:
+    "Record the structured reading of a wine bottle label photographed for a cellar app. Fill every field from the label where printed, and from well-established knowledge of the wine, producer or appellation where not. Null means 'genuinely unknown', never 'lazy'.",
+  input_schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      producer: {
+        type: ["string", "null"],
+        description: "Winery / producer name, or null.",
+      },
+      wineName: {
+        type: ["string", "null"],
+        description:
+          "The cuvée / special bottling name — not the producer, not the appellation — or null.",
+      },
+      appellation: {
+        type: ["string", "null"],
+        description:
+          'The wine\'s geographic denomination — AOC/AOP, DOC/DOCG, DO/DOCa, IGT/IGP, PDO/PGI, AVA, etc. A regional PGI counts: a label printing "PUGLIA — Indicazione Geografica Protetta" IS the appellation "Puglia IGT". Italian labels print the EU term (IGP/DOP) for what wine lists still call IGT/DOC/DOCG — return the traditional form ("Puglia IGT", not "Puglia IGP"). Repeat the name even when it equals the region. Null ONLY when the wine truly carries no geographic indication (Vin de France, Vino d\'Italia, Deutscher Wein).',
+      },
+      region: {
+        type: ["string", "null"],
+        description:
+          "The wine region — infer it from the appellation or producer even when not printed (Amarone della Valpolicella → Veneto), or null.",
+      },
+      country: {
+        type: ["string", "null"],
+        description: "The country — infer it too (→ Italy), or null.",
+      },
+      designation: {
+        type: ["string", "null"],
+        description:
+          'The label\'s legal quality, ageing or style term, in its canonical form: "Gran Reserva", "Reserva", "Crianza", "Riserva", "Gran Selezione", "Kabinett", "Spätlese", "Auslese", "Grosses Gewächs", "Grand Cru", "Premier Cru", "Brut", "Brut Nature", "Extra Dry", "Vintage", "LBV", "Colheita", "Fino", "Amontillado", "VORS"… Return the term itself, not a sentence. Null when the label carries none. Do NOT put grape names or fantasy names here.',
+      },
+      vintageKind: {
+        type: "string",
+        enum: ["YEAR", "NV", "TAWNY"],
+        description:
+          '"YEAR" if a vintage year is shown, "NV" for non-vintage, "TAWNY" for an "X years" tawny.',
+      },
+      vintageYear: {
+        type: ["integer", "null"],
+        description: "The 4-digit vintage year, or null.",
+      },
+      colour: {
+        type: ["string", "null"],
+        enum: ["WHITE", "ROSE", "RED", "ORANGE", null],
+        description: "Null if unclear.",
+      },
+      style: {
+        type: ["string", "null"],
+        enum: ["STILL", "SPARKLING", "SWEET", "FORTIFIED", null],
+        description:
+          '"STILL" for normal reds/whites including Amarone; "SPARKLING" for Champagne, Prosecco, Cava…; "SWEET" for dessert / late-harvest (Sauternes, Tokaji); "FORTIFIED" for Port, Sherry, Madeira, VDN — Port is FORTIFIED, not SWEET. Null if unclear.',
+      },
+      grapes: {
+        type: "array",
+        description:
+          'ALL major grapes in the blend, not just the primary. Canonical international variety names — never a local synonym, clone or translation, no parenthetical qualifiers ("Sangiovese" not "Brunello"/"Prugnolo Gentile"; "Grenache" not "Garnacha"/"Cannonau"; "Syrah" not "Shiraz"; "Pinot Noir" not "Pinot Nero"/"Spätburgunder"). Percentages from the label; else the proportions well-known for this wine or appellation; else null.',
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            name: { type: "string" },
+            percentage: { type: ["number", "null"] },
+          },
+          required: ["name", "percentage"],
+        },
+      },
+      description: {
+        type: ["string", "null"],
+        description:
+          "2-4 sentences of REFERENCE NOTES for a wine enthusiast's cellar — the register of an encyclopedia entry, not a shop shelf-talker. Include only verifiable facts you are confident of: terroir and soils, the appellation's production rules as they apply to this wine (ageing minimums, yields, permitted varieties), élevage (vessel, months), production scale, the estate's founding or ownership where notable, stated neutrally. FORBIDDEN: describing the bottle, label or packaging; praise and promotional adjectives (legendary, prestigious, stunning, exceptional, iconic, renowned) unless part of an official classification's name; food pairings; 'perfect for' anything; every form of sales tone. A wine about which little is known gets a SHORT description — two dry sentences beat four glowing ones. Facts you cannot stand behind are omitted, not hedged. Null when you cannot say anything factual beyond what other fields already carry.",
+      },
+      estimatedPriceDkk: {
+        type: ["number", "null"],
+        description:
+          "Typical current retail price for THIS wine and vintage in Danish kroner (DKK), as a plain number. Base it on the wine's market level: appellation, producer standing, vintage. This is an editable estimate for cellar valuation — a defensible ballpark is wanted, but null is the right answer when the wine is too obscure to price with any confidence. Never invent precision (round to sensible figures).",
+      },
+      confidence: {
+        type: "string",
+        enum: ["high", "medium", "low"],
+        description: "How clearly the label could be read.",
+      },
+      rawText: {
+        type: "string",
+        description:
+          "All text readable on the label, verbatim. If the image is not a wine label, say so briefly here and null/empty every other field with confidence low.",
+      },
+    },
+    required: [
+      "producer",
+      "wineName",
+      "appellation",
+      "region",
+      "country",
+      "designation",
+      "vintageKind",
+      "vintageYear",
+      "colour",
+      "style",
+      "grapes",
+      "description",
+      "estimatedPriceDkk",
+      "confidence",
+      "rawText",
+    ],
+  },
+} as const;
+
+const PROMPT =
+  "Read this wine bottle label and record it with the record_wine_label tool. " +
+  "You are compiling reference data for a wine enthusiast's cellar, not writing marketing.";
 
 function str(v: unknown): string | null {
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 
-// Normalise the model's JSON into a safe, typed shape — never trust the raw
-// output. Unknown enum values fall back to sane defaults.
+// Normalise the model's JSON into a safe, typed shape — the schema constrains
+// the API's output, but this code must not trust the transport either.
 function coerce(o: Record<string, unknown>): ExtractedLabel {
+  const year =
+    typeof o.vintageYear === "number" ? o.vintageYear : Number(o.vintageYear);
+  const vintageYear =
+    Number.isInteger(year) && year > 1900 && year < 2100 ? year : null;
   const vk = o.vintageKind;
-  const vintageKind = vk === "NV" || vk === "TAWNY" ? vk : "YEAR";
+  // Unknown kind: a parsed year means YEAR; otherwise NV. The old behaviour
+  // defaulted to YEAR unconditionally — a guess presented as a reading.
+  const vintageKind =
+    vk === "YEAR" || vk === "NV" || vk === "TAWNY"
+      ? vk
+      : vintageYear != null
+        ? "YEAR"
+        : "NV";
   const col = o.colour;
   const colour =
     col === "WHITE" || col === "ROSE" || col === "RED" || col === "ORANGE" ? col : null;
@@ -61,16 +178,23 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
   const conf = o.confidence;
   const confidence =
     conf === "high" || conf === "medium" || conf === "low" ? conf : "low";
-  const year =
-    typeof o.vintageYear === "number" ? o.vintageYear : Number(o.vintageYear);
+  const priceRaw =
+    typeof o.estimatedPriceDkk === "number"
+      ? o.estimatedPriceDkk
+      : Number(o.estimatedPriceDkk);
+  const estimatedPriceDkk =
+    Number.isFinite(priceRaw) && priceRaw > 0 && priceRaw < 1_000_000
+      ? Math.round(priceRaw)
+      : null;
   return {
     producer: str(o.producer),
     wineName: str(o.wineName),
     appellation: str(o.appellation),
     region: str(o.region),
     country: str(o.country),
+    designation: str(o.designation),
     vintageKind,
-    vintageYear: Number.isInteger(year) && year > 1900 && year < 2100 ? year : null,
+    vintageYear,
     colour,
     style,
     grapes: Array.isArray(o.grapes)
@@ -93,33 +217,49 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
           .filter((g): g is { name: string; percentage: number | null } => !!g)
       : [],
     description: str(o.description),
+    estimatedPriceDkk,
     confidence,
     rawText: typeof o.rawText === "string" ? o.rawText : "",
   };
 }
 
-// Tolerate a stray ```json fence or leading prose by slicing the first {...}.
-function parseJson(text: string): Record<string, unknown> {
-  const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  const slice = start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned;
-  return JSON.parse(slice) as Record<string, unknown>;
+// One retry on transient failures (429 / 5xx / network). A scan is a user
+// standing with a bottle in hand — a single hiccup should not cost the photo.
+async function callAnthropic(body: string, key: string): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body,
+      });
+      if ((res.status === 429 || res.status >= 500) && attempt === 1) {
+        await new Promise((r) => setTimeout(r, 800));
+        continue;
+      }
+      return res;
+    } catch (error) {
+      if (attempt >= 2) throw error;
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
 }
 
 export async function extractLabel(imageUrl: string): Promise<ExtractedLabel> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY is not configured.");
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
+  const res = await callAnthropic(
+    JSON.stringify({
       model: MODEL,
-      max_tokens: 1024,
+      max_tokens: 2048,
+      tools: [LABEL_TOOL],
+      // Forced: the model MUST answer through the tool, so the output is
+      // schema-shaped JSON — no fences, no preamble, no slicing.
+      tool_choice: { type: "tool", name: LABEL_TOOL.name },
       messages: [
         {
           role: "user",
@@ -130,13 +270,19 @@ export async function extractLabel(imageUrl: string): Promise<ExtractedLabel> {
         },
       ],
     }),
-  });
+    key,
+  );
   if (!res.ok) {
     throw new Error(`Label read failed (Anthropic ${res.status}).`);
   }
   const data = (await res.json()) as {
-    content?: Array<{ type: string; text?: string }>;
+    content?: Array<{ type: string; name?: string; input?: unknown }>;
   };
-  const text = data.content?.find((c) => c.type === "text")?.text ?? "";
-  return coerce(parseJson(text));
+  const tool = data.content?.find(
+    (c) => c.type === "tool_use" && c.name === LABEL_TOOL.name,
+  );
+  if (!tool || typeof tool.input !== "object" || tool.input === null) {
+    throw new Error("Label read failed (no structured output).");
+  }
+  return coerce(tool.input as Record<string, unknown>);
 }

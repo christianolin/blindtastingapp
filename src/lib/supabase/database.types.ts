@@ -931,6 +931,8 @@ export type Database = {
           description: string | null;
           image_url: string | null;
           bottle_size_ml: number;
+          estimated_price: number | null;
+          estimated_price_currency: string;
           created_by: string;
           created_at: string;
           blind_pending: boolean;
@@ -953,6 +955,8 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           bottle_size_ml?: number;
+          estimated_price?: number | null;
+          estimated_price_currency?: string;
           created_by: string;
           created_at?: string;
           blind_pending?: boolean;

@@ -53,7 +53,7 @@ export function StatsPanel({ stats }: { stats: CellarStats }) {
   const tiles = [
     { label: "bottles", value: stats.totalBottles },
     { label: "wines", value: stats.distinctWines },
-    { label: `${stats.currency} value`, value: stats.value },
+        { label: `${stats.currency} est. value`, value: stats.value },
     { label: `${stats.currency} spent`, value: stats.spend },
   ];
   return (

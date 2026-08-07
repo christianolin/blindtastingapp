@@ -7,6 +7,9 @@ export type StatLotRow = {
   purchasedQuantity: number;
   pricePerBottle: number | null;
   currency: string;
+  /** The catalog wine's market estimate — preferred over purchase price for value. */
+  estimatedPrice: number | null;
+  estimatedPriceCurrency: string;
   purchasedOn: string | null;
   drinkFrom: number | null;
   drinkTo: number | null;
@@ -67,9 +70,20 @@ export function computeCellarStats(
     totalBottles += r.quantity;
     if (r.quantity > 0) wines.add(r.catalogWineId);
 
+    // VALUE prefers the wine's market estimate over the lot's purchase price
+    // (falling back when there is none); SPEND is deliberately still purchase
+    // history — an estimate says what the cellar is worth, not what it cost.
+    const estimateInPref =
+      r.estimatedPrice != null && r.estimatedPriceCurrency === preferredCurrency;
+    if (estimateInPref) {
+      value += r.quantity * (r.estimatedPrice as number);
+    } else if (r.pricePerBottle != null && inPref) {
+      value += r.quantity * r.pricePerBottle;
+    } else if (r.estimatedPrice != null || r.pricePerBottle != null) {
+      mixedCurrency = true;
+    }
     if (r.pricePerBottle != null) {
       if (inPref) {
-        value += r.quantity * r.pricePerBottle;
         spend += r.purchasedQuantity * r.pricePerBottle;
       } else {
         mixedCurrency = true;

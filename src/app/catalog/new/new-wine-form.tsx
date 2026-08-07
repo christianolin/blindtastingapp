@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
 import { WineIdentityFields } from "@/components/wine/wine-identity-fields";
@@ -36,6 +38,8 @@ export type WineFormInitial = {
   style: Style | null;
   wineName: string;
   description: string | null;
+  /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
+  estimatedPrice: string;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
@@ -107,6 +111,9 @@ export function NewWineForm({
   );
   const [vintageYear, setVintageYear] = useState(initialWine?.vintageYear ?? "");
   const [tawnyYears, setTawnyYears] = useState(initialWine?.tawnyYears ?? "");
+  const [estimatedPrice, setEstimatedPrice] = useState(
+    initialWine?.estimatedPrice ?? "",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(initialWine?.imageUrl ?? null);
@@ -165,6 +172,10 @@ export function NewWineForm({
         vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
         vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
         imageUrl,
+        estimatedPrice:
+          estimatedPrice.trim() && Number.isFinite(Number(estimatedPrice))
+            ? Number(estimatedPrice)
+            : null,
       };
       if (wineId) {
         await updateCatalogWine(wineId, payload);
@@ -228,6 +239,21 @@ export function NewWineForm({
         imageAspect="aspect-[3/4] max-w-40"
         onImageChange={setImageUrl}
       />
+
+      {/* Wine-level, not lot-level: this is the market estimate the cellar sums
+          (scan-suggested, always editable), not what someone paid. */}
+      <div className="flex max-w-56 flex-col gap-2">
+        <Label htmlFor="estimated-price">Estimated price (DKK)</Label>
+        <Input
+          id="estimated-price"
+          type="number"
+          min={0}
+          step="1"
+          value={estimatedPrice}
+          onChange={(e) => setEstimatedPrice(e.target.value)}
+          placeholder="e.g. 250"
+        />
+      </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" onClick={submit} disabled={pending}>
