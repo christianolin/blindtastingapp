@@ -153,17 +153,20 @@ export default async function CellarPage({
     // Value prefers the wine's market estimate over what this lot happened to
     // cost (owner decision): purchase price is history, the estimate is worth.
     // Each candidate still has to be in the viewer's currency — no conversion.
+    // Resolved ONCE here; the table renders the same number the total sums.
     const estimate =
       cw?.estimated_price == null ? null : Number(cw.estimated_price);
     const estimateUsable =
       estimate != null &&
       Number.isFinite(estimate) &&
       (cw?.estimated_price_currency ?? "DKK") === preferredCurrency;
-    if (estimateUsable) {
-      totalValue += row.quantity * estimate;
-      hasValue = true;
-    } else if (pricePerBottle != null && row.currency === preferredCurrency) {
-      totalValue += row.quantity * pricePerBottle;
+    const valuePerBottle = estimateUsable
+      ? estimate
+      : pricePerBottle != null && row.currency === preferredCurrency
+        ? pricePerBottle
+        : null;
+    if (valuePerBottle != null) {
+      totalValue += row.quantity * valuePerBottle;
       hasValue = true;
     }
     const best = bestNote.get(row.catalog_wine_id) ?? null;
@@ -185,8 +188,7 @@ export default async function CellarPage({
       drinkFrom: row.drink_from,
       drinkTo: row.drink_to,
       storageLocation: row.storage_location,
-      pricePerBottle,
-      currency: row.currency,
+      valuePerBottle,
       addedAt: row.created_at,
       bestScore: best?.score ?? null,
       bestNoteId: best?.id ?? null,

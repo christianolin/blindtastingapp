@@ -42,8 +42,13 @@ export type BottleRow = {
   drinkFrom: number | null;
   drinkTo: number | null;
   storageLocation: string | null;
-  pricePerBottle: number | null;
-  currency: string;
+  /**
+   * Effective per-bottle value in the page's display currency, already
+   * resolved by the caller: the wine's market estimate first, else the lot's
+   * purchase price, null when neither applies. The table never re-derives it,
+   * so the row, the sort and the summary total can never disagree.
+   */
+  valuePerBottle: number | null;
   addedAt: string;
   bestScore: number | null;
   bestNoteId: string | null;
@@ -110,9 +115,7 @@ export function CellarBottlesTable({
   const [grape, setGrape] = useState(ALL);
 
   const lotValue = (r: BottleRow) =>
-    r.pricePerBottle != null && r.currency === currency
-      ? r.pricePerBottle * r.quantity
-      : null;
+    r.valuePerBottle != null ? r.valuePerBottle * r.quantity : null;
 
   const countries = useMemo(
     () => [...new Set(rows.map((r) => r.country).filter(Boolean) as string[])].sort(),
@@ -160,9 +163,7 @@ export function CellarBottlesTable({
     });
     const dir = sort.dir === "asc" ? 1 : -1;
     const val = (r: BottleRow) =>
-      r.pricePerBottle != null && r.currency === currency
-        ? r.pricePerBottle * r.quantity
-        : -1;
+      r.valuePerBottle != null ? r.valuePerBottle * r.quantity : -1;
     const cmp = (a: BottleRow, b: BottleRow) => {
       switch (sort.key) {
         case "region":
@@ -184,7 +185,7 @@ export function CellarBottlesTable({
       }
     };
     return [...list].sort(cmp);
-  }, [rows, needle, sort, currency, country, region, colour, grape]);
+  }, [rows, needle, sort, country, region, colour, grape]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const clampedPage = Math.min(page, pageCount);

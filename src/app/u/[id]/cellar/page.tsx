@@ -118,18 +118,21 @@ export default async function UserCellarPage({
         relName(cw?.region ?? null) ?? relName(cw?.country ?? null) ?? "Unknown";
       regionCounts.set(regionName, (regionCounts.get(regionName) ?? 0) + row.quantity);
       // Same estimate-first rule as the owner's own cellar page, valued in the
-      // OWNER's preferred currency (it is their cellar being summed).
+      // OWNER's preferred currency (it is their cellar being summed). Resolved
+      // once; row cell and total share the number.
       const estimate =
         cw?.estimated_price == null ? null : Number(cw.estimated_price);
       const estimateUsable =
         estimate != null &&
         Number.isFinite(estimate) &&
         (cw?.estimated_price_currency ?? "DKK") === currency;
-      if (estimateUsable) {
-        totalValue += row.quantity * estimate;
-        hasValue = true;
-      } else if (pricePerBottle != null && row.currency === currency) {
-        totalValue += row.quantity * pricePerBottle;
+      const valuePerBottle = estimateUsable
+        ? estimate
+        : pricePerBottle != null && row.currency === currency
+          ? pricePerBottle
+          : null;
+      if (valuePerBottle != null) {
+        totalValue += row.quantity * valuePerBottle;
         hasValue = true;
       }
       bottleRows.push({
@@ -150,8 +153,7 @@ export default async function UserCellarPage({
         drinkFrom: row.drink_from,
         drinkTo: row.drink_to,
         storageLocation: row.storage_location,
-        pricePerBottle,
-        currency: row.currency,
+        valuePerBottle,
         addedAt: row.created_at,
         bestScore: null,
         bestNoteId: null,
