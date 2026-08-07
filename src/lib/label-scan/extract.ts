@@ -20,8 +20,6 @@ export type ExtractedLabel = {
   style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
   grapes: { name: string; percentage: number | null }[];
   description: string | null;
-  /** Typical current retail price in DKK — an estimate, editable, never summed as fact. */
-  estimatedPriceDkk: number | null;
   confidence: "high" | "medium" | "low";
   rawText: string;
 };
@@ -107,11 +105,6 @@ const LABEL_TOOL = {
         description:
           "2-4 sentences of REFERENCE NOTES for a wine enthusiast's cellar — the register of an encyclopedia entry, not a shop shelf-talker. Include only verifiable facts you are confident of: terroir and soils, the appellation's production rules as they apply to this wine (ageing minimums, yields, permitted varieties), élevage (vessel, months), production scale, the estate's founding or ownership where notable, stated neutrally. FORBIDDEN: describing the bottle, label or packaging; praise and promotional adjectives (legendary, prestigious, stunning, exceptional, iconic, renowned) unless part of an official classification's name; food pairings; 'perfect for' anything; every form of sales tone. A wine about which little is known gets a SHORT description — two dry sentences beat four glowing ones. Facts you cannot stand behind are omitted, not hedged. Null when you cannot say anything factual beyond what other fields already carry.",
       },
-      estimatedPriceDkk: {
-        type: ["number", "null"],
-        description:
-          "Typical current retail price for THIS wine and vintage in Danish kroner (DKK), as a plain number. Base it on the wine's market level: appellation, producer standing, vintage. This is an editable estimate for cellar valuation — a defensible ballpark is wanted, but null is the right answer when the wine is too obscure to price with any confidence. Never invent precision (round to sensible figures).",
-      },
       confidence: {
         type: "string",
         enum: ["high", "medium", "low"],
@@ -136,7 +129,6 @@ const LABEL_TOOL = {
       "style",
       "grapes",
       "description",
-      "estimatedPriceDkk",
       "confidence",
       "rawText",
     ],
@@ -178,14 +170,6 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
   const conf = o.confidence;
   const confidence =
     conf === "high" || conf === "medium" || conf === "low" ? conf : "low";
-  const priceRaw =
-    typeof o.estimatedPriceDkk === "number"
-      ? o.estimatedPriceDkk
-      : Number(o.estimatedPriceDkk);
-  const estimatedPriceDkk =
-    Number.isFinite(priceRaw) && priceRaw > 0 && priceRaw < 1_000_000
-      ? Math.round(priceRaw)
-      : null;
   return {
     producer: str(o.producer),
     wineName: str(o.wineName),
@@ -217,7 +201,6 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
           .filter((g): g is { name: string; percentage: number | null } => !!g)
       : [],
     description: str(o.description),
-    estimatedPriceDkk,
     confidence,
     rawText: typeof o.rawText === "string" ? o.rawText : "",
   };

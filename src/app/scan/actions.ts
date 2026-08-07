@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
+import { lookupWinePrice, vintageLabel } from "@/lib/label-scan/price";
 import { canonicalGrapeName } from "@/lib/label-scan/grape-canonical";
 import {
   canonicalCountryName,
@@ -125,6 +126,21 @@ export async function resolveWinePrefill(
   extracted: ExtractedLabel,
 ): Promise<WineFormInitial> {
   const supabase = await createClient();
+
+  // Price policy: real web evidence or blank. The lookup (Claude + web search,
+  // ~10-20 s) is started first so it runs alongside all the reference-data
+  // resolution below, and a lookup failure only blanks the field — it never
+  // fails the prefill.
+  const pricePromise = lookupWinePrice({
+    producer: extracted.producer,
+    wineName: extracted.wineName,
+    appellation: extracted.appellation,
+    region: extracted.region,
+    country: extracted.country,
+    vintage: vintageLabel(extracted.vintageKind, extracted.vintageYear),
+    colour: extracted.colour,
+    grapes: extracted.grapes.map((g) => g.name),
+  }).catch(() => ({ priceDkk: null, basis: null }));
 
   let countryId = "";
   let regionId = "";
@@ -334,6 +350,8 @@ export async function resolveWinePrefill(
     ? await listAppellationsForRegions([regionId])
     : [];
 
+  const price = await pricePromise;
+
   return {
     countryId,
     regionId,
@@ -346,8 +364,7 @@ export async function resolveWinePrefill(
     style: extracted.style,
     wineName: extracted.wineName ?? "",
     description: extracted.description,
-    estimatedPrice:
-      extracted.estimatedPriceDkk != null ? String(extracted.estimatedPriceDkk) : "",
+    estimatedPrice: price.priceDkk != null ? String(price.priceDkk) : "",
     vintageKind: extracted.vintageKind,
     vintageYear: extracted.vintageYear != null ? String(extracted.vintageYear) : "",
     tawnyYears: "",
