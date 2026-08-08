@@ -152,17 +152,8 @@ export function BordeauxClassification({
           onSelect={(key) => setActiveTier(activeTier === key ? null : key)}
         />
 
-        <ClassificationTable
-          columns={
-            // The classified unit differs by system: a château in the Médoc, a
-            // whole village in Champagne, a single vineyard in Alsace.
-            system.key === "champagne-echelle-des-crus"
-              ? ["Village", "Rank", "Sub-region"]
-              : system.key === "alsace-grand-cru"
-                ? ["Grand Cru", "Rank", "Commune"]
-                : ["Château", "Growth", "Commune"]
-          }
-          rows={rows.map((m, i) => ({
+        {(() => {
+          const tableRows = rows.map((m, i) => ({
             id: `${m.name}-${i}`,
             cells: [m.name, m.tier, m.commune],
             note: m.localNote,
@@ -170,18 +161,47 @@ export function BordeauxClassification({
             // Where the member IS the place, the button would just repeat the
             // name in the first column — say "Map" instead.
             placeLabel: selfPlaced ? "Map" : (m.appellationName ?? m.commune ?? "Map"),
-          }))}
-          query={query}
-          onQueryChange={setQuery}
-          searchPlaceholder={`Search ${unitPlural}…`}
-          summary={
-            activeTier
-              ? `${rows.length} · ${activeTier}`
-              : `All ${system.members.length} ${unitPlural}`
-          }
-          onClearFilter={activeTier ? () => setActiveTier(null) : undefined}
-          mapColumnLabel={selfPlaced ? "Map" : "Appellation"}
-        />
+          }));
+          // Location grouping for every system in this view: châteaux fold by
+          // commune, Champagne villages by sub-region, Alsace crus by commune.
+          const byPlace = new Map<string, typeof tableRows>();
+          rows.forEach((m, i) => {
+            const key = m.commune ?? "Other";
+            const list = byPlace.get(key) ?? [];
+            list.push(tableRows[i]);
+            byPlace.set(key, list);
+          });
+          const groups = [...byPlace.entries()]
+            .sort(([a], [b]) =>
+              a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b),
+            )
+            .map(([label, groupRows]) => ({ label, rows: groupRows }));
+          return (
+            <ClassificationTable
+              columns={
+                // The classified unit differs by system: a château in the Médoc, a
+                // whole village in Champagne, a single vineyard in Alsace.
+                system.key === "champagne-echelle-des-crus"
+                  ? ["Village", "Rank", "Sub-region"]
+                  : system.key === "alsace-grand-cru"
+                    ? ["Grand Cru", "Rank", "Commune"]
+                    : ["Château", "Growth", "Commune"]
+              }
+              rows={tableRows}
+              groups={groups.length > 1 ? groups : null}
+              query={query}
+              onQueryChange={setQuery}
+              searchPlaceholder={`Search ${unitPlural}…`}
+              summary={
+                activeTier
+                  ? `${rows.length} · ${activeTier}`
+                  : `All ${system.members.length} ${unitPlural}`
+              }
+              onClearFilter={activeTier ? () => setActiveTier(null) : undefined}
+              mapColumnLabel={selfPlaced ? "Map" : "Appellation"}
+            />
+          );
+        })()}
       </div>
 
       {/* Bordeaux-only footnote — this view also serves Alsace. */}
