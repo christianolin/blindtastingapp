@@ -350,8 +350,11 @@ export async function resolveWinePrefill(
     // slower and ~$0.15 dearer. Prices are curated instead (backfill script /
     // contributor edit); the scan itself stays a fast, cheap extraction.
     estimatedPrice: "",
-    vintageKind: extracted.vintageKind,
+    // An unread vintage prefills as YEAR-with-empty-field plus a prompt — NV
+    // is a claim about the wine, not a fallback for "couldn't see the year".
+    vintageKind: extracted.vintageRead ? extracted.vintageKind : "YEAR",
     vintageYear: extracted.vintageYear != null ? String(extracted.vintageYear) : "",
+    vintagePrompt: !extracted.vintageRead,
     tawnyYears: "",
     imageUrl: null,
     appellations,

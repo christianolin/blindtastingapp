@@ -40,6 +40,8 @@ export type WineFormInitial = {
   description: string | null;
   /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
   estimatedPrice: string;
+  /** Scan couldn't read a vintage: ask the user instead of assuming NV. */
+  vintagePrompt?: boolean;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
@@ -226,6 +228,20 @@ export function NewWineForm({
         setDescription={setDescription}
         colour={colour ?? ""}
         setColour={(v) => setColour((v || null) as Colour | null)}
+        vintageBanner={
+          initialWine?.vintagePrompt && vintageKind === "YEAR" && !vintageYear.trim() ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <span>No vintage found on the label — type the year, or</span>
+              <button
+                type="button"
+                onClick={() => setVintageKind("NV")}
+                className="rounded-full border border-amber-400 px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-amber-100"
+              >
+                mark as Non-vintage (NV)
+              </button>
+            </div>
+          ) : null
+        }
         style={style ?? ""}
         setStyle={(v) => setStyle((v || null) as Style | null)}
         vintageKind={vintageKind}

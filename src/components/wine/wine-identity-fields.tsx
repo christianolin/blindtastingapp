@@ -83,6 +83,7 @@ export function WineIdentityFields({
   setStyle,
   vintageKind,
   setVintageKind,
+  vintageBanner,
   vintageYear,
   setVintageYear,
   tawnyInitial,
@@ -129,6 +130,8 @@ export function WineIdentityFields({
   setStyle: (v: string) => void;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   setVintageKind: (v: "YEAR" | "NV" | "TAWNY") => void;
+  /** Rendered above the vintage controls (scan's "no vintage found" prompt). */
+  vintageBanner?: React.ReactNode;
   vintageYear: string;
   setVintageYear: (v: string) => void;
   tawnyInitial?: number | null;
@@ -358,6 +361,7 @@ export function WineIdentityFields({
         <div className="flex flex-col gap-3 pt-1.5">
           <div className="flex flex-col gap-2">
             <Label htmlFor="vintage_kind">Vintage</Label>
+            {vintageBanner}
             <Select
               name="vintage_kind"
               items={VINTAGE_KIND_ITEMS}

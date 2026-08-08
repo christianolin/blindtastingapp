@@ -15,6 +15,9 @@ export type ExtractedLabel = {
   /** The label's quality/ageing/style term (Gran Reserva, Kabinett…), canonical form. */
   designation: string | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
+  /** False when no vintage could actually be read off the label — the kind is
+      then only a placeholder and the user must confirm year vs NV. */
+  vintageRead: boolean;
   vintageYear: number | null;
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
   style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
@@ -159,6 +162,13 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
       : vintageYear != null
         ? "YEAR"
         : "NV";
+  // "The label says NV" and "I couldn't find a year" are different facts:
+  // most still wines have a vintage somewhere (often only on the back), so an
+  // unread year must prompt the user, not silently become Non-Vintage.
+  const vintageRead =
+    vintageKind === "TAWNY" ||
+    (vintageKind === "YEAR" && vintageYear != null) ||
+    (vk === "NV" && vintageKind === "NV");
   const col = o.colour;
   const colour =
     col === "WHITE" || col === "ROSE" || col === "RED" || col === "ORANGE" ? col : null;
@@ -178,6 +188,7 @@ function coerce(o: Record<string, unknown>): ExtractedLabel {
     country: str(o.country),
     designation: str(o.designation),
     vintageKind,
+    vintageRead,
     vintageYear,
     colour,
     style,
