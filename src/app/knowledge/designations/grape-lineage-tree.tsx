@@ -11,17 +11,19 @@ import {
 } from "@/lib/grape-lineage";
 
 // A layered descendant graph. Vertical position is generation depth — ancient
-// founder varieties sit at the top, their crosses below — so scrolling down is
-// moving forward in time. Parents connect to children with SVG links. It's a
-// DAG, not a strict tree (a grape has up to two parents, a parent many
-// children), so a child stays visible while any one of its parents is expanded.
+// founder varieties at the top, their crosses below — so scrolling down moves
+// forward in time. It's a DAG (a grape has up to two parents, a parent many
+// children), so each child is placed at the horizontal barycentre of its
+// parents and links run near-vertically. Grapes with neither recorded parents
+// nor recorded children aren't part of any line, so they sit in a separate
+// list instead of bloating the founders row.
 
-const NODE_W = 156;
-const NODE_H = 54;
-const COL_GAP = 22;
-const ROW_GAP = 104;
-const TOP_PAD = 40;
-const SIDE_PAD = 16;
+const NODE_W = 150;
+const NODE_H = 52;
+const COL_GAP = 26;
+const ROW_GAP = 108;
+const PAD = 20;
+const STEP = NODE_W + COL_GAP;
 
 const CONF_DOT: Record<Confidence, string> = {
   confirmed: "bg-primary",
@@ -30,7 +32,11 @@ const CONF_DOT: Record<Confidence, string> = {
 };
 
 const ROW_LABEL = (d: number) =>
-  d === 0 ? "Founders / ancient" : d === 1 ? "First-generation crosses" : `Generation ${d}`;
+  d === 0
+    ? "Founders / ancient"
+    : d === 1
+      ? "First-generation crosses"
+      : `Generation ${d}`;
 
 export function GrapeLineageTree({
   grapeIds,
@@ -45,28 +51,21 @@ export function GrapeLineageTree({
 
   const model = useMemo(() => {
     const byGrape = new Map(GRAPE_PARENTAGE.map((p) => [p.grape, p]));
-    // Every node: grapes we hold facts for, plus any named parent that isn't
-    // itself a grape entry (Gouais Blanc, Dureza…) — those are founders.
     const nodeSet = new Set<string>();
     for (const p of GRAPE_PARENTAGE) {
       nodeSet.add(p.grape);
       for (const parent of p.parents) nodeSet.add(parent);
     }
-    // Synonyms/mutations are identities, not lineage nodes.
     for (const n of [...nodeSet]) {
       if (GRAPE_SYNONYMS[n] || GRAPE_MUTATIONS[n]) nodeSet.delete(n);
     }
-
     const parentsOf = (n: string) =>
       (byGrape.get(n)?.parents ?? []).filter((p) => nodeSet.has(p));
     const childrenOf = new Map<string, string[]>();
-    for (const n of nodeSet) {
-      for (const parent of parentsOf(n)) {
+    for (const n of nodeSet)
+      for (const parent of parentsOf(n))
         childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), n]);
-      }
-    }
 
-    // Structural depth (ignores collapse). Acyclic by construction.
     const depth = new Map<string, number>();
     const computeDepth = (n: string): number => {
       const cached = depth.get(n);
@@ -78,72 +77,107 @@ export function GrapeLineageTree({
     };
     for (const n of nodeSet) computeDepth(n);
 
-    return { byGrape, nodeSet, parentsOf, childrenOf, depth };
+    // A grape with no parents and no children is on no line of descent.
+    const isolated = [...nodeSet]
+      .filter((n) => parentsOf(n).length === 0 && !(childrenOf.get(n)?.length))
+      .sort((a, b) => a.localeCompare(b));
+
+    return { byGrape, nodeSet, parentsOf, childrenOf, depth, isolated };
   }, []);
 
   const layout = useMemo(() => {
-    const { nodeSet, parentsOf, childrenOf, depth } = model;
-    const ordered = [...nodeSet].sort((a, b) => depth.get(a)! - depth.get(b)!);
+    const { nodeSet, parentsOf, childrenOf, depth, isolated } = model;
+    const isolatedSet = new Set(isolated);
 
-    // A node shows if it's a founder or any parent is shown AND expanded.
+    // Collapse-aware visibility, then keep only nodes that are on a line.
+    const ordered = [...nodeSet].sort((a, b) => depth.get(a)! - depth.get(b)!);
     const visible = new Map<string, boolean>();
     for (const n of ordered) {
       const ps = parentsOf(n);
       visible.set(
         n,
-        ps.length === 0
-          ? true
-          : ps.some((p) => visible.get(p) && !collapsed.has(p)),
+        ps.length === 0 ? true : ps.some((p) => visible.get(p) && !collapsed.has(p)),
       );
     }
-    const vis = ordered.filter((n) => visible.get(n)!);
+    const graph = ordered.filter((n) => visible.get(n) && !isolatedSet.has(n));
+    const graphSet = new Set(graph);
 
-    const maxDepth = Math.max(0, ...vis.map((n) => depth.get(n)!));
+    const maxDepth = Math.max(0, ...graph.map((n) => depth.get(n)!));
     const rows: string[][] = Array.from({ length: maxDepth + 1 }, () => []);
-    for (const n of vis) rows[depth.get(n)!].push(n);
+    for (const n of graph) rows[depth.get(n)!].push(n);
+    rows.forEach((r) => r.sort((a, b) => a.localeCompare(b)));
 
-    const col = new Map<string, number>();
-    const childCount = (n: string) => childrenOf.get(n)?.length ?? 0;
-    rows.forEach((row, d) => {
-      if (d === 0) {
-        row.sort((a, b) => childCount(b) - childCount(a) || a.localeCompare(b));
-      } else {
-        // Barycentre: sit each node near the average column of its parents.
-        const bary = (n: string) => {
-          const cols = parentsOf(n)
-            .map((p) => col.get(p))
-            .filter((c): c is number => c != null);
-          return cols.length ? cols.reduce((s, c) => s + c, 0) / cols.length : 0;
-        };
-        row.sort((a, b) => bary(a) - bary(b) || a.localeCompare(b));
+    const pOf = (n: string) => parentsOf(n).filter((p) => graphSet.has(p));
+    const cOf = (n: string) =>
+      (childrenOf.get(n) ?? []).filter((c) => graphSet.has(c));
+
+    // Crossing reduction: alternate barycentre sweeps on ORDER indices.
+    const idx = new Map<string, number>();
+    const reindex = () =>
+      rows.forEach((r) => r.forEach((n, i) => idx.set(n, i)));
+    reindex();
+    const mean = (ns: string[], self: string) =>
+      ns.length ? ns.reduce((s, n) => s + idx.get(n)!, 0) / ns.length : idx.get(self)!;
+    for (let iter = 0; iter < 5; iter += 1) {
+      for (let d = 1; d < rows.length; d += 1) {
+        rows[d].sort((a, b) => mean(pOf(a), a) - mean(pOf(b), b));
+        rows[d].forEach((n, i) => idx.set(n, i));
       }
-      row.forEach((n, i) => col.set(n, i));
-    });
-
-    const maxCols = Math.max(1, ...rows.map((r) => r.length));
-    const step = NODE_W + COL_GAP;
-    const pos = new Map<string, { x: number; y: number }>();
-    rows.forEach((row, d) => {
-      const offset = ((maxCols - row.length) * step) / 2;
-      row.forEach((n) => {
-        pos.set(n, {
-          x: SIDE_PAD + offset + col.get(n)! * step,
-          y: TOP_PAD + d * ROW_GAP,
-        });
-      });
-    });
-
-    // Edges: parent → child, only where the parent is visible & expanded.
-    const edges: { from: string; to: string }[] = [];
-    for (const n of vis) {
-      for (const p of parentsOf(n)) {
-        if (visible.get(p) && !collapsed.has(p)) edges.push({ from: p, to: n });
+      for (let d = rows.length - 2; d >= 0; d -= 1) {
+        rows[d].sort((a, b) => mean(cOf(a), a) - mean(cOf(b), b));
+        rows[d].forEach((n, i) => idx.set(n, i));
       }
     }
 
-    const width = SIDE_PAD * 2 + maxCols * step - COL_GAP;
-    const height = TOP_PAD + maxDepth * ROW_GAP + NODE_H + TOP_PAD;
-    return { rows, pos, edges, width, height, maxDepth };
+    // Coordinates: place each node at the barycentre of the relatives above/
+    // below it, pushing right to keep spacing. A down/up/down settle aligns
+    // parents over their children and vice-versa.
+    const x = new Map<string, number>();
+    rows[0]?.forEach((n, i) => x.set(n, i * STEP));
+    const settleDown = () => {
+      rows.forEach((row, d) => {
+        row.forEach((n, i) => {
+          const rel = d === 0 ? [] : pOf(n).filter((p) => x.has(p));
+          let xi = rel.length
+            ? rel.reduce((s, p) => s + x.get(p)!, 0) / rel.length
+            : (x.get(n) ?? (i > 0 ? x.get(row[i - 1])! + STEP : 0));
+          if (i > 0) xi = Math.max(xi, x.get(row[i - 1])! + STEP);
+          x.set(n, xi);
+        });
+      });
+    };
+    const settleUp = () => {
+      for (let d = rows.length - 2; d >= 0; d -= 1) {
+        rows[d].forEach((n, i) => {
+          const cs = cOf(n).filter((c) => x.has(c));
+          let xi = cs.length
+            ? cs.reduce((s, c) => s + x.get(c)!, 0) / cs.length
+            : x.get(n)!;
+          if (i > 0) xi = Math.max(xi, x.get(rows[d][i - 1])! + STEP);
+          x.set(n, xi);
+        });
+      }
+    };
+    settleDown();
+    settleUp();
+    settleDown();
+
+    // Shift so the leftmost node sits at PAD.
+    const minX = Math.min(...[...x.values()]);
+    for (const [n, v] of x) x.set(n, v - minX + PAD);
+
+    const pos = new Map<string, { x: number; y: number }>();
+    for (const n of graph)
+      pos.set(n, { x: x.get(n)!, y: PAD + 16 + depth.get(n)! * ROW_GAP });
+
+    const edges: { from: string; to: string }[] = [];
+    for (const n of graph)
+      for (const p of pOf(n))
+        if (!collapsed.has(p)) edges.push({ from: p, to: n });
+
+    const width = Math.max(...[...x.values()]) + NODE_W + PAD;
+    const height = PAD + 16 + maxDepth * ROW_GAP + NODE_H + PAD;
+    return { rows, pos, edges, width, height };
   }, [model, collapsed]);
 
   const toggle = (n: string) =>
@@ -154,16 +188,14 @@ export function GrapeLineageTree({
       return next;
     });
 
-  const { byGrape, childrenOf } = model;
+  const { byGrape, childrenOf, isolated } = model;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
         Who descends from whom, by DNA parentage. The higher a grape sits, the
-        older it is — ancient founder varieties at the top, their crosses below.
-        Collapse a grape to fold away its descendants;{" "}
-        <span className="font-medium text-foreground">unknown</span> parentage is
-        stated, not hidden.
+        older it is — founder varieties at the top, their crosses below.
+        Collapse a grape (−) to fold away its descendants.
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -175,7 +207,7 @@ export function GrapeLineageTree({
         />
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-primary" /> DNA-confirmed
+            <span className="size-2 rounded-full bg-primary" /> confirmed
           </span>
           <span className="flex items-center gap-1">
             <span className="size-2 rounded-full bg-gold" /> probable
@@ -196,12 +228,9 @@ export function GrapeLineageTree({
       </div>
 
       <div className="relative max-h-[70vh] overflow-auto rounded-xl border border-border bg-gradient-to-b from-muted/20 to-background">
-        <div
-          className="relative"
-          style={{ width: layout.width, height: layout.height }}
-        >
+        <div className="relative" style={{ width: layout.width, height: layout.height }}>
           <svg
-            className="pointer-events-none absolute inset-0 text-muted-foreground/40"
+            className="pointer-events-none absolute inset-0 text-muted-foreground/45"
             width={layout.width}
             height={layout.height}
           >
@@ -225,13 +254,12 @@ export function GrapeLineageTree({
             })}
           </svg>
 
-          {/* Generation labels down the left edge — the time axis. */}
           {layout.rows.map((row, d) =>
             row.length ? (
               <span
                 key={`label-${d}`}
-                className="absolute left-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60"
-                style={{ top: TOP_PAD + d * ROW_GAP - 16 }}
+                className="pointer-events-none absolute left-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60"
+                style={{ top: PAD + d * ROW_GAP }}
               >
                 {ROW_LABEL(d)}
               </span>
@@ -277,7 +305,7 @@ export function GrapeLineageTree({
                       type="button"
                       aria-label={isCollapsed ? "Expand descendants" : "Collapse descendants"}
                       onClick={() => toggle(n)}
-                      className="ml-auto shrink-0 rounded px-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="ml-auto flex size-5 shrink-0 items-center justify-center rounded text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       {isCollapsed ? "+" : "−"}
                     </button>
@@ -293,6 +321,37 @@ export function GrapeLineageTree({
           })}
         </div>
       </div>
+
+      {isolated.length > 0 ? (
+        <div className="rounded-xl border border-border p-4">
+          <p className="text-sm font-medium">No recorded parentage</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Ancient or unstudied varieties with no established parent cross yet.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {isolated.map((n) => {
+              const cardId = grapeIds[n];
+              return cardId ? (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => onOpenCard(cardId)}
+                  className="rounded-full border border-border px-2.5 py-0.5 text-xs transition-colors hover:bg-muted"
+                >
+                  {n}
+                </button>
+              ) : (
+                <span
+                  key={n}
+                  className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground"
+                >
+                  {n}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
