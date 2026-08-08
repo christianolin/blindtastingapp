@@ -3,12 +3,14 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Camera, Eye, NotebookPen, Plus, RotateCcw, Warehouse, Wine } from "lucide-react";
+import { Camera, Eye, NotebookPen, Pencil, Plus, RotateCcw, Warehouse, Wine } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { NewNoteModal } from "@/components/new-note-modal";
+import { EditWineModal } from "@/app/catalog/[wineId]/edit-wine-modal";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import {
+  createScannedWine,
   identifyWineFromLabel,
   resolveWinePrefill,
   type ScanResult,
@@ -44,6 +46,43 @@ export function ScanModal({
   const [error, setError] = useState<string | null>(null);
   const [noteWineId, setNoteWineId] = useState<string | null>(null);
   const [addingNew, setAddingNew] = useState(false);
+  // High-confidence scans are saved without the form; this holds the created
+  // wine while the follow-up chooser (note / cellar / view / edit) is up.
+  const [created, setCreated] = useState<{ id: string; label: string } | null>(
+    null,
+  );
+  const [editOpen, setEditOpen] = useState(false);
+
+  // Auto-accept when the read is confident and complete; otherwise fall back
+  // to the pre-filled form (which is also where the vintage prompt lives).
+  async function addAndContinue() {
+    if (!result) return;
+    setAddingNew(true);
+    try {
+      const prefill = {
+        ...(await resolveWinePrefill(result.extracted)),
+        imageUrl: scanUrl,
+      };
+      if (result.extracted.confidence === "high") {
+        const auto = await createScannedWine(prefill);
+        if (auto) {
+          const label =
+            [result.extracted.producer, result.extracted.wineName]
+              .filter(Boolean)
+              .join(" ") || "Scanned wine";
+          setCreated({ id: auto.id, label });
+          setAddingNew(false);
+          return;
+        }
+      }
+      onAddNew(prefill);
+      onClose();
+    } catch {
+      setAddingNew(false);
+      setError("Couldn't add the wine — you can still add it manually.");
+      setStep("error");
+    }
+  }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -88,6 +127,92 @@ export function ScanModal({
 
   if (noteWineId) {
     return <NewNoteModal wineId={noteWineId} onClose={onClose} />;
+  }
+
+  if (created && editOpen) {
+    return (
+      <EditWineModal
+        wineId={created.id}
+        userId={userId}
+        onClose={() => setEditOpen(false)}
+      />
+    );
+  }
+
+  if (created) {
+    const meta = result?.extracted;
+    return (
+      <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogTitle>Wine added</DialogTitle>
+          {/* The wine pill: what was just saved, with an escape hatch to fix
+              a misread without restarting the flow. */}
+          <div className="flex items-center gap-3 rounded-lg border border-border p-2.5">
+            {scanUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={scanUrl}
+                alt=""
+                className="h-14 w-10 shrink-0 rounded-md border border-border object-cover"
+              />
+            ) : null}
+            <div className="min-w-0 flex-1 text-sm">
+              <p className="truncate font-medium">{created.label}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[
+                  meta?.appellation,
+                  meta?.vintageKind === "YEAR"
+                    ? meta?.vintageYear
+                    : meta?.vintageKind,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors hover:bg-muted"
+            >
+              <Pencil className="size-3.5" /> Edit
+            </button>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setNoteWineId(created.id)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <NotebookPen className="size-4" /> Write a tasting note
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onAddToCellar({ id: created.id, label: created.label });
+                onClose();
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <Warehouse className="size-4" /> Add to my cellar
+            </button>
+            <Link
+              href={`/catalog/${created.id}`}
+              onClick={onClose}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <Eye className="size-4" /> View the wine page
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+            >
+              Done
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   const extracted = result?.extracted;
@@ -246,12 +371,12 @@ export function ScanModal({
               <button
                 type="button"
                 disabled={addingNew}
-                onClick={() => addAsNew(onAddNew)}
+                onClick={addAndContinue}
                 className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
                 <Wine className="size-4" />
                 {addingNew
-                  ? "Preparing…"
+                  ? "Adding…"
                   : result && result.matches.length > 0
                     ? "None of these — add as new"
                     : "Add this wine"}

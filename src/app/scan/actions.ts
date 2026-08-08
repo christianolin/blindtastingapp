@@ -2,6 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
+import {
+  createCatalogWine,
+  createGrape,
+  createProducer,
+} from "@/app/catalog/new/actions";
 import { canonicalGrapeName } from "@/lib/label-scan/grape-canonical";
 import {
   canonicalCountryName,
@@ -121,6 +126,73 @@ function stripClassSuffix(folded: string): string {
 // opens pre-populated. Names are matched (accent-insensitively) to existing
 // reference rows; anything unmatched stays blank for the user to pick or create
 // via the form's own find-or-create. The scan photo is attached by the caller.
+// Auto-accept a scanned wine: create it exactly as the add-wine form would —
+// same find-or-create producer/grape actions, same payload — or return null
+// when anything needs human review (missing geography, colour/style, an
+// unread vintage) so the caller falls back to the form.
+export async function createScannedWine(
+  prefill: WineFormInitial,
+): Promise<{ id: string } | null> {
+  const b0 = prefill.blend[0];
+  if (
+    !prefill.countryId ||
+    !prefill.regionId ||
+    !prefill.appellationId ||
+    !prefill.colour ||
+    !prefill.style ||
+    !(b0 && (b0.grapeId || b0.pendingName?.trim())) ||
+    !(prefill.producerId || prefill.producerLabel?.trim()) ||
+    prefill.vintagePrompt ||
+    (prefill.vintageKind === "YEAR" && !prefill.vintageYear)
+  ) {
+    return null;
+  }
+  let producerId = prefill.producerId;
+  if (!producerId && prefill.producerLabel) {
+    producerId = (
+      await createProducer(prefill.producerLabel.trim(), prefill.regionId || null)
+    ).id;
+  }
+  const rows: { grapeId: string; percentage: number | null }[] = [];
+  for (const r of prefill.blend) {
+    let grapeId = r.grapeId;
+    if (!grapeId && r.pendingName?.trim()) {
+      grapeId = (await createGrape(r.pendingName.trim())).id;
+    }
+    if (grapeId) {
+      rows.push({
+        grapeId,
+        percentage: r.percentage.trim() ? Number(r.percentage) : null,
+      });
+    }
+  }
+  if (rows.length === 0) return null;
+  const { id } = await createCatalogWine({
+    countryId: prefill.countryId,
+    regionId: prefill.regionId,
+    appellationId: prefill.appellationId,
+    primaryGrapeId: rows[0].grapeId,
+    secondaryGrapeId: rows[1]?.grapeId ?? null,
+    grapes: rows,
+    producerId,
+    typeDesignationId: prefill.typeDesignationId || null,
+    colour: prefill.colour,
+    style: prefill.style,
+    wineName: prefill.wineName.trim() || null,
+    description: prefill.description?.trim() || null,
+    vintageKind: prefill.vintageKind,
+    vintageYear:
+      prefill.vintageKind === "YEAR" ? Number(prefill.vintageYear) : null,
+    vintageTawnyYears:
+      prefill.vintageKind === "TAWNY" && prefill.tawnyYears
+        ? Number(prefill.tawnyYears)
+        : null,
+    imageUrl: prefill.imageUrl,
+    estimatedPrice: null,
+  });
+  return { id };
+}
+
 export async function resolveWinePrefill(
   extracted: ExtractedLabel,
 ): Promise<WineFormInitial> {
