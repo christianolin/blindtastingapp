@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
   LABELS,
@@ -201,6 +201,10 @@ export function WsetSheet({
   // it to tablet/desktop, which retired the scroll-spy rail.)
   const [mobileSection, setMobileSection] = useState<SectionId>("appearance");
   const [menuOpen, setMenuOpen] = useState(false);
+  // In the modal the sections scroll INSIDE this container while the header
+  // bar stays put — switching section resets it to the top instead of
+  // yanking the whole dialog around.
+  const scrollRef = useRef<HTMLDivElement>(null);
   const dirty = useMemo(
     () => JSON.stringify(state) !== JSON.stringify(baseline),
     [state, baseline],
@@ -260,7 +264,13 @@ export function WsetSheet({
   }, [dirty, onDiscard]);
 
   return (
-    <div className="wset-sheet min-w-0" style={{ color: WSET.body }}>
+    <div
+      className={cn(
+        "wset-sheet min-w-0",
+        embedded && "flex min-h-0 flex-1 flex-col",
+      )}
+      style={{ color: WSET.body }}
+    >
       <div
         className={cn(
           "sticky z-30 mb-4 py-2.5 sm:py-3",
@@ -464,10 +474,15 @@ export function WsetSheet({
                 type="button"
                 onClick={() => {
                   setMobileSection(s.id as SectionId);
-                  // After the hidden card mounts, line its top up under the bar.
-                  requestAnimationFrame(() =>
-                    document.getElementById(s.id)?.scrollIntoView(),
-                  );
+                  // After the hidden card mounts: in the modal just reset the
+                  // inner scroll; on the page line the card up under the bar.
+                  requestAnimationFrame(() => {
+                    if (scrollRef.current && embedded) {
+                      scrollRef.current.scrollTo({ top: 0 });
+                    } else {
+                      document.getElementById(s.id)?.scrollIntoView();
+                    }
+                  });
                 }}
                 className="rounded-[10px] px-0.5 py-[5px] sm:inline-flex sm:items-baseline sm:gap-1.5 sm:px-3 sm:py-1.5"
                 style={{
@@ -503,12 +518,15 @@ export function WsetSheet({
       </div>
 
       <div
+        ref={scrollRef}
         className={cn(
           // grid-cols-1 (=minmax(0,1fr)) so the single column can't be
           // inflated past the container by a card's intrinsic content width —
           // the section boxes stay within the modal's padding on phones.
           "grid grid-cols-1 items-start gap-6",
           !embedded && "lg:grid-cols-[264px_minmax(0,1fr)]",
+          // The modal scrolls HERE, under the anchored header bar.
+          embedded && "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4",
         )}
       >
         {embedded ? null : (

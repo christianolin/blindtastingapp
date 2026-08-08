@@ -48,10 +48,9 @@ export function AppSidebar({
   };
 
   return (
-    // fixed, not sticky: iPad Safari's collapsing browser chrome makes a
-    // sticky 100vh aside drift with the scroll. Fixed + a pl-60 content
-    // column pins it to the viewport everywhere.
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-primary text-primary-foreground md:flex">
+    // In flow, full height: the shell locks window scrolling and scrolls the
+    // content column instead, so the aside cannot move on any device.
+    <aside className="hidden h-full w-60 shrink-0 flex-col bg-primary text-primary-foreground md:flex">
       <div className="px-5 pt-4 pb-2">
         <Link href="/taste" className="flex items-center gap-2 transition-opacity hover:opacity-90">
           <BlindrMark size={26} onDark />

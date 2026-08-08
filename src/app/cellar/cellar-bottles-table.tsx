@@ -280,7 +280,7 @@ export function CellarBottlesTable({
               setQ(e.target.value);
               setPage(1);
             }}
-            placeholder="Search wines, producers, regions, grapes…"
+            placeholder="Search"
             className="w-full pl-9"
           />
         </div>

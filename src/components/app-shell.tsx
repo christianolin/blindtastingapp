@@ -23,7 +23,11 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <AddWineProvider userId={user.id}>
       <TasteLauncherProvider userId={user.id}>
-        <div className="flex min-h-screen">
+        {/* The window never scrolls: the content column is the scroll
+            container. That's the only arrangement iPad Safari can't defeat —
+            both sticky and fixed sidebars drifted with its collapsing
+            browser chrome. */}
+        <div className="flex h-dvh overflow-hidden">
           <AppSidebar
             isManager={isManager}
             user={{
@@ -32,8 +36,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               avatarUrl: profile?.avatar_url ?? null,
             }}
           />
-          {/* pl-60 clears the fixed sidebar from md up. */}
-          <div className="flex min-w-0 flex-1 flex-col md:pl-60">{children}</div>
+          <div className="flex h-full min-w-0 flex-1 flex-col overflow-y-auto">
+            {children}
+          </div>
         </div>
       </TasteLauncherProvider>
     </AddWineProvider>
