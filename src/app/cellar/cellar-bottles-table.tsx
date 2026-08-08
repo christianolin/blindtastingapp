@@ -643,7 +643,7 @@ export function CellarBottlesTable({
             <col className="w-[6.5rem]" />
             <col className="w-[6.5rem]" />
             <col className="w-[7.5rem]" />
-            {!readOnly ? <col className="w-[6.5rem]" /> : null}
+            {!readOnly ? <col className="w-[12rem]" /> : null}
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -770,40 +770,36 @@ export function CellarBottlesTable({
                   </td>
                   {!readOnly ? (
                   <td className="px-3 py-3">
-                    {/* All actions inline as icon buttons — no hidden menu.
-                        Drink leads (filled); Rate / Edit / View follow. */}
-                    <div className="flex items-center justify-end gap-1">
+                    {/* All actions inline — Drink leads with a label; the rest
+                        are labelled icon buttons, sized for a real tap target. */}
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
                       <Link
                         href={`/cellar/${r.lotId}/drink`}
-                        title="Drink a bottle"
-                        aria-label="Drink a bottle"
-                        className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                        className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                       >
-                        <Wine className="size-3.5" />
+                        <Wine className="size-3.5" /> Drink
                       </Link>
                       <Link
                         href={`/catalog/${r.catalogWineId}/notes/new`}
-                        title="Rate this wine"
-                        aria-label="Rate this wine"
-                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                       >
-                        <NotebookPen className="size-3.5" />
+                        <NotebookPen className="size-3.5" /> Rate
                       </Link>
                       <Link
                         href={`/cellar/${r.lotId}/edit`}
                         title="Edit lot"
                         aria-label="Edit lot"
-                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className="inline-flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-4" />
                       </Link>
                       <Link
                         href={`/catalog/${r.catalogWineId}`}
                         title="View wine page"
                         aria-label="View wine page"
-                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className="inline-flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
-                        <ExternalLink className="size-3.5" />
+                        <ExternalLink className="size-4" />
                       </Link>
                     </div>
                   </td>
