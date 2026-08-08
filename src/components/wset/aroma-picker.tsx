@@ -81,6 +81,14 @@ export function AromaPicker({
     else onChange([...selectedIds, id]);
   };
 
+  // "Copy from nose" only while it would actually add something — once every
+  // nose term is here the button would be a silent no-op, so it leaves.
+  const copyRemaining = copyFrom
+    ? copyFrom.ids.filter((id) => !selected.has(id)).length
+    : 0;
+  const copyAll = () =>
+    copyFrom && onChange([...new Set([...selectedIds, ...copyFrom.ids])]);
+
   return (
     <div>
       {/* Phones: selection summary + Add. The vocabulary itself lives in the
@@ -126,6 +134,24 @@ export function AromaPicker({
           >
             + Add
           </button>
+          {copyRemaining > 0 ? (
+            <button
+              type="button"
+              onClick={copyAll}
+              style={{
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                background: "transparent",
+                border: `1px solid ${WSET.pillBorder}`,
+                color: "#7A5F35",
+              }}
+            >
+              {copyFrom!.label}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -210,10 +236,10 @@ export function AromaPicker({
         </div>
       ))}
 
-      {copyFrom && copyFrom.ids.length > 0 ? (
+      {copyFrom && copyRemaining > 0 ? (
         <button
           type="button"
-          onClick={() => onChange([...new Set([...selectedIds, ...copyFrom.ids])])}
+          onClick={copyAll}
           style={{
             marginTop: 4,
             borderRadius: 999,
@@ -389,11 +415,11 @@ export function AromaPicker({
                 return c.charAt(0).toUpperCase() + c.slice(1);
               })()}
             </div>
-            {copyFrom && copyFrom.ids.length > 0 ? (
+            {copyFrom && copyRemaining > 0 ? (
               <div style={{ padding: "8px 16px 0" }}>
                 <button
                   type="button"
-                  onClick={() => onChange([...new Set([...selectedIds, ...copyFrom.ids])])}
+                  onClick={copyAll}
                   style={{
                     borderRadius: 999,
                     padding: "5px 12px",
