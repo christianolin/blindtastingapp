@@ -32,7 +32,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               avatarUrl: profile?.avatar_url ?? null,
             }}
           />
-          <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+          {/* pl-60 clears the fixed sidebar from md up. */}
+          <div className="flex min-w-0 flex-1 flex-col md:pl-60">{children}</div>
         </div>
       </TasteLauncherProvider>
     </AddWineProvider>

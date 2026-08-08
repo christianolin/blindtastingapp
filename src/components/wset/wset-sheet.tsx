@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
   LABELS,
@@ -22,7 +22,7 @@ import { PillGroup } from "./pill-group";
 import { WineColourControl } from "./wine-colour-control";
 import { AromaPicker } from "./aroma-picker";
 import { QualitySlider } from "./quality-slider";
-import { SectionNav, type SectionNavItem } from "./section-nav";
+import { type SectionNavItem } from "./section-nav";
 import { LiveTastingNote } from "./live-tasting-note";
 import { WSET } from "./tokens";
 import { cn } from "@/lib/utils";
@@ -160,7 +160,7 @@ export function SectionCard({
   );
 }
 
-const SECTION_IDS = ["appearance", "nose", "palate", "conclusions"] as const;
+type SectionId = "appearance" | "nose" | "palate" | "conclusions";
 
 export function WsetSheet({
   wine,
@@ -191,16 +191,15 @@ export function WsetSheet({
   // against THIS, not the mount-time initial — after a successful save the
   // sheet is clean again, and Discard turns into a plain Close.
   const [baseline, setBaseline] = useState<WsetNoteState>(initial);
-  const [activeId, setActiveId] = useState<string>("appearance");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  // Phones show one WSET section at a time (progressive disclosure); desktop
-  // still stacks all four with the scroll-spy rail.
-  const [mobileSection, setMobileSection] =
-    useState<(typeof SECTION_IDS)[number]>("appearance");
+  // One WSET section on screen at a time, at every breakpoint — the tabs in
+  // the sticky bar switch between them. (Was phone-only; the owner extended
+  // it to tablet/desktop, which retired the scroll-spy rail.)
+  const [mobileSection, setMobileSection] = useState<SectionId>("appearance");
   const [menuOpen, setMenuOpen] = useState(false);
   const dirty = useMemo(
     () => JSON.stringify(state) !== JSON.stringify(baseline),
@@ -231,27 +230,6 @@ export function WsetSheet({
   ];
   const done = navItems.reduce((n, s) => n + s.done, 0);
   const total = navItems.reduce((n, s) => n + s.total, 0);
-
-  const jump = useCallback((id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 114, behavior: "smooth" });
-    }
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => {
-      let current = SECTION_IDS[0] as string;
-      for (const id of SECTION_IDS) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= 150) current = id;
-      }
-      setActiveId(current);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const handleSave = useCallback(async () => {
     setSaveState("saving");
@@ -476,12 +454,7 @@ export function WsetSheet({
         {/* Section chips: on phones they switch the visible section; in the
             desktop modal (which has no scroll-spy rail) they double as the
             sheet's table of contents and scroll to the section. */}
-        <div
-          className={cn(
-            "mt-2 gap-1 max-sm:grid max-sm:grid-cols-4 sm:flex sm:gap-2",
-            !embedded && "sm:hidden",
-          )}
-        >
+        <div className="mt-2 gap-1 max-sm:grid max-sm:grid-cols-4 sm:flex sm:gap-2">
           {navItems.map((s) => {
             const active = s.id === mobileSection;
             const complete = s.total > 0 && s.done >= s.total;
@@ -490,7 +463,7 @@ export function WsetSheet({
                 key={s.id}
                 type="button"
                 onClick={() => {
-                  setMobileSection(s.id as (typeof SECTION_IDS)[number]);
+                  setMobileSection(s.id as SectionId);
                   // After the hidden card mounts, line its top up under the bar.
                   requestAnimationFrame(() =>
                     document.getElementById(s.id)?.scrollIntoView(),
@@ -540,7 +513,6 @@ export function WsetSheet({
       >
         {embedded ? null : (
         <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
-          <SectionNav sections={navItems} activeId={activeId} onJump={jump} />
           <LiveTastingNote sections={noteSections} />
           <p style={{ fontSize: 10.5, color: WSET.faint }}>
             Follows the WSET Level 4 Systematic Approach to Tasting Wine.
@@ -549,7 +521,7 @@ export function WsetSheet({
         )}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={cn(mobileSection !== "appearance" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={cn(mobileSection !== "appearance" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
               <Row label="Clarity" value={valueLabel(state.clarity)}>
                 <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
@@ -566,7 +538,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={cn(mobileSection !== "nose" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={cn(mobileSection !== "nose" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
               <Row label="Condition" value={valueLabel(state.condition)}>
                 <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
@@ -587,7 +559,7 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle="Aroma characteristics" />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={cn(mobileSection !== "palate" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={cn(mobileSection !== "palate" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
               <Row label="Sweetness" value={valueLabel(state.sweetness)}>
                 <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
@@ -646,7 +618,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={cn(mobileSection !== "conclusions" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={cn(mobileSection !== "conclusions" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <Row label="Point Score" sub="100-point scale">
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
             </Row>
