@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { Camera } from "lucide-react";
 import { NewWineForm, type WineFormInitial } from "@/app/catalog/new/new-wine-form";
+import { NewNoteModal } from "@/components/new-note-modal";
 import type { ReferenceOption } from "@/components/reference-combobox";
 
 type RefData = {
@@ -32,6 +33,9 @@ export function CatalogAddWineModal({
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [ref, setRef] = useState<RefData | null | "loading">("loading");
+  // A wine that arrived via scan flows straight into its tasting note after
+  // saving — the whole point of scanning is usually to taste it now.
+  const [noteWineId, setNoteWineId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +64,10 @@ export function CatalogAddWineModal({
       cancelled = true;
     };
   }, [supabase]);
+
+  if (noteWineId) {
+    return <NewNoteModal wineId={noteWineId} onClose={onClose} />;
+  }
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -94,8 +102,13 @@ export function CatalogAddWineModal({
             userId={userId}
             initialWine={initialWine}
             onCreated={(id) => {
-              onClose();
-              router.push(`/catalog/${id}`);
+              if (initialWine) {
+                // Scanned: open the WSET sheet right here, no wine-page stop.
+                setNoteWineId(id);
+              } else {
+                onClose();
+                router.push(`/catalog/${id}`);
+              }
             }}
           />
         )}
