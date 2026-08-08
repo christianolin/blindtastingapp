@@ -157,6 +157,7 @@ export default async function UserCellarPage({
         addedAt: row.created_at,
         bestScore: null,
         bestNoteId: null,
+      bestNoteOn: null,
       });
     }
   }

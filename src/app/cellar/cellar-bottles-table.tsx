@@ -52,6 +52,7 @@ export type BottleRow = {
   addedAt: string;
   bestScore: number | null;
   bestNoteId: string | null;
+  bestNoteOn: string | null;
 };
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
@@ -68,6 +69,33 @@ function formatSize(ml: number): string {
 function windowLabel(from: number | null, to: number | null): string {
   if (from == null && to == null) return "\u2014";
   return `${from ?? "?"}\u2013${to ?? "?"}`;
+}
+
+// The drink window as a decision, not a pair of years: is this bottle ready?
+const THIS_YEAR = new Date().getFullYear();
+function readiness(from: number | null, to: number | null) {
+  if (from == null && to == null)
+    return { label: "No window", cls: "border border-dashed border-border text-muted-foreground" };
+  if (from != null && THIS_YEAR < from)
+    return { label: "Hold", cls: "bg-muted text-muted-foreground" };
+  if (to != null && THIS_YEAR > to)
+    return { label: "Past peak", cls: "bg-destructive/10 text-destructive" };
+  if (to != null && to - THIS_YEAR <= 1)
+    return { label: "Drink soon", cls: "bg-amber-100 text-amber-900" };
+  return { label: "Ready now", cls: "bg-primary/10 text-primary" };
+}
+function ReadinessChip({ from, to }: { from: number | null; to: number | null }) {
+  const r = readiness(from, to);
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap",
+        r.cls,
+      )}
+    >
+      {r.label}
+    </span>
+  );
 }
 
 type SortKey =
@@ -396,7 +424,10 @@ export function CellarBottlesTable({
               <span>
                 {r.quantity}× {formatSize(r.bottleSizeMl)}
               </span>
-              <span>Drink {windowLabel(r.drinkFrom, r.drinkTo)}</span>
+              <ReadinessChip from={r.drinkFrom} to={r.drinkTo} />
+              {r.drinkFrom != null || r.drinkTo != null ? (
+                <span className="tabular-nums">{windowLabel(r.drinkFrom, r.drinkTo)}</span>
+              ) : null}
               {r.storageLocation ? <span>{r.storageLocation}</span> : null}
               {lotValue(r) != null ? (
                 <span className="tabular-nums">
@@ -442,37 +473,31 @@ export function CellarBottlesTable({
 
       {/* Desktop: full table (scrolls sideways on narrow desktops). */}
       <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
-        <table className="w-full min-w-[64rem] table-fixed text-sm">
+        <table className="w-full min-w-[56rem] table-fixed text-sm">
           <colgroup>
             <col />
-            <col className="w-[9.5rem]" />
-            <col className="w-[4.5rem]" />
-            <col className="w-[3.5rem]" />
-            <col className="w-[6rem]" />
-            <col className="w-[6rem]" />
+            <col className="w-[5rem]" />
             <col className="w-[6.5rem]" />
-            <col className="w-[8rem]" />
-            {!readOnly ? <col className="w-[5.5rem]" /> : null}
+            <col className="w-[6.5rem]" />
+            <col className="w-[6.5rem]" />
+            <col className="w-[7.5rem]" />
+            {!readOnly ? <col className="w-[6.5rem]" /> : null}
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
               <Th onClick={() => toggleSort("wine")}>Wine {sortIcon("wine")}</Th>
-              <Th onClick={() => toggleSort("region")}>
-                Region / Country {sortIcon("region")}
-              </Th>
-              <Th onClick={() => toggleSort("size")}>Size {sortIcon("size")}</Th>
               <Th align="right" onClick={() => toggleSort("quantity")}>
-                Qty {sortIcon("quantity")}
+                Bottles {sortIcon("quantity")}
               </Th>
               <Th onClick={() => toggleSort("window")}>
-                Drink window {sortIcon("window")}
+                Readiness {sortIcon("window")}
               </Th>
               <Th>Location</Th>
               <Th align="right" onClick={() => toggleSort("value")}>
                 Value ({currency}) {sortIcon("value")}
               </Th>
-              <Th align="right" onClick={() => toggleSort("score")}>
-                Tasting note {sortIcon("score")}
+              <Th onClick={() => toggleSort("score")}>
+                Last note {sortIcon("score")}
               </Th>
               {!readOnly ? <Th align="right">Actions</Th> : null}
             </tr>
@@ -486,19 +511,21 @@ export function CellarBottlesTable({
                   className="border-b border-border align-top last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-3 py-3">
+                    {/* The identity block does the work the dropped columns
+                        used to: name, colour+grapes, place, odd formats. */}
                     <Link
                       href={`/catalog/${r.catalogWineId}`}
-                      className="flex items-center gap-3"
+                      className="flex items-start gap-3"
                     >
                       {r.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={r.imageUrl}
                           alt=""
-                          className="size-10 shrink-0 rounded-md border border-border object-cover"
+                          className="h-14 w-10 shrink-0 rounded-md border border-border object-cover"
                         />
                       ) : (
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                        <span className="flex h-14 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
                           <Wine className="size-4" />
                         </span>
                       )}
@@ -511,27 +538,36 @@ export function CellarBottlesTable({
                             .filter(Boolean)
                             .join(" · ") || "—"}
                         </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
+                          {[
+                            r.appellation && r.appellation !== r.region
+                              ? r.appellation
+                              : null,
+                            r.region,
+                            r.country,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </span>
                       </span>
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-muted-foreground">
-                    <span className="block truncate">{r.region ?? "—"}</span>
-                    {r.appellation && r.appellation !== r.region ? (
-                      <span className="block truncate text-xs">{r.appellation}</span>
-                    ) : null}
-                    {r.country ? (
-                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs">
-                        <CountryFlag name={r.country} />
-                        {r.country}
+                  <td className="px-3 py-3 text-right tabular-nums">
+                    {r.quantity}×
+                    {r.bottleSizeMl !== 750 ? (
+                      <span className="block text-xs text-muted-foreground">
+                        {formatSize(r.bottleSizeMl)}
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-3 py-3 tabular-nums text-muted-foreground">
-                    {formatSize(r.bottleSizeMl)}
-                  </td>
-                  <td className="px-3 py-3 text-right tabular-nums">{r.quantity}</td>
-                  <td className="px-3 py-3 tabular-nums text-muted-foreground">
-                    {windowLabel(r.drinkFrom, r.drinkTo)}
+                  <td className="px-3 py-3">
+                    <ReadinessChip from={r.drinkFrom} to={r.drinkTo} />
+                    {r.drinkFrom != null || r.drinkTo != null ? (
+                      <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
+                        {windowLabel(r.drinkFrom, r.drinkTo)}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">
                     <span className="block truncate">{r.storageLocation ?? "—"}</span>
@@ -539,46 +575,44 @@ export function CellarBottlesTable({
                   <td className="px-3 py-3 text-right tabular-nums">
                     {value != null ? Math.round(value).toLocaleString() : "—"}
                   </td>
-                  <td className="px-3 py-3 text-right">
+                  <td className="px-3 py-3">
                     {r.bestScore != null ? (
-                      <span className="flex flex-col items-end gap-0.5">
+                      <button
+                        type="button"
+                        disabled={!r.bestNoteId}
+                        onClick={() =>
+                          r.bestNoteId &&
+                          setOpenNote({
+                            noteId: r.bestNoteId,
+                            wineId: r.catalogWineId,
+                          })
+                        }
+                        className="group flex flex-col items-start text-left"
+                      >
                         <span className="inline-flex items-center gap-1 font-medium text-gold-deep">
                           <Star className="size-3.5" />
                           {r.bestScore} pts
                         </span>
-                        {r.bestNoteId ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setOpenNote({
-                                noteId: r.bestNoteId!,
-                                wineId: r.catalogWineId,
-                              })
-                            }
-                            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                          >
-                            Show note
-                          </button>
+                        {r.bestNoteOn ? (
+                          <span className="text-xs text-muted-foreground underline-offset-2 group-hover:underline">
+                            {new Date(r.bestNoteOn).toLocaleDateString()}
+                          </span>
                         ) : null}
-                      </span>
+                      </button>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   {!readOnly ? (
                   <td className="px-3 py-3">
-                    <div className="flex flex-col items-stretch gap-1">
+                    {/* One primary action; the rest live behind ⋯ so every row
+                        isn't a stack of equal-weight buttons. */}
+                    <div className="flex items-center justify-end gap-1.5">
                       <Link
                         href={`/cellar/${r.lotId}/drink`}
-                        className="inline-flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
+                        className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                       >
                         <Wine className="size-3.5" /> Drink
-                      </Link>
-                      <Link
-                        href={`/cellar/${r.lotId}/edit`}
-                        className="inline-flex items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-center text-xs font-medium transition-colors hover:bg-muted"
-                      >
-                        <Pencil className="size-3.5" /> Edit
                       </Link>
                       <div className="relative">
                         <button
@@ -587,7 +621,7 @@ export function CellarBottlesTable({
                           onClick={() =>
                             setMenuFor(menuFor === r.lotId ? null : r.lotId)
                           }
-                          className="flex w-full items-center justify-center rounded-md border border-border px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className="flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                           <MoreHorizontal className="size-4" />
                         </button>
@@ -601,6 +635,14 @@ export function CellarBottlesTable({
                               className="fixed inset-0 z-10 cursor-default"
                             />
                             <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-border bg-popover p-1 text-left shadow-lg">
+                              <Link
+                                href={`/cellar/${r.lotId}/edit`}
+                                onClick={() => setMenuFor(null)}
+                                className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-muted"
+                              >
+                                <Pencil className="size-3.5" />
+                                Edit lot
+                              </Link>
                               <Link
                                 href={`/catalog/${r.catalogWineId}`}
                                 onClick={() => setMenuFor(null)}

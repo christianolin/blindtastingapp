@@ -12,6 +12,7 @@ import { AddWineButton } from "@/components/add-wine-button";
 import { type HistoryRow } from "./history-list";
 import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
 import { CellarVisibilityControl } from "./cellar-visibility-control";
+import { LABELS } from "@/lib/wset/vocab";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -105,21 +106,26 @@ export default async function CellarPage({
     .gt("quantity", 0)
     .order("created_at", { ascending: false });
 
-  // Best (highest-scored) tasting note per wine, for the Tasting note column.
+  // Best (highest-scored) tasting note per wine, for the Last note column.
   const { data: scoreRows } = await supabase
     .from("wset_notes")
-    .select("id, catalog_wine_id, quality_score")
+    .select("id, catalog_wine_id, quality_score, tasted_on")
     .eq("author_id", user.id)
     .not("quality_score", "is", null);
-  const bestNote = new Map<string, { id: string; score: number }>();
+  const bestNote = new Map<string, { id: string; score: number; on: string }>();
   for (const n of (scoreRows ?? []) as unknown as Array<{
     id: string;
     catalog_wine_id: string;
     quality_score: number;
+    tasted_on: string;
   }>) {
     const prev = bestNote.get(n.catalog_wine_id);
     if (!prev || n.quality_score > prev.score) {
-      bestNote.set(n.catalog_wine_id, { id: n.id, score: n.quality_score });
+      bestNote.set(n.catalog_wine_id, {
+        id: n.id,
+        score: n.quality_score,
+        on: n.tasted_on,
+      });
     }
   }
 
@@ -192,12 +198,24 @@ export default async function CellarPage({
       addedAt: row.created_at,
       bestScore: best?.score ?? null,
       bestNoteId: best?.id ?? null,
+      bestNoteOn: best?.on ?? null,
     });
   }
-  const topRegions = [...regionCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, bottles]) => ({ name, bottles }));
+  // "Ready to drink": the window has opened and hasn't closed. Wines with no
+  // window at all don't count — readiness unknown is not readiness.
+  const thisYear = new Date().getUTCFullYear();
+  const readyBottles = bottleRows.reduce(
+    (n, r) =>
+      (r.drinkFrom != null || r.drinkTo != null) &&
+      (r.drinkFrom == null || r.drinkFrom <= thisYear) &&
+      (r.drinkTo == null || thisYear <= r.drinkTo)
+        ? n + r.quantity
+        : n,
+    0,
+  );
+  // Top regions moved into the Stats tab — the summary strip stays focused on
+  // the four decision KPIs (own / bottles / worth / ready).
+  void regionCounts;
 
   // Notes, history and stats all load up front so CellarTabs can switch
   // between them instantly, with no navigation.
@@ -207,7 +225,8 @@ export default async function CellarPage({
       .from("wset_notes")
       .select(
         "id, tasted_on, quality_score, context_kind, catalog_wine_id, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
+          "sweetness, acidity, tannin, body, finish, taster_notes, " +
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, " +
           "producer:producers(name), appellation:appellations(name), " +
           "region:regions(name), country:countries(name), " +
           "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -215,16 +234,50 @@ export default async function CellarPage({
       )
       .eq("author_id", user.id)
       .order("tasted_on", { ascending: false });
-    notes = (
-      (noteRows ?? []) as unknown as Array<{
-        id: string;
-        tasted_on: string;
-        quality_score: number | null;
-        context_kind: "OPEN" | "BLIND" | "TRAINING";
-        catalog_wine_id: string;
-        catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
-      }>
-    ).map((n) => {
+    type NoteRowRaw = {
+      id: string;
+      tasted_on: string;
+      quality_score: number | null;
+      context_kind: "OPEN" | "BLIND" | "TRAINING";
+      catalog_wine_id: string;
+      sweetness: string | null;
+      acidity: string | null;
+      tannin: string | null;
+      body: string | null;
+      finish: string | null;
+      taster_notes: string | null;
+      catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
+    };
+    const raw = (noteRows ?? []) as unknown as NoteRowRaw[];
+    // The descriptors each note picked, so the card can show what it SAYS.
+    const aromasByNote = new Map<string, string[]>();
+    if (raw.length > 0) {
+      const { data: aromaRows } = await supabase
+        .from("wset_note_aromas")
+        .select("note_id, term:wset_aroma_terms(term)")
+        .in("note_id", raw.map((n) => n.id));
+      for (const a of (aromaRows ?? []) as unknown as Array<{
+        note_id: string;
+        term: { term: string } | { term: string }[] | null;
+      }>) {
+        const t = unwrap(a.term)?.term;
+        if (!t) continue;
+        const list = aromasByNote.get(a.note_id) ?? [];
+        if (list.length < 5) list.push(t);
+        aromasByNote.set(a.note_id, list);
+      }
+    }
+    const structureBits = (n: NoteRowRaw): string[] => {
+      const L = (v: string | null) => (v ? (LABELS[v] ?? v) : null);
+      return [
+        L(n.sweetness),
+        n.acidity ? `${L(n.acidity)} acid` : null,
+        n.tannin ? `${L(n.tannin)} tannin` : null,
+        n.body ? `${L(n.body)} body` : null,
+        n.finish ? `${L(n.finish)} finish` : null,
+      ].filter(Boolean) as string[];
+    };
+    notes = raw.map((n) => {
       const c = unwrap(n.catalog_wines);
       return {
         id: n.id,
@@ -236,9 +289,13 @@ export default async function CellarPage({
             .filter(Boolean)
             .join(", ") || null,
         colour: c?.colour ?? null,
+        imageUrl: c?.image_url ?? null,
         tastedOn: n.tasted_on,
         qualityScore: n.quality_score,
         contextKind: n.context_kind,
+        aromas: aromasByNote.get(n.id) ?? [],
+        structure: structureBits(n),
+        preview: n.taster_notes?.trim() || null,
       };
     });
   }
@@ -249,7 +306,8 @@ export default async function CellarPage({
       .from("cellar_consumptions")
       .select(
         "id, quantity, reason, consumed_on, occasion, wset_note_id, catalog_wine_id, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, " +
+          "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name))",
       )
       .order("consumed_on", { ascending: false })
       .order("created_at", { ascending: false });
@@ -264,16 +322,21 @@ export default async function CellarPage({
         catalog_wine_id: string;
         catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
       }>
-    ).map((r) => ({
-      id: r.id,
-      title: embedTitle(unwrap(r.catalog_wines)),
-      quantity: r.quantity,
-      reason: r.reason,
-      consumedOn: r.consumed_on,
-      occasion: r.occasion,
-      wsetNoteId: r.wset_note_id,
-      catalogWineId: r.catalog_wine_id,
-    }));
+    ).map((r) => {
+      const c = unwrap(r.catalog_wines);
+      return {
+        id: r.id,
+        title: embedTitle(c),
+        subtitle: embedSubtitle(c),
+        imageUrl: c?.image_url ?? null,
+        quantity: r.quantity,
+        reason: r.reason,
+        consumedOn: r.consumed_on,
+        occasion: r.occasion,
+        wsetNoteId: r.wset_note_id,
+        catalogWineId: r.catalog_wine_id,
+      };
+    });
   }
 
   let stats: CellarStats | null = null;
@@ -363,7 +426,7 @@ export default async function CellarPage({
         totalBottles={totalBottles}
         totalValue={totalValue}
         hasValue={hasValue}
-        topRegions={topRegions}
+        readyBottles={readyBottles}
         currency={preferredCurrency}
       />
 
