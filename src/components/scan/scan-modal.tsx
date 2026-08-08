@@ -53,36 +53,7 @@ export function ScanModal({
   );
   const [editOpen, setEditOpen] = useState(false);
 
-  // Auto-accept when the read is confident and complete; otherwise fall back
-  // to the pre-filled form (which is also where the vintage prompt lives).
-  async function addAndContinue() {
-    if (!result) return;
-    setAddingNew(true);
-    try {
-      const prefill = {
-        ...(await resolveWinePrefill(result.extracted)),
-        imageUrl: scanUrl,
-      };
-      if (result.extracted.confidence === "high") {
-        const auto = await createScannedWine(prefill);
-        if (auto) {
-          const label =
-            [result.extracted.producer, result.extracted.wineName]
-              .filter(Boolean)
-              .join(" ") || "Scanned wine";
-          setCreated({ id: auto.id, label });
-          setAddingNew(false);
-          return;
-        }
-      }
-      onAddNew(prefill);
-      onClose();
-    } catch {
-      setAddingNew(false);
-      setError("Couldn't add the wine — you can still add it manually.");
-      setStep("error");
-    }
-  }
+
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -111,12 +82,31 @@ export function ScanModal({
     }
   }
 
+  // Every add path tries auto-accept first: a high-confidence, complete read
+  // is saved straight to the catalog and lands in the follow-up chooser
+  // (note / cellar / view / done). Only an uncertain or incomplete read —
+  // or a lower confidence — falls back to the pre-filled form handler.
   async function addAsNew(handler: (catalog: WineFormInitial) => void) {
     if (!result) return;
     setAddingNew(true);
     try {
-      const prefill = await resolveWinePrefill(result.extracted);
-      handler({ ...prefill, imageUrl: scanUrl });
+      const prefill = {
+        ...(await resolveWinePrefill(result.extracted)),
+        imageUrl: scanUrl,
+      };
+      if (result.extracted.confidence === "high") {
+        const auto = await createScannedWine(prefill);
+        if (auto) {
+          const label =
+            [result.extracted.producer, result.extracted.wineName]
+              .filter(Boolean)
+              .join(" ") || "Scanned wine";
+          setCreated({ id: auto.id, label });
+          setAddingNew(false);
+          return;
+        }
+      }
+      handler(prefill);
       onClose();
     } catch {
       setAddingNew(false);
@@ -371,7 +361,7 @@ export function ScanModal({
               <button
                 type="button"
                 disabled={addingNew}
-                onClick={addAndContinue}
+                onClick={() => addAsNew(onAddNew)}
                 className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
                 <Wine className="size-4" />
