@@ -51,16 +51,12 @@ export function OverviewHero({ stats }: { stats: AppStats }) {
           <h1 className="max-w-[10ch] font-heading text-[2rem] font-semibold leading-[1.05] tracking-tight sm:max-w-[15ch] sm:text-5xl xl:max-w-none">
             Understand what&apos;s in the glass.
           </h1>
-          <p className="max-w-lg text-[0.82rem] leading-relaxed text-muted-foreground sm:max-w-xl sm:text-sm xl:max-w-2xl">
-            We believe wine deserves more than a quick score. By giving people a
-            structured way to observe, describe, compare and learn, Blindr helps
-            curious drinkers develop their palate, appreciate complexity and build
-            real wine knowledge over time.
-          </p>
-          <p className="max-w-lg text-[0.82rem] font-medium leading-relaxed sm:max-w-xl sm:text-sm xl:max-w-2xl">
-            We built Blindr for wine enthusiasts, committed beginners, blind
-            tasters, collectors and professionals who want to learn more from every
-            bottle — and share that with a community of like-minded people.
+          {/* One sentence only — the longer mission copy lives at the bottom of
+              the page as the "More than a score" editorial section, where it
+              isn't competing with the buttons, the stats and the photo. */}
+          <p className="max-w-lg text-[0.82rem] leading-relaxed text-muted-foreground sm:max-w-xl sm:text-sm">
+            Taste with structure, challenge yourself blind, and learn more from
+            every bottle.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

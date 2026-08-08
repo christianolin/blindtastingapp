@@ -130,8 +130,11 @@ export default async function TastePage() {
       <div className="flex w-full flex-1 flex-col gap-6 p-6 sm:p-8">
         <OverviewHero stats={appStats} />
 
-        <ExplainerCards />
-
+        {/* relative: the hero photo deliberately spills past its section, and
+            everything after it must paint on top of that spill. Order is the
+            page's whole argument — what do I need now (tastings), where can I
+            go (explore), why does this exist (editorial). */}
+        <div className="relative flex flex-col gap-6">
         <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
 
         {(tastings ?? []).length === 0 ? (
@@ -180,6 +183,29 @@ export default async function TastePage() {
             )}
           />
         )}
+
+        <ExplainerCards />
+
+        {/* The mission copy, demoted from the hero to editorial content — it
+            says WHY Blindr exists, which belongs after what you can do. */}
+        <section className="mt-2 flex flex-col gap-3 border-t border-border pt-8">
+          <h2 className="font-heading text-2xl font-medium">More than a score</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+              We believe wine deserves more than a quick score. By giving people
+              a structured way to observe, describe, compare and learn, Blindr
+              helps curious drinkers develop their palate, appreciate complexity
+              and build real wine knowledge over time.
+            </p>
+            <p className="max-w-prose text-sm font-medium leading-relaxed">
+              We built Blindr for wine enthusiasts, committed beginners, blind
+              tasters, collectors and professionals who want to learn more from
+              every bottle — and share that with a community of like-minded
+              people.
+            </p>
+          </div>
+        </section>
+        </div>
       </div>
     </div>
   );

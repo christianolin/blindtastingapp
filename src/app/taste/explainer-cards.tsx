@@ -1,49 +1,56 @@
-import { Wine, EyeOff, BookOpen, Warehouse } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
-// Four static "what you can do here" explainers, framing the app's purpose
-// just below the hero. Informational only (not links), matching the mockup:
-// one card, four columns split by hairlines.
-const CARDS = [
+// "Explore Blindr": compact navigation cards named after the actual product
+// areas, not benefit headlines — they demoted from the hero-adjacent explainer
+// strip to a lower-page wayfinding section once "Your tastings" took its slot.
+const AREAS = [
   {
-    icon: Wine,
-    title: "Taste with structure",
-    body: "Create thoughtful tasting notes and scores using a consistent method inspired by WSET.",
+    title: "Taste",
+    body: "Structured notes, ratings and blind tastings.",
+    href: "/taste",
+    cta: "Explore tasting",
   },
   {
-    icon: EyeOff,
-    title: "Taste & challenge",
-    body: "Host blind, semi-blind and open tastings, compare impressions and share experiences with friends and fellow wine enthusiasts.",
+    title: "Learn",
+    body: "Regions, grapes, styles and classifications.",
+    href: "/knowledge/map",
+    cta: "Explore knowledge",
   },
   {
-    icon: BookOpen,
-    title: "Understand the wine",
-    body: "Explore regions, grapes, styles, classifications and more to connect what's in the glass with its origin.",
+    title: "Cellar",
+    body: "Your bottles, tasting history and collection.",
+    href: "/cellar",
+    cta: "Open cellar",
   },
   {
-    icon: Warehouse,
-    title: "Build your cellar",
-    body: "Organise your bottles, track your collection and keep your tasting notes in one place. Choose what to keep private and what to share.",
+    title: "Community",
+    body: "Taste and share with other wine enthusiasts.",
+    href: "/community",
+    cta: "Community",
   },
-];
+] as const;
 
 export function ExplainerCards() {
   return (
-    <div className="relative grid grid-cols-1 divide-border rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4 lg:divide-x">
-      {CARDS.map((c) => (
-        <div key={c.title} className="flex gap-3 p-3.5 sm:p-4">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-primary/10">
-            <c.icon className="size-4" strokeWidth={2} />
-          </span>
-          <div className="flex min-w-0 flex-col gap-1">
-            <span className="font-heading text-base font-medium leading-snug sm:text-[1.05rem]">
-              {c.title}
+    <section className="flex flex-col gap-3">
+      <h2 className="font-heading text-2xl font-medium">Explore Blindr</h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {AREAS.map((a) => (
+          <Link
+            key={a.title}
+            href={a.href}
+            className="group flex flex-col gap-1 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/40"
+          >
+            <span className="font-heading text-lg font-medium">{a.title}</span>
+            <span className="text-sm text-muted-foreground">{a.body}</span>
+            <span className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary">
+              {a.cta}
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
-            <span className="text-[0.78rem] leading-snug text-muted-foreground sm:text-[0.8rem] sm:leading-relaxed">
-              {c.body}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
