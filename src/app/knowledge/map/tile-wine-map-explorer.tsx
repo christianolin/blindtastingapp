@@ -308,23 +308,23 @@ export function TileWineMapExplorer({
       }
     >
       <div
-        className={`flex flex-col gap-4 lg:flex-row lg:items-stretch ${
+        className={`flex flex-col gap-4 xl:flex-row xl:items-stretch ${
           // Height-lock the row on desktop only. On mobile the expanded view
           // is a normal scrolling column (map first, near-fullscreen), so the
           // flex algorithm can never crush the map card to zero height.
-          expanded ? "lg:min-h-0 lg:flex-1" : ""
+          expanded ? "xl:min-h-0 xl:flex-1" : ""
         }`}
       >
         {treeOpen ? (
           <Card
-            className={`order-3 lg:order-1 lg:w-[280px] lg:shrink-0 ${
-              expanded ? "" : "lg:sticky lg:top-6 lg:self-start"
+            className={`order-3 xl:order-1 xl:w-[280px] xl:shrink-0 ${
+              expanded ? "" : "xl:sticky xl:top-6 xl:self-start"
             }`}
           >
             <CardContent
               className={`flex flex-col pt-4 ${
                 expanded
-                  ? "h-[70vh] min-h-0 lg:h-full"
+                  ? "h-[70vh] min-h-0 xl:h-full"
                   : "h-[70vh] min-h-[420px]"
               }`}
             >
@@ -338,7 +338,7 @@ export function TileWineMapExplorer({
                   onClick={() => setTreeOpen(false)}
                   // No collapse on phones: the reopen tab is desktop-only, so
                   // collapsing there left the hierarchy gone with no way back.
-                  className="text-muted-foreground hover:text-foreground max-lg:hidden"
+                  className="text-muted-foreground hover:text-foreground max-xl:hidden"
                 >
                   <PanelLeftClose className="size-4" />
                 </button>
@@ -362,8 +362,8 @@ export function TileWineMapExplorer({
             type="button"
             aria-label="Show hierarchy"
             onClick={() => setTreeOpen(true)}
-            className={`order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-1 lg:flex lg:w-9 lg:items-start lg:justify-center ${
-              expanded ? "" : "lg:sticky lg:top-6 lg:self-start"
+            className={`order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center ${
+              expanded ? "" : "xl:sticky xl:top-6 xl:self-start"
             }`}
           >
             <PanelLeftOpen className="size-4" />
@@ -377,8 +377,8 @@ export function TileWineMapExplorer({
             // nothing (the "map disappears" bug): full view opts out of
             // shrinking below lg and sizes from the map's fixed height.
             expanded
-              ? "order-1 min-w-0 shrink-0 overflow-hidden lg:order-2 lg:flex-1 lg:shrink"
-              : "order-1 min-w-0 flex-1 overflow-hidden lg:order-2"
+              ? "order-1 min-w-0 shrink-0 overflow-hidden xl:order-2 xl:flex-1 xl:shrink"
+              : "order-1 min-w-0 flex-1 overflow-hidden xl:order-2"
           }
         >
           <CardContent
@@ -414,12 +414,12 @@ export function TileWineMapExplorer({
             </div>
             {/* Expanded on mobile needs a definite height: the lg full-view
                 relies on a flex-1/min-h-0 chain that only exists in the
-                lg:flex-row layout — in the phone column the hierarchy card's
+                xl:flex-row layout — in the phone column the hierarchy card's
                 natural height swallowed it and the map collapsed to zero. */}
             <div
               className={
                 expanded
-                  ? "h-[calc(100dvh-7rem)] lg:h-auto lg:min-h-0 lg:flex-1"
+                  ? "h-[calc(100dvh-7rem)] xl:h-auto xl:min-h-0 xl:flex-1"
                   : "h-[70vh] min-h-[420px]"
               }
             >
@@ -459,26 +459,26 @@ export function TileWineMapExplorer({
         {detailsOpen ? (
         <Card
           className={cn(
-            "lg:order-3 lg:w-[320px] lg:shrink-0",
+            "xl:order-3 xl:w-[320px] xl:shrink-0",
             // On phones this panel detaches into a frozen sheet pinned to the
             // bottom of the screen; tapping its bar folds it open into a
             // near-fullscreen scrollable profile and back down again.
-            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-t max-lg:border-border max-lg:shadow-[0_-8px_24px_rgba(0,0,0,0.10)]",
-            sheetOpen ? "max-lg:top-14 max-lg:flex max-lg:flex-col" : "",
-            expanded ? "lg:overflow-y-auto" : "",
+            "max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:border-t max-xl:border-border max-xl:shadow-[0_-8px_24px_rgba(0,0,0,0.10)]",
+            sheetOpen ? "max-xl:top-14 max-xl:flex max-xl:flex-col" : "",
+            expanded ? "xl:overflow-y-auto" : "",
           )}
         >
           <CardContent
             className={cn(
               "flex flex-col gap-3 pt-4",
-              sheetOpen ? "max-lg:h-full max-lg:min-h-0" : "",
+              sheetOpen ? "max-xl:h-full max-xl:min-h-0" : "",
             )}
           >
             <button
               type="button"
               onClick={() => setSheetOpen((open) => !open)}
               aria-expanded={sheetOpen}
-              className="flex items-center justify-between gap-2 text-left lg:hidden"
+              className="flex items-center justify-between gap-2 text-left xl:hidden"
             >
               <span className="flex min-w-0 flex-col">
                 <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -495,7 +495,7 @@ export function TileWineMapExplorer({
                 )}
               />
             </button>
-            <div className="hidden items-center justify-between lg:flex">
+            <div className="hidden items-center justify-between xl:flex">
               <span className="text-xs font-medium text-muted-foreground">
                 Details
               </span>
@@ -512,8 +512,8 @@ export function TileWineMapExplorer({
               className={cn(
                 "flex flex-col gap-3",
                 sheetOpen
-                  ? "max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto"
-                  : "max-lg:hidden",
+                  ? "max-xl:min-h-0 max-xl:flex-1 max-xl:overflow-y-auto"
+                  : "max-xl:hidden",
               )}
             >
             {!selectedKey ? (
@@ -645,7 +645,7 @@ export function TileWineMapExplorer({
             type="button"
             aria-label="Show details"
             onClick={() => setDetailsOpen(true)}
-            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground lg:order-3 lg:flex lg:w-9 lg:items-start lg:justify-center"
+            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:items-start xl:justify-center"
           >
             <PanelRightOpen className="size-4" />
           </button>
@@ -653,7 +653,7 @@ export function TileWineMapExplorer({
       </div>
       {/* Reserve room so the frozen mobile sheet's bar never hides the last
           of the page content beneath it. */}
-      <div aria-hidden className="h-20 lg:hidden" />
+      <div aria-hidden className="h-20 xl:hidden" />
       {openArchetype ? (
         <ArchetypeModal
           id={openArchetype.id}
