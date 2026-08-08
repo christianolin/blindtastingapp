@@ -12,9 +12,8 @@ import {
   ArrowDown,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   ExternalLink,
-  FileText,
+  NotebookPen,
   Pencil,
   Plus,
   List,
@@ -160,7 +159,6 @@ export function CellarBottlesTable({
   const [openNote, setOpenNote] = useState<{ noteId: string; wineId: string } | null>(
     null,
   );
-  const [menuFor, setMenuFor] = useState<string | null>(null);
   const [country, setCountry] = useState(ALL);
   const [region, setRegion] = useState(ALL);
   const [colour, setColour] = useState(ALL);
@@ -445,63 +443,92 @@ export function CellarBottlesTable({
               {pageRows.map((r) => {
                 const value = lotValue(r);
                 return (
-                  <Link
+                  <div
                     key={r.lotId}
-                    href={`/catalog/${r.catalogWineId}`}
-                    className="group flex flex-col overflow-hidden rounded-xl border border-border transition-colors hover:bg-muted/30"
+                    className="group flex flex-col overflow-hidden rounded-xl border border-border"
                   >
                     {/* The bottle is the content here — a tall contain-fit
-                        panel over cream, not a cropped thumbnail. */}
-                    <div className="flex h-48 items-end justify-center bg-gradient-to-b from-muted/40 to-background p-3 sm:h-56">
-                      {r.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={r.imageUrl}
-                          alt=""
-                          className="h-full w-auto max-w-[80%] object-contain drop-shadow-md transition-transform group-hover:scale-[1.03]"
-                        />
-                      ) : (
-                        <Wine className="mb-6 size-14 text-muted-foreground/40" />
-                      )}
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1 border-t border-border p-3">
-                      <p className="truncate font-medium leading-tight">{r.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {[r.grapes.slice(0, 2).join(", "), r.colour && cap(r.colour)]
-                          .filter(Boolean)
-                          .join(" · ") || "—"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
-                        {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
-                      </p>
-                      <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-                        <span className="text-xs text-muted-foreground">
-                          {r.quantity} {r.quantity === 1 ? "bottle" : "bottles"}
-                        </span>
-                        {value != null ? (
-                          <span className="text-sm font-medium tabular-nums">
-                            {Math.round(value).toLocaleString()} {currency}
-                          </span>
-                        ) : null}
+                        panel over cream, not a cropped thumbnail. Image + text
+                        navigate; the action row below has its own buttons. */}
+                    <Link
+                      href={`/catalog/${r.catalogWineId}`}
+                      className="flex flex-col transition-colors hover:bg-muted/30"
+                    >
+                      <div className="flex h-48 items-end justify-center bg-gradient-to-b from-muted/40 to-background p-3 sm:h-56">
+                        {r.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={r.imageUrl}
+                            alt=""
+                            className="h-full w-auto max-w-[80%] object-contain drop-shadow-md transition-transform group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <Wine className="mb-6 size-14 text-muted-foreground/40" />
+                        )}
                       </div>
-                      {r.bestScore != null ? (
-                        <span className="mt-1 inline-flex items-center gap-1 border-t border-border pt-2 text-xs">
-                          <Star className="size-3.5 text-gold-deep" />
-                          <span className="font-medium">{r.bestScore} pts</span>
-                          {r.bestNoteOn ? (
-                            <span className="text-muted-foreground">
-                              · {new Date(r.bestNoteOn).toLocaleDateString()}
+                      <div className="flex min-w-0 flex-col gap-1 border-t border-border p-3">
+                        <p className="truncate font-medium leading-tight">{r.title}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[r.grapes.slice(0, 2).join(", "), r.colour && cap(r.colour)]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
+                          {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
+                        </p>
+                        <div className="mt-1 flex items-end justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {r.quantity} {r.quantity === 1 ? "bottle" : "bottles"}
+                          </span>
+                          {value != null ? (
+                            <span className="text-sm font-medium tabular-nums">
+                              {Math.round(value).toLocaleString()} {currency}
                             </span>
                           ) : null}
-                        </span>
-                      ) : (
-                        <span className="mt-1 border-t border-border pt-2 text-xs text-muted-foreground/70">
-                          Not tasted yet
-                        </span>
-                      )}
-                    </div>
-                  </Link>
+                        </div>
+                        {r.bestScore != null ? (
+                          <span className="mt-1 inline-flex items-center gap-1 text-xs">
+                            <Star className="size-3.5 text-gold-deep" />
+                            <span className="font-medium">{r.bestScore} pts</span>
+                            {r.bestNoteOn ? (
+                              <span className="text-muted-foreground">
+                                · {new Date(r.bestNoteOn).toLocaleDateString()}
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : (
+                          <span className="mt-1 text-xs text-muted-foreground/70">
+                            Not tasted yet
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                    {!readOnly ? (
+                      <div className="mt-auto flex items-center gap-1 border-t border-border p-2">
+                        <Link
+                          href={`/cellar/${r.lotId}/drink`}
+                          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md bg-primary px-2 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                          <Wine className="size-3.5" /> Drink
+                        </Link>
+                        <Link
+                          href={`/catalog/${r.catalogWineId}/notes/new`}
+                          className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                        >
+                          <NotebookPen className="size-3.5" /> Rate
+                        </Link>
+                        <Link
+                          href={`/cellar/${r.lotId}/edit`}
+                          title="Edit lot"
+                          aria-label="Edit lot"
+                          className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
@@ -743,72 +770,41 @@ export function CellarBottlesTable({
                   </td>
                   {!readOnly ? (
                   <td className="px-3 py-3">
-                    {/* One primary action; the rest live behind ⋯ so every row
-                        isn't a stack of equal-weight buttons. */}
-                    <div className="flex items-center justify-end gap-1.5">
+                    {/* All actions inline as icon buttons — no hidden menu.
+                        Drink leads (filled); Rate / Edit / View follow. */}
+                    <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/cellar/${r.lotId}/drink`}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                        title="Drink a bottle"
+                        aria-label="Drink a bottle"
+                        className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
                       >
-                        <Wine className="size-3.5" /> Drink
+                        <Wine className="size-3.5" />
                       </Link>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          aria-label="More actions"
-                          onClick={() =>
-                            setMenuFor(menuFor === r.lotId ? null : r.lotId)
-                          }
-                          className="flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </button>
-                        {menuFor === r.lotId ? (
-                          <>
-                            <button
-                              type="button"
-                              aria-hidden
-                              tabIndex={-1}
-                              onClick={() => setMenuFor(null)}
-                              className="fixed inset-0 z-10 cursor-default"
-                            />
-                            <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-border bg-popover p-1 text-left shadow-lg">
-                              <Link
-                                href={`/cellar/${r.lotId}/edit`}
-                                onClick={() => setMenuFor(null)}
-                                className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-muted"
-                              >
-                                <Pencil className="size-3.5" />
-                                Edit lot
-                              </Link>
-                              <Link
-                                href={`/catalog/${r.catalogWineId}`}
-                                onClick={() => setMenuFor(null)}
-                                className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-muted"
-                              >
-                                <ExternalLink className="size-3.5" />
-                                View wine page
-                              </Link>
-                              {r.bestNoteId ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setMenuFor(null);
-                                    setOpenNote({
-                                      noteId: r.bestNoteId!,
-                                      wineId: r.catalogWineId,
-                                    });
-                                  }}
-                                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted"
-                                >
-                                  <FileText className="size-3.5" />
-                                  Show tasting note
-                                </button>
-                              ) : null}
-                            </div>
-                          </>
-                        ) : null}
-                      </div>
+                      <Link
+                        href={`/catalog/${r.catalogWineId}/notes/new`}
+                        title="Rate this wine"
+                        aria-label="Rate this wine"
+                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <NotebookPen className="size-3.5" />
+                      </Link>
+                      <Link
+                        href={`/cellar/${r.lotId}/edit`}
+                        title="Edit lot"
+                        aria-label="Edit lot"
+                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Link>
+                      <Link
+                        href={`/catalog/${r.catalogWineId}`}
+                        title="View wine page"
+                        aria-label="View wine page"
+                        className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </Link>
                     </div>
                   </td>
                   ) : null}
