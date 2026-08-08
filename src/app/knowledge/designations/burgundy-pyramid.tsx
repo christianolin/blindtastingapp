@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import type { BurgundyHierarchy } from "@/lib/designations/burgundy";
 import type { PyramidTier } from "@/lib/designations/content";
 import { PyramidBands } from "./pyramid-bands";
-import { ClassificationTable, type ClassificationRow } from "./classification-table";
+import {
+  ClassificationTable,
+  type ClassificationRow,
+  type ClassificationGroup,
+} from "./classification-table";
 
 // Interactive Burgundy quality ladder: the shared band pyramid on the left,
 // the selected tier's vineyards in the shared searchable table on the right —
@@ -58,6 +62,24 @@ export function BurgundyPyramid({
       )
     : allRows;
 
+  // Grand Cru / Premier Cru (tiers 0 and 1) fold under per-village headers —
+  // 624 Premier Cru climats are unscrollable flat. The village tier is one
+  // row per AOC already, so grouping there would just be 44 headers of one.
+  const groups: ClassificationGroup[] | null = (() => {
+    if (active > 1 || rows.length === 0) return null;
+    const byVillage = new Map<string, ClassificationRow[]>();
+    for (const r of rows) {
+      const village = r.cells[1] || "—";
+      const list = byVillage.get(village) ?? [];
+      list.push(r);
+      byVillage.set(village, list);
+    }
+    return [...byVillage.entries()].map(([label, groupRows]) => ({
+      label,
+      rows: groupRows,
+    }));
+  })();
+
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
       <div className="flex flex-col gap-3">
@@ -96,6 +118,7 @@ export function BurgundyPyramid({
         <ClassificationTable
           columns={["Vineyard", "Village", "Sub-region"]}
           rows={rows}
+          groups={groups}
           query={query}
           onQueryChange={setQuery}
           searchPlaceholder="Search vineyards, villages…"
