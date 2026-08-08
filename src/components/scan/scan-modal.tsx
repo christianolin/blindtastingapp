@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Camera, Eye, NotebookPen, Pencil, Plus, RotateCcw, Warehouse, Wine } from "lucide-react";
+import { Camera, Check, Eye, NotebookPen, Pencil, Plus, RotateCcw, Warehouse, Wine } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { NewNoteModal } from "@/components/new-note-modal";
@@ -131,74 +131,99 @@ export function ScanModal({
 
   if (created) {
     const meta = result?.extracted;
+    const metaLine = [
+      meta?.appellation ?? meta?.region,
+      meta?.country,
+      meta?.vintageKind === "YEAR"
+        ? meta?.vintageYear
+        : meta?.vintageKind === "NV"
+          ? "NV"
+          : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    const grapeLine = (meta?.grapes ?? []).map((g) => g.name).join(", ");
     return (
       <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogTitle>Wine added</DialogTitle>
-          {/* The wine pill: what was just saved, with an escape hatch to fix
-              a misread without restarting the flow. */}
-          <div className="flex items-center gap-3 rounded-lg border border-border p-2.5">
+        <DialogContent
+          showCloseButton={false}
+          className="gap-0 overflow-hidden p-0 sm:max-w-md max-sm:top-4 max-sm:max-h-[calc(100dvh-2rem)] max-sm:translate-y-0"
+        >
+          <DialogTitle className="sr-only">Wine added</DialogTitle>
+          {/* The reward: a big bottle over a warm wash, so a scan lands as a
+              moment rather than a form receipt. The label photo fills a tall
+              hero; identity and actions sit on the cream below. */}
+          <div className="relative flex h-56 items-end justify-center overflow-hidden bg-gradient-to-b from-primary/15 to-background">
             {scanUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={scanUrl}
                 alt=""
-                className="h-14 w-10 shrink-0 rounded-md border border-border object-cover"
+                className="h-52 w-auto max-w-[70%] rounded-t-lg object-contain drop-shadow-xl"
               />
-            ) : null}
-            <div className="min-w-0 flex-1 text-sm">
-              <p className="truncate font-medium">{created.label}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {[
-                  meta?.appellation,
-                  meta?.vintageKind === "YEAR"
-                    ? meta?.vintageYear
-                    : meta?.vintageKind,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            </div>
+            ) : (
+              <Wine className="mb-8 size-20 text-primary/40" />
+            )}
             <button
               type="button"
               onClick={() => setEditOpen(true)}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors hover:bg-muted"
+              className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-border bg-background/80 px-2.5 py-1 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-background"
             >
               <Pencil className="size-3.5" /> Edit
             </button>
           </div>
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => setNoteWineId(created.id)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <NotebookPen className="size-4" /> Write a tasting note
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onAddToCellar({ id: created.id, label: created.label });
-                onClose();
-              }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              <Warehouse className="size-4" /> Add to my cellar
-            </button>
-            <Link
-              href={`/catalog/${created.id}`}
-              onClick={onClose}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-            >
-              <Eye className="size-4" /> View the wine page
-            </Link>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-            >
-              Done
-            </button>
+
+          <div className="flex flex-col gap-4 px-5 pb-5">
+            <div className="text-center">
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary">
+                <Check className="size-3.5" /> Added to the catalog
+              </p>
+              <h2 className="mt-1 font-heading text-xl font-semibold leading-tight">
+                {created.label}
+              </h2>
+              {metaLine ? (
+                <p className="mt-0.5 text-sm text-muted-foreground">{metaLine}</p>
+              ) : null}
+              {grapeLine ? (
+                <p className="text-xs text-muted-foreground">{grapeLine}</p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setNoteWineId(created.id)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <NotebookPen className="size-4" /> Taste &amp; rate it now
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAddToCellar({ id: created.id, label: created.label });
+                    onClose();
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                  <Warehouse className="size-4" /> To cellar
+                </button>
+                <Link
+                  href={`/catalog/${created.id}`}
+                  onClick={onClose}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                >
+                  <Eye className="size-4" /> View wine
+                </Link>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
