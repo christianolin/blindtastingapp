@@ -89,9 +89,12 @@ export function ClassificationTable({
                     <td
                       key={i}
                       className={
+                        // nowrap only where there's room: on tablets the
+                        // forced single-line cells inflated the table past
+                        // its card and dragged the whole page sideways.
                         i === 0
                           ? "px-3 py-2"
-                          : "whitespace-nowrap px-3 py-2 text-muted-foreground"
+                          : "px-3 py-2 text-muted-foreground lg:whitespace-nowrap"
                       }
                     >
                       {i === 0 ? (
@@ -113,10 +116,13 @@ export function ClassificationTable({
                       {r.placeKey ? (
                         <Link
                           href={`/knowledge/map?place=${encodeURIComponent(r.placeKey)}`}
+                          aria-label={`Show ${r.placeLabel ?? "place"} on the map`}
                           className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
                         >
                           <MapPin className="size-3.5" />
-                          {r.placeLabel ?? "Map"}
+                          <span className="max-lg:hidden">
+                            {r.placeLabel ?? "Map"}
+                          </span>
                         </Link>
                       ) : (
                         <span className="text-muted-foreground">—</span>

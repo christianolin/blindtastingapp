@@ -229,7 +229,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
             an explicit Sort control (mirrors the cellar list). */}
         <select
           aria-label="Sort by"
-          className={cn(selectCls, "lg:hidden")}
+          className={cn(selectCls, "xl:hidden")}
           value={`${sort.key}:${sort.dir}`}
           onChange={(e) => {
             const [key, dir] = e.target.value.split(":") as [
@@ -264,7 +264,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         </button>
       </div>
 
-      <div className="flex flex-col gap-2 lg:hidden">
+      <div className="flex flex-col gap-2 xl:hidden">
         {pageRows.map((r) => (
           <div
             key={r.id}
@@ -338,7 +338,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
         ) : null}
       </div>
 
-      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border xl:block">
         <table className="w-full table-fixed text-sm">
             <colgroup>
               <col />
