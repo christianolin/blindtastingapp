@@ -71,7 +71,8 @@ export function RateWineModal({
       <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg max-sm:top-4 max-sm:max-h-[calc(100dvh-2rem)] max-sm:translate-y-0">
         <DialogTitle>Taste &amp; rate a wine</DialogTitle>
         <p className="text-sm text-muted-foreground">
-          Find the wine you&apos;re tasting to write a WSET note.
+          Scan the label of the wine you&apos;re tasting — scanning finds it in
+          the catalog automatically, or adds it if it&apos;s new.
         </p>
         {/* All three ways in to a wine sit together above the search field: on a
             phone the keyboard covers the lower half of the dialog, so nothing
@@ -106,9 +107,19 @@ export function RateWineModal({
             <Plus className="size-4" /> Add manually
           </button>
         </div>
+        {/* The search is the fallback, not the main path — scanning already
+            matches the catalog. Demoted below a divider that says what it
+            searches, and no autoFocus: focus popped the phone keyboard over
+            the dialog and made search look like the primary action. */}
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" aria-hidden />
+          <span className="text-xs text-muted-foreground">
+            or search the wine catalog
+          </span>
+          <span className="h-px flex-1 bg-border" aria-hidden />
+        </div>
         <Input
-          autoFocus
-          placeholder="Search by wine, producer or region…"
+          placeholder="Search the catalog — wine, producer, region…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />

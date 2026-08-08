@@ -289,7 +289,7 @@ export function CellarLotForm({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label>Already added? Find it</Label>
+        <Label>Already in the wine catalog? Find it</Label>
         <SearchableCombobox
           formFieldName="catalog_wine_id"
           value={catalogWineId}
@@ -299,7 +299,7 @@ export function CellarLotForm({
             setCatalogWineLabel(label || null);
           }}
           search={async (q) => await searchCellarCatalog(q)}
-          placeholder="Search by producer, wine or appellation"
+          placeholder="Search the catalog — producer, wine, appellation…"
         />
         <p className="text-xs text-muted-foreground">
           Pick an existing wine to skip the details, or fill them in below to add
