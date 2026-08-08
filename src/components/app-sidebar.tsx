@@ -1,9 +1,9 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wine, BookOpen, Boxes, GraduationCap, Users, Shield, LogOut } from "lucide-react";
+import { Wine, BookOpen, Boxes, GraduationCap, Users, Shield, LogOut, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navWithAdmin, isNavActive, type NavChild } from "@/components/nav-links";
 import { useAddWine } from "@/components/add-wine-context";
@@ -32,6 +32,12 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const links = navWithAdmin(isManager);
+  // Collapsible sub-nav: a pillar's children show when you're inside that
+  // section; a chevron tap overrides either way. Keeps the sidebar one calm
+  // line per pillar instead of every section's sub-pages all the time.
+  const [expandOverrides, setExpandOverrides] = useState<Record<string, boolean>>(
+    {},
+  );
   const { openAddWine } = useAddWine();
   const { openTaste } = useTasteLauncher();
   const openModal = (kind: NonNullable<NavChild["modal"]>) => {
@@ -54,22 +60,46 @@ export function AppSidebar({
         {links.map((link) => {
           const Icon = ICONS[link.key] ?? Wine;
           const sectionActive = isNavActive(pathname, link);
+          const open =
+            !!link.children && (expandOverrides[link.key] ?? sectionActive);
           return (
             <div key={link.key} className="mb-1">
-              <Link
-                href={link.href}
-                aria-current={sectionActive ? "page" : undefined}
+              <div
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center rounded-lg transition-colors",
                   sectionActive
                     ? "bg-primary-foreground/15 text-primary-foreground"
                     : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground",
                 )}
               >
-                <Icon className="size-4 shrink-0" />
-                {link.label}
-              </Link>
-              {link.children ? (
+                <Link
+                  href={link.href}
+                  aria-current={sectionActive ? "page" : undefined}
+                  className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-sm font-medium"
+                >
+                  <Icon className="size-4 shrink-0" />
+                  {link.label}
+                </Link>
+                {link.children ? (
+                  <button
+                    type="button"
+                    aria-label={open ? `Collapse ${link.label}` : `Expand ${link.label}`}
+                    aria-expanded={open}
+                    onClick={() =>
+                      setExpandOverrides((o) => ({ ...o, [link.key]: !open }))
+                    }
+                    className="mr-1.5 rounded-md p-1.5 text-primary-foreground/50 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        "size-3.5 transition-transform",
+                        open && "rotate-90",
+                      )}
+                    />
+                  </button>
+                ) : null}
+              </div>
+              {link.children && open ? (
                 <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
                   {link.children.map((child) => {
                     if (child.soon) {
