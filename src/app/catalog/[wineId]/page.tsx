@@ -137,6 +137,21 @@ export default async function CatalogWinePage({
                   ) : null}
                 </div>
               </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Estimated price
+                </p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {wine.estimatedPrice != null
+                    ? `${Math.round(wine.estimatedPrice).toLocaleString("da-DK")} kr`
+                    : "—"}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground/70">
+                  Looked up from current retail listings and market data for
+                  this exact wine and vintage; blank when none exist.
+                  {isManager ? " Edit it via Manage wine." : " Contributors and admins can correct it."}
+                </p>
+              </div>
             </div>
             {wine.appellationPlaceKey && wine.appellationName ? (
               <Link

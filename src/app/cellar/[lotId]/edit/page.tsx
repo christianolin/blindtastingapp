@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { isContributor } from "@/lib/auth/roles";
 import { EditLotForm } from "./edit-lot-form";
+import { WinePriceField } from "./wine-price-field";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -18,6 +20,7 @@ function unwrap<T>(rel: T | T[] | null): T | null {
 
 type LotRow = {
   id: string;
+  catalog_wine_id: string;
   bottle_size_ml: number;
   quantity: number;
   price_per_bottle: number | null;
@@ -33,6 +36,7 @@ type LotRow = {
     vintage_kind: "YEAR" | "NV" | "TAWNY";
     vintage_year: number | null;
     vintage_tawny_years: number | null;
+    estimated_price: number | string | null;
     producer: Rel;
     appellation: Rel;
   } | null;
@@ -50,14 +54,17 @@ export default async function EditLotPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data } = await supabase
-    .from("cellar_lots")
-    .select(
-      "id, bottle_size_ml, quantity, price_per_bottle, currency, purchased_on, purchase_source, drink_from, drink_to, storage_location, lot_note, " +
-        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
-    )
-    .eq("id", lotId)
-    .maybeSingle();
+  const [{ data }, canEditPrice] = await Promise.all([
+    supabase
+      .from("cellar_lots")
+      .select(
+        "id, catalog_wine_id, bottle_size_ml, quantity, price_per_bottle, currency, purchased_on, purchase_source, drink_from, drink_to, storage_location, lot_note, " +
+          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, estimated_price, producer:producers(name), appellation:appellations(name))",
+      )
+      .eq("id", lotId)
+      .maybeSingle(),
+    isContributor(supabase, user.id),
+  ]);
 
   // RLS returns nothing for a lot that isn't the caller's, so treat as absent.
   const lot = data as unknown as LotRow | null;
@@ -103,6 +110,15 @@ export default async function EditLotPage({
               lotNote: lot.lot_note,
             }}
           />
+          <div className="mt-6">
+            <WinePriceField
+              wineId={lot.catalog_wine_id}
+              initialPrice={
+                c?.estimated_price == null ? null : Number(c.estimated_price)
+              }
+              canEdit={canEditPrice}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -23,12 +23,14 @@ export type CellarWine = {
   primaryGrapeName: string | null;
   secondaryGrapeName: string | null;
   typeDesignationName: string | null;
+  /** Market estimate in DKK from web listings; null when none were found. */
+  estimatedPrice: number | null;
   avgScore: number | null;
   noteCount: number;
 };
 
 const SELECT =
-  "id, appellation_id, colour, style, wine_name, description, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, appellation_id, colour, style, wine_name, description, image_url, estimated_price, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -61,6 +63,8 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     primaryGrapeName: name(row.primary_grape),
     secondaryGrapeName: name(row.secondary_grape),
     typeDesignationName: name(row.type_designation),
+    estimatedPrice:
+      row.estimated_price == null ? null : Number(row.estimated_price),
     avgScore,
     noteCount,
   };
