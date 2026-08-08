@@ -17,6 +17,8 @@ import {
   FileText,
   Pencil,
   Plus,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -137,8 +139,24 @@ export function CellarBottlesTable({
     key: "added",
     dir: "desc",
   });
-  const [perPage, setPerPage] = useState(25);
+  // Two ways to read one cellar: a dense list for managing, a bottle grid for
+  // browsing. Same rows, same search/filter/sort — only the render and the
+  // page size differ. The choice persists per browser so the cellar reopens
+  // the way you like it. Read lazily once (SSR renders list, then the client's
+  // saved choice applies on mount) rather than via a state-setting effect.
+  const [view, setView] = useState<"list" | "grid">(() => {
+    if (typeof window === "undefined") return "list";
+    const saved = window.localStorage.getItem("cellar-view");
+    return saved === "grid" ? "grid" : "list";
+  });
+  const chooseView = (v: "list" | "grid") => {
+    setView(v);
+    setPage(1);
+    window.localStorage.setItem("cellar-view", v);
+  };
   const [page, setPage] = useState(1);
+  // Bottle view is for browsing a few at a time; list view for scanning many.
+  const perPage = view === "grid" ? 8 : 25;
   const [openNote, setOpenNote] = useState<{ noteId: string; wineId: string } | null>(
     null,
   );
@@ -380,7 +398,118 @@ export function CellarBottlesTable({
         >
           Clear filters
         </button>
+        {/* Finder-style view switch, pushed to the far right. Neither view is
+            secondary — same rows, same filters, just list vs. bottles. */}
+        <div className="ml-auto inline-flex overflow-hidden rounded-md border border-border">
+          <button
+            type="button"
+            aria-label="List view"
+            title="List view"
+            aria-pressed={view === "list"}
+            onClick={() => chooseView("list")}
+            className={cn(
+              "inline-flex items-center justify-center px-2.5 py-1.5 transition-colors",
+              view === "list"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <List className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Bottle view"
+            title="Bottle view"
+            aria-pressed={view === "grid"}
+            onClick={() => chooseView("grid")}
+            className={cn(
+              "inline-flex items-center justify-center border-l border-border px-2.5 py-1.5 transition-colors",
+              view === "grid"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="size-4" />
+          </button>
+        </div>
       </div>
+
+      {view === "grid" ? (
+        <>
+          {filtered.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              No bottles match your search.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+              {pageRows.map((r) => {
+                const value = lotValue(r);
+                return (
+                  <Link
+                    key={r.lotId}
+                    href={`/catalog/${r.catalogWineId}`}
+                    className="group flex flex-col overflow-hidden rounded-xl border border-border transition-colors hover:bg-muted/30"
+                  >
+                    {/* The bottle is the content here — a tall contain-fit
+                        panel over cream, not a cropped thumbnail. */}
+                    <div className="flex h-48 items-end justify-center bg-gradient-to-b from-muted/40 to-background p-3 sm:h-56">
+                      {r.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.imageUrl}
+                          alt=""
+                          className="h-full w-auto max-w-[80%] object-contain drop-shadow-md transition-transform group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <Wine className="mb-6 size-14 text-muted-foreground/40" />
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1 border-t border-border p-3">
+                      <p className="truncate font-medium leading-tight">{r.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {[r.grapes.slice(0, 2).join(", "), r.colour && cap(r.colour)]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
+                        {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
+                      </p>
+                      <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {r.quantity} {r.quantity === 1 ? "bottle" : "bottles"}
+                        </span>
+                        {value != null ? (
+                          <span className="text-sm font-medium tabular-nums">
+                            {Math.round(value).toLocaleString()} {currency}
+                          </span>
+                        ) : null}
+                      </div>
+                      {r.bestScore != null ? (
+                        <span className="mt-1 inline-flex items-center gap-1 border-t border-border pt-2 text-xs">
+                          <Star className="size-3.5 text-gold-deep" />
+                          <span className="font-medium">{r.bestScore} pts</span>
+                          {r.bestNoteOn ? (
+                            <span className="text-muted-foreground">
+                              · {new Date(r.bestNoteOn).toLocaleDateString()}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : (
+                        <span className="mt-1 border-t border-border pt-2 text-xs text-muted-foreground/70">
+                          Not tasted yet
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </>
+      ) : (
+      <>
+      {/* --- list view (mobile cards + desktop table) --- */}
 
       {/* Mobile: a card per row (the wide table only appears at lg+). */}
       <div className="flex flex-col gap-2 lg:hidden">
@@ -694,25 +823,13 @@ export function CellarBottlesTable({
           </div>
         ) : null}
       </div>
+      </>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <label className="flex items-center gap-2">
-          Wines per page
-          <select
-            className={selectCls}
-            value={perPage}
-            onChange={(e) => {
-              setPerPage(Number(e.target.value));
-              setPage(1);
-            }}
-          >
-            {[10, 25, 50, 100].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span>
+          {view === "grid" ? "Browsing bottles" : "Managing bottles"}
+        </span>
         <div className="flex items-center gap-3">
           <span>
             {filtered.length === 0
