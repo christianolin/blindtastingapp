@@ -25,6 +25,7 @@ export function NoteEditor({
   consumptionId = null,
   embedded = false,
   onClose,
+  onDeleted,
   onSaved,
 }: {
   wineId: string;
@@ -38,6 +39,8 @@ export function NoteEditor({
   embedded?: boolean;
   /** Close/exit the editor (modal close, or route back) — used by Discard. */
   onClose?: () => void;
+  /** Called after the note was deleted; defaults to going to the wine page. */
+  onDeleted?: () => void;
   /** Called after a successful save (with the saved note id); a modal uses it
       to close itself (and skip the route swap the standalone page does). */
   onSaved?: (savedId?: string) => void;
@@ -112,6 +115,23 @@ export function NoteEditor({
   // the target must be deterministic.
   const onDiscard = onClose ?? (() => router.push(`/catalog/${wineId}`));
 
+  // Deleting only exists for a note that is already saved. RLS scopes the
+  // delete to the author; aromas cascade and a cellar drink's link nulls out.
+  const noteId = initial.id;
+  const onDelete = noteId
+    ? async () => {
+        const { error } = await supabase
+          .from("wset_notes")
+          .delete()
+          .eq("id", noteId);
+        if (error) throw new Error(error.message);
+        router.refresh();
+        if (onDeleted) onDeleted();
+        else if (onClose) onClose();
+        else router.push(`/catalog/${wineId}`);
+      }
+    : undefined;
+
   return (
     <WsetSheet
       wine={wine}
@@ -120,6 +140,7 @@ export function NoteEditor({
       initial={initial}
       onSave={onSave}
       onDiscard={onDiscard}
+      onDelete={onDelete}
       embedded={embedded}
     />
   );

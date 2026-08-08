@@ -162,6 +162,7 @@ export function WsetSheet({
   initial,
   onSave,
   onDiscard,
+  onDelete,
   embedded = false,
 }: {
   wine: { colour: WineColour; style: WineStyle };
@@ -171,6 +172,9 @@ export function WsetSheet({
   onSave: (state: WsetNoteState) => Promise<void>;
   /** Exit without saving; renders a Discard button (confirms when dirty). */
   onDiscard?: () => void;
+  /** Delete this saved note permanently (confirms first). Only passed for
+      notes that already exist; the caller owns navigation afterwards. */
+  onDelete?: () => Promise<void> | void;
   // In a dialog: single column (no scroll-spy rail), header sticks to the
   // popup top instead of below the app header.
   embedded?: boolean;
@@ -183,6 +187,9 @@ export function WsetSheet({
   const [activeId, setActiveId] = useState<string>("appearance");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // Phones show one WSET section at a time (progressive disclosure); desktop
   // still stacks all four with the scroll-spy rail.
   const [mobileSection, setMobileSection] =
@@ -347,8 +354,10 @@ export function WsetSheet({
             <span className="sm:hidden">{saveLabelShort}</span>
             <span className="max-sm:hidden">{saveLabel}</span>
           </button>
-          {onDiscard && dirty ? (
-            <div className="relative sm:hidden">
+          {onDelete || (onDiscard && dirty) ? (
+            // The ⋯ menu: on phones it holds Discard (while dirty) and Delete;
+            // desktop only needs it for Delete — Discard sits in the bar there.
+            <div className={cn("relative", !onDelete && "sm:hidden")}>
               <button
                 type="button"
                 aria-label="More actions"
@@ -393,29 +402,58 @@ export function WsetSheet({
                       boxShadow: "0 8px 28px rgba(70,25,40,0.18)",
                     }}
                   >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        discard();
-                      }}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "9px 12px",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        border: "none",
-                        background: "none",
-                        color: WSET.ink,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Discard note
-                    </button>
+                    {onDiscard && dirty ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="sm:hidden"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          discard();
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "9px 12px",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          border: "none",
+                          background: "none",
+                          color: WSET.ink,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Discard changes
+                      </button>
+                    ) : null}
+                    {onDelete ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setDeleteError(null);
+                          setConfirmDelete(true);
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "9px 12px",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          border: "none",
+                          background: "none",
+                          color: WSET.faultRed,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete note
+                      </button>
+                    ) : null}
                   </div>
                 </>
               ) : null}
@@ -655,6 +693,79 @@ export function WsetSheet({
                 style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: WSET.burgundy, color: WSET.creamText }}
               >
                 Discard
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {confirmDelete ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => (deleting ? null : setConfirmDelete(false))}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            background: "rgba(30,10,17,0.45)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 360,
+              background: WSET.cream,
+              border: `1px solid ${WSET.border}`,
+              borderRadius: 16,
+              padding: 20,
+              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+            }}
+          >
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+              Delete this tasting note?
+            </h3>
+            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
+              The note and its aroma selections are removed for good. This
+              can&apos;t be undone.
+            </p>
+            {deleteError ? (
+              <p style={{ fontSize: 12.5, color: WSET.faultRed, marginBottom: 14 }}>{deleteError}</p>
+            ) : null}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setConfirmDelete(false)}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+              >
+                Keep note
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  setDeleteError(null);
+                  try {
+                    await onDelete?.();
+                    // The caller navigates away / closes on success.
+                  } catch (error) {
+                    setDeleting(false);
+                    setDeleteError(
+                      error instanceof Error && error.message
+                        ? error.message
+                        : "Couldn't delete the note. Please try again.",
+                    );
+                  }
+                }}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: deleting ? "default" : "pointer", border: "none", background: WSET.faultRed, color: WSET.creamText, opacity: deleting ? 0.7 : 1 }}
+              >
+                {deleting ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>
