@@ -156,8 +156,8 @@ export function AromaPicker({
       </div>
 
       <div className="max-sm:hidden">
-      <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}`, marginBottom: 12 }}>
-        {ORIGINS.map(({ origin, label, caption }) => {
+      <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}` }}>
+        {ORIGINS.map(({ origin, label }) => {
           const active = origin === activeOrigin;
           const count = countByOrigin[origin] ?? 0;
           return (
@@ -182,7 +182,6 @@ export function AromaPicker({
               }}
             >
               {label}
-              <span style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2 }}>{caption}</span>
               {count > 0 ? (
                 <span
                   style={{
@@ -202,11 +201,21 @@ export function AromaPicker({
         })}
       </div>
 
+      {/* The active tab's meaning, said once — not squeezed into every tab. */}
+      <div style={{ margin: "6px 0 10px", fontSize: 11, color: WSET.muted2 }}>
+        {(() => {
+          const c = ORIGINS.find((o) => o.origin === activeOrigin)!.caption;
+          return c.charAt(0).toUpperCase() + c.slice(1);
+        })()}
+      </div>
+      {/* Descriptor grid: clusters flow into two columns, name above chips —
+          the old 120px label column spent a third of the width on whitespace. */}
+      <div className="sm:columns-2 sm:gap-x-10">
       {groups.map((group) => (
-        <div key={group.name} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 8, marginBottom: 5, alignItems: "start" }}>
-          <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, paddingTop: 3, whiteSpace: "nowrap" }}>
+        <div key={group.name} className="break-inside-avoid" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, marginBottom: 6 }}>
             {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
-          </span>
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {group.items.map((term) => {
               const isSel = selected.has(term.id);
@@ -235,6 +244,7 @@ export function AromaPicker({
           </div>
         </div>
       ))}
+      </div>
 
       {copyFrom && copyRemaining > 0 ? (
         <button

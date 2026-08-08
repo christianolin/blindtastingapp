@@ -233,8 +233,9 @@
   animation: rise-in 0.25s 0.15s ease both;
 }
 
-/* WSET tasting-sheet attribute rows: label + control side-by-side on tablet+,
-   stacked (control full-width, so sliders/pills aren't squished) on phones. */
+/* WSET tasting-sheet attribute rows: label above its control at every width —
+   the old 150px desktop label column spent a third of the row on whitespace.
+   Desktop density comes from .wset-pair putting two rows side by side. */
 .wset-row {
   display: grid;
   gap: 0.625rem;
@@ -243,9 +244,16 @@
 }
 @media (min-width: 640px) {
   .wset-row {
-    grid-template-columns: 150px minmax(0, 1fr);
-    gap: 24px;
-    padding: 16px 0;
+    padding: 14px 0;
+  }
+}
+.wset-pair {
+  display: grid;
+}
+@media (min-width: 640px) {
+  .wset-pair {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 44px;
   }
 }
 

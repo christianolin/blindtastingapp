@@ -97,6 +97,13 @@ export function Row({
   );
 }
 
+// Two related attributes side by side on desktop (Sweetness | Acidity),
+// stacked on phones — the worksheet density comes from here, not from
+// shrinking anything.
+export function RowPair({ children }: { children: React.ReactNode }) {
+  return <div className="wset-pair">{children}</div>;
+}
+
 export function SectionCard({
   id,
   numeral,
@@ -284,14 +291,20 @@ export function WsetSheet({
           // plain -mx-4 reaches the edges without any viewport math (the 50vw
           // calc misbehaves inside the fixed, scrolling modal); the note page,
           // whose nesting/padding is unknown, uses the viewport calc.
+          // In the modal the bar must own the very top: the dialog's p-4 left
+          // a gap the content scrolled past, so the "sticky" header looked
+          // detached. Negative margins cancel that padding on every side and
+          // the top corners take over the dialog's own radius.
           embedded
-            ? "max-sm:-mx-4 max-sm:px-4 max-sm:pr-4 sm:pl-1 sm:pr-1"
+            ? "-mx-4 -mt-4 px-4 sm:rounded-t-xl sm:px-6"
             : "max-sm:mx-[calc(50%-50vw)] max-sm:px-4 sm:px-1",
         )}
         style={{
           top: embedded ? 0 : 56,
-          background: "rgba(247,239,224,0.94)",
-          backdropFilter: "blur(8px)",
+          // Solid card-cream in the modal so nothing ghosts through; the page
+          // keeps the translucent blur since content scrolls under it there.
+          background: embedded ? WSET.cream : "rgba(247,239,224,0.94)",
+          backdropFilter: embedded ? undefined : "blur(8px)",
           borderBottom: `1px solid ${WSET.border}`,
         }}
       >
@@ -460,7 +473,15 @@ export function WsetSheet({
             </div>
           ) : null}
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-1 sm:hidden">
+        {/* Section chips: on phones they switch the visible section; in the
+            desktop modal (which has no scroll-spy rail) they double as the
+            sheet's table of contents and scroll to the section. */}
+        <div
+          className={cn(
+            "mt-2 gap-1 max-sm:grid max-sm:grid-cols-4 sm:flex sm:gap-2",
+            !embedded && "sm:hidden",
+          )}
+        >
           {navItems.map((s) => {
             const active = s.id === mobileSection;
             const complete = s.total > 0 && s.done >= s.total;
@@ -475,17 +496,16 @@ export function WsetSheet({
                     document.getElementById(s.id)?.scrollIntoView(),
                   );
                 }}
+                className="rounded-[10px] px-0.5 py-[5px] sm:inline-flex sm:items-baseline sm:gap-1.5 sm:px-3 sm:py-1.5"
                 style={{
-                  borderRadius: 10,
-                  padding: "5px 2px",
                   border: "none",
                   cursor: "pointer",
                   background: active ? WSET.burgundy : "#F3EAD6",
                 }}
               >
                 <span
+                  className="block sm:inline"
                   style={{
-                    display: "block",
                     fontSize: 11,
                     fontWeight: 600,
                     color: active ? WSET.creamText : WSET.ink,
@@ -494,8 +514,8 @@ export function WsetSheet({
                   {s.name === "Conclusions" ? "Conclusion" : s.name}
                 </span>
                 <span
+                  className="block sm:inline"
                   style={{
-                    display: "block",
                     fontSize: 9.5,
                     fontWeight: 600,
                     color: active ? WSET.creamText : complete ? WSET.gold : WSET.faint,
@@ -529,13 +549,15 @@ export function WsetSheet({
         )}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={mobileSection !== "appearance" ? "max-sm:hidden" : undefined}>
-            <Row label="Clarity" value={valueLabel(state.clarity)}>
-              <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
-            </Row>
-            <Row label="Intensity" value={valueLabel(state.appearanceIntensity)}>
-              <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={LABELS} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
-            </Row>
+          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={cn(mobileSection !== "appearance" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+            <RowPair>
+              <Row label="Clarity" value={valueLabel(state.clarity)}>
+                <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
+              </Row>
+              <Row label="Intensity" value={valueLabel(state.appearanceIntensity)}>
+                <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={LABELS} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
+              </Row>
+            </RowPair>
             <Row label="Colour" value={valueLabel(state.colourHue)}>
               <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} />
             </Row>
@@ -544,18 +566,20 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={mobileSection !== "nose" ? "max-sm:hidden" : undefined}>
-            <Row label="Condition" value={valueLabel(state.condition)}>
-              <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
-            </Row>
+          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={cn(mobileSection !== "nose" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+            <RowPair>
+              <Row label="Condition" value={valueLabel(state.condition)}>
+                <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
+              </Row>
+              <Row label="Intensity" value={valueLabel(state.noseIntensity)}>
+                <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
+              </Row>
+            </RowPair>
             {state.condition === "UNCLEAN" ? (
               <Row label="Fault" sub="what's wrong">
                 <PillGroup multi options={FAULTS} labels={LABELS} value={state.faults} onChange={(v) => set("faults", v)} />
               </Row>
             ) : null}
-            <Row label="Intensity" value={valueLabel(state.noseIntensity)}>
-              <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
-            </Row>
             <Row label="Development" value={valueLabel(state.development)}>
               <SnapSlider stops={DEVELOPMENT_STOPS} labels={LABELS} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
@@ -563,38 +587,50 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle="Aroma characteristics" />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={mobileSection !== "palate" ? "max-sm:hidden" : undefined}>
-            <Row label="Sweetness" value={valueLabel(state.sweetness)}>
-              <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
-            </Row>
-            <Row label="Acidity" value={valueLabel(state.acidity)}>
-              <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.acidity} onChange={(v) => set("acidity", v)} />
-            </Row>
-            <Row label="Tannin" value={valueLabel(state.tannin)}>
-              <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.tannin} onChange={(v) => set("tannin", v)} />
-            </Row>
-            <Row label="Tannin nature" sub="optional">
-              <PillGroup multi options={TANNIN_NATURE} labels={LABELS} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
-            </Row>
-            <Row label="Alcohol" value={valueLabel(state.alcohol)}>
-              <SnapSlider
-                stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
-                labels={LABELS}
-                value={state.alcohol}
-                onChange={(v) => set("alcohol", v)}
-              />
-            </Row>
-            <Row label="Body" value={valueLabel(state.body)}>
-              <SnapSlider stops={BODY_STOPS} labels={LABELS} value={state.body} onChange={(v) => set("body", v)} />
-            </Row>
-            {wine.style === "SPARKLING" ? (
-              <Row label="Mousse" value={valueLabel(state.mousse)} sub={state.mousse ? undefined : "required — sparkling"}>
-                <PillGroup options={MOUSSE} labels={LABELS} value={state.mousse} onChange={(v) => set("mousse", v)} />
+          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={cn(mobileSection !== "palate" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
+            <RowPair>
+              <Row label="Sweetness" value={valueLabel(state.sweetness)}>
+                <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
               </Row>
-            ) : null}
-            <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
-              <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
-            </Row>
+              <Row label="Acidity" value={valueLabel(state.acidity)}>
+                <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.acidity} onChange={(v) => set("acidity", v)} />
+              </Row>
+            </RowPair>
+            <RowPair>
+              <Row label="Tannin" value={valueLabel(state.tannin)}>
+                <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.tannin} onChange={(v) => set("tannin", v)} />
+              </Row>
+              <Row label="Tannin nature" sub="optional">
+                <PillGroup multi options={TANNIN_NATURE} labels={LABELS} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
+              </Row>
+            </RowPair>
+            <RowPair>
+              <Row label="Alcohol" value={valueLabel(state.alcohol)}>
+                <SnapSlider
+                  stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
+                  labels={LABELS}
+                  value={state.alcohol}
+                  onChange={(v) => set("alcohol", v)}
+                />
+              </Row>
+              <Row label="Body" value={valueLabel(state.body)}>
+                <SnapSlider stops={BODY_STOPS} labels={LABELS} value={state.body} onChange={(v) => set("body", v)} />
+              </Row>
+            </RowPair>
+            {wine.style === "SPARKLING" ? (
+              <RowPair>
+                <Row label="Mousse" value={valueLabel(state.mousse)} sub={state.mousse ? undefined : "required — sparkling"}>
+                  <PillGroup options={MOUSSE} labels={LABELS} value={state.mousse} onChange={(v) => set("mousse", v)} />
+                </Row>
+                <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
+                  <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
+                </Row>
+              </RowPair>
+            ) : (
+              <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
+                <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
+              </Row>
+            )}
             <Row wide label="Flavour characteristics" sub="what you taste, not just smell">
               <AromaPicker
                 terms={terms}
@@ -610,16 +646,18 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={mobileSection !== "conclusions" ? "max-sm:hidden" : undefined}>
+          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={cn(mobileSection !== "conclusions" && "max-sm:hidden", embedded && "sm:scroll-mt-[104px]")}>
             <Row label="Point Score" sub="100-point scale">
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
             </Row>
-            <Row label="Price category" value={valueLabel(state.priceCategory)}>
-              <PillGroup options={PRICE} labels={LABELS} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
-            </Row>
-            <Row label="Readiness" value={valueLabel(state.readiness)}>
-              <PillGroup options={READINESS} labels={LABELS} value={state.readiness} onChange={(v) => set("readiness", v)} />
-            </Row>
+            <RowPair>
+              <Row label="Price category" value={valueLabel(state.priceCategory)}>
+                <PillGroup options={PRICE} labels={LABELS} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
+              </Row>
+              <Row label="Readiness" value={valueLabel(state.readiness)}>
+                <PillGroup options={READINESS} labels={LABELS} value={state.readiness} onChange={(v) => set("readiness", v)} />
+              </Row>
+            </RowPair>
             <Row label="Taster's notes" sub="free text">
               <textarea
                 value={state.tasterNotes}
