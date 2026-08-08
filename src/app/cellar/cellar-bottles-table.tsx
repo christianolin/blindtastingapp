@@ -73,9 +73,10 @@ function windowLabel(from: number | null, to: number | null): string {
 
 // The drink window as a decision, not a pair of years: is this bottle ready?
 const THIS_YEAR = new Date().getFullYear();
+// null = no information; the caller renders that as quiet text, so pills are
+// reserved for states that actually mean something.
 function readiness(from: number | null, to: number | null) {
-  if (from == null && to == null)
-    return { label: "No window", cls: "border border-dashed border-border text-muted-foreground" };
+  if (from == null && to == null) return null;
   if (from != null && THIS_YEAR < from)
     return { label: "Hold", cls: "bg-muted text-muted-foreground" };
   if (to != null && THIS_YEAR > to)
@@ -86,6 +87,11 @@ function readiness(from: number | null, to: number | null) {
 }
 function ReadinessChip({ from, to }: { from: number | null; to: number | null }) {
   const r = readiness(from, to);
+  // Absence of information is not a status: no window renders as quiet text,
+  // so the coloured pills are reserved for states that mean something.
+  if (!r) {
+    return <span className="text-xs text-muted-foreground">No window</span>;
+  }
   return (
     <span
       className={cn(
@@ -408,7 +414,7 @@ export function CellarBottlesTable({
                   {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {[r.colour && cap(r.colour), r.grapes.slice(0, 2).join(", ")]
+                  {[r.grapes.slice(0, 2).join(", "), r.colour && cap(r.colour)]
                     .filter(Boolean)
                     .join(" · ") || "—"}
                 </p>
@@ -522,10 +528,10 @@ export function CellarBottlesTable({
                         <img
                           src={r.imageUrl}
                           alt=""
-                          className="h-14 w-10 shrink-0 rounded-md border border-border object-cover"
+                          className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
                         />
                       ) : (
-                        <span className="flex h-14 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+                        <span className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
                           <Wine className="size-4" />
                         </span>
                       )}
@@ -533,22 +539,17 @@ export function CellarBottlesTable({
                         <span className="line-clamp-2 font-medium text-foreground">
                           {r.title}
                         </span>
+                        {/* The title already carries the appellation, so the
+                            meta lines don't repeat it: grapes · colour, then
+                            region · country. Calmer rows, no lost facts. */}
                         <span className="block truncate text-xs text-muted-foreground">
-                          {[r.colour && cap(r.colour), r.grapes.slice(0, 3).join(", ")]
+                          {[r.grapes.slice(0, 3).join(", "), r.colour && cap(r.colour)]
                             .filter(Boolean)
                             .join(" · ") || "—"}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
                           {r.country ? <CountryFlag name={r.country} className="mr-1" /> : null}
-                          {[
-                            r.appellation && r.appellation !== r.region
-                              ? r.appellation
-                              : null,
-                            r.region,
-                            r.country,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ") || "—"}
+                          {[r.region, r.country].filter(Boolean).join(" · ") || "—"}
                         </span>
                       </span>
                     </Link>
@@ -599,6 +600,14 @@ export function CellarBottlesTable({
                           </span>
                         ) : null}
                       </button>
+                    ) : !readOnly ? (
+                      // An empty cell is a dead end; a quiet action isn't.
+                      <Link
+                        href={`/catalog/${r.catalogWineId}/notes/new`}
+                        className="text-xs text-muted-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        + Add note
+                      </Link>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

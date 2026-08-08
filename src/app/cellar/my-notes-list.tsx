@@ -74,55 +74,79 @@ export function MyNotesList({ notes }: { notes: NoteRow[] }) {
                 </span>
               )}
 
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="flex items-start justify-between gap-3">
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">{n.title}</span>
+              {/* Three zones — identity | tasting summary | score+date — so the
+                  wide desktop card doesn't leave its right half empty. Phones
+                  stack them back into one column. */}
+              <span className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-6">
+                <span className="flex min-w-0 flex-col sm:w-60 sm:shrink-0">
+                  <span className="line-clamp-2 font-medium">{n.title}</span>
+                  {n.grapes ? (
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      {n.grapes}
+                    </span>
+                  ) : null}
+                  {n.subtitle ? (
                     <span className="block truncate text-xs text-muted-foreground">
-                      {[n.subtitle, n.grapes].filter(Boolean).join(" · ") || "—"}
+                      {n.subtitle}
                     </span>
-                  </span>
-                  <span className="flex shrink-0 flex-col items-end">
-                    {n.qualityScore != null ? (
-                      <span className="font-heading text-xl leading-none tabular-nums">
-                        {n.qualityScore}
-                      </span>
-                    ) : null}
-                    <span className="mt-0.5 text-xs text-muted-foreground">
-                      {new Date(n.tastedOn).toLocaleDateString()}
+                  ) : null}
+                  {badge ? (
+                    <span className="mt-1.5 self-start rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+                      {badge}
                     </span>
-                    {badge ? (
-                      <span className="mt-1 rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-                        {badge}
-                      </span>
-                    ) : null}
-                  </span>
+                  ) : null}
                 </span>
 
-                {n.aromas.length > 0 ? (
-                  <span className="flex flex-wrap gap-1">
-                    {n.aromas.map((a) => (
-                      <span
-                        key={a}
-                        className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground"
-                      >
-                        {a}
+                <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  {n.aromas.length > 0 ? (
+                    <span className="flex flex-col gap-1">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                        Aromas
                       </span>
-                    ))}
-                  </span>
-                ) : null}
+                      <span className="flex flex-wrap gap-1">
+                        {n.aromas.map((a) => (
+                          <span
+                            key={a}
+                            className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground"
+                          >
+                            {a}
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                  ) : null}
+                  {n.structure.length > 0 ? (
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                        Structure
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {n.structure.join(" · ")}
+                      </span>
+                    </span>
+                  ) : null}
+                  {n.preview ? (
+                    // The taster's own words — the human part of the note, so
+                    // it reads darker than the structured metadata around it.
+                    <span className="mt-1 line-clamp-2 text-sm italic leading-relaxed text-foreground/80">
+                      “{n.preview}”
+                    </span>
+                  ) : null}
+                </span>
 
-                {n.structure.length > 0 ? (
+                <span className="flex shrink-0 items-baseline gap-2 sm:flex-col sm:items-end sm:gap-0.5">
+                  {n.qualityScore != null ? (
+                    <span className="font-heading text-2xl leading-none tabular-nums">
+                      {n.qualityScore}
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">
+                        pts
+                      </span>
+                    </span>
+                  ) : null}
                   <span className="text-xs text-muted-foreground">
-                    {n.structure.join(" · ")}
+                    {new Date(n.tastedOn).toLocaleDateString()}
                   </span>
-                ) : null}
-
-                {n.preview ? (
-                  <span className="line-clamp-2 text-xs italic text-muted-foreground/90">
-                    {n.preview}
-                  </span>
-                ) : null}
+                </span>
               </span>
             </button>
           );
