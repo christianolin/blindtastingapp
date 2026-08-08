@@ -106,9 +106,11 @@ export function NoteEditor({
     [supabase, wineId, router, contextKind, tastingWineId, consumptionId, onSaved],
   );
 
-  // Exit without saving. In a modal the parent supplies onClose; as a full
-  // route we step back to wherever the taster came from.
-  const onDiscard = onClose ?? (() => router.back());
+  // Exit the editor. In a modal the parent supplies onClose; as a full route
+  // we go to the wine's page — router.back() silently does nothing when the
+  // editor was opened directly (fresh tab, or after the post-save replace), so
+  // the target must be deterministic.
+  const onDiscard = onClose ?? (() => router.push(`/catalog/${wineId}`));
 
   return (
     <WsetSheet

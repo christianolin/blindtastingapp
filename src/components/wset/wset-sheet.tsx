@@ -176,6 +176,10 @@ export function WsetSheet({
   embedded?: boolean;
 }) {
   const [state, setState] = useState<WsetNoteState>(initial);
+  // What the note looked like when last saved (or opened). Dirtiness compares
+  // against THIS, not the mount-time initial — after a successful save the
+  // sheet is clean again, and Discard turns into a plain Close.
+  const [baseline, setBaseline] = useState<WsetNoteState>(initial);
   const [activeId, setActiveId] = useState<string>("appearance");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -185,8 +189,8 @@ export function WsetSheet({
     useState<(typeof SECTION_IDS)[number]>("appearance");
   const [menuOpen, setMenuOpen] = useState(false);
   const dirty = useMemo(
-    () => JSON.stringify(state) !== JSON.stringify(initial),
-    [state, initial],
+    () => JSON.stringify(state) !== JSON.stringify(baseline),
+    [state, baseline],
   );
 
   const set = useCallback(
@@ -239,6 +243,7 @@ export function WsetSheet({
     setSaveState("saving");
     try {
       await onSave(state);
+      setBaseline(state);
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2200);
     } catch {
@@ -300,11 +305,13 @@ export function WsetSheet({
             {total} assessed
           </span>
           {onDiscard ? (
-            // Desktop keeps the Discard button; on phones it moves into the
-            // ⋯ menu so Save doesn't share weight with a rare action.
+            // With unsaved changes this is Discard (confirms); once the note
+            // is clean — freshly opened or just saved — it is a plain Close.
+            // Desktop always shows it; phones show Close in the bar but tuck
+            // the rarer Discard into the ⋯ menu.
             <button
               type="button"
-              className="max-sm:hidden"
+              className={dirty ? "max-sm:hidden" : undefined}
               onClick={discard}
               style={{
                 borderRadius: 999,
@@ -318,7 +325,7 @@ export function WsetSheet({
                 whiteSpace: "nowrap",
               }}
             >
-              Discard
+              {dirty ? "Discard" : "Close"}
             </button>
           ) : null}
           <button
@@ -340,7 +347,7 @@ export function WsetSheet({
             <span className="sm:hidden">{saveLabelShort}</span>
             <span className="max-sm:hidden">{saveLabel}</span>
           </button>
-          {onDiscard ? (
+          {onDiscard && dirty ? (
             <div className="relative sm:hidden">
               <button
                 type="button"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { WSET } from "./tokens";
@@ -39,9 +40,16 @@ export function AromaPicker({
 }) {
   const [activeOrigin, setActiveOrigin] = useState<AromaOrigin>("PRIMARY");
   const [sheetOpen, setSheetOpen] = useState(false);
-  // Cluster open/closed in the mobile sheet: explicit taps win; otherwise a
-  // cluster is open exactly when something in it is selected.
-  const [openOverrides, setOpenOverrides] = useState<Record<string, boolean>>({});
+  // While the sheet is up the page behind must not scroll — an un-locked body
+  // drags a "fixed" sheet around with it on iOS.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sheetOpen]);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(terms.map((t) => [t.id, t])), [terms]);
 
@@ -269,7 +277,10 @@ export function AromaPicker({
       ) : null}
       </div>
 
-      {sheetOpen ? (
+      {/* Portalled to <body>: any transformed/filtered ancestor turns
+          position:fixed into position:absolute-within-it, which is exactly the
+          "sheet scrolls away with the page" bug. */}
+      {sheetOpen ? createPortal(
         <div
           className="sm:hidden"
           role="dialog"
@@ -405,92 +416,54 @@ export function AromaPicker({
                 padding: "4px 16px 28px",
               }}
             >
-              {groups.map((group) => {
-                const key = `${activeOrigin}:${group.name}`;
-                const selCount = group.items.filter((t) => selected.has(t.id)).length;
-                const open = openOverrides[key] ?? selCount > 0;
-                return (
-                  <div key={group.name} style={{ borderBottom: `1px solid ${WSET.hairline}` }}>
-                    <button
-                      type="button"
-                      aria-expanded={open}
-                      onClick={() => setOpenOverrides((o) => ({ ...o, [key]: !open }))}
-                      style={{
-                        display: "flex",
-                        width: "100%",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "11px 0",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span
-                        style={{
-                          flex: 1,
-                          textAlign: "left",
-                          fontSize: 11,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.07em",
-                          fontWeight: 600,
-                          color: WSET.gold,
-                        }}
-                      >
-                        {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
-                      </span>
-                      {selCount > 0 ? (
-                        <span
+              {/* Every cluster open, name above its chips — scanning beats
+                  tapping categories open one by one. */}
+              {groups.map((group) => (
+                <div key={group.name} style={{ paddingTop: 10, borderBottom: `1px solid ${WSET.hairline}` }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.07em",
+                      fontWeight: 600,
+                      color: WSET.gold,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 12 }}>
+                    {group.items.map((term) => {
+                      const isSel = selected.has(term.id);
+                      return (
+                        <button
+                          key={term.id}
+                          type="button"
+                          aria-pressed={isSel}
+                          onClick={() => toggle(term.id)}
                           style={{
                             borderRadius: 999,
-                            background: WSET.goldSoft,
-                            color: WSET.pillText,
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                            padding: "1px 7px",
+                            padding: "6px 13px",
+                            fontSize: 12.5,
+                            lineHeight: 1.35,
+                            cursor: "pointer",
+                            background: isSel ? WSET.burgundy : WSET.pillBg,
+                            border: `1px solid ${WSET.pillBorder}`,
+                            color: isSel ? WSET.creamText : WSET.pillText,
+                            fontWeight: isSel ? 600 : 500,
                           }}
                         >
-                          {selCount}
-                        </span>
-                      ) : null}
-                      <span aria-hidden style={{ fontSize: 11, color: WSET.muted2 }}>
-                        {open ? "▾" : "▸"}
-                      </span>
-                    </button>
-                    {open ? (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 0 12px" }}>
-                        {group.items.map((term) => {
-                          const isSel = selected.has(term.id);
-                          return (
-                            <button
-                              key={term.id}
-                              type="button"
-                              aria-pressed={isSel}
-                              onClick={() => toggle(term.id)}
-                              style={{
-                                borderRadius: 999,
-                                padding: "6px 13px",
-                                fontSize: 12.5,
-                                lineHeight: 1.35,
-                                cursor: "pointer",
-                                background: isSel ? WSET.burgundy : WSET.pillBg,
-                                border: `1px solid ${WSET.pillBorder}`,
-                                color: isSel ? WSET.creamText : WSET.pillText,
-                                fontWeight: isSel ? 600 : 500,
-                              }}
-                            >
-                              {term.term}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : null}
+                          {term.term}
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
