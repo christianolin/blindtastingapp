@@ -49,9 +49,10 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
   const [region, setRegion] = useState(ALL);
   const [colour, setColour] = useState(ALL);
   const [grape, setGrape] = useState(ALL);
+  // Newest additions first by default — the catalog opens on what just landed.
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
-    key: "title",
-    dir: "asc",
+    key: "added",
+    dir: "desc",
   });
   const [page, setPage] = useState(1);
   const [noteWineId, setNoteWineId] = useState<string | null>(null);
