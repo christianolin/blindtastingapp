@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Grape as GrapeIcon } from "lucide-react";
+import { Grape as GrapeIcon, LayoutList, Network } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { GrapeLineageTree } from "./grape-lineage-tree";
 
 export type GrapeRow = {
   id: string;
@@ -43,6 +44,10 @@ export function GrapeLibrary({
 }) {
   const [q, setQ] = useState("");
   const [color, setColor] = useState<"ALL" | "RED" | "WHITE">("ALL");
+  const [view, setView] = useState<"cards" | "lineage">("cards");
+  // name -> card id, so the lineage tree can deep-link a known grape to its
+  // profile card below.
+  const grapeIds = Object.fromEntries(grapes.map((g) => [g.name, g.id]));
   const needle = q.trim().toLowerCase();
   const filtered = grapes.filter(
     (g) =>
@@ -52,17 +57,59 @@ export function GrapeLibrary({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-heading text-2xl font-semibold tracking-tight">
-          Grapes
-        </h2>
-        <p className="mt-1 text-muted-foreground">
-          The same grape list used across every tasting, with tasting notes for
-          the most common varieties.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            Grapes
+          </h2>
+          <p className="mt-1 text-muted-foreground">
+            The same grape list used across every tasting, with tasting notes for
+            the most common varieties.
+          </p>
+        </div>
+        {/* Two ways to read the grapes: profile cards, or the parentage tree. */}
+        <div className="flex shrink-0 gap-1 rounded-lg bg-muted/60 p-1">
+          <button
+            type="button"
+            onClick={() => setView("cards")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              view === "cards"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LayoutList className="size-4" /> Cards
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("lineage")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              view === "lineage"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Network className="size-4" /> Lineage
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-8">
+      {view === "lineage" ? (
+        <GrapeLineageTree
+          grapeIds={grapeIds}
+          onOpenCard={(id) => {
+            // Cards carry the anchors; flip to them, then jump once painted.
+            setView("cards");
+            requestAnimationFrame(() =>
+              document.getElementById(`grape-${id}`)?.scrollIntoView(),
+            );
+          }}
+        />
+      ) : null}
+
+      <div className={cn("flex gap-8", view === "lineage" && "hidden")}>
         <nav className="sticky top-20 hidden h-[calc(100vh-6rem)] w-52 shrink-0 flex-col overflow-y-auto lg:flex">
           <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">
             {filtered.length} grape{filtered.length === 1 ? "" : "s"}
