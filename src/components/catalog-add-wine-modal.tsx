@@ -33,8 +33,10 @@ export function CatalogAddWineModal({
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [ref, setRef] = useState<RefData | null | "loading">("loading");
-  // A wine that arrived via scan flows straight into its tasting note after
-  // saving — the whole point of scanning is usually to taste it now.
+  // Adding a wine and what happens next are separate decisions: after a
+  // scanned wine is saved, a small chooser offers the follow-ups (note now,
+  // view the wine, or simply done) instead of assuming one of them.
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [noteWineId, setNoteWineId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -67,6 +69,45 @@ export function CatalogAddWineModal({
 
   if (noteWineId) {
     return <NewNoteModal wineId={noteWineId} onClose={onClose} />;
+  }
+
+  if (createdId) {
+    return (
+      <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogTitle>Wine added</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            It&apos;s in the catalog. What would you like to do now?
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setNoteWineId(createdId)}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Write a tasting note
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push(`/catalog/${createdId}`);
+              }}
+              className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              View the wine page
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+            >
+              Done
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
@@ -103,8 +144,8 @@ export function CatalogAddWineModal({
             initialWine={initialWine}
             onCreated={(id) => {
               if (initialWine) {
-                // Scanned: open the WSET sheet right here, no wine-page stop.
-                setNoteWineId(id);
+                // Scanned: offer the follow-ups instead of assuming one.
+                setCreatedId(id);
               } else {
                 onClose();
                 router.push(`/catalog/${id}`);
