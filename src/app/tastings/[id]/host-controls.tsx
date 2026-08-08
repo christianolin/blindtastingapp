@@ -62,6 +62,7 @@ export function HostControls({
   showSequentialToggle = false,
   leaderboardReveal = "PER_ATTRIBUTE",
   showLeaderboardToggle = false,
+  invitesStayOpen = false,
   surface,
 }: {
   tastingId: string;
@@ -73,6 +74,8 @@ export function HostControls({
   showSequentialToggle?: boolean;
   leaderboardReveal?: string;
   showLeaderboardToggle?: boolean;
+  /** OPEN tastings keep the invite field in the running-tasting menu too. */
+  invitesStayOpen?: boolean;
   surface: "start" | "menu";
 }) {
   const [startState, startAction, startPending] = useActionState(
@@ -259,6 +262,25 @@ export function HostControls({
           ) : null}
         </>
       ) : status === "IN_PROGRESS" ? (
+        <>
+        {invitesStayOpen ? (
+          <form action={inviteAction} className="flex flex-col gap-2">
+            <input type="hidden" name="tasting_id" value={tastingId} />
+            <Label className="flex items-center gap-1.5">
+              <UserPlus className="size-4" /> Invite more people
+            </Label>
+            <InviteField friends={friends} />
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={invitePending}
+              className="w-fit"
+            >
+              {invitePending ? "Sending…" : "Send invites"}
+            </Button>
+            <StateMessage state={inviteState} />
+          </form>
+        ) : null}
         <form
           action={finishAction}
           className="flex flex-col gap-2"
@@ -295,6 +317,7 @@ export function HostControls({
           </Button>
           <StateMessage state={finishState} />
         </form>
+        </>
       ) : (
         <form action={reopenAction} className="flex flex-col gap-2">
           <input type="hidden" name="tasting_id" value={tastingId} />

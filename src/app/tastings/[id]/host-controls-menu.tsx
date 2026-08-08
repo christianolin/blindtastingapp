@@ -23,6 +23,7 @@ export function HostControlsMenu({
   showSequentialToggle = false,
   leaderboardReveal = "PER_ATTRIBUTE",
   showLeaderboardToggle = false,
+  invitesStayOpen = false,
 }: {
   tastingId: string;
   status: string;
@@ -33,6 +34,7 @@ export function HostControlsMenu({
   showSequentialToggle?: boolean;
   leaderboardReveal?: string;
   showLeaderboardToggle?: boolean;
+  invitesStayOpen?: boolean;
 }) {
   return (
     <Popover>
@@ -55,6 +57,7 @@ export function HostControlsMenu({
           showSequentialToggle={showSequentialToggle}
           leaderboardReveal={leaderboardReveal}
           showLeaderboardToggle={showLeaderboardToggle}
+          invitesStayOpen={invitesStayOpen}
           surface="menu"
         />
       </PopoverContent>

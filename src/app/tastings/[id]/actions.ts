@@ -23,7 +23,7 @@ async function assertHost(
 ) {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status")
+    .select("id, host_id, status, reveal_mode")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== userId) return null;
@@ -159,7 +159,10 @@ export async function inviteToTasting(
   const tastingId = String(formData.get("tasting_id") ?? "");
   const tasting = await assertHost(supabase, tastingId, user.id);
   if (!tasting) return { error: "Only the host can invite people." };
-  if (tasting.status !== "DRAFT") {
+  // OPEN (group Taste & Rate) has nothing to protect, so people can be added
+  // on the go — even after it's started and wines exist. Blind/semi-blind
+  // still lock invites at start so late joiners can't game the guessing.
+  if (tasting.status !== "DRAFT" && tasting.reveal_mode !== "OPEN") {
     return { error: "Invites close once the tasting has started." };
   }
 

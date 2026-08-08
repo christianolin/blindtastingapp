@@ -28,10 +28,18 @@ export function NewNoteModal({
   wineId,
   onClose,
   cellarConsume = null,
+  tastingWineId = null,
+  contextKind = null,
+  onSaved,
 }: {
   wineId: string;
   onClose: () => void;
   cellarConsume?: { lotId: string } | null;
+  /** Attaches the note to a tasting wine (group Taste & Rate scoring). */
+  tastingWineId?: string | null;
+  contextKind?: string | null;
+  /** Extra work after save (e.g. refresh the tasting board), then close. */
+  onSaved?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<Data | null | "loading">("loading");
@@ -100,6 +108,8 @@ export function NewNoteModal({
             title={data.title}
             terms={data.terms}
             initial={data.initial}
+            contextKind={contextKind}
+            tastingWineId={tastingWineId}
             embedded
             onClose={onClose}
             onSaved={async (savedId) => {
@@ -113,6 +123,7 @@ export function NewNoteModal({
                   },
                 });
               }
+              onSaved?.();
               onClose();
             }}
           />

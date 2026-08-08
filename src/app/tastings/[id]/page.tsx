@@ -18,6 +18,7 @@ import { TastingAddWineButton } from "./tasting-add-wine-button";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { RevealButton } from "./play/reveal-button";
 import { PlayExperience } from "./play/play-experience";
+import { OpenBoard } from "./open-board";
 import { respondToInvite, moveWine } from "./actions";
 
 export default async function TastingPage({
@@ -92,6 +93,9 @@ export default async function TastingPage({
           : "In progress"
         : "Not started";
 
+  // OPEN (group Taste & Rate): nothing hidden. No guessing, no reveal — a
+  // shared, ranked scoreboard — and people/wines can join at any time.
+  const isOpen = tasting.reveal_mode === "OPEN";
   const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
   const nameByParticipantId = new Map(
     (participantRows ?? []).map((p) => [
@@ -124,7 +128,9 @@ export default async function TastingPage({
   // Friends for the host's "invite more people" picker (only fetched for the
   // host, and only needed while the tasting is still in draft).
   let friends: { id: string; display_name: string; email: string }[] = [];
-  if (isHost && !hasStarted) {
+  // OPEN tastings have nothing to protect, so the host can invite after the
+  // tasting has started too — not only while it's a draft.
+  if (isHost && (!hasStarted || isOpen)) {
     const { data: friendRows } = await supabase
       .from("friendships")
       .select("friend_id")
@@ -528,6 +534,7 @@ export default async function TastingPage({
               showSequentialToggle={tasting.reveal_mode === "BLIND"}
               leaderboardReveal={tasting.leaderboard_reveal}
               showLeaderboardToggle={tasting.reveal_mode === "BLIND"}
+              invitesStayOpen={isOpen}
             />
           </div>
         ) : null}
@@ -535,7 +542,27 @@ export default async function TastingPage({
 
       {inviteCard}
 
-      {running ? (
+      {running && isOpen ? (
+        <div className="flex flex-col gap-4">
+          {canAddWine ? (
+            <div className="flex justify-end">
+              <TastingAddWineButton
+                tastingId={id}
+                label={
+                  tasting.wine_source === "HOST_PROVIDES"
+                    ? "Add wine"
+                    : "Add a wine"
+                }
+              />
+            </div>
+          ) : null}
+          <OpenBoard
+            tastingId={id}
+            userId={user.id}
+            canRate={myStatus === "JOINED"}
+          />
+        </div>
+      ) : running ? (
         <>
           {/* Compact progress + wine navigator — replaces the old left rail. */}
           {wineCount > 0 ? (

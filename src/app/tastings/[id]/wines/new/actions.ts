@@ -307,6 +307,9 @@ export async function addWine(
       tasting_id: tastingId,
       position,
       contributor_participant_id: contributorParticipantId,
+      // OPEN (group Taste & Rate) hides nothing — wines are visible and
+      // scoreable the moment they're added, with no reveal step.
+      is_revealed: tasting.reveal_mode === "OPEN",
     })
     .select()
     .single();
@@ -584,7 +587,7 @@ async function insertTastingWineFromCatalog(
 ): Promise<{ error: string } | { ok: true }> {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, wine_source")
+    .select("id, host_id, wine_source, reveal_mode")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) return { error: "Tasting not found." };
@@ -762,7 +765,7 @@ export async function addWineUnidentified(
 
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, wine_source")
+    .select("id, host_id, wine_source, reveal_mode")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) return { error: "Tasting not found." };
@@ -815,6 +818,7 @@ export async function addWineUnidentified(
       tasting_id: tastingId,
       position: (count ?? 0) + 1,
       contributor_participant_id: contributorParticipantId,
+      is_revealed: tasting.reveal_mode === "OPEN",
     })
     .select()
     .single();
