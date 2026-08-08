@@ -60,8 +60,12 @@ export async function createTasting(
   ) {
     return { error: "Choose who provides the wines." };
   }
-  if (revealMode !== "BLIND" && revealMode !== "SEMI_BLIND") {
-    return { error: "Choose a blindness level." };
+  if (
+    revealMode !== "BLIND" &&
+    revealMode !== "SEMI_BLIND" &&
+    revealMode !== "OPEN"
+  ) {
+    return { error: "Choose a tasting mode." };
   }
 
   const emails = [

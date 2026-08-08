@@ -5,9 +5,10 @@ import { NewTastingModal } from "./new-tasting-modal";
 import { RateWineModal } from "./rate-wine-modal";
 import { NewNoteModal } from "./new-note-modal";
 
-// Which Taste flow to launch. Blind / semi-blind open a tasting-creation popup;
-// rate opens the "find a wine to note" picker.
-export type TasteKind = "blind" | "semi-blind" | "rate";
+// Which Taste flow to launch. Blind / semi-blind / open create a tasting
+// popup ("open" = group Taste & Rate, nothing hidden); rate opens the solo
+// "find a wine to note" picker.
+export type TasteKind = "blind" | "semi-blind" | "rate" | "open";
 
 type Ctx = { openTaste: (kind: TasteKind) => void };
 const TasteCtx = createContext<Ctx | null>(null);
@@ -41,6 +42,9 @@ export function TasteLauncherProvider({
       ) : null}
       {open === "semi-blind" ? (
         <NewTastingModal reveal="SEMI_BLIND" userId={userId} onClose={() => setOpen(null)} />
+      ) : null}
+      {open === "open" ? (
+        <NewTastingModal reveal="OPEN" userId={userId} onClose={() => setOpen(null)} />
       ) : null}
       {open === "rate" ? (
         <RateWineModal

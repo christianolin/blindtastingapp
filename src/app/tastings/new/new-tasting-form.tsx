@@ -161,7 +161,11 @@ export function NewTastingForm({
             <span>
               <span className="text-muted-foreground">Mode</span>{" "}
               <span className="font-medium">
-                {reveal === "BLIND" ? "Blind" : "Semi-blind"}
+                {reveal === "BLIND"
+                  ? "Blind"
+                  : reveal === "SEMI_BLIND"
+                    ? "Semi-blind"
+                    : "Taste & Rate"}
               </span>
             </span>
           </span>
@@ -175,7 +179,9 @@ export function NewTastingForm({
         <p className="text-xs text-muted-foreground">
           {reveal === "BLIND"
             ? "Nothing is known ahead of time — guess each wine from scratch."
-            : "The full wine list is shown up front; match each glass to a wine."}
+            : reveal === "SEMI_BLIND"
+              ? "The full wine list is shown up front; match each glass to a wine."
+              : "Nothing is hidden: everyone sees the wines, scores are shared, and the wines rank by average."}
         </p>
         <input type="hidden" name="reveal_mode" value={reveal} />
       </div>
@@ -231,7 +237,7 @@ export function NewTastingForm({
         </div>
       ) : null}
 
-      {timing === "ASYNC" ? (
+      {timing === "ASYNC" && reveal !== "OPEN" ? (
         <div className="flex flex-col gap-2">
           <Label htmlFor="async_reveal_policy">When to show results</Label>
           <Select

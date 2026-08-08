@@ -11,7 +11,7 @@
 
 export type TimingMode = "LIVE" | "ASYNC";
 export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
-export type RevealMode = "BLIND" | "SEMI_BLIND";
+export type RevealMode = "BLIND" | "SEMI_BLIND" | "OPEN";
 export type TastingStatus = "DRAFT" | "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type ParticipantStatus = "INVITED" | "JOINED" | "DECLINED";
 export type AsyncRevealPolicy = "AFTER_ALL" | "IMMEDIATE";

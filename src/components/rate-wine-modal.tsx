@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Camera, Plus, Warehouse } from "lucide-react";
+import { Camera, Plus, Users, Warehouse } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchCatalogWines } from "@/app/tastings/[id]/wines/new/actions";
 import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
 import { CellarLotPicker } from "@/components/cellar-lot-picker";
 import { useAddWine } from "@/components/add-wine-context";
+import { useTasteLauncher } from "@/components/taste-launcher-context";
 
 type Hit = { id: string; name: string };
 
@@ -26,6 +27,7 @@ export function RateWineModal({
 }) {
   const router = useRouter();
   const { openAddWine, openScan } = useAddWine();
+  const { openTaste } = useTasteLauncher();
   const [q, setQ] = useState("");
   // Results are stored WITH the query that produced them, so "nothing found
   // yet for what is currently typed" is derived rather than written. The effect
@@ -105,6 +107,18 @@ export function RateWineModal({
             className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
             <Plus className="size-4" /> Add manually
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // Group Taste & Rate: a real tasting with participants, shared
+              // scores and average ranking — everything above stays the solo
+              // path. openTaste swaps this modal for the creation popup.
+              openTaste("open");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Users className="size-4" /> Taste together
           </button>
         </div>
         {/* The search is the fallback, not the main path — scanning already
