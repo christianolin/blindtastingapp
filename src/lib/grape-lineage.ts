@@ -4,11 +4,15 @@
 // carries a confidence so the UI can be honest about what's established versus
 // uncertain, and unknown parentage is stated, not hidden.
 //
-// PROVENANCE NOTE: these facts are compiled knowledge, not yet verified edge by
-// edge against the primary papers — treat "confirmed" as "well-established in
-// the literature" and spot-check before citing. Parents may name grapes that
-// aren't in the tasting list (e.g. Gouais Blanc); those render as external
-// ancestor nodes with no profile page.
+// PROVENANCE NOTE: "confirmed" means the parentage is DNA-established and
+// well-documented in the literature; "probable" means one parent is known or
+// the finding is contested; "unknown" means parentage is genuinely unrecorded,
+// not merely absent from our data. The Pinot × Gouais Blanc siblings and the
+// Syrah = Dureza × Mondeuse Blanche edges were cross-checked against Wikipedia's
+// cited summaries of the UC Davis / Wine Grapes findings (2026); the remaining
+// edges are compiled from Wine Grapes and should be spot-checked before citing.
+// Parents may name grapes outside the tasting list (e.g. Gouais Blanc); those
+// render as external ancestor nodes with no profile page.
 
 export type Confidence = "confirmed" | "probable" | "unknown";
 
@@ -62,6 +66,7 @@ export const GRAPE_PARENTAGE: Parentage[] = [
   { grape: "Grüner Veltliner", parents: ["Savagnin", "St Georgen"], confidence: "confirmed" },
   { grape: "Petit Manseng", parents: [], confidence: "unknown" },
   { grape: "Gros Manseng", parents: [], confidence: "unknown" },
+  { grape: "Chenin Blanc", parents: ["Savagnin"], confidence: "probable", note: "likely a Savagnin offspring" },
 
   // --- Rhône / south ------------------------------------------------------
   { grape: "Syrah", parents: ["Dureza", "Mondeuse Blanche"], confidence: "confirmed", note: "DNA parentage, Bowers 1998" },
@@ -70,7 +75,10 @@ export const GRAPE_PARENTAGE: Parentage[] = [
   // --- Italy --------------------------------------------------------------
   { grape: "Sangiovese", parents: ["Ciliegiolo", "Calabrese Montenuovo"], confidence: "confirmed" },
   { grape: "Nebbiolo", parents: [], confidence: "unknown", note: "ancient; parentage unrecorded" },
-  { grape: "Primitivo", parents: [], confidence: "unknown", note: "= Zinfandel = Tribidrag (Croatia)" },
+  { grape: "Zinfandel", parents: [], confidence: "unknown", note: "= Primitivo = Tribidrag, an old Croatian variety" },
+  { grape: "Barbera", parents: [], confidence: "unknown", note: "ancient Piedmontese; parentage unrecorded" },
+  { grape: "Dolcetto", parents: [], confidence: "unknown" },
+  { grape: "Aglianico", parents: [], confidence: "unknown", note: "ancient southern Italian" },
 
   // --- Iberia -------------------------------------------------------------
   { grape: "Tempranillo", parents: ["Albillo Mayor", "Benedicto"], confidence: "confirmed", note: "DNA parentage, 2012" },
@@ -85,5 +93,25 @@ export const GRAPE_PARENTAGE: Parentage[] = [
   { grape: "Savagnin", parents: [], confidence: "unknown", note: "ancient founder (Traminer)" },
   { grape: "Sauvignon Blanc", parents: [], confidence: "unknown", note: "likely a Savagnin relative; unrecorded" },
   { grape: "Cabernet Franc", parents: [], confidence: "unknown", note: "old Basque/Bordeaux founder" },
-  { grape: "Chenin Blanc", parents: [], confidence: "unknown", note: "likely a Savagnin offspring; unrecorded" },
+  { grape: "Mondeuse", parents: [], confidence: "unknown", note: "Savoie; relative of Syrah's parent Mondeuse Blanche" },
+  { grape: "Trousseau", parents: [], confidence: "unknown", note: "Jura; sibling relationships to Savagnin" },
+  { grape: "Poulsard", parents: [], confidence: "unknown", note: "Jura founder" },
 ];
+
+// Each grape must appear once, and a synonym/mutation must not also carry its
+// own parentage row — both would render contradictory nodes. Fail loudly in
+// development rather than ship a confusing tree.
+if (process.env.NODE_ENV !== "production") {
+  const seen = new Set<string>();
+  for (const p of GRAPE_PARENTAGE) {
+    if (seen.has(p.grape)) {
+      throw new Error(`grape-lineage: duplicate entry for "${p.grape}"`);
+    }
+    seen.add(p.grape);
+    if (GRAPE_SYNONYMS[p.grape] || GRAPE_MUTATIONS[p.grape]) {
+      throw new Error(
+        `grape-lineage: "${p.grape}" is a synonym/mutation and can't have its own parentage`,
+      );
+    }
+  }
+}
