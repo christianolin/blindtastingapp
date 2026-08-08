@@ -30,8 +30,9 @@ export type PriceLookup = {
 
 const MODEL = "claude-sonnet-5";
 
-// Bounded searching keeps a lookup at a predictable cost and duration.
-const MAX_WEB_SEARCHES = 3;
+// Bounded searching keeps a lookup at a predictable cost and duration. Each
+// search round adds ~15-20k input tokens of results, so this is the cost dial.
+const MAX_WEB_SEARCHES = 2;
 
 const RECORD_TOOL = {
   name: "record_price",
