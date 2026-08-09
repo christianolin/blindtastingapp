@@ -8,7 +8,7 @@ export function normalizeComuneName(name) {
   return String(name ?? "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
-    .replace(/['`']/g, " ")
+    .replace(/['\u2019`]/g, " ")
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();

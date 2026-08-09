@@ -4,7 +4,7 @@ import { normalizeComuneName, matchComune } from "./istat-lib.mjs";
 
 test("normalizeComuneName folds case, accents, apostrophes", () => {
   assert.equal(normalizeComuneName("Serralunga d'Alba"), "serralunga d alba");
-  assert.equal(normalizeComuneName("SERRALUNGA D'ALBA"), "serralunga d alba"); // curly apostrophe U+2019
+  assert.equal(normalizeComuneName("SERRALUNGA D\u2019ALBA"), "serralunga d alba"); // curly apostrophe U+2019
   assert.equal(normalizeComuneName("Monforte d'Alba"), "monforte d alba");
 });
 
