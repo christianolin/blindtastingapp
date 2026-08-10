@@ -160,6 +160,7 @@ test("attribution keys reject unknown namespaces", () => {
     "ign-inao": ATTRIBUTION.IGN_INAO_AOC_VITICOLES_LEGACY.text,
     "natural-earth": ATTRIBUTION.NATURAL_EARTH.text,
     istat: ATTRIBUTION.ISTAT_CONFINI.text,
+    piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
   });
 });
 
