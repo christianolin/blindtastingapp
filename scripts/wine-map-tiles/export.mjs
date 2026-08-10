@@ -66,11 +66,19 @@ const client = new pg.Client(pgConfig());
 await client.connect();
 let rows;
 try {
-  const verified = await client.query(
-    "select count(*)::int as count from wine_places where publication_status = 'VERIFIED'",
+  // Exportable = VERIFIED places that carry a current-VALIDATED boundary. Some
+  // VERIFIED places are intentionally tree/Details-only with no boundary (e.g.
+  // broad grape-DOCs listed under a subregion) — get_wine_place_tree lists them
+  // and the map camera-fit no-ops on their null boundary. This assertion still
+  // catches a boundary that exists but is missing its provenance snapshot/source.
+  const exportable = await client.query(
+    `select count(*)::int as count from wine_places p
+      where p.publication_status = 'VERIFIED'
+        and exists (select 1 from wine_place_boundaries b
+                     where b.wine_place_id = p.id and b.is_current and b.quality_status = 'VALIDATED')`,
   );
   ({ rows } = await client.query(EXPORT_SQL));
-  assert.equal(rows.length, verified.rows[0].count, "verified/export row mismatch");
+  assert.equal(rows.length, exportable.rows[0].count, "verified-with-boundary/export row mismatch");
   assert.ok(rows.length >= 20, "implausibly few exportable places");
 } finally {
   await client.end();
