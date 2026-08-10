@@ -1,0 +1,44 @@
+{
+  "denomination": "Dogliani",
+  "classification": "DOCG",
+  "region": "Piemonte",
+  "province": "Cuneo (CN)",
+  "docg_since": 2011,
+  "grape": { "variety": "Dolcetto", "share": "100%" },
+  "provenance": {
+    "membership_authority": "Disciplinare di produzione della DOCG «Dogliani», Art. 3 (zona di produzione)",
+    "membership_source_urls": [
+      "http://catalogoviti.politicheagricole.it/scheda_denom.php?t=dsc&q=1031",
+      "https://www.regione.piemonte.it/web/sites/default/files/media/documenti/2019-01/docg_dogliani.pdf"
+    ],
+    "membership_verified_at": "2026-08-10",
+    "geometry_source": "ISTAT — Confini delle unità amministrative a fini statistici (comuni)",
+    "geometry_licence": "ISTAT open data (CC BY)",
+    "note": "Dolcetto heartland in the Dogliani/Monregalese hills, SW of Barolo. Footprint from member comuni (ISTAT dissolve, hole-free); whole-comune over-approximation for partial comuni."
+  },
+  "footprint_treatment": { "model": "whole-comune union", "boundary_method": "MANUAL", "drop_interior_rings": true },
+  "comune_count": 21,
+  "comuni": [
+    { "name": "Bastia Mondovì", "province": "CN", "inclusion": "whole" },
+    { "name": "Belvedere Langhe", "province": "CN", "inclusion": "whole" },
+    { "name": "Briaglia", "province": "CN", "inclusion": "whole" },
+    { "name": "Castellino Tanaro", "province": "CN", "inclusion": "whole" },
+    { "name": "Cigliè", "province": "CN", "inclusion": "whole" },
+    { "name": "Clavesana", "province": "CN", "inclusion": "whole" },
+    { "name": "Dogliani", "province": "CN", "inclusion": "whole" },
+    { "name": "Farigliano", "province": "CN", "inclusion": "whole" },
+    { "name": "Igliano", "province": "CN", "inclusion": "whole" },
+    { "name": "Marsaglia", "province": "CN", "inclusion": "whole" },
+    { "name": "Monchiero", "province": "CN", "inclusion": "whole" },
+    { "name": "Niella Tanaro", "province": "CN", "inclusion": "whole" },
+    { "name": "Piozzo", "province": "CN", "inclusion": "whole" },
+    { "name": "Rocca Cigliè", "province": "CN", "inclusion": "whole" },
+    { "name": "Carrù", "province": "CN", "inclusion": "partial" },
+    { "name": "Mondovì", "province": "CN", "inclusion": "partial" },
+    { "name": "Murazzano", "province": "CN", "inclusion": "partial" },
+    { "name": "Roddino", "province": "CN", "inclusion": "partial" },
+    { "name": "San Michele Mondovì", "province": "CN", "inclusion": "partial" },
+    { "name": "Somano", "province": "CN", "inclusion": "partial" },
+    { "name": "Vicoforte", "province": "CN", "inclusion": "partial" }
+  ]
+}

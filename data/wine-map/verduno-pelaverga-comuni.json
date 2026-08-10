@@ -1,0 +1,26 @@
+{
+  "denomination": "Verduno Pelaverga",
+  "full_name": "Verduno Pelaverga o Verduno",
+  "classification": "DOC",
+  "region": "Piemonte",
+  "province": "Cuneo (CN)",
+  "doc_since": 1995,
+  "grape": { "variety": "Pelaverga piccolo", "share": "≥85%" },
+  "provenance": {
+    "membership_authority": "Disciplinare DOC «Verduno Pelaverga o Verduno», Art. 3",
+    "membership_source_urls": [
+      "http://catalogoviti.politicheagricole.it/scheda_denom.php?t=dsc&q=2322",
+      "https://www.disciplinare.it/verduno-pelaverga-o-verduno-doc.html"
+    ],
+    "membership_verified_at": "2026-08-10",
+    "geometry_source": "ISTAT comuni (CC BY)",
+    "note": "Entire comune of Verduno PLUS part of La Morra and Roddi. Tiny appellation. Footprint = Verduno only (whole); La Morra/Roddi are partial and EXCLUDED from the footprint (ISTAT has no sub-comune geometry, and unioning the whole of either would grossly over-approximate) — documented under-approximation, same treatment as Barbaresco's Alba frazione. ISTAT dissolve, hole-free."
+  },
+  "footprint_treatment": { "model": "whole-comune (Verduno only)", "boundary_method": "MANUAL", "drop_interior_rings": true },
+  "comune_count": 3,
+  "comuni": [
+    { "name": "Verduno", "province": "CN", "inclusion": "whole", "in_footprint": true },
+    { "name": "La Morra", "province": "CN", "inclusion": "partial", "in_footprint": false },
+    { "name": "Roddi", "province": "CN", "inclusion": "partial", "in_footprint": false }
+  ]
+}
