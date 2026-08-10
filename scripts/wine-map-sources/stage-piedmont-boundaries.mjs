@@ -241,6 +241,49 @@ async function dissolveInTx(boundary) {
   return report;
 }
 
+// Round-trips report.geojson through the EXACT same geom CTE the --stage
+// insert uses (ST_GeomFromGeoJSON -> ST_MakeValid -> ST_CollectionExtract(3)
+// -> ST_Multi) and asserts the table's CHECK constraints on the result:
+// ST_IsValid, not ST_IsEmpty, ST_Covers(geom, ST_PointOnSurface(geom)). The
+// dissolve's own pre-serialization output can be valid while the ROUND-
+// TRIPPED (5-decimal ST_AsGeoJSON -> ST_GeomFromGeoJSON) geometry is not —
+// rounding can introduce a self-intersection at dissolve-union seams — so
+// this is what actually predicts whether --stage's insert would pass the
+// wine_place_boundaries table CHECKs, not just whether the dissolve did.
+async function roundtripStageInsertGeom(boundary, report) {
+  const result = await client.query(
+    `with geom as (
+       select extensions.ST_Multi(
+                extensions.ST_CollectionExtract(
+                  extensions.ST_MakeValid(
+                    extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1), 4326)
+                  ), 3)) g
+     )
+     select extensions.ST_IsValid(g) valid,
+            extensions.ST_IsEmpty(g) is_empty,
+            extensions.ST_Covers(g, extensions.ST_PointOnSurface(g)) covers_label
+       from geom`,
+    [report.geojson],
+  );
+  const rt = result.rows[0];
+  assert.ok(
+    rt.valid,
+    `${boundary.label}: post-round-trip (--stage insert CTE) geometry is invalid — the dissolve ` +
+      `output passed ST_IsValid, but re-parsing it through GeoJSON like the real insert does did not`,
+  );
+  assert.equal(
+    rt.is_empty,
+    false,
+    `${boundary.label}: post-round-trip (--stage insert CTE) geometry is empty`,
+  );
+  assert.ok(
+    rt.covers_label,
+    `${boundary.label}: post-round-trip (--stage insert CTE) geometry does not cover ` +
+      `ST_PointOnSurface(geometry) — would fail the wine_place_boundaries ST_Covers CHECK`,
+  );
+  return rt;
+}
+
 const reports = {};
 try {
   await client.query("begin");
@@ -253,6 +296,11 @@ try {
       `  ${boundary.label}: ${r.npoints} vertices, ${r.nparts} part(s), ` +
         `bbox lon ${Number(r.minx).toFixed(3)}..${Number(r.maxx).toFixed(3)} ` +
         `lat ${Number(r.miny).toFixed(3)}..${Number(r.maxy).toFixed(3)}, valid=${r.valid}, covers_label=${r.covers_label}`,
+    );
+    const rt = await roundtripStageInsertGeom(boundary, r);
+    console.log(
+      `  ${boundary.label}: post-round-trip (--stage insert CTE) valid=${rt.valid} ` +
+        `is_empty=${rt.is_empty} covers_label=${rt.covers_label}`,
     );
   }
 
@@ -404,7 +452,11 @@ try {
          returning id
        ),
        geom as (
-         select extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($14), 4326) g
+         select extensions.ST_Multi(
+                  extensions.ST_CollectionExtract(
+                    extensions.ST_MakeValid(
+                      extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($14), 4326)
+                    ), 3)) g
        )
        insert into wine_place_boundaries (
          wine_place_id, source_snapshot_id, boundary_method, quality_status,
