@@ -235,7 +235,7 @@ git commit -m "feat(wine-map): Italy/Piedmont/Barolo/Barbaresco catalog (DRAFT)"
 piemonte: "#7B2233",
 ```
 
-- [ ] **Step 2 (owner):** Knowledge articles for the 4 places (may launch `PLACEHOLDER`): grape link Nebbiolo for Barolo/Barbaresco; style = still red; designation note = DOCG (1980), 100% Nebbiolo, and that MGA are named vineyard zones (future depth), not separate appellations.
+- [ ] **Step 2 (owner):** Knowledge content that populates the **Details panel** (right side of `/knowledge/map`). **Do NOT ship `PLACEHOLDER` articles** — `tile-wine-map-explorer.tsx:297` nulls out any article with `editorial_status = 'PLACEHOLDER'`, leaving Details blank. Write real (`DRAFT`/`PUBLISHED`) articles for all four places: `barolo`/`barbaresco` — description (Langhe, Nebbiolo, tar-and-roses/perfumed style), `soils` (Barolo spans Tortonian + Serravallian marls; Barbaresco mostly Tortonian), `climate`, `key_facts` (DOCG 1980, 100% Nebbiolo, min ageing — Barolo 38 mo / Riserva 62, Barbaresco 26 mo / Riserva 50; **verify these ageing figures against the disciplinare before writing**); `piemonte` — short regional description; `italy` — one-line country article. Grape link **Nebbiolo** (`wine_place_grapes`) + still-red style (`wine_place_styles`) for Barolo/Barbaresco — these render as their own Details rows (`context.grapes`/`context.styles`) independent of the prose. Designation note: DOCG since 1980; MGA are future cru depth, not separate appellations.
 - [ ] **Step 3 (owner):** Scoring links — link existing live `regions`/`appellations` rows for Piemonte/Barolo/Barbaresco to the new places via `wine_place_id`, exact-name match, `map_status = 'VERIFIED'`. **Note for later Italy batches (not this task):** "Classico" appellations must be linked scoped by `region_id`, never by name alone (seven distinct regional Classicos) — see CLAUDE.md.
 - [ ] **Step 4:** Commit the styling change.
 
@@ -250,7 +250,7 @@ git commit -m "feat(wine-map): Piedmont region color (France-matched palette)"
 
 - [ ] **Step 1:** Update `scripts/world-wine-map-foundation.test.mjs` counts (+4 places, +4 boundaries, +4 manual, +4 linked) and regenerate `data/wine-map/boundary-expectations.json` from the post-flip live state (its diff is review evidence). Run the foundation + context suites green.
 - [ ] **Step 2:** Dispatch the `wine-map-tiles` GitHub Actions workflow: export → tippecanoe → validate → publish → promote. Country+Piemonte region land in `world.pmtiles`; Barolo/Barbaresco go to the new `piemonte.pmtiles` shard; manifest `schema_version: 2` gains the shard. Re-check the world-archive size budget.
-- [ ] **Step 3:** **Live tile probe + owner "see it on the map" sign-off** at `/knowledge/map` — select Italy → Piemonte → Barolo/Barbaresco; confirm fills, casing, labels, and camera-fit match the France regions. This is the definition of done.
+- [ ] **Step 3:** **Live probe + owner "see it on the map" sign-off** at `/knowledge/map`, checking all three panels the France map has: (1) **map** — select Italy → Piemonte → Barolo/Barbaresco; fills, casing, labels, camera-fit match the France regions; (2) **Explorer** (left) — Italy appears as a second country root next to France, and the breadcrumb/child-pills navigate Italy→Piemonte→Barolo/Barbaresco; (3) **Details** (right) — the article prose + Nebbiolo grape row + red-style row render (NOT blank, i.e. no PLACEHOLDER article); (4) **Legend** (bottom-left) — shows a Piemonte/Barolo/Barbaresco row in the `piemonte` color. This is the definition of done.
 
 ---
 
