@@ -1,0 +1,45 @@
+{
+  "denomination": "Barolo",
+  "classification": "DOCG",
+  "region": "Piemonte",
+  "province": "Cuneo (CN)",
+  "docg_since": 1980,
+  "doc_since": 1966,
+  "grape": {
+    "variety": "Nebbiolo",
+    "subvarieties": ["Michet", "Lampia", "Rosé"],
+    "share": "100%"
+  },
+  "provenance": {
+    "membership_authority": "Disciplinare di produzione della DOCG «Barolo», Art. 3 (zona di produzione)",
+    "membership_source_urls": [
+      "http://catalogoviti.politicheagricole.it/scheda_denom.php?t=dsc&q=1011",
+      "https://www.agraria.org/vini/disciplinarebarolo.htm"
+    ],
+    "membership_verified_at": "2026-08-09",
+    "geometry_source": "ISTAT — Confini delle unità amministrative a fini statistici (comuni)",
+    "geometry_source_note": "PRO_COM codes and polygons are populated by fetch-piedmont-comuni.mjs by exact name-match against the ISTAT comuni layer; they are intentionally null here so the geometry provenance stays with the fetched artifact, not hand-typed.",
+    "geometry_licence": "ISTAT open data — CONFIRM exact attribution/redistribution terms during the source spike (owner gate)",
+    "note": "Barolo has no national vineyard-parcel layer (unlike France's INAO AOC-VITICOLES); its footprint is derived from member comuni, following the Champagne/Alsace commune model. FIDELITY CAVEAT: comuni 'in parte' (partial) are, in a whole-comune union, over-approximated — some (notably Cherasco and Roddi) contribute only a small sliver of true Barolo land. See footprint_treatment; the higher-fidelity path is the Piemonte Geoportale MGA layer (spec Option C)."
+  },
+  "footprint_treatment": {
+    "model": "whole-comune union",
+    "boundary_method": "MANUAL",
+    "partial_comuni_policy": "included whole at region/appellation display zoom (over-approximation, documented) — flagged for owner review before the DRAFT→VALIDATED flip",
+    "recommended_review": "Owner to decide whether Cherasco/Roddi/Diano d'Alba/Grinzane Cavour are unioned whole or trimmed; MGA geometry (Option C) supersedes this if adopted."
+  },
+  "comune_count": 11,
+  "comuni": [
+    { "name": "Barolo", "province": "CN", "inclusion": "whole", "istat_pro_com": null },
+    { "name": "Castiglione Falletto", "province": "CN", "inclusion": "whole", "istat_pro_com": null },
+    { "name": "Serralunga d'Alba", "province": "CN", "inclusion": "whole", "istat_pro_com": null },
+    { "name": "Monforte d'Alba", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Novello", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "La Morra", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Verduno", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Grinzane Cavour", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Diano d'Alba", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Cherasco", "province": "CN", "inclusion": "partial", "istat_pro_com": null },
+    { "name": "Roddi", "province": "CN", "inclusion": "partial", "istat_pro_com": null }
+  ]
+}

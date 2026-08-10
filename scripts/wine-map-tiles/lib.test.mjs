@@ -159,6 +159,7 @@ test("attribution keys reject unknown namespaces", () => {
     blindr: ATTRIBUTION.BLINDR_MANUAL.text,
     "ign-inao": ATTRIBUTION.IGN_INAO_AOC_VITICOLES_LEGACY.text,
     "natural-earth": ATTRIBUTION.NATURAL_EARTH.text,
+    istat: ATTRIBUTION.ISTAT_CONFINI.text,
   });
 });
 
@@ -213,7 +214,8 @@ test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {
 
 test("the Admin Express namespace shares the ign-inao credit", () => {
   assert.equal(attributionKeyFor("IGN_ADMIN_EXPRESS"), "ign-inao");
-  // Collapses to the same credit key, so attributionDisplayMap stays 3 entries.
+  // Collapses to the same credit key as the other IGN/INAO namespaces
+  // (doesn't add a new attributionDisplayMap entry).
   assert.equal(
     ATTRIBUTION.IGN_ADMIN_EXPRESS.text,
     ATTRIBUTION.IGN_INAO_AOC_VITICOLES.text,

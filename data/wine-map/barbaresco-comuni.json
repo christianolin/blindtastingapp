@@ -1,0 +1,38 @@
+{
+  "denomination": "Barbaresco",
+  "classification": "DOCG",
+  "region": "Piemonte",
+  "province": "Cuneo (CN)",
+  "docg_since": 1980,
+  "doc_since": 1966,
+  "grape": {
+    "variety": "Nebbiolo",
+    "subvarieties": ["Michet", "Lampia", "Rosé"],
+    "share": "100%"
+  },
+  "provenance": {
+    "membership_authority": "Disciplinare di produzione della DOCG «Barbaresco», Art. 3 (zona di produzione)",
+    "membership_source_urls": [
+      "https://www.disciplinare.it/barbaresco-docg.html",
+      "https://it.wikipedia.org/wiki/Barbaresco_(vino)"
+    ],
+    "membership_verified_at": "2026-08-09",
+    "geometry_source": "ISTAT — Confini delle unità amministrative a fini statistici (comuni)",
+    "geometry_source_note": "PRO_COM codes and polygons populated by fetch-piedmont-comuni.mjs via exact name-match against the ISTAT comuni layer; null here by design.",
+    "geometry_licence": "ISTAT open data — CONFIRM exact attribution/redistribution terms during the source spike (owner gate)",
+    "note": "Disciplinare zone: entire territory of Barbaresco, Neive, Treiso, PLUS the frazione «San Rocco Seno d'Elvio» (Senodelvio) — historically part of comune Barbaresco, later aggregated to comune Alba."
+  },
+  "footprint_treatment": {
+    "model": "whole-comune union",
+    "boundary_method": "MANUAL",
+    "alba_frazione_policy": "EXCLUDE the comune of Alba from the footprint. Only the small frazione San Rocco Seno d'Elvio of Alba is in the DOCG; ISTAT's comuni layer has no sub-comune (frazione) geometry, and unioning the WHOLE of Alba (a large comune containing the town of Alba and much non-Barbaresco land) would grossly over-approximate. Footprint = union of Barbaresco + Neive + Treiso. Documented under-approximation of the frazione sliver — flagged for owner review; MGA geometry (Option C) is the precise upgrade path.",
+    "recommended_review": "Owner confirms Alba-exclusion, or supplies frazione/MGA geometry for precision."
+  },
+  "comune_count": 4,
+  "comuni": [
+    { "name": "Barbaresco", "province": "CN", "inclusion": "whole", "in_footprint": true, "istat_pro_com": null },
+    { "name": "Neive", "province": "CN", "inclusion": "whole", "in_footprint": true, "istat_pro_com": null },
+    { "name": "Treiso", "province": "CN", "inclusion": "whole", "in_footprint": true, "istat_pro_com": null },
+    { "name": "Alba", "province": "CN", "inclusion": "partial", "in_footprint": false, "frazione": "San Rocco Seno d'Elvio", "istat_pro_com": null }
+  ]
+}
