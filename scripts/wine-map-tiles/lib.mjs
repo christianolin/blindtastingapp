@@ -48,6 +48,12 @@ export const ATTRIBUTION = {
     text: "Contains data © IGN / INAO, Licence Ouverte Etalab",
   },
   NATURAL_EARTH: { key: "natural-earth", text: "Made with Natural Earth" },
+  // Piedmont pilot (Barolo/Barbaresco/Piemonte): ISTAT comuni dissolve.
+  // See scripts/wine-map-sources/stage-piedmont-boundaries.mjs (NAMESPACE).
+  ISTAT_CONFINI: {
+    key: "istat",
+    text: "© ISTAT — Confini delle unità amministrative a fini statistici (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {

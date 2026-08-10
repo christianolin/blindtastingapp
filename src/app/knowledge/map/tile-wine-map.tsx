@@ -57,6 +57,7 @@ export const REGION_COLORS: Record<string, string> = {
   jura: "#7A4E8C",
   "languedoc-roussillon": "#2F7A78",
   loire: "#2F6B4F",
+  piemonte: "#7B2233",
   provence: "#9A6A2F",
   rhone: "#7A3B2E",
   savoie: "#5C7A3B",
