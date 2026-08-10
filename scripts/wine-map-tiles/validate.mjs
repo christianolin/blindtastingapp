@@ -16,9 +16,13 @@ import {
   WORLD_TARGET,
 } from "./lib.mjs";
 
-// TODO(3E): the first non-France region shard will need its own bbox gate;
-// today every shard is a subset of France, so this window is a safe superset.
-const FRANCE_BBOX = { minLon: -6, minLat: 41, maxLon: 11, maxLat: 52 };
+// Gross-bounds sanity gate: every archive must sit inside the mapped-coverage
+// window — the union of currently-mapped countries (France + Italy). The tight
+// per-archive correctness gate is the feature-id-set check below; this box only
+// catches wildly-misplaced geometry (e.g. 0,0). Widen it when coverage grows to
+// a country outside it.
+// TODO(3E): give each shard its own tighter bbox once shards span many countries.
+const COVERAGE_BBOX = { minLon: -6, minLat: 35, maxLon: 19, maxLat: 52 };
 
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
@@ -40,9 +44,9 @@ export async function validateArchives(sources, release) {
     assert.equal(header.maxZoom, spec.maxZoom, `${name}: header maxZoom`);
     assert.equal(header.tileType, 1, `${name}: tileType must be MVT`);
     assert.ok(
-      header.minLon >= FRANCE_BBOX.minLon && header.maxLon <= FRANCE_BBOX.maxLon &&
-      header.minLat >= FRANCE_BBOX.minLat && header.maxLat <= FRANCE_BBOX.maxLat,
-      `${name}: bounds outside France bbox`,
+      header.minLon >= COVERAGE_BBOX.minLon && header.maxLon <= COVERAGE_BBOX.maxLon &&
+      header.minLat >= COVERAGE_BBOX.minLat && header.maxLat <= COVERAGE_BBOX.maxLat,
+      `${name}: bounds outside mapped-coverage bbox`,
     );
     gates.push(`${name}: header ok (z${header.minZoom}-z${header.maxZoom})`);
 
