@@ -1,0 +1,24 @@
+{
+  "denomination": "Diano d'Alba",
+  "full_name": "Dolcetto di Diano d'Alba o Diano d'Alba",
+  "classification": "DOCG",
+  "region": "Piemonte",
+  "province": "Cuneo (CN)",
+  "docg_since": 2010,
+  "grape": { "variety": "Dolcetto", "share": "100%" },
+  "provenance": {
+    "membership_authority": "Disciplinare DOCG «Dolcetto di Diano d'Alba o Diano d'Alba», Art. 3",
+    "membership_source_urls": [
+      "http://catalogoviti.politicheagricole.it/scheda_denom.php?t=dsc&q=1032",
+      "https://it.wikipedia.org/wiki/Dolcetto_di_Diano_d'Alba"
+    ],
+    "membership_verified_at": "2026-08-10",
+    "geometry_source": "ISTAT comuni (CC BY)",
+    "note": "Entire territory of the single comune of Diano d'Alba (E of Alba, between Barolo and Barbaresco). The 77 'sorì' are MGA cru mentions, not separate comuni. ISTAT dissolve, hole-free."
+  },
+  "footprint_treatment": { "model": "whole-comune", "boundary_method": "MANUAL", "drop_interior_rings": true },
+  "comune_count": 1,
+  "comuni": [
+    { "name": "Diano d'Alba", "province": "CN", "inclusion": "whole" }
+  ]
+}

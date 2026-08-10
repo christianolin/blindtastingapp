@@ -54,6 +54,13 @@ export const ATTRIBUTION = {
     key: "istat",
     text: "© ISTAT — Confini delle unità amministrative a fini statistici (CC BY 4.0)",
   },
+  // Official Regione Piemonte DOC/DOCG delimited-area polygons (Langhe
+  // expansion pilot). See scripts/wine-map-sources/stage-piemonte-official.mjs
+  // (NAMESPACE). Supersedes ISTAT_CONFINI for Barolo/Barbaresco.
+  PIEMONTE_DOC_DOCG: {
+    key: "piemonte",
+    text: "© Regione Piemonte — Aree di produzione dei vini DOC e DOCG (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {
