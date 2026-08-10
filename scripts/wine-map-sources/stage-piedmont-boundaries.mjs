@@ -207,8 +207,17 @@ async function dissolveInTx(boundary) {
      multi as (
        select extensions.ST_Multi(g) g from simp
      ),
+     noholes as (
+       -- These are solid wine footprints (region / appellation) with no
+       -- legitimate enclaves; imperfect comune tiling + the simplify otherwise
+       -- leaves spurious interior holes. Rebuild each part from its exterior
+       -- ring only.
+       select extensions.ST_Multi(extensions.ST_Collect(
+                extensions.ST_MakePolygon(extensions.ST_ExteriorRing(d.geom)))) g
+         from multi, lateral extensions.ST_Dump(multi.g) d
+     ),
      labelled as (
-       select g, extensions.ST_PointOnSurface(g) lp from multi
+       select g, extensions.ST_PointOnSurface(g) lp from noholes
      )
      select extensions.ST_AsGeoJSON(g, 5) geojson,
             extensions.ST_AsGeoJSON(lp, 6) label_point_geojson,
