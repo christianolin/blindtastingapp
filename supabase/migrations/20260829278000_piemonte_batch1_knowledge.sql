@@ -85,7 +85,7 @@ begin
   if a <> 10 then raise exception 'expected 10 batch-1 articles, got %', a; end if;
   select count(*) into gr from wine_place_grapes x join wine_places p on p.id=x.wine_place_id where p.canonical_key in ('italy.piemonte.roero','italy.piemonte.monferrato','italy.piemonte.barbera-dasti','italy.piemonte.nizza','italy.piemonte.gattinara','italy.piemonte.ghemme','italy.piemonte.alto-piemonte') and x.editorial_status='PUBLISHED';
   if gr <> 8 then raise exception 'expected 8 batch-1 grape links, got %', gr; end if;
-  select count(*) into sl from wine_place_styles x join wine_places p on p.id=x.wine_place_id where p.canonical_key like 'italy.piemonte.%' and x.editorial_status='PUBLISHED' and p.sort_order >= 20 and p.display_tier >= 2 and p.canonical_key not in ('italy.piemonte.langhe','italy.piemonte.barolo','italy.piemonte.barbaresco','italy.piemonte.dogliani','italy.piemonte.diano-dalba','italy.piemonte.verduno-pelaverga','italy.piemonte.barbera-dalba','italy.piemonte.dolcetto-dalba','italy.piemonte.nebbiolo-dalba');
+  select count(*) into sl from wine_place_styles x join wine_places p on p.id=x.wine_place_id where p.canonical_key in ('italy.piemonte.roero','italy.piemonte.gavi','italy.piemonte.monferrato','italy.piemonte.barbera-dasti','italy.piemonte.nizza','italy.piemonte.asti','italy.piemonte.brachetto-dacqui','italy.piemonte.gattinara','italy.piemonte.ghemme','italy.piemonte.alto-piemonte') and x.editorial_status='PUBLISHED';
   if sl <> 14 then raise exception 'expected 14 batch-1 style links, got %', sl; end if;
 end $$;
 
