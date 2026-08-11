@@ -114,6 +114,32 @@ const BOUNDARIES = [
     label: "Gattinara",
   },
   { key: "ghemme", targetKey: "italy.piemonte.ghemme", denominazi: "Ghemme", label: "Ghemme" },
+  // Batch 2.
+  { key: "alta-langa", targetKey: "italy.piemonte.alta-langa", denominazi: "Alta Langa", label: "Alta Langa" },
+  {
+    key: "colli-tortonesi",
+    targetKey: "italy.piemonte.colli-tortonesi",
+    denominazi: "Colli Tortonesi",
+    label: "Colli Tortonesi",
+  },
+  {
+    key: "ruche",
+    targetKey: "italy.piemonte.ruche",
+    denominazi: "Ruche' di Castagnole Monferrato",
+    label: "Ruché di Castagnole Monferrato",
+  },
+  {
+    key: "grignolino-dasti",
+    targetKey: "italy.piemonte.grignolino-dasti",
+    denominazi: "Grignolino d'Asti",
+    label: "Grignolino d'Asti",
+  },
+  {
+    key: "grignolino-casalese",
+    targetKey: "italy.piemonte.grignolino-casalese",
+    denominazi: "Grignolino del Monferrato Casalese",
+    label: "Grignolino del Monferrato Casalese",
+  },
 ];
 
 function slugify(name) {
