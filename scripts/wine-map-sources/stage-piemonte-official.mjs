@@ -167,6 +167,20 @@ const BOUNDARIES = [
     label: "Erbaluce di Caluso",
   },
   { key: "carema", targetKey: "italy.piemonte.carema", denominazi: "Carema", label: "Carema" },
+  // Batch 5 — Asti/Monferrato long tail.
+  { key: "barbera-del-monferrato", targetKey: "italy.piemonte.barbera-del-monferrato", denominazi: "Barbera del Monferrato", label: "Barbera del Monferrato" },
+  { key: "barbera-del-monferrato-superiore", targetKey: "italy.piemonte.barbera-del-monferrato-superiore", denominazi: "Barbera del Monferrato Superiore", label: "Barbera del Monferrato Superiore" },
+  { key: "terre-alfieri", targetKey: "italy.piemonte.terre-alfieri", denominazi: "Terre Alfieri", label: "Terre Alfieri" },
+  { key: "cortese-alto-monferrato", targetKey: "italy.piemonte.cortese-alto-monferrato", denominazi: "Cortese dell'Alto Monferrato", label: "Cortese dell'Alto Monferrato" },
+  { key: "albugnano", targetKey: "italy.piemonte.albugnano", denominazi: "Albugnano", label: "Albugnano" },
+  { key: "freisa-dasti", targetKey: "italy.piemonte.freisa-dasti", denominazi: "Freisa d'Asti", label: "Freisa d'Asti" },
+  { key: "dolcetto-dasti", targetKey: "italy.piemonte.dolcetto-dasti", denominazi: "Dolcetto d'Asti", label: "Dolcetto d'Asti" },
+  { key: "canelli", targetKey: "italy.piemonte.canelli", denominazi: "Canelli", label: "Canelli" },
+  { key: "calosso", targetKey: "italy.piemonte.calosso", denominazi: "Calosso", label: "Calosso" },
+  { key: "malvasia-di-casorzo", targetKey: "italy.piemonte.malvasia-di-casorzo", denominazi: "Malvasia di Casorzo d'Asti", label: "Malvasia di Casorzo d'Asti" },
+  { key: "loazzolo", targetKey: "italy.piemonte.loazzolo", denominazi: "Loazzolo", label: "Loazzolo" },
+  { key: "gabiano", targetKey: "italy.piemonte.gabiano", denominazi: "Gabiano", label: "Gabiano" },
+  { key: "rubino-di-cantavenna", targetKey: "italy.piemonte.rubino-di-cantavenna", denominazi: "Rubino di Cantavenna", label: "Rubino di Cantavenna" },
 ];
 
 function slugify(name) {
