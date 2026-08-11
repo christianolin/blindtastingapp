@@ -80,6 +80,40 @@ const BOUNDARIES = [
     label: "Verduno Pelaverga o Verduno",
   },
   { key: "langhe", targetKey: "italy.piemonte.langhe", denominazi: "Langhe", label: "Langhe" },
+  { key: "roero", targetKey: "italy.piemonte.roero", denominazi: "Roero", label: "Roero" },
+  {
+    key: "gavi",
+    targetKey: "italy.piemonte.gavi",
+    denominazi: "Gavi o Cortese di Gavi",
+    label: "Gavi",
+  },
+  {
+    key: "monferrato",
+    targetKey: "italy.piemonte.monferrato",
+    denominazi: "Monferrato",
+    label: "Monferrato",
+  },
+  {
+    key: "barbera-dasti",
+    targetKey: "italy.piemonte.barbera-dasti",
+    denominazi: "Barbera D'Asti",
+    label: "Barbera d'Asti",
+  },
+  { key: "nizza", targetKey: "italy.piemonte.nizza", denominazi: "Nizza", label: "Nizza" },
+  { key: "asti", targetKey: "italy.piemonte.asti", denominazi: "Asti", label: "Asti" },
+  {
+    key: "brachetto-dacqui",
+    targetKey: "italy.piemonte.brachetto-dacqui",
+    denominazi: "Brachetto D'Acqui",
+    label: "Brachetto d'Acqui",
+  },
+  {
+    key: "gattinara",
+    targetKey: "italy.piemonte.gattinara",
+    denominazi: "Gattinara",
+    label: "Gattinara",
+  },
+  { key: "ghemme", targetKey: "italy.piemonte.ghemme", denominazi: "Ghemme", label: "Ghemme" },
 ];
 
 function slugify(name) {
