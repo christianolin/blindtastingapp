@@ -18,7 +18,7 @@ insert into wine_places (
   slug, canonical_key, name, kind, display_tier, min_zoom, label_min_zoom,
   is_appellation, appellation_system, appellation_level, publication_status, sort_order, primary_parent_id
 )
-select v.slug, v.ckey, v.name, v.kind, 2, v.mz, v.mz, v.is_app, v.sys, v.lvl, 'DRAFT', v.so, p.id
+select v.slug, v.ckey, v.name, v.kind::wine_place_kind, 2, v.mz, v.mz, v.is_app, v.sys, v.lvl, 'DRAFT', v.so, p.id
   from (values
     ('monferrato',    'italy.piemonte.monferrato',    'Monferrato',    'SUBREGION',   5.0, true,  'DOC',  'subregional', 20),
     ('alto-piemonte', 'italy.piemonte.alto-piemonte', 'Alto Piemonte', 'SUBREGION',   5.0, false, null,   null,          30),
