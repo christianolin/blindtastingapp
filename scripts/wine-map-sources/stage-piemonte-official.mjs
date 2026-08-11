@@ -158,6 +158,15 @@ const BOUNDARIES = [
     denominazi: "Coste della Sesia",
     label: "Coste della Sesia",
   },
+  // Batch 4 — Canavese subregion.
+  { key: "canavese", targetKey: "italy.piemonte.canavese", denominazi: "Canavese", label: "Canavese" },
+  {
+    key: "erbaluce-di-caluso",
+    targetKey: "italy.piemonte.erbaluce-di-caluso",
+    denominazi: "Erbaluce di Caluso",
+    label: "Erbaluce di Caluso",
+  },
+  { key: "carema", targetKey: "italy.piemonte.carema", denominazi: "Carema", label: "Carema" },
 ];
 
 function slugify(name) {
