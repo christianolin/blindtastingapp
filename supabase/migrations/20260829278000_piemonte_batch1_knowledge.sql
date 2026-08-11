@@ -62,7 +62,7 @@ join grapes g on (
 
 -- Style links.
 insert into wine_place_styles (wine_place_id, style, sort_order, editorial_status)
-select p.id, st.style, st.so, 'PUBLISHED'
+select p.id, st.style::wine_style_kind, st.so, 'PUBLISHED'
 from wine_places p
 join (values
   ('italy.piemonte.roero','RED',0), ('italy.piemonte.roero','WHITE',1),
