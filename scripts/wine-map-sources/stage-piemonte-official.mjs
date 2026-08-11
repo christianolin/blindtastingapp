@@ -80,6 +80,40 @@ const BOUNDARIES = [
     label: "Verduno Pelaverga o Verduno",
   },
   { key: "langhe", targetKey: "italy.piemonte.langhe", denominazi: "Langhe", label: "Langhe" },
+  { key: "roero", targetKey: "italy.piemonte.roero", denominazi: "Roero", label: "Roero" },
+  {
+    key: "gavi",
+    targetKey: "italy.piemonte.gavi",
+    denominazi: "Gavi o Cortese di Gavi",
+    label: "Gavi",
+  },
+  {
+    key: "monferrato",
+    targetKey: "italy.piemonte.monferrato",
+    denominazi: "Monferrato",
+    label: "Monferrato",
+  },
+  {
+    key: "barbera-dasti",
+    targetKey: "italy.piemonte.barbera-dasti",
+    denominazi: "Barbera D'Asti",
+    label: "Barbera d'Asti",
+  },
+  { key: "nizza", targetKey: "italy.piemonte.nizza", denominazi: "Nizza", label: "Nizza" },
+  { key: "asti", targetKey: "italy.piemonte.asti", denominazi: "Asti", label: "Asti" },
+  {
+    key: "brachetto-dacqui",
+    targetKey: "italy.piemonte.brachetto-dacqui",
+    denominazi: "Brachetto D'Acqui",
+    label: "Brachetto d'Acqui",
+  },
+  {
+    key: "gattinara",
+    targetKey: "italy.piemonte.gattinara",
+    denominazi: "Gattinara",
+    label: "Gattinara",
+  },
+  { key: "ghemme", targetKey: "italy.piemonte.ghemme", denominazi: "Ghemme", label: "Ghemme" },
 ];
 
 function slugify(name) {
@@ -242,7 +276,22 @@ const reports = {};
 try {
   await client.query("begin");
   await client.query("set local statement_timeout = 600000");
+  // Resumable: skip targets whose place already has a current boundary from this
+  // namespace (e.g. the live Langhe set) so re-running never duplicates them.
+  const existingRes = await client.query(
+    `select p.canonical_key from wine_places p
+       join wine_place_boundaries b on b.wine_place_id = p.id and b.is_current
+       join wine_boundary_source_snapshots s on s.id = b.source_snapshot_id
+       join wine_boundary_sources so on so.id = s.source_id
+      where so.source_namespace = $1 and p.canonical_key = any($2::text[])`,
+    [NAMESPACE, BOUNDARIES.map((b) => b.targetKey)],
+  );
+  const alreadyCurrent = new Set(existingRes.rows.map((r) => r.canonical_key));
   for (const boundary of BOUNDARIES) {
+    if (alreadyCurrent.has(boundary.targetKey)) {
+      console.log(`SKIP (already current ${NAMESPACE}) ${boundary.label}`);
+      continue;
+    }
     console.log(`building ${boundary.label} (tolerance ${SIMPLIFY_TOLERANCE})...`);
     reports[boundary.key] = await buildInTx(boundary);
     const r = reports[boundary.key];
@@ -272,6 +321,7 @@ try {
 await mkdir(OUT_DIR, { recursive: true });
 for (const boundary of BOUNDARIES) {
   const r = reports[boundary.key];
+  if (!r) continue;
   const g = JSON.parse(r.geojson);
   const pad = boundary.key === "langhe" ? 0.05 : 0.03;
   const [w, s, e, n] = [
@@ -341,6 +391,7 @@ const importer = `scripts/wine-map-sources/stage-piemonte-official.mjs@${
 
 try {
   for (const boundary of BOUNDARIES) {
+    if (!reports[boundary.key]) continue;
     const features = matched[boundary.key];
     const firstCodice = features[0]?.properties?.codice;
     const sourceFeatureId =
