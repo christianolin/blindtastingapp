@@ -140,6 +140,24 @@ const BOUNDARIES = [
     denominazi: "Grignolino del Monferrato Casalese",
     label: "Grignolino del Monferrato Casalese",
   },
+  // Batch 3 — Alto Piemonte siblings.
+  { key: "boca", targetKey: "italy.piemonte.boca", denominazi: "Boca", label: "Boca" },
+  { key: "bramaterra", targetKey: "italy.piemonte.bramaterra", denominazi: "Bramaterra", label: "Bramaterra" },
+  { key: "lessona", targetKey: "italy.piemonte.lessona", denominazi: "Lessona", label: "Lessona" },
+  { key: "fara", targetKey: "italy.piemonte.fara", denominazi: "Fara", label: "Fara" },
+  { key: "sizzano", targetKey: "italy.piemonte.sizzano", denominazi: "Sizzano", label: "Sizzano" },
+  {
+    key: "colline-novaresi",
+    targetKey: "italy.piemonte.colline-novaresi",
+    denominazi: "Colline Novaresi",
+    label: "Colline Novaresi",
+  },
+  {
+    key: "coste-della-sesia",
+    targetKey: "italy.piemonte.coste-della-sesia",
+    denominazi: "Coste della Sesia",
+    label: "Coste della Sesia",
+  },
 ];
 
 function slugify(name) {
