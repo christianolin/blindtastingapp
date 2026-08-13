@@ -92,6 +92,10 @@ const BOUNDARIES = [
   { key: "elba", targetKey: "italy.toscana.elba", name: "Elba", label: "Elba" },
   { key: "pomino", targetKey: "italy.toscana.pomino", name: "Pomino", label: "Pomino" },
   { key: "candia-dei-colli-apuani", targetKey: "italy.toscana.candia-dei-colli-apuani", name: "Candia dei Colli Apuani", label: "Candia dei Colli Apuani" },
+  // Round 3 (non-overlapping only).
+  { key: "colli-di-luni", targetKey: "italy.toscana.colli-di-luni", name: "Colli di Luni", label: "Colli di Luni" },
+  { key: "montescudaio", targetKey: "italy.toscana.montescudaio", name: "Montescudaio", label: "Montescudaio" },
+  { key: "terratico-di-bibbona", targetKey: "italy.toscana.terratico-di-bibbona", name: "Terratico di Bibbona", label: "Terratico di Bibbona" },
 ];
 
 function slugify(name) {
