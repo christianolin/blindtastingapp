@@ -1,15 +1,15 @@
-// Task: stage DRAFT wine_place_boundaries for six Langhe-area denominations
-// from the OFFICIAL Regione Piemonte delimited-area dataset, replacing the
-// old ISTAT-comune-dissolve approximation (stage-piedmont-boundaries.mjs) for
-// Barolo/Barbaresco and supplying accurate footprints for four new targets:
-// Dogliani, Dolcetto di Diano d'Alba, Verduno Pelaverga o Verduno, Langhe.
+// Task: stage DRAFT wine_place_boundaries for the Tuscany round-1 denominations
+// (Chianti Classico, Chianti + 7 subzones, Montalcino, Montepulciano, Bolgheri
+// + Sassicaia, Vernaccia di San Gimignano, Morellino di Scansano) from the
+// OFFICIAL Regione Toscana delimited-area dataset. Sibling of
+// stage-piemonte-official.mjs.
 //
 // Source: data/wine-map/toscana-doc-docg.geojson — a FeatureCollection
-// (EPSG:4326) already committed to the repo (reprojected from the official
-// EPSG:32632 Regione Piemonte "Aree di produzione dei vini DOC e DOCG"
-// dataset; see its top-level `_provenance` object for the authoritative
-// source/licence detail). No shapefile parsing, no network fetch — this
-// script reads that one committed file.
+// (EPSG:4326) already committed to the repo (parsed from the official Regione
+// Toscana GEOscopio "Zone di produzione dei vini" WFS GML in EPSG:3003 and
+// reprojected to WGS84; see its top-level `_provenance` object for the
+// authoritative source/licence detail). No network fetch — this script reads
+// that one committed file, matching features by their `name` property.
 //
 // Unlike the ISTAT commune-union approximation, these are AUTHORITATIVE
 // delimited zones: interior rings (holes) are real and are NOT stripped.
@@ -36,8 +36,8 @@
 // Env: DATABASE_URL (read from .env.local). No SUPABASE_SERVICE_ROLE_KEY
 // needed (no bucket upload — see note above).
 // Usage:
-//   node scripts/wine-map-sources/stage-piemonte-official.mjs           (test only, default)
-//   node scripts/wine-map-sources/stage-piemonte-official.mjs --stage   (controller-gated; persists)
+//   node scripts/wine-map-sources/stage-toscana-official.mjs           (test only, default)
+//   node scripts/wine-map-sources/stage-toscana-official.mjs --stage   (controller-gated; persists)
 import assert from "node:assert/strict";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { execSync } from "node:child_process";
@@ -334,10 +334,10 @@ if (!STAGE) {
     [targetKeys, NAMESPACE],
   );
   console.log(
-    `post-run check: ${check.rows[0].n} DRAFT wine_place_boundaries rows exist for the six targets under ${NAMESPACE}`,
+    `post-run check: ${check.rows[0].n} DRAFT wine_place_boundaries rows exist for the targets under ${NAMESPACE}`,
   );
   await client.end();
-  console.log("DONE (default mode): built + asserted all six boundaries, persisted nothing.");
+  console.log(`DONE (default mode): built + asserted all ${BOUNDARIES.length} boundaries, persisted nothing.`);
   process.exit(0);
 }
 
@@ -454,7 +454,7 @@ try {
     console.log(`BOUNDARY-STAGED ${boundary.key} DRAFT boundary=${result.rows[0].id}`);
   }
   await client.query("commit");
-  console.log("STAGE MODE COMPLETE: 6 DRAFT boundaries committed.");
+  console.log(`STAGE MODE COMPLETE: ${BOUNDARIES.filter((b) => reports[b.key]).length} DRAFT boundaries committed.`);
 } catch (e) {
   await client.query("rollback").catch(() => {});
   throw e;
