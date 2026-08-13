@@ -62,7 +62,7 @@ export const REGION_COLORS: Record<string, string> = {
   rhone: "#7A3B2E",
   savoie: "#5C7A3B",
   "sud-ouest": "#B0722C",
-  toscana: "#8C3A52",
+  toscana: "#C0872E",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",
