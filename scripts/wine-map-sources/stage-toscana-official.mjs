@@ -79,6 +79,19 @@ const BOUNDARIES = [
   { key: "bolgheri-sassicaia", targetKey: "italy.toscana.bolgheri-sassicaia", name: "Bolgheri Sassicaia", label: "Bolgheri Sassicaia" },
   { key: "vernaccia-di-san-gimignano", targetKey: "italy.toscana.vernaccia-di-san-gimignano", name: "Vernaccia di San Gimignano", label: "Vernaccia di San Gimignano" },
   { key: "morellino-di-scansano", targetKey: "italy.toscana.morellino-di-scansano", name: "Morellino di Scansano", label: "Morellino di Scansano" },
+  // Round 2.
+  { key: "carmignano", targetKey: "italy.toscana.carmignano", name: "Carmignano", label: "Carmignano" },
+  { key: "cortona", targetKey: "italy.toscana.cortona", name: "Cortona", label: "Cortona" },
+  { key: "maremma-toscana", targetKey: "italy.toscana.maremma-toscana", name: "Maremma Toscana", label: "Maremma Toscana" },
+  { key: "montecucco", targetKey: "italy.toscana.montecucco", name: "Montecucco", label: "Montecucco" },
+  { key: "orcia", targetKey: "italy.toscana.orcia", name: "Orcia", label: "Orcia" },
+  { key: "suvereto", targetKey: "italy.toscana.suvereto", name: "Suvereto", label: "Suvereto" },
+  { key: "val-di-cornia", targetKey: "italy.toscana.val-di-cornia", name: "Val di Cornia", label: "Val di Cornia" },
+  { key: "colline-lucchesi", targetKey: "italy.toscana.colline-lucchesi", name: "Colline Lucchesi", label: "Colline Lucchesi" },
+  { key: "montecarlo", targetKey: "italy.toscana.montecarlo", name: "Montecarlo", label: "Montecarlo" },
+  { key: "elba", targetKey: "italy.toscana.elba", name: "Elba", label: "Elba" },
+  { key: "pomino", targetKey: "italy.toscana.pomino", name: "Pomino", label: "Pomino" },
+  { key: "candia-dei-colli-apuani", targetKey: "italy.toscana.candia-dei-colli-apuani", name: "Candia dei Colli Apuani", label: "Candia dei Colli Apuani" },
 ];
 
 function slugify(name) {
