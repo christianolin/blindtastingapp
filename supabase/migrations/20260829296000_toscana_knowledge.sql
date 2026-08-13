@@ -161,7 +161,7 @@ begin
   if gr <> 22 then raise exception 'expected 22 Toscana grape links, got %', gr; end if;
   select count(*) into sl from wine_place_styles x join wine_places p on p.id=x.wine_place_id
    where p.canonical_key like 'italy.toscana%' and x.editorial_status='PUBLISHED';
-  if sl <> 24 then raise exception 'expected 24 Toscana style links, got %', sl; end if;
+  if sl <> 25 then raise exception 'expected 25 Toscana style links, got %', sl; end if;
 end $$;
 
 commit;
