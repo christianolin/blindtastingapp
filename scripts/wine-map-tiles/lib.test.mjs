@@ -161,6 +161,7 @@ test("attribution keys reject unknown namespaces", () => {
     "natural-earth": ATTRIBUTION.NATURAL_EARTH.text,
     istat: ATTRIBUTION.ISTAT_CONFINI.text,
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
+    toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
   });
 });
 
