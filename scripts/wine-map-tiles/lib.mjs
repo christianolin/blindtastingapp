@@ -61,6 +61,12 @@ export const ATTRIBUTION = {
     key: "piemonte",
     text: "© Regione Piemonte — Aree di produzione dei vini DOC e DOCG (CC BY 4.0)",
   },
+  // Official Regione Toscana wine-production-area polygons (GEOscopio "Zone di
+  // produzione dei vini"). See scripts/wine-map-sources/stage-toscana-official.mjs.
+  TOSCANA_DOC_DOCG: {
+    key: "toscana",
+    text: "© Regione Toscana — Zone di produzione dei vini (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {
