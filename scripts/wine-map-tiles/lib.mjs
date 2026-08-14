@@ -67,6 +67,12 @@ export const ATTRIBUTION = {
     key: "toscana",
     text: "© Regione Toscana — Zone di produzione dei vini (CC BY 4.0)",
   },
+  // Official Provincia Autonoma di Bolzano "Zone DOC e IGT" (GeoKatalog).
+  // See scripts/wine-map-sources/stage-altoadige-official.mjs.
+  ALTOADIGE_DOC_IGT: {
+    key: "trentino-alto-adige",
+    text: "© Autonome Provinz Bozen-Südtirol / Provincia Autonoma di Bolzano — Zone DOC e IGT (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {

@@ -63,6 +63,7 @@ export const REGION_COLORS: Record<string, string> = {
   savoie: "#5C7A3B",
   "sud-ouest": "#B0722C",
   toscana: "#C0872E",
+  "trentino-alto-adige": "#3A6E8C",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",

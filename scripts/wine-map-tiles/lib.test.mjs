@@ -162,6 +162,7 @@ test("attribution keys reject unknown namespaces", () => {
     istat: ATTRIBUTION.ISTAT_CONFINI.text,
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
+    "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
   });
 });
 
