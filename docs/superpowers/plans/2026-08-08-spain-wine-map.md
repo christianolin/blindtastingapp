@@ -4,6 +4,70 @@ Add the whole Spanish DO/DOP hierarchy to the wine map, mirroring the France
 model but sourced the Champagne/Alsace way (commune-union), because Spain has
 no national parcel layer.
 
+## Session status — 2026-08-14 (resume here)
+
+Branch `spain-wine-map-phase-1`. All the **machinery** is built, tested and
+proven; the **membership data** is blocked on authoritative sourcing (see below).
+Nothing false was shipped to the live map.
+
+**Done + committed (branch is pushed as backup):**
+- `02737a4` Task 1 — country-agnostic export guard `assertMultiCountryArchive`
+  (orphan-country + cross-country shard-collision, both fail-closed) in
+  `lib.mjs`, wired into `export.mjs`, unit-tested. Turns out **Italy already
+  made the pipeline multi-country** (live `italy.*` tree from a collaborator),
+  so items 2–5 of the plan's "multi-country blocker" were already delivered;
+  only the export assertion needed generalising.
+- `b847297` Task 2 — `extract-spain-ne.mjs` + pinned Natural Earth ESP artifacts
+  (peninsula + Balearics; Canaries out of scope per owner).
+- `8933d70` Task 2 — migration `20260901090000_spain_country_base.sql`,
+  dry-run + **live-applied** (`spain` COUNTRY, tier 0, España). *(See collaborator
+  note — the row was later EXCLUDED by the other developer.)*
+- `9b03e0c` Task 3+4 — `fetch-spain-municipios.mjs` (8,217 municipios w/
+  aliases+geometry cached), `spain-lib.mjs` fail-closed resolver (+15 tests),
+  `run-spain-dos.mjs` resumable stage→guard→auto-promote driver,
+  `IGN_CNIG_SPAIN` attribution. Driver **proven** via `--selftest 01` (dissolved
+  53 real Álava municipios → valid outline, all guards green, rolled back).
+- `8a26d05` Task 6 (frontend) — `spain` colour + label on the tile map.
+- Gate green: 46 pure unit tests, `tsc`, `eslint` all clean.
+
+**BLOCKER — Task 3c membership (the dominant risk, unresolved):** this
+environment had **no web search** (Google 403) and **no reachable authoritative
+DO→municipio dataset** (OpenDataSoft catalog, datos.gob.es, Wikidata SPARQL all
+dry). Per the owner mandate (lists from BOE pliegos, *not* recall) I **refused to
+fabricate** ~70 municipality lists from memory — the fail-closed resolver catches
+typos/nonexistent names but *cannot* catch a plausible-but-incomplete list, which
+is exactly the shipped-wrong-map risk. So `data/wine-map/spain-do-membership.json`
+is a documented schema with 6 `status:"pending"` stubs and **zero** transcribed
+lists. Task 5 (catalog/links/content migrations) is consequently deferred — there
+are no `ready` DOs to catalog yet.
+
+**Collaborator / live-DB divergence:** the live DB is ahead of this branch — the
+other developer is actively adding Italian regions (Trentino-Alto-Adige, Veneto,
+… now through migration `20260829322000`, still climbing *during* this session).
+Spain was therefore renumbered into its own `20260901xxxxxx` block to avoid
+racing their slot sequence. At 18:56 they **directly set the `spain` country node
+to `EXCLUDED` and retired its boundary** (no migration; a content-less country
+outline is reasonably premature on the live map). Left as-is — not my change to
+revert. Note: the DB-integration test `world-wine-map-foundation.test.mjs` is
+already red against live from their un-merged Italy work (hardcoded
+`linked_boundaries=1346`; live is ~1450+) — not Spain's doing, not fixed here.
+
+**To resume a real DO wave (one command per wave, fully resumable):**
+1. For each DO, set `municipios` (code-first `{code,name}` for Galicia/Cataluña/
+   Valencia/País Vasco; name-only fine for Castilian comunidades) + `expected_count`
+   + `provenance` (BOE ref) + `status:"ready"` in `spain-do-membership.json`,
+   transcribed **from the pliego** (or have the owner paste lists).
+2. Re-activate the `spain` country node (VERIFIED + current boundary) — the
+   export guard fail-closes on a Spanish DO with no country outline, by design.
+3. Create the catalog nodes (Task 5): comunidad SUBREGION + DO APPELLATION rows,
+   tiers/zooms per the France precedent (REGION t1 4/4, communal DO t2 7/7),
+   `20260901xxxxxx` block.
+4. `node scripts/wine-map-sources/fetch-spain-municipios.mjs` (cache; idempotent),
+   then `node scripts/wine-map-sources/run-spain-dos.mjs --dry` (resolve+dissolve+
+   guards, rolled back), then `--commit` to stage+promote. Skips done DOs.
+5. Task 6 tiles: `export → build → validate → publish` (owner-gated — it also
+   republishes the collaborator's in-progress Italy).
+
 ## Decisions (owner, locked)
 
 - **Boundary model:** municipality-dissolve. Geometry from OpenDataSoft
