@@ -1,0 +1,64 @@
+-- Trentino-Alto Adige region-fill blob. ISTAT admin outline via
+-- openpolis/geojson-italy (CC BY), simplified (~188 pts), interior rings dropped.
+-- Inserted as a current VALIDATED boundary for the region node.
+
+begin;
+
+with src as (
+  insert into wine_boundary_sources (source_namespace, source_feature_id, authority, jurisdiction)
+  values ('ISTAT_CONFINI', 'istat-regione-trentino-alto-adige', 'ISTAT', 'Italy')
+  on conflict (source_namespace, source_feature_id) do update set authority = excluded.authority
+  returning id
+),
+snap as (
+  insert into wine_boundary_source_snapshots (
+    source_id, source_revision, retrieved_at, source_url, licence,
+    raw_snapshot_uri, raw_checksum_sha256, normalized_artifact_uri, normalized_checksum_sha256,
+    provenance_note, importer_version
+  )
+  select id, '20260814T155951Z', now(),
+         'https://github.com/openpolis/geojson-italy (limits_IT_regions.geojson)', 'CC BY 4.0',
+         null, null, 'data/wine-map/trentino-alto-adige-region-istat.geojson', '953F4DB8C72F8A1A81233D1D6A52A201F7754C8E38D57F1AC9D065881631D59F',
+         'ISTAT regione Trentino-Alto Adige/Südtirol administrative outline, simplified (mapshaper 6%) with interior rings dropped for a solid region fill.',
+         'supabase/migrations/20260829309000_trentino_alto_adige_region_boundary.sql'
+  from src returning id
+),
+geom as (
+  select extensions.ST_Multi(
+           extensions.ST_CollectionExtract(
+             extensions.ST_MakeValid(
+               extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('{"type":"MultiPolygon","coordinates":[[[[12.01396,46.55091],[12.04977,46.59376],[12.06479,46.6232],[12.06827,46.67507],[12.14513,46.63407],[12.17133,46.6341],[12.19446,46.60491],[12.24184,46.61632],[12.26122,46.62912],[12.28384,46.61793],[12.3397,46.63138],[12.38516,46.62278],[12.43424,46.66828],[12.4429,46.68813],[12.37792,46.72193],[12.35117,46.77707],[12.30866,46.78482],[12.28243,46.81499],[12.30618,46.83394],[12.26649,46.88714],[12.2362,46.88852],[12.21503,46.87419],[12.19016,46.90623],[12.15891,46.90944],[12.16821,46.93789],[12.13152,46.96412],[12.1367,46.983],[12.12099,47.00665],[12.14815,47.02437],[12.20479,47.02789],[12.22559,47.08271],[12.18668,47.09178],[12.12155,47.0746],[12.09298,47.07628],[12.07005,47.05993],[12.02006,47.04676],[11.9799,47.04988],[11.9684,47.04061],[11.91533,47.03255],[11.83621,46.9929],[11.78178,46.99206],[11.74717,46.9689],[11.71123,46.99302],[11.6641,46.99263],[11.62721,47.01258],[11.58079,47.00149],[11.53808,46.98411],[11.5126,47.00467],[11.47986,47.011],[11.44209,46.9765],[11.40091,46.96524],[11.35829,46.99036],[11.26277,46.98034],[11.24139,46.96962],[11.18891,46.97016],[11.13955,46.92763],[11.11501,46.93101],[11.09498,46.90748],[11.10155,46.88986],[11.07144,46.8518],[11.08354,46.82287],[11.0398,46.80508],[11.02167,46.76591],[10.94397,46.77514],[10.88221,46.76319],[10.83679,46.78194],[10.81374,46.77554],[10.78878,46.7947],[10.73049,46.78791],[10.7632,46.82349],[10.72332,46.83739],[10.67145,46.8707],[10.59643,46.8573],[10.57051,46.84245],[10.55072,46.8499],[10.49894,46.84751],[10.4801,46.85871],[10.45763,46.82885],[10.44827,46.80137],[10.42467,46.78879],[10.44054,46.77375],[10.43478,46.75219],[10.40105,46.73209],[10.41827,46.71781],[10.38742,46.68728],[10.39414,46.65475],[10.41075,46.63514],[10.44595,46.6411],[10.48916,46.61502],[10.47257,46.54356],[10.45318,46.53205],[10.45794,46.51059],[10.48453,46.4936],[10.55196,46.49146],[10.60049,46.46866],[10.62184,46.44796],[10.61906,46.41814],[10.63046,46.40255],[10.60738,46.3793],[10.56669,46.37777],[10.51593,46.34636],[10.56562,46.32634],[10.57957,46.29883],[10.57567,46.27568],[10.58573,46.24534],[10.5414,46.18862],[10.56524,46.16706],[10.54927,46.14643],[10.54158,46.10327],[10.49092,46.06681],[10.48622,46.02955],[10.45709,46.00805],[10.45341,45.97655],[10.4866,45.97116],[10.48303,45.95193],[10.50736,45.92497],[10.49099,45.88232],[10.50231,45.87126],[10.5082,45.82374],[10.54327,45.81836],[10.53088,45.79586],[10.56347,45.78411],[10.60049,45.80282],[10.64533,45.80413],[10.65464,45.83263],[10.70184,45.84104],[10.79168,45.8331],[10.82539,45.83774],[10.8834,45.81697],[10.86524,45.7613],[10.84383,45.71859],[10.88958,45.71507],[10.91878,45.70055],[10.93746,45.67342],[10.96832,45.68012],[11.00756,45.71042],[11.04138,45.70632],[11.05773,45.7176],[11.0924,45.69515],[11.13851,45.69685],[11.13866,45.70932],[11.17465,45.73311],[11.18066,45.76291],[11.17357,45.78652],[11.21845,45.84396],[11.23932,45.85598],[11.26124,45.91825],[11.32435,45.91742],[11.35806,45.92529],[11.38075,45.94267],[11.3724,45.97317],[11.44678,45.98089],[11.4912,46.00855],[11.53891,46.0133],[11.57723,46.00652],[11.58759,45.969],[11.67323,45.96435],[11.69,45.98881],[11.66665,46.0171],[11.6669,46.03806],[11.70644,46.04599],[11.68639,46.06626],[11.68235,46.08999],[11.71679,46.10294],[11.81367,46.10227],[11.89341,46.12115],[11.92177,46.14934],[11.92863,46.1758],[11.96227,46.18786],[11.90957,46.22443],[11.92481,46.24295],[11.88626,46.25819],[11.88525,46.27881],[11.83764,46.27072],[11.83185,46.32515],[11.77438,46.35824],[11.80401,46.36498],[11.83204,46.38719],[11.85052,46.43431],[11.88879,46.442],[11.87422,46.47288],[11.81316,46.47814],[11.81545,46.50032],[11.85135,46.51784],[11.91188,46.53296],[11.93389,46.5279],[11.96615,46.54468],[12.01396,46.55091]]]]}'), 4326)
+             ), 3)) g
+)
+insert into wine_place_boundaries (
+  wine_place_id, source_snapshot_id, boundary_method, quality_status,
+  display_geometry, label_point, bbox, source_feature_refs, generation_parameters,
+  revision, is_current, reviewed_at
+)
+select p.id, snap.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED',
+       geom.g, extensions.ST_PointOnSurface(geom.g),
+       array[
+         extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
+         extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))
+       ]::double precision[],
+       '{"source":"ISTAT regione Trentino-Alto Adige"}'::jsonb,
+       '{"engine":"istat-admin-region","simplify":"mapshaper 6%","holes":"dropped","coordinate_precision":5}'::jsonb,
+       '20260814T155951Z', true, now()
+from wine_places p, snap, geom
+where p.canonical_key = 'italy.trentino-alto-adige';
+
+do $$
+declare n int; bx double precision[];
+begin
+  select count(*) into n from wine_place_boundaries b join wine_places p on p.id=b.wine_place_id
+   where p.canonical_key='italy.trentino-alto-adige' and b.is_current and b.quality_status='VALIDATED';
+  if n <> 1 then raise exception 'expected 1 current region boundary, got %', n; end if;
+  select b.bbox into bx from wine_place_boundaries b join wine_places p on p.id=b.wine_place_id
+   where p.canonical_key='italy.trentino-alto-adige' and b.is_current;
+  if bx[1] < 10.2 or bx[2] < 45.5 or bx[3] > 12.6 or bx[4] > 47.2 then
+    raise exception 'region bbox escapes window: %', bx;
+  end if;
+end
+$$;
+
+commit;
