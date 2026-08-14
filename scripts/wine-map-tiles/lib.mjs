@@ -110,6 +110,14 @@ export const ATTRIBUTION = {
     key: "toscana",
     text: "© Regione Toscana — Zone di produzione dei vini (CC BY 4.0)",
   },
+  // Spanish DO/DOCa outlines: whole-municipality union from the OpenDataSoft
+  // georef-spain-municipio layer (IGN/CNIG-derived) filtered by each DO's
+  // official municipality list. The Spanish analogue of IGN_ADMIN_EXPRESS —
+  // official municipal polygons + a pliego membership list, dissolved.
+  IGN_CNIG_SPAIN: {
+    key: "ign-cnig-spain",
+    text: "Contains data © IGN/CNIG España",
+  },
 };
 
 export function attributionKeyFor(namespace) {

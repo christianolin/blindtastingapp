@@ -1,0 +1,106 @@
+{
+  "_readme": {
+    "purpose": "In-repo source of truth for each Spanish DO/DOP/DOCa's official municipality list, resolved to INE mun_codes and dissolved into the DO outline (municipality-union model — Spain has no national parcel/DO polygon layer, so this mirrors the Champagne/Alsace commune-union path).",
+    "how_geometry_is_built": "run-spain-dos.mjs resolves each entry's municipalities against the georef-spain-municipio cache (fetch-spain-municipios.mjs) via spain-lib.mjs, dissolves the whole-municipality polygons, stages a DRAFT boundary with IGN_CNIG_SPAIN provenance, runs the auto-promote guards, and (if they all pass) promotes it to current-VALIDATED / the place to VERIFIED. There is no human review gate (owner decision) — the guards are the only safety net.",
+    "provenance_rule": "MEMBERSHIP MUST COME FROM THE OFFICIAL BOE PLIEGO DE CONDICIONES, NOT FROM RECALL. Every entry records provenance.source (the BOE reference / URL and retrieval date). The resolver fails closed on any municipality that does not map to exactly one INE code in the right province, and on any expected_count mismatch — but it CANNOT detect a plausible-but-incomplete list, which is why the source must be authoritative.",
+    "status_values": {
+      "pending": "Scaffolded but NOT yet sourced from a pliego — municipios is empty. run-spain-dos.mjs SKIPS these. This is the current state of every entry: the build session had no web access to fetch pliegos, so no list was transcribed from memory.",
+      "ready": "municipios sourced from the cited pliego and filled in. run-spain-dos.mjs will stage + guard + promote it."
+    },
+    "entry_shape": {
+      "canonical_key": "spain.<comunidad>.<do>  e.g. spain.cataluna.priorat",
+      "comunidad_key": "the 2nd key segment; also the tile shard key",
+      "comunidad": "display name of the autonomous community (SUBREGION node)",
+      "display_name": "the DO's display name",
+      "appellation_system": "DOP | DOCa/DOQ | VP (Vino de Pago)",
+      "appellation_level": "regional | subregional | communal (drives tier/zoom + the area-band guard)",
+      "parent_key": "optional — a parent DO whose outline must contain this one (sub-zone containment guard)",
+      "provinces": "[INE prov_code or prov_name] — scopes name resolution so duplicate town names across provinces disambiguate",
+      "expected_count": "number of municipalities in the pliego — the resolver asserts it resolved exactly this many",
+      "municipios": "[{ code: '<INE 5-digit>', name: '<official/co-official name for review>' } | { name: '<name>' }]. Code-first is REQUIRED for bilingual comunidades (Galicia/Cataluna/Valencia/Pais Vasco) where the georef name is the co-official form; name-only is fine for Castilian-only comunidades.",
+      "grapes": "optional [variety names] for the knowledge migration",
+      "scoring_reference": "optional exact appellation name for the scoring-reference link",
+      "provenance": "{ source: 'BOE-A-YYYY-NNNNN / MAPA pliego', url, retrieved: 'YYYY-MM-DD', note }",
+      "status": "pending | ready"
+    },
+    "resume": "Once a pliego list is available for an entry: set municipios (+ expected_count + provenance) and status:'ready', then `node scripts/wine-map-sources/run-spain-dos.mjs --dry` (verifies resolve+dissolve+guards, rolls back) and finally without --dry to stage+promote. The run is resumable: it skips any DO that already has a current-VALIDATED boundary."
+  },
+  "version": 1,
+  "generated_at": "2026-08-14",
+  "denominations": [
+    {
+      "canonical_key": "spain.la-rioja.rioja",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja",
+      "appellation_system": "DOCa",
+      "appellation_level": "regional",
+      "provinces": ["26", "01", "31"],
+      "provinces_note": "La Rioja (26) + Alava/Araba (01, Rioja Alavesa) + Navarra (31). Trans-comunidad DOCa: keyed under la-rioja with the Alava/Navarra municipalities included in the dissolve.",
+      "municipios": [],
+      "provenance": { "source": "BOE pliego de condiciones DOCa Rioja", "url": null, "retrieved": null, "note": "PENDING — not sourced (no web access this session)." },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.cataluna.priorat",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Priorat",
+      "appellation_system": "DOCa/DOQ",
+      "appellation_level": "communal",
+      "provinces": ["43"],
+      "municipios": [],
+      "provenance": { "source": "DOGC/BOE pliego DOQ Priorat", "url": null, "retrieved": null, "note": "PENDING — bilingual (Catalan): use code-first." },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Ribera del Duero",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": ["09", "47", "40", "42"],
+      "provinces_note": "Burgos (09) + Valladolid (47) + Segovia (40) + Soria (42).",
+      "municipios": [],
+      "provenance": { "source": "BOE pliego DOP Ribera del Duero", "url": null, "retrieved": null, "note": "PENDING." },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.rueda",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Rueda",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": ["47", "40", "05"],
+      "municipios": [],
+      "provenance": { "source": "BOE pliego DOP Rueda", "url": null, "retrieved": null, "note": "PENDING." },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.toro",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Toro",
+      "appellation_system": "DOP",
+      "appellation_level": "communal",
+      "provinces": ["49", "47"],
+      "municipios": [],
+      "provenance": { "source": "BOE pliego DOP Toro", "url": null, "retrieved": null, "note": "PENDING." },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Rías Baixas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": ["36", "27"],
+      "municipios": [],
+      "provenance": { "source": "BOE/DOG pliego DOP Rías Baixas", "url": null, "retrieved": null, "note": "PENDING — bilingual (Galician): use code-first." },
+      "status": "pending"
+    }
+  ]
+}

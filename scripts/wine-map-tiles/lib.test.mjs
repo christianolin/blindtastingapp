@@ -163,7 +163,13 @@ test("attribution keys reject unknown namespaces", () => {
     istat: ATTRIBUTION.ISTAT_CONFINI.text,
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
+    "ign-cnig-spain": ATTRIBUTION.IGN_CNIG_SPAIN.text,
   });
+});
+
+test("the Spain IGN/CNIG namespace resolves to its own credit", () => {
+  assert.equal(attributionKeyFor("IGN_CNIG_SPAIN"), "ign-cnig-spain");
+  assert.match(ATTRIBUTION.IGN_CNIG_SPAIN.text, /IGN\/CNIG Espa/);
 });
 
 test("buildManifest emits the schema_version 2 contract", () => {
