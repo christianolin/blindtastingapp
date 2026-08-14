@@ -73,6 +73,12 @@ export const ATTRIBUTION = {
     key: "trentino-alto-adige",
     text: "© Autonome Provinz Bozen-Südtirol / Provincia Autonoma di Bolzano — Zone DOC e IGT (CC BY 4.0)",
   },
+  // Official Regione del Veneto DOC/DOCG wine zones (IDT2 GeoServer).
+  // See scripts/wine-map-sources/stage-veneto-official.mjs.
+  VENETO_DOC_DOCG: {
+    key: "veneto",
+    text: "© Regione del Veneto — Zone DOC e DOCG viticole (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {

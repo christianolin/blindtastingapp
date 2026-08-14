@@ -163,6 +163,7 @@ test("attribution keys reject unknown namespaces", () => {
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
     "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
+    veneto: ATTRIBUTION.VENETO_DOC_DOCG.text,
   });
 });
 
