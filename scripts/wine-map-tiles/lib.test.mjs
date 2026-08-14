@@ -164,6 +164,7 @@ test("attribution keys reject unknown namespaces", () => {
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
     "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
     veneto: ATTRIBUTION.VENETO_DOC_DOCG.text,
+    sicilia: ATTRIBUTION.SICILY_COMUNI.text,
   });
 });
 

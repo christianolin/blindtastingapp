@@ -79,6 +79,13 @@ export const ATTRIBUTION = {
     key: "veneto",
     text: "© Regione del Veneto — Zone DOC e DOCG viticole (CC BY 4.0)",
   },
+  // Sicily has no official delimited-zone GIS: footprints are ISTAT comune
+  // boundaries dissolved per the MASAF disciplinare comune lists (comune-level
+  // approximation). See scripts/wine-map-sources/stage-sicily-official.mjs.
+  SICILY_COMUNI: {
+    key: "sicilia",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {
