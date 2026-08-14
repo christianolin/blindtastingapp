@@ -63,9 +63,14 @@ export const REGION_COLORS: Record<string, string> = {
   savoie: "#5C7A3B",
   "sud-ouest": "#B0722C",
   toscana: "#C0872E",
+  // Spain: the country outline is neutral context (like France's); each
+  // comunidad shard (galicia, cataluna, la-rioja…) gets its own hue when its
+  // DO wave ships.
+  spain: "#6B6257",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",
+  spain: "Spain",
   "languedoc-roussillon": "Languedoc-Roussillon",
   rhone: "Rhône",
   "sud-ouest": "Sud-Ouest",
