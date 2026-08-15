@@ -22,6 +22,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
@@ -37,18 +39,18 @@ const DATASET_URL =
 // Peninsula + Balearics display window — must match the Task 2 country base
 // (20260901090000). Canary Islands are out of scope, so a Canary municipio
 // slipping into a list makes the bbox escape this window and the DO is rejected.
-const WINDOW = { minLon: -10, minLat: 35, maxLon: 5, maxLat: 44 };
+export const WINDOW = { minLon: -10, minLat: 35, maxLon: 5, maxLat: 44 };
 // Loose planar-deg² sanity bands per level: generous enough never to reject a
 // real DO, tight enough to catch a gross membership error (a municipio in the
 // wrong province blows up the bbox/area). Rioja ~0.5, Ribera ~0.4, Priorat ~0.02.
-const AREA_BAND = {
+export const AREA_BAND = {
   regional: [0.01, 4.0],
   subregional: [0.003, 2.0],
   communal: [0.0003, 0.8],
 };
 // A DO's geometry may sit at most this fraction outside its declared parent DO
 // before the containment guard rejects it (absorbs simplification mismatch).
-const CONTAINMENT_SLACK = 0.02;
+export const CONTAINMENT_SLACK = 0.02;
 
 const argv = process.argv.slice(2);
 const hasFlag = (n) => argv.includes(`--${n}`);
@@ -118,7 +120,7 @@ async function dissolve(client, geometries, tolerance) {
 
 // The guards that replace the human eye. Throw on any failure — the caller
 // turns a throw into "skip this DO, keep going".
-function assertGuards(report, { label, level, memberCount }) {
+export function assertGuards(report, { label, level, memberCount }) {
   assert.ok(report.geojson, `${label}: dissolve produced no geometry`);
   assert.equal(report.is_empty, false, `${label}: geometry empty`);
   assert.ok(report.valid, `${label}: geometry invalid`);
@@ -376,4 +378,8 @@ async function main() {
   }
 }
 
-await main();
+// Only run when invoked directly; importing for the pure guards must not open a
+// DB connection (cross-platform entrypoint check — see fetch-spain-municipios).
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}
