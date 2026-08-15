@@ -28,7 +28,12 @@ Nothing false was shipped to the live map.
   `IGN_CNIG_SPAIN` attribution. Driver **proven** via `--selftest 01` (dissolved
   53 real Álava municipios → valid outline, all guards green, rolled back).
 - `8a26d05` Task 6 (frontend) — `spain` colour + label on the tile map.
-- Gate green: 46 pure unit tests, `tsc`, `eslint` all clean.
+- `5ff554e` Task 4 hardening — unit-tested the auto-promote guards (the only
+  safety net for the waived review): 12 tests proving they reject an out-of-window
+  bbox (Canary municipio), out-of-band area (wrong-province municipio), and
+  empty/invalid/uncovered geometry. `main()` gated so importing the pure guards
+  never touches the DB.
+- Gate green: 51 pure unit tests, `tsc`, `eslint` all clean.
 
 **BLOCKER — Task 3c membership (the dominant risk, unresolved):** this
 environment had **no web search** (Google 403) and **no reachable authoritative
