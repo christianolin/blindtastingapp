@@ -775,6 +775,249 @@
         "note": "Whole-municipality union of the pliego zona de producción. 18 Salamanca + 14 Zamora INE municipios. Monumenta (a real Zamora member) is excluded — it has no polygon in the georef-spain-municipio cache, so no geometry to dissolve. Pliego pedanías that are not separate INE municipios also excluded (Corporario, Valdenoguera; Abelón, Badilla, Carbajosa de Alba, Castro de Alcañices, Cibanal, Cozcurrita, Formariz, Fornillos de Fermoselle, Mámoles, Pinilla de Fermoselle, Salto de Castro, Santa Eulalia — sub-entities of listed parents). Almaraz de Duero and Muelas del Pan (partial cadastral-polygon inclusions) taken whole."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.somontano",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Somontano",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "22"
+      ],
+      "expected_count": 43,
+      "municipios": [
+        {
+          "code": "22001",
+          "name": "Abiego"
+        },
+        {
+          "code": "22003",
+          "name": "Adahuesca"
+        },
+        {
+          "code": "22015",
+          "name": "Alcalá del Obispo"
+        },
+        {
+          "code": "22027",
+          "name": "Angüés"
+        },
+        {
+          "code": "22029",
+          "name": "Antillón"
+        },
+        {
+          "code": "22024",
+          "name": "Alquézar"
+        },
+        {
+          "code": "22036",
+          "name": "Argavieso"
+        },
+        {
+          "code": "22041",
+          "name": "Azara"
+        },
+        {
+          "code": "22042",
+          "name": "Azlor"
+        },
+        {
+          "code": "22048",
+          "name": "Barbastro"
+        },
+        {
+          "code": "22050",
+          "name": "Barbuñales"
+        },
+        {
+          "code": "22055",
+          "name": "Berbegal"
+        },
+        {
+          "code": "22064",
+          "name": "Blecua y Torres"
+        },
+        {
+          "code": "22058",
+          "name": "Bierge"
+        },
+        {
+          "code": "22080",
+          "name": "Capella"
+        },
+        {
+          "code": "22081",
+          "name": "Casbas de Huesca"
+        },
+        {
+          "code": "22088",
+          "name": "Castillazuelo"
+        },
+        {
+          "code": "22090",
+          "name": "Colungo"
+        },
+        {
+          "code": "22102",
+          "name": "Estada"
+        },
+        {
+          "code": "22103",
+          "name": "Estadilla"
+        },
+        {
+          "code": "22110",
+          "name": "Fonz"
+        },
+        {
+          "code": "22115",
+          "name": "El Grado"
+        },
+        {
+          "code": "22117",
+          "name": "Graus"
+        },
+        {
+          "code": "22908",
+          "name": "Hoz y Costean"
+        },
+        {
+          "code": "22126",
+          "name": "Ibieca"
+        },
+        {
+          "code": "22128",
+          "name": "Ilche"
+        },
+        {
+          "code": "22135",
+          "name": "Laluenga"
+        },
+        {
+          "code": "22139",
+          "name": "Laperdiguera"
+        },
+        {
+          "code": "22141",
+          "name": "Lascellas-Ponzano"
+        },
+        {
+          "code": "22160",
+          "name": "Naval"
+        },
+        {
+          "code": "22164",
+          "name": "Olvena"
+        },
+        {
+          "code": "22174",
+          "name": "Peralta de Alcofea"
+        },
+        {
+          "code": "22176",
+          "name": "Peraltilla"
+        },
+        {
+          "code": "22177",
+          "name": "Perarrúa"
+        },
+        {
+          "code": "22178",
+          "name": "Pertusa"
+        },
+        {
+          "code": "22186",
+          "name": "Pozán de Vero"
+        },
+        {
+          "code": "22187",
+          "name": "La Puebla de Castro"
+        },
+        {
+          "code": "22201",
+          "name": "Salas Altas"
+        },
+        {
+          "code": "22202",
+          "name": "Salas Bajas"
+        },
+        {
+          "code": "22906",
+          "name": "Santa María de Dulcis"
+        },
+        {
+          "code": "22214",
+          "name": "Secastilla"
+        },
+        {
+          "code": "22222",
+          "name": "Siétamo"
+        },
+        {
+          "code": "22235",
+          "name": "Torres de Alcanadre"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Somontano», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/somontano_2011_01_01.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 43 Huesca términos municipales listed in the pliego (área geográfica)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.jumilla",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Jumilla",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30",
+        "02"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "30022",
+          "name": "Jumilla"
+        },
+        {
+          "code": "02033",
+          "name": "Fuente-Álamo"
+        },
+        {
+          "code": "02004",
+          "name": "Albatana"
+        },
+        {
+          "code": "02056",
+          "name": "Ontur"
+        },
+        {
+          "code": "02037",
+          "name": "Hellín"
+        },
+        {
+          "code": "02074",
+          "name": "Tobarra"
+        },
+        {
+          "code": "02051",
+          "name": "Montealegre del Castillo"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Jumilla», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliego_de_condiciones_dop_jumilla_.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Trans-comunidad DOP keyed under Murcia (town of Jumilla, prov 30); 6 of 7 municipios are in Albacete / Castilla-La Mancha (prov 02): Fuente-Álamo, Albatana, Ontur, Hellín, Tobarra, Montealegre del Castillo. Whole-municipality union."
+      },
+      "status": "ready"
     }
   ]
 }
