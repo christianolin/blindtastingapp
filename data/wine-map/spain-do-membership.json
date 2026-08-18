@@ -60,14 +60,63 @@
       "provinces": [
         "43"
       ],
-      "municipios": [],
+      "expected_count": 10,
+      "municipios": [
+        {
+          "code": "43023",
+          "name": "Bellmunt del Priorat"
+        },
+        {
+          "code": "43069",
+          "name": "Gratallops"
+        },
+        {
+          "code": "43072",
+          "name": "El Lloar"
+        },
+        {
+          "code": "43096",
+          "name": "La Morera de Montsant"
+        },
+        {
+          "code": "43112",
+          "name": "Poboleda"
+        },
+        {
+          "code": "43114",
+          "name": "Porrera"
+        },
+        {
+          "code": "43154",
+          "name": "Torroja del Priorat"
+        },
+        {
+          "code": "43173",
+          "name": "La Vilella Alta"
+        },
+        {
+          "code": "43174",
+          "name": "La Vilella Baixa"
+        },
+        {
+          "code": "43055",
+          "name": "Falset"
+        }
+      ],
+      "grapes": [
+        "Garnacha Tinta",
+        "Cariñena",
+        "Garnacha Blanca",
+        "Macabeo"
+      ],
+      "scoring_reference": "Priorat",
       "provenance": {
-        "source": "DOGC/BOE pliego DOQ Priorat",
-        "url": null,
-        "retrieved": null,
-        "note": "PENDING — bilingual (Catalan): use code-first."
+        "source": "Pliego de condiciones DOP «Priorat» (DOQ/DOCa), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/priorat_2022_09_06.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Section 4.1 'Zona de producción de la uva'. 10 municipios (Tarragona). 'Su agregado Escaladei' is part of La Morera de Montsant; the partial inclusion 'la parte norte del municipio de Falset' is taken whole (documented whole-municipality over-approximation)."
       },
-      "status": "pending"
+      "status": "ready"
     },
     {
       "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
