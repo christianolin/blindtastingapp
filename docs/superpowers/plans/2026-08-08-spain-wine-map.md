@@ -16,17 +16,25 @@ publish Spain + Italy (owner-gated).
 All **machinery** is built and proven, and authoritative sourcing is **solved**:
 official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
 licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
-fail-closed by `fetch-spain-pliego.mjs`. **Four DOs are LIVE end-to-end** from
-their official pliegos — **Rueda** (68 municipios), **Toro** (15), **Cigales**
-(12), all Castilla y León, and **Priorat** DOQ (10, Cataluña) — each dissolved →
-guarded → auto-promoted. Migrations `20260901091000`–`094000`. Nothing false
-shipped; the live *map tiles* are unchanged until the workflow is run.
+fail-closed by `fetch-spain-pliego.mjs`. Merged to `master` (Spain + the
+collaborator's Italy). **Five DOs are LIVE end-to-end** from their official
+pliegos — **Rueda** (68 municipios), **Toro** (15), **Cigales** (12), **Arribes**
+(32), all Castilla y León, and **Priorat** DOQ (10, Cataluña) — each dissolved →
+guarded → auto-promoted. Migrations `20260901091000`–`095000`.
 
-**Sourcing scales, but each DO needs a quick human pass** (the fail-closed
-resolver forces it). Pliego formats vary: comma-lists (Rueda/Toro/Cigales) parse
-almost fully; **Rioja** DOCa is a space-separated multi-column table (greedy
-longest-match gets ~131/144 — needs the multi-word remainder reconciled);
-**Bierzo** the parser locked onto the control-plan section (anchor needs
+**Reliability finding (important):** bulk-processing is NOT trustworthy for this
+map's quality bar — every DO needs a per-DO pass against the raw pliego text.
+Pliego formats vary wildly (comma-lists, space-separated multi-column tables like
+Rioja, "entidad menor" sub-entity annotations, older 2011 layouts), and the
+membership hazard is subtle: pliegos list many **pedanías** that are NOT separate
+INE municipios (must be dropped, as they are covered by their parent), and
+**partial** (cadastral-polygon) inclusions taken whole. Arribes proved the point
+— an initial hasty reconciliation was wrong twice (a mislabeled code; a missed
+real municipio, Monumenta, which turns out absent from the georef cache) before a
+name-by-name resolve against the pliego got it right. So the parser is an
+accelerator, not an oracle; the fail-closed resolver + reading the pliego is what
+makes a DO correct. Attempted-but-deferred formats: **Rioja** DOCa (space table,
+~131/144 auto), **Bierzo** (anchor lands on the control-plan section; anchor needs
 tightening); **Arlanza** is dense with "entidad menor" sub-entities to classify;
 **Rías Baixas** is Galician with sub-zones. Each is `fetch-spain-pliego.mjs
 --search`/`--pdf --emit`, review FUZZY + UNRESOLVED, finalize codes, catalog
