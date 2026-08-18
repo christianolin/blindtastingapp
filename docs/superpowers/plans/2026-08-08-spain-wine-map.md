@@ -6,14 +6,31 @@ no national parcel layer.
 
 ## Session status — 2026-08-14 (resume here)
 
-Branch `spain-wine-map-phase-1`. All **machinery** is built, tested and proven,
-and the authoritative-sourcing problem is **solved**: official MAPA pliego PDFs
-are fetched (DuckDuckGo over HTTP, since the Google tool is licence-blocked),
-text-extracted, parsed and INE-validated fail-closed. **Three DOs are LIVE
-end-to-end** from their official pliegos — **Rueda** (68 municipios), **Toro**
-(15), and **Priorat** DOQ (10, Cataluña) — each dissolved → guarded →
-auto-promoted to a current-VALIDATED boundary. Nothing false was shipped; the
-live *map tiles* are unchanged (a tile republish is owner-gated).
+**Merged to `master`** (`b892baa`) — Spain wave 1 + the collaborator's Italy
+(Trentino-Alto-Adige/Veneto/Sicily) are unioned; `export.mjs` runs clean on the
+full live DB (1358 places, all namespaces, guard passes), tests/tsc/eslint green.
+Old branches cleaned up (11 merged branches deleted; `master` + `auth-phase-1`
+kept). **The GitHub `wine-map-tiles` workflow can now be run from `master`** to
+publish Spain + Italy (owner-gated).
+
+All **machinery** is built and proven, and authoritative sourcing is **solved**:
+official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
+licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
+fail-closed by `fetch-spain-pliego.mjs`. **Four DOs are LIVE end-to-end** from
+their official pliegos — **Rueda** (68 municipios), **Toro** (15), **Cigales**
+(12), all Castilla y León, and **Priorat** DOQ (10, Cataluña) — each dissolved →
+guarded → auto-promoted. Migrations `20260901091000`–`094000`. Nothing false
+shipped; the live *map tiles* are unchanged until the workflow is run.
+
+**Sourcing scales, but each DO needs a quick human pass** (the fail-closed
+resolver forces it). Pliego formats vary: comma-lists (Rueda/Toro/Cigales) parse
+almost fully; **Rioja** DOCa is a space-separated multi-column table (greedy
+longest-match gets ~131/144 — needs the multi-word remainder reconciled);
+**Bierzo** the parser locked onto the control-plan section (anchor needs
+tightening); **Arlanza** is dense with "entidad menor" sub-entities to classify;
+**Rías Baixas** is Galician with sub-zones. Each is `fetch-spain-pliego.mjs
+--search`/`--pdf --emit`, review FUZZY + UNRESOLVED, finalize codes, catalog
+migration, `run-spain-dos.mjs --commit`. ~65 DOs remain.
 
 **Done + committed (branch is pushed as backup):**
 - `02737a4` Task 1 — country-agnostic export guard `assertMultiCountryArchive`
@@ -58,9 +75,19 @@ live *map tiles* are unchanged (a tile republish is owner-gated).
 - Gate green: 51 pure unit tests, `tsc`, `eslint` all clean. `pdfjs-dist` is a
   session-only tool (`npm install --no-save pdfjs-dist`); the committed pipeline
   and artifact never depend on it.
-- **Live tree now:** `spain` → `castilla-y-leon` → {`rueda`, `toro`}; `spain` →
-  `cataluna` → `priorat`. Next: Rías Baixas (Galicia — pliego found; needs the
-  Galician-phrasing anchor + subzone handling), Ribera del Duero, Rioja DOCa.
+- `221fc05` Cigales (4th DO), LIVE — pliego cigales_2022_03_25.pdf, 12 municipios
+  (11 in Valladolid along the Pisuerga + Dueñas/Palencia; the "El Berrocal" pago,
+  which the pliego notes lies within the city of Valladolid, is documented-excluded
+  to avoid pulling in the whole city). Migration `20260901094000`.
+- **Live tree now (4 DOs, committed to `master`):** `spain` → `castilla-y-leon`
+  → {`rueda`, `toro`, `cigales`}; `spain` → `cataluna` → `priorat`.
+- **Pliego parser** handles three list phrasings + the fuzzy suggester. Harder
+  pliegos still need per-DO care (their PDFs found + probed, not yet promoted):
+  **Rioja** DOCa (space-separated multi-column table across La Rioja/Álava/Navarra
+  — a greedy longest-match got 131/~144; needs the multi-word residue finished),
+  **Bierzo** (anchor grabbed the control-plan section — needs a tighter anchor),
+  **Arlanza** (many "entidad menor" sub-entities to classify), **Rías Baixas**
+  (Galician phrasing + subzones), **Ribera del Duero** (~300 municipios).
 
 **Sourcing solved (Task 3c was the dominant risk):** the Google search *tool* is
 dead here (backend Gemini licence, `SUBSCRIPTION_REQUIRED`), and ODS/datos.gob.es/
