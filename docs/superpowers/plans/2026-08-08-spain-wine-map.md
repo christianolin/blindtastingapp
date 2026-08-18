@@ -17,10 +17,17 @@ All **machinery** is built and proven, and authoritative sourcing is **solved**:
 official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
 licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
 fail-closed by `fetch-spain-pliego.mjs`. Merged to `master` (Spain + the
-collaborator's Italy). **Five DOs are LIVE end-to-end** from their official
-pliegos — **Rueda** (68 municipios), **Toro** (15), **Cigales** (12), **Arribes**
-(32), all Castilla y León, and **Priorat** DOQ (10, Cataluña) — each dissolved →
-guarded → auto-promoted. Migrations `20260901091000`–`095000`.
+collaborator's Italy). **Eight DOs are LIVE end-to-end** across **five
+comunidades**, each dissolved → guarded → auto-promoted from its official pliego:
+- **Castilla y León** — Rueda (68), Toro (15), Cigales (12), Arribes (32)
+- **Cataluña** — Priorat DOQ (10)
+- **Aragón** — Somontano (43)
+- **Región de Murcia** — Jumilla (7; trans-comunidad, 6 municipios in Albacete)
+- **Andalucía** — Jerez-Xérès-Sherry (10; Marco de Jerez, +Lebrija in Sevilla)
+
+Migrations `20260901091000`–`097000`. Per-DO verification against the raw pliego
+each time (see the reliability finding below) — new comunidad REGION nodes are
+tree-only groupings; each DO's boundary is the whole-municipality union.
 
 **Reliability finding (important):** bulk-processing is NOT trustworthy for this
 map's quality bar — every DO needs a per-DO pass against the raw pliego text.
