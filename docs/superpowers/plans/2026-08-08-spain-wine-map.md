@@ -6,9 +6,13 @@ no national parcel layer.
 
 ## Session status — 2026-08-14 (resume here)
 
-Branch `spain-wine-map-phase-1`. All the **machinery** is built, tested and
-proven; the **membership data** is blocked on authoritative sourcing (see below).
-Nothing false was shipped to the live map.
+Branch `spain-wine-map-phase-1`. All **machinery** is built, tested and proven,
+and the authoritative-sourcing problem is **solved**: official MAPA pliego PDFs
+are fetched (DuckDuckGo over HTTP, since the Google tool is licence-blocked),
+text-extracted, parsed and INE-validated fail-closed. The first DO — **Rueda,
+68 municipios from the official pliego PDO-ES-A0889 — is LIVE end-to-end**
+(dissolved → guards → auto-promoted). Nothing false was shipped; the live *map
+tiles* are unchanged (a tile republish is owner-gated).
 
 **Done + committed (branch is pushed as backup):**
 - `02737a4` Task 1 — country-agnostic export guard `assertMultiCountryArchive`
@@ -33,35 +37,60 @@ Nothing false was shipped to the live map.
   bbox (Canary municipio), out-of-band area (wrong-province municipio), and
   empty/invalid/uncovered geometry. `main()` gated so importing the pure guards
   never touches the DB.
-- Gate green: 51 pure unit tests, `tsc`, `eslint` all clean.
+- `1a0c069` Task 3c+4+5 **wave 1 (Rueda pilot), LIVE** — `fetch-spain-pliego.mjs`
+  (DuckDuckGo search → official MAPA pliego PDF → pdfjs text extract → parse the
+  province-grouped `términos municipales` → INE-resolve fail-closed, with a
+  province-scoped `query⊆cache` fuzzy suggester for abbreviations/`del`↔`de`
+  variants, flagged for review). `spain-do-membership.json` Rueda entry = 68 INE
+  municipios w/ pliego provenance (6 pedanías/sub-entities documented-excluded).
+  Migration `20260901091000` re-activates `spain` (VERIFIED + boundary current)
+  and adds `castilla-y-leon` (tree-only REGION) + `rueda` (APPELLATION). Driver
+  promoted Rueda's 68-municipio union → current-VALIDATED (0.319 deg², 277 pts).
+- Gate green: 51 pure unit tests, `tsc`, `eslint` all clean. `pdfjs-dist` is a
+  session-only tool (`npm install --no-save pdfjs-dist`); the committed pipeline
+  and artifact never depend on it.
 
-**BLOCKER — Task 3c membership (the dominant risk, unresolved):** this
-environment had **no web search** (Google 403) and **no reachable authoritative
-DO→municipio dataset** (OpenDataSoft catalog, datos.gob.es, Wikidata SPARQL all
-dry). Per the owner mandate (lists from BOE pliegos, *not* recall) I **refused to
-fabricate** ~70 municipality lists from memory — the fail-closed resolver catches
-typos/nonexistent names but *cannot* catch a plausible-but-incomplete list, which
-is exactly the shipped-wrong-map risk. So `data/wine-map/spain-do-membership.json`
-is a documented schema with 6 `status:"pending"` stubs and **zero** transcribed
-lists. Task 5 (catalog/links/content migrations) is consequently deferred — there
-are no `ready` DOs to catalog yet.
+**Sourcing solved (Task 3c was the dominant risk):** the Google search *tool* is
+dead here (backend Gemini licence, `SUBSCRIPTION_REQUIRED`), and ODS/datos.gob.es/
+Wikidata/Wikipedia all lack municipality-level membership — but **DuckDuckGo over
+plain HTTP works**, and the **Ministry of Agriculture (mapa.gob.es) publishes each
+DOP's official pliego de condiciones as a text-extractable PDF** with a clean
+province-grouped municipality list. That's pliego-grade provenance, exactly the
+plan's requirement. `fetch-spain-pliego.mjs` turns each pliego into an
+INE-validated list; the fail-closed resolver + the documented per-DO exclusions
+mean no plausible-but-wrong list ships silently. Rueda proves it end-to-end;
+5 stubs remain `pending` + the rest of the ~70 DOs to source the same way.
 
 **Collaborator / live-DB divergence:** the live DB is ahead of this branch — the
 other developer is actively adding Italian regions (Trentino-Alto-Adige, Veneto,
 … now through migration `20260829322000`, still climbing *during* this session).
 Spain was therefore renumbered into its own `20260901xxxxxx` block to avoid
-racing their slot sequence. At 18:56 they **directly set the `spain` country node
-to `EXCLUDED` and retired its boundary** (no migration; a content-less country
-outline is reasonably premature on the live map). Left as-is — not my change to
-revert. Note: the DB-integration test `world-wine-map-foundation.test.mjs` is
-already red against live from their un-merged Italy work (hardcoded
+racing their slot sequence. Mid-session they set the content-less `spain` node to
+`EXCLUDED`; wave 1's migration (`20260901091000`) **re-activated it** (VERIFIED +
+boundary current) because it now hosts a real DO (Rueda) — documented in the
+migration header, and it does not touch the live map until a tile republish.
+
+**Export divergence (resolves on merge):** a full `export.mjs` run on this branch
+throws `Unknown source namespace: SICILY_COMUNI` — the live DB carries the
+collaborator's newer Italy namespaces (`SICILY_COMUNI`, `VENETO_DOC_DOCG`,
+`ALTOADIGE_DOC_IGT`) that this branch's `ATTRIBUTION` map hasn't got yet. Not mine
+to add (I'd risk the wrong licence text); it clears when this branch merges master.
+Spain's own rows use `IGN_CNIG_SPAIN`/`NATURAL_EARTH` and export fine — verified
+directly: countries `france, italy, spain`, **no orphan, no shard collision**,
+`rueda` → `castilla-y-leon` shard. Also: `world-wine-map-foundation.test.mjs` is
+already red against live from the un-merged Italy work (hardcoded
 `linked_boundaries=1346`; live is ~1450+) — not Spain's doing, not fixed here.
 
 **To resume a real DO wave (one command per wave, fully resumable):**
-1. For each DO, set `municipios` (code-first `{code,name}` for Galicia/Cataluña/
-   Valencia/País Vasco; name-only fine for Castilian comunidades) + `expected_count`
-   + `provenance` (BOE ref) + `status:"ready"` in `spain-do-membership.json`,
-   transcribed **from the pliego** (or have the owner paste lists).
+1. Source the pliego (Rueda is the worked example): `npm install --no-save pdfjs-dist`,
+   then `node scripts/wine-map-sources/fetch-spain-pliego.mjs --search "<DO>"` to
+   find the `mapa.gob.es` pliego PDF, then `... --pdf <url> --emit spain.<com>.<do>`.
+   Review the FUZZY lines (each `del`/`de` or abbreviation) and classify every
+   UNRESOLVED: pedania of a listed parent -> drop; orthographic variant -> add its
+   explicit INE code; not an INE municipio -> drop and note. Write the finalized
+   `{code,name}` list + `expected_count` + pliego `provenance` + `status:"ready"`
+   into `spain-do-membership.json` (the strict resolver must return exactly
+   `expected_count`).
 2. Re-activate the `spain` country node (VERIFIED + current boundary) — the
    export guard fail-closes on a Spanish DO with no country outline, by design.
 3. Create the catalog nodes (Task 5): comunidad SUBREGION + DO APPELLATION rows,
