@@ -67,6 +67,9 @@ export const REGION_COLORS: Record<string, string> = {
   // comunidad shard (galicia, cataluna, la-rioja…) gets its own hue when its
   // DO wave ships.
   spain: "#6B6257",
+  "trentino-alto-adige": "#3A6E8C",
+  veneto: "#4E8A5C",
+  sicilia: "#C25A2C",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",

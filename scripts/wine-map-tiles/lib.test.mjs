@@ -164,6 +164,9 @@ test("attribution keys reject unknown namespaces", () => {
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
     "ign-cnig-spain": ATTRIBUTION.IGN_CNIG_SPAIN.text,
+    "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
+    veneto: ATTRIBUTION.VENETO_DOC_DOCG.text,
+    sicilia: ATTRIBUTION.SICILY_COMUNI.text,
   });
 });
 
