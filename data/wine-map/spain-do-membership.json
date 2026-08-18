@@ -625,6 +625,156 @@
       },
       "grapes": [],
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.arribes",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Arribes",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "37",
+        "49"
+      ],
+      "expected_count": 32,
+      "municipios": [
+        {
+          "code": "37003",
+          "name": "Ahigal de los Aceiteros"
+        },
+        {
+          "code": "37014",
+          "name": "Aldeadávila de la Ribera"
+        },
+        {
+          "code": "37160",
+          "name": "Hinojosa de Duero"
+        },
+        {
+          "code": "37173",
+          "name": "Lumbrales"
+        },
+        {
+          "code": "37184",
+          "name": "Masueco"
+        },
+        {
+          "code": "37190",
+          "name": "Mieza"
+        },
+        {
+          "code": "37250",
+          "name": "Pereña de la Ribera"
+        },
+        {
+          "code": "37264",
+          "name": "Puerto Seguro"
+        },
+        {
+          "code": "37285",
+          "name": "San Felices de los Gallegos"
+        },
+        {
+          "code": "37302",
+          "name": "Saucelle"
+        },
+        {
+          "code": "37311",
+          "name": "Sobradillo"
+        },
+        {
+          "code": "37350",
+          "name": "Vilvestre"
+        },
+        {
+          "code": "37359",
+          "name": "Villar de la Yegua"
+        },
+        {
+          "code": "37132",
+          "name": "La Fregeneda"
+        },
+        {
+          "code": "37243",
+          "name": "La Peña"
+        },
+        {
+          "code": "37266",
+          "name": "La Redonda"
+        },
+        {
+          "code": "37357",
+          "name": "Villar de Ciervo"
+        },
+        {
+          "code": "37364",
+          "name": "Villarino de los Aires"
+        },
+        {
+          "code": "49012",
+          "name": "Argañín"
+        },
+        {
+          "code": "49064",
+          "name": "Fariza"
+        },
+        {
+          "code": "49065",
+          "name": "Fermoselle"
+        },
+        {
+          "code": "49088",
+          "name": "Gamones"
+        },
+        {
+          "code": "49101",
+          "name": "Luelmo"
+        },
+        {
+          "code": "49124",
+          "name": "Moral de Sayago"
+        },
+        {
+          "code": "49131",
+          "name": "Moralina"
+        },
+        {
+          "code": "49221",
+          "name": "Torregamones"
+        },
+        {
+          "code": "49240",
+          "name": "Villadepera"
+        },
+        {
+          "code": "49247",
+          "name": "Villalcampo"
+        },
+        {
+          "code": "49157",
+          "name": "Pino del Oro"
+        },
+        {
+          "code": "49265",
+          "name": "Villardiegua de la Ribera"
+        },
+        {
+          "code": "49007",
+          "name": "Almaraz de Duero"
+        },
+        {
+          "code": "49135",
+          "name": "Muelas del Pan"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Arribes» (PDO-ES-A0614), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/arribes_2025_11_07.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. 18 Salamanca + 14 Zamora INE municipios. Monumenta (a real Zamora member) is excluded — it has no polygon in the georef-spain-municipio cache, so no geometry to dissolve. Pliego pedanías that are not separate INE municipios also excluded (Corporario, Valdenoguera; Abelón, Badilla, Carbajosa de Alba, Castro de Alcañices, Cibanal, Cozcurrita, Formariz, Fornillos de Fermoselle, Mámoles, Pinilla de Fermoselle, Salto de Castro, Santa Eulalia — sub-entities of listed parents). Almaraz de Duero and Muelas del Pan (partial cadastral-polygon inclusions) taken whole."
+      },
+      "status": "ready"
     }
   ]
 }
