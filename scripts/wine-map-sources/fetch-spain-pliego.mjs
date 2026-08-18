@@ -164,8 +164,12 @@ function stripPdfNoise(text) {
 
 function parsePliego(rawText) {
   const text = stripPdfNoise(rawText);
+  // Pliegos vary in how they introduce the list; match the phrase that
+  // immediately precedes the first "Provincia de …:" group. Observed forms:
+  // "…términos municipales que conforman la zona de producción son los
+  // siguientes:" (Rueda), "Comprende los siguientes municipios:" (Toro).
   const anchor =
-    /(t[ée]rminos municipales[^:]{0,60}:|zona de producci[óo]n[^:]{0,80}siguientes\s*:|delimitaci[óo]n de la zona geogr[áa]fica[^:]{0,40}:)/i.exec(
+    /(comprende[^:]{0,40}siguientes[^:]{0,30}:|siguientes municipios\s*:|t[ée]rminos municipales[^:]{0,60}:|zona de producci[óo]n[^:]{0,80}siguientes\s*:|delimitaci[óo]n de la zona geogr[áa]fica[^:]{0,40}:)/i.exec(
       text,
     );
   assert.ok(anchor, "could not locate the municipality enumeration anchor in the pliego");

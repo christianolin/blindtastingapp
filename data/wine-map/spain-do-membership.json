@@ -403,19 +403,88 @@
       "comunidad": "Castilla y León",
       "display_name": "Toro",
       "appellation_system": "DOP",
-      "appellation_level": "communal",
+      "appellation_level": "regional",
       "provinces": [
         "49",
         "47"
       ],
-      "municipios": [],
+      "municipios": [
+        {
+          "code": "49013",
+          "name": "Argujillo"
+        },
+        {
+          "code": "49024",
+          "name": "Bóveda de Toro, La"
+        },
+        {
+          "code": "49129",
+          "name": "Morales de Toro"
+        },
+        {
+          "code": "49146",
+          "name": "Pego, El"
+        },
+        {
+          "code": "49147",
+          "name": "Peleagonzalo"
+        },
+        {
+          "code": "49158",
+          "name": "Piñero, El"
+        },
+        {
+          "code": "49191",
+          "name": "San Miguel de la Ribera"
+        },
+        {
+          "code": "49210",
+          "name": "Sanzoles"
+        },
+        {
+          "code": "49219",
+          "name": "Toro"
+        },
+        {
+          "code": "49228",
+          "name": "Valdefinjas"
+        },
+        {
+          "code": "49234",
+          "name": "Venialbo"
+        },
+        {
+          "code": "49239",
+          "name": "Villabuena del Puente"
+        },
+        {
+          "code": "47150",
+          "name": "San Román de Hornija"
+        },
+        {
+          "code": "47204",
+          "name": "Villafranca de Duero"
+        },
+        {
+          "code": "47113",
+          "name": "Pedrosa del Rey"
+        }
+      ],
       "provenance": {
-        "source": "BOE pliego DOP Toro",
-        "url": null,
-        "retrieved": null,
-        "note": "PENDING."
+        "source": "Pliego de condiciones DOP «Toro» (PDO-ES-A0886), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/toro_2025_01_03.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. Zamora (12) + Valladolid: San Román de Hornija, Villafranca de Duero, and Pedrosa del Rey (the pliego includes only its Villaester de Arriba/Abajo pagos; taken whole — documented over-approximation)."
       },
-      "status": "pending"
+      "status": "ready",
+      "expected_count": 15,
+      "grapes": [
+        "Tinta de Toro",
+        "Garnacha Tinta",
+        "Malvasía Castellana",
+        "Verdejo",
+        "Albillo Real"
+      ]
     },
     {
       "canonical_key": "spain.galicia.rias-baixas",
