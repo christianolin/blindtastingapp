@@ -554,6 +554,77 @@
         "note": "PENDING — bilingual (Galician): use code-first."
       },
       "status": "pending"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.cigales",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Cigales",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "47",
+        "34"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "47027",
+          "name": "Cabezón de Pisuerga"
+        },
+        {
+          "code": "47050",
+          "name": "Cigales"
+        },
+        {
+          "code": "47057",
+          "name": "Cubillas de Santa Marta"
+        },
+        {
+          "code": "47066",
+          "name": "Fuensaldaña"
+        },
+        {
+          "code": "47098",
+          "name": "Mucientes"
+        },
+        {
+          "code": "47130",
+          "name": "Quintanilla de Trigueros"
+        },
+        {
+          "code": "47144",
+          "name": "San Martín de Valvení"
+        },
+        {
+          "code": "47155",
+          "name": "Santovenia de Pisuerga"
+        },
+        {
+          "code": "47174",
+          "name": "Trigueros del Valle"
+        },
+        {
+          "code": "34069",
+          "name": "Dueñas"
+        },
+        {
+          "code": "47055",
+          "name": "Corcos"
+        },
+        {
+          "code": "47184",
+          "name": "Valoria la Buena"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cigales», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/cigales_2022_03_25.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union. 11 Valladolid municipios (incl. Corcos = pliego 'Corcos del Valle', and Valoria la Buena) + Dueñas (Palencia). The 'El Berrocal' pago, which the pliego notes lies within the término municipal of the city of Valladolid, is EXCLUDED — including the whole Valladolid city municipality for one pago would grossly over-represent the DO."
+      },
+      "grapes": [],
+      "status": "ready"
     }
   ]
 }
