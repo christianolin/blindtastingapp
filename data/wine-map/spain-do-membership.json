@@ -1018,6 +1018,68 @@
         "note": "Trans-comunidad DOP keyed under Murcia (town of Jumilla, prov 30); 6 of 7 municipios are in Albacete / Castilla-La Mancha (prov 02): Fuente-Álamo, Albatana, Ontur, Hellín, Tobarra, Montealegre del Castillo. Whole-municipality union."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.jerez",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Jerez-Xérès-Sherry",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "11",
+        "41"
+      ],
+      "expected_count": 10,
+      "municipios": [
+        {
+          "code": "11020",
+          "name": "Jerez de la Frontera"
+        },
+        {
+          "code": "11027",
+          "name": "El Puerto de Santa María"
+        },
+        {
+          "code": "11032",
+          "name": "Sanlúcar de Barrameda"
+        },
+        {
+          "code": "11037",
+          "name": "Trebujena"
+        },
+        {
+          "code": "11016",
+          "name": "Chipiona"
+        },
+        {
+          "code": "11030",
+          "name": "Rota"
+        },
+        {
+          "code": "11028",
+          "name": "Puerto Real"
+        },
+        {
+          "code": "11015",
+          "name": "Chiclana de la Frontera"
+        },
+        {
+          "code": "41053",
+          "name": "Lebrija"
+        },
+        {
+          "code": "11902",
+          "name": "San José del Valle"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Jerez-Xérès-Sherry», §D.1 Zona Delimitada (Junta de Andalucía / MAPA)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/jerez_2025_04_08.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 10 términos municipales of the Marco de Jerez (9 in Cádiz + Lebrija in Sevilla). Same delimited zone underlies DOP Manzanilla-Sanlúcar de Barrameda (not added here)."
+      },
+      "status": "ready"
     }
   ]
 }
