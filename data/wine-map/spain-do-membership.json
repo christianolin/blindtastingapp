@@ -35,10 +35,19 @@
       "display_name": "Rioja",
       "appellation_system": "DOCa",
       "appellation_level": "regional",
-      "provinces": ["26", "01", "31"],
+      "provinces": [
+        "26",
+        "01",
+        "31"
+      ],
       "provinces_note": "La Rioja (26) + Alava/Araba (01, Rioja Alavesa) + Navarra (31). Trans-comunidad DOCa: keyed under la-rioja with the Alava/Navarra municipalities included in the dissolve.",
       "municipios": [],
-      "provenance": { "source": "BOE pliego de condiciones DOCa Rioja", "url": null, "retrieved": null, "note": "PENDING — not sourced (no web access this session)." },
+      "provenance": {
+        "source": "BOE pliego de condiciones DOCa Rioja",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING — not sourced (no web access this session)."
+      },
       "status": "pending"
     },
     {
@@ -48,9 +57,16 @@
       "display_name": "Priorat",
       "appellation_system": "DOCa/DOQ",
       "appellation_level": "communal",
-      "provinces": ["43"],
+      "provinces": [
+        "43"
+      ],
       "municipios": [],
-      "provenance": { "source": "DOGC/BOE pliego DOQ Priorat", "url": null, "retrieved": null, "note": "PENDING — bilingual (Catalan): use code-first." },
+      "provenance": {
+        "source": "DOGC/BOE pliego DOQ Priorat",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING — bilingual (Catalan): use code-first."
+      },
       "status": "pending"
     },
     {
@@ -60,10 +76,20 @@
       "display_name": "Ribera del Duero",
       "appellation_system": "DOP",
       "appellation_level": "regional",
-      "provinces": ["09", "47", "40", "42"],
+      "provinces": [
+        "09",
+        "47",
+        "40",
+        "42"
+      ],
       "provinces_note": "Burgos (09) + Valladolid (47) + Segovia (40) + Soria (42).",
       "municipios": [],
-      "provenance": { "source": "BOE pliego DOP Ribera del Duero", "url": null, "retrieved": null, "note": "PENDING." },
+      "provenance": {
+        "source": "BOE pliego DOP Ribera del Duero",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING."
+      },
       "status": "pending"
     },
     {
@@ -73,10 +99,303 @@
       "display_name": "Rueda",
       "appellation_system": "DOP",
       "appellation_level": "regional",
-      "provinces": ["47", "40", "05"],
-      "municipios": [],
-      "provenance": { "source": "BOE pliego DOP Rueda", "url": null, "retrieved": null, "note": "PENDING." },
-      "status": "pending"
+      "provinces": [
+        "47",
+        "05",
+        "40"
+      ],
+      "expected_count": 68,
+      "municipios": [
+        {
+          "code": "05034",
+          "name": "Blasconuño de Matacabras"
+        },
+        {
+          "code": "05114",
+          "name": "Madrigal de las Altas Torres"
+        },
+        {
+          "code": "05174",
+          "name": "Orbita"
+        },
+        {
+          "code": "05178",
+          "name": "Palacios de Goda"
+        },
+        {
+          "code": "40010",
+          "name": "Aldeanueva del Codonal"
+        },
+        {
+          "code": "40015",
+          "name": "Aldehuela del Codonal"
+        },
+        {
+          "code": "40057",
+          "name": "Coca"
+        },
+        {
+          "code": "40058",
+          "name": "Codorniz"
+        },
+        {
+          "code": "40069",
+          "name": "Donhierro"
+        },
+        {
+          "code": "40082",
+          "name": "Fuente de Santa Cruz"
+        },
+        {
+          "code": "40106",
+          "name": "Juarros de Voltoya"
+        },
+        {
+          "code": "40129",
+          "name": "Montejo de Arévalo"
+        },
+        {
+          "code": "40138",
+          "name": "Nava de la Asunción"
+        },
+        {
+          "code": "40148",
+          "name": "Nieva"
+        },
+        {
+          "code": "40164",
+          "name": "Rapariegos"
+        },
+        {
+          "code": "40178",
+          "name": "San Cristóbal de la Vega"
+        },
+        {
+          "code": "40189",
+          "name": "Santiuste de San Juan Bautista"
+        },
+        {
+          "code": "40201",
+          "name": "Tolocirio"
+        },
+        {
+          "code": "47002",
+          "name": "Aguasal"
+        },
+        {
+          "code": "47004",
+          "name": "Alaejos"
+        },
+        {
+          "code": "47005",
+          "name": "Alcazarén"
+        },
+        {
+          "code": "47008",
+          "name": "Almenara de Adaja"
+        },
+        {
+          "code": "47011",
+          "name": "Ataquines"
+        },
+        {
+          "code": "47020",
+          "name": "Bobadilla del Campo"
+        },
+        {
+          "code": "47021",
+          "name": "Bocigas"
+        },
+        {
+          "code": "47025",
+          "name": "Brahojos de Medina"
+        },
+        {
+          "code": "47031",
+          "name": "El Campillo"
+        },
+        {
+          "code": "47035",
+          "name": "Carpio"
+        },
+        {
+          "code": "47037",
+          "name": "Castrejón de Trabancos"
+        },
+        {
+          "code": "47045",
+          "name": "Castronuño"
+        },
+        {
+          "code": "47049",
+          "name": "Cervillego de la Cruz"
+        },
+        {
+          "code": "47065",
+          "name": "Fresno el Viejo"
+        },
+        {
+          "code": "47067",
+          "name": "Fuente el Sol"
+        },
+        {
+          "code": "47068",
+          "name": "Fuente-Olmedo"
+        },
+        {
+          "code": "47074",
+          "name": "Hornillos de Eresma"
+        },
+        {
+          "code": "47078",
+          "name": "Lomoviejo"
+        },
+        {
+          "code": "47079",
+          "name": "Llano de Olmedo"
+        },
+        {
+          "code": "47082",
+          "name": "Matapozuelos"
+        },
+        {
+          "code": "47085",
+          "name": "Medina del Campo"
+        },
+        {
+          "code": "47090",
+          "name": "Mojados"
+        },
+        {
+          "code": "47095",
+          "name": "Moraleja de las Panaderas"
+        },
+        {
+          "code": "47100",
+          "name": "Muriel"
+        },
+        {
+          "code": "47101",
+          "name": "Nava del Rey"
+        },
+        {
+          "code": "47102",
+          "name": "Nueva Villa de las Torres"
+        },
+        {
+          "code": "47104",
+          "name": "Olmedo"
+        },
+        {
+          "code": "47121",
+          "name": "Pollos"
+        },
+        {
+          "code": "47123",
+          "name": "Pozal de Gallinas"
+        },
+        {
+          "code": "47124",
+          "name": "Pozaldez"
+        },
+        {
+          "code": "47126",
+          "name": "Puras"
+        },
+        {
+          "code": "47132",
+          "name": "Ramiro"
+        },
+        {
+          "code": "47138",
+          "name": "Rubí de Bracamonte"
+        },
+        {
+          "code": "47139",
+          "name": "Rueda"
+        },
+        {
+          "code": "47141",
+          "name": "Salvador de Zapardiel"
+        },
+        {
+          "code": "47147",
+          "name": "San Pablo de la Moraleja"
+        },
+        {
+          "code": "47156",
+          "name": "San Vicente del Palacio"
+        },
+        {
+          "code": "47158",
+          "name": "La Seca"
+        },
+        {
+          "code": "47159",
+          "name": "Serrada"
+        },
+        {
+          "code": "47160",
+          "name": "Siete Iglesias de Trabancos"
+        },
+        {
+          "code": "47165",
+          "name": "Tordesillas"
+        },
+        {
+          "code": "47166",
+          "name": "Torrecilla de la Abadesa"
+        },
+        {
+          "code": "47167",
+          "name": "Torrecilla de la Orden"
+        },
+        {
+          "code": "47182",
+          "name": "Valdestillas"
+        },
+        {
+          "code": "47189",
+          "name": "Velascálvaro"
+        },
+        {
+          "code": "47192",
+          "name": "Ventosa de la Cuesta"
+        },
+        {
+          "code": "47204",
+          "name": "Villafranca de Duero"
+        },
+        {
+          "code": "47218",
+          "name": "Villanueva de Duero"
+        },
+        {
+          "code": "47228",
+          "name": "Villaverde de Medina"
+        },
+        {
+          "code": "47232",
+          "name": "La Zarza"
+        }
+      ],
+      "grapes": [
+        "Verdejo",
+        "Sauvignon Blanc",
+        "Viura",
+        "Palomino Fino",
+        "Chardonnay",
+        "Viognier",
+        "Tempranillo"
+      ],
+      "scoring_reference": "Rueda",
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rueda» (PDO-ES-A0889), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rueda_2025_06_12.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. 68 of 74 listed entries map to INE municipios; excluded as pedanías/sub-entities covered by a listed parent, or not a current INE municipio: Gomeznarro, Rodilana (Medina del Campo), Bernuy de Coca (Santiuste de San Juan Bautista), Moraleja de Coca, Montuenga, Torrecilla del Valle. Cadastral-polygon partial inclusions (Órbita, Palacios de Goda, Coca) taken whole (documented over-approximation)."
+      },
+      "status": "ready"
     },
     {
       "canonical_key": "spain.castilla-y-leon.toro",
@@ -85,9 +404,17 @@
       "display_name": "Toro",
       "appellation_system": "DOP",
       "appellation_level": "communal",
-      "provinces": ["49", "47"],
+      "provinces": [
+        "49",
+        "47"
+      ],
       "municipios": [],
-      "provenance": { "source": "BOE pliego DOP Toro", "url": null, "retrieved": null, "note": "PENDING." },
+      "provenance": {
+        "source": "BOE pliego DOP Toro",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING."
+      },
       "status": "pending"
     },
     {
@@ -97,9 +424,17 @@
       "display_name": "Rías Baixas",
       "appellation_system": "DOP",
       "appellation_level": "regional",
-      "provinces": ["36", "27"],
+      "provinces": [
+        "36",
+        "27"
+      ],
       "municipios": [],
-      "provenance": { "source": "BOE/DOG pliego DOP Rías Baixas", "url": null, "retrieved": null, "note": "PENDING — bilingual (Galician): use code-first." },
+      "provenance": {
+        "source": "BOE/DOG pliego DOP Rías Baixas",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING — bilingual (Galician): use code-first."
+      },
       "status": "pending"
     }
   ]

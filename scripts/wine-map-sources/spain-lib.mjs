@@ -30,7 +30,10 @@ function stripAccentsLower(value) {
 }
 
 function collapse(value) {
-  return value.replace(/['\u2019\u2018`´]/g, " ").replace(/\s+/g, " ").trim();
+  // Apostrophes AND hyphens fold to spaces: pliego "Fuente Olmedo" vs INE
+  // "Fuente-Olmedo", "Vitoria Gasteiz" vs "Vitoria-Gasteiz" — same municipality,
+  // and applied to both sides so it can't create a cross-municipality collision.
+  return value.replace(/['’‘`´-]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 // Every normalized comparison key for a municipality name. Handles:
