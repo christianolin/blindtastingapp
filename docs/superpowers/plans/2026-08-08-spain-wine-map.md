@@ -9,10 +9,11 @@ no national parcel layer.
 Branch `spain-wine-map-phase-1`. All **machinery** is built, tested and proven,
 and the authoritative-sourcing problem is **solved**: official MAPA pliego PDFs
 are fetched (DuckDuckGo over HTTP, since the Google tool is licence-blocked),
-text-extracted, parsed and INE-validated fail-closed. The first DO — **Rueda,
-68 municipios from the official pliego PDO-ES-A0889 — is LIVE end-to-end**
-(dissolved → guards → auto-promoted). Nothing false was shipped; the live *map
-tiles* are unchanged (a tile republish is owner-gated).
+text-extracted, parsed and INE-validated fail-closed. **Three DOs are LIVE
+end-to-end** from their official pliegos — **Rueda** (68 municipios), **Toro**
+(15), and **Priorat** DOQ (10, Cataluña) — each dissolved → guarded →
+auto-promoted to a current-VALIDATED boundary. Nothing false was shipped; the
+live *map tiles* are unchanged (a tile republish is owner-gated).
 
 **Done + committed (branch is pushed as backup):**
 - `02737a4` Task 1 — country-agnostic export guard `assertMultiCountryArchive`
@@ -46,9 +47,20 @@ tiles* are unchanged (a tile republish is owner-gated).
   Migration `20260901091000` re-activates `spain` (VERIFIED + boundary current)
   and adds `castilla-y-leon` (tree-only REGION) + `rueda` (APPELLATION). Driver
   promoted Rueda's 68-municipio union → current-VALIDATED (0.319 deg², 277 pts).
+- `a48f6e4` Toro (2nd DO), LIVE — pliego PDO-ES-A0886 ("Comprende los siguientes
+  municipios:", a phrasing the anchor now also matches). 15 municipios (Zamora +
+  Valladolid: San Román de Hornija, Villafranca de Duero, and Pedrosa del Rey —
+  included whole for the Villaester *pagos*). Migration `20260901092000`.
+- `3d96aa6` Priorat DOQ (3rd DO, first bilingual/Catalan, first outside Castilla
+  y León), LIVE — pliego priorat_2022_09_06.pdf §4.1. 10 municipios (Tarragona),
+  resolved code-first. Migration `20260901093000` adds the `cataluna` REGION
+  (tree-only) + `priorat` APPELLATION (DOCa/DOQ, communal 7/7).
 - Gate green: 51 pure unit tests, `tsc`, `eslint` all clean. `pdfjs-dist` is a
   session-only tool (`npm install --no-save pdfjs-dist`); the committed pipeline
   and artifact never depend on it.
+- **Live tree now:** `spain` → `castilla-y-leon` → {`rueda`, `toro`}; `spain` →
+  `cataluna` → `priorat`. Next: Rías Baixas (Galicia — pliego found; needs the
+  Galician-phrasing anchor + subzone handling), Ribera del Duero, Rioja DOCa.
 
 **Sourcing solved (Task 3c was the dominant risk):** the Google search *tool* is
 dead here (backend Gemini licence, `SUBSCRIPTION_REQUIRED`), and ODS/datos.gob.es/
