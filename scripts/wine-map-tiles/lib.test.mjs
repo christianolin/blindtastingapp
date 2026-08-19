@@ -167,6 +167,8 @@ test("attribution keys reject unknown namespaces", () => {
     "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
     veneto: ATTRIBUTION.VENETO_DOC_DOCG.text,
     sicilia: ATTRIBUTION.SICILY_COMUNI.text,
+    lombardia: ATTRIBUTION.LOMBARDIA_COMUNI.text,
+    friuli: ATTRIBUTION.FRIULI_COMUNI.text,
   });
 });
 
