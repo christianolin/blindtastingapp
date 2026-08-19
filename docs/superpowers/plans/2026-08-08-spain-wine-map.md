@@ -17,17 +17,32 @@ All **machinery** is built and proven, and authoritative sourcing is **solved**:
 official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
 licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
 fail-closed by `fetch-spain-pliego.mjs`. Merged to `master` (Spain + the
-collaborator's Italy). **Eight DOs are LIVE end-to-end** across **five
-comunidades**, each dissolved → guarded → auto-promoted from its official pliego:
+collaborator's Italy). **17 DOs are LIVE end-to-end** across **9 comunidades**,
+each dissolved → guarded → auto-promoted from its official pliego:
 - **Castilla y León** — Rueda (68), Toro (15), Cigales (12), Arribes (32)
-- **Cataluña** — Priorat DOQ (10)
-- **Aragón** — Somontano (43)
+- **Cataluña** — Priorat DOQ (10), Montsant (13)
+- **Aragón** — Somontano (43), Cariñena (16), Calatayud (50), Campo de Borja (16)
 - **Región de Murcia** — Jumilla (7; trans-comunidad, 6 municipios in Albacete)
-- **Andalucía** — Jerez-Xérès-Sherry (10; Marco de Jerez, +Lebrija in Sevilla)
+- **Andalucía** — Jerez-Xérès-Sherry (10), Condado de Huelva (18)
+- **Galicia** — Ribeiro (13; parroquia-delimited, coarser)
+- **Comunidad Valenciana** — Utiel-Requena (9)
+- **Castilla-La Mancha** — Almansa (7)
+- **Navarra** — Navarra (118)
 
-Migrations `20260901091000`–`097000`. Per-DO verification against the raw pliego
-each time (see the reliability finding below) — new comunidad REGION nodes are
-tree-only groupings; each DO's boundary is the whole-municipality union.
+Migrations `20260901091000`–`100000`. Each comunidad REGION node carries an
+**overview boundary = union of its DOs' municipios** (built by
+`build-spain-comunidad-boundaries.mjs`, re-run after each wave) so it renders at
+region zoom (z4) like France/Italy, coloured per comunidad. Each DO's boundary is
+the whole-municipality union. **Sourcing accelerator:** `scratch`-level density
+list-finder (greedy-match whole doc, take the largest dense cluster of in-province
+matches, skip "provincia de X" headers) locates the list regardless of pliego
+intro phrasing — but each DO is still verified before promotion.
+
+**Deferred (need per-DO pliego reads):** parroquia-delimited Galician DOs (Rías
+Baixas + subzones, Ribeira Sacra, Valdeorras, Monterrei), capital-membership
+ambiguity on big DOs (Málaga, Ribera del Guadiana), space-table Rioja DOCa,
+several Cataluña/CLM pliegos where search or anchor missed. Subregions (Rías
+Baixas subzones, Rioja Alta/Alavesa/Oriental) not yet added.
 
 **Reliability finding (important):** bulk-processing is NOT trustworthy for this
 map's quality bar — every DO needs a per-DO pass against the raw pliego text.
