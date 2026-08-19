@@ -67,6 +67,7 @@ export const REGION_COLORS: Record<string, string> = {
   veneto: "#4E8A5C",
   sicilia: "#C25A2C",
   lombardia: "#6E4E8C",
+  friuli: "#B0507A",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",

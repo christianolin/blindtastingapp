@@ -92,6 +92,12 @@ export const ATTRIBUTION = {
     key: "lombardia",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Friuli: no official delimited-zone GIS — ISTAT comuni dissolved per the
+  // MASAF disciplinare comune lists. See stage-friuli-official.mjs.
+  FRIULI_COMUNI: {
+    key: "friuli",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {
