@@ -167,6 +167,7 @@ test("attribution keys reject unknown namespaces", () => {
     sicilia: ATTRIBUTION.SICILY_COMUNI.text,
     lombardia: ATTRIBUTION.LOMBARDIA_COMUNI.text,
     friuli: ATTRIBUTION.FRIULI_COMUNI.text,
+    spain: ATTRIBUTION.IGN_CNIG_SPAIN.text,
   });
 });
 

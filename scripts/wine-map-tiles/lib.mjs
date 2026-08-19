@@ -98,6 +98,13 @@ export const ATTRIBUTION = {
     key: "friuli",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Spain (owner's parallel build). Provisional credit so the tile export
+  // (which reads the shared DB) doesn't throw on Spain's boundaries; the owner
+  // may refine the wording when their Spain branch merges.
+  IGN_CNIG_SPAIN: {
+    key: "spain",
+    text: "© Instituto Geográfico Nacional de España (IGN/CNIG) (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {

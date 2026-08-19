@@ -17,12 +17,14 @@ import {
 } from "./lib.mjs";
 
 // Gross-bounds sanity gate: every archive must sit inside the mapped-coverage
-// window — the union of currently-mapped countries (France + Italy, incl.
-// Sicily and its satellite islands). The tight per-archive correctness gate is
-// the feature-id-set check below; this box only catches wildly-misplaced
-// geometry (e.g. 0,0). Widen it when coverage grows to a country outside it.
+// window — the union of currently-mapped countries (France + Italy + Spain,
+// incl. Sicily and its satellite islands; Spain's mainland reaches lon -9.3).
+// The tight per-archive correctness gate is the feature-id-set check below;
+// this box only catches wildly-misplaced geometry (e.g. 0,0). Widen it when
+// coverage grows to a country outside it (Spain's Canary Islands would need a
+// further west/south extension).
 // TODO(3E): give each shard its own tighter bbox once shards span many countries.
-const COVERAGE_BBOX = { minLon: -6, minLat: 35, maxLon: 19, maxLat: 52 };
+const COVERAGE_BBOX = { minLon: -10, minLat: 34, maxLon: 20, maxLat: 52 };
 
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
