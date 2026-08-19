@@ -64,9 +64,14 @@ export const REGION_COLORS: Record<string, string> = {
   "sud-ouest": "#B0722C",
   toscana: "#C0872E",
   // Spain: the country outline is neutral context (like France's); each
-  // comunidad shard (galicia, cataluna, la-rioja…) gets its own hue when its
-  // DO wave ships.
+  // comunidad shard gets its own hue as its DO wave ships (the comunidad REGION
+  // node carries a region-overview boundary = union of its DOs' municipios).
   spain: "#6B6257",
+  "castilla-y-leon": "#A8324A",
+  cataluna: "#B5642A",
+  aragon: "#6E7A34",
+  murcia: "#8C3E7A",
+  andalucia: "#C99A2E",
   "trentino-alto-adige": "#3A6E8C",
   veneto: "#4E8A5C",
   sicilia: "#C25A2C",
@@ -74,6 +79,11 @@ export const REGION_COLORS: Record<string, string> = {
 const REGION_LABELS: Record<string, string> = {
   france: "France",
   spain: "Spain",
+  "castilla-y-leon": "Castilla y León",
+  cataluna: "Cataluña",
+  aragon: "Aragón",
+  murcia: "Región de Murcia",
+  andalucia: "Andalucía",
   "languedoc-roussillon": "Languedoc-Roussillon",
   rhone: "Rhône",
   "sud-ouest": "Sud-Ouest",
