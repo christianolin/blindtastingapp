@@ -23,9 +23,18 @@ export const LOCAL_TO_ENGLISH: Record<string, string> = {
   Aragón: "Aragon",
   "Comunidad Valenciana": "Valencia",
   "Región de Murcia": "Murcia",
-  // France regions
+  // France regions + subregions with a common English form (Côte de Beaune,
+  // Côtes du Rhône, Châteauneuf-du-Pape etc. stay French — that IS their English
+  // usage).
   Bourgogne: "Burgundy",
   Corse: "Corsica",
+  "Vallée du Rhône": "Rhône Valley",
+  "Rhône septentrional": "Northern Rhône",
+  "Rhône méridional": "Southern Rhône",
+  "Vallée de la Loire": "Loire Valley",
+  "Sud-Ouest": "South West France",
+  Gascogne: "Gascony",
+  Pyrénées: "Pyrenees",
 };
 
 export function englishName(name: string): string {
