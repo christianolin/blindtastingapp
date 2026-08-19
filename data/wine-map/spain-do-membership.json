@@ -1226,6 +1226,503 @@
         "note": "Whole-municipality union of the 12 whole términos municipales + Falset (pliego includes Falset by polígono; taken whole). The Montsant DO rings the Priorat DOQ."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.carinena",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Cariñena",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 16,
+      "municipios": [
+        {
+          "code": "50073",
+          "name": "Cariñena"
+        },
+        {
+          "code": "50004",
+          "name": "Aguarón"
+        },
+        {
+          "code": "50007",
+          "name": "Aladrén"
+        },
+        {
+          "code": "50018",
+          "name": "Alfamén"
+        },
+        {
+          "code": "50024",
+          "name": "Almonacid de la Sierra"
+        },
+        {
+          "code": "50026",
+          "name": "Alpartir"
+        },
+        {
+          "code": "50088",
+          "name": "Cosuenda"
+        },
+        {
+          "code": "50098",
+          "name": "Encinacorba"
+        },
+        {
+          "code": "50114",
+          "name": "Fuendetodos"
+        },
+        {
+          "code": "50143",
+          "name": "Longares"
+        },
+        {
+          "code": "50167",
+          "name": "Mezalocha"
+        },
+        {
+          "code": "50181",
+          "name": "Muel"
+        },
+        {
+          "code": "50200",
+          "name": "Paniza"
+        },
+        {
+          "code": "50264",
+          "name": "Tosos"
+        },
+        {
+          "code": "50290",
+          "name": "Villanueva de Huerva"
+        },
+        {
+          "code": "50295",
+          "name": "Vistabella"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cariñena», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/carinena_2025_10_07.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.calatayud",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Calatayud",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 50,
+      "municipios": [
+        {
+          "code": "50067",
+          "name": "Calatayud"
+        },
+        {
+          "code": "50001",
+          "name": "Abanto"
+        },
+        {
+          "code": "50002",
+          "name": "Acered"
+        },
+        {
+          "code": "50009",
+          "name": "Alarba"
+        },
+        {
+          "code": "50020",
+          "name": "Alhama de Aragón"
+        },
+        {
+          "code": "50029",
+          "name": "Aniñón"
+        },
+        {
+          "code": "50034",
+          "name": "Ariza"
+        },
+        {
+          "code": "50037",
+          "name": "Atea"
+        },
+        {
+          "code": "50038",
+          "name": "Ateca"
+        },
+        {
+          "code": "50046",
+          "name": "Belmonte de Gracián"
+        },
+        {
+          "code": "50058",
+          "name": "Bubierca"
+        },
+        {
+          "code": "50072",
+          "name": "Carenas"
+        },
+        {
+          "code": "50076",
+          "name": "Castejón de las Armas"
+        },
+        {
+          "code": "50075",
+          "name": "Castejón de Alarba"
+        },
+        {
+          "code": "50079",
+          "name": "Cervera de la Cañada"
+        },
+        {
+          "code": "50081",
+          "name": "Cetina"
+        },
+        {
+          "code": "50084",
+          "name": "Clarés de Ribota"
+        },
+        {
+          "code": "50086",
+          "name": "Codos"
+        },
+        {
+          "code": "50094",
+          "name": "Daroca"
+        },
+        {
+          "code": "50110",
+          "name": "El Frasno"
+        },
+        {
+          "code": "50116",
+          "name": "Fuentes de Jiloca"
+        },
+        {
+          "code": "50120",
+          "name": "Godojos"
+        },
+        {
+          "code": "50125",
+          "name": "Ibdes"
+        },
+        {
+          "code": "50129",
+          "name": "Jaraba"
+        },
+        {
+          "code": "50282",
+          "name": "La Vilueña"
+        },
+        {
+          "code": "50159",
+          "name": "Maluenda"
+        },
+        {
+          "code": "50161",
+          "name": "Manchones"
+        },
+        {
+          "code": "50162",
+          "name": "Mara"
+        },
+        {
+          "code": "50173",
+          "name": "Monterde"
+        },
+        {
+          "code": "50174",
+          "name": "Montón"
+        },
+        {
+          "code": "50176",
+          "name": "Morata de Jiloca"
+        },
+        {
+          "code": "50178",
+          "name": "Moros"
+        },
+        {
+          "code": "50183",
+          "name": "Munébrega"
+        },
+        {
+          "code": "50184",
+          "name": "Murero"
+        },
+        {
+          "code": "50192",
+          "name": "Nuévalos"
+        },
+        {
+          "code": "50194",
+          "name": "Olvés"
+        },
+        {
+          "code": "50195",
+          "name": "Orcajo"
+        },
+        {
+          "code": "50196",
+          "name": "Orera"
+        },
+        {
+          "code": "50201",
+          "name": "Paracuellos de Jiloca"
+        },
+        {
+          "code": "50229",
+          "name": "Ruesca"
+        },
+        {
+          "code": "50242",
+          "name": "Sediles"
+        },
+        {
+          "code": "50253",
+          "name": "Terrer"
+        },
+        {
+          "code": "50257",
+          "name": "Torralba de Ribota"
+        },
+        {
+          "code": "50263",
+          "name": "Torrijo de la Cañada"
+        },
+        {
+          "code": "50277",
+          "name": "Valtorres"
+        },
+        {
+          "code": "50279",
+          "name": "Velilla de Jiloca"
+        },
+        {
+          "code": "50284",
+          "name": "Villafeliche"
+        },
+        {
+          "code": "50286",
+          "name": "Villalba de Perejil"
+        },
+        {
+          "code": "50287",
+          "name": "Villalengua"
+        },
+        {
+          "code": "50293",
+          "name": "Villarroya de la Sierra"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Calatayud», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/calatayud_2024_02_26.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.campo-de-borja",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Campo de Borja",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 16,
+      "municipios": [
+        {
+          "code": "50055",
+          "name": "Borja"
+        },
+        {
+          "code": "50003",
+          "name": "Agón"
+        },
+        {
+          "code": "50006",
+          "name": "Ainzón"
+        },
+        {
+          "code": "50011",
+          "name": "Albeta"
+        },
+        {
+          "code": "50027",
+          "name": "Ambel"
+        },
+        {
+          "code": "50052",
+          "name": "Bisimbre"
+        },
+        {
+          "code": "50060",
+          "name": "Bulbuente"
+        },
+        {
+          "code": "50061",
+          "name": "Bureta"
+        },
+        {
+          "code": "50063",
+          "name": "El Buste"
+        },
+        {
+          "code": "50113",
+          "name": "Fuendejalón"
+        },
+        {
+          "code": "50153",
+          "name": "Magallón"
+        },
+        {
+          "code": "50156",
+          "name": "Maleján"
+        },
+        {
+          "code": "50216",
+          "name": "Pozuelo de Aragón"
+        },
+        {
+          "code": "50249",
+          "name": "Tabuenca"
+        },
+        {
+          "code": "50280",
+          "name": "Vera de Moncayo"
+        },
+        {
+          "code": "50160",
+          "name": "Mallén"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Campo de Borja», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/campo_de_borja_2024_12_13.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.valencia.utiel-requena",
+      "comunidad_key": "valencia",
+      "comunidad": "Comunidad Valenciana",
+      "display_name": "Utiel-Requena",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "46"
+      ],
+      "expected_count": 9,
+      "municipios": [
+        {
+          "code": "46080",
+          "name": "Camporrobles"
+        },
+        {
+          "code": "46095",
+          "name": "Caudete de las Fuentes"
+        },
+        {
+          "code": "46129",
+          "name": "Fuenterrobles"
+        },
+        {
+          "code": "46213",
+          "name": "Requena"
+        },
+        {
+          "code": "46229",
+          "name": "Siete Aguas"
+        },
+        {
+          "code": "46232",
+          "name": "Sinarcas"
+        },
+        {
+          "code": "46249",
+          "name": "Utiel"
+        },
+        {
+          "code": "46254",
+          "name": "Venta del Moro"
+        },
+        {
+          "code": "46259",
+          "name": "Villargordo del Cabriel"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Utiel-Requena», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/utiel-requena_2023_05_09.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.almansa",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Almansa",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "02"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "02009",
+          "name": "Almansa"
+        },
+        {
+          "code": "02010",
+          "name": "Alpera"
+        },
+        {
+          "code": "02018",
+          "name": "Bonete"
+        },
+        {
+          "code": "02027",
+          "name": "Corral-Rubio"
+        },
+        {
+          "code": "02039",
+          "name": "Higueruela"
+        },
+        {
+          "code": "02040",
+          "name": "Hoya-Gonzalo"
+        },
+        {
+          "code": "02061",
+          "name": "Pétrola"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Almansa», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/almansa_2024_12_04.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
     }
   ]
 }
