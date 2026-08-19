@@ -119,29 +119,6 @@
       "status": "ready"
     },
     {
-      "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
-      "comunidad_key": "castilla-y-leon",
-      "comunidad": "Castilla y León",
-      "display_name": "Ribera del Duero",
-      "appellation_system": "DOP",
-      "appellation_level": "regional",
-      "provinces": [
-        "09",
-        "47",
-        "40",
-        "42"
-      ],
-      "provinces_note": "Burgos (09) + Valladolid (47) + Segovia (40) + Soria (42).",
-      "municipios": [],
-      "provenance": {
-        "source": "BOE pliego DOP Ribera del Duero",
-        "url": null,
-        "retrieved": null,
-        "note": "PENDING."
-      },
-      "status": "pending"
-    },
-    {
       "canonical_key": "spain.castilla-y-leon.rueda",
       "comunidad_key": "castilla-y-leon",
       "comunidad": "Castilla y León",
@@ -4385,6 +4362,1024 @@
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/manchuela_2026_04_21.pdf",
         "retrieved": "2026-08-18",
         "note": "Whole-municipality union (multi-cluster density-located; province-capital/outlier codes excluded: 16078, 02003)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Ribera del Duero",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "09",
+        "47",
+        "40",
+        "42"
+      ],
+      "expected_count": 83,
+      "municipios": [
+        {
+          "code": "09003",
+          "name": "Adrada de Haza"
+        },
+        {
+          "code": "09017",
+          "name": "Anguix"
+        },
+        {
+          "code": "09018",
+          "name": "Aranda de Duero"
+        },
+        {
+          "code": "09035",
+          "name": "Baños de Valdearados"
+        },
+        {
+          "code": "09051",
+          "name": "Berlangas de Roa"
+        },
+        {
+          "code": "09064",
+          "name": "Caleruega"
+        },
+        {
+          "code": "09065",
+          "name": "Campillo de Aranda"
+        },
+        {
+          "code": "09085",
+          "name": "Castrillo de la Vega"
+        },
+        {
+          "code": "09117",
+          "name": "La Cueva de Roa"
+        },
+        {
+          "code": "09131",
+          "name": "Fresnillo de las Dueñas"
+        },
+        {
+          "code": "09136",
+          "name": "Fuentecén"
+        },
+        {
+          "code": "09137",
+          "name": "Fuentelcésped"
+        },
+        {
+          "code": "09138",
+          "name": "Fuentelisendo"
+        },
+        {
+          "code": "09139",
+          "name": "Fuentemolinos"
+        },
+        {
+          "code": "09140",
+          "name": "Fuentenebro"
+        },
+        {
+          "code": "09141",
+          "name": "Fuentespina"
+        },
+        {
+          "code": "09151",
+          "name": "Gumiel de Izán"
+        },
+        {
+          "code": "09451",
+          "name": "Villanueva de Gumiel"
+        },
+        {
+          "code": "09464",
+          "name": "Villatuelda"
+        },
+        {
+          "code": "09483",
+          "name": "Zazuar"
+        },
+        {
+          "code": "09152",
+          "name": "Gumiel de Mercado"
+        },
+        {
+          "code": "09155",
+          "name": "Haza"
+        },
+        {
+          "code": "09160",
+          "name": "Hontangas"
+        },
+        {
+          "code": "09164",
+          "name": "Hontoria de Valdearados"
+        },
+        {
+          "code": "09168",
+          "name": "La Horra"
+        },
+        {
+          "code": "09170",
+          "name": "Hoyales de Roa"
+        },
+        {
+          "code": "09199",
+          "name": "Mambrilla de Castrejón"
+        },
+        {
+          "code": "09218",
+          "name": "Milagros"
+        },
+        {
+          "code": "09228",
+          "name": "Moradillo de Roa"
+        },
+        {
+          "code": "09229",
+          "name": "Nava de Roa"
+        },
+        {
+          "code": "09235",
+          "name": "Olmedillo de Roa"
+        },
+        {
+          "code": "09253",
+          "name": "Pardilla"
+        },
+        {
+          "code": "09256",
+          "name": "Pedrosa de Duero"
+        },
+        {
+          "code": "09321",
+          "name": "Roa"
+        },
+        {
+          "code": "09261",
+          "name": "Peñaranda de Duero"
+        },
+        {
+          "code": "09279",
+          "name": "Quemada"
+        },
+        {
+          "code": "09281",
+          "name": "Quintana del Pidio"
+        },
+        {
+          "code": "09337",
+          "name": "San Juan del Monte"
+        },
+        {
+          "code": "09339",
+          "name": "San Martín de Rubiales"
+        },
+        {
+          "code": "09345",
+          "name": "Santa Cruz de la Salceda"
+        },
+        {
+          "code": "09365",
+          "name": "La Sequera de Haza"
+        },
+        {
+          "code": "09369",
+          "name": "Sotillo de la Ribera"
+        },
+        {
+          "code": "09380",
+          "name": "Terradillos de Esgueva"
+        },
+        {
+          "code": "09387",
+          "name": "Torregalindo"
+        },
+        {
+          "code": "09391",
+          "name": "Tórtoles de Esgueva"
+        },
+        {
+          "code": "09396",
+          "name": "Tubilla del Lago"
+        },
+        {
+          "code": "09400",
+          "name": "Vadocondes"
+        },
+        {
+          "code": "09403",
+          "name": "Valdeande"
+        },
+        {
+          "code": "09405",
+          "name": "Valdezate"
+        },
+        {
+          "code": "09421",
+          "name": "La Vid y Barrios"
+        },
+        {
+          "code": "09428",
+          "name": "Villaescusa de Roa"
+        },
+        {
+          "code": "09438",
+          "name": "Villalba de Duero"
+        },
+        {
+          "code": "09440",
+          "name": "Villalbilla de Gumiel"
+        },
+        {
+          "code": "40014",
+          "name": "Aldehorno"
+        },
+        {
+          "code": "40099",
+          "name": "Honrubia de la Cuesta"
+        },
+        {
+          "code": "40229",
+          "name": "Villaverde de Montejo"
+        },
+        {
+          "code": "42007",
+          "name": "Alcubilla de Avellaneda"
+        },
+        {
+          "code": "42043",
+          "name": "Burgo de Osma-Ciudad de Osma"
+        },
+        {
+          "code": "42058",
+          "name": "Castillejo de Robledo"
+        },
+        {
+          "code": "42103",
+          "name": "Langa de Duero"
+        },
+        {
+          "code": "47021",
+          "name": "Bocigas"
+        },
+        {
+          "code": "42116",
+          "name": "Miño de San Esteban"
+        },
+        {
+          "code": "42162",
+          "name": "San Esteban de Gormaz"
+        },
+        {
+          "code": "47190",
+          "name": "Velilla"
+        },
+        {
+          "code": "47022",
+          "name": "Bocos de Duero"
+        },
+        {
+          "code": "47033",
+          "name": "Canalejas de Peñafiel"
+        },
+        {
+          "code": "47038",
+          "name": "Castrillo de Duero"
+        },
+        {
+          "code": "47059",
+          "name": "Curiel de Duero"
+        },
+        {
+          "code": "47063",
+          "name": "Fompedraza"
+        },
+        {
+          "code": "47080",
+          "name": "Manzanillo"
+        },
+        {
+          "code": "47103",
+          "name": "Olivares de Duero"
+        },
+        {
+          "code": "47106",
+          "name": "Olmos de Peñafiel"
+        },
+        {
+          "code": "47114",
+          "name": "Peñafiel"
+        },
+        {
+          "code": "47116",
+          "name": "Pesquera de Duero"
+        },
+        {
+          "code": "47118",
+          "name": "Piñel de Abajo"
+        },
+        {
+          "code": "47119",
+          "name": "Piñel de Arriba"
+        },
+        {
+          "code": "47127",
+          "name": "Quintanilla de Arriba"
+        },
+        {
+          "code": "47129",
+          "name": "Quintanilla de Onésimo"
+        },
+        {
+          "code": "47131",
+          "name": "Rábano"
+        },
+        {
+          "code": "47137",
+          "name": "Roturas"
+        },
+        {
+          "code": "47170",
+          "name": "Torre de Peñafiel"
+        },
+        {
+          "code": "47179",
+          "name": "Valbuena de Duero"
+        },
+        {
+          "code": "47180",
+          "name": "Valdearcos de la Vega"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Duero», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located); the 4 province capitals (Burgos/Segovia/Soria/Valladolid) excluded as non-members."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.tierra-de-leon",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Tierra de León",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "24",
+        "47"
+      ],
+      "expected_count": 85,
+      "municipios": [
+        {
+          "code": "24002",
+          "name": "Algadefe"
+        },
+        {
+          "code": "24003",
+          "name": "Alija del Infantado"
+        },
+        {
+          "code": "24005",
+          "name": "La Antigua"
+        },
+        {
+          "code": "24006",
+          "name": "Ardón"
+        },
+        {
+          "code": "24010",
+          "name": "La Bañeza"
+        },
+        {
+          "code": "24017",
+          "name": "Bercianos del Páramo"
+        },
+        {
+          "code": "24018",
+          "name": "Bercianos del Real Camino"
+        },
+        {
+          "code": "24024",
+          "name": "El Burgo Ranero"
+        },
+        {
+          "code": "24028",
+          "name": "Cabreros del Río"
+        },
+        {
+          "code": "24031",
+          "name": "Calzada del Coto"
+        },
+        {
+          "code": "24032",
+          "name": "Campazas"
+        },
+        {
+          "code": "24033",
+          "name": "Campo de Villavidel"
+        },
+        {
+          "code": "24042",
+          "name": "Castilfalé"
+        },
+        {
+          "code": "24046",
+          "name": "Castrocalbón"
+        },
+        {
+          "code": "24050",
+          "name": "Castrotierra de Valmadrigal"
+        },
+        {
+          "code": "24053",
+          "name": "Cebrones del Río"
+        },
+        {
+          "code": "24054",
+          "name": "Cimanes de la Vega"
+        },
+        {
+          "code": "24058",
+          "name": "Corbillos de los Oteros"
+        },
+        {
+          "code": "24062",
+          "name": "Cubillas de los Oteros"
+        },
+        {
+          "code": "24065",
+          "name": "Chozas de Abajo"
+        },
+        {
+          "code": "24073",
+          "name": "Fresno de la Vega"
+        },
+        {
+          "code": "24077",
+          "name": "Gordaliza del Pino"
+        },
+        {
+          "code": "24078",
+          "name": "Gordoncillo"
+        },
+        {
+          "code": "24080",
+          "name": "Grajal de Campos"
+        },
+        {
+          "code": "24081",
+          "name": "Gusendos de los Oteros"
+        },
+        {
+          "code": "24084",
+          "name": "Izagre"
+        },
+        {
+          "code": "24086",
+          "name": "Joarilla de las Matas"
+        },
+        {
+          "code": "24088",
+          "name": "Laguna de Negrillos"
+        },
+        {
+          "code": "24097",
+          "name": "Matadeón de los Oteros"
+        },
+        {
+          "code": "24099",
+          "name": "Matanza"
+        },
+        {
+          "code": "24105",
+          "name": "Onzonilla"
+        },
+        {
+          "code": "24107",
+          "name": "Pajares de los Oteros"
+        },
+        {
+          "code": "24113",
+          "name": "Pobladura de Pelayo García"
+        },
+        {
+          "code": "24117",
+          "name": "Pozuelo del Páramo"
+        },
+        {
+          "code": "24124",
+          "name": "Quintana del Marco"
+        },
+        {
+          "code": "24125",
+          "name": "Quintana y Congosto"
+        },
+        {
+          "code": "24131",
+          "name": "Riego de la Vega"
+        },
+        {
+          "code": "24136",
+          "name": "Roperuelos del Páramo"
+        },
+        {
+          "code": "24139",
+          "name": "Sahagún"
+        },
+        {
+          "code": "24141",
+          "name": "San Adrián del Valle"
+        },
+        {
+          "code": "24146",
+          "name": "San Esteban de Nogales"
+        },
+        {
+          "code": "24149",
+          "name": "San Millán de los Caballeros"
+        },
+        {
+          "code": "24153",
+          "name": "Santa Cristina de Valmadrigal"
+        },
+        {
+          "code": "24154",
+          "name": "Santa Elena de Jamuz"
+        },
+        {
+          "code": "24156",
+          "name": "Santa María del Monte de Cea"
+        },
+        {
+          "code": "24160",
+          "name": "Santas Martas"
+        },
+        {
+          "code": "24162",
+          "name": "Santovenia de la Valdoncina"
+        },
+        {
+          "code": "24168",
+          "name": "Toral de los Guzmanes"
+        },
+        {
+          "code": "24178",
+          "name": "Valdemora"
+        },
+        {
+          "code": "24181",
+          "name": "Valderas"
+        },
+        {
+          "code": "24187",
+          "name": "Valdevimbre"
+        },
+        {
+          "code": "24188",
+          "name": "Valencia de Don Juan"
+        },
+        {
+          "code": "24190",
+          "name": "Valverde-Enrique"
+        },
+        {
+          "code": "24191",
+          "name": "Vallecillo"
+        },
+        {
+          "code": "24197",
+          "name": "Vega de Infanzones"
+        },
+        {
+          "code": "24203",
+          "name": "Villabraz"
+        },
+        {
+          "code": "24207",
+          "name": "Villademor de la Vega"
+        },
+        {
+          "code": "24211",
+          "name": "Villamandos"
+        },
+        {
+          "code": "24212",
+          "name": "Villamañán"
+        },
+        {
+          "code": "24216",
+          "name": "Villamontán de la Valduerna"
+        },
+        {
+          "code": "24217",
+          "name": "Villamoratiel de las Matas"
+        },
+        {
+          "code": "24218",
+          "name": "Villanueva de las Manzanas"
+        },
+        {
+          "code": "24221",
+          "name": "Villaquejida"
+        },
+        {
+          "code": "24227",
+          "name": "Villaturiel"
+        },
+        {
+          "code": "24230",
+          "name": "Zotes del Páramo"
+        },
+        {
+          "code": "47015",
+          "name": "Becilla de Valderaduey"
+        },
+        {
+          "code": "47026",
+          "name": "Bustillo de Chaves"
+        },
+        {
+          "code": "47028",
+          "name": "Cabezón de Valderaduey"
+        },
+        {
+          "code": "47040",
+          "name": "Castrobol"
+        },
+        {
+          "code": "47046",
+          "name": "Castroponce"
+        },
+        {
+          "code": "47058",
+          "name": "Cuenca de Campos"
+        },
+        {
+          "code": "47084",
+          "name": "Mayorga"
+        },
+        {
+          "code": "47088",
+          "name": "Melgar de Abajo"
+        },
+        {
+          "code": "47089",
+          "name": "Melgar de Arriba"
+        },
+        {
+          "code": "47091",
+          "name": "Monasterio de Vega"
+        },
+        {
+          "code": "47128",
+          "name": "Quintanilla del Molar"
+        },
+        {
+          "code": "47134",
+          "name": "Roales de Campos"
+        },
+        {
+          "code": "47140",
+          "name": "Saelices de Mayorga"
+        },
+        {
+          "code": "47153",
+          "name": "Santervás de Campos"
+        },
+        {
+          "code": "47176",
+          "name": "La Unión de Campos"
+        },
+        {
+          "code": "47183",
+          "name": "Valdunquillo"
+        },
+        {
+          "code": "47199",
+          "name": "Villacid de Campos"
+        },
+        {
+          "code": "47208",
+          "name": "Villagómez la Nueva"
+        },
+        {
+          "code": "47211",
+          "name": "Villalba de la Loma"
+        },
+        {
+          "code": "24051",
+          "name": "Cea"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Tierra de León», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located); León capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.cebreros",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Cebreros",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "05"
+      ],
+      "expected_count": 35,
+      "municipios": [
+        {
+          "code": "05002",
+          "name": "La Adrada"
+        },
+        {
+          "code": "05041",
+          "name": "Burgohondo"
+        },
+        {
+          "code": "05054",
+          "name": "Casavieja"
+        },
+        {
+          "code": "05055",
+          "name": "Casillas"
+        },
+        {
+          "code": "05057",
+          "name": "Cebreros"
+        },
+        {
+          "code": "05066",
+          "name": "Cuevas del Valle"
+        },
+        {
+          "code": "05075",
+          "name": "Fresnedilla"
+        },
+        {
+          "code": "05082",
+          "name": "Gavilanes"
+        },
+        {
+          "code": "05093",
+          "name": "Herradón de Pinares"
+        },
+        {
+          "code": "05095",
+          "name": "Higuera de las Dueñas"
+        },
+        {
+          "code": "05102",
+          "name": "El Hoyo de Pinares"
+        },
+        {
+          "code": "05110",
+          "name": "Lanzahíta"
+        },
+        {
+          "code": "05127",
+          "name": "Mijares"
+        },
+        {
+          "code": "05132",
+          "name": "Mombeltrán"
+        },
+        {
+          "code": "05156",
+          "name": "Navahondilla"
+        },
+        {
+          "code": "05158",
+          "name": "Navalmoral"
+        },
+        {
+          "code": "05163",
+          "name": "Navaluenga"
+        },
+        {
+          "code": "05166",
+          "name": "Navarredondilla"
+        },
+        {
+          "code": "05167",
+          "name": "Navarrevisca"
+        },
+        {
+          "code": "05182",
+          "name": "Pedro Bernardo"
+        },
+        {
+          "code": "05187",
+          "name": "Piedralaves"
+        },
+        {
+          "code": "05201",
+          "name": "San Bartolomé de Pinares"
+        },
+        {
+          "code": "05207",
+          "name": "San Esteban del Valle"
+        },
+        {
+          "code": "05211",
+          "name": "San Juan de la Nava"
+        },
+        {
+          "code": "05212",
+          "name": "San Juan del Molinillo"
+        },
+        {
+          "code": "05222",
+          "name": "Santa Cruz de Pinares"
+        },
+        {
+          "code": "05221",
+          "name": "Santa Cruz del Valle"
+        },
+        {
+          "code": "05227",
+          "name": "Santa María del Tiétar"
+        },
+        {
+          "code": "05233",
+          "name": "Serranillos"
+        },
+        {
+          "code": "05240",
+          "name": "Sotillo de la Adrada"
+        },
+        {
+          "code": "05241",
+          "name": "El Tiemblo"
+        },
+        {
+          "code": "05262",
+          "name": "Villarejo del Valle"
+        },
+        {
+          "code": "05022",
+          "name": "El Barraco"
+        },
+        {
+          "code": "05169",
+          "name": "Navatalgordo"
+        },
+        {
+          "code": "05905",
+          "name": "Villanueva de Ávila"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cebreros», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (density-located); Ávila capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.bullas",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Bullas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30"
+      ],
+      "expected_count": 11,
+      "municipios": [
+        {
+          "code": "30012",
+          "name": "Bullas"
+        },
+        {
+          "code": "30017",
+          "name": "Cehegín"
+        },
+        {
+          "code": "30029",
+          "name": "Mula"
+        },
+        {
+          "code": "30032",
+          "name": "Pliego"
+        },
+        {
+          "code": "30034",
+          "name": "Ricote"
+        },
+        {
+          "code": "30013",
+          "name": "Calasparra"
+        },
+        {
+          "code": "30028",
+          "name": "Moratalla"
+        },
+        {
+          "code": "30040",
+          "name": "Ulea"
+        },
+        {
+          "code": "30024",
+          "name": "Lorca"
+        },
+        {
+          "code": "30039",
+          "name": "Totana"
+        },
+        {
+          "code": "30019",
+          "name": "Cieza"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Bullas», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (density-located); Murcia capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.yecla",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Yecla",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30"
+      ],
+      "expected_count": 1,
+      "municipios": [
+        {
+          "code": "30043",
+          "name": "Yecla"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Yecla», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "DOP Yecla comprises the single municipality of Yecla."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.ribera-del-jucar",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Ribera del Júcar",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "16"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "16060",
+          "name": "Casas de Benítez"
+        },
+        {
+          "code": "16061",
+          "name": "Casas de Fernando Alonso"
+        },
+        {
+          "code": "16063",
+          "name": "Casas de Guijarro"
+        },
+        {
+          "code": "16064",
+          "name": "Casas de Haro"
+        },
+        {
+          "code": "16065",
+          "name": "Casas de los Pinos"
+        },
+        {
+          "code": "16166",
+          "name": "Pozoamargo"
+        },
+        {
+          "code": "16198",
+          "name": "Sisante"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Júcar», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 7 términos municipales (Cuenca)."
       },
       "status": "ready"
     }
