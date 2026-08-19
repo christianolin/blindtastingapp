@@ -11338,6 +11338,513 @@
         "note": "Whole-municipality union of the 4 pliego subzones' Alicante-province municipios (L'Alacantí, L'Alcoià, Alto Vinalopó, Medio Vinalopó), 34 in total. The pliego's partial parajes in Caudete (Albacete), Jumilla/Yecla/Abanilla (Murcia) and Orihuela are excluded (not whole municipios of the zone). Home of Monastrell and the historic Fondillón."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.arlanza",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Arlanza",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "09",
+        "34"
+      ],
+      "expected_count": 53,
+      "municipios": [
+        {
+          "code": "09026",
+          "name": "Arlanzón"
+        },
+        {
+          "code": "09032",
+          "name": "Avellanosa de Muñó"
+        },
+        {
+          "code": "09034",
+          "name": "Los Balbases"
+        },
+        {
+          "code": "09094",
+          "name": "Cebrecos"
+        },
+        {
+          "code": "09103",
+          "name": "Cilleruelo de Abajo"
+        },
+        {
+          "code": "09104",
+          "name": "Cilleruelo de Arriba"
+        },
+        {
+          "code": "09105",
+          "name": "Ciruelos de Cervera"
+        },
+        {
+          "code": "09113",
+          "name": "Covarrubias"
+        },
+        {
+          "code": "09127",
+          "name": "Fontioso"
+        },
+        {
+          "code": "09179",
+          "name": "Iglesiarrubia"
+        },
+        {
+          "code": "09194",
+          "name": "Lerma"
+        },
+        {
+          "code": "09196",
+          "name": "Madrigal del Monte"
+        },
+        {
+          "code": "09197",
+          "name": "Madrigalejo del Monte"
+        },
+        {
+          "code": "09198",
+          "name": "Mahamud"
+        },
+        {
+          "code": "09231",
+          "name": "Nebreda"
+        },
+        {
+          "code": "09262",
+          "name": "Peral de Arlanza"
+        },
+        {
+          "code": "09267",
+          "name": "Pineda Trasmonte"
+        },
+        {
+          "code": "09270",
+          "name": "Pinilla Trasmonte"
+        },
+        {
+          "code": "09277",
+          "name": "Puentedura"
+        },
+        {
+          "code": "09294",
+          "name": "Quintanilla de la Mata"
+        },
+        {
+          "code": "09295",
+          "name": "Quintanilla del Coco"
+        },
+        {
+          "code": "09311",
+          "name": "Retuerta"
+        },
+        {
+          "code": "09316",
+          "name": "Revilla Vallejera"
+        },
+        {
+          "code": "09343",
+          "name": "Santa Cecilia"
+        },
+        {
+          "code": "09348",
+          "name": "Santa Inés"
+        },
+        {
+          "code": "09350",
+          "name": "Santa María del Campo"
+        },
+        {
+          "code": "09356",
+          "name": "Santibáñez del Val"
+        },
+        {
+          "code": "09358",
+          "name": "Santo Domingo de Silos"
+        },
+        {
+          "code": "09366",
+          "name": "Solarana"
+        },
+        {
+          "code": "09384",
+          "name": "Tordómar"
+        },
+        {
+          "code": "09386",
+          "name": "Torrecilla del Monte"
+        },
+        {
+          "code": "09389",
+          "name": "Torrepadre"
+        },
+        {
+          "code": "09418",
+          "name": "Valles de Palenzuela"
+        },
+        {
+          "code": "09432",
+          "name": "Villafruela"
+        },
+        {
+          "code": "09437",
+          "name": "Villahoz"
+        },
+        {
+          "code": "09442",
+          "name": "Villalmanzo"
+        },
+        {
+          "code": "09443",
+          "name": "Villamayor de los Montes"
+        },
+        {
+          "code": "09448",
+          "name": "Villangómez"
+        },
+        {
+          "code": "09466",
+          "name": "Villaverde del Monte"
+        },
+        {
+          "code": "09480",
+          "name": "Zael"
+        },
+        {
+          "code": "09901",
+          "name": "Quintanilla del Agua y Tordueles"
+        },
+        {
+          "code": "34022",
+          "name": "Baltanás"
+        },
+        {
+          "code": "34060",
+          "name": "Cobos de Cerrato"
+        },
+        {
+          "code": "34063",
+          "name": "Cordovilla la Real"
+        },
+        {
+          "code": "34070",
+          "name": "Espinosa de Cerrato"
+        },
+        {
+          "code": "34084",
+          "name": "Herrera de Valdecañas"
+        },
+        {
+          "code": "34087",
+          "name": "Hornillos de Cerrato"
+        },
+        {
+          "code": "34121",
+          "name": "Palenzuela"
+        },
+        {
+          "code": "34141",
+          "name": "Quintana del Puente"
+        },
+        {
+          "code": "34178",
+          "name": "Tabanera de Cerrato"
+        },
+        {
+          "code": "34182",
+          "name": "Torquemada"
+        },
+        {
+          "code": "34210",
+          "name": "Villahán"
+        },
+        {
+          "code": "34242",
+          "name": "Villodrigo"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Garnacha"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Arlanza»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/arlanza_2024_10_29.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union: 41 Burgos + 12 Palencia municipios. Entidades menores listed in the pliego are not separate INE municipios (excluded); Los Balbases and Ciruelos de Cervera are included by a single polígono catastral only, taken whole (documented over-approximation)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.valles-de-benavente",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Valles de Benavente",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "49"
+      ],
+      "expected_count": 61,
+      "municipios": [
+        {
+          "code": "49004",
+          "name": "Alcubilla de Nogales"
+        },
+        {
+          "code": "49011",
+          "name": "Arcos de la Polvorosa"
+        },
+        {
+          "code": "49015",
+          "name": "Arrabalde"
+        },
+        {
+          "code": "49018",
+          "name": "Ayoó de Vidriales"
+        },
+        {
+          "code": "49019",
+          "name": "Barcial del Barco"
+        },
+        {
+          "code": "49021",
+          "name": "Benavente"
+        },
+        {
+          "code": "49025",
+          "name": "Bretó"
+        },
+        {
+          "code": "49026",
+          "name": "Bretocino"
+        },
+        {
+          "code": "49027",
+          "name": "Brime de Sog"
+        },
+        {
+          "code": "49028",
+          "name": "Brime de Urz"
+        },
+        {
+          "code": "49029",
+          "name": "Burganes de Valverde"
+        },
+        {
+          "code": "49032",
+          "name": "Calzadilla de Tera"
+        },
+        {
+          "code": "49033",
+          "name": "Camarzana de Tera"
+        },
+        {
+          "code": "49041",
+          "name": "Castrogonzalo"
+        },
+        {
+          "code": "49046",
+          "name": "Cerecinos de Campos"
+        },
+        {
+          "code": "49052",
+          "name": "Coomonte"
+        },
+        {
+          "code": "49057",
+          "name": "Cubo de Benavente"
+        },
+        {
+          "code": "49063",
+          "name": "Faramontanos de Tábara"
+        },
+        {
+          "code": "49075",
+          "name": "Fresno de la Polvorosa"
+        },
+        {
+          "code": "49078",
+          "name": "Friera de Valverde"
+        },
+        {
+          "code": "49079",
+          "name": "Fuente Encalada"
+        },
+        {
+          "code": "49082",
+          "name": "Fuentes de Ropel"
+        },
+        {
+          "code": "49091",
+          "name": "Granja de Moreruela"
+        },
+        {
+          "code": "49092",
+          "name": "Granucillo"
+        },
+        {
+          "code": "49105",
+          "name": "Maire de Castroponce"
+        },
+        {
+          "code": "49109",
+          "name": "Manganeses de la Polvorosa"
+        },
+        {
+          "code": "49113",
+          "name": "Matilla de Arzón"
+        },
+        {
+          "code": "49116",
+          "name": "Melgar de Tera"
+        },
+        {
+          "code": "49117",
+          "name": "Micereces de Tera"
+        },
+        {
+          "code": "49118",
+          "name": "Milles de la Polvorosa"
+        },
+        {
+          "code": "49128",
+          "name": "Morales de Rey"
+        },
+        {
+          "code": "49130",
+          "name": "Morales de Valverde"
+        },
+        {
+          "code": "49137",
+          "name": "Navianos de Valverde"
+        },
+        {
+          "code": "49159",
+          "name": "Pobladura del Valle"
+        },
+        {
+          "code": "49167",
+          "name": "Pueblica de Valverde"
+        },
+        {
+          "code": "49170",
+          "name": "Quintanilla de Urz"
+        },
+        {
+          "code": "49171",
+          "name": "Quiruelas de Vidriales"
+        },
+        {
+          "code": "49187",
+          "name": "San Cristóbal de Entreviñas"
+        },
+        {
+          "code": "49188",
+          "name": "San Esteban del Molar"
+        },
+        {
+          "code": "49192",
+          "name": "San Miguel del Valle"
+        },
+        {
+          "code": "49193",
+          "name": "San Pedro de Ceque"
+        },
+        {
+          "code": "49199",
+          "name": "Santa Colomba de las Monjas"
+        },
+        {
+          "code": "49200",
+          "name": "Santa Cristina de la Polvorosa"
+        },
+        {
+          "code": "49201",
+          "name": "Santa Croya de Tera"
+        },
+        {
+          "code": "49203",
+          "name": "Santa María de la Vega"
+        },
+        {
+          "code": "49204",
+          "name": "Santa María de Valverde"
+        },
+        {
+          "code": "49205",
+          "name": "Santibáñez de Tera"
+        },
+        {
+          "code": "49206",
+          "name": "Santibáñez de Vidriales"
+        },
+        {
+          "code": "49207",
+          "name": "Santovenia"
+        },
+        {
+          "code": "49220",
+          "name": "La Torre del Valle"
+        },
+        {
+          "code": "49225",
+          "name": "Uña de Quintana"
+        },
+        {
+          "code": "49229",
+          "name": "Valdescorriel"
+        },
+        {
+          "code": "49231",
+          "name": "Vega de Tera"
+        },
+        {
+          "code": "49238",
+          "name": "Villabrázaro"
+        },
+        {
+          "code": "49243",
+          "name": "Villaferrueña"
+        },
+        {
+          "code": "49244",
+          "name": "Villageriz"
+        },
+        {
+          "code": "49250",
+          "name": "Villalpando"
+        },
+        {
+          "code": "49256",
+          "name": "Villanázar"
+        },
+        {
+          "code": "49257",
+          "name": "Villanueva de Azoague"
+        },
+        {
+          "code": "49259",
+          "name": "Villanueva de las Peras"
+        },
+        {
+          "code": "49271",
+          "name": "Villaveza del Agua"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Prieto Picudo"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valles de Benavente»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valles_de_benavente_2011_01_01.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 61 parent municipios (Zamora, comarcas of Benavente/Tera/Vidriales/Valverde). The pliego's anejos (in parentheses) are not separate INE municipios and are excluded."
+      },
+      "status": "ready"
     }
   ]
 }
