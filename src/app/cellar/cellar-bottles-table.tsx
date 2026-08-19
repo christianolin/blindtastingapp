@@ -545,7 +545,7 @@ export function CellarBottlesTable({
         {pageRows.map((r) => (
           <div
             key={r.lotId}
-            className="flex flex-col gap-2 rounded-xl border border-border p-3"
+            className="flex flex-col gap-2 rounded-xl border border-border p-3 [contain-intrinsic-size:auto_120px] [content-visibility:auto]"
           >
             <div className="flex items-start gap-3">
               {r.imageUrl ? (
@@ -676,7 +676,7 @@ export function CellarBottlesTable({
               return (
                 <tr
                   key={r.lotId}
-                  className="border-b border-border align-top last:border-0 hover:bg-muted/30"
+                  className="border-b border-border align-top last:border-0 hover:bg-muted/30 [contain-intrinsic-size:auto_73px] [content-visibility:auto]"
                 >
                   <td className="px-3 py-3">
                     {/* The identity block does the work the dropped columns
