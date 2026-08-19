@@ -11845,6 +11845,128 @@
         "note": "Whole-municipality union of the 61 parent municipios (Zamora, comarcas of Benavente/Tera/Vidriales/Valverde). The pliego's anejos (in parentheses) are not separate INE municipios and are excluded."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.ucles",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Uclés",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "16",
+        "45"
+      ],
+      "expected_count": 24,
+      "municipios": [
+        {
+          "code": "16002",
+          "name": "El Acebrón"
+        },
+        {
+          "code": "16010",
+          "name": "Alcázar del Rey"
+        },
+        {
+          "code": "16016",
+          "name": "Almendros"
+        },
+        {
+          "code": "16032",
+          "name": "Belinchón"
+        },
+        {
+          "code": "16086",
+          "name": "Fuente de Pedro Naharro"
+        },
+        {
+          "code": "16106",
+          "name": "Horcajo de Santiago"
+        },
+        {
+          "code": "16108",
+          "name": "Huelves"
+        },
+        {
+          "code": "16112",
+          "name": "Huete"
+        },
+        {
+          "code": "16151",
+          "name": "Paredes"
+        },
+        {
+          "code": "16167",
+          "name": "Pozorrubio de Santiago"
+        },
+        {
+          "code": "16181",
+          "name": "Rozalén del Monte"
+        },
+        {
+          "code": "16186",
+          "name": "Saelices"
+        },
+        {
+          "code": "16203",
+          "name": "Tarancón"
+        },
+        {
+          "code": "16212",
+          "name": "Torrubia del Campo"
+        },
+        {
+          "code": "16217",
+          "name": "Tribaldos"
+        },
+        {
+          "code": "16218",
+          "name": "Uclés"
+        },
+        {
+          "code": "16240",
+          "name": "Vellisca"
+        },
+        {
+          "code": "16249",
+          "name": "Villamayor de Santiago"
+        },
+        {
+          "code": "16270",
+          "name": "Villarrubio"
+        },
+        {
+          "code": "16279",
+          "name": "Zarza de Tajo"
+        },
+        {
+          "code": "16901",
+          "name": "Campos del Paraíso"
+        },
+        {
+          "code": "45027",
+          "name": "Cabezamesada"
+        },
+        {
+          "code": "45054",
+          "name": "Corral de Almaguer"
+        },
+        {
+          "code": "45156",
+          "name": "Santa Cruz de la Zarza"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Garnacha"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Uclés» (Junta de Castilla-La Mancha, 2024)",
+        "url": "https://apliagri.castillalamancha.es/sites/default/files/2025-08/PLIEGO_DE_CONDICIONES_D.O._UCLES_12-12-2024.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the pliego zona (24 municipios: Cuenca + Toledo). Cabezamesada and Corral de Almaguer are included by certain polígonos only, taken whole (documented over-approximation). High-altitude Tempranillo (Cencibel) DO around the monastery of Uclés."
+      },
+      "status": "ready"
     }
   ]
 }
