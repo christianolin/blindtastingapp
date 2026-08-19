@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { createClient } from "@/lib/supabase/client";
 
 // Uploads directly to a Storage bucket from the browser (like
@@ -61,10 +62,13 @@ export function ImageUploader({
     <div className="flex flex-col gap-2">
       <input type="hidden" name={name} value={url ?? ""} />
       {url ? (
-        <div className={`overflow-hidden rounded-lg border border-border ${aspectClassName}`}>
+        <ImageLightbox
+          src={url}
+          className={`block overflow-hidden rounded-lg border border-border ${aspectClassName}`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="" className="size-full object-cover" />
-        </div>
+          <img src={url} alt="" className="size-full cursor-zoom-in object-cover" />
+        </ImageLightbox>
       ) : null}
       <input
         ref={inputRef}
