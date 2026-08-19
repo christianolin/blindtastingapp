@@ -66,6 +66,7 @@ const BOUNDARIES = [
   { key: "collio", targetKey: "italy.friuli.collio", name: "Collio", label: "Collio" },
   { key: "friuli-colli-orientali", targetKey: "italy.friuli.friuli-colli-orientali", name: "Friuli Colli Orientali", label: "Friuli Colli Orientali" },
   { key: "carso", targetKey: "italy.friuli.carso", name: "Carso", label: "Carso" },
+  { key: "friuli-isonzo", targetKey: "italy.friuli.friuli-isonzo", name: "Friuli Isonzo", label: "Friuli Isonzo" },
 ];
 
 function slugify(name) {

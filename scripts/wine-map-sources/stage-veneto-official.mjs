@@ -77,6 +77,10 @@ const BOUNDARIES = [
   { key: "piave", targetKey: "italy.veneto.piave", name: "Piave", label: "Piave" },
   { key: "garda", targetKey: "italy.veneto.garda", name: "Garda", label: "Garda" },
   { key: "lison-pramaggiore", targetKey: "italy.veneto.lison-pramaggiore", name: "Lison-Pramaggiore", label: "Lison-Pramaggiore" },
+  { key: "montello-colli-asolani", targetKey: "italy.veneto.montello-colli-asolani", name: "Montello - Colli Asolani", label: "Montello - Colli Asolani" },
+  { key: "monti-lessini", targetKey: "italy.veneto.monti-lessini", name: "Monti Lessini", label: "Monti Lessini" },
+  { key: "colli-di-conegliano", targetKey: "italy.veneto.colli-di-conegliano", name: "Colli di Conegliano", label: "Colli di Conegliano" },
+  { key: "bagnoli", targetKey: "italy.veneto.bagnoli", name: "Bagnoli", label: "Bagnoli" },
 ];
 
 function slugify(name) {

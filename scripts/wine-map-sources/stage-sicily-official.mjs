@@ -54,7 +54,7 @@ const JURISDICTION = "Italy";
 const LICENCE = "CC BY 4.0";
 const SIMPLIFY_TOLERANCE = 0.0002;
 // Sicily staging window: [minLon, minLat, maxLon, maxLat].
-const WINDOW = { minLon: 12.3, minLat: 36.6, maxLon: 15.3, maxLat: 38.3 };
+const WINDOW = { minLon: 12.3, minLat: 36.5, maxLon: 15.7, maxLat: 38.35 };
 const revision = releaseVersion();
 
 // Same France-palette single boundary colour as stage-piedmont-boundaries.mjs.
@@ -66,6 +66,9 @@ const BOUNDARIES = [
   { key: "etna", targetKey: "italy.sicilia.etna", name: "Etna", label: "Etna" },
   { key: "cerasuolo-di-vittoria", targetKey: "italy.sicilia.cerasuolo-di-vittoria", name: "Cerasuolo di Vittoria", label: "Cerasuolo di Vittoria" },
   { key: "marsala", targetKey: "italy.sicilia.marsala", name: "Marsala", label: "Marsala" },
+  { key: "noto", targetKey: "italy.sicilia.noto", name: "Noto", label: "Noto" },
+  { key: "menfi", targetKey: "italy.sicilia.menfi", name: "Menfi", label: "Menfi" },
+  { key: "faro", targetKey: "italy.sicilia.faro", name: "Faro", label: "Faro" },
 ];
 
 function slugify(name) {
