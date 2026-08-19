@@ -17,17 +17,22 @@ All **machinery** is built and proven, and authoritative sourcing is **solved**:
 official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
 licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
 fail-closed by `fetch-spain-pliego.mjs`. Merged to `master` (Spain + the
-collaborator's Italy). **17 DOs are LIVE end-to-end** across **9 comunidades**,
-each dissolved → guarded → auto-promoted from its official pliego:
-- **Castilla y León** — Rueda (68), Toro (15), Cigales (12), Arribes (32)
-- **Cataluña** — Priorat DOQ (10), Montsant (13)
-- **Aragón** — Somontano (43), Cariñena (16), Calatayud (50), Campo de Borja (16)
-- **Región de Murcia** — Jumilla (7; trans-comunidad, 6 municipios in Albacete)
-- **Andalucía** — Jerez-Xérès-Sherry (10), Condado de Huelva (18)
-- **Galicia** — Ribeiro (13; parroquia-delimited, coarser)
-- **Comunidad Valenciana** — Utiel-Requena (9)
-- **Castilla-La Mancha** — Almansa (7)
-- **Navarra** — Navarra (118)
+collaborator's Italy). **29 DOs are LIVE end-to-end** across **11 comunidades**, each dissolved →
+guarded → auto-promoted from its official pliego, plus a **precise national
+border** (georef dissolve of all 8,129 peninsular + Balearic municipios, 9,571
+vertices, replacing the coarse Natural Earth 1:50m outline — matches the
+comunidad boundaries exactly):
+- **Castilla y León** (7) — Rueda, Toro, Cigales, Arribes, Ribera del Duero (83), Tierra de León (85), Cebreros (35)
+- **Castilla-La Mancha** (5) — La Mancha (188), Valdepeñas (12), Manchuela (68), Almansa (7), Ribera del Júcar (7)
+- **Aragón** (4) — Somontano (43), Cariñena (16), Calatayud (50), Campo de Borja (16)
+- **Andalucía** (3) — Jerez (10), Condado de Huelva (18), Málaga (102, 7 subzones)
+- **Región de Murcia** (3) — Jumilla (7), Bullas (11), Yecla (1)
+- **Cataluña** (2) — Priorat DOQ (10), Montsant (13)
+- **Galicia** (1) — Ribeiro (13; parroquia-delimited, coarser)
+- **Comunidad Valenciana** (1) — Utiel-Requena (9)
+- **Navarra** (1) — Navarra (118)
+- **Extremadura** (1) — Ribera del Guadiana (122, 6 subzones)
+- **La Rioja** (1) — Rioja DOCa (135; trans-comunidad, incl. Álava + Navarra)
 
 Migrations `20260901091000`–`100000`. Each comunidad REGION node carries an
 **overview boundary = union of its DOs' municipios** (built by
