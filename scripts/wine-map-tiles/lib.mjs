@@ -86,6 +86,12 @@ export const ATTRIBUTION = {
     key: "sicilia",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Lombardy: no official delimited-zone GIS — ISTAT comuni dissolved per the
+  // MASAF disciplinare comune lists. See stage-lombardia-official.mjs.
+  LOMBARDIA_COMUNI: {
+    key: "lombardia",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
 };
 
 export function attributionKeyFor(namespace) {
