@@ -6,6 +6,40 @@ no national parcel layer.
 
 ## Session status — 2026-08-19 (resume here)
 
+**Overnight "finish Spain" run (waves 11–19, pushed through `af69543`).** Spain is
+now **14 comunidades, 57 DOs**, all promoted (VERIFIED + current boundary) with
+descriptions + grape/style chips. This run added: **Castilla y León** Bierzo,
+Valtiendas, Sierra de Salamanca, Tierra del Vino de Zamora, Arlanza (53), Valles
+de Benavente (61); **Galicia** Rías Baixas (34), Ribeira Sacra (18), Valdeorras
+(8), Monterrei (8); **new comunidades** País Vasco (Arabako 5, Bizkaiko = whole
+Bizkaia 112, Getariako = whole Gipuzkoa 90), Illes Balears (Binissalem 5, Pla i
+Llevant 19), Comunidad de Madrid (Vinos de Madrid 70); **Andalucía** Montilla-
+Moriles (17), Granada (whole province, 174); **Valenciana** Valencia (91),
+Alicante (34); **CLM** Mondéjar (21), Uclés (24). Whole-territory DOs (the two
+Txakolis, Granada) are the literal legal delimitation; every list verified against
+the pliego with capital/partial drops. Frontend colours+labels + English-toggle
+exonyms added for the 3 new comunidades. **Tiles need a republish** to show all
+the new polygons.
+
+**HELD (need owner input or careful work; NOT shipped, by design):**
+- **Méntrida** — the current 2022 pliego lists **77** Toledo municipios *including
+  Toledo city + Talavera de la Reina*; owner-flagged over-grab. Decide: ship
+  faithful-to-current-pliego, or use an older/smaller scope.
+- **Tarragona** — pliego defines it by comarca ("only *part* of the Ribera d'Ebre")
+  with no clean municipio enumeration; the finder's 79 would over-grab. Needs the
+  explicit list.
+- **Costers del Segre** — 7 disjoint subzones, many partial polígono-catastral
+  inclusions; high over-grab risk.
+- **DO Catalunya** (region-wide, overlaps every Catalan DO) and **Cava**
+  (multi-region sparkling) — don't fit the `spain.<comunidad>.<do>` tree; modeling
+  decision needed.
+- **Lebrija** — a Vino de Calidad, no clean enumerated list.
+- **Vinos de Pago** (single-estate DOPs) — sub-municipal, can't be a municipality
+  union; out of scope per the plan's Decisions.
+- **Canarias** — out of scope (outside the map's display window, prior decision).
+- Minor unfetched comunidades: Asturias (Cangas), Cantabria (Costa de Cantabria,
+  Liébana).
+
 **Wave 11 — Castilla y León completion (pushed `5bdec65`):** four more DOPs from
 their MAPA pliego zona lists, density-located + INE-resolved fail-closed, each
 verified per-pliego and promoted (with descriptions + grape/style chips):
