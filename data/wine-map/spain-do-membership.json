@@ -491,26 +491,6 @@
       ]
     },
     {
-      "canonical_key": "spain.galicia.rias-baixas",
-      "comunidad_key": "galicia",
-      "comunidad": "Galicia",
-      "display_name": "Rías Baixas",
-      "appellation_system": "DOP",
-      "appellation_level": "regional",
-      "provinces": [
-        "36",
-        "27"
-      ],
-      "municipios": [],
-      "provenance": {
-        "source": "BOE/DOG pliego DOP Rías Baixas",
-        "url": null,
-        "retrieved": null,
-        "note": "PENDING — bilingual (Galician): use code-first."
-      },
-      "status": "pending"
-    },
-    {
       "canonical_key": "spain.castilla-y-leon.cigales",
       "comunidad_key": "castilla-y-leon",
       "comunidad": "Castilla y León",
@@ -8144,6 +8124,383 @@
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/tierradel_vino_de_zamora_2011_01_01.pdf",
         "retrieved": "2026-08-19",
         "note": "Whole-municipality union: 46 Zamora municipios (the city of Zamora, 49275, IS a listed member) + 10 Salamanca municipios = 56. The capital Salamanca (37274) — a spurious header match, not a listed member — is dropped."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.valdeorras",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Valdeorras",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "32"
+      ],
+      "expected_count": 8,
+      "municipios": [
+        {
+          "code": "32009",
+          "name": "O Barco de Valdeorras"
+        },
+        {
+          "code": "32015",
+          "name": "O Bolo"
+        },
+        {
+          "code": "32017",
+          "name": "Carballeda de Valdeorras"
+        },
+        {
+          "code": "32038",
+          "name": "Larouco"
+        },
+        {
+          "code": "32060",
+          "name": "Petín"
+        },
+        {
+          "code": "32072",
+          "name": "A Rúa"
+        },
+        {
+          "code": "32073",
+          "name": "Rubiá"
+        },
+        {
+          "code": "32088",
+          "name": "Vilamartín de Valdeorras"
+        }
+      ],
+      "grapes": [
+        "Godello",
+        "Mencía"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valdeorras», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valdeorras_2024_12_04.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 8 ayuntamientos named in the pliego DELIMITACIÓN (O Barco de Valdeorras, A Rúa, Vilamartín de Valdeorras, O Bolo, Carballeda de Valdeorras, Larouco, Petín, Rubiá — all Ourense). A Veiga (32083), a stray finder match, is dropped."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Rías Baixas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "36",
+        "15"
+      ],
+      "expected_count": 34,
+      "municipios": [
+        {
+          "code": "15012",
+          "name": "Boqueixón"
+        },
+        {
+          "code": "15065",
+          "name": "Padrón"
+        },
+        {
+          "code": "15082",
+          "name": "Teo"
+        },
+        {
+          "code": "15085",
+          "name": "Touro"
+        },
+        {
+          "code": "15089",
+          "name": "Vedra"
+        },
+        {
+          "code": "36001",
+          "name": "Arbo"
+        },
+        {
+          "code": "36002",
+          "name": "Barro"
+        },
+        {
+          "code": "36005",
+          "name": "Caldas de Reis"
+        },
+        {
+          "code": "36006",
+          "name": "Cambados"
+        },
+        {
+          "code": "36009",
+          "name": "A Cañiza"
+        },
+        {
+          "code": "36014",
+          "name": "Crecente"
+        },
+        {
+          "code": "36017",
+          "name": "A Estrada"
+        },
+        {
+          "code": "36021",
+          "name": "Gondomar"
+        },
+        {
+          "code": "36022",
+          "name": "O Grove"
+        },
+        {
+          "code": "36023",
+          "name": "A Guarda"
+        },
+        {
+          "code": "36027",
+          "name": "Meaño"
+        },
+        {
+          "code": "36028",
+          "name": "Meis"
+        },
+        {
+          "code": "36033",
+          "name": "Mos"
+        },
+        {
+          "code": "36034",
+          "name": "As Neves"
+        },
+        {
+          "code": "36040",
+          "name": "Portas"
+        },
+        {
+          "code": "36042",
+          "name": "Ponteareas"
+        },
+        {
+          "code": "36046",
+          "name": "Ribadumia"
+        },
+        {
+          "code": "36048",
+          "name": "O Rosal"
+        },
+        {
+          "code": "36049",
+          "name": "Salceda de Caselas"
+        },
+        {
+          "code": "36050",
+          "name": "Salvaterra de Miño"
+        },
+        {
+          "code": "36051",
+          "name": "Sanxenxo"
+        },
+        {
+          "code": "36052",
+          "name": "Silleda"
+        },
+        {
+          "code": "36053",
+          "name": "Soutomaior"
+        },
+        {
+          "code": "36054",
+          "name": "Tomiño"
+        },
+        {
+          "code": "36055",
+          "name": "Tui"
+        },
+        {
+          "code": "36059",
+          "name": "Vila de Cruces"
+        },
+        {
+          "code": "36060",
+          "name": "Vilagarcía de Arousa"
+        },
+        {
+          "code": "36061",
+          "name": "Vilanova de Arousa"
+        },
+        {
+          "code": "36901",
+          "name": "A Illa de Arousa"
+        }
+      ],
+      "grapes": [
+        "Albariño",
+        "Treixadura"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality over-approximation (parroquia-delimited DO, 5 subzones: Val do Salnés, Condado do Tea, O Rosal, Soutomaior, Ribeira do Ulla). Pontevedra + A Coruña. 'Ribeira' (15073) is the subzone name Ribeira do Ulla, not the municipio — dropped; A Guarda (36023, 'A Garda' in the pliego, O Rosal subzone) added."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.monterrei",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Monterrei",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "32"
+      ],
+      "expected_count": 8,
+      "municipios": [
+        {
+          "code": "32021",
+          "name": "Castrelo do Val"
+        },
+        {
+          "code": "32028",
+          "name": "Cualedro"
+        },
+        {
+          "code": "32039",
+          "name": "Laza"
+        },
+        {
+          "code": "32050",
+          "name": "Monterrei"
+        },
+        {
+          "code": "32053",
+          "name": "Oímbra"
+        },
+        {
+          "code": "32071",
+          "name": "Riós"
+        },
+        {
+          "code": "32085",
+          "name": "Verín"
+        },
+        {
+          "code": "32091",
+          "name": "Vilardevós"
+        }
+      ],
+      "grapes": [
+        "Godello",
+        "Treixadura",
+        "Mencía",
+        "Tempranillo"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Monterrei», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/monterrei_2025_09_12.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality over-approximation of the 8 ayuntamientos of the two subzones (valle + ladera de Monterrei); the DO is parroquia-delimited within them. Ourense."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.ribeira-sacra",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Ribeira Sacra",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "27",
+        "32"
+      ],
+      "expected_count": 18,
+      "municipios": [
+        {
+          "code": "27009",
+          "name": "Carballedo"
+        },
+        {
+          "code": "27016",
+          "name": "Chantada"
+        },
+        {
+          "code": "27031",
+          "name": "Monforte de Lemos"
+        },
+        {
+          "code": "27041",
+          "name": "Pantón"
+        },
+        {
+          "code": "27042",
+          "name": "Paradela"
+        },
+        {
+          "code": "27049",
+          "name": "Portomarín"
+        },
+        {
+          "code": "27050",
+          "name": "Quiroga"
+        },
+        {
+          "code": "27052",
+          "name": "Ribas de Sil"
+        },
+        {
+          "code": "27058",
+          "name": "O Saviñao"
+        },
+        {
+          "code": "27059",
+          "name": "Sober"
+        },
+        {
+          "code": "27060",
+          "name": "Taboada"
+        },
+        {
+          "code": "32023",
+          "name": "Castro Caldelas"
+        },
+        {
+          "code": "32044",
+          "name": "Manzaneda"
+        },
+        {
+          "code": "32052",
+          "name": "Nogueira de Ramuín"
+        },
+        {
+          "code": "32057",
+          "name": "Parada de Sil"
+        },
+        {
+          "code": "32059",
+          "name": "A Peroxa"
+        },
+        {
+          "code": "32070",
+          "name": "San Xoán de Río"
+        },
+        {
+          "code": "32080",
+          "name": "A Teixeira"
+        }
+      ],
+      "grapes": [
+        "Mencía",
+        "Godello",
+        "Albariño"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribeira Sacra», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribeira_sacra_2025_03_12.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality over-approximation of the 18 ayuntamientos across the pliego's subzones (Amandi, Chantada, Quiroga-Bibei, Ribeiras do Miño, Ribeiras do Sil); the DO is parroquia-delimited within them. Lugo + Ourense."
       },
       "status": "ready"
     }
