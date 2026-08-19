@@ -1680,7 +1680,7 @@
       "status": "ready"
     },
     {
-      "canonical_key": "spain.navarra.navarra",
+      "canonical_key": "spain.navarra",
       "comunidad_key": "navarra",
       "comunidad": "Navarra",
       "display_name": "Navarra",
@@ -2168,7 +2168,7 @@
         "source": "Pliego de condiciones DOP «Navarra», Ministerio de Agricultura, Pesca y Alimentación",
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/navarra_2024_10_11.pdf",
         "retrieved": "2026-08-18",
-        "note": "Whole-municipality union of the pliego zona de producción (5 subzones across southern Navarra). List located by match-density; every code is a real Navarra INE municipio."
+        "note": "Whole-municipality union of the pliego zona de producción (5 subzones across southern Navarra). List located by match-density; every code is a real Navarra INE municipio. [Collapsed 2026-08-19: this DO shares its comunidad's name, so it lives on the comunidad node spain.navarra; the redundant child node was removed.]"
       },
       "status": "ready"
     },
@@ -5362,7 +5362,7 @@
       "status": "ready"
     },
     {
-      "canonical_key": "spain.la-rioja.rioja",
+      "canonical_key": "spain.la-rioja",
       "comunidad_key": "la-rioja",
       "comunidad": "La Rioja",
       "display_name": "Rioja",
@@ -5920,7 +5920,7 @@
         "source": "Pliego de condiciones DOCa «Rioja», MAPA",
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
         "retrieved": "2026-08-18",
-        "note": "Trans-comunidad DOCa keyed under La Rioja; includes Rioja Alavesa (Álava/País Vasco) and Rioja municipios of Navarra. Whole-municipality union (density-located from the space-separated multi-column list). Logroño is a member; the Vitoria/Pamplona capitals are excluded."
+        "note": "Trans-comunidad DOCa keyed under La Rioja; includes Rioja Alavesa (Álava/País Vasco) and Rioja municipios of Navarra. Whole-municipality union (density-located from the space-separated multi-column list). Logroño is a member; the Vitoria/Pamplona capitals are excluded. [Collapsed 2026-08-19: this DO shares its comunidad's name, so it lives on the comunidad node spain.la-rioja; the redundant child node was removed.]"
       },
       "status": "ready"
     },
@@ -6927,7 +6927,7 @@
       "display_name": "Rioja Alta",
       "appellation_system": "DOCa",
       "appellation_level": "subregional",
-      "parent_key": "spain.la-rioja.rioja",
+      "parent_key": "spain.la-rioja",
       "provinces": [
         "26"
       ],
@@ -7249,7 +7249,7 @@
       "display_name": "Rioja Oriental",
       "appellation_system": "DOCa",
       "appellation_level": "subregional",
-      "parent_key": "spain.la-rioja.rioja",
+      "parent_key": "spain.la-rioja",
       "provinces": [
         "26",
         "31"
@@ -7460,7 +7460,7 @@
       "display_name": "Rioja Alavesa",
       "appellation_system": "DOCa",
       "appellation_level": "subregional",
-      "parent_key": "spain.la-rioja.rioja",
+      "parent_key": "spain.la-rioja",
       "provinces": [
         "01"
       ],

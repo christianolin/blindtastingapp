@@ -95,7 +95,7 @@ const REGION_LABELS: Record<string, string> = {
   "castilla-la-mancha": "Castilla-La Mancha",
   navarra: "Navarra",
   extremadura: "Extremadura",
-  "la-rioja": "La Rioja",
+  "la-rioja": "Rioja",
   "languedoc-roussillon": "Languedoc-Roussillon",
   rhone: "Rhône",
   "sud-ouest": "Sud-Ouest",
