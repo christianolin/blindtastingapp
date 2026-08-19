@@ -6,7 +6,24 @@ no national parcel layer.
 
 ## Session status — 2026-08-19 (resume here)
 
-**Latest work (2026-08-19 cont., pushed to `master` through `c90a6ba`):**
+**Wave 11 — Castilla y León completion (pushed `5bdec65`):** four more DOPs from
+their MAPA pliego zona lists, density-located + INE-resolved fail-closed, each
+verified per-pliego and promoted (with descriptions + grape/style chips):
+**Bierzo** (31, León — Mencía), **Valtiendas** (16, Segovia), **Sierra de
+Salamanca** (26 — Rufete; spurious Salamanca-city header match dropped), **Tierra
+del Vino de Zamora** (56 = 46 Zamora incl. the city + 10 Salamanca; spurious
+Salamanca-city dropped). CyL overview rebuilt → 11 DOs / 457 municipios. Added
+grapes Rufete + Garnacha Tintorera. Migration `20260901113000`. **Still deferred
+in CyL:** **Arlanza** (Burgos + a Palencia block + many *entidades menores* to
+classify — the finder only caught the 41 Burgos ones) and **Valles de Benavente**
+(pliego riddled with parenthetical *anejos* that aren't separate INE municipios —
+verify before shipping). Also still open across Spain: Galicia parroquia DOs
+(Rías Baixas + subzones, Ribeira Sacra, Valdeorras, Monterrei), Costers del Segre
+(partial-parcel subzones) + Tarragona DO, Baleares, País Vasco Txakolis, CLM
+(Méntrida/Uclés/Mondéjar), Valencia/Alicante. **Tiles need a republish** to show
+the 4 new polygons (owner ran one earlier today for the prior waves).
+
+**Earlier 2026-08-19 work (pushed to `master` through `c90a6ba`):**
 - **Subzone tier (NEW) — Rioja Alta / Rioja Oriental / Rioja Alavesa** as
   `APPELLATION` children of `spain.la-rioja.rioja` (canonical keys
   `spain.la-rioja.rioja.rioja-{alta,oriental,alavesa}`, display_tier 3, min_zoom 7,
