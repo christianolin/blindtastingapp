@@ -1723,6 +1723,592 @@
         "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.navarra.navarra",
+      "comunidad_key": "navarra",
+      "comunidad": "Navarra",
+      "display_name": "Navarra",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "31"
+      ],
+      "expected_count": 118,
+      "municipios": [
+        {
+          "code": "31006",
+          "name": "Ablitas"
+        },
+        {
+          "code": "31032",
+          "name": "Arguedas"
+        },
+        {
+          "code": "31048",
+          "name": "Barillas"
+        },
+        {
+          "code": "31068",
+          "name": "Cascante"
+        },
+        {
+          "code": "31070",
+          "name": "Castejón"
+        },
+        {
+          "code": "31072",
+          "name": "Cintruénigo"
+        },
+        {
+          "code": "31077",
+          "name": "Corella"
+        },
+        {
+          "code": "31105",
+          "name": "Fitero"
+        },
+        {
+          "code": "31173",
+          "name": "Monteagudo"
+        },
+        {
+          "code": "31176",
+          "name": "Murchante"
+        },
+        {
+          "code": "31232",
+          "name": "Tudela"
+        },
+        {
+          "code": "31233",
+          "name": "Tulebras"
+        },
+        {
+          "code": "31249",
+          "name": "Valtierra"
+        },
+        {
+          "code": "31038",
+          "name": "Artajona"
+        },
+        {
+          "code": "31051",
+          "name": "Beire"
+        },
+        {
+          "code": "31053",
+          "name": "Berbinzana"
+        },
+        {
+          "code": "31064",
+          "name": "Cadreita"
+        },
+        {
+          "code": "31065",
+          "name": "Caparroso"
+        },
+        {
+          "code": "31066",
+          "name": "Cárcar"
+        },
+        {
+          "code": "31067",
+          "name": "Carcastillo"
+        },
+        {
+          "code": "31104",
+          "name": "Falces"
+        },
+        {
+          "code": "31107",
+          "name": "Funes"
+        },
+        {
+          "code": "31142",
+          "name": "Larraga"
+        },
+        {
+          "code": "31152",
+          "name": "Lerín"
+        },
+        {
+          "code": "31157",
+          "name": "Lodosa"
+        },
+        {
+          "code": "31163",
+          "name": "Marcilla"
+        },
+        {
+          "code": "31164",
+          "name": "Mélida"
+        },
+        {
+          "code": "31169",
+          "name": "Milagro"
+        },
+        {
+          "code": "31171",
+          "name": "Miranda de Arga"
+        },
+        {
+          "code": "31178",
+          "name": "Murillo el Cuende"
+        },
+        {
+          "code": "31179",
+          "name": "Murillo el Fruto"
+        },
+        {
+          "code": "31191",
+          "name": "Olite"
+        },
+        {
+          "code": "31202",
+          "name": "Peralta"
+        },
+        {
+          "code": "31205",
+          "name": "Pitillas"
+        },
+        {
+          "code": "31220",
+          "name": "Santacara"
+        },
+        {
+          "code": "31224",
+          "name": "Sesma"
+        },
+        {
+          "code": "31227",
+          "name": "Tafalla"
+        },
+        {
+          "code": "31254",
+          "name": "Villafranca"
+        },
+        {
+          "code": "31005",
+          "name": "Aberin"
+        },
+        {
+          "code": "31012",
+          "name": "Allo"
+        },
+        {
+          "code": "31030",
+          "name": "Arellano"
+        },
+        {
+          "code": "31035",
+          "name": "Armañanzas"
+        },
+        {
+          "code": "31036",
+          "name": "Arróniz"
+        },
+        {
+          "code": "31041",
+          "name": "Ayegui"
+        },
+        {
+          "code": "31046",
+          "name": "Barbarin"
+        },
+        {
+          "code": "31080",
+          "name": "Dicastillo"
+        },
+        {
+          "code": "31079",
+          "name": "Desojo"
+        },
+        {
+          "code": "31061",
+          "name": "El Busto"
+        },
+        {
+          "code": "31096",
+          "name": "Espronceda"
+        },
+        {
+          "code": "31125",
+          "name": "Igúzquiza"
+        },
+        {
+          "code": "31145",
+          "name": "Lazagurría"
+        },
+        {
+          "code": "31029",
+          "name": "Los Arcos"
+        },
+        {
+          "code": "31160",
+          "name": "Luquin"
+        },
+        {
+          "code": "31166",
+          "name": "Mendaza"
+        },
+        {
+          "code": "31174",
+          "name": "Morentin"
+        },
+        {
+          "code": "31177",
+          "name": "Murieta"
+        },
+        {
+          "code": "31200",
+          "name": "Oteiza"
+        },
+        {
+          "code": "31219",
+          "name": "Sansol"
+        },
+        {
+          "code": "31230",
+          "name": "Torralba del Río"
+        },
+        {
+          "code": "31231",
+          "name": "Torres del Río"
+        },
+        {
+          "code": "31260",
+          "name": "Valle de Yerri"
+        },
+        {
+          "code": "31255",
+          "name": "Villamayor de Monjardín"
+        },
+        {
+          "code": "31257",
+          "name": "Villatuerta"
+        },
+        {
+          "code": "31204",
+          "name": "Piedramillera"
+        },
+        {
+          "code": "31007",
+          "name": "Adiós"
+        },
+        {
+          "code": "31018",
+          "name": "Añorbe"
+        },
+        {
+          "code": "31039",
+          "name": "Artazu"
+        },
+        {
+          "code": "31045",
+          "name": "Barásoain"
+        },
+        {
+          "code": "31074",
+          "name": "Cirauqui"
+        },
+        {
+          "code": "31089",
+          "name": "Enériz"
+        },
+        {
+          "code": "31114",
+          "name": "Garínoain"
+        },
+        {
+          "code": "31121",
+          "name": "Guirguillano"
+        },
+        {
+          "code": "31147",
+          "name": "Legarda"
+        },
+        {
+          "code": "31150",
+          "name": "Leoz"
+        },
+        {
+          "code": "31161",
+          "name": "Mañeru"
+        },
+        {
+          "code": "31167",
+          "name": "Mendigorria"
+        },
+        {
+          "code": "31180",
+          "name": "Muruzábal"
+        },
+        {
+          "code": "31183",
+          "name": "Obanos"
+        },
+        {
+          "code": "31192",
+          "name": "Olóriz"
+        },
+        {
+          "code": "31197",
+          "name": "Orísoain"
+        },
+        {
+          "code": "31207",
+          "name": "Pueyo"
+        },
+        {
+          "code": "31206",
+          "name": "Puente la Reina"
+        },
+        {
+          "code": "31228",
+          "name": "Tiebas-Muruarte de Reta"
+        },
+        {
+          "code": "31229",
+          "name": "Tirapu"
+        },
+        {
+          "code": "31234",
+          "name": "Ucar"
+        },
+        {
+          "code": "31238",
+          "name": "Unzué"
+        },
+        {
+          "code": "31246",
+          "name": "Uterga"
+        },
+        {
+          "code": "31009",
+          "name": "Aibar"
+        },
+        {
+          "code": "31069",
+          "name": "Cáseda"
+        },
+        {
+          "code": "31094",
+          "name": "Eslava"
+        },
+        {
+          "code": "31103",
+          "name": "Ezprogui"
+        },
+        {
+          "code": "31110",
+          "name": "Gallipienzo"
+        },
+        {
+          "code": "31135",
+          "name": "Javier"
+        },
+        {
+          "code": "31146",
+          "name": "Leache"
+        },
+        {
+          "code": "31151",
+          "name": "Lerga"
+        },
+        {
+          "code": "31155",
+          "name": "Liédena"
+        },
+        {
+          "code": "31159",
+          "name": "Lumbier"
+        },
+        {
+          "code": "31212",
+          "name": "Sada"
+        },
+        {
+          "code": "31216",
+          "name": "Sangüesa"
+        },
+        {
+          "code": "31217",
+          "name": "San Martín de Unx"
+        },
+        {
+          "code": "31235",
+          "name": "Ujué"
+        },
+        {
+          "code": "31209",
+          "name": "Romanzado"
+        },
+        {
+          "code": "31242",
+          "name": "Urraul Bajo"
+        },
+        {
+          "code": "31085",
+          "name": "Etxauri"
+        },
+        {
+          "code": "31076",
+          "name": "Cizur"
+        },
+        {
+          "code": "31011",
+          "name": "Allín"
+        },
+        {
+          "code": "31043",
+          "name": "Azuelo"
+        },
+        {
+          "code": "31120",
+          "name": "Guesálaz"
+        },
+        {
+          "code": "31141",
+          "name": "Lapoblación"
+        },
+        {
+          "code": "31168",
+          "name": "Metauten"
+        },
+        {
+          "code": "31170",
+          "name": "Mirafuentes"
+        },
+        {
+          "code": "31175",
+          "name": "Mues"
+        },
+        {
+          "code": "31182",
+          "name": "Nazar"
+        },
+        {
+          "code": "31184",
+          "name": "Oco"
+        },
+        {
+          "code": "31225",
+          "name": "Sorlada"
+        },
+        {
+          "code": "31158",
+          "name": "Lónguida"
+        },
+        {
+          "code": "31261",
+          "name": "Yesa"
+        },
+        {
+          "code": "31262",
+          "name": "Zabalza"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Navarra», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/navarra_2024_10_11.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (5 subzones across southern Navarra). List located by match-density; every code is a real Navarra INE municipio."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.condado-de-huelva",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Condado de Huelva",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "21"
+      ],
+      "expected_count": 18,
+      "municipios": [
+        {
+          "code": "21005",
+          "name": "Almonte"
+        },
+        {
+          "code": "21011",
+          "name": "Beas"
+        },
+        {
+          "code": "21013",
+          "name": "Bollullos Par del Condado"
+        },
+        {
+          "code": "21014",
+          "name": "Bonares"
+        },
+        {
+          "code": "21030",
+          "name": "Chucena"
+        },
+        {
+          "code": "21035",
+          "name": "Gibraleón"
+        },
+        {
+          "code": "21040",
+          "name": "Hinojos"
+        },
+        {
+          "code": "21054",
+          "name": "La Palma del Condado"
+        },
+        {
+          "code": "21046",
+          "name": "Lucena del Puerto"
+        },
+        {
+          "code": "21047",
+          "name": "Manzanilla"
+        },
+        {
+          "code": "21050",
+          "name": "Moguer"
+        },
+        {
+          "code": "21053",
+          "name": "Niebla"
+        },
+        {
+          "code": "21055",
+          "name": "Palos de la Frontera"
+        },
+        {
+          "code": "21061",
+          "name": "Rociana del Condado"
+        },
+        {
+          "code": "21064",
+          "name": "San Juan del Puerto"
+        },
+        {
+          "code": "21070",
+          "name": "Trigueros"
+        },
+        {
+          "code": "21074",
+          "name": "Villalba del Alcor"
+        },
+        {
+          "code": "21077",
+          "name": "Villarrasa"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Condado de Huelva», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/condado_de_huelva_2020_11_09.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 18 Condado municipios. Huelva capital excluded (not a member — the density match picked up the province name)."
+      },
+      "status": "ready"
     }
   ]
 }
