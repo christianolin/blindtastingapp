@@ -1080,6 +1080,152 @@
         "note": "Whole-municipality union of the 10 términos municipales of the Marco de Jerez (9 in Cádiz + Lebrija in Sevilla). Same delimited zone underlies DOP Manzanilla-Sanlúcar de Barrameda (not added here)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.ribeiro",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Ribeiro",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "32"
+      ],
+      "expected_count": 13,
+      "municipios": [
+        {
+          "code": "32069",
+          "name": "Ribadavia"
+        },
+        {
+          "code": "32003",
+          "name": "A Arnoia"
+        },
+        {
+          "code": "32022",
+          "name": "Castrelo de Miño"
+        },
+        {
+          "code": "32018",
+          "name": "Carballeda de Avia"
+        },
+        {
+          "code": "32040",
+          "name": "Leiro"
+        },
+        {
+          "code": "32025",
+          "name": "Cenlle"
+        },
+        {
+          "code": "32010",
+          "name": "Beade"
+        },
+        {
+          "code": "32065",
+          "name": "Punxín"
+        },
+        {
+          "code": "32027",
+          "name": "Cortegada"
+        },
+        {
+          "code": "32019",
+          "name": "O Carballiño"
+        },
+        {
+          "code": "32013",
+          "name": "Boborás"
+        },
+        {
+          "code": "32081",
+          "name": "Toén"
+        },
+        {
+          "code": "32074",
+          "name": "San Amaro"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribeiro» (Ourense), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribeiro_2025_12_04.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union. 9 whole ayuntamientos + 4 municipios included whole though the pliego delimits them by parroquia/lugar (O Carballiño, Boborás, Toén, San Amaro). Ourense EXCLUDED: only the lugares of Santa Cruz de Arrabaldo/Untes belong, so including the whole city would grossly over-represent. Galician DOs are parroquia-delimited; this is a coarser whole-municipality over-approximation."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.montsant",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Montsant",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 13,
+      "municipios": [
+        {
+          "code": "43027",
+          "name": "La Bisbal de Falset"
+        },
+        {
+          "code": "43035",
+          "name": "Cabacés"
+        },
+        {
+          "code": "43040",
+          "name": "Capçanes"
+        },
+        {
+          "code": "43049",
+          "name": "Cornudella de Montsant"
+        },
+        {
+          "code": "43058",
+          "name": "La Figuera"
+        },
+        {
+          "code": "43070",
+          "name": "Els Guiamets"
+        },
+        {
+          "code": "43076",
+          "name": "Marçà"
+        },
+        {
+          "code": "43075",
+          "name": "Margalef"
+        },
+        {
+          "code": "43082",
+          "name": "El Masroig"
+        },
+        {
+          "code": "43115",
+          "name": "Pradell de la Teixeta"
+        },
+        {
+          "code": "43151",
+          "name": "La Torre de Fontaubella"
+        },
+        {
+          "code": "43157",
+          "name": "Ulldemolins"
+        },
+        {
+          "code": "43055",
+          "name": "Falset"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Montsant» (Tarragona), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/montsant_2022_09_14.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 12 whole términos municipales + Falset (pliego includes Falset by polígono; taken whole). The Montsant DO rings the Priorat DOQ."
+      },
+      "status": "ready"
     }
   ]
 }
