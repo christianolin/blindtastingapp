@@ -10478,6 +10478,397 @@
         "note": "Whole-territory DO: the pliego delimits it as la totalidad de los términos municipales de la provincia de Granada. Boundary = the whole province of Granada (municipality-union) — high-altitude Andalucían vineyards up to ~1,300 m."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.valencia.valencia",
+      "comunidad_key": "valencia",
+      "comunidad": "Comunidad Valenciana",
+      "display_name": "Valencia",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "46"
+      ],
+      "expected_count": 91,
+      "municipios": [
+        {
+          "code": "46003",
+          "name": "Atzeneta d'Albaida"
+        },
+        {
+          "code": "46004",
+          "name": "Agullent"
+        },
+        {
+          "code": "46006",
+          "name": "Albaida"
+        },
+        {
+          "code": "46012",
+          "name": "Alborache"
+        },
+        {
+          "code": "46018",
+          "name": "Alcublas"
+        },
+        {
+          "code": "46027",
+          "name": "Alfarrasí"
+        },
+        {
+          "code": "46036",
+          "name": "Alpuente"
+        },
+        {
+          "code": "46038",
+          "name": "Andilla"
+        },
+        {
+          "code": "46039",
+          "name": "Anna"
+        },
+        {
+          "code": "46041",
+          "name": "Aras de los Olmos"
+        },
+        {
+          "code": "46042",
+          "name": "Aielo de Malferit"
+        },
+        {
+          "code": "46043",
+          "name": "Aielo de Rugat"
+        },
+        {
+          "code": "46044",
+          "name": "Ayora"
+        },
+        {
+          "code": "46046",
+          "name": "Barx"
+        },
+        {
+          "code": "46047",
+          "name": "Bèlgida"
+        },
+        {
+          "code": "46048",
+          "name": "Bellreguard"
+        },
+        {
+          "code": "46049",
+          "name": "Bellús"
+        },
+        {
+          "code": "46050",
+          "name": "Benagéber"
+        },
+        {
+          "code": "46056",
+          "name": "Beniatjar"
+        },
+        {
+          "code": "46057",
+          "name": "Benicolet"
+        },
+        {
+          "code": "46062",
+          "name": "Benigànim"
+        },
+        {
+          "code": "46068",
+          "name": "Benissoda"
+        },
+        {
+          "code": "46069",
+          "name": "Benissuera"
+        },
+        {
+          "code": "46070",
+          "name": "Bétera"
+        },
+        {
+          "code": "46071",
+          "name": "Bicorp"
+        },
+        {
+          "code": "46072",
+          "name": "Bocairent"
+        },
+        {
+          "code": "46073",
+          "name": "Bolbaite"
+        },
+        {
+          "code": "46075",
+          "name": "Bufali"
+        },
+        {
+          "code": "46076",
+          "name": "Bugarra"
+        },
+        {
+          "code": "46077",
+          "name": "Buñol"
+        },
+        {
+          "code": "46079",
+          "name": "Calles"
+        },
+        {
+          "code": "46086",
+          "name": "Carrícola"
+        },
+        {
+          "code": "46089",
+          "name": "Casinos"
+        },
+        {
+          "code": "46090",
+          "name": "Castelló de Rugat"
+        },
+        {
+          "code": "46093",
+          "name": "Catadau"
+        },
+        {
+          "code": "46104",
+          "name": "Quatretonda"
+        },
+        {
+          "code": "46106",
+          "name": "Chelva"
+        },
+        {
+          "code": "46107",
+          "name": "Chella"
+        },
+        {
+          "code": "46109",
+          "name": "Cheste"
+        },
+        {
+          "code": "46111",
+          "name": "Chiva"
+        },
+        {
+          "code": "46112",
+          "name": "Chulilla"
+        },
+        {
+          "code": "46114",
+          "name": "Domeño"
+        },
+        {
+          "code": "46118",
+          "name": "Enguera"
+        },
+        {
+          "code": "46120",
+          "name": "Estivella"
+        },
+        {
+          "code": "46124",
+          "name": "Fontanars dels Alforins"
+        },
+        {
+          "code": "46128",
+          "name": "la Font de la Figuera"
+        },
+        {
+          "code": "46133",
+          "name": "Gestalgar"
+        },
+        {
+          "code": "46135",
+          "name": "Godella"
+        },
+        {
+          "code": "46136",
+          "name": "Godelleta"
+        },
+        {
+          "code": "46138",
+          "name": "Guadasséquies"
+        },
+        {
+          "code": "46140",
+          "name": "Guardamar de la Safor"
+        },
+        {
+          "code": "46141",
+          "name": "Higueruelas"
+        },
+        {
+          "code": "46145",
+          "name": "Xàtiva"
+        },
+        {
+          "code": "46147",
+          "name": "Llíria"
+        },
+        {
+          "code": "46149",
+          "name": "Losa del Obispo"
+        },
+        {
+          "code": "46150",
+          "name": "Llutxent"
+        },
+        {
+          "code": "46156",
+          "name": "Llombai"
+        },
+        {
+          "code": "46157",
+          "name": "la Llosa de Ranes"
+        },
+        {
+          "code": "46158",
+          "name": "Macastre"
+        },
+        {
+          "code": "46170",
+          "name": "Moixent"
+        },
+        {
+          "code": "46172",
+          "name": "Montserrat"
+        },
+        {
+          "code": "46173",
+          "name": "Montaverner"
+        },
+        {
+          "code": "46174",
+          "name": "Montesa"
+        },
+        {
+          "code": "46175",
+          "name": "Montitxelvo"
+        },
+        {
+          "code": "46176",
+          "name": "Montroi"
+        },
+        {
+          "code": "46178",
+          "name": "Nàquera"
+        },
+        {
+          "code": "46183",
+          "name": "l'Olleria"
+        },
+        {
+          "code": "46184",
+          "name": "Ontinyent"
+        },
+        {
+          "code": "46185",
+          "name": "Otos"
+        },
+        {
+          "code": "46189",
+          "name": "el Palomar"
+        },
+        {
+          "code": "46190",
+          "name": "Paterna"
+        },
+        {
+          "code": "46191",
+          "name": "Pedralba"
+        },
+        {
+          "code": "46193",
+          "name": "Picanya"
+        },
+        {
+          "code": "46196",
+          "name": "Pinet"
+        },
+        {
+          "code": "46200",
+          "name": "la Pobla del Duc"
+        },
+        {
+          "code": "46210",
+          "name": "Ráfol de Salem"
+        },
+        {
+          "code": "46212",
+          "name": "Real"
+        },
+        {
+          "code": "46214",
+          "name": "Riba-roja de Túria"
+        },
+        {
+          "code": "46219",
+          "name": "Rugat"
+        },
+        {
+          "code": "46221",
+          "name": "Salem"
+        },
+        {
+          "code": "46226",
+          "name": "Sempere"
+        },
+        {
+          "code": "46240",
+          "name": "Terrateig"
+        },
+        {
+          "code": "46241",
+          "name": "Titaguas"
+        },
+        {
+          "code": "46244",
+          "name": "Torrent"
+        },
+        {
+          "code": "46247",
+          "name": "Tuéjar"
+        },
+        {
+          "code": "46248",
+          "name": "Turís"
+        },
+        {
+          "code": "46251",
+          "name": "Vallada"
+        },
+        {
+          "code": "46256",
+          "name": "Vilamarxant"
+        },
+        {
+          "code": "46258",
+          "name": "Villar del Arzobispo"
+        },
+        {
+          "code": "46261",
+          "name": "Yátova"
+        },
+        {
+          "code": "46262",
+          "name": "La Yesa"
+        }
+      ],
+      "grapes": [
+        "Moscatel",
+        "Bobal",
+        "Tempranillo",
+        "Garnacha"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valencia», MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valencia_2024_09_20.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 4 pliego subzones (Alto Turia, Valentino, Moscatel de Valencia, Clariano), 91 municipios of Valencia province. Valencia city is not a member."
+      },
+      "status": "ready"
     }
   ]
 }
