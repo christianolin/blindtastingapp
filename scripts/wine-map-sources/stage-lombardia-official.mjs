@@ -68,6 +68,7 @@ const BOUNDARIES = [
   { key: "oltrepo-pavese", targetKey: "italy.lombardia.oltrepo-pavese", name: "Oltrepò Pavese", label: "Oltrepò Pavese" },
   { key: "riviera-del-garda-classico", targetKey: "italy.lombardia.riviera-del-garda-classico", name: "Riviera del Garda Classico", label: "Riviera del Garda Classico" },
   { key: "moscato-di-scanzo", targetKey: "italy.lombardia.moscato-di-scanzo", name: "Moscato di Scanzo", label: "Moscato di Scanzo" },
+  { key: "san-colombano", targetKey: "italy.lombardia.san-colombano", name: "San Colombano al Lambro", label: "San Colombano al Lambro" },
 ];
 
 function slugify(name) {

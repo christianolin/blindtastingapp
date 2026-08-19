@@ -54,7 +54,7 @@ const JURISDICTION = "Italy";
 const LICENCE = "CC BY 4.0";
 const SIMPLIFY_TOLERANCE = 0.0002;
 // Lombardy staging window: [minLon, minLat, maxLon, maxLat].
-const WINDOW = { minLon: 10.9, minLat: 46.1, maxLon: 11.4, maxLat: 46.4 };
+const WINDOW = { minLon: 10.4, minLat: 45.6, maxLon: 11.7, maxLat: 46.4 };
 const revision = releaseVersion();
 
 // Same France-palette single boundary colour as stage-piedmont-boundaries.mjs.
@@ -64,6 +64,7 @@ const BACKGROUND = "#F4F0E4";
 
 const BOUNDARIES = [
   { key: "teroldego-rotaliano", targetKey: "italy.trentino-alto-adige.teroldego-rotaliano", name: "Teroldego Rotaliano", label: "Teroldego Rotaliano" },
+  { key: "trentino", targetKey: "italy.trentino-alto-adige.trentino", name: "Trentino", label: "Trentino" },
 ];
 
 function slugify(name) {
