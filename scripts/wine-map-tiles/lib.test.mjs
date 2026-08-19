@@ -14,6 +14,7 @@ import {
   sha256hex,
   storagePublicUrl,
   archiveForPlace,
+  assertMultiCountryArchive,
   shardKeyFor,
 } from "./lib.mjs";
 
@@ -162,13 +163,18 @@ test("attribution keys reject unknown namespaces", () => {
     istat: ATTRIBUTION.ISTAT_CONFINI.text,
     piemonte: ATTRIBUTION.PIEMONTE_DOC_DOCG.text,
     toscana: ATTRIBUTION.TOSCANA_DOC_DOCG.text,
+    "ign-cnig-spain": ATTRIBUTION.IGN_CNIG_SPAIN.text,
     "trentino-alto-adige": ATTRIBUTION.ALTOADIGE_DOC_IGT.text,
     veneto: ATTRIBUTION.VENETO_DOC_DOCG.text,
     sicilia: ATTRIBUTION.SICILY_COMUNI.text,
     lombardia: ATTRIBUTION.LOMBARDIA_COMUNI.text,
     friuli: ATTRIBUTION.FRIULI_COMUNI.text,
-    spain: ATTRIBUTION.IGN_CNIG_SPAIN.text,
   });
+});
+
+test("the Spain IGN/CNIG namespace resolves to its own credit", () => {
+  assert.equal(attributionKeyFor("IGN_CNIG_SPAIN"), "ign-cnig-spain");
+  assert.match(ATTRIBUTION.IGN_CNIG_SPAIN.text, /IGN\/CNIG Espa/);
 });
 
 test("buildManifest emits the schema_version 2 contract", () => {
@@ -210,6 +216,65 @@ test("archiveForPlace routes by tier and region segment", () => {
     { world: false, shard: "bourgogne" },
   );
   assert.equal(shardKeyFor("france.bordeaux.fronsac"), "bordeaux");
+});
+
+test("archiveForPlace routes a Spanish key by its comunidad segment", () => {
+  // Spain reuses the same country.region.* shape as France/Italy, so the
+  // country prefix is inert to routing: the shard is still segment 1.
+  assert.deepEqual(archiveForPlace({ display_tier: 0, canonical_key: "spain" }), {
+    world: true, shard: null,
+  });
+  assert.deepEqual(archiveForPlace({ display_tier: 1, canonical_key: "spain.galicia" }), {
+    world: true, shard: "galicia",
+  });
+  assert.deepEqual(
+    archiveForPlace({ display_tier: 2, canonical_key: "spain.galicia.rias-baixas" }),
+    { world: false, shard: "galicia" },
+  );
+  // La Rioja the comunidad (shard) vs Rioja the DO (leaf) — the shard is the
+  // comunidad, and no French region is named `la-rioja`, so no collision.
+  assert.equal(shardKeyFor("spain.la-rioja.rioja"), "la-rioja");
+});
+
+test("assertMultiCountryArchive accepts a France + Italy + Spain archive", () => {
+  assert.doesNotThrow(() =>
+    assertMultiCountryArchive([
+      { canonical_key: "france", display_tier: 0 },
+      { canonical_key: "france.bordeaux", display_tier: 1 },
+      { canonical_key: "italy", display_tier: 0 },
+      { canonical_key: "italy.piemonte.barolo", display_tier: 2 },
+      { canonical_key: "spain", display_tier: 0 },
+      { canonical_key: "spain.galicia.rias-baixas", display_tier: 2 },
+    ]),
+  );
+});
+
+test("assertMultiCountryArchive fails closed when a country outline is missing", () => {
+  // A Spanish DO shipped before (or without) its `spain` COUNTRY node — the
+  // orphan the auto-promote pipeline must never let through.
+  assert.throws(
+    () =>
+      assertMultiCountryArchive([
+        { canonical_key: "france", display_tier: 0 },
+        { canonical_key: "spain.galicia.rias-baixas", display_tier: 2 },
+      ]),
+    /no spain country outline/,
+  );
+});
+
+test("assertMultiCountryArchive fails closed on a cross-country shard collision", () => {
+  // Hypothetical `rioja` used as both a French region and a Spanish comunidad:
+  // both would land in one shard archive. The guard is the tripwire.
+  assert.throws(
+    () =>
+      assertMultiCountryArchive([
+        { canonical_key: "france", display_tier: 0 },
+        { canonical_key: "france.rioja", display_tier: 1 },
+        { canonical_key: "spain", display_tier: 0 },
+        { canonical_key: "spain.rioja.rioja", display_tier: 2 },
+      ]),
+    /claimed by two countries/,
+  );
 });
 
 test("the Phase 3A INAO namespace resolves to the ign-inao credit", () => {

@@ -1,0 +1,7531 @@
+{
+  "_readme": {
+    "purpose": "In-repo source of truth for each Spanish DO/DOP/DOCa's official municipality list, resolved to INE mun_codes and dissolved into the DO outline (municipality-union model — Spain has no national parcel/DO polygon layer, so this mirrors the Champagne/Alsace commune-union path).",
+    "how_geometry_is_built": "run-spain-dos.mjs resolves each entry's municipalities against the georef-spain-municipio cache (fetch-spain-municipios.mjs) via spain-lib.mjs, dissolves the whole-municipality polygons, stages a DRAFT boundary with IGN_CNIG_SPAIN provenance, runs the auto-promote guards, and (if they all pass) promotes it to current-VALIDATED / the place to VERIFIED. There is no human review gate (owner decision) — the guards are the only safety net.",
+    "provenance_rule": "MEMBERSHIP MUST COME FROM THE OFFICIAL BOE PLIEGO DE CONDICIONES, NOT FROM RECALL. Every entry records provenance.source (the BOE reference / URL and retrieval date). The resolver fails closed on any municipality that does not map to exactly one INE code in the right province, and on any expected_count mismatch — but it CANNOT detect a plausible-but-incomplete list, which is why the source must be authoritative.",
+    "status_values": {
+      "pending": "Scaffolded but NOT yet sourced from a pliego — municipios is empty. run-spain-dos.mjs SKIPS these. This is the current state of every entry: the build session had no web access to fetch pliegos, so no list was transcribed from memory.",
+      "ready": "municipios sourced from the cited pliego and filled in. run-spain-dos.mjs will stage + guard + promote it."
+    },
+    "entry_shape": {
+      "canonical_key": "spain.<comunidad>.<do>  e.g. spain.cataluna.priorat",
+      "comunidad_key": "the 2nd key segment; also the tile shard key",
+      "comunidad": "display name of the autonomous community (SUBREGION node)",
+      "display_name": "the DO's display name",
+      "appellation_system": "DOP | DOCa/DOQ | VP (Vino de Pago)",
+      "appellation_level": "regional | subregional | communal (drives tier/zoom + the area-band guard)",
+      "parent_key": "optional — a parent DO whose outline must contain this one (sub-zone containment guard)",
+      "provinces": "[INE prov_code or prov_name] — scopes name resolution so duplicate town names across provinces disambiguate",
+      "expected_count": "number of municipalities in the pliego — the resolver asserts it resolved exactly this many",
+      "municipios": "[{ code: '<INE 5-digit>', name: '<official/co-official name for review>' } | { name: '<name>' }]. Code-first is REQUIRED for bilingual comunidades (Galicia/Cataluna/Valencia/Pais Vasco) where the georef name is the co-official form; name-only is fine for Castilian-only comunidades.",
+      "grapes": "optional [variety names] for the knowledge migration",
+      "scoring_reference": "optional exact appellation name for the scoring-reference link",
+      "provenance": "{ source: 'BOE-A-YYYY-NNNNN / MAPA pliego', url, retrieved: 'YYYY-MM-DD', note }",
+      "status": "pending | ready"
+    },
+    "resume": "Once a pliego list is available for an entry: set municipios (+ expected_count + provenance) and status:'ready', then `node scripts/wine-map-sources/run-spain-dos.mjs --dry` (verifies resolve+dissolve+guards, rolls back) and finally without --dry to stage+promote. The run is resumable: it skips any DO that already has a current-VALIDATED boundary."
+  },
+  "version": 1,
+  "generated_at": "2026-08-14",
+  "denominations": [
+    {
+      "canonical_key": "spain.cataluna.priorat",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Priorat",
+      "appellation_system": "DOCa/DOQ",
+      "appellation_level": "communal",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 10,
+      "municipios": [
+        {
+          "code": "43023",
+          "name": "Bellmunt del Priorat"
+        },
+        {
+          "code": "43069",
+          "name": "Gratallops"
+        },
+        {
+          "code": "43072",
+          "name": "El Lloar"
+        },
+        {
+          "code": "43096",
+          "name": "La Morera de Montsant"
+        },
+        {
+          "code": "43112",
+          "name": "Poboleda"
+        },
+        {
+          "code": "43114",
+          "name": "Porrera"
+        },
+        {
+          "code": "43154",
+          "name": "Torroja del Priorat"
+        },
+        {
+          "code": "43173",
+          "name": "La Vilella Alta"
+        },
+        {
+          "code": "43174",
+          "name": "La Vilella Baixa"
+        },
+        {
+          "code": "43055",
+          "name": "Falset"
+        }
+      ],
+      "grapes": [
+        "Garnacha Tinta",
+        "Cariñena",
+        "Garnacha Blanca",
+        "Macabeo"
+      ],
+      "scoring_reference": "Priorat",
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Priorat» (DOQ/DOCa), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/priorat_2022_09_06.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Section 4.1 'Zona de producción de la uva'. 10 municipios (Tarragona). 'Su agregado Escaladei' is part of La Morera de Montsant; the partial inclusion 'la parte norte del municipio de Falset' is taken whole (documented whole-municipality over-approximation)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.rueda",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Rueda",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "47",
+        "05",
+        "40"
+      ],
+      "expected_count": 68,
+      "municipios": [
+        {
+          "code": "05034",
+          "name": "Blasconuño de Matacabras"
+        },
+        {
+          "code": "05114",
+          "name": "Madrigal de las Altas Torres"
+        },
+        {
+          "code": "05174",
+          "name": "Orbita"
+        },
+        {
+          "code": "05178",
+          "name": "Palacios de Goda"
+        },
+        {
+          "code": "40010",
+          "name": "Aldeanueva del Codonal"
+        },
+        {
+          "code": "40015",
+          "name": "Aldehuela del Codonal"
+        },
+        {
+          "code": "40057",
+          "name": "Coca"
+        },
+        {
+          "code": "40058",
+          "name": "Codorniz"
+        },
+        {
+          "code": "40069",
+          "name": "Donhierro"
+        },
+        {
+          "code": "40082",
+          "name": "Fuente de Santa Cruz"
+        },
+        {
+          "code": "40106",
+          "name": "Juarros de Voltoya"
+        },
+        {
+          "code": "40129",
+          "name": "Montejo de Arévalo"
+        },
+        {
+          "code": "40138",
+          "name": "Nava de la Asunción"
+        },
+        {
+          "code": "40148",
+          "name": "Nieva"
+        },
+        {
+          "code": "40164",
+          "name": "Rapariegos"
+        },
+        {
+          "code": "40178",
+          "name": "San Cristóbal de la Vega"
+        },
+        {
+          "code": "40189",
+          "name": "Santiuste de San Juan Bautista"
+        },
+        {
+          "code": "40201",
+          "name": "Tolocirio"
+        },
+        {
+          "code": "47002",
+          "name": "Aguasal"
+        },
+        {
+          "code": "47004",
+          "name": "Alaejos"
+        },
+        {
+          "code": "47005",
+          "name": "Alcazarén"
+        },
+        {
+          "code": "47008",
+          "name": "Almenara de Adaja"
+        },
+        {
+          "code": "47011",
+          "name": "Ataquines"
+        },
+        {
+          "code": "47020",
+          "name": "Bobadilla del Campo"
+        },
+        {
+          "code": "47021",
+          "name": "Bocigas"
+        },
+        {
+          "code": "47025",
+          "name": "Brahojos de Medina"
+        },
+        {
+          "code": "47031",
+          "name": "El Campillo"
+        },
+        {
+          "code": "47035",
+          "name": "Carpio"
+        },
+        {
+          "code": "47037",
+          "name": "Castrejón de Trabancos"
+        },
+        {
+          "code": "47045",
+          "name": "Castronuño"
+        },
+        {
+          "code": "47049",
+          "name": "Cervillego de la Cruz"
+        },
+        {
+          "code": "47065",
+          "name": "Fresno el Viejo"
+        },
+        {
+          "code": "47067",
+          "name": "Fuente el Sol"
+        },
+        {
+          "code": "47068",
+          "name": "Fuente-Olmedo"
+        },
+        {
+          "code": "47074",
+          "name": "Hornillos de Eresma"
+        },
+        {
+          "code": "47078",
+          "name": "Lomoviejo"
+        },
+        {
+          "code": "47079",
+          "name": "Llano de Olmedo"
+        },
+        {
+          "code": "47082",
+          "name": "Matapozuelos"
+        },
+        {
+          "code": "47085",
+          "name": "Medina del Campo"
+        },
+        {
+          "code": "47090",
+          "name": "Mojados"
+        },
+        {
+          "code": "47095",
+          "name": "Moraleja de las Panaderas"
+        },
+        {
+          "code": "47100",
+          "name": "Muriel"
+        },
+        {
+          "code": "47101",
+          "name": "Nava del Rey"
+        },
+        {
+          "code": "47102",
+          "name": "Nueva Villa de las Torres"
+        },
+        {
+          "code": "47104",
+          "name": "Olmedo"
+        },
+        {
+          "code": "47121",
+          "name": "Pollos"
+        },
+        {
+          "code": "47123",
+          "name": "Pozal de Gallinas"
+        },
+        {
+          "code": "47124",
+          "name": "Pozaldez"
+        },
+        {
+          "code": "47126",
+          "name": "Puras"
+        },
+        {
+          "code": "47132",
+          "name": "Ramiro"
+        },
+        {
+          "code": "47138",
+          "name": "Rubí de Bracamonte"
+        },
+        {
+          "code": "47139",
+          "name": "Rueda"
+        },
+        {
+          "code": "47141",
+          "name": "Salvador de Zapardiel"
+        },
+        {
+          "code": "47147",
+          "name": "San Pablo de la Moraleja"
+        },
+        {
+          "code": "47156",
+          "name": "San Vicente del Palacio"
+        },
+        {
+          "code": "47158",
+          "name": "La Seca"
+        },
+        {
+          "code": "47159",
+          "name": "Serrada"
+        },
+        {
+          "code": "47160",
+          "name": "Siete Iglesias de Trabancos"
+        },
+        {
+          "code": "47165",
+          "name": "Tordesillas"
+        },
+        {
+          "code": "47166",
+          "name": "Torrecilla de la Abadesa"
+        },
+        {
+          "code": "47167",
+          "name": "Torrecilla de la Orden"
+        },
+        {
+          "code": "47182",
+          "name": "Valdestillas"
+        },
+        {
+          "code": "47189",
+          "name": "Velascálvaro"
+        },
+        {
+          "code": "47192",
+          "name": "Ventosa de la Cuesta"
+        },
+        {
+          "code": "47204",
+          "name": "Villafranca de Duero"
+        },
+        {
+          "code": "47218",
+          "name": "Villanueva de Duero"
+        },
+        {
+          "code": "47228",
+          "name": "Villaverde de Medina"
+        },
+        {
+          "code": "47232",
+          "name": "La Zarza"
+        }
+      ],
+      "grapes": [
+        "Verdejo",
+        "Sauvignon Blanc",
+        "Viura",
+        "Palomino Fino",
+        "Chardonnay",
+        "Viognier",
+        "Tempranillo"
+      ],
+      "scoring_reference": "Rueda",
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rueda» (PDO-ES-A0889), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rueda_2025_06_12.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. 68 of 74 listed entries map to INE municipios; excluded as pedanías/sub-entities covered by a listed parent, or not a current INE municipio: Gomeznarro, Rodilana (Medina del Campo), Bernuy de Coca (Santiuste de San Juan Bautista), Moraleja de Coca, Montuenga, Torrecilla del Valle. Cadastral-polygon partial inclusions (Órbita, Palacios de Goda, Coca) taken whole (documented over-approximation)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.toro",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Toro",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "49",
+        "47"
+      ],
+      "municipios": [
+        {
+          "code": "49013",
+          "name": "Argujillo"
+        },
+        {
+          "code": "49024",
+          "name": "Bóveda de Toro, La"
+        },
+        {
+          "code": "49129",
+          "name": "Morales de Toro"
+        },
+        {
+          "code": "49146",
+          "name": "Pego, El"
+        },
+        {
+          "code": "49147",
+          "name": "Peleagonzalo"
+        },
+        {
+          "code": "49158",
+          "name": "Piñero, El"
+        },
+        {
+          "code": "49191",
+          "name": "San Miguel de la Ribera"
+        },
+        {
+          "code": "49210",
+          "name": "Sanzoles"
+        },
+        {
+          "code": "49219",
+          "name": "Toro"
+        },
+        {
+          "code": "49228",
+          "name": "Valdefinjas"
+        },
+        {
+          "code": "49234",
+          "name": "Venialbo"
+        },
+        {
+          "code": "49239",
+          "name": "Villabuena del Puente"
+        },
+        {
+          "code": "47150",
+          "name": "San Román de Hornija"
+        },
+        {
+          "code": "47204",
+          "name": "Villafranca de Duero"
+        },
+        {
+          "code": "47113",
+          "name": "Pedrosa del Rey"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Toro» (PDO-ES-A0886), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/toro_2025_01_03.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. Zamora (12) + Valladolid: San Román de Hornija, Villafranca de Duero, and Pedrosa del Rey (the pliego includes only its Villaester de Arriba/Abajo pagos; taken whole — documented over-approximation)."
+      },
+      "status": "ready",
+      "expected_count": 15,
+      "grapes": [
+        "Tinta de Toro",
+        "Garnacha Tinta",
+        "Malvasía Castellana",
+        "Verdejo",
+        "Albillo Real"
+      ]
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Rías Baixas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "36",
+        "27"
+      ],
+      "municipios": [],
+      "provenance": {
+        "source": "BOE/DOG pliego DOP Rías Baixas",
+        "url": null,
+        "retrieved": null,
+        "note": "PENDING — bilingual (Galician): use code-first."
+      },
+      "status": "pending"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.cigales",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Cigales",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "47",
+        "34"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "47027",
+          "name": "Cabezón de Pisuerga"
+        },
+        {
+          "code": "47050",
+          "name": "Cigales"
+        },
+        {
+          "code": "47057",
+          "name": "Cubillas de Santa Marta"
+        },
+        {
+          "code": "47066",
+          "name": "Fuensaldaña"
+        },
+        {
+          "code": "47098",
+          "name": "Mucientes"
+        },
+        {
+          "code": "47130",
+          "name": "Quintanilla de Trigueros"
+        },
+        {
+          "code": "47144",
+          "name": "San Martín de Valvení"
+        },
+        {
+          "code": "47155",
+          "name": "Santovenia de Pisuerga"
+        },
+        {
+          "code": "47174",
+          "name": "Trigueros del Valle"
+        },
+        {
+          "code": "34069",
+          "name": "Dueñas"
+        },
+        {
+          "code": "47055",
+          "name": "Corcos"
+        },
+        {
+          "code": "47184",
+          "name": "Valoria la Buena"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cigales», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/cigales_2022_03_25.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union. 11 Valladolid municipios (incl. Corcos = pliego 'Corcos del Valle', and Valoria la Buena) + Dueñas (Palencia). The 'El Berrocal' pago, which the pliego notes lies within the término municipal of the city of Valladolid, is EXCLUDED — including the whole Valladolid city municipality for one pago would grossly over-represent the DO."
+      },
+      "grapes": [],
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.arribes",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Arribes",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "37",
+        "49"
+      ],
+      "expected_count": 32,
+      "municipios": [
+        {
+          "code": "37003",
+          "name": "Ahigal de los Aceiteros"
+        },
+        {
+          "code": "37014",
+          "name": "Aldeadávila de la Ribera"
+        },
+        {
+          "code": "37160",
+          "name": "Hinojosa de Duero"
+        },
+        {
+          "code": "37173",
+          "name": "Lumbrales"
+        },
+        {
+          "code": "37184",
+          "name": "Masueco"
+        },
+        {
+          "code": "37190",
+          "name": "Mieza"
+        },
+        {
+          "code": "37250",
+          "name": "Pereña de la Ribera"
+        },
+        {
+          "code": "37264",
+          "name": "Puerto Seguro"
+        },
+        {
+          "code": "37285",
+          "name": "San Felices de los Gallegos"
+        },
+        {
+          "code": "37302",
+          "name": "Saucelle"
+        },
+        {
+          "code": "37311",
+          "name": "Sobradillo"
+        },
+        {
+          "code": "37350",
+          "name": "Vilvestre"
+        },
+        {
+          "code": "37359",
+          "name": "Villar de la Yegua"
+        },
+        {
+          "code": "37132",
+          "name": "La Fregeneda"
+        },
+        {
+          "code": "37243",
+          "name": "La Peña"
+        },
+        {
+          "code": "37266",
+          "name": "La Redonda"
+        },
+        {
+          "code": "37357",
+          "name": "Villar de Ciervo"
+        },
+        {
+          "code": "37364",
+          "name": "Villarino de los Aires"
+        },
+        {
+          "code": "49012",
+          "name": "Argañín"
+        },
+        {
+          "code": "49064",
+          "name": "Fariza"
+        },
+        {
+          "code": "49065",
+          "name": "Fermoselle"
+        },
+        {
+          "code": "49088",
+          "name": "Gamones"
+        },
+        {
+          "code": "49101",
+          "name": "Luelmo"
+        },
+        {
+          "code": "49124",
+          "name": "Moral de Sayago"
+        },
+        {
+          "code": "49131",
+          "name": "Moralina"
+        },
+        {
+          "code": "49221",
+          "name": "Torregamones"
+        },
+        {
+          "code": "49240",
+          "name": "Villadepera"
+        },
+        {
+          "code": "49247",
+          "name": "Villalcampo"
+        },
+        {
+          "code": "49157",
+          "name": "Pino del Oro"
+        },
+        {
+          "code": "49265",
+          "name": "Villardiegua de la Ribera"
+        },
+        {
+          "code": "49007",
+          "name": "Almaraz de Duero"
+        },
+        {
+          "code": "49135",
+          "name": "Muelas del Pan"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Arribes» (PDO-ES-A0614), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/arribes_2025_11_07.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción. 18 Salamanca + 14 Zamora INE municipios. Monumenta (a real Zamora member) is excluded — it has no polygon in the georef-spain-municipio cache, so no geometry to dissolve. Pliego pedanías that are not separate INE municipios also excluded (Corporario, Valdenoguera; Abelón, Badilla, Carbajosa de Alba, Castro de Alcañices, Cibanal, Cozcurrita, Formariz, Fornillos de Fermoselle, Mámoles, Pinilla de Fermoselle, Salto de Castro, Santa Eulalia — sub-entities of listed parents). Almaraz de Duero and Muelas del Pan (partial cadastral-polygon inclusions) taken whole."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.somontano",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Somontano",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "22"
+      ],
+      "expected_count": 43,
+      "municipios": [
+        {
+          "code": "22001",
+          "name": "Abiego"
+        },
+        {
+          "code": "22003",
+          "name": "Adahuesca"
+        },
+        {
+          "code": "22015",
+          "name": "Alcalá del Obispo"
+        },
+        {
+          "code": "22027",
+          "name": "Angüés"
+        },
+        {
+          "code": "22029",
+          "name": "Antillón"
+        },
+        {
+          "code": "22024",
+          "name": "Alquézar"
+        },
+        {
+          "code": "22036",
+          "name": "Argavieso"
+        },
+        {
+          "code": "22041",
+          "name": "Azara"
+        },
+        {
+          "code": "22042",
+          "name": "Azlor"
+        },
+        {
+          "code": "22048",
+          "name": "Barbastro"
+        },
+        {
+          "code": "22050",
+          "name": "Barbuñales"
+        },
+        {
+          "code": "22055",
+          "name": "Berbegal"
+        },
+        {
+          "code": "22064",
+          "name": "Blecua y Torres"
+        },
+        {
+          "code": "22058",
+          "name": "Bierge"
+        },
+        {
+          "code": "22080",
+          "name": "Capella"
+        },
+        {
+          "code": "22081",
+          "name": "Casbas de Huesca"
+        },
+        {
+          "code": "22088",
+          "name": "Castillazuelo"
+        },
+        {
+          "code": "22090",
+          "name": "Colungo"
+        },
+        {
+          "code": "22102",
+          "name": "Estada"
+        },
+        {
+          "code": "22103",
+          "name": "Estadilla"
+        },
+        {
+          "code": "22110",
+          "name": "Fonz"
+        },
+        {
+          "code": "22115",
+          "name": "El Grado"
+        },
+        {
+          "code": "22117",
+          "name": "Graus"
+        },
+        {
+          "code": "22908",
+          "name": "Hoz y Costean"
+        },
+        {
+          "code": "22126",
+          "name": "Ibieca"
+        },
+        {
+          "code": "22128",
+          "name": "Ilche"
+        },
+        {
+          "code": "22135",
+          "name": "Laluenga"
+        },
+        {
+          "code": "22139",
+          "name": "Laperdiguera"
+        },
+        {
+          "code": "22141",
+          "name": "Lascellas-Ponzano"
+        },
+        {
+          "code": "22160",
+          "name": "Naval"
+        },
+        {
+          "code": "22164",
+          "name": "Olvena"
+        },
+        {
+          "code": "22174",
+          "name": "Peralta de Alcofea"
+        },
+        {
+          "code": "22176",
+          "name": "Peraltilla"
+        },
+        {
+          "code": "22177",
+          "name": "Perarrúa"
+        },
+        {
+          "code": "22178",
+          "name": "Pertusa"
+        },
+        {
+          "code": "22186",
+          "name": "Pozán de Vero"
+        },
+        {
+          "code": "22187",
+          "name": "La Puebla de Castro"
+        },
+        {
+          "code": "22201",
+          "name": "Salas Altas"
+        },
+        {
+          "code": "22202",
+          "name": "Salas Bajas"
+        },
+        {
+          "code": "22906",
+          "name": "Santa María de Dulcis"
+        },
+        {
+          "code": "22214",
+          "name": "Secastilla"
+        },
+        {
+          "code": "22222",
+          "name": "Siétamo"
+        },
+        {
+          "code": "22235",
+          "name": "Torres de Alcanadre"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Somontano», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/somontano_2011_01_01.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 43 Huesca términos municipales listed in the pliego (área geográfica)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.jumilla",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Jumilla",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30",
+        "02"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "30022",
+          "name": "Jumilla"
+        },
+        {
+          "code": "02033",
+          "name": "Fuente-Álamo"
+        },
+        {
+          "code": "02004",
+          "name": "Albatana"
+        },
+        {
+          "code": "02056",
+          "name": "Ontur"
+        },
+        {
+          "code": "02037",
+          "name": "Hellín"
+        },
+        {
+          "code": "02074",
+          "name": "Tobarra"
+        },
+        {
+          "code": "02051",
+          "name": "Montealegre del Castillo"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Jumilla», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliego_de_condiciones_dop_jumilla_.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Trans-comunidad DOP keyed under Murcia (town of Jumilla, prov 30); 6 of 7 municipios are in Albacete / Castilla-La Mancha (prov 02): Fuente-Álamo, Albatana, Ontur, Hellín, Tobarra, Montealegre del Castillo. Whole-municipality union."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.jerez",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Jerez-Xérès-Sherry",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "11",
+        "41"
+      ],
+      "expected_count": 10,
+      "municipios": [
+        {
+          "code": "11020",
+          "name": "Jerez de la Frontera"
+        },
+        {
+          "code": "11027",
+          "name": "El Puerto de Santa María"
+        },
+        {
+          "code": "11032",
+          "name": "Sanlúcar de Barrameda"
+        },
+        {
+          "code": "11037",
+          "name": "Trebujena"
+        },
+        {
+          "code": "11016",
+          "name": "Chipiona"
+        },
+        {
+          "code": "11030",
+          "name": "Rota"
+        },
+        {
+          "code": "11028",
+          "name": "Puerto Real"
+        },
+        {
+          "code": "11015",
+          "name": "Chiclana de la Frontera"
+        },
+        {
+          "code": "41053",
+          "name": "Lebrija"
+        },
+        {
+          "code": "11902",
+          "name": "San José del Valle"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Jerez-Xérès-Sherry», §D.1 Zona Delimitada (Junta de Andalucía / MAPA)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/jerez_2025_04_08.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 10 términos municipales of the Marco de Jerez (9 in Cádiz + Lebrija in Sevilla). Same delimited zone underlies DOP Manzanilla-Sanlúcar de Barrameda (not added here)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.ribeiro",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Ribeiro",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "32"
+      ],
+      "expected_count": 13,
+      "municipios": [
+        {
+          "code": "32069",
+          "name": "Ribadavia"
+        },
+        {
+          "code": "32003",
+          "name": "A Arnoia"
+        },
+        {
+          "code": "32022",
+          "name": "Castrelo de Miño"
+        },
+        {
+          "code": "32018",
+          "name": "Carballeda de Avia"
+        },
+        {
+          "code": "32040",
+          "name": "Leiro"
+        },
+        {
+          "code": "32025",
+          "name": "Cenlle"
+        },
+        {
+          "code": "32010",
+          "name": "Beade"
+        },
+        {
+          "code": "32065",
+          "name": "Punxín"
+        },
+        {
+          "code": "32027",
+          "name": "Cortegada"
+        },
+        {
+          "code": "32019",
+          "name": "O Carballiño"
+        },
+        {
+          "code": "32013",
+          "name": "Boborás"
+        },
+        {
+          "code": "32081",
+          "name": "Toén"
+        },
+        {
+          "code": "32074",
+          "name": "San Amaro"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribeiro» (Ourense), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribeiro_2025_12_04.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union. 9 whole ayuntamientos + 4 municipios included whole though the pliego delimits them by parroquia/lugar (O Carballiño, Boborás, Toén, San Amaro). Ourense EXCLUDED: only the lugares of Santa Cruz de Arrabaldo/Untes belong, so including the whole city would grossly over-represent. Galician DOs are parroquia-delimited; this is a coarser whole-municipality over-approximation."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.montsant",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Montsant",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 13,
+      "municipios": [
+        {
+          "code": "43027",
+          "name": "La Bisbal de Falset"
+        },
+        {
+          "code": "43035",
+          "name": "Cabacés"
+        },
+        {
+          "code": "43040",
+          "name": "Capçanes"
+        },
+        {
+          "code": "43049",
+          "name": "Cornudella de Montsant"
+        },
+        {
+          "code": "43058",
+          "name": "La Figuera"
+        },
+        {
+          "code": "43070",
+          "name": "Els Guiamets"
+        },
+        {
+          "code": "43076",
+          "name": "Marçà"
+        },
+        {
+          "code": "43075",
+          "name": "Margalef"
+        },
+        {
+          "code": "43082",
+          "name": "El Masroig"
+        },
+        {
+          "code": "43115",
+          "name": "Pradell de la Teixeta"
+        },
+        {
+          "code": "43151",
+          "name": "La Torre de Fontaubella"
+        },
+        {
+          "code": "43157",
+          "name": "Ulldemolins"
+        },
+        {
+          "code": "43055",
+          "name": "Falset"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Montsant» (Tarragona), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/montsant_2022_09_14.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 12 whole términos municipales + Falset (pliego includes Falset by polígono; taken whole). The Montsant DO rings the Priorat DOQ."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.carinena",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Cariñena",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 16,
+      "municipios": [
+        {
+          "code": "50073",
+          "name": "Cariñena"
+        },
+        {
+          "code": "50004",
+          "name": "Aguarón"
+        },
+        {
+          "code": "50007",
+          "name": "Aladrén"
+        },
+        {
+          "code": "50018",
+          "name": "Alfamén"
+        },
+        {
+          "code": "50024",
+          "name": "Almonacid de la Sierra"
+        },
+        {
+          "code": "50026",
+          "name": "Alpartir"
+        },
+        {
+          "code": "50088",
+          "name": "Cosuenda"
+        },
+        {
+          "code": "50098",
+          "name": "Encinacorba"
+        },
+        {
+          "code": "50114",
+          "name": "Fuendetodos"
+        },
+        {
+          "code": "50143",
+          "name": "Longares"
+        },
+        {
+          "code": "50167",
+          "name": "Mezalocha"
+        },
+        {
+          "code": "50181",
+          "name": "Muel"
+        },
+        {
+          "code": "50200",
+          "name": "Paniza"
+        },
+        {
+          "code": "50264",
+          "name": "Tosos"
+        },
+        {
+          "code": "50290",
+          "name": "Villanueva de Huerva"
+        },
+        {
+          "code": "50295",
+          "name": "Vistabella"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cariñena», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/carinena_2025_10_07.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.calatayud",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Calatayud",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 50,
+      "municipios": [
+        {
+          "code": "50067",
+          "name": "Calatayud"
+        },
+        {
+          "code": "50001",
+          "name": "Abanto"
+        },
+        {
+          "code": "50002",
+          "name": "Acered"
+        },
+        {
+          "code": "50009",
+          "name": "Alarba"
+        },
+        {
+          "code": "50020",
+          "name": "Alhama de Aragón"
+        },
+        {
+          "code": "50029",
+          "name": "Aniñón"
+        },
+        {
+          "code": "50034",
+          "name": "Ariza"
+        },
+        {
+          "code": "50037",
+          "name": "Atea"
+        },
+        {
+          "code": "50038",
+          "name": "Ateca"
+        },
+        {
+          "code": "50046",
+          "name": "Belmonte de Gracián"
+        },
+        {
+          "code": "50058",
+          "name": "Bubierca"
+        },
+        {
+          "code": "50072",
+          "name": "Carenas"
+        },
+        {
+          "code": "50076",
+          "name": "Castejón de las Armas"
+        },
+        {
+          "code": "50075",
+          "name": "Castejón de Alarba"
+        },
+        {
+          "code": "50079",
+          "name": "Cervera de la Cañada"
+        },
+        {
+          "code": "50081",
+          "name": "Cetina"
+        },
+        {
+          "code": "50084",
+          "name": "Clarés de Ribota"
+        },
+        {
+          "code": "50086",
+          "name": "Codos"
+        },
+        {
+          "code": "50094",
+          "name": "Daroca"
+        },
+        {
+          "code": "50110",
+          "name": "El Frasno"
+        },
+        {
+          "code": "50116",
+          "name": "Fuentes de Jiloca"
+        },
+        {
+          "code": "50120",
+          "name": "Godojos"
+        },
+        {
+          "code": "50125",
+          "name": "Ibdes"
+        },
+        {
+          "code": "50129",
+          "name": "Jaraba"
+        },
+        {
+          "code": "50282",
+          "name": "La Vilueña"
+        },
+        {
+          "code": "50159",
+          "name": "Maluenda"
+        },
+        {
+          "code": "50161",
+          "name": "Manchones"
+        },
+        {
+          "code": "50162",
+          "name": "Mara"
+        },
+        {
+          "code": "50173",
+          "name": "Monterde"
+        },
+        {
+          "code": "50174",
+          "name": "Montón"
+        },
+        {
+          "code": "50176",
+          "name": "Morata de Jiloca"
+        },
+        {
+          "code": "50178",
+          "name": "Moros"
+        },
+        {
+          "code": "50183",
+          "name": "Munébrega"
+        },
+        {
+          "code": "50184",
+          "name": "Murero"
+        },
+        {
+          "code": "50192",
+          "name": "Nuévalos"
+        },
+        {
+          "code": "50194",
+          "name": "Olvés"
+        },
+        {
+          "code": "50195",
+          "name": "Orcajo"
+        },
+        {
+          "code": "50196",
+          "name": "Orera"
+        },
+        {
+          "code": "50201",
+          "name": "Paracuellos de Jiloca"
+        },
+        {
+          "code": "50229",
+          "name": "Ruesca"
+        },
+        {
+          "code": "50242",
+          "name": "Sediles"
+        },
+        {
+          "code": "50253",
+          "name": "Terrer"
+        },
+        {
+          "code": "50257",
+          "name": "Torralba de Ribota"
+        },
+        {
+          "code": "50263",
+          "name": "Torrijo de la Cañada"
+        },
+        {
+          "code": "50277",
+          "name": "Valtorres"
+        },
+        {
+          "code": "50279",
+          "name": "Velilla de Jiloca"
+        },
+        {
+          "code": "50284",
+          "name": "Villafeliche"
+        },
+        {
+          "code": "50286",
+          "name": "Villalba de Perejil"
+        },
+        {
+          "code": "50287",
+          "name": "Villalengua"
+        },
+        {
+          "code": "50293",
+          "name": "Villarroya de la Sierra"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Calatayud», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/calatayud_2024_02_26.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.aragon.campo-de-borja",
+      "comunidad_key": "aragon",
+      "comunidad": "Aragón",
+      "display_name": "Campo de Borja",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "50"
+      ],
+      "expected_count": 16,
+      "municipios": [
+        {
+          "code": "50055",
+          "name": "Borja"
+        },
+        {
+          "code": "50003",
+          "name": "Agón"
+        },
+        {
+          "code": "50006",
+          "name": "Ainzón"
+        },
+        {
+          "code": "50011",
+          "name": "Albeta"
+        },
+        {
+          "code": "50027",
+          "name": "Ambel"
+        },
+        {
+          "code": "50052",
+          "name": "Bisimbre"
+        },
+        {
+          "code": "50060",
+          "name": "Bulbuente"
+        },
+        {
+          "code": "50061",
+          "name": "Bureta"
+        },
+        {
+          "code": "50063",
+          "name": "El Buste"
+        },
+        {
+          "code": "50113",
+          "name": "Fuendejalón"
+        },
+        {
+          "code": "50153",
+          "name": "Magallón"
+        },
+        {
+          "code": "50156",
+          "name": "Maleján"
+        },
+        {
+          "code": "50216",
+          "name": "Pozuelo de Aragón"
+        },
+        {
+          "code": "50249",
+          "name": "Tabuenca"
+        },
+        {
+          "code": "50280",
+          "name": "Vera de Moncayo"
+        },
+        {
+          "code": "50160",
+          "name": "Mallén"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Campo de Borja», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/campo_de_borja_2024_12_13.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.valencia.utiel-requena",
+      "comunidad_key": "valencia",
+      "comunidad": "Comunidad Valenciana",
+      "display_name": "Utiel-Requena",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "46"
+      ],
+      "expected_count": 9,
+      "municipios": [
+        {
+          "code": "46080",
+          "name": "Camporrobles"
+        },
+        {
+          "code": "46095",
+          "name": "Caudete de las Fuentes"
+        },
+        {
+          "code": "46129",
+          "name": "Fuenterrobles"
+        },
+        {
+          "code": "46213",
+          "name": "Requena"
+        },
+        {
+          "code": "46229",
+          "name": "Siete Aguas"
+        },
+        {
+          "code": "46232",
+          "name": "Sinarcas"
+        },
+        {
+          "code": "46249",
+          "name": "Utiel"
+        },
+        {
+          "code": "46254",
+          "name": "Venta del Moro"
+        },
+        {
+          "code": "46259",
+          "name": "Villargordo del Cabriel"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Utiel-Requena», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/utiel-requena_2023_05_09.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.almansa",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Almansa",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "02"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "02009",
+          "name": "Almansa"
+        },
+        {
+          "code": "02010",
+          "name": "Alpera"
+        },
+        {
+          "code": "02018",
+          "name": "Bonete"
+        },
+        {
+          "code": "02027",
+          "name": "Corral-Rubio"
+        },
+        {
+          "code": "02039",
+          "name": "Higueruela"
+        },
+        {
+          "code": "02040",
+          "name": "Hoya-Gonzalo"
+        },
+        {
+          "code": "02061",
+          "name": "Pétrola"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Almansa», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/almansa_2024_12_04.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (density-located list; province-capital header excluded)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.navarra",
+      "comunidad_key": "navarra",
+      "comunidad": "Navarra",
+      "display_name": "Navarra",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "31"
+      ],
+      "expected_count": 118,
+      "municipios": [
+        {
+          "code": "31006",
+          "name": "Ablitas"
+        },
+        {
+          "code": "31032",
+          "name": "Arguedas"
+        },
+        {
+          "code": "31048",
+          "name": "Barillas"
+        },
+        {
+          "code": "31068",
+          "name": "Cascante"
+        },
+        {
+          "code": "31070",
+          "name": "Castejón"
+        },
+        {
+          "code": "31072",
+          "name": "Cintruénigo"
+        },
+        {
+          "code": "31077",
+          "name": "Corella"
+        },
+        {
+          "code": "31105",
+          "name": "Fitero"
+        },
+        {
+          "code": "31173",
+          "name": "Monteagudo"
+        },
+        {
+          "code": "31176",
+          "name": "Murchante"
+        },
+        {
+          "code": "31232",
+          "name": "Tudela"
+        },
+        {
+          "code": "31233",
+          "name": "Tulebras"
+        },
+        {
+          "code": "31249",
+          "name": "Valtierra"
+        },
+        {
+          "code": "31038",
+          "name": "Artajona"
+        },
+        {
+          "code": "31051",
+          "name": "Beire"
+        },
+        {
+          "code": "31053",
+          "name": "Berbinzana"
+        },
+        {
+          "code": "31064",
+          "name": "Cadreita"
+        },
+        {
+          "code": "31065",
+          "name": "Caparroso"
+        },
+        {
+          "code": "31066",
+          "name": "Cárcar"
+        },
+        {
+          "code": "31067",
+          "name": "Carcastillo"
+        },
+        {
+          "code": "31104",
+          "name": "Falces"
+        },
+        {
+          "code": "31107",
+          "name": "Funes"
+        },
+        {
+          "code": "31142",
+          "name": "Larraga"
+        },
+        {
+          "code": "31152",
+          "name": "Lerín"
+        },
+        {
+          "code": "31157",
+          "name": "Lodosa"
+        },
+        {
+          "code": "31163",
+          "name": "Marcilla"
+        },
+        {
+          "code": "31164",
+          "name": "Mélida"
+        },
+        {
+          "code": "31169",
+          "name": "Milagro"
+        },
+        {
+          "code": "31171",
+          "name": "Miranda de Arga"
+        },
+        {
+          "code": "31178",
+          "name": "Murillo el Cuende"
+        },
+        {
+          "code": "31179",
+          "name": "Murillo el Fruto"
+        },
+        {
+          "code": "31191",
+          "name": "Olite"
+        },
+        {
+          "code": "31202",
+          "name": "Peralta"
+        },
+        {
+          "code": "31205",
+          "name": "Pitillas"
+        },
+        {
+          "code": "31220",
+          "name": "Santacara"
+        },
+        {
+          "code": "31224",
+          "name": "Sesma"
+        },
+        {
+          "code": "31227",
+          "name": "Tafalla"
+        },
+        {
+          "code": "31254",
+          "name": "Villafranca"
+        },
+        {
+          "code": "31005",
+          "name": "Aberin"
+        },
+        {
+          "code": "31012",
+          "name": "Allo"
+        },
+        {
+          "code": "31030",
+          "name": "Arellano"
+        },
+        {
+          "code": "31035",
+          "name": "Armañanzas"
+        },
+        {
+          "code": "31036",
+          "name": "Arróniz"
+        },
+        {
+          "code": "31041",
+          "name": "Ayegui"
+        },
+        {
+          "code": "31046",
+          "name": "Barbarin"
+        },
+        {
+          "code": "31080",
+          "name": "Dicastillo"
+        },
+        {
+          "code": "31079",
+          "name": "Desojo"
+        },
+        {
+          "code": "31061",
+          "name": "El Busto"
+        },
+        {
+          "code": "31096",
+          "name": "Espronceda"
+        },
+        {
+          "code": "31125",
+          "name": "Igúzquiza"
+        },
+        {
+          "code": "31145",
+          "name": "Lazagurría"
+        },
+        {
+          "code": "31029",
+          "name": "Los Arcos"
+        },
+        {
+          "code": "31160",
+          "name": "Luquin"
+        },
+        {
+          "code": "31166",
+          "name": "Mendaza"
+        },
+        {
+          "code": "31174",
+          "name": "Morentin"
+        },
+        {
+          "code": "31177",
+          "name": "Murieta"
+        },
+        {
+          "code": "31200",
+          "name": "Oteiza"
+        },
+        {
+          "code": "31219",
+          "name": "Sansol"
+        },
+        {
+          "code": "31230",
+          "name": "Torralba del Río"
+        },
+        {
+          "code": "31231",
+          "name": "Torres del Río"
+        },
+        {
+          "code": "31260",
+          "name": "Valle de Yerri"
+        },
+        {
+          "code": "31255",
+          "name": "Villamayor de Monjardín"
+        },
+        {
+          "code": "31257",
+          "name": "Villatuerta"
+        },
+        {
+          "code": "31204",
+          "name": "Piedramillera"
+        },
+        {
+          "code": "31007",
+          "name": "Adiós"
+        },
+        {
+          "code": "31018",
+          "name": "Añorbe"
+        },
+        {
+          "code": "31039",
+          "name": "Artazu"
+        },
+        {
+          "code": "31045",
+          "name": "Barásoain"
+        },
+        {
+          "code": "31074",
+          "name": "Cirauqui"
+        },
+        {
+          "code": "31089",
+          "name": "Enériz"
+        },
+        {
+          "code": "31114",
+          "name": "Garínoain"
+        },
+        {
+          "code": "31121",
+          "name": "Guirguillano"
+        },
+        {
+          "code": "31147",
+          "name": "Legarda"
+        },
+        {
+          "code": "31150",
+          "name": "Leoz"
+        },
+        {
+          "code": "31161",
+          "name": "Mañeru"
+        },
+        {
+          "code": "31167",
+          "name": "Mendigorria"
+        },
+        {
+          "code": "31180",
+          "name": "Muruzábal"
+        },
+        {
+          "code": "31183",
+          "name": "Obanos"
+        },
+        {
+          "code": "31192",
+          "name": "Olóriz"
+        },
+        {
+          "code": "31197",
+          "name": "Orísoain"
+        },
+        {
+          "code": "31207",
+          "name": "Pueyo"
+        },
+        {
+          "code": "31206",
+          "name": "Puente la Reina"
+        },
+        {
+          "code": "31228",
+          "name": "Tiebas-Muruarte de Reta"
+        },
+        {
+          "code": "31229",
+          "name": "Tirapu"
+        },
+        {
+          "code": "31234",
+          "name": "Ucar"
+        },
+        {
+          "code": "31238",
+          "name": "Unzué"
+        },
+        {
+          "code": "31246",
+          "name": "Uterga"
+        },
+        {
+          "code": "31009",
+          "name": "Aibar"
+        },
+        {
+          "code": "31069",
+          "name": "Cáseda"
+        },
+        {
+          "code": "31094",
+          "name": "Eslava"
+        },
+        {
+          "code": "31103",
+          "name": "Ezprogui"
+        },
+        {
+          "code": "31110",
+          "name": "Gallipienzo"
+        },
+        {
+          "code": "31135",
+          "name": "Javier"
+        },
+        {
+          "code": "31146",
+          "name": "Leache"
+        },
+        {
+          "code": "31151",
+          "name": "Lerga"
+        },
+        {
+          "code": "31155",
+          "name": "Liédena"
+        },
+        {
+          "code": "31159",
+          "name": "Lumbier"
+        },
+        {
+          "code": "31212",
+          "name": "Sada"
+        },
+        {
+          "code": "31216",
+          "name": "Sangüesa"
+        },
+        {
+          "code": "31217",
+          "name": "San Martín de Unx"
+        },
+        {
+          "code": "31235",
+          "name": "Ujué"
+        },
+        {
+          "code": "31209",
+          "name": "Romanzado"
+        },
+        {
+          "code": "31242",
+          "name": "Urraul Bajo"
+        },
+        {
+          "code": "31085",
+          "name": "Etxauri"
+        },
+        {
+          "code": "31076",
+          "name": "Cizur"
+        },
+        {
+          "code": "31011",
+          "name": "Allín"
+        },
+        {
+          "code": "31043",
+          "name": "Azuelo"
+        },
+        {
+          "code": "31120",
+          "name": "Guesálaz"
+        },
+        {
+          "code": "31141",
+          "name": "Lapoblación"
+        },
+        {
+          "code": "31168",
+          "name": "Metauten"
+        },
+        {
+          "code": "31170",
+          "name": "Mirafuentes"
+        },
+        {
+          "code": "31175",
+          "name": "Mues"
+        },
+        {
+          "code": "31182",
+          "name": "Nazar"
+        },
+        {
+          "code": "31184",
+          "name": "Oco"
+        },
+        {
+          "code": "31225",
+          "name": "Sorlada"
+        },
+        {
+          "code": "31158",
+          "name": "Lónguida"
+        },
+        {
+          "code": "31261",
+          "name": "Yesa"
+        },
+        {
+          "code": "31262",
+          "name": "Zabalza"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Navarra», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/navarra_2024_10_11.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the pliego zona de producción (5 subzones across southern Navarra). List located by match-density; every code is a real Navarra INE municipio. [Collapsed 2026-08-19: this DO shares its comunidad's name, so it lives on the comunidad node spain.navarra; the redundant child node was removed.]"
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.condado-de-huelva",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Condado de Huelva",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "21"
+      ],
+      "expected_count": 18,
+      "municipios": [
+        {
+          "code": "21005",
+          "name": "Almonte"
+        },
+        {
+          "code": "21011",
+          "name": "Beas"
+        },
+        {
+          "code": "21013",
+          "name": "Bollullos Par del Condado"
+        },
+        {
+          "code": "21014",
+          "name": "Bonares"
+        },
+        {
+          "code": "21030",
+          "name": "Chucena"
+        },
+        {
+          "code": "21035",
+          "name": "Gibraleón"
+        },
+        {
+          "code": "21040",
+          "name": "Hinojos"
+        },
+        {
+          "code": "21054",
+          "name": "La Palma del Condado"
+        },
+        {
+          "code": "21046",
+          "name": "Lucena del Puerto"
+        },
+        {
+          "code": "21047",
+          "name": "Manzanilla"
+        },
+        {
+          "code": "21050",
+          "name": "Moguer"
+        },
+        {
+          "code": "21053",
+          "name": "Niebla"
+        },
+        {
+          "code": "21055",
+          "name": "Palos de la Frontera"
+        },
+        {
+          "code": "21061",
+          "name": "Rociana del Condado"
+        },
+        {
+          "code": "21064",
+          "name": "San Juan del Puerto"
+        },
+        {
+          "code": "21070",
+          "name": "Trigueros"
+        },
+        {
+          "code": "21074",
+          "name": "Villalba del Alcor"
+        },
+        {
+          "code": "21077",
+          "name": "Villarrasa"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Condado de Huelva», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/condado_de_huelva_2020_11_09.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 18 Condado municipios. Huelva capital excluded (not a member — the density match picked up the province name)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.extremadura.ribera-del-guadiana",
+      "comunidad_key": "extremadura",
+      "comunidad": "Extremadura",
+      "display_name": "Ribera del Guadiana",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "06",
+        "10"
+      ],
+      "expected_count": 122,
+      "municipios": [
+        {
+          "code": "06903",
+          "name": "Guadiana"
+        },
+        {
+          "code": "06002",
+          "name": "Aceuchal"
+        },
+        {
+          "code": "06003",
+          "name": "Ahillones"
+        },
+        {
+          "code": "06004",
+          "name": "Alange"
+        },
+        {
+          "code": "06011",
+          "name": "Almendralejo"
+        },
+        {
+          "code": "06012",
+          "name": "Arroyo de San Serván"
+        },
+        {
+          "code": "06014",
+          "name": "Azuaga"
+        },
+        {
+          "code": "06019",
+          "name": "Berlanga"
+        },
+        {
+          "code": "06025",
+          "name": "Calamonte"
+        },
+        {
+          "code": "06040",
+          "name": "Corte de Peleas"
+        },
+        {
+          "code": "06045",
+          "name": "Entrín Bajo"
+        },
+        {
+          "code": "06049",
+          "name": "Feria"
+        },
+        {
+          "code": "06054",
+          "name": "Fuente del Maestre"
+        },
+        {
+          "code": "06059",
+          "name": "Granja de Torrehermosa"
+        },
+        {
+          "code": "06065",
+          "name": "Higuera de Llerena"
+        },
+        {
+          "code": "06068",
+          "name": "Hinojosa del Valle"
+        },
+        {
+          "code": "06069",
+          "name": "Hornachos"
+        },
+        {
+          "code": "06089",
+          "name": "La Morera"
+        },
+        {
+          "code": "06099",
+          "name": "La Parra"
+        },
+        {
+          "code": "06073",
+          "name": "Llera"
+        },
+        {
+          "code": "06074",
+          "name": "Llerena"
+        },
+        {
+          "code": "06076",
+          "name": "Maguilla"
+        },
+        {
+          "code": "06083",
+          "name": "Mérida"
+        },
+        {
+          "code": "06092",
+          "name": "Nogales"
+        },
+        {
+          "code": "06098",
+          "name": "Palomas"
+        },
+        {
+          "code": "06106",
+          "name": "Puebla del Prior"
+        },
+        {
+          "code": "06104",
+          "name": "Puebla de la Reina"
+        },
+        {
+          "code": "06113",
+          "name": "Ribera del Fresno"
+        },
+        {
+          "code": "06117",
+          "name": "Salvatierra de los Barros"
+        },
+        {
+          "code": "06121",
+          "name": "Santa Marta"
+        },
+        {
+          "code": "06126",
+          "name": "Solana de los Barros"
+        },
+        {
+          "code": "06131",
+          "name": "Torre de Miguel Sesmero"
+        },
+        {
+          "code": "06139",
+          "name": "Valencia de las Torres"
+        },
+        {
+          "code": "06144",
+          "name": "Valverde de Llerena"
+        },
+        {
+          "code": "06149",
+          "name": "Villafranca de los Barros"
+        },
+        {
+          "code": "06152",
+          "name": "Villalba de los Barros"
+        },
+        {
+          "code": "06020",
+          "name": "Bienvenida"
+        },
+        {
+          "code": "10040",
+          "name": "Calzadilla"
+        },
+        {
+          "code": "06052",
+          "name": "Fuente de Cantos"
+        },
+        {
+          "code": "06081",
+          "name": "Medina de las Torres"
+        },
+        {
+          "code": "06108",
+          "name": "Puebla de Sancho Pérez"
+        },
+        {
+          "code": "06122",
+          "name": "Los Santos de Maimona"
+        },
+        {
+          "code": "06136",
+          "name": "Usagre"
+        },
+        {
+          "code": "06141",
+          "name": "Valencia del Ventoso"
+        },
+        {
+          "code": "06158",
+          "name": "Zafra"
+        },
+        {
+          "code": "06009",
+          "name": "Aljucén"
+        },
+        {
+          "code": "10027",
+          "name": "Benquerencia"
+        },
+        {
+          "code": "06028",
+          "name": "Campanario"
+        },
+        {
+          "code": "06036",
+          "name": "Castuera"
+        },
+        {
+          "code": "06039",
+          "name": "La Coronada"
+        },
+        {
+          "code": "06041",
+          "name": "Cristina"
+        },
+        {
+          "code": "06043",
+          "name": "Don Álvaro"
+        },
+        {
+          "code": "06044",
+          "name": "Don Benito"
+        },
+        {
+          "code": "06046",
+          "name": "Esparragalejo"
+        },
+        {
+          "code": "06047",
+          "name": "Esparragosa de la Serena"
+        },
+        {
+          "code": "06064",
+          "name": "Higuera de la Serena"
+        },
+        {
+          "code": "06058",
+          "name": "La Garrovilla"
+        },
+        {
+          "code": "06060",
+          "name": "Guareña"
+        },
+        {
+          "code": "06061",
+          "name": "La Haba"
+        },
+        {
+          "code": "06075",
+          "name": "Magacela"
+        },
+        {
+          "code": "06078",
+          "name": "Malpartida de la Serena"
+        },
+        {
+          "code": "06079",
+          "name": "Manchita"
+        },
+        {
+          "code": "06080",
+          "name": "Medellín"
+        },
+        {
+          "code": "06082",
+          "name": "Mengabril"
+        },
+        {
+          "code": "06084",
+          "name": "Mirandilla"
+        },
+        {
+          "code": "06087",
+          "name": "Monterrubio de la Serena"
+        },
+        {
+          "code": "06090",
+          "name": "La Nava de Santiago"
+        },
+        {
+          "code": "06091",
+          "name": "Navalvillar de Pela"
+        },
+        {
+          "code": "06094",
+          "name": "Oliva de Mérida"
+        },
+        {
+          "code": "06109",
+          "name": "Quintana de la Serena"
+        },
+        {
+          "code": "06111",
+          "name": "Rena"
+        },
+        {
+          "code": "06119",
+          "name": "San Pedro de Mérida"
+        },
+        {
+          "code": "06120",
+          "name": "Santa Amalia"
+        },
+        {
+          "code": "06135",
+          "name": "Trujillanos"
+        },
+        {
+          "code": "06138",
+          "name": "Valdetorres"
+        },
+        {
+          "code": "06145",
+          "name": "Valverde de Mérida"
+        },
+        {
+          "code": "06146",
+          "name": "Valle de la Serena"
+        },
+        {
+          "code": "06151",
+          "name": "Villagonzalo"
+        },
+        {
+          "code": "06153",
+          "name": "Villanueva de la Serena"
+        },
+        {
+          "code": "06156",
+          "name": "Villar de Rena"
+        },
+        {
+          "code": "06160",
+          "name": "Zalamea de la Serena"
+        },
+        {
+          "code": "06162",
+          "name": "La Zarza"
+        },
+        {
+          "code": "06005",
+          "name": "La Albuera"
+        },
+        {
+          "code": "06010",
+          "name": "Almendral"
+        },
+        {
+          "code": "06015",
+          "name": "Badajoz"
+        },
+        {
+          "code": "06072",
+          "name": "Lobón"
+        },
+        {
+          "code": "06088",
+          "name": "Montijo"
+        },
+        {
+          "code": "06095",
+          "name": "Olivenza"
+        },
+        {
+          "code": "06115",
+          "name": "La Roca de la Sierra"
+        },
+        {
+          "code": "06128",
+          "name": "Talavera la Real"
+        },
+        {
+          "code": "06132",
+          "name": "Torremayor"
+        },
+        {
+          "code": "06143",
+          "name": "Valverde de Leganés"
+        },
+        {
+          "code": "06155",
+          "name": "Villar del Rey"
+        },
+        {
+          "code": "10126",
+          "name": "Montánchez"
+        },
+        {
+          "code": "10007",
+          "name": "Albalá"
+        },
+        {
+          "code": "10010",
+          "name": "Alcuéscar"
+        },
+        {
+          "code": "10195",
+          "name": "Trujillo"
+        },
+        {
+          "code": "10011",
+          "name": "Aldeacentenera"
+        },
+        {
+          "code": "10020",
+          "name": "Almoharín"
+        },
+        {
+          "code": "10023",
+          "name": "Arroyomolinos"
+        },
+        {
+          "code": "10052",
+          "name": "Casas de Don Antonio"
+        },
+        {
+          "code": "10073",
+          "name": "Escurial"
+        },
+        {
+          "code": "10077",
+          "name": "Garciaz"
+        },
+        {
+          "code": "10102",
+          "name": "Ibahernando"
+        },
+        {
+          "code": "10069",
+          "name": "La Cumbre"
+        },
+        {
+          "code": "10113",
+          "name": "Madroñera"
+        },
+        {
+          "code": "10121",
+          "name": "Miajadas"
+        },
+        {
+          "code": "10153",
+          "name": "Puerto de Santa Cruz"
+        },
+        {
+          "code": "10158",
+          "name": "Robledillo de Trujillo"
+        },
+        {
+          "code": "10163",
+          "name": "Salvatierra de Santiago"
+        },
+        {
+          "code": "10166",
+          "name": "Santa Cruz de la Sierra"
+        },
+        {
+          "code": "10168",
+          "name": "Santa Marta de Magasca"
+        },
+        {
+          "code": "10188",
+          "name": "Torre de Santa María"
+        },
+        {
+          "code": "10198",
+          "name": "Valdefuentes"
+        },
+        {
+          "code": "10201",
+          "name": "Valdemorales"
+        },
+        {
+          "code": "10209",
+          "name": "Villamesías"
+        },
+        {
+          "code": "10217",
+          "name": "Zarza de Montánchez"
+        },
+        {
+          "code": "10044",
+          "name": "Cañamero"
+        },
+        {
+          "code": "10017",
+          "name": "Alía"
+        },
+        {
+          "code": "10029",
+          "name": "Berzocana"
+        },
+        {
+          "code": "10087",
+          "name": "Guadalupe"
+        },
+        {
+          "code": "06137",
+          "name": "Valdecaballeros"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Guadiana», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribera_del_guadiana_2023_06_19.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union across all pliego subzones (multi-cluster density-located). Provincial capital included (verified member of a subzone)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.malaga",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Málaga",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "29"
+      ],
+      "expected_count": 102,
+      "municipios": [
+        {
+          "code": "29067",
+          "name": "Málaga"
+        },
+        {
+          "code": "29001",
+          "name": "Alameda"
+        },
+        {
+          "code": "29002",
+          "name": "Alcaucín"
+        },
+        {
+          "code": "29003",
+          "name": "Alfarnate"
+        },
+        {
+          "code": "29004",
+          "name": "Alfarnatejo"
+        },
+        {
+          "code": "29005",
+          "name": "Algarrobo"
+        },
+        {
+          "code": "29006",
+          "name": "Algatocín"
+        },
+        {
+          "code": "29007",
+          "name": "Alhaurín de la Torre"
+        },
+        {
+          "code": "29008",
+          "name": "Alhaurín el Grande"
+        },
+        {
+          "code": "29009",
+          "name": "Almáchar"
+        },
+        {
+          "code": "29010",
+          "name": "Almargen"
+        },
+        {
+          "code": "29011",
+          "name": "Almogía"
+        },
+        {
+          "code": "29012",
+          "name": "Álora"
+        },
+        {
+          "code": "29013",
+          "name": "Alozaina"
+        },
+        {
+          "code": "29014",
+          "name": "Alpandeire"
+        },
+        {
+          "code": "29015",
+          "name": "Antequera"
+        },
+        {
+          "code": "29016",
+          "name": "Árchez"
+        },
+        {
+          "code": "29017",
+          "name": "Archidona"
+        },
+        {
+          "code": "29018",
+          "name": "Ardales"
+        },
+        {
+          "code": "29019",
+          "name": "Arenas"
+        },
+        {
+          "code": "29020",
+          "name": "Arriate"
+        },
+        {
+          "code": "29021",
+          "name": "Atajate"
+        },
+        {
+          "code": "29022",
+          "name": "Benadalid"
+        },
+        {
+          "code": "29023",
+          "name": "Benahavís"
+        },
+        {
+          "code": "29024",
+          "name": "Benalauría"
+        },
+        {
+          "code": "29026",
+          "name": "Benamargosa"
+        },
+        {
+          "code": "29027",
+          "name": "Benamocarra"
+        },
+        {
+          "code": "29028",
+          "name": "Benaoján"
+        },
+        {
+          "code": "29029",
+          "name": "Benarrabá"
+        },
+        {
+          "code": "29030",
+          "name": "El Borge"
+        },
+        {
+          "code": "29031",
+          "name": "El Burgo"
+        },
+        {
+          "code": "29032",
+          "name": "Campillos"
+        },
+        {
+          "code": "29033",
+          "name": "Canillas de Aceituno"
+        },
+        {
+          "code": "29034",
+          "name": "Canillas de Albaida"
+        },
+        {
+          "code": "29035",
+          "name": "Cañete la Real"
+        },
+        {
+          "code": "29036",
+          "name": "Carratraca"
+        },
+        {
+          "code": "29037",
+          "name": "Cartajima"
+        },
+        {
+          "code": "29038",
+          "name": "Cártama"
+        },
+        {
+          "code": "29039",
+          "name": "Casabermeja"
+        },
+        {
+          "code": "29040",
+          "name": "Casarabonela"
+        },
+        {
+          "code": "29041",
+          "name": "Casares"
+        },
+        {
+          "code": "29042",
+          "name": "Coín"
+        },
+        {
+          "code": "29043",
+          "name": "Colmenar"
+        },
+        {
+          "code": "29044",
+          "name": "Comares"
+        },
+        {
+          "code": "29045",
+          "name": "Cómpeta"
+        },
+        {
+          "code": "29046",
+          "name": "Cortes de la Frontera"
+        },
+        {
+          "code": "29047",
+          "name": "Cuevas Bajas"
+        },
+        {
+          "code": "29048",
+          "name": "Cuevas del Becerro"
+        },
+        {
+          "code": "29049",
+          "name": "Cuevas de San Marcos"
+        },
+        {
+          "code": "29050",
+          "name": "Cútar"
+        },
+        {
+          "code": "29051",
+          "name": "Estepona"
+        },
+        {
+          "code": "29052",
+          "name": "Faraján"
+        },
+        {
+          "code": "29053",
+          "name": "Frigiliana"
+        },
+        {
+          "code": "29054",
+          "name": "Fuengirola"
+        },
+        {
+          "code": "29056",
+          "name": "Gaucín"
+        },
+        {
+          "code": "29057",
+          "name": "Genalguacil"
+        },
+        {
+          "code": "29058",
+          "name": "Guaro"
+        },
+        {
+          "code": "29059",
+          "name": "Humilladero"
+        },
+        {
+          "code": "29060",
+          "name": "Igualeja"
+        },
+        {
+          "code": "29061",
+          "name": "Istán"
+        },
+        {
+          "code": "29062",
+          "name": "Iznate"
+        },
+        {
+          "code": "29063",
+          "name": "Jimera de Líbar"
+        },
+        {
+          "code": "29064",
+          "name": "Jubrique"
+        },
+        {
+          "code": "29065",
+          "name": "Júzcar"
+        },
+        {
+          "code": "29066",
+          "name": "Macharaviaya"
+        },
+        {
+          "code": "29068",
+          "name": "Manilva"
+        },
+        {
+          "code": "29069",
+          "name": "Marbella"
+        },
+        {
+          "code": "29070",
+          "name": "Mijas"
+        },
+        {
+          "code": "29071",
+          "name": "Moclinejo"
+        },
+        {
+          "code": "29072",
+          "name": "Mollina"
+        },
+        {
+          "code": "29073",
+          "name": "Monda"
+        },
+        {
+          "code": "29903",
+          "name": "Montecorto"
+        },
+        {
+          "code": "29074",
+          "name": "Montejaque"
+        },
+        {
+          "code": "29075",
+          "name": "Nerja"
+        },
+        {
+          "code": "29076",
+          "name": "Ojén"
+        },
+        {
+          "code": "29077",
+          "name": "Parauta"
+        },
+        {
+          "code": "29079",
+          "name": "Periana"
+        },
+        {
+          "code": "29080",
+          "name": "Pizarra"
+        },
+        {
+          "code": "29081",
+          "name": "Pujerra"
+        },
+        {
+          "code": "29082",
+          "name": "Rincón de la Victoria"
+        },
+        {
+          "code": "29083",
+          "name": "Riogordo"
+        },
+        {
+          "code": "29084",
+          "name": "Ronda"
+        },
+        {
+          "code": "29085",
+          "name": "Salares"
+        },
+        {
+          "code": "29086",
+          "name": "Sayalonga"
+        },
+        {
+          "code": "29087",
+          "name": "Sedella"
+        },
+        {
+          "code": "29904",
+          "name": "Serrato"
+        },
+        {
+          "code": "29088",
+          "name": "Sierra de Yeguas"
+        },
+        {
+          "code": "29089",
+          "name": "Teba"
+        },
+        {
+          "code": "29090",
+          "name": "Tolox"
+        },
+        {
+          "code": "29901",
+          "name": "Torremolinos"
+        },
+        {
+          "code": "29091",
+          "name": "Torrox"
+        },
+        {
+          "code": "29092",
+          "name": "Totalán"
+        },
+        {
+          "code": "29093",
+          "name": "Valle de Abdalajís"
+        },
+        {
+          "code": "29094",
+          "name": "Vélez-Málaga"
+        },
+        {
+          "code": "29095",
+          "name": "Villanueva de Algaidas"
+        },
+        {
+          "code": "29902",
+          "name": "Villanueva de la Concepción"
+        },
+        {
+          "code": "29096",
+          "name": "Villanueva del Rosario"
+        },
+        {
+          "code": "29098",
+          "name": "Villanueva de Tapia"
+        },
+        {
+          "code": "29097",
+          "name": "Villanueva del Trabuco"
+        },
+        {
+          "code": "29099",
+          "name": "Viñuela"
+        },
+        {
+          "code": "29100",
+          "name": "Yunquera"
+        },
+        {
+          "code": "29025",
+          "name": "Benalmádena"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Sierras de Málaga» (shared production zone of DOP Málaga y Sierras de Málaga), MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/sierras_de_malaga_2024_10_29.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the shared Málaga wine zone across all subzones (Serranía de Ronda, Axarquía, Montes de Málaga, Manilva, Costa Occidental, Norte de Málaga, Sierra de las Nieves). Málaga city is a member (Montes de Málaga). Multi-cluster density-located."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.la-mancha",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "La Mancha",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "13",
+        "16",
+        "45",
+        "02"
+      ],
+      "expected_count": 188,
+      "municipios": [
+        {
+          "code": "02015",
+          "name": "Barrax"
+        },
+        {
+          "code": "02032",
+          "name": "Fuensanta"
+        },
+        {
+          "code": "02038",
+          "name": "La Herrera"
+        },
+        {
+          "code": "02043",
+          "name": "Lezuza"
+        },
+        {
+          "code": "02048",
+          "name": "Minaya"
+        },
+        {
+          "code": "02050",
+          "name": "Montalvos"
+        },
+        {
+          "code": "02053",
+          "name": "Munera"
+        },
+        {
+          "code": "02057",
+          "name": "Ossa de Montiel"
+        },
+        {
+          "code": "02069",
+          "name": "La Roda"
+        },
+        {
+          "code": "02073",
+          "name": "Tarazona de la Mancha"
+        },
+        {
+          "code": "02078",
+          "name": "Villalgordo del Júcar"
+        },
+        {
+          "code": "02081",
+          "name": "Villarrobledo"
+        },
+        {
+          "code": "02019",
+          "name": "El Bonillo"
+        },
+        {
+          "code": "13005",
+          "name": "Alcázar de San Juan"
+        },
+        {
+          "code": "13007",
+          "name": "Alcolea de Calatrava"
+        },
+        {
+          "code": "13009",
+          "name": "Aldea del Rey"
+        },
+        {
+          "code": "13013",
+          "name": "Almagro"
+        },
+        {
+          "code": "13014",
+          "name": "Almedina"
+        },
+        {
+          "code": "13015",
+          "name": "Almodóvar del Campo"
+        },
+        {
+          "code": "13903",
+          "name": "Arenales de San Gregorio"
+        },
+        {
+          "code": "13018",
+          "name": "Arenas de San Juan"
+        },
+        {
+          "code": "13019",
+          "name": "Argamasilla de Alba"
+        },
+        {
+          "code": "13020",
+          "name": "Argamasilla de Calatrava"
+        },
+        {
+          "code": "13022",
+          "name": "Ballesteros de Calatrava"
+        },
+        {
+          "code": "13023",
+          "name": "Bolaños de Calatrava"
+        },
+        {
+          "code": "13027",
+          "name": "Calzada de Calatrava"
+        },
+        {
+          "code": "13028",
+          "name": "Campo de Criptana"
+        },
+        {
+          "code": "13029",
+          "name": "Cañada de Calatrava"
+        },
+        {
+          "code": "13031",
+          "name": "Carrión de Calatrava"
+        },
+        {
+          "code": "13032",
+          "name": "Carrizosa"
+        },
+        {
+          "code": "13033",
+          "name": "Castellar de Santiago"
+        },
+        {
+          "code": "13034",
+          "name": "Ciudad Real"
+        },
+        {
+          "code": "13036",
+          "name": "Los Cortijos"
+        },
+        {
+          "code": "13037",
+          "name": "Cózar"
+        },
+        {
+          "code": "13039",
+          "name": "Daimiel"
+        },
+        {
+          "code": "13040",
+          "name": "Fernán Caballero"
+        },
+        {
+          "code": "13043",
+          "name": "Fuenllana"
+        },
+        {
+          "code": "13044",
+          "name": "Fuente el Fresno"
+        },
+        {
+          "code": "13047",
+          "name": "Herencia"
+        },
+        {
+          "code": "13052",
+          "name": "Malagón"
+        },
+        {
+          "code": "13053",
+          "name": "Manzanares"
+        },
+        {
+          "code": "13054",
+          "name": "Membrilla"
+        },
+        {
+          "code": "13056",
+          "name": "Miguelturra"
+        },
+        {
+          "code": "13050",
+          "name": "Las Labores"
+        },
+        {
+          "code": "13904",
+          "name": "Llanos del Caudillo"
+        },
+        {
+          "code": "13061",
+          "name": "Pedro Muñoz"
+        },
+        {
+          "code": "13062",
+          "name": "Picón"
+        },
+        {
+          "code": "13063",
+          "name": "Piedrabuena"
+        },
+        {
+          "code": "13064",
+          "name": "Poblete"
+        },
+        {
+          "code": "13065",
+          "name": "Porzuna"
+        },
+        {
+          "code": "13066",
+          "name": "Pozuelo de Calatrava"
+        },
+        {
+          "code": "13069",
+          "name": "Puebla del Príncipe"
+        },
+        {
+          "code": "13070",
+          "name": "Puerto Lápice"
+        },
+        {
+          "code": "13902",
+          "name": "Ruidera"
+        },
+        {
+          "code": "13076",
+          "name": "Santa Cruz de los Cáñamos"
+        },
+        {
+          "code": "13078",
+          "name": "Socuéllamos"
+        },
+        {
+          "code": "13079",
+          "name": "La Solana"
+        },
+        {
+          "code": "13081",
+          "name": "Terrinches"
+        },
+        {
+          "code": "13082",
+          "name": "Tomelloso"
+        },
+        {
+          "code": "13083",
+          "name": "Torralba de Calatrava"
+        },
+        {
+          "code": "13088",
+          "name": "Valenzuela de Calatrava"
+        },
+        {
+          "code": "13089",
+          "name": "Villahermosa"
+        },
+        {
+          "code": "13090",
+          "name": "Villamanrique"
+        },
+        {
+          "code": "13091",
+          "name": "Villamayor de Calatrava"
+        },
+        {
+          "code": "13092",
+          "name": "Villanueva de la Fuente"
+        },
+        {
+          "code": "13093",
+          "name": "Villanueva de los Infantes"
+        },
+        {
+          "code": "13095",
+          "name": "Villar del Pozo"
+        },
+        {
+          "code": "13097",
+          "name": "Villarta de San Juan"
+        },
+        {
+          "code": "13096",
+          "name": "Villarrubia de los Ojos"
+        },
+        {
+          "code": "13010",
+          "name": "Alhambra"
+        },
+        {
+          "code": "13045",
+          "name": "Granátula de Calatrava"
+        },
+        {
+          "code": "13057",
+          "name": "Montiel"
+        },
+        {
+          "code": "13084",
+          "name": "Torre de Juan Abad"
+        },
+        {
+          "code": "16002",
+          "name": "El Acebrón"
+        },
+        {
+          "code": "16007",
+          "name": "La Alberca de Záncara"
+        },
+        {
+          "code": "16010",
+          "name": "Alcázar del Rey"
+        },
+        {
+          "code": "16012",
+          "name": "Alconchel de la Estrella"
+        },
+        {
+          "code": "16015",
+          "name": "La Almarcha"
+        },
+        {
+          "code": "16016",
+          "name": "Almendros"
+        },
+        {
+          "code": "16018",
+          "name": "Almonacid del Marquesado"
+        },
+        {
+          "code": "16026",
+          "name": "Atalaya del Cañavate"
+        },
+        {
+          "code": "16027",
+          "name": "Barajas de Melo"
+        },
+        {
+          "code": "16032",
+          "name": "Belinchón"
+        },
+        {
+          "code": "16033",
+          "name": "Belmonte"
+        },
+        {
+          "code": "16047",
+          "name": "Cañada Juncosa"
+        },
+        {
+          "code": "16049",
+          "name": "El Cañavate"
+        },
+        {
+          "code": "16058",
+          "name": "Carrascosa de Haro"
+        },
+        {
+          "code": "16060",
+          "name": "Casas de Benítez"
+        },
+        {
+          "code": "16061",
+          "name": "Casas de Fernando Alonso"
+        },
+        {
+          "code": "16063",
+          "name": "Casas de Guijarro"
+        },
+        {
+          "code": "16064",
+          "name": "Casas de Haro"
+        },
+        {
+          "code": "16065",
+          "name": "Casas de los Pinos"
+        },
+        {
+          "code": "16072",
+          "name": "Castillo de Garcimuñoz"
+        },
+        {
+          "code": "16073",
+          "name": "Cervera del Llano"
+        },
+        {
+          "code": "16086",
+          "name": "Fuente de Pedro Naharro"
+        },
+        {
+          "code": "16087",
+          "name": "Fuentelespino de Haro"
+        },
+        {
+          "code": "16099",
+          "name": "La Hinojosa"
+        },
+        {
+          "code": "16100",
+          "name": "Los Hinojosos"
+        },
+        {
+          "code": "16101",
+          "name": "El Hito"
+        },
+        {
+          "code": "16102",
+          "name": "Honrubia"
+        },
+        {
+          "code": "16103",
+          "name": "Hontanaya"
+        },
+        {
+          "code": "16106",
+          "name": "Horcajo de Santiago"
+        },
+        {
+          "code": "16108",
+          "name": "Huelves"
+        },
+        {
+          "code": "16119",
+          "name": "Leganiel"
+        },
+        {
+          "code": "16124",
+          "name": "Las Mesas"
+        },
+        {
+          "code": "16128",
+          "name": "Monreal del Llano"
+        },
+        {
+          "code": "16129",
+          "name": "Montalbanejo"
+        },
+        {
+          "code": "16133",
+          "name": "Mota del Cuervo"
+        },
+        {
+          "code": "16139",
+          "name": "Olivares de Júcar"
+        },
+        {
+          "code": "16145",
+          "name": "Osa de la Vega"
+        },
+        {
+          "code": "16151",
+          "name": "Paredes"
+        },
+        {
+          "code": "16153",
+          "name": "El Pedernoso"
+        },
+        {
+          "code": "16154",
+          "name": "Las Pedroñeras"
+        },
+        {
+          "code": "16159",
+          "name": "Pinarejo"
+        },
+        {
+          "code": "16166",
+          "name": "Pozoamargo"
+        },
+        {
+          "code": "16167",
+          "name": "Pozorrubio de Santiago"
+        },
+        {
+          "code": "16171",
+          "name": "El Provencio"
+        },
+        {
+          "code": "16172",
+          "name": "Puebla de Almenara"
+        },
+        {
+          "code": "16176",
+          "name": "Rada de Haro"
+        },
+        {
+          "code": "16181",
+          "name": "Rozalén del Monte"
+        },
+        {
+          "code": "16186",
+          "name": "Saelices"
+        },
+        {
+          "code": "16190",
+          "name": "San Clemente"
+        },
+        {
+          "code": "16195",
+          "name": "Santa María del Campo Rus"
+        },
+        {
+          "code": "16196",
+          "name": "Santa María de los Llanos"
+        },
+        {
+          "code": "16198",
+          "name": "Sisante"
+        },
+        {
+          "code": "16203",
+          "name": "Tarancón"
+        },
+        {
+          "code": "16212",
+          "name": "Torrubia del Campo"
+        },
+        {
+          "code": "16213",
+          "name": "Torrubia del Castillo"
+        },
+        {
+          "code": "16216",
+          "name": "Tresjuncos"
+        },
+        {
+          "code": "16217",
+          "name": "Tribaldos"
+        },
+        {
+          "code": "16218",
+          "name": "Uclés"
+        },
+        {
+          "code": "16236",
+          "name": "Valverde de Júcar"
+        },
+        {
+          "code": "16238",
+          "name": "Vara de Rey"
+        },
+        {
+          "code": "16243",
+          "name": "Villaescusa de Haro"
+        },
+        {
+          "code": "16247",
+          "name": "Villalgordo del Marquesado"
+        },
+        {
+          "code": "16249",
+          "name": "Villamayor de Santiago"
+        },
+        {
+          "code": "16253",
+          "name": "Villar de Cañas"
+        },
+        {
+          "code": "16255",
+          "name": "Villar de la Encina"
+        },
+        {
+          "code": "16269",
+          "name": "Villares del Saz"
+        },
+        {
+          "code": "16270",
+          "name": "Villarrubio"
+        },
+        {
+          "code": "16273",
+          "name": "Villaverde y Pasaconsol"
+        },
+        {
+          "code": "16279",
+          "name": "Zarza de Tajo"
+        },
+        {
+          "code": "45001",
+          "name": "Ajofrín"
+        },
+        {
+          "code": "45012",
+          "name": "Almonacid de Toledo"
+        },
+        {
+          "code": "45026",
+          "name": "Cabañas de Yepes"
+        },
+        {
+          "code": "45027",
+          "name": "Cabezamesada"
+        },
+        {
+          "code": "45034",
+          "name": "Camuñas"
+        },
+        {
+          "code": "45050",
+          "name": "Ciruelos"
+        },
+        {
+          "code": "45053",
+          "name": "Consuegra"
+        },
+        {
+          "code": "45054",
+          "name": "Corral de Almaguer"
+        },
+        {
+          "code": "45057",
+          "name": "Chueca"
+        },
+        {
+          "code": "45059",
+          "name": "Dosbarrios"
+        },
+        {
+          "code": "45071",
+          "name": "La Guardia"
+        },
+        {
+          "code": "45078",
+          "name": "Huerta de Valdecarábanos"
+        },
+        {
+          "code": "45084",
+          "name": "Lillo"
+        },
+        {
+          "code": "45087",
+          "name": "Madridejos"
+        },
+        {
+          "code": "45090",
+          "name": "Manzaneque"
+        },
+        {
+          "code": "45092",
+          "name": "Marjaliza"
+        },
+        {
+          "code": "45094",
+          "name": "Mascaraque"
+        },
+        {
+          "code": "45101",
+          "name": "Miguel Esteban"
+        },
+        {
+          "code": "45106",
+          "name": "Mora"
+        },
+        {
+          "code": "45107",
+          "name": "Nambroca"
+        },
+        {
+          "code": "45115",
+          "name": "Noblejas"
+        },
+        {
+          "code": "45121",
+          "name": "Ocaña"
+        },
+        {
+          "code": "45123",
+          "name": "Ontígola"
+        },
+        {
+          "code": "45124",
+          "name": "Orgaz"
+        },
+        {
+          "code": "45135",
+          "name": "La Puebla de Almoradiel"
+        },
+        {
+          "code": "45141",
+          "name": "Quero"
+        },
+        {
+          "code": "45142",
+          "name": "Quintanar de la Orden"
+        },
+        {
+          "code": "45149",
+          "name": "El Romeral"
+        },
+        {
+          "code": "45156",
+          "name": "Santa Cruz de la Zarza"
+        },
+        {
+          "code": "45163",
+          "name": "Sonseca"
+        },
+        {
+          "code": "45166",
+          "name": "Tembleque"
+        },
+        {
+          "code": "45167",
+          "name": "El Toboso"
+        },
+        {
+          "code": "45175",
+          "name": "Turleque"
+        },
+        {
+          "code": "45177",
+          "name": "Urda"
+        },
+        {
+          "code": "45185",
+          "name": "Villacañas"
+        },
+        {
+          "code": "45186",
+          "name": "La Villa de Don Fadrique"
+        },
+        {
+          "code": "45187",
+          "name": "Villafranca de los Caballeros"
+        },
+        {
+          "code": "45190",
+          "name": "Villaminaya"
+        },
+        {
+          "code": "45191",
+          "name": "Villamuelas"
+        },
+        {
+          "code": "45192",
+          "name": "Villanueva de Alcardete"
+        },
+        {
+          "code": "45193",
+          "name": "Villanueva de Bogas"
+        },
+        {
+          "code": "45195",
+          "name": "Villarrubia de Santiago"
+        },
+        {
+          "code": "45197",
+          "name": "Villasequilla"
+        },
+        {
+          "code": "45198",
+          "name": "Villatobas"
+        },
+        {
+          "code": "45200",
+          "name": "Los Yébenes"
+        },
+        {
+          "code": "45202",
+          "name": "Yepes"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «La Mancha», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/la_mancha_2025_11_20.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located; province-capital/outlier codes excluded: 16219)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.valdepenas",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Valdepeñas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "13"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "13087",
+          "name": "Valdepeñas"
+        },
+        {
+          "code": "13077",
+          "name": "Santa Cruz de Mudela"
+        },
+        {
+          "code": "13058",
+          "name": "Moral de Calatrava"
+        },
+        {
+          "code": "13008",
+          "name": "Alcubillas"
+        },
+        {
+          "code": "13074",
+          "name": "San Carlos del Valle"
+        },
+        {
+          "code": "13085",
+          "name": "Torrenueva"
+        },
+        {
+          "code": "13010",
+          "name": "Alhambra"
+        },
+        {
+          "code": "13079",
+          "name": "La Solana"
+        },
+        {
+          "code": "13093",
+          "name": "Villanueva de los Infantes"
+        },
+        {
+          "code": "13045",
+          "name": "Granátula de Calatrava"
+        },
+        {
+          "code": "13057",
+          "name": "Montiel"
+        },
+        {
+          "code": "13084",
+          "name": "Torre de Juan Abad"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valdepeñas», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valdepenas_2019_09_03.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.manchuela",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Manchuela",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "16",
+        "02"
+      ],
+      "expected_count": 68,
+      "municipios": [
+        {
+          "code": "02001",
+          "name": "Abengibre"
+        },
+        {
+          "code": "02002",
+          "name": "Alatoz"
+        },
+        {
+          "code": "02005",
+          "name": "Alborea"
+        },
+        {
+          "code": "02007",
+          "name": "Alcalá del Júcar"
+        },
+        {
+          "code": "02013",
+          "name": "Balsa de Ves"
+        },
+        {
+          "code": "02020",
+          "name": "Carcelén"
+        },
+        {
+          "code": "02024",
+          "name": "Casas-Ibáñez"
+        },
+        {
+          "code": "02021",
+          "name": "Casas de Juan Núñez"
+        },
+        {
+          "code": "02023",
+          "name": "Casas de Ves"
+        },
+        {
+          "code": "02026",
+          "name": "Cenizate"
+        },
+        {
+          "code": "02034",
+          "name": "Fuentealbilla"
+        },
+        {
+          "code": "02036",
+          "name": "Golosalvo"
+        },
+        {
+          "code": "02035",
+          "name": "La Gineta"
+        },
+        {
+          "code": "02041",
+          "name": "Jorquera"
+        },
+        {
+          "code": "02045",
+          "name": "Madrigueras"
+        },
+        {
+          "code": "02046",
+          "name": "Mahora"
+        },
+        {
+          "code": "02052",
+          "name": "Motilleja"
+        },
+        {
+          "code": "02054",
+          "name": "Navas de Jorquera"
+        },
+        {
+          "code": "02064",
+          "name": "Pozo-Lorente"
+        },
+        {
+          "code": "02066",
+          "name": "La Recueja"
+        },
+        {
+          "code": "02075",
+          "name": "Valdeganga"
+        },
+        {
+          "code": "02077",
+          "name": "Villa de Ves"
+        },
+        {
+          "code": "02079",
+          "name": "Villamalea"
+        },
+        {
+          "code": "02082",
+          "name": "Villatoya"
+        },
+        {
+          "code": "02083",
+          "name": "Villavaliente"
+        },
+        {
+          "code": "16003",
+          "name": "Alarcón"
+        },
+        {
+          "code": "16014",
+          "name": "Aliaguilla"
+        },
+        {
+          "code": "16017",
+          "name": "Almodóvar del Pinar"
+        },
+        {
+          "code": "16029",
+          "name": "Barchín del Hoyo"
+        },
+        {
+          "code": "16039",
+          "name": "Buenache de Alarcón"
+        },
+        {
+          "code": "16042",
+          "name": "Campillo de Altobuey"
+        },
+        {
+          "code": "16056",
+          "name": "Cardenete"
+        },
+        {
+          "code": "16066",
+          "name": "Casasimarro"
+        },
+        {
+          "code": "16068",
+          "name": "Castillejo de Iniesta"
+        },
+        {
+          "code": "16081",
+          "name": "Chumillas"
+        },
+        {
+          "code": "16082",
+          "name": "Enguídanos"
+        },
+        {
+          "code": "16092",
+          "name": "Gabaldón"
+        },
+        {
+          "code": "16093",
+          "name": "Garaballa"
+        },
+        {
+          "code": "16095",
+          "name": "Graja de Campalbo"
+        },
+        {
+          "code": "16096",
+          "name": "Graja de Iniesta"
+        },
+        {
+          "code": "16098",
+          "name": "El Herrumblar"
+        },
+        {
+          "code": "16104",
+          "name": "Hontecillas"
+        },
+        {
+          "code": "16113",
+          "name": "Iniesta"
+        },
+        {
+          "code": "16117",
+          "name": "Landete"
+        },
+        {
+          "code": "16118",
+          "name": "Ledaña"
+        },
+        {
+          "code": "16125",
+          "name": "Minglanilla"
+        },
+        {
+          "code": "16126",
+          "name": "Mira"
+        },
+        {
+          "code": "16134",
+          "name": "Motilla del Palancar"
+        },
+        {
+          "code": "16137",
+          "name": "Narboneta"
+        },
+        {
+          "code": "16142",
+          "name": "Olmedilla de Alarcón"
+        },
+        {
+          "code": "16150",
+          "name": "Paracuellos"
+        },
+        {
+          "code": "16155",
+          "name": "El Peral"
+        },
+        {
+          "code": "16157",
+          "name": "La Pesquera"
+        },
+        {
+          "code": "16158",
+          "name": "El Picazo"
+        },
+        {
+          "code": "16161",
+          "name": "Piqueras del Castillo"
+        },
+        {
+          "code": "16174",
+          "name": "Puebla del Salvador"
+        },
+        {
+          "code": "16175",
+          "name": "Quintanar del Rey"
+        },
+        {
+          "code": "16199",
+          "name": "Solera de Gabaldón"
+        },
+        {
+          "code": "16202",
+          "name": "Talayuelas"
+        },
+        {
+          "code": "16204",
+          "name": "Tébar"
+        },
+        {
+          "code": "16231",
+          "name": "Valhermoso de la Fuente"
+        },
+        {
+          "code": "16237",
+          "name": "Valverdejo"
+        },
+        {
+          "code": "16244",
+          "name": "Villagarcía del Llano"
+        },
+        {
+          "code": "16248",
+          "name": "Villalpardo"
+        },
+        {
+          "code": "16251",
+          "name": "Villanueva de la Jara"
+        },
+        {
+          "code": "16271",
+          "name": "Villarta"
+        },
+        {
+          "code": "16274",
+          "name": "Víllora"
+        },
+        {
+          "code": "16276",
+          "name": "Yémeda"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Manchuela», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/manchuela_2026_04_21.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located; province-capital/outlier codes excluded: 16078, 02003)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Ribera del Duero",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "09",
+        "47",
+        "40",
+        "42"
+      ],
+      "expected_count": 83,
+      "municipios": [
+        {
+          "code": "09003",
+          "name": "Adrada de Haza"
+        },
+        {
+          "code": "09017",
+          "name": "Anguix"
+        },
+        {
+          "code": "09018",
+          "name": "Aranda de Duero"
+        },
+        {
+          "code": "09035",
+          "name": "Baños de Valdearados"
+        },
+        {
+          "code": "09051",
+          "name": "Berlangas de Roa"
+        },
+        {
+          "code": "09064",
+          "name": "Caleruega"
+        },
+        {
+          "code": "09065",
+          "name": "Campillo de Aranda"
+        },
+        {
+          "code": "09085",
+          "name": "Castrillo de la Vega"
+        },
+        {
+          "code": "09117",
+          "name": "La Cueva de Roa"
+        },
+        {
+          "code": "09131",
+          "name": "Fresnillo de las Dueñas"
+        },
+        {
+          "code": "09136",
+          "name": "Fuentecén"
+        },
+        {
+          "code": "09137",
+          "name": "Fuentelcésped"
+        },
+        {
+          "code": "09138",
+          "name": "Fuentelisendo"
+        },
+        {
+          "code": "09139",
+          "name": "Fuentemolinos"
+        },
+        {
+          "code": "09140",
+          "name": "Fuentenebro"
+        },
+        {
+          "code": "09141",
+          "name": "Fuentespina"
+        },
+        {
+          "code": "09151",
+          "name": "Gumiel de Izán"
+        },
+        {
+          "code": "09451",
+          "name": "Villanueva de Gumiel"
+        },
+        {
+          "code": "09464",
+          "name": "Villatuelda"
+        },
+        {
+          "code": "09483",
+          "name": "Zazuar"
+        },
+        {
+          "code": "09152",
+          "name": "Gumiel de Mercado"
+        },
+        {
+          "code": "09155",
+          "name": "Haza"
+        },
+        {
+          "code": "09160",
+          "name": "Hontangas"
+        },
+        {
+          "code": "09164",
+          "name": "Hontoria de Valdearados"
+        },
+        {
+          "code": "09168",
+          "name": "La Horra"
+        },
+        {
+          "code": "09170",
+          "name": "Hoyales de Roa"
+        },
+        {
+          "code": "09199",
+          "name": "Mambrilla de Castrejón"
+        },
+        {
+          "code": "09218",
+          "name": "Milagros"
+        },
+        {
+          "code": "09228",
+          "name": "Moradillo de Roa"
+        },
+        {
+          "code": "09229",
+          "name": "Nava de Roa"
+        },
+        {
+          "code": "09235",
+          "name": "Olmedillo de Roa"
+        },
+        {
+          "code": "09253",
+          "name": "Pardilla"
+        },
+        {
+          "code": "09256",
+          "name": "Pedrosa de Duero"
+        },
+        {
+          "code": "09321",
+          "name": "Roa"
+        },
+        {
+          "code": "09261",
+          "name": "Peñaranda de Duero"
+        },
+        {
+          "code": "09279",
+          "name": "Quemada"
+        },
+        {
+          "code": "09281",
+          "name": "Quintana del Pidio"
+        },
+        {
+          "code": "09337",
+          "name": "San Juan del Monte"
+        },
+        {
+          "code": "09339",
+          "name": "San Martín de Rubiales"
+        },
+        {
+          "code": "09345",
+          "name": "Santa Cruz de la Salceda"
+        },
+        {
+          "code": "09365",
+          "name": "La Sequera de Haza"
+        },
+        {
+          "code": "09369",
+          "name": "Sotillo de la Ribera"
+        },
+        {
+          "code": "09380",
+          "name": "Terradillos de Esgueva"
+        },
+        {
+          "code": "09387",
+          "name": "Torregalindo"
+        },
+        {
+          "code": "09391",
+          "name": "Tórtoles de Esgueva"
+        },
+        {
+          "code": "09396",
+          "name": "Tubilla del Lago"
+        },
+        {
+          "code": "09400",
+          "name": "Vadocondes"
+        },
+        {
+          "code": "09403",
+          "name": "Valdeande"
+        },
+        {
+          "code": "09405",
+          "name": "Valdezate"
+        },
+        {
+          "code": "09421",
+          "name": "La Vid y Barrios"
+        },
+        {
+          "code": "09428",
+          "name": "Villaescusa de Roa"
+        },
+        {
+          "code": "09438",
+          "name": "Villalba de Duero"
+        },
+        {
+          "code": "09440",
+          "name": "Villalbilla de Gumiel"
+        },
+        {
+          "code": "40014",
+          "name": "Aldehorno"
+        },
+        {
+          "code": "40099",
+          "name": "Honrubia de la Cuesta"
+        },
+        {
+          "code": "40229",
+          "name": "Villaverde de Montejo"
+        },
+        {
+          "code": "42007",
+          "name": "Alcubilla de Avellaneda"
+        },
+        {
+          "code": "42043",
+          "name": "Burgo de Osma-Ciudad de Osma"
+        },
+        {
+          "code": "42058",
+          "name": "Castillejo de Robledo"
+        },
+        {
+          "code": "42103",
+          "name": "Langa de Duero"
+        },
+        {
+          "code": "47021",
+          "name": "Bocigas"
+        },
+        {
+          "code": "42116",
+          "name": "Miño de San Esteban"
+        },
+        {
+          "code": "42162",
+          "name": "San Esteban de Gormaz"
+        },
+        {
+          "code": "47190",
+          "name": "Velilla"
+        },
+        {
+          "code": "47022",
+          "name": "Bocos de Duero"
+        },
+        {
+          "code": "47033",
+          "name": "Canalejas de Peñafiel"
+        },
+        {
+          "code": "47038",
+          "name": "Castrillo de Duero"
+        },
+        {
+          "code": "47059",
+          "name": "Curiel de Duero"
+        },
+        {
+          "code": "47063",
+          "name": "Fompedraza"
+        },
+        {
+          "code": "47080",
+          "name": "Manzanillo"
+        },
+        {
+          "code": "47103",
+          "name": "Olivares de Duero"
+        },
+        {
+          "code": "47106",
+          "name": "Olmos de Peñafiel"
+        },
+        {
+          "code": "47114",
+          "name": "Peñafiel"
+        },
+        {
+          "code": "47116",
+          "name": "Pesquera de Duero"
+        },
+        {
+          "code": "47118",
+          "name": "Piñel de Abajo"
+        },
+        {
+          "code": "47119",
+          "name": "Piñel de Arriba"
+        },
+        {
+          "code": "47127",
+          "name": "Quintanilla de Arriba"
+        },
+        {
+          "code": "47129",
+          "name": "Quintanilla de Onésimo"
+        },
+        {
+          "code": "47131",
+          "name": "Rábano"
+        },
+        {
+          "code": "47137",
+          "name": "Roturas"
+        },
+        {
+          "code": "47170",
+          "name": "Torre de Peñafiel"
+        },
+        {
+          "code": "47179",
+          "name": "Valbuena de Duero"
+        },
+        {
+          "code": "47180",
+          "name": "Valdearcos de la Vega"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Duero», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located); the 4 province capitals (Burgos/Segovia/Soria/Valladolid) excluded as non-members."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.tierra-de-leon",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Tierra de León",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "24",
+        "47"
+      ],
+      "expected_count": 85,
+      "municipios": [
+        {
+          "code": "24002",
+          "name": "Algadefe"
+        },
+        {
+          "code": "24003",
+          "name": "Alija del Infantado"
+        },
+        {
+          "code": "24005",
+          "name": "La Antigua"
+        },
+        {
+          "code": "24006",
+          "name": "Ardón"
+        },
+        {
+          "code": "24010",
+          "name": "La Bañeza"
+        },
+        {
+          "code": "24017",
+          "name": "Bercianos del Páramo"
+        },
+        {
+          "code": "24018",
+          "name": "Bercianos del Real Camino"
+        },
+        {
+          "code": "24024",
+          "name": "El Burgo Ranero"
+        },
+        {
+          "code": "24028",
+          "name": "Cabreros del Río"
+        },
+        {
+          "code": "24031",
+          "name": "Calzada del Coto"
+        },
+        {
+          "code": "24032",
+          "name": "Campazas"
+        },
+        {
+          "code": "24033",
+          "name": "Campo de Villavidel"
+        },
+        {
+          "code": "24042",
+          "name": "Castilfalé"
+        },
+        {
+          "code": "24046",
+          "name": "Castrocalbón"
+        },
+        {
+          "code": "24050",
+          "name": "Castrotierra de Valmadrigal"
+        },
+        {
+          "code": "24053",
+          "name": "Cebrones del Río"
+        },
+        {
+          "code": "24054",
+          "name": "Cimanes de la Vega"
+        },
+        {
+          "code": "24058",
+          "name": "Corbillos de los Oteros"
+        },
+        {
+          "code": "24062",
+          "name": "Cubillas de los Oteros"
+        },
+        {
+          "code": "24065",
+          "name": "Chozas de Abajo"
+        },
+        {
+          "code": "24073",
+          "name": "Fresno de la Vega"
+        },
+        {
+          "code": "24077",
+          "name": "Gordaliza del Pino"
+        },
+        {
+          "code": "24078",
+          "name": "Gordoncillo"
+        },
+        {
+          "code": "24080",
+          "name": "Grajal de Campos"
+        },
+        {
+          "code": "24081",
+          "name": "Gusendos de los Oteros"
+        },
+        {
+          "code": "24084",
+          "name": "Izagre"
+        },
+        {
+          "code": "24086",
+          "name": "Joarilla de las Matas"
+        },
+        {
+          "code": "24088",
+          "name": "Laguna de Negrillos"
+        },
+        {
+          "code": "24097",
+          "name": "Matadeón de los Oteros"
+        },
+        {
+          "code": "24099",
+          "name": "Matanza"
+        },
+        {
+          "code": "24105",
+          "name": "Onzonilla"
+        },
+        {
+          "code": "24107",
+          "name": "Pajares de los Oteros"
+        },
+        {
+          "code": "24113",
+          "name": "Pobladura de Pelayo García"
+        },
+        {
+          "code": "24117",
+          "name": "Pozuelo del Páramo"
+        },
+        {
+          "code": "24124",
+          "name": "Quintana del Marco"
+        },
+        {
+          "code": "24125",
+          "name": "Quintana y Congosto"
+        },
+        {
+          "code": "24131",
+          "name": "Riego de la Vega"
+        },
+        {
+          "code": "24136",
+          "name": "Roperuelos del Páramo"
+        },
+        {
+          "code": "24139",
+          "name": "Sahagún"
+        },
+        {
+          "code": "24141",
+          "name": "San Adrián del Valle"
+        },
+        {
+          "code": "24146",
+          "name": "San Esteban de Nogales"
+        },
+        {
+          "code": "24149",
+          "name": "San Millán de los Caballeros"
+        },
+        {
+          "code": "24153",
+          "name": "Santa Cristina de Valmadrigal"
+        },
+        {
+          "code": "24154",
+          "name": "Santa Elena de Jamuz"
+        },
+        {
+          "code": "24156",
+          "name": "Santa María del Monte de Cea"
+        },
+        {
+          "code": "24160",
+          "name": "Santas Martas"
+        },
+        {
+          "code": "24162",
+          "name": "Santovenia de la Valdoncina"
+        },
+        {
+          "code": "24168",
+          "name": "Toral de los Guzmanes"
+        },
+        {
+          "code": "24178",
+          "name": "Valdemora"
+        },
+        {
+          "code": "24181",
+          "name": "Valderas"
+        },
+        {
+          "code": "24187",
+          "name": "Valdevimbre"
+        },
+        {
+          "code": "24188",
+          "name": "Valencia de Don Juan"
+        },
+        {
+          "code": "24190",
+          "name": "Valverde-Enrique"
+        },
+        {
+          "code": "24191",
+          "name": "Vallecillo"
+        },
+        {
+          "code": "24197",
+          "name": "Vega de Infanzones"
+        },
+        {
+          "code": "24203",
+          "name": "Villabraz"
+        },
+        {
+          "code": "24207",
+          "name": "Villademor de la Vega"
+        },
+        {
+          "code": "24211",
+          "name": "Villamandos"
+        },
+        {
+          "code": "24212",
+          "name": "Villamañán"
+        },
+        {
+          "code": "24216",
+          "name": "Villamontán de la Valduerna"
+        },
+        {
+          "code": "24217",
+          "name": "Villamoratiel de las Matas"
+        },
+        {
+          "code": "24218",
+          "name": "Villanueva de las Manzanas"
+        },
+        {
+          "code": "24221",
+          "name": "Villaquejida"
+        },
+        {
+          "code": "24227",
+          "name": "Villaturiel"
+        },
+        {
+          "code": "24230",
+          "name": "Zotes del Páramo"
+        },
+        {
+          "code": "47015",
+          "name": "Becilla de Valderaduey"
+        },
+        {
+          "code": "47026",
+          "name": "Bustillo de Chaves"
+        },
+        {
+          "code": "47028",
+          "name": "Cabezón de Valderaduey"
+        },
+        {
+          "code": "47040",
+          "name": "Castrobol"
+        },
+        {
+          "code": "47046",
+          "name": "Castroponce"
+        },
+        {
+          "code": "47058",
+          "name": "Cuenca de Campos"
+        },
+        {
+          "code": "47084",
+          "name": "Mayorga"
+        },
+        {
+          "code": "47088",
+          "name": "Melgar de Abajo"
+        },
+        {
+          "code": "47089",
+          "name": "Melgar de Arriba"
+        },
+        {
+          "code": "47091",
+          "name": "Monasterio de Vega"
+        },
+        {
+          "code": "47128",
+          "name": "Quintanilla del Molar"
+        },
+        {
+          "code": "47134",
+          "name": "Roales de Campos"
+        },
+        {
+          "code": "47140",
+          "name": "Saelices de Mayorga"
+        },
+        {
+          "code": "47153",
+          "name": "Santervás de Campos"
+        },
+        {
+          "code": "47176",
+          "name": "La Unión de Campos"
+        },
+        {
+          "code": "47183",
+          "name": "Valdunquillo"
+        },
+        {
+          "code": "47199",
+          "name": "Villacid de Campos"
+        },
+        {
+          "code": "47208",
+          "name": "Villagómez la Nueva"
+        },
+        {
+          "code": "47211",
+          "name": "Villalba de la Loma"
+        },
+        {
+          "code": "24051",
+          "name": "Cea"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Tierra de León», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located); León capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.cebreros",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Cebreros",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "05"
+      ],
+      "expected_count": 35,
+      "municipios": [
+        {
+          "code": "05002",
+          "name": "La Adrada"
+        },
+        {
+          "code": "05041",
+          "name": "Burgohondo"
+        },
+        {
+          "code": "05054",
+          "name": "Casavieja"
+        },
+        {
+          "code": "05055",
+          "name": "Casillas"
+        },
+        {
+          "code": "05057",
+          "name": "Cebreros"
+        },
+        {
+          "code": "05066",
+          "name": "Cuevas del Valle"
+        },
+        {
+          "code": "05075",
+          "name": "Fresnedilla"
+        },
+        {
+          "code": "05082",
+          "name": "Gavilanes"
+        },
+        {
+          "code": "05093",
+          "name": "Herradón de Pinares"
+        },
+        {
+          "code": "05095",
+          "name": "Higuera de las Dueñas"
+        },
+        {
+          "code": "05102",
+          "name": "El Hoyo de Pinares"
+        },
+        {
+          "code": "05110",
+          "name": "Lanzahíta"
+        },
+        {
+          "code": "05127",
+          "name": "Mijares"
+        },
+        {
+          "code": "05132",
+          "name": "Mombeltrán"
+        },
+        {
+          "code": "05156",
+          "name": "Navahondilla"
+        },
+        {
+          "code": "05158",
+          "name": "Navalmoral"
+        },
+        {
+          "code": "05163",
+          "name": "Navaluenga"
+        },
+        {
+          "code": "05166",
+          "name": "Navarredondilla"
+        },
+        {
+          "code": "05167",
+          "name": "Navarrevisca"
+        },
+        {
+          "code": "05182",
+          "name": "Pedro Bernardo"
+        },
+        {
+          "code": "05187",
+          "name": "Piedralaves"
+        },
+        {
+          "code": "05201",
+          "name": "San Bartolomé de Pinares"
+        },
+        {
+          "code": "05207",
+          "name": "San Esteban del Valle"
+        },
+        {
+          "code": "05211",
+          "name": "San Juan de la Nava"
+        },
+        {
+          "code": "05212",
+          "name": "San Juan del Molinillo"
+        },
+        {
+          "code": "05222",
+          "name": "Santa Cruz de Pinares"
+        },
+        {
+          "code": "05221",
+          "name": "Santa Cruz del Valle"
+        },
+        {
+          "code": "05227",
+          "name": "Santa María del Tiétar"
+        },
+        {
+          "code": "05233",
+          "name": "Serranillos"
+        },
+        {
+          "code": "05240",
+          "name": "Sotillo de la Adrada"
+        },
+        {
+          "code": "05241",
+          "name": "El Tiemblo"
+        },
+        {
+          "code": "05262",
+          "name": "Villarejo del Valle"
+        },
+        {
+          "code": "05022",
+          "name": "El Barraco"
+        },
+        {
+          "code": "05169",
+          "name": "Navatalgordo"
+        },
+        {
+          "code": "05905",
+          "name": "Villanueva de Ávila"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cebreros», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (density-located); Ávila capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.bullas",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Bullas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30"
+      ],
+      "expected_count": 11,
+      "municipios": [
+        {
+          "code": "30012",
+          "name": "Bullas"
+        },
+        {
+          "code": "30017",
+          "name": "Cehegín"
+        },
+        {
+          "code": "30029",
+          "name": "Mula"
+        },
+        {
+          "code": "30032",
+          "name": "Pliego"
+        },
+        {
+          "code": "30034",
+          "name": "Ricote"
+        },
+        {
+          "code": "30013",
+          "name": "Calasparra"
+        },
+        {
+          "code": "30028",
+          "name": "Moratalla"
+        },
+        {
+          "code": "30040",
+          "name": "Ulea"
+        },
+        {
+          "code": "30024",
+          "name": "Lorca"
+        },
+        {
+          "code": "30039",
+          "name": "Totana"
+        },
+        {
+          "code": "30019",
+          "name": "Cieza"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Bullas», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (density-located); Murcia capital excluded."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.murcia.yecla",
+      "comunidad_key": "murcia",
+      "comunidad": "Región de Murcia",
+      "display_name": "Yecla",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "30"
+      ],
+      "expected_count": 1,
+      "municipios": [
+        {
+          "code": "30043",
+          "name": "Yecla"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Yecla», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "DOP Yecla comprises the single municipality of Yecla."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.ribera-del-jucar",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Ribera del Júcar",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "16"
+      ],
+      "expected_count": 7,
+      "municipios": [
+        {
+          "code": "16060",
+          "name": "Casas de Benítez"
+        },
+        {
+          "code": "16061",
+          "name": "Casas de Fernando Alonso"
+        },
+        {
+          "code": "16063",
+          "name": "Casas de Guijarro"
+        },
+        {
+          "code": "16064",
+          "name": "Casas de Haro"
+        },
+        {
+          "code": "16065",
+          "name": "Casas de los Pinos"
+        },
+        {
+          "code": "16166",
+          "name": "Pozoamargo"
+        },
+        {
+          "code": "16198",
+          "name": "Sisante"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Júcar», MAPA",
+        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the 7 términos municipales (Cuenca)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.la-rioja",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja",
+      "appellation_system": "DOCa",
+      "appellation_level": "regional",
+      "provinces": [
+        "26",
+        "01",
+        "31"
+      ],
+      "expected_count": 135,
+      "municipios": [
+        {
+          "code": "26001",
+          "name": "Ábalos"
+        },
+        {
+          "code": "26037",
+          "name": "Camprovín"
+        },
+        {
+          "code": "26062",
+          "name": "Foncea"
+        },
+        {
+          "code": "26095",
+          "name": "Matute"
+        },
+        {
+          "code": "26148",
+          "name": "Tirgo"
+        },
+        {
+          "code": "26009",
+          "name": "Alesanco"
+        },
+        {
+          "code": "26063",
+          "name": "Fonzaleche"
+        },
+        {
+          "code": "26096",
+          "name": "Medrano"
+        },
+        {
+          "code": "26150",
+          "name": "Tormantos"
+        },
+        {
+          "code": "26010",
+          "name": "Alesón"
+        },
+        {
+          "code": "26040",
+          "name": "Cañas"
+        },
+        {
+          "code": "26064",
+          "name": "Fuenmayor"
+        },
+        {
+          "code": "26102",
+          "name": "Nájera"
+        },
+        {
+          "code": "26152",
+          "name": "Torrecilla sobre Alesanco"
+        },
+        {
+          "code": "26013",
+          "name": "Anguciana"
+        },
+        {
+          "code": "26041",
+          "name": "Cárdenas"
+        },
+        {
+          "code": "26065",
+          "name": "Galbárruli"
+        },
+        {
+          "code": "26105",
+          "name": "Navarrete"
+        },
+        {
+          "code": "26154",
+          "name": "Torremontalbo"
+        },
+        {
+          "code": "26015",
+          "name": "Arenzana de Abajo"
+        },
+        {
+          "code": "26042",
+          "name": "Casalarreina"
+        },
+        {
+          "code": "26068",
+          "name": "Gimileo"
+        },
+        {
+          "code": "26109",
+          "name": "Ochánduri"
+        },
+        {
+          "code": "26155",
+          "name": "Treviana"
+        },
+        {
+          "code": "26016",
+          "name": "Arenzana de Arriba"
+        },
+        {
+          "code": "26043",
+          "name": "Castañares de Rioja"
+        },
+        {
+          "code": "26071",
+          "name": "Haro"
+        },
+        {
+          "code": "26111",
+          "name": "Ollauri"
+        },
+        {
+          "code": "26157",
+          "name": "Tricio"
+        },
+        {
+          "code": "26022",
+          "name": "Azofra"
+        },
+        {
+          "code": "26045",
+          "name": "Cellorigo"
+        },
+        {
+          "code": "26074",
+          "name": "Hervías"
+        },
+        {
+          "code": "26127",
+          "name": "Rodezno"
+        },
+        {
+          "code": "26160",
+          "name": "Uruñuela"
+        },
+        {
+          "code": "26023",
+          "name": "Badarán"
+        },
+        {
+          "code": "26046",
+          "name": "Cenicero"
+        },
+        {
+          "code": "26073",
+          "name": "Herramélluri"
+        },
+        {
+          "code": "26128",
+          "name": "Sajazarra"
+        },
+        {
+          "code": "26163",
+          "name": "Ventosa"
+        },
+        {
+          "code": "26024",
+          "name": "Bañares"
+        },
+        {
+          "code": "26048",
+          "name": "Cidamón"
+        },
+        {
+          "code": "26075",
+          "name": "Hormilla"
+        },
+        {
+          "code": "26129",
+          "name": "San Asensio"
+        },
+        {
+          "code": "26166",
+          "name": "Villalba de Rioja"
+        },
+        {
+          "code": "26026",
+          "name": "Baños de Río Tobía"
+        },
+        {
+          "code": "26049",
+          "name": "Cihuri"
+        },
+        {
+          "code": "26076",
+          "name": "Hormilleja"
+        },
+        {
+          "code": "26131",
+          "name": "San Millán de Yécora"
+        },
+        {
+          "code": "26171",
+          "name": "Villar de Torre"
+        },
+        {
+          "code": "26025",
+          "name": "Baños de Rioja"
+        },
+        {
+          "code": "26050",
+          "name": "Cirueña"
+        },
+        {
+          "code": "26078",
+          "name": "Hornos de Moncalvillo"
+        },
+        {
+          "code": "26139",
+          "name": "San Torcuato"
+        },
+        {
+          "code": "26172",
+          "name": "Villarejo"
+        },
+        {
+          "code": "26027",
+          "name": "Berceo"
+        },
+        {
+          "code": "26052",
+          "name": "Cordovín"
+        },
+        {
+          "code": "26079",
+          "name": "Huércanos"
+        },
+        {
+          "code": "26142",
+          "name": "San Vicente de la Sonsierra"
+        },
+        {
+          "code": "26180",
+          "name": "Zarratón"
+        },
+        {
+          "code": "26030",
+          "name": "Bezares"
+        },
+        {
+          "code": "26056",
+          "name": "Cuzcurrita de Río Tirón"
+        },
+        {
+          "code": "26084",
+          "name": "Lardero"
+        },
+        {
+          "code": "26134",
+          "name": "Santa Coloma"
+        },
+        {
+          "code": "26031",
+          "name": "Bobadilla"
+        },
+        {
+          "code": "26057",
+          "name": "Daroca de Rioja"
+        },
+        {
+          "code": "26087",
+          "name": "Leiva"
+        },
+        {
+          "code": "26143",
+          "name": "Sojuela"
+        },
+        {
+          "code": "26033",
+          "name": "Briñas"
+        },
+        {
+          "code": "26059",
+          "name": "Entrena"
+        },
+        {
+          "code": "26089",
+          "name": "Logroño"
+        },
+        {
+          "code": "26144",
+          "name": "Sorzano"
+        },
+        {
+          "code": "26034",
+          "name": "Briones"
+        },
+        {
+          "code": "26060",
+          "name": "Estollo"
+        },
+        {
+          "code": "26092",
+          "name": "Manjarrés"
+        },
+        {
+          "code": "26145",
+          "name": "Sotés"
+        },
+        {
+          "code": "26002",
+          "name": "Agoncillo"
+        },
+        {
+          "code": "26019",
+          "name": "Arrúbal"
+        },
+        {
+          "code": "26054",
+          "name": "Cornago"
+        },
+        {
+          "code": "26108",
+          "name": "Ocón"
+        },
+        {
+          "code": "26125",
+          "name": "Rincón de Soto"
+        },
+        {
+          "code": "26020",
+          "name": "Ausejo"
+        },
+        {
+          "code": "26123",
+          "name": "El Redal"
+        },
+        {
+          "code": "26099",
+          "name": "Murillo de Río Leza"
+        },
+        {
+          "code": "26135",
+          "name": "Santa Engracia del Jubera"
+        },
+        {
+          "code": "26021",
+          "name": "Autol"
+        },
+        {
+          "code": "26170",
+          "name": "El Villar de Arnedo"
+        },
+        {
+          "code": "26100",
+          "name": "Muro de Aguas"
+        },
+        {
+          "code": "26136",
+          "name": "Santa Eulalia Bajera"
+        },
+        {
+          "code": "26066",
+          "name": "Galilea"
+        },
+        {
+          "code": "26103",
+          "name": "Nalda"
+        },
+        {
+          "code": "26158",
+          "name": "Tudelilla"
+        },
+        {
+          "code": "26006",
+          "name": "Alberite"
+        },
+        {
+          "code": "26028",
+          "name": "Bergasa"
+        },
+        {
+          "code": "26070",
+          "name": "Grávalos"
+        },
+        {
+          "code": "26168",
+          "name": "Villamediana de Iregua"
+        },
+        {
+          "code": "26007",
+          "name": "Alcanadre"
+        },
+        {
+          "code": "26036",
+          "name": "Calahorra"
+        },
+        {
+          "code": "26072",
+          "name": "Herce"
+        },
+        {
+          "code": "26117",
+          "name": "Pradejón"
+        },
+        {
+          "code": "26173",
+          "name": "Villarroya"
+        },
+        {
+          "code": "26008",
+          "name": "Aldeanueva de Ebro"
+        },
+        {
+          "code": "26047",
+          "name": "Cervera del Río Alhama"
+        },
+        {
+          "code": "26080",
+          "name": "Igea"
+        },
+        {
+          "code": "26119",
+          "name": "Préjano"
+        },
+        {
+          "code": "26011",
+          "name": "Alfaro"
+        },
+        {
+          "code": "26051",
+          "name": "Clavijo"
+        },
+        {
+          "code": "26083",
+          "name": "Lagunilla del Jubera"
+        },
+        {
+          "code": "26120",
+          "name": "Quel"
+        },
+        {
+          "code": "26017",
+          "name": "Arnedillo"
+        },
+        {
+          "code": "26053",
+          "name": "Corera"
+        },
+        {
+          "code": "26088",
+          "name": "Leza de Río Leza"
+        },
+        {
+          "code": "26124",
+          "name": "Ribafrecha"
+        },
+        {
+          "code": "26018",
+          "name": "Arnedo"
+        },
+        {
+          "code": "31015",
+          "name": "Andosilla"
+        },
+        {
+          "code": "31047",
+          "name": "Bargota"
+        },
+        {
+          "code": "31165",
+          "name": "Mendavia"
+        },
+        {
+          "code": "31223",
+          "name": "Sartaguda"
+        },
+        {
+          "code": "31026",
+          "name": "Aras"
+        },
+        {
+          "code": "31042",
+          "name": "Azagra"
+        },
+        {
+          "code": "31215",
+          "name": "San Adrián"
+        },
+        {
+          "code": "31251",
+          "name": "Viana"
+        },
+        {
+          "code": "01011",
+          "name": "Baños de Ebro"
+        },
+        {
+          "code": "01023",
+          "name": "Elvillar"
+        },
+        {
+          "code": "01032",
+          "name": "Lanciego"
+        },
+        {
+          "code": "01041",
+          "name": "Navaridas"
+        },
+        {
+          "code": "01057",
+          "name": "Villabuena de Álava"
+        },
+        {
+          "code": "01028",
+          "name": "Labastida"
+        },
+        {
+          "code": "01033",
+          "name": "Lapuebla de Labarca"
+        },
+        {
+          "code": "01060",
+          "name": "Yécora"
+        },
+        {
+          "code": "01034",
+          "name": "Leza"
+        },
+        {
+          "code": "01022",
+          "name": "Elciego"
+        },
+        {
+          "code": "01031",
+          "name": "Laguardia"
+        },
+        {
+          "code": "01039",
+          "name": "Moreda de Álava"
+        },
+        {
+          "code": "01052",
+          "name": "Samaniego"
+        },
+        {
+          "code": "31157",
+          "name": "Lodosa"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOCa «Rioja», MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Trans-comunidad DOCa keyed under La Rioja; includes Rioja Alavesa (Álava/País Vasco) and Rioja municipios of Navarra. Whole-municipality union (density-located from the space-separated multi-column list). Logroño is a member; the Vitoria/Pamplona capitals are excluded. [Collapsed 2026-08-19: this DO shares its comunidad's name, so it lives on the comunidad node spain.la-rioja; the redundant child node was removed.]"
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.penedes",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Penedès",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08",
+        "43"
+      ],
+      "expected_count": 61,
+      "municipios": [
+        {
+          "code": "08001",
+          "name": "Abrera"
+        },
+        {
+          "code": "08013",
+          "name": "Avinyonet del Penedès"
+        },
+        {
+          "code": "08020",
+          "name": "Begues"
+        },
+        {
+          "code": "08027",
+          "name": "Les Cabanyes"
+        },
+        {
+          "code": "08028",
+          "name": "Cabrera d'Anoia"
+        },
+        {
+          "code": "08043",
+          "name": "Canyelles"
+        },
+        {
+          "code": "08058",
+          "name": "Castellet i la Gornal"
+        },
+        {
+          "code": "08065",
+          "name": "Castellví de la Marca"
+        },
+        {
+          "code": "08066",
+          "name": "Castellví de Rosanes"
+        },
+        {
+          "code": "08068",
+          "name": "Cervelló"
+        },
+        {
+          "code": "08072",
+          "name": "Corbera de Llobregat"
+        },
+        {
+          "code": "08074",
+          "name": "Cubelles"
+        },
+        {
+          "code": "08085",
+          "name": "Font-rubí"
+        },
+        {
+          "code": "08091",
+          "name": "Gelida"
+        },
+        {
+          "code": "08094",
+          "name": "La Granada"
+        },
+        {
+          "code": "08104",
+          "name": "La Llacuna"
+        },
+        {
+          "code": "08114",
+          "name": "Martorell"
+        },
+        {
+          "code": "08119",
+          "name": "Masquefa"
+        },
+        {
+          "code": "08122",
+          "name": "Mediona"
+        },
+        {
+          "code": "08145",
+          "name": "Olèrdola"
+        },
+        {
+          "code": "08146",
+          "name": "Olesa de Bonesvalls"
+        },
+        {
+          "code": "08148",
+          "name": "Olivella"
+        },
+        {
+          "code": "08154",
+          "name": "Pacs del Penedès"
+        },
+        {
+          "code": "08161",
+          "name": "Piera"
+        },
+        {
+          "code": "08162",
+          "name": "Els Hostalets de Pierola"
+        },
+        {
+          "code": "08164",
+          "name": "El Pla del Penedès"
+        },
+        {
+          "code": "08168",
+          "name": "Pontons"
+        },
+        {
+          "code": "08174",
+          "name": "Puigdàlber"
+        },
+        {
+          "code": "08206",
+          "name": "Sant Cugat Sesgarrigues"
+        },
+        {
+          "code": "08208",
+          "name": "Sant Esteve Sesrovires"
+        },
+        {
+          "code": "08222",
+          "name": "Sant Llorenç d'Hortons"
+        },
+        {
+          "code": "08227",
+          "name": "Sant Martí Sarroca"
+        },
+        {
+          "code": "08231",
+          "name": "Sant Pere de Ribes"
+        },
+        {
+          "code": "08232",
+          "name": "Sant Pere de Riudebitlles"
+        },
+        {
+          "code": "08236",
+          "name": "Sant Quintí de Mediona"
+        },
+        {
+          "code": "08240",
+          "name": "Sant Sadurní d'Anoia"
+        },
+        {
+          "code": "08249",
+          "name": "Santa Fe del Penedès"
+        },
+        {
+          "code": "08251",
+          "name": "Santa Margarida i els Monjos"
+        },
+        {
+          "code": "08257",
+          "name": "Santa Maria de Miralles"
+        },
+        {
+          "code": "08270",
+          "name": "Sitges"
+        },
+        {
+          "code": "08273",
+          "name": "Subirats"
+        },
+        {
+          "code": "08287",
+          "name": "Torrelavit"
+        },
+        {
+          "code": "08288",
+          "name": "Torrelles de Foix"
+        },
+        {
+          "code": "08295",
+          "name": "Vallirana"
+        },
+        {
+          "code": "08304",
+          "name": "Vilobí del Penedès"
+        },
+        {
+          "code": "08305",
+          "name": "Vilafranca del Penedès"
+        },
+        {
+          "code": "08307",
+          "name": "Vilanova i la Geltrú"
+        },
+        {
+          "code": "43001",
+          "name": "Aiguamúrcia"
+        },
+        {
+          "code": "43002",
+          "name": "Albinyana"
+        },
+        {
+          "code": "43016",
+          "name": "L'Arboç"
+        },
+        {
+          "code": "43020",
+          "name": "Banyeres del Penedès"
+        },
+        {
+          "code": "43024",
+          "name": "Bellvei"
+        },
+        {
+          "code": "43028",
+          "name": "La Bisbal del Penedès"
+        },
+        {
+          "code": "43030",
+          "name": "Bonastre"
+        },
+        {
+          "code": "43037",
+          "name": "Calafell"
+        },
+        {
+          "code": "43051",
+          "name": "Cunit"
+        },
+        {
+          "code": "43074",
+          "name": "Llorenç del Penedès"
+        },
+        {
+          "code": "43090",
+          "name": "El Montmell"
+        },
+        {
+          "code": "43137",
+          "name": "Sant Jaume dels Domenys"
+        },
+        {
+          "code": "43140",
+          "name": "Santa Oliva"
+        },
+        {
+          "code": "43163",
+          "name": "El Vendrell"
+        }
+      ],
+      "grapes": [
+        "Macabeo",
+        "Xarel·lo",
+        "Parellada",
+        "Garnacha Tinta",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Penedès», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/penedes_2026_02_20.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Bulleted list §4.1 (p.10-11), province footnote (1)=Barcelona (2)=Tarragona. 61 whole municipios. 'Cabrera d'Igualada' in the pliego is the former name of the INE municipality Cabrera d'Anoia (08028)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.terra-alta",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Terra Alta",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "43018",
+          "name": "Arnes"
+        },
+        {
+          "code": "43022",
+          "name": "Batea"
+        },
+        {
+          "code": "43032",
+          "name": "Bot"
+        },
+        {
+          "code": "43041",
+          "name": "Caseres"
+        },
+        {
+          "code": "43048",
+          "name": "Corbera d'Ebre"
+        },
+        {
+          "code": "43056",
+          "name": "La Fatarella"
+        },
+        {
+          "code": "43064",
+          "name": "Gandesa"
+        },
+        {
+          "code": "43071",
+          "name": "Horta de Sant Joan"
+        },
+        {
+          "code": "43106",
+          "name": "El Pinell de Brai"
+        },
+        {
+          "code": "43110",
+          "name": "La Pobla de Massaluca"
+        },
+        {
+          "code": "43117",
+          "name": "Prat de Comte"
+        },
+        {
+          "code": "43175",
+          "name": "Vilalba dels Arcs"
+        }
+      ],
+      "grapes": [
+        "Garnacha Blanca",
+        "Garnacha Tinta",
+        "Macabeo",
+        "Cariñena"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Terra Alta», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/terra_alta_2020_04_03.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = the 12 whole municipios of the comarca de la Terra Alta (Tarragona), listed comma-separated in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.emporda",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Empordà",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "17"
+      ],
+      "expected_count": 55,
+      "municipios": [
+        {
+          "code": "17001",
+          "name": "Agullana"
+        },
+        {
+          "code": "17012",
+          "name": "Avinyonet de Puigventós"
+        },
+        {
+          "code": "17013",
+          "name": "Begur"
+        },
+        {
+          "code": "17018",
+          "name": "Bellcaire d'Empordà"
+        },
+        {
+          "code": "17022",
+          "name": "La Bisbal d'Empordà"
+        },
+        {
+          "code": "17029",
+          "name": "Boadella i les Escaules"
+        },
+        {
+          "code": "17030",
+          "name": "Cabanes"
+        },
+        {
+          "code": "17032",
+          "name": "Cadaqués"
+        },
+        {
+          "code": "17034",
+          "name": "Calonge i Sant Antoni"
+        },
+        {
+          "code": "17041",
+          "name": "Cantallops"
+        },
+        {
+          "code": "17042",
+          "name": "Capmany"
+        },
+        {
+          "code": "17048",
+          "name": "Castell-Platja d'Aro"
+        },
+        {
+          "code": "17051",
+          "name": "Cistella"
+        },
+        {
+          "code": "17054",
+          "name": "Colera"
+        },
+        {
+          "code": "17057",
+          "name": "Corçà"
+        },
+        {
+          "code": "17060",
+          "name": "Darnius"
+        },
+        {
+          "code": "17064",
+          "name": "Espolla"
+        },
+        {
+          "code": "17066",
+          "name": "Figueres"
+        },
+        {
+          "code": "17077",
+          "name": "Garriguella"
+        },
+        {
+          "code": "17086",
+          "name": "La Jonquera"
+        },
+        {
+          "code": "17092",
+          "name": "Llançà"
+        },
+        {
+          "code": "17093",
+          "name": "Llers"
+        },
+        {
+          "code": "17100",
+          "name": "Masarac"
+        },
+        {
+          "code": "17106",
+          "name": "Mollet de Peralada"
+        },
+        {
+          "code": "17110",
+          "name": "Mont-ras"
+        },
+        {
+          "code": "17117",
+          "name": "Palafrugell"
+        },
+        {
+          "code": "17118",
+          "name": "Palamós"
+        },
+        {
+          "code": "17120",
+          "name": "Palau-saverdera"
+        },
+        {
+          "code": "17121",
+          "name": "Palau-sator"
+        },
+        {
+          "code": "17124",
+          "name": "Pals"
+        },
+        {
+          "code": "17128",
+          "name": "Pau"
+        },
+        {
+          "code": "17129",
+          "name": "Pedret i Marzà"
+        },
+        {
+          "code": "17132",
+          "name": "Peralada"
+        },
+        {
+          "code": "17135",
+          "name": "Pont de Molins"
+        },
+        {
+          "code": "17138",
+          "name": "Portbou"
+        },
+        {
+          "code": "17140",
+          "name": "El Port de la Selva"
+        },
+        {
+          "code": "17143",
+          "name": "Rabós"
+        },
+        {
+          "code": "17144",
+          "name": "Regencós"
+        },
+        {
+          "code": "17152",
+          "name": "Roses"
+        },
+        {
+          "code": "17158",
+          "name": "Sant Climent Sescebes"
+        },
+        {
+          "code": "17160",
+          "name": "Sant Feliu de Guíxols"
+        },
+        {
+          "code": "17181",
+          "name": "Santa Cristina d'Aro"
+        },
+        {
+          "code": "17188",
+          "name": "La Selva de Mar"
+        },
+        {
+          "code": "17196",
+          "name": "Terrades"
+        },
+        {
+          "code": "17197",
+          "name": "Torrent"
+        },
+        {
+          "code": "17199",
+          "name": "Torroella de Montgrí"
+        },
+        {
+          "code": "17204",
+          "name": "Ullà"
+        },
+        {
+          "code": "17209",
+          "name": "Vall-llobrega"
+        },
+        {
+          "code": "17221",
+          "name": "Vilafant"
+        },
+        {
+          "code": "17223",
+          "name": "Vilajuïga"
+        },
+        {
+          "code": "17227",
+          "name": "Vilamaniscle"
+        },
+        {
+          "code": "17228",
+          "name": "Vilanant"
+        },
+        {
+          "code": "17234",
+          "name": "Biure"
+        },
+        {
+          "code": "17901",
+          "name": "Cruïlles, Monells i Sant Sadurní de l'Heura"
+        },
+        {
+          "code": "17902",
+          "name": "Forallac"
+        }
+      ],
+      "grapes": [
+        "Garnacha (Garnatxa)",
+        "Cariñena (Samsó)",
+        "Macabeo",
+        "Garnacha Blanca"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Empordà», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/emporda_2025_07_24.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción, two comarca groups: Alt Empordà (35) + Baix Empordà (20) = 55 whole municipios (Girona). Pliego spells 'Avinyonet del Puigventós'; INE municipality is 'Avinyonet de Puigventós' (17012) — de/del orthographic variant, code-fixed."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.conca-de-barbera",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Conca de Barberà",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 14,
+      "municipios": [
+        {
+          "code": "43021",
+          "name": "Barberà de la Conca"
+        },
+        {
+          "code": "43029",
+          "name": "Blancafort"
+        },
+        {
+          "code": "43046",
+          "name": "Conesa"
+        },
+        {
+          "code": "43054",
+          "name": "L'Espluga de Francolí"
+        },
+        {
+          "code": "43061",
+          "name": "Forès"
+        },
+        {
+          "code": "43086",
+          "name": "Montblanc"
+        },
+        {
+          "code": "43107",
+          "name": "Pira"
+        },
+        {
+          "code": "43130",
+          "name": "Rocafort de Queralt"
+        },
+        {
+          "code": "43142",
+          "name": "Sarral"
+        },
+        {
+          "code": "43146",
+          "name": "Senan"
+        },
+        {
+          "code": "43147",
+          "name": "Solivella"
+        },
+        {
+          "code": "43158",
+          "name": "Vallclara"
+        },
+        {
+          "code": "43172",
+          "name": "Vilaverd"
+        },
+        {
+          "code": "43176",
+          "name": "Vimbodí i Poblet"
+        }
+      ],
+      "grapes": [
+        "Trepat",
+        "Macabeo",
+        "Parellada",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Conca de Barberà», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/conca_de_barbera_2024_10_24.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 14 whole municipios (Tarragona). The Vilanova de Prades / Cabra del Camp / Aiguamúrcia parcels the pliego notes are 'fuera de los límites de la DOP' (a historical bodega exception) are DROPPED — they are not part of the delimited zone."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.alella",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Alella",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08"
+      ],
+      "expected_count": 31,
+      "municipios": [
+        {
+          "code": "08003",
+          "name": "Alella"
+        },
+        {
+          "code": "08006",
+          "name": "Arenys de Mar"
+        },
+        {
+          "code": "08007",
+          "name": "Arenys de Munt"
+        },
+        {
+          "code": "08009",
+          "name": "Argentona"
+        },
+        {
+          "code": "08015",
+          "name": "Badalona"
+        },
+        {
+          "code": "08029",
+          "name": "Cabrera de Mar"
+        },
+        {
+          "code": "08030",
+          "name": "Cabrils"
+        },
+        {
+          "code": "08035",
+          "name": "Calella"
+        },
+        {
+          "code": "08096",
+          "name": "Granollers"
+        },
+        {
+          "code": "08106",
+          "name": "Llinars del Vallès"
+        },
+        {
+          "code": "08115",
+          "name": "Martorelles"
+        },
+        {
+          "code": "08118",
+          "name": "El Masnou"
+        },
+        {
+          "code": "08121",
+          "name": "Mataró"
+        },
+        {
+          "code": "08126",
+          "name": "Montgat"
+        },
+        {
+          "code": "08136",
+          "name": "Montornès del Vallès"
+        },
+        {
+          "code": "08153",
+          "name": "Òrrius"
+        },
+        {
+          "code": "08172",
+          "name": "Premià de Mar"
+        },
+        {
+          "code": "08181",
+          "name": "La Roca del Vallès"
+        },
+        {
+          "code": "08193",
+          "name": "Sant Iscle de Vallalta"
+        },
+        {
+          "code": "08203",
+          "name": "Sant Cebrià de Vallalta"
+        },
+        {
+          "code": "08209",
+          "name": "Sant Fost de Campsentelles"
+        },
+        {
+          "code": "08214",
+          "name": "Vilassar de Dalt"
+        },
+        {
+          "code": "08219",
+          "name": "Vilassar de Mar"
+        },
+        {
+          "code": "08230",
+          "name": "Premià de Dalt"
+        },
+        {
+          "code": "08235",
+          "name": "Sant Pol de Mar"
+        },
+        {
+          "code": "08245",
+          "name": "Santa Coloma de Gramenet"
+        },
+        {
+          "code": "08256",
+          "name": "Santa Maria de Martorelles"
+        },
+        {
+          "code": "08281",
+          "name": "Teià"
+        },
+        {
+          "code": "08282",
+          "name": "Tiana"
+        },
+        {
+          "code": "08296",
+          "name": "Vallromanes"
+        },
+        {
+          "code": "08902",
+          "name": "Vilanova del Vallès"
+        }
+      ],
+      "grapes": [
+        "Pansa Blanca (Xarel·lo)",
+        "Garnacha Blanca",
+        "Garnacha Tinta"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Alella», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/alella_2020_03_04.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 31 whole municipios (Barcelona), listed bulleted in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.pla-de-bages",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Pla de Bages",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08"
+      ],
+      "expected_count": 35,
+      "municipios": [
+        {
+          "code": "08002",
+          "name": "Aguilar de Segarra"
+        },
+        {
+          "code": "08010",
+          "name": "Artés"
+        },
+        {
+          "code": "08012",
+          "name": "Avinyó"
+        },
+        {
+          "code": "08018",
+          "name": "Balsareny"
+        },
+        {
+          "code": "08034",
+          "name": "Calders"
+        },
+        {
+          "code": "08038",
+          "name": "Callús"
+        },
+        {
+          "code": "08047",
+          "name": "Cardona"
+        },
+        {
+          "code": "08053",
+          "name": "Castellbell i el Vilar"
+        },
+        {
+          "code": "08059",
+          "name": "Castellfollit del Boix"
+        },
+        {
+          "code": "08061",
+          "name": "Castellgalí"
+        },
+        {
+          "code": "08062",
+          "name": "Castellnou de Bages"
+        },
+        {
+          "code": "08079",
+          "name": "L'Estany"
+        },
+        {
+          "code": "08084",
+          "name": "Fonollosa"
+        },
+        {
+          "code": "08090",
+          "name": "Gaià"
+        },
+        {
+          "code": "08098",
+          "name": "Sant Salvador de Guardiola"
+        },
+        {
+          "code": "08113",
+          "name": "Manresa"
+        },
+        {
+          "code": "08127",
+          "name": "Monistrol de Montserrat"
+        },
+        {
+          "code": "08128",
+          "name": "Monistrol de Calders"
+        },
+        {
+          "code": "08138",
+          "name": "Moià"
+        },
+        {
+          "code": "08139",
+          "name": "Mura"
+        },
+        {
+          "code": "08140",
+          "name": "Navarcles"
+        },
+        {
+          "code": "08141",
+          "name": "Navàs"
+        },
+        {
+          "code": "08178",
+          "name": "Rajadell"
+        },
+        {
+          "code": "08182",
+          "name": "El Pont de Vilomara i Rocafort"
+        },
+        {
+          "code": "08191",
+          "name": "Sallent"
+        },
+        {
+          "code": "08192",
+          "name": "Santpedor"
+        },
+        {
+          "code": "08212",
+          "name": "Sant Feliu Sasserra"
+        },
+        {
+          "code": "08213",
+          "name": "Sant Fruitós de Bages"
+        },
+        {
+          "code": "08218",
+          "name": "Sant Joan de Vilatorrada"
+        },
+        {
+          "code": "08229",
+          "name": "Sant Mateu de Bages"
+        },
+        {
+          "code": "08242",
+          "name": "Marganell"
+        },
+        {
+          "code": "08258",
+          "name": "Santa Maria d'Oló"
+        },
+        {
+          "code": "08262",
+          "name": "Sant Vicenç de Castellet"
+        },
+        {
+          "code": "08274",
+          "name": "Súria"
+        },
+        {
+          "code": "08277",
+          "name": "Talamanca"
+        }
+      ],
+      "grapes": [
+        "Picapoll",
+        "Macabeo",
+        "Garnacha Tinta",
+        "Sumoll",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Pla de Bages», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/pla_de_bages_2024_09_13.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 35 whole municipios (Barcelona, comarca del Bages), listed in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.la-rioja.rioja.rioja-alta",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja Alta",
+      "appellation_system": "DOCa",
+      "appellation_level": "subregional",
+      "parent_key": "spain.la-rioja",
+      "provinces": [
+        "26"
+      ],
+      "expected_count": 75,
+      "municipios": [
+        {
+          "code": "26001",
+          "name": "Ábalos"
+        },
+        {
+          "code": "26009",
+          "name": "Alesanco"
+        },
+        {
+          "code": "26010",
+          "name": "Alesón"
+        },
+        {
+          "code": "26013",
+          "name": "Anguciana"
+        },
+        {
+          "code": "26015",
+          "name": "Arenzana de Abajo"
+        },
+        {
+          "code": "26016",
+          "name": "Arenzana de Arriba"
+        },
+        {
+          "code": "26022",
+          "name": "Azofra"
+        },
+        {
+          "code": "26023",
+          "name": "Badarán"
+        },
+        {
+          "code": "26024",
+          "name": "Bañares"
+        },
+        {
+          "code": "26025",
+          "name": "Baños de Rioja"
+        },
+        {
+          "code": "26026",
+          "name": "Baños de Río Tobía"
+        },
+        {
+          "code": "26027",
+          "name": "Berceo"
+        },
+        {
+          "code": "26030",
+          "name": "Bezares"
+        },
+        {
+          "code": "26031",
+          "name": "Bobadilla"
+        },
+        {
+          "code": "26033",
+          "name": "Briñas"
+        },
+        {
+          "code": "26034",
+          "name": "Briones"
+        },
+        {
+          "code": "26037",
+          "name": "Camprovín"
+        },
+        {
+          "code": "26040",
+          "name": "Cañas"
+        },
+        {
+          "code": "26041",
+          "name": "Cárdenas"
+        },
+        {
+          "code": "26042",
+          "name": "Casalarreina"
+        },
+        {
+          "code": "26043",
+          "name": "Castañares de Rioja"
+        },
+        {
+          "code": "26045",
+          "name": "Cellorigo"
+        },
+        {
+          "code": "26046",
+          "name": "Cenicero"
+        },
+        {
+          "code": "26048",
+          "name": "Cidamón"
+        },
+        {
+          "code": "26049",
+          "name": "Cihuri"
+        },
+        {
+          "code": "26050",
+          "name": "Cirueña"
+        },
+        {
+          "code": "26052",
+          "name": "Cordovín"
+        },
+        {
+          "code": "26056",
+          "name": "Cuzcurrita de Río Tirón"
+        },
+        {
+          "code": "26057",
+          "name": "Daroca de Rioja"
+        },
+        {
+          "code": "26059",
+          "name": "Entrena"
+        },
+        {
+          "code": "26060",
+          "name": "Estollo"
+        },
+        {
+          "code": "26062",
+          "name": "Foncea"
+        },
+        {
+          "code": "26063",
+          "name": "Fonzaleche"
+        },
+        {
+          "code": "26064",
+          "name": "Fuenmayor"
+        },
+        {
+          "code": "26065",
+          "name": "Galbárruli"
+        },
+        {
+          "code": "26068",
+          "name": "Gimileo"
+        },
+        {
+          "code": "26071",
+          "name": "Haro"
+        },
+        {
+          "code": "26073",
+          "name": "Herramélluri"
+        },
+        {
+          "code": "26074",
+          "name": "Hervías"
+        },
+        {
+          "code": "26075",
+          "name": "Hormilla"
+        },
+        {
+          "code": "26076",
+          "name": "Hormilleja"
+        },
+        {
+          "code": "26078",
+          "name": "Hornos de Moncalvillo"
+        },
+        {
+          "code": "26079",
+          "name": "Huércanos"
+        },
+        {
+          "code": "26084",
+          "name": "Lardero"
+        },
+        {
+          "code": "26087",
+          "name": "Leiva"
+        },
+        {
+          "code": "26089",
+          "name": "Logroño"
+        },
+        {
+          "code": "26092",
+          "name": "Manjarrés"
+        },
+        {
+          "code": "26095",
+          "name": "Matute"
+        },
+        {
+          "code": "26096",
+          "name": "Medrano"
+        },
+        {
+          "code": "26102",
+          "name": "Nájera"
+        },
+        {
+          "code": "26105",
+          "name": "Navarrete"
+        },
+        {
+          "code": "26109",
+          "name": "Ochánduri"
+        },
+        {
+          "code": "26111",
+          "name": "Ollauri"
+        },
+        {
+          "code": "26127",
+          "name": "Rodezno"
+        },
+        {
+          "code": "26128",
+          "name": "Sajazarra"
+        },
+        {
+          "code": "26129",
+          "name": "San Asensio"
+        },
+        {
+          "code": "26131",
+          "name": "San Millán de Yécora"
+        },
+        {
+          "code": "26134",
+          "name": "Santa Coloma"
+        },
+        {
+          "code": "26139",
+          "name": "San Torcuato"
+        },
+        {
+          "code": "26142",
+          "name": "San Vicente de la Sonsierra"
+        },
+        {
+          "code": "26143",
+          "name": "Sojuela"
+        },
+        {
+          "code": "26144",
+          "name": "Sorzano"
+        },
+        {
+          "code": "26145",
+          "name": "Sotés"
+        },
+        {
+          "code": "26148",
+          "name": "Tirgo"
+        },
+        {
+          "code": "26150",
+          "name": "Tormantos"
+        },
+        {
+          "code": "26152",
+          "name": "Torrecilla sobre Alesanco"
+        },
+        {
+          "code": "26154",
+          "name": "Torremontalbo"
+        },
+        {
+          "code": "26155",
+          "name": "Treviana"
+        },
+        {
+          "code": "26157",
+          "name": "Tricio"
+        },
+        {
+          "code": "26160",
+          "name": "Uruñuela"
+        },
+        {
+          "code": "26163",
+          "name": "Ventosa"
+        },
+        {
+          "code": "26166",
+          "name": "Villalba de Rioja"
+        },
+        {
+          "code": "26171",
+          "name": "Villar de Torre"
+        },
+        {
+          "code": "26172",
+          "name": "Villarejo"
+        },
+        {
+          "code": "26180",
+          "name": "Zarratón"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOCa «Rioja», MAPA — zona headers RIOJA ALTA / RIOJA ORIENTAL / RIOJA ALAVESA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Subzone of DOCa Rioja. Municipios read from the pliego's 'Rioja Alta' zone header, intersected with the parent Rioja entry's municipios so the three subzones tile the DO exactly (whole-municipality union)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.la-rioja.rioja.rioja-oriental",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja Oriental",
+      "appellation_system": "DOCa",
+      "appellation_level": "subregional",
+      "parent_key": "spain.la-rioja",
+      "provinces": [
+        "26",
+        "31"
+      ],
+      "expected_count": 47,
+      "municipios": [
+        {
+          "code": "26002",
+          "name": "Agoncillo"
+        },
+        {
+          "code": "26006",
+          "name": "Alberite"
+        },
+        {
+          "code": "26007",
+          "name": "Alcanadre"
+        },
+        {
+          "code": "26008",
+          "name": "Aldeanueva de Ebro"
+        },
+        {
+          "code": "26011",
+          "name": "Alfaro"
+        },
+        {
+          "code": "26017",
+          "name": "Arnedillo"
+        },
+        {
+          "code": "26018",
+          "name": "Arnedo"
+        },
+        {
+          "code": "26019",
+          "name": "Arrúbal"
+        },
+        {
+          "code": "26020",
+          "name": "Ausejo"
+        },
+        {
+          "code": "26021",
+          "name": "Autol"
+        },
+        {
+          "code": "26028",
+          "name": "Bergasa"
+        },
+        {
+          "code": "26036",
+          "name": "Calahorra"
+        },
+        {
+          "code": "26047",
+          "name": "Cervera del Río Alhama"
+        },
+        {
+          "code": "26051",
+          "name": "Clavijo"
+        },
+        {
+          "code": "26053",
+          "name": "Corera"
+        },
+        {
+          "code": "26054",
+          "name": "Cornago"
+        },
+        {
+          "code": "26066",
+          "name": "Galilea"
+        },
+        {
+          "code": "26070",
+          "name": "Grávalos"
+        },
+        {
+          "code": "26072",
+          "name": "Herce"
+        },
+        {
+          "code": "26080",
+          "name": "Igea"
+        },
+        {
+          "code": "26083",
+          "name": "Lagunilla del Jubera"
+        },
+        {
+          "code": "26088",
+          "name": "Leza de Río Leza"
+        },
+        {
+          "code": "26099",
+          "name": "Murillo de Río Leza"
+        },
+        {
+          "code": "26100",
+          "name": "Muro de Aguas"
+        },
+        {
+          "code": "26103",
+          "name": "Nalda"
+        },
+        {
+          "code": "26108",
+          "name": "Ocón"
+        },
+        {
+          "code": "26117",
+          "name": "Pradejón"
+        },
+        {
+          "code": "26119",
+          "name": "Préjano"
+        },
+        {
+          "code": "26120",
+          "name": "Quel"
+        },
+        {
+          "code": "26123",
+          "name": "El Redal"
+        },
+        {
+          "code": "26124",
+          "name": "Ribafrecha"
+        },
+        {
+          "code": "26125",
+          "name": "Rincón de Soto"
+        },
+        {
+          "code": "26135",
+          "name": "Santa Engracia del Jubera"
+        },
+        {
+          "code": "26136",
+          "name": "Santa Eulalia Bajera"
+        },
+        {
+          "code": "26158",
+          "name": "Tudelilla"
+        },
+        {
+          "code": "26168",
+          "name": "Villamediana de Iregua"
+        },
+        {
+          "code": "26170",
+          "name": "El Villar de Arnedo"
+        },
+        {
+          "code": "26173",
+          "name": "Villarroya"
+        },
+        {
+          "code": "31015",
+          "name": "Andosilla"
+        },
+        {
+          "code": "31026",
+          "name": "Aras"
+        },
+        {
+          "code": "31042",
+          "name": "Azagra"
+        },
+        {
+          "code": "31047",
+          "name": "Bargota"
+        },
+        {
+          "code": "31157",
+          "name": "Lodosa"
+        },
+        {
+          "code": "31165",
+          "name": "Mendavia"
+        },
+        {
+          "code": "31215",
+          "name": "San Adrián"
+        },
+        {
+          "code": "31223",
+          "name": "Sartaguda"
+        },
+        {
+          "code": "31251",
+          "name": "Viana"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOCa «Rioja», MAPA — zona headers RIOJA ALTA / RIOJA ORIENTAL / RIOJA ALAVESA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Subzone of DOCa Rioja. Municipios read from the pliego's 'Rioja Oriental' zone header, intersected with the parent Rioja entry's municipios so the three subzones tile the DO exactly (whole-municipality union)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.la-rioja.rioja.rioja-alavesa",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja Alavesa",
+      "appellation_system": "DOCa",
+      "appellation_level": "subregional",
+      "parent_key": "spain.la-rioja",
+      "provinces": [
+        "01"
+      ],
+      "expected_count": 13,
+      "municipios": [
+        {
+          "code": "01011",
+          "name": "Baños de Ebro"
+        },
+        {
+          "code": "01022",
+          "name": "Elciego"
+        },
+        {
+          "code": "01023",
+          "name": "Elvillar"
+        },
+        {
+          "code": "01028",
+          "name": "Labastida"
+        },
+        {
+          "code": "01031",
+          "name": "Laguardia"
+        },
+        {
+          "code": "01032",
+          "name": "Lanciego"
+        },
+        {
+          "code": "01033",
+          "name": "Lapuebla de Labarca"
+        },
+        {
+          "code": "01034",
+          "name": "Leza"
+        },
+        {
+          "code": "01039",
+          "name": "Moreda de Álava"
+        },
+        {
+          "code": "01041",
+          "name": "Navaridas"
+        },
+        {
+          "code": "01052",
+          "name": "Samaniego"
+        },
+        {
+          "code": "01057",
+          "name": "Villabuena de Álava"
+        },
+        {
+          "code": "01060",
+          "name": "Yécora"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOCa «Rioja», MAPA — zona headers RIOJA ALTA / RIOJA ORIENTAL / RIOJA ALAVESA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Subzone of DOCa Rioja. Municipios read from the pliego's 'Rioja Alavesa' zone header, intersected with the parent Rioja entry's municipios so the three subzones tile the DO exactly (whole-municipality union)."
+      },
+      "status": "ready"
+    }
+  ]
+}

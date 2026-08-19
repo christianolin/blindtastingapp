@@ -9,6 +9,7 @@ import {
   Search,
 } from "lucide-react";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
+import { englishName } from "@/lib/wine-map/localize-names";
 
 // Folder-style hierarchy of every verified place. The selected path is
 // auto-expanded and highlighted; searching filters to matches plus their
@@ -18,6 +19,7 @@ export function WineMapTree({
   selectedKey,
   onSelect,
   filterKeys = null,
+  english = false,
 }: {
   roots: WinePlaceTreeNode[];
   selectedKey: string | null;
@@ -25,9 +27,16 @@ export function WineMapTree({
   /** Map-filter keys (e.g. the grape filter): when set, the tree shows only
       these places plus their ancestors, mirroring what the map renders. */
   filterKeys?: string[] | null;
+  /** English-names toggle: show each node's English exonym (Toscana -> Tuscany)
+      where one exists, matching the map. Search still matches either form. */
+  english?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // The displayed label follows the English toggle; native where no exonym.
+  const label = (node: WinePlaceTreeNode) =>
+    english ? englishName(node.name) : node.name;
 
   // Accent- and case-insensitive: "tache" or "TÂCHE" both find La Tâche.
   const fold = (value: string) =>
@@ -39,7 +48,12 @@ export function WineMapTree({
     if (!normalizedQuery) return null;
     const keep = new Set<string>();
     const walk = (node: WinePlaceTreeNode, ancestors: string[]) => {
-      if (fold(node.name).includes(normalizedQuery)) {
+      // Match either the native name or its English exonym, so search works
+      // the same whichever label mode is on.
+      if (
+        fold(node.name).includes(normalizedQuery) ||
+        fold(englishName(node.name)).includes(normalizedQuery)
+      ) {
         keep.add(node.key);
         for (const ancestor of ancestors) keep.add(ancestor);
       }
@@ -211,7 +225,7 @@ export function WineMapTree({
           {hasVisibleChildren ? (
             <button
               type="button"
-              aria-label={isCollapsed ? `Expand ${node.name}` : `Collapse ${node.name}`}
+              aria-label={isCollapsed ? `Expand ${label(node)}` : `Collapse ${label(node)}`}
               onClick={() =>
                 setCollapsed((prev) => ({ ...prev, [node.key]: !isCollapsed }))
               }
@@ -230,9 +244,9 @@ export function WineMapTree({
             type="button"
             onClick={() => onSelect(node.key)}
             className="truncate text-left"
-            title={node.name}
+            title={label(node)}
           >
-            {node.name}
+            {label(node)}
           </button>
         </div>
         {hasVisibleChildren && !isCollapsed ? (

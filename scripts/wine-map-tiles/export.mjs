@@ -9,6 +9,7 @@ import pg from "pg";
 import {
   WORK_DIR,
   archiveForPlace,
+  assertMultiCountryArchive,
   SHARD_TARGET,
   featureCollection,
   labelFeatures,
@@ -179,10 +180,17 @@ for (const row of rows) {
     extendBbox(bucket.bbox, JSON.parse(row.geometry));
   }
 }
+// France is load-bearing — it must always ship its country outline, kept as an
+// explicit guard even as Italy/Spain join (assertMultiCountryArchive only
+// requires an outline for countries that actually contribute rows, so this
+// pins France's presence unconditionally).
 assert.ok(
   world.rows.some(({ canonical_key }) => canonical_key === "france"),
   "world archive must contain France",
 );
+// Every country present ships its own tier-0 outline, and no shard key is
+// shared across countries (fail-closed multi-country guard; see lib.mjs).
+assertMultiCountryArchive(rows);
 assert.ok(world.rows.length >= 2 && Object.keys(shards).length >= 1, "empty archive");
 
 await mkdir(WORK_DIR, { recursive: true });

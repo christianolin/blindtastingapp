@@ -21,6 +21,49 @@ export function archiveForPlace(row) {
   return { world: false, shard };
 }
 
+// Multi-country export invariants (fail-closed). Routing is country-agnostic
+// by construction — country = key segment 0, shard = segment 1 — so France,
+// Italy and Spain coexist without special cases. Two silent failure modes
+// survive that generality, and this guard turns each into a hard stop at
+// export time:
+//
+//  1. Orphaned country: a place keyed `spain.galicia.rias-baixas` while no
+//     `spain` COUNTRY (tier 0) row is present — the region would draw with no
+//     country outline beneath it, or the prefix is a typo. Every distinct
+//     key-prefix among the rows MUST have a tier-0 row in the same set.
+//  2. Cross-country shard collision: shards are keyed by the 2nd segment
+//     (a France region / a Spain comunidad). If a French region and a Spanish
+//     comunidad ever shared a slug (say both `rioja`) their features would
+//     merge into one archive under one colour and bbox. No shard key may be
+//     claimed by two different countries.
+//
+// Decision (locked): keep shard = 2nd segment, un-namespaced — matching
+// France's region-level and Italy's — rather than prefixing `country-region`.
+// France/Italy/Spain have no colliding second segment today; this guard is the
+// tripwire if that ever stops being true, at which point we namespace.
+export function assertMultiCountryArchive(rows) {
+  const countryOf = (key) => key.split(".")[0];
+  const countryOutlines = new Set(
+    rows.filter((row) => row.display_tier <= 0).map((row) => row.canonical_key),
+  );
+  const shardCountries = new Map();
+  for (const row of rows) {
+    const country = countryOf(row.canonical_key);
+    assert.ok(
+      countryOutlines.has(country),
+      `place ${row.canonical_key} has no ${country} country outline in the archive`,
+    );
+    const shard = shardKeyFor(row.canonical_key);
+    if (shard === null) continue;
+    const claimed = shardCountries.get(shard);
+    assert.ok(
+      claimed === undefined || claimed === country,
+      `shard "${shard}" is claimed by two countries (${claimed}, ${country}); namespace shard keys`,
+    );
+    shardCountries.set(shard, country);
+  }
+}
+
 export const WORLD_TARGET = { minZoom: 0, maxZoom: 7 };
 export const SHARD_TARGET = { minZoom: 4, maxZoom: 16 };
 export const BUCKET = "wine-map-tiles";
@@ -67,6 +110,14 @@ export const ATTRIBUTION = {
     key: "toscana",
     text: "© Regione Toscana — Zone di produzione dei vini (CC BY 4.0)",
   },
+  // Spanish DO/DOCa outlines: whole-municipality union from the OpenDataSoft
+  // georef-spain-municipio layer (IGN/CNIG-derived) filtered by each DO's
+  // official municipality list. The Spanish analogue of IGN_ADMIN_EXPRESS —
+  // official municipal polygons + a pliego membership list, dissolved.
+  IGN_CNIG_SPAIN: {
+    key: "ign-cnig-spain",
+    text: "Contains data © IGN/CNIG España",
+  },
   // Official Provincia Autonoma di Bolzano "Zone DOC e IGT" (GeoKatalog).
   // See scripts/wine-map-sources/stage-altoadige-official.mjs.
   ALTOADIGE_DOC_IGT: {
@@ -97,13 +148,6 @@ export const ATTRIBUTION = {
   FRIULI_COMUNI: {
     key: "friuli",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
-  },
-  // Spain (owner's parallel build). Provisional credit so the tile export
-  // (which reads the shared DB) doesn't throw on Spain's boundaries; the owner
-  // may refine the wording when their Spain branch merges.
-  IGN_CNIG_SPAIN: {
-    key: "spain",
-    text: "© Instituto Geográfico Nacional de España (IGN/CNIG) (CC BY 4.0)",
   },
 };
 

@@ -4,6 +4,245 @@ Add the whole Spanish DO/DOP hierarchy to the wine map, mirroring the France
 model but sourced the Champagne/Alsace way (commune-union), because Spain has
 no national parcel layer.
 
+## Session status — 2026-08-19 (resume here)
+
+**Latest work (2026-08-19 cont., pushed to `master` through `c90a6ba`):**
+- **Subzone tier (NEW) — Rioja Alta / Rioja Oriental / Rioja Alavesa** as
+  `APPELLATION` children of `spain.la-rioja.rioja` (canonical keys
+  `spain.la-rioja.rioja.rioja-{alta,oriental,alavesa}`, display_tier 3, min_zoom 7,
+  `appellation_level='subregional'`). Sourced by reading the DOCa Rioja pliego's
+  three zone headers, then intersecting each zone with the parent Rioja's 135
+  municipios so they tile it exactly (Alta 75 + Oriental 47 + Alavesa 13 = 135).
+  Promoted by `run-spain-dos.mjs` with the parent-containment guard. Migration
+  `20260901107000`; commit `de2dc35`. **This is the reusable subzone pattern** for
+  Rías Baixas' 5 zones etc. (extractor: `.tiles-build/build-rioja-subzones.mjs`).
+- **Knowledge content (NEW) — every Spanish place now has a profile.** Migrations
+  `20260901108000` (15 Spanish grapes added to the shared `grapes` lib +
+  Graciano colour fix), `20260901109000` (country + 11 comunidad articles: rich
+  description/climate/soils/key_facts + grape & style chips), `20260901110000`
+  (all 34 DOs + 3 Rioja subzones: description + key_facts + grape/style chips).
+  50/50 Spanish places have descriptions; all `editorial_status='PUBLISHED'`.
+  Comunidad REGION content renders NOW (those nodes are VERIFIED); DO content
+  renders too (VERIFIED post-promotion). Written in-session, no API (AGENTS.md).
+  Commit `02aa032`. **These render from the live DB immediately — no tile rebuild
+  needed** (tiles carry geometry/labels, not article prose).
+- **Cellar smoothness (cont.)** — `content-visibility:auto` +
+  `contain-intrinsic-size` on the list rows/cards so the browser skips off-screen
+  layout/paint. Safe because the desktop table is `table-fixed` with a fixed
+  `<colgroup>` (columns don't shift when rows are virtualised out). Commit
+  `c90a6ba`. Further levers if still not smooth: collapse the mobile-card/desktop-
+  table double-mount to one per breakpoint; memoize the row + the `filtered` sort.
+
+**Earlier on 2026-08-19, pushed to `master` (`b083f34`):**
+- **Precise Italy country border** — new `fetch-italy-comuni.mjs` (caches all 7,904
+  `georef-italy-comune` ISTAT comuni to `.tiles-build/sources/italy-comuni.json`,
+  gitignored) + `build-italy-country-outline.mjs` (grid-dissolve, mainland + Sicily
+  + Sardinia, 7,531 vertices, `NAMESPACE=ISTAT_CONFINI`, `source_feature_id=
+  georef-comune-dissolve:ITA`), replacing the collaborator's coarse Natural Earth
+  1:50m Italy outline. Committed live directly (like Spain's outline). Now matches
+  France/Spain fidelity, as the owner asked.
+- **Cataluña wave 10 (6 DOs, LIVE)** — Penedès (61), Terra Alta (12), Empordà (55),
+  Conca de Barberà (14), Alella (31), Pla de Bages (35), all from official MAPA
+  pliegos read directly (the "anchor-miss" DOs — their lists were sourced by
+  reading each pliego's *Demarcación de la zona geográfica* out of a text dump, the
+  reliable path; the density finder undercounts Catalan bulleted/footnote lists).
+  Migration `20260901106000`; promoted by `run-spain-dos.mjs`; comunidad overview
+  rebuilt (Cataluña now 8 DOs / 230 municipios). **35 DOs across 11 comunidades.**
+  Notable: `Cabrera d'Igualada`→INE `Cabrera d'Anoia` (08028) rename; Alella is a
+  documented whole-municipality over-approximation (tiny DO, dense Maresme).
+- **Cellar list-view scroll lag fixed** (separate concern, `b083f34`) —
+  `src/app/cellar/cellar-bottles-table.tsx` thumbnails were raw full-res `<img>`
+  with no sizing/lazy/decoding at 25 rows/page; added `loading="lazy"
+  decoding="async"` to all three `<img>` and explicit `width`/`height` to the two
+  list thumbnails. tsc+eslint green.
+- **Catalan pliego tooling** (scratch, gitignored under `.tiles-build/`):
+  `dump-pliego.mjs` (PDF→text), `slice.mjs` (find the zona section),
+  `parse-catalan-list.mjs` (bulleted `- Name (n)` + province footnote legend),
+  `build-catalan.mjs` (verbatim name lists → fail-closed resolve → writes entries).
+- **STILL DEFERRED in Cataluña:** **Costers del Segre** (7 disjoint subzones, many
+  partial polígono-catastral inclusions — needs careful per-subzone whole-vs-partial
+  reading) and the **Tarragona** DO (large, not yet fetched). Plus all the earlier
+  deferrals (Galicia parroquia DOs, País Vasco Txakolis, Baleares, Rioja refine,
+  subregions).
+- **TILES ARE STALE** — the DB has Italy's new border + the 6 Cataluña DOs but the
+  published tiles do not. Owner must run the **"Wine Map Tiles"** GitHub Actions
+  workflow from `master` with `promote: true` (reads live DB; republishes Italy +
+  Spain + the collaborator's Italy regions together).
+
+---
+
+## Session status — 2026-08-14
+
+**Merged to `master`** (`b892baa`) — Spain wave 1 + the collaborator's Italy
+(Trentino-Alto-Adige/Veneto/Sicily) are unioned; `export.mjs` runs clean on the
+full live DB (1358 places, all namespaces, guard passes), tests/tsc/eslint green.
+Old branches cleaned up (11 merged branches deleted; `master` + `auth-phase-1`
+kept). **The GitHub `wine-map-tiles` workflow can now be run from `master`** to
+publish Spain + Italy (owner-gated).
+
+All **machinery** is built and proven, and authoritative sourcing is **solved**:
+official MAPA pliego PDFs, found via DuckDuckGo over HTTP (the Google tool is
+licence-blocked), text-extracted with `pdfjs`, parsed and INE-validated
+fail-closed by `fetch-spain-pliego.mjs`. Merged to `master` (Spain + the
+collaborator's Italy). **29 DOs are LIVE end-to-end** across **11 comunidades**, each dissolved →
+guarded → auto-promoted from its official pliego, plus a **precise national
+border** (georef dissolve of all 8,129 peninsular + Balearic municipios, 9,571
+vertices, replacing the coarse Natural Earth 1:50m outline — matches the
+comunidad boundaries exactly):
+- **Castilla y León** (7) — Rueda, Toro, Cigales, Arribes, Ribera del Duero (83), Tierra de León (85), Cebreros (35)
+- **Castilla-La Mancha** (5) — La Mancha (188), Valdepeñas (12), Manchuela (68), Almansa (7), Ribera del Júcar (7)
+- **Aragón** (4) — Somontano (43), Cariñena (16), Calatayud (50), Campo de Borja (16)
+- **Andalucía** (3) — Jerez (10), Condado de Huelva (18), Málaga (102, 7 subzones)
+- **Región de Murcia** (3) — Jumilla (7), Bullas (11), Yecla (1)
+- **Cataluña** (2) — Priorat DOQ (10), Montsant (13)
+- **Galicia** (1) — Ribeiro (13; parroquia-delimited, coarser)
+- **Comunidad Valenciana** (1) — Utiel-Requena (9)
+- **Navarra** (1) — Navarra (118)
+- **Extremadura** (1) — Ribera del Guadiana (122, 6 subzones)
+- **La Rioja** (1) — Rioja DOCa (135; trans-comunidad, incl. Álava + Navarra)
+
+Migrations `20260901091000`–`100000`. Each comunidad REGION node carries an
+**overview boundary = union of its DOs' municipios** (built by
+`build-spain-comunidad-boundaries.mjs`, re-run after each wave) so it renders at
+region zoom (z4) like France/Italy, coloured per comunidad. Each DO's boundary is
+the whole-municipality union. **Sourcing accelerator:** `scratch`-level density
+list-finder (greedy-match whole doc, take the largest dense cluster of in-province
+matches, skip "provincia de X" headers) locates the list regardless of pliego
+intro phrasing — but each DO is still verified before promotion.
+
+**Deferred (need per-DO pliego reads):** parroquia-delimited Galician DOs (Rías
+Baixas + subzones, Ribeira Sacra, Valdeorras, Monterrei), capital-membership
+ambiguity on big DOs (Málaga, Ribera del Guadiana), space-table Rioja DOCa,
+several Cataluña/CLM pliegos where search or anchor missed. Subregions (Rías
+Baixas subzones, Rioja Alta/Alavesa/Oriental) not yet added.
+
+**Reliability finding (important):** bulk-processing is NOT trustworthy for this
+map's quality bar — every DO needs a per-DO pass against the raw pliego text.
+Pliego formats vary wildly (comma-lists, space-separated multi-column tables like
+Rioja, "entidad menor" sub-entity annotations, older 2011 layouts), and the
+membership hazard is subtle: pliegos list many **pedanías** that are NOT separate
+INE municipios (must be dropped, as they are covered by their parent), and
+**partial** (cadastral-polygon) inclusions taken whole. Arribes proved the point
+— an initial hasty reconciliation was wrong twice (a mislabeled code; a missed
+real municipio, Monumenta, which turns out absent from the georef cache) before a
+name-by-name resolve against the pliego got it right. So the parser is an
+accelerator, not an oracle; the fail-closed resolver + reading the pliego is what
+makes a DO correct. Attempted-but-deferred formats: **Rioja** DOCa (space table,
+~131/144 auto), **Bierzo** (anchor lands on the control-plan section; anchor needs
+tightening); **Arlanza** is dense with "entidad menor" sub-entities to classify;
+**Rías Baixas** is Galician with sub-zones. Each is `fetch-spain-pliego.mjs
+--search`/`--pdf --emit`, review FUZZY + UNRESOLVED, finalize codes, catalog
+migration, `run-spain-dos.mjs --commit`. ~65 DOs remain.
+
+**Done + committed (branch is pushed as backup):**
+- `02737a4` Task 1 — country-agnostic export guard `assertMultiCountryArchive`
+  (orphan-country + cross-country shard-collision, both fail-closed) in
+  `lib.mjs`, wired into `export.mjs`, unit-tested. Turns out **Italy already
+  made the pipeline multi-country** (live `italy.*` tree from a collaborator),
+  so items 2–5 of the plan's "multi-country blocker" were already delivered;
+  only the export assertion needed generalising.
+- `b847297` Task 2 — `extract-spain-ne.mjs` + pinned Natural Earth ESP artifacts
+  (peninsula + Balearics; Canaries out of scope per owner).
+- `8933d70` Task 2 — migration `20260901090000_spain_country_base.sql`,
+  dry-run + **live-applied** (`spain` COUNTRY, tier 0, España). *(See collaborator
+  note — the row was later EXCLUDED by the other developer.)*
+- `9b03e0c` Task 3+4 — `fetch-spain-municipios.mjs` (8,217 municipios w/
+  aliases+geometry cached), `spain-lib.mjs` fail-closed resolver (+15 tests),
+  `run-spain-dos.mjs` resumable stage→guard→auto-promote driver,
+  `IGN_CNIG_SPAIN` attribution. Driver **proven** via `--selftest 01` (dissolved
+  53 real Álava municipios → valid outline, all guards green, rolled back).
+- `8a26d05` Task 6 (frontend) — `spain` colour + label on the tile map.
+- `5ff554e` Task 4 hardening — unit-tested the auto-promote guards (the only
+  safety net for the waived review): 12 tests proving they reject an out-of-window
+  bbox (Canary municipio), out-of-band area (wrong-province municipio), and
+  empty/invalid/uncovered geometry. `main()` gated so importing the pure guards
+  never touches the DB.
+- `1a0c069` Task 3c+4+5 **wave 1 (Rueda pilot), LIVE** — `fetch-spain-pliego.mjs`
+  (DuckDuckGo search → official MAPA pliego PDF → pdfjs text extract → parse the
+  province-grouped `términos municipales` → INE-resolve fail-closed, with a
+  province-scoped `query⊆cache` fuzzy suggester for abbreviations/`del`↔`de`
+  variants, flagged for review). `spain-do-membership.json` Rueda entry = 68 INE
+  municipios w/ pliego provenance (6 pedanías/sub-entities documented-excluded).
+  Migration `20260901091000` re-activates `spain` (VERIFIED + boundary current)
+  and adds `castilla-y-leon` (tree-only REGION) + `rueda` (APPELLATION). Driver
+  promoted Rueda's 68-municipio union → current-VALIDATED (0.319 deg², 277 pts).
+- `a48f6e4` Toro (2nd DO), LIVE — pliego PDO-ES-A0886 ("Comprende los siguientes
+  municipios:", a phrasing the anchor now also matches). 15 municipios (Zamora +
+  Valladolid: San Román de Hornija, Villafranca de Duero, and Pedrosa del Rey —
+  included whole for the Villaester *pagos*). Migration `20260901092000`.
+- `3d96aa6` Priorat DOQ (3rd DO, first bilingual/Catalan, first outside Castilla
+  y León), LIVE — pliego priorat_2022_09_06.pdf §4.1. 10 municipios (Tarragona),
+  resolved code-first. Migration `20260901093000` adds the `cataluna` REGION
+  (tree-only) + `priorat` APPELLATION (DOCa/DOQ, communal 7/7).
+- Gate green: 51 pure unit tests, `tsc`, `eslint` all clean. `pdfjs-dist` is a
+  session-only tool (`npm install --no-save pdfjs-dist`); the committed pipeline
+  and artifact never depend on it.
+- `221fc05` Cigales (4th DO), LIVE — pliego cigales_2022_03_25.pdf, 12 municipios
+  (11 in Valladolid along the Pisuerga + Dueñas/Palencia; the "El Berrocal" pago,
+  which the pliego notes lies within the city of Valladolid, is documented-excluded
+  to avoid pulling in the whole city). Migration `20260901094000`.
+- **Live tree now (4 DOs, committed to `master`):** `spain` → `castilla-y-leon`
+  → {`rueda`, `toro`, `cigales`}; `spain` → `cataluna` → `priorat`.
+- **Pliego parser** handles three list phrasings + the fuzzy suggester. Harder
+  pliegos still need per-DO care (their PDFs found + probed, not yet promoted):
+  **Rioja** DOCa (space-separated multi-column table across La Rioja/Álava/Navarra
+  — a greedy longest-match got 131/~144; needs the multi-word residue finished),
+  **Bierzo** (anchor grabbed the control-plan section — needs a tighter anchor),
+  **Arlanza** (many "entidad menor" sub-entities to classify), **Rías Baixas**
+  (Galician phrasing + subzones), **Ribera del Duero** (~300 municipios).
+
+**Sourcing solved (Task 3c was the dominant risk):** the Google search *tool* is
+dead here (backend Gemini licence, `SUBSCRIPTION_REQUIRED`), and ODS/datos.gob.es/
+Wikidata/Wikipedia all lack municipality-level membership — but **DuckDuckGo over
+plain HTTP works**, and the **Ministry of Agriculture (mapa.gob.es) publishes each
+DOP's official pliego de condiciones as a text-extractable PDF** with a clean
+province-grouped municipality list. That's pliego-grade provenance, exactly the
+plan's requirement. `fetch-spain-pliego.mjs` turns each pliego into an
+INE-validated list; the fail-closed resolver + the documented per-DO exclusions
+mean no plausible-but-wrong list ships silently. Rueda proves it end-to-end;
+5 stubs remain `pending` + the rest of the ~70 DOs to source the same way.
+
+**Collaborator / live-DB divergence:** the live DB is ahead of this branch — the
+other developer is actively adding Italian regions (Trentino-Alto-Adige, Veneto,
+… now through migration `20260829322000`, still climbing *during* this session).
+Spain was therefore renumbered into its own `20260901xxxxxx` block to avoid
+racing their slot sequence. Mid-session they set the content-less `spain` node to
+`EXCLUDED`; wave 1's migration (`20260901091000`) **re-activated it** (VERIFIED +
+boundary current) because it now hosts a real DO (Rueda) — documented in the
+migration header, and it does not touch the live map until a tile republish.
+
+**Export divergence (resolves on merge):** a full `export.mjs` run on this branch
+throws `Unknown source namespace: SICILY_COMUNI` — the live DB carries the
+collaborator's newer Italy namespaces (`SICILY_COMUNI`, `VENETO_DOC_DOCG`,
+`ALTOADIGE_DOC_IGT`) that this branch's `ATTRIBUTION` map hasn't got yet. Not mine
+to add (I'd risk the wrong licence text); it clears when this branch merges master.
+Spain's own rows use `IGN_CNIG_SPAIN`/`NATURAL_EARTH` and export fine — verified
+directly: countries `france, italy, spain`, **no orphan, no shard collision**,
+`rueda` → `castilla-y-leon` shard. Also: `world-wine-map-foundation.test.mjs` is
+already red against live from the un-merged Italy work (hardcoded
+`linked_boundaries=1346`; live is ~1450+) — not Spain's doing, not fixed here.
+
+**To resume a real DO wave (one command per wave, fully resumable):**
+1. Source the pliego (Rueda is the worked example): `npm install --no-save pdfjs-dist`,
+   then `node scripts/wine-map-sources/fetch-spain-pliego.mjs --search "<DO>"` to
+   find the `mapa.gob.es` pliego PDF, then `... --pdf <url> --emit spain.<com>.<do>`.
+   Review the FUZZY lines (each `del`/`de` or abbreviation) and classify every
+   UNRESOLVED: pedania of a listed parent -> drop; orthographic variant -> add its
+   explicit INE code; not an INE municipio -> drop and note. Write the finalized
+   `{code,name}` list + `expected_count` + pliego `provenance` + `status:"ready"`
+   into `spain-do-membership.json` (the strict resolver must return exactly
+   `expected_count`).
+2. Re-activate the `spain` country node (VERIFIED + current boundary) — the
+   export guard fail-closes on a Spanish DO with no country outline, by design.
+3. Create the catalog nodes (Task 5): comunidad SUBREGION + DO APPELLATION rows,
+   tiers/zooms per the France precedent (REGION t1 4/4, communal DO t2 7/7),
+   `20260901xxxxxx` block.
+4. `node scripts/wine-map-sources/fetch-spain-municipios.mjs` (cache; idempotent),
+   then `node scripts/wine-map-sources/run-spain-dos.mjs --dry` (resolve+dissolve+
+   guards, rolled back), then `--commit` to stage+promote. Skips done DOs.
+5. Task 6 tiles: `export → build → validate → publish` (owner-gated — it also
+   republishes the collaborator's in-progress Italy).
+
 ## Decisions (owner, locked)
 
 - **Boundary model:** municipality-dissolve. Geometry from OpenDataSoft

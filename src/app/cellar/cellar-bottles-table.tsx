@@ -460,6 +460,8 @@ export function CellarBottlesTable({
                           <img
                             src={r.imageUrl}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-auto max-w-[80%] object-contain drop-shadow-md transition-transform group-hover:scale-[1.03]"
                           />
                         ) : (
@@ -543,7 +545,7 @@ export function CellarBottlesTable({
         {pageRows.map((r) => (
           <div
             key={r.lotId}
-            className="flex flex-col gap-2 rounded-xl border border-border p-3"
+            className="flex flex-col gap-2 rounded-xl border border-border p-3 [contain-intrinsic-size:auto_120px] [content-visibility:auto]"
           >
             <div className="flex items-start gap-3">
               {r.imageUrl ? (
@@ -551,6 +553,10 @@ export function CellarBottlesTable({
                 <img
                   src={r.imageUrl}
                   alt=""
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                  decoding="async"
                   className="size-12 shrink-0 rounded-md border border-border object-cover"
                 />
               ) : (
@@ -670,7 +676,7 @@ export function CellarBottlesTable({
               return (
                 <tr
                   key={r.lotId}
-                  className="border-b border-border align-top last:border-0 hover:bg-muted/30"
+                  className="border-b border-border align-top last:border-0 hover:bg-muted/30 [contain-intrinsic-size:auto_73px] [content-visibility:auto]"
                 >
                   <td className="px-3 py-3">
                     {/* The identity block does the work the dropped columns
@@ -684,6 +690,10 @@ export function CellarBottlesTable({
                         <img
                           src={r.imageUrl}
                           alt=""
+                          width={48}
+                          height={64}
+                          loading="lazy"
+                          decoding="async"
                           className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
                         />
                       ) : (
