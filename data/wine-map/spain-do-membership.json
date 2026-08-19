@@ -5923,6 +5923,1002 @@
         "note": "Trans-comunidad DOCa keyed under La Rioja; includes Rioja Alavesa (Álava/País Vasco) and Rioja municipios of Navarra. Whole-municipality union (density-located from the space-separated multi-column list). Logroño is a member; the Vitoria/Pamplona capitals are excluded."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.penedes",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Penedès",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08",
+        "43"
+      ],
+      "expected_count": 61,
+      "municipios": [
+        {
+          "code": "08001",
+          "name": "Abrera"
+        },
+        {
+          "code": "08013",
+          "name": "Avinyonet del Penedès"
+        },
+        {
+          "code": "08020",
+          "name": "Begues"
+        },
+        {
+          "code": "08027",
+          "name": "Les Cabanyes"
+        },
+        {
+          "code": "08028",
+          "name": "Cabrera d'Anoia"
+        },
+        {
+          "code": "08043",
+          "name": "Canyelles"
+        },
+        {
+          "code": "08058",
+          "name": "Castellet i la Gornal"
+        },
+        {
+          "code": "08065",
+          "name": "Castellví de la Marca"
+        },
+        {
+          "code": "08066",
+          "name": "Castellví de Rosanes"
+        },
+        {
+          "code": "08068",
+          "name": "Cervelló"
+        },
+        {
+          "code": "08072",
+          "name": "Corbera de Llobregat"
+        },
+        {
+          "code": "08074",
+          "name": "Cubelles"
+        },
+        {
+          "code": "08085",
+          "name": "Font-rubí"
+        },
+        {
+          "code": "08091",
+          "name": "Gelida"
+        },
+        {
+          "code": "08094",
+          "name": "La Granada"
+        },
+        {
+          "code": "08104",
+          "name": "La Llacuna"
+        },
+        {
+          "code": "08114",
+          "name": "Martorell"
+        },
+        {
+          "code": "08119",
+          "name": "Masquefa"
+        },
+        {
+          "code": "08122",
+          "name": "Mediona"
+        },
+        {
+          "code": "08145",
+          "name": "Olèrdola"
+        },
+        {
+          "code": "08146",
+          "name": "Olesa de Bonesvalls"
+        },
+        {
+          "code": "08148",
+          "name": "Olivella"
+        },
+        {
+          "code": "08154",
+          "name": "Pacs del Penedès"
+        },
+        {
+          "code": "08161",
+          "name": "Piera"
+        },
+        {
+          "code": "08162",
+          "name": "Els Hostalets de Pierola"
+        },
+        {
+          "code": "08164",
+          "name": "El Pla del Penedès"
+        },
+        {
+          "code": "08168",
+          "name": "Pontons"
+        },
+        {
+          "code": "08174",
+          "name": "Puigdàlber"
+        },
+        {
+          "code": "08206",
+          "name": "Sant Cugat Sesgarrigues"
+        },
+        {
+          "code": "08208",
+          "name": "Sant Esteve Sesrovires"
+        },
+        {
+          "code": "08222",
+          "name": "Sant Llorenç d'Hortons"
+        },
+        {
+          "code": "08227",
+          "name": "Sant Martí Sarroca"
+        },
+        {
+          "code": "08231",
+          "name": "Sant Pere de Ribes"
+        },
+        {
+          "code": "08232",
+          "name": "Sant Pere de Riudebitlles"
+        },
+        {
+          "code": "08236",
+          "name": "Sant Quintí de Mediona"
+        },
+        {
+          "code": "08240",
+          "name": "Sant Sadurní d'Anoia"
+        },
+        {
+          "code": "08249",
+          "name": "Santa Fe del Penedès"
+        },
+        {
+          "code": "08251",
+          "name": "Santa Margarida i els Monjos"
+        },
+        {
+          "code": "08257",
+          "name": "Santa Maria de Miralles"
+        },
+        {
+          "code": "08270",
+          "name": "Sitges"
+        },
+        {
+          "code": "08273",
+          "name": "Subirats"
+        },
+        {
+          "code": "08287",
+          "name": "Torrelavit"
+        },
+        {
+          "code": "08288",
+          "name": "Torrelles de Foix"
+        },
+        {
+          "code": "08295",
+          "name": "Vallirana"
+        },
+        {
+          "code": "08304",
+          "name": "Vilobí del Penedès"
+        },
+        {
+          "code": "08305",
+          "name": "Vilafranca del Penedès"
+        },
+        {
+          "code": "08307",
+          "name": "Vilanova i la Geltrú"
+        },
+        {
+          "code": "43001",
+          "name": "Aiguamúrcia"
+        },
+        {
+          "code": "43002",
+          "name": "Albinyana"
+        },
+        {
+          "code": "43016",
+          "name": "L'Arboç"
+        },
+        {
+          "code": "43020",
+          "name": "Banyeres del Penedès"
+        },
+        {
+          "code": "43024",
+          "name": "Bellvei"
+        },
+        {
+          "code": "43028",
+          "name": "La Bisbal del Penedès"
+        },
+        {
+          "code": "43030",
+          "name": "Bonastre"
+        },
+        {
+          "code": "43037",
+          "name": "Calafell"
+        },
+        {
+          "code": "43051",
+          "name": "Cunit"
+        },
+        {
+          "code": "43074",
+          "name": "Llorenç del Penedès"
+        },
+        {
+          "code": "43090",
+          "name": "El Montmell"
+        },
+        {
+          "code": "43137",
+          "name": "Sant Jaume dels Domenys"
+        },
+        {
+          "code": "43140",
+          "name": "Santa Oliva"
+        },
+        {
+          "code": "43163",
+          "name": "El Vendrell"
+        }
+      ],
+      "grapes": [
+        "Macabeo",
+        "Xarel·lo",
+        "Parellada",
+        "Garnacha Tinta",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Penedès», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/penedes_2026_02_20.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Bulleted list §4.1 (p.10-11), province footnote (1)=Barcelona (2)=Tarragona. 61 whole municipios. 'Cabrera d'Igualada' in the pliego is the former name of the INE municipality Cabrera d'Anoia (08028)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.terra-alta",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Terra Alta",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "43018",
+          "name": "Arnes"
+        },
+        {
+          "code": "43022",
+          "name": "Batea"
+        },
+        {
+          "code": "43032",
+          "name": "Bot"
+        },
+        {
+          "code": "43041",
+          "name": "Caseres"
+        },
+        {
+          "code": "43048",
+          "name": "Corbera d'Ebre"
+        },
+        {
+          "code": "43056",
+          "name": "La Fatarella"
+        },
+        {
+          "code": "43064",
+          "name": "Gandesa"
+        },
+        {
+          "code": "43071",
+          "name": "Horta de Sant Joan"
+        },
+        {
+          "code": "43106",
+          "name": "El Pinell de Brai"
+        },
+        {
+          "code": "43110",
+          "name": "La Pobla de Massaluca"
+        },
+        {
+          "code": "43117",
+          "name": "Prat de Comte"
+        },
+        {
+          "code": "43175",
+          "name": "Vilalba dels Arcs"
+        }
+      ],
+      "grapes": [
+        "Garnacha Blanca",
+        "Garnacha Tinta",
+        "Macabeo",
+        "Cariñena"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Terra Alta», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/terra_alta_2020_04_03.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = the 12 whole municipios of the comarca de la Terra Alta (Tarragona), listed comma-separated in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.emporda",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Empordà",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "17"
+      ],
+      "expected_count": 55,
+      "municipios": [
+        {
+          "code": "17001",
+          "name": "Agullana"
+        },
+        {
+          "code": "17012",
+          "name": "Avinyonet de Puigventós"
+        },
+        {
+          "code": "17013",
+          "name": "Begur"
+        },
+        {
+          "code": "17018",
+          "name": "Bellcaire d'Empordà"
+        },
+        {
+          "code": "17022",
+          "name": "La Bisbal d'Empordà"
+        },
+        {
+          "code": "17029",
+          "name": "Boadella i les Escaules"
+        },
+        {
+          "code": "17030",
+          "name": "Cabanes"
+        },
+        {
+          "code": "17032",
+          "name": "Cadaqués"
+        },
+        {
+          "code": "17034",
+          "name": "Calonge i Sant Antoni"
+        },
+        {
+          "code": "17041",
+          "name": "Cantallops"
+        },
+        {
+          "code": "17042",
+          "name": "Capmany"
+        },
+        {
+          "code": "17048",
+          "name": "Castell-Platja d'Aro"
+        },
+        {
+          "code": "17051",
+          "name": "Cistella"
+        },
+        {
+          "code": "17054",
+          "name": "Colera"
+        },
+        {
+          "code": "17057",
+          "name": "Corçà"
+        },
+        {
+          "code": "17060",
+          "name": "Darnius"
+        },
+        {
+          "code": "17064",
+          "name": "Espolla"
+        },
+        {
+          "code": "17066",
+          "name": "Figueres"
+        },
+        {
+          "code": "17077",
+          "name": "Garriguella"
+        },
+        {
+          "code": "17086",
+          "name": "La Jonquera"
+        },
+        {
+          "code": "17092",
+          "name": "Llançà"
+        },
+        {
+          "code": "17093",
+          "name": "Llers"
+        },
+        {
+          "code": "17100",
+          "name": "Masarac"
+        },
+        {
+          "code": "17106",
+          "name": "Mollet de Peralada"
+        },
+        {
+          "code": "17110",
+          "name": "Mont-ras"
+        },
+        {
+          "code": "17117",
+          "name": "Palafrugell"
+        },
+        {
+          "code": "17118",
+          "name": "Palamós"
+        },
+        {
+          "code": "17120",
+          "name": "Palau-saverdera"
+        },
+        {
+          "code": "17121",
+          "name": "Palau-sator"
+        },
+        {
+          "code": "17124",
+          "name": "Pals"
+        },
+        {
+          "code": "17128",
+          "name": "Pau"
+        },
+        {
+          "code": "17129",
+          "name": "Pedret i Marzà"
+        },
+        {
+          "code": "17132",
+          "name": "Peralada"
+        },
+        {
+          "code": "17135",
+          "name": "Pont de Molins"
+        },
+        {
+          "code": "17138",
+          "name": "Portbou"
+        },
+        {
+          "code": "17140",
+          "name": "El Port de la Selva"
+        },
+        {
+          "code": "17143",
+          "name": "Rabós"
+        },
+        {
+          "code": "17144",
+          "name": "Regencós"
+        },
+        {
+          "code": "17152",
+          "name": "Roses"
+        },
+        {
+          "code": "17158",
+          "name": "Sant Climent Sescebes"
+        },
+        {
+          "code": "17160",
+          "name": "Sant Feliu de Guíxols"
+        },
+        {
+          "code": "17181",
+          "name": "Santa Cristina d'Aro"
+        },
+        {
+          "code": "17188",
+          "name": "La Selva de Mar"
+        },
+        {
+          "code": "17196",
+          "name": "Terrades"
+        },
+        {
+          "code": "17197",
+          "name": "Torrent"
+        },
+        {
+          "code": "17199",
+          "name": "Torroella de Montgrí"
+        },
+        {
+          "code": "17204",
+          "name": "Ullà"
+        },
+        {
+          "code": "17209",
+          "name": "Vall-llobrega"
+        },
+        {
+          "code": "17221",
+          "name": "Vilafant"
+        },
+        {
+          "code": "17223",
+          "name": "Vilajuïga"
+        },
+        {
+          "code": "17227",
+          "name": "Vilamaniscle"
+        },
+        {
+          "code": "17228",
+          "name": "Vilanant"
+        },
+        {
+          "code": "17234",
+          "name": "Biure"
+        },
+        {
+          "code": "17901",
+          "name": "Cruïlles, Monells i Sant Sadurní de l'Heura"
+        },
+        {
+          "code": "17902",
+          "name": "Forallac"
+        }
+      ],
+      "grapes": [
+        "Garnacha (Garnatxa)",
+        "Cariñena (Samsó)",
+        "Macabeo",
+        "Garnacha Blanca"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Empordà», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/emporda_2025_07_24.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción, two comarca groups: Alt Empordà (35) + Baix Empordà (20) = 55 whole municipios (Girona). Pliego spells 'Avinyonet del Puigventós'; INE municipality is 'Avinyonet de Puigventós' (17012) — de/del orthographic variant, code-fixed."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.conca-de-barbera",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Conca de Barberà",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 14,
+      "municipios": [
+        {
+          "code": "43021",
+          "name": "Barberà de la Conca"
+        },
+        {
+          "code": "43029",
+          "name": "Blancafort"
+        },
+        {
+          "code": "43046",
+          "name": "Conesa"
+        },
+        {
+          "code": "43054",
+          "name": "L'Espluga de Francolí"
+        },
+        {
+          "code": "43061",
+          "name": "Forès"
+        },
+        {
+          "code": "43086",
+          "name": "Montblanc"
+        },
+        {
+          "code": "43107",
+          "name": "Pira"
+        },
+        {
+          "code": "43130",
+          "name": "Rocafort de Queralt"
+        },
+        {
+          "code": "43142",
+          "name": "Sarral"
+        },
+        {
+          "code": "43146",
+          "name": "Senan"
+        },
+        {
+          "code": "43147",
+          "name": "Solivella"
+        },
+        {
+          "code": "43158",
+          "name": "Vallclara"
+        },
+        {
+          "code": "43172",
+          "name": "Vilaverd"
+        },
+        {
+          "code": "43176",
+          "name": "Vimbodí i Poblet"
+        }
+      ],
+      "grapes": [
+        "Trepat",
+        "Macabeo",
+        "Parellada",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Conca de Barberà», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/conca_de_barbera_2024_10_24.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 14 whole municipios (Tarragona). The Vilanova de Prades / Cabra del Camp / Aiguamúrcia parcels the pliego notes are 'fuera de los límites de la DOP' (a historical bodega exception) are DROPPED — they are not part of the delimited zone."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.alella",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Alella",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08"
+      ],
+      "expected_count": 31,
+      "municipios": [
+        {
+          "code": "08003",
+          "name": "Alella"
+        },
+        {
+          "code": "08006",
+          "name": "Arenys de Mar"
+        },
+        {
+          "code": "08007",
+          "name": "Arenys de Munt"
+        },
+        {
+          "code": "08009",
+          "name": "Argentona"
+        },
+        {
+          "code": "08015",
+          "name": "Badalona"
+        },
+        {
+          "code": "08029",
+          "name": "Cabrera de Mar"
+        },
+        {
+          "code": "08030",
+          "name": "Cabrils"
+        },
+        {
+          "code": "08035",
+          "name": "Calella"
+        },
+        {
+          "code": "08096",
+          "name": "Granollers"
+        },
+        {
+          "code": "08106",
+          "name": "Llinars del Vallès"
+        },
+        {
+          "code": "08115",
+          "name": "Martorelles"
+        },
+        {
+          "code": "08118",
+          "name": "El Masnou"
+        },
+        {
+          "code": "08121",
+          "name": "Mataró"
+        },
+        {
+          "code": "08126",
+          "name": "Montgat"
+        },
+        {
+          "code": "08136",
+          "name": "Montornès del Vallès"
+        },
+        {
+          "code": "08153",
+          "name": "Òrrius"
+        },
+        {
+          "code": "08172",
+          "name": "Premià de Mar"
+        },
+        {
+          "code": "08181",
+          "name": "La Roca del Vallès"
+        },
+        {
+          "code": "08193",
+          "name": "Sant Iscle de Vallalta"
+        },
+        {
+          "code": "08203",
+          "name": "Sant Cebrià de Vallalta"
+        },
+        {
+          "code": "08209",
+          "name": "Sant Fost de Campsentelles"
+        },
+        {
+          "code": "08214",
+          "name": "Vilassar de Dalt"
+        },
+        {
+          "code": "08219",
+          "name": "Vilassar de Mar"
+        },
+        {
+          "code": "08230",
+          "name": "Premià de Dalt"
+        },
+        {
+          "code": "08235",
+          "name": "Sant Pol de Mar"
+        },
+        {
+          "code": "08245",
+          "name": "Santa Coloma de Gramenet"
+        },
+        {
+          "code": "08256",
+          "name": "Santa Maria de Martorelles"
+        },
+        {
+          "code": "08281",
+          "name": "Teià"
+        },
+        {
+          "code": "08282",
+          "name": "Tiana"
+        },
+        {
+          "code": "08296",
+          "name": "Vallromanes"
+        },
+        {
+          "code": "08902",
+          "name": "Vilanova del Vallès"
+        }
+      ],
+      "grapes": [
+        "Pansa Blanca (Xarel·lo)",
+        "Garnacha Blanca",
+        "Garnacha Tinta"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Alella», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/alella_2020_03_04.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 31 whole municipios (Barcelona), listed bulleted in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.pla-de-bages",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Pla de Bages",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "08"
+      ],
+      "expected_count": 35,
+      "municipios": [
+        {
+          "code": "08002",
+          "name": "Aguilar de Segarra"
+        },
+        {
+          "code": "08010",
+          "name": "Artés"
+        },
+        {
+          "code": "08012",
+          "name": "Avinyó"
+        },
+        {
+          "code": "08018",
+          "name": "Balsareny"
+        },
+        {
+          "code": "08034",
+          "name": "Calders"
+        },
+        {
+          "code": "08038",
+          "name": "Callús"
+        },
+        {
+          "code": "08047",
+          "name": "Cardona"
+        },
+        {
+          "code": "08053",
+          "name": "Castellbell i el Vilar"
+        },
+        {
+          "code": "08059",
+          "name": "Castellfollit del Boix"
+        },
+        {
+          "code": "08061",
+          "name": "Castellgalí"
+        },
+        {
+          "code": "08062",
+          "name": "Castellnou de Bages"
+        },
+        {
+          "code": "08079",
+          "name": "L'Estany"
+        },
+        {
+          "code": "08084",
+          "name": "Fonollosa"
+        },
+        {
+          "code": "08090",
+          "name": "Gaià"
+        },
+        {
+          "code": "08098",
+          "name": "Sant Salvador de Guardiola"
+        },
+        {
+          "code": "08113",
+          "name": "Manresa"
+        },
+        {
+          "code": "08127",
+          "name": "Monistrol de Montserrat"
+        },
+        {
+          "code": "08128",
+          "name": "Monistrol de Calders"
+        },
+        {
+          "code": "08138",
+          "name": "Moià"
+        },
+        {
+          "code": "08139",
+          "name": "Mura"
+        },
+        {
+          "code": "08140",
+          "name": "Navarcles"
+        },
+        {
+          "code": "08141",
+          "name": "Navàs"
+        },
+        {
+          "code": "08178",
+          "name": "Rajadell"
+        },
+        {
+          "code": "08182",
+          "name": "El Pont de Vilomara i Rocafort"
+        },
+        {
+          "code": "08191",
+          "name": "Sallent"
+        },
+        {
+          "code": "08192",
+          "name": "Santpedor"
+        },
+        {
+          "code": "08212",
+          "name": "Sant Feliu Sasserra"
+        },
+        {
+          "code": "08213",
+          "name": "Sant Fruitós de Bages"
+        },
+        {
+          "code": "08218",
+          "name": "Sant Joan de Vilatorrada"
+        },
+        {
+          "code": "08229",
+          "name": "Sant Mateu de Bages"
+        },
+        {
+          "code": "08242",
+          "name": "Marganell"
+        },
+        {
+          "code": "08258",
+          "name": "Santa Maria d'Oló"
+        },
+        {
+          "code": "08262",
+          "name": "Sant Vicenç de Castellet"
+        },
+        {
+          "code": "08274",
+          "name": "Súria"
+        },
+        {
+          "code": "08277",
+          "name": "Talamanca"
+        }
+      ],
+      "grapes": [
+        "Picapoll",
+        "Macabeo",
+        "Garnacha Tinta",
+        "Sumoll",
+        "Ull de Llebre (Tempranillo)"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Pla de Bages», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/pla_de_bages_2024_09_13.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Zona de producción = 35 whole municipios (Barcelona, comarca del Bages), listed in the 'Demarcación de la zona geográfica' section."
+      },
+      "status": "ready"
     }
   ]
 }
