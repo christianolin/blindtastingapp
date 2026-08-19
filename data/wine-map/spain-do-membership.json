@@ -11176,6 +11176,168 @@
         "note": "Whole-municipality union of the 4 pliego subzones (Arganda, Navalcarnero, San Martín de Valdeiglesias, El Molar), 70 municipios of the Comunidad de Madrid. Alcalá de Henares is excluded (only its 'finca El Encín' research farm is in the DO); Madrid city is not a member."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.valencia.alicante",
+      "comunidad_key": "valencia",
+      "comunidad": "Comunidad Valenciana",
+      "display_name": "Alicante",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "03"
+      ],
+      "expected_count": 34,
+      "municipios": [
+        {
+          "code": "03002",
+          "name": "Agost"
+        },
+        {
+          "code": "03004",
+          "name": "Aigües"
+        },
+        {
+          "code": "03009",
+          "name": "Alcoi"
+        },
+        {
+          "code": "03013",
+          "name": "Algueña"
+        },
+        {
+          "code": "03014",
+          "name": "Alacant"
+        },
+        {
+          "code": "03021",
+          "name": "Banyeres de Mariola"
+        },
+        {
+          "code": "03023",
+          "name": "Beneixama"
+        },
+        {
+          "code": "03032",
+          "name": "Benifallim"
+        },
+        {
+          "code": "03043",
+          "name": "Biar"
+        },
+        {
+          "code": "03046",
+          "name": "Busot"
+        },
+        {
+          "code": "03050",
+          "name": "el Campello"
+        },
+        {
+          "code": "03051",
+          "name": "el Camp de Mirra"
+        },
+        {
+          "code": "03052",
+          "name": "Cañada"
+        },
+        {
+          "code": "03053",
+          "name": "Castalla"
+        },
+        {
+          "code": "03066",
+          "name": "Elda"
+        },
+        {
+          "code": "03077",
+          "name": "el Fondó de les Neus"
+        },
+        {
+          "code": "03078",
+          "name": "Hondón de los Frailes"
+        },
+        {
+          "code": "03079",
+          "name": "Ibi"
+        },
+        {
+          "code": "03083",
+          "name": "Xixona"
+        },
+        {
+          "code": "03089",
+          "name": "Monòver"
+        },
+        {
+          "code": "03090",
+          "name": "Mutxamel"
+        },
+        {
+          "code": "03093",
+          "name": "Novelda"
+        },
+        {
+          "code": "03096",
+          "name": "Onil"
+        },
+        {
+          "code": "03103",
+          "name": "Penàguila"
+        },
+        {
+          "code": "03104",
+          "name": "Petrer"
+        },
+        {
+          "code": "03105",
+          "name": "el Pinós"
+        },
+        {
+          "code": "03114",
+          "name": "la Romana"
+        },
+        {
+          "code": "03116",
+          "name": "Salinas"
+        },
+        {
+          "code": "03119",
+          "name": "Sant Joan d'Alacant"
+        },
+        {
+          "code": "03122",
+          "name": "Sant Vicent del Raspeig"
+        },
+        {
+          "code": "03123",
+          "name": "Sax"
+        },
+        {
+          "code": "03129",
+          "name": "Tibi"
+        },
+        {
+          "code": "03132",
+          "name": "la Torre de les Maçanes"
+        },
+        {
+          "code": "03140",
+          "name": "Villena"
+        }
+      ],
+      "grapes": [
+        "Monastrell",
+        "Moscatel",
+        "Garnacha"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Alicante», MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/alicante_2024_07_25.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 4 pliego subzones' Alicante-province municipios (L'Alacantí, L'Alcoià, Alto Vinalopó, Medio Vinalopó), 34 in total. The pliego's partial parajes in Caudete (Albacete), Jumilla/Yecla/Abanilla (Murcia) and Orihuela are excluded (not whole municipios of the zone). Home of Monastrell and the historic Fondillón."
+      },
+      "status": "ready"
     }
   ]
 }
