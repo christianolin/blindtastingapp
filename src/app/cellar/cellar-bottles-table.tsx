@@ -460,6 +460,8 @@ export function CellarBottlesTable({
                           <img
                             src={r.imageUrl}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-auto max-w-[80%] object-contain drop-shadow-md transition-transform group-hover:scale-[1.03]"
                           />
                         ) : (
@@ -551,6 +553,10 @@ export function CellarBottlesTable({
                 <img
                   src={r.imageUrl}
                   alt=""
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                  decoding="async"
                   className="size-12 shrink-0 rounded-md border border-border object-cover"
                 />
               ) : (
@@ -684,6 +690,10 @@ export function CellarBottlesTable({
                         <img
                           src={r.imageUrl}
                           alt=""
+                          width={48}
+                          height={64}
+                          loading="lazy"
+                          decoding="async"
                           className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
                         />
                       ) : (
