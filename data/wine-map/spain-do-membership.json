@@ -8503,6 +8503,1166 @@
         "note": "Whole-municipality over-approximation of the 18 ayuntamientos across the pliego's subzones (Amandi, Chantada, Quiroga-Bibei, Ribeiras do Miño, Ribeiras do Sil); the DO is parroquia-delimited within them. Lugo + Ourense."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.mondejar",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Mondéjar",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "19"
+      ],
+      "expected_count": 21,
+      "municipios": [
+        {
+          "code": "19006",
+          "name": "Albalate de Zorita"
+        },
+        {
+          "code": "19007",
+          "name": "Albares"
+        },
+        {
+          "code": "19021",
+          "name": "Almoguera"
+        },
+        {
+          "code": "19022",
+          "name": "Almonacid de Zorita"
+        },
+        {
+          "code": "19045",
+          "name": "Auñón"
+        },
+        {
+          "code": "19107",
+          "name": "Driebes"
+        },
+        {
+          "code": "19111",
+          "name": "Escariche"
+        },
+        {
+          "code": "19112",
+          "name": "Escopete"
+        },
+        {
+          "code": "19124",
+          "name": "Fuentenovilla"
+        },
+        {
+          "code": "19152",
+          "name": "Illana"
+        },
+        {
+          "code": "19160",
+          "name": "Loranca de Tajuña"
+        },
+        {
+          "code": "19176",
+          "name": "Mazuecos"
+        },
+        {
+          "code": "19192",
+          "name": "Mondéjar"
+        },
+        {
+          "code": "19212",
+          "name": "Pastrana"
+        },
+        {
+          "code": "19220",
+          "name": "Pioz"
+        },
+        {
+          "code": "19224",
+          "name": "Pozo de Almoguera"
+        },
+        {
+          "code": "19245",
+          "name": "Sacedón"
+        },
+        {
+          "code": "19252",
+          "name": "Sayatón"
+        },
+        {
+          "code": "19301",
+          "name": "Valdeconcha"
+        },
+        {
+          "code": "19327",
+          "name": "Yebra"
+        },
+        {
+          "code": "19335",
+          "name": "Zorita de los Canes"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Airén"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Mondéjar»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/mondejar_2022_10_20.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 21 pliego municipios (Guadalajara, La Alcarria)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.pais-vasco.arabako",
+      "comunidad_key": "pais-vasco",
+      "comunidad": "País Vasco",
+      "display_name": "Arabako Txakolina",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "01"
+      ],
+      "expected_count": 5,
+      "municipios": [
+        {
+          "code": "01002",
+          "name": "Amurrio"
+        },
+        {
+          "code": "01004",
+          "name": "Artziniega"
+        },
+        {
+          "code": "01010",
+          "name": "Ayala"
+        },
+        {
+          "code": "01036",
+          "name": "Laudio"
+        },
+        {
+          "code": "01042",
+          "name": "Okondo"
+        }
+      ],
+      "grapes": [
+        "Hondarrabi Zuri",
+        "Hondarrabi Beltza"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Arabako Txakolina»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/chacoli_alava_2025_09_11.pdf",
+        "retrieved": "2026-08-19",
+        "note": "The 5 ayuntamientos named in the pliego (Álava, Aiala/Ayala valley)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.pais-vasco.bizkaiko",
+      "comunidad_key": "pais-vasco",
+      "comunidad": "País Vasco",
+      "display_name": "Bizkaiko Txakolina",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "48"
+      ],
+      "expected_count": 112,
+      "municipios": [
+        {
+          "code": "48001",
+          "name": "Abadiño"
+        },
+        {
+          "code": "48002",
+          "name": "Abanto y Ciérvana-Abanto Zierbena"
+        },
+        {
+          "code": "48003",
+          "name": "Amorebieta-Etxano"
+        },
+        {
+          "code": "48004",
+          "name": "Amoroto"
+        },
+        {
+          "code": "48005",
+          "name": "Arakaldo"
+        },
+        {
+          "code": "48006",
+          "name": "Arantzazu"
+        },
+        {
+          "code": "48007",
+          "name": "Munitibar-Arbatzegi Gerrikaitz"
+        },
+        {
+          "code": "48008",
+          "name": "Artzentales"
+        },
+        {
+          "code": "48009",
+          "name": "Arrankudiaga-Zollo"
+        },
+        {
+          "code": "48010",
+          "name": "Arrieta"
+        },
+        {
+          "code": "48011",
+          "name": "Arrigorriaga"
+        },
+        {
+          "code": "48012",
+          "name": "Bakio"
+        },
+        {
+          "code": "48013",
+          "name": "Barakaldo"
+        },
+        {
+          "code": "48014",
+          "name": "Barrika"
+        },
+        {
+          "code": "48015",
+          "name": "Basauri"
+        },
+        {
+          "code": "48016",
+          "name": "Berango"
+        },
+        {
+          "code": "48017",
+          "name": "Bermeo"
+        },
+        {
+          "code": "48018",
+          "name": "Berriatua"
+        },
+        {
+          "code": "48019",
+          "name": "Berriz"
+        },
+        {
+          "code": "48020",
+          "name": "Bilbao"
+        },
+        {
+          "code": "48021",
+          "name": "Busturia"
+        },
+        {
+          "code": "48022",
+          "name": "Karrantza Harana"
+        },
+        {
+          "code": "48023",
+          "name": "Artea"
+        },
+        {
+          "code": "48024",
+          "name": "Zeanuri"
+        },
+        {
+          "code": "48025",
+          "name": "Zeberio"
+        },
+        {
+          "code": "48026",
+          "name": "Dima"
+        },
+        {
+          "code": "48027",
+          "name": "Durango"
+        },
+        {
+          "code": "48028",
+          "name": "Ea"
+        },
+        {
+          "code": "48029",
+          "name": "Etxebarri"
+        },
+        {
+          "code": "48030",
+          "name": "Etxebarria"
+        },
+        {
+          "code": "48031",
+          "name": "Elantxobe"
+        },
+        {
+          "code": "48032",
+          "name": "Elorrio"
+        },
+        {
+          "code": "48033",
+          "name": "Ereño"
+        },
+        {
+          "code": "48034",
+          "name": "Ermua"
+        },
+        {
+          "code": "48035",
+          "name": "Fruiz"
+        },
+        {
+          "code": "48036",
+          "name": "Galdakao"
+        },
+        {
+          "code": "48037",
+          "name": "Galdames"
+        },
+        {
+          "code": "48038",
+          "name": "Gamiz-Fika"
+        },
+        {
+          "code": "48039",
+          "name": "Garai"
+        },
+        {
+          "code": "48040",
+          "name": "Gatika"
+        },
+        {
+          "code": "48041",
+          "name": "Gautegiz Arteaga"
+        },
+        {
+          "code": "48042",
+          "name": "Gordexola"
+        },
+        {
+          "code": "48043",
+          "name": "Gorliz"
+        },
+        {
+          "code": "48044",
+          "name": "Getxo"
+        },
+        {
+          "code": "48045",
+          "name": "Güeñes"
+        },
+        {
+          "code": "48046",
+          "name": "Gernika-Lumo"
+        },
+        {
+          "code": "48047",
+          "name": "Gizaburuaga"
+        },
+        {
+          "code": "48048",
+          "name": "Ibarrangelu"
+        },
+        {
+          "code": "48049",
+          "name": "Ispaster"
+        },
+        {
+          "code": "48050",
+          "name": "Izurtza"
+        },
+        {
+          "code": "48051",
+          "name": "Lanestosa"
+        },
+        {
+          "code": "48052",
+          "name": "Larrabetzu"
+        },
+        {
+          "code": "48053",
+          "name": "Laukiz"
+        },
+        {
+          "code": "48054",
+          "name": "Leioa"
+        },
+        {
+          "code": "48055",
+          "name": "Lemoa"
+        },
+        {
+          "code": "48056",
+          "name": "Lemoiz"
+        },
+        {
+          "code": "48057",
+          "name": "Lekeitio"
+        },
+        {
+          "code": "48058",
+          "name": "Mallabia"
+        },
+        {
+          "code": "48059",
+          "name": "Mañaria"
+        },
+        {
+          "code": "48060",
+          "name": "Markina-Xemein"
+        },
+        {
+          "code": "48061",
+          "name": "Maruri-Jatabe"
+        },
+        {
+          "code": "48062",
+          "name": "Mendata"
+        },
+        {
+          "code": "48063",
+          "name": "Mendexa"
+        },
+        {
+          "code": "48064",
+          "name": "Meñaka"
+        },
+        {
+          "code": "48065",
+          "name": "Ugao-Miraballes"
+        },
+        {
+          "code": "48066",
+          "name": "Morga"
+        },
+        {
+          "code": "48067",
+          "name": "Muxika"
+        },
+        {
+          "code": "48068",
+          "name": "Mundaka"
+        },
+        {
+          "code": "48069",
+          "name": "Mungia"
+        },
+        {
+          "code": "48070",
+          "name": "Aulesti"
+        },
+        {
+          "code": "48071",
+          "name": "Muskiz"
+        },
+        {
+          "code": "48072",
+          "name": "Otxandio"
+        },
+        {
+          "code": "48073",
+          "name": "Ondarroa"
+        },
+        {
+          "code": "48074",
+          "name": "Urduña"
+        },
+        {
+          "code": "48075",
+          "name": "Orozko"
+        },
+        {
+          "code": "48076",
+          "name": "Sukarrieta"
+        },
+        {
+          "code": "48077",
+          "name": "Plentzia"
+        },
+        {
+          "code": "48078",
+          "name": "Portugalete"
+        },
+        {
+          "code": "48079",
+          "name": "Errigoiti"
+        },
+        {
+          "code": "48080",
+          "name": "Valle de Trápaga-Trapagaran"
+        },
+        {
+          "code": "48081",
+          "name": "Lezama"
+        },
+        {
+          "code": "48082",
+          "name": "Santurtzi"
+        },
+        {
+          "code": "48083",
+          "name": "Ortuella"
+        },
+        {
+          "code": "48084",
+          "name": "Sestao"
+        },
+        {
+          "code": "48085",
+          "name": "Sopela"
+        },
+        {
+          "code": "48086",
+          "name": "Sopuerta"
+        },
+        {
+          "code": "48087",
+          "name": "Trucios-Turtzioz"
+        },
+        {
+          "code": "48088",
+          "name": "Ubide"
+        },
+        {
+          "code": "48089",
+          "name": "Urduliz"
+        },
+        {
+          "code": "48090",
+          "name": "Balmaseda"
+        },
+        {
+          "code": "48091",
+          "name": "Atxondo"
+        },
+        {
+          "code": "48092",
+          "name": "Bedia"
+        },
+        {
+          "code": "48093",
+          "name": "Areatza"
+        },
+        {
+          "code": "48094",
+          "name": "Igorre"
+        },
+        {
+          "code": "48095",
+          "name": "Zaldibar"
+        },
+        {
+          "code": "48096",
+          "name": "Zalla"
+        },
+        {
+          "code": "48097",
+          "name": "Zaratamo"
+        },
+        {
+          "code": "48901",
+          "name": "Derio"
+        },
+        {
+          "code": "48902",
+          "name": "Erandio"
+        },
+        {
+          "code": "48903",
+          "name": "Loiu"
+        },
+        {
+          "code": "48904",
+          "name": "Sondika"
+        },
+        {
+          "code": "48905",
+          "name": "Zamudio"
+        },
+        {
+          "code": "48906",
+          "name": "Forua"
+        },
+        {
+          "code": "48907",
+          "name": "Kortezubi"
+        },
+        {
+          "code": "48908",
+          "name": "Murueta"
+        },
+        {
+          "code": "48909",
+          "name": "Nabarniz"
+        },
+        {
+          "code": "48910",
+          "name": "Iurreta"
+        },
+        {
+          "code": "48911",
+          "name": "Ajangiz"
+        },
+        {
+          "code": "48912",
+          "name": "Alonsotegi"
+        },
+        {
+          "code": "48913",
+          "name": "Zierbena"
+        },
+        {
+          "code": "48914",
+          "name": "Arratzu"
+        },
+        {
+          "code": "48915",
+          "name": "Ziortza-Bolibar"
+        }
+      ],
+      "grapes": [
+        "Hondarrabi Zuri",
+        "Hondarrabi Beltza"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Bizkaiko Txakolina»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/chacoli_bizkaia_2025_12_08.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-territory DO: the pliego delimits it as any término municipal of Bizkaia. Boundary = the whole province of Bizkaia (municipality-union), the legal zona de producción."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.pais-vasco.getariako",
+      "comunidad_key": "pais-vasco",
+      "comunidad": "País Vasco",
+      "display_name": "Getariako Txakolina",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "20"
+      ],
+      "expected_count": 90,
+      "municipios": [
+        {
+          "code": "20001",
+          "name": "Abaltzisketa"
+        },
+        {
+          "code": "20002",
+          "name": "Aduna"
+        },
+        {
+          "code": "20003",
+          "name": "Aizarnazabal"
+        },
+        {
+          "code": "20004",
+          "name": "Albiztur"
+        },
+        {
+          "code": "20005",
+          "name": "Alegia"
+        },
+        {
+          "code": "20006",
+          "name": "Alkiza"
+        },
+        {
+          "code": "20007",
+          "name": "Altzo"
+        },
+        {
+          "code": "20008",
+          "name": "Amezketa"
+        },
+        {
+          "code": "20009",
+          "name": "Andoain"
+        },
+        {
+          "code": "20010",
+          "name": "Anoeta"
+        },
+        {
+          "code": "20011",
+          "name": "Antzuola"
+        },
+        {
+          "code": "20012",
+          "name": "Arama"
+        },
+        {
+          "code": "20013",
+          "name": "Aretxabaleta"
+        },
+        {
+          "code": "20014",
+          "name": "Asteasu"
+        },
+        {
+          "code": "20015",
+          "name": "Ataun"
+        },
+        {
+          "code": "20016",
+          "name": "Aia"
+        },
+        {
+          "code": "20017",
+          "name": "Azkoitia"
+        },
+        {
+          "code": "20018",
+          "name": "Azpeitia"
+        },
+        {
+          "code": "20019",
+          "name": "Beasain"
+        },
+        {
+          "code": "20020",
+          "name": "Beizama"
+        },
+        {
+          "code": "20021",
+          "name": "Belauntza"
+        },
+        {
+          "code": "20022",
+          "name": "Berastegi"
+        },
+        {
+          "code": "20023",
+          "name": "Berrobi"
+        },
+        {
+          "code": "20024",
+          "name": "Bidania-Goiatz"
+        },
+        {
+          "code": "20025",
+          "name": "Zegama"
+        },
+        {
+          "code": "20026",
+          "name": "Zerain"
+        },
+        {
+          "code": "20027",
+          "name": "Zestoa"
+        },
+        {
+          "code": "20028",
+          "name": "Zizurkil"
+        },
+        {
+          "code": "20029",
+          "name": "Deba"
+        },
+        {
+          "code": "20030",
+          "name": "Eibar"
+        },
+        {
+          "code": "20031",
+          "name": "Elduain"
+        },
+        {
+          "code": "20032",
+          "name": "Elgoibar"
+        },
+        {
+          "code": "20033",
+          "name": "Elgeta"
+        },
+        {
+          "code": "20034",
+          "name": "Eskoriatza"
+        },
+        {
+          "code": "20035",
+          "name": "Ezkio-Itsaso"
+        },
+        {
+          "code": "20036",
+          "name": "Hondarribia"
+        },
+        {
+          "code": "20037",
+          "name": "Gaintza"
+        },
+        {
+          "code": "20038",
+          "name": "Gabiria"
+        },
+        {
+          "code": "20039",
+          "name": "Getaria"
+        },
+        {
+          "code": "20040",
+          "name": "Hernani"
+        },
+        {
+          "code": "20041",
+          "name": "Hernialde"
+        },
+        {
+          "code": "20042",
+          "name": "Ibarra"
+        },
+        {
+          "code": "20043",
+          "name": "Idiazabal"
+        },
+        {
+          "code": "20044",
+          "name": "Ikaztegieta"
+        },
+        {
+          "code": "20045",
+          "name": "Irun"
+        },
+        {
+          "code": "20046",
+          "name": "Irura"
+        },
+        {
+          "code": "20047",
+          "name": "Itsasondo"
+        },
+        {
+          "code": "20048",
+          "name": "Larraul"
+        },
+        {
+          "code": "20049",
+          "name": "Lazkao"
+        },
+        {
+          "code": "20050",
+          "name": "Leaburu"
+        },
+        {
+          "code": "20051",
+          "name": "Legazpi"
+        },
+        {
+          "code": "20052",
+          "name": "Legorreta"
+        },
+        {
+          "code": "20053",
+          "name": "Lezo"
+        },
+        {
+          "code": "20054",
+          "name": "Lizartza"
+        },
+        {
+          "code": "20055",
+          "name": "Arrasate"
+        },
+        {
+          "code": "20056",
+          "name": "Mutriku"
+        },
+        {
+          "code": "20057",
+          "name": "Mutiloa"
+        },
+        {
+          "code": "20058",
+          "name": "Olaberria"
+        },
+        {
+          "code": "20059",
+          "name": "Oñati"
+        },
+        {
+          "code": "20060",
+          "name": "Orexa"
+        },
+        {
+          "code": "20061",
+          "name": "Orio"
+        },
+        {
+          "code": "20062",
+          "name": "Ormaiztegi"
+        },
+        {
+          "code": "20063",
+          "name": "Oiartzun"
+        },
+        {
+          "code": "20064",
+          "name": "Pasaia"
+        },
+        {
+          "code": "20065",
+          "name": "Soraluze-Placencia de las Armas"
+        },
+        {
+          "code": "20066",
+          "name": "Errezil"
+        },
+        {
+          "code": "20067",
+          "name": "Errenteria"
+        },
+        {
+          "code": "20068",
+          "name": "Leintz-Gatzaga"
+        },
+        {
+          "code": "20069",
+          "name": "Donostia"
+        },
+        {
+          "code": "20070",
+          "name": "Segura"
+        },
+        {
+          "code": "20071",
+          "name": "Tolosa"
+        },
+        {
+          "code": "20072",
+          "name": "Urnieta"
+        },
+        {
+          "code": "20073",
+          "name": "Usurbil"
+        },
+        {
+          "code": "20074",
+          "name": "Bergara"
+        },
+        {
+          "code": "20075",
+          "name": "Villabona"
+        },
+        {
+          "code": "20076",
+          "name": "Ordizia"
+        },
+        {
+          "code": "20077",
+          "name": "Urretxu"
+        },
+        {
+          "code": "20078",
+          "name": "Zaldibia"
+        },
+        {
+          "code": "20079",
+          "name": "Zarautz"
+        },
+        {
+          "code": "20080",
+          "name": "Zumarraga"
+        },
+        {
+          "code": "20081",
+          "name": "Zumaia"
+        },
+        {
+          "code": "20901",
+          "name": "Mendaro"
+        },
+        {
+          "code": "20902",
+          "name": "Lasarte-Oria"
+        },
+        {
+          "code": "20903",
+          "name": "Astigarraga"
+        },
+        {
+          "code": "20904",
+          "name": "Baliarrain"
+        },
+        {
+          "code": "20905",
+          "name": "Orendain"
+        },
+        {
+          "code": "20906",
+          "name": "Altzaga"
+        },
+        {
+          "code": "20907",
+          "name": "Gaztelu"
+        },
+        {
+          "code": "53000",
+          "name": "Parzonería general de Guipúzcoa y Álava"
+        },
+        {
+          "code": "53048",
+          "name": "Mancomunidad de Amezketa y Ordizia"
+        }
+      ],
+      "grapes": [
+        "Hondarrabi Zuri",
+        "Hondarrabi Beltza"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Getariako Txakolina»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/chacoli_getaria_2019_01_01.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-territory DO: the pliego delimits it as the Territorio Histórico de Gipuzkoa. Boundary = the whole province of Gipuzkoa (municipality-union), the legal zona de producción."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.baleares.binissalem",
+      "comunidad_key": "baleares",
+      "comunidad": "Illes Balears",
+      "display_name": "Binissalem",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "07"
+      ],
+      "expected_count": 5,
+      "municipios": [
+        {
+          "code": "07008",
+          "name": "Binissalem"
+        },
+        {
+          "code": "07016",
+          "name": "Consell"
+        },
+        {
+          "code": "07047",
+          "name": "Sencelles"
+        },
+        {
+          "code": "07053",
+          "name": "Santa Eugènia"
+        },
+        {
+          "code": "07056",
+          "name": "Santa María del Camí"
+        }
+      ],
+      "grapes": [
+        "Manto Negro",
+        "Prensal",
+        "Moll"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Binissalem»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/binissalem_2025_03_18.pdf",
+        "retrieved": "2026-08-19",
+        "note": "The 5 pliego municipios of the Mallorcan central plain (Raiguer)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.baleares.pla-i-llevant",
+      "comunidad_key": "baleares",
+      "comunidad": "Illes Balears",
+      "display_name": "Pla i Llevant",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "07"
+      ],
+      "expected_count": 19,
+      "municipios": [
+        {
+          "code": "07004",
+          "name": "Algaida"
+        },
+        {
+          "code": "07006",
+          "name": "Artà"
+        },
+        {
+          "code": "07013",
+          "name": "Campos"
+        },
+        {
+          "code": "07014",
+          "name": "Capdepera"
+        },
+        {
+          "code": "07022",
+          "name": "Felanitx"
+        },
+        {
+          "code": "07031",
+          "name": "Llucmajor"
+        },
+        {
+          "code": "07033",
+          "name": "Manacor"
+        },
+        {
+          "code": "07035",
+          "name": "Maria de la Salut"
+        },
+        {
+          "code": "07038",
+          "name": "Montuïri"
+        },
+        {
+          "code": "07039",
+          "name": "Muro"
+        },
+        {
+          "code": "07041",
+          "name": "Petra"
+        },
+        {
+          "code": "07043",
+          "name": "Porreres"
+        },
+        {
+          "code": "07049",
+          "name": "Sant Joan"
+        },
+        {
+          "code": "07051",
+          "name": "Sant Llorenç des Cardassar"
+        },
+        {
+          "code": "07055",
+          "name": "Santa Margalida"
+        },
+        {
+          "code": "07057",
+          "name": "Santanyí"
+        },
+        {
+          "code": "07060",
+          "name": "Sineu"
+        },
+        {
+          "code": "07065",
+          "name": "Vilafranca de Bonany"
+        },
+        {
+          "code": "07901",
+          "name": "Ariany"
+        }
+      ],
+      "grapes": [
+        "Callet",
+        "Manto Negro",
+        "Prensal"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Pla i Llevant»",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/pla_i_llevant_2025_12_23.pdf",
+        "retrieved": "2026-08-19",
+        "note": "The 19 pliego municipios of the Mallorcan plain + east (Pla i Llevant)."
+      },
+      "status": "ready"
     }
   ]
 }
