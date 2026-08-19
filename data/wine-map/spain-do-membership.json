@@ -3248,6 +3248,1145 @@
         "note": "Whole-municipality union of the shared Málaga wine zone across all subzones (Serranía de Ronda, Axarquía, Montes de Málaga, Manilva, Costa Occidental, Norte de Málaga, Sierra de las Nieves). Málaga city is a member (Montes de Málaga). Multi-cluster density-located."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.la-mancha",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "La Mancha",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "13",
+        "16",
+        "45",
+        "02"
+      ],
+      "expected_count": 188,
+      "municipios": [
+        {
+          "code": "02015",
+          "name": "Barrax"
+        },
+        {
+          "code": "02032",
+          "name": "Fuensanta"
+        },
+        {
+          "code": "02038",
+          "name": "La Herrera"
+        },
+        {
+          "code": "02043",
+          "name": "Lezuza"
+        },
+        {
+          "code": "02048",
+          "name": "Minaya"
+        },
+        {
+          "code": "02050",
+          "name": "Montalvos"
+        },
+        {
+          "code": "02053",
+          "name": "Munera"
+        },
+        {
+          "code": "02057",
+          "name": "Ossa de Montiel"
+        },
+        {
+          "code": "02069",
+          "name": "La Roda"
+        },
+        {
+          "code": "02073",
+          "name": "Tarazona de la Mancha"
+        },
+        {
+          "code": "02078",
+          "name": "Villalgordo del Júcar"
+        },
+        {
+          "code": "02081",
+          "name": "Villarrobledo"
+        },
+        {
+          "code": "02019",
+          "name": "El Bonillo"
+        },
+        {
+          "code": "13005",
+          "name": "Alcázar de San Juan"
+        },
+        {
+          "code": "13007",
+          "name": "Alcolea de Calatrava"
+        },
+        {
+          "code": "13009",
+          "name": "Aldea del Rey"
+        },
+        {
+          "code": "13013",
+          "name": "Almagro"
+        },
+        {
+          "code": "13014",
+          "name": "Almedina"
+        },
+        {
+          "code": "13015",
+          "name": "Almodóvar del Campo"
+        },
+        {
+          "code": "13903",
+          "name": "Arenales de San Gregorio"
+        },
+        {
+          "code": "13018",
+          "name": "Arenas de San Juan"
+        },
+        {
+          "code": "13019",
+          "name": "Argamasilla de Alba"
+        },
+        {
+          "code": "13020",
+          "name": "Argamasilla de Calatrava"
+        },
+        {
+          "code": "13022",
+          "name": "Ballesteros de Calatrava"
+        },
+        {
+          "code": "13023",
+          "name": "Bolaños de Calatrava"
+        },
+        {
+          "code": "13027",
+          "name": "Calzada de Calatrava"
+        },
+        {
+          "code": "13028",
+          "name": "Campo de Criptana"
+        },
+        {
+          "code": "13029",
+          "name": "Cañada de Calatrava"
+        },
+        {
+          "code": "13031",
+          "name": "Carrión de Calatrava"
+        },
+        {
+          "code": "13032",
+          "name": "Carrizosa"
+        },
+        {
+          "code": "13033",
+          "name": "Castellar de Santiago"
+        },
+        {
+          "code": "13034",
+          "name": "Ciudad Real"
+        },
+        {
+          "code": "13036",
+          "name": "Los Cortijos"
+        },
+        {
+          "code": "13037",
+          "name": "Cózar"
+        },
+        {
+          "code": "13039",
+          "name": "Daimiel"
+        },
+        {
+          "code": "13040",
+          "name": "Fernán Caballero"
+        },
+        {
+          "code": "13043",
+          "name": "Fuenllana"
+        },
+        {
+          "code": "13044",
+          "name": "Fuente el Fresno"
+        },
+        {
+          "code": "13047",
+          "name": "Herencia"
+        },
+        {
+          "code": "13052",
+          "name": "Malagón"
+        },
+        {
+          "code": "13053",
+          "name": "Manzanares"
+        },
+        {
+          "code": "13054",
+          "name": "Membrilla"
+        },
+        {
+          "code": "13056",
+          "name": "Miguelturra"
+        },
+        {
+          "code": "13050",
+          "name": "Las Labores"
+        },
+        {
+          "code": "13904",
+          "name": "Llanos del Caudillo"
+        },
+        {
+          "code": "13061",
+          "name": "Pedro Muñoz"
+        },
+        {
+          "code": "13062",
+          "name": "Picón"
+        },
+        {
+          "code": "13063",
+          "name": "Piedrabuena"
+        },
+        {
+          "code": "13064",
+          "name": "Poblete"
+        },
+        {
+          "code": "13065",
+          "name": "Porzuna"
+        },
+        {
+          "code": "13066",
+          "name": "Pozuelo de Calatrava"
+        },
+        {
+          "code": "13069",
+          "name": "Puebla del Príncipe"
+        },
+        {
+          "code": "13070",
+          "name": "Puerto Lápice"
+        },
+        {
+          "code": "13902",
+          "name": "Ruidera"
+        },
+        {
+          "code": "13076",
+          "name": "Santa Cruz de los Cáñamos"
+        },
+        {
+          "code": "13078",
+          "name": "Socuéllamos"
+        },
+        {
+          "code": "13079",
+          "name": "La Solana"
+        },
+        {
+          "code": "13081",
+          "name": "Terrinches"
+        },
+        {
+          "code": "13082",
+          "name": "Tomelloso"
+        },
+        {
+          "code": "13083",
+          "name": "Torralba de Calatrava"
+        },
+        {
+          "code": "13088",
+          "name": "Valenzuela de Calatrava"
+        },
+        {
+          "code": "13089",
+          "name": "Villahermosa"
+        },
+        {
+          "code": "13090",
+          "name": "Villamanrique"
+        },
+        {
+          "code": "13091",
+          "name": "Villamayor de Calatrava"
+        },
+        {
+          "code": "13092",
+          "name": "Villanueva de la Fuente"
+        },
+        {
+          "code": "13093",
+          "name": "Villanueva de los Infantes"
+        },
+        {
+          "code": "13095",
+          "name": "Villar del Pozo"
+        },
+        {
+          "code": "13097",
+          "name": "Villarta de San Juan"
+        },
+        {
+          "code": "13096",
+          "name": "Villarrubia de los Ojos"
+        },
+        {
+          "code": "13010",
+          "name": "Alhambra"
+        },
+        {
+          "code": "13045",
+          "name": "Granátula de Calatrava"
+        },
+        {
+          "code": "13057",
+          "name": "Montiel"
+        },
+        {
+          "code": "13084",
+          "name": "Torre de Juan Abad"
+        },
+        {
+          "code": "16002",
+          "name": "El Acebrón"
+        },
+        {
+          "code": "16007",
+          "name": "La Alberca de Záncara"
+        },
+        {
+          "code": "16010",
+          "name": "Alcázar del Rey"
+        },
+        {
+          "code": "16012",
+          "name": "Alconchel de la Estrella"
+        },
+        {
+          "code": "16015",
+          "name": "La Almarcha"
+        },
+        {
+          "code": "16016",
+          "name": "Almendros"
+        },
+        {
+          "code": "16018",
+          "name": "Almonacid del Marquesado"
+        },
+        {
+          "code": "16026",
+          "name": "Atalaya del Cañavate"
+        },
+        {
+          "code": "16027",
+          "name": "Barajas de Melo"
+        },
+        {
+          "code": "16032",
+          "name": "Belinchón"
+        },
+        {
+          "code": "16033",
+          "name": "Belmonte"
+        },
+        {
+          "code": "16047",
+          "name": "Cañada Juncosa"
+        },
+        {
+          "code": "16049",
+          "name": "El Cañavate"
+        },
+        {
+          "code": "16058",
+          "name": "Carrascosa de Haro"
+        },
+        {
+          "code": "16060",
+          "name": "Casas de Benítez"
+        },
+        {
+          "code": "16061",
+          "name": "Casas de Fernando Alonso"
+        },
+        {
+          "code": "16063",
+          "name": "Casas de Guijarro"
+        },
+        {
+          "code": "16064",
+          "name": "Casas de Haro"
+        },
+        {
+          "code": "16065",
+          "name": "Casas de los Pinos"
+        },
+        {
+          "code": "16072",
+          "name": "Castillo de Garcimuñoz"
+        },
+        {
+          "code": "16073",
+          "name": "Cervera del Llano"
+        },
+        {
+          "code": "16086",
+          "name": "Fuente de Pedro Naharro"
+        },
+        {
+          "code": "16087",
+          "name": "Fuentelespino de Haro"
+        },
+        {
+          "code": "16099",
+          "name": "La Hinojosa"
+        },
+        {
+          "code": "16100",
+          "name": "Los Hinojosos"
+        },
+        {
+          "code": "16101",
+          "name": "El Hito"
+        },
+        {
+          "code": "16102",
+          "name": "Honrubia"
+        },
+        {
+          "code": "16103",
+          "name": "Hontanaya"
+        },
+        {
+          "code": "16106",
+          "name": "Horcajo de Santiago"
+        },
+        {
+          "code": "16108",
+          "name": "Huelves"
+        },
+        {
+          "code": "16119",
+          "name": "Leganiel"
+        },
+        {
+          "code": "16124",
+          "name": "Las Mesas"
+        },
+        {
+          "code": "16128",
+          "name": "Monreal del Llano"
+        },
+        {
+          "code": "16129",
+          "name": "Montalbanejo"
+        },
+        {
+          "code": "16133",
+          "name": "Mota del Cuervo"
+        },
+        {
+          "code": "16139",
+          "name": "Olivares de Júcar"
+        },
+        {
+          "code": "16145",
+          "name": "Osa de la Vega"
+        },
+        {
+          "code": "16151",
+          "name": "Paredes"
+        },
+        {
+          "code": "16153",
+          "name": "El Pedernoso"
+        },
+        {
+          "code": "16154",
+          "name": "Las Pedroñeras"
+        },
+        {
+          "code": "16159",
+          "name": "Pinarejo"
+        },
+        {
+          "code": "16166",
+          "name": "Pozoamargo"
+        },
+        {
+          "code": "16167",
+          "name": "Pozorrubio de Santiago"
+        },
+        {
+          "code": "16171",
+          "name": "El Provencio"
+        },
+        {
+          "code": "16172",
+          "name": "Puebla de Almenara"
+        },
+        {
+          "code": "16176",
+          "name": "Rada de Haro"
+        },
+        {
+          "code": "16181",
+          "name": "Rozalén del Monte"
+        },
+        {
+          "code": "16186",
+          "name": "Saelices"
+        },
+        {
+          "code": "16190",
+          "name": "San Clemente"
+        },
+        {
+          "code": "16195",
+          "name": "Santa María del Campo Rus"
+        },
+        {
+          "code": "16196",
+          "name": "Santa María de los Llanos"
+        },
+        {
+          "code": "16198",
+          "name": "Sisante"
+        },
+        {
+          "code": "16203",
+          "name": "Tarancón"
+        },
+        {
+          "code": "16212",
+          "name": "Torrubia del Campo"
+        },
+        {
+          "code": "16213",
+          "name": "Torrubia del Castillo"
+        },
+        {
+          "code": "16216",
+          "name": "Tresjuncos"
+        },
+        {
+          "code": "16217",
+          "name": "Tribaldos"
+        },
+        {
+          "code": "16218",
+          "name": "Uclés"
+        },
+        {
+          "code": "16236",
+          "name": "Valverde de Júcar"
+        },
+        {
+          "code": "16238",
+          "name": "Vara de Rey"
+        },
+        {
+          "code": "16243",
+          "name": "Villaescusa de Haro"
+        },
+        {
+          "code": "16247",
+          "name": "Villalgordo del Marquesado"
+        },
+        {
+          "code": "16249",
+          "name": "Villamayor de Santiago"
+        },
+        {
+          "code": "16253",
+          "name": "Villar de Cañas"
+        },
+        {
+          "code": "16255",
+          "name": "Villar de la Encina"
+        },
+        {
+          "code": "16269",
+          "name": "Villares del Saz"
+        },
+        {
+          "code": "16270",
+          "name": "Villarrubio"
+        },
+        {
+          "code": "16273",
+          "name": "Villaverde y Pasaconsol"
+        },
+        {
+          "code": "16279",
+          "name": "Zarza de Tajo"
+        },
+        {
+          "code": "45001",
+          "name": "Ajofrín"
+        },
+        {
+          "code": "45012",
+          "name": "Almonacid de Toledo"
+        },
+        {
+          "code": "45026",
+          "name": "Cabañas de Yepes"
+        },
+        {
+          "code": "45027",
+          "name": "Cabezamesada"
+        },
+        {
+          "code": "45034",
+          "name": "Camuñas"
+        },
+        {
+          "code": "45050",
+          "name": "Ciruelos"
+        },
+        {
+          "code": "45053",
+          "name": "Consuegra"
+        },
+        {
+          "code": "45054",
+          "name": "Corral de Almaguer"
+        },
+        {
+          "code": "45057",
+          "name": "Chueca"
+        },
+        {
+          "code": "45059",
+          "name": "Dosbarrios"
+        },
+        {
+          "code": "45071",
+          "name": "La Guardia"
+        },
+        {
+          "code": "45078",
+          "name": "Huerta de Valdecarábanos"
+        },
+        {
+          "code": "45084",
+          "name": "Lillo"
+        },
+        {
+          "code": "45087",
+          "name": "Madridejos"
+        },
+        {
+          "code": "45090",
+          "name": "Manzaneque"
+        },
+        {
+          "code": "45092",
+          "name": "Marjaliza"
+        },
+        {
+          "code": "45094",
+          "name": "Mascaraque"
+        },
+        {
+          "code": "45101",
+          "name": "Miguel Esteban"
+        },
+        {
+          "code": "45106",
+          "name": "Mora"
+        },
+        {
+          "code": "45107",
+          "name": "Nambroca"
+        },
+        {
+          "code": "45115",
+          "name": "Noblejas"
+        },
+        {
+          "code": "45121",
+          "name": "Ocaña"
+        },
+        {
+          "code": "45123",
+          "name": "Ontígola"
+        },
+        {
+          "code": "45124",
+          "name": "Orgaz"
+        },
+        {
+          "code": "45135",
+          "name": "La Puebla de Almoradiel"
+        },
+        {
+          "code": "45141",
+          "name": "Quero"
+        },
+        {
+          "code": "45142",
+          "name": "Quintanar de la Orden"
+        },
+        {
+          "code": "45149",
+          "name": "El Romeral"
+        },
+        {
+          "code": "45156",
+          "name": "Santa Cruz de la Zarza"
+        },
+        {
+          "code": "45163",
+          "name": "Sonseca"
+        },
+        {
+          "code": "45166",
+          "name": "Tembleque"
+        },
+        {
+          "code": "45167",
+          "name": "El Toboso"
+        },
+        {
+          "code": "45175",
+          "name": "Turleque"
+        },
+        {
+          "code": "45177",
+          "name": "Urda"
+        },
+        {
+          "code": "45185",
+          "name": "Villacañas"
+        },
+        {
+          "code": "45186",
+          "name": "La Villa de Don Fadrique"
+        },
+        {
+          "code": "45187",
+          "name": "Villafranca de los Caballeros"
+        },
+        {
+          "code": "45190",
+          "name": "Villaminaya"
+        },
+        {
+          "code": "45191",
+          "name": "Villamuelas"
+        },
+        {
+          "code": "45192",
+          "name": "Villanueva de Alcardete"
+        },
+        {
+          "code": "45193",
+          "name": "Villanueva de Bogas"
+        },
+        {
+          "code": "45195",
+          "name": "Villarrubia de Santiago"
+        },
+        {
+          "code": "45197",
+          "name": "Villasequilla"
+        },
+        {
+          "code": "45198",
+          "name": "Villatobas"
+        },
+        {
+          "code": "45200",
+          "name": "Los Yébenes"
+        },
+        {
+          "code": "45202",
+          "name": "Yepes"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «La Mancha», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/la_mancha_2025_11_20.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located; province-capital/outlier codes excluded: 16219)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.valdepenas",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Valdepeñas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "13"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "13087",
+          "name": "Valdepeñas"
+        },
+        {
+          "code": "13077",
+          "name": "Santa Cruz de Mudela"
+        },
+        {
+          "code": "13058",
+          "name": "Moral de Calatrava"
+        },
+        {
+          "code": "13008",
+          "name": "Alcubillas"
+        },
+        {
+          "code": "13074",
+          "name": "San Carlos del Valle"
+        },
+        {
+          "code": "13085",
+          "name": "Torrenueva"
+        },
+        {
+          "code": "13010",
+          "name": "Alhambra"
+        },
+        {
+          "code": "13079",
+          "name": "La Solana"
+        },
+        {
+          "code": "13093",
+          "name": "Villanueva de los Infantes"
+        },
+        {
+          "code": "13045",
+          "name": "Granátula de Calatrava"
+        },
+        {
+          "code": "13057",
+          "name": "Montiel"
+        },
+        {
+          "code": "13084",
+          "name": "Torre de Juan Abad"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valdepeñas», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valdepenas_2019_09_03.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.manchuela",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Manchuela",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "16",
+        "02"
+      ],
+      "expected_count": 68,
+      "municipios": [
+        {
+          "code": "02001",
+          "name": "Abengibre"
+        },
+        {
+          "code": "02002",
+          "name": "Alatoz"
+        },
+        {
+          "code": "02005",
+          "name": "Alborea"
+        },
+        {
+          "code": "02007",
+          "name": "Alcalá del Júcar"
+        },
+        {
+          "code": "02013",
+          "name": "Balsa de Ves"
+        },
+        {
+          "code": "02020",
+          "name": "Carcelén"
+        },
+        {
+          "code": "02024",
+          "name": "Casas-Ibáñez"
+        },
+        {
+          "code": "02021",
+          "name": "Casas de Juan Núñez"
+        },
+        {
+          "code": "02023",
+          "name": "Casas de Ves"
+        },
+        {
+          "code": "02026",
+          "name": "Cenizate"
+        },
+        {
+          "code": "02034",
+          "name": "Fuentealbilla"
+        },
+        {
+          "code": "02036",
+          "name": "Golosalvo"
+        },
+        {
+          "code": "02035",
+          "name": "La Gineta"
+        },
+        {
+          "code": "02041",
+          "name": "Jorquera"
+        },
+        {
+          "code": "02045",
+          "name": "Madrigueras"
+        },
+        {
+          "code": "02046",
+          "name": "Mahora"
+        },
+        {
+          "code": "02052",
+          "name": "Motilleja"
+        },
+        {
+          "code": "02054",
+          "name": "Navas de Jorquera"
+        },
+        {
+          "code": "02064",
+          "name": "Pozo-Lorente"
+        },
+        {
+          "code": "02066",
+          "name": "La Recueja"
+        },
+        {
+          "code": "02075",
+          "name": "Valdeganga"
+        },
+        {
+          "code": "02077",
+          "name": "Villa de Ves"
+        },
+        {
+          "code": "02079",
+          "name": "Villamalea"
+        },
+        {
+          "code": "02082",
+          "name": "Villatoya"
+        },
+        {
+          "code": "02083",
+          "name": "Villavaliente"
+        },
+        {
+          "code": "16003",
+          "name": "Alarcón"
+        },
+        {
+          "code": "16014",
+          "name": "Aliaguilla"
+        },
+        {
+          "code": "16017",
+          "name": "Almodóvar del Pinar"
+        },
+        {
+          "code": "16029",
+          "name": "Barchín del Hoyo"
+        },
+        {
+          "code": "16039",
+          "name": "Buenache de Alarcón"
+        },
+        {
+          "code": "16042",
+          "name": "Campillo de Altobuey"
+        },
+        {
+          "code": "16056",
+          "name": "Cardenete"
+        },
+        {
+          "code": "16066",
+          "name": "Casasimarro"
+        },
+        {
+          "code": "16068",
+          "name": "Castillejo de Iniesta"
+        },
+        {
+          "code": "16081",
+          "name": "Chumillas"
+        },
+        {
+          "code": "16082",
+          "name": "Enguídanos"
+        },
+        {
+          "code": "16092",
+          "name": "Gabaldón"
+        },
+        {
+          "code": "16093",
+          "name": "Garaballa"
+        },
+        {
+          "code": "16095",
+          "name": "Graja de Campalbo"
+        },
+        {
+          "code": "16096",
+          "name": "Graja de Iniesta"
+        },
+        {
+          "code": "16098",
+          "name": "El Herrumblar"
+        },
+        {
+          "code": "16104",
+          "name": "Hontecillas"
+        },
+        {
+          "code": "16113",
+          "name": "Iniesta"
+        },
+        {
+          "code": "16117",
+          "name": "Landete"
+        },
+        {
+          "code": "16118",
+          "name": "Ledaña"
+        },
+        {
+          "code": "16125",
+          "name": "Minglanilla"
+        },
+        {
+          "code": "16126",
+          "name": "Mira"
+        },
+        {
+          "code": "16134",
+          "name": "Motilla del Palancar"
+        },
+        {
+          "code": "16137",
+          "name": "Narboneta"
+        },
+        {
+          "code": "16142",
+          "name": "Olmedilla de Alarcón"
+        },
+        {
+          "code": "16150",
+          "name": "Paracuellos"
+        },
+        {
+          "code": "16155",
+          "name": "El Peral"
+        },
+        {
+          "code": "16157",
+          "name": "La Pesquera"
+        },
+        {
+          "code": "16158",
+          "name": "El Picazo"
+        },
+        {
+          "code": "16161",
+          "name": "Piqueras del Castillo"
+        },
+        {
+          "code": "16174",
+          "name": "Puebla del Salvador"
+        },
+        {
+          "code": "16175",
+          "name": "Quintanar del Rey"
+        },
+        {
+          "code": "16199",
+          "name": "Solera de Gabaldón"
+        },
+        {
+          "code": "16202",
+          "name": "Talayuelas"
+        },
+        {
+          "code": "16204",
+          "name": "Tébar"
+        },
+        {
+          "code": "16231",
+          "name": "Valhermoso de la Fuente"
+        },
+        {
+          "code": "16237",
+          "name": "Valverdejo"
+        },
+        {
+          "code": "16244",
+          "name": "Villagarcía del Llano"
+        },
+        {
+          "code": "16248",
+          "name": "Villalpardo"
+        },
+        {
+          "code": "16251",
+          "name": "Villanueva de la Jara"
+        },
+        {
+          "code": "16271",
+          "name": "Villarta"
+        },
+        {
+          "code": "16274",
+          "name": "Víllora"
+        },
+        {
+          "code": "16276",
+          "name": "Yémeda"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Manchuela», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/manchuela_2026_04_21.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union (multi-cluster density-located; province-capital/outlier codes excluded: 16078, 02003)."
+      },
+      "status": "ready"
     }
   ]
 }
