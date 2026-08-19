@@ -54,7 +54,7 @@ const JURISDICTION = "Italy";
 const LICENCE = "CC BY 4.0";
 const SIMPLIFY_TOLERANCE = 0.0002;
 // Lombardy staging window: [minLon, minLat, maxLon, maxLat].
-const WINDOW = { minLon: 8.9, minLat: 44.7, maxLon: 10.4, maxLat: 46.4 };
+const WINDOW = { minLon: 8.9, minLat: 44.7, maxLon: 10.85, maxLat: 46.4 };
 const revision = releaseVersion();
 
 // Same France-palette single boundary colour as stage-piedmont-boundaries.mjs.
@@ -66,6 +66,8 @@ const BOUNDARIES = [
   { key: "franciacorta", targetKey: "italy.lombardia.franciacorta", name: "Franciacorta", label: "Franciacorta" },
   { key: "valtellina-superiore", targetKey: "italy.lombardia.valtellina-superiore", name: "Valtellina Superiore", label: "Valtellina Superiore" },
   { key: "oltrepo-pavese", targetKey: "italy.lombardia.oltrepo-pavese", name: "Oltrepò Pavese", label: "Oltrepò Pavese" },
+  { key: "riviera-del-garda-classico", targetKey: "italy.lombardia.riviera-del-garda-classico", name: "Riviera del Garda Classico", label: "Riviera del Garda Classico" },
+  { key: "moscato-di-scanzo", targetKey: "italy.lombardia.moscato-di-scanzo", name: "Moscato di Scanzo", label: "Moscato di Scanzo" },
 ];
 
 function slugify(name) {

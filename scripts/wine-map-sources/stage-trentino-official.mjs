@@ -1,10 +1,10 @@
-// Task: stage DRAFT wine_place_boundaries for the Friuli round-1 zones
+// Task: stage DRAFT wine_place_boundaries for the Lombardy round-1 zones
 // (Alto Adige DOC umbrella + subzones Santa Maddalena, Terlano, Meranese,
 // Valle Isarco, Val Venosta, Colli di Bolzano, Lago di Caldaro, plus the shared
 // Valdadige) from the OFFICIAL Provincia Autonoma di Bolzano dataset. Sibling
-// of stage-friuli-official.mjs.
+// of stage-trentino-official.mjs.
 //
-// Source: data/wine-map/friuli-comuni-dissolved.geojson — a FeatureCollection
+// Source: data/wine-map/trentino-comuni-dissolved.geojson — a FeatureCollection
 // (EPSG:4326) already committed to the repo (fetched directly as WGS84 GeoJSON
 // from the official Bolzano GeoServer "Zone DOC e IGT" WFS; see its top-level
 // `_provenance` object for the authoritative source/licence detail). No network
@@ -35,8 +35,8 @@
 // Env: DATABASE_URL (read from .env.local). No SUPABASE_SERVICE_ROLE_KEY
 // needed (no bucket upload — see note above).
 // Usage:
-//   node scripts/wine-map-sources/stage-friuli-official.mjs           (test only, default)
-//   node scripts/wine-map-sources/stage-friuli-official.mjs --stage   (controller-gated; persists)
+//   node scripts/wine-map-sources/stage-trentino-official.mjs           (test only, default)
+//   node scripts/wine-map-sources/stage-trentino-official.mjs --stage   (controller-gated; persists)
 import assert from "node:assert/strict";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { execSync } from "node:child_process";
@@ -47,14 +47,14 @@ const hasFlag = (n) => process.argv.includes(`--${n}`);
 const STAGE = hasFlag("stage");
 
 const OUT_DIR = ".tiles-build";
-const SOURCE_FILE = "data/wine-map/friuli-comuni-dissolved.geojson";
-const NAMESPACE = "FRIULI_COMUNI";
+const SOURCE_FILE = "data/wine-map/trentino-comuni-dissolved.geojson";
+const NAMESPACE = "ISTAT_CONFINI";
 const AUTHORITY = "ISTAT (comune geometry) / MASAF disciplinari (comune membership)";
 const JURISDICTION = "Italy";
 const LICENCE = "CC BY 4.0";
 const SIMPLIFY_TOLERANCE = 0.0002;
-// Friuli staging window: [minLon, minLat, maxLon, maxLat].
-const WINDOW = { minLon: 13.0, minLat: 45.55, maxLon: 13.95, maxLat: 46.35 };
+// Lombardy staging window: [minLon, minLat, maxLon, maxLat].
+const WINDOW = { minLon: 10.9, minLat: 46.1, maxLon: 11.4, maxLat: 46.4 };
 const revision = releaseVersion();
 
 // Same France-palette single boundary colour as stage-piedmont-boundaries.mjs.
@@ -63,9 +63,7 @@ const CASING = "#FFFDF7";
 const BACKGROUND = "#F4F0E4";
 
 const BOUNDARIES = [
-  { key: "collio", targetKey: "italy.friuli.collio", name: "Collio", label: "Collio" },
-  { key: "friuli-colli-orientali", targetKey: "italy.friuli.friuli-colli-orientali", name: "Friuli Colli Orientali", label: "Friuli Colli Orientali" },
-  { key: "carso", targetKey: "italy.friuli.carso", name: "Carso", label: "Carso" },
+  { key: "teroldego-rotaliano", targetKey: "italy.trentino-alto-adige.teroldego-rotaliano", name: "Teroldego Rotaliano", label: "Teroldego Rotaliano" },
 ];
 
 function slugify(name) {
@@ -288,7 +286,7 @@ for (const boundary of BOUNDARIES) {
   for (const poly of g.coordinates) for (const ring of poly) d += `M${ring.map(project).join("L")}Z`;
   const W = ((e - w) * scale).toFixed(0);
   const H = ((n - s) * scale).toFixed(0);
-  const title = `Friuli — ${boundary.label} (DRAFT, official Regione Piemonte delimited area)`;
+  const title = `Trentino — ${boundary.label} (DRAFT, official Regione Piemonte delimited area)`;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" font-family="sans-serif">` +
     `<rect width="${W}" height="${H}" fill="${BACKGROUND}"/>` +
@@ -296,7 +294,7 @@ for (const boundary of BOUNDARIES) {
     `<text x="${Number(W) / 2}" y="24" font-size="16" font-weight="bold" text-anchor="middle" ` +
     `paint-order="stroke" stroke="${CASING}" stroke-width="3" stroke-linejoin="round" fill="#2b0f18">${title}</text>` +
     `</svg>\n`;
-  const outPath = `${OUT_DIR}/preview-friuli-${boundary.key}-official.svg`;
+  const outPath = `${OUT_DIR}/preview-trentino-${boundary.key}-official.svg`;
   await writeFile(outPath, svg);
   console.log(`wrote ${outPath}`);
 }
@@ -337,7 +335,7 @@ if (!STAGE) {
 // =============================================================================
 console.log("STAGE MODE: committing boundary rows...");
 
-const importer = `scripts/wine-map-sources/stage-friuli-official.mjs@${
+const importer = `scripts/wine-map-sources/stage-trentino-official.mjs@${
   process.env.GITHUB_SHA ?? execSync("git rev-parse HEAD").toString().trim()
 }`;
 
