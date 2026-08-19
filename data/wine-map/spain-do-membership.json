@@ -7526,6 +7526,626 @@
         "note": "Subzone of DOCa Rioja. Municipios read from the pliego's 'Rioja Alavesa' zone header, intersected with the parent Rioja entry's municipios so the three subzones tile the DO exactly (whole-municipality union)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.bierzo",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Bierzo",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "24"
+      ],
+      "expected_count": 31,
+      "municipios": [
+        {
+          "code": "24007",
+          "name": "Arganza"
+        },
+        {
+          "code": "24014",
+          "name": "Bembibre"
+        },
+        {
+          "code": "24016",
+          "name": "Benuza"
+        },
+        {
+          "code": "24019",
+          "name": "Berlanga del Bierzo"
+        },
+        {
+          "code": "24022",
+          "name": "Borrenes"
+        },
+        {
+          "code": "24027",
+          "name": "Cabañas Raras"
+        },
+        {
+          "code": "24030",
+          "name": "Cacabelos"
+        },
+        {
+          "code": "24034",
+          "name": "Camponaraya"
+        },
+        {
+          "code": "24038",
+          "name": "Carracedelo"
+        },
+        {
+          "code": "24041",
+          "name": "Carucedo"
+        },
+        {
+          "code": "24049",
+          "name": "Castropodame"
+        },
+        {
+          "code": "24057",
+          "name": "Congosto"
+        },
+        {
+          "code": "24059",
+          "name": "Corullón"
+        },
+        {
+          "code": "24064",
+          "name": "Cubillos del Sil"
+        },
+        {
+          "code": "24070",
+          "name": "Fabero"
+        },
+        {
+          "code": "24071",
+          "name": "Folgoso de la Ribera"
+        },
+        {
+          "code": "24083",
+          "name": "Igüeña"
+        },
+        {
+          "code": "24100",
+          "name": "Molinaseca"
+        },
+        {
+          "code": "24102",
+          "name": "Noceda del Bierzo"
+        },
+        {
+          "code": "24103",
+          "name": "Oencia"
+        },
+        {
+          "code": "24115",
+          "name": "Ponferrada"
+        },
+        {
+          "code": "24119",
+          "name": "Priaranza del Bierzo"
+        },
+        {
+          "code": "24122",
+          "name": "Puente de Domingo Flórez"
+        },
+        {
+          "code": "24143",
+          "name": "Sancedo"
+        },
+        {
+          "code": "24165",
+          "name": "Sobrado"
+        },
+        {
+          "code": "24169",
+          "name": "Toreno"
+        },
+        {
+          "code": "24170",
+          "name": "Torre del Bierzo"
+        },
+        {
+          "code": "24171",
+          "name": "Trabadelo"
+        },
+        {
+          "code": "24196",
+          "name": "Vega de Espinareda"
+        },
+        {
+          "code": "24206",
+          "name": "Toral de los Vados"
+        },
+        {
+          "code": "24209",
+          "name": "Villafranca del Bierzo"
+        }
+      ],
+      "grapes": [
+        "Mencía",
+        "Godello",
+        "Palomino",
+        "Garnacha Tintorera"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Bierzo», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/bierzo_2021_07_23.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the pliego's 31 municipios (León; the comarca of El Bierzo). Ponferrada is a genuine member per the pliego."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.valtiendas",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Valtiendas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "40"
+      ],
+      "expected_count": 16,
+      "municipios": [
+        {
+          "code": "40013",
+          "name": "Aldeasoña"
+        },
+        {
+          "code": "40037",
+          "name": "Calabazas de Fuentidueña"
+        },
+        {
+          "code": "40044",
+          "name": "Carrascal del Río"
+        },
+        {
+          "code": "40047",
+          "name": "Castro de Fuentidueña"
+        },
+        {
+          "code": "40056",
+          "name": "Cobos de Fuentidueña"
+        },
+        {
+          "code": "40083",
+          "name": "Fuente el Olmo de Fuentidueña"
+        },
+        {
+          "code": "40087",
+          "name": "Fuentepiñel"
+        },
+        {
+          "code": "40091",
+          "name": "Fuentesoto"
+        },
+        {
+          "code": "40092",
+          "name": "Fuentidueña"
+        },
+        {
+          "code": "40108",
+          "name": "Laguna de Contreras"
+        },
+        {
+          "code": "40140",
+          "name": "Navalilla"
+        },
+        {
+          "code": "40174",
+          "name": "Sacramenia"
+        },
+        {
+          "code": "40183",
+          "name": "San Miguel de Bernuy"
+        },
+        {
+          "code": "40202",
+          "name": "Torreadrada"
+        },
+        {
+          "code": "40215",
+          "name": "Valtiendas"
+        },
+        {
+          "code": "40905",
+          "name": "Cuevas de Provanco"
+        }
+      ],
+      "grapes": [
+        "Tempranillo"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Valtiendas», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/valtiendas_2019_01_01.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 16 pliego municipios (Segovia, comarca de Fuentidueña)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.sierra-de-salamanca",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Sierra de Salamanca",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "37"
+      ],
+      "expected_count": 26,
+      "municipios": [
+        {
+          "code": "37090",
+          "name": "Las Casas del Conde"
+        },
+        {
+          "code": "37098",
+          "name": "Cepeda"
+        },
+        {
+          "code": "37102",
+          "name": "El Cerro"
+        },
+        {
+          "code": "37112",
+          "name": "Cristóbal"
+        },
+        {
+          "code": "37147",
+          "name": "Garcibuey"
+        },
+        {
+          "code": "37158",
+          "name": "Herguijuela de la Sierra"
+        },
+        {
+          "code": "37168",
+          "name": "Lagunilla"
+        },
+        {
+          "code": "37176",
+          "name": "Madroñal"
+        },
+        {
+          "code": "37193",
+          "name": "Miranda del Castañar"
+        },
+        {
+          "code": "37194",
+          "name": "Mogarraz"
+        },
+        {
+          "code": "37195",
+          "name": "Molinillo"
+        },
+        {
+          "code": "37196",
+          "name": "Monforte de la Sierra"
+        },
+        {
+          "code": "37201",
+          "name": "Montemayor del Río"
+        },
+        {
+          "code": "37252",
+          "name": "Pinedas"
+        },
+        {
+          "code": "37284",
+          "name": "San Esteban de la Sierra"
+        },
+        {
+          "code": "37286",
+          "name": "San Martín del Castañar"
+        },
+        {
+          "code": "37287",
+          "name": "San Miguel de Valero"
+        },
+        {
+          "code": "37298",
+          "name": "Santibáñez de la Sierra"
+        },
+        {
+          "code": "37300",
+          "name": "Los Santos"
+        },
+        {
+          "code": "37305",
+          "name": "Sequeros"
+        },
+        {
+          "code": "37313",
+          "name": "Sotoserrano"
+        },
+        {
+          "code": "37325",
+          "name": "El Tornadizo"
+        },
+        {
+          "code": "37331",
+          "name": "Valdefuentes de Sangusín"
+        },
+        {
+          "code": "37334",
+          "name": "Valdelageve"
+        },
+        {
+          "code": "37339",
+          "name": "Valero"
+        },
+        {
+          "code": "37355",
+          "name": "Villanueva del Conde"
+        }
+      ],
+      "grapes": [
+        "Rufete",
+        "Tempranillo",
+        "Garnacha Tinta"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Sierra de Salamanca», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/sierra_de_salamanca_2020_11_20.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 26 pliego municipios (Salamanca, Sierra de Francia foothills). The capital Salamanca (37274) — a spurious header match, not a listed member — is dropped."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-y-leon.tierra-del-vino-de-zamora",
+      "comunidad_key": "castilla-y-leon",
+      "comunidad": "Castilla y León",
+      "display_name": "Tierra del Vino de Zamora",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "49",
+        "37"
+      ],
+      "expected_count": 56,
+      "municipios": [
+        {
+          "code": "37017",
+          "name": "Aldeanueva de Figueroa"
+        },
+        {
+          "code": "37019",
+          "name": "Aldearrodrigo"
+        },
+        {
+          "code": "37130",
+          "name": "Forfoleda"
+        },
+        {
+          "code": "37226",
+          "name": "Palacios del Arzobispo"
+        },
+        {
+          "code": "37231",
+          "name": "Parada de Rubiales"
+        },
+        {
+          "code": "37299",
+          "name": "Santiz"
+        },
+        {
+          "code": "37323",
+          "name": "Topas"
+        },
+        {
+          "code": "37327",
+          "name": "Torresmenudas"
+        },
+        {
+          "code": "37335",
+          "name": "Valdelosa"
+        },
+        {
+          "code": "37379",
+          "name": "Zamayón"
+        },
+        {
+          "code": "49006",
+          "name": "Algodre"
+        },
+        {
+          "code": "49010",
+          "name": "Arcenillas"
+        },
+        {
+          "code": "49022",
+          "name": "Benegiles"
+        },
+        {
+          "code": "49031",
+          "name": "Cabañas de Sayago"
+        },
+        {
+          "code": "49034",
+          "name": "Cañizal"
+        },
+        {
+          "code": "49038",
+          "name": "Casaseca de Campeán"
+        },
+        {
+          "code": "49039",
+          "name": "Casaseca de las Chanas"
+        },
+        {
+          "code": "49040",
+          "name": "Castrillo de la Guareña"
+        },
+        {
+          "code": "49044",
+          "name": "Cazurra"
+        },
+        {
+          "code": "49053",
+          "name": "Coreses"
+        },
+        {
+          "code": "49054",
+          "name": "Corrales del Vino"
+        },
+        {
+          "code": "49056",
+          "name": "Cubillos"
+        },
+        {
+          "code": "49058",
+          "name": "El Cubo de Tierra del Vino"
+        },
+        {
+          "code": "49059",
+          "name": "Cuelgamures"
+        },
+        {
+          "code": "49061",
+          "name": "Entrala"
+        },
+        {
+          "code": "49076",
+          "name": "Fresno de la Ribera"
+        },
+        {
+          "code": "49080",
+          "name": "Fuentelapeña"
+        },
+        {
+          "code": "49081",
+          "name": "Fuentesaúco"
+        },
+        {
+          "code": "49084",
+          "name": "Fuentespreadas"
+        },
+        {
+          "code": "49090",
+          "name": "Gema"
+        },
+        {
+          "code": "49093",
+          "name": "Guarrate"
+        },
+        {
+          "code": "49095",
+          "name": "La Hiniesta"
+        },
+        {
+          "code": "49096",
+          "name": "Jambrina"
+        },
+        {
+          "code": "49102",
+          "name": "El Maderal"
+        },
+        {
+          "code": "49103",
+          "name": "Madridanos"
+        },
+        {
+          "code": "49115",
+          "name": "Mayalde"
+        },
+        {
+          "code": "49119",
+          "name": "Molacillos"
+        },
+        {
+          "code": "49122",
+          "name": "Monfarracinos"
+        },
+        {
+          "code": "49125",
+          "name": "Moraleja del Vino"
+        },
+        {
+          "code": "49127",
+          "name": "Morales del Vino"
+        },
+        {
+          "code": "49132",
+          "name": "Moreruela de los Infanzones"
+        },
+        {
+          "code": "49148",
+          "name": "Peleas de Abajo"
+        },
+        {
+          "code": "49149",
+          "name": "Peñausende"
+        },
+        {
+          "code": "49151",
+          "name": "El Perdigón"
+        },
+        {
+          "code": "49178",
+          "name": "Roales"
+        },
+        {
+          "code": "49197",
+          "name": "Santa Clara de Avedillo"
+        },
+        {
+          "code": "49222",
+          "name": "Torres del Carrizal"
+        },
+        {
+          "code": "49226",
+          "name": "Vadillo de la Guareña"
+        },
+        {
+          "code": "49227",
+          "name": "Valcabado"
+        },
+        {
+          "code": "49230",
+          "name": "Vallesa de la Guareña"
+        },
+        {
+          "code": "49241",
+          "name": "Villaescusa"
+        },
+        {
+          "code": "49245",
+          "name": "Villalazán"
+        },
+        {
+          "code": "49255",
+          "name": "Villamor de los Escuderos"
+        },
+        {
+          "code": "49258",
+          "name": "Villanueva de Campeán"
+        },
+        {
+          "code": "49261",
+          "name": "Villaralbo"
+        },
+        {
+          "code": "49275",
+          "name": "Zamora"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Malvasía Castellana",
+        "Moscatel de Grano Menudo"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Tierra del Vino de Zamora», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/tierradel_vino_de_zamora_2011_01_01.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union: 46 Zamora municipios (the city of Zamora, 49275, IS a listed member) + 10 Salamanca municipios = 56. The capital Salamanca (37274) — a spurious header match, not a listed member — is dropped."
+      },
+      "status": "ready"
     }
   ]
 }
