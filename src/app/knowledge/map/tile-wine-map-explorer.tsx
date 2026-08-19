@@ -29,6 +29,7 @@ import {
   fetchWinePlaceTree,
   type WinePlaceTreeNode,
 } from "@/lib/wine-map/tree";
+import { englishName } from "@/lib/wine-map/localize-names";
 import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
@@ -92,6 +93,19 @@ export function TileWineMapExplorer({
     "loading" | "ready" | "missing" | "error"
   >("loading");
   const [tree, setTree] = useState<WinePlaceTreeNode[] | null>(null);
+  // Label language for the map + tree: native local names, or English exonyms
+  // (Italia->Italy, Toscana->Tuscany) from the curated dictionary. Persisted
+  // per browser. Safe as a lazy initializer — the tree shows a skeleton during
+  // hydration and the map is ssr:false, so neither renders a label server-side.
+  const [english, setEnglish] = useState<boolean>(
+    () =>
+      typeof window !== "undefined" &&
+      window.localStorage.getItem("wine-map-lang") === "en",
+  );
+  const chooseLang = (value: boolean) => {
+    setEnglish(value);
+    window.localStorage.setItem("wine-map-lang", value ? "en" : "local");
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -352,6 +366,7 @@ export function TileWineMapExplorer({
                     selectedKey={selectedKey}
                     onSelect={select}
                     filterKeys={visibleKeys}
+                    english={english}
                   />
                 )}
               </div>
@@ -411,6 +426,36 @@ export function TileWineMapExplorer({
                   {visibleKeys.length} place{visibleKeys.length === 1 ? "" : "s"}
                 </Badge>
               ) : null}
+              {/* Label language: native local names vs English exonyms
+                  (Italia->Italy, Toscana->Tuscany), across the map + tree. */}
+              <div className="ml-auto flex items-center rounded-md border border-border p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => chooseLang(false)}
+                  aria-pressed={!english}
+                  className={cn(
+                    "rounded px-2 py-1 font-medium transition-colors",
+                    !english
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Local
+                </button>
+                <button
+                  type="button"
+                  onClick={() => chooseLang(true)}
+                  aria-pressed={english}
+                  className={cn(
+                    "rounded px-2 py-1 font-medium transition-colors",
+                    english
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  English
+                </button>
+              </div>
             </div>
             {/* Expanded on mobile needs a definite height: the lg full-view
                 relies on a flex-1/min-h-0 chain that only exists in the
@@ -434,6 +479,7 @@ export function TileWineMapExplorer({
                 visibleKeys={visibleKeys}
                 expanded={expanded}
                 onToggleExpanded={() => setExpanded((value) => !value)}
+                english={english}
               />
             ) : manifestError ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border text-center">
@@ -485,7 +531,11 @@ export function TileWineMapExplorer({
                   Details
                 </span>
                 <span className="truncate text-sm font-medium">
-                  {context ? context.place.name : "Click on areas to learn more"}
+                  {context
+                    ? english
+                      ? englishName(context.place.name)
+                      : context.place.name
+                    : "Click on areas to learn more"}
                 </span>
               </span>
               <ChevronUp
@@ -537,7 +587,7 @@ export function TileWineMapExplorer({
                     {KIND_LABELS[context.place.kind] ?? context.place.kind}
                   </Badge>
                   <h2 className="font-heading text-xl font-semibold">
-                    {context.place.name}
+                    {english ? englishName(context.place.name) : context.place.name}
                   </h2>
                 </div>
                 {archetypes.length > 0 ? (

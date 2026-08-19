@@ -12,6 +12,10 @@ import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
+import {
+  englishName,
+  englishTextFieldExpression,
+} from "@/lib/wine-map/localize-names";
 import { cn } from "@/lib/utils";
 
 // Free, un-keyed Carto vector basemap — same as the legacy map.
@@ -274,9 +278,12 @@ function labelLayout(
   selectedKey: string | null,
   selectedId: string | null,
   selectedParentId: string | null,
+  english: boolean,
 ) {
   const base = {
-    "text-field": ["get", "name"] as unknown as string,
+    "text-field": (english
+      ? englishTextFieldExpression()
+      : ["get", "name"]) as unknown as string,
     "text-transform": [
       "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
     ] as unknown as "none",
@@ -338,6 +345,7 @@ export function TileWineMap({
   expanded,
   onToggleExpanded,
   visibleKeys = null,
+  english = false,
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
@@ -353,6 +361,10 @@ export function TileWineMap({
       stays for context). Computed by the explorer's filters — grapes today,
       styles/designations later — so hiding needs no tile rebuild. */
   visibleKeys?: string[] | null;
+  /** English-names toggle: relabels the map, legend and tree from the curated
+      local->English dictionary (Italia->Italy, Toscana->Tuscany). Client-side
+      only — no tile rebuild. */
+  english?: boolean;
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
@@ -627,12 +639,15 @@ export function TileWineMap({
     const keys = viewInfo.regions.length
       ? viewInfo.regions
       : Object.keys(manifest.shards).sort();
-    return keys.map((key) => ({
-      key,
-      label: REGION_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1),
-      color: REGION_COLORS[key] ?? FALLBACK_COLOR,
-    }));
-  }, [manifest, viewInfo.regions]);
+    return keys.map((key) => {
+      const local = REGION_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
+      return {
+        key,
+        label: english ? englishName(local) : local,
+        color: REGION_COLORS[key] ?? FALLBACK_COLOR,
+      };
+    });
+  }, [manifest, viewInfo.regions, english]);
 
   return (
     <div className="relative h-full overflow-hidden rounded-lg border">
@@ -795,7 +810,7 @@ export function TileWineMap({
             type="symbol"
             source-layer="labels"
             filter={gatedWorldFilter}
-            layout={labelLayout(selectedKey, selectedId, selectedParentId)}
+            layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
             paint={labelPaint(selectedKey, selectedId, selectedParentId)}
           />
         </Source>
@@ -844,7 +859,7 @@ export function TileWineMap({
               type="symbol"
               source-layer="labels"
               filter={keyGate ?? PASS_FILTER}
-              layout={labelLayout(selectedKey, selectedId, selectedParentId)}
+              layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
               paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
           </Source>
