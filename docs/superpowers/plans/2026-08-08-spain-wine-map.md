@@ -4,7 +4,74 @@ Add the whole Spanish DO/DOP hierarchy to the wine map, mirroring the France
 model but sourced the Champagne/Alsace way (commune-union), because Spain has
 no national parcel layer.
 
-## Session status — 2026-08-14 (resume here)
+## Session status — 2026-08-19 (resume here)
+
+**Latest work (2026-08-19 cont., pushed to `master` through `c90a6ba`):**
+- **Subzone tier (NEW) — Rioja Alta / Rioja Oriental / Rioja Alavesa** as
+  `APPELLATION` children of `spain.la-rioja.rioja` (canonical keys
+  `spain.la-rioja.rioja.rioja-{alta,oriental,alavesa}`, display_tier 3, min_zoom 7,
+  `appellation_level='subregional'`). Sourced by reading the DOCa Rioja pliego's
+  three zone headers, then intersecting each zone with the parent Rioja's 135
+  municipios so they tile it exactly (Alta 75 + Oriental 47 + Alavesa 13 = 135).
+  Promoted by `run-spain-dos.mjs` with the parent-containment guard. Migration
+  `20260901107000`; commit `de2dc35`. **This is the reusable subzone pattern** for
+  Rías Baixas' 5 zones etc. (extractor: `.tiles-build/build-rioja-subzones.mjs`).
+- **Knowledge content (NEW) — every Spanish place now has a profile.** Migrations
+  `20260901108000` (15 Spanish grapes added to the shared `grapes` lib +
+  Graciano colour fix), `20260901109000` (country + 11 comunidad articles: rich
+  description/climate/soils/key_facts + grape & style chips), `20260901110000`
+  (all 34 DOs + 3 Rioja subzones: description + key_facts + grape/style chips).
+  50/50 Spanish places have descriptions; all `editorial_status='PUBLISHED'`.
+  Comunidad REGION content renders NOW (those nodes are VERIFIED); DO content
+  renders too (VERIFIED post-promotion). Written in-session, no API (AGENTS.md).
+  Commit `02aa032`. **These render from the live DB immediately — no tile rebuild
+  needed** (tiles carry geometry/labels, not article prose).
+- **Cellar smoothness (cont.)** — `content-visibility:auto` +
+  `contain-intrinsic-size` on the list rows/cards so the browser skips off-screen
+  layout/paint. Safe because the desktop table is `table-fixed` with a fixed
+  `<colgroup>` (columns don't shift when rows are virtualised out). Commit
+  `c90a6ba`. Further levers if still not smooth: collapse the mobile-card/desktop-
+  table double-mount to one per breakpoint; memoize the row + the `filtered` sort.
+
+**Earlier on 2026-08-19, pushed to `master` (`b083f34`):**
+- **Precise Italy country border** — new `fetch-italy-comuni.mjs` (caches all 7,904
+  `georef-italy-comune` ISTAT comuni to `.tiles-build/sources/italy-comuni.json`,
+  gitignored) + `build-italy-country-outline.mjs` (grid-dissolve, mainland + Sicily
+  + Sardinia, 7,531 vertices, `NAMESPACE=ISTAT_CONFINI`, `source_feature_id=
+  georef-comune-dissolve:ITA`), replacing the collaborator's coarse Natural Earth
+  1:50m Italy outline. Committed live directly (like Spain's outline). Now matches
+  France/Spain fidelity, as the owner asked.
+- **Cataluña wave 10 (6 DOs, LIVE)** — Penedès (61), Terra Alta (12), Empordà (55),
+  Conca de Barberà (14), Alella (31), Pla de Bages (35), all from official MAPA
+  pliegos read directly (the "anchor-miss" DOs — their lists were sourced by
+  reading each pliego's *Demarcación de la zona geográfica* out of a text dump, the
+  reliable path; the density finder undercounts Catalan bulleted/footnote lists).
+  Migration `20260901106000`; promoted by `run-spain-dos.mjs`; comunidad overview
+  rebuilt (Cataluña now 8 DOs / 230 municipios). **35 DOs across 11 comunidades.**
+  Notable: `Cabrera d'Igualada`→INE `Cabrera d'Anoia` (08028) rename; Alella is a
+  documented whole-municipality over-approximation (tiny DO, dense Maresme).
+- **Cellar list-view scroll lag fixed** (separate concern, `b083f34`) —
+  `src/app/cellar/cellar-bottles-table.tsx` thumbnails were raw full-res `<img>`
+  with no sizing/lazy/decoding at 25 rows/page; added `loading="lazy"
+  decoding="async"` to all three `<img>` and explicit `width`/`height` to the two
+  list thumbnails. tsc+eslint green.
+- **Catalan pliego tooling** (scratch, gitignored under `.tiles-build/`):
+  `dump-pliego.mjs` (PDF→text), `slice.mjs` (find the zona section),
+  `parse-catalan-list.mjs` (bulleted `- Name (n)` + province footnote legend),
+  `build-catalan.mjs` (verbatim name lists → fail-closed resolve → writes entries).
+- **STILL DEFERRED in Cataluña:** **Costers del Segre** (7 disjoint subzones, many
+  partial polígono-catastral inclusions — needs careful per-subzone whole-vs-partial
+  reading) and the **Tarragona** DO (large, not yet fetched). Plus all the earlier
+  deferrals (Galicia parroquia DOs, País Vasco Txakolis, Baleares, Rioja refine,
+  subregions).
+- **TILES ARE STALE** — the DB has Italy's new border + the 6 Cataluña DOs but the
+  published tiles do not. Owner must run the **"Wine Map Tiles"** GitHub Actions
+  workflow from `master` with `promote: true` (reads live DB; republishes Italy +
+  Spain + the collaborator's Italy regions together).
+
+---
+
+## Session status — 2026-08-14
 
 **Merged to `master`** (`b892baa`) — Spain wave 1 + the collaborator's Italy
 (Trentino-Alto-Adige/Veneto/Sicily) are unioned; `export.mjs` runs clean on the
