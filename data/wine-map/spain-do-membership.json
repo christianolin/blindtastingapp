@@ -29,28 +29,6 @@
   "generated_at": "2026-08-14",
   "denominations": [
     {
-      "canonical_key": "spain.la-rioja.rioja",
-      "comunidad_key": "la-rioja",
-      "comunidad": "La Rioja",
-      "display_name": "Rioja",
-      "appellation_system": "DOCa",
-      "appellation_level": "regional",
-      "provinces": [
-        "26",
-        "01",
-        "31"
-      ],
-      "provinces_note": "La Rioja (26) + Alava/Araba (01, Rioja Alavesa) + Navarra (31). Trans-comunidad DOCa: keyed under la-rioja with the Alava/Navarra municipalities included in the dissolve.",
-      "municipios": [],
-      "provenance": {
-        "source": "BOE pliego de condiciones DOCa Rioja",
-        "url": null,
-        "retrieved": null,
-        "note": "PENDING — not sourced (no web access this session)."
-      },
-      "status": "pending"
-    },
-    {
       "canonical_key": "spain.cataluna.priorat",
       "comunidad_key": "cataluna",
       "comunidad": "Cataluña",
@@ -5380,6 +5358,569 @@
         "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
         "retrieved": "2026-08-18",
         "note": "Whole-municipality union of the 7 términos municipales (Cuenca)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.la-rioja.rioja",
+      "comunidad_key": "la-rioja",
+      "comunidad": "La Rioja",
+      "display_name": "Rioja",
+      "appellation_system": "DOCa",
+      "appellation_level": "regional",
+      "provinces": [
+        "26",
+        "01",
+        "31"
+      ],
+      "expected_count": 135,
+      "municipios": [
+        {
+          "code": "26001",
+          "name": "Ábalos"
+        },
+        {
+          "code": "26037",
+          "name": "Camprovín"
+        },
+        {
+          "code": "26062",
+          "name": "Foncea"
+        },
+        {
+          "code": "26095",
+          "name": "Matute"
+        },
+        {
+          "code": "26148",
+          "name": "Tirgo"
+        },
+        {
+          "code": "26009",
+          "name": "Alesanco"
+        },
+        {
+          "code": "26063",
+          "name": "Fonzaleche"
+        },
+        {
+          "code": "26096",
+          "name": "Medrano"
+        },
+        {
+          "code": "26150",
+          "name": "Tormantos"
+        },
+        {
+          "code": "26010",
+          "name": "Alesón"
+        },
+        {
+          "code": "26040",
+          "name": "Cañas"
+        },
+        {
+          "code": "26064",
+          "name": "Fuenmayor"
+        },
+        {
+          "code": "26102",
+          "name": "Nájera"
+        },
+        {
+          "code": "26152",
+          "name": "Torrecilla sobre Alesanco"
+        },
+        {
+          "code": "26013",
+          "name": "Anguciana"
+        },
+        {
+          "code": "26041",
+          "name": "Cárdenas"
+        },
+        {
+          "code": "26065",
+          "name": "Galbárruli"
+        },
+        {
+          "code": "26105",
+          "name": "Navarrete"
+        },
+        {
+          "code": "26154",
+          "name": "Torremontalbo"
+        },
+        {
+          "code": "26015",
+          "name": "Arenzana de Abajo"
+        },
+        {
+          "code": "26042",
+          "name": "Casalarreina"
+        },
+        {
+          "code": "26068",
+          "name": "Gimileo"
+        },
+        {
+          "code": "26109",
+          "name": "Ochánduri"
+        },
+        {
+          "code": "26155",
+          "name": "Treviana"
+        },
+        {
+          "code": "26016",
+          "name": "Arenzana de Arriba"
+        },
+        {
+          "code": "26043",
+          "name": "Castañares de Rioja"
+        },
+        {
+          "code": "26071",
+          "name": "Haro"
+        },
+        {
+          "code": "26111",
+          "name": "Ollauri"
+        },
+        {
+          "code": "26157",
+          "name": "Tricio"
+        },
+        {
+          "code": "26022",
+          "name": "Azofra"
+        },
+        {
+          "code": "26045",
+          "name": "Cellorigo"
+        },
+        {
+          "code": "26074",
+          "name": "Hervías"
+        },
+        {
+          "code": "26127",
+          "name": "Rodezno"
+        },
+        {
+          "code": "26160",
+          "name": "Uruñuela"
+        },
+        {
+          "code": "26023",
+          "name": "Badarán"
+        },
+        {
+          "code": "26046",
+          "name": "Cenicero"
+        },
+        {
+          "code": "26073",
+          "name": "Herramélluri"
+        },
+        {
+          "code": "26128",
+          "name": "Sajazarra"
+        },
+        {
+          "code": "26163",
+          "name": "Ventosa"
+        },
+        {
+          "code": "26024",
+          "name": "Bañares"
+        },
+        {
+          "code": "26048",
+          "name": "Cidamón"
+        },
+        {
+          "code": "26075",
+          "name": "Hormilla"
+        },
+        {
+          "code": "26129",
+          "name": "San Asensio"
+        },
+        {
+          "code": "26166",
+          "name": "Villalba de Rioja"
+        },
+        {
+          "code": "26026",
+          "name": "Baños de Río Tobía"
+        },
+        {
+          "code": "26049",
+          "name": "Cihuri"
+        },
+        {
+          "code": "26076",
+          "name": "Hormilleja"
+        },
+        {
+          "code": "26131",
+          "name": "San Millán de Yécora"
+        },
+        {
+          "code": "26171",
+          "name": "Villar de Torre"
+        },
+        {
+          "code": "26025",
+          "name": "Baños de Rioja"
+        },
+        {
+          "code": "26050",
+          "name": "Cirueña"
+        },
+        {
+          "code": "26078",
+          "name": "Hornos de Moncalvillo"
+        },
+        {
+          "code": "26139",
+          "name": "San Torcuato"
+        },
+        {
+          "code": "26172",
+          "name": "Villarejo"
+        },
+        {
+          "code": "26027",
+          "name": "Berceo"
+        },
+        {
+          "code": "26052",
+          "name": "Cordovín"
+        },
+        {
+          "code": "26079",
+          "name": "Huércanos"
+        },
+        {
+          "code": "26142",
+          "name": "San Vicente de la Sonsierra"
+        },
+        {
+          "code": "26180",
+          "name": "Zarratón"
+        },
+        {
+          "code": "26030",
+          "name": "Bezares"
+        },
+        {
+          "code": "26056",
+          "name": "Cuzcurrita de Río Tirón"
+        },
+        {
+          "code": "26084",
+          "name": "Lardero"
+        },
+        {
+          "code": "26134",
+          "name": "Santa Coloma"
+        },
+        {
+          "code": "26031",
+          "name": "Bobadilla"
+        },
+        {
+          "code": "26057",
+          "name": "Daroca de Rioja"
+        },
+        {
+          "code": "26087",
+          "name": "Leiva"
+        },
+        {
+          "code": "26143",
+          "name": "Sojuela"
+        },
+        {
+          "code": "26033",
+          "name": "Briñas"
+        },
+        {
+          "code": "26059",
+          "name": "Entrena"
+        },
+        {
+          "code": "26089",
+          "name": "Logroño"
+        },
+        {
+          "code": "26144",
+          "name": "Sorzano"
+        },
+        {
+          "code": "26034",
+          "name": "Briones"
+        },
+        {
+          "code": "26060",
+          "name": "Estollo"
+        },
+        {
+          "code": "26092",
+          "name": "Manjarrés"
+        },
+        {
+          "code": "26145",
+          "name": "Sotés"
+        },
+        {
+          "code": "26002",
+          "name": "Agoncillo"
+        },
+        {
+          "code": "26019",
+          "name": "Arrúbal"
+        },
+        {
+          "code": "26054",
+          "name": "Cornago"
+        },
+        {
+          "code": "26108",
+          "name": "Ocón"
+        },
+        {
+          "code": "26125",
+          "name": "Rincón de Soto"
+        },
+        {
+          "code": "26020",
+          "name": "Ausejo"
+        },
+        {
+          "code": "26123",
+          "name": "El Redal"
+        },
+        {
+          "code": "26099",
+          "name": "Murillo de Río Leza"
+        },
+        {
+          "code": "26135",
+          "name": "Santa Engracia del Jubera"
+        },
+        {
+          "code": "26021",
+          "name": "Autol"
+        },
+        {
+          "code": "26170",
+          "name": "El Villar de Arnedo"
+        },
+        {
+          "code": "26100",
+          "name": "Muro de Aguas"
+        },
+        {
+          "code": "26136",
+          "name": "Santa Eulalia Bajera"
+        },
+        {
+          "code": "26066",
+          "name": "Galilea"
+        },
+        {
+          "code": "26103",
+          "name": "Nalda"
+        },
+        {
+          "code": "26158",
+          "name": "Tudelilla"
+        },
+        {
+          "code": "26006",
+          "name": "Alberite"
+        },
+        {
+          "code": "26028",
+          "name": "Bergasa"
+        },
+        {
+          "code": "26070",
+          "name": "Grávalos"
+        },
+        {
+          "code": "26168",
+          "name": "Villamediana de Iregua"
+        },
+        {
+          "code": "26007",
+          "name": "Alcanadre"
+        },
+        {
+          "code": "26036",
+          "name": "Calahorra"
+        },
+        {
+          "code": "26072",
+          "name": "Herce"
+        },
+        {
+          "code": "26117",
+          "name": "Pradejón"
+        },
+        {
+          "code": "26173",
+          "name": "Villarroya"
+        },
+        {
+          "code": "26008",
+          "name": "Aldeanueva de Ebro"
+        },
+        {
+          "code": "26047",
+          "name": "Cervera del Río Alhama"
+        },
+        {
+          "code": "26080",
+          "name": "Igea"
+        },
+        {
+          "code": "26119",
+          "name": "Préjano"
+        },
+        {
+          "code": "26011",
+          "name": "Alfaro"
+        },
+        {
+          "code": "26051",
+          "name": "Clavijo"
+        },
+        {
+          "code": "26083",
+          "name": "Lagunilla del Jubera"
+        },
+        {
+          "code": "26120",
+          "name": "Quel"
+        },
+        {
+          "code": "26017",
+          "name": "Arnedillo"
+        },
+        {
+          "code": "26053",
+          "name": "Corera"
+        },
+        {
+          "code": "26088",
+          "name": "Leza de Río Leza"
+        },
+        {
+          "code": "26124",
+          "name": "Ribafrecha"
+        },
+        {
+          "code": "26018",
+          "name": "Arnedo"
+        },
+        {
+          "code": "31015",
+          "name": "Andosilla"
+        },
+        {
+          "code": "31047",
+          "name": "Bargota"
+        },
+        {
+          "code": "31165",
+          "name": "Mendavia"
+        },
+        {
+          "code": "31223",
+          "name": "Sartaguda"
+        },
+        {
+          "code": "31026",
+          "name": "Aras"
+        },
+        {
+          "code": "31042",
+          "name": "Azagra"
+        },
+        {
+          "code": "31215",
+          "name": "San Adrián"
+        },
+        {
+          "code": "31251",
+          "name": "Viana"
+        },
+        {
+          "code": "01011",
+          "name": "Baños de Ebro"
+        },
+        {
+          "code": "01023",
+          "name": "Elvillar"
+        },
+        {
+          "code": "01032",
+          "name": "Lanciego"
+        },
+        {
+          "code": "01041",
+          "name": "Navaridas"
+        },
+        {
+          "code": "01057",
+          "name": "Villabuena de Álava"
+        },
+        {
+          "code": "01028",
+          "name": "Labastida"
+        },
+        {
+          "code": "01033",
+          "name": "Lapuebla de Labarca"
+        },
+        {
+          "code": "01060",
+          "name": "Yécora"
+        },
+        {
+          "code": "01034",
+          "name": "Leza"
+        },
+        {
+          "code": "01022",
+          "name": "Elciego"
+        },
+        {
+          "code": "01031",
+          "name": "Laguardia"
+        },
+        {
+          "code": "01039",
+          "name": "Moreda de Álava"
+        },
+        {
+          "code": "01052",
+          "name": "Samaniego"
+        },
+        {
+          "code": "31157",
+          "name": "Lodosa"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOCa «Rioja», MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/htm/pliegodecondicionesdocarioja.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Trans-comunidad DOCa keyed under La Rioja; includes Rioja Alavesa (Álava/País Vasco) and Rioja municipios of Navarra. Whole-municipality union (density-located from the space-separated multi-column list). Logroño is a member; the Vitoria/Pamplona capitals are excluded."
       },
       "status": "ready"
     }
