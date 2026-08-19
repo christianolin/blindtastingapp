@@ -2309,6 +2309,945 @@
         "note": "Whole-municipality union of the 18 Condado municipios. Huelva capital excluded (not a member — the density match picked up the province name)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.extremadura.ribera-del-guadiana",
+      "comunidad_key": "extremadura",
+      "comunidad": "Extremadura",
+      "display_name": "Ribera del Guadiana",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "06",
+        "10"
+      ],
+      "expected_count": 122,
+      "municipios": [
+        {
+          "code": "06903",
+          "name": "Guadiana"
+        },
+        {
+          "code": "06002",
+          "name": "Aceuchal"
+        },
+        {
+          "code": "06003",
+          "name": "Ahillones"
+        },
+        {
+          "code": "06004",
+          "name": "Alange"
+        },
+        {
+          "code": "06011",
+          "name": "Almendralejo"
+        },
+        {
+          "code": "06012",
+          "name": "Arroyo de San Serván"
+        },
+        {
+          "code": "06014",
+          "name": "Azuaga"
+        },
+        {
+          "code": "06019",
+          "name": "Berlanga"
+        },
+        {
+          "code": "06025",
+          "name": "Calamonte"
+        },
+        {
+          "code": "06040",
+          "name": "Corte de Peleas"
+        },
+        {
+          "code": "06045",
+          "name": "Entrín Bajo"
+        },
+        {
+          "code": "06049",
+          "name": "Feria"
+        },
+        {
+          "code": "06054",
+          "name": "Fuente del Maestre"
+        },
+        {
+          "code": "06059",
+          "name": "Granja de Torrehermosa"
+        },
+        {
+          "code": "06065",
+          "name": "Higuera de Llerena"
+        },
+        {
+          "code": "06068",
+          "name": "Hinojosa del Valle"
+        },
+        {
+          "code": "06069",
+          "name": "Hornachos"
+        },
+        {
+          "code": "06089",
+          "name": "La Morera"
+        },
+        {
+          "code": "06099",
+          "name": "La Parra"
+        },
+        {
+          "code": "06073",
+          "name": "Llera"
+        },
+        {
+          "code": "06074",
+          "name": "Llerena"
+        },
+        {
+          "code": "06076",
+          "name": "Maguilla"
+        },
+        {
+          "code": "06083",
+          "name": "Mérida"
+        },
+        {
+          "code": "06092",
+          "name": "Nogales"
+        },
+        {
+          "code": "06098",
+          "name": "Palomas"
+        },
+        {
+          "code": "06106",
+          "name": "Puebla del Prior"
+        },
+        {
+          "code": "06104",
+          "name": "Puebla de la Reina"
+        },
+        {
+          "code": "06113",
+          "name": "Ribera del Fresno"
+        },
+        {
+          "code": "06117",
+          "name": "Salvatierra de los Barros"
+        },
+        {
+          "code": "06121",
+          "name": "Santa Marta"
+        },
+        {
+          "code": "06126",
+          "name": "Solana de los Barros"
+        },
+        {
+          "code": "06131",
+          "name": "Torre de Miguel Sesmero"
+        },
+        {
+          "code": "06139",
+          "name": "Valencia de las Torres"
+        },
+        {
+          "code": "06144",
+          "name": "Valverde de Llerena"
+        },
+        {
+          "code": "06149",
+          "name": "Villafranca de los Barros"
+        },
+        {
+          "code": "06152",
+          "name": "Villalba de los Barros"
+        },
+        {
+          "code": "06020",
+          "name": "Bienvenida"
+        },
+        {
+          "code": "10040",
+          "name": "Calzadilla"
+        },
+        {
+          "code": "06052",
+          "name": "Fuente de Cantos"
+        },
+        {
+          "code": "06081",
+          "name": "Medina de las Torres"
+        },
+        {
+          "code": "06108",
+          "name": "Puebla de Sancho Pérez"
+        },
+        {
+          "code": "06122",
+          "name": "Los Santos de Maimona"
+        },
+        {
+          "code": "06136",
+          "name": "Usagre"
+        },
+        {
+          "code": "06141",
+          "name": "Valencia del Ventoso"
+        },
+        {
+          "code": "06158",
+          "name": "Zafra"
+        },
+        {
+          "code": "06009",
+          "name": "Aljucén"
+        },
+        {
+          "code": "10027",
+          "name": "Benquerencia"
+        },
+        {
+          "code": "06028",
+          "name": "Campanario"
+        },
+        {
+          "code": "06036",
+          "name": "Castuera"
+        },
+        {
+          "code": "06039",
+          "name": "La Coronada"
+        },
+        {
+          "code": "06041",
+          "name": "Cristina"
+        },
+        {
+          "code": "06043",
+          "name": "Don Álvaro"
+        },
+        {
+          "code": "06044",
+          "name": "Don Benito"
+        },
+        {
+          "code": "06046",
+          "name": "Esparragalejo"
+        },
+        {
+          "code": "06047",
+          "name": "Esparragosa de la Serena"
+        },
+        {
+          "code": "06064",
+          "name": "Higuera de la Serena"
+        },
+        {
+          "code": "06058",
+          "name": "La Garrovilla"
+        },
+        {
+          "code": "06060",
+          "name": "Guareña"
+        },
+        {
+          "code": "06061",
+          "name": "La Haba"
+        },
+        {
+          "code": "06075",
+          "name": "Magacela"
+        },
+        {
+          "code": "06078",
+          "name": "Malpartida de la Serena"
+        },
+        {
+          "code": "06079",
+          "name": "Manchita"
+        },
+        {
+          "code": "06080",
+          "name": "Medellín"
+        },
+        {
+          "code": "06082",
+          "name": "Mengabril"
+        },
+        {
+          "code": "06084",
+          "name": "Mirandilla"
+        },
+        {
+          "code": "06087",
+          "name": "Monterrubio de la Serena"
+        },
+        {
+          "code": "06090",
+          "name": "La Nava de Santiago"
+        },
+        {
+          "code": "06091",
+          "name": "Navalvillar de Pela"
+        },
+        {
+          "code": "06094",
+          "name": "Oliva de Mérida"
+        },
+        {
+          "code": "06109",
+          "name": "Quintana de la Serena"
+        },
+        {
+          "code": "06111",
+          "name": "Rena"
+        },
+        {
+          "code": "06119",
+          "name": "San Pedro de Mérida"
+        },
+        {
+          "code": "06120",
+          "name": "Santa Amalia"
+        },
+        {
+          "code": "06135",
+          "name": "Trujillanos"
+        },
+        {
+          "code": "06138",
+          "name": "Valdetorres"
+        },
+        {
+          "code": "06145",
+          "name": "Valverde de Mérida"
+        },
+        {
+          "code": "06146",
+          "name": "Valle de la Serena"
+        },
+        {
+          "code": "06151",
+          "name": "Villagonzalo"
+        },
+        {
+          "code": "06153",
+          "name": "Villanueva de la Serena"
+        },
+        {
+          "code": "06156",
+          "name": "Villar de Rena"
+        },
+        {
+          "code": "06160",
+          "name": "Zalamea de la Serena"
+        },
+        {
+          "code": "06162",
+          "name": "La Zarza"
+        },
+        {
+          "code": "06005",
+          "name": "La Albuera"
+        },
+        {
+          "code": "06010",
+          "name": "Almendral"
+        },
+        {
+          "code": "06015",
+          "name": "Badajoz"
+        },
+        {
+          "code": "06072",
+          "name": "Lobón"
+        },
+        {
+          "code": "06088",
+          "name": "Montijo"
+        },
+        {
+          "code": "06095",
+          "name": "Olivenza"
+        },
+        {
+          "code": "06115",
+          "name": "La Roca de la Sierra"
+        },
+        {
+          "code": "06128",
+          "name": "Talavera la Real"
+        },
+        {
+          "code": "06132",
+          "name": "Torremayor"
+        },
+        {
+          "code": "06143",
+          "name": "Valverde de Leganés"
+        },
+        {
+          "code": "06155",
+          "name": "Villar del Rey"
+        },
+        {
+          "code": "10126",
+          "name": "Montánchez"
+        },
+        {
+          "code": "10007",
+          "name": "Albalá"
+        },
+        {
+          "code": "10010",
+          "name": "Alcuéscar"
+        },
+        {
+          "code": "10195",
+          "name": "Trujillo"
+        },
+        {
+          "code": "10011",
+          "name": "Aldeacentenera"
+        },
+        {
+          "code": "10020",
+          "name": "Almoharín"
+        },
+        {
+          "code": "10023",
+          "name": "Arroyomolinos"
+        },
+        {
+          "code": "10052",
+          "name": "Casas de Don Antonio"
+        },
+        {
+          "code": "10073",
+          "name": "Escurial"
+        },
+        {
+          "code": "10077",
+          "name": "Garciaz"
+        },
+        {
+          "code": "10102",
+          "name": "Ibahernando"
+        },
+        {
+          "code": "10069",
+          "name": "La Cumbre"
+        },
+        {
+          "code": "10113",
+          "name": "Madroñera"
+        },
+        {
+          "code": "10121",
+          "name": "Miajadas"
+        },
+        {
+          "code": "10153",
+          "name": "Puerto de Santa Cruz"
+        },
+        {
+          "code": "10158",
+          "name": "Robledillo de Trujillo"
+        },
+        {
+          "code": "10163",
+          "name": "Salvatierra de Santiago"
+        },
+        {
+          "code": "10166",
+          "name": "Santa Cruz de la Sierra"
+        },
+        {
+          "code": "10168",
+          "name": "Santa Marta de Magasca"
+        },
+        {
+          "code": "10188",
+          "name": "Torre de Santa María"
+        },
+        {
+          "code": "10198",
+          "name": "Valdefuentes"
+        },
+        {
+          "code": "10201",
+          "name": "Valdemorales"
+        },
+        {
+          "code": "10209",
+          "name": "Villamesías"
+        },
+        {
+          "code": "10217",
+          "name": "Zarza de Montánchez"
+        },
+        {
+          "code": "10044",
+          "name": "Cañamero"
+        },
+        {
+          "code": "10017",
+          "name": "Alía"
+        },
+        {
+          "code": "10029",
+          "name": "Berzocana"
+        },
+        {
+          "code": "10087",
+          "name": "Guadalupe"
+        },
+        {
+          "code": "06137",
+          "name": "Valdecaballeros"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Ribera del Guadiana», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribera_del_guadiana_2023_06_19.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union across all pliego subzones (multi-cluster density-located). Provincial capital included (verified member of a subzone)."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.andalucia.malaga",
+      "comunidad_key": "andalucia",
+      "comunidad": "Andalucía",
+      "display_name": "Málaga",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "29"
+      ],
+      "expected_count": 102,
+      "municipios": [
+        {
+          "code": "29067",
+          "name": "Málaga"
+        },
+        {
+          "code": "29001",
+          "name": "Alameda"
+        },
+        {
+          "code": "29002",
+          "name": "Alcaucín"
+        },
+        {
+          "code": "29003",
+          "name": "Alfarnate"
+        },
+        {
+          "code": "29004",
+          "name": "Alfarnatejo"
+        },
+        {
+          "code": "29005",
+          "name": "Algarrobo"
+        },
+        {
+          "code": "29006",
+          "name": "Algatocín"
+        },
+        {
+          "code": "29007",
+          "name": "Alhaurín de la Torre"
+        },
+        {
+          "code": "29008",
+          "name": "Alhaurín el Grande"
+        },
+        {
+          "code": "29009",
+          "name": "Almáchar"
+        },
+        {
+          "code": "29010",
+          "name": "Almargen"
+        },
+        {
+          "code": "29011",
+          "name": "Almogía"
+        },
+        {
+          "code": "29012",
+          "name": "Álora"
+        },
+        {
+          "code": "29013",
+          "name": "Alozaina"
+        },
+        {
+          "code": "29014",
+          "name": "Alpandeire"
+        },
+        {
+          "code": "29015",
+          "name": "Antequera"
+        },
+        {
+          "code": "29016",
+          "name": "Árchez"
+        },
+        {
+          "code": "29017",
+          "name": "Archidona"
+        },
+        {
+          "code": "29018",
+          "name": "Ardales"
+        },
+        {
+          "code": "29019",
+          "name": "Arenas"
+        },
+        {
+          "code": "29020",
+          "name": "Arriate"
+        },
+        {
+          "code": "29021",
+          "name": "Atajate"
+        },
+        {
+          "code": "29022",
+          "name": "Benadalid"
+        },
+        {
+          "code": "29023",
+          "name": "Benahavís"
+        },
+        {
+          "code": "29024",
+          "name": "Benalauría"
+        },
+        {
+          "code": "29026",
+          "name": "Benamargosa"
+        },
+        {
+          "code": "29027",
+          "name": "Benamocarra"
+        },
+        {
+          "code": "29028",
+          "name": "Benaoján"
+        },
+        {
+          "code": "29029",
+          "name": "Benarrabá"
+        },
+        {
+          "code": "29030",
+          "name": "El Borge"
+        },
+        {
+          "code": "29031",
+          "name": "El Burgo"
+        },
+        {
+          "code": "29032",
+          "name": "Campillos"
+        },
+        {
+          "code": "29033",
+          "name": "Canillas de Aceituno"
+        },
+        {
+          "code": "29034",
+          "name": "Canillas de Albaida"
+        },
+        {
+          "code": "29035",
+          "name": "Cañete la Real"
+        },
+        {
+          "code": "29036",
+          "name": "Carratraca"
+        },
+        {
+          "code": "29037",
+          "name": "Cartajima"
+        },
+        {
+          "code": "29038",
+          "name": "Cártama"
+        },
+        {
+          "code": "29039",
+          "name": "Casabermeja"
+        },
+        {
+          "code": "29040",
+          "name": "Casarabonela"
+        },
+        {
+          "code": "29041",
+          "name": "Casares"
+        },
+        {
+          "code": "29042",
+          "name": "Coín"
+        },
+        {
+          "code": "29043",
+          "name": "Colmenar"
+        },
+        {
+          "code": "29044",
+          "name": "Comares"
+        },
+        {
+          "code": "29045",
+          "name": "Cómpeta"
+        },
+        {
+          "code": "29046",
+          "name": "Cortes de la Frontera"
+        },
+        {
+          "code": "29047",
+          "name": "Cuevas Bajas"
+        },
+        {
+          "code": "29048",
+          "name": "Cuevas del Becerro"
+        },
+        {
+          "code": "29049",
+          "name": "Cuevas de San Marcos"
+        },
+        {
+          "code": "29050",
+          "name": "Cútar"
+        },
+        {
+          "code": "29051",
+          "name": "Estepona"
+        },
+        {
+          "code": "29052",
+          "name": "Faraján"
+        },
+        {
+          "code": "29053",
+          "name": "Frigiliana"
+        },
+        {
+          "code": "29054",
+          "name": "Fuengirola"
+        },
+        {
+          "code": "29056",
+          "name": "Gaucín"
+        },
+        {
+          "code": "29057",
+          "name": "Genalguacil"
+        },
+        {
+          "code": "29058",
+          "name": "Guaro"
+        },
+        {
+          "code": "29059",
+          "name": "Humilladero"
+        },
+        {
+          "code": "29060",
+          "name": "Igualeja"
+        },
+        {
+          "code": "29061",
+          "name": "Istán"
+        },
+        {
+          "code": "29062",
+          "name": "Iznate"
+        },
+        {
+          "code": "29063",
+          "name": "Jimera de Líbar"
+        },
+        {
+          "code": "29064",
+          "name": "Jubrique"
+        },
+        {
+          "code": "29065",
+          "name": "Júzcar"
+        },
+        {
+          "code": "29066",
+          "name": "Macharaviaya"
+        },
+        {
+          "code": "29068",
+          "name": "Manilva"
+        },
+        {
+          "code": "29069",
+          "name": "Marbella"
+        },
+        {
+          "code": "29070",
+          "name": "Mijas"
+        },
+        {
+          "code": "29071",
+          "name": "Moclinejo"
+        },
+        {
+          "code": "29072",
+          "name": "Mollina"
+        },
+        {
+          "code": "29073",
+          "name": "Monda"
+        },
+        {
+          "code": "29903",
+          "name": "Montecorto"
+        },
+        {
+          "code": "29074",
+          "name": "Montejaque"
+        },
+        {
+          "code": "29075",
+          "name": "Nerja"
+        },
+        {
+          "code": "29076",
+          "name": "Ojén"
+        },
+        {
+          "code": "29077",
+          "name": "Parauta"
+        },
+        {
+          "code": "29079",
+          "name": "Periana"
+        },
+        {
+          "code": "29080",
+          "name": "Pizarra"
+        },
+        {
+          "code": "29081",
+          "name": "Pujerra"
+        },
+        {
+          "code": "29082",
+          "name": "Rincón de la Victoria"
+        },
+        {
+          "code": "29083",
+          "name": "Riogordo"
+        },
+        {
+          "code": "29084",
+          "name": "Ronda"
+        },
+        {
+          "code": "29085",
+          "name": "Salares"
+        },
+        {
+          "code": "29086",
+          "name": "Sayalonga"
+        },
+        {
+          "code": "29087",
+          "name": "Sedella"
+        },
+        {
+          "code": "29904",
+          "name": "Serrato"
+        },
+        {
+          "code": "29088",
+          "name": "Sierra de Yeguas"
+        },
+        {
+          "code": "29089",
+          "name": "Teba"
+        },
+        {
+          "code": "29090",
+          "name": "Tolox"
+        },
+        {
+          "code": "29901",
+          "name": "Torremolinos"
+        },
+        {
+          "code": "29091",
+          "name": "Torrox"
+        },
+        {
+          "code": "29092",
+          "name": "Totalán"
+        },
+        {
+          "code": "29093",
+          "name": "Valle de Abdalajís"
+        },
+        {
+          "code": "29094",
+          "name": "Vélez-Málaga"
+        },
+        {
+          "code": "29095",
+          "name": "Villanueva de Algaidas"
+        },
+        {
+          "code": "29902",
+          "name": "Villanueva de la Concepción"
+        },
+        {
+          "code": "29096",
+          "name": "Villanueva del Rosario"
+        },
+        {
+          "code": "29098",
+          "name": "Villanueva de Tapia"
+        },
+        {
+          "code": "29097",
+          "name": "Villanueva del Trabuco"
+        },
+        {
+          "code": "29099",
+          "name": "Viñuela"
+        },
+        {
+          "code": "29100",
+          "name": "Yunquera"
+        },
+        {
+          "code": "29025",
+          "name": "Benalmádena"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Sierras de Málaga» (shared production zone of DOP Málaga y Sierras de Málaga), MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/sierras_de_malaga_2024_10_29.pdf",
+        "retrieved": "2026-08-18",
+        "note": "Whole-municipality union of the shared Málaga wine zone across all subzones (Serranía de Ronda, Axarquía, Montes de Málaga, Manilva, Costa Occidental, Norte de Málaga, Sierra de las Nieves). Málaga city is a member (Montes de Málaga). Multi-cluster density-located."
+      },
+      "status": "ready"
     }
   ]
 }
