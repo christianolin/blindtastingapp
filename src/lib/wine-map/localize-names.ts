@@ -25,6 +25,7 @@ export const LOCAL_TO_ENGLISH: Record<string, string> = {
   "Región de Murcia": "Murcia",
   "País Vasco": "Basque Country",
   "Illes Balears": "Balearic Islands",
+  "Comunidad de Madrid": "Madrid",
   // France regions + subregions with a common English form (Côte de Beaune,
   // Côtes du Rhône, Châteauneuf-du-Pape etc. stay French — that IS their English
   // usage).

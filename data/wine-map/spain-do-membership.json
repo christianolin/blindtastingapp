@@ -10869,6 +10869,313 @@
         "note": "Whole-municipality union of the 4 pliego subzones (Alto Turia, Valentino, Moscatel de Valencia, Clariano), 91 municipios of Valencia province. Valencia city is not a member."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.madrid.vinos-de-madrid",
+      "comunidad_key": "madrid",
+      "comunidad": "Comunidad de Madrid",
+      "display_name": "Vinos de Madrid",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "28"
+      ],
+      "expected_count": 70,
+      "municipios": [
+        {
+          "code": "28004",
+          "name": "El Álamo"
+        },
+        {
+          "code": "28008",
+          "name": "Aldea del Fresno"
+        },
+        {
+          "code": "28011",
+          "name": "Ambite"
+        },
+        {
+          "code": "28013",
+          "name": "Aranjuez"
+        },
+        {
+          "code": "28014",
+          "name": "Arganda del Rey"
+        },
+        {
+          "code": "28015",
+          "name": "Arroyomolinos"
+        },
+        {
+          "code": "28017",
+          "name": "Batres"
+        },
+        {
+          "code": "28019",
+          "name": "Belmonte de Tajo"
+        },
+        {
+          "code": "28025",
+          "name": "Brea de Tajo"
+        },
+        {
+          "code": "28026",
+          "name": "Brunete"
+        },
+        {
+          "code": "28031",
+          "name": "Cadalso de los Vidrios"
+        },
+        {
+          "code": "28033",
+          "name": "Campo Real"
+        },
+        {
+          "code": "28035",
+          "name": "Carabaña"
+        },
+        {
+          "code": "28037",
+          "name": "Cenicientos"
+        },
+        {
+          "code": "28042",
+          "name": "Colmenar del Arroyo"
+        },
+        {
+          "code": "28043",
+          "name": "Colmenar de Oreja"
+        },
+        {
+          "code": "28045",
+          "name": "Colmenar Viejo"
+        },
+        {
+          "code": "28051",
+          "name": "Chapinería"
+        },
+        {
+          "code": "28052",
+          "name": "Chinchón"
+        },
+        {
+          "code": "28055",
+          "name": "Estremera"
+        },
+        {
+          "code": "28058",
+          "name": "Fuenlabrada"
+        },
+        {
+          "code": "28060",
+          "name": "Fuentidueña de Tajo"
+        },
+        {
+          "code": "28065",
+          "name": "Getafe"
+        },
+        {
+          "code": "28066",
+          "name": "Griñón"
+        },
+        {
+          "code": "28073",
+          "name": "Humanes de Madrid"
+        },
+        {
+          "code": "28075",
+          "name": "Loeches"
+        },
+        {
+          "code": "28084",
+          "name": "Mejorada del Campo"
+        },
+        {
+          "code": "28086",
+          "name": "El Molar"
+        },
+        {
+          "code": "28089",
+          "name": "Moraleja de Enmedio"
+        },
+        {
+          "code": "28091",
+          "name": "Morata de Tajuña"
+        },
+        {
+          "code": "28092",
+          "name": "Móstoles"
+        },
+        {
+          "code": "28096",
+          "name": "Navalcarnero"
+        },
+        {
+          "code": "28099",
+          "name": "Navas del Rey"
+        },
+        {
+          "code": "28100",
+          "name": "Nuevo Baztán"
+        },
+        {
+          "code": "28101",
+          "name": "Olmeda de las Fuentes"
+        },
+        {
+          "code": "28102",
+          "name": "Orusco de Tajuña"
+        },
+        {
+          "code": "28106",
+          "name": "Parla"
+        },
+        {
+          "code": "28107",
+          "name": "Patones"
+        },
+        {
+          "code": "28108",
+          "name": "Pedrezuela"
+        },
+        {
+          "code": "28109",
+          "name": "Pelayos de la Presa"
+        },
+        {
+          "code": "28110",
+          "name": "Perales de Tajuña"
+        },
+        {
+          "code": "28111",
+          "name": "Pezuela de las Torres"
+        },
+        {
+          "code": "28116",
+          "name": "Pozuelo del Rey"
+        },
+        {
+          "code": "28128",
+          "name": "Rozas de Puerto Real"
+        },
+        {
+          "code": "28129",
+          "name": "San Agustín del Guadalix"
+        },
+        {
+          "code": "28133",
+          "name": "San Martín de Valdeiglesias"
+        },
+        {
+          "code": "28140",
+          "name": "Serranillos del Valle"
+        },
+        {
+          "code": "28141",
+          "name": "Sevilla la Nueva"
+        },
+        {
+          "code": "28145",
+          "name": "Talamanca de Jarama"
+        },
+        {
+          "code": "28146",
+          "name": "Tielmes"
+        },
+        {
+          "code": "28147",
+          "name": "Titulcia"
+        },
+        {
+          "code": "28151",
+          "name": "Torrelaguna"
+        },
+        {
+          "code": "28153",
+          "name": "Torremocha de Jarama"
+        },
+        {
+          "code": "28154",
+          "name": "Torres de la Alameda"
+        },
+        {
+          "code": "28155",
+          "name": "Valdaracete"
+        },
+        {
+          "code": "28157",
+          "name": "Valdelaguna"
+        },
+        {
+          "code": "28160",
+          "name": "Valdemorillo"
+        },
+        {
+          "code": "28164",
+          "name": "Valdetorres de Jarama"
+        },
+        {
+          "code": "28165",
+          "name": "Valdilecha"
+        },
+        {
+          "code": "28168",
+          "name": "El Vellón"
+        },
+        {
+          "code": "28169",
+          "name": "Venturada"
+        },
+        {
+          "code": "28170",
+          "name": "Villaconejos"
+        },
+        {
+          "code": "28171",
+          "name": "Villa del Prado"
+        },
+        {
+          "code": "28173",
+          "name": "Villamanrique de Tajo"
+        },
+        {
+          "code": "28174",
+          "name": "Villamanta"
+        },
+        {
+          "code": "28175",
+          "name": "Villamantilla"
+        },
+        {
+          "code": "28176",
+          "name": "Villanueva de la Cañada"
+        },
+        {
+          "code": "28179",
+          "name": "Villar del Olmo"
+        },
+        {
+          "code": "28180",
+          "name": "Villarejo de Salvanés"
+        },
+        {
+          "code": "28181",
+          "name": "Villaviciosa de Odón"
+        }
+      ],
+      "grapes": [
+        "Garnacha",
+        "Tempranillo",
+        "Albillo Real",
+        "Malvar"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Vinos de Madrid», MAPA",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/vinos_de_madrid_2024_10_25.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 4 pliego subzones (Arganda, Navalcarnero, San Martín de Valdeiglesias, El Molar), 70 municipios of the Comunidad de Madrid. Alcalá de Henares is excluded (only its 'finca El Encín' research farm is in the DO); Madrid city is not a member."
+      },
+      "status": "ready"
     }
   ]
 }

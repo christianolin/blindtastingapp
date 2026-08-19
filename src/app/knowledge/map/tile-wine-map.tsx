@@ -107,7 +107,7 @@ const REGION_LABELS: Record<string, string> = {
   "la-rioja": "Rioja",
   "pais-vasco": "País Vasco",
   baleares: "Illes Balears",
-  madrid: "Vinos de Madrid",
+  madrid: "Comunidad de Madrid",
   "languedoc-roussillon": "Languedoc-Roussillon",
   rhone: "Rhône",
   "sud-ouest": "Sud-Ouest",
