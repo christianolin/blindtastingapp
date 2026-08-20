@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
@@ -154,6 +154,12 @@ export function CellarBottlesTable({
     window.localStorage.setItem("cellar-view", v);
   };
   const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
+  // Changing page must also bring the top of the list back into view.
+  const goToPage = (p: number) => {
+    setPage(p);
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   // Bottle view is for browsing a few at a time; list view for scanning many.
   const perPage = view === "grid" ? 8 : 25;
   const [openNote, setOpenNote] = useState<{ noteId: string; wineId: string } | null>(
@@ -431,6 +437,10 @@ export function CellarBottlesTable({
           </button>
         </div>
       </div>
+
+      {/* Paging anchor — the pager is below the rows, so without scrolling back
+          here each new page opens at its bottom. */}
+      <div ref={listTopRef} className="scroll-mt-4" />
 
       {view === "grid" ? (
         <>
@@ -847,7 +857,7 @@ export function CellarBottlesTable({
                 type="button"
                 aria-label="Previous page"
                 disabled={clampedPage <= 1}
-                onClick={() => setPage(clampedPage - 1)}
+                onClick={() => goToPage(clampedPage - 1)}
                 className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
                 <ChevronLeft className="size-4" />
@@ -855,7 +865,7 @@ export function CellarBottlesTable({
               <select
                 aria-label="Go to page"
                 value={clampedPage}
-                onChange={(e) => setPage(Number(e.target.value))}
+                onChange={(e) => goToPage(Number(e.target.value))}
                 className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
               >
                 {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
@@ -868,7 +878,7 @@ export function CellarBottlesTable({
                 type="button"
                 aria-label="Next page"
                 disabled={clampedPage >= pageCount}
-                onClick={() => setPage(clampedPage + 1)}
+                onClick={() => goToPage(clampedPage + 1)}
                 className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
                 <ChevronRight className="size-4" />

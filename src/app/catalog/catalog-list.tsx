@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Wine, Star, ChevronsUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Warehouse, NotebookPen } from "lucide-react";
@@ -55,6 +55,12 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
     dir: "desc",
   });
   const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
+  // Changing page must also bring the top of the list back into view.
+  const goToPage = (p: number) => {
+    setPage(p);
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [noteWineId, setNoteWineId] = useState<string | null>(null);
   const { openAddWine } = useAddWine();
 
@@ -263,6 +269,11 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
           Clear filters
         </button>
       </div>
+
+      {/* Paging anchor. The pager sits BELOW the results, so changing page
+          without this leaves you at the bottom — i.e. reading each new page
+          from its last row upwards. */}
+      <div ref={listTopRef} className="scroll-mt-4" />
 
       <div className="flex flex-col gap-2 xl:hidden">
         {pageRows.map((r) => (
@@ -488,7 +499,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 type="button"
                 aria-label="Previous page"
                 disabled={clampedPage <= 1}
-                onClick={() => setPage(clampedPage - 1)}
+                onClick={() => goToPage(clampedPage - 1)}
                 className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
                 <ChevronLeft className="size-4" />
@@ -496,7 +507,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
               <select
                 aria-label="Go to page"
                 value={clampedPage}
-                onChange={(e) => setPage(Number(e.target.value))}
+                onChange={(e) => goToPage(Number(e.target.value))}
                 className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
               >
                 {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
@@ -509,7 +520,7 @@ export function CatalogList({ rows }: { rows: CatalogRow[] }) {
                 type="button"
                 aria-label="Next page"
                 disabled={clampedPage >= pageCount}
-                onClick={() => setPage(clampedPage + 1)}
+                onClick={() => goToPage(clampedPage + 1)}
                 className="inline-flex size-8 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted disabled:opacity-40"
               >
                 <ChevronRight className="size-4" />
