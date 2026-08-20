@@ -18,13 +18,18 @@ import {
 
 // Gross-bounds sanity gate: every archive must sit inside the mapped-coverage
 // window — the union of currently-mapped countries (Spain peninsula + Balearics,
-// France, and Italy incl. Sicily and its satellite islands). The tight
+// France, Italy incl. Sicily and its satellite islands, and Germany). The tight
 // per-archive correctness gate is the feature-id-set check below; this box only
 // catches wildly-misplaced geometry (e.g. 0,0). Widen it when coverage grows to
 // a country outside it. Spain's western edge here is Galicia (~-9.3); the Canary
 // Islands are out of scope (lon < -13), so they stay outside this box by design.
+//
+// maxLat was 52 until Germany landed: the German outline is a dissolve of the 16
+// Bundesländer and so reaches the Baltic/North Sea coast at 55.06°N, far north of
+// any vineyard. 56 gives that a small margin. (Only maxLat needed widening —
+// Germany's 5.87..15.04°E sits well inside the existing longitude range.)
 // TODO(3E): give each shard its own tighter bbox once shards span many countries.
-const COVERAGE_BBOX = { minLon: -10, minLat: 35, maxLon: 19, maxLat: 52 };
+const COVERAGE_BBOX = { minLon: -10, minLat: 35, maxLon: 19, maxLat: 56 };
 
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
