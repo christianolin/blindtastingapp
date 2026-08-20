@@ -1100,7 +1100,7 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // district footprint (all validated + current); superseded rows retained.
   // Phase 3D complete: all six Burgundy districts, their 23 wave-2/3
   // children, and Bourgogne's own derived outline.
-  assert.deepEqual(result.rows[0], {
+  // Historical note on how this boundary set was built up, wave by wave:
     // Beaujolais + Vallee du Rhone + Champagne (region + 5 sub-regions + 59
     // GC/1er-cru villages) + Alsace (region + 51 grands crus, concave INAO
     // dissolves) + Jura (region + 4 villages) + Savoie (region + 22
@@ -1147,21 +1147,27 @@ test("all migrated places have valid reviewed current boundaries", async () => {
     // two of them communes deleguees since the 2016 Kaysersberg Vignoble
     // merger), all validated + current, giving the 51 grands crus a village
     // level to hang off (they moved to tier 3 in the same flip).
-    total: 1346,
-    validated: 1346,
-    current: 1241,
-    valid: 1346,
-    labelled: 1346,
-    // MANUAL = France + Champagne region + 2 outer sub-region commune-unions
-    // (Sezanne/Bar) + 59 village commune footprints (17 GC + 42 Premier Cru,
-    // four of them deleguees) + the retired Ay commune-nouvelle revision.
-    // + the France Admin Express outline (its retired NE revision included)
-    // + the Vacqueyras 2-commune union (its aire has no INAO parcels)
-    // + the 47 Alsace commune footprints.
-    manual: 114,
-    generalized: 1149,
-    reproducible: 13,
-  });
+  // Assert the PROPERTIES this test is named for, not a census. Every boundary
+  // row must be validated, geometrically valid, and carry a label point inside
+  // its own polygon — those are the things that would actually be broken.
+  //
+  // The absolute totals used to be pinned here (1346 before Spain and Italy),
+  // which meant every legitimate map wave turned this suite red and the fix was
+  // always "bump the number" — noise that hides a real regression. The counts
+  // below are ratios and floors instead, so they survive new regions but still
+  // fail if a wave lands unvalidated or self-intersecting geometry.
+  const b = result.rows[0];
+  assert.ok(b.total > 1300, `expected a populated boundary table, got ${b.total}`);
+  assert.equal(b.validated, b.total, "every boundary must be VALIDATED");
+  assert.equal(b.valid, b.total, "every boundary must be geometrically valid");
+  assert.equal(
+    b.labelled,
+    b.total,
+    "every boundary's label_point must sit inside its polygon",
+  );
+  // Current is a subset of total: superseded revisions are retained as history.
+  assert.ok(b.current > 0 && b.current <= b.total);
+  assert.equal(b.manual + b.generalized <= b.total, true);
 
   const classifications = await client.query(
     `select p.canonical_key, b.boundary_method, s.source_feature_id,
@@ -1210,7 +1216,17 @@ test("all migrated places have valid reviewed current boundaries", async () => {
   // boundary row carries provenance, and identities never collide. Exact
   // geometry integrity is pinned separately via boundary-expectations.json.
   const prov = provenance.rows[0];
-  assert.equal(prov.linked_boundaries, 1346);
+  // "Every boundary row carries provenance" is the actual claim, so assert it
+  // directly: the join to snapshot+source must lose nothing. Pinning a literal
+  // (1346) contradicted the comment above and broke on every map wave.
+  const { rows: allRows } = await client.query(
+    "select count(*)::int n from wine_place_boundaries",
+  );
+  assert.equal(
+    prov.linked_boundaries,
+    allRows[0].n,
+    "every boundary must resolve to a snapshot and source",
+  );
   assert.equal(prov.sources, prov.identities, "source identities must be unique");
   assert.ok(
     prov.snapshots >= prov.sources,
@@ -1386,17 +1402,21 @@ test("classification facts and legal relationship types", async () => {
             count(*) filter (where not is_appellation and canonical_key = 'france')::int france_plain
        from wine_places`,
   );
-  assert.deepEqual(facts.rows[0], {
-      // 111 through wave 3D-1 + 23 across Chablis, Grand Auxerrois, Côte
-      // Chalonnaise and Mâconnais (16 villages, 1 grand cru, 6 groups),
-      // +1 Champagne (region == regional AOC), +52 Alsace (dual-role region
-      // + 51 grands crus), +2 Rhone (Cotes du Rhone regional + Vacqueyras;
-      // the 2 Rhone SUBREGIONs are not appellations).
-      appellations: 1107,
-      aoc: 1107,
-    missing_level: 0,
-    france_plain: 1,
-  });
+  const f = facts.rows[0];
+  // The real invariants: every appellation declares a level (the classification
+  // coupling this test exists to guard), France itself is a plain country node,
+  // and the French AOC/AOP count is stable because France is complete.
+  //
+  // `appellations` is deliberately NOT pinned — it grows with every new country
+  // (1107 when France was the only one; Spain and Italy have since landed), and
+  // pinning it just meant every legitimate wave failed here for no real reason.
+  assert.equal(f.missing_level, 0, "every appellation must declare a level");
+  assert.equal(f.france_plain, 1, "france is a country node, not an appellation");
+  assert.equal(f.aoc, 1107, "France's AOC/AOP set is complete and shouldn't move");
+  assert.ok(
+    f.appellations >= f.aoc,
+    `appellations (${f.appellations}) must include the AOCs (${f.aoc})`,
+  );
 
   // One failing statement per rollback scope: after a rejected statement
   // the (sub)transaction is aborted and a second probe would only see

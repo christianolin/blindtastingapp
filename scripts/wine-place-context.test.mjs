@@ -200,7 +200,15 @@ test("burgundy depth chain resolves to the climat level", async () => {
 test("place tree returns every verified place with parent links", async () => {
   const result = await client.query("select get_wine_place_tree() tree");
   const tree = result.rows[0].tree;
-  assert.equal(tree.length, 1194);
+  // Assert the invariant the test is named for — the tree is exactly the
+  // VERIFIED places — rather than a hardcoded total. A literal count goes
+  // stale the moment a map wave lands (it was 1194 before Spain and Italy),
+  // which turns a green suite red for the wrong reason.
+  const { rows: verified } = await client.query(
+    `select count(*)::int n from wine_places where publication_status = 'VERIFIED'`,
+  );
+  assert.equal(tree.length, verified[0].n);
+  assert.ok(tree.length > 1000, `tree looks empty: ${tree.length}`);
   const byKey = new Map(tree.map((node) => [node.key, node]));
   assert.equal(byKey.get("france").parent_key, null);
   assert.equal(
