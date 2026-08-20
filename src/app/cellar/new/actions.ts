@@ -249,6 +249,8 @@ export type CellarLotOption = {
   bottleSizeMl: number;
   storageLocation: string | null;
   quantity: number;
+  /** The catalog wine's bottle photo, so pickers can show the label. */
+  imageUrl: string | null;
 };
 
 // The caller's in-stock lots (quantity > 0) with a readable wine label — feeds
@@ -263,7 +265,7 @@ export async function listMyCellarLots(): Promise<CellarLotOption[]> {
     .from("cellar_lots")
     .select(
       "id, catalog_wine_id, bottle_size_ml, quantity, storage_location, " +
-        "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, " +
+        "catalog_wines(wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
         "producer:producers(name), appellation:appellations(name))",
     )
     .eq("owner_id", user.id)
@@ -303,6 +305,7 @@ export async function listMyCellarLots(): Promise<CellarLotOption[]> {
         bottleSizeMl: l.bottle_size_ml,
         storageLocation: l.storage_location,
         quantity: l.quantity,
+        imageUrl: (cw?.image_url as string | null) ?? null,
       };
     })
     .sort((a, b) => a.label.localeCompare(b.label));

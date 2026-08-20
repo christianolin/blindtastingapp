@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Wine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CellarLotOption } from "@/app/cellar/new/actions";
@@ -47,7 +48,10 @@ export function CellarLotPicker({
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search your cellar…"
       />
-      <ul className="flex max-h-[45vh] flex-col gap-1 overflow-y-auto">
+      {/* No inner scroll area: the containing modal/page already scrolls, and a
+          nested one gave two competing scrollbars (owner: "drop the double
+          scroll wheel"). */}
+      <ul className="flex flex-col gap-1">
         {filtered.map((l) => {
           const meta = [
             l.bottleSizeMl !== 750 ? `${l.bottleSizeMl} ml` : null,
@@ -63,14 +67,34 @@ export function CellarLotPicker({
                 type="button"
                 onClick={() => onPick(l)}
                 className={cn(
-                  "flex w-full flex-col gap-0.5 rounded-md border px-3 py-2 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left transition-colors",
                   active
                     ? "border-primary bg-muted/40"
                     : "border-border hover:bg-muted/40",
                 )}
               >
-                <span className="text-sm font-medium">{l.label}</span>
-                <span className="text-xs text-muted-foreground">{meta}</span>
+                {/* The label photo makes a bottle recognisable at a glance;
+                    lots without one keep the neutral glass placeholder. */}
+                {l.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={l.imageUrl}
+                    alt=""
+                    width={32}
+                    height={42}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-[42px] w-8 shrink-0 rounded border border-border object-cover"
+                  />
+                ) : (
+                  <span className="flex h-[42px] w-8 shrink-0 items-center justify-center rounded border border-border bg-muted text-muted-foreground">
+                    <Wine className="size-4" />
+                  </span>
+                )}
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-sm font-medium">{l.label}</span>
+                  <span className="text-xs text-muted-foreground">{meta}</span>
+                </span>
               </button>
             </li>
           );
