@@ -11967,6 +11967,340 @@
         "note": "Whole-municipality union of the pliego zona (24 municipios: Cuenca + Toledo). Cabezamesada and Corral de Almaguer are included by certain polígonos only, taken whole (documented over-approximation). High-altitude Tempranillo (Cencibel) DO around the monastery of Uclés."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.castilla-la-mancha.mentrida",
+      "comunidad_key": "castilla-la-mancha",
+      "comunidad": "Castilla-La Mancha",
+      "display_name": "Méntrida",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "45"
+      ],
+      "expected_count": 77,
+      "municipios": [
+        {
+          "code": "45003",
+          "name": "Albarreal de Tajo"
+        },
+        {
+          "code": "45004",
+          "name": "Alcabón"
+        },
+        {
+          "code": "45008",
+          "name": "Aldea en Cabo"
+        },
+        {
+          "code": "45011",
+          "name": "Almendral de la Cañada"
+        },
+        {
+          "code": "45013",
+          "name": "Almorox"
+        },
+        {
+          "code": "45015",
+          "name": "Arcicóllar"
+        },
+        {
+          "code": "45016",
+          "name": "Argés"
+        },
+        {
+          "code": "45018",
+          "name": "Barcience"
+        },
+        {
+          "code": "45019",
+          "name": "Bargas"
+        },
+        {
+          "code": "45022",
+          "name": "Buenaventura"
+        },
+        {
+          "code": "45024",
+          "name": "Burujón"
+        },
+        {
+          "code": "45031",
+          "name": "Camarena"
+        },
+        {
+          "code": "45032",
+          "name": "Camarenilla"
+        },
+        {
+          "code": "45035",
+          "name": "Cardiel de los Montes"
+        },
+        {
+          "code": "45036",
+          "name": "Carmena"
+        },
+        {
+          "code": "45037",
+          "name": "El Carpio de Tajo"
+        },
+        {
+          "code": "45038",
+          "name": "Carranque"
+        },
+        {
+          "code": "45039",
+          "name": "Carriches"
+        },
+        {
+          "code": "45040",
+          "name": "El Casar de Escalona"
+        },
+        {
+          "code": "45041",
+          "name": "Casarrubios del Monte"
+        },
+        {
+          "code": "45043",
+          "name": "Castillo de Bayuela"
+        },
+        {
+          "code": "45045",
+          "name": "Cazalegas"
+        },
+        {
+          "code": "45046",
+          "name": "Cebolla"
+        },
+        {
+          "code": "45048",
+          "name": "Los Cerralbos"
+        },
+        {
+          "code": "45056",
+          "name": "Chozas de Canales"
+        },
+        {
+          "code": "45058",
+          "name": "Domingo Pérez"
+        },
+        {
+          "code": "45060",
+          "name": "Erustes"
+        },
+        {
+          "code": "45061",
+          "name": "Escalona"
+        },
+        {
+          "code": "45062",
+          "name": "Escalonilla"
+        },
+        {
+          "code": "45066",
+          "name": "Fuensalida"
+        },
+        {
+          "code": "45068",
+          "name": "Garciotum"
+        },
+        {
+          "code": "45069",
+          "name": "Gerindote"
+        },
+        {
+          "code": "45070",
+          "name": "Guadamur"
+        },
+        {
+          "code": "45074",
+          "name": "Hinojosa de San Vicente"
+        },
+        {
+          "code": "45076",
+          "name": "Hormigos"
+        },
+        {
+          "code": "45077",
+          "name": "Huecas"
+        },
+        {
+          "code": "45079",
+          "name": "La Iglesuela del Tiétar"
+        },
+        {
+          "code": "45080",
+          "name": "Illán de Vacas"
+        },
+        {
+          "code": "45085",
+          "name": "Lominchar"
+        },
+        {
+          "code": "45086",
+          "name": "Lucillos"
+        },
+        {
+          "code": "45089",
+          "name": "Malpica de Tajo"
+        },
+        {
+          "code": "45091",
+          "name": "Maqueda"
+        },
+        {
+          "code": "45093",
+          "name": "Marrupe"
+        },
+        {
+          "code": "45095",
+          "name": "La Mata"
+        },
+        {
+          "code": "45099",
+          "name": "Méntrida"
+        },
+        {
+          "code": "45100",
+          "name": "Mesegar de Tajo"
+        },
+        {
+          "code": "45104",
+          "name": "Montearagón"
+        },
+        {
+          "code": "45114",
+          "name": "Navamorcuende"
+        },
+        {
+          "code": "45117",
+          "name": "Nombela"
+        },
+        {
+          "code": "45118",
+          "name": "Novés"
+        },
+        {
+          "code": "45120",
+          "name": "Nuño Gómez"
+        },
+        {
+          "code": "45122",
+          "name": "Olías del Rey"
+        },
+        {
+          "code": "45126",
+          "name": "Otero"
+        },
+        {
+          "code": "45127",
+          "name": "Palomeque"
+        },
+        {
+          "code": "45129",
+          "name": "Paredes de Escalona"
+        },
+        {
+          "code": "45131",
+          "name": "Pelahustán"
+        },
+        {
+          "code": "45134",
+          "name": "Portillo de Toledo"
+        },
+        {
+          "code": "45143",
+          "name": "Quismondo"
+        },
+        {
+          "code": "45144",
+          "name": "El Real de San Vicente"
+        },
+        {
+          "code": "45145",
+          "name": "Recas"
+        },
+        {
+          "code": "45147",
+          "name": "Rielves"
+        },
+        {
+          "code": "45152",
+          "name": "San Martín de Pusa"
+        },
+        {
+          "code": "45155",
+          "name": "Santa Ana de Pusa"
+        },
+        {
+          "code": "45157",
+          "name": "Santa Cruz del Retamar"
+        },
+        {
+          "code": "45158",
+          "name": "Santa Olalla"
+        },
+        {
+          "code": "45159",
+          "name": "Sartajada"
+        },
+        {
+          "code": "45164",
+          "name": "Sotillo de las Palomas"
+        },
+        {
+          "code": "45165",
+          "name": "Talavera de la Reina"
+        },
+        {
+          "code": "45168",
+          "name": "Toledo"
+        },
+        {
+          "code": "45171",
+          "name": "La Torre de Esteban Hambrán"
+        },
+        {
+          "code": "45173",
+          "name": "Torrijos"
+        },
+        {
+          "code": "45180",
+          "name": "Valmojado"
+        },
+        {
+          "code": "45183",
+          "name": "Las Ventas de Retamosa"
+        },
+        {
+          "code": "45189",
+          "name": "Villamiel de Toledo"
+        },
+        {
+          "code": "45199",
+          "name": "El Viso de San Juan"
+        },
+        {
+          "code": "45204",
+          "name": "Yunclillos"
+        },
+        {
+          "code": "45901",
+          "name": "Santo Domingo-Caudilla"
+        }
+      ],
+      "grapes": [
+        "Garnacha",
+        "Tempranillo",
+        "Syrah"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Méntrida» (2022)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/mentrida_2022_15_12.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the 77 Toledo términos municipales in the current (2022) pliego, which significantly expanded the zona. Argés and Guadamur are included by certain polígonos only, taken whole; Toledo city and Talavera de la Reina are listed members of the current zona."
+      },
+      "status": "ready"
     }
   ]
 }
