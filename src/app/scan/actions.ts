@@ -188,7 +188,11 @@ export async function createScannedWine(
         ? Number(prefill.tawnyYears)
         : null,
     imageUrl: prefill.imageUrl,
-    estimatedPrice: null,
+    // FastCork reports a typical US RETAIL price (newer wines only) rather than
+    // a market valuation, so it's stored as-is in USD with its currency — never
+    // silently relabelled as DKK.
+    estimatedPrice: prefill.retailPriceUsd ?? null,
+    estimatedPriceCurrency: prefill.retailPriceUsd != null ? "USD" : null,
   });
   return { id };
 }
@@ -421,7 +425,10 @@ export async function resolveWinePrefill(
     // Deliberately blank: the web-search price lookup made every scan ~15 s
     // slower and ~$0.15 dearer. Prices are curated instead (backfill script /
     // contributor edit); the scan itself stays a fast, cheap extraction.
+    // The DKK form field stays blank — FastCork's figure is US retail, carried
+    // separately in retailPriceUsd so it can be stored with its own currency.
     estimatedPrice: "",
+    retailPriceUsd: extracted.retailPriceUsd,
     // An unread vintage prefills as YEAR-with-empty-field plus a prompt — NV
     // is a claim about the wine, not a fallback for "couldn't see the year".
     vintageKind: extracted.vintageRead ? extracted.vintageKind : "YEAR",

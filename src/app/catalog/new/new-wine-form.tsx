@@ -40,6 +40,10 @@ export type WineFormInitial = {
   description: string | null;
   /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
   estimatedPrice: string;
+  /** A scanned retail price in USD (FastCork reports US retail). Kept apart
+      from `estimatedPrice` because that field is DKK: the auto-accept path
+      stores this with currency USD, and the manual form ignores it. */
+  retailPriceUsd?: number | null;
   /** Scan couldn't read a vintage: ask the user instead of assuming NV. */
   vintagePrompt?: boolean;
   vintageKind: "YEAR" | "NV" | "TAWNY";

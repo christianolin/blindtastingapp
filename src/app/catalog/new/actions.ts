@@ -96,6 +96,9 @@ export type NewCatalogWine = {
   imageUrl?: string | null;
   /** Estimated market price per bottle in DKK — scan-suggested, user-editable. */
   estimatedPrice?: number | null;
+  /** Currency of estimatedPrice. Defaults to DKK (the manual form's unit); the
+      label scan supplies USD, since FastCork reports a US retail price. */
+  estimatedPriceCurrency?: string | null;
 };
 
 export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: string }> {
@@ -123,6 +126,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       vintage_tawny_years: input.vintageTawnyYears,
       image_url: input.imageUrl ?? null,
       estimated_price: input.estimatedPrice ?? null,
+      estimated_price_currency: input.estimatedPriceCurrency ?? "DKK",
       created_by: user.id,
     })
     .select("id")
@@ -175,6 +179,7 @@ export async function updateCatalogWine(
       vintage_tawny_years: input.vintageTawnyYears,
       image_url: input.imageUrl ?? null,
       estimated_price: input.estimatedPrice ?? null,
+      estimated_price_currency: input.estimatedPriceCurrency ?? "DKK",
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
