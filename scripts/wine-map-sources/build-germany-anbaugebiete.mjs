@@ -35,11 +35,17 @@ import {
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
-const CLOSE = 0.002;        // ~150 m: buffer out this far…
-const CLOSE_BACK = 0.0015;  // …and back 75%, knitting neighbours together
-const SIMPLIFY = 0.0005;
-const MIN_COMPONENT_AREA = 0.00002; // ~0.15 km²: drop specks left after closing
-const AREA_BAND = [0.0005, 0.5];    // Ahr ~0.002 … Mosel ~0.036 measured
+// Region zoom (z4-6) needs MUCH heavier generalisation than first shipped. At
+// 0.002° the six regions rendered as scattered confetti — dozens of disconnected
+// ribbons, unreadable as regions. 0.012° (~900 m) knits each Anbaugebiet into
+// the handful of coherent shapes a reader expects, at the cost of more area
+// inflation. That trade is right HERE and wrong lower down: Einzellagen remain
+// completely ungeneralised.
+const CLOSE = 0.012;
+const CLOSE_BACK = 0.008;
+const SIMPLIFY = 0.002;
+const MIN_COMPONENT_AREA = 0.0005;  // ~4 km²: drop outlying specks at this zoom
+const AREA_BAND = [0.0005, 2.0];
 
 const COMMIT = process.argv.includes("--commit");
 const ONLY = (() => {
@@ -76,12 +82,20 @@ async function buildOne(client, gebiet, geoms) {
     }
 
     const { rows } = await client.query(
+      // Pre-simplify before buffering. Parcel outlines carry far more detail
+       // than a 900 m buffer can express, and ST_Buffer cost scales with vertex
+       // count — at full detail Pfalz did not finish in 25 minutes. quad_segs=2
+       // keeps the rounded corners cheap; nothing here is precision-critical.
       `with u as (
-         select extensions.ST_UnaryUnion(extensions.ST_MakeValid(extensions.ST_Collect(geom))) g from _w
+         select extensions.ST_UnaryUnion(extensions.ST_MakeValid(
+                  extensions.ST_SimplifyPreserveTopology(
+                    extensions.ST_MakeValid(extensions.ST_Collect(geom)), $3))) g from _w
        ),
        closed as (
          select extensions.ST_MakeValid(
-                  extensions.ST_Buffer(extensions.ST_Buffer(g, $1::float8), -$2::float8)) g from u
+                  extensions.ST_Buffer(
+                    extensions.ST_Buffer(g, $1::float8, 'quad_segs=2'),
+                    -$2::float8, 'quad_segs=2')) g from u
        ),
        simp as (
          select extensions.ST_CollectionExtract(

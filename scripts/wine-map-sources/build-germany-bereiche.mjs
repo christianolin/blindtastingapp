@@ -20,11 +20,15 @@ import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.m
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
-const CLOSE = 0.001;
-const CLOSE_BACK = 0.00075;
-const SIMPLIFY = 0.0003;
-const MIN_COMPONENT_AREA = 0.00001;
-const AREA_BAND = [0.0002, 0.3];
+// Districts render from z6 — one zoom closer than the Anbaugebiete, so a little
+// less closing, but still far heavier than first shipped (0.001° left them as
+// scattered ribbons). Same trade, same caveat: generalised here, exact at
+// Einzellage level.
+const CLOSE = 0.006;
+const CLOSE_BACK = 0.004;
+const SIMPLIFY = 0.001;
+const MIN_COMPONENT_AREA = 0.0001;
+const AREA_BAND = [0.0001, 1.0];
 
 const COMMIT = process.argv.includes("--commit");
 const ONLY = (() => {
@@ -60,8 +64,14 @@ async function buildOne(client, { key, rawName, parentKey, geoms }) {
       );
     }
     const { rows } = await client.query(
-      `with u as (select extensions.ST_UnaryUnion(extensions.ST_MakeValid(extensions.ST_Collect(geom))) g from _w),
-       closed as (select extensions.ST_MakeValid(extensions.ST_Buffer(extensions.ST_Buffer(g,$1::float8),-$2::float8)) g from u),
+      // Pre-simplify before buffering: ST_Buffer cost scales with vertex count,
+      // and parcel detail is finer than a several-hundred-metre buffer can
+      // express anyway. quad_segs=2 keeps rounded corners cheap.
+      `with u as (select extensions.ST_UnaryUnion(extensions.ST_MakeValid(
+                    extensions.ST_SimplifyPreserveTopology(
+                      extensions.ST_MakeValid(extensions.ST_Collect(geom)), $3))) g from _w),
+       closed as (select extensions.ST_MakeValid(extensions.ST_Buffer(
+                    extensions.ST_Buffer(g,$1::float8,'quad_segs=2'),-$2::float8,'quad_segs=2')) g from u),
        -- Clip to the parent Anbaugebiet. A Bereich legally cannot extend beyond
        -- it, and without this the child pokes outside purely as an artifact:
        -- parent and child are INDEPENDENT generalisations (the parent used a
