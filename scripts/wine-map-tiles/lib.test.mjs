@@ -169,7 +169,16 @@ test("attribution keys reject unknown namespaces", () => {
     sicilia: ATTRIBUTION.SICILY_COMUNI.text,
     lombardia: ATTRIBUTION.LOMBARDIA_COMUNI.text,
     friuli: ATTRIBUTION.FRIULI_COMUNI.text,
+    bkg: ATTRIBUTION.BKG_VG250.text,
+    "lwk-rlp": ATTRIBUTION.LWK_RLP_WEINLAGEN.text,
   });
+});
+
+test("the German namespaces resolve to their own credits", () => {
+  assert.equal(attributionKeyFor("BKG_VG250"), "bkg");
+  assert.equal(attributionKeyFor("LWK_RLP_WEINLAGEN"), "lwk-rlp");
+  assert.match(ATTRIBUTION.BKG_VG250.text, /BKG/);
+  assert.match(ATTRIBUTION.LWK_RLP_WEINLAGEN.text, /Weinbergsrolle/);
 });
 
 test("the Spain IGN/CNIG namespace resolves to its own credit", () => {
