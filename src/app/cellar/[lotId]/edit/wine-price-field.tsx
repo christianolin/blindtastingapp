@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { updateWineEstimatedPrice } from "./wine-price-actions";
 
-// The wine's shared market estimate, shown with the lot but saved separately —
-// the lot form's own Save must not silently write wine-level data. Members see
-// it greyed out; contributors and admins can correct it inline.
+// The wine's shared average retail price, shown with the lot but saved
+// separately — the lot form's own Save must not silently write wine-level data.
+// Members see it greyed out; contributors and admins can correct it inline.
 export function WinePriceField({
   wineId,
   initialPrice,
@@ -54,7 +54,7 @@ export function WinePriceField({
   return (
     <div className="flex flex-col gap-2 border-t border-border pt-4">
       <Label htmlFor="wine-estimated-price">
-        Estimated price (DKK) — wine-level
+        Average retail price (DKK) — wine-level
       </Label>
       <div className="flex items-center gap-2">
         <Input

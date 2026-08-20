@@ -139,7 +139,7 @@ export default async function CatalogWinePage({
               </div>
               <div className="sm:col-span-2">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Estimated price
+                  Average retail price
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   {wine.estimatedPrice != null
@@ -147,8 +147,9 @@ export default async function CatalogWinePage({
                     : "—"}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground/70">
-                  Looked up from current retail listings and market data for
-                  this exact wine and vintage; blank when none exist.
+                  A typical retail price when the wine was scanned, converted to
+                  DKK. Mostly available for recent vintages; blank when none was
+                  found.
                   {isManager ? " Edit it via Manage wine." : " Contributors and admins can correct it."}
                 </p>
               </div>

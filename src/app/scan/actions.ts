@@ -23,6 +23,29 @@ import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 export type ScanMatch = { id: string; name: string };
 export type ScanResult = { extracted: ExtractedLabel; matches: ScanMatch[] };
 
+type CatalogSearchRow = {
+  id: string;
+  wine_name: string;
+  producer: string;
+  appellation: string;
+  colour: string;
+  vintage_kind: string;
+  vintage_year: number | null;
+  vintage_tawny_years: number | null;
+};
+
+async function searchRows(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  query: string,
+  limit: number,
+): Promise<CatalogSearchRow[]> {
+  const { data } = await supabase.rpc("search_catalog_wines", {
+    p_query: query,
+    p_limit: limit,
+  });
+  return (data ?? []) as CatalogSearchRow[];
+}
+
 // Read a wine label (Claude vision) and find catalog matches for it. The Scan
 // popup uploads the photo to storage and passes the resulting public URL here.
 export async function identifyWineFromLabel(
@@ -36,27 +59,36 @@ export async function identifyWineFromLabel(
 
   const extracted = await extractLabel(imageUrl);
 
-  const query = [extracted.producer, extracted.wineName, extracted.appellation]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  // Dedup matching, deliberately NOT a plain text search.
+  //
+  // `search_catalog_wines` requires EVERY query token to match (bool_and), which
+  // is right for a user typing a search but wrong for a label read: the scanner
+  // returns a richer name than the catalog stores ("Vintage Brut" vs "Vintage"),
+  // and one extra word made the whole match fail — so a wine already in the
+  // catalog was offered as new. Instead, anchor on the strong identity
+  // (producer + vintage + colour) and use the remaining words only to RANK.
+  const anchor = (extracted.producer ?? "").trim();
+  const query = anchor
+    ? anchor
+    : [extracted.wineName, extracted.appellation]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
   let matches: ScanMatch[] = [];
   if (query.length >= 2) {
-    const { data } = await supabase.rpc("search_catalog_wines", {
-      p_query: query,
-      p_limit: 5,
-    });
-    const rows = (data ?? []) as Array<{
-      id: string;
-      wine_name: string;
-      producer: string;
-      appellation: string;
-      colour: string;
-      vintage_kind: string;
-      vintage_year: number | null;
-      vintage_tawny_years: number | null;
-    }>;
+    // Broad fetch: every wine by this producer. Colour/vintage narrow it right
+    // back down below, so the cap is never the limiting factor in practice.
+    let rows = await searchRows(supabase, query, anchor ? 50 : 5);
+    // A label may print a longer producer name than the catalog holds ("Veuve
+    // Clicquot Ponsardin" vs "Veuve Clicquot"); every-token-must-match would
+    // return nothing. Retry on the leading words before giving up.
+    if (rows.length === 0 && anchor) {
+      const words = anchor.split(/\s+/).filter(Boolean);
+      for (let take = words.length - 1; take >= 1 && rows.length === 0; take--) {
+        rows = await searchRows(supabase, words.slice(0, take).join(" "), 50);
+      }
+    }
     // A label scan must only offer a match that is really the SAME bottle.
     // search_catalog_wines ranks purely on producer/name text, so for a
     // many-cuvee producer it would otherwise return a different colour or
@@ -70,6 +102,15 @@ export async function identifyWineFromLabel(
         ? extracted.vintageYear == null ||
           (w.vintage_kind === "YEAR" && w.vintage_year === extracted.vintageYear)
         : w.vintage_kind === extracted.vintageKind;
+    // The words the anchor didn't consume ("Vintage Brut", "Champagne") decide
+    // the ORDER of the surviving candidates, never whether they survive — that
+    // is the whole point of the change.
+    const hintTokens = [extracted.wineName, extracted.appellation]
+      .filter(Boolean)
+      .join(" ")
+      .split(/[^\p{L}\p{N}]+/u)
+      .map(fold)
+      .filter((t) => t.length > 2);
     matches = rows
       .filter(
         (w) =>
@@ -90,8 +131,15 @@ export async function identifyWineFromLabel(
         const name = [w.producer, w.wine_name, w.appellation, vintage]
           .filter(Boolean)
           .join(" ");
-        return { id: w.id, name: name || "Untitled wine" };
-      });
+        const haystack = fold(
+          [w.wine_name, w.appellation, w.producer].filter(Boolean).join(" "),
+        );
+        const score = hintTokens.filter((t) => haystack.includes(t)).length;
+        return { id: w.id, name: name || "Untitled wine", score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(({ id, name }) => ({ id, name }));
   }
 
   return { extracted, matches };

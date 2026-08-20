@@ -260,10 +260,10 @@ export function NewWineForm({
         onImageChange={setImageUrl}
       />
 
-      {/* Wine-level, not lot-level: this is the market estimate the cellar sums
+      {/* Wine-level, not lot-level: a typical retail price the cellar sums
           (scan-suggested, always editable), not what someone paid. */}
       <div className="flex max-w-56 flex-col gap-2">
-        <Label htmlFor="estimated-price">Estimated price (DKK)</Label>
+        <Label htmlFor="estimated-price">Average retail price (DKK)</Label>
         <Input
           id="estimated-price"
           type="number"
