@@ -13,6 +13,73 @@ const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
   { origin: "TERTIARY", label: "Tertiary", caption: "ageing" },
 ];
 
+// Tertiary ageing is one big WSET bucket per wine colour — "Red wine" holds 23
+// terms and "White wine" 19, which reads as an undifferentiated wall of pills.
+// WSET's own lexicon doesn't subdivide them, but for scanning we do: each term
+// maps to a themed sub-cluster (dried/cooked fruit vs earth & forest vs savoury
+// & smoke). Presentation only — the DB group_name, the saved note and the
+// colour filtering are untouched.
+const TERTIARY_SUBGROUP: Record<string, string> = {
+  // Red wine — dried & cooked fruit
+  prune: "Dried & cooked fruit",
+  raisin: "Dried & cooked fruit",
+  fig: "Dried & cooked fruit",
+  "cooked plum": "Dried & cooked fruit",
+  "cooked cherry": "Dried & cooked fruit",
+  "cooked red plum": "Dried & cooked fruit",
+  "dried blackberry": "Dried & cooked fruit",
+  "dried cranberry": "Dried & cooked fruit",
+  "cooked blackberry": "Dried & cooked fruit",
+  kirsch: "Dried & cooked fruit",
+  // Red wine — earth & forest
+  leather: "Earth & forest",
+  earth: "Earth & forest",
+  mushroom: "Earth & forest",
+  "wet leaves": "Earth & forest",
+  "forest floor": "Earth & forest",
+  farmyard: "Earth & forest",
+  vegetal: "Earth & forest",
+  // Red wine — savoury & smoke
+  meat: "Savoury & smoke",
+  game: "Savoury & smoke",
+  tobacco: "Savoury & smoke",
+  savoury: "Savoury & smoke",
+  tar: "Savoury & smoke",
+  caramel: "Savoury & smoke",
+};
+const WHITE_TERTIARY_SUBGROUP: Record<string, string> = {
+  // White wine — dried fruit
+  "dried apricot": "Dried fruit",
+  sultana: "Dried fruit",
+  raisin: "Dried fruit",
+  "orange marmalade": "Dried fruit",
+  "dried apple": "Dried fruit",
+  "dried banana": "Dried fruit",
+  // White wine — nut, spice & toast
+  cinnamon: "Nut, spice & toast",
+  ginger: "Nut, spice & toast",
+  nutmeg: "Nut, spice & toast",
+  almond: "Nut, spice & toast",
+  hazelnut: "Nut, spice & toast",
+  nutty: "Nut, spice & toast",
+  toast: "Nut, spice & toast",
+  // White wine — petrol, honey & earth
+  petrol: "Petrol, honey & earth",
+  kerosene: "Petrol, honey & earth",
+  honey: "Petrol, honey & earth",
+  caramel: "Petrol, honey & earth",
+  mushroom: "Petrol, honey & earth",
+  hay: "Petrol, honey & earth",
+};
+
+/** The cluster heading a term renders under (subdivides the tertiary buckets). */
+function splitGroupName(groupName: string, term: string): string {
+  const t = term.toLowerCase();
+  if (groupName === "Red wine") return TERTIARY_SUBGROUP[t] ?? groupName;
+  if (groupName === "White wine") return WHITE_TERTIARY_SUBGROUP[t] ?? groupName;
+  return groupName;
+}
+
 // Multi-select aroma/flavour picker over the seeded WSET lexicon. Origin tabs
 // (Primary / Secondary / Tertiary — how the aroma arises) carry a per-origin
 // selected count; the active tab shows its clusters (caption + wrapped pills in
@@ -63,16 +130,19 @@ export function AromaPicker({
     return counts;
   }, [selectedIds, byId]);
 
-  // Clusters of the active origin, in sort order, caption preserved.
+  // Clusters of the active origin, in sort order, caption preserved. Tertiary's
+  // two huge WSET clusters ("Red wine" 23 terms, "White wine" 19) are subdivided
+  // for readability — see splitGroupName.
   const groups = useMemo(() => {
     const inOrigin = terms
       .filter((t) => t.origin === activeOrigin && aromaVisibleFor(colour, t.groupName, t.term))
       .sort((a, b) => a.sortOrder - b.sortOrder);
     const out: { name: string; items: AromaTerm[] }[] = [];
     for (const t of inOrigin) {
-      const last = out[out.length - 1];
-      if (last && last.name === t.groupName) last.items.push(t);
-      else out.push({ name: t.groupName, items: [t] });
+      const name = splitGroupName(t.groupName, t.term);
+      const found = out.find((g) => g.name === name);
+      if (found) found.items.push(t);
+      else out.push({ name, items: [t] });
     }
     return out;
   }, [terms, activeOrigin, colour]);

@@ -40,7 +40,9 @@ const C = {
 export const ICON_META = {
   // ---- FLORAL ----
   blossom: { set: E, icon: "cherry-blossom" },
-  acacia: { set: E, icon: "sunflower" },
+  // Acacia blossom is a drooping cluster of small cream-gold florets — a
+  // sunflower reads completely wrong, so use a soft flower-head in acacia gold.
+  acacia: { set: G, icon: "dandelion-flower", color: "#E3C766" },
   elderflower: { set: E, icon: "white-flower" },
   honeysuckle: { set: E, icon: "hibiscus" },
   jasmine: { set: E, icon: "blossom" },
