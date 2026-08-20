@@ -47,19 +47,19 @@ export const ICON_META = {
   chamomile: { set: G, icon: "daisy", color: "#E8D98A" },
   geranium: { set: E, icon: "tulip" },
   rose: { set: E, icon: "rose" },
-  violet: { set: E, icon: "wilted-flower" },
+  violet: { set: G, icon: "spoted-flower", color: "#7B4FA8" },
   // ---- GREEN FRUIT ----
   apple: { set: E, icon: "green-apple" },
   pear: { set: E, icon: "pear" },
   gooseberry: { set: G, icon: "berry-bush", color: "#8FBF3A" },
   grape: { set: E, icon: "grapes" },
   "pear-drop": { set: P, icon: "candy", color: "#7FBF3A" },
-  quince: { set: P, icon: "pear", color: "#E8C64A" }, // no quince glyph anywhere; pome silhouette
+  quince: { set: P, icon: "pear", color: "#E3BE33" }, // no quince glyph anywhere; pome silhouette
   // ---- CITRUS ----
   lemon: { set: E, icon: "lemon" },
   "lemon-peel": { set: G, icon: "cut-lemon", color: C.citrus },
   lime: { set: G, icon: "lemon", color: "#7FBF3A" },
-  grapefruit: { set: P, icon: "orange-one", color: "#E8734A" },
+  grapefruit: { set: P, icon: "orange-one", color: "#EF6A5A" },
   orange: { set: E, icon: "tangerine" },
   "orange-peel": { set: G, icon: "orange-slice", color: "#E68A2E" },
   // ---- STONE ----
@@ -100,16 +100,16 @@ export const ICON_META = {
   dill: { set: G, icon: "seedling", color: C.sage },
   "dried-herbs": { set: G, icon: "herbs-bundle", color: C.sage },
   medicinal: { set: E, icon: "pill" },
-  lavender: { set: G, icon: "spoted-flower", color: C.violet },
+  lavender: { set: G, icon: "dandelion-flower", color: "#9B7BC4" },
   // ---- SPICE ----
   "black-pepper": { set: O, icon: "pepper-mill" },
   "white-pepper": { set: O, icon: "salt-mill" },
   liquorice: { set: G, icon: "wrapped-sweet", color: C.black },
-  cinnamon: { set: G, icon: "wood-stick", color: "#B5652E" },
+  cinnamon: { set: G, icon: "wood-stick", color: "#9C5A2B" },
   // ---- FRUIT RIPENESS ----
   "unripe-fruit": { set: G, icon: "shiny-apple", color: C.green },
   "ripe-fruit": { set: E, icon: "red-apple" },
-  "dried-fruit": { set: G, icon: "grain-bundle", color: "#8A5A2E" },
+  "dried-fruit": { set: G, icon: "grain-bundle", color: "#9C6B33" },
   "cooked-fruit": { set: E, icon: "pot-of-food" },
   jammy: { set: E, icon: "jar" },
   // ---- OTHER ----
@@ -134,7 +134,7 @@ export const ICON_META = {
   cream: { set: P, icon: "milk", color: "#F0E6C8" },
   // ---- OAK ----
   vanilla: { set: G, icon: "vanilla-flower", color: "#E6D9A8" },
-  cloves: { set: G, icon: "clover", color: "#6B4A2E" },
+  cloves: { set: G, icon: "clover-spiked", color: "#5C3A1E" },
   nutmeg: { set: E, icon: "chestnut" },
   coconut: { set: E, icon: "coconut" },
   butterscotch: { set: G, icon: "jelly-beans", color: C.gold },
@@ -162,7 +162,7 @@ export const ICON_META = {
   "dried-banana": { set: G, icon: "banana", color: "#C9A44A" },
   // ---- RED WINE (tertiary) ----
   prune: { set: G, icon: "plum", color: "#4A2A38" },
-  fig: { set: G, icon: "fruiting", color: "#7A3A5E" },
+  fig: { set: G, icon: "fruiting", color: "#6E3560" },
   "cooked-plum": { set: G, icon: "cooking-pot", color: "#7A3A6E" },
   "cooked-cherry": { set: G, icon: "cherry", color: "#8A2A2E" },
   "cooked-red-plum": { set: G, icon: "saucepan", color: "#A33A3A" },
@@ -179,8 +179,8 @@ export const ICON_META = {
   "wet-leaves": { set: E, icon: "fallen-leaf" },
   "forest-floor": { set: E, icon: "deciduous-tree" },
   vegetal: { set: E, icon: "broccoli" },
-  savoury: { set: G, icon: "salt-shaker", color: "#A08A6A" },
-  farmyard: { set: G, icon: "barn", color: "#A33A2E" },
+  savoury: { set: G, icon: "salt-shaker", color: "#8A7A5A" },
+  farmyard: { set: G, icon: "barn", color: "#9C3A2E" },
   tar: { set: G, icon: "coal-pile", color: "#2A2A2A" },
   // ---- DELIBERATELY OXIDISED ----
   marzipan: { set: G, icon: "almond", color: "#E0D2A8" },
