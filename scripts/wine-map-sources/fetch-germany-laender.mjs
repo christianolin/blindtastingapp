@@ -62,6 +62,8 @@ async function main() {
 // pathToFileURL, not string-building: a Windows path produces `file:///C:/...`
 // (three slashes), so a hand-rolled `file://${argv[1]}` never matches and the
 // script silently does nothing.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined under `node -e`, where pathToFileURL would throw — guard
+// it so importing this module from an eval context stays harmless.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }

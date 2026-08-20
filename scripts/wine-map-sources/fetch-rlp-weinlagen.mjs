@@ -96,6 +96,8 @@ async function main() {
   console.log(`Anbaugebiete: ${gebiete.join(", ")}`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined under `node -e`, where pathToFileURL would throw — guard
+// it so importing this module from an eval context stays harmless.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }
