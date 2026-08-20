@@ -12605,6 +12605,349 @@
         "note": "COARSE whole-municipality over-approximation: the pliego's 7 subzones (Artesa de Segre, Urgell, Les Garrigues, Pallars, Raimat, Segrià, Valls del Riu Corb) are mostly defined by specific polígonos catastrales. The 69 whole Lleida-province municipios that contribute any listed parcel are taken whole; Lleida city (only the Raimat estate belongs) is excluded."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.tarragona",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Tarragona",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "43"
+      ],
+      "expected_count": 79,
+      "municipios": [
+        {
+          "code": "43003",
+          "name": "L'Albiol"
+        },
+        {
+          "code": "43005",
+          "name": "Alcover"
+        },
+        {
+          "code": "43007",
+          "name": "L'Aleixar"
+        },
+        {
+          "code": "43009",
+          "name": "Alforja"
+        },
+        {
+          "code": "43010",
+          "name": "Alió"
+        },
+        {
+          "code": "43011",
+          "name": "Almoster"
+        },
+        {
+          "code": "43012",
+          "name": "Altafulla"
+        },
+        {
+          "code": "43017",
+          "name": "L'Argentera"
+        },
+        {
+          "code": "43019",
+          "name": "Ascó"
+        },
+        {
+          "code": "43026",
+          "name": "Benissanet"
+        },
+        {
+          "code": "43031",
+          "name": "Les Borges del Camp"
+        },
+        {
+          "code": "43033",
+          "name": "Botarell"
+        },
+        {
+          "code": "43034",
+          "name": "Bràfim"
+        },
+        {
+          "code": "43036",
+          "name": "Cabra del Camp"
+        },
+        {
+          "code": "43038",
+          "name": "Cambrils"
+        },
+        {
+          "code": "43039",
+          "name": "Capafonts"
+        },
+        {
+          "code": "43042",
+          "name": "Castellvell del Camp"
+        },
+        {
+          "code": "43043",
+          "name": "El Catllar"
+        },
+        {
+          "code": "43045",
+          "name": "Colldejou"
+        },
+        {
+          "code": "43047",
+          "name": "Constantí"
+        },
+        {
+          "code": "43053",
+          "name": "Duesaigües"
+        },
+        {
+          "code": "43057",
+          "name": "La Febró"
+        },
+        {
+          "code": "43059",
+          "name": "Figuerola del Camp"
+        },
+        {
+          "code": "43060",
+          "name": "Flix"
+        },
+        {
+          "code": "43065",
+          "name": "Garcia"
+        },
+        {
+          "code": "43066",
+          "name": "Els Garidells"
+        },
+        {
+          "code": "43067",
+          "name": "Ginestar"
+        },
+        {
+          "code": "43079",
+          "name": "Masllorenç"
+        },
+        {
+          "code": "43080",
+          "name": "La Masó"
+        },
+        {
+          "code": "43081",
+          "name": "Maspujols"
+        },
+        {
+          "code": "43083",
+          "name": "El Milà"
+        },
+        {
+          "code": "43084",
+          "name": "Miravet"
+        },
+        {
+          "code": "43088",
+          "name": "Montbrió del Camp"
+        },
+        {
+          "code": "43089",
+          "name": "Montferri"
+        },
+        {
+          "code": "43091",
+          "name": "Mont-ral"
+        },
+        {
+          "code": "43092",
+          "name": "Mont-roig del Camp"
+        },
+        {
+          "code": "43093",
+          "name": "Móra d'Ebre"
+        },
+        {
+          "code": "43094",
+          "name": "Móra la Nova"
+        },
+        {
+          "code": "43095",
+          "name": "El Morell"
+        },
+        {
+          "code": "43097",
+          "name": "La Nou de Gaià"
+        },
+        {
+          "code": "43098",
+          "name": "Nulles"
+        },
+        {
+          "code": "43099",
+          "name": "La Palma d'Ebre"
+        },
+        {
+          "code": "43100",
+          "name": "Els Pallaresos"
+        },
+        {
+          "code": "43103",
+          "name": "Perafort"
+        },
+        {
+          "code": "43104",
+          "name": "El Perelló"
+        },
+        {
+          "code": "43108",
+          "name": "El Pla de Santa Maria"
+        },
+        {
+          "code": "43109",
+          "name": "La Pobla de Mafumet"
+        },
+        {
+          "code": "43111",
+          "name": "La Pobla de Montornès"
+        },
+        {
+          "code": "43113",
+          "name": "El Pont d'Armentera"
+        },
+        {
+          "code": "43116",
+          "name": "Prades"
+        },
+        {
+          "code": "43119",
+          "name": "Puigpelat"
+        },
+        {
+          "code": "43121",
+          "name": "Rasquera"
+        },
+        {
+          "code": "43122",
+          "name": "Renau"
+        },
+        {
+          "code": "43123",
+          "name": "Reus"
+        },
+        {
+          "code": "43125",
+          "name": "Riba-roja d'Ebre"
+        },
+        {
+          "code": "43126",
+          "name": "La Riera de Gaià"
+        },
+        {
+          "code": "43127",
+          "name": "Riudecanyes"
+        },
+        {
+          "code": "43128",
+          "name": "Riudecols"
+        },
+        {
+          "code": "43129",
+          "name": "Riudoms"
+        },
+        {
+          "code": "43132",
+          "name": "Rodonyà"
+        },
+        {
+          "code": "43134",
+          "name": "El Rourell"
+        },
+        {
+          "code": "43135",
+          "name": "Salomó"
+        },
+        {
+          "code": "43144",
+          "name": "La Secuita"
+        },
+        {
+          "code": "43145",
+          "name": "La Selva del Camp"
+        },
+        {
+          "code": "43148",
+          "name": "Tarragona"
+        },
+        {
+          "code": "43150",
+          "name": "Tivissa"
+        },
+        {
+          "code": "43152",
+          "name": "La Torre de l'Espanyol"
+        },
+        {
+          "code": "43153",
+          "name": "Torredembarra"
+        },
+        {
+          "code": "43160",
+          "name": "Vallmoll"
+        },
+        {
+          "code": "43161",
+          "name": "Valls"
+        },
+        {
+          "code": "43165",
+          "name": "Vilabella"
+        },
+        {
+          "code": "43166",
+          "name": "Vilallonga del Camp"
+        },
+        {
+          "code": "43167",
+          "name": "Vilanova d'Escornalbou"
+        },
+        {
+          "code": "43170",
+          "name": "Vila-rodona"
+        },
+        {
+          "code": "43171",
+          "name": "Vila-seca"
+        },
+        {
+          "code": "43177",
+          "name": "Vinebre"
+        },
+        {
+          "code": "43178",
+          "name": "Vinyols i els Arcs"
+        },
+        {
+          "code": "43905",
+          "name": "Salou"
+        },
+        {
+          "code": "43907",
+          "name": "La Canonja"
+        }
+      ],
+      "grapes": [
+        "Garnacha",
+        "Macabeu",
+        "Tempranillo",
+        "Cariñena"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Tarragona» (2023)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/tarragona_2023_09_05.pdf",
+        "retrieved": "2026-08-19",
+        "note": "Whole-municipality union of the pliego \"Zona de producción\" list (79 Tarragona-province municipios: the comarcas of Tarragonès, Alt Camp, Baix Camp, part of the Ribera d'Ebre, and Masllorenç of the Baix Penedès). A handful of municipios the pliego includes by \"excepte polígon\" partial clauses are taken whole (documented over-approximation)."
+      },
+      "status": "ready"
     }
   ]
 }
