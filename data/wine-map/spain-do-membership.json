@@ -13005,6 +13005,257 @@
         "note": "The 8 municipios of the pliego zona (Asturias, upper Narcea valley): Allande, Cangas del Narcea, Degaña, Grandas de Salime, Ibias, Illano, Pesoz + Tineo (parroquia-partial, taken whole)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas.val-do-salnes",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Val do Salnés",
+      "appellation_system": "DOP",
+      "appellation_level": "subregional",
+      "parent_key": "spain.galicia.rias-baixas",
+      "provinces": [
+        "36"
+      ],
+      "expected_count": 12,
+      "municipios": [
+        {
+          "code": "36002",
+          "name": "Barro"
+        },
+        {
+          "code": "36005",
+          "name": "Caldas de Reis"
+        },
+        {
+          "code": "36006",
+          "name": "Cambados"
+        },
+        {
+          "code": "36022",
+          "name": "O Grove"
+        },
+        {
+          "code": "36027",
+          "name": "Meaño"
+        },
+        {
+          "code": "36028",
+          "name": "Meis"
+        },
+        {
+          "code": "36040",
+          "name": "Portas"
+        },
+        {
+          "code": "36046",
+          "name": "Ribadumia"
+        },
+        {
+          "code": "36051",
+          "name": "Sanxenxo"
+        },
+        {
+          "code": "36060",
+          "name": "Vilagarcía de Arousa"
+        },
+        {
+          "code": "36061",
+          "name": "Vilanova de Arousa"
+        },
+        {
+          "code": "36901",
+          "name": "A Illa de Arousa"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas» (julio 2024), MAPA — §4 Delimitación de la zona geográfica, table Subzona / Términos municipales / Parroquias",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-20",
+        "note": "Subzone of DOP Rías Baixas. Whole-municipality over-approximation: the pliego delimits most subzones by parroquia and the pipeline has no sub-municipal geometry. Municipios intersected with the parent entry so the subzone cannot escape its DO. Tui belongs to both Condado do Tea and O Rosal (its parroquias are split between them), so those two overlap in Tui."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas.condado-do-tea",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Condado do Tea",
+      "appellation_system": "DOP",
+      "appellation_level": "subregional",
+      "parent_key": "spain.galicia.rias-baixas",
+      "provinces": [
+        "36"
+      ],
+      "expected_count": 9,
+      "municipios": [
+        {
+          "code": "36001",
+          "name": "Arbo"
+        },
+        {
+          "code": "36009",
+          "name": "A Cañiza"
+        },
+        {
+          "code": "36014",
+          "name": "Crecente"
+        },
+        {
+          "code": "36033",
+          "name": "Mos"
+        },
+        {
+          "code": "36034",
+          "name": "As Neves"
+        },
+        {
+          "code": "36042",
+          "name": "Ponteareas"
+        },
+        {
+          "code": "36049",
+          "name": "Salceda de Caselas"
+        },
+        {
+          "code": "36050",
+          "name": "Salvaterra de Miño"
+        },
+        {
+          "code": "36055",
+          "name": "Tui"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas» (julio 2024), MAPA — §4 Delimitación de la zona geográfica, table Subzona / Términos municipales / Parroquias",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-20",
+        "note": "Subzone of DOP Rías Baixas. Whole-municipality over-approximation: the pliego delimits most subzones by parroquia and the pipeline has no sub-municipal geometry. Municipios intersected with the parent entry so the subzone cannot escape its DO. Tui belongs to both Condado do Tea and O Rosal (its parroquias are split between them), so those two overlap in Tui."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas.o-rosal",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "O Rosal",
+      "appellation_system": "DOP",
+      "appellation_level": "subregional",
+      "parent_key": "spain.galicia.rias-baixas",
+      "provinces": [
+        "36"
+      ],
+      "expected_count": 5,
+      "municipios": [
+        {
+          "code": "36021",
+          "name": "Gondomar"
+        },
+        {
+          "code": "36023",
+          "name": "A Guarda"
+        },
+        {
+          "code": "36048",
+          "name": "O Rosal"
+        },
+        {
+          "code": "36054",
+          "name": "Tomiño"
+        },
+        {
+          "code": "36055",
+          "name": "Tui"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas» (julio 2024), MAPA — §4 Delimitación de la zona geográfica, table Subzona / Términos municipales / Parroquias",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-20",
+        "note": "Subzone of DOP Rías Baixas. Whole-municipality over-approximation: the pliego delimits most subzones by parroquia and the pipeline has no sub-municipal geometry. Municipios intersected with the parent entry so the subzone cannot escape its DO. Tui belongs to both Condado do Tea and O Rosal (its parroquias are split between them), so those two overlap in Tui."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas.soutomaior",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Soutomaior",
+      "appellation_system": "DOP",
+      "appellation_level": "subregional",
+      "parent_key": "spain.galicia.rias-baixas",
+      "provinces": [
+        "36"
+      ],
+      "expected_count": 1,
+      "municipios": [
+        {
+          "code": "36053",
+          "name": "Soutomaior"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas» (julio 2024), MAPA — §4 Delimitación de la zona geográfica, table Subzona / Términos municipales / Parroquias",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-20",
+        "note": "Subzone of DOP Rías Baixas. Whole-municipality over-approximation: the pliego delimits most subzones by parroquia and the pipeline has no sub-municipal geometry. Municipios intersected with the parent entry so the subzone cannot escape its DO. Tui belongs to both Condado do Tea and O Rosal (its parroquias are split between them), so those two overlap in Tui."
+      },
+      "status": "ready"
+    },
+    {
+      "canonical_key": "spain.galicia.rias-baixas.ribeira-do-ulla",
+      "comunidad_key": "galicia",
+      "comunidad": "Galicia",
+      "display_name": "Ribeira do Ulla",
+      "appellation_system": "DOP",
+      "appellation_level": "subregional",
+      "parent_key": "spain.galicia.rias-baixas",
+      "provinces": [
+        "15",
+        "36"
+      ],
+      "expected_count": 8,
+      "municipios": [
+        {
+          "code": "15012",
+          "name": "Boqueixón"
+        },
+        {
+          "code": "15065",
+          "name": "Padrón"
+        },
+        {
+          "code": "15082",
+          "name": "Teo"
+        },
+        {
+          "code": "15085",
+          "name": "Touro"
+        },
+        {
+          "code": "15089",
+          "name": "Vedra"
+        },
+        {
+          "code": "36017",
+          "name": "A Estrada"
+        },
+        {
+          "code": "36052",
+          "name": "Silleda"
+        },
+        {
+          "code": "36059",
+          "name": "Vila de Cruces"
+        }
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Rías Baixas» (julio 2024), MAPA — §4 Delimitación de la zona geográfica, table Subzona / Términos municipales / Parroquias",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/rias_baixas_2024_09_30.pdf",
+        "retrieved": "2026-08-20",
+        "note": "Subzone of DOP Rías Baixas. Whole-municipality over-approximation: the pliego delimits most subzones by parroquia and the pipeline has no sub-municipal geometry. Municipios intersected with the parent entry so the subzone cannot escape its DO. Tui belongs to both Condado do Tea and O Rosal (its parroquias are split between them), so those two overlap in Tui."
+      },
+      "status": "ready"
     }
   ]
 }

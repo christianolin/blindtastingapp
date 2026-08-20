@@ -43,9 +43,13 @@ export const WINDOW = { minLon: -10, minLat: 35, maxLon: 5, maxLat: 44 };
 // Loose planar-deg² sanity bands per level: generous enough never to reject a
 // real DO, tight enough to catch a gross membership error (a municipio in the
 // wrong province blows up the bbox/area). Rioja ~0.5, Ribera ~0.4, Priorat ~0.02.
+// The subregional floor was 0.003 until Rías Baixas' Soutomaior — a real
+// single-municipality subzone (0.0027 deg²) — hit it. That is a legitimate
+// zone, not a membership error, so the floor moved to 0.002: still ~7x the
+// communal floor, so a subzone that lost most of its municipios is still caught.
 export const AREA_BAND = {
   regional: [0.01, 4.0],
-  subregional: [0.003, 2.0],
+  subregional: [0.002, 2.0],
   communal: [0.0003, 0.8],
 };
 // A DO's geometry may sit at most this fraction outside its declared parent DO
