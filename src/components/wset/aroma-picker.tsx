@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { WSET } from "./tokens";
+import { AromaIcon } from "./aroma-icon";
 
 const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
   { origin: "PRIMARY", label: "Primary", caption: "grape & terroir" },
@@ -105,6 +106,9 @@ export function AromaPicker({
                 aria-label={`Remove ${term.term}`}
                 onClick={() => toggle(id)}
                 style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
                   borderRadius: 999,
                   padding: "4px 11px",
                   fontSize: 12,
@@ -114,7 +118,8 @@ export function AromaPicker({
                   color: WSET.creamText,
                 }}
               >
-                {term.term} ×
+                <AromaIcon term={term.term} family={term.groupName} size={14} />
+                {`${term.term} ×`}
               </button>
             );
           })}
@@ -226,6 +231,9 @@ export function AromaPicker({
                   aria-pressed={isSel}
                   onClick={() => toggle(term.id)}
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                     borderRadius: 999,
                     padding: "2px 9px",
                     fontSize: 11.5,
@@ -237,6 +245,7 @@ export function AromaPicker({
                     fontWeight: isSel ? 600 : 500,
                   }}
                 >
+                  <AromaIcon term={term.term} family={term.groupName} size={14} />
                   {term.term}
                 </button>
               );
@@ -281,6 +290,9 @@ export function AromaPicker({
                   type="button"
                   onClick={() => toggle(id)}
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                     borderRadius: 999,
                     padding: "3px 9px",
                     fontSize: 11.5,
@@ -290,7 +302,8 @@ export function AromaPicker({
                     color: WSET.creamText,
                   }}
                 >
-                  {term.term} ×
+                  <AromaIcon term={term.term} family={term.groupName} size={14} />
+                  {`${term.term} ×`}
                 </button>
               );
             })}
@@ -478,6 +491,9 @@ export function AromaPicker({
                           aria-pressed={isSel}
                           onClick={() => toggle(term.id)}
                           style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
                             borderRadius: 999,
                             padding: "6px 13px",
                             fontSize: 12.5,
@@ -489,6 +505,7 @@ export function AromaPicker({
                             fontWeight: isSel ? 600 : 500,
                           }}
                         >
+                          <AromaIcon term={term.term} family={term.groupName} size={15} />
                           {term.term}
                         </button>
                       );

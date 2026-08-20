@@ -18,6 +18,7 @@ import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { SnapSlider } from "./snap-slider";
 import { Row, SectionCard } from "./wset-sheet";
 import { WSET } from "./tokens";
+import { AromaIcon } from "./aroma-icon";
 
 type Range = [string, string];
 
@@ -66,6 +67,9 @@ function AromaPills({ terms }: { terms: string[] }) {
         <span
           key={t}
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
             borderRadius: 999,
             padding: "2px 9px",
             fontSize: 11.5,
@@ -73,6 +77,7 @@ function AromaPills({ terms }: { terms: string[] }) {
             color: WSET.creamText,
           }}
         >
+          <AromaIcon term={t} family="" size={14} />
           {t}
         </span>
       ))}
