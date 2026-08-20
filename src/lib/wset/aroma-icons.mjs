@@ -186,14 +186,16 @@ export function slugForTerm(term) {
     .replace(/^-+|-+$/g, "");
 }
 
-// A term's icon slug: its own tinted glyph, else a neutral wine glass. (The
-// second arg is accepted and ignored — callers pass the family for API symmetry
-// with the old per-family fallback; the icon+colour now come solely from the term.)
+// A term's icon slug: its own tinted glyph, else a neutral wine glass. The
+// optional second argument (the term's family) is accepted for call-site symmetry
+// but deliberately unused — icon and colour now come solely from the term.
 /**
  * @param {string} term
+ * @param {string} [_family] unused; kept so callers may pass the family
  * @returns {string}
  */
-export function iconForTerm(term) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function iconForTerm(term, _family) {
   const slug = slugForTerm(term);
   return ICON_META[slug] ? slug : "wine";
 }
