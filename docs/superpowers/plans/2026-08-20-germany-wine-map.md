@@ -102,6 +102,41 @@ per site. One Einzellage can have VDP and non-VDP owners, and the classified
 portion may be smaller than the legal Einzellage. The badge means "this site
 contains VDP Große/Erste Lage holdings", not "this whole polygon is Große Lage".
 
+## Generalisation was RE-TUNED after seeing it rendered (`e8268b9`)
+
+First ship was far too detailed: at z4 the six Anbaugebiete rendered as scattered
+confetti. Re-run with much heavier closing. Part counts, before → after:
+
+| | Mosel | Nahe | Pfalz | Rheinhessen | Mittelrhein | Ahr |
+|---|---|---|---|---|---|---|
+| Anbaugebiet | 58 → **3** | 52 → **4** | 33 → **2** | 16 → **1** | 25 → **3** | 4 → **1** |
+
+Close per tier is now: **Anbaugebiet 0.012°**, **Bereich 0.006°**, Großlage
+0.0006°, Einzellage **none**. Bereich max parts 76 → 11.
+
+**Perf fix that made it possible:** pre-simplify BEFORE buffering and use
+`quad_segs=2`. ST_Buffer cost scales with vertex count, and at full parcel detail
+Pfalz did not finish in 25 minutes; after, seconds.
+
+Großlagen (tier 3, avg 7 parts / max 55) are still the most fragmented tier and
+are the obvious next candidate for a heavier close if they look wrong at z7.
+
+## Wave 5 — the 7 non-RLP Anbaugebiete: NO single source exists
+
+Probed OpenStreetMap via Overpass (the only plausible one-stop source):
+it holds **individual vineyard parcels** (`landuse=vineyard`, ~64 named
+relations like "Würzburger Innere Leiste") but **not** the Anbaugebiet
+boundaries. Confirmed negative — OSM cannot supply Baden, Württemberg, Franken,
+Rheingau, Hessische Bergstraße, Saale-Unstrut or Sachsen.
+
+So each remaining region needs its own state cadastre, roughly:
+- **Hessen** (Rheingau, Hess. Bergstraße) — HLNUG / Geoportal Hessen
+- **Baden-Württemberg** (Baden, Württemberg) — LGL BW
+- **Bayern** (Franken) — LDBV / Bayerische Vermessungsverwaltung
+- **Sachsen** — GeoSN; **Sachsen-Anhalt/Thüringen** (Saale-Unstrut) — LVermGeo
+Each is a separate integration, like RLP was. The RLP scripts are the template:
+`fetch-rlp-weinlagen.mjs` → `build-germany-{anbaugebiete,bereiche,grosslagen,einzellagen}.mjs`.
+
 ## Status — Waves 1–3 COMPLETE (pushed through `4cff4fa`)
 
 **Germany's whole RLP hierarchy is live: 1,686 nodes, every one VERIFIED with a
