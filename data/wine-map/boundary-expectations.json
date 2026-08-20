@@ -11169,6 +11169,69 @@
     "documented": true
   },
   {
+    "canonical_key": "germany",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "georef-land-dissolve:DEU",
+    "normalized_checksum_sha256": "1235EB89E7B0526B8F31D6158FFD996DA8A44C39900F15E303512B4750B0D6B1",
+    "raw_snapshot_uri": "storage://wine-map-sources/BKG_VG250/20260820T185752Z/country-germany/outline.geojson",
+    "raw_checksum_sha256": "1235EB89E7B0526B8F31D6158FFD996DA8A44C39900F15E303512B4750B0D6B1",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.ahr",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:ahr",
+    "normalized_checksum_sha256": "95503BE77E86CCA6FFD2575A92F31FCEB695E928E2B31E88D71643A00DCA8DC4",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192158Z/anbaugebiet-ahr/outline.geojson",
+    "raw_checksum_sha256": "95503BE77E86CCA6FFD2575A92F31FCEB695E928E2B31E88D71643A00DCA8DC4",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mittelrhein",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:mittelrhein",
+    "normalized_checksum_sha256": "83B811783104DA1798687E53B1866CFEC5E46CEAE5B5C14B25E55AD9BB8F617D",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192201Z/anbaugebiet-mittelrhein/outline.geojson",
+    "raw_checksum_sha256": "83B811783104DA1798687E53B1866CFEC5E46CEAE5B5C14B25E55AD9BB8F617D",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mosel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:mosel",
+    "normalized_checksum_sha256": "338D5732AEA84D806F08474C5ED49E4AD89A63EBDFE50DD4B64DCF8D6633F12D",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192422Z/anbaugebiet-mosel/outline.geojson",
+    "raw_checksum_sha256": "338D5732AEA84D806F08474C5ED49E4AD89A63EBDFE50DD4B64DCF8D6633F12D",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.nahe",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:nahe",
+    "normalized_checksum_sha256": "36ABDDBDAF3106608D62397E23D684826BF0ACA704BC50EB3725B80C5B5DC6B9",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192215Z/anbaugebiet-nahe/outline.geojson",
+    "raw_checksum_sha256": "36ABDDBDAF3106608D62397E23D684826BF0ACA704BC50EB3725B80C5B5DC6B9",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.pfalz",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:pfalz",
+    "normalized_checksum_sha256": "865D1E7C0884245F369894B6A94408A34DB263C0BA322CF29CFF5BE50A2B7161",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192300Z/anbaugebiet-pfalz/outline.geojson",
+    "raw_checksum_sha256": "865D1E7C0884245F369894B6A94408A34DB263C0BA322CF29CFF5BE50A2B7161",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.rheinhessen",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:rheinhessen",
+    "normalized_checksum_sha256": "778771DD59F65E935B309286EB169DFD43F36E17E50A901B739F76F7DAB28025",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192317Z/anbaugebiet-rheinhessen/outline.geojson",
+    "raw_checksum_sha256": "778771DD59F65E935B309286EB169DFD43F36E17E50A901B739F76F7DAB28025",
+    "documented": true
+  },
+  {
     "canonical_key": "italy",
     "boundary_method": "MANUAL",
     "source_feature_id": "georef-comune-dissolve:ITA",

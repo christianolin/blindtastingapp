@@ -9,6 +9,10 @@
 export const LOCAL_TO_ENGLISH: Record<string, string> = {
   // Countries
   Italia: "Italy",
+  // German wine regions keep their native names in English (Mosel, Pfalz,
+  // Rheinhessen are used untranslated in the trade), so only the country needs
+  // an exonym.
+  Deutschland: "Germany",
   España: "Spain",
   // Italy regions
   Toscana: "Tuscany",

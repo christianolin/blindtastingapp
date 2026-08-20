@@ -91,6 +91,13 @@ export const REGION_COLORS: Record<string, string> = {
   sicilia: "#C25A2C",
   lombardia: "#6E4E8C",
   friuli: "#B0507A",
+  // Germany — Anbaugebiete.
+  mosel: "#4E8C6E",
+  rheinhessen: "#9A5C2E",
+  pfalz: "#8C6E2E",
+  nahe: "#5C6E9A",
+  ahr: "#A83E4E",
+  mittelrhein: "#3E8C9A",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",
@@ -113,6 +120,13 @@ const REGION_LABELS: Record<string, string> = {
   "languedoc-roussillon": "Languedoc-Roussillon",
   rhone: "Rhône",
   "sud-ouest": "Sud-Ouest",
+  germany: "Germany",
+  mosel: "Mosel",
+  rheinhessen: "Rheinhessen",
+  pfalz: "Pfalz",
+  nahe: "Nahe",
+  ahr: "Ahr",
+  mittelrhein: "Mittelrhein",
 };
 const FALLBACK_COLOR = "#6B6257";
 const SELECTED_COLOR = "#B78E42";
