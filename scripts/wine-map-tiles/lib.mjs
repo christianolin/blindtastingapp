@@ -149,6 +149,21 @@ export const ATTRIBUTION = {
     key: "friuli",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Germany national outline: dissolve of the 16 Bundesländer (BKG VG250 via
+  // OpenDataSoft georef-germany-land). Same data family as the Spain/Italy
+  // dissolves. See scripts/wine-map-sources/build-germany-country-outline.mjs.
+  BKG_VG250: {
+    key: "bkg",
+    text: "© GeoBasis-DE / BKG (VG250), dl-de/by-2.0",
+  },
+  // German vineyard sites: the LEGAL Weinbergsrolle boundaries (Anbaugebiet /
+  // Bereich / Großlage / Einzellage) published by the Landwirtschaftskammer
+  // Rheinland-Pfalz via LGB. Every German tier is a dissolve of this one layer.
+  // See scripts/wine-map-sources/fetch-rlp-weinlagen.mjs.
+  LWK_RLP_WEINLAGEN: {
+    key: "lwk-rlp",
+    text: "© LGB-RLP, dl-de/by-2.0 — Weinbergsrolle der Landwirtschaftskammer Rheinland-Pfalz",
+  },
 };
 
 export function attributionKeyFor(namespace) {
