@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { extractLabel, type ExtractedLabel } from "@/lib/label-scan/extract";
+import { usdToDkk } from "@/lib/label-scan/fx";
 import {
   createCatalogWine,
   createGrape,
@@ -189,10 +190,9 @@ export async function createScannedWine(
         : null,
     imageUrl: prefill.imageUrl,
     // FastCork reports a typical US RETAIL price (newer wines only) rather than
-    // a market valuation, so it's stored as-is in USD with its currency — never
-    // silently relabelled as DKK.
-    estimatedPrice: prefill.retailPriceUsd ?? null,
-    estimatedPriceCurrency: prefill.retailPriceUsd != null ? "USD" : null,
+    // a market valuation. The catalog stores prices in DKK, so it's converted at
+    // the current USD/DKK rate — never stored as a USD number labelled DKK.
+    estimatedPrice: await usdToDkk(prefill.retailPriceUsd ?? null),
   });
   return { id };
 }
@@ -426,7 +426,7 @@ export async function resolveWinePrefill(
     // slower and ~$0.15 dearer. Prices are curated instead (backfill script /
     // contributor edit); the scan itself stays a fast, cheap extraction.
     // The DKK form field stays blank — FastCork's figure is US retail, carried
-    // separately in retailPriceUsd so it can be stored with its own currency.
+    // separately in retailPriceUsd and converted to DKK when the wine is saved.
     estimatedPrice: "",
     retailPriceUsd: extracted.retailPriceUsd,
     // An unread vintage prefills as YEAR-with-empty-field plus a prompt — NV

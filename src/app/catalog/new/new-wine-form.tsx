@@ -42,7 +42,7 @@ export type WineFormInitial = {
   estimatedPrice: string;
   /** A scanned retail price in USD (FastCork reports US retail). Kept apart
       from `estimatedPrice` because that field is DKK: the auto-accept path
-      stores this with currency USD, and the manual form ignores it. */
+      converts this to DKK at save time, and the manual form ignores it. */
   retailPriceUsd?: number | null;
   /** Scan couldn't read a vintage: ask the user instead of assuming NV. */
   vintagePrompt?: boolean;
