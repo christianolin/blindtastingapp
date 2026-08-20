@@ -4,7 +4,47 @@ Add the whole Spanish DO/DOP hierarchy to the wine map, mirroring the France
 model but sourced the Champagne/Alsace way (commune-union), because Spain has
 no national parcel layer.
 
-## Session status — 2026-08-19 (resume here)
+## Session status — 2026-08-20 (resume here)
+
+**Waves 24–25 (pushed through `9fe02e4`). Spain is now 15 comunidades / 69
+appellations, all VERIFIED with a current boundary.**
+
+- **Wave 24 — Mondéjar (21, Guadalajara).** This was a *bug*, not a gap: its
+  membership entry had been marked `ready` during the CLM wave but its catalog
+  node was never created, so `run-spain-dos` would reject it on every future
+  run. Now shipped; CLM is 8 DOs.
+- **Wave 25 — the five Rías Baixas subzones** (Val do Salnés 12, Condado do Tea
+  9, O Rosal 5, Soutomaior 1, Ribeira do Ulla 8), the second use of the
+  subregional tier proven on Rioja: tier 3 / min_zoom 7. Two honest caveats:
+  whole-municipality over-approximation (the pliego delimits by *parroquia*),
+  and unlike Rioja they do **not** tile the DO — Tui's parroquias are split
+  between Condado do Tea and O Rosal, so those two overlap in Tui. All 34
+  parent municipios covered, no holes.
+- **Guard change:** subregional area floor 0.003 → 0.002. Soutomaior is a real
+  single-municipality subzone (0.0027 deg²) and was rejected by a floor set
+  before any such zone existed. Still ~7× the communal floor.
+
+**Invariant to keep checking** (`.tiles-build/verify-spain.mjs`): membership
+`ready` entries == DB appellations, nothing unverified, no appellation without a
+current boundary. Currently 69 / 69 / clean. Wave 24 existed *because* nobody
+checked this.
+
+**Still missing, by category:**
+- *Mainland DOPs never sourced*: **Sierras de Málaga** and **Manzanilla-Sanlúcar
+  de Barrameda** (both separate DOPs whose polygons would near-duplicate Málaga
+  and Jerez), **Liébana** (needs a new Cantabria comunidad; its pliego lookup
+  returned the wrong PDF).
+- *Modelling decision pending*: **Cava** and **DO Catalunya** — multi-region /
+  umbrella; the owner was offered "tree-only, no polygon" as the recommended
+  option but hasn't chosen.
+- *Out of scope by prior decision*: Vinos de Pago (~20, sub-municipal),
+  Canarias (~11, outside the display window), Vinos de Calidad (Lebrija, Costa
+  de Cantabria), the IGP/VT tier.
+- *Depth*: Ribeira Sacra (5 subzones), Ribera del Guadiana (6) still flat.
+
+**Tiles need a republish** for Mondéjar + the 5 subzones to appear as polygons.
+
+---
 
 **Overnight "finish Spain" run (waves 11–19, pushed through `af69543`).** Spain is
 now **14 comunidades, 57 DOs**, all promoted (VERIFIED + current boundary) with
