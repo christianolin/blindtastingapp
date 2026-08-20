@@ -1,7 +1,7 @@
-Emoji graphics in this folder are from Twemoji (https://github.com/jdecked/twemoji),
-© Twitter, Inc. and other contributors, licensed CC-BY 4.0
-(https://creativecommons.org/licenses/by/4.0/).
+The aroma/flavour icons in this folder are from game-icons.net, by Lorc,
+Delapouite and other contributors, licensed CC-BY 3.0
+(https://creativecommons.org/licenses/by/3.0/).
 
-Only the subset used by the WSET tasting-sheet aroma/flavour icons is vendored
-here (see src/lib/wset/aroma-icons.mjs). Files are renamed from their Unicode
-codepoints to friendly slugs.
+Each icon is vendored pre-tinted (one fill colour per aroma term) via the Iconify
+API. The term -> icon + colour mapping lives in src/lib/wset/aroma-icons.mjs.
+Files are named by a slug derived from the aroma term.

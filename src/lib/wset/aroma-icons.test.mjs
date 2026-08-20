@@ -1,14 +1,15 @@
-// Coverage tests for the aroma-icon mapping. LEXICON mirrors the seeded
-// wset_aroma_terms (group_name + term). Two guarantees: every term resolves to a
-// real slug (no bare pill), and every slug the mapping can return has a vendored
-// SVG on disk (no broken image). Node strips the .ts types on import.
+// Coverage + uniqueness tests for the aroma-icon mapping. LEXICON mirrors the
+// seeded wset_aroma_terms (group_name + term). Guarantees: (1) every seeded term
+// has its own ICON_META entry (never the neutral "wine" fallback), (2) no two
+// distinct terms share the same (icon, colour) pair — i.e. no visual duplicate,
+// and (3) every ICON_META slug has a vendored SVG on disk. Node imports the .mjs
+// natively.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { iconForTerm, ICON_CODEPOINT, FAMILY_ICON } from "./aroma-icons.mjs";
+import { iconForTerm, slugForTerm, ICON_META } from "./aroma-icons.mjs";
 
-// group_name -> terms, copied from the DB seed (families in vocab order).
 const LEXICON = {
   Floral: ["blossom", "acacia", "elderflower", "honeysuckle", "jasmine", "chamomile", "geranium", "rose", "violet"],
   "Green fruit": ["apple", "pear", "gooseberry", "grape", "pear drop", "quince"],
@@ -30,34 +31,28 @@ const LEXICON = {
   "Deliberately oxidised": ["almond", "marzipan", "hazelnut", "walnut", "chocolate", "coffee", "toffee", "caramel"],
 };
 
-test("every seeded term resolves to a non-empty slug", () => {
-  for (const [family, terms] of Object.entries(LEXICON)) {
+test("every seeded term has its own ICON_META entry (no wine fallback)", () => {
+  for (const terms of Object.values(LEXICON)) {
     for (const term of terms) {
-      const slug = iconForTerm(term, family);
-      assert.ok(slug && typeof slug === "string", `no slug for "${term}" (${family})`);
+      const slug = slugForTerm(term);
+      assert.ok(ICON_META[slug], `"${term}" -> slug "${slug}" has no ICON_META entry`);
+      assert.notEqual(iconForTerm(term, ""), "wine", `"${term}" fell back to wine`);
     }
   }
 });
 
-test("every family fallback and the default resolve to a known slug", () => {
-  for (const slug of [...Object.values(FAMILY_ICON), "wine"]) {
-    assert.ok(ICON_CODEPOINT[slug], `family/default slug "${slug}" missing from ICON_CODEPOINT`);
+test("no two ICON_META slugs share the same (icon, colour) pair", () => {
+  const seen = new Map();
+  for (const [slug, m] of Object.entries(ICON_META)) {
+    const key = `${m.icon}|${m.color.toLowerCase()}`;
+    assert.ok(!seen.has(key), `duplicate (icon,colour): "${slug}" and "${seen.get(key)}" both ${key}`);
+    seen.set(key, slug);
   }
 });
 
-test("every slug iconForTerm can return maps to a known codepoint", () => {
-  const slugs = new Set(["wine", ...Object.values(FAMILY_ICON)]);
-  for (const [family, terms] of Object.entries(LEXICON)) {
-    for (const term of terms) slugs.add(iconForTerm(term, family));
-  }
-  for (const slug of slugs) {
-    assert.ok(ICON_CODEPOINT[slug], `returned slug "${slug}" missing from ICON_CODEPOINT`);
-  }
-});
-
-test("every codepoint has a vendored SVG in public/emoji", () => {
+test("every ICON_META slug has a vendored SVG in public/emoji", () => {
   const dir = fileURLToPath(new URL("../../../public/emoji/", import.meta.url));
-  for (const slug of Object.keys(ICON_CODEPOINT)) {
+  for (const slug of Object.keys(ICON_META)) {
     assert.ok(existsSync(`${dir}${slug}.svg`), `missing public/emoji/${slug}.svg`);
   }
 });
