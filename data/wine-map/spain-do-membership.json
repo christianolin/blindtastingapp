@@ -12301,6 +12301,310 @@
         "note": "Whole-municipality union of the 77 Toledo términos municipales in the current (2022) pliego, which significantly expanded the zona. Argés and Guadamur are included by certain polígonos only, taken whole; Toledo city and Talavera de la Reina are listed members of the current zona."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.cataluna.costers-del-segre",
+      "comunidad_key": "cataluna",
+      "comunidad": "Cataluña",
+      "display_name": "Costers del Segre",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "25",
+        "43"
+      ],
+      "expected_count": 69,
+      "municipios": [
+        {
+          "code": "25003",
+          "name": "Agramunt"
+        },
+        {
+          "code": "25006",
+          "name": "L'Albagés"
+        },
+        {
+          "code": "25009",
+          "name": "L'Albi"
+        },
+        {
+          "code": "25011",
+          "name": "Alcarràs"
+        },
+        {
+          "code": "25013",
+          "name": "Alfarràs"
+        },
+        {
+          "code": "25015",
+          "name": "Algerri"
+        },
+        {
+          "code": "25019",
+          "name": "Almacelles"
+        },
+        {
+          "code": "25021",
+          "name": "Almenar"
+        },
+        {
+          "code": "25022",
+          "name": "Alòs de Balaguer"
+        },
+        {
+          "code": "25024",
+          "name": "Alt Àneu"
+        },
+        {
+          "code": "25029",
+          "name": "Arbeca"
+        },
+        {
+          "code": "25034",
+          "name": "Artesa de Segre"
+        },
+        {
+          "code": "25035",
+          "name": "La Sentiu de Sió"
+        },
+        {
+          "code": "25040",
+          "name": "Balaguer"
+        },
+        {
+          "code": "25046",
+          "name": "Belianes"
+        },
+        {
+          "code": "25058",
+          "name": "Les Borges Blanques"
+        },
+        {
+          "code": "25069",
+          "name": "Castelló de Farfanya"
+        },
+        {
+          "code": "25073",
+          "name": "Cervià de les Garrigues"
+        },
+        {
+          "code": "25074",
+          "name": "Ciutadilla"
+        },
+        {
+          "code": "25079",
+          "name": "Cubells"
+        },
+        {
+          "code": "25081",
+          "name": "L'Espluga Calba"
+        },
+        {
+          "code": "25086",
+          "name": "Esterri d'Àneu"
+        },
+        {
+          "code": "25092",
+          "name": "La Floresta"
+        },
+        {
+          "code": "25094",
+          "name": "Foradada"
+        },
+        {
+          "code": "25097",
+          "name": "Fulleda"
+        },
+        {
+          "code": "25098",
+          "name": "Gavet de la Conca"
+        },
+        {
+          "code": "25103",
+          "name": "Granyanella"
+        },
+        {
+          "code": "25104",
+          "name": "Granyena de Segarra"
+        },
+        {
+          "code": "25109",
+          "name": "Guimerà"
+        },
+        {
+          "code": "25113",
+          "name": "Ivars d'Urgell"
+        },
+        {
+          "code": "25115",
+          "name": "Isona i Conca Dellà"
+        },
+        {
+          "code": "25118",
+          "name": "Juncosa"
+        },
+        {
+          "code": "25119",
+          "name": "Juneda"
+        },
+        {
+          "code": "25125",
+          "name": "Llardecans"
+        },
+        {
+          "code": "25128",
+          "name": "Llimiana"
+        },
+        {
+          "code": "25130",
+          "name": "Maldà"
+        },
+        {
+          "code": "25134",
+          "name": "Menàrguens"
+        },
+        {
+          "code": "25141",
+          "name": "Montoliu de Segarra"
+        },
+        {
+          "code": "25143",
+          "name": "Montornès de Segarra"
+        },
+        {
+          "code": "25145",
+          "name": "Nalec"
+        },
+        {
+          "code": "25153",
+          "name": "Els Omellons"
+        },
+        {
+          "code": "25154",
+          "name": "Els Omells de na Gaia"
+        },
+        {
+          "code": "25156",
+          "name": "Os de Balaguer"
+        },
+        {
+          "code": "25161",
+          "name": "Conca de Dalt"
+        },
+        {
+          "code": "25164",
+          "name": "Penelles"
+        },
+        {
+          "code": "25169",
+          "name": "La Pobla de Cérvoles"
+        },
+        {
+          "code": "25170",
+          "name": "Bellaguarda"
+        },
+        {
+          "code": "25171",
+          "name": "La Pobla de Segur"
+        },
+        {
+          "code": "25176",
+          "name": "Preixana"
+        },
+        {
+          "code": "25177",
+          "name": "Preixens"
+        },
+        {
+          "code": "25183",
+          "name": "Rialp"
+        },
+        {
+          "code": "25190",
+          "name": "Salàs de Pallars"
+        },
+        {
+          "code": "25208",
+          "name": "Soriguera"
+        },
+        {
+          "code": "25209",
+          "name": "Sort"
+        },
+        {
+          "code": "25215",
+          "name": "Talarn"
+        },
+        {
+          "code": "25217",
+          "name": "Tàrrega"
+        },
+        {
+          "code": "25218",
+          "name": "Tarrés"
+        },
+        {
+          "code": "25228",
+          "name": "Torrefarrera"
+        },
+        {
+          "code": "25234",
+          "name": "Tremp"
+        },
+        {
+          "code": "25238",
+          "name": "Vallbona de les Monges"
+        },
+        {
+          "code": "25242",
+          "name": "Verdú"
+        },
+        {
+          "code": "25244",
+          "name": "Vilagrassa"
+        },
+        {
+          "code": "25250",
+          "name": "Vilanova de Meià"
+        },
+        {
+          "code": "25253",
+          "name": "El Vilosell"
+        },
+        {
+          "code": "25255",
+          "name": "Vinaixa"
+        },
+        {
+          "code": "25902",
+          "name": "Sant Martí de Riucorb"
+        },
+        {
+          "code": "25904",
+          "name": "Castell de Mur"
+        },
+        {
+          "code": "25912",
+          "name": "Gimenells i el Pla de la Font"
+        },
+        {
+          "code": "43159",
+          "name": "Vallfogona de Riucorb"
+        }
+      ],
+      "grapes": [
+        "Tempranillo",
+        "Garnacha",
+        "Macabeu",
+        "Cabernet Sauvignon"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Costers del Segre» (2025)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/costers_del_segre_2025_01_28.pdf",
+        "retrieved": "2026-08-19",
+        "note": "COARSE whole-municipality over-approximation: the pliego's 7 subzones (Artesa de Segre, Urgell, Les Garrigues, Pallars, Raimat, Segrià, Valls del Riu Corb) are mostly defined by specific polígonos catastrales. The 69 whole Lleida-province municipios that contribute any listed parcel are taken whole; Lleida city (only the Raimat estate belongs) is excluded."
+      },
+      "status": "ready"
     }
   ]
 }
