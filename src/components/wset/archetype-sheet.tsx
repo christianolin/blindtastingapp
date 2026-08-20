@@ -69,15 +69,15 @@ function AromaPills({ terms }: { terms: string[] }) {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 4,
+            gap: 5,
             borderRadius: 999,
-            padding: "2px 9px",
-            fontSize: 11.5,
+            padding: "4px 11px",
+            fontSize: 12.5,
             background: WSET.burgundy,
             color: WSET.creamText,
           }}
         >
-          <AromaIcon term={t} family="" size={14} />
+          <AromaIcon term={t} family="" size={17} />
           {t}
         </span>
       ))}

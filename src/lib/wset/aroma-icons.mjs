@@ -1,24 +1,30 @@
-// Each WSET aroma/flavour term gets its own icon, picked per-term from the set
-// that has the BEST, most literal, most legible glyph for it:
+// Each WSET aroma/flavour term gets its own icon, chosen per-term from whichever
+// set has the SIMPLEST, most literal glyph — the pills are ~16px, so a busy
+// illustration is unreadable.
 //
-//   fluent-emoji-flat  — bold flat multicolour emoji. First choice: it reads at
-//                        15px and is the literal thing (a lemon, a cinnamon-less
-//                        but real bread, cheese, mushroom, deer...).
-//   game-icons         — one-colour line icons, vendored PRE-TINTED. Used only
-//                        where no emoji exists (leather, flint, wool, oak, tar,
-//                        peppercorns, cinnamon...); we pick the simplest glyph.
+// Set preference (owner: "Apple iPhone-style looks if possible", "go for simple
+// icons", "use many different sources"):
+//   fluent-emoji       — Microsoft Fluent 3D. Glossy, rounded, single-subject:
+//                        the closest thing to the iOS emoji look. FIRST CHOICE.
+//   fluent-emoji-flat  — the flat cut of the same set, where 3D lacks the glyph.
+//   icon-park-solid    — clean one-shape solid icons (cherry, pear, candy…).
+//   game-icons         — one-colour line icons, vendored PRE-TINTED; last resort
+//                        for things no emoji set has (leather, flint, wool, tar).
 //
-// Rules this table follows (from owner review):
-//   - the icon must be the ACTUAL note, never a stand-in ("quince tree" for
-//     quince is not acceptable);
-//   - prefer simple silhouettes — busy, detailed glyphs are unreadable at 15px;
+// Rules this table follows:
+//   - the icon must be the ACTUAL note, never a look-alike stand-in;
+//   - prefer a SINGLE object over a cluster — owner flagged multi-berry glyphs
+//     (cranberry/redcurrant) as too busy at pill size;
 //   - no two terms may share the same (set, icon, colour) — asserted by the test.
 //
 // ICON_META maps a slug -> { set, icon, color? }. `color` applies to game-icons
-// only (emoji are already multicolour). The slug is the slugified term.
+// only (the emoji sets are already multicolour). The slug is the slugified term.
 
-const F = "fluent-emoji-flat";
-const G = "game-icons";
+const E = "fluent-emoji"; // 3D, iOS-like
+// (fluent-emoji-flat is the flat sibling of E — kept available but unused: the
+// 3D set reads better at pill size.)
+const P = "icon-park-solid"; // clean solid single shapes
+const G = "game-icons"; // tinted line icons, last resort
 
 // Tints for the one-colour game-icons entries.
 const C = {
@@ -27,129 +33,127 @@ const C = {
   red: "#B4283A", crimson: "#9E2536", pinkred: "#D45A6A", darkpurple: "#4A2A5E",
   blue: "#3A5FA0", brown: "#7A5230", darkbrown: "#5A3A26", garnet: "#6B3A2E",
   nut: "#8A5A2E", spice: "#A34327", slate: "#7C7C72", grey: "#8A8A80",
-  cream: "#D8B85E", tan: "#C39A54", black: "#2E2A28", oak: "#7A5230",
+  cream: "#D8B85E", tan: "#C39A54", black: "#2E2A28",
 };
 
 export const ICON_META = {
-  // ---- FLORAL (real flowers) ----
-  blossom: { set: F, icon: "cherry-blossom" },
-  acacia: { set: F, icon: "sunflower" },
-  elderflower: { set: F, icon: "white-flower" },
-  honeysuckle: { set: F, icon: "hibiscus" },
-  jasmine: { set: F, icon: "blossom" },
+  // ---- FLORAL ----
+  blossom: { set: E, icon: "cherry-blossom" },
+  acacia: { set: E, icon: "sunflower" },
+  elderflower: { set: E, icon: "white-flower" },
+  honeysuckle: { set: E, icon: "hibiscus" },
+  jasmine: { set: E, icon: "blossom" },
   chamomile: { set: G, icon: "daisy", color: C.gold },
-  geranium: { set: F, icon: "tulip" },
-  rose: { set: F, icon: "rose" },
-  violet: { set: F, icon: "wilted-flower" },
+  geranium: { set: E, icon: "tulip" },
+  rose: { set: E, icon: "rose" },
+  violet: { set: E, icon: "wilted-flower" },
   // ---- GREEN FRUIT ----
-  apple: { set: F, icon: "green-apple" },
-  pear: { set: F, icon: "pear" },
-  gooseberry: { set: F, icon: "kiwi-fruit" },
-  grape: { set: F, icon: "grapes" },
-  "pear-drop": { set: F, icon: "candy" },
-  // Quince has no icon in any set — use the pear silhouette in quince-gold
-  // (quince IS a pome, pear-shaped), rather than an unrelated stand-in.
-  quince: { set: G, icon: "pear", color: C.gold },
+  apple: { set: E, icon: "green-apple" },
+  pear: { set: E, icon: "pear" },
+  gooseberry: { set: E, icon: "kiwi-fruit" },
+  grape: { set: E, icon: "grapes" },
+  "pear-drop": { set: P, icon: "candy" },
+  quince: { set: P, icon: "pear" }, // no quince glyph anywhere; pome silhouette
   // ---- CITRUS ----
-  lemon: { set: F, icon: "lemon" },
+  lemon: { set: E, icon: "lemon" },
   "lemon-peel": { set: G, icon: "cut-lemon", color: C.citrus },
   lime: { set: G, icon: "lemon", color: "#7FBF3A" },
-  grapefruit: { set: G, icon: "orange", color: C.pinkred },
-  orange: { set: F, icon: "tangerine" },
+  grapefruit: { set: P, icon: "orange-one", color: undefined },
+  orange: { set: E, icon: "tangerine" },
   "orange-peel": { set: G, icon: "orange-slice", color: "#E68A2E" },
   // ---- STONE ----
-  peach: { set: F, icon: "peach" },
-  apricot: { set: G, icon: "peach", color: C.amber },
+  peach: { set: E, icon: "peach" },
+  apricot: { set: P, icon: "peach" },
   nectarine: { set: G, icon: "peach", color: C.red },
   // ---- TROPICAL ----
-  banana: { set: F, icon: "banana" },
+  banana: { set: E, icon: "banana" },
   lychee: { set: G, icon: "cherry", color: C.pinkred },
-  mango: { set: F, icon: "mango" },
-  melon: { set: F, icon: "melon" },
+  mango: { set: E, icon: "mango" },
+  melon: { set: E, icon: "melon" },
   "passion-fruit": { set: G, icon: "kiwi-fruit", color: C.violet },
-  pineapple: { set: F, icon: "pineapple" },
-  // ---- RED FRUIT ----
-  redcurrant: { set: G, icon: "elderberry", color: C.red },
-  cranberry: { set: G, icon: "berry-bush", color: C.crimson },
+  pineapple: { set: E, icon: "pineapple" },
+  // ---- RED FRUIT (single-object glyphs, no clusters) ----
+  redcurrant: { set: G, icon: "gems", color: C.red },
+  cranberry: { set: G, icon: "circle", color: C.crimson },
   raspberry: { set: G, icon: "raspberry", color: C.pinkred },
-  strawberry: { set: F, icon: "strawberry" },
-  "red-cherry": { set: F, icon: "cherries" },
+  strawberry: { set: E, icon: "strawberry" },
+  "red-cherry": { set: P, icon: "cherry" },
   "red-plum": { set: G, icon: "plum", color: C.red },
   // ---- BLACK FRUIT ----
-  blackcurrant: { set: G, icon: "blackcurrant", color: C.darkpurple },
-  blackberry: { set: G, icon: "berry-bush", color: C.darkpurple },
-  blueberry: { set: F, icon: "blueberries" },
+  blackcurrant: { set: G, icon: "gems", color: C.darkpurple },
+  blackberry: { set: G, icon: "circle", color: C.darkpurple },
+  blueberry: { set: E, icon: "blueberries" },
   "black-cherry": { set: G, icon: "cherry", color: "#3A2140" },
   "black-plum": { set: G, icon: "plum", color: C.darkpurple },
   bramble: { set: G, icon: "vine-leaf", color: C.darkpurple },
   // ---- HERBACEOUS ----
-  "green-bell-pepper": { set: F, icon: "bell-pepper" },
-  grass: { set: F, icon: "leafy-green" },
-  "tomato-leaf": { set: F, icon: "tomato" },
+  "green-bell-pepper": { set: E, icon: "bell-pepper" },
+  grass: { set: E, icon: "leafy-green" },
+  "tomato-leaf": { set: E, icon: "tomato" },
   asparagus: { set: G, icon: "asparagus", color: C.herb },
   "blackcurrant-leaf": { set: G, icon: "vine-leaf", color: C.herb },
   // ---- HERBAL ----
-  eucalyptus: { set: F, icon: "leaf-fluttering-in-wind" },
-  mint: { set: F, icon: "herb" },
+  eucalyptus: { set: E, icon: "leaf-fluttering-in-wind" },
+  mint: { set: E, icon: "herb" },
   fennel: { set: G, icon: "sprout", color: C.sage },
   dill: { set: G, icon: "seedling", color: C.sage },
   "dried-herbs": { set: G, icon: "herbs-bundle", color: C.sage },
-  medicinal: { set: F, icon: "pill" },
+  medicinal: { set: E, icon: "pill" },
   lavender: { set: G, icon: "spoted-flower", color: C.violet },
   // ---- SPICE ----
   "black-pepper": { set: G, icon: "powder", color: C.black },
   "white-pepper": { set: G, icon: "salt-shaker", color: "#B8A88A" },
   liquorice: { set: G, icon: "candy-canes", color: C.black },
-  cinnamon: { set: G, icon: "incense", color: C.spice },
+  cinnamon: { set: G, icon: "wood-stick", color: C.spice },
   // ---- FRUIT RIPENESS ----
   "unripe-fruit": { set: G, icon: "shiny-apple", color: C.green },
-  "ripe-fruit": { set: F, icon: "red-apple" },
+  "ripe-fruit": { set: E, icon: "red-apple" },
   "dried-fruit": { set: G, icon: "grain-bundle", color: C.darkbrown },
-  "cooked-fruit": { set: F, icon: "pot-of-food" },
-  jammy: { set: F, icon: "jar" },
+  "cooked-fruit": { set: E, icon: "pot-of-food" },
+  jammy: { set: E, icon: "jar" },
   // ---- OTHER ----
-  simple: { set: F, icon: "wine-glass" },
-  "wet-stones": { set: G, icon: "stone-pile", color: C.slate },
-  flint: { set: F, icon: "rock" },
-  candy: { set: F, icon: "lollipop" },
+  simple: { set: E, icon: "wine-glass" },
+  "wet-stones": { set: E, icon: "rock" },
+  flint: { set: G, icon: "flint-spark", color: C.slate },
+  candy: { set: E, icon: "candy" },
   "wet-wool": { set: G, icon: "wool", color: C.grey },
   // ---- YEAST ----
-  biscuit: { set: F, icon: "cookie" },
+  biscuit: { set: E, icon: "cookie" },
   "graham-cracker": { set: G, icon: "bread-slice", color: C.tan },
-  bread: { set: F, icon: "bread" },
+  bread: { set: E, icon: "bread" },
   toast: { set: G, icon: "butter-toast", color: "#B07A3A" },
-  pastry: { set: F, icon: "croissant" },
-  brioche: { set: F, icon: "cupcake" },
+  pastry: { set: E, icon: "croissant" },
+  brioche: { set: E, icon: "cupcake" },
   "bread-dough": { set: G, icon: "dough-roller", color: C.cream },
-  cheese: { set: F, icon: "cheese-wedge" },
-  yogurt: { set: F, icon: "glass-of-milk" },
+  cheese: { set: E, icon: "cheese-wedge" },
+  yogurt: { set: P, icon: "milk-one" },
   acetaldehyde: { set: G, icon: "round-bottom-flask", color: C.green },
   // ---- MALOLACTIC ----
-  butter: { set: F, icon: "butter" },
-  cream: { set: G, icon: "milk-carton", color: "#E8E0C8" },
+  butter: { set: E, icon: "butter" },
+  cream: { set: P, icon: "milk" },
   // ---- OAK ----
   vanilla: { set: G, icon: "vanilla-flower", color: "#D8C89A" },
   cloves: { set: G, icon: "clover-spiked", color: C.brown },
-  nutmeg: { set: F, icon: "chestnut" },
-  coconut: { set: F, icon: "coconut" },
+  nutmeg: { set: E, icon: "chestnut" },
+  coconut: { set: E, icon: "coconut" },
   butterscotch: { set: G, icon: "jelly-beans", color: C.gold },
-  cedar: { set: F, icon: "evergreen-tree" },
+  cedar: { set: E, icon: "evergreen-tree" },
   "charred-wood": { set: G, icon: "burning-embers", color: "#3A2A24" },
   smoke: { set: G, icon: "smoke-bomb", color: C.grey },
-  chocolate: { set: F, icon: "chocolate-bar" },
-  coffee: { set: F, icon: "hot-beverage" },
-  resinous: { set: F, icon: "wood" },
+  chocolate: { set: E, icon: "chocolate-bar" },
+  coffee: { set: E, icon: "hot-beverage" },
+  resinous: { set: E, icon: "wood" },
   // ---- WHITE WINE (tertiary) ----
   "dried-apricot": { set: G, icon: "peach", color: C.nut },
   sultana: { set: G, icon: "grapes", color: C.nut },
   raisin: { set: G, icon: "grapes", color: C.garnet },
   "orange-marmalade": { set: G, icon: "honey-jar", color: "#C9702E" },
-  petrol: { set: F, icon: "fuel-pump" },
+  petrol: { set: E, icon: "fuel-pump" },
   kerosene: { set: G, icon: "jerrycan", color: "#5A6A6A" },
-  ginger: { set: F, icon: "ginger-root" },
+  ginger: { set: E, icon: "ginger-root" },
   almond: { set: G, icon: "almond", color: C.nut },
-  hazelnut: { set: F, icon: "peanuts" },
-  honey: { set: F, icon: "honey-pot" },
+  hazelnut: { set: E, icon: "peanuts" },
+  honey: { set: E, icon: "honey-pot" },
   caramel: { set: G, icon: "honey-jar", color: C.amber },
   nutty: { set: G, icon: "peanut", color: C.nut },
   hay: { set: G, icon: "wheat", color: C.gold },
@@ -161,20 +165,20 @@ export const ICON_META = {
   "cooked-plum": { set: G, icon: "cooking-pot", color: C.darkpurple },
   "cooked-cherry": { set: G, icon: "cherry", color: C.darkbrown },
   "cooked-red-plum": { set: G, icon: "saucepan", color: C.garnet },
-  "dried-blackberry": { set: G, icon: "berry-bush", color: C.darkbrown },
-  "dried-cranberry": { set: G, icon: "elderberry", color: C.darkbrown },
+  "dried-blackberry": { set: G, icon: "circle", color: C.darkbrown },
+  "dried-cranberry": { set: G, icon: "gems", color: C.darkbrown },
   "cooked-blackberry": { set: G, icon: "jelly", color: C.darkpurple },
   kirsch: { set: G, icon: "brandy-bottle", color: C.red },
   leather: { set: G, icon: "leather-boot", color: C.brown },
   earth: { set: G, icon: "stone-block", color: C.darkbrown },
-  mushroom: { set: F, icon: "brown-mushroom" },
-  meat: { set: F, icon: "cut-of-meat" },
-  game: { set: F, icon: "deer" },
+  mushroom: { set: E, icon: "brown-mushroom" },
+  meat: { set: E, icon: "cut-of-meat" },
+  game: { set: E, icon: "deer" },
   tobacco: { set: G, icon: "smoking-pipe", color: C.brown },
-  "wet-leaves": { set: F, icon: "fallen-leaf" },
-  "forest-floor": { set: F, icon: "deciduous-tree" },
-  vegetal: { set: F, icon: "broccoli" },
-  savoury: { set: F, icon: "salt" },
+  "wet-leaves": { set: E, icon: "fallen-leaf" },
+  "forest-floor": { set: E, icon: "deciduous-tree" },
+  vegetal: { set: E, icon: "broccoli" },
+  savoury: { set: E, icon: "salt" },
   farmyard: { set: G, icon: "barn", color: C.brown },
   tar: { set: G, icon: "coal-pile", color: "#2A2A2A" },
   // ---- DELIBERATELY OXIDISED ----

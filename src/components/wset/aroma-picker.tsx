@@ -108,17 +108,17 @@ export function AromaPicker({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 4,
+                  gap: 5,
                   borderRadius: 999,
-                  padding: "4px 11px",
-                  fontSize: 12,
+                  padding: "5px 12px",
+                  fontSize: 12.5,
                   cursor: "pointer",
                   background: WSET.burgundy,
                   border: "none",
                   color: WSET.creamText,
                 }}
               >
-                <AromaIcon term={term.term} family={term.groupName} size={14} />
+                <AromaIcon term={term.term} family={term.groupName} size={17} />
                 {`${term.term} ×`}
               </button>
             );
@@ -233,10 +233,10 @@ export function AromaPicker({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 4,
+                    gap: 5,
                     borderRadius: 999,
-                    padding: "2px 9px",
-                    fontSize: 11.5,
+                    padding: "4px 11px",
+                    fontSize: 12.5,
                     lineHeight: 1.35,
                     cursor: "pointer",
                     background: isSel ? WSET.burgundy : WSET.pillBg,
@@ -245,7 +245,7 @@ export function AromaPicker({
                     fontWeight: isSel ? 600 : 500,
                   }}
                 >
-                  <AromaIcon term={term.term} family={term.groupName} size={14} />
+                  <AromaIcon term={term.term} family={term.groupName} size={17} />
                   {term.term}
                 </button>
               );
@@ -292,17 +292,17 @@ export function AromaPicker({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 4,
+                    gap: 5,
                     borderRadius: 999,
-                    padding: "3px 9px",
-                    fontSize: 11.5,
+                    padding: "4px 11px",
+                    fontSize: 12.5,
                     cursor: "pointer",
                     background: WSET.burgundy,
                     border: "none",
                     color: WSET.creamText,
                   }}
                 >
-                  <AromaIcon term={term.term} family={term.groupName} size={14} />
+                  <AromaIcon term={term.term} family={term.groupName} size={17} />
                   {`${term.term} ×`}
                 </button>
               );
@@ -505,7 +505,7 @@ export function AromaPicker({
                             fontWeight: isSel ? 600 : 500,
                           }}
                         >
-                          <AromaIcon term={term.term} family={term.groupName} size={15} />
+                          <AromaIcon term={term.term} family={term.groupName} size={18} />
                           {term.term}
                         </button>
                       );
