@@ -50,11 +50,21 @@ test("no two ICON_META slugs share the same (set, icon, colour)", () => {
   }
 });
 
-test("every ICON_META entry names a set and an icon; game-icons entries are tinted", () => {
+// Only the emoji sets ship their own colours. Every other set is monochrome, so
+// an entry without a tint renders BLACK — which shipped once (a black quince, a
+// black apricot). Colour carries real meaning here (the brain ties colour to
+// smell/taste), so a missing tint is a bug, not a style nit.
+const EMOJI_SETS = new Set(["fluent-emoji", "fluent-emoji-flat", "noto", "twemoji", "openmoji", "emojione", "fxemoji", "streamline-emojis", "noto-v1"]);
+
+test("every ICON_META entry names a set and an icon; every monochrome set is tinted", () => {
   for (const [slug, m] of Object.entries(ICON_META)) {
     assert.ok(m.set && m.icon, `${slug}: missing set/icon`);
-    if (m.set === "game-icons") {
-      assert.match(m.color ?? "", /^#[0-9a-f]{6}$/i, `${slug}: game-icons entry needs a hex colour`);
+    if (!EMOJI_SETS.has(m.set)) {
+      assert.match(
+        m.color ?? "",
+        /^#[0-9a-f]{6}$/i,
+        `${slug}: "${m.set}" is monochrome and would render black without a colour`,
+      );
     }
   }
 });
