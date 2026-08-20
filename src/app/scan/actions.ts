@@ -241,6 +241,7 @@ export async function createScannedWine(
     // a market valuation. The catalog stores prices in DKK, so it's converted at
     // the current USD/DKK rate — never stored as a USD number labelled DKK.
     estimatedPrice: await usdToDkk(prefill.retailPriceUsd ?? null),
+    profile: prefill.profile ?? null,
   });
   return { id };
 }
@@ -469,7 +470,19 @@ export async function resolveWinePrefill(
     colour: extracted.colour,
     style: extracted.style,
     wineName: extracted.wineName ?? "",
-    description: extracted.description,
+    // The free-text blurb is no longer composed from the read — FastCork's
+    // prose is carried as the structured profile below instead, so the catalog
+    // shows the same sections for every scanned wine.
+    description: null,
+    profile: {
+      wineryDescription: extracted.wineryDescription,
+      aroma: extracted.aroma,
+      tastingNotes: extracted.tastingNotes,
+      foodPairing: extracted.foodPairing,
+      servingTempC: extracted.servingTempC,
+      decantMinutes: extracted.decantMinutes,
+      alcoholPercent: extracted.alcoholPercent,
+    },
     // Deliberately blank: the web-search price lookup made every scan ~15 s
     // slower and ~$0.15 dearer. Prices are curated instead (backfill script /
     // contributor edit); the scan itself stays a fast, cheap extraction.

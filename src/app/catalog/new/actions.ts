@@ -99,7 +99,35 @@ export type NewCatalogWine = {
   /** Currency of estimatedPrice. Defaults to DKK (the manual form's unit); the
       label scan supplies USD, since FastCork reports a US retail price. */
   estimatedPriceCurrency?: string | null;
+  /** Structured profile from the label read. Omitted by the manual form; when
+      omitted on UPDATE the existing profile is left untouched, so a curator
+      editing a wine's region never wipes its tasting notes. */
+  profile?: WineProfileInput | null;
 };
+
+/** The FastCork-shaped wine profile, stored as distinct catalog columns. */
+export type WineProfileInput = {
+  wineryDescription: string | null;
+  aroma: string | null;
+  tastingNotes: string | null;
+  foodPairing: string | null;
+  servingTempC: { min: number; max: number } | null;
+  decantMinutes: number | null;
+  alcoholPercent: number | null;
+};
+
+function profileColumns(p: WineProfileInput) {
+  return {
+    winery_description: p.wineryDescription,
+    aroma: p.aroma,
+    tasting_notes: p.tastingNotes,
+    food_pairing: p.foodPairing,
+    serving_temp_min_c: p.servingTempC?.min ?? null,
+    serving_temp_max_c: p.servingTempC?.max ?? null,
+    decant_minutes: p.decantMinutes,
+    alcohol_percent: p.alcoholPercent,
+  };
+}
 
 export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: string }> {
   const supabase = await createClient();
@@ -127,6 +155,7 @@ export async function createCatalogWine(input: NewCatalogWine): Promise<{ id: st
       image_url: input.imageUrl ?? null,
       estimated_price: input.estimatedPrice ?? null,
       estimated_price_currency: input.estimatedPriceCurrency ?? "DKK",
+      ...(input.profile ? profileColumns(input.profile) : {}),
       created_by: user.id,
     })
     .select("id")
@@ -180,6 +209,10 @@ export async function updateCatalogWine(
       image_url: input.imageUrl ?? null,
       estimated_price: input.estimatedPrice ?? null,
       estimated_price_currency: input.estimatedPriceCurrency ?? "DKK",
+      // Only written when the caller supplies one. The manual edit form has no
+      // profile inputs, so omitting it must LEAVE the wine's tasting notes
+      // alone rather than blanking them as a side-effect of fixing its region.
+      ...(input.profile ? profileColumns(input.profile) : {}),
     })
     .eq("id", id);
   if (error) throw new Error(error.message);

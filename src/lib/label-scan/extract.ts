@@ -33,7 +33,13 @@ export type ExtractedLabel = {
   colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
   style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
   grapes: { name: string; percentage: number | null }[];
-  description: string | null;
+  /** FastCork's prose, kept as the separate facts it reports rather than
+      flattened into one blurb — the catalog stores and renders them as
+      distinct sections (producer background / nose / palate / pairing). */
+  wineryDescription: string | null;
+  aroma: string | null;
+  tastingNotes: string | null;
+  foodPairing: string | null;
   confidence: "high" | "medium" | "low";
   rawText: string;
   /** FastCork's typical retail price for one bottle, in USD. */
@@ -162,17 +168,6 @@ function parseGrapes(raw: string | null): ExtractedLabel["grapes"] {
     .filter((g): g is { name: string; percentage: number | null } => !!g);
 }
 
-// The catalog blurb, composed from FastCork's prose. We keep the factual,
-// wine-describing parts (the winery background, then aroma/palate) and leave
-// out food pairing and serving mechanics, which the catalog shows separately or
-// not at all. Empty when FastCork said nothing substantive.
-function buildDescription(r: FastCorkResult): string | null {
-  const parts = [str(r.winery_description), str(r.aroma), str(r.tasting_notes)]
-    .filter(Boolean)
-    .join(" ");
-  return parts.trim() ? parts.trim() : null;
-}
-
 // FastCork reports no confidence score. Derive one from how much identity it
 // actually recovered, so the caller's auto-accept gate stays meaningful: a read
 // missing the producer or the wine's type is not something to save unattended.
@@ -234,7 +229,10 @@ function coerce(r: FastCorkResult): ExtractedLabel {
     colour,
     style,
     grapes: parseGrapes(str(r.grape_variety)),
-    description: buildDescription(r),
+    wineryDescription: str(r.winery_description),
+    aroma: str(r.aroma),
+    tastingNotes: str(r.tasting_notes),
+    foodPairing: str(r.food_pairing),
     confidence: deriveConfidence(r, colour, vintageRead),
     // FastCork returns no verbatim OCR; the wine's own name is the closest
     // thing to "what the label said", and the field is only shown for review.

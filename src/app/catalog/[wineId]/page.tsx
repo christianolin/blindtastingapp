@@ -71,6 +71,40 @@ export default async function CatalogWinePage({
 
   const title = catalogWineTitle(wine);
   const grapes = formatBlend(blend);
+
+  // Structured profile from the label read. Each part renders only if present,
+  // so a wine with just a nose and no pairing shows one section, not an empty
+  // one; when nothing is present at all we fall back to the legacy blurb.
+  const profileSections = (
+    [
+      { title: "The producer", body: wine.wineryDescription },
+      { title: "Aroma", body: wine.aroma },
+      { title: "Tasting notes", body: wine.tastingNotes },
+      { title: "Food pairing", body: wine.foodPairing },
+    ] as { title: string; body: string | null }[]
+  ).filter((s): s is { title: string; body: string } => !!s.body?.trim());
+
+  const servingFacts = [
+    wine.servingTempC
+      ? {
+          label: "Serve at",
+          value: `${wine.servingTempC.min}–${wine.servingTempC.max} °C`,
+        }
+      : null,
+    // 0 minutes is a real answer ("no decanting needed"), not a missing value.
+    wine.decantMinutes != null
+      ? {
+          label: "Decant",
+          value:
+            wine.decantMinutes > 0 ? `${wine.decantMinutes} min` : "Not needed",
+        }
+      : null,
+    wine.alcoholPercent != null
+      ? { label: "Alcohol", value: `${wine.alcoholPercent}%` }
+      : null,
+  ].filter((f): f is { label: string; value: string } => f !== null);
+
+  const hasProfile = profileSections.length > 0 || servingFacts.length > 0;
   const isManager =
     profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
   const usage = usageRows?.[0] ?? {
@@ -220,7 +254,32 @@ export default async function CatalogWinePage({
         </Card>
       </div>
 
-      {wine.description ? (
+      {/* The wine's profile, one section per thing the label read reports, so
+          every scanned wine shows the same shape. `description` is the older
+          free-text blurb and is only shown when there's no profile at all. */}
+      {hasProfile ? (
+        <div className="flex flex-col gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            {profileSections.map((s) => (
+              <div key={s.title}>
+                <p className="mb-2 text-sm font-medium">{s.title}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                  {s.body}
+                </p>
+              </div>
+            ))}
+          </div>
+          {servingFacts.length > 0 ? (
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              {servingFacts.map((f) => (
+                <p key={f.label} className="text-xs text-muted-foreground">
+                  <span className="font-medium">{f.label}:</span> {f.value}
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : wine.description ? (
         <div>
           <p className="mb-2 text-sm font-medium">About this wine</p>
           <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">

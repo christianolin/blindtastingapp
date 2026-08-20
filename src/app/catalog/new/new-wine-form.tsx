@@ -14,6 +14,7 @@ import {
   createGrape,
   createProducer,
   updateCatalogWine,
+  type WineProfileInput,
 } from "./actions";
 import { type BlendRow } from "./grape-blend-editor";
 import { resolvePendingBlend } from "@/lib/wine-blend";
@@ -38,6 +39,11 @@ export type WineFormInitial = {
   style: Style | null;
   wineName: string;
   description: string | null;
+  /** Structured wine profile from the label read (producer background, nose,
+      palate, pairing, serving). Carried straight through to the catalog row —
+      the manual form doesn't edit these, so they're absent for a hand-added
+      wine and simply stay null. */
+  profile?: WineProfileInput | null;
   /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
   estimatedPrice: string;
   /** A scanned retail price in USD (FastCork reports US retail). Kept apart
