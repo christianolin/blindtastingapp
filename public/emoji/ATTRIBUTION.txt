@@ -1,7 +1,11 @@
-The aroma/flavour icons in this folder are from game-icons.net, by Lorc,
-Delapouite and other contributors, licensed CC-BY 3.0
-(https://creativecommons.org/licenses/by/3.0/).
+The aroma/flavour icons in this folder come from two sources, chosen per term for
+whichever has the clearest, most literal glyph:
 
-Each icon is vendored pre-tinted (one fill colour per aroma term) via the Iconify
-API. The term -> icon + colour mapping lives in src/lib/wset/aroma-icons.mjs.
-Files are named by a slug derived from the aroma term.
+1. Fluent Emoji (flat) — © Microsoft, MIT licence
+   https://github.com/microsoft/fluentui-emoji
+2. game-icons.net — by Lorc, Delapouite and contributors, CC-BY 3.0
+   https://creativecommons.org/licenses/by/3.0/
+   (vendored pre-tinted; one fill colour per aroma term)
+
+Both are fetched via the Iconify API. The term -> set/icon/colour mapping lives in
+src/lib/wset/aroma-icons.mjs. Files are named by a slug derived from the term.

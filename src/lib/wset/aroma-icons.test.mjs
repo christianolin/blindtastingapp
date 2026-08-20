@@ -41,12 +41,21 @@ test("every seeded term has its own ICON_META entry (no wine fallback)", () => {
   }
 });
 
-test("no two ICON_META slugs share the same (icon, colour) pair", () => {
+test("no two ICON_META slugs share the same (set, icon, colour)", () => {
   const seen = new Map();
   for (const [slug, m] of Object.entries(ICON_META)) {
-    const key = `${m.icon}|${m.color.toLowerCase()}`;
-    assert.ok(!seen.has(key), `duplicate (icon,colour): "${slug}" and "${seen.get(key)}" both ${key}`);
+    const key = `${m.set}|${m.icon}|${(m.color ?? "").toLowerCase()}`;
+    assert.ok(!seen.has(key), `duplicate icon: "${slug}" and "${seen.get(key)}" both ${key}`);
     seen.set(key, slug);
+  }
+});
+
+test("every ICON_META entry names a set and an icon; game-icons entries are tinted", () => {
+  for (const [slug, m] of Object.entries(ICON_META)) {
+    assert.ok(m.set && m.icon, `${slug}: missing set/icon`);
+    if (m.set === "game-icons") {
+      assert.match(m.color ?? "", /^#[0-9a-f]{6}$/i, `${slug}: game-icons entry needs a hex colour`);
+    }
   }
 });
 
