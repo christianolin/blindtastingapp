@@ -102,6 +102,44 @@ per site. One Einzellage can have VDP and non-VDP owners, and the classified
 portion may be smaller than the legal Einzellage. The badge means "this site
 contains VDP Große/Erste Lage holdings", not "this whole polygon is Große Lage".
 
+## Status — Waves 1–3 COMPLETE (pushed through `4cff4fa`)
+
+**Germany's whole RLP hierarchy is live: 1,686 nodes, every one VERIFIED with a
+current boundary.** The map went 1,478 → 3,144 places.
+
+| Tier | Kind | Count |
+|---|---|---|
+| 0 | COUNTRY | 1 |
+| 1 | Anbaugebiet (REGION, also `is_appellation`) | 6 |
+| 2 | Bereich (SUBREGION) | 13 |
+| 3 | Großlage (APPELLATION) | 83 |
+| 4 | **Einzellage (SITE)** | **1,583** |
+
+Key decisions, all recorded in each boundary's `provenance_note`:
+- **Tiers 1–3 are GENERALISED**: dissolve + morphological close, because a raw
+  parcel union is unusable (Mosel = 1,391 slivers). Close narrows with depth
+  (0.002° → 0.001° → 0.0006°) as zoom increases. This inflates area, and says so.
+- **Tier 4 is NOT generalised**: the Weinbergsrolle polygon *is* the legal site,
+  used as-is. That is the point of going four deep — precision lives here.
+- **Children are CLIPPED to their parent.** Parent and child are independent
+  generalisations, so neither strictly contains the other; clipping makes
+  containment true by construction rather than by a tolerance. (Found via
+  Loreley reporting 2.5% outside Mittelrhein — an artifact, not bad data.)
+- **Einzellage keys include the village** (1,010 distinct names / 1,583 sites;
+  Schloßberg ×43), with `wlg_nr` disambiguating the rest.
+- **Every Großlage profile carries the caveat** that it is a collective site
+  labelled like a single vineyard — the 1971-law confusion, made visible.
+
+### Two CI gates the German data tripped (both fixed)
+1. `lib.test.mjs` asserts the attribution map **exhaustively** — adding
+   `BKG_VG250`/`LWK_RLP_WEINLAGEN` requires updating it. (`ce46b34`)
+2. `validate.mjs` `COVERAGE_BBOX` capped at lat 52; Germany reaches **55.06°N**.
+   Widened to 56. (`9109d14`) — its own comment said to do exactly this.
+
+**Local testing gap worth knowing:** `tippecanoe` isn't installed on the dev
+machine, so only 2 of the 8 tile-workflow steps can be run locally. Both failures
+above were in steps 3–6. Run `export.mjs` at minimum before pushing map changes.
+
 ## Wave 1 status — country DONE, Anbaugebiete blocked on one decision
 
 Shipped (`0336444`):
