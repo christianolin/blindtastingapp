@@ -277,3 +277,17 @@
     --wset-gap: 11px;
   }
 }
+/* Desktop: the sheet reads too small on a monitor (it's tuned for a phone), so
+   scale the whole thing up at laptop width and let the dialog take more width. */
+@media (min-width: 1024px) {
+  /* One uniform zoom rather than per-token bumps: the sheet sets most of its
+     sizes as inline pixels (which don't inherit), so a root zoom is what
+     actually enlarges everything — cards, labels, sliders, pills and aroma
+     icons alike — in one predictable step. `zoom` is supported in every current
+     browser and, unlike transform:scale, it reflows rather than blurring the
+     text or breaking the sticky header. The variables stay at their desktop
+     values so this is a single, easily-tuned number. */
+  .wset-sheet {
+    zoom: 1.15;
+  }
+}

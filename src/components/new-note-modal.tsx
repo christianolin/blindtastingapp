@@ -90,7 +90,10 @@ export function NewNoteModal({
     >
       <DialogContent
         showCloseButton={false}
-        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl"
+        // Wider on big screens: the sheet reads small on a desktop monitor, so
+        // the dialog takes more of the viewport (capped) and the .wset-sheet
+        // desktop scale in globals.css enlarges its type to match.
+        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:w-[calc(100vw-3rem)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl lg:max-w-[1400px]"
       >
         <DialogTitle className="sr-only">Tasting note</DialogTitle>
         {data === "loading" ? (
