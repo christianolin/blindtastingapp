@@ -102,6 +102,38 @@ per site. One Einzellage can have VDP and non-VDP owners, and the classified
 portion may be smaller than the legal Einzellage. The badge means "this site
 contains VDP Große/Erste Lage holdings", not "this whole polygon is Große Lage".
 
+## Wave 1 status — country DONE, Anbaugebiete blocked on one decision
+
+Shipped (`0336444`):
+- **`germany` COUNTRY node** + a precise outline: dissolve of the 16 Bundesländer
+  (BKG VG250), **6,571 vertices, 25 parts**, bbox 5.87..15.04 / 47.27..55.06 —
+  Germany's exact extremes, matching France/Spain/Italy resolution.
+- The **six RLP Anbaugebiete as DRAFT** nodes with articles, grapes and styles.
+  They are REGION **and** `is_appellation` (a German Anbaugebiet *is* the g.U.).
+- Attribution namespaces `BKG_VG250` and `LWK_RLP_WEINLAGEN`; the Weinbergsrolle
+  fetcher (fails closed on ~1583 features + unique `wlg_nr`).
+
+### The decision that blocks promoting them
+The `gu` (PDO) layer only covers **4 of the 6** (no Rheinhessen, no Ahr), so the
+Anbaugebiet outline has to come from dissolving the Einzellagen. But vineyard
+parcels are scattered, and a raw union is unusable at region zoom. Measured:
+
+| Anbaugebiet | raw union | close ~150 m | close ~380 m |
+|---|---|---|---|
+| Ahr (38 Lagen) | 1,121 pts / **115 parts** | 216 / 5 | 95 / 2 |
+| Mittelrhein (95) | 2,324 pts / **299 parts** | 763 / 47 | 364 / 21 |
+| Mosel (462) | 13,348 pts / **1,391 parts** | 3,241 / 93 | — |
+
+**Recommendation: morphological close at 0.002° (~150 m)** — Mosel 1,391 → 93
+parts — and record it honestly, because it inflates area (Mosel 0.0235 → 0.0364
+deg², ~55%). The precise geometry is kept where it matters, at Einzellage level;
+the region outline is explicitly a generalisation. Alternative if that's too
+loose: ship the raw union and accept a sparse, ribbon-like region at z4.
+
+**Perf note:** the close is expensive — a single Mosel variant took minutes and a
+15-min budget wasn't enough for all six. The builder must run per-Anbaugebiet
+with a long `statement_timeout`, and is a good candidate for one-at-a-time runs.
+
 ## Waves
 
 1. **Country outline + 13 Anbaugebiete.** Outline by dissolving
