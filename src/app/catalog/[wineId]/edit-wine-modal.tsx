@@ -47,7 +47,7 @@ export function EditWineModal({
         supabase
           .from("catalog_wines")
           .select(
-            "country_id, region_id, appellation_id, producer_id, type_designation_id, colour, style, wine_name, description, vintage_kind, vintage_year, vintage_tawny_years, image_url, estimated_price",
+            "country_id, region_id, appellation_id, producer_id, type_designation_id, colour, style, wine_name, description, vintage_kind, vintage_year, vintage_tawny_years, image_url, estimated_price, winery_description, aroma, tasting_notes, food_pairing, serving_temp_min_c, serving_temp_max_c, decant_minutes, alcohol_percent",
           )
           .eq("id", wineId)
           .maybeSingle(),
@@ -97,6 +97,26 @@ export function EditWineModal({
           style: w.style as WineFormInitial["style"],
           wineName: w.wine_name ?? "",
           description: w.description ?? null,
+          // Must be loaded, not left undefined: the form always submits a
+          // profile, so an unloaded one would blank the wine's tasting notes
+          // the first time anyone edited its region.
+          profile: {
+            wineryDescription: w.winery_description ?? null,
+            aroma: w.aroma ?? null,
+            tastingNotes: w.tasting_notes ?? null,
+            foodPairing: w.food_pairing ?? null,
+            servingTempC:
+              w.serving_temp_min_c != null && w.serving_temp_max_c != null
+                ? {
+                    min: Number(w.serving_temp_min_c),
+                    max: Number(w.serving_temp_max_c),
+                  }
+                : null,
+            decantMinutes:
+              w.decant_minutes == null ? null : Number(w.decant_minutes),
+            alcoholPercent:
+              w.alcohol_percent == null ? null : Number(w.alcohol_percent),
+          },
           estimatedPrice:
             w.estimated_price == null ? "" : String(w.estimated_price),
           vintageKind: (w.vintage_kind ?? "YEAR") as "YEAR" | "NV" | "TAWNY",

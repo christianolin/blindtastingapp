@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
 import { WineIdentityFields } from "@/components/wine/wine-identity-fields";
@@ -23,6 +24,11 @@ import { resolvePendingBlend } from "@/lib/wine-blend";
 // WineIdentityFields control, so a runtime array here was never read.
 type Colour = "WHITE" | "ORANGE" | "ROSE" | "RED";
 type Style = "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
+
+// "" and a non-numeric entry both mean "not set"; 0 is a real value (decanting
+// time of zero = no decanting needed), so it must survive.
+const numOrNull = (s: string): number | null =>
+  s.trim() && Number.isFinite(Number(s)) ? Number(s) : null;
 
 // Pre-filled values for edit mode (every field the form owns). BlendRow, the
 // producer label and the region's appellations are resolved by the caller so
@@ -126,6 +132,27 @@ export function NewWineForm({
   const [estimatedPrice, setEstimatedPrice] = useState(
     initialWine?.estimatedPrice ?? "",
   );
+  // The structured profile. Editable here so a curator can correct a bad label
+  // read — without this the fields would be write-only from the scanner.
+  const p0 = initialWine?.profile;
+  const [wineryDescription, setWineryDescription] = useState(
+    p0?.wineryDescription ?? "",
+  );
+  const [aroma, setAroma] = useState(p0?.aroma ?? "");
+  const [tastingNotes, setTastingNotes] = useState(p0?.tastingNotes ?? "");
+  const [foodPairing, setFoodPairing] = useState(p0?.foodPairing ?? "");
+  const [tempMin, setTempMin] = useState(
+    p0?.servingTempC ? String(p0.servingTempC.min) : "",
+  );
+  const [tempMax, setTempMax] = useState(
+    p0?.servingTempC ? String(p0.servingTempC.max) : "",
+  );
+  const [decantMinutes, setDecantMinutes] = useState(
+    p0?.decantMinutes != null ? String(p0.decantMinutes) : "",
+  );
+  const [alcoholPercent, setAlcoholPercent] = useState(
+    p0?.alcoholPercent != null ? String(p0.alcoholPercent) : "",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(initialWine?.imageUrl ?? null);
@@ -188,6 +215,20 @@ export function NewWineForm({
           estimatedPrice.trim() && Number.isFinite(Number(estimatedPrice))
             ? Number(estimatedPrice)
             : null,
+        profile: {
+          wineryDescription: wineryDescription.trim() || null,
+          aroma: aroma.trim() || null,
+          tastingNotes: tastingNotes.trim() || null,
+          foodPairing: foodPairing.trim() || null,
+          // A range needs both ends to mean anything, so a half-filled pair is
+          // stored as no range rather than a bound the UI can't render.
+          servingTempC:
+            numOrNull(tempMin) != null && numOrNull(tempMax) != null
+              ? { min: numOrNull(tempMin)!, max: numOrNull(tempMax)! }
+              : null,
+          decantMinutes: numOrNull(decantMinutes),
+          alcoholPercent: numOrNull(alcoholPercent),
+        },
       };
       if (wineId) {
         await updateCatalogWine(wineId, payload);
@@ -265,6 +306,57 @@ export function NewWineForm({
         imageAspect="aspect-[3/4] max-w-40"
         onImageChange={setImageUrl}
       />
+
+      {/* The structured profile. Filled by the label scan, editable here so a
+          bad read can be corrected — otherwise these fields would be
+          write-only. Every part is optional. */}
+      <details className="rounded-lg border border-border px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">
+          Wine profile
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          {(
+            [
+              ["The producer", wineryDescription, setWineryDescription],
+              ["Aroma", aroma, setAroma],
+              ["Tasting notes", tastingNotes, setTastingNotes],
+              ["Food pairing", foodPairing, setFoodPairing],
+            ] as [string, string, (v: string) => void][]
+          ).map(([labelText, value, set]) => (
+            <div key={labelText} className="flex flex-col gap-2">
+              <Label htmlFor={`profile-${labelText}`}>{labelText}</Label>
+              <Textarea
+                id={`profile-${labelText}`}
+                rows={3}
+                value={value}
+                onChange={(e) => set(e.target.value)}
+              />
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-4">
+            {(
+              [
+                ["Serve from (°C)", tempMin, setTempMin],
+                ["Serve to (°C)", tempMax, setTempMax],
+                ["Decant (min)", decantMinutes, setDecantMinutes],
+                ["Alcohol (%)", alcoholPercent, setAlcoholPercent],
+              ] as [string, string, (v: string) => void][]
+            ).map(([labelText, value, set]) => (
+              <div key={labelText} className="flex w-32 flex-col gap-2">
+                <Label htmlFor={`profile-${labelText}`}>{labelText}</Label>
+                <Input
+                  id={`profile-${labelText}`}
+                  type="number"
+                  step="0.1"
+                  value={value}
+                  onChange={(e) => set(e.target.value)}
+                  placeholder="—"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
 
       {/* Wine-level, not lot-level: a typical retail price the cellar sums
           (scan-suggested, always editable), not what someone paid. */}
