@@ -12948,6 +12948,63 @@
         "note": "Whole-municipality union of the pliego \"Zona de producción\" list (79 Tarragona-province municipios: the comarcas of Tarragonès, Alt Camp, Baix Camp, part of the Ribera d'Ebre, and Masllorenç of the Baix Penedès). A handful of municipios the pliego includes by \"excepte polígon\" partial clauses are taken whole (documented over-approximation)."
       },
       "status": "ready"
+    },
+    {
+      "canonical_key": "spain.asturias.cangas",
+      "comunidad_key": "asturias",
+      "comunidad": "Principado de Asturias",
+      "display_name": "Cangas",
+      "appellation_system": "DOP",
+      "appellation_level": "regional",
+      "provinces": [
+        "33"
+      ],
+      "expected_count": 8,
+      "municipios": [
+        {
+          "code": "33001",
+          "name": "Allande"
+        },
+        {
+          "code": "33011",
+          "name": "Cangas del Narcea"
+        },
+        {
+          "code": "33022",
+          "name": "Degaña"
+        },
+        {
+          "code": "33027",
+          "name": "Grandas de Salime"
+        },
+        {
+          "code": "33028",
+          "name": "Ibias"
+        },
+        {
+          "code": "33029",
+          "name": "Illano"
+        },
+        {
+          "code": "33048",
+          "name": "Pesoz"
+        },
+        {
+          "code": "33073",
+          "name": "Tineo"
+        }
+      ],
+      "grapes": [
+        "Albarín",
+        "Mencía"
+      ],
+      "provenance": {
+        "source": "Pliego de condiciones DOP «Cangas» (2019)",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/cangas_2019_01_01.pdf",
+        "retrieved": "2026-08-19",
+        "note": "The 8 municipios of the pliego zona (Asturias, upper Narcea valley): Allande, Cangas del Narcea, Degaña, Grandas de Salime, Ibias, Illano, Pesoz + Tineo (parroquia-partial, taken whole)."
+      },
+      "status": "ready"
     }
   ]
 }
