@@ -11187,12 +11187,30 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.ahr.walporzheim-ahrtal",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.ahr.walporzheim-ahrtal",
+    "normalized_checksum_sha256": "9D1980EDF4682C66D9E8239F46859FC090719F8FE09BC93ADDA12B95CFE4AFEE",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201151Z/bereich-ahr-walporzheim-ahrtal/outline.geojson",
+    "raw_checksum_sha256": "9D1980EDF4682C66D9E8239F46859FC090719F8FE09BC93ADDA12B95CFE4AFEE",
+    "documented": true
+  },
+  {
     "canonical_key": "germany.mittelrhein",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "weinlagen-dissolve:mittelrhein",
     "normalized_checksum_sha256": "83B811783104DA1798687E53B1866CFEC5E46CEAE5B5C14B25E55AD9BB8F617D",
     "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192201Z/anbaugebiet-mittelrhein/outline.geojson",
     "raw_checksum_sha256": "83B811783104DA1798687E53B1866CFEC5E46CEAE5B5C14B25E55AD9BB8F617D",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mittelrhein.loreley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mittelrhein.loreley",
+    "normalized_checksum_sha256": "FA33930B541B0291E7A19B457BD473ACBFDC57640D3EDD8C3035862B92FDD319",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201141Z/bereich-mittelrhein-loreley/outline.geojson",
+    "raw_checksum_sha256": "FA33930B541B0291E7A19B457BD473ACBFDC57640D3EDD8C3035862B92FDD319",
     "documented": true
   },
   {
@@ -11205,12 +11223,66 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.mosel.bernkastel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mosel.bernkastel",
+    "normalized_checksum_sha256": "C938A4F9ABCFEC9E74BE278B5F3054917EF32D7C14016DB1405B143D94BA7463",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201146Z/bereich-mosel-bernkastel/outline.geojson",
+    "raw_checksum_sha256": "C938A4F9ABCFEC9E74BE278B5F3054917EF32D7C14016DB1405B143D94BA7463",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mosel.burg-cochem",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mosel.burg-cochem",
+    "normalized_checksum_sha256": "21A75BB5439B8F6FA4C2B52989F60B09F21D67A854BDDF1BD335479B750DB97D",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201136Z/bereich-mosel-burg-cochem/outline.geojson",
+    "raw_checksum_sha256": "21A75BB5439B8F6FA4C2B52989F60B09F21D67A854BDDF1BD335479B750DB97D",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mosel.obermosel",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mosel.obermosel",
+    "normalized_checksum_sha256": "DE2C77350A6C51A88112ED626B7CAD2867CAE8AA78E2DC51870D67F298C3C5E6",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201151Z/bereich-mosel-obermosel/outline.geojson",
+    "raw_checksum_sha256": "DE2C77350A6C51A88112ED626B7CAD2867CAE8AA78E2DC51870D67F298C3C5E6",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mosel.ruwer",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mosel.ruwer",
+    "normalized_checksum_sha256": "13C50FE409C1128C8C1BFBF57D0060055CA792AD6DAE11FB4423F8D1061DD7D8",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201149Z/bereich-mosel-ruwer/outline.geojson",
+    "raw_checksum_sha256": "13C50FE409C1128C8C1BFBF57D0060055CA792AD6DAE11FB4423F8D1061DD7D8",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.mosel.saar",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.mosel.saar",
+    "normalized_checksum_sha256": "79C39AFCCC1E032BD40F1756914A995B52C4C9AA0F5A37E48CC2D364A36A42DB",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201139Z/bereich-mosel-saar/outline.geojson",
+    "raw_checksum_sha256": "79C39AFCCC1E032BD40F1756914A995B52C4C9AA0F5A37E48CC2D364A36A42DB",
+    "documented": true
+  },
+  {
     "canonical_key": "germany.nahe",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "weinlagen-dissolve:nahe",
     "normalized_checksum_sha256": "36ABDDBDAF3106608D62397E23D684826BF0ACA704BC50EB3725B80C5B5DC6B9",
     "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192215Z/anbaugebiet-nahe/outline.geojson",
     "raw_checksum_sha256": "36ABDDBDAF3106608D62397E23D684826BF0ACA704BC50EB3725B80C5B5DC6B9",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.nahe.nahetal",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.nahe.nahetal",
+    "normalized_checksum_sha256": "039B017B3FD434CC248205893E4162A2AA548783FE735E07CB9EC7425A616759",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201140Z/bereich-nahe-nahetal/outline.geojson",
+    "raw_checksum_sha256": "039B017B3FD434CC248205893E4162A2AA548783FE735E07CB9EC7425A616759",
     "documented": true
   },
   {
@@ -11223,12 +11295,57 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.pfalz.mittelhaardt-dt-weinstrasse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.pfalz.mittelhaardt-dt-weinstrasse",
+    "normalized_checksum_sha256": "D1BB65167639FC6AB34CA09381D9F7B9C40AD0A6C0A5021581194AFEF0F336D8",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201138Z/bereich-pfalz-mittelhaardt-dt-weinstrasse/outline.geojson",
+    "raw_checksum_sha256": "D1BB65167639FC6AB34CA09381D9F7B9C40AD0A6C0A5021581194AFEF0F336D8",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.pfalz.suedl-weinstrasse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.pfalz.suedl-weinstrasse",
+    "normalized_checksum_sha256": "A790865B533AA3AF5CD675FE3DE57F987870F0896D9956496FF555A6DDAB05E0",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201144Z/bereich-pfalz-suedl-weinstrasse/outline.geojson",
+    "raw_checksum_sha256": "A790865B533AA3AF5CD675FE3DE57F987870F0896D9956496FF555A6DDAB05E0",
+    "documented": true
+  },
+  {
     "canonical_key": "germany.rheinhessen",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "weinlagen-dissolve:rheinhessen",
     "normalized_checksum_sha256": "778771DD59F65E935B309286EB169DFD43F36E17E50A901B739F76F7DAB28025",
     "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T192317Z/anbaugebiet-rheinhessen/outline.geojson",
     "raw_checksum_sha256": "778771DD59F65E935B309286EB169DFD43F36E17E50A901B739F76F7DAB28025",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.rheinhessen.bingen",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.rheinhessen.bingen",
+    "normalized_checksum_sha256": "3A188EAB836AF682257263A9DF7D9EBE147304FB3AA82BA96E528C129AD14326",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201147Z/bereich-rheinhessen-bingen/outline.geojson",
+    "raw_checksum_sha256": "3A188EAB836AF682257263A9DF7D9EBE147304FB3AA82BA96E528C129AD14326",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.rheinhessen.nierstein",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.rheinhessen.nierstein",
+    "normalized_checksum_sha256": "02091B005714EA7E89F2B4DCB56ECA7AF942553D5249465B6D4956352428DEA7",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201150Z/bereich-rheinhessen-nierstein/outline.geojson",
+    "raw_checksum_sha256": "02091B005714EA7E89F2B4DCB56ECA7AF942553D5249465B6D4956352428DEA7",
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.rheinhessen.wonnegau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "weinlagen-dissolve:bereich:germany.rheinhessen.wonnegau",
+    "normalized_checksum_sha256": "0FC4734BC26C1A559E38BA06E8EA0E05187B28DFD549772FE562475A1C830552",
+    "raw_snapshot_uri": "storage://wine-map-sources/LWK_RLP_WEINLAGEN/20260820T201148Z/bereich-rheinhessen-wonnegau/outline.geojson",
+    "raw_checksum_sha256": "0FC4734BC26C1A559E38BA06E8EA0E05187B28DFD549772FE562475A1C830552",
     "documented": true
   },
   {
