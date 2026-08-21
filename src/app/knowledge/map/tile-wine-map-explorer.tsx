@@ -93,14 +93,15 @@ export function TileWineMapExplorer({
     "loading" | "ready" | "missing" | "error"
   >("loading");
   const [tree, setTree] = useState<WinePlaceTreeNode[] | null>(null);
-  // Label language for the map + tree: native local names, or English exonyms
-  // (Italia->Italy, Toscana->Tuscany) from the curated dictionary. Persisted
-  // per browser. Safe as a lazy initializer — the tree shows a skeleton during
-  // hydration and the map is ssr:false, so neither renders a label server-side.
+  // Label language for the map + tree: English exonyms (Italia->Italy,
+  // Toscana->Tuscany) from the curated dictionary by default, or native local
+  // names when the viewer has explicitly chosen "local". Persisted per browser.
+  // Safe as a lazy initializer — the tree shows a skeleton during hydration and
+  // the map is ssr:false, so neither renders a label server-side.
   const [english, setEnglish] = useState<boolean>(
     () =>
-      typeof window !== "undefined" &&
-      window.localStorage.getItem("wine-map-lang") === "en",
+      typeof window === "undefined" ||
+      window.localStorage.getItem("wine-map-lang") !== "local",
   );
   const chooseLang = (value: boolean) => {
     setEnglish(value);
