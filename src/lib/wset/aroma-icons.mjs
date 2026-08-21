@@ -15,6 +15,8 @@
 //   - the icon must be the ACTUAL note, never a look-alike stand-in;
 //   - prefer a SINGLE object over a cluster — owner flagged multi-berry glyphs
 //     (cranberry/redcurrant) as too busy at pill size;
+//   - it must SURVIVE the cream pill (#FBF5E7): a cream or near-white tint is
+//     invisible there, so pale notes take a saturated stand-in colour;
 //   - no two terms may share the same (set, icon, colour) — asserted by the test.
 //
 // ICON_META maps a slug -> { set, icon, color? }. `color` applies to game-icons
@@ -40,13 +42,16 @@ const C = {
 export const ICON_META = {
   // ---- FLORAL ----
   blossom: { set: E, icon: "cherry-blossom" },
-  // Acacia blossom is a drooping cluster of small cream-gold florets — a
-  // sunflower reads completely wrong, so use a soft flower-head in acacia gold.
-  acacia: { set: G, icon: "dandelion-flower", color: "#E3C766" },
-  elderflower: { set: E, icon: "white-flower" },
+  // Acacia reads as honey-gold; a full-colour flower-head survives the pill far
+  // better than the pale gold line-art it replaced (invisible on cream).
+  acacia: { set: E, icon: "rosette" },
+  // Elder's flower is a green-stemmed umbel of tiny florets. The white-flower
+  // emoji was near-white on a cream pill; this keeps the plant and the contrast.
+  elderflower: { set: G, icon: "elderberry", color: "#A8B03A" },
   honeysuckle: { set: E, icon: "hibiscus" },
   jasmine: { set: E, icon: "blossom" },
-  chamomile: { set: G, icon: "daisy", color: "#E8D98A" },
+  // Chamomile IS a daisy — the glyph was right, the cream tint was not.
+  chamomile: { set: G, icon: "daisy", color: "#D9A82E" },
   geranium: { set: E, icon: "tulip" },
   rose: { set: E, icon: "rose" },
   violet: { set: G, icon: "spoted-flower", color: "#7B4FA8" },
@@ -55,7 +60,6 @@ export const ICON_META = {
   pear: { set: E, icon: "pear" },
   gooseberry: { set: G, icon: "berry-bush", color: "#8FBF3A" },
   grape: { set: E, icon: "grapes" },
-  "pear-drop": { set: P, icon: "candy", color: "#7FBF3A" },
   quince: { set: P, icon: "pear", color: "#E3BE33" }, // no quince glyph anywhere; pome silhouette
   // ---- CITRUS ----
   lemon: { set: E, icon: "lemon" },
@@ -70,10 +74,15 @@ export const ICON_META = {
   nectarine: { set: G, icon: "peach", color: "#E0553A" },
   // ---- TROPICAL ----
   banana: { set: E, icon: "banana" },
-  lychee: { set: G, icon: "berry-bush", color: "#E0708A" },
+  // No set has a lychee. A small round red fruit with a bumpy, split skin is
+  // the next-closest thing, and it survives the pill where the pale berry
+  // cluster it replaced did not.
+  lychee: { set: O, icon: "pomegranate" },
   mango: { set: E, icon: "mango" },
   melon: { set: E, icon: "melon" },
-  "passion-fruit": { set: G, icon: "kiwi-fruit", color: "#8A3F6E" },
+  // Halved fruit showing its seed cavity — the passion fruit's defining look.
+  // Nothing renders it better; the tint is deepened for contrast on cream.
+  "passion-fruit": { set: G, icon: "kiwi-fruit", color: "#7A2E6B" },
   pineapple: { set: E, icon: "pineapple" },
   // ---- RED FRUIT (single-object glyphs, no clusters) ----
   redcurrant: { set: G, icon: "berry-bush", color: C.red },
@@ -99,7 +108,7 @@ export const ICON_META = {
   eucalyptus: { set: E, icon: "leaf-fluttering-in-wind" },
   mint: { set: E, icon: "herb" },
   fennel: { set: G, icon: "sprout", color: C.sage },
-  dill: { set: G, icon: "seedling", color: C.sage },
+  dill: { set: G, icon: "fern", color: "#5E8A3A" }, // feathery frond, not a pot plant
   "dried-herbs": { set: G, icon: "herbs-bundle", color: C.sage },
   medicinal: { set: E, icon: "pill" },
   lavender: { set: G, icon: "dandelion-flower", color: "#9B7BC4" },
@@ -111,29 +120,38 @@ export const ICON_META = {
   // ---- FRUIT RIPENESS ----
   "unripe-fruit": { set: G, icon: "shiny-apple", color: C.green },
   "ripe-fruit": { set: E, icon: "red-apple" },
-  "dried-fruit": { set: G, icon: "grain-bundle", color: "#9C6B33" },
-  "cooked-fruit": { set: E, icon: "pot-of-food" },
-  jammy: { set: E, icon: "jar" },
+  "dried-fruit": { set: G, icon: "fruit-bowl", color: "#8A5A2E" }, // was a wheat sheaf
+  "cooked-fruit": { set: E, icon: "pie" }, // baked fruit, not a savoury stew pot
+  jammy: { set: O, icon: "jar-with-red-content" }, // jam IN the jar, not an empty one
   // ---- OTHER ----
   simple: { set: E, icon: "wine-glass" },
   "wet-stones": { set: E, icon: "rock" },
   flint: { set: G, icon: "flint-spark", color: C.slate },
   candy: { set: E, icon: "candy" },
   "wet-wool": { set: G, icon: "wool", color: C.grey },
+  // Coastal whites: the two notes the WSET lexicon leaves out. Minerality gets
+  // a crystal cluster (distinct from wet stones' rounded pebble and flint's
+  // spark); saltiness gets the salt shaker itself.
+  minerality: { set: G, icon: "minerals", color: "#5E7E9E" },
+  saltiness: { set: E, icon: "salt" },
   // ---- YEAST ----
   biscuit: { set: E, icon: "cookie" },
   "graham-cracker": { set: G, icon: "bread-slice", color: "#C98A4A" },
   bread: { set: E, icon: "bread" },
   toast: { set: G, icon: "butter-toast", color: "#B07A3A" },
   pastry: { set: E, icon: "croissant" },
-  brioche: { set: E, icon: "cupcake" },
-  "bread-dough": { set: G, icon: "flour", color: "#E8DCC0" },
+  // A round, domed, scored bun — the shape brioche is baked in. (The burger
+  // emoji has the right bun but comes with a beef patty attached.)
+  brioche: { set: O, icon: "boule-bread" },
+  // Dough proving in a bowl. A flour sack is an ingredient, not the dough, and
+  // its cream tint was invisible on the cream pill.
+  "bread-dough": { set: G, icon: "bubbling-bowl", color: "#C9A046" },
   cheese: { set: E, icon: "cheese-wedge" },
-  yogurt: { set: P, icon: "milk-one", color: "#E8E4D8" },
+  yogurt: { set: E, icon: "bowl-with-spoon" }, // eaten from a bowl; the carton read as milk
   acetaldehyde: { set: G, icon: "round-bottom-flask", color: C.green },
   // ---- MALOLACTIC ----
   butter: { set: E, icon: "butter" },
-  cream: { set: P, icon: "milk", color: "#F0E6C8" },
+  cream: { set: P, icon: "milk", color: "#D9C88A" }, // was near-white on cream
   // ---- OAK ----
   vanilla: { set: G, icon: "vanilla-flower", color: "#E6D9A8" },
   cloves: { set: G, icon: "clover-spiked", color: "#5C3A1E" },
@@ -141,8 +159,12 @@ export const ICON_META = {
   coconut: { set: E, icon: "coconut" },
   butterscotch: { set: G, icon: "jelly-beans", color: C.gold },
   cedar: { set: E, icon: "evergreen-tree" },
-  "charred-wood": { set: G, icon: "burning-embers", color: "#3A2A24" },
-  smoke: { set: G, icon: "smoke-bomb", color: C.grey },
+  // Burnt logs, in the red-brown of a toasted stave — the old embers glyph was
+  // so near-black it read as a smudge.
+  "charred-wood": { set: G, icon: "campfire", color: "#8A4A2E" },
+  // A solid puff. The smoke-bomb's thin curls disappeared at pill size, and its
+  // pale grey had almost no contrast against cream.
+  smoke: { set: G, icon: "steam", color: "#5F5F58" },
   chocolate: { set: E, icon: "chocolate-bar" },
   coffee: { set: E, icon: "hot-beverage" },
   resinous: { set: E, icon: "wood" },
@@ -181,13 +203,17 @@ export const ICON_META = {
   "wet-leaves": { set: E, icon: "fallen-leaf" },
   "forest-floor": { set: E, icon: "deciduous-tree" },
   vegetal: { set: E, icon: "broccoli" },
-  savoury: { set: G, icon: "salt-shaker", color: "#8A7A5A" },
+  // A steaming broth bowl says umami. The salt shaker moved to `saltiness`,
+  // where it is literal — two shakers in one lexicon would just be confusing.
+  savoury: { set: E, icon: "steaming-bowl" },
   farmyard: { set: G, icon: "barn", color: "#9C3A2E" },
   tar: { set: G, icon: "coal-pile", color: "#2A2A2A" },
   // ---- DELIBERATELY OXIDISED ----
   marzipan: { set: G, icon: "almond", color: "#E0D2A8" },
   walnut: { set: G, icon: "acorn", color: "#7A5230" },
-  toffee: { set: G, icon: "sugar-cane", color: "#B5722E" },
+  // A wrapped sweet in toffee brown. Sugar cane is the raw crop, which is not
+  // what "toffee" smells of. (Freed by pear drop leaving the lexicon.)
+  toffee: { set: P, icon: "candy", color: "#B5722E" },
   // ---- default ----
   wine: { set: G, icon: "wine-glass", color: C.garnet },
 };

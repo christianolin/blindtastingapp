@@ -12,7 +12,7 @@ import { iconForTerm, slugForTerm, ICON_META } from "./aroma-icons.mjs";
 
 const LEXICON = {
   Floral: ["blossom", "acacia", "elderflower", "honeysuckle", "jasmine", "chamomile", "geranium", "rose", "violet"],
-  "Green fruit": ["apple", "pear", "gooseberry", "grape", "pear drop", "quince"],
+  "Green fruit": ["apple", "pear", "gooseberry", "grape", "quince"],
   "Citrus fruit": ["grapefruit", "lemon", "lime", "orange", "lemon peel", "orange peel"],
   "Stone fruit": ["peach", "apricot", "nectarine"],
   "Tropical fruit": ["banana", "lychee", "mango", "melon", "passion fruit", "pineapple"],
@@ -22,7 +22,7 @@ const LEXICON = {
   Herbal: ["eucalyptus", "mint", "fennel", "dill", "dried herbs", "medicinal", "lavender"],
   Spice: ["black pepper", "white pepper", "liquorice", "cinnamon"],
   "Fruit ripeness": ["unripe fruit", "ripe fruit", "dried fruit", "cooked fruit", "jammy"],
-  Other: ["simple", "wet stones", "flint", "candy", "wet wool"],
+  Other: ["simple", "wet stones", "flint", "minerality", "saltiness", "candy", "wet wool"],
   Yeast: ["biscuit", "graham cracker", "bread", "toast", "pastry", "brioche", "bread dough", "cheese", "yogurt", "acetaldehyde"],
   Malolactic: ["butter", "cream", "cheese"],
   Oak: ["vanilla", "cloves", "nutmeg", "coconut", "butterscotch", "toast", "cedar", "charred wood", "smoke", "chocolate", "coffee", "resinous"],
