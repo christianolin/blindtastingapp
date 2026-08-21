@@ -371,9 +371,31 @@ export async function uploadObject(objectPath, body, { contentType, cacheControl
 // Args are relative paths run with cwd=WORK_DIR so tippecanoe's embedded
 // generator_options metadata stays machine-independent (determinism).
 // name is "world" or a shard key; spec carries that archive's min/max zoom.
+// Zoom-dependent detail, applied uniformly to EVERY country.
+//
+// The geometry we store is parcel-accurate (German Einzellagen especially), and
+// showing that at z4 looked like static — hundreds of hairline slivers. But we
+// want the detail when you zoom in. That is exactly what tippecanoe's
+// per-zoom Douglas-Peucker pass is for, and we were not using it:
+//
+//   --simplification=N  multiplies the simplification tolerance at every zoom
+//                       BELOW maxzoom. Full source detail survives at maxzoom,
+//                       and shapes get progressively cleaner as you zoom out.
+//   --detail / -d       tile grid resolution; the default 12 quantises
+//                       coordinates enough to shed sub-pixel wobble.
+//
+// This is deliberately a GENERAL change rather than a Germany patch: France's
+// climats and Spain's DOs get the same treatment, so the whole map reads the
+// same way. Tune SIMPLIFICATION alone to trade crispness against clutter.
+export const SIMPLIFICATION = 6;
+
 export function tippecanoeArgs(name, spec) {
   return [
     "-o", `${name}.pmtiles`, "--force", `-Z${spec.minZoom}`, `-z${spec.maxZoom}`, "-r1",
+    `--simplification=${SIMPLIFICATION}`,
+    // Keep tiny polygons as polygons rather than letting them collapse to
+    // nothing at low zoom — a vineyard that vanishes is worse than a coarse one.
+    "--no-tiny-polygon-reduction",
     "--no-progress-indicator",
     "-L", `places:${name}-places.geojson`,
     "-L", `labels:${name}-labels.geojson`,

@@ -304,18 +304,26 @@ test("the Admin Express namespace shares the ign-inao credit", () => {
   );
 });
 
-test("tippecanoeArgs honours per-archive zoom", async () => {
-  const { tippecanoeArgs, WORLD_TARGET, SHARD_TARGET } = await import("./lib.mjs");
+test("tippecanoeArgs honours per-archive zoom and zoom-dependent detail", async () => {
+  const { tippecanoeArgs, WORLD_TARGET, SHARD_TARGET, SIMPLIFICATION } =
+    await import("./lib.mjs");
   assert.deepEqual(tippecanoeArgs("world", WORLD_TARGET), [
     "-o", "world.pmtiles", "--force", "-Z0", "-z7", "-r1",
+    `--simplification=${SIMPLIFICATION}`,
+    "--no-tiny-polygon-reduction",
     "--no-progress-indicator",
     "-L", "places:world-places.geojson", "-L", "labels:world-labels.geojson",
   ]);
   assert.deepEqual(tippecanoeArgs("bourgogne", SHARD_TARGET), [
     "-o", "bourgogne.pmtiles", "--force", "-Z4", "-z16", "-r1",
+    `--simplification=${SIMPLIFICATION}`,
+    "--no-tiny-polygon-reduction",
     "--no-progress-indicator",
     "-L", "places:bourgogne-places.geojson", "-L", "labels:bourgogne-labels.geojson",
   ]);
+  // The whole point: geometry gets simpler as you zoom out. A value of 1 would
+  // be tippecanoe's default and would silently undo this.
+  assert.ok(SIMPLIFICATION > 1, "simplification must exceed tippecanoe's default");
 });
 
 test("expectedIdSets splits ids into world + shard sets", async () => {
