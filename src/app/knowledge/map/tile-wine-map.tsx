@@ -148,7 +148,10 @@ function shiftLightness(hex: string, amount: number): string {
 // ramp of the region's own colour — so adjacent shapes separate, while the
 // whole region still reads as one family. Stable hash => a place keeps its
 // shade across rebuilds.
-const SHADE_STEPS = [-0.22, -0.1, 0, 0.12, 0.24, 0.36];
+// Widened after seeing it rendered: at wash opacity the first pass was too
+// subtle to read as distinct shapes. Adjacent steps must be separable at ~40%
+// fill opacity, which needs a bigger spread than it does at full strength.
+const SHADE_STEPS = [-0.3, -0.16, -0.04, 0.12, 0.28, 0.44];
 
 const regionMatch = [
   "match",
@@ -267,6 +270,22 @@ function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
         areaExpr,
         ...areaSlugs.flatMap((slug) => {
           const shades = classificationShades(districtColor(slug));
+          // Within an area, sites that share a classification used to render in
+          // one identical colour — a whole Großlage of Einzellagen as a single
+          // brown mass, with no way to see where one ends and the next begins.
+          // Spread them across a lightness ramp of the area's own hue using the
+          // stable per-place `tint`, so neighbours separate while the area still
+          // reads as one group. This is the plain/village case only: the cru
+          // shades stay exact, because there intensity carries real meaning.
+          const tinted = [
+            "match",
+            ["to-number", ["coalesce", ["get", "tint"], 2]],
+            ...SHADE_STEPS.flatMap((step, i) => [
+              i,
+              shiftLightness(shades.base, step),
+            ]),
+            shades.base,
+          ];
           return [
             slug,
             rampEnabled
@@ -277,9 +296,9 @@ function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
                   shades.grand_cru,
                   "premier_cru",
                   shades.premier_cru,
-                  shades.base,
+                  tinted,
                 ]
-              : shades.base,
+              : tinted,
           ];
         }),
         regionMatch,
