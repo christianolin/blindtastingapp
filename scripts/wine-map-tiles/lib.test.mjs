@@ -16,6 +16,8 @@ import {
   archiveForPlace,
   assertMultiCountryArchive,
   shardKeyFor,
+  shadeIndex,
+  SHADE_COUNT,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -78,6 +80,7 @@ test("placeFeature maps an export row to the exact tile properties", () => {
     has_children: true,
     rank: 0,
     region: "bordeaux",
+    tint: shadeIndex("france.bordeaux"),
     attribution: "ign-inao",
     min_zoom: 4,
     label_min_zoom: 4,
@@ -89,6 +92,20 @@ test("placeFeature maps an export row to the exact tile properties", () => {
   });
   assert.deepEqual(feature.tippecanoe, { minzoom: 4 });
   assert.equal(feature.geometry.type, "MultiPolygon");
+});
+
+test("shadeIndex is stable, in range, and well spread", () => {
+  // A place must keep its colour across rebuilds.
+  assert.equal(shadeIndex("france.bordeaux"), shadeIndex("france.bordeaux"));
+  const counts = new Array(SHADE_COUNT).fill(0);
+  for (let i = 0; i < 3000; i += 1) {
+    const v = shadeIndex(`germany.mosel.bernkastel.michelsberg.site-${i}`);
+    assert.ok(Number.isInteger(v) && v >= 0 && v < SHADE_COUNT, `out of range: ${v}`);
+    counts[v] += 1;
+  }
+  // Even-ish spread matters: a lopsided hash would put neighbours on the same
+  // shade and defeat the point.
+  for (const c of counts) assert.ok(c > 3000 / SHADE_COUNT / 2, `bucket too small: ${counts}`);
 });
 
 test("placeFeature carries the district group when export computed one", () => {

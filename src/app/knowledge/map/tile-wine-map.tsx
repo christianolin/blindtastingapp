@@ -131,10 +131,37 @@ const REGION_LABELS: Record<string, string> = {
 const FALLBACK_COLOR = "#6B6257";
 const SELECTED_COLOR = "#B78E42";
 
+// Shift a hex colour's lightness by `amount` (-1..1). Used to derive a small
+// family of shades from each region colour.
+function shiftLightness(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
+    Math.round(amount >= 0 ? c + (255 - c) * amount : c * (1 + amount)),
+  );
+  return `#${ch.map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("")}`;
+}
+
+// One hue per region is right when you're looking at regions, but at vineyard
+// zoom it means a dozen neighbouring sites render as one indistinguishable
+// block of colour. Each place carries a stable `tint` (0..5, hashed from its
+// canonical key in the tile build), and we spread those across a lightness
+// ramp of the region's own colour — so adjacent shapes separate, while the
+// whole region still reads as one family. Stable hash => a place keeps its
+// shade across rebuilds.
+const SHADE_STEPS = [-0.22, -0.1, 0, 0.12, 0.24, 0.36];
+
 const regionMatch = [
   "match",
   ["get", "region"],
-  ...Object.entries(REGION_COLORS).flat(),
+  ...Object.entries(REGION_COLORS).flatMap(([key, color]) => [
+    key,
+    [
+      "match",
+      ["to-number", ["coalesce", ["get", "tint"], 2]],
+      ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(color, step)]),
+      color,
+    ],
+  ]),
   FALLBACK_COLOR,
 ];
 

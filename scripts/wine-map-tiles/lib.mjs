@@ -204,6 +204,20 @@ export function lonLatToTile(lon, lat, z) {
   return { z, x, y };
 }
 
+// Small stable hash -> 0..SHADE_COUNT-1. FNV-1a: cheap, well-distributed, and
+// deterministic across Node versions (a place's colour must not move between
+// releases).
+export const SHADE_COUNT = 6;
+
+export function shadeIndex(key) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < String(key).length; i += 1) {
+    h ^= String(key).charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h % SHADE_COUNT;
+}
+
 function tileProperties(row) {
   return {
     id: row.id,
@@ -217,6 +231,14 @@ function tileProperties(row) {
     // Region segment drives per-region map colouring; the country itself
     // falls back to its own key.
     region: shardKeyFor(row.canonical_key) ?? row.canonical_key,
+    // Deterministic 0..5 shade index. Every place in a region shares one hue,
+    // which is right at region zoom but makes neighbouring vineyard sites
+    // indistinguishable when you get close — a wall of identical brown. The
+    // frontend varies lightness by this index so adjacent shapes separate
+    // visually while still reading as the same family. Hashed from the
+    // canonical key so it is stable across rebuilds (a place must not change
+    // colour between releases) and uncorrelated between neighbours.
+    tint: shadeIndex(row.canonical_key),
     attribution: attributionKeyFor(row.source_namespace),
     min_zoom: Number(row.min_zoom),
     label_min_zoom: Number(row.label_min_zoom),
