@@ -58,7 +58,9 @@ export const ICON_META = {
   // ---- GREEN FRUIT ----
   apple: { set: E, icon: "green-apple" },
   pear: { set: E, icon: "pear" },
-  gooseberry: { set: G, icon: "berry-bush", color: "#8FBF3A" },
+  // Owner disliked the leafy berry-bush (busy cluster). A single green orchard
+  // fruit with a leaf reads cleaner at pill size; no set has a literal gooseberry.
+  gooseberry: { set: G, icon: "plum", color: "#8FBF3A" },
   grape: { set: E, icon: "grapes" },
   quince: { set: P, icon: "pear", color: "#E3BE33" }, // no quince glyph anywhere; pome silhouette
   // ---- CITRUS ----
@@ -167,7 +169,9 @@ export const ICON_META = {
   smoke: { set: G, icon: "steam", color: "#5F5F58" },
   chocolate: { set: E, icon: "chocolate-bar" },
   coffee: { set: E, icon: "hot-beverage" },
-  resinous: { set: E, icon: "wood" },
+  // Sticky pine sap oozing — resin, not a cut plank. The plain log read as
+  // plain "wood/oak"; a whole conifer would just be a second cedar tree.
+  resinous: { set: G, icon: "dripping-goo", color: "#B5782A" },
   // ---- WHITE WINE (tertiary) ----
   "dried-apricot": { set: G, icon: "peach", color: "#C97A3A" },
   sultana: { set: G, icon: "grapes", color: "#C79A4E" },
@@ -209,7 +213,10 @@ export const ICON_META = {
   farmyard: { set: G, icon: "barn", color: "#9C3A2E" },
   tar: { set: G, icon: "coal-pile", color: "#2A2A2A" },
   // ---- DELIBERATELY OXIDISED ----
-  marzipan: { set: G, icon: "almond", color: "#E0D2A8" },
+  // Marzipan is almond CONFECTION, not the raw nut — so a sweet, in a warm
+  // marzipan gold. The old pale-almond glyph was near-invisible on cream and a
+  // twin of the `almond` term; cake evokes it (kransekage, cake-covering).
+  marzipan: { set: G, icon: "cake-slice", color: "#C9A24E" },
   walnut: { set: G, icon: "acorn", color: "#7A5230" },
   // A wrapped sweet in toffee brown. Sugar cane is the raw crop, which is not
   // what "toffee" smells of. (Freed by pear drop leaving the lexicon.)
