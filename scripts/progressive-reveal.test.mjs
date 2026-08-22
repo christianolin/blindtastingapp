@@ -79,9 +79,14 @@ export async function seedTasting({ timing = "LIVE", sequential = true } = {}) {
   const cab = await ref("grapes", "Cabernet Sauvignon");
   const merlot = await ref("grapes", "Merlot");
   const prod = (await client.query("select id from producers limit 1")).rows[0].id;
+  // wine_answers now carries a catalog link (20260829205000) with an
+  // exactly-one-identity CHECK (20260829210000): every answer resolves to a
+  // catalog wine (or an unidentified one). Attach an existing catalog wine.
+  const catalogWine = (await client.query("select id from catalog_wines limit 1")).rows[0]?.id;
+  assert.ok(catalogWine, "need a catalog_wines row to seed a wine_answer");
   await client.query(
-    "insert into wine_answers (wine_id, country_id, region_id, primary_grape_id, secondary_grape_id, producer_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,$6,'YEAR',2020)",
-    [wineId, country, region, cab, merlot, prod],
+    "insert into wine_answers (wine_id, catalog_wine_id, country_id, region_id, primary_grape_id, secondary_grape_id, producer_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,$6,$7,'YEAR',2020)",
+    [wineId, catalogWine, country, region, cab, merlot, prod],
   );
   await client.query(
     "insert into guesses (wine_id, participant_id, country_id, region_id, primary_grape_id, secondary_grape_id, producer_id, vintage_kind, vintage_year) values ($1,$2,$3,$4,$5,$6,$7,'YEAR',2020)",
