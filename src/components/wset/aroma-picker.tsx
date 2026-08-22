@@ -6,12 +6,29 @@ import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { WSET } from "./tokens";
 import { AromaIcon } from "./aroma-icon";
+import {
+  makeT,
+  translateTerm,
+  translateGroup,
+  type WsetLang,
+} from "@/lib/wset/i18n";
 
-const ORIGINS: { origin: AromaOrigin; label: string; caption: string }[] = [
-  { origin: "PRIMARY", label: "Primary", caption: "grape & terroir" },
-  { origin: "SECONDARY", label: "Secondary", caption: "winemaking" },
-  { origin: "TERTIARY", label: "Tertiary", caption: "ageing" },
+const ORIGINS: { origin: AromaOrigin; labelKey: string; capKey: string }[] = [
+  { origin: "PRIMARY", labelKey: "origin_primary", capKey: "cap_primary" },
+  { origin: "SECONDARY", labelKey: "origin_secondary", capKey: "cap_secondary" },
+  { origin: "TERTIARY", labelKey: "origin_tertiary", capKey: "cap_tertiary" },
 ];
+
+// The six themed tertiary sub-clusters map to their UI-dict keys so the heading
+// localises. Anything not here is a real DB group name (translated separately).
+const SUBGROUP_KEY: Record<string, string> = {
+  "Dried & cooked fruit": "sub_dried_cooked_fruit",
+  "Earth & forest": "sub_earth_forest",
+  "Savoury & smoke": "sub_savoury_smoke",
+  "Dried fruit": "sub_dried_fruit",
+  "Nut, spice & toast": "sub_nut_spice_toast",
+  "Petrol, honey & earth": "sub_petrol_honey_earth",
+};
 
 // Tertiary ageing is one big WSET bucket per wine colour — "Red wine" holds 23
 // terms and "White wine" 19, which reads as an undifferentiated wall of pills.
@@ -97,6 +114,7 @@ export function AromaPicker({
   copyFrom,
   colour,
   sheetTitle = "Aromas & flavours",
+  lang = "en",
 }: {
   terms: AromaTerm[];
   selectedIds: string[];
@@ -105,7 +123,17 @@ export function AromaPicker({
   colour?: WineColour | null;
   /** Heading of the mobile bottom-sheet picker. */
   sheetTitle?: string;
+  lang?: WsetLang;
 }) {
+  const t = makeT(lang);
+  // A cluster heading in the active language: the six tertiary sub-clusters use
+  // their UI-dict key, "Deliberately oxidised" shows as "Oxidative", everything
+  // else is a real DB group name translated by the lexicon.
+  const groupHeading = (name: string): string => {
+    if (SUBGROUP_KEY[name]) return t(SUBGROUP_KEY[name]);
+    if (name === "Deliberately oxidised") return t("oxidative");
+    return translateGroup(name, lang);
+  };
   const [activeOrigin, setActiveOrigin] = useState<AromaOrigin>("PRIMARY");
   const [sheetOpen, setSheetOpen] = useState(false);
   // While the sheet is up the page behind must not scroll — an un-locked body
@@ -173,7 +201,7 @@ export function AromaPicker({
               <button
                 key={id}
                 type="button"
-                aria-label={`Remove ${term.term}`}
+                aria-label={t("remove", { term: translateTerm(term.term, lang) })}
                 onClick={() => toggle(id)}
                 style={{
                   display: "inline-flex",
@@ -188,8 +216,8 @@ export function AromaPicker({
                   color: WSET.creamText,
                 }}
               >
-                <AromaIcon term={term.term} family={term.groupName} size={17} />
-                {`${term.term} ×`}
+                  <AromaIcon term={term.term} family={term.groupName} size={17} />
+                  {`${translateTerm(term.term, lang)} ×`}
               </button>
             );
           })}
@@ -207,7 +235,7 @@ export function AromaPicker({
               color: "#7A5F35",
             }}
           >
-            + Add
+            {t("add")}
           </button>
           {copyRemaining > 0 ? (
             <button
@@ -232,7 +260,7 @@ export function AromaPicker({
 
       <div className="max-sm:hidden">
       <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}` }}>
-        {ORIGINS.map(({ origin, label }) => {
+        {ORIGINS.map(({ origin, labelKey }) => {
           const active = origin === activeOrigin;
           const count = countByOrigin[origin] ?? 0;
           return (
@@ -256,7 +284,7 @@ export function AromaPicker({
                 textAlign: "left",
               }}
             >
-              {label}
+              {t(labelKey)}
               {count > 0 ? (
                 <span
                   style={{
@@ -279,7 +307,7 @@ export function AromaPicker({
       {/* The active tab's meaning, said once — not squeezed into every tab. */}
       <div style={{ margin: "6px 0 10px", fontSize: 11, color: WSET.muted2 }}>
         {(() => {
-          const c = ORIGINS.find((o) => o.origin === activeOrigin)!.caption;
+          const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
           return c.charAt(0).toUpperCase() + c.slice(1);
         })()}
       </div>
@@ -289,7 +317,7 @@ export function AromaPicker({
       {groups.map((group) => (
         <div key={group.name} className="break-inside-avoid" style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, marginBottom: 6 }}>
-            {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
+            {groupHeading(group.name)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
             {group.items.map((term) => {
@@ -316,7 +344,7 @@ export function AromaPicker({
                   }}
                 >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
-                  {term.term}
+                  {translateTerm(term.term, lang)}
                 </button>
               );
             })}
@@ -349,7 +377,7 @@ export function AromaPicker({
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${WSET.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: WSET.gold }}>
-              Selected · {selectedIds.length}
+              {t("selected")} · {selectedIds.length}
             </span>
             {selectedIds.map((id) => {
               const term = byId.get(id);
@@ -373,7 +401,7 @@ export function AromaPicker({
                   }}
                 >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
-                  {`${term.term} ×`}
+                {`${translateTerm(term.term, lang)} ×`}
                 </button>
               );
             })}
@@ -389,7 +417,7 @@ export function AromaPicker({
                 textDecoration: "none",
               }}
             >
-              clear
+              {t("clear")}
             </button>
           </div>
         </div>
@@ -437,7 +465,7 @@ export function AromaPicker({
                   {sheetTitle}
                 </span>
                 <span style={{ fontSize: 11.5, color: WSET.muted2, whiteSpace: "nowrap" }}>
-                  {selectedIds.length} selected
+                  {t("n_selected", { n: selectedIds.length })}
                 </span>
                 <button
                   type="button"
@@ -453,13 +481,13 @@ export function AromaPicker({
                     color: WSET.creamText,
                   }}
                 >
-                  Done
+                  {t("done")}
                 </button>
               </div>
               {/* Origin tabs: names only here — the active tab's meaning sits
                   once below, instead of six concepts in one cramped row. */}
               <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
-                {ORIGINS.map(({ origin, label }) => {
+                {ORIGINS.map(({ origin, labelKey }) => {
                   const active = origin === activeOrigin;
                   const count = countByOrigin[origin] ?? 0;
                   return (
@@ -482,7 +510,7 @@ export function AromaPicker({
                         color: active ? WSET.ink : WSET.muted,
                       }}
                     >
-                      {label}
+                      {t(labelKey)}
                       {count > 0 ? (
                         <span
                           style={{
@@ -504,7 +532,7 @@ export function AromaPicker({
             </div>
             <div style={{ padding: "8px 16px 0", fontSize: 11, color: WSET.muted2 }}>
               {(() => {
-                const c = ORIGINS.find((o) => o.origin === activeOrigin)!.caption;
+                const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
                 return c.charAt(0).toUpperCase() + c.slice(1);
               })()}
             </div>
@@ -549,7 +577,7 @@ export function AromaPicker({
                       marginBottom: 8,
                     }}
                   >
-                    {group.name === "Deliberately oxidised" ? "Oxidative" : group.name}
+                    {groupHeading(group.name)}
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 12 }}>
                     {group.items.map((term) => {
@@ -576,7 +604,7 @@ export function AromaPicker({
                           }}
                         >
                           <AromaIcon term={term.term} family={term.groupName} size={18} />
-                          {term.term}
+                          {translateTerm(term.term, lang)}
                         </button>
                       );
                     })}

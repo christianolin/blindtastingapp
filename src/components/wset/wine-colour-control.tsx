@@ -2,28 +2,35 @@
 
 import type { WineColour, ColourHue } from "@/lib/wset/types";
 import { HUES_BY_COLOUR, HUE_HEX, LABELS } from "@/lib/wset/vocab";
+import { makeT, type WsetLang } from "@/lib/wset/i18n";
 import { WSET } from "./tokens";
 
-const COLOUR_LABEL: Record<WineColour, string> = {
-  WHITE: "White",
-  ORANGE: "Orange",
-  ROSE: "Rosé",
-  RED: "Red",
+const COLOUR_KEY: Record<WineColour, string> = {
+  WHITE: "colour_white",
+  ORANGE: "colour_orange",
+  ROSE: "colour_rose",
+  RED: "colour_red",
 };
 const COLOURS: WineColour[] = ["WHITE", "ORANGE", "ROSE", "RED"];
 
 // Colour is the wine's identity (set on the catalog wine), so the segmented
 // control is read-only here — it shows which family this wine is. The hue
-// slider below picks the observed shade within that family's gradient.
+// slider below picks the observed shade within that family's gradient. `labels`
+// + `lang` localise the hue names and the colour-family names.
 export function WineColourControl({
   colour,
   hue,
   onChange,
+  labels = LABELS,
+  lang = "en",
 }: {
   colour: WineColour;
   hue: ColourHue | null;
   onChange: (hue: ColourHue | null) => void;
+  labels?: Record<string, string>;
+  lang?: WsetLang;
 }) {
+  const t = makeT(lang);
   const hues = HUES_BY_COLOUR[colour];
   const selected = hue === null ? null : hues.indexOf(hue);
   const hexes = hues.map((h) => HUE_HEX[colour][h] ?? WSET.track);
@@ -60,7 +67,7 @@ export function WineColourControl({
                 boxShadow: active ? "0 1px 2px rgba(70,25,40,0.12)" : "none",
               }}
             >
-              {COLOUR_LABEL[c]}
+              {t(COLOUR_KEY[c])}
             </span>
           );
         })}
@@ -81,7 +88,7 @@ export function WineColourControl({
               <button
                 key={h}
                 type="button"
-                aria-label={LABELS[h] ?? h}
+                aria-label={labels[h] ?? h}
                 aria-pressed={isSel}
                 onClick={() => onChange(isSel ? null : h)}
                 style={{
@@ -125,7 +132,7 @@ export function WineColourControl({
                 color: selected === i ? WSET.ink : WSET.muted2,
               }}
             >
-              {LABELS[h] ?? h}
+              {labels[h] ?? h}
             </button>
           ))}
         </div>

@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
-  LABELS,
   APPEARANCE_INTENSITY_STOPS,
   INTENSITY_STOPS,
   DEVELOPMENT_STOPS,
@@ -16,7 +15,16 @@ import {
   FINISH_STOPS,
   sectionProgress,
 } from "@/lib/wset/vocab";
+import {
+  labelsFor,
+  makeT,
+  translateTerm,
+  translateBand,
+  noteConnectors,
+} from "@/lib/wset/i18n";
+import { useWsetLang } from "@/lib/wset/wset-lang";
 import { composeLiveNote } from "@/lib/wset/live-note.mjs";
+import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { SnapSlider } from "./snap-slider";
 import { PillGroup } from "./pill-group";
 import { WineColourControl } from "./wine-colour-control";
@@ -35,18 +43,20 @@ const MOUSSE = ["DELICATE", "CREAMY", "AGGRESSIVE"] as const;
 const PRICE = ["INEXPENSIVE", "MID_PRICED", "HIGH_PRICED", "PREMIUM", "DONT_KNOW"] as const;
 const READINESS = ["NEEDS_TIME", "READY_CAN_IMPROVE", "READY_WONT_IMPROVE", "TOO_OLD"] as const;
 
-const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; caption: string }[] = [
-  { key: "appearance", caption: "Appearance" },
-  { key: "nose", caption: "Nose" },
-  { key: "palate", caption: "Palate" },
-  { key: "conclusions", caption: "Conclusions" },
-  { key: "taster", caption: "Taster" },
+// The live-note section keys, paired with the UI-dict key that names each one.
+const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; uiKey: string }[] = [
+  { key: "appearance", uiKey: "appearance" },
+  { key: "nose", uiKey: "nose" },
+  { key: "palate", uiKey: "palate" },
+  { key: "conclusions", uiKey: "conclusions" },
+  { key: "taster", uiKey: "taster" },
 ];
 
-// The selected value's display label, or nothing. An empty control already
-// says "not set" — spelling it out on every unrated row was pure noise.
-function valueLabel(value: string | null): string | undefined {
-  return value ? LABELS[value] ?? value : undefined;
+// The selected value's display label (in the active language), or nothing. An
+// empty control already says "not set" — spelling it out on every unrated row
+// was pure noise.
+function valueLabel(value: string | null, labels: Record<string, string>): string | undefined {
+  return value ? labels[value] ?? value : undefined;
 }
 
 export function Row({
@@ -186,6 +196,9 @@ export function WsetSheet({
   // popup top instead of below the app header.
   embedded?: boolean;
 }) {
+  const { lang, setLang } = useWsetLang();
+  const L = labelsFor(lang);
+  const t = makeT(lang);
   const [state, setState] = useState<WsetNoteState>(initial);
   // What the note looked like when last saved (or opened). Dirtiness compares
   // against THIS, not the mount-time initial — after a successful save the
@@ -216,21 +229,29 @@ export function WsetSheet({
     [],
   );
 
-  const termLabels = useMemo(() => new Map(terms.map((t) => [t.id, t.term])), [terms]);
+  // The live note reads in the active language: term labels are translated, and
+  // the prose stitching gets Danish scale words + the Danish quality band.
+  const termLabels = useMemo(
+    () => new Map(terms.map((tm) => [tm.id, translateTerm(tm.term, lang)])),
+    [terms, lang],
+  );
   const prog = useMemo(() => sectionProgress(state, wine.style), [state, wine.style]);
 
   const noteSections = useMemo(() => {
-    const composed = composeLiveNote(state, termLabels, LABELS);
-    return NOTE_CAPTIONS.flatMap(({ key, caption }) =>
-      composed[key] ? [{ caption, prose: composed[key] as string }] : [],
+    const composed = composeLiveNote(state, termLabels, L, {
+      ...noteConnectors(lang),
+      band: (s: number) => translateBand(qualityBand(s), lang),
+    });
+    return NOTE_CAPTIONS.flatMap(({ key, uiKey }) =>
+      composed[key] ? [{ caption: t(uiKey), prose: composed[key] as string }] : [],
     );
-  }, [state, termLabels]);
+  }, [state, termLabels, L, lang, t]);
 
   const navItems: SectionNavItem[] = [
-    { id: "appearance", numeral: "I", name: "Appearance", done: prog.appearance[0], total: prog.appearance[1] },
-    { id: "nose", numeral: "II", name: "Nose", done: prog.nose[0], total: prog.nose[1] },
-    { id: "palate", numeral: "III", name: "Palate", done: prog.palate[0], total: prog.palate[1] },
-    { id: "conclusions", numeral: "IV", name: "Conclusions", done: prog.conclusions[0], total: prog.conclusions[1] },
+    { id: "appearance", numeral: "I", name: t("appearance"), done: prog.appearance[0], total: prog.appearance[1] },
+    { id: "nose", numeral: "II", name: t("nose"), done: prog.nose[0], total: prog.nose[1] },
+    { id: "palate", numeral: "III", name: t("palate"), done: prog.palate[0], total: prog.palate[1] },
+    { id: "conclusions", numeral: "IV", name: t("conclusions"), done: prog.conclusions[0], total: prog.conclusions[1] },
   ];
   const done = navItems.reduce((n, s) => n + s.done, 0);
   const total = navItems.reduce((n, s) => n + s.total, 0);
@@ -248,15 +269,15 @@ export function WsetSheet({
   }, [onSave, state]);
 
   const saveLabel =
-    saveState === "saving" ? "Saving…"
-    : saveState === "saved" ? "Saved ✓"
-    : saveState === "error" ? "Retry save"
-    : "Save note";
+    saveState === "saving" ? t("saving")
+    : saveState === "saved" ? t("saved")
+    : saveState === "error" ? t("retry_save")
+    : t("save_note");
   const saveLabelShort =
-    saveState === "saving" ? "Saving…"
-    : saveState === "saved" ? "Saved ✓"
-    : saveState === "error" ? "Retry"
-    : "Save";
+    saveState === "saving" ? t("saving")
+    : saveState === "saved" ? t("saved")
+    : saveState === "error" ? t("retry")
+    : t("save");
 
   const discard = useCallback(() => {
     if (dirty) setConfirmDiscard(true);
@@ -307,11 +328,27 @@ export function WsetSheet({
             className="text-[11.5px] sm:text-[12.5px]"
             style={{ color: WSET.muted, whiteSpace: "nowrap" }}
           >
-            <b style={{ color: WSET.ink }}>{done}</b>
-            <span className="max-sm:hidden"> of </span>
-            <span className="sm:hidden">/</span>
-            {total} assessed
+            {t("assessed_of", { done, total })}
           </span>
+          {/* EN/DA toggle — mirrors the map's; the sheet language is shared and
+              persisted, so it also drives the read-only archetype view. */}
+          <div className="flex items-center rounded-md border p-0.5 text-[11px]" style={{ borderColor: WSET.border }}>
+            {(["en", "da"] as const).map((lng) => (
+              <button
+                key={lng}
+                type="button"
+                onClick={() => setLang(lng)}
+                aria-pressed={lang === lng}
+                className="rounded px-1.5 py-0.5 font-medium"
+                style={{
+                  background: lang === lng ? WSET.burgundy : "transparent",
+                  color: lang === lng ? WSET.creamText : WSET.muted,
+                }}
+              >
+                {lng.toUpperCase()}
+              </button>
+            ))}
+          </div>
           {onDiscard ? (
             // With unsaved changes this is Discard (confirms); once the note
             // is clean — freshly opened or just saved — it is a plain Close.
@@ -333,7 +370,7 @@ export function WsetSheet({
                 whiteSpace: "nowrap",
               }}
             >
-              {dirty ? "Discard" : "Close"}
+              {dirty ? t("discard") : t("close")}
             </button>
           ) : null}
           <button
@@ -361,7 +398,7 @@ export function WsetSheet({
             <div className={cn("relative", !onDelete && "sm:hidden")}>
               <button
                 type="button"
-                aria-label="More actions"
+                aria-label={t("more_actions")}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((o) => !o)}
                 style={{
@@ -426,7 +463,7 @@ export function WsetSheet({
                           cursor: "pointer",
                         }}
                       >
-                        Discard changes
+                        {t("discard_changes")}
                       </button>
                     ) : null}
                     {onDelete ? (
@@ -452,7 +489,7 @@ export function WsetSheet({
                           cursor: "pointer",
                         }}
                       >
-                        Delete note
+                        {t("delete_note")}
                       </button>
                     ) : null}
                   </div>
@@ -499,7 +536,7 @@ export function WsetSheet({
                     color: active ? WSET.creamText : WSET.ink,
                   }}
                 >
-                  {s.name === "Conclusions" ? "Conclusion" : s.name}
+                  {s.id === "conclusions" ? t("conclusion_short") : s.name}
                 </span>
                 <span
                   className="block sm:inline"
@@ -531,128 +568,129 @@ export function WsetSheet({
       >
         {embedded ? null : (
         <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
-          <LiveTastingNote sections={noteSections} />
+          <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
           <p style={{ fontSize: 10.5, color: WSET.faint }}>
-            Follows the WSET Level 4 Systematic Approach to Tasting Wine.
+            {t("footer_wset")}
           </p>
         </aside>
         )}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title="Appearance" rated={`${prog.appearance[0]} of ${prog.appearance[1]} assessed`} className={cn(mobileSection !== "appearance" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(mobileSection !== "appearance" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
-              <Row label="Clarity" value={valueLabel(state.clarity)}>
-                <PillGroup options={CLARITY} labels={LABELS} value={state.clarity} onChange={(v) => set("clarity", v)} />
+              <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
+                <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
               </Row>
-              <Row label="Intensity" value={valueLabel(state.appearanceIntensity)}>
-                <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={LABELS} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
+              <Row label={t("intensity")} value={valueLabel(state.appearanceIntensity, L)}>
+                <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={L} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
               </Row>
             </RowPair>
-            <Row label="Colour" value={valueLabel(state.colourHue)}>
-              <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} />
+            <Row label={t("colour")} value={valueLabel(state.colourHue, L)}>
+              <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} labels={L} lang={lang} />
             </Row>
-            <Row label="Other observations" sub="optional">
-              <PillGroup multi options={OBSERVATIONS} labels={LABELS} value={state.observations} onChange={(v) => set("observations", v)} />
+            <Row label={t("other_observations")} sub={t("optional")}>
+              <PillGroup multi options={OBSERVATIONS} labels={L} value={state.observations} onChange={(v) => set("observations", v)} />
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title="Nose" rated={`${prog.nose[0]} of ${prog.nose[1]} assessed`} className={cn(mobileSection !== "nose" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(mobileSection !== "nose" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
-              <Row label="Condition" value={valueLabel(state.condition)}>
-                <PillGroup options={CONDITION} labels={LABELS} value={state.condition} onChange={(v) => set("condition", v)} />
+              <Row label={t("condition")} value={valueLabel(state.condition, L)}>
+                <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
               </Row>
-              <Row label="Intensity" value={valueLabel(state.noseIntensity)}>
-                <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
+              <Row label={t("intensity")} value={valueLabel(state.noseIntensity, L)}>
+                <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
               </Row>
             </RowPair>
             {state.condition === "UNCLEAN" ? (
-              <Row label="Fault" sub="what's wrong">
-                <PillGroup multi options={FAULTS} labels={LABELS} value={state.faults} onChange={(v) => set("faults", v)} />
+              <Row label={t("fault")} sub={t("whats_wrong")}>
+                <PillGroup multi options={FAULTS} labels={L} value={state.faults} onChange={(v) => set("faults", v)} />
               </Row>
             ) : null}
-            <Row label="Development" value={valueLabel(state.development)}>
-              <SnapSlider stops={DEVELOPMENT_STOPS} labels={LABELS} value={state.development} onChange={(v) => set("development", v)} />
+            <Row label={t("development")} value={valueLabel(state.development, L)}>
+              <SnapSlider stops={DEVELOPMENT_STOPS} labels={L} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
-            <Row wide label="Aroma characteristics" sub="select all that apply">
-              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle="Aroma characteristics" />
+            <Row wide label={t("aroma_characteristics")} sub={t("select_all")}>
+              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle={t("aroma_characteristics")} lang={lang} />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title="Palate" rated={`${prog.palate[0]} of ${prog.palate[1]} assessed`} className={cn(mobileSection !== "palate" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(mobileSection !== "palate" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
             <RowPair>
-              <Row label="Sweetness" value={valueLabel(state.sweetness)}>
-                <SnapSlider stops={SWEETNESS_STOPS} labels={LABELS} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
+              <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
+                <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
               </Row>
-              <Row label="Acidity" value={valueLabel(state.acidity)}>
-                <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.acidity} onChange={(v) => set("acidity", v)} />
+              <Row label={t("acidity")} value={valueLabel(state.acidity, L)}>
+                <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.acidity} onChange={(v) => set("acidity", v)} />
               </Row>
             </RowPair>
             <RowPair>
-              <Row label="Tannin" value={valueLabel(state.tannin)}>
-                <SnapSlider stops={LEVEL_STOPS} labels={LABELS} value={state.tannin} onChange={(v) => set("tannin", v)} />
+              <Row label={t("tannin")} value={valueLabel(state.tannin, L)}>
+                <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.tannin} onChange={(v) => set("tannin", v)} />
               </Row>
-              <Row label="Tannin nature" sub="optional">
-                <PillGroup multi options={TANNIN_NATURE} labels={LABELS} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
+              <Row label={t("tannin_nature")} sub={t("optional")}>
+                <PillGroup multi options={TANNIN_NATURE} labels={L} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
               </Row>
             </RowPair>
             <RowPair>
-              <Row label="Alcohol" value={valueLabel(state.alcohol)}>
+              <Row label={t("alcohol")} value={valueLabel(state.alcohol, L)}>
                 <SnapSlider
                   stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
-                  labels={LABELS}
+                  labels={L}
                   value={state.alcohol}
                   onChange={(v) => set("alcohol", v)}
                 />
               </Row>
-              <Row label="Body" value={valueLabel(state.body)}>
-                <SnapSlider stops={BODY_STOPS} labels={LABELS} value={state.body} onChange={(v) => set("body", v)} />
+              <Row label={t("body")} value={valueLabel(state.body, L)}>
+                <SnapSlider stops={BODY_STOPS} labels={L} value={state.body} onChange={(v) => set("body", v)} />
               </Row>
             </RowPair>
             {wine.style === "SPARKLING" ? (
               <RowPair>
-                <Row label="Mousse" value={valueLabel(state.mousse)} sub={state.mousse ? undefined : "required — sparkling"}>
-                  <PillGroup options={MOUSSE} labels={LABELS} value={state.mousse} onChange={(v) => set("mousse", v)} />
+                <Row label={t("mousse")} value={valueLabel(state.mousse, L)} sub={state.mousse ? undefined : t("required_sparkling")}>
+                  <PillGroup options={MOUSSE} labels={L} value={state.mousse} onChange={(v) => set("mousse", v)} />
                 </Row>
-                <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
-                  <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
+                <Row label={t("flavour_intensity")} value={valueLabel(state.flavourIntensity, L)}>
+                  <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
                 </Row>
               </RowPair>
             ) : (
-              <Row label="Flavour intensity" value={valueLabel(state.flavourIntensity)}>
-                <SnapSlider stops={INTENSITY_STOPS} labels={LABELS} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
+              <Row label={t("flavour_intensity")} value={valueLabel(state.flavourIntensity, L)}>
+                <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
               </Row>
             )}
-            <Row wide label="Flavour characteristics" sub="what you taste, not just smell">
+            <Row wide label={t("flavour_characteristics")} sub={t("taste_not_smell")}>
               <AromaPicker
                 terms={terms}
                 selectedIds={state.palateTermIds}
                 onChange={(ids) => set("palateTermIds", ids)}
-                copyFrom={{ label: "Copy from nose", ids: state.noseTermIds }}
+                copyFrom={{ label: t("copy_from_nose"), ids: state.noseTermIds }}
                 colour={wine.colour}
-                sheetTitle="Flavour characteristics"
+                sheetTitle={t("flavour_characteristics")}
+                lang={lang}
               />
             </Row>
-            <Row label="Finish" value={valueLabel(state.finish)}>
-              <SnapSlider stops={FINISH_STOPS} labels={LABELS} value={state.finish} onChange={(v) => set("finish", v)} />
+            <Row label={t("finish")} value={valueLabel(state.finish, L)}>
+              <SnapSlider stops={FINISH_STOPS} labels={L} value={state.finish} onChange={(v) => set("finish", v)} />
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title="Conclusions" rated={`${prog.conclusions[0]} of ${prog.conclusions[1]} assessed`} className={cn(mobileSection !== "conclusions" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
-            <Row label="Point Score" sub="100-point scale">
-              <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} />
+          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(mobileSection !== "conclusions" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+            <Row label={t("point_score")} sub={t("hundred_scale")}>
+              <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
             </Row>
             <RowPair>
-              <Row label="Price category" value={valueLabel(state.priceCategory)}>
-                <PillGroup options={PRICE} labels={LABELS} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
+              <Row label={t("price_category")} value={valueLabel(state.priceCategory, L)}>
+                <PillGroup options={PRICE} labels={L} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
               </Row>
-              <Row label="Readiness" value={valueLabel(state.readiness)}>
-                <PillGroup options={READINESS} labels={LABELS} value={state.readiness} onChange={(v) => set("readiness", v)} />
+              <Row label={t("readiness")} value={valueLabel(state.readiness, L)}>
+                <PillGroup options={READINESS} labels={L} value={state.readiness} onChange={(v) => set("readiness", v)} />
               </Row>
             </RowPair>
-            <Row label="Taster's notes" sub="free text">
+            <Row label={t("tasters_notes")} sub={t("free_text")}>
               <textarea
                 value={state.tasterNotes}
                 onChange={(e) => set("tasterNotes", e.target.value)}
-                placeholder="Anything else — structure, blind guesses, food pairings…"
+                placeholder={t("notes_placeholder")}
                 style={{
                   width: "100%",
                   minHeight: 96,
@@ -699,10 +737,10 @@ export function WsetSheet({
             }}
           >
             <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
-              Discard this tasting note?
+              {t("discard_q")}
             </h3>
             <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: 18 }}>
-              Your changes haven&apos;t been saved and will be lost.
+              {t("discard_body")}
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
@@ -710,7 +748,7 @@ export function WsetSheet({
                 onClick={() => setConfirmDiscard(false)}
                 style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
               >
-                Keep editing
+                {t("keep_editing")}
               </button>
               <button
                 type="button"
@@ -720,7 +758,7 @@ export function WsetSheet({
                 }}
                 style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: WSET.burgundy, color: WSET.creamText }}
               >
-                Discard
+                {t("discard")}
               </button>
             </div>
           </div>
@@ -755,11 +793,10 @@ export function WsetSheet({
             }}
           >
             <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
-              Delete this tasting note?
+              {t("delete_q")}
             </h3>
             <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
-              The note and its aroma selections are removed for good. This
-              can&apos;t be undone.
+              {t("delete_body")}
             </p>
             {deleteError ? (
               <p style={{ fontSize: 12.5, color: WSET.faultRed, marginBottom: 14 }}>{deleteError}</p>
@@ -771,7 +808,7 @@ export function WsetSheet({
                 onClick={() => setConfirmDelete(false)}
                 style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
               >
-                Keep note
+                {t("keep_note")}
               </button>
               <button
                 type="button"
@@ -787,13 +824,13 @@ export function WsetSheet({
                     setDeleteError(
                       error instanceof Error && error.message
                         ? error.message
-                        : "Couldn't delete the note. Please try again.",
+                        : t("delete_error"),
                     );
                   }
                 }}
                 style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: deleting ? "default" : "pointer", border: "none", background: WSET.faultRed, color: WSET.creamText, opacity: deleting ? 0.7 : 1 }}
               >
-                {deleting ? "Deleting…" : "Delete"}
+                {deleting ? t("deleting") : t("delete")}
               </button>
             </div>
           </div>

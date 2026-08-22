@@ -6,6 +6,7 @@ import {
   pctToScore,
   qualityBand,
 } from "@/lib/wset/quality-curve.mjs";
+import { makeT, translateBand, type WsetLang } from "@/lib/wset/i18n";
 import { WSET } from "./tokens";
 
 const TICKS = [50, 70, 80, 85, 90, 95, 100];
@@ -17,10 +18,13 @@ const TICKS = [50, 70, 80, 85, 90, 95, 100];
 export function QualitySlider({
   score,
   onChange,
+  lang = "en",
 }: {
   score: number | null;
   onChange: (score: number | null) => void;
+  lang?: WsetLang;
 }) {
+  const t = makeT(lang);
   const trackRef = useRef<HTMLDivElement>(null);
 
   const setFromClientX = useCallback(
@@ -44,7 +48,7 @@ export function QualitySlider({
         </span>
         {score !== null ? (
           <span style={{ fontSize: 12, fontWeight: 600, color: WSET.gold }}>
-            {qualityBand(score)}
+            {translateBand(qualityBand(score), lang)}
           </span>
         ) : null}
       </div>
@@ -157,11 +161,7 @@ export function QualitySlider({
         </div>
       </div>
       <p style={{ marginTop: 8, fontSize: 11, color: WSET.muted2 }}>
-        We&apos;ve swapped WSET&apos;s word scale (faulty → outstanding) for the
-        classic 100-point score used by critics like Parker: 50 is the floor,
-        ~85+ is good-to-excellent, 95+ is exceptional. The bar is weighted —
-        50–84 is compressed to the left; 85–92, where most good wines land, gets
-        the widest stretch; 95+ sits at the rarefied right edge.
+        {t("quality_help")}
       </p>
     </div>
   );

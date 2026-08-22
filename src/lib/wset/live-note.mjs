@@ -29,14 +29,32 @@ function termList(ids, termLabels) {
   return ids.map((id) => termLabels.get(id)).filter(Boolean);
 }
 
-export function composeLiveNote(state, termLabels, labels) {
+// `opts` carries the small joining words ("intensity", "acidity", …), the
+// "Aromas" fallback, the word "points" and a quality-band translator, so this
+// pure module holds no language table — the caller passes English or Danish.
+// Every field defaults to English, keeping older callers (and the node test)
+// working unchanged.
+export function composeLiveNote(state, termLabels, labels, opts = {}) {
+  const {
+    intensity = "intensity",
+    acidity = "acidity",
+    tannin = "tannin",
+    alcohol = "alcohol",
+    body = "body",
+    flavour = "flavour",
+    finish = "finish",
+    mousse = "mousse",
+    aromas: aromasWord = "Aromas",
+    points = "points",
+    band = (s) => qualityBand(s),
+  } = opts;
   const out = {};
 
   // "medium(+) intensity" reads better than a bare "medium(+)".
   const appParts = [];
   if (state.clarity != null) appParts.push(labels[state.clarity]);
   if (state.appearanceIntensity != null) {
-    appParts.push(`${labels[state.appearanceIntensity]} intensity`);
+    appParts.push(`${labels[state.appearanceIntensity]} ${intensity}`);
   }
   if (state.colourHue != null) appParts.push(labels[state.colourHue]);
   if (appParts.length || state.observations.length) {
@@ -49,14 +67,14 @@ export function composeLiveNote(state, termLabels, labels) {
   const noseParts = [];
   if (state.condition != null) noseParts.push(labels[state.condition]);
   if (state.noseIntensity != null) {
-    noseParts.push(`${labels[state.noseIntensity]} intensity`);
+    noseParts.push(`${labels[state.noseIntensity]} ${intensity}`);
   }
   if (state.development != null) noseParts.push(labels[state.development]);
   const noseAromas = termList(state.noseTermIds, termLabels);
   const faults = labelList(state.faults, labels);
   if (noseParts.length || noseAromas.length || faults.length) {
     out.nose = line({
-      scales: noseParts.length ? noseParts : ["Aromas"],
+      scales: noseParts.length ? noseParts : [aromasWord],
       aromas: noseAromas,
       trailer: faults,
     });
@@ -68,13 +86,13 @@ export function composeLiveNote(state, termLabels, labels) {
   const palParts = [];
   if (state.sweetness != null) palParts.push(labels[state.sweetness]);
   for (const [key, name] of [
-    ["acidity", "acidity"],
-    ["tannin", "tannin"],
-    ["alcohol", "alcohol"],
-    ["body", "body"],
-    ["flavourIntensity", "flavour"],
-    ["finish", "finish"],
-    ["mousse", "mousse"],
+    ["acidity", acidity],
+    ["tannin", tannin],
+    ["alcohol", alcohol],
+    ["body", body],
+    ["flavourIntensity", flavour],
+    ["finish", finish],
+    ["mousse", mousse],
   ]) {
     if (state[key] != null) palParts.push(`${name} ${labels[state[key]]}`);
   }
@@ -86,7 +104,7 @@ export function composeLiveNote(state, termLabels, labels) {
   const conParts = [];
   if (state.qualityScore != null) {
     conParts.push(
-      `${state.qualityScore} points (${qualityBand(state.qualityScore).toLowerCase()})`,
+      `${state.qualityScore} ${points} (${band(state.qualityScore).toLowerCase()})`,
     );
   }
   if (state.priceCategory != null) conParts.push(labels[state.priceCategory]);

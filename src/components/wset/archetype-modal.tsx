@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { fetchArchetype } from "@/lib/wset/queries";
 import { ArchetypeSheet, type ArchetypeView } from "./archetype-sheet";
+import { useWsetLang } from "@/lib/wset/wset-lang";
+import { makeT } from "@/lib/wset/i18n";
 
 // The archetype reference sheet in a popup — opened from the map so the taster
 // never leaves the place they're exploring. The map only carries the id + name,
@@ -19,6 +21,8 @@ export function ArchetypeModal({
   onClose: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
+  const { lang } = useWsetLang();
+  const t = makeT(lang);
   const [view, setView] = useState<ArchetypeView | null | "loading">("loading");
 
   useEffect(() => {
@@ -47,13 +51,13 @@ export function ArchetypeModal({
         <div className="max-h-[80vh] overflow-y-auto pr-1">
           {view === "loading" ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Loading profile…
+              {t("loading_profile")}
             </p>
           ) : view ? (
             <ArchetypeSheet a={view} />
           ) : (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Couldn&apos;t load this profile right now.
+              {t("profile_error")}
             </p>
           )}
         </div>
