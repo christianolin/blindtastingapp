@@ -166,6 +166,29 @@ function shiftLightness(hex: string, amount: number): string {
 // fill opacity, which needs a bigger spread than it does at full strength.
 const SHADE_STEPS = [-0.3, -0.16, -0.04, 0.12, 0.28, 0.44];
 
+// Diagnostic escape hatch: `?debugFills=off` on the map URL renders outlines
+// and labels but no polygon fills. Fills are the only thing that stacks —
+// a pixel deep in Burgundy sits under country + region + subregion +
+// appellation + village + cru, each a translucent blend — so if the map is
+// fragment-bound this one switch is the difference between crawling and
+// smooth, and if FPS barely moves the bottleneck is somewhere else entirely.
+// Off by default; nothing reads it unless the query param is present.
+function fillsDisabled() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("debugFills") === "off";
+}
+
+// Share of the on-screen wine country a single country must account for before
+// the map treats you as "viewing" it and reveals its subregions. Below this the
+// frame spans several countries, so everything stays at region level.
+const COUNTRY_FOCUS_SHARE = 0.6;
+
+// Cap on the area-colour lookup table fed to fillColorExpression. There are 854
+// distinct areas in the catalogue; a viewport shows tens at most, so this is
+// generous headroom for "areas seen recently" while keeping the generated
+// `match` expression an order of magnitude smaller than the unbounded version.
+const MAX_PAINT_GROUPS = 96;
+
 const regionMatch = [
   "match",
   ["get", "region"],
@@ -517,8 +540,16 @@ export function TileWineMap({
       const oh = Math.min(maxY, n) - Math.max(minY, s);
       if (ow > 0 && oh > 0) overlap[country] = (overlap[country] ?? 0) + ow * oh;
     }
+    // "Viewing a country" means one country actually dominates the view — not
+    // merely that it happens to be the largest sliver of a continent-wide
+    // frame. Below the threshold there is no focus country at all, and nothing
+    // renders deeper than region level anywhere.
+    const ranked = Object.entries(overlap).sort((a, b) => b[1] - a[1]);
+    const total = ranked.reduce((sum, [, area]) => sum + area, 0);
     const top =
-      Object.entries(overlap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      ranked.length && total > 0 && ranked[0][1] / total >= COUNTRY_FOCUS_SHARE
+        ? ranked[0][0]
+        : null;
     setViewportCountry((prev) => (prev === top ? prev : top));
     const hit = (bbox: [number, number, number, number] | undefined, pad: number) => {
       // No bbox (transitional v1 manifest) => never hide it.
@@ -550,6 +581,7 @@ export function TileWineMap({
     syncMountedShards();
   }, [syncMountedShards]);
   const mountedSet = useMemo(() => new Set(mountedShards), [mountedShards]);
+  const noFills = useMemo(() => fillsDisabled(), []);
 
   // A selection pins the focus country; otherwise it follows the viewport.
   const focusCountry = useMemo(
@@ -619,11 +651,32 @@ export function TileWineMap({
         groups.set(areaKey, areaName);
       }
     }
-    for (const [slug, name] of groups) allGroupsRef.current.set(slug, name);
+    // Refresh recency for everything in view (delete+set moves the key to the
+    // end of a Map's insertion order), then evict the least-recently-seen.
+    //
+    // This set only exists to BUILD the colour lookup table in
+    // fillColorExpression — it is not what makes colours stable. districtColor()
+    // is a pure function of the slug, so an area renders the same hue whether
+    // the table holds 20 entries or all 854. Left unbounded it grew for the
+    // whole session into a ~21k-node `match` used as both fill-color and
+    // line-color on every shard layer, which MapLibre re-evaluates per feature
+    // on every tile load — i.e. continuously while panning and zooming, getting
+    // worse the longer the map was open. The cap is far above how many areas
+    // can be on screen at once, so nothing visible is ever evicted.
+    for (const [slug, name] of groups) {
+      allGroupsRef.current.delete(slug);
+      allGroupsRef.current.set(slug, name);
+    }
+    while (allGroupsRef.current.size > MAX_PAINT_GROUPS) {
+      const oldest = allGroupsRef.current.keys().next().value;
+      if (oldest === undefined) break;
+      allGroupsRef.current.delete(oldest);
+    }
+    const nextGroups = [...allGroupsRef.current.keys()].sort();
     setPaintGroups((prev) =>
-      prev.length === allGroupsRef.current.size
+      prev.length === nextGroups.length && prev.every((k, i) => k === nextGroups[i])
         ? prev
-        : [...allGroupsRef.current.keys()].sort(),
+        : nextGroups,
     );
     const next = {
       regions: [...regions].sort(),
@@ -641,6 +694,25 @@ export function TileWineMap({
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
   }, [mountedShards]);
+
+  // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
+  // at the end of each gesture — so a burst of small pans/zooms ran a full
+  // scan per gesture. Coalesce them; the legend lands a beat after you stop
+  // moving instead of after every twitch.
+  const scanTimer = useRef<number | null>(null);
+  const scheduleScan = useCallback(() => {
+    if (scanTimer.current !== null) window.clearTimeout(scanTimer.current);
+    scanTimer.current = window.setTimeout(() => {
+      scanTimer.current = null;
+      scanView();
+    }, 250);
+  }, [scanView]);
+  useEffect(
+    () => () => {
+      if (scanTimer.current !== null) window.clearTimeout(scanTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!cameraTarget) return;
@@ -724,6 +796,11 @@ export function TileWineMap({
         ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
         : ["case", sel, selectedOpacity, base];
     return {
+      // Every fill already has a dedicated `line` outline layer drawn over it,
+      // so MapLibre's built-in fill antialiasing is a redundant second edge
+      // pass per fill layer. Turning it off removes that pass outright; the
+      // outline layer keeps edges crisp, so it reads the same.
+      "fill-antialias": false,
       "fill-color": fillColorExpression(paintGroups, rampEnabled),
       "fill-opacity": [
         "interpolate",
@@ -804,7 +881,13 @@ export function TileWineMap({
     (shardKey: string) => {
       const base = keyGate ?? PASS_FILTER;
       const country = shardCountries[shardKey];
-      if (!focusCountry || !country || country === focusCountry) return base;
+      // Full depth only for the country you are actually viewing. With no focus
+      // country (a frame spanning several) nothing goes below region level, so
+      // a wide view is countries + regions rather than every country at once
+      // stacking subregions, appellations and sites into the same pixels.
+      // Unknown shard (tree not loaded yet) is left alone rather than blanked.
+      if (!country) return base;
+      if (focusCountry && country === focusCountry) return base;
       return ["all", base, ["<=", ["get", "tier"], 1]] as unknown as boolean;
     },
     [keyGate, focusCountry, shardCountries],
@@ -854,6 +937,11 @@ export function TileWineMap({
           "world-fills",
           ...mountedShards.map((key) => `shard-fills-${key}`),
         ]}
+        // Tiles and labels cross-fade in by default, which keeps compositing
+        // extra passes alive for 300ms after every tile lands — constant while
+        // panning or zooming. They pop in instead; on a GPU-bound map that is a
+        // straight win.
+        fadeDuration={0}
         onMoveEnd={syncMountedShards}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
@@ -930,7 +1018,7 @@ export function TileWineMap({
           if (best.tier === 0 && (mapRef.current?.getZoom() ?? 0) > 5) return;
           onSelect(best.key, "map");
         }}
-        onIdle={scanView}
+        onIdle={scheduleScan}
         onMouseMove={(e) => {
           const map = mapRef.current;
           if (map) {
@@ -953,8 +1041,19 @@ export function TileWineMap({
             id="world-fills"
             type="fill"
             source-layer="places"
+            // The country wash fades to 0.02 opacity by z9 — invisible, but
+            // still a full-viewport translucent blend every frame on top of
+            // every region/appellation/site fill beneath it. Stop drawing it
+            // once it stops being perceptible. Outlines are unaffected, and
+            // regions are drawn by their shard (which viewport gating
+            // guarantees is mounted whenever one is on screen).
+            maxzoom={8}
             filter={gatedWorldFilter}
+            layout={noFills ? { visibility: "none" } : undefined}
             paint={{
+              // See fillPaint: the outline layer supplies the edge, so the
+              // built-in fill antialias pass is redundant work.
+              "fill-antialias": false,
               "fill-color": regionColor,
               "fill-opacity": [
                 "interpolate",
@@ -1017,6 +1116,7 @@ export function TileWineMap({
               source-layer="places"
               filter={shardFilterFor(key)}
               paint={fillPaint}
+              layout={noFills ? { visibility: "none" } : undefined}
             />
             <Layer
               id={`shard-outlines-${key}`}
