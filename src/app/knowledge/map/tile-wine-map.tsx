@@ -770,6 +770,11 @@ export function TileWineMap({
         ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
         : ["case", sel, selectedOpacity, base];
     return {
+      // Every fill already has a dedicated `line` outline layer drawn over it,
+      // so MapLibre's built-in fill antialiasing is a redundant second edge
+      // pass per fill layer. Turning it off removes that pass outright; the
+      // outline layer keeps edges crisp, so it reads the same.
+      "fill-antialias": false,
       "fill-color": fillColorExpression(paintGroups, rampEnabled),
       "fill-opacity": [
         "interpolate",
@@ -900,6 +905,11 @@ export function TileWineMap({
           "world-fills",
           ...mountedShards.map((key) => `shard-fills-${key}`),
         ]}
+        // Tiles and labels cross-fade in by default, which keeps compositing
+        // extra passes alive for 300ms after every tile lands — constant while
+        // panning or zooming. They pop in instead; on a GPU-bound map that is a
+        // straight win.
+        fadeDuration={0}
         onMoveEnd={syncMountedShards}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
@@ -1001,6 +1011,9 @@ export function TileWineMap({
             source-layer="places"
             filter={gatedWorldFilter}
             paint={{
+              // See fillPaint: the outline layer supplies the edge, so the
+              // built-in fill antialias pass is redundant work.
+              "fill-antialias": false,
               "fill-color": regionColor,
               "fill-opacity": [
                 "interpolate",
