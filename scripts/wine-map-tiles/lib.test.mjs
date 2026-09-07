@@ -186,6 +186,11 @@ test("attribution keys reject unknown namespaces", () => {
     sicilia: ATTRIBUTION.SICILY_COMUNI.text,
     lombardia: ATTRIBUTION.LOMBARDIA_COMUNI.text,
     friuli: ATTRIBUTION.FRIULI_COMUNI.text,
+    "emilia-romagna": ATTRIBUTION.EMILIAROMAGNA_COMUNI.text,
+    campania: ATTRIBUTION.CAMPANIA_COMUNI.text,
+    puglia: ATTRIBUTION.PUGLIA_COMUNI.text,
+    umbria: ATTRIBUTION.UMBRIA_COMUNI.text,
+    abruzzo: ATTRIBUTION.ABRUZZO_COMUNI.text,
     bkg: ATTRIBUTION.BKG_VG250.text,
     "lwk-rlp": ATTRIBUTION.LWK_RLP_WEINLAGEN.text,
   });

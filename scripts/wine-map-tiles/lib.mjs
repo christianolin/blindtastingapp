@@ -149,6 +149,29 @@ export const ATTRIBUTION = {
     key: "friuli",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Wave-5 Italian regions: no official delimited-zone GIS — ISTAT comuni
+  // dissolved per the MASAF disciplinare comune lists (comune-level
+  // approximation). See scripts/wine-map-sources/stage-<region>-official.mjs.
+  EMILIAROMAGNA_COMUNI: {
+    key: "emilia-romagna",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
+  CAMPANIA_COMUNI: {
+    key: "campania",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
+  PUGLIA_COMUNI: {
+    key: "puglia",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
+  UMBRIA_COMUNI: {
+    key: "umbria",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
+  ABRUZZO_COMUNI: {
+    key: "abruzzo",
+    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
+  },
   // Germany national outline: dissolve of the 16 Bundesländer (BKG VG250 via
   // OpenDataSoft georef-germany-land). Same data family as the Spain/Italy
   // dissolves. See scripts/wine-map-sources/build-germany-country-outline.mjs.

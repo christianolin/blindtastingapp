@@ -91,6 +91,11 @@ export const REGION_COLORS: Record<string, string> = {
   sicilia: "#C25A2C",
   lombardia: "#6E4E8C",
   friuli: "#B0507A",
+  "emilia-romagna": "#8C2F5E",
+  campania: "#2E8C86",
+  puglia: "#A65A2E",
+  umbria: "#6E8C3A",
+  abruzzo: "#7A3B5C",
   // Germany — Anbaugebiete.
   mosel: "#4E8C6E",
   rheinhessen: "#9A5C2E",
