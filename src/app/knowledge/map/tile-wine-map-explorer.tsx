@@ -154,6 +154,22 @@ export function TileWineMapExplorer({
     [grapeFilterId, tree, grapeLinks],
   );
 
+  // Tile shards are keyed by canonical_key segment 1 (a region slug), which
+  // carries no country. The tree roots are the countries and their children the
+  // regions, so it gives us shard -> country for free — no tile rebuild needed
+  // to let the map show subregion depth one country at a time.
+  const shardCountries = useMemo(() => {
+    const byShard: Record<string, string> = {};
+    for (const country of tree ?? []) {
+      const countrySlug = country.key.split(".")[0];
+      for (const region of country.children ?? []) {
+        const shard = region.key.split(".")[1];
+        if (shard) byShard[shard] = countrySlug;
+      }
+    }
+    return byShard;
+  }, [tree]);
+
   // Expanded ("full view") keeps the tree and details visible but
   // collapsible; Escape exits.
   const [expanded, setExpanded] = useState(false);
@@ -478,6 +494,7 @@ export function TileWineMapExplorer({
                 cameraTarget={cameraTarget}
                 onSelect={select}
                 visibleKeys={visibleKeys}
+                shardCountries={shardCountries}
                 expanded={expanded}
                 onToggleExpanded={() => setExpanded((value) => !value)}
                 english={english}

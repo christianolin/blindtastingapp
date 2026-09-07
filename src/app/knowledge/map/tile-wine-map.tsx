@@ -428,6 +428,7 @@ export function TileWineMap({
   expanded,
   onToggleExpanded,
   visibleKeys = null,
+  shardCountries = {},
   english = false,
 }: {
   manifest: WineMapManifest;
@@ -444,6 +445,10 @@ export function TileWineMap({
       stays for context). Computed by the explorer's filters — grapes today,
       styles/designations later — so hiding needs no tile rebuild. */
   visibleKeys?: string[] | null;
+  /** shard key (canonical_key segment 1) -> country slug, derived from the
+      place tree. Lets the map show subregion-and-deeper detail for one country
+      at a time; other countries stay at region level. Empty = no gating. */
+  shardCountries?: Record<string, string>;
   /** English-names toggle: relabels the map, legend and tree from the curated
       local->English dictionary (Italia->Italy, Toscana->Tuscany). Client-side
       only — no tile rebuild. */
@@ -470,6 +475,88 @@ export function TileWineMap({
     [shardEntries],
   );
 
+  // A place belongs to exactly one shard (canonical_key segment 1), so on the
+  // other 53 shards the selected-casing/ring layers are filtered to nothing by
+  // construction — they can never draw a pixel. Mounting that pair only on the
+  // owning shard drops ~106 dead layers with no visual change at all.
+  const selectedShard = useMemo(
+    () => (selectedKey ? (selectedKey.split(".")[1] ?? null) : null),
+    [selectedKey],
+  );
+
+  // Viewport-gated mounting. An off-screen shard draws nothing, so unmounting
+  // it is invisible by definition; what it saves is the per-frame bookkeeping,
+  // symbol-collision and queryRenderedFeatures cost of its source + layers.
+  //
+  // NOTE (deliberate): `worldFilter` below stays keyed to ALL shard keys, not
+  // the mounted ones. The world archive paints regions differently from the
+  // shards (regionColor + a z2/6/9 opacity ramp vs fillColorExpression + a
+  // z5/9 ramp), so letting an unmounted region fall back to the world archive
+  // would visibly change its opacity. Instead an unmounted region simply stays
+  // where it already was — off-screen.
+  //
+  // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
+  // never thrashes sources.
+  const [mountedShards, setMountedShards] = useState<string[]>(shardKeys);
+  // Which country owns the view: the one whose shards cover most of the
+  // viewport. Only consulted when nothing is selected — a selection always wins.
+  const [viewportCountry, setViewportCountry] = useState<string | null>(null);
+  const syncMountedShards = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const b = map.getBounds();
+    const [w, s, e, n] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+    const [dx, dy] = [e - w, n - s];
+
+    const overlap: Record<string, number> = {};
+    for (const [key, shard] of shardEntries) {
+      const country = shardCountries[key];
+      if (!country || !shard.bbox) continue;
+      const [minX, minY, maxX, maxY] = shard.bbox;
+      const ow = Math.min(maxX, e) - Math.max(minX, w);
+      const oh = Math.min(maxY, n) - Math.max(minY, s);
+      if (ow > 0 && oh > 0) overlap[country] = (overlap[country] ?? 0) + ow * oh;
+    }
+    const top =
+      Object.entries(overlap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    setViewportCountry((prev) => (prev === top ? prev : top));
+    const hit = (bbox: [number, number, number, number] | undefined, pad: number) => {
+      // No bbox (transitional v1 manifest) => never hide it.
+      if (!bbox) return true;
+      const [minX, minY, maxX, maxY] = bbox;
+      return (
+        maxX >= w - dx * pad && minX <= e + dx * pad &&
+        maxY >= s - dy * pad && minY <= n + dy * pad
+      );
+    };
+    setMountedShards((prev) => {
+      const prevSet = new Set(prev);
+      const next = shardEntries
+        .filter(
+          ([key, shard]) =>
+            key === selectedShard ||
+            hit(shard.bbox, 0.5) ||
+            (prevSet.has(key) && hit(shard.bbox, 1.5)),
+        )
+        .map(([key]) => key);
+      return next.length === prev.length && next.every((k, i) => k === prev[i])
+        ? prev
+        : next;
+    });
+  }, [shardEntries, selectedShard, shardCountries]);
+  // Re-evaluates on selection too, so a shard selected from the tree is mounted
+  // even if the camera never moves.
+  useEffect(() => {
+    syncMountedShards();
+  }, [syncMountedShards]);
+  const mountedSet = useMemo(() => new Set(mountedShards), [mountedShards]);
+
+  // A selection pins the focus country; otherwise it follows the viewport.
+  const focusCountry = useMemo(
+    () => (selectedKey ? (selectedKey.split(".")[0] ?? null) : viewportCountry),
+    [selectedKey, viewportCountry],
+  );
+
   // What's actually on screen — drives the dynamic legend (sections only
   // where they apply) and the district colours. Scanned on map idle; the
   // group set only accumulates so colours stay stable while panning.
@@ -494,7 +581,7 @@ export function TileWineMap({
     if (!map) return;
     const layers = [
       "world-fills",
-      ...shardKeys.map((key) => `shard-fills-${key}`),
+      ...mountedShards.map((key) => `shard-fills-${key}`),
     ].filter((l) => map.getLayer(l));
     if (layers.length === 0) return;
     const regions = new Set<string>();
@@ -548,12 +635,12 @@ export function TileWineMap({
     setViewInfo((prev) =>
       JSON.stringify(prev) === JSON.stringify(next) ? prev : next,
     );
-    // shardKeys is genuinely needed: with an empty dep array this closed over
-    // the first render's value, which is [] until the manifest resolves — so
-    // the scan would only ever look at world-fills and the legend would never
-    // see a shard layer. shardKeys is memoized off the manifest, so it changes
-    // once; scanView is passed straight to onIdle, which re-binds for free.
-  }, [shardKeys]);
+    // mountedShards is genuinely needed: with an empty dep array this closed
+    // over the first render's value, so the scan would only ever look at
+    // world-fills and the legend would never see a shard layer. It tracks the
+    // viewport-gated mount set, so the scan queries only layers that actually
+    // exist; scanView is passed straight to onIdle, which re-binds for free.
+  }, [mountedShards]);
 
   useEffect(() => {
     if (!cameraTarget) return;
@@ -707,6 +794,21 @@ export function TileWineMap({
       (keyGate ? ["all", worldFilter, keyGate] : worldFilter) as unknown as boolean,
     [worldFilter, keyGate],
   );
+
+  // Subregion depth, one country at a time. A shard outside the focus country
+  // renders only its regions (tier <= 1), so neighbours stay on the map as
+  // geographic context instead of every country exploding into subregions and
+  // appellations at once. Regions are never hidden, and tier 2+ only reveals
+  // from z5 anyway, so this is inert at country/region zoom.
+  const shardFilterFor = useCallback(
+    (shardKey: string) => {
+      const base = keyGate ?? PASS_FILTER;
+      const country = shardCountries[shardKey];
+      if (!focusCountry || !country || country === focusCountry) return base;
+      return ["all", base, ["<=", ["get", "tier"], 1]] as unknown as boolean;
+    },
+    [keyGate, focusCountry, shardCountries],
+  );
   const selectedGate = useMemo(
     () =>
       (keyGate
@@ -750,8 +852,9 @@ export function TileWineMap({
         initialViewState={{ longitude: 2.4, latitude: 46.6, zoom: 4.4 }}
         interactiveLayerIds={[
           "world-fills",
-          ...shardKeys.map((key) => `shard-fills-${key}`),
+          ...mountedShards.map((key) => `shard-fills-${key}`),
         ]}
+        onMoveEnd={syncMountedShards}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
           // it so only the "i" toggle shows until the user opens it.
@@ -780,6 +883,8 @@ export function TileWineMap({
               );
             }
           }
+          // First gating pass once the map has real bounds.
+          syncMountedShards();
         }}
         onClick={(e) => {
           // Smallest-wins: the smallest footprint under the click is the most
@@ -897,7 +1002,9 @@ export function TileWineMap({
             paint={labelPaint(selectedKey, selectedId, selectedParentId)}
           />
         </Source>
-        {shardEntries.map(([key, shard]) => (
+        {shardEntries
+          .filter(([key]) => mountedSet.has(key))
+          .map(([key, shard]) => (
           <Source
             key={key}
             id={`wine-shard-${key}`}
@@ -908,14 +1015,14 @@ export function TileWineMap({
               id={`shard-fills-${key}`}
               type="fill"
               source-layer="places"
-              filter={keyGate ?? PASS_FILTER}
+              filter={shardFilterFor(key)}
               paint={fillPaint}
             />
             <Layer
               id={`shard-outlines-${key}`}
               type="line"
               source-layer="places"
-              filter={keyGate ?? PASS_FILTER}
+              filter={shardFilterFor(key)}
               paint={{
                 // Outlines follow the fill palette (classification colours at
                 // village zoom) so deep levels aren't ringed in region teal.
@@ -923,25 +1030,32 @@ export function TileWineMap({
                 "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
               }}
             />
-            <Layer
-              id={`shard-selected-casing-${key}`}
-              type="line"
-              source-layer="places"
-              filter={selectedGate}
-              paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
-            />
-            <Layer
-              id={`shard-selected-ring-${key}`}
-              type="line"
-              source-layer="places"
-              filter={selectedGate}
-              paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
-            />
+            {/* Only the owning shard can match selectedKey — on every other
+                shard this pair is filtered to nothing, so mounting them here
+                alone is pixel-identical and drops ~106 layers. */}
+            {key === selectedShard && (
+              <Layer
+                id={`shard-selected-casing-${key}`}
+                type="line"
+                source-layer="places"
+                filter={selectedGate}
+                paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
+              />
+            )}
+            {key === selectedShard && (
+              <Layer
+                id={`shard-selected-ring-${key}`}
+                type="line"
+                source-layer="places"
+                filter={selectedGate}
+                paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
+              />
+            )}
             <Layer
               id={`shard-labels-${key}`}
               type="symbol"
               source-layer="labels"
-              filter={keyGate ?? PASS_FILTER}
+              filter={shardFilterFor(key)}
               layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
               paint={labelPaint(selectedKey, selectedId, selectedParentId)}
             />
