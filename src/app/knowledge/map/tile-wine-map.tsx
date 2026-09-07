@@ -166,6 +166,18 @@ function shiftLightness(hex: string, amount: number): string {
 // fill opacity, which needs a bigger spread than it does at full strength.
 const SHADE_STEPS = [-0.3, -0.16, -0.04, 0.12, 0.28, 0.44];
 
+// Diagnostic escape hatch: `?debugFills=off` on the map URL renders outlines
+// and labels but no polygon fills. Fills are the only thing that stacks —
+// a pixel deep in Burgundy sits under country + region + subregion +
+// appellation + village + cru, each a translucent blend — so if the map is
+// fragment-bound this one switch is the difference between crawling and
+// smooth, and if FPS barely moves the bottleneck is somewhere else entirely.
+// Off by default; nothing reads it unless the query param is present.
+function fillsDisabled() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("debugFills") === "off";
+}
+
 // Cap on the area-colour lookup table fed to fillColorExpression. There are 854
 // distinct areas in the catalogue; a viewport shows tens at most, so this is
 // generous headroom for "areas seen recently" while keeping the generated
@@ -556,6 +568,7 @@ export function TileWineMap({
     syncMountedShards();
   }, [syncMountedShards]);
   const mountedSet = useMemo(() => new Set(mountedShards), [mountedShards]);
+  const noFills = useMemo(() => fillsDisabled(), []);
 
   // A selection pins the focus country; otherwise it follows the viewport.
   const focusCountry = useMemo(
@@ -1009,7 +1022,15 @@ export function TileWineMap({
             id="world-fills"
             type="fill"
             source-layer="places"
+            // The country wash fades to 0.02 opacity by z9 — invisible, but
+            // still a full-viewport translucent blend every frame on top of
+            // every region/appellation/site fill beneath it. Stop drawing it
+            // once it stops being perceptible. Outlines are unaffected, and
+            // regions are drawn by their shard (which viewport gating
+            // guarantees is mounted whenever one is on screen).
+            maxzoom={8}
             filter={gatedWorldFilter}
+            layout={noFills ? { visibility: "none" } : undefined}
             paint={{
               // See fillPaint: the outline layer supplies the edge, so the
               // built-in fill antialias pass is redundant work.
@@ -1076,6 +1097,7 @@ export function TileWineMap({
               source-layer="places"
               filter={shardFilterFor(key)}
               paint={fillPaint}
+              layout={noFills ? { visibility: "none" } : undefined}
             />
             <Layer
               id={`shard-outlines-${key}`}
