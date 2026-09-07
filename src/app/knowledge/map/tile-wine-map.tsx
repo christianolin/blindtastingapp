@@ -183,6 +183,18 @@ function fillsDisabled() {
 // frame spans several countries, so everything stays at region level.
 const COUNTRY_FOCUS_SHARE = 0.6;
 
+// Below this zoom no region shard is mounted. Verified against the catalogue:
+// every shard-only place has min_zoom >= 5, so beneath it a shard can only
+// contribute its region outline/fill — which the world archive also carries.
+// The map therefore opens (initialViewState is z4.4) without reading a single
+// shard's pmtiles header, instead of opening all 54.
+const SHARD_MIN_ZOOM = 5;
+
+// MapLibre keeps 500 tiles by default across ALL sources; panning back over
+// ground you just left re-fetches and re-decodes it. Raising this trades a few
+// MB of memory for not re-doing that work.
+const MAX_TILE_CACHE = 1500;
+
 // Cap on the area-colour lookup table fed to fillColorExpression. There are 854
 // distinct areas in the catalogue; a viewport shows tens at most, so this is
 // generous headroom for "areas seen recently" while keeping the generated
@@ -493,10 +505,6 @@ export function TileWineMap({
     () => Object.entries(manifest.shards).sort(([a], [b]) => a.localeCompare(b)),
     [manifest],
   );
-  const shardKeys = useMemo(
-    () => shardEntries.map(([key]) => key),
-    [shardEntries],
-  );
 
   // A place belongs to exactly one shard (canonical_key segment 1), so on the
   // other 53 shards the selected-casing/ring layers are filtered to nothing by
@@ -520,7 +528,7 @@ export function TileWineMap({
   //
   // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
   // never thrashes sources.
-  const [mountedShards, setMountedShards] = useState<string[]>(shardKeys);
+  const [mountedShards, setMountedShards] = useState<string[]>([]);
   // Which country owns the view: the one whose shards cover most of the
   // viewport. Only consulted when nothing is selected — a selection always wins.
   const [viewportCountry, setViewportCountry] = useState<string | null>(null);
@@ -560,14 +568,21 @@ export function TileWineMap({
         maxY >= s - dy * pad && minY <= n + dy * pad
       );
     };
+    // Below SHARD_MIN_ZOOM a shard has nothing the world archive lacks: every
+    // shard-only feature has min_zoom >= 5, so all a shard contributes down
+    // there is its region — which the world archive also carries, and which the
+    // world-region-* layers now paint identically. Mounting none of them means
+    // the map opens without reading 54 pmtiles headers.
+    const zoom = map.getZoom();
     setMountedShards((prev) => {
       const prevSet = new Set(prev);
       const next = shardEntries
         .filter(
           ([key, shard]) =>
             key === selectedShard ||
-            hit(shard.bbox, 0.5) ||
-            (prevSet.has(key) && hit(shard.bbox, 1.5)),
+            (zoom >= SHARD_MIN_ZOOM &&
+              (hit(shard.bbox, 0.5) ||
+                (prevSet.has(key) && hit(shard.bbox, 1.5)))),
         )
         .map(([key]) => key);
       return next.length === prev.length && next.every((k, i) => k === prev[i])
@@ -827,6 +842,18 @@ export function TileWineMap({
     };
   }, [selectedKey, selectedId, paintGroups, rampEnabled]);
 
+  // Shared by the shard outlines and the world archive's region outlines, so a
+  // region drawn from either source is pixel-identical.
+  const outlinePaint = useMemo(
+    () => ({
+      // Outlines follow the fill palette (classification colours at village
+      // zoom) so deep levels aren't ringed in region teal.
+      "line-color": fillColorExpression(paintGroups, rampEnabled),
+      "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
+    }),
+    [paintGroups, rampEnabled],
+  );
+
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
     [manifest],
@@ -835,14 +862,18 @@ export function TileWineMap({
   // World layers show the country (tier 0) and any region NOT served by a
   // mounted shard — with every shard mounted that means the shards own all
   // region rendering and the world archive only contributes France itself.
+  // Keyed on the MOUNTED shards, not all of them: a region whose shard is not
+  // mounted is drawn from the world archive instead, by the region layers below
+  // which reuse the shard paint exactly. That is what lets the map open with
+  // zero shard archives (see SHARD_MIN_ZOOM) without changing a pixel.
   const worldFilter = useMemo(
     () =>
       [
         "any",
         ["==", ["get", "tier"], 0],
-        ["!", ["in", ["get", "region"], ["literal", shardKeys]]],
+        ["!", ["in", ["get", "region"], ["literal", mountedShards]]],
       ] as unknown as boolean,
-    [shardKeys],
+    [mountedShards],
   );
 
   // Attribute filters (grape today, styles/designations later): when a
@@ -871,6 +902,24 @@ export function TileWineMap({
       (keyGate ? ["all", worldFilter, keyGate] : worldFilter) as unknown as boolean,
     [worldFilter, keyGate],
   );
+  // Tier 0 only — the country wash, which has its own opacity ramp.
+  const worldCountryFilter = useMemo(
+    () =>
+      (keyGate
+        ? ["all", ["==", ["get", "tier"], 0], keyGate]
+        : ["==", ["get", "tier"], 0]) as unknown as boolean,
+    [keyGate],
+  );
+  // Regions no mounted shard is covering. Painted with the shards' own fill and
+  // outline paint, so handing a region between archives is invisible.
+  const worldRegionFilter = useMemo(() => {
+    const base = [
+      "all",
+      [">=", ["get", "tier"], 1],
+      ["!", ["in", ["get", "region"], ["literal", mountedShards]]],
+    ];
+    return (keyGate ? ["all", base, keyGate] : base) as unknown as boolean;
+  }, [mountedShards, keyGate]);
 
   // Subregion depth, one country at a time. A shard outside the focus country
   // renders only its regions (tier <= 1), so neighbours stay on the map as
@@ -942,6 +991,7 @@ export function TileWineMap({
         // panning or zooming. They pop in instead; on a GPU-bound map that is a
         // straight win.
         fadeDuration={0}
+        maxTileCacheSize={MAX_TILE_CACHE}
         onMoveEnd={syncMountedShards}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
@@ -1048,7 +1098,7 @@ export function TileWineMap({
             // regions are drawn by their shard (which viewport gating
             // guarantees is mounted whenever one is on screen).
             maxzoom={8}
-            filter={gatedWorldFilter}
+            filter={worldCountryFilter}
             layout={noFills ? { visibility: "none" } : undefined}
             paint={{
               // See fillPaint: the outline layer supplies the edge, so the
@@ -1072,11 +1122,30 @@ export function TileWineMap({
             id="world-outlines"
             type="line"
             source-layer="places"
-            filter={gatedWorldFilter}
+            filter={worldCountryFilter}
             paint={{
               "line-color": regionColor,
               "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
             }}
+          />
+          {/* Regions no mounted shard is covering, drawn with the shards' own
+              fill and outline paint. Below SHARD_MIN_ZOOM no shard is mounted at
+              all, so these are what render the regions — identical pixels, but
+              from one already-open archive instead of 54. */}
+          <Layer
+            id="world-region-fills"
+            type="fill"
+            source-layer="places"
+            filter={worldRegionFilter}
+            paint={fillPaint}
+            layout={noFills ? { visibility: "none" } : undefined}
+          />
+          <Layer
+            id="world-region-outlines"
+            type="line"
+            source-layer="places"
+            filter={worldRegionFilter}
+            paint={outlinePaint}
           />
           <Layer
             id="world-selected-casing"
@@ -1123,12 +1192,7 @@ export function TileWineMap({
               type="line"
               source-layer="places"
               filter={shardFilterFor(key)}
-              paint={{
-                // Outlines follow the fill palette (classification colours at
-                // village zoom) so deep levels aren't ringed in region teal.
-                "line-color": fillColorExpression(paintGroups, rampEnabled),
-                "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
-              }}
+              paint={outlinePaint}
             />
             {/* Only the owning shard can match selectedKey — on every other
                 shard this pair is filtered to nothing, so mounting them here
