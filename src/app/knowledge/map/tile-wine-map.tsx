@@ -178,6 +178,11 @@ function fillsDisabled() {
   return new URLSearchParams(window.location.search).get("debugFills") === "off";
 }
 
+// Share of the on-screen wine country a single country must account for before
+// the map treats you as "viewing" it and reveals its subregions. Below this the
+// frame spans several countries, so everything stays at region level.
+const COUNTRY_FOCUS_SHARE = 0.6;
+
 // Cap on the area-colour lookup table fed to fillColorExpression. There are 854
 // distinct areas in the catalogue; a viewport shows tens at most, so this is
 // generous headroom for "areas seen recently" while keeping the generated
@@ -535,8 +540,16 @@ export function TileWineMap({
       const oh = Math.min(maxY, n) - Math.max(minY, s);
       if (ow > 0 && oh > 0) overlap[country] = (overlap[country] ?? 0) + ow * oh;
     }
+    // "Viewing a country" means one country actually dominates the view — not
+    // merely that it happens to be the largest sliver of a continent-wide
+    // frame. Below the threshold there is no focus country at all, and nothing
+    // renders deeper than region level anywhere.
+    const ranked = Object.entries(overlap).sort((a, b) => b[1] - a[1]);
+    const total = ranked.reduce((sum, [, area]) => sum + area, 0);
     const top =
-      Object.entries(overlap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      ranked.length && total > 0 && ranked[0][1] / total >= COUNTRY_FOCUS_SHARE
+        ? ranked[0][0]
+        : null;
     setViewportCountry((prev) => (prev === top ? prev : top));
     const hit = (bbox: [number, number, number, number] | undefined, pad: number) => {
       // No bbox (transitional v1 manifest) => never hide it.
@@ -868,7 +881,13 @@ export function TileWineMap({
     (shardKey: string) => {
       const base = keyGate ?? PASS_FILTER;
       const country = shardCountries[shardKey];
-      if (!focusCountry || !country || country === focusCountry) return base;
+      // Full depth only for the country you are actually viewing. With no focus
+      // country (a frame spanning several) nothing goes below region level, so
+      // a wide view is countries + regions rather than every country at once
+      // stacking subregions, appellations and sites into the same pixels.
+      // Unknown shard (tree not loaded yet) is left alone rather than blanked.
+      if (!country) return base;
+      if (focusCountry && country === focusCountry) return base;
       return ["all", base, ["<=", ["get", "tier"], 1]] as unknown as boolean;
     },
     [keyGate, focusCountry, shardCountries],
