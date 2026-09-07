@@ -166,6 +166,12 @@ function shiftLightness(hex: string, amount: number): string {
 // fill opacity, which needs a bigger spread than it does at full strength.
 const SHADE_STEPS = [-0.3, -0.16, -0.04, 0.12, 0.28, 0.44];
 
+// Cap on the area-colour lookup table fed to fillColorExpression. There are 854
+// distinct areas in the catalogue; a viewport shows tens at most, so this is
+// generous headroom for "areas seen recently" while keeping the generated
+// `match` expression an order of magnitude smaller than the unbounded version.
+const MAX_PAINT_GROUPS = 96;
+
 const regionMatch = [
   "match",
   ["get", "region"],
@@ -619,11 +625,32 @@ export function TileWineMap({
         groups.set(areaKey, areaName);
       }
     }
-    for (const [slug, name] of groups) allGroupsRef.current.set(slug, name);
+    // Refresh recency for everything in view (delete+set moves the key to the
+    // end of a Map's insertion order), then evict the least-recently-seen.
+    //
+    // This set only exists to BUILD the colour lookup table in
+    // fillColorExpression — it is not what makes colours stable. districtColor()
+    // is a pure function of the slug, so an area renders the same hue whether
+    // the table holds 20 entries or all 854. Left unbounded it grew for the
+    // whole session into a ~21k-node `match` used as both fill-color and
+    // line-color on every shard layer, which MapLibre re-evaluates per feature
+    // on every tile load — i.e. continuously while panning and zooming, getting
+    // worse the longer the map was open. The cap is far above how many areas
+    // can be on screen at once, so nothing visible is ever evicted.
+    for (const [slug, name] of groups) {
+      allGroupsRef.current.delete(slug);
+      allGroupsRef.current.set(slug, name);
+    }
+    while (allGroupsRef.current.size > MAX_PAINT_GROUPS) {
+      const oldest = allGroupsRef.current.keys().next().value;
+      if (oldest === undefined) break;
+      allGroupsRef.current.delete(oldest);
+    }
+    const nextGroups = [...allGroupsRef.current.keys()].sort();
     setPaintGroups((prev) =>
-      prev.length === allGroupsRef.current.size
+      prev.length === nextGroups.length && prev.every((k, i) => k === nextGroups[i])
         ? prev
-        : [...allGroupsRef.current.keys()].sort(),
+        : nextGroups,
     );
     const next = {
       regions: [...regions].sort(),
@@ -641,6 +668,25 @@ export function TileWineMap({
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
   }, [mountedShards]);
+
+  // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
+  // at the end of each gesture — so a burst of small pans/zooms ran a full
+  // scan per gesture. Coalesce them; the legend lands a beat after you stop
+  // moving instead of after every twitch.
+  const scanTimer = useRef<number | null>(null);
+  const scheduleScan = useCallback(() => {
+    if (scanTimer.current !== null) window.clearTimeout(scanTimer.current);
+    scanTimer.current = window.setTimeout(() => {
+      scanTimer.current = null;
+      scanView();
+    }, 250);
+  }, [scanView]);
+  useEffect(
+    () => () => {
+      if (scanTimer.current !== null) window.clearTimeout(scanTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!cameraTarget) return;
@@ -930,7 +976,7 @@ export function TileWineMap({
           if (best.tier === 0 && (mapRef.current?.getZoom() ?? 0) > 5) return;
           onSelect(best.key, "map");
         }}
-        onIdle={scanView}
+        onIdle={scheduleScan}
         onMouseMove={(e) => {
           const map = mapRef.current;
           if (map) {
