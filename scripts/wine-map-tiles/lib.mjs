@@ -172,6 +172,16 @@ export const ATTRIBUTION = {
     key: "abruzzo",
     text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)",
   },
+  // Wave-6 Italian regions (comune-union from ISTAT + MASAF disciplinari) —
+  // completing the Italian mainland + islands. See stage-wave6-region.mjs.
+  MARCHE_COMUNI:      { key: "marche",        text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  LAZIO_COMUNI:       { key: "lazio",         text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  SARDEGNA_COMUNI:    { key: "sardegna",      text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  LIGURIA_COMUNI:     { key: "liguria",       text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  CALABRIA_COMUNI:    { key: "calabria",      text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  BASILICATA_COMUNI:  { key: "basilicata",    text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  VALLEDAOSTA_COMUNI: { key: "valle-d-aosta", text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
+  MOLISE_COMUNI:      { key: "molise",        text: "© ISTAT — confini comunali; delimitazione da disciplinari MASAF (CC BY 4.0)" },
   // Germany national outline: dissolve of the 16 Bundesländer (BKG VG250 via
   // OpenDataSoft georef-germany-land). Same data family as the Spain/Italy
   // dissolves. See scripts/wine-map-sources/build-germany-country-outline.mjs.
