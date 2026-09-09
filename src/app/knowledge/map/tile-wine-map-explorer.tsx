@@ -313,11 +313,6 @@ export function TileWineMapExplorer({
       const params = new URLSearchParams(window.location.search);
       params.set("place", key);
       window.history.replaceState(null, "", `?${params.toString()}`);
-      // Keep the deep-link watermark in step with the URL we just wrote.
-      // Without this the watermark stays at whatever the server last rendered,
-      // and a later navigation back to that same ?place= looks like "no
-      // change" and is ignored.
-      setLastInitialKey(key);
     },
     [selectedKey],
   );
@@ -332,17 +327,27 @@ export function TileWineMapExplorer({
   // extra commit-then-rerender pass an effect would cost. No history write is
   // needed on this path either: the router has ALREADY put the new key in the
   // URL, so select()'s replaceState would only rewrite what is there.
-  // lastInitialKey is a watermark for "the ?place= this component has already
-  // acted on", and select() moves it whenever it rewrites the URL. Comparing
-  // the prop against THAT is what makes both directions work:
-  //   - Re-navigating to a key seen earlier still fires, because clicking
-  //     something else moved the watermark off it. (Comparing prop against the
-  //     last PROP value missed this, since replaceState leaves the prop alone.)
-  //   - A plain selection does NOT fire, because select() already advanced the
-  //     watermark to match. Comparing the prop against selectedKey instead —
-  //     which is what this guard did briefly — meant every map or tree click
-  //     was reverted to the deep-linked key during the same render pass, since
-  //     the prop can never catch up without a real navigation.
+  // This fires ONLY when the prop CHANGES between renders, which is the only
+  // real signal that a navigation happened. Nothing else may move the
+  // watermark.
+  //
+  // Two previous attempts both broke every click, because both made the
+  // watermark diverge from the prop while the prop cannot move on its own —
+  // select() uses history.replaceState, which deliberately avoids a server
+  // round-trip, so initialPlaceKey keeps whatever the last real navigation
+  // rendered:
+  //   - Comparing the prop against selectedKey: any selection differs from the
+  //     prop, so it fired and set the selection straight back.
+  //   - Advancing the watermark inside select(): the watermark then differed
+  //     from the prop, so it fired and set the selection straight back.
+  // Both reverted the selection during the same render pass, for every blob on
+  // the map, whenever the page had been loaded with a ?place= (i.e. after any
+  // refresh, since select() writes one into the URL).
+  //
+  // Known limitation, deliberately accepted: re-navigating to the SAME ?place=
+  // after selecting something else does not re-select it, because the prop is
+  // unchanged and is therefore indistinguishable from no navigation at all.
+  // That is a rare no-op; the alternatives above are a map you cannot click.
   const [lastInitialKey, setLastInitialKey] = useState(initialPlaceKey);
   if (initialPlaceKey && initialPlaceKey !== lastInitialKey) {
     setLastInitialKey(initialPlaceKey);
