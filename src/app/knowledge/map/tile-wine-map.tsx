@@ -274,6 +274,15 @@ const classificationExpr = [
 // filter" must be an always-true expression instead.
 const PASS_FILTER = ["boolean", true] as unknown as boolean;
 
+// Same trap as PASS_FILTER, one property over: react-map-gl feeds `layout`
+// straight into addLayer, and MapLibre rejects `undefined` there — the layer is
+// silently dropped, with no error and no console warning. Passing
+// `layout={cond ? {...} : undefined}` therefore removed EVERY fill layer from
+// the style whenever the condition was false, which is the normal case. Both
+// states must be real objects.
+const LAYER_VISIBLE = { visibility: "visible" } as const;
+const LAYER_HIDDEN = { visibility: "none" } as const;
+
 // Curated palette for district colouring; slug-hashed so a group keeps its
 // colour across sessions and republish cycles.
 const DISTRICT_PALETTE = [
@@ -1373,7 +1382,7 @@ export function TileWineMap({
             // guarantees is mounted whenever one is on screen).
             maxzoom={8}
             filter={worldCountryFilter}
-            layout={noFills ? { visibility: "none" } : undefined}
+            layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
             paint={{
               // See fillPaint: the outline layer supplies the edge, so the
               // built-in fill antialias pass is redundant work.
@@ -1412,7 +1421,7 @@ export function TileWineMap({
             source-layer="places"
             filter={worldRegionFilter}
             paint={fillPaint}
-            layout={noFills ? { visibility: "none" } : undefined}
+            layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
           />
           <Layer
             id="world-region-outlines"
@@ -1459,7 +1468,7 @@ export function TileWineMap({
               source-layer="places"
               filter={shardFilterFor(key)}
               paint={fillPaint}
-              layout={noFills ? { visibility: "none" } : undefined}
+              layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
             />
             <Layer
               id={`shard-outlines-${key}`}
