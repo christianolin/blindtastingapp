@@ -93,11 +93,15 @@ const WINE_COLOUR_HEX: Record<string, string> = {
 // throws SecurityError, which used to take the whole explorer down.
 const LANG_STORAGE_KEY = "wine-map-lang";
 const langListeners = new Set<() => void>();
+// Fallback for profiles where localStorage throws (site data blocked, private
+// windows). Without it readEnglish always answered "english" and the toggle was
+// inert rather than merely non-persistent.
+let langMemory: boolean | null = null;
 function readEnglish() {
   try {
     return window.localStorage.getItem(LANG_STORAGE_KEY) !== "local";
   } catch {
-    return true;
+    return langMemory ?? true;
   }
 }
 function subscribeLang(onChange: () => void) {
@@ -107,10 +111,11 @@ function subscribeLang(onChange: () => void) {
   };
 }
 function writeEnglish(value: boolean) {
+  langMemory = value;
   try {
     window.localStorage.setItem(LANG_STORAGE_KEY, value ? "en" : "local");
   } catch {
-    // Preference just will not persist.
+    // Preference just will not persist beyond this page view.
   }
   for (const listener of langListeners) listener();
 }
@@ -308,6 +313,11 @@ export function TileWineMapExplorer({
       const params = new URLSearchParams(window.location.search);
       params.set("place", key);
       window.history.replaceState(null, "", `?${params.toString()}`);
+      // Keep the deep-link watermark in step with the URL we just wrote.
+      // Without this the watermark stays at whatever the server last rendered,
+      // and a later navigation back to that same ?place= looks like "no
+      // change" and is ignored.
+      setLastInitialKey(key);
     },
     [selectedKey],
   );
@@ -322,15 +332,19 @@ export function TileWineMapExplorer({
   // extra commit-then-rerender pass an effect would cost. No history write is
   // needed on this path either: the router has ALREADY put the new key in the
   // URL, so select()'s replaceState would only rewrite what is there.
-  // Keyed on the CURRENT selection, not on the last prop value. Tracking the
-  // last prop meant re-navigating to a ?place= that had been seen once before
-  // was skipped entirely: search for Bordeaux, click Chianti on the map (which
-  // only replaceStates, leaving the prop at Bordeaux), then search Bordeaux
-  // again — the prop is unchanged, so the branch never ran and the map stayed
-  // on Chianti with the URL disagreeing, permanently. The inner comparison
-  // already makes the initial mount and same-key pushes no-ops on its own.
+  // lastInitialKey is a watermark for "the ?place= this component has already
+  // acted on", and select() moves it whenever it rewrites the URL. Comparing
+  // the prop against THAT is what makes both directions work:
+  //   - Re-navigating to a key seen earlier still fires, because clicking
+  //     something else moved the watermark off it. (Comparing prop against the
+  //     last PROP value missed this, since replaceState leaves the prop alone.)
+  //   - A plain selection does NOT fire, because select() already advanced the
+  //     watermark to match. Comparing the prop against selectedKey instead —
+  //     which is what this guard did briefly — meant every map or tree click
+  //     was reverted to the deep-linked key during the same render pass, since
+  //     the prop can never catch up without a real navigation.
   const [lastInitialKey, setLastInitialKey] = useState(initialPlaceKey);
-  if (initialPlaceKey && (initialPlaceKey !== lastInitialKey || initialPlaceKey !== selectedKey)) {
+  if (initialPlaceKey && initialPlaceKey !== lastInitialKey) {
     setLastInitialKey(initialPlaceKey);
     if (initialPlaceKey !== selectedKey) {
       // Navigation-driven selection flies the camera, exactly as select() does
