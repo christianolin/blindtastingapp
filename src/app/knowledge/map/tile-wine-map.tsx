@@ -183,6 +183,21 @@ function fillsDisabled() {
 // frame spans several countries, so everything stays at region level.
 const COUNTRY_FOCUS_SHARE = 0.6;
 
+// Release threshold for that focus. Taking focus at 0.6 and dropping it at 0.6
+// made a frame sitting near the boundary flip on every small drag, blinking
+// every appellation in view. Keep focus until the leader falls well clear.
+const COUNTRY_RELEASE_SHARE = 0.45;
+
+// Resolution of the grid used to measure each country's share of the visible
+// wine ground by UNION rather than by summing overlapping bboxes. 48x48 over a
+// viewport is far finer than the bboxes it is measuring.
+const FOCUS_GRID = 48;
+
+// Zoom at which fillColorExpression steps from the region hue to the per-area /
+// classification palette. The legend keys off the same number so it never
+// advertises colours the map is not painting yet.
+const AREA_PALETTE_ZOOM = 8;
+
 // Below this zoom no region shard is mounted. Verified against the catalogue:
 // every shard-only place has min_zoom >= 5, so beneath it a shard can only
 // contribute its region outline/fill — which the world archive also carries.
@@ -195,10 +210,13 @@ const SHARD_MIN_ZOOM = 5;
 // MB of memory for not re-doing that work.
 const MAX_TILE_CACHE = 1500;
 
-// Cap on the area-colour lookup table fed to fillColorExpression. There are 854
-// distinct areas in the catalogue; a viewport shows tens at most, so this is
-// generous headroom for "areas seen recently" while keeping the generated
-// `match` expression an order of magnitude smaller than the unbounded version.
+// Soft cap on the area-colour lookup table fed to fillColorExpression, over the
+// 854 distinct areas in the catalogue. SOFT because areas currently on screen
+// are never evicted: a z8 frame over northern Italy genuinely carries ~120
+// distinct areas (Piemonte alone has ~55), and evicting a visible one drops its
+// arm from the generated `match` so it falls through to regionMatch — a
+// different palette entirely — and flickers as the query order changes between
+// gestures. The cap therefore only trims areas that have scrolled off.
 const MAX_PAINT_GROUPS = 96;
 
 const regionMatch = [
@@ -356,7 +374,7 @@ function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
     "step",
     ["zoom"],
     regionMatch,
-    8,
+    AREA_PALETTE_ZOOM,
     areaMatch,
   ] as unknown as string;
 }
@@ -519,12 +537,11 @@ export function TileWineMap({
   // it is invisible by definition; what it saves is the per-frame bookkeeping,
   // symbol-collision and queryRenderedFeatures cost of its source + layers.
   //
-  // NOTE (deliberate): `worldFilter` below stays keyed to ALL shard keys, not
-  // the mounted ones. The world archive paints regions differently from the
-  // shards (regionColor + a z2/6/9 opacity ramp vs fillColorExpression + a
-  // z5/9 ramp), so letting an unmounted region fall back to the world archive
-  // would visibly change its opacity. Instead an unmounted region simply stays
-  // where it already was — off-screen.
+  // `worldFilter` is keyed on the shards that have actually LOADED, so a region
+  // whose shard is unmounted (below SHARD_MIN_ZOOM that is all of them) falls
+  // back to the world archive's world-region-* layers, which reuse the shards'
+  // own fillPaint/outlinePaint. Do NOT re-key this to every shard key: below
+  // SHARD_MIN_ZOOM nothing would draw a region at all.
   //
   // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
   // never thrashes sources.
@@ -532,6 +549,9 @@ export function TileWineMap({
   // Which country owns the view: the one whose shards cover most of the
   // viewport. Only consulted when nothing is selected — a selection always wins.
   const [viewportCountry, setViewportCountry] = useState<string | null>(null);
+  // Every country with ANY presence on screen. A selection only pins focus
+  // while its country is one of these — see focusCountry.
+  const [viewportCountries, setViewportCountries] = useState<string[]>([]);
   const syncMountedShards = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -539,26 +559,55 @@ export function TileWineMap({
     const [w, s, e, n] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
     const [dx, dy] = [e - w, n - s];
 
-    const overlap: Record<string, number> = {};
+    // Union, not sum. Region bboxes overlap heavily (Italy has 20 of them), so
+    // adding per-shard intersections double-counts and systematically favours
+    // whichever country is split into the most overlapping pieces — it once
+    // ranked Spain over Italy on a frame Italy dominated. Rasterising the
+    // viewport into a coarse grid and marking covered cells gives the real
+    // "share of on-screen wine ground" the threshold is supposed to mean.
+    const covered: Record<string, Set<number>> = {};
+    const anyCovered = new Set<number>();
     for (const [key, shard] of shardEntries) {
       const country = shardCountries[key];
       if (!country || !shard.bbox) continue;
       const [minX, minY, maxX, maxY] = shard.bbox;
-      const ow = Math.min(maxX, e) - Math.max(minX, w);
-      const oh = Math.min(maxY, n) - Math.max(minY, s);
-      if (ow > 0 && oh > 0) overlap[country] = (overlap[country] ?? 0) + ow * oh;
+      const cx0 = Math.max(0, Math.floor(((minX - w) / dx) * FOCUS_GRID));
+      const cx1 = Math.min(FOCUS_GRID - 1, Math.ceil(((maxX - w) / dx) * FOCUS_GRID) - 1);
+      const cy0 = Math.max(0, Math.floor(((minY - s) / dy) * FOCUS_GRID));
+      const cy1 = Math.min(FOCUS_GRID - 1, Math.ceil(((maxY - s) / dy) * FOCUS_GRID) - 1);
+      if (cx1 < cx0 || cy1 < cy0) continue;
+      const cells = (covered[country] ??= new Set<number>());
+      for (let gx = cx0; gx <= cx1; gx += 1) {
+        for (let gy = cy0; gy <= cy1; gy += 1) {
+          const cell = gy * FOCUS_GRID + gx;
+          cells.add(cell);
+          anyCovered.add(cell);
+        }
+      }
     }
     // "Viewing a country" means one country actually dominates the view — not
     // merely that it happens to be the largest sliver of a continent-wide
     // frame. Below the threshold there is no focus country at all, and nothing
     // renders deeper than region level anywhere.
-    const ranked = Object.entries(overlap).sort((a, b) => b[1] - a[1]);
-    const total = ranked.reduce((sum, [, area]) => sum + area, 0);
-    const top =
-      ranked.length && total > 0 && ranked[0][1] / total >= COUNTRY_FOCUS_SHARE
-        ? ranked[0][0]
-        : null;
-    setViewportCountry((prev) => (prev === top ? prev : top));
+    const ranked = Object.entries(covered).sort((a, b) => b[1].size - a[1].size);
+    const total = anyCovered.size;
+    const present = ranked.map(([country]) => country).sort();
+    setViewportCountries((prev) =>
+      prev.length === present.length && prev.every((c, i) => c === present[i]) ? prev : present,
+    );
+    setViewportCountry((prev) => {
+      if (!ranked.length || total === 0) return prev === null ? prev : null;
+      const [leader, cells] = ranked[0];
+      const share = cells.size / total;
+      // Hysteresis, matching the mount set right below: take focus at
+      // COUNTRY_FOCUS_SHARE, but keep it until share drops under
+      // COUNTRY_RELEASE_SHARE. A single hard threshold made a ~20px drag along
+      // the Rhone/Provence border flip focus on and off, blinking every
+      // appellation in three regions in and out on alternate gestures.
+      if (share >= COUNTRY_FOCUS_SHARE) return prev === leader ? prev : leader;
+      if (prev && covered[prev] && covered[prev].size / total >= COUNTRY_RELEASE_SHARE) return prev;
+      return prev === null ? prev : null;
+    });
     const hit = (bbox: [number, number, number, number] | undefined, pad: number) => {
       // No bbox (transitional v1 manifest) => never hide it.
       if (!bbox) return true;
@@ -596,22 +645,84 @@ export function TileWineMap({
     syncMountedShards();
   }, [syncMountedShards]);
   const mountedSet = useMemo(() => new Set(mountedShards), [mountedShards]);
+
+  // Mounting a shard <Source> only STARTS its cold pmtiles header fetch. Keying
+  // the world->shard handoff on `mountedShards` therefore told the world archive
+  // to drop a region the instant the shard appeared, leaving it with no fill, no
+  // outline and no label — a hole with the country wash showing through — until
+  // the round trip finished. Worse on a tree selection, which force-mounts the
+  // shard and drew a gold ring around an empty hole. Track what has actually
+  // loaded and hand over only then; the brief overlap where both draw is a
+  // moment of doubled opacity, which reads far better than a gap.
+  //
+  // This must be a LIVE reading, not a latch. Two ways a latched "ready" lies:
+  //   - Re-mount. Unmounting a Source removes its tiles, so a shard that was
+  //     ready, unmounted (zooming under SHARD_MIN_ZOOM, or panning past the
+  //     150% pad) and re-mounted would be treated as handed off in the very
+  //     commit that re-creates it — empty — bringing the hole straight back on
+  //     every crossing after the first.
+  //   - Vacuous load. A shard mounted by the 50% pad while its region is still
+  //     off screen needs no tiles, so MapLibre reports isSourceLoaded true
+  //     immediately; pan until the region is actually visible and the handoff
+  //     has already happened against a source with nothing in it.
+  // Re-reading isSourceLoaded per mounted shard handles both: it goes false
+  // again while a re-created or newly-in-view source fetches, the world resumes
+  // drawing that region, and the hand-off waits for real tiles.
+  const [readyShards, setReadyShards] = useState<string[]>([]);
+  const recomputeReady = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const next = mountedShards.filter((key) => {
+      const id = `wine-shard-${key}`;
+      try {
+        return Boolean(map.getSource(id)) && map.isSourceLoaded(id);
+      } catch {
+        return false;
+      }
+    });
+    setReadyShards((prev) =>
+      prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
+    );
+  }, [mountedShards]);
+  const handleSourceData = useCallback(
+    (e: { sourceId?: string }) => {
+      if (!e.sourceId || !e.sourceId.startsWith("wine-shard-")) return;
+      recomputeReady();
+    },
+    [recomputeReady],
+  );
+  // Mounted AND actually loaded. Intersecting again is belt-and-braces:
+  // recomputeReady already derives from mountedShards, but a shard can unmount
+  // between that run and this render.
+  const handedOffShards = useMemo(() => {
+    const ready = new Set(readyShards);
+    return mountedShards.filter((key) => ready.has(key));
+  }, [mountedShards, readyShards]);
   const noFills = useMemo(() => fillsDisabled(), []);
 
-  // A selection pins the focus country; otherwise it follows the viewport.
-  const focusCountry = useMemo(
-    () => (selectedKey ? (selectedKey.split(".")[0] ?? null) : viewportCountry),
-    [selectedKey, viewportCountry],
-  );
+  // A selection pins the focus country, but ONLY while that country is still on
+  // screen. selectedKey is never cleared by the explorer, so keying focus on it
+  // unconditionally meant the first selection of the session — a tree click, or
+  // just arriving via ?place=... — pinned depth to that country permanently:
+  // pan to Tuscany afterwards and its shard mounts but stays clamped to
+  // tier <= 1, so Chianti and every Tuscan subzone could never appear at any
+  // zoom. Once the selection is off screen, focus follows the viewport again.
+  const focusCountry = useMemo(() => {
+    const selectedCountry = selectedKey ? (selectedKey.split(".")[0] ?? null) : null;
+    if (selectedCountry && viewportCountries.includes(selectedCountry)) return selectedCountry;
+    return viewportCountry;
+  }, [selectedKey, viewportCountries, viewportCountry]);
 
   // What's actually on screen — drives the dynamic legend (sections only
   // where they apply) and the district colours. Scanned on map idle; the
   // group set only accumulates so colours stay stable while panning.
   const [viewInfo, setViewInfo] = useState<{
+    scanned: boolean;
+    zoom: number;
     regions: string[];
     groups: { slug: string; name: string }[];
     classifications: string[];
-  }>({ regions: [], groups: [], classifications: [] });
+  }>({ scanned: false, zoom: 0, regions: [], groups: [], classifications: [] });
   // globalThis: `Map` in this module is the react-map-gl component.
   const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
   const [paintGroups, setPaintGroups] = useState<string[]>([]);
@@ -626,10 +737,30 @@ export function TileWineMap({
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const layers = [
-      "world-fills",
-      ...mountedShards.map((key) => `shard-fills-${key}`),
-    ].filter((l) => map.getLayer(l));
+    // Same reason as interactiveLayerIds: regions live on world-region-fills
+    // whenever their shard is unmounted, so omitting it left the legend blind
+    // to every region at the opening zoom.
+    //
+    // Under ?debugFills=off the fill layers are visibility:none, and MapLibre
+    // excludes hidden layers from queryRenderedFeatures — scanning them there
+    // returned nothing, so paintGroups stayed empty and every OUTLINE collapsed
+    // to the region hue. That made the diagnostic change outline colour and the
+    // legend as well as fills, which is not the clean isolation it claims. The
+    // outline layers carry the same features and properties, so scan those
+    // instead and the A/B differs in fills alone.
+    const layers = (
+      noFills
+        ? [
+            "world-outlines",
+            "world-region-outlines",
+            ...mountedShards.map((key) => `shard-outlines-${key}`),
+          ]
+        : [
+            "world-fills",
+            "world-region-fills",
+            ...mountedShards.map((key) => `shard-fills-${key}`),
+          ]
+    ).filter((l) => map.getLayer(l));
     if (layers.length === 0) return;
     const regions = new Set<string>();
     const groups = new globalThis.Map<string, string>();
@@ -682,10 +813,17 @@ export function TileWineMap({
       allGroupsRef.current.delete(slug);
       allGroupsRef.current.set(slug, name);
     }
-    while (allGroupsRef.current.size > MAX_PAINT_GROUPS) {
-      const oldest = allGroupsRef.current.keys().next().value;
-      if (oldest === undefined) break;
-      allGroupsRef.current.delete(oldest);
+    // Evict only what is NOT on screen. Insertion order puts the just-refreshed
+    // visible entries last, so walking from the front and skipping anything in
+    // `groups` trims exactly the stale ones; if everything is visible the table
+    // is allowed to exceed the cap rather than repaint a region in front of the
+    // user.
+    if (allGroupsRef.current.size > MAX_PAINT_GROUPS) {
+      for (const slug of [...allGroupsRef.current.keys()]) {
+        if (allGroupsRef.current.size <= MAX_PAINT_GROUPS) break;
+        if (groups.has(slug)) continue;
+        allGroupsRef.current.delete(slug);
+      }
     }
     const nextGroups = [...allGroupsRef.current.keys()].sort();
     setPaintGroups((prev) =>
@@ -694,6 +832,8 @@ export function TileWineMap({
         : nextGroups,
     );
     const next = {
+      scanned: true,
+      zoom: map.getZoom(),
       regions: [...regions].sort(),
       groups: [...groups.entries()]
         .map(([slug, name]) => ({ slug, name }))
@@ -708,7 +848,7 @@ export function TileWineMap({
     // world-fills and the legend would never see a shard layer. It tracks the
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
-  }, [mountedShards]);
+  }, [mountedShards, noFills]);
 
   // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
   // at the end of each gesture — so a burst of small pans/zooms ran a full
@@ -797,6 +937,12 @@ export function TileWineMap({
   // ramp switches off and every plot keeps its plain area hue at a uniform
   // mid opacity.
   const rampEnabled = viewInfo.classifications.length >= 2;
+  // fillColorExpression only steps from regionMatch to the per-area/
+  // classification palette at z8, so below that the legend's Areas and
+  // Classification chips described colours that appeared nowhere on the map —
+  // a Gevrey-Chambertin swatch in DISTRICT_PALETTE red while every polygon on
+  // screen was still Bourgogne petrol. Same threshold as the step.
+  const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
   const fillPaint = useMemo(() => {
     const sel = ["==", ["get", "key"], selectedKey ?? ""];
@@ -871,9 +1017,9 @@ export function TileWineMap({
       [
         "any",
         ["==", ["get", "tier"], 0],
-        ["!", ["in", ["get", "region"], ["literal", mountedShards]]],
+        ["!", ["in", ["get", "region"], ["literal", handedOffShards]]],
       ] as unknown as boolean,
-    [mountedShards],
+    [handedOffShards],
   );
 
   // Attribute filters (grape today, styles/designations later): when a
@@ -916,10 +1062,10 @@ export function TileWineMap({
     const base = [
       "all",
       [">=", ["get", "tier"], 1],
-      ["!", ["in", ["get", "region"], ["literal", mountedShards]]],
+      ["!", ["in", ["get", "region"], ["literal", handedOffShards]]],
     ];
     return (keyGate ? ["all", base, keyGate] : base) as unknown as boolean;
-  }, [mountedShards, keyGate]);
+  }, [handedOffShards, keyGate]);
 
   // Subregion depth, one country at a time. A shard outside the focus country
   // renders only its regions (tier <= 1), so neighbours stay on the map as
@@ -951,9 +1097,12 @@ export function TileWineMap({
 
 
   // Legend regions follow the viewport once the first scan lands; the
-  // manifest's shard list covers the initial paint.
+  // manifest's shard list covers the initial paint only. An empty result from a
+  // scan that DID run is meaningful — panning onto the Alps or open sea shows no
+  // wine ground — and used to be misread as "not scanned yet", expanding the
+  // legend to all 54 regions over a frame containing none.
   const legendRegions = useMemo(() => {
-    const keys = viewInfo.regions.length
+    const keys = viewInfo.scanned
       ? viewInfo.regions
       : Object.keys(manifest.shards).sort();
     return keys.map((key) => {
@@ -964,7 +1113,7 @@ export function TileWineMap({
         color: REGION_COLORS[key] ?? FALLBACK_COLOR,
       };
     });
-  }, [manifest, viewInfo.regions, english]);
+  }, [manifest, viewInfo.scanned, viewInfo.regions, english]);
 
   return (
     <div className="relative h-full overflow-hidden rounded-lg border">
@@ -982,17 +1131,44 @@ export function TileWineMap({
         ref={mapRef}
         mapStyle={BASEMAP_STYLE}
         initialViewState={{ longitude: 2.4, latitude: 46.6, zoom: 4.4 }}
-        interactiveLayerIds={[
-          "world-fills",
-          ...mountedShards.map((key) => `shard-fills-${key}`),
-        ]}
+        // world-region-fills is load-bearing here, not decoration: since the
+        // world archive took over regions whose shard is unmounted — which
+        // below SHARD_MIN_ZOOM is ALL of them — it is the only layer carrying a
+        // region at the opening zoom. Leaving it out made clicking a region
+        // fall through to the country fill beneath it, so the map opened unable
+        // to drill into a region, which is its primary gesture.
+        // Mirrors scanView's swap: ?debugFills=off sets the fill layers to
+        // visibility:none, and MapLibre excludes hidden layers from
+        // queryRenderedFeatures — leaving them listed here made the whole map
+        // inert in that mode, no click and no hover cursor at any zoom. The
+        // outline layers carry the same key/tier/area/min_zoom the resolver
+        // reads, and line layers hit-test fine.
+        interactiveLayerIds={
+          noFills
+            ? [
+                "world-outlines",
+                "world-region-outlines",
+                ...mountedShards.map((key) => `shard-outlines-${key}`),
+              ]
+            : [
+                "world-fills",
+                "world-region-fills",
+                ...mountedShards.map((key) => `shard-fills-${key}`),
+              ]
+        }
         // Tiles and labels cross-fade in by default, which keeps compositing
         // extra passes alive for 300ms after every tile lands — constant while
         // panning or zooming. They pop in instead; on a GPU-bound map that is a
         // straight win.
         fadeDuration={0}
         maxTileCacheSize={MAX_TILE_CACHE}
-        onMoveEnd={syncMountedShards}
+        onSourceData={handleSourceData}
+        onMoveEnd={() => {
+          syncMountedShards();
+          // A shard whose region has just scrolled into view now genuinely
+          // needs tiles, so its vacuous "loaded" must be re-tested here.
+          recomputeReady();
+        }}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
           // it so only the "i" toggle shows until the user opens it.
@@ -1071,9 +1247,15 @@ export function TileWineMap({
         onIdle={scheduleScan}
         onMouseMove={(e) => {
           const map = mapRef.current;
-          if (map) {
-            map.getCanvas().style.cursor = e.features?.length ? "pointer" : "";
-          }
+          if (!map) return;
+          // Mirror onClick's tier-0 guard. Without it the country fill made
+          // most of France's surface advertise a pointer at z5-8 for a click
+          // that is then deliberately discarded.
+          const zoom = map.getZoom();
+          const clickable = (e.features ?? []).some(
+            (f) => ((f.properties as { tier?: number } | null)?.tier ?? 0) > 0 || zoom <= 5,
+          );
+          map.getCanvas().style.cursor = clickable ? "pointer" : "";
         }}
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
@@ -1266,7 +1448,7 @@ export function TileWineMap({
             Selected (gold ring)
           </li>
         </ul>
-        {viewInfo.groups.length > 0 ? (
+        {areaPaletteLive && viewInfo.groups.length > 0 ? (
           <>
             <p className="mb-1 mt-2 font-medium text-foreground">Areas</p>
             <ul className="flex flex-col gap-0.5">
@@ -1282,7 +1464,7 @@ export function TileWineMap({
             </ul>
           </>
         ) : null}
-        {viewInfo.classifications.length > 0
+        {areaPaletteLive && viewInfo.classifications.length > 0
           ? (() => {
               // Shade chips borrow the first visible area's hue so the
               // legend ramp matches what's on screen: darker = higher
