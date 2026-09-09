@@ -193,6 +193,11 @@ const COUNTRY_RELEASE_SHARE = 0.45;
 // viewport is far finer than the bboxes it is measuring.
 const FOCUS_GRID = 48;
 
+// Zoom at which fillColorExpression steps from the region hue to the per-area /
+// classification palette. The legend keys off the same number so it never
+// advertises colours the map is not painting yet.
+const AREA_PALETTE_ZOOM = 8;
+
 // Below this zoom no region shard is mounted. Verified against the catalogue:
 // every shard-only place has min_zoom >= 5, so beneath it a shard can only
 // contribute its region outline/fill — which the world archive also carries.
@@ -369,7 +374,7 @@ function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
     "step",
     ["zoom"],
     regionMatch,
-    8,
+    AREA_PALETTE_ZOOM,
     areaMatch,
   ] as unknown as string;
 }
@@ -649,16 +654,46 @@ export function TileWineMap({
   // shard and drew a gold ring around an empty hole. Track what has actually
   // loaded and hand over only then; the brief overlap where both draw is a
   // moment of doubled opacity, which reads far better than a gap.
+  //
+  // This must be a LIVE reading, not a latch. Two ways a latched "ready" lies:
+  //   - Re-mount. Unmounting a Source removes its tiles, so a shard that was
+  //     ready, unmounted (zooming under SHARD_MIN_ZOOM, or panning past the
+  //     150% pad) and re-mounted would be treated as handed off in the very
+  //     commit that re-creates it — empty — bringing the hole straight back on
+  //     every crossing after the first.
+  //   - Vacuous load. A shard mounted by the 50% pad while its region is still
+  //     off screen needs no tiles, so MapLibre reports isSourceLoaded true
+  //     immediately; pan until the region is actually visible and the handoff
+  //     has already happened against a source with nothing in it.
+  // Re-reading isSourceLoaded per mounted shard handles both: it goes false
+  // again while a re-created or newly-in-view source fetches, the world resumes
+  // drawing that region, and the hand-off waits for real tiles.
   const [readyShards, setReadyShards] = useState<string[]>([]);
-  const handleSourceData = useCallback((e: { sourceId?: string; isSourceLoaded?: boolean }) => {
-    const id = e.sourceId;
-    if (!id || !id.startsWith("wine-shard-") || !e.isSourceLoaded) return;
-    const key = id.slice("wine-shard-".length);
-    setReadyShards((prev) => (prev.includes(key) ? prev : [...prev, key]));
-  }, []);
-  // The set the world archive actually defers to: mounted AND loaded. Derived
-  // rather than pruned on unmount, so readyShards can stay append-only (a stale
-  // key for an unmounted shard is filtered out here and costs nothing).
+  const recomputeReady = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const next = mountedShards.filter((key) => {
+      const id = `wine-shard-${key}`;
+      try {
+        return Boolean(map.getSource(id)) && map.isSourceLoaded(id);
+      } catch {
+        return false;
+      }
+    });
+    setReadyShards((prev) =>
+      prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
+    );
+  }, [mountedShards]);
+  const handleSourceData = useCallback(
+    (e: { sourceId?: string }) => {
+      if (!e.sourceId || !e.sourceId.startsWith("wine-shard-")) return;
+      recomputeReady();
+    },
+    [recomputeReady],
+  );
+  // Mounted AND actually loaded. Intersecting again is belt-and-braces:
+  // recomputeReady already derives from mountedShards, but a shard can unmount
+  // between that run and this render.
   const handedOffShards = useMemo(() => {
     const ready = new Set(readyShards);
     return mountedShards.filter((key) => ready.has(key));
@@ -682,10 +717,12 @@ export function TileWineMap({
   // where they apply) and the district colours. Scanned on map idle; the
   // group set only accumulates so colours stay stable while panning.
   const [viewInfo, setViewInfo] = useState<{
+    scanned: boolean;
+    zoom: number;
     regions: string[];
     groups: { slug: string; name: string }[];
     classifications: string[];
-  }>({ regions: [], groups: [], classifications: [] });
+  }>({ scanned: false, zoom: 0, regions: [], groups: [], classifications: [] });
   // globalThis: `Map` in this module is the react-map-gl component.
   const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
   const [paintGroups, setPaintGroups] = useState<string[]>([]);
@@ -795,6 +832,8 @@ export function TileWineMap({
         : nextGroups,
     );
     const next = {
+      scanned: true,
+      zoom: map.getZoom(),
       regions: [...regions].sort(),
       groups: [...groups.entries()]
         .map(([slug, name]) => ({ slug, name }))
@@ -898,6 +937,12 @@ export function TileWineMap({
   // ramp switches off and every plot keeps its plain area hue at a uniform
   // mid opacity.
   const rampEnabled = viewInfo.classifications.length >= 2;
+  // fillColorExpression only steps from regionMatch to the per-area/
+  // classification palette at z8, so below that the legend's Areas and
+  // Classification chips described colours that appeared nowhere on the map —
+  // a Gevrey-Chambertin swatch in DISTRICT_PALETTE red while every polygon on
+  // screen was still Bourgogne petrol. Same threshold as the step.
+  const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
   const fillPaint = useMemo(() => {
     const sel = ["==", ["get", "key"], selectedKey ?? ""];
@@ -1052,9 +1097,12 @@ export function TileWineMap({
 
 
   // Legend regions follow the viewport once the first scan lands; the
-  // manifest's shard list covers the initial paint.
+  // manifest's shard list covers the initial paint only. An empty result from a
+  // scan that DID run is meaningful — panning onto the Alps or open sea shows no
+  // wine ground — and used to be misread as "not scanned yet", expanding the
+  // legend to all 54 regions over a frame containing none.
   const legendRegions = useMemo(() => {
-    const keys = viewInfo.regions.length
+    const keys = viewInfo.scanned
       ? viewInfo.regions
       : Object.keys(manifest.shards).sort();
     return keys.map((key) => {
@@ -1065,7 +1113,7 @@ export function TileWineMap({
         color: REGION_COLORS[key] ?? FALLBACK_COLOR,
       };
     });
-  }, [manifest, viewInfo.regions, english]);
+  }, [manifest, viewInfo.scanned, viewInfo.regions, english]);
 
   return (
     <div className="relative h-full overflow-hidden rounded-lg border">
@@ -1089,11 +1137,25 @@ export function TileWineMap({
         // region at the opening zoom. Leaving it out made clicking a region
         // fall through to the country fill beneath it, so the map opened unable
         // to drill into a region, which is its primary gesture.
-        interactiveLayerIds={[
-          "world-fills",
-          "world-region-fills",
-          ...mountedShards.map((key) => `shard-fills-${key}`),
-        ]}
+        // Mirrors scanView's swap: ?debugFills=off sets the fill layers to
+        // visibility:none, and MapLibre excludes hidden layers from
+        // queryRenderedFeatures — leaving them listed here made the whole map
+        // inert in that mode, no click and no hover cursor at any zoom. The
+        // outline layers carry the same key/tier/area/min_zoom the resolver
+        // reads, and line layers hit-test fine.
+        interactiveLayerIds={
+          noFills
+            ? [
+                "world-outlines",
+                "world-region-outlines",
+                ...mountedShards.map((key) => `shard-outlines-${key}`),
+              ]
+            : [
+                "world-fills",
+                "world-region-fills",
+                ...mountedShards.map((key) => `shard-fills-${key}`),
+              ]
+        }
         // Tiles and labels cross-fade in by default, which keeps compositing
         // extra passes alive for 300ms after every tile lands — constant while
         // panning or zooming. They pop in instead; on a GPU-bound map that is a
@@ -1101,7 +1163,12 @@ export function TileWineMap({
         fadeDuration={0}
         maxTileCacheSize={MAX_TILE_CACHE}
         onSourceData={handleSourceData}
-        onMoveEnd={syncMountedShards}
+        onMoveEnd={() => {
+          syncMountedShards();
+          // A shard whose region has just scrolled into view now genuinely
+          // needs tiles, so its vacuous "loaded" must be re-tested here.
+          recomputeReady();
+        }}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
           // it so only the "i" toggle shows until the user opens it.
@@ -1180,9 +1247,15 @@ export function TileWineMap({
         onIdle={scheduleScan}
         onMouseMove={(e) => {
           const map = mapRef.current;
-          if (map) {
-            map.getCanvas().style.cursor = e.features?.length ? "pointer" : "";
-          }
+          if (!map) return;
+          // Mirror onClick's tier-0 guard. Without it the country fill made
+          // most of France's surface advertise a pointer at z5-8 for a click
+          // that is then deliberately discarded.
+          const zoom = map.getZoom();
+          const clickable = (e.features ?? []).some(
+            (f) => ((f.properties as { tier?: number } | null)?.tier ?? 0) > 0 || zoom <= 5,
+          );
+          map.getCanvas().style.cursor = clickable ? "pointer" : "";
         }}
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
@@ -1375,7 +1448,7 @@ export function TileWineMap({
             Selected (gold ring)
           </li>
         </ul>
-        {viewInfo.groups.length > 0 ? (
+        {areaPaletteLive && viewInfo.groups.length > 0 ? (
           <>
             <p className="mb-1 mt-2 font-medium text-foreground">Areas</p>
             <ul className="flex flex-col gap-0.5">
@@ -1391,7 +1464,7 @@ export function TileWineMap({
             </ul>
           </>
         ) : null}
-        {viewInfo.classifications.length > 0
+        {areaPaletteLive && viewInfo.classifications.length > 0
           ? (() => {
               // Shade chips borrow the first visible area's hue so the
               // legend ramp matches what's on screen: darker = higher

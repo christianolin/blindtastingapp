@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import dynamic from "next/dynamic";
 import {
   ChevronUp,
@@ -76,6 +83,38 @@ const WINE_COLOUR_HEX: Record<string, string> = {
   ORANGE: "#C0692E",
 };
 
+// Label-language preference as an external store. useState + a localStorage
+// lazy initializer produced a hydration mismatch: the tree and map render no
+// labels server-side, but the Local/English toggle itself does, so a viewer who
+// had chosen "local" hydrated with the opposite button highlighted. This is the
+// case useSyncExternalStore exists for — the server snapshot is the default and
+// the stored preference is adopted after hydration, with no setState in an
+// effect. Reads/writes are guarded: with site data blocked the bare accessor
+// throws SecurityError, which used to take the whole explorer down.
+const LANG_STORAGE_KEY = "wine-map-lang";
+const langListeners = new Set<() => void>();
+function readEnglish() {
+  try {
+    return window.localStorage.getItem(LANG_STORAGE_KEY) !== "local";
+  } catch {
+    return true;
+  }
+}
+function subscribeLang(onChange: () => void) {
+  langListeners.add(onChange);
+  return () => {
+    langListeners.delete(onChange);
+  };
+}
+function writeEnglish(value: boolean) {
+  try {
+    window.localStorage.setItem(LANG_STORAGE_KEY, value ? "en" : "local");
+  } catch {
+    // Preference just will not persist.
+  }
+  for (const listener of langListeners) listener();
+}
+
 export function TileWineMapExplorer({
   initialPlaceKey,
 }: {
@@ -96,17 +135,14 @@ export function TileWineMapExplorer({
   // Label language for the map + tree: English exonyms (Italia->Italy,
   // Toscana->Tuscany) from the curated dictionary by default, or native local
   // names when the viewer has explicitly chosen "local". Persisted per browser.
-  // Safe as a lazy initializer — the tree shows a skeleton during hydration and
-  // the map is ssr:false, so neither renders a label server-side.
-  const [english, setEnglish] = useState<boolean>(
-    () =>
-      typeof window === "undefined" ||
-      window.localStorage.getItem("wine-map-lang") !== "local",
-  );
-  const chooseLang = (value: boolean) => {
-    setEnglish(value);
-    window.localStorage.setItem("wine-map-lang", value ? "en" : "local");
-  };
+  // Must start at the SERVER value and only adopt the stored preference after
+  // mount. The tree and map render no labels server-side, but the Local/English
+  // toggle itself does, so reading localStorage during the first client render
+  // made a viewer who had chosen "local" hydrate with the opposite button
+  // highlighted. localStorage is also wrapped: in a profile with site data
+  // blocked the bare getter throws SecurityError and took the explorer down.
+  const english = useSyncExternalStore(subscribeLang, readEnglish, () => true);
+  const chooseLang = (value: boolean) => writeEnglish(value);
 
   useEffect(() => {
     let cancelled = false;
@@ -259,11 +295,14 @@ export function TileWineMapExplorer({
   const selectSourceRef = useRef<"map" | "ui">("ui");
   const select = useCallback(
     (key: string, source: "map" | "ui" = "ui") => {
-      selectSourceRef.current = source;
       // Same-key selection must be a no-op: the context effect only re-runs
       // when selectedKey changes, so setting "loading" here would never
-      // resolve.
+      // resolve. The early return comes FIRST — writing the source ref before
+      // it let a map tap on an already-pending tree selection flip that
+      // selection's source to "map", which cancels its fly-to with no later
+      // commit able to recover it.
       if (key === selectedKey) return;
+      selectSourceRef.current = source;
       setContextState("loading");
       setSelectedKey(key);
       const params = new URLSearchParams(window.location.search);
@@ -283,8 +322,15 @@ export function TileWineMapExplorer({
   // extra commit-then-rerender pass an effect would cost. No history write is
   // needed on this path either: the router has ALREADY put the new key in the
   // URL, so select()'s replaceState would only rewrite what is there.
+  // Keyed on the CURRENT selection, not on the last prop value. Tracking the
+  // last prop meant re-navigating to a ?place= that had been seen once before
+  // was skipped entirely: search for Bordeaux, click Chianti on the map (which
+  // only replaceStates, leaving the prop at Bordeaux), then search Bordeaux
+  // again — the prop is unchanged, so the branch never ran and the map stayed
+  // on Chianti with the URL disagreeing, permanently. The inner comparison
+  // already makes the initial mount and same-key pushes no-ops on its own.
   const [lastInitialKey, setLastInitialKey] = useState(initialPlaceKey);
-  if (initialPlaceKey && initialPlaceKey !== lastInitialKey) {
+  if (initialPlaceKey && (initialPlaceKey !== lastInitialKey || initialPlaceKey !== selectedKey)) {
     setLastInitialKey(initialPlaceKey);
     if (initialPlaceKey !== selectedKey) {
       // Navigation-driven selection flies the camera, exactly as select() does
