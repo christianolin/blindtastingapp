@@ -869,8 +869,15 @@ export function TileWineMap({
     [],
   );
 
-  useEffect(() => {
-    if (!cameraTarget) return;
+  // A cameraTarget that arrives BEFORE the map instance exists used to be
+  // dropped: @vis.gl/react-maplibre creates the map inside an async import, so
+  // mapRef.current is still null on TileWineMap's first commit, and on a cold
+  // deep link the place context usually resolves before that chunk lands. The
+  // effect no-opped, cameraTarget never changed again, and the link framed
+  // nothing — intermittently, depending on which fetch won. Stash it and replay
+  // on load instead.
+  const pendingCameraRef = useRef<CameraTarget | null>(null);
+  const applyCameraTarget = useCallback((cameraTarget: CameraTarget) => {
     // Map-originated selections never reframe: you tapped the shape, so it
     // is on screen; the gold ring appearing is feedback enough.
     if (cameraTarget.source === "map") return;
@@ -926,7 +933,16 @@ export function TileWineMap({
     if (centreVisible && zoomedEnough && spanFrac >= 0.18 && spanFrac <= 1.3)
       return;
     apply();
-  }, [cameraTarget]);
+  }, []);
+
+  useEffect(() => {
+    if (!cameraTarget) return;
+    if (!mapRef.current?.getMap()) {
+      pendingCameraRef.current = cameraTarget;
+      return;
+    }
+    applyCameraTarget(cameraTarget);
+  }, [cameraTarget, applyCameraTarget]);
 
   // Selection-aware paint. The zoom interpolation fades fills — the selected
   // parent included — as children appear, while outlines and labels persist
@@ -1199,6 +1215,12 @@ export function TileWineMap({
           }
           // First gating pass once the map has real bounds.
           syncMountedShards();
+          // Replay a camera target that arrived before the map existed.
+          const pending = pendingCameraRef.current;
+          if (pending) {
+            pendingCameraRef.current = null;
+            applyCameraTarget(pending);
+          }
         }}
         onClick={(e) => {
           // Smallest-wins: the smallest footprint under the click is the most
