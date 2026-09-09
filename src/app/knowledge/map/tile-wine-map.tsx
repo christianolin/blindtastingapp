@@ -178,6 +178,15 @@ function fillsDisabled() {
   return new URLSearchParams(window.location.search).get("debugFills") === "off";
 }
 
+// `?debugClick=1` logs what every click actually hits — zoom, which interactive
+// layers exist on the style, and each feature returned — and puts the map on
+// window.__wineMap. Added because "clicking does nothing" has been diagnosed
+// wrong from source more than once; this turns it into one line of evidence.
+function clickDebugEnabled() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("debugClick") === "1";
+}
+
 // Share of the on-screen wine country a single country must account for before
 // the map treats you as "viewing" it and reveals its subregions. Below this the
 // frame spans several countries, so everything stays at region level.
@@ -699,6 +708,7 @@ export function TileWineMap({
     return mountedShards.filter((key) => ready.has(key));
   }, [mountedShards, readyShards]);
   const noFills = useMemo(() => fillsDisabled(), []);
+  const debugClick = useMemo(() => clickDebugEnabled(), []);
 
   // A selection pins the focus country, but ONLY while that country is still on
   // screen. selectedKey is never cleared by the explorer, so keying focus on it
@@ -1159,8 +1169,15 @@ export function TileWineMap({
         // inert in that mode, no click and no hover cursor at any zoom. The
         // outline layers carry the same key/tier/area/min_zoom the resolver
         // reads, and line layers hit-test fine.
-        interactiveLayerIds={
-          noFills
+        // Labels are hit-testable too. Clicking a place's NAME is the obvious
+        // gesture — often the only practical target, since a climat like
+        // La Tache is a few pixels of polygon next to a much larger label — but
+        // the symbol layers were never listed here, so clicking a name did
+        // nothing at all. They carry the same key/tier/area properties as the
+        // polygons (labelFeatures reuses tileProperties), so the smallest-wins
+        // resolver handles them unchanged.
+        interactiveLayerIds={[
+          ...(noFills
             ? [
                 "world-outlines",
                 "world-region-outlines",
@@ -1170,8 +1187,10 @@ export function TileWineMap({
                 "world-fills",
                 "world-region-fills",
                 ...mountedShards.map((key) => `shard-fills-${key}`),
-              ]
-        }
+              ]),
+          "world-labels",
+          ...mountedShards.map((key) => `shard-labels-${key}`),
+        ]}
         // Tiles and labels cross-fade in by default, which keeps compositing
         // extra passes alive for 300ms after every tile lands — constant while
         // panning or zooming. They pop in instead; on a GPU-bound map that is a
@@ -1215,6 +1234,10 @@ export function TileWineMap({
           }
           // First gating pass once the map has real bounds.
           syncMountedShards();
+          if (debugClick) {
+            (window as unknown as { __wineMap?: unknown }).__wineMap = e.target;
+            console.log("[wine-map] map exposed as window.__wineMap");
+          }
           // Replay a camera target that arrived before the map existed.
           const pending = pendingCameraRef.current;
           if (pending) {
@@ -1223,6 +1246,29 @@ export function TileWineMap({
           }
         }}
         onClick={(e) => {
+          if (debugClick) {
+            const m = mapRef.current?.getMap();
+            const ids = [
+              "world-fills",
+              "world-region-fills",
+              "world-outlines",
+              "world-region-outlines",
+              "world-labels",
+              ...mountedShards.flatMap((k) => [`shard-fills-${k}`, `shard-labels-${k}`]),
+            ];
+            console.log("[wine-map click]", {
+              zoom: m?.getZoom(),
+              mountedShards,
+              focusCountry,
+              layersPresent: ids.filter((id) => m?.getLayer(id)),
+              layersMissing: ids.filter((id) => !m?.getLayer(id)),
+              features: (e.features ?? []).map((f) => ({
+                layer: f.layer?.id,
+                key: (f.properties as { key?: string } | null)?.key,
+                tier: (f.properties as { tier?: number } | null)?.tier,
+              })),
+            });
+          }
           // Smallest-wins: the smallest footprint under the click is the most
           // specific place the user aimed at, so AREA leads and tier/min_zoom
           // only break ties. An enclave (Canon-Fronsac within Fronsac, La Tâche
