@@ -64,6 +64,11 @@ const CASING = "#FFFDF7";
 const BACKGROUND = "#F4F0E4";
 
 const BOUNDARIES = [
+  // The three Alba varietal DOCs were catalogued without footprints even though
+  // the Regione Piemonte layer carries each as its own delimited zone.
+  { key: "barbera-dalba", targetKey: "italy.piemonte.barbera-dalba", denominazi: "Barbera d'Alba", label: "Barbera d'Alba" },
+  { key: "dolcetto-dalba", targetKey: "italy.piemonte.dolcetto-dalba", denominazi: "Dolcetto d'Alba", label: "Dolcetto d'Alba" },
+  { key: "nebbiolo-dalba", targetKey: "italy.piemonte.nebbiolo-dalba", denominazi: "Nebbiolo d'Alba", label: "Nebbiolo d'Alba" },
   { key: "barolo", targetKey: "italy.piemonte.barolo", denominazi: "Barolo", label: "Barolo" },
   { key: "barbaresco", targetKey: "italy.piemonte.barbaresco", denominazi: "Barbaresco", label: "Barbaresco" },
   { key: "dogliani", targetKey: "italy.piemonte.dogliani", denominazi: "Dogliani", label: "Dogliani" },
