@@ -37,6 +37,7 @@ import {
   type WinePlaceTreeNode,
 } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
+import { deepLinkAction } from "@/lib/wine-map/deep-link";
 import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
@@ -349,14 +350,15 @@ export function TileWineMapExplorer({
   // unchanged and is therefore indistinguishable from no navigation at all.
   // That is a rare no-op; the alternatives above are a map you cannot click.
   const [lastInitialKey, setLastInitialKey] = useState(initialPlaceKey);
-  if (initialPlaceKey && initialPlaceKey !== lastInitialKey) {
-    setLastInitialKey(initialPlaceKey);
-    if (initialPlaceKey !== selectedKey) {
+  const deepLink = deepLinkAction({ initialPlaceKey, lastInitialKey, selectedKey });
+  if (deepLink) {
+    setLastInitialKey(deepLink.nextWatermark);
+    if (deepLink.select) {
       // Navigation-driven selection flies the camera, exactly as select() does
       // for tree/search clicks; only map taps hold it still.
       selectSourceRef.current = "ui";
       setContextState("loading");
-      setSelectedKey(initialPlaceKey);
+      setSelectedKey(deepLink.select);
     }
   }
 
