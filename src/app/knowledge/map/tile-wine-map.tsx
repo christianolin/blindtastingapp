@@ -18,6 +18,20 @@ import {
 } from "@/lib/wine-map/localize-names";
 import { cn } from "@/lib/utils";
 
+// Basemap source-layers removed at style load. Roads, place names, water and
+// boundaries all stay — this is only the clutter that carries no meaning on a
+// wine map: street numbers, points of interest, road-name labels, airport
+// runways and building footprints. Positron ships 93 style layers; these
+// account for roughly a third of them, including the symbol layers that are the
+// costliest kind (every symbol layer joins MapLibre's global collision pass).
+const PRUNED_BASEMAP_LAYERS = new Set([
+  "housenumber",
+  "poi",
+  "transportation_name",
+  "aeroway",
+  "building",
+]);
+
 // Free, un-keyed Carto vector basemap — same as the legacy map.
 const BASEMAP_STYLE =
   "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
@@ -1220,11 +1234,21 @@ export function TileWineMap({
           // village-zoom context (Épernay, Châlons…) and our tier-1 labels
           // are no longer contending.
           for (const layer of e.target.getStyle().layers ?? []) {
-            if (
-              layer.type === "symbol" &&
-              "source-layer" in layer &&
-              layer["source-layer"] === "place"
-            ) {
+            const sourceLayer =
+              "source-layer" in layer ? layer["source-layer"] : undefined;
+            // Basemap clutter that a wine map never uses. Measured: a z14 tile
+            // over the Cote de Nuits carries 341 basemap features and 11,049
+            // vertices against 66 features and 637 vertices of ours, across 93
+            // basemap style layers versus our ~16 — so the context map, not the
+            // wine data, is the bulk of what every frame draws. Dropping these
+            // removes symbol layers from the global label-collision pass and
+            // line/fill layers from the draw loop, and cannot affect wine
+            // fidelity because it never touches our own layers.
+            if (sourceLayer && PRUNED_BASEMAP_LAYERS.has(sourceLayer)) {
+              e.target.removeLayer(layer.id);
+              continue;
+            }
+            if (layer.type === "symbol" && sourceLayer === "place") {
               e.target.setLayerZoomRange(
                 layer.id,
                 Math.max(7, layer.minzoom ?? 0),
