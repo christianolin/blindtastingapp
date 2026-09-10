@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { logClientTiming } from "@/lib/reveal-timing";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import {
   revealNextCategory,
@@ -26,6 +27,20 @@ export function RevealControls({
     RevealActionState,
     FormData
   >(revealNextCategory, null);
+
+  // How long the host actually waits: the action plus the whole-route
+  // re-render it triggers, which is what makes the click feel unseamless.
+  const nextStartedAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (nextPending) {
+      nextStartedAt.current = performance.now();
+      return;
+    }
+    if (nextStartedAt.current !== null) {
+      logClientTiming("host: click -> settled", performance.now() - nextStartedAt.current);
+      nextStartedAt.current = null;
+    }
+  }, [nextPending]);
   const [fullState, fullAction, fullPending] = useActionState<
     RevealActionState,
     FormData

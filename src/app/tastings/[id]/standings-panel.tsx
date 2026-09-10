@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getCurrentUser,
+  getParticipantRows,
+  getTastingRow,
+} from "@/lib/tasting-request-cache";
 import { cn } from "@/lib/utils";
 
 // Rank marks in the app's own palette — bordeaux for the winner, a gilt tint
@@ -24,22 +29,16 @@ function rankBadgeClass(rank: number, completed: boolean) {
  */
 export async function StandingsPanel({ tastingId }: { tastingId: string }) {
   const supabase = await createClient();
-  const [leaderboard, { data: userData }, { data: tasting }] =
-    await Promise.all([
-      getTastingLeaderboard(tastingId),
-      supabase.auth.getUser(),
-      supabase
-        .from("tastings")
-        .select("reveal_mode, wine_source, host_id, status")
-        .eq("id", tastingId)
-        .maybeSingle(),
-    ]);
-  const user = userData.user;
+  // The user, tasting and participant rows come from the per-request cache —
+  // the page and PlayExperience have already asked for them by the time this
+  // renders, so these resolve without another round trip.
+  const [leaderboard, user, tasting, participants] = await Promise.all([
+    getTastingLeaderboard(tastingId),
+    getCurrentUser(),
+    getTastingRow(tastingId),
+    getParticipantRows(tastingId),
+  ]);
 
-  const { data: participants } = await supabase
-    .from("tasting_participants")
-    .select("id, user_id, status")
-    .eq("tasting_id", tastingId);
   const userIds = (participants ?? []).map((p) => p.user_id);
   const { data: profiles } = await supabase
     .from("profiles")

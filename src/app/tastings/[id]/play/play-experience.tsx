@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getCurrentUser,
+  getReferenceOptions,
+  getTastingRow,
+  getWineRows,
+} from "@/lib/tasting-request-cache";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
@@ -91,16 +97,12 @@ export async function PlayExperience({
   embedded?: boolean;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Shared with the enclosing tasting page and StandingsPanel via the
+  // per-request cache, so when this renders embedded these cost nothing.
+  const user = await getCurrentUser();
   if (!user) return null;
 
-  const { data: tasting } = await supabase
-    .from("tastings")
-    .select("*")
-    .eq("id", tastingId)
-    .maybeSingle();
+  const tasting = await getTastingRow(tastingId);
   if (!tasting) return null;
 
   const isHost = tasting.host_id === user.id;
@@ -123,27 +125,16 @@ export async function PlayExperience({
   const finished = tasting.status === "CLOSED";
   if (tasting.status === "DRAFT") return null;
 
-  const [
-    { data: wines },
-    { data: countries },
-    { data: regions },
-    { data: grapes },
-    { data: typeDesignations },
-  ] = await Promise.all([
-    supabase
-      .from("wines")
-      .select("id, position, is_revealed, contributor_participant_id, reveal_step")
-      .eq("tasting_id", tastingId)
-      .order("position"),
-    supabase.from("countries").select("id, name").order("name"),
-    supabase.from("regions").select("id, name, country_id").order("name"),
-    supabase.from("grapes").select("id, name").order("name"),
+  const [wines, reference, { data: typeDesignations }] = await Promise.all([
+    getWineRows(tastingId),
+    getReferenceOptions(),
     supabase
       .from("type_designations")
       .select("id, name, category, country_id")
       .eq("is_active", true)
       .order("sort_order"),
   ]);
+  const { countries, regions, grapes } = reference;
 
   const nameById = new Map<string, string>();
   for (const list of [countries, regions, grapes, typeDesignations]) {
@@ -476,7 +467,15 @@ export async function PlayExperience({
   return (
     <div className="flex flex-col gap-6">
       {tasting.timing_mode === "LIVE" ? (
-        <RevealSync tastingId={tastingId} />
+        <RevealSync
+          tastingId={tastingId}
+          // Sum of every wine's reveal step: changes on each advance, so it
+          // marks the moment refreshed content actually committed.
+          watermark={(wines ?? []).reduce(
+            (n, w) => n + (w.reveal_step ?? 0) + (w.is_revealed ? 1000 : 0),
+            0,
+          )}
+        />
       ) : (
         <AutoRefresh />
       )}

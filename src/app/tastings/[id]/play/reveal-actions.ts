@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { timePhase } from "@/lib/reveal-timing";
 
 export type RevealActionState = { error: string } | null;
 
@@ -29,10 +30,14 @@ export async function revealNextCategory(
   const supabase = await createClient();
   const tastingId = await tastingIdForWine(supabase, wineId);
   if (!tastingId) return { error: "Wine not found." };
-  const { error } = await supabase.rpc("reveal_next_category", {
-    p_wine_id: wineId,
-    p_expected_step: expectedStep,
-  });
+  // Supabase's builder is a thenable, not a Promise, so it needs the async
+  // wrapper for timePhase's signature.
+  const { error } = await timePhase("action: reveal_next_category rpc", async () =>
+    supabase.rpc("reveal_next_category", {
+      p_wine_id: wineId,
+      p_expected_step: expectedStep,
+    }),
+  );
   if (error) return { error: error.message };
   revalidatePath(`/tastings/${tastingId}`);
   revalidatePath(`/tastings/${tastingId}/play`);
