@@ -117,11 +117,39 @@ function tallyGuess(acc: ProfileStatsSummary, g: ScoredGuessRow) {
 }
 
 /**
+ * Wine ids that are FULLY revealed within the given tastings. Every profile
+ * statistic is scoped to these, for two reasons that are both load-bearing:
+ *
+ * Correctness — `scored_at` is set on the FIRST reveal step, not the last, so
+ * filtering on it alone let a wine revealed only as far as "country" count as
+ * a whole wine in the averagePoints denominator while contributing a couple
+ * of points. A taster's average sagged mid-tasting and recovered afterwards.
+ *
+ * Stability — the `guesses` SELECT policy admits someone else's row only once
+ * the wine is fully revealed. Anything looser made these figures depend on
+ * who was looking: your own profile counted your in-progress wines, another
+ * person's view of you did not, and a host saw more than either. Scoped this
+ * way, every viewer computes the same numbers from rows RLS already makes
+ * public, so no elevated privileges are needed.
+ */
+async function fullyRevealedWineIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tastingIds: string[],
+): Promise<string[]> {
+  if (tastingIds.length === 0) return [];
+  const { data } = await supabase
+    .from("wines")
+    .select("id")
+    .in("tasting_id", tastingIds)
+    .eq("is_revealed", true);
+  return (data ?? []).map((w) => w.id);
+}
+
+/**
  * A person's cross-tasting stats: wines guessed, points, per-category
- * accuracy, plus which tastings they've attended. Only ever counts
- * revealed/scored guesses (scored_at set), so nothing still-hidden ever
- * leaks through — matches the "revealed = public" RLS rule added for
- * tastings/tasting_participants/wines.
+ * accuracy, plus which tastings they've attended. Counts only fully revealed
+ * wines (see fullyRevealedWineIds), so nothing still-hidden leaks and the
+ * figures are identical no matter who is viewing the profile.
  */
 export async function getProfileStats(profileId: string): Promise<{
   summary: ProfileStatsSummary;
@@ -156,12 +184,21 @@ export async function getProfileStats(profileId: string): Promise<{
     return { summary, tastings: [] };
   }
 
+  const revealedWineIds = await fullyRevealedWineIds(
+    supabase,
+    [...new Set((participantRows ?? []).map((p) => p.tasting_id))],
+  );
+  if (revealedWineIds.length === 0) {
+    return { summary, tastings: [] };
+  }
+
   const { data: guesses } = await supabase
     .from("guesses")
     .select(
       "participant_id, wine_id, country_points, region_points, appellation_points, primary_grape_points, secondary_grape_points, producer_points, type_designation_points, vintage_points, total_points",
     )
     .in("participant_id", participantIds)
+    .in("wine_id", revealedWineIds)
     .not("scored_at", "is", null);
 
   for (const g of guesses ?? []) tallyGuess(summary, g);
@@ -306,10 +343,17 @@ export async function getBulkProfileSummaries(
     participantRows.map((p) => [p.id, p.user_id]),
   );
 
+  const revealedWineIds = await fullyRevealedWineIds(
+    supabase,
+    [...new Set(participantRows.map((p) => p.tasting_id))],
+  );
+  if (revealedWineIds.length === 0) return result;
+
   const { data: guesses } = await supabase
     .from("guesses")
     .select("participant_id, total_points")
     .in("participant_id", participantIds)
+    .in("wine_id", revealedWineIds)
     .not("scored_at", "is", null);
 
   const tastingIdsByUser = new Map<string, Set<string>>();
