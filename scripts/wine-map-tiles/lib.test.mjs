@@ -212,6 +212,7 @@ test("the German namespaces resolve to their own credits", () => {
   // public credit, the way the IGN parcel and admin sources do for France.
   assert.equal(attributionKeyFor("CAOP_CONCELHOS"), "dgt-caop");
   assert.equal(attributionKeyFor("CAOP_RAM"), "dgt-caop");
+  assert.equal(attributionKeyFor("CAOP_FREGUESIAS"), "dgt-caop");
   assert.match(ATTRIBUTION.BKG_VG250.text, /BKG/);
   assert.match(ATTRIBUTION.LWK_RLP_WEINLAGEN.text, /Weinbergsrolle/);
 });

@@ -210,6 +210,13 @@ export const ATTRIBUTION = {
     key: "dgt-caop",
     text: "© Direção-Geral do Território — CAOP 2025 (CC BY 4.0); delimitação segundo os diplomas do IVV/IVDP",
   },
+  // Sub-regions delimited by freguesia lists rather than whole concelhos —
+  // the Douro's three (DL 173/2009) and the two Alentejo ones that Portaria
+  // 296/2010 defines administratively. Same dataset family, same credit.
+  CAOP_FREGUESIAS: {
+    key: "dgt-caop",
+    text: "© Direção-Geral do Território — CAOP 2025 (CC BY 4.0); delimitação segundo os diplomas do IVV/IVDP",
+  },
 };
 
 export function attributionKeyFor(namespace) {

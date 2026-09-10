@@ -1,0 +1,275 @@
+{
+  "_note": "Freguesia-level membership for Portuguese wine sub-regions, with an explicit concordance from the names used in the statutes to the CAOP 2025 units that carry them. The concordance is deliberately explicit rather than fuzzy-matched: freguesia names repeat across concelhos (Ribalonga exists in both Alijó and Carrazeda de Ansiães; Fonte Longa in both Carrazeda and Mêda), and a wrong silent match would put a wrong shape on the map. Every lookup is scoped to its concelho and every entry here was checked against the CAOP unit list for that concelho.",
+  "_sources": {
+    "douro": "Decreto-Lei n.º 173/2009, Estatuto das DO e IG da Região Demarcada do Douro, artigo 2.º (Delimitação da Região). The statute reproduces the delimitation of Decreto n.º 7934 de 10 de Dezembro de 1921 and states that the outlines correspond to the administrative boundaries in force in 1921 — so present-day freguesia geometry is an approximation of the legal area even before the 2013 amalgamations.",
+    "alentejo": "Portaria n.º 296/2010 de 1 de Junho. Only two of the eight Alentejo sub-regions are delimited by administrative units; the other six are delimited by ridgelines, watercourses, roads, a railway and numbered rural properties, and cannot be represented as a union of administrative units."
+  },
+  "concordance": {
+    "Vila Real": {
+      "Nossa Senhora da Conceição": "Vila Real",
+      "São Dinis": "Vila Real",
+      "São Pedro": "Vila Real"
+    },
+    "Lamego": {
+      "Santa Maria de Almacave": "Lamego (Almacave e Sé)"
+    },
+    "Alijó": {
+      "Casal de Loivos": "União das freguesias de Vale de Mendiz, Casal de Loivos e Vilarinho de Cotas",
+      "Vale de Mendiz": "União das freguesias de Vale de Mendiz, Casal de Loivos e Vilarinho de Cotas",
+      "São Mamede de Riba Tua": "São Mamede de Ribatua"
+    },
+    "Sabrosa": {
+      "Provesende": "União das freguesias de Provesende, Gouvães do Douro e São Cristóvão do Douro",
+      "Gouvães do Douro": "União das freguesias de Provesende, Gouvães do Douro e São Cristóvão do Douro",
+      "São Martinho de Anta": "União das freguesias de São Martinho de Antas e Paradela de Guiães"
+    },
+    "São João da Pesqueira": {
+      "Casais do Douro": "Ervedosa do Douro",
+      "Sarzedinho": "Ervedosa do Douro"
+    },
+    "Carrazeda de Ansiães": {
+      "Beira Grande": "União das freguesias de Lavandeira, Beira Grande e Selores",
+      "Lavandeira": "União das freguesias de Lavandeira, Beira Grande e Selores"
+    },
+    "Torre de Moncorvo": {
+      "Horta": "Horta da Vilariça"
+    },
+    "Vila Flor": {
+      "Santa Comba da Vilariça": "Santa Comba de Vilariça"
+    },
+    "Mêda": {
+      "Meda": "Mêda, Outeiro de Gatos e Fonte Longa",
+      "Fontelonga": "Mêda, Outeiro de Gatos e Fonte Longa"
+    }
+  },
+  "footprints": {
+    "douro-baixo-corgo": {
+      "legal": "DL 173/2009 art. 2.1(a). Whole concelhos of Mesao Frio, Peso da Regua and Santa Marta de Penaguiao, plus named freguesias of Vila Real, Armamar, Lamego and Resende.",
+      "whole_concelhos": [
+        "Mesão Frio",
+        "Peso da Régua",
+        "Santa Marta de Penaguião"
+      ],
+      "freguesias": {
+        "Vila Real": [
+          "Abaças",
+          "Ermida",
+          "Folhadela",
+          "Guiães",
+          "Mateus",
+          "Nogueira",
+          "Nossa Senhora da Conceição",
+          "Parada de Cunhos",
+          "São Dinis",
+          "São Pedro"
+        ],
+        "Armamar": [
+          "Aldeias",
+          "Armamar",
+          "Folgosa",
+          "Fontelo",
+          "Santo Adrião",
+          "Vacalar",
+          "Vila Seca"
+        ],
+        "Lamego": [
+          "Cambres",
+          "Ferreiros de Avões",
+          "Figueira",
+          "Parada do Bispo",
+          "Penajóia",
+          "Samodães",
+          "Sande",
+          "Santa Maria de Almacave",
+          "Sé",
+          "Valdigem",
+          "Várzea de Abrunhais"
+        ],
+        "Resende": [
+          "Barrô"
+        ]
+      },
+      "partial": {
+        "Vila Real / Nossa Senhora da Conceição": "statute says (parte); the modern Vila Real freguesia absorbs it whole",
+        "Lamego / Várzea de Abrunhais": "statute includes only the Quintas de Foutoura, do Prado and das Várzeas"
+      }
+    },
+    "douro-cima-corgo": {
+      "legal": "DL 173/2009 art. 2.1(b). Named freguesias of Alijo, Murca, Sabrosa, Sao Joao da Pesqueira, Tabuaco and Carrazeda de Ansiaes.",
+      "whole_concelhos": [],
+      "freguesias": {
+        "Alijó": [
+          "Alijó",
+          "Amieiro",
+          "Carlão",
+          "Casal de Loivos",
+          "Castedo",
+          "Cotas",
+          "Favaios",
+          "Pegarinhos",
+          "Pinhão",
+          "Sanfins do Douro",
+          "Santa Eugénia",
+          "São Mamede de Riba Tua",
+          "Vale de Mendiz",
+          "Vilar de Maçada",
+          "Vilarinho de Cotas"
+        ],
+        "Murça": [
+          "Candedo",
+          "Murça",
+          "Noura"
+        ],
+        "Sabrosa": [
+          "Celeirós",
+          "Covas do Douro",
+          "Gouvães do Douro",
+          "Gouvinhas",
+          "Paços",
+          "Paradela de Guiães",
+          "Provesende",
+          "Sabrosa",
+          "São Cristóvão do Douro",
+          "São Martinho de Anta",
+          "Souto Maior",
+          "Vilarinho de São Romão"
+        ],
+        "São João da Pesqueira": [
+          "Casais do Douro",
+          "Castanheiro do Sul",
+          "Espinhosa",
+          "Ervedosa do Douro",
+          "Nagozelo do Douro",
+          "Paredes da Beira",
+          "São João da Pesqueira",
+          "Sarzedinho",
+          "Soutelo do Douro",
+          "Trevões",
+          "Vale de Figueira",
+          "Valongo dos Azeites",
+          "Várzea de Trevões",
+          "Vilarouco"
+        ],
+        "Tabuaço": [
+          "Adorigo",
+          "Barcos",
+          "Desejosa",
+          "Granjinha",
+          "Pereiro",
+          "Santa Leocádia",
+          "Sendim",
+          "Tabuaço",
+          "Távora",
+          "Valença do Douro"
+        ],
+        "Carrazeda de Ansiães": [
+          "Beira Grande",
+          "Castanheiro do Norte",
+          "Carrazeda de Ansiães",
+          "Lavandeira",
+          "Linhares",
+          "Parambos",
+          "Pereiros",
+          "Pinhal do Norte",
+          "Pombal",
+          "Ribalonga",
+          "Seixo de Ansiães",
+          "Vilarinho da Castanheira"
+        ]
+      },
+      "partial": {}
+    },
+    "douro-douro-superior": {
+      "legal": "DL 173/2009 art. 2.1(c). Named freguesias of Alfandega da Fe, Freixo de Espada a Cinta, Mirandela, Torre de Moncorvo, Vila Flor, Figueira de Castelo Rodrigo and Meda, plus the whole concelho of Vila Nova de Foz Coa.",
+      "whole_concelhos": [
+        "Vila Nova de Foz Côa"
+      ],
+      "freguesias": {
+        "Alfândega da Fé": [
+          "Vilarelhos"
+        ],
+        "Freixo de Espada à Cinta": [
+          "Freixo de Espada à Cinta",
+          "Ligares",
+          "Mazouco",
+          "Poiares"
+        ],
+        "Mirandela": [
+          "Frechas",
+          "Avantos",
+          "Carvalhais",
+          "Romeu"
+        ],
+        "Torre de Moncorvo": [
+          "Açoreira",
+          "Adeganha",
+          "Cabeça Boa",
+          "Horta",
+          "Lousa",
+          "Peredo dos Castelhanos",
+          "Torre de Moncorvo",
+          "Urros"
+        ],
+        "Vila Flor": [
+          "Assares",
+          "Freixiel",
+          "Lodões",
+          "Roios",
+          "Sampaio",
+          "Santa Comba da Vilariça",
+          "Seixo de Manhoses",
+          "Vale Frechoso",
+          "Vilarinho das Azenhas",
+          "Vilas Boas",
+          "Vila Flor"
+        ],
+        "Figueira de Castelo Rodrigo": [
+          "Escalhão"
+        ],
+        "Mêda": [
+          "Fontelonga",
+          "Longroiva",
+          "Meda",
+          "Poço do Canto"
+        ]
+      },
+      "partial": {
+        "Mirandela / Frechas, Avantos, Carvalhais, Romeu": "statute includes only the former D. Maria Angelica de Sousa Pinto Barroso properties and those of the Sociedade Clemente Meneres",
+        "Vila Flor / Vilas Boas": "statute includes only the Quintas da Peca and das Trigueiras and the Vimieiro properties"
+      }
+    },
+    "alentejo-vidigueira": {
+      "legal": "Portaria 296/2010: 'os limites da sub-regiao correspondem aos limites dos concelhos de Alvito, Cuba e Vidigueira' — legally exact, no approximation.",
+      "whole_concelhos": [
+        "Alvito",
+        "Cuba",
+        "Vidigueira"
+      ],
+      "freguesias": {},
+      "partial": {}
+    },
+    "alentejo-granja-amareleja": {
+      "legal": "Portaria 296/2010: the whole concelho of Mourao ('a area total das tres freguesias: Mourao, Granja e Luz') plus 'a area total das freguesias de Povoa de Sao Miguel e Amareleja' of Moura.",
+      "whole_concelhos": [
+        "Mourão"
+      ],
+      "freguesias": {
+        "Moura": [
+          "Amareleja",
+          "Póvoa de São Miguel"
+        ]
+      },
+      "partial": {
+        "Moura / Ardila": "statute adds a small zone between the Povoa de Sao Miguel boundary and the mouth of the rio Ardila, which has no administrative unit and is not included"
+      }
+    },
+    "douro": {
+      "legal": "DL 173/2009 art. 2.1. The Regiao Demarcada do Douro is exactly the union of its three sub-regions, so it is derived from them rather than listed again.",
+      "union_of": [
+        "douro-baixo-corgo",
+        "douro-cima-corgo",
+        "douro-douro-superior"
+      ]
+    }
+  }
+}

@@ -2,41 +2,233 @@
   "slug": "portugal",
   "footprints": {
     "douro": {
-      "legal": "Decreto-Lei 173/2009 (Estatuto das DO e IG da Regiao Demarcada do Douro); RDD = 21 concelhos",
-      "concelhos": ["Alijó","Armamar","Carrazeda de Ansiães","Freixo de Espada à Cinta","Lamego","Mêda","Mesão Frio","Moimenta da Beira","Murça","Penedono","Peso da Régua","Sabrosa","Santa Marta de Penaguião","São João da Pesqueira","Sernancelhe","Tabuaço","Tarouca","Torre de Moncorvo","Vila Flor","Vila Nova de Foz Côa","Vila Real"]
+      "_superseded_by": "portugal-subregion-membership.json footprint 'douro' (freguesia-union)",
+      "_error": "WRONG — do not rebuild from this. Taken from a tourism-site concelho list, not from DL 173/2009. It included Moimenta da Beira, Penedono, Sernancelhe and Tarouca (which belong to Tavora-Varosa, not the Douro) and omitted Resende, Alfandega da Fe, Mirandela and Figueira de Castelo Rodrigo, which the statute names. The resulting footprint was 4596 km2 against a true 2824 km2. Retained only because the wave-1 artifact checksum pins the file it produced.",
+      "concelhos": [
+        "Alijó",
+        "Armamar",
+        "Carrazeda de Ansiães",
+        "Freixo de Espada à Cinta",
+        "Lamego",
+        "Mêda",
+        "Mesão Frio",
+        "Moimenta da Beira",
+        "Murça",
+        "Penedono",
+        "Peso da Régua",
+        "Sabrosa",
+        "Santa Marta de Penaguião",
+        "São João da Pesqueira",
+        "Sernancelhe",
+        "Tabuaço",
+        "Tarouca",
+        "Torre de Moncorvo",
+        "Vila Flor",
+        "Vila Nova de Foz Côa",
+        "Vila Real"
+      ]
     },
     "minho": {
       "legal": "DO Vinho Verde / Regiao Demarcada dos Vinhos Verdes; union of the nine sub-regions",
-      "concelhos": ["Monção","Melgaço","Viana do Castelo","Ponte de Lima","Ponte da Barca","Arcos de Valdevez","Esposende","Barcelos","Braga","Vila Verde","Amares","Terras de Bouro","Vila Nova de Famalicão","Fafe","Guimarães","Santo Tirso","Trofa","Póvoa de Lanhoso","Vieira do Minho","Póvoa de Varzim","Vila do Conde","Vizela","Cabeceiras de Basto","Celorico de Basto","Mondim de Basto","Ribeira de Pena","Amarante","Marco de Canaveses","Baião","Resende","Cinfães","Paços de Ferreira","Paredes","Lousada","Felgueiras","Penafiel","Castelo de Paiva"]
+      "concelhos": [
+        "Monção",
+        "Melgaço",
+        "Viana do Castelo",
+        "Ponte de Lima",
+        "Ponte da Barca",
+        "Arcos de Valdevez",
+        "Esposende",
+        "Barcelos",
+        "Braga",
+        "Vila Verde",
+        "Amares",
+        "Terras de Bouro",
+        "Vila Nova de Famalicão",
+        "Fafe",
+        "Guimarães",
+        "Santo Tirso",
+        "Trofa",
+        "Póvoa de Lanhoso",
+        "Vieira do Minho",
+        "Póvoa de Varzim",
+        "Vila do Conde",
+        "Vizela",
+        "Cabeceiras de Basto",
+        "Celorico de Basto",
+        "Mondim de Basto",
+        "Ribeira de Pena",
+        "Amarante",
+        "Marco de Canaveses",
+        "Baião",
+        "Resende",
+        "Cinfães",
+        "Paços de Ferreira",
+        "Paredes",
+        "Lousada",
+        "Felgueiras",
+        "Penafiel",
+        "Castelo de Paiva"
+      ]
     },
-    "minho-moncao-melgaco": { "concelhos": ["Monção","Melgaço"] },
-    "minho-lima": { "concelhos": ["Viana do Castelo","Ponte de Lima","Ponte da Barca","Arcos de Valdevez"] },
-    "minho-cavado": { "concelhos": ["Esposende","Barcelos","Braga","Vila Verde","Amares","Terras de Bouro"] },
-    "minho-ave": { "concelhos": ["Vila Nova de Famalicão","Fafe","Guimarães","Santo Tirso","Trofa","Póvoa de Lanhoso","Vieira do Minho","Póvoa de Varzim","Vila do Conde","Vizela"] },
-    "minho-basto": { "concelhos": ["Cabeceiras de Basto","Celorico de Basto","Mondim de Basto","Ribeira de Pena"] },
-    "minho-sousa": { "concelhos": ["Paços de Ferreira","Paredes","Lousada","Felgueiras","Penafiel"] },
-    "minho-amarante": { "concelhos": ["Amarante","Marco de Canaveses"] },
-    "minho-baiao": { "concelhos": ["Baião","Resende","Cinfães"] },
-    "minho-paiva": { "concelhos": ["Castelo de Paiva"] },
+    "minho-moncao-melgaco": {
+      "concelhos": [
+        "Monção",
+        "Melgaço"
+      ]
+    },
+    "minho-lima": {
+      "concelhos": [
+        "Viana do Castelo",
+        "Ponte de Lima",
+        "Ponte da Barca",
+        "Arcos de Valdevez"
+      ]
+    },
+    "minho-cavado": {
+      "concelhos": [
+        "Esposende",
+        "Barcelos",
+        "Braga",
+        "Vila Verde",
+        "Amares",
+        "Terras de Bouro"
+      ]
+    },
+    "minho-ave": {
+      "concelhos": [
+        "Vila Nova de Famalicão",
+        "Fafe",
+        "Guimarães",
+        "Santo Tirso",
+        "Trofa",
+        "Póvoa de Lanhoso",
+        "Vieira do Minho",
+        "Póvoa de Varzim",
+        "Vila do Conde",
+        "Vizela"
+      ]
+    },
+    "minho-basto": {
+      "concelhos": [
+        "Cabeceiras de Basto",
+        "Celorico de Basto",
+        "Mondim de Basto",
+        "Ribeira de Pena"
+      ]
+    },
+    "minho-sousa": {
+      "concelhos": [
+        "Paços de Ferreira",
+        "Paredes",
+        "Lousada",
+        "Felgueiras",
+        "Penafiel"
+      ]
+    },
+    "minho-amarante": {
+      "concelhos": [
+        "Amarante",
+        "Marco de Canaveses"
+      ]
+    },
+    "minho-baiao": {
+      "concelhos": [
+        "Baião",
+        "Resende",
+        "Cinfães"
+      ]
+    },
+    "minho-paiva": {
+      "concelhos": [
+        "Castelo de Paiva"
+      ]
+    },
     "dao": {
       "legal": "DO Dao; 16 concelhos across the districts of Coimbra, Guarda and Viseu",
-      "concelhos": ["Arganil","Oliveira do Hospital","Tábua","Aguiar da Beira","Fornos de Algodres","Gouveia","Seia","Carregal do Sal","Mangualde","Mortágua","Nelas","Penalva do Castelo","Santa Comba Dão","Sátão","Tondela","Viseu"]
+      "concelhos": [
+        "Arganil",
+        "Oliveira do Hospital",
+        "Tábua",
+        "Aguiar da Beira",
+        "Fornos de Algodres",
+        "Gouveia",
+        "Seia",
+        "Carregal do Sal",
+        "Mangualde",
+        "Mortágua",
+        "Nelas",
+        "Penalva do Castelo",
+        "Santa Comba Dão",
+        "Sátão",
+        "Tondela",
+        "Viseu"
+      ]
     },
     "bairrada": {
       "legal": "DO Bairrada; 8 concelhos (CVR Bairrada)",
-      "concelhos": ["Águeda","Anadia","Aveiro","Cantanhede","Coimbra","Mealhada","Oliveira do Bairro","Vagos"]
+      "concelhos": [
+        "Águeda",
+        "Anadia",
+        "Aveiro",
+        "Cantanhede",
+        "Coimbra",
+        "Mealhada",
+        "Oliveira do Bairro",
+        "Vagos"
+      ]
     },
     "alentejo": {
       "legal": "DO Alentejo = union of the eight sub-regions (IVV). Concelho-level union of every concelho named in those definitions.",
-      "concelhos": ["Portalegre","Castelo de Vide","Crato","Marvão","Sousel","Borba","Alandroal","Elvas","Estremoz","Monforte","Vila Viçosa","Redondo","Évora","Reguengos de Monsaraz","Arraiolos","Montemor-o-Novo","Vidigueira","Alvito","Cuba","Moura","Mourão","Serpa"]
+      "concelhos": [
+        "Portalegre",
+        "Castelo de Vide",
+        "Crato",
+        "Marvão",
+        "Sousel",
+        "Borba",
+        "Alandroal",
+        "Elvas",
+        "Estremoz",
+        "Monforte",
+        "Vila Viçosa",
+        "Redondo",
+        "Évora",
+        "Reguengos de Monsaraz",
+        "Arraiolos",
+        "Montemor-o-Novo",
+        "Vidigueira",
+        "Alvito",
+        "Cuba",
+        "Moura",
+        "Mourão",
+        "Serpa"
+      ]
     },
     "peninsula-de-setubal": {
       "legal": "IG Peninsula de Setubal = the Setubal district (13 concelhos)",
-      "concelhos": ["Alcácer do Sal","Alcochete","Almada","Barreiro","Grândola","Moita","Montijo","Palmela","Santiago do Cacém","Seixal","Sesimbra","Setúbal","Sines"]
+      "concelhos": [
+        "Alcácer do Sal",
+        "Alcochete",
+        "Almada",
+        "Barreiro",
+        "Grândola",
+        "Moita",
+        "Montijo",
+        "Palmela",
+        "Santiago do Cacém",
+        "Seixal",
+        "Sesimbra",
+        "Setúbal",
+        "Sines"
+      ]
     },
     "palmela": {
       "legal": "DO Palmela / DO Setubal: concelho of Palmela in full, plus freguesias of Montijo (Canha, Santo Isidro de Pegoes) and Setubal (Gambia-Pontes-Alto da Guerra, Sao Sebastiao). Concelho-level union.",
-      "concelhos": ["Palmela","Montijo","Setúbal"]
+      "concelhos": [
+        "Palmela",
+        "Montijo",
+        "Setúbal"
+      ]
     }
   }
 }
