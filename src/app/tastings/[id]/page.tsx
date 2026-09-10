@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, MapPin, Wine } from "lucide-react";
@@ -6,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getCurrentUser,
+  getParticipantRows,
+  getReferenceOptions,
+  getTastingRow,
+  getWineRows,
+} from "@/lib/tasting-request-cache";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { makeWineLabeler } from "@/lib/wine-label";
@@ -28,26 +36,19 @@ export default async function TastingPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Shared reads go through the per-request cache: PlayExperience and
+  // StandingsPanel render inside this page and need the same rows.
+  const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }
 
-  const { data: tasting } = await supabase
-    .from("tastings")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  const tasting = await getTastingRow(id);
   if (!tasting) {
     notFound();
   }
 
-  const { data: participantRows } = await supabase
-    .from("tasting_participants")
-    .select("id, user_id, status")
-    .eq("tasting_id", id);
+  const participantRows = await getParticipantRows(id);
 
   const userIds = (participantRows ?? []).map((p) => p.user_id);
   const { data: profiles } = await supabase
@@ -59,11 +60,7 @@ export default async function TastingPage({
   // points) — one batched query via the shared helper, not per-person.
   const statsByUserId = await getBulkProfileSummaries(userIds);
 
-  const { data: wines } = await supabase
-    .from("wines")
-    .select("id, position, is_revealed, contributor_participant_id")
-    .eq("tasting_id", id)
-    .order("position");
+  const wines = await getWineRows(id);
 
   const isHost = tasting.host_id === user.id;
   const myParticipant = (participantRows ?? []).find(
@@ -161,9 +158,9 @@ export default async function TastingPage({
       { data: ht },
       { data: hAnswers },
     ] = await Promise.all([
-      supabase.from("countries").select("id, name"),
-      supabase.from("regions").select("id, name"),
-      supabase.from("grapes").select("id, name"),
+      getReferenceOptions().then((r) => ({ data: r.countries })),
+      getReferenceOptions().then((r) => ({ data: r.regions })),
+      getReferenceOptions().then((r) => ({ data: r.grapes })),
       supabase.from("type_designations").select("id, name"),
       supabase.from("wine_answers").select("*").in("wine_id", wineIds),
     ]);
@@ -640,7 +637,16 @@ export default async function TastingPage({
               )}
             </div>
             <aside className="lg:sticky lg:top-8 lg:self-start">
-              <StandingsPanel tastingId={id} />
+              {/* Streamed: the standings do their own leaderboard query, and
+                  gating the revealed category behind it made every reveal feel
+                  slow for host and participants alike. */}
+              <Suspense
+                fallback={
+                  <div className="h-40 animate-pulse rounded-lg bg-muted/40" />
+                }
+              >
+                <StandingsPanel tastingId={id} />
+              </Suspense>
             </aside>
           </div>
         </>
