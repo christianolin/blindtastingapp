@@ -22,15 +22,15 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://eqzwmkpeysqiihuojmuj.supabase.co
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - name: Cache tippecanoe
         id: cache-tippecanoe
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/tippecanoe-bin
           key: tippecanoe-2.79.0
@@ -65,9 +65,14 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tiles-build
+          # .tiles-build is a dot directory, and upload-artifact skips hidden
+          # paths by default -- so every run since that default changed has
+          # uploaded nothing and logged "No files were found", leaving failed
+          # runs with no release.json or layer inputs to inspect.
+          include-hidden-files: true
           path: |
             .tiles-build/release.json
             .tiles-build/*.geojson
