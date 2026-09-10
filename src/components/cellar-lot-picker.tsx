@@ -5,6 +5,7 @@ import { Wine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CellarLotOption } from "@/app/cellar/new/actions";
+import { deaccent } from "@/lib/deaccent";
 
 // Shared "pick a bottle from my cellar" list: a search box over the caller's
 // in-stock lots, each shown as a two-line row (wine label + size · location ·
@@ -21,10 +22,11 @@ export function CellarLotPicker({
 }) {
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    // Deaccented on both sides so "chateauneuf" matches a Châteauneuf lot.
+    const needle = deaccent(q.trim().toLowerCase());
     const list = lots ?? [];
     return needle
-      ? list.filter((l) => l.label.toLowerCase().includes(needle))
+      ? list.filter((l) => deaccent(l.label.toLowerCase()).includes(needle))
       : list;
   }, [lots, q]);
 
