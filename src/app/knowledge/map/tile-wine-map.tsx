@@ -125,6 +125,17 @@ export const REGION_COLORS: Record<string, string> = {
   nahe: "#5C6E9A",
   ahr: "#A83E4E",
   mittelrhein: "#3E8C9A",
+  // Portugal. Neighbouring regions run down the country in order, so the hues
+  // alternate warm/cool: Minho green, Douro slate-blue, Bairrada and Dão
+  // (which touch) copper vs moss, Setúbal teal, Alentejo terracotta.
+  portugal: "#6B6257",
+  minho: "#3E8C5E",
+  douro: "#2E5C8C",
+  dao: "#6E8C3E",
+  bairrada: "#B06A2E",
+  "peninsula-de-setubal": "#2E8C9A",
+  alentejo: "#B04A2E",
+  madeira: "#8C3E7A",
 };
 const REGION_LABELS: Record<string, string> = {
   france: "France",
@@ -154,6 +165,14 @@ const REGION_LABELS: Record<string, string> = {
   nahe: "Nahe",
   ahr: "Ahr",
   mittelrhein: "Mittelrhein",
+  portugal: "Portugal",
+  minho: "Minho",
+  douro: "Douro",
+  dao: "Dão",
+  bairrada: "Bairrada",
+  "peninsula-de-setubal": "Península de Setúbal",
+  alentejo: "Alentejo",
+  madeira: "Madeira",
 };
 const FALLBACK_COLOR = "#6B6257";
 const SELECTED_COLOR = "#B78E42";

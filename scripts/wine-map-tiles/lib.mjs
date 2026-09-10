@@ -197,6 +197,19 @@ export const ATTRIBUTION = {
     key: "lwk-rlp",
     text: "© LGB-RLP, dl-de/by-2.0 — Weinbergsrolle der Landwirtschaftskammer Rheinland-Pfalz",
   },
+  // Portugal: no authority publishes open DO boundaries, so every Portuguese
+  // footprint is a concelho-union of CAOP 2025 (DGT) driven by the legal area
+  // definitions published by the IVV / IVDP / regional CVRs — the same method
+  // Italy uses over ISTAT comuni. Mainland and Madeira are separate CAOP
+  // datasets, hence two namespaces sharing one public credit.
+  CAOP_CONCELHOS: {
+    key: "dgt-caop",
+    text: "© Direção-Geral do Território — CAOP 2025 (CC BY 4.0); delimitação segundo os diplomas do IVV/IVDP",
+  },
+  CAOP_RAM: {
+    key: "dgt-caop",
+    text: "© Direção-Geral do Território — CAOP 2025 (CC BY 4.0); delimitação segundo os diplomas do IVV/IVDP",
+  },
 };
 
 export function attributionKeyFor(namespace) {
