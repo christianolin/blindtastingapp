@@ -29,8 +29,11 @@ export async function getTastingLeaderboard(
 ): Promise<LeaderboardRow[]> {
   const supabase = await createClient();
 
-  const [{ data: participants }, { data: wines }, { data: scores }] =
-    await Promise.all([
+  const [
+    { data: participants },
+    { data: wines },
+    { data: scores, error: scoresError },
+  ] = await Promise.all([
       supabase
         .from("tasting_participants")
         .select("id, user_id")
@@ -41,6 +44,17 @@ export async function getTastingLeaderboard(
         .eq("tasting_id", tastingId),
       supabase.rpc("get_tasting_leaderboard", { p_tasting_id: tastingId }),
     ]);
+
+  // Without this the board degrades to every participant on 0 points and says
+  // nothing about why — indistinguishable from "nobody has scored yet". Most
+  // likely cause is an environment where this migration has not been applied.
+  // Degrading is fine; degrading silently is not.
+  if (scoresError) {
+    console.error("get_tasting_leaderboard RPC failed", {
+      tastingId,
+      error: scoresError,
+    });
+  }
 
   const userIds = (participants ?? []).map((p) => p.user_id);
   const { data: profiles } = await supabase

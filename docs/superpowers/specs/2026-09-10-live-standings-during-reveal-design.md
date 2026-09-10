@@ -54,16 +54,28 @@ including for categories **not yet revealed**, and while guessing may still be
 open. That trades a scoreboard bug for a cheating vector.
 
 A restricted `guesses_leaderboard` view was also considered. It is narrower,
-but still publishes per-person, per-wine totals, from which a non-zero jump
-reveals that someone has already matched the unrevealed appellation. Aggregates
-are the only shape that leaks nothing.
+but it publishes the full per-person, per-wine grid for every wine at once, and
+it does so through RLS on a view, which is easy to get subtly wrong on a later
+edit. A definer function with a fixed, minimal column list is the tighter
+surface.
 
 ## Design
 
 ### `get_tasting_leaderboard(p_tasting_id uuid)`
 
 A new `STABLE SECURITY DEFINER` function returning one row per participant, and
-**only aggregates** — no guessed value ever crosses the boundary.
+**points totals only** — no **unrevealed** value ever crosses the boundary.
+
+That is deliberately not the stronger claim "no per-wine figure crosses it":
+`last_round_points` *is* a single participant's points on a single wine. It is
+benign, and the reason is worth stating rather than assuming. `total_points`
+sums matched categories that have **already been revealed** — unrevealed
+category columns are null — so the figure cannot disclose whether someone has
+matched a category the host has not yet turned over. And it is derivable from
+successive `total` deltas anyway, so it adds no disclosure over the running
+total the board already shows. The four columns below are the whole contract:
+adding a fifth is where a real leak would enter, so any future addition needs
+this same argument made afresh.
 
 ```
 RETURNS TABLE (
@@ -93,8 +105,13 @@ unchanged for every mode other than the broken one:
 already revealed-categories-only, the per-category drip needs no new
 arithmetic.
 
-`last_round_points` keeps the current definition: the participant's points on
-the wine with the most recent `scored_at` among countable guesses.
+`last_round_points` is the participant's points on **their own** most recently
+scored countable wine — the greatest `scored_at` among that participant's
+countable guesses — or NULL if they have none. It is scoped per participant,
+not globally: in a `LIVE` tasting everyone is on the same wine so the two are
+the same, but in a self-paced tasting a global pick would show "+0 last round"
+to anyone who has not yet reached whichever wine some other participant scored
+most recently.
 
 ### `getTastingLeaderboard` becomes a wrapper
 
