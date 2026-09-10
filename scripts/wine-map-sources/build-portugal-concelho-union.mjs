@@ -27,6 +27,12 @@ const outFeatures = [];
 let hadError = false;
 
 for (const [slug, spec] of Object.entries(cfg.footprints)) {
+  // A footprint superseded by a better source stays in the config as a record
+  // of the correction, but must never be rebuilt from.
+  if (spec._superseded_by) {
+    console.log(`[${slug}] SKIPPED — superseded by ${spec._superseded_by}`);
+    continue;
+  }
   const feats = [];
   const missing = [];
   for (const c of spec.concelhos) {
