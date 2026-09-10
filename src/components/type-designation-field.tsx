@@ -13,6 +13,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { deaccent } from "@/lib/deaccent";
 
 export type TypeDesignationOption = {
   id: string;
@@ -94,6 +95,8 @@ export function TypeDesignationField({
     <CommandItem
       key={o.id}
       value={`${o.name} ${o.category ?? ""}`}
+      // Accented designations (e.g. Réserve) must match unaccented typing.
+      keywords={[deaccent(`${o.name} ${o.category ?? ""}`)]}
       onSelect={() => selectOption(o.id)}
     >
       <Check

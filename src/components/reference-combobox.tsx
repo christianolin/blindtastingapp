@@ -13,6 +13,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { deaccent } from "@/lib/deaccent";
 
 export type ReferenceOption = { id: string; name: string };
 
@@ -144,6 +145,10 @@ export function ReferenceCombobox({
                   <CommandItem
                     key={option.id}
                     value={option.name}
+                    // So "rhone" finds Rhône and "gewurztraminer" finds
+                    // Gewürztraminer. cmdk's scorer compares raw strings, so
+                    // without this the accented option scores 0 and vanishes.
+                    keywords={[deaccent(option.name)]}
                     onSelect={() => selectOption(option.id)}
                   >
                     <Check
