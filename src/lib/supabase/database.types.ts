@@ -1364,6 +1364,15 @@ export type Database = {
         Args: { p_wine_id: string; p_expected_step: number };
         Returns: number;
       };
+      get_tasting_leaderboard: {
+        Args: { p_tasting_id: string };
+        Returns: {
+          participant_id: string;
+          total: number;
+          wines_scored: number;
+          last_round_points: number | null;
+        }[];
+      };
       get_wine_reveal: {
         Args: { p_wine_id: string };
         Returns: unknown;
