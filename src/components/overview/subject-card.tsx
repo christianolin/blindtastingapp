@@ -29,8 +29,12 @@ export function SubjectCard({
 }) {
   return (
     <section
+      // Only on phones may the card shrink below its content (`min-h-0`) —
+      // that is what lets the three share one screen. From `md` up the card
+      // keeps its natural height so a long list makes the page scroll instead
+      // of being clipped by overflow-hidden.
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-[13px] border border-border-strong bg-card max-md:flex-1 max-md:rounded-xl",
+        "flex flex-col overflow-hidden rounded-[13px] border border-border-strong bg-card max-md:min-h-0 max-md:flex-1 max-md:rounded-xl",
         className,
       )}
     >
