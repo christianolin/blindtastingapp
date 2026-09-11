@@ -3,15 +3,27 @@
 import { useState, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wine, BookOpen, Boxes, GraduationCap, Users, Shield, LogOut, ChevronRight } from "lucide-react";
+import {
+  Wine,
+  BookOpen,
+  Boxes,
+  GraduationCap,
+  Users,
+  Shield,
+  LogOut,
+  ChevronRight,
+  LayoutDashboard,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navWithAdmin, isNavActive, type NavChild } from "@/components/nav-links";
 import { useAddWine } from "@/components/add-wine-context";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
 import { signOut } from "@/app/actions";
 import { BlindrMark } from "@/components/logo";
+import { PROFILE_LINKS } from "@/components/profile-links";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  overview: LayoutDashboard,
   taste: Wine,
   catalog: BookOpen,
   cellar: Boxes,
@@ -20,9 +32,10 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   admin: Shield,
 };
 
-// The persistent left navigation (desktop only — below lg the MobileNav drawer
-// in the top bar takes over). Five pillars with their real sub-pages, active-
-// highlighted from the URL, and the signed-in user pinned at the bottom.
+// The persistent left navigation (desktop only — below md the MobileNav drawer
+// in the top bar takes over). Overview plus five pillars with their real
+// sub-pages, active-highlighted from the URL, and the signed-in user pinned at
+// the bottom.
 export function AppSidebar({
   isManager,
   user,
@@ -32,6 +45,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const links = navWithAdmin(isManager);
+  const profileActive = pathname.startsWith("/profile");
   // Collapsible sub-nav: a pillar's children show when you're inside that
   // section; a chevron tap overrides either way. Keeps the sidebar one calm
   // line per pillar instead of every section's sub-pages all the time.
@@ -52,7 +66,7 @@ export function AppSidebar({
     // content column instead, so the aside cannot move on any device.
     <aside className="hidden h-full w-60 shrink-0 flex-col bg-primary text-primary-foreground md:flex">
       <div className="px-5 pt-4 pb-2">
-        <Link href="/taste" className="flex items-center gap-2 transition-opacity hover:opacity-90">
+        <Link href="/overview" className="flex items-center gap-2 transition-opacity hover:opacity-90">
           <BlindrMark size={26} onDark />
           <span className="font-heading text-xl font-semibold tracking-tight">Blindr</span>
         </Link>
@@ -156,11 +170,18 @@ export function AppSidebar({
         })}
       </nav>
 
+      {/* The signed-in person. Under /profile/* this block is the active item
+          and reveals its two sub-pages (Your numbers, Profile & settings) —
+          that, plus the top-bar pill, is how the stats page is reached; it is
+          deliberately not a nav pillar. */}
       <div className="border-t border-primary-foreground/15 p-3">
         <div className="flex items-center gap-2">
           <Link
             href={`/u/${user.id}`}
-            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-primary-foreground/10"
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-primary-foreground/10",
+              profileActive && "bg-primary-foreground/15",
+            )}
           >
             {user.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -174,7 +195,14 @@ export function AppSidebar({
                 {user.name.slice(0, 1).toUpperCase()}
               </span>
             )}
-            <span className="truncate text-sm font-medium">{user.name}</span>
+            <span
+              className={cn(
+                "truncate text-sm",
+                profileActive ? "font-semibold" : "font-medium",
+              )}
+            >
+              {user.name}
+            </span>
           </Link>
           <form action={signOut}>
             <button
@@ -186,6 +214,29 @@ export function AppSidebar({
             </button>
           </form>
         </div>
+        {profileActive ? (
+          <div className="mt-0.5 mb-1 ml-6 flex flex-col border-l border-primary-foreground/[.18] pl-3">
+            {PROFILE_LINKS.map((l) => {
+              const active =
+                pathname === l.href || pathname.startsWith(`${l.href}/`);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "rounded-md px-2.5 py-1.5 text-[12.5px] transition-colors",
+                    active
+                      ? "font-semibold text-primary-foreground"
+                      : "text-primary-foreground/60 hover:text-primary-foreground",
+                  )}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </aside>
   );

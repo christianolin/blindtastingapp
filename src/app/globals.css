@@ -24,6 +24,18 @@
   --font-heading: var(--font-cormorant);
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
+  /* Redesign palette (Overview / About / Your numbers handoff). */
+  --color-rose: var(--rose);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  --color-live: var(--live);
+  --color-border-light: var(--border-light);
+  --color-border-strong: var(--border-strong);
+  --color-ink-photo: var(--ink-photo);
+  --color-ink-caption: var(--ink-caption);
+  --color-placeholder: var(--placeholder);
+  --color-placeholder-soft: var(--placeholder-soft);
+  --color-chart-oldest: var(--chart-oldest);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -86,6 +98,20 @@
   --ring: #c3a25b;
   --gold: #c3a25b;
   --gold-deep: #b78e42;
+  /* Redesign palette (Overview / About / Your numbers handoff): the third
+     chart series, the live-banner accents, the finer border steps and the
+     ink shades used over the photo bands. Values are the handoff's. */
+  --rose: #a8425a;
+  --gold-light: #d4af6a;
+  --gold-dark: #6e5416;
+  --live: #c6543f;
+  --border-light: #f0e6d1;
+  --border-strong: #dcceb0;
+  --ink-photo: #5a4b3c;
+  --ink-caption: #6b5b45;
+  --placeholder: #a79574;
+  --placeholder-soft: #c9b896;
+  --chart-oldest: #e5d9c0;
   --chart-1: #5c1a2b;
   --chart-2: #c3a25b;
   --chart-3: #3f5b42;
@@ -290,4 +316,35 @@
   .wset-sheet {
     zoom: 1.15;
   }
+}
+/* Live-banner dot (Overview): a duplicate behind the dot scales out and
+   fades. Reduced motion drops the animation but keeps the dot. */
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.animate-live-ping {
+  animation: live-ping 1.7s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-live-ping {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Empty-image placeholder for bottle thumbs and tasting covers. */
+.hatch {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--muted) 0 6px,
+    var(--chart-oldest) 6px 12px
+  );
 }

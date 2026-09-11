@@ -20,15 +20,21 @@ export type NavLink = {
   children?: NavChild[];
 };
 
-// The five pillars (owner UX brief). Sub-nav lists only pages that exist today.
+// Overview (the logged-in front page) plus the five pillars (owner UX brief).
+// Sub-nav lists only pages that exist today.
 export const NAV_LINKS: NavLink[] = [
+  {
+    key: "overview",
+    href: "/overview",
+    label: "Overview",
+    match: ["/overview"],
+  },
   {
     key: "taste",
     href: "/taste",
     label: "Taste",
     match: ["/taste", "/tastings"],
     children: [
-      { href: "/taste", label: "Overview" },
       { href: "/tastings/new?mode=blind", label: "Taste Blind", modal: "taste-blind" },
       {
         href: "/tastings/new?mode=semi-blind",

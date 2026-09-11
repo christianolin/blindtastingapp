@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChartColumn } from "lucide-react";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { navWithAdmin } from "@/components/nav-links";
@@ -7,21 +9,29 @@ import { touchLastSeen } from "@/lib/last-seen";
 import { GlobalSearch } from "@/components/global-search";
 import { ScanButton } from "@/components/scan/scan-button";
 
+// The bordered icon-button look from the redesign's top bar: 1px border on
+// the raised parchment, gold border + white fill on hover.
+const ICON_BUTTON =
+  "rounded-lg border border-border bg-card transition-colors hover:border-gold hover:bg-white";
+
 /**
  * The app's top bar — rendered inside the main column, to the right of the
- * persistent AppSidebar. Holds the global search + notifications on desktop, and
- * the MobileNav hamburger drawer below `md` (where the sidebar is hidden). The
- * nav, logo, user chip and sign-out now live in the sidebar. Renders nothing
- * when logged out (those pages redirect to /login anyway).
+ * persistent AppSidebar. Holds the global search, the "Your numbers" pill,
+ * the label scanner and notifications on desktop, and the MobileNav hamburger
+ * drawer below `md` (where the sidebar is hidden). `title` is the page name
+ * shown next to the burger on phones (the sidebar carries it on desktop).
+ * Renders nothing when logged out (those pages redirect to /login anyway).
  */
 export async function AppHeader({
   userId: userIdProp,
   displayName: displayNameProp,
   avatarUrl: avatarUrlProp,
+  title,
 }: {
   userId?: string;
   displayName?: string;
   avatarUrl?: string | null;
+  title?: string;
 }) {
   const supabase = await createClient();
 
@@ -57,21 +67,36 @@ export async function AppHeader({
   const navLinks = navWithAdmin(canManage);
 
   return (
-    <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur sm:px-6">
       <MobileNav
         userId={userId}
         displayName={name}
         avatarUrl={avatarUrl}
         links={navLinks}
-        notifications={<NotificationsBell invites={invites} />}
+        notifications={
+          <NotificationsBell invites={invites} className={ICON_BUTTON} />
+        }
       />
-      <div className="hidden max-w-md flex-1 md:flex">
+      {title ? (
+        <span className="font-heading text-xl font-semibold leading-none md:hidden">
+          {title}
+        </span>
+      ) : null}
+      <div className="hidden max-w-[380px] flex-1 md:flex">
         <GlobalSearch />
       </div>
-      <div className="ml-auto flex items-center gap-1">
-        <ScanButton />
+      <div className="ml-auto flex items-center gap-2 md:gap-3">
+        <Link
+          href="/profile/numbers"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gold bg-card px-2.5 text-[11px] font-semibold text-primary transition-colors hover:bg-white md:px-[13px] md:text-[12.5px]"
+        >
+          <ChartColumn className="size-3.5" strokeWidth={2.25} />
+          <span className="md:hidden">Numbers</span>
+          <span className="hidden md:inline">Your numbers</span>
+        </Link>
+        <ScanButton className={ICON_BUTTON} />
         <div className="hidden items-center md:flex">
-          <NotificationsBell invites={invites} />
+          <NotificationsBell invites={invites} className={ICON_BUTTON} />
         </div>
       </div>
     </header>

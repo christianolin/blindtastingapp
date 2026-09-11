@@ -9,13 +9,14 @@ import { useAddWine } from "@/components/add-wine-context";
 // target: nothing is added automatically — after scanning you actively pick
 // (rate / add to cellar / view a match, or add a new wine to your cellar or the
 // catalog).
-export function ScanButton() {
+export function ScanButton({ className }: { className?: string }) {
   const { openScan, activeTasting, openTastingScan } = useAddWine();
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label="Scan a wine label"
+      className={className}
       onClick={() => (activeTasting ? openTastingScan() : openScan("choose"))}
     >
       <Camera />

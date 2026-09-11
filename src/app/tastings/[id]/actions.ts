@@ -304,4 +304,5 @@ export async function respondToInvite(formData: FormData): Promise<void> {
 
   revalidatePath(`/tastings/${tastingId}`);
   revalidatePath("/taste");
+  revalidatePath("/overview");
 }

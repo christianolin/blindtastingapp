@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getPendingInvites, type InviteNotification } from "@/lib/notifications";
 
 export type { InviteNotification };
@@ -21,8 +22,10 @@ const POLL_MS = 15000;
  */
 export function NotificationsBell({
   invites: initialInvites,
+  className,
 }: {
   invites: InviteNotification[];
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [invites, setInvites] = useState(initialInvites);
@@ -48,7 +51,7 @@ export function NotificationsBell({
         size="icon"
         aria-label={`Notifications${count ? ` (${count} pending)` : ""}`}
         onClick={() => setOpen((o) => !o)}
-        className="relative"
+        className={cn("relative", className)}
       >
         <Bell />
         {count > 0 ? (

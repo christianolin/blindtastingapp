@@ -14,16 +14,19 @@ import {
   Users,
   Shield,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/actions";
 import { cn } from "@/lib/utils";
 import { BlindrMark } from "@/components/logo";
 import { type NavLink, type NavChild, isNavActive } from "@/components/nav-links";
+import { PROFILE_LINKS } from "@/components/profile-links";
 import { useAddWine } from "@/components/add-wine-context";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  overview: LayoutDashboard,
   taste: Wine,
   catalog: BookOpen,
   cellar: Boxes,
@@ -84,7 +87,7 @@ export function MobileNav({
             <div className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-64 flex-col bg-primary text-primary-foreground shadow-xl duration-200">
               <div className="flex shrink-0 items-center justify-between px-5 pt-4 pb-2">
                 <Link
-                  href="/taste"
+                  href="/overview"
                   onClick={close}
                   className="flex items-center gap-2 transition-opacity hover:opacity-90"
                 >
@@ -211,6 +214,30 @@ export function MobileNav({
                       <LogOut className="size-4" />
                     </button>
                   </form>
+                </div>
+                {/* The two profile pages — always listed here (a drawer has no
+                    hover-to-expand), mirroring the desktop sidebar's footer. */}
+                <div className="mt-0.5 ml-6 flex flex-col border-l border-primary-foreground/[.18] pl-3">
+                  {PROFILE_LINKS.map((l) => {
+                    const active =
+                      pathname === l.href || pathname.startsWith(`${l.href}/`);
+                    return (
+                      <Link
+                        key={l.href}
+                        href={l.href}
+                        onClick={close}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "rounded-md px-2.5 py-2 text-[12.5px] transition-colors",
+                          active
+                            ? "font-semibold text-primary-foreground"
+                            : "text-primary-foreground/60 hover:text-primary-foreground",
+                        )}
+                      >
+                        {l.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </div>
