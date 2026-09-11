@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, MapPin, Wine } from "lucide-react";
+import { MapPin, Wine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,10 +24,10 @@ import { HostControlsMenu } from "./host-controls-menu";
 import { StandingsPanel } from "./standings-panel";
 import { TastingAddWineButton } from "./tasting-add-wine-button";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
-import { RevealButton } from "./play/reveal-button";
 import { PlayExperience } from "./play/play-experience";
 import { OpenBoard } from "./open-board";
-import { respondToInvite, moveWine } from "./actions";
+import { WineFlightList, type FlightWine } from "./wine-flight-list";
+import { respondToInvite } from "./actions";
 
 export default async function TastingPage({
   params,
@@ -194,38 +194,25 @@ export default async function TastingPage({
     }
   }
 
-  const reorderControls = (wineId: string, canUp: boolean, canDown: boolean) => (
-    <span className="flex items-center gap-0.5">
-      <form action={moveWine}>
-        <input type="hidden" name="tasting_id" value={id} />
-        <input type="hidden" name="wine_id" value={wineId} />
-        <input type="hidden" name="direction" value="up" />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Move up"
-          disabled={!canUp}
-        >
-          <ChevronUp className="size-4" />
-        </Button>
-      </form>
-      <form action={moveWine}>
-        <input type="hidden" name="tasting_id" value={id} />
-        <input type="hidden" name="wine_id" value={wineId} />
-        <input type="hidden" name="direction" value="down" />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Move down"
-          disabled={!canDown}
-        >
-          <ChevronDown className="size-4" />
-        </Button>
-      </form>
-    </span>
-  );
+  // Per-wine display state for the draft flight list, computed here (server) so
+  // the WineFlightList client component only owns the *order* — reordering is
+  // optimistic there, moveWine persists it. `contributorLabel` null => the row
+  // is numbered positionally from its live index.
+  const flightWines: FlightWine[] = (wines ?? []).map((w) => ({
+    id: w.id,
+    contributorLabel: isByo ? wineLabel(w) : null,
+    isRevealed: w.is_revealed,
+    isByo,
+    identity: (isHost ? hostWineIdentity.get(w.id) : null) ?? null,
+    editable:
+      !hasStarted &&
+      (w.contributor_participant_id
+        ? w.contributor_participant_id === myParticipant?.id
+        : isHost),
+    canReorder: isHost && !w.is_revealed,
+    canReveal:
+      isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
+  }));
 
   // The wine list (serving order + reveal state). Shown to everyone: host gets
   // the reveal / reorder / add / edit affordances, guessers see a read-only
@@ -254,80 +241,7 @@ export default async function TastingPage({
                 This is the serving order — use the arrows to reorder.
               </p>
             ) : null}
-            <ul className="flex flex-col gap-2">
-              {(wines ?? []).map((w, i) => {
-                // Editable while the tasting hasn't started, by whoever added
-                // the wine: host for host-entered wines, the contributor for
-                // their own BYO bottle.
-                const editable =
-                  !hasStarted &&
-                  (w.contributor_participant_id
-                    ? w.contributor_participant_id === myParticipant?.id
-                    : isHost);
-                const canReorder = isHost && !w.is_revealed;
-                const canReveal =
-                  isHost &&
-                  hasStarted &&
-                  tasting.status !== "CLOSED" &&
-                  !w.is_revealed;
-                const identity = isHost ? hostWineIdentity.get(w.id) : null;
-                return (
-                  <li
-                    key={w.id}
-                    className="flex flex-col gap-1.5 rounded-lg border border-border/60 p-2.5 text-sm"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate font-medium">
-                        {isByo ? wineLabel(w) : `Wine ${i + 1}`}
-                      </span>
-                      <Badge
-                        variant={w.is_revealed ? "default" : "outline"}
-                        className="shrink-0"
-                      >
-                        {w.is_revealed
-                          ? "Revealed"
-                          : isByo
-                            ? "Added"
-                            : "Hidden"}
-                      </Badge>
-                    </div>
-                    {identity ? (
-                      <p className="truncate text-xs text-muted-foreground">
-                        {identity}
-                      </p>
-                    ) : null}
-                    {editable || canReorder || canReveal ? (
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {editable ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            nativeButton={false}
-                            render={
-                              <Link
-                                href={`/tastings/${id}/wines/${w.id}/edit`}
-                              />
-                            }
-                          >
-                            Edit
-                          </Button>
-                        ) : null}
-                        {canReorder
-                          ? reorderControls(
-                              w.id,
-                              i > 0,
-                              i < (wines ?? []).length - 1,
-                            )
-                          : null}
-                        {canReveal ? (
-                          <RevealButton tastingId={id} wineId={w.id} />
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
+            <WineFlightList tastingId={id} wines={flightWines} />
             {isByo && participantsWithoutWine.length > 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 Yet to add a wine:{" "}
