@@ -120,12 +120,12 @@ export default async function AboutPage() {
         className="relative shrink-0 overflow-hidden bg-muted max-md:h-[394px]"
       >
         <Image
-          src="/hero/romanee.webp"
+          src="/hero/romanee-sepia.webp"
           alt="A bottle of Romanée-Conti 1945"
           fill
           preload
           sizes="(min-width: 1280px) calc(100vw - 240px), (min-width: 768px) calc(100vw - 60px), 100vw"
-          className="object-cover object-[center_72%] [filter:sepia(.24)_saturate(.9)]"
+          className="object-cover object-[center_72%]"
         />
         <div
           className="absolute inset-0 max-md:hidden"

@@ -21,18 +21,19 @@ export function AboutBand({ className }: { className?: string }) {
         // shrink-0: the band sits in fixed-height flex columns (the page
         // roots); without it the column squashes the band to a sliver
         // instead of letting the page grow and scroll.
-        // will-change-transform: own compositor layer, so the sepia-filtered
-        // photo is rasterised once and just moved while the page scrolls.
-        "group relative block shrink-0 overflow-hidden border-t border-border-strong bg-muted text-foreground transition-shadow will-change-transform hover:shadow-[0_8px_20px_-8px_rgba(42,33,30,.5)]",
+        "group relative block shrink-0 overflow-hidden border-t border-border-strong bg-muted text-foreground transition-shadow hover:shadow-[0_8px_20px_-8px_rgba(42,33,30,.5)]",
         className,
       )}
     >
+      {/* romanee-sepia.webp has the handoff's sepia(.24) saturate(.9) baked
+          in (see scripts/bake-hero-sepia.mjs), so no CSS filter has to be
+          rasterised while the page scrolls under it. */}
       <Image
-        src="/hero/romanee.webp"
+        src="/hero/romanee-sepia.webp"
         alt="A bottle of Romanée-Conti 1945"
         fill
         sizes="(min-width: 1280px) calc(100vw - 240px), (min-width: 768px) calc(100vw - 60px), 100vw"
-        className="object-cover object-[center_76%] [filter:sepia(.24)_saturate(.9)]"
+        className="object-cover object-[center_76%]"
       />
       <div className="absolute inset-0" style={{ background: VEIL }} />
       <div className="relative flex max-w-[560px] flex-col gap-[11px] p-[30px_26px_34px] max-md:p-[22px_16px_24px]">

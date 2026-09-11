@@ -30,12 +30,13 @@ export default async function OverviewPage() {
   ]);
 
   return (
-    // The root fills the content column exactly and scrolls itself. On
-    // desktop that pins the photo band to the bottom whenever the cards are
-    // short; on phones it bounds the body so the banner and the three cards
-    // share one screen, with the root's own overflow as the safety net for a
-    // phone too small to fit them.
-    <div className="flex min-h-full flex-1 flex-col overflow-y-auto">
+    // The root fills the content column (which is the app's scroll container,
+    // as on every other page — the page deliberately does NOT nest a second
+    // scroller). On desktop that pins the photo band to the bottom whenever the
+    // cards are short and lets the column scroll when they are tall; on phones
+    // it bounds the body so the banner and the three cards share one screen,
+    // the column scrolling only if a phone is too small to fit them.
+    <div className="flex min-h-full flex-1 flex-col">
       <AppHeader
         userId={user.id}
         displayName={profile?.display_name ?? user.email ?? ""}
