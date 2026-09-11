@@ -227,6 +227,7 @@ export function WineForm({
           {scanning && userId ? (
             <ScanModal
               userId={userId}
+              context="tasting"
               pickLabel="Add to tasting"
               onClose={() => setScanning(false)}
               onAddToCellar={(wine) => {

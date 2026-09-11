@@ -27,6 +27,7 @@ export function ScanModal({
   onAddNewToCellar,
   onAddToCellar,
   pickLabel = "Cellar",
+  context = "catalog",
 }: {
   userId: string;
   onClose: () => void;
@@ -37,6 +38,11 @@ export function ScanModal({
   onAddNewToCellar?: (catalog: WineFormInitial) => void;
   onAddToCellar: (wine: { id: string; label: string }) => void;
   pickLabel?: string;
+  /** "tasting": the only sensible action is adding the wine to the tasting, so
+   *  the catalog-oriented follow-ups (Taste & rate, To cellar, View) are hidden
+   *  and `onAddToCellar` (wired by the caller to add-to-tasting) is the primary
+   *  CTA. Defaults to the full catalog chooser. */
+  context?: "catalog" | "tasting";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -189,41 +195,65 @@ export function ScanModal({
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setNoteWineId(created.id)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                <NotebookPen className="size-4" /> Taste &amp; rate it now
-              </button>
-              <div className="grid grid-cols-2 gap-2">
+            {context === "tasting" ? (
+              // Adding to a tasting: the wine's already in the catalog now — the
+              // only action that matters here is putting it in the tasting.
+              <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     onAddToCellar({ id: created.id, label: created.label });
                     onClose();
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  <Warehouse className="size-4" /> To cellar
+                  <Plus className="size-4" /> {pickLabel}
                 </button>
-                <Link
-                  href={`/catalog/${created.id}`}
+                <button
+                  type="button"
                   onClick={onClose}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                  className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
                 >
-                  <Eye className="size-4" /> View wine
-                </Link>
+                  Cancel
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-              >
-                Done
-              </button>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNoteWineId(created.id)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  <NotebookPen className="size-4" /> Taste &amp; rate it now
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAddToCellar({ id: created.id, label: created.label });
+                      onClose();
+                    }}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                  >
+                    <Warehouse className="size-4" /> To cellar
+                  </button>
+                  <Link
+                    href={`/catalog/${created.id}`}
+                    onClick={onClose}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+                  >
+                    <Eye className="size-4" /> View wine
+                  </Link>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  Done
+                </button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -320,13 +350,15 @@ export function ScanModal({
                   >
                     <span className="text-sm">{m.name}</span>
                     <span className="flex flex-wrap items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setNoteWineId(m.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
-                      >
-                        <NotebookPen className="size-3.5" /> Rate
-                      </button>
+                      {context !== "tasting" ? (
+                        <button
+                          type="button"
+                          onClick={() => setNoteWineId(m.id)}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                        >
+                          <NotebookPen className="size-3.5" /> Rate
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => {
@@ -337,13 +369,15 @@ export function ScanModal({
                       >
                         <Plus className="size-3.5" /> {pickLabel}
                       </button>
-                      <Link
-                        href={`/catalog/${m.id}`}
-                        onClick={onClose}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
-                      >
-                        <Eye className="size-3.5" /> View
-                      </Link>
+                      {context !== "tasting" ? (
+                        <Link
+                          href={`/catalog/${m.id}`}
+                          onClick={onClose}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted"
+                        >
+                          <Eye className="size-3.5" /> View
+                        </Link>
+                      ) : null}
                     </span>
                   </div>
                 ))}
