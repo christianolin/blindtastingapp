@@ -21,7 +21,9 @@ export function AboutBand({ className }: { className?: string }) {
         // shrink-0: the band sits in fixed-height flex columns (the page
         // roots); without it the column squashes the band to a sliver
         // instead of letting the page grow and scroll.
-        "group relative block shrink-0 overflow-hidden border-t border-border-strong bg-muted text-foreground transition-shadow hover:shadow-[0_8px_20px_-8px_rgba(42,33,30,.5)]",
+        // will-change-transform: own compositor layer, so the sepia-filtered
+        // photo is rasterised once and just moved while the page scrolls.
+        "group relative block shrink-0 overflow-hidden border-t border-border-strong bg-muted text-foreground transition-shadow will-change-transform hover:shadow-[0_8px_20px_-8px_rgba(42,33,30,.5)]",
         className,
       )}
     >
