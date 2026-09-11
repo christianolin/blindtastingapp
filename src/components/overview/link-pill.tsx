@@ -23,7 +23,9 @@ export function LinkPill({
     <Link
       href={href}
       className={cn(
-        "inline-flex shrink-0 items-center gap-[5px] rounded-full border border-border font-semibold whitespace-nowrap text-primary transition-colors hover:border-gold hover:bg-white",
+        // On phones an invisible ::after pad stretches the hit area to the
+        // 44px tap-target floor without making the 24px pill itself taller.
+        "relative inline-flex shrink-0 items-center gap-[5px] rounded-full border border-border font-semibold whitespace-nowrap text-primary transition-colors hover:border-gold hover:bg-white max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2.5 max-md:after:content-['']",
         tone === "card" ? "bg-card" : "bg-background",
         size === "sm"
           ? "px-[11px] py-[5px] text-[11.5px] max-md:px-[9px] max-md:py-1 max-md:text-[10.5px]"

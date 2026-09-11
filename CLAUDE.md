@@ -765,6 +765,69 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (`20260722090000_wine_answers_contributor_update.sql`) extends the old
   host-only update to contributors with a not-revealed guard as the
   defense-in-depth floor.
+- **Overview / About / Your numbers (2026-09 redesign).** `/overview` is the
+  logged-in landing page (`/` redirects there): live/next-up banner, then
+  three equal subject cards in a fixed order — Blind tastings → Your ratings
+  → Your cellar — then the "More than a score" photo band into `/about`.
+  `/taste` stays the Taste pillar page but is only the Start-tasting menu +
+  the Invited/Hosting/Attending/History tabs (the old marketing hero,
+  explainer cards and mission copy moved to `/about`, which is information-
+  only: the back link is its sole interactive element). `/profile/numbers`
+  is the personal stats page and is deliberately NOT a nav pillar — it is
+  reached from the "Your numbers" pill in the top bar and from the sidebar's
+  footer profile block (which shows "Your numbers" / "Profile & settings"
+  sub-items whenever the path starts with `/profile`). Spec + plan:
+  `docs/superpowers/specs/2026-09-11-overview-about-numbers-design.md`; the
+  Claude Design handoff (README + `Blindr Front Page v3.dc.html`) is the
+  visual source of truth.
+  - Shared primitives live in `src/components/overview/` (SubjectCard /
+    CardRow, LinkPill, StatTrio, DistributionBar, AccuracyRows, ColumnChart /
+    StackedColumnChart, AboutBand, Eyebrow, HatchThumb, ActionButton /
+    ActionButtonClient, LiveDot, RangeControl). Chart series order is fixed
+    bordeaux → rose → gold → ink-muted; it was validated for colour-vision
+    separation in that order — never reorder or cycle it, and always keep
+    the legend row (gold's contrast relies on it).
+  - Tokens added to `globals.css` for the handoff palette: `--rose`,
+    `--gold-light`, `--gold-dark`, `--live`, `--border-light`,
+    `--border-strong`, `--ink-photo`, `--ink-caption`, `--placeholder`,
+    `--placeholder-soft`, `--chart-oldest`, plus the `.hatch` empty-image
+    utility and the `live-ping` keyframes (dropped under reduced motion).
+  - Data: `src/lib/overview-data.ts` (`getOverviewData(userId)`) and
+    `src/lib/your-numbers.ts` (`getYourNumbers(userId, range)`), with pure,
+    vitest-covered maths in `overview-math.ts`, `your-numbers-math.ts` and
+    `stats-math.ts` and the contracts in `overview-types.ts` /
+    `your-numbers-types.ts`. Everything is RLS-readable as the viewer or
+    comes from `get_tasting_leaderboard` / `get_wine_reveal`; tasting stats
+    follow `profile-stats.ts`'s fully-revealed-wines rule. No migrations.
+  - Metrics deliberately changed from the mockup (schema can't back them):
+    no "WSET notes vs quick rating" split (every rating IS a WSET note, so
+    the third ratings stat is total notes); "Vintage ±1", not ±2 (matches the
+    off-by-one scoring rule); no "Poured into tastings" (consumptions don't
+    record the tasting); semi-blind guesses (0/1 scale) are excluded from
+    "Where you taste best". On Your numbers the cellar Distributions /
+    Vintages cards describe current holdings and ignore the range (their
+    eyebrow says so); the "Added / Opened this year" footer sums the
+    calendar year even under All time. `range` lives in the URL
+    (`?range=year|90d`, all-time is the bare path).
+  - Live banner = an IN_PROGRESS tasting I'm JOINED in (LIVE timing
+    preferred); next-up = the soonest DRAFT I host or joined; otherwise a
+    single "No tasting on the calendar" row — never an empty bordeaux block.
+  - The sidebar collapses to a 60px icon rail between `md` and `xl`; its
+    expand button opens the full sidebar as an overlay drawer that closes on
+    backdrop, X, Escape or navigation. Below `md` MobileNav is unchanged.
+  - `LocalDateTime` now uses `useSyncExternalStore` (server snapshot "" →
+    "Scheduled", client snapshot the local text) so hard-loaded pages no
+    longer stay on "Scheduled" — the old lazy `useState` initialiser never
+    re-rendered after hydration.
+  - Dev/verification gotchas: a folder starting with `_` under `src/app` is
+    private (no route) — a `_dev` preview page silently 404s. The seeded demo
+    accounts (`demo.*@blindr.invalid`) currently have no `profiles` rows and
+    no data, so they only exercise empty states; a signed-in preview session
+    can be minted without typing a password via `auth.admin.generateLink`
+    (magiclink) + `verifyOtp` and opening `/auth/confirm-hash?next=…#access_token=…`
+    — and right after that hash login the first client-side navigation can
+    throw "useAddWine must be used within <AddWineProvider>" once (stale
+    logged-out shell); a reload clears it.
 - The LWIN import promoted every SITE/sub-region value to an appellation,
   which occasionally produced a nonsense row when LWIN's site column held a
   vineyard/lieu-dit name that collides with a famous term — e.g.

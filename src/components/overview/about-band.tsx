@@ -26,7 +26,7 @@ export function AboutBand({ className }: { className?: string }) {
         src="/hero/romanee.webp"
         alt="A bottle of Romanée-Conti 1945"
         fill
-        sizes="(min-width: 768px) calc(100vw - 240px), 100vw"
+        sizes="(min-width: 1280px) calc(100vw - 240px), (min-width: 768px) calc(100vw - 60px), 100vw"
         className="object-cover object-[center_76%] [filter:sepia(.24)_saturate(.9)]"
       />
       <div className="absolute inset-0" style={{ background: VEIL }} />

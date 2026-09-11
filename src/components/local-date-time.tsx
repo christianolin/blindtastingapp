@@ -1,23 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 
-// Formats an ISO timestamp in the viewer's own locale + timezone. Computed via
-// a lazy initializer (guarded on window) rather than useEffect+setState, so it
-// doesn't trip the set-state-in-effect lint; the SSR/client text differ by
-// timezone, hence suppressHydrationWarning.
+const noopSubscribe = () => () => {};
+
+// Formats an ISO timestamp in the viewer's own locale + timezone. The server
+// (and the hydration pass) render the neutral "Scheduled" placeholder and the
+// client swaps in the local text right after hydrating — useSyncExternalStore
+// with a separate server snapshot is React's sanctioned way to render a
+// client-only value without a hydration mismatch and without a set-state-in-
+// effect. (A lazy useState initialiser looked the same but never re-rendered
+// after a hard load, so hard-loaded pages kept showing "Scheduled".)
 export function LocalDateTime({ iso }: { iso: string }) {
-  const [text] = useState(() =>
-    typeof window === "undefined"
-      ? ""
-      : new Date(iso).toLocaleString(undefined, {
-          weekday: "short",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+  const text = useSyncExternalStore(
+    noopSubscribe,
+    () =>
+      new Date(iso).toLocaleString(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    () => "",
   );
-  return <span suppressHydrationWarning>{text || "Scheduled"}</span>;
+  return <span>{text || "Scheduled"}</span>;
 }

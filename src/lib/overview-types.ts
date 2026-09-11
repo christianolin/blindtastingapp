@@ -35,8 +35,10 @@ export type NextUpBanner = {
   hosting: boolean;
   hostName: string;
   scheduledAt: string | null;
-  /** The flight's slots, at most 6. */
-  slots: { label: string; filled: boolean }[];
+  /** The flight's slots (padded to 6 for a host-provides flight). `note` is
+      a muted suffix after a filled label — "set" for a host-provides wine;
+      bring-your-own slots carry the contributor's name and no note. */
+  slots: { label: string; filled: boolean; note?: string }[];
   canAddWine: boolean;
   nextWinePosition: number;
 };

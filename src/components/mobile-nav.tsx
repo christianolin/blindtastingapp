@@ -228,7 +228,7 @@ export function MobileNav({
                         onClick={close}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "rounded-md px-2.5 py-2 text-[12.5px] transition-colors",
+                          "flex min-h-11 items-center rounded-md px-2.5 py-2 text-[12.5px] transition-colors",
                           active
                             ? "font-semibold text-primary-foreground"
                             : "text-primary-foreground/60 hover:text-primary-foreground",
@@ -253,6 +253,9 @@ export function MobileNav({
         variant="ghost"
         size="icon"
         aria-label="Open menu"
+        // The 32px box gets a 44px tap target on phones via a ::before
+        // pseudo-element, the same way the header's pill and icon buttons do.
+        className="relative before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']"
         onClick={() => setOpen(true)}
       >
         <Menu />

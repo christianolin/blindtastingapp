@@ -47,7 +47,7 @@ export function RangeControl({ value }: { value: NumbersRange }) {
             aria-selected={active}
             onClick={() => select(it.key)}
             className={cn(
-              "rounded-[7px] px-3.5 py-[7px] text-[12.5px] transition-colors max-md:flex-1 max-md:py-2",
+              "rounded-[7px] px-3.5 py-[7px] text-[12.5px] transition-colors max-md:min-h-11 max-md:flex-1 max-md:py-2",
               active
                 ? "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgba(42,33,30,.08)]"
                 : "text-muted-foreground hover:text-foreground",

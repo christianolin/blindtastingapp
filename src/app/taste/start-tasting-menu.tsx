@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
 
-// The hero's primary action. Replaces the old four mode tiles: one button that
+// The Taste page's primary action. Replaces the old four mode tiles: one button that
 // opens a menu of every taste flow, reusing the shared launcher popups.
 export function StartTastingMenu() {
   const { openTaste } = useTasteLauncher();

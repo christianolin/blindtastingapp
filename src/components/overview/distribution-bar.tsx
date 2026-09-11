@@ -19,12 +19,15 @@ export function DistributionBar({
   captionStyle = "eyebrow",
   items,
   height = 7,
+  countPrefix = "",
   className,
 }: {
   caption?: string;
   captionStyle?: "eyebrow" | "bold";
   items: DistributionItem[];
   height?: 6 | 7;
+  /** Text before each legend count — "×" gives "1st ×2" (occurrences). */
+  countPrefix?: string;
   className?: string;
 }) {
   const total = items.reduce((n, i) => n + i.count, 0);
@@ -57,7 +60,8 @@ export function DistributionBar({
       <span className="flex justify-between gap-2 text-[11px] text-muted-foreground max-md:text-[10.5px]">
         {items.map((i) => (
           <span key={i.label} className="truncate">
-            {i.label} {i.count}
+            {i.label} {countPrefix}
+            {i.count}
           </span>
         ))}
       </span>
