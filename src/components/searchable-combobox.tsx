@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Check, ChevronsUpDown, Plus, SearchIcon } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
 // `group` is an optional heading label — consecutive results sharing one
@@ -146,19 +146,16 @@ export function SearchableCombobox({
         </PopoverTrigger>
         <PopoverContent className="w-(--anchor-width) p-0">
           <Command shouldFilter={false}>
-            <div className="p-1 pb-0">
-              <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none!">
-                <InputGroupInput
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={`Search ${(createLabel ?? placeholder).toLowerCase()}…`}
-                />
-                <InputGroupAddon>
-                  <SearchIcon className="size-4 shrink-0 opacity-50" />
-                </InputGroupAddon>
-              </InputGroup>
-            </div>
+            {/* cmdk's own CommandInput — the same input the other combobox
+                fields use. A custom base-ui Input here wasn't registering
+                typed characters on mobile, so the query never updated and the
+                list stayed on its first (empty-query) page. */}
+            <CommandInput
+              ref={inputRef}
+              value={query}
+              onValueChange={setQuery}
+              placeholder={`Search ${(createLabel ?? placeholder).toLowerCase()}…`}
+            />
             <CommandList>
               {allowClear && value ? (
                 <CommandGroup>
