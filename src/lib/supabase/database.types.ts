@@ -361,6 +361,7 @@ export type Database = {
           created_at: string;
           image_url: string | null;
           description: string | null;
+          join_code: string | null;
         };
         Insert: {
           id?: string;
@@ -380,6 +381,7 @@ export type Database = {
           created_at?: string;
           image_url?: string | null;
           description?: string | null;
+          join_code?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
         Relationships: [];
@@ -496,6 +498,7 @@ export type Database = {
           vintage_points: number | null;
           total_points: number | null;
           scored_at: string | null;
+          locked_at: string | null;
           reveal_step: number;
           submitted_at: string;
           updated_at: string;
@@ -505,6 +508,7 @@ export type Database = {
           wine_id: string;
           participant_id: string;
           reveal_step?: number;
+          locked_at?: string | null;
           country_id?: string | null;
           region_id?: string | null;
           appellation_id?: string | null;
@@ -1387,7 +1391,15 @@ export type Database = {
       };
       tasting_guess_status: {
         Args: { p_tasting_id: string };
-        Returns: { wine_id: string; participant_id: string }[];
+        Returns: { wine_id: string; participant_id: string; locked: boolean }[];
+      };
+      ensure_join_code: {
+        Args: { p_tasting_id: string };
+        Returns: string;
+      };
+      join_tasting_by_code: {
+        Args: { p_code: string };
+        Returns: string;
       };
       save_wset_note: {
         Args: { p_note: unknown; p_aromas: unknown };
