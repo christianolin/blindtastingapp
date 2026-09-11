@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useRef, useTransition } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,11 @@ export function WineFlightList({
   wines: FlightWine[];
 }) {
   const [optimistic, setOptimistic] = useOptimistic(wines);
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  // Serialise the persistence: rapid clicks stay instant on screen, but the
+  // moveWine writes run one-at-a-time so two overlapping swaps can't collide on
+  // the (tasting_id, position) unique constraint via the shared temp slot.
+  const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
 
   function move(id: string, direction: "up" | "down") {
     startTransition(async () => {
@@ -59,7 +63,9 @@ export function WineFlightList({
       fd.set("tasting_id", tastingId);
       fd.set("wine_id", id);
       fd.set("direction", direction);
-      await moveWine(fd);
+      const run = writeQueue.current.then(() => moveWine(fd));
+      writeQueue.current = run.catch(() => {});
+      await run;
     });
   }
 
@@ -107,7 +113,7 @@ export function WineFlightList({
                     variant="ghost"
                     size="icon-sm"
                     aria-label="Move up"
-                    disabled={pending || i === 0}
+                    disabled={i === 0}
                     onClick={() => move(w.id, "up")}
                   >
                     <ChevronUp className="size-4" />
@@ -117,7 +123,7 @@ export function WineFlightList({
                     variant="ghost"
                     size="icon-sm"
                     aria-label="Move down"
-                    disabled={pending || i === optimistic.length - 1}
+                    disabled={i === optimistic.length - 1}
                     onClick={() => move(w.id, "down")}
                   >
                     <ChevronDown className="size-4" />
