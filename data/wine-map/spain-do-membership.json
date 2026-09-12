@@ -4344,7 +4344,7 @@
         "40",
         "42"
       ],
-      "expected_count": 83,
+      "expected_count": 81,
       "municipios": [
         {
           "code": "09003",
@@ -4587,20 +4587,12 @@
           "name": "Langa de Duero"
         },
         {
-          "code": "47021",
-          "name": "Bocigas"
-        },
-        {
           "code": "42116",
           "name": "Miño de San Esteban"
         },
         {
           "code": "42162",
           "name": "San Esteban de Gormaz"
-        },
-        {
-          "code": "47190",
-          "name": "Velilla"
         },
         {
           "code": "47022",
@@ -4680,10 +4672,11 @@
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Ribera del Duero», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "Whole-municipality union (multi-cluster density-located); the 4 province capitals (Burgos/Segovia/Soria/Valladolid) excluded as non-members."
+        "source": "Pliego de condiciones DOP «Ribera del Duero» (PDO-ES-A0626), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribera_del_duero_2023_07_31.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then re-derived from the pliego table)",
+        "note": "Whole-municipality union of section 4's table, which pairs each INE municipio (3-digit code) with its unidades poblacionales (6-digit codes). AUDIT 2026-09-12: the previous entry cited only a landing page and carried two FALSE INCLUSIONS created by matching the unidad-poblacional column against municipality names across provinces — 'Bocigas' (47021, Valladolid) was really BOCIGAS DE PERALES, a pedania of Langa de Duero (Soria 42103), and 'Velilla' (47190, Valladolid) was VELILLA DE SAN ESTEBAN, a pedania of San Esteban de Gormaz (Soria 42162). Both real parents were already listed, so the two Valladolid municipios were pure over-inclusion and are removed. The 4 province capitals are not members. Pedanias are represented by their parent municipio throughout."
       },
       "status": "ready"
     },
