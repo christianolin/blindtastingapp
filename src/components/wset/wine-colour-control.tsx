@@ -13,9 +13,10 @@ const COLOUR_KEY: Record<WineColour, string> = {
 const COLOURS: WineColour[] = ["WHITE", "ORANGE", "ROSE", "RED"];
 
 // Colour is the wine's identity (set on the catalog wine), so the segmented
-// control is read-only here — it shows which family this wine is. The hue
-// slider below picks the observed shade within that family's gradient. `labels`
-// + `lang` localise the hue names and the colour-family names.
+// control is read-only here — it shows which family this wine is, and a caption
+// says so (beside the control on desktop, a sentence under it on phones). The
+// hue slider below picks the observed shade within that family's gradient.
+// `labels` + `lang` localise the hue names and the colour-family names.
 export function WineColourControl({
   colour,
   hue,
@@ -38,38 +39,45 @@ export function WineColourControl({
 
   return (
     <div>
-      <div
-        style={{
-          display: "inline-flex",
-          gap: 3,
-          padding: 3,
-          borderRadius: 999,
-          background: "var(--accent)",
-          marginBottom: 16,
-        }}
-      >
-        {COLOURS.map((c) => {
-          const active = c === colour;
-          return (
-            <span
-              key={c}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                borderRadius: 999,
-                padding: "4px 12px",
-                fontSize: 12,
-                fontWeight: active ? 600 : 500,
-                background: active ? "var(--card)" : "transparent",
-                color: active ? "var(--foreground)" : "var(--muted-foreground)",
-                boxShadow: active ? "0 1px 2px rgba(42,33,30,0.12)" : "none",
-              }}
-            >
-              {t(COLOUR_KEY[c])}
-            </span>
-          );
-        })}
+      <div className="mb-4 flex flex-wrap items-center gap-x-[9px] gap-y-1.5">
+        <div
+          style={{
+            display: "inline-flex",
+            gap: 3,
+            padding: 3,
+            borderRadius: 999,
+            background: "var(--accent)",
+          }}
+        >
+          {COLOURS.map((c) => {
+            const active = c === colour;
+            return (
+              <span
+                key={c}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  borderRadius: 999,
+                  padding: "4px 12px",
+                  fontSize: 12,
+                  fontWeight: active ? 600 : 500,
+                  background: active ? "var(--card)" : "transparent",
+                  color: active ? "var(--foreground)" : "var(--muted-foreground)",
+                  boxShadow: active ? "0 1px 2px rgba(42,33,30,0.12)" : "none",
+                }}
+              >
+                {t(COLOUR_KEY[c])}
+              </span>
+            );
+          })}
+        </div>
+        <span className="text-[11px] text-muted-foreground max-sm:hidden">
+          {t("colour_readonly")}
+        </span>
+        <span className="basis-full text-[11px] text-muted-foreground sm:hidden">
+          {t("colour_readonly_sentence")}
+        </span>
       </div>
 
       <div style={{ padding: "0 20px", userSelect: "none" }}>
@@ -90,6 +98,10 @@ export function WineColourControl({
                 aria-label={labels[h] ?? h}
                 aria-pressed={isSel}
                 onClick={() => onChange(isSel ? null : h)}
+                // A 16px swatch is far below a finger: the ::before square lifts
+                // the target to 44px. Swatches sit well over 44px apart on the
+                // narrowest phone, so neighbouring targets never overlap.
+                className="before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2"
                 style={{
                   position: "absolute",
                   top: "50%",

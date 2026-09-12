@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { AromaIcon } from "./aroma-icon";
+import { PHONE_HIT_44 } from "./pill-group";
 import {
   makeT,
   translateTerm,
@@ -104,8 +105,9 @@ function splitGroupName(groupName: string, term: string): string {
 // unions the nose selections in.
 //
 // Phones don't get the whole vocabulary inline — the tasting sheet shows only
-// the selected chips plus "+ Add", which opens a bottom sheet where the
-// clusters stack vertically and collapse (ones holding selections stay open).
+// "Selected · N" with a Clear, the selected chips and "+ Add", which opens a
+// bottom sheet where every cluster stacks vertically. Phone chip rows are 44px
+// (PHONE_HIT_44: a compact chip plus an invisible 44px strip).
 export function AromaPicker({
   terms,
   selectedIds,
@@ -144,6 +146,20 @@ export function AromaPicker({
     return () => {
       document.body.style.overflow = prev;
     };
+  }, [sheetOpen]);
+  // Escape closes the sheet, and only the sheet. Captured on window so it runs
+  // before the note dialog hears the key — otherwise Escape would ask to
+  // discard the whole note from underneath the open sheet.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setSheetOpen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [sheetOpen]);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(terms.map((t) => [t.id, t])), [terms]);
@@ -192,7 +208,23 @@ export function AromaPicker({
       {/* Phones: selection summary + Add. The vocabulary itself lives in the
           bottom sheet so the tasting note stays compact. */}
       <div className="sm:hidden">
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
+        {selectedIds.length > 0 ? (
+          <div className="mb-2 flex items-center gap-2">
+            <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
+              {t("selected")} · {selectedIds.length}
+            </span>
+            {/* Clear's 44px strip reaches up into the row heading (nothing to
+                tap there), not down into the chips below. */}
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="relative ml-auto min-w-11 px-1 text-right text-[12px] font-semibold text-primary before:absolute before:inset-x-0 before:-bottom-1 before:h-11"
+            >
+              {t("clear_short")}
+            </button>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2.5">
           {selectedIds.map((id) => {
             const term = byId.get(id);
             if (!term) return null;
@@ -202,6 +234,7 @@ export function AromaPicker({
                 type="button"
                 aria-label={t("remove", { term: translateTerm(term.term, lang) })}
                 onClick={() => toggle(id)}
+                className={`${PHONE_HIT_44} min-h-[34px]`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -223,6 +256,7 @@ export function AromaPicker({
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
+            className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
             style={{
               borderRadius: 999,
               padding: "4px 12px",
@@ -240,6 +274,7 @@ export function AromaPicker({
             <button
               type="button"
               onClick={copyAll}
+              className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
               style={{
                 borderRadius: 999,
                 padding: "4px 12px",
@@ -375,7 +410,7 @@ export function AromaPicker({
       {selectedIds.length > 0 ? (
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
+            <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
               {t("selected")} · {selectedIds.length}
             </span>
             {selectedIds.map((id) => {
@@ -469,6 +504,7 @@ export function AromaPicker({
                 <button
                   type="button"
                   onClick={() => setSheetOpen(false)}
+                  className={PHONE_HIT_44}
                   style={{
                     borderRadius: 999,
                     padding: "7px 16px",
@@ -485,7 +521,7 @@ export function AromaPicker({
               </div>
               {/* Origin tabs: names only here — the active tab's meaning sits
                   once below, instead of six concepts in one cramped row. */}
-              <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 20, marginTop: 16 }}>
                 {ORIGINS.map(({ origin, labelKey }) => {
                   const active = origin === activeOrigin;
                   const count = countByOrigin[origin] ?? 0;
@@ -494,6 +530,7 @@ export function AromaPicker({
                       key={origin}
                       type="button"
                       onClick={() => setActiveOrigin(origin)}
+                      className={PHONE_HIT_44}
                       style={{
                         display: "inline-flex",
                         alignItems: "baseline",
@@ -540,6 +577,7 @@ export function AromaPicker({
                 <button
                   type="button"
                   onClick={copyAll}
+                  className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
                   style={{
                     borderRadius: 999,
                     padding: "5px 12px",
@@ -578,7 +616,7 @@ export function AromaPicker({
                   >
                     {groupHeading(group.name)}
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 12 }}>
+                  <div className="flex flex-wrap gap-x-1.5 gap-y-2.5 pb-3">
                     {group.items.map((term) => {
                       const isSel = selected.has(term.id);
                       return (
@@ -587,6 +625,7 @@ export function AromaPicker({
                           type="button"
                           aria-pressed={isSel}
                           onClick={() => toggle(term.id)}
+                          className={`${PHONE_HIT_44} min-h-[34px]`}
                           style={{
                             display: "inline-flex",
                             alignItems: "center",

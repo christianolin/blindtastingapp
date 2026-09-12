@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
@@ -12,6 +12,7 @@ import type {
   WsetNoteState,
 } from "@/lib/wset/types";
 import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
+import type { WsetSheetHandle } from "@/components/wset/wset-sheet";
 
 type Data = {
   wine: { colour: WineColour; style: WineStyle };
@@ -43,6 +44,7 @@ export function NewNoteModal({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<Data | null | "loading">("loading");
+  const sheetRef = useRef<WsetSheetHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +87,11 @@ export function NewNoteModal({
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (open) return;
+        // Escape and the backdrop take the sheet's own close path (the Discard
+        // confirm while dirty); before the sheet mounts there is nothing to lose.
+        if (sheetRef.current) sheetRef.current.requestClose();
+        else onClose();
       }}
     >
       <DialogContent
@@ -93,7 +99,7 @@ export function NewNoteModal({
         // Wider on big screens: the sheet reads small on a desktop monitor, so
         // the dialog takes more of the viewport (capped) and the .wset-sheet
         // desktop scale in globals.css enlarges its type to match.
-        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:w-[calc(100vw-3rem)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl lg:max-w-[1400px]"
+        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:w-[calc(100vw-3rem)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-[16px] lg:max-w-[1400px]"
       >
         <DialogTitle className="sr-only">Tasting note</DialogTitle>
         {data === "loading" ? (
@@ -114,6 +120,7 @@ export function NewNoteModal({
             contextKind={contextKind}
             tastingWineId={tastingWineId}
             embedded
+            sheetRef={sheetRef}
             onClose={onClose}
             onSaved={async (savedId) => {
               if (cellarConsume && savedId) {

@@ -63,7 +63,7 @@ export function RatingsSection({
         title="Ratings"
         summary={summary}
         pill={
-          <LinkPill href="/cellar?tab=notes" size="md" tone="card">
+          <LinkPill href="/taste/notes" size="md" tone="card">
             All notes
           </LinkPill>
         }

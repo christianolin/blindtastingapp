@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { CountryFlag } from "@/components/country-flag";
 import { AddWineButton } from "@/components/add-wine-button";
-import { NoteModal } from "./note-modal";
+import { NoteModal } from "@/components/wset/note-modal";
 
 // One row per cellar lot (a wine can appear in several rows if held in
 // different sizes/vintages/locations). Carries everything the table renders so

@@ -3,31 +3,27 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CellarBottlesTable, type BottleRow } from "./cellar-bottles-table";
-import { MyNotesList, type NoteRow } from "./my-notes-list";
 import { HistoryList, type HistoryRow } from "./history-list";
 import { StatsPanel } from "./stats-panel";
 import type { CellarStats } from "./stats";
 
 const TABS = [
   { slug: "bottles", label: "Bottles" },
-  { slug: "notes", label: "My notes" },
   { slug: "history", label: "History" },
   { slug: "stats", label: "Stats" },
 ];
 
 // Cellar sections as instant client tabs (no navigation), styled like the
-// Library tab bar. All four datasets are loaded once by the page, so switching
-// is instant.
+// Library tab bar. All three datasets are loaded once by the page, so switching
+// is instant. Tasting notes live under Taste now (/taste/notes).
 export function CellarTabs({
   bottles,
-  notes,
   history,
   stats,
   currency,
   initialTab,
 }: {
   bottles: BottleRow[];
-  notes: NoteRow[];
   history: HistoryRow[];
   stats: CellarStats | null;
   currency: string;
@@ -73,8 +69,6 @@ export function CellarTabs({
 
       {active === "bottles" ? (
         <CellarBottlesTable rows={bottles} currency={currency} />
-      ) : active === "notes" ? (
-        <MyNotesList notes={notes} />
       ) : active === "history" ? (
         <HistoryList rows={history} />
       ) : stats ? (

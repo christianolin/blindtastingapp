@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
@@ -12,6 +12,7 @@ import type {
   WsetNoteState,
 } from "@/lib/wset/types";
 import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
+import type { WsetSheetHandle } from "@/components/wset/wset-sheet";
 
 type EditData = {
   wine: { colour: WineColour; style: WineStyle };
@@ -21,8 +22,11 @@ type EditData = {
 };
 
 // Opens a saved note as the full WSET sheet — the very editor the note page
-// uses — so a taster can review AND edit it in place from the cellar. Data is
-// fetched on open (RLS scopes it to the author); NoteEditor owns saving.
+// uses — so a taster can review AND edit it in place: from the Tasting notes
+// archive (/taste/notes) and from a bottle's "Show note" in the cellar. Data is
+// fetched on open by note id. The notes read policy is public, so privacy is
+// the caller's job: pass only the signed-in author's own notes. NoteEditor owns
+// saving.
 export function NoteModal({
   noteId,
   wineId,
@@ -34,6 +38,7 @@ export function NoteModal({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<EditData | null | "loading">("loading");
+  const sheetRef = useRef<WsetSheetHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,12 +86,16 @@ export function NoteModal({
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (open) return;
+        // Escape and the backdrop take the sheet's own close path (the Discard
+        // confirm while dirty); before the sheet mounts there is nothing to lose.
+        if (sheetRef.current) sheetRef.current.requestClose();
+        else onClose();
       }}
     >
       <DialogContent
         showCloseButton={false}
-        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl"
+        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-[16px]"
       >
         <DialogTitle className="sr-only">Tasting note</DialogTitle>
         {data === "loading" ? (
@@ -106,6 +115,7 @@ export function NoteModal({
             initial={data.initial}
             onClose={onClose}
             embedded
+            sheetRef={sheetRef}
           />
         )}
       </DialogContent>
