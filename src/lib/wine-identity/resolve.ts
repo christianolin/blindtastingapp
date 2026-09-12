@@ -75,6 +75,20 @@ function suffixEquivalent(a: string | null, b: string | null): boolean {
   return a === b || SUFFIX_EQUIVALENTS.some((set) => set.includes(a) && set.includes(b));
 }
 
+/**
+ * The words step 4.2 sends to `search_appellations` for a base. `normaliseCru`
+ * spells every premier cru "premier cru", but stored names say "Premier Cru" or
+ * "1er Cru", and the RPC's ILIKE cannot match one spelling against the other. So
+ * the search sends "cru" in its place: "puligny montrachet premier cru" →
+ * "puligny%montrachet%cru", which finds both spellings. Step 4.3 still compares
+ * `normaliseCru` forms, so the pick stays exact. Without this, a stored "1er Cru"
+ * row never comes back, step 4.7 strips the qualifier and the plain base
+ * appellation is picked instead: a wrong appellation, not a null (RC4).
+ */
+function appellationSearchWords(base: string): string {
+  return base.replace(/(^| )premier cru(?= |$)/g, "$1cru");
+}
+
 /** `base` minus one trailing "grand cru" / "premier cru", or null when there is
     none (or nothing would be left). */
 function withoutCruQualifier(base: string): string | null {
@@ -99,10 +113,12 @@ async function attemptAppellation(
   countryId: string | null,
   regionCandidateId: string | null,
 ): Promise<AppellationAttempt> {
-  // 4.2 — the region-scoped retry fires only on a possibly truncated list.
-  let hits = await lookup.searchAppellations(base);
+  // 4.2 — the region-scoped retry fires only on a possibly truncated list. A
+  // premier cru is searched as "cru", so either stored spelling comes back.
+  const words = appellationSearchWords(base);
+  let hits = await lookup.searchAppellations(words);
   if (hits.length === APPELLATION_SEARCH_LIMIT && regionCandidateId !== null) {
-    hits = await lookup.searchAppellations(base, regionCandidateId);
+    hits = await lookup.searchAppellations(words, regionCandidateId);
   }
   if (hits.length === 0) return { row: null, agreed: false };
 

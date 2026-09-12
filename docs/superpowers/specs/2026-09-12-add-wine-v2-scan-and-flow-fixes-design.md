@@ -2676,7 +2676,7 @@ as $$
   from producers p
   where public.f_search_norm(p_name) <> ''
     and public.f_search_norm(p.name) = public.f_search_norm(p_name)
-  order by (p_region_id is not null and p.region_id = p_region_id) desc,
+  order by coalesce(p_region_id is not null and p.region_id = p_region_id, false) desc,
            (p.region_id is not null) desc,
            p.name,
            p.id

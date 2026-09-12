@@ -41,6 +41,8 @@ describe("resolveLabelRead against the reference snapshot (spec G.2)", () => {
   it.each([
     ["France", "Southern Rhône", "rhone"], ["France", "Northern Rhone", "rhone"], ["Portugal", "Douro Valley", "douro"],
     ["Germany", "Mosel-Saar-Ruwer", "mosel"], ["France", "Burgundy", "bourgogne"], ["Italy", "Piedmont", "piemonte"], ["Italy", "Tuscany", "toscana"],
+    // The map's keys are only lowercased, so each accented synonym is a second key (spec §B.5).
+    ["France", "Southern Rhone", "rhone"], ["France", "Northern Rhône", "rhone"],
   ] as const)("%s · %s resolves to its stored region (RC3)", async (countryName, region, target) => {
     const d = await resolve("produttori-barbaresco-2018.json", { country: countryName, region, appellation: null, producer: null });
     const stored = snap.regions.find((r) => r.id === d.regionId);
@@ -207,10 +209,11 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     expect(covered.filter((n) => !appellationIds.has(n.appellation_id))).toEqual([]);
   });
   it("a folded producer collision resolves to the region-linked row, not the region-less one (spec §B.7)", async () => {
-    // The contract find_producer_by_folded_name owes step 7: ties go to the given
-    // region first. See snapshot-lookup.ts — the live SQL currently inverts this
-    // first tie-break (a NULL region_id sorts first under DESC), so until the
-    // follow-up migration lands, this passes here and fails in production.
+    // With the region known (step 6 passes it), ties go to that region first. See
+    // snapshot-lookup.ts: 20260912101000's SQL inverts this tie-break for a
+    // region-less duplicate (its NULL sort key comes first under DESC), so until
+    // 20260912101530 is applied live this half passes here while production
+    // returns p-null.
     const snap = two();
     snap.producers = [
       { id: "p-null", name: "Château Lascombes", region_id: null },
@@ -218,6 +221,14 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     ];
     const d = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bordeaux", producer: "Chateau Lascombes" }, snap);
     expect(d.producer).toEqual({ kind: "existing", id: "p-bx", name: "Chateau Lascombes" });
+
+    // With no region the first sort key is false for every row, live and here
+    // alike, so the linked row wins and step 7 fills the region from its link.
+    // Step 7 is not what the live defect breaks.
+    const unplaced = await resolve("vin-de-france.json", { ...plain, country: "France", producer: "Chateau Lascombes" }, snap);
+    expect([unplaced.producer, unplaced.regionId, unplaced.provenance.region]).toEqual([
+      { kind: "existing", id: "p-bx", name: "Chateau Lascombes" }, "bx", "producer-region",
+    ]);
   });
 
   // Two rules the plan's cases assert only by their result, which is the same
@@ -277,5 +288,223 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     expect([d.regionId, d.appellationId]).toEqual(["bg", null]);
     expect(watched.calls.search).toEqual([]);
     expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+
+  // Step 4.2's region-scoped retry. The crowded case above cannot prove it: its two
+  // agreeing rows sort ahead of the 26 "Villages" rows, so it picks nothing with or
+  // without the retry. Here only the scoped search can reach the right row.
+  it("step 4.2 retries a truncated search inside the region candidate", async () => {
+    const s = two();
+    s.regions.push({ id: "rh", name: "Rhône", country_id: "fr" });
+    s.appellations.push(
+      // 26 rows outside the region that match the pattern and sort first (a digit
+      // sorts before a letter), so the unscoped search stops at 25 of them.
+      ...Array.from({ length: 26 }, (_, i) => ({ id: `f${i}`, name: `Côtes du Rhône ${i} AOC`, region_id: "bg" })),
+      { id: "cdr", name: "Côtes du Rhône AOC", region_id: "rh" },
+    );
+    const watched = spy(s);
+    const d = await resolveLabelRead(
+      coerceLabelRead({ ...fixture("vin-de-france.json"), ...plain, country: "France", region: "Rhône", appellation: "Côtes du Rhône AOC" }),
+      watched.lookup,
+      { imageUrl: null },
+    );
+    expect(watched.calls.search).toEqual(["cotes du rhone", "cotes du rhone @rh"]);
+    expect([d.appellationId, d.regionId]).toEqual(["cdr", "rh"]);
+  });
+
+  it("step 4.2 never narrows an uncrowded search to the region candidate", async () => {
+    // The read's region can be wrong. Under 25 hits the search stays unscoped, and
+    // the one agreeing row sets the region itself (step 4.8).
+    const watched = spy(two());
+    const d = await resolveLabelRead(
+      coerceLabelRead({ ...fixture("vin-de-france.json"), ...plain, country: "France", region: "Bordeaux", appellation: "Puligny-Montrachet AOC" }),
+      watched.lookup,
+      { imageUrl: null },
+    );
+    expect(watched.calls.search).toEqual(["puligny montrachet"]);
+    expect([d.appellationId, d.regionId]).toEqual(["pm", "bg"]);
+  });
+
+  it("step 1 leaves a country the reference table lacks null, and places nothing under it", async () => {
+    const d = await resolve("produttori-barbaresco-2018.json", { country: "Atlantis", appellation: null, producer: null });
+    expect([d.countryId, d.regionId, d.appellationId]).toEqual([null, null, null]);
+    expect(d.provenance.country).toBeUndefined();
+  });
+
+  it("step 4.6 prefers the row whose suffix is equivalent to the read's", async () => {
+    const s = two();
+    s.appellations.push(
+      { id: "cb-aoc", name: "Collines Basses AOC", region_id: "bg" },
+      { id: "cb-igp", name: "Collines Basses IGP", region_id: "bg" },
+    );
+    const picks = await Promise.all(
+      ["Collines Basses AOC", "Collines Basses AOP", "Collines Basses IGP"].map(async (appellation) =>
+        [appellation, (await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bourgogne", appellation }, s)).appellationId]),
+    );
+    // aoc ≡ aop, so the AOP read picks the AOC row; the IGP read picks its own row.
+    expect(picks).toEqual([["Collines Basses AOC", "cb-aoc"], ["Collines Basses AOP", "cb-aoc"], ["Collines Basses IGP", "cb-igp"]]);
+  });
+
+  it("step 12 makes a TAWNY read FORTIFIED whatever style the read gave", async () => {
+    // The tawny fixture already says FORTIFIED, so the case above cannot tell
+    // normaliseDraft from a plain copy of the read.
+    for (const style of ["SWEET", null]) {
+      const d = await resolve("tawny-port-20.json", { style });
+      expect([style, d.vintage.kind, d.vintage.tawnyYears, d.style]).toEqual([style, "TAWNY", 20, "FORTIFIED"]);
+    }
+  });
+
+  // The field chips (§B.4) are driven by provenance alone, so every step that
+  // places a value from the read must mark it "label" (§B.5 steps 1, 2, 4.8, 5,
+  // 6, 8-11; D8: a scan-read value is read from the label, not an inference).
+  it("a full read marks every value it placed as read from the label", async () => {
+    const d = await resolveLabelRead(
+      coerceLabelRead(fixture("produttori-barbaresco-2018.json")),
+      snapshotLookup(snap),
+      { imageUrl: "https://example.test/label.jpg" },
+    );
+    expect(d.provenance).toMatchObject({
+      country: "label", region: "label", appellation: "label", producer: "label", blend: "label",
+      vintage: "label", colour: "label", style: "label", wineName: "label", alcohol: "label", description: "label",
+    });
+    expect(d.provenance.typeDesignation).toBeUndefined(); // the read had no designation
+    expect(d.imageUrl).toBe("https://example.test/label.jpg"); // step 11
+  });
+
+  it("the no-GI, region-only, pending-producer and designation steps mark provenance too; unread fields carry none", async () => {
+    const noGi = await resolve("vin-de-france.json");
+    expect([noGi.provenance.region, noGi.provenance.appellation]).toEqual(["label", "label"]);
+
+    const regionOnly = await resolve("produttori-barbaresco-2018.json", { appellation: null, region: "Piedmont" });
+    expect([regionOnly.provenance.region, regionOnly.provenance.appellation]).toEqual(["label", undefined]);
+
+    expect((await resolve("domaine-leflaive-puligny.json")).provenance.producer).toBe("label");
+
+    const s = two();
+    s.type_designations.push({ id: "gc", name: "Grand Cru", country_id: null });
+    const designated = await resolve("vin-de-france.json", { ...plain, country: "France", designation: "Grand Cru" }, s);
+    expect([designated.typeDesignationId, designated.provenance.typeDesignation]).toEqual(["gc", "label"]);
+
+    const cigliuti = await resolve("cigliuti-barbaresco-no-vintage.json");
+    expect([cigliuti.provenance.vintage, cigliuti.provenance.alcohol]).toEqual([undefined, undefined]);
+  });
+
+  // A premier cru read against a stored premier cru row. normaliseCru spells every
+  // premier cru "premier cru", but stored names use "Premier Cru" or "1er Cru", and
+  // search_appellations' ILIKE cannot match one spelling against the other. If step
+  // 4.2 sent "premier cru", a stored "1er Cru" row would never come back: step 4.7
+  // would strip the qualifier and pick the plain base appellation with provenance
+  // "label", a silently wrong FK (RC4). So the search sends "cru" in its place, and
+  // step 4.3 still compares normaliseCru forms, which keeps the pick exact.
+  it.each([
+    "Puligny-Montrachet 1er Cru", "Puligny-Montrachet Premier Cru", "Puligny-Montrachet 1er Cru AOC", "PULIGNY-MONTRACHET PREMIER CRU AOC",
+  ])("%s resolves to the stored \"1er Cru\" row, never to the base appellation", async (appellation) => {
+    const premier = snap.appellations.find((a) => a.name === "Puligny-Montrachet 1er Cru")!;
+    const d = await resolve("domaine-leflaive-puligny.json", { appellation });
+    expect([appName(d.appellationId), d.appellationId, d.regionId, d.provenance.appellation]).toEqual([
+      "Puligny-Montrachet 1er Cru", premier.id, premier.region_id, "label",
+    ]);
+  });
+
+  it("a base read beside a stored 1er Cru row still resolves to the base row", async () => {
+    const d = await resolve("domaine-leflaive-puligny.json");
+    expect(appName(d.appellationId)).toBe("Puligny-Montrachet AOC");
+  });
+
+  it("a 1er Cru read finds a stored \"Premier Cru\" spelling in one search, with no retry to the base", async () => {
+    const s = two();
+    s.appellations.push(
+      { id: "chab", name: "Chablis AOC", region_id: "bg" },
+      { id: "chab-gc", name: "Chablis Grand Cru", region_id: "bg" },
+      { id: "chab-pc", name: "Chablis Premier Cru", region_id: "bg" },
+    );
+    for (const appellation of ["Chablis 1er Cru", "Chablis Premier Cru AOC"]) {
+      const watched = spy(s);
+      const d = await resolveLabelRead(
+        coerceLabelRead({ ...fixture("vin-de-france.json"), ...plain, country: "France", region: "Bourgogne", appellation }),
+        watched.lookup,
+        { imageUrl: null },
+      );
+      expect([appellation, watched.calls.search, d.appellationId]).toEqual([appellation, ["chablis cru"], "chab-pc"]);
+    }
+  });
+
+  it("two stored spellings of one premier cru both agree, so nothing is picked and the base is never tried", async () => {
+    const s = two();
+    s.appellations.push(
+      { id: "chab", name: "Chablis AOC", region_id: "bg" },
+      { id: "chab-1er", name: "Chablis 1er Cru", region_id: "bg" },
+      { id: "chab-pc", name: "Chablis Premier Cru", region_id: "bg" },
+    );
+    const d = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bourgogne", appellation: "Chablis Premier Cru" }, s);
+    expect([d.appellationId, d.regionId]).toEqual([null, "bg"]);
+  });
+
+  it("step 6 passes the draft's region, so a folded collision goes to the row in that region", async () => {
+    // Both rows are region-linked, and the Bordeaux row wins every later tie-break
+    // (same name, lower id), so only the region argument can pick Bourgogne's row.
+    const s = two();
+    s.producers = [
+      { id: "a-bx", name: "Domaine Dupont", region_id: "bx" },
+      { id: "b-bg", name: "Domaine Dupont", region_id: "bg" },
+    ];
+    const inBourgogne = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bourgogne", producer: "DOMAINE DUPONT" }, s);
+    const inBordeaux = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bordeaux", producer: "DOMAINE DUPONT" }, s);
+    expect([inBourgogne.producer, inBordeaux.producer]).toEqual([
+      { kind: "existing", id: "b-bg", name: "Domaine Dupont" },
+      { kind: "existing", id: "a-bx", name: "Domaine Dupont" },
+    ]);
+  });
+
+  // Single rules the F5 re-review's mutants still survived (spec §B.5 steps 1, 2,
+  // 4.5, 4.7, 4.8, 7 and 9).
+  it("step 1 maps a local country name through canonicalCountryName", async () => {
+    const d = await resolve("produttori-barbaresco-2018.json", { country: "Italia", region: null, appellation: null, producer: null });
+    expect([d.countryId, d.provenance.country]).toEqual([country("italy").id, "label"]);
+  });
+
+  it("step 2 skips steps 3-5, so a no-GI read that also names a region and an appellation keeps the national tier", async () => {
+    // coerceLabelRead already nulls the appellation of a no-GI read (its rule 5), so
+    // the read is built directly: this tests the resolver's own skip.
+    const read = { ...coerceLabelRead(fixture("vin-de-france.json")), region: "Bourgogne", appellation: "Puligny-Montrachet AOC" };
+    const d = await resolveLabelRead(read, snapshotLookup(snap), { imageUrl: null });
+    const vdfRegion = snap.regions.find((r) => r.country_id === country("france").id && foldName(r.name) === "vindefrance")!;
+    const vdfApp = snap.appellations.find((a) => a.region_id === vdfRegion.id && foldName(a.name) === "vindefrance")!;
+    expect([d.regionId, d.appellationId]).toEqual([vdfRegion.id, vdfApp.id]);
+  });
+
+  it("step 4.5 keeps only the region candidate's rows, even when that leaves none", async () => {
+    const s = two();
+    s.regions.push({ id: "pv", name: "Provence", country_id: "fr" });
+    s.appellations.push(
+      { id: "cb-bx", name: "Collines Basses AOC", region_id: "bx" },
+      { id: "cb-bg", name: "Collines Basses IGP", region_id: "bg" },
+    );
+    // A filter that kept both rows when none sit in Provence would let step 4.6's
+    // suffix preference pick cb-bx.
+    const d = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Provence", appellation: "Collines Basses AOC" }, s);
+    expect([d.appellationId, d.regionId]).toEqual([null, "pv"]);
+  });
+
+  it("step 4.7 strips a cru qualifier once, never twice", async () => {
+    const d = await resolve("vin-de-france.json", { ...plain, country: "France", region: "Bourgogne", appellation: "Puligny-Montrachet Grand Cru Premier Cru AOC" }, two());
+    expect([d.appellationId, d.regionId]).toEqual([null, "bg"]);
+  });
+
+  it("step 4.8 fills the country from the one agreeing row when the read had none", async () => {
+    const d = await resolve("vin-de-france.json", { ...plain, country: null, appellation: "Puligny-Montrachet AOC" }, two());
+    expect([d.appellationId, d.regionId, d.countryId, d.provenance.country]).toEqual(["pm", "bg", "fr", "label"]);
+  });
+
+  it("step 7 fills an empty country from the producer's linked region", async () => {
+    const s = two();
+    s.producers = [{ id: "p-bx", name: "Chateau Lascombes", region_id: "bx" }];
+    const d = await resolve("vin-de-france.json", { ...plain, country: null, producer: "Chateau Lascombes" }, s);
+    expect([d.regionId, d.countryId, d.provenance.region, d.provenance.country]).toEqual(["bx", "fr", "producer-region", "producer-region"]);
+  });
+
+  it("step 9 keeps the canonical name on a pending grape", async () => {
+    const d = await resolve("vin-de-france.json", { ...plain, grapes: [{ name: "Garnacha", percentage: 100 }] }, two());
+    expect(d.blend).toEqual([{ grape: { kind: "pending", name: "Grenache" }, percentage: 100 }]);
   });
 });
