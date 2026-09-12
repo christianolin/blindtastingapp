@@ -217,6 +217,8 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
     - if T10 adds a joined-participant count to `NextUpBanner`, pass it as `joinedCount` to `nextUpMeta` so the phone line gains "· {k} in"; do not add the field only for that;
     - `canAddWine` on the live banner also gates the tile row nothing; the tiles never depend on banner data except `bannerKind`.
 
+17. **All tastings replaces the Taste tabs (T10).** The Taste & Rate lane rebuilds `/taste` as "All tastings" with its own row component (`src/app/taste/tasting-row.tsx`), leaving `src/app/taste/tasting-card.tsx` untouched and unused. T10 therefore skips its `tasting-card.tsx` edit when `rg -n "TastingCard" src` shows no importer (Working Rule 5: delete it instead), and `tastingCardStatus` stays a pure helper the row component may import. If the T&R lane has not landed when T10 starts, T10 proceeds as written.
+
 ## Working Rules
 
 1. **Ownership.** You may create, edit or delete only the files in your task's **OWNS** list. You may read anything. If the task needs a change in a file you do not own, stop and report the exact change to the orchestrator. Never make that change yourself.
