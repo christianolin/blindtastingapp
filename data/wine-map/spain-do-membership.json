@@ -4691,7 +4691,7 @@
         "24",
         "47"
       ],
-      "expected_count": 85,
+      "expected_count": 87,
       "municipios": [
         {
           "code": "24002",
@@ -5030,15 +5030,24 @@
           "name": "Villalba de la Loma"
         },
         {
-          "code": "24051",
-          "name": "Cea"
+          "code": "24074",
+          "name": "Fuentes de Carbajal"
+        },
+        {
+          "code": "24108",
+          "name": "Palacios de la Valduerna"
+        },
+        {
+          "code": "24902",
+          "name": "Villaornate y Castro"
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Tierra de León», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "Whole-municipality union (multi-cluster density-located); León capital excluded."
+        "source": "Pliego de condiciones DOP «Tierra de León» (DO-104), Consejo Regulador D.O. Tierra de León",
+        "url": "https://catatu.es/deos/documentos/pliego-de-condiciones-de-la-do-tierra-de-leon-do-104.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then checked against the pliego)",
+        "note": "Section 4: 69 Leon + 19 Valladolid municipios. AUDIT 2026-09-12: three were missing — Fuentes de Carbajal (the pliego spells it \"Carvajal\"), Palacios de la Valduerna and Villaornate y Castro — and \"Cea\" (24051) was a FALSE INCLUSION, almost certainly split out of \"Santa Maria del Monte de Cea\", which is the actual member. Armunia is named \"(Pd.)\" in the pliego and is a pedania of the city of Leon rather than a municipio, so it stays excluded. NOTE: this is the only entry citing a non-MAPA host; MAPA publishes this DO under \"DOP Leon\" and its PDF was not locatable at audit time."
       },
       "status": "ready"
     },
@@ -5196,10 +5205,11 @@
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Cebreros», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "Whole-municipality union (density-located); Ávila capital excluded."
+        "source": "Pliego de condiciones DOP «Cebreros», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/cebreros_2024_10_10.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then checked against the pliego)",
+        "note": "Section 4: the 35 Avila municipios listed verbatim. Verified correct at audit; no change. Avila capital is not a member."
       },
       "status": "ready"
     },
@@ -5244,10 +5254,6 @@
           "name": "Moratalla"
         },
         {
-          "code": "30040",
-          "name": "Ulea"
-        },
-        {
           "code": "30024",
           "name": "Lorca"
         },
@@ -5258,13 +5264,18 @@
         {
           "code": "30019",
           "name": "Cieza"
+        },
+        {
+          "code": "30015",
+          "name": "Caravaca de la Cruz"
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Bullas», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "Whole-municipality union (density-located); Murcia capital excluded."
+        "source": "Pliego de condiciones DOP «Bullas» (revision 3, julio 2019), Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/images/es/bullas_ccaa_2019_07_01_tcm30-210060.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then checked against the pliego)",
+        "note": "Section 4. Whole municipios: Bullas, Cehegin, Mula, Pliego, Ricote. Partial (pagos/parajes/pedanias, taken whole): Calasparra, Caravaca de la Cruz, Moratalla, Lorca, Cieza, Totana. AUDIT 2026-09-12: \"Ulea\" was a FALSE INCLUSION — the pliego names it only inside \"la Rambla de Ulea\", a watercourse used to describe the Moratalla boundary, and Ulea is a separate Murcia municipio outside the DO. Caravaca de la Cruz, which the pliego names as \"el termino municipal de Caravaca\", was missing."
       },
       "status": "ready"
     },
@@ -5286,10 +5297,11 @@
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Yecla», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "DOP Yecla comprises the single municipality of Yecla."
+        "source": "Pliego de condiciones DOP «Yecla», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/yecla_2024_02_22.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then checked against the pliego)",
+        "note": "Section 4: \"el termino municipal de Yecla, Region de Murcia\" — a single-municipality DO. Verified correct at audit; no change."
       },
       "status": "ready"
     },
@@ -5322,23 +5334,24 @@
           "name": "Casas de Haro"
         },
         {
-          "code": "16065",
-          "name": "Casas de los Pinos"
-        },
-        {
           "code": "16166",
           "name": "Pozoamargo"
         },
         {
           "code": "16198",
           "name": "Sisante"
+        },
+        {
+          "code": "16158",
+          "name": "El Picazo"
         }
       ],
       "provenance": {
-        "source": "Pliego de condiciones DOP «Ribera del Júcar», MAPA",
-        "url": "https://www.mapa.gob.es/es/alimentacion/temas/calidad-diferenciada/dop-igp/",
-        "retrieved": "2026-08-18",
-        "note": "Whole-municipality union of the 7 términos municipales (Cuenca)."
+        "source": "Pliego de condiciones DOP «Ribera del Júcar», Ministerio de Agricultura, Pesca y Alimentación",
+        "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/ribera_del_jucar_2021_08_06.pdf",
+        "retrieved": "2026-09-12",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs flagged the missing PDF citation; list then checked against the pliego)",
+        "note": "Section 4: seven Cuenca municipios, delimited by cadastral poligonos and taken whole. AUDIT 2026-09-12: \"Casas de los Pinos\" was a FALSE INCLUSION and \"El Picazo\" was missing — a count-preserving substitution, which is why expected_count never flagged it."
       },
       "status": "ready"
     },
