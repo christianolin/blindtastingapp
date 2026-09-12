@@ -283,7 +283,7 @@ export function CellarBottlesTable({
               className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Plus className="size-4" />
-              Add a wine
+              Add a bottle
             </AddWineButton>
           </>
         ) : null}

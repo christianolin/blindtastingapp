@@ -18,6 +18,14 @@ const TILE =
 // or "Add your first bottle" when empty.
 const DASHED_TILE =
   "flex h-16 items-center justify-center rounded-[5px] border border-dashed border-gold text-[11px] font-semibold text-primary transition-colors hover:bg-background";
+// The empty "Add your first bottle" tile opens the cellar sheet instead of
+// navigating, so it renders through ActionButtonClient; these trailing classes
+// merge away that button's white fill, press shadow and padding so it keeps
+// the dashed tile's look.
+const EMPTY_TILE_LAUNCHER = cn(
+  DASHED_TILE,
+  "col-span-5 bg-transparent p-0 shadow-none",
+);
 
 /**
  * The Your cellar card: bottles / producers / countries, the four newest
@@ -56,9 +64,13 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
             README's tablet rule), measured on the card, not the viewport. */}
         <div className="grid grid-cols-5 gap-[7px] @max-[300px]:grid-cols-4">
           {empty ? (
-            <Link href="/cellar" className={cn(DASHED_TILE, "col-span-5")}>
+            <ActionButtonClient
+              launch="cellar"
+              variant="outline"
+              className={EMPTY_TILE_LAUNCHER}
+            >
               Add your first bottle
-            </Link>
+            </ActionButtonClient>
           ) : (
             <>
               {data.tiles.map((tile) => (
