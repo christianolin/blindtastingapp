@@ -11547,6 +11547,15 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.franken",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "franken",
+    "normalized_checksum_sha256": "8278E6A11CAD7B857C4049611129952CF425D9AC65AE7F9C4BDA39BC03139F5C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "germany.hessische-bergstrasse",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "hessische-bergstrasse",
