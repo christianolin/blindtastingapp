@@ -38,7 +38,7 @@
       "provinces": [
         "43"
       ],
-      "expected_count": 10,
+      "expected_count": 11,
       "municipios": [
         {
           "code": "43023",
@@ -79,6 +79,9 @@
         {
           "code": "43055",
           "name": "Falset"
+        },
+        {
+          "name": "El Molar"
         }
       ],
       "grapes": [
@@ -92,7 +95,8 @@
         "source": "Pliego de condiciones DOP «Priorat» (DOQ/DOCa), Ministerio de Agricultura, Pesca y Alimentación",
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/priorat_2022_09_06.pdf",
         "retrieved": "2026-08-18",
-        "note": "Section 4.1 'Zona de producción de la uva'. 10 municipios (Tarragona). 'Su agregado Escaladei' is part of La Morera de Montsant; the partial inclusion 'la parte norte del municipio de Falset' is taken whole (documented whole-municipality over-approximation)."
+        "note": "Section 4.1 'Zona de producción de la uva'. 10 municipios (Tarragona). 'Su agregado Escaladei' is part of La Morera de Montsant; the partial inclusion 'la parte norte del municipio de Falset' is taken whole (documented whole-municipality over-approximation). AUDIT 2026-09-12: El Molar was missing. The pliego includes \"la parte este del municipio del Molar\" by poligono, immediately after the Falset partial; only Falset had been captured. Taken whole, consistent with Falset.",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs re-check against the cited pliego)"
       },
       "status": "ready"
     },
@@ -1099,7 +1103,7 @@
       "provinces": [
         "43"
       ],
-      "expected_count": 13,
+      "expected_count": 14,
       "municipios": [
         {
           "code": "43027",
@@ -1152,13 +1156,17 @@
         {
           "code": "43055",
           "name": "Falset"
+        },
+        {
+          "name": "El Molar"
         }
       ],
       "provenance": {
         "source": "Pliego de condiciones DOP «Montsant» (Tarragona), Ministerio de Agricultura, Pesca y Alimentación",
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/montsant_2022_09_14.pdf",
         "retrieved": "2026-08-18",
-        "note": "Whole-municipality union of the 12 whole términos municipales + Falset (pliego includes Falset by polígono; taken whole). The Montsant DO rings the Priorat DOQ."
+        "note": "Whole-municipality union of the 12 whole términos municipales + Falset (pliego includes Falset by polígono; taken whole). The Montsant DO rings the Priorat DOQ. AUDIT 2026-09-12: El Molar was missing. The pliego lists it under \"Y, en parte, los terminos municipales siguientes\" alongside Falset; only Falset had been captured. Taken whole, consistent with Falset.",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs re-check against the cited pliego)"
       },
       "status": "ready"
     },
@@ -11187,7 +11195,7 @@
       "provinces": [
         "03"
       ],
-      "expected_count": 34,
+      "expected_count": 111,
       "municipios": [
         {
           "code": "03002",
@@ -11324,6 +11332,254 @@
         {
           "code": "03140",
           "name": "Villena"
+        },
+        {
+          "name": "Elx",
+          "code": "03065"
+        },
+        {
+          "name": "Crevillent",
+          "code": "03059"
+        },
+        {
+          "name": "Santa Pola"
+        },
+        {
+          "name": "Alcalalí"
+        },
+        {
+          "name": "Beniarbeig"
+        },
+        {
+          "name": "Benigembla"
+        },
+        {
+          "name": "Benidoleig"
+        },
+        {
+          "name": "Benimeli"
+        },
+        {
+          "name": "Benissa"
+        },
+        {
+          "name": "el Poble Nou de Benitatxell",
+          "code": "03042"
+        },
+        {
+          "name": "Calp",
+          "code": "03047"
+        },
+        {
+          "name": "Castell de Castells"
+        },
+        {
+          "name": "Dénia"
+        },
+        {
+          "name": "Els Poblets"
+        },
+        {
+          "name": "Gata de Gorgos"
+        },
+        {
+          "name": "Llíber"
+        },
+        {
+          "name": "Murla"
+        },
+        {
+          "name": "Ondara"
+        },
+        {
+          "name": "Orba"
+        },
+        {
+          "name": "Parcent"
+        },
+        {
+          "name": "Pedreguer"
+        },
+        {
+          "name": "Sagra"
+        },
+        {
+          "name": "Sanet y Negrals"
+        },
+        {
+          "name": "Senija"
+        },
+        {
+          "name": "Teulada"
+        },
+        {
+          "name": "el Ràfol d'Almúnia",
+          "code": "03110"
+        },
+        {
+          "name": "Tormos"
+        },
+        {
+          "name": "la Vall de Laguar",
+          "code": "03137"
+        },
+        {
+          "name": "El Verger"
+        },
+        {
+          "name": "Xàbia",
+          "code": "03082"
+        },
+        {
+          "name": "Xaló"
+        },
+        {
+          "name": "l'Atzúbia",
+          "code": "03001"
+        },
+        {
+          "name": "Pego"
+        },
+        {
+          "name": "la Vall d'Alcalà",
+          "code": "03134"
+        },
+        {
+          "name": "la Vall d'Ebo",
+          "code": "03135"
+        },
+        {
+          "name": "la Vall de Gallinera",
+          "code": "03136"
+        },
+        {
+          "name": "Benidorm"
+        },
+        {
+          "name": "l'Alfàs del Pi",
+          "code": "03011"
+        },
+        {
+          "name": "Altea"
+        },
+        {
+          "name": "Callosa d'En Sarrià"
+        },
+        {
+          "name": "Finestrat"
+        },
+        {
+          "name": "La Nucia"
+        },
+        {
+          "name": "Polop"
+        },
+        {
+          "name": "el Castell de Guadalest",
+          "code": "03075"
+        },
+        {
+          "name": "Benimantell"
+        },
+        {
+          "name": "Benifato"
+        },
+        {
+          "name": "Confrides"
+        },
+        {
+          "name": "Sella"
+        },
+        {
+          "name": "Beniardá"
+        },
+        {
+          "name": "Bolulla"
+        },
+        {
+          "name": "Relleu"
+        },
+        {
+          "name": "la Vila Joiosa",
+          "code": "03139"
+        },
+        {
+          "name": "Orxeta"
+        },
+        {
+          "name": "Tárbena"
+        },
+        {
+          "name": "Alfafara"
+        },
+        {
+          "name": "Alcoleja"
+        },
+        {
+          "name": "Agres"
+        },
+        {
+          "name": "Muro de Alcoy"
+        },
+        {
+          "name": "Gaianes"
+        },
+        {
+          "name": "Beniarrés"
+        },
+        {
+          "name": "Benimassot"
+        },
+        {
+          "name": "l'Orxa",
+          "code": "03084"
+        },
+        {
+          "name": "Planes"
+        },
+        {
+          "name": "Tollos"
+        },
+        {
+          "name": "Fageca",
+          "code": "03067"
+        },
+        {
+          "name": "Famorca"
+        },
+        {
+          "name": "Quatretondeta"
+        },
+        {
+          "name": "Benasau"
+        },
+        {
+          "name": "Gorga"
+        },
+        {
+          "name": "Millena"
+        },
+        {
+          "name": "Balones"
+        },
+        {
+          "name": "Benilloba"
+        },
+        {
+          "name": "Benillup"
+        },
+        {
+          "name": "l'Alqueria d'Asnar",
+          "code": "03017"
+        },
+        {
+          "name": "Almudaina"
+        },
+        {
+          "name": "Benimarfull"
+        },
+        {
+          "name": "Cocentaina"
         }
       ],
       "grapes": [
@@ -11335,7 +11591,8 @@
         "source": "Pliego de condiciones DOP «Alicante», MAPA",
         "url": "https://www.mapa.gob.es/dam/mapa/contenido/alimentacion/temas/calidad-agroalimentaria/2017-calidad-diferenciada/nuevo_denominaciones/pliegos-de-condiciones/pliego-condiciones-vinos/dops/alicante_2024_07_25.pdf",
         "retrieved": "2026-08-19",
-        "note": "Whole-municipality union of the 4 pliego subzones' Alicante-province municipios (L'Alacantí, L'Alcoià, Alto Vinalopó, Medio Vinalopó), 34 in total. The pliego's partial parajes in Caudete (Albacete), Jumilla/Yecla/Abanilla (Murcia) and Orihuela are excluded (not whole municipios of the zone). Home of Monastrell and the historic Fondillón."
+        "note": "Whole-municipality union of the 4 pliego subzones' Alicante-province municipios (L'Alacantí, L'Alcoià, Alto Vinalopó, Medio Vinalopó), 34 in total. The pliego's partial parajes in Caudete (Albacete), Jumilla/Yecla/Abanilla (Murcia) and Orihuela are excluded (not whole municipios of the zone). Home of Monastrell and the historic Fondillón. AUDIT 2026-09-12: the list covered only 4 of the pliego’s 7 subzones. Bajo Vinalopo, La Marina Alta, La Marina Baja and El Comtat were missing entirely — the DO is roughly three times the area previously mapped. The Torrevieja Lagunas natural-park vineyards are not a municipality and are not represented. Bilingual-comunidad names are code-first (INE) per the readme rule: the georef cache carries the co-official Valencian forms (Elx, Xabia, Calp, la Vila Joiosa...). Alcocer de Planes is named in the pliego but is no longer a separate INE municipio (absorbed into Planes, which is listed), so it is excluded as a sub-entity of a listed parent.",
+        "audited": "2026-09-12 (audit-spain-pliegos.mjs re-check against the cited pliego)"
       },
       "status": "ready"
     },
