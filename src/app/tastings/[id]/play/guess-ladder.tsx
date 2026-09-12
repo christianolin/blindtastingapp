@@ -23,6 +23,7 @@ import { ordinal } from "@/lib/stats-math";
 import { cn } from "@/lib/utils";
 import { lockGuess, submitGuess } from "./actions";
 import { FieldPicker } from "./field-picker";
+import { LADDER_EXTRAS_NOTE, lockButtonLabel, lockConfirm, lockFooter } from "./lock-copy";
 import {
   VINTAGE_NV_ID,
   vintageTawnyId,
@@ -192,6 +193,8 @@ export function GuessLadder({
   initialLabels,
   frequentGrapeIds,
   shortlist: initialShortlist,
+  timingMode,
+  asyncRevealPolicy,
   onLocked,
 }: GuessLadderProps) {
   const [guess, setGuess] = useState<GuessRow>(() => toRow(initialGuess));
@@ -335,9 +338,11 @@ export function GuessLadder({
       case "region": {
         next = { ...g, region_id: id, appellation_id: null };
         setAppellationLabel(null);
-        // A region implies its country — fill the 2 pts in when still blank.
+        // A region implies its country, so picking one — even from another
+        // country's "Everything else" rows — sets the Country row to match;
+        // the guess never saves as "Italy · Bordeaux" (play-3).
         const picked = regions.find((r) => r.id === id);
-        if (picked && !g.country_id) next = { ...next, country_id: picked.country_id };
+        if (picked) next = { ...next, country_id: picked.country_id };
         refetchShortlist(id);
         break;
       }
@@ -481,7 +486,13 @@ export function GuessLadder({
       case "region": {
         if (!guess.country_id) return [{ options: regions }];
         const inCountry = regions.filter((r) => r.country_id === guess.country_id);
-        const others = regions.filter((r) => r.country_id !== guess.country_id);
+        // Another country's regions name their country, so the taster sees
+        // the Country row switch coming (a region pick sets it, play-3) and
+        // same-named regions in different countries can be told apart.
+        const countryNameById = new Map(countries.map((c) => [c.id, c.name]));
+        const others: PickerOption[] = regions
+          .filter((r) => r.country_id !== guess.country_id)
+          .map((r) => ({ id: r.id, name: r.name, sub: countryNameById.get(r.country_id) }));
         return [
           { heading: `In ${countryName ?? "the country"}`, options: inCountry },
           { heading: "Everything else", options: others },
@@ -628,8 +639,23 @@ export function GuessLadder({
   const chips = chipIds
     .map((id) => grapes.find((g) => g.id === id))
     .filter((g): g is ReferenceOption => Boolean(g));
+  // ASYNC + IMMEDIATE: locking runs score_own_guess, so it is a final submit
+  // that shows the answer — the button, footer and a confirm say so (play-4).
+  // Null in every other mode, where locking stays a take-back-able signal.
+  const submitLabel = lockButtonLabel({
+    timingMode,
+    asyncRevealPolicy,
+    glass: glassNumber,
+    match: false,
+  });
 
   async function onLock() {
+    if (
+      submitLabel !== null &&
+      !window.confirm(lockConfirm({ glass: glassNumber, blank: pointsAtStake(guess) === 0 }))
+    ) {
+      return;
+    }
     setLocking(true);
     setError(null);
     try {
@@ -803,9 +829,7 @@ export function GuessLadder({
 
         {LADDER_ORDER.map(renderRow)}
 
-        <p className="px-1 pt-0.5 text-[11px] text-muted-foreground">
-          Secondary grape and type designation appear only if the wine has them — 2 pts each.
-        </p>
+        <p className="px-1 pt-0.5 text-[11px] text-muted-foreground">{LADDER_EXTRAS_NOTE}</p>
 
         <button
           type="button"
@@ -832,11 +856,12 @@ export function GuessLadder({
               <WineGlassLoader size={18} /> Locking…
             </>
           ) : (
-            `Lock in glass ${glassNumber}`
+            (submitLabel ?? `Lock in glass ${glassNumber}`)
           )}
         </button>
         <span className="text-center text-[11.5px] text-muted-foreground">
-          Saved as you go. Locking stops edits and shows the others you are ready.
+          {lockFooter({ timingMode, asyncRevealPolicy }) ??
+            "Saved as you go. Locking stops edits and shows the others you are ready."}
         </span>
       </div>
 

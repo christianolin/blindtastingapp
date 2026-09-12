@@ -56,6 +56,7 @@ export function FieldPicker({
   inputRef,
   searchPlaceholder = "Search",
   resetKey,
+  skipLabel = "Not sure — skip it",
 }: FieldPickerProps) {
   const titleId = useId();
   const [query, setQuery] = useState("");
@@ -301,19 +302,25 @@ export function FieldPicker({
         </Command>
 
         <div className="flex shrink-0 items-center gap-[10px] border-t border-border bg-background px-4 pt-[11px] pb-[max(22px,env(safe-area-inset-bottom))] md:pb-[14px]">
-          <button
-            type="button"
-            tabIndex={open ? 0 : -1}
-            onClick={() => onPick(null)}
-            className="flex min-h-11 flex-1 items-center text-left text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Not sure — skip it
-          </button>
+          {skipLabel !== null ? (
+            <button
+              type="button"
+              tabIndex={open ? 0 : -1}
+              onClick={() => onPick(null)}
+              className="flex min-h-11 flex-1 items-center text-left text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {skipLabel}
+            </button>
+          ) : null}
           <button
             type="button"
             tabIndex={open ? 0 : -1}
             onClick={onNext}
-            className="flex min-h-11 items-center justify-center rounded-[11px] bg-primary px-[22px] py-[13px] text-[15px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523]"
+            className={cn(
+              "flex min-h-11 items-center justify-center rounded-[11px] bg-primary px-[22px] py-[13px] text-[15px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523]",
+              // No skip button (the match ladder): Next takes the full width.
+              skipLabel === null && "flex-1",
+            )}
           >
             {nextLabel}
           </button>

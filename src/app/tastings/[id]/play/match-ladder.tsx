@@ -5,9 +5,11 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
+import type { AsyncRevealPolicy, TimingMode } from "@/lib/supabase/database.types";
 import { cn } from "@/lib/utils";
 import { lockGuesses, submitAllMatchGuesses } from "./actions";
 import { FieldPicker } from "./field-picker";
+import { MATCH_FOOTER, lockButtonLabel } from "./lock-copy";
 import { LockedIn, type LockedInData } from "./locked-in";
 import type { PickerGroup } from "./ladder-types";
 
@@ -48,6 +50,8 @@ export function MatchLadder({
   candidates,
   initialLocked,
   lockedIn,
+  timingMode,
+  asyncRevealPolicy,
 }: {
   tastingId: string;
   tastingName: string;
@@ -57,6 +61,11 @@ export function MatchLadder({
   initialLocked: boolean;
   /** The 6g data minus what this component knows better (my matches). */
   lockedIn: Omit<LockedInData, "chips" | "stakeLine" | "wineIds">;
+  /** The tasting's timing and results policy. In ASYNC + IMMEDIATE, locking
+   *  scores every glass and shows the answers, so the button says "Submit"
+   *  (lock-copy.ts, play-4). Omitted → today's lock copy. */
+  timingMode?: TimingMode;
+  asyncRevealPolicy?: AsyncRevealPolicy;
 }) {
   const [matches, setMatches] = useState<Record<string, string>>(() =>
     Object.fromEntries(glasses.map((g) => [g.wineId, g.existingGuessedWineId ?? ""])),
@@ -242,7 +251,7 @@ export function MatchLadder({
                     <span className="truncate text-[11.5px] text-muted-foreground">{c.sub}</span>
                   </>
                 ) : (
-                  <span className="text-[14px] text-muted-foreground">Skip, or pick a wine</span>
+                  <span className="text-[14px] text-muted-foreground">Pick a wine</span>
                 )}
               </span>
               <ChevronRight className="size-4 shrink-0 text-placeholder" aria-hidden />
@@ -269,18 +278,20 @@ export function MatchLadder({
               <WineGlassLoader size={18} /> Locking…
             </>
           ) : allMatched ? (
-            "Lock in all glasses"
+            (lockButtonLabel({ timingMode, asyncRevealPolicy, match: true }) ??
+              "Lock in all glasses")
           ) : (
             "Match every glass to lock in"
           )}
         </button>
-        <span className="text-center text-[11.5px] text-muted-foreground">
-          Locking saves every match at once and shows the others you are ready.
-        </span>
+        <span className="text-center text-[11.5px] text-muted-foreground">{MATCH_FOOTER}</span>
       </div>
 
       <FieldPicker
         open={picker.open}
+        // No skip: a skipped glass could never lock (play-7). "Next" already
+        // moves on without clearing a match.
+        skipLabel={null}
         // Every glass picks from the same candidate list, so `field` is a
         // constant; the glass index is what resets the search per glass.
         field="country"
