@@ -454,9 +454,6 @@ export type Database = {
           catalog_wine_id: string | null;
           unidentified_wine_id: string | null;
         };
-        // Clients may write only the guess fields and locked_at; the scoring
-        // columns, reveal_step and the timestamps are server-written (migration
-        // 20260912093000 revokes the column privileges).
         Insert: {
           wine_id: string;
           country_id: string;
@@ -510,6 +507,9 @@ export type Database = {
           submitted_at: string;
           updated_at: string;
         };
+        // Clients may write only the guess fields and locked_at; the scoring
+        // columns, reveal_step and the timestamps are server-written (migration
+        // 20260912093000 revokes the column privileges).
         Insert: {
           wine_id: string;
           participant_id: string;
