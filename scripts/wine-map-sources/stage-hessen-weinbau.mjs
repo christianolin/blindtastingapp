@@ -21,7 +21,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 import pg from "pg";
-import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
+import { sha256hex, releaseVersion, attributionKeyFor } from "../wine-map-tiles/lib.mjs";
 
 const STAGE = process.argv.includes("--stage");
 const SOURCE_FILE = "data/wine-map/hessen-weinbau-dissolved.geojson";
@@ -44,6 +44,14 @@ const TARGETS = {
   starkenburg: "germany.hessische-bergstrasse.starkenburg",
   umstadt: "germany.hessische-bergstrasse.umstadt",
 };
+
+// Fail here, not in CI. A source_namespace with no entry in lib.mjs's
+// ATTRIBUTION map stages and promotes perfectly happily, then takes down the
+// whole tiles run at export with "Unknown source namespace" -- after the rows
+// are already live, so the only way back is another migration. attributionKeyFor
+// throws on an unknown namespace, so calling it before any work is done turns a
+// red pipeline into a failed script.
+attributionKeyFor(NAMESPACE);
 
 const buffer = await readFile(SOURCE_FILE);
 const sourceSha256 = sha256hex(buffer);

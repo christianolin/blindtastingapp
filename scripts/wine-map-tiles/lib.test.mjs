@@ -202,6 +202,7 @@ test("attribution keys reject unknown namespaces", () => {
     bkg: ATTRIBUTION.BKG_VG250.text,
     "lwk-rlp": ATTRIBUTION.LWK_RLP_WEINLAGEN.text,
     "dgt-caop": ATTRIBUTION.CAOP_CONCELHOS.text,
+    "hvbg-atkis": ATTRIBUTION.HESSEN_ATKIS_WEINBAU.text,
   });
 });
 
@@ -213,6 +214,10 @@ test("the German namespaces resolve to their own credits", () => {
   assert.equal(attributionKeyFor("CAOP_CONCELHOS"), "dgt-caop");
   assert.equal(attributionKeyFor("CAOP_RAM"), "dgt-caop");
   assert.equal(attributionKeyFor("CAOP_FREGUESIAS"), "dgt-caop");
+  // Hessen is the one German source that is not a Weinbergsrolle: ATKIS land
+  // use clipped to the Gemeinden the Weinbauamt names, so it gets its own
+  // credit rather than sharing the Rheinland-Pfalz one.
+  assert.equal(attributionKeyFor("HESSEN_ATKIS_WEINBAU"), "hvbg-atkis");
   assert.match(ATTRIBUTION.BKG_VG250.text, /BKG/);
   assert.match(ATTRIBUTION.LWK_RLP_WEINLAGEN.text, /Weinbergsrolle/);
 });
