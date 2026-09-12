@@ -17,6 +17,7 @@ import {
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { makeWineLabeler } from "@/lib/wine-label";
+import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
 import { cn } from "@/lib/utils";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
@@ -78,6 +79,18 @@ export default async function TastingPage({
   // The wine currently in play (first not-yet-revealed) — its chip gets the
   // filled "active" treatment in the navigator, matching the prototype.
   const activeChipId = (wines ?? []).find((w) => !w.is_revealed)?.id ?? null;
+  // Glasses whose answers ending the tasting would leave hidden (reveal-4).
+  // Numbered by list order, not the stored position, like every other glass
+  // number in the app; a glass part-way through a step reveal is "half".
+  const unrevealedGlasses: UnrevealedGlass[] = [];
+  (wines ?? []).forEach((w, i) => {
+    if (!w.is_revealed) {
+      unrevealedGlasses.push({
+        glass: i + 1,
+        state: w.reveal_step > 0 ? "half" : "hidden",
+      });
+    }
+  });
   const participantCount = (participantRows ?? []).length;
   // Derived session state — "All revealed" and "Completed" are real phases,
   // not "In progress" sitting at 100% (owner: status must reflect actual state).
@@ -359,23 +372,40 @@ export default async function TastingPage({
     </Card>
   );
 
+  // entry-6: there is nothing left to accept on a CLOSED tasting, so the card
+  // says so and drops Accept. Decline stays — it is how the invite is cleared.
+  const inviteClosed = tasting.status === "CLOSED";
   const inviteCard =
     myStatus === "INVITED" ? (
-      <Card className="border-primary/40 bg-primary/5">
+      <Card
+        className={
+          inviteClosed
+            ? "border-border bg-muted/40"
+            : "border-primary/40 bg-primary/5"
+        }
+      >
         <CardHeader>
           <CardTitle className="text-base">You&apos;re invited</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
-            {profileById.get(tasting.host_id)?.display_name ?? "The host"}{" "}
-            invited you to this tasting. Accept to take part.
+            {inviteClosed ? (
+              "This tasting has finished. Decline to clear it from your invites."
+            ) : (
+              <>
+                {profileById.get(tasting.host_id)?.display_name ?? "The host"}{" "}
+                invited you to this tasting. Accept to take part.
+              </>
+            )}
           </p>
           <div className="flex gap-2">
-            <form action={respondToInvite}>
-              <input type="hidden" name="tasting_id" value={id} />
-              <input type="hidden" name="response" value="accept" />
-              <Button type="submit">Accept</Button>
-            </form>
+            {inviteClosed ? null : (
+              <form action={respondToInvite}>
+                <input type="hidden" name="tasting_id" value={id} />
+                <input type="hidden" name="response" value="accept" />
+                <Button type="submit">Accept</Button>
+              </form>
+            )}
             <form action={respondToInvite}>
               <input type="hidden" name="tasting_id" value={id} />
               <input type="hidden" name="response" value="decline" />
@@ -486,10 +516,22 @@ export default async function TastingPage({
               wineCount={wineCount}
               friends={friends}
               sequentialGuessing={tasting.sequential_guessing}
-              showSequentialToggle={tasting.reveal_mode === "BLIND"}
+              // Guided pacing is LIVE-only (create-1, play-1, reveal-2): a
+              // self-paced tasting has no shared "current glass" to gate on.
+              showSequentialToggle={
+                tasting.reveal_mode === "BLIND" &&
+                tasting.timing_mode === "LIVE"
+              }
               leaderboardReveal={tasting.leaderboard_reveal}
-              showLeaderboardToggle={tasting.reveal_mode === "BLIND"}
+              // The standings setting only bites on a guided LIVE blind
+              // tasting, where attributes are revealed one at a time (create-8).
+              showLeaderboardToggle={
+                tasting.reveal_mode === "BLIND" &&
+                tasting.timing_mode === "LIVE" &&
+                tasting.sequential_guessing
+              }
               invitesStayOpen={isOpen}
+              unrevealedGlasses={unrevealedGlasses}
             />
           </div>
         ) : null}
@@ -610,8 +652,11 @@ export default async function TastingPage({
                 tastingId={id}
                 status={tasting.status}
                 wineCount={wineCount}
+                // All three, so Start can decide where it lands (reveal-5):
+                // only a LIVE blind host-provides host goes to the console.
                 timingMode={tasting.timing_mode}
                 revealMode={tasting.reveal_mode}
+                wineSource={tasting.wine_source}
                 surface="start"
               />
             ) : null}
