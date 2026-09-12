@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
-import { listAppellationsForRegions } from "@/lib/reference-search";
 import { addCellarLot } from "@/app/cellar/new/actions";
 import { addTastingWineFromCellarLot } from "@/app/tastings/[id]/wines/new/actions";
 import {
@@ -25,18 +24,6 @@ type Db = Awaited<ReturnType<typeof createClient>>;
 
 const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
-
-// Same rule as app/scan/actions.ts: compare an appellation to its region with
-// the quality-scheme suffix removed ("Puglia IGT" is the region's own row).
-function stripClassSuffix(folded: string): string {
-  return folded
-    .replace(
-      /\b(a\.?o\.?c\.?|aop|d\.?o\.?c\.?g\.?|d\.?o\.?c\.?|docg|doca|dop|do|i\.?g\.?t\.?|i\.?g\.?p\.?|pdo|pgi|ava|g\.?i\.?)\b/g,
-      " ",
-    )
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 async function currentUser(supabase: Db) {
   const {
@@ -309,48 +296,33 @@ async function flightCatalogIds(supabase: Db, tastingId: string): Promise<Set<st
 }
 
 // ---------------------------------------------------------------------------
-// By-hand inference: what a producer alone tells us about the bottle.
+// By hand: the producer's home region — the one thing the form takes from a
+// producer. Owner decision, 2026-09-12: a producer makes wines from many
+// appellations and many grapes, so nothing about a new wine's appellation or
+// grape follows from its producer, that producer's other catalog wines, or
+// its region's most common grape. Never add an appellation or grape here.
 // ---------------------------------------------------------------------------
 
-export type ProducerInference = {
+export type ProducerHomeRegion = {
   countryId: string;
   countryName: string;
   regionId: string;
   regionName: string;
-  /** "" (the form's own "unset" value) when the region has no self-named
-      appellation and the producer's catalog wines suggest none — the country
-      and region are still worth prefilling, and the form then asks for the
-      appellation like any other gap. */
-  appellationId: string;
-  appellationName: string | null;
-  primaryGrapeId: string | null;
-  primaryGrapeName: string | null;
 };
 
-function mode<T extends string>(values: (T | null | undefined)[]): T | null {
-  const counts = new Map<T, number>();
-  for (const v of values) {
-    if (!v) continue;
-    counts.set(v, (counts.get(v) ?? 0) + 1);
-  }
-  let best: T | null = null;
-  let bestN = 0;
-  for (const [v, n] of counts) {
-    if (n > bestN) {
-      best = v;
-      bestN = n;
-    }
-  }
-  return best;
-}
-
-export async function inferFromProducer(
+/**
+ * The producer's home region (`producers.region_id`) and that region's
+ * country. Null when the producer has none — the ~5% genuinely multi-region
+ * producers are left without one on purpose — or a row is missing.
+ */
+export async function producerHomeRegion(
   producerId: string,
-): Promise<ProducerInference | null> {
+): Promise<ProducerHomeRegion | null> {
+  if (!producerId) return null;
   const supabase = await createClient();
   const { data: producer } = await supabase
     .from("producers")
-    .select("id, name, region_id")
+    .select("region_id")
     .eq("id", producerId)
     .maybeSingle();
   if (!producer?.region_id) return null;
@@ -368,66 +340,11 @@ export async function inferFromProducer(
     .maybeSingle();
   if (!country) return null;
 
-  // catalog_wines is readable by everyone; blind-pending placeholders are
-  // hidden in application code (as the search does), so they are excluded
-  // here too — a producer whose only catalog wine is tonight's hidden glass
-  // must not have that glass's grape or appellation suggested to the table.
-  const [appellations, ownWines] = await Promise.all([
-    listAppellationsForRegions([region.id]),
-    supabase
-      .from("catalog_wines")
-      .select("appellation_id, primary_grape_id")
-      .eq("producer_id", producerId)
-      .eq("blind_pending", false)
-      .limit(500),
-  ]);
-  const own = ownWines.data ?? [];
-
-  // The region's self-named appellation ("just the region") beats a guess
-  // from the producer's other wines, which may sit in a different village.
-  // Neither existing (a region created inline never got the self-named row
-  // the 2026-07-13 backfill gave imported regions) still leaves the country
-  // and region worth returning.
-  const regionBase = fold(region.name);
-  const selfNamed = appellations.find(
-    (a) => stripClassSuffix(fold(a.name)) === regionBase,
-  );
-  const commonAppellationId = mode(own.map((w) => w.appellation_id));
-  const appellation =
-    selfNamed ??
-    appellations.find((a) => a.id === commonAppellationId) ??
-    null;
-
-  let grapeId = mode(own.map((w) => w.primary_grape_id));
-  if (!grapeId) {
-    const { data: regionWines } = await supabase
-      .from("catalog_wines")
-      .select("primary_grape_id")
-      .eq("region_id", region.id)
-      .eq("blind_pending", false)
-      .limit(500);
-    grapeId = mode((regionWines ?? []).map((w) => w.primary_grape_id));
-  }
-  let grapeName: string | null = null;
-  if (grapeId) {
-    const { data: grape } = await supabase
-      .from("grapes")
-      .select("name")
-      .eq("id", grapeId)
-      .maybeSingle();
-    grapeName = grape?.name ?? null;
-    if (!grape) grapeId = null;
-  }
-
   return {
     countryId: country.id,
     countryName: country.name,
     regionId: region.id,
     regionName: region.name,
-    appellationId: appellation?.id ?? "",
-    appellationName: appellation?.name ?? null,
-    primaryGrapeId: grapeId,
-    primaryGrapeName: grapeName,
   };
 }
 

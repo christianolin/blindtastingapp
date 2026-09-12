@@ -18,26 +18,39 @@ import { searchAddWine } from "./actions";
 import { getCellarSummary } from "./desktop-actions";
 import {
   cellarTileSubtitle,
+  enterHint,
   flattenSearchGroups,
+  footerButtonLabel,
   footerSentence,
   pickImageFiles,
   rowActionLabel,
   uploadZoneCopy,
+  uploadZoneLabels,
   type CellarSummary,
   type DesktopRow,
 } from "./desktop-format";
 import { scanTitle } from "./format";
 import { PendingFixStrip } from "./pending-fix";
-import { addedWhere, pendingProblemLabel } from "./scan-copy";
+import { addedWhere, consumeLabel, pendingProblemLabel } from "./scan-copy";
 import type { AddSource, DesktopViewProps, PendingScan, SearchGroups } from "./types";
 
 const DEBOUNCE_MS = 250;
 const SEARCH_FAILED = "Search failed — try again.";
 
 /**
- * 7h: the sheet on a laptop. Search leads — a full-width field where ↵ adds
+ * 7h: the sheet on a mouse / trackpad device, at any window width. The
+ * device rule (use-camera.ts) routes by input type, so a PC never sees the
+ * live camera and a narrow desktop window gets this view too: below `md` the
+ * upload zone and the tiles stack, and below `sm` each result row moves its
+ * actions to a second line. Search leads — a full-width field where ↵ adds
  * the first hit, and result rows that state their source with an inline
- * "Add as glass N" (first addable row primary, the rest "Add"). Below it the
+ * action. That action is the same button on every addable row (owner
+ * feedback 2026-09-12, `RowActionButton`): one outline style and one label
+ * naming the destination — "Add as glass N", "Add to cellar", "Add to the
+ * catalog", "Rate this wine", plain "Add" with none — and "In flight",
+ * disabled, on a wine already poured. The row ↵ adds is marked only by its
+ * gold tint and left border plus the field's "↵ adds the first hit". Below it
+ * the
  * dashed "Upload label photos" zone (drag-and-drop or a file picker, several
  * at once; each file goes through the shell's read-and-confirm path, one
  * FastCork credit per photo) beside the "From my cellar" and "Add it by hand"
@@ -47,7 +60,16 @@ const SEARCH_FAILED = "Search failed — try again.";
  * Cellar rows add as `{ kind: "lot", consume: true }` — the bottle is drawn
  * down when poured — with a per-row "keep it in the cellar" toggle. They
  * are offered only when the bottle can go into a flight (the flight
- * destination, or none with tonight's tasting as the hint).
+ * destination, or none with tonight's tasting as the hint) or picked for a
+ * note (rate).
+ *
+ * Taste & rate (the rate destination, owner feedback 2026-09-12) is this
+ * same layout for ONE pick: every row's action reads "Rate this wine", ↵
+ * picks the first hit, the upload zone takes a single photo, cellar rows
+ * carry "Take a bottle out of the cellar when I save the note" (on by
+ * default; nothing is drawn down until the note saves), and the footer
+ * points at the note with Close instead of Done. The shell closes the sheet
+ * on the pick.
  */
 export function DesktopView({
   ctx,
@@ -59,11 +81,16 @@ export function DesktopView({
   onFixPending,
   onRemovePending,
   busy,
+  inputRef,
 }: DesktopViewProps) {
   const destination = ctx.destination;
+  const rate = destination?.kind === "rate";
   const tastingId = destination?.kind === "flight" ? destination.tastingId : undefined;
   const includeCellar =
-    destination?.kind === "flight" || (destination === null && ctx.flightHint !== null);
+    destination?.kind === "flight" ||
+    rate ||
+    (destination === null && ctx.flightHint !== null);
+  const zone = uploadZoneLabels(destination);
 
   const [query, setQuery] = useState("");
   // null = nothing searched yet (the results box is hidden).
@@ -76,7 +103,6 @@ export function DesktopView({
   const [dragging, setDragging] = useState(false);
   const [skippedNote, setSkippedNote] = useState<string | null>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | null>(null);
   // What the field says right now — the post-add re-search must not use a
@@ -159,7 +185,13 @@ export function DesktopView({
     if (locked || row.inFlight) return;
     const source: AddSource =
       row.source.kind === "lot"
-        ? { kind: "lot", lotId: row.source.lotId, consume: !keepInCellar[row.source.lotId] }
+        ? {
+            kind: "lot",
+            lotId: row.source.lotId,
+            consume: !keepInCellar[row.source.lotId],
+            // Carried so a rate pick needs no lookup.
+            catalogWineId: row.catalogWineId,
+          }
         : { kind: "catalog", catalogWineId: row.source.catalogWineId };
     setAddingKey(row.key);
     try {
@@ -167,9 +199,10 @@ export function DesktopView({
     } finally {
       setAddingKey(null);
       // The results stay: re-read them so the wine just poured reads "in
-      // flight" and ↵ moves on to the next hit.
+      // flight" and ↵ moves on to the next hit. A rate pick closes the sheet
+      // (or failed and changed nothing), so there is nothing to re-read.
       const latest = queryRef.current;
-      if (latest.trim()) void runSearch(latest);
+      if (!rate && latest.trim()) void runSearch(latest);
     }
   };
 
@@ -183,7 +216,10 @@ export function DesktopView({
 
   const takeFiles = (files: File[]) => {
     if (locked) return;
-    const { accepted, skipped } = pickImageFiles(files);
+    // One photo for a rate pick (one wine, one FastCork credit).
+    const { accepted, skipped } = pickImageFiles(files, {
+      max: zone.multiple ? undefined : 1,
+    });
     setSkippedNote(
       skipped.length
         ? `Skipped ${skipped.map((s) => `${s.name} (${s.reason})`).join(", ")}.`
@@ -213,7 +249,7 @@ export function DesktopView({
 
   return (
     <div className="flex min-h-full flex-col">
-      <div className="flex flex-col gap-4 p-[18px_22px]">
+      <div className="flex flex-col gap-4 p-4 md:p-[18px_22px]">
         {/* Search leads. */}
         <label className="flex items-center gap-[10px] rounded-[11px] border-[1.5px] border-primary bg-white p-[13px_14px] focus-within:ring-3 focus-within:ring-ring/40">
           <Search className="size-[17px] shrink-0 text-primary" aria-hidden />
@@ -228,8 +264,9 @@ export function DesktopView({
             spellCheck={false}
             className="h-auto flex-1 rounded-none border-0 bg-transparent p-0 text-[15.5px] shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-[15.5px]"
           />
-          <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground">
-            ↵ adds the first hit
+          {/* In a narrow window the hint gives its room to the field. */}
+          <span className="ml-auto hidden shrink-0 font-mono text-[10.5px] text-muted-foreground sm:inline">
+            {enterHint(destination)}
           </span>
         </label>
 
@@ -241,16 +278,19 @@ export function DesktopView({
             {rows.length > 0 ? (
               <ul>
                 {rows.map((row, i) => {
-                  const primary = firstAddable?.key === row.key;
-                  const label = rowActionLabel(destination, { primary, inFlight: row.inFlight });
-                  const adding = addingKey === row.key;
+                  // The row ↵ adds: marked by its tint and left border alone —
+                  // its button is the same as every other row's.
+                  const enterTarget = firstAddable?.key === row.key;
                   return (
                     <li
                       key={row.key}
                       className={cn(
-                        "flex items-center gap-3 p-[11px_14px] transition-colors",
+                        // Below `sm` the actions wrap to a second line under
+                        // the title, so a cellar row's toggle and button
+                        // never crush it to nothing.
+                        "flex items-center gap-3 p-[11px_14px] transition-colors max-sm:flex-wrap max-sm:gap-y-2",
                         i > 0 && "border-t border-border-light",
-                        primary
+                        enterTarget
                           ? "border-l-[3px] border-l-gold bg-gold/12"
                           : "hover:bg-background",
                         row.inFlight && "opacity-70",
@@ -265,31 +305,44 @@ export function DesktopView({
                           {row.meta}
                         </span>
                       </span>
-                      {row.source.kind === "lot" && !row.inFlight ? (
-                        <KeepToggle
-                          lotId={row.source.lotId}
-                          checked={Boolean(keepInCellar[row.source.lotId])}
+                      {/* 42px = the thumb and its gap: the second line starts
+                          under the title. */}
+                      <span className="flex shrink-0 items-center justify-end gap-3 max-sm:w-full max-sm:pl-[42px]">
+                        {row.source.kind === "lot" && !row.inFlight ? (
+                          rate ? (
+                            // Checked = draw a bottle down once the note
+                            // saves (the default); stored as its inverse.
+                            <LotToggle
+                              lotId={row.source.lotId}
+                              label={consumeLabel(destination)}
+                              checked={!keepInCellar[row.source.lotId]}
+                              disabled={locked}
+                              wrap
+                              onChange={(lotId, consume) =>
+                                setKeepInCellar((m) => ({ ...m, [lotId]: !consume }))
+                              }
+                            />
+                          ) : (
+                            <LotToggle
+                              lotId={row.source.lotId}
+                              label="keep it in the cellar"
+                              checked={Boolean(keepInCellar[row.source.lotId])}
+                              disabled={locked}
+                              onChange={(lotId, keep) =>
+                                setKeepInCellar((m) => ({ ...m, [lotId]: keep }))
+                              }
+                            />
+                          )
+                        ) : null}
+                        <RowActionButton
+                          label={rowActionLabel(destination, row)}
+                          wineTitle={row.title}
+                          inFlight={row.inFlight}
+                          pending={addingKey === row.key}
                           disabled={locked}
-                          onChange={(lotId, keep) =>
-                            setKeepInCellar((m) => ({ ...m, [lotId]: keep }))
-                          }
+                          onClick={() => void addRow(row)}
                         />
-                      ) : null}
-                      <button
-                        type="button"
-                        disabled={locked || row.inFlight}
-                        onClick={() => void addRow(row)}
-                        className={cn(
-                          "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] px-[14px] py-2 text-[12.5px] font-semibold transition-colors disabled:cursor-default",
-                          primary
-                            ? "bg-primary text-primary-foreground hover:bg-[#4A1523] disabled:hover:bg-primary"
-                            : "border border-border text-primary hover:border-gold hover:bg-white",
-                          row.inFlight ? "opacity-70" : "disabled:opacity-60",
-                        )}
-                      >
-                        {adding ? <WineGlassLoader size={16} /> : null}
-                        {label}
-                      </button>
+                      </span>
                     </li>
                   );
                 })}
@@ -335,8 +388,8 @@ export function DesktopView({
           </ul>
         ) : null}
 
-        {/* Upload zone beside the two tiles. */}
-        <div className="flex gap-3">
+        {/* Upload zone beside the two tiles — stacked below `md`. */}
+        <div className="flex flex-col gap-3 md:flex-row">
           <div
             onDragOver={onDragOver}
             onDragEnter={onDragOver}
@@ -349,7 +402,7 @@ export function DesktopView({
           >
             <span className="flex items-center gap-2 text-[14px] font-semibold">
               <Upload className="size-[17px] text-primary" aria-hidden />
-              Upload label photos
+              {zone.title}
             </span>
             <span className="text-[12px] leading-[1.5] text-ink-photo">
               {uploadZoneCopy(destination)}
@@ -358,7 +411,7 @@ export function DesktopView({
               ref={fileRef}
               type="file"
               accept="image/*"
-              multiple
+              multiple={zone.multiple}
               className="hidden"
               onChange={(e) => {
                 const files = Array.from(e.target.files ?? []);
@@ -375,10 +428,8 @@ export function DesktopView({
             >
               <HatchThumb src={null} width={34} height={44} />
               <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                <span className="text-[12.5px] font-semibold">Drop photos here</span>
-                <span className="text-[11.5px] text-muted-foreground">
-                  or choose files · JPG, PNG, up to 5MB each
-                </span>
+                <span className="text-[12.5px] font-semibold">{zone.drop}</span>
+                <span className="text-[11.5px] text-muted-foreground">{zone.hint}</span>
               </span>
             </button>
             {skippedNote ? (
@@ -407,9 +458,11 @@ export function DesktopView({
         </div>
       </div>
 
-      {/* Footer: the sheet does not close on add. */}
-      <div className="mt-auto flex shrink-0 items-center gap-3 border-t border-border bg-background p-[14px_22px]">
-        <span className="text-[12.5px] text-muted-foreground">
+      {/* Footer: the sheet does not close on add. Pinned to the bottom of the
+          sheet's scroll region, like the search and confirm footers, so Done
+          stays in reach under a long result list. */}
+      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 items-center gap-3 border-t border-border bg-background p-[14px_16px] pb-[max(14px,env(safe-area-inset-bottom))] md:px-[22px]">
+        <span className="min-w-0 text-[12.5px] text-muted-foreground">
           {footerSentence(destination, ctx.added.length)}
         </span>
         <button
@@ -418,36 +471,94 @@ export function DesktopView({
           disabled={locked}
           className="ml-auto min-h-11 shrink-0 rounded-[9px] border border-border bg-card px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors hover:border-gold hover:bg-white disabled:opacity-60"
         >
-          Done
+          {footerButtonLabel(destination)}
         </button>
       </div>
     </div>
   );
 }
 
-// The per-row "keep it in the cellar" toggle: unchecked means the bottle is
-// drawn down when poured (the 7f default), checked leaves the lot untouched.
-function KeepToggle({
+/**
+ * A result row's inline action — one button for every addable row of every
+ * add-wine result list (owner feedback 2026-09-12): the outline style
+ * (border, primary text, gold hover) with the destination's label from
+ * `rowActionLabel`, and "In flight", disabled, on a wine already poured.
+ * Nothing about it marks the row ↵ adds; that row's tint does. Exported so
+ * the create sheet's flight step (6b) renders the very same button. With
+ * every visible label alike, the accessible name adds the wine.
+ */
+export function RowActionButton({
+  label,
+  wineTitle,
+  inFlight,
+  pending,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  wineTitle: string;
+  inFlight: boolean;
+  pending: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled || inFlight}
+      onClick={onClick}
+      aria-label={`${label}: ${wineTitle}`}
+      className={cn(
+        // A white face, so the button reads the same on the tinted ↵ row as
+        // on a plain or hovered one.
+        "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-white px-[14px] py-2 text-[12.5px] font-semibold text-primary transition-colors hover:border-gold disabled:cursor-default disabled:hover:border-border",
+        inFlight ? "opacity-70" : "disabled:opacity-60",
+      )}
+    >
+      {pending ? <WineGlassLoader size={16} /> : null}
+      {label}
+    </button>
+  );
+}
+
+// A cellar row's own toggle. Flight: "keep it in the cellar" — unchecked
+// means the bottle is drawn down when poured (the 7f default), checked
+// leaves the lot untouched. Rate: "Take a bottle out of the cellar when I
+// save the note", checked by default; that longer line wraps (`wrap`) rather
+// than crushing the title. On a row's wrapped second line (below `sm`) it
+// sits left, the button right.
+function LotToggle({
   lotId,
+  label,
   checked,
   disabled,
+  wrap = false,
   onChange,
 }: {
   lotId: string;
+  label: string;
   checked: boolean;
   disabled: boolean;
-  onChange: (lotId: string, keep: boolean) => void;
+  wrap?: boolean;
+  onChange: (lotId: string, checked: boolean) => void;
 }) {
   return (
-    <label className="flex shrink-0 items-center gap-[5px] text-[11px] whitespace-nowrap text-muted-foreground">
+    <label
+      className={cn(
+        "flex shrink-0 items-center gap-[5px] text-[11px] text-muted-foreground max-sm:mr-auto",
+        wrap
+          ? "max-w-[190px] leading-[1.3] max-sm:max-w-none max-sm:min-w-0 max-sm:shrink"
+          : "whitespace-nowrap",
+      )}
+    >
       <input
         type="checkbox"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(lotId, e.target.checked)}
-        className="size-[13px] accent-primary"
+        className="size-[13px] shrink-0 accent-primary"
       />
-      keep it in the cellar
+      <span className="min-w-0">{label}</span>
     </label>
   );
 }

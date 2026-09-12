@@ -14,7 +14,8 @@ const CAMERA_FALLBACK = "Camera not available — use Library or search";
  * 7b / 7d: the sheet's opening view — a live camera on the dark ground. The
  * shell draws the header; this renders the "Or search by name" field, the
  * viewfinder with its gold brackets, the shutter row (Library · shutter ·
- * Many, or Library · shutter · By hand once in multi mode), and the source
+ * Many, or Library · shutter · By hand once in multi mode; a rate pick has
+ * no Many), and the source
  * chips (or, in multi mode, the added/pending stack above the viewfinder and
  * the gold "Done" footer).
  *
@@ -41,6 +42,8 @@ export function CameraView({
   const live = status === "live";
   const fallback = status === "unavailable" || status === "denied";
   const multi = ctx.multi;
+  // Taste & rate picks exactly one wine (the shell never turns multi on).
+  const single = ctx.destination?.kind === "rate";
   const nextGlass = ctx.destination?.kind === "flight" ? ctx.destination.position : null;
   const showCellar = ctx.destination?.kind !== "cellar";
   const addedCount = ctx.added.length;
@@ -182,6 +185,10 @@ export function CameraView({
           <TextSlot onClick={onByHand} disabled={busy}>
             By hand
           </TextSlot>
+        ) : single ? (
+          // A rate pick is one wine: no Many. The empty slot keeps the
+          // shutter centred.
+          <span aria-hidden className="w-14 shrink-0" />
         ) : (
           <TileSlot
             label="Many"

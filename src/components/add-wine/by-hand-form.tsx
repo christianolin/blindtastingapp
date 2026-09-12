@@ -32,14 +32,13 @@ import {
   createRegion,
   createTypeDesignation,
 } from "@/app/tastings/[id]/wines/new/actions";
-import { inferFromProducer, type ProducerInference } from "./actions";
+import { producerHomeRegion } from "./actions";
 import { producerSummary } from "./by-hand-actions";
 import {
   actionLabel,
-  applyInference,
+  applyProducerRegion,
   buildIdentity,
   missingFields,
-  ORIGIN_FIELDS,
   pickProducerSuggestion,
   producerRowLabel,
   stateFromPrefill,
@@ -85,9 +84,6 @@ const STYLE_ITEMS: Record<Style, string> = {
 const INPUT = "h-12 rounded-[10px] border-border bg-card px-[13px] text-base md:text-[15px]";
 const PICKER =
   "[&>button]:h-12 [&>button]:rounded-[10px] [&>button]:border-border [&>button]:bg-card [&>button]:px-[13px] [&>button]:text-[15px]";
-const CHIP = "rounded-full border border-border bg-card px-[10px] py-[4px] text-[11.5px]";
-const CHIP_MISSING =
-  "rounded-full border border-dashed border-border-strong px-[10px] py-[4px] text-[11.5px] text-muted-foreground";
 // A compact link-button whose tap area still reaches 44px on phones.
 const TAP_PAD = "relative before:absolute before:inset-x-0 before:-inset-y-3 before:content-['']";
 
@@ -107,9 +103,12 @@ const fold = (s: string) => deaccent(s).toLowerCase().trim();
 
 /**
  * By hand (7g): four required fields — producer, wine name, vintage, colour
- * — then the origin card the producer implies, then everything else folded
- * under "More detail". Every value is React state (the sheet can be open on
- * a polling page); the add itself goes through `onAdd` so the shell applies
+ * — then the origin pickers, always expanded (country → region →
+ * appellation, then grape), then everything else folded under "More
+ * detail". Only the country and region are ever prefilled from the producer
+ * (its home region); the appellation and grape never are (owner decision,
+ * 2026-09-12). Every value is React state (the sheet can be open on a
+ * polling page); the add itself goes through `onAdd` so the shell applies
  * the destination rules. A scan prefill seeds every field; pending grape
  * names are created on submit and a pending producer is left for the
  * server to create.
@@ -170,24 +169,24 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
     });
   }, [state.regionId]);
 
-  // Inference: what the producer alone says about the origin. Keyed by the
-  // producer it answered for, so a stale answer is never shown or applied.
-  const [inference, setInference] = useState<{
-    producerId: string;
-    result: ProducerInference | null;
-  } | null>(null);
+  // The producer's home region — the only thing taken from a producer
+  // (owner decision, 2026-09-12: a producer makes wines from many
+  // appellations and grapes, so neither is ever guessed from it). It lands
+  // only in an origin nobody else set, and only while its producer is still
+  // the chosen one. A failed lookup counts as "no home region", so a previous
+  // producer's region is never left standing under the wrong producer.
   useEffect(() => {
     const producerId = state.producerId;
     if (!producerId) return;
     let cancelled = false;
-    inferFromProducer(producerId)
-      .then((result) => {
+    producerHomeRegion(producerId)
+      .then((home) => {
         if (cancelled) return;
-        setInference({ producerId, result });
-        setState((s) => (s.producerId === producerId ? applyInference(s, result) : s));
+        setState((s) => (s.producerId === producerId ? applyProducerRegion(s, home) : s));
       })
       .catch(() => {
-        if (!cancelled) setInference({ producerId, result: null });
+        if (cancelled) return;
+        setState((s) => (s.producerId === producerId ? applyProducerRegion(s, null) : s));
       });
     return () => {
       cancelled = true;
@@ -233,7 +232,6 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
   }, [suggestionKey, state.producerId, state.producerName, state.regionId]);
   const suggestionRow = suggestion?.key === suggestionKey ? suggestion.row : null;
 
-  const [originOpen, setOriginOpen] = useState<boolean | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -245,47 +243,21 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
     () => (ref ? ref.regions.filter((r) => r.country_id === state.countryId) : []),
     [ref, state.countryId],
   );
-  const countryName =
-    ref?.countries.find((c) => c.id === state.countryId)?.name ?? state.labels.country;
   const regionName =
     ref?.regions.find((r) => r.id === state.regionId)?.name ?? state.labels.region;
-  const appellationName =
-    appellations.find((a) => a.id === state.appellationId)?.name ?? state.labels.appellation;
-  const grapeName = state.primaryGrapeId
-    ? (ref?.grapes.find((g) => g.id === state.primaryGrapeId)?.name ?? state.labels.grape)
-    : state.primaryGrapePending.trim() || null;
 
-  const inferenceForProducer =
-    inference && inference.producerId === state.producerId ? inference : null;
-  const inferring = Boolean(state.producerId) && !inferenceForProducer;
-  const inferenceFailed = Boolean(inferenceForProducer) && inferenceForProducer?.result === null;
-  const originMissing = missingFields(state).filter((f) =>
-    (ORIGIN_FIELDS as readonly string[]).includes(f),
-  );
-  // Auto-expand the pickers when the inference could not fill the origin
-  // (or a prefill left gaps); an explicit Change / Done wins over that.
-  const autoOpen =
-    originMissing.length > 0 &&
-    (Boolean(inferenceForProducer) || (!state.producerId && state.originSource !== "none"));
-  const originExpanded = originOpen ?? autoOpen;
-
-  const originTitle = inferring
-    ? "Looking up the producer…"
-    : state.originSource === "inferred"
-      ? "Filled in from the producer"
+  // One muted line under Region naming where a prefilled country / region
+  // came from — gone as soon as the taster picks their own.
+  const originNote =
+    state.originSource === "producer"
+      ? "From the producer's home region — change it if this wine comes from elsewhere."
       : state.originSource === "prefill"
-        ? "Filled in from the label"
-        : "Origin";
-  const originCaveat =
-    originMissing.length > 0 && inferenceFailed
-      ? "We couldn't guess the origin — pick it here."
-      : state.originSource === "inferred"
-        ? "Guessed from the producer and the wine name. Check the appellation if it matters for scoring."
-        : state.originSource === "prefill"
-          ? "Read from the label. Check the appellation if it matters for scoring."
-          : state.originSource === "none" && !state.producerId
-            ? "Pick a producer and we'll fill this in."
-            : null;
+        ? state.regionId
+          ? "Read from the label — check it."
+          : state.countryId
+            ? "Country read from the label — pick the region."
+            : null
+        : null;
 
   const imageFolder =
     ctx.destination?.kind === "flight"
@@ -323,9 +295,6 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
     const missing = missingFields(state);
     if (missing.length > 0) {
       setError(`Still missing: ${missing.join(", ")}.`);
-      if (missing.some((f) => (ORIGIN_FIELDS as readonly string[]).includes(f))) {
-        setOriginOpen(true);
-      }
       return;
     }
     setSubmitting(true);
@@ -369,7 +338,15 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
               formFieldName="producer_id"
               value={state.producerId}
               selectedLabel={state.producerName || null}
-              onValueChange={(id, label) => patch({ producerId: id, producerName: label })}
+              onValueChange={(id, label) =>
+                setState((s) => {
+                  const next = { ...s, producerId: id, producerName: label };
+                  // A pending (not yet created) producer has no home region
+                  // to look up, so a region the previous producer filled in
+                  // is cleared rather than left under the wrong producer.
+                  return id ? next : applyProducerRegion(next, null);
+                })
+              }
               search={searchProducersGrouped}
               placeholder="Search for the producer"
               createLabel="producer"
@@ -493,169 +470,140 @@ export function ByHandForm({ ctx, prefill, onAdd, busy }: ByHandFormProps) {
           </Field>
         </div>
 
-        {/* The origin card: chips + Change ▾ → the full pickers. */}
-        <div className="flex flex-col gap-[6px] rounded-[11px] border border-gold bg-background p-[12px_13px]">
-          <div className="flex items-center gap-2">
-            <span className="text-[12.5px] font-semibold">{originTitle}</span>
+        {/* Origin: always the full pickers — the country → region →
+            appellation cascade, then the grape. Only the country and region
+            are ever prefilled from the producer (its home region); the
+            appellation and grape never are (owner decision, 2026-09-12). */}
+        {refFailed ? (
+          <p className="text-[12px] text-rose">
+            Couldn&apos;t load the lists.{" "}
             <button
               type="button"
-              aria-expanded={originExpanded}
-              onClick={() => setOriginOpen(!originExpanded)}
-              className={cn(
-                "ml-auto flex items-center gap-[3px] text-[11.5px] font-semibold text-primary hover:text-[#4A1523]",
-                TAP_PAD,
-              )}
+              onClick={() => setRefAttempt((n) => n + 1)}
+              className="font-semibold text-primary underline-offset-2 hover:underline"
             >
-              {originExpanded ? "Done" : "Change"}
-              <ChevronDown
-                className={cn("size-3.5 transition-transform", originExpanded && "rotate-180")}
-              />
+              Try again
             </button>
-          </div>
-          <div className="flex flex-wrap gap-[6px]">
-            <OriginChip label="Country" value={countryName} />
-            <OriginChip label="Region" value={regionName} />
-            <OriginChip label="Appellation" value={appellationName} />
-            <OriginChip label="Grape" value={grapeName} />
-          </div>
-          {originCaveat ? (
-            <span className="text-[11px] leading-[1.45] text-muted-foreground">{originCaveat}</span>
-          ) : null}
-
-          {originExpanded ? (
-            <div className="mt-[6px] flex flex-col gap-[10px] border-t border-border-light pt-[10px]">
-              {refFailed ? (
-                <p className="text-[12px] text-rose">
-                  Couldn&apos;t load the lists.{" "}
-                  <button
-                    type="button"
-                    onClick={() => setRefAttempt((n) => n + 1)}
-                    className="font-semibold text-primary underline-offset-2 hover:underline"
-                  >
-                    Try again
-                  </button>
+          </p>
+        ) : !ref ? (
+          <p className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <WineGlassLoader size={16} /> Loading the lists…
+          </p>
+        ) : (
+          <>
+            <Field label="Country" required>
+              <div className={PICKER}>
+                <ReferenceCombobox
+                  formFieldName="country_id"
+                  options={ref.countries}
+                  value={state.countryId}
+                  onValueChange={(id) =>
+                    patch({
+                      countryId: id,
+                      regionId: "",
+                      appellationId: "",
+                      originSource: "manual",
+                      labels: { ...state.labels, region: null, appellation: null },
+                    })
+                  }
+                  onOptionCreated={(o) =>
+                    setRef((r) => (r ? { ...r, countries: [...r.countries, o] } : r))
+                  }
+                  placeholder="Select a country"
+                  createLabel="country"
+                  onCreate={createCountry}
+                  disabled={working}
+                />
+              </div>
+            </Field>
+            <Field label="Region" required>
+              <div className={PICKER}>
+                <ReferenceCombobox
+                  formFieldName="region_id"
+                  options={regionsForCountry}
+                  value={state.regionId}
+                  onValueChange={(id) =>
+                    patch({
+                      regionId: id,
+                      appellationId: "",
+                      originSource: "manual",
+                      labels: { ...state.labels, appellation: null },
+                    })
+                  }
+                  onOptionCreated={(o) =>
+                    setRef((r) =>
+                      r
+                        ? { ...r, regions: [...r.regions, { ...o, country_id: state.countryId }] }
+                        : r,
+                    )
+                  }
+                  placeholder={state.countryId ? "Select a region" : "Choose a country first"}
+                  createLabel="region"
+                  onCreate={
+                    state.countryId ? (name) => createRegion(state.countryId, name) : undefined
+                  }
+                  disabled={working || !state.countryId}
+                />
+              </div>
+              {originNote ? (
+                <p className="text-[11px] leading-[1.45] text-muted-foreground">{originNote}</p>
+              ) : null}
+            </Field>
+            <Field label="Appellation" required>
+              <div className={PICKER}>
+                <ReferenceCombobox
+                  formFieldName="appellation_id"
+                  options={appellations}
+                  value={state.appellationId}
+                  selectedLabel={state.labels.appellation}
+                  // An appellation pick commits the region above it: a later
+                  // producer pick never replaces it (applyProducerRegion).
+                  onValueChange={(id) => patch({ appellationId: id, originSource: "manual" })}
+                  onOptionCreated={(o) => setAppellations((a) => [...a, o])}
+                  placeholder={
+                    !state.regionId
+                      ? "Choose a region first"
+                      : appellationsPending
+                        ? "Loading appellations…"
+                        : "Pick one — or just the region"
+                  }
+                  createLabel="appellation"
+                  onCreate={
+                    state.regionId
+                      ? (name) => createAppellation(state.regionId, name)
+                      : undefined
+                  }
+                  disabled={working || !state.regionId || appellationsPending}
+                />
+              </div>
+            </Field>
+            <Field label="Grape" required>
+              <div className={PICKER}>
+                <ReferenceCombobox
+                  formFieldName="primary_grape_id"
+                  options={ref.grapes}
+                  value={state.primaryGrapeId}
+                  selectedLabel={state.primaryGrapePending || null}
+                  // Not part of the origin: picking the grape first still
+                  // lets the producer's home region fill the country / region.
+                  onValueChange={(id) => patch({ primaryGrapeId: id, primaryGrapePending: "" })}
+                  onOptionCreated={(o) =>
+                    setRef((r) => (r ? { ...r, grapes: [...r.grapes, o] } : r))
+                  }
+                  placeholder="Primary grape"
+                  createLabel="grape"
+                  onCreate={createGrape}
+                  disabled={working}
+                />
+              </div>
+              {state.primaryGrapePending && !state.primaryGrapeId ? (
+                <p className="text-[11px] leading-[1.45] text-muted-foreground">
+                  New grape — we&apos;ll add it when you save, or pick an existing one above.
                 </p>
-              ) : !ref ? (
-                <p className="flex items-center gap-2 text-[12px] text-muted-foreground">
-                  <WineGlassLoader size={16} /> Loading the lists…
-                </p>
-              ) : (
-                <>
-                  <Field label="Country">
-                    <div className={PICKER}>
-                      <ReferenceCombobox
-                        formFieldName="country_id"
-                        options={ref.countries}
-                        value={state.countryId}
-                        onValueChange={(id) =>
-                          patch({
-                            countryId: id,
-                            regionId: "",
-                            appellationId: "",
-                            originSource: "manual",
-                            labels: { ...state.labels, region: null, appellation: null },
-                          })
-                        }
-                        onOptionCreated={(o) =>
-                          setRef((r) => (r ? { ...r, countries: [...r.countries, o] } : r))
-                        }
-                        placeholder="Select a country"
-                        createLabel="country"
-                        onCreate={createCountry}
-                        disabled={working}
-                      />
-                    </div>
-                  </Field>
-                  <Field label="Region">
-                    <div className={PICKER}>
-                      <ReferenceCombobox
-                        formFieldName="region_id"
-                        options={regionsForCountry}
-                        value={state.regionId}
-                        onValueChange={(id) =>
-                          patch({
-                            regionId: id,
-                            appellationId: "",
-                            originSource: "manual",
-                            labels: { ...state.labels, appellation: null },
-                          })
-                        }
-                        onOptionCreated={(o) =>
-                          setRef((r) =>
-                            r
-                              ? { ...r, regions: [...r.regions, { ...o, country_id: state.countryId }] }
-                              : r,
-                          )
-                        }
-                        placeholder={state.countryId ? "Select a region" : "Choose a country first"}
-                        createLabel="region"
-                        onCreate={
-                          state.countryId ? (name) => createRegion(state.countryId, name) : undefined
-                        }
-                        disabled={working || !state.countryId}
-                      />
-                    </div>
-                  </Field>
-                  <Field label="Appellation">
-                    <div className={PICKER}>
-                      <ReferenceCombobox
-                        formFieldName="appellation_id"
-                        options={appellations}
-                        value={state.appellationId}
-                        selectedLabel={state.labels.appellation}
-                        onValueChange={(id) => patch({ appellationId: id, originSource: "manual" })}
-                        onOptionCreated={(o) => setAppellations((a) => [...a, o])}
-                        placeholder={
-                          !state.regionId
-                            ? "Choose a region first"
-                            : appellationsPending
-                              ? "Loading appellations…"
-                              : "Pick one — or just the region"
-                        }
-                        createLabel="appellation"
-                        onCreate={
-                          state.regionId
-                            ? (name) => createAppellation(state.regionId, name)
-                            : undefined
-                        }
-                        disabled={working || !state.regionId || appellationsPending}
-                      />
-                    </div>
-                  </Field>
-                  <Field label="Grape">
-                    <div className={PICKER}>
-                      <ReferenceCombobox
-                        formFieldName="primary_grape_id"
-                        options={ref.grapes}
-                        value={state.primaryGrapeId}
-                        selectedLabel={state.primaryGrapePending || null}
-                        onValueChange={(id) =>
-                          patch({
-                            primaryGrapeId: id,
-                            primaryGrapePending: "",
-                            originSource: state.originSource === "none" ? "manual" : state.originSource,
-                          })
-                        }
-                        onOptionCreated={(o) =>
-                          setRef((r) => (r ? { ...r, grapes: [...r.grapes, o] } : r))
-                        }
-                        placeholder="Primary grape"
-                        createLabel="grape"
-                        onCreate={createGrape}
-                        disabled={working}
-                      />
-                    </div>
-                    {state.primaryGrapePending && !state.primaryGrapeId ? (
-                      <p className="text-[11px] leading-[1.45] text-muted-foreground">
-                        New grape — we&apos;ll add it when you save, or pick an existing one above.
-                      </p>
-                    ) : null}
-                  </Field>
-                </>
-              )}
-            </div>
-          ) : null}
-        </div>
+              ) : null}
+            </Field>
+          </>
+        )}
 
         {/* More detail (collapsed) */}
         <div className="rounded-[11px] border border-border bg-card">
@@ -889,13 +837,5 @@ function Segmented<T extends string>({
         );
       })}
     </div>
-  );
-}
-
-function OriginChip({ label, value }: { label: string; value: string | null }) {
-  return value ? (
-    <span className={CHIP}>{value}</span>
-  ) : (
-    <span className={CHIP_MISSING}>{label}?</span>
   );
 }

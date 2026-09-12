@@ -921,6 +921,45 @@ a raw subquery, regardless of which two tables look involved at a glance.
     + HOST_PROVIDES effectively relies on the manual host reveal. The right
     fix is to count only `locked_at` rows and exclude that host — a future
     migration.
+  - **Owner feedback round 1 (2026-09-12, same day as the flows shipped).**
+    - The live camera is touch-only. The add-wine sheet routes by input type
+      with `(pointer: coarse)` (`useTouchPrimary`, `startViewFor`,
+      `homeViewFor`, `viewForDevice` in `add-wine/use-camera.ts`), never by
+      width: a mouse / trackpad device at any width gets the desktop view
+      (search, Upload label photos, From my cellar, Add it by hand) and can
+      never reach the camera; phones and tablets get the camera views. The
+      header button paints ImagePlus vs Camera with Tailwind's
+      `pointer-coarse:` variant, so SSR already shows the right glyph.
+    - Taste & rate is the sheet's `{ kind: "rate" }` destination —
+      `RateWineModal` and `cellar-lot-picker.tsx` are deleted. A rate pick is
+      single (no multi / Many / chooser), never writes to a flight or cellar,
+      and hands `{ catalogWineId, lotId, consume }` to the provider, which
+      opens `NewNoteModal`; a cellar bottle is drawn down only when the note
+      saves (`cellarConsume`). `ratePickPlan` in `format.ts` decides "pick" vs
+      "add to the catalog first" (by hand, unmatched scan).
+    - Every addable row in an add-wine result list carries the same
+      `RowActionButton` (exported from `desktop-view.tsx`, also used by the
+      create sheet's flight step) labelled by `rowActionLabel`. The row Enter
+      adds is marked only by its tint and the "↵ adds the first hit" hint —
+      never by a different button (owner asked why two rows differed).
+    - The by-hand form never fills appellation or grape from the producer
+      (owner: "nonsense" — a producer makes many wines). Only
+      `producerHomeRegion` prefills country + region into an untouched origin
+      (`applyProducerRegion`); the origin pickers are always expanded.
+    - Step 1 of the create sheet has an optional cover photo
+      (`ImageUploader`, bucket `tasting-images`, folder = host user id);
+      `setupColumns` writes `image_url` (null clears, undefined leaves it).
+    - "Taste Blind" and "Taste Semi-Blind" are one nav / menu item ("Taste
+      Blind"); the sheet's mode tiles pick semi-blind.
+      `/tastings/new?mode=semi-blind` still preselects it.
+  - Dev gotcha (browser verification): when the in-app Browser pane is hidden
+    (`document.visibilityState === "hidden"`, `innerWidth` 0) pages stall on
+    their `loading.tsx` text ("Setting the table…") and never hydrate, so
+    clicks do nothing and screenshots time out — an environment limit, not an
+    app bug. The console buffer also survives navigations: a single stale
+    "useAddWine must be used within <AddWineProvider>" from an earlier hash
+    login keeps showing up in `onlyErrors` reads, so check message order
+    against a logged marker before treating it as a new failure.
   - Dev/verification gotchas: the in-app browser tool's "Return" key does
     not reach React `onKeyDown` handlers (send "Enter"), and a
     `window.confirm` swallows automated clicks (override it in the tab).

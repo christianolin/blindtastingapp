@@ -7,7 +7,7 @@
 export type NavChild = {
   href: string;
   label: string;
-  modal?: "catalog" | "cellar" | "taste-blind" | "taste-semi-blind" | "taste-rate";
+  modal?: "catalog" | "cellar" | "taste-blind" | "taste-rate";
   // A teaser sub-item: rendered greyed-out with a "Soon" tag, not clickable.
   soon?: boolean;
 };
@@ -34,13 +34,10 @@ export const NAV_LINKS: NavLink[] = [
     href: "/taste",
     label: "Taste",
     match: ["/taste", "/tastings"],
+    // One way into a group tasting: the create sheet asks blind or
+    // semi-blind itself, so Semi-Blind is not a separate entry.
     children: [
-      { href: "/tastings/new?mode=blind", label: "Taste Blind", modal: "taste-blind" },
-      {
-        href: "/tastings/new?mode=semi-blind",
-        label: "Taste Semi-Blind",
-        modal: "taste-semi-blind",
-      },
+      { href: "/tastings/new", label: "Taste Blind", modal: "taste-blind" },
       { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
       { href: "/taste", label: "Training Room", soon: true },
     ],

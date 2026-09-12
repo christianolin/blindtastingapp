@@ -22,8 +22,21 @@ import {
 } from "@/app/scan/actions";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import { addToCatalog, addToCellar, addToFlight } from "./actions";
-import { cameraSupported } from "./use-camera";
-import { glassLabel, identityFromPrefill, scanTitle, vintageLabel } from "./format";
+import {
+  cameraSupported,
+  homeViewFor,
+  isTouchPrimary,
+  startViewFor,
+  useTouchPrimary,
+  viewForDevice,
+} from "./use-camera";
+import {
+  glassLabel,
+  identityFromPrefill,
+  ratePickPlan,
+  scanTitle,
+  vintageLabel,
+} from "./format";
 import { bottlesLabel } from "./row-format";
 import { chooserEyebrow } from "./scan-copy";
 import { DestinationFooter, type CellarLotFields } from "./destination-footer";
@@ -38,11 +51,11 @@ import type {
   AddSource,
   AddWineDestination,
   AddWineOpenOptions,
-  AddWineStart,
   AddedWine,
   FlightHint,
   PendingFix,
   PendingScan,
+  RatePick,
   SheetContext,
 } from "./types";
 
@@ -77,45 +90,18 @@ type ChooseFor = {
 export type InitialSource = { source: AddSource; label: string };
 
 const DARK_VIEWS: View[] = ["camera", "reading", "confirm", "choose"];
-// The views that need the viewfinder's height on desktop (the card is
-// content-height everywhere else, capped and scrolling).
+// The views that need the card's full height on a larger screen (`sm+`): a
+// tablet's viewfinder, and the photo on reading / confirm on either device.
+// The card is content-height everywhere else, capped and scrolling.
 const SCAN_VIEWS: View[] = ["camera", "reading", "confirm"];
 const READ_FAILED = "Couldn't read the label — try again or search by name";
 
 const noopSubscribe = () => () => {};
 
-function useMediaQuery(query: string): boolean {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      const mql = window.matchMedia(query);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
-
 function uid(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
-}
-
-function initialView(
-  start: AddWineStart | undefined,
-  isDesktop: boolean,
-  hasCamera: boolean,
-): View {
-  if (start === "search") return isDesktop ? "desktop" : "search";
-  if (start === "cellar") return "cellar";
-  if (start === "byhand") return "byhand";
-  if (start === "camera") return isDesktop && !hasCamera ? "desktop" : "camera";
-  return isDesktop ? "desktop" : "camera";
 }
 
 function flightFromHint(h: FlightHint): AddWineDestination {
@@ -141,11 +127,17 @@ function identityLabel(source: AddSource): string {
 
 /**
  * The universal add-wine sheet (spec Part 1, "The sheet"). Rendered once by
- * AddWineProvider; full-screen on phones, a centred 760px card on desktop.
- * Every branch — camera, reading, confirm, search, cellar, by hand, the
- * desktop layout and the cellar fields — happens inside this one dialog.
- * Views render UI and call back; this shell owns the state machine, the
- * capture → read pipeline and the destination rules for every add.
+ * AddWineProvider; full-screen on phones, a centred 760px card on larger
+ * screens. Which views it offers follows the device, not the width (owner,
+ * 2026-09-12 — the device rule in use-camera.ts): a touch device opens on
+ * the live camera, a mouse / trackpad device on the desktop layout (7h) and
+ * never reaches the camera or a Scan / Scan next / Many control. Every
+ * branch — camera, reading, confirm, search, cellar, by hand, the desktop
+ * layout and the cellar fields — happens inside this one dialog. Views
+ * render UI and call back; this shell owns the state machine, the capture →
+ * read pipeline and the destination rules for every add. The rate
+ * destination (Taste & rate) reuses the same views for a single pick that
+ * opens the WSET note instead of adding anything (`pickToRate`).
  */
 export function AddWineSheet({
   userId,
@@ -164,24 +156,31 @@ export function AddWineSheet({
   options: AddWineOpenOptions;
   flightHint: FlightHint | null;
   onClose: () => void;
-  /** 7i "Rate it now": the provider opens the WSET note for this wine. */
-  onRate: (catalogWineId: string) => void;
+  /** A rate pick (the rate destination, or 7i "Rate it now"), handed over as
+      the sheet closes: the provider opens the WSET note for this wine and
+      draws `lotId` down on save only when `consume` says so. */
+  onRate: (pick: RatePick) => void;
   /** Open on the destination step for a known wine (cellar "To cellar"). */
   initialSource?: InitialSource | null;
   /** Open on the by-hand form prefilled (a legacy scan hand-off). */
   initialPrefill?: WineFormInitial | null;
 }) {
   const router = useRouter();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  // The device rule: route by input type (`(pointer: coarse)`), never by
+  // width. Only the frame's CSS below stays width-based.
+  const touch = useTouchPrimary();
   const hasCamera = useSyncExternalStore(noopSubscribe, cameraSupported, () => false);
 
-  const [view, setView] = useState<View>(() => {
+  const [rawView, setView] = useState<View>(() => {
     if (initialSource) return "lot";
     if (initialPrefill) return "byhand";
-    const desktopNow =
-      typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
-    return initialView(options.start, desktopNow, cameraSupported());
+    // The provider mounts the sheet on the client only (after a tap), so the
+    // plain read already knows the device.
+    return startViewFor(options.start, isTouchPrimary());
   });
+  // Derived, not stored: a mouse device never renders the camera or the phone
+  // search view, even if the pointer type changes while the sheet is open.
+  const view: View = viewForDevice(rawView, touch);
   const [dest, setDestState] = useState<AddWineDestination | null>(destination);
   // Async handlers (an add that follows a 7i choice) must see the destination
   // the moment it changes, not the closure's stale copy.
@@ -191,7 +190,10 @@ export function AddWineSheet({
     setDestState(d);
   }, []);
 
-  const [multi, setMultiState] = useState(Boolean(options.multi));
+  // A rate pick is single: never multi, whatever the caller passed.
+  const [multi, setMultiState] = useState(
+    Boolean(options.multi) && destination?.kind !== "rate",
+  );
   const multiRef = useRef(multi);
   const setMulti = useCallback((m: boolean) => {
     multiRef.current = m;
@@ -215,14 +217,16 @@ export function AddWineSheet({
   // tap that opens it; both refs serve that tap (see `openSearch`).
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // A mouse device's search is the desktop view's own field; "Search by
+  // name" from the confirm view focuses it once that view is up.
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+  const focusDesktopSearchRef = useRef(false);
   // The cellar step's pending write (7c "Add to cellar" opens the fields first).
   const [lotStep, setLotStep] = useState<{
     source: AddSource;
     label: string;
     andScanNext: boolean;
   } | null>(initialSource ? { ...initialSource, andScanNext: false } : null);
-  // 7i "Rate it now": open the note once the catalog add lands.
-  const rateAfterRef = useRef(false);
   // Desktop multi-file upload: read the files one at a time. `drainRef` lets
   // the read pipeline (declared first) pull the next file after a Fix row or
   // a failed read, so one bad photo never stalls the rest of the drop.
@@ -234,14 +238,9 @@ export function AddWineSheet({
     router.refresh();
   }, [onClose, router]);
 
-  const home = useCallback(
-    (): View => (isDesktop ? "desktop" : "camera"),
-    [isDesktop],
-  );
-  const scanReturn = useCallback(
-    (): View => (isDesktop && !hasCamera ? "desktop" : "camera"),
-    [isDesktop, hasCamera],
-  );
+  // Where a read, a confirm or an add returns: the camera on touch (it falls
+  // back to Library without getUserMedia), the desktop view on a mouse.
+  const home = useCallback((): View => homeViewFor(touch), [touch]);
   const go = useCallback(
     (next: View) => {
       // A cellar choice on the chooser leads to the cellar fields; ← from
@@ -297,21 +296,21 @@ export function AddWineSheet({
             ...p,
             { id: uid(), imageUrl: publicUrl, prefill, problem: "no-vintage" },
           ]);
-          if (!drainRef.current()) setView(scanReturn());
+          if (!drainRef.current()) setView(home());
           return;
         }
         setScan({ imageUrl: publicUrl, result, prefill });
         setView("confirm");
       } catch {
         setError(READ_FAILED);
-        if (!drainRef.current()) setView(scanReturn());
+        if (!drainRef.current()) setView(home());
       } finally {
         setBusy(false);
         setReadingImage(null);
         URL.revokeObjectURL(localUrl);
       }
     },
-    [userId, scanReturn],
+    [userId, home],
   );
 
   const drainQueue = useCallback((): boolean => {
@@ -327,8 +326,13 @@ export function AddWineSheet({
   const onFiles = useCallback(
     (files: File[]) => {
       if (files.length === 0) return;
-      if (files.length > 1) setMulti(true);
-      queueRef.current.push(...files);
+      if (destRef.current?.kind === "rate") {
+        // A rate pick is one wine: one photo, one read (one FastCork credit).
+        queueRef.current = files.slice(0, 1);
+      } else {
+        if (files.length > 1) setMulti(true);
+        queueRef.current.push(...files);
+      }
       if (!busy) drainQueue();
     },
     [busy, drainQueue, setMulti],
@@ -369,32 +373,73 @@ export function AddWineSheet({
       setScan(null);
       setLotStep(null);
       setChooseFor(null);
-      if (rateAfterRef.current) {
-        rateAfterRef.current = false;
-        onRate(r.added.catalogWineId);
-        onClose();
-        return;
-      }
       if (drainQueue()) return;
       if (andScanNext) {
         setMulti(true);
-        setView(scanReturn());
+        setView(home());
         return;
       }
-      // Multi mode and the desktop layout both keep the sheet open.
-      if (multiRef.current || isDesktop) {
+      // Multi mode and the desktop layout (every mouse device) both keep the
+      // sheet open.
+      if (multiRef.current || !touch) {
         setView(home());
         return;
       }
       close();
     },
-    [options, setDestination, onRate, onClose, drainQueue, setMulti, scanReturn, isDesktop, home, close],
+    [options, setDestination, drainQueue, setMulti, home, touch, close],
+  );
+
+  // --- the rate destination ------------------------------------------------
+
+  // Taste & rate (owner feedback, 2026-09-12): a pick never writes to a
+  // flight or a cellar and never stacks. It resolves the catalog wine — a
+  // catalog row or matched scan as it is, a cellar lot's wine carried on the
+  // row, a by-hand identity or unmatched scan found-or-created first
+  // (`ratePickPlan`) — then closes the sheet and hands the pick to the
+  // provider, which opens the WSET note and draws a cellar bottle down only
+  // once that note saves.
+  const pickToRate = useCallback(
+    async (source: AddSource) => {
+      const plan = ratePickPlan(source);
+      if (plan.kind === "error") {
+        setError(plan.error);
+        return;
+      }
+      let pick: RatePick | null = plan.kind === "pick" ? plan.pick : null;
+      if (plan.kind === "catalog-first") {
+        setBusy(true);
+        try {
+          const r = await addToCatalog(plan.source);
+          if ("error" in r) {
+            setError(r.error);
+            return;
+          }
+          pick = { catalogWineId: r.added.catalogWineId };
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Couldn't find that wine in the catalog.");
+          return;
+        } finally {
+          setBusy(false);
+        }
+      }
+      if (!pick) return;
+      queueRef.current = [];
+      onRate(pick);
+      onClose();
+    },
+    [onRate, onClose],
   );
 
   const handleAdd = useCallback(
     async (source: AddSource, opts: { andScanNext: boolean }, lot?: CellarLotFields) => {
       setError(null);
       let d = destRef.current;
+      // A rate pick: no chooser, no cellar fields, no write to a flight or cellar.
+      if (d?.kind === "rate") {
+        await pickToRate(source);
+        return;
+      }
       // A cellar bottle picked with no destination can only go into tonight's flight.
       if (!d && source.kind === "lot" && flightHint) {
         d = flightFromHint(flightHint);
@@ -457,13 +502,12 @@ export function AddWineSheet({
         setBusy(false);
       }
     },
-    [flightHint, setDestination, scan, performAdd, afterAdd, go],
+    [flightHint, setDestination, scan, performAdd, afterAdd, go, pickToRate],
   );
 
   const onChoose = useCallback(
     async (choice: { kind: "flight" | "cellar" | "rate" | "catalog-only" }) => {
       setError(null);
-      rateAfterRef.current = false;
       if (choice.kind === "flight") {
         if (!flightHint) {
           setError("No tasting tonight — pick the cellar or the catalog.");
@@ -472,12 +516,16 @@ export function AddWineSheet({
         setDestination(flightFromHint(flightHint));
       } else if (choice.kind === "cellar") {
         setDestination({ kind: "cellar" });
+      } else if (choice.kind === "rate") {
+        // "Rate it now" adopts the rate destination, so the add that follows
+        // is a rate pick: single, and it closes into the note.
+        setMulti(false);
+        setDestination({ kind: "rate" });
       } else {
-        if (choice.kind === "rate") rateAfterRef.current = true;
         setDestination({ kind: "catalog" });
       }
     },
-    [flightHint, setDestination],
+    [flightHint, setDestination, setMulti],
   );
 
   // The shell's chooser (view "choose"): adopt the choice exactly as
@@ -555,16 +603,20 @@ export function AddWineSheet({
       flightHint,
       userId,
       preferredCurrency,
-      isDesktop,
+      // The desktop layout, by the device rule: a mouse / trackpad device at
+      // any width. Views read it to keep their Scan controls touch-only.
+      isDesktop: !touch,
       hasCamera,
     }),
-    [dest, multi, added, pending, flightHint, userId, preferredCurrency, isDesktop, hasCamera],
+    [dest, multi, added, pending, flightHint, userId, preferredCurrency, touch, hasCamera],
   );
 
   const dark = DARK_VIEWS.includes(view);
   const scanning = SCAN_VIEWS.includes(view);
   // The destination line: the title on most views, the eyebrow on the
   // cellar / by-hand branches (7f, 7g put the branch name in the title slot).
+  // Taste & rate: eyebrow "Taste & rate", title the question (never multi).
+  const rate = dest?.kind === "rate";
   const destTitle = multi
     ? dest?.kind === "flight"
       ? "Adding to the flight"
@@ -579,27 +631,37 @@ export function AddWineSheet({
         ? "Add a bottle"
         : dest?.kind === "catalog"
           ? "Add a wine"
-          : scanning
-            ? "Scan"
-            : "Add wine";
+          : rate
+            ? "Which wine are you tasting?"
+            : scanning && touch
+              ? "Scan"
+              : "Add wine";
   const branchTitle =
     view === "cellar" ? "From my cellar" : view === "byhand" ? "By hand" : null;
+  // On the cellar / by-hand branches the eyebrow carries the destination
+  // line; for a rate pick that stays "Taste & rate", not the question.
   const eyebrow = branchTitle
-    ? destTitle
+    ? rate
+      ? "Taste & rate"
+      : destTitle
     : dest?.kind === "flight"
       ? dest.tastingName
       : dest?.kind === "cellar"
         ? "Cellar"
         : dest?.kind === "catalog"
           ? "Catalog"
-          : null;
+          : rate
+            ? "Taste & rate"
+            : null;
   const title = branchTitle ?? destTitle;
   const showBack =
     view === "cellar" || view === "byhand" || view === "lot" || view === "choose";
+  // Scan / "Scan instead" — only ever rendered on touch, where home is the
+  // camera (Library when getUserMedia is missing).
   const toCamera = useCallback(() => {
     setScan(null);
-    go(hasCamera || !isDesktop ? "camera" : "desktop");
-  }, [go, hasCamera, isDesktop]);
+    go(home());
+  }, [go, home]);
   const toByHand = useCallback(() => {
     setByHandPrefill(null);
     go("byhand");
@@ -609,16 +671,29 @@ export function AddWineSheet({
   // this tap — a phone only raises its keyboard for a focus() that runs
   // synchronously in the user's gesture (CLAUDE.md's combobox rule). The
   // state change then renders the same display value it was given here.
+  // A mouse device has no phone search view: its search is the desktop
+  // view's own field, which is not mounted yet — the effect below focuses
+  // it once that view is up (no keyboard to raise, so no gesture needed).
   const openSearch = useCallback(() => {
+    if (!touch) {
+      focusDesktopSearchRef.current = true;
+      go("desktop");
+      return;
+    }
     const wrap = searchWrapRef.current;
     if (wrap) wrap.style.display = "";
     searchInputRef.current?.focus({ preventScroll: true });
     go("search");
-  }, [go]);
+  }, [go, touch]);
+  useEffect(() => {
+    if (view !== "desktop" || !focusDesktopSearchRef.current) return;
+    focusDesktopSearchRef.current = false;
+    desktopSearchRef.current?.focus({ preventScroll: true });
+  }, [view]);
   const onRescan = useCallback(() => {
     setScan(null);
-    if (!drainQueue()) setView(scanReturn());
-  }, [drainQueue, scanReturn]);
+    if (!drainQueue()) setView(home());
+  }, [drainQueue, home]);
   const simpleAdd = useCallback(
     (source: AddSource) => handleAdd(source, { andScanNext: false }),
     [handleAdd],
@@ -641,9 +716,11 @@ export function AddWineSheet({
         showCloseButton={false}
         className={cn(
           "inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none p-0",
-          // Content-height on desktop (7h: the footer sits under the tiles),
-          // capped and scrolling via the body; only the viewfinder views
-          // need the full height.
+          // The frame is width-based on purpose — full-screen below `sm`, a
+          // centred card above — and separate from routing (the device rule
+          // picks the views). Content-height on larger screens (7h: the
+          // footer sits under the tiles), capped and scrolling via the body;
+          // only the photo views need the full height.
           "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[88vh] sm:w-[calc(100vw-3rem)] sm:max-w-[760px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl",
           scanning && "sm:h-[88vh]",
           dark ? "bg-[#15100D] text-primary-foreground" : "bg-card text-foreground",
@@ -708,8 +785,8 @@ export function AddWineSheet({
             </div>
           </div>
           {/* Trailing slot: Scan (search), "Scan instead" (by hand, 7g) or
-              the bottle count (cellar, 7f). */}
-          {view === "search" && hasCamera ? (
+              the bottle count (cellar, 7f). Both scan pills are touch-only. */}
+          {view === "search" && touch && hasCamera ? (
             <button
               type="button"
               onClick={toCamera}
@@ -718,7 +795,7 @@ export function AddWineSheet({
               <Camera className="size-4" />
               Scan
             </button>
-          ) : view === "byhand" && (hasCamera || !isDesktop) ? (
+          ) : view === "byhand" && touch ? (
             <button type="button" onClick={toCamera} className={scanPillClass}>
               <Camera className="size-4" />
               Scan instead
@@ -814,14 +891,15 @@ export function AddWineSheet({
               onAdd={handleAdd}
               onPending={(prefill) => {
                 // 7c → 7d, the same route the read pipeline takes in multi
-                // mode: a Fix row above the viewfinder, camera back up.
+                // mode: a Fix row above the viewfinder (or in the desktop
+                // list), and back home.
                 setPending((p) => [
                   ...p,
                   { id: uid(), imageUrl: scan.imageUrl, prefill, problem: "no-vintage" },
                 ]);
                 setScan(null);
                 setMulti(true);
-                if (!drainQueue()) setView(scanReturn());
+                if (!drainQueue()) setView(home());
               }}
               onChoose={onChoose}
               busy={busy}
@@ -865,6 +943,7 @@ export function AddWineSheet({
               onFixPending={onFixPending}
               onRemovePending={onRemovePending}
               busy={busy}
+              inputRef={desktopSearchRef}
             />
           ) : null}
         </div>
@@ -883,15 +962,16 @@ export function AddWineSheet({
                 if (!lot) return;
                 await handleAdd(lotStep.source, { andScanNext: lotStep.andScanNext }, lot);
               }}
+              // "Add and scan the next" follows a camera read: touch only.
               onSecondary={
-                scan
+                scan && touch
                   ? async () => {
                       setLotStep({ ...lotStep, andScanNext: true });
                     }
                   : undefined
               }
               secondaryLabel={
-                scan
+                scan && touch
                   ? lotStep.andScanNext
                     ? "Scanning the next after this one"
                     : "Add and scan the next"

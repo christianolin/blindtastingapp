@@ -18,6 +18,7 @@ import type {
   AddWineDestination,
   AddWineOpenOptions,
   FlightHint,
+  RatePick,
 } from "@/components/add-wine/types";
 
 // Which destination a legacy caller means. All three now open the one
@@ -57,6 +58,7 @@ type Ctx = {
   setActiveTasting: (t: ActiveTastingInput | null) => void;
   // The header camera while a tasting is registered: scan straight into it.
   openTastingScan: () => void;
+  // `{ kind: "rate" }` is Taste & rate: pick one wine, then its WSET note opens.
   openAddWineSheet: (
     destination: AddWineDestination | null,
     options?: AddWineOpenOptions,
@@ -104,7 +106,8 @@ export function AddWineProvider({
   const [sheet, setSheet] = useState<OpenSheet | null>(null);
   const [activeTasting, setActiveTastingState] = useState<ActiveTasting | null>(null);
   const [flightHint, setFlightHint] = useState<FlightHint | null>(null);
-  const [noteWineId, setNoteWineId] = useState<string | null>(null);
+  // A rate pick waiting on its WSET note (the rate destination, or 7i).
+  const [notePick, setNotePick] = useState<RatePick | null>(null);
   const [preferredCurrency, setPreferredCurrency] = useState("DKK");
   const supabase = useMemo(() => createClient(), []);
 
@@ -288,11 +291,21 @@ export function AddWineProvider({
           initialSource={sheet.initialSource}
           initialPrefill={sheet.initialPrefill}
           onClose={() => setSheet(null)}
-          onRate={(catalogWineId) => setNoteWineId(catalogWineId)}
+          onRate={(pick) => setNotePick(pick)}
         />
       ) : null}
-      {noteWineId ? (
-        <NewNoteModal wineId={noteWineId} onClose={() => setNoteWineId(null)} />
+      {notePick ? (
+        <NewNoteModal
+          // Remount per pick so a second rate never starts on the last note.
+          key={`${notePick.catalogWineId}:${notePick.lotId ?? ""}`}
+          wineId={notePick.catalogWineId}
+          // The sheet draws nothing down: the bottle leaves the cellar only
+          // once the note saves, and only when the pick asked for it.
+          cellarConsume={
+            notePick.consume && notePick.lotId ? { lotId: notePick.lotId } : null
+          }
+          onClose={() => setNotePick(null)}
+        />
       ) : null}
     </AddWineCtx.Provider>
   );

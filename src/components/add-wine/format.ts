@@ -3,7 +3,7 @@
 // is erased at compile time).
 import type { ExtractedLabel } from "@/lib/label-scan/extract";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
-import type { ByHandIdentity } from "./types";
+import type { AddSource, ByHandIdentity, RatePick } from "./types";
 
 type VintageKind = "YEAR" | "NV" | "TAWNY";
 
@@ -118,4 +118,37 @@ export function identityFromPrefill(p: WineFormInitial): ByHandIdentity | null {
 /** "★ 91" for a rating average, null when there is none. */
 export function starLabel(avg: number | null): string | null {
   return avg == null ? null : `★ ${Math.round(avg)}`;
+}
+
+/** How a rate pick reaches its catalog wine (the sheet runs the write). */
+export type RatePickPlan =
+  | { kind: "pick"; pick: RatePick }
+  | { kind: "catalog-first"; source: Extract<AddSource, { kind: "identity" }> }
+  | { kind: "error"; error: string };
+
+/**
+ * The rate destination's rule (owner feedback, 2026-09-12): a pick never
+ * writes to a flight or a cellar — it only needs the catalog wine whose note
+ * opens. A catalog row or a matched scan already is that wine; a cellar lot
+ * row carries its wine from the list (no lookup) plus whether to draw the
+ * bottle down once the note saves; a by-hand identity or an unmatched scan
+ * has to be found-or-created in the catalog first.
+ */
+export function ratePickPlan(source: AddSource): RatePickPlan {
+  if (source.kind === "catalog") {
+    return { kind: "pick", pick: { catalogWineId: source.catalogWineId } };
+  }
+  if (source.kind === "lot") {
+    if (!source.catalogWineId) {
+      return {
+        kind: "error",
+        error: "Couldn't tell which wine that bottle is — search for it instead.",
+      };
+    }
+    return {
+      kind: "pick",
+      pick: { catalogWineId: source.catalogWineId, lotId: source.lotId, consume: source.consume },
+    };
+  }
+  return { kind: "catalog-first", source };
 }

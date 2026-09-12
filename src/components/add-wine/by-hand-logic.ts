@@ -1,12 +1,12 @@
 // The by-hand form's state and the pure rules over it (7g). Kept apart from
-// the component so the seeding-from-a-scan, inference and validation rules
-// are unit-tested without a DOM. Type-only imports keep this file safe on
-// both sides.
+// the component so the seeding-from-a-scan, producer home-region and
+// validation rules are unit-tested without a DOM. Type-only imports keep this
+// file safe on both sides.
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 // Relative on purpose: vitest here has no `@/` alias for runtime imports.
 import { deaccent } from "../../lib/deaccent";
 import { glassLabel } from "./format";
-import type { ProducerInference } from "./actions";
+import type { ProducerHomeRegion } from "./actions";
 import type { AddWineDestination, ByHandIdentity } from "./types";
 
 export type Colour = "RED" | "WHITE" | "ROSE" | "ORANGE";
@@ -16,17 +16,19 @@ export type Style = "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 
 /**
- * Where the origin (country / region / appellation / grape) came from:
- * `inferred` values are replaced wholesale on the next producer pick,
- * `prefill` (a label read) and `manual` values are only ever topped up.
+ * Where the country and region came from. `producer` is the chosen
+ * producer's home region — replaced (or cleared) by the next producer pick;
+ * `prefill` (a label read) and `manual` (the taster's own pick) are never
+ * touched by a producer. Picking an appellation counts as `manual`: it
+ * commits the region above it. The grape never changes this — it is not
+ * part of where the wine comes from, and no producer ever fills it.
  */
-export type OriginSource = "none" | "inferred" | "prefill" | "manual";
+export type OriginSource = "none" | "producer" | "prefill" | "manual";
 
 export type OriginLabels = {
   country: string | null;
   region: string | null;
   appellation: string | null;
-  grape: string | null;
 };
 
 export type ByHandState = {
@@ -53,12 +55,13 @@ export type ByHandState = {
   description: string;
   imageUrl: string | null;
   originSource: OriginSource;
-  /** Display names for the origin chips before (or without) the reference
-      lists — the inference and the prefill both know the names already. */
+  /** Display names the reference lists may not hold yet: the producer's
+      home region (the producer search's group heading reads the region) and
+      a label-read appellation (its region's list loads after the form opens). */
   labels: OriginLabels;
 };
 
-const NO_LABELS: OriginLabels = { country: null, region: null, appellation: null, grape: null };
+const NO_LABELS: OriginLabels = { country: null, region: null, appellation: null };
 
 export function colourGroupOf(colour: Colour | null): ColourGroup | null {
   if (colour === "RED" || colour === "WHITE") return colour;
@@ -129,67 +132,47 @@ export function stateFromPrefill(p: WineFormInitial | null): ByHandState {
 }
 
 /**
- * Fold a producer's inference into the state. An origin nobody has touched
- * (or that came from a previous inference) is replaced; a label-read or
- * hand-picked origin keeps its values and only gets its gaps filled where
- * the inference agrees with it. A grape is not region-bound, so an empty
- * grape always takes the suggestion.
+ * Fold the chosen producer's home region into the state — the one thing a
+ * producer says about a new wine (owner decision, 2026-09-12: a producer
+ * makes wines from many appellations and grapes, so neither follows from
+ * it). Only an origin nobody set (`none`) or a previous producer's home
+ * region (`producer`) is written: a home region replaces it, and `null` (no
+ * home region, a pending producer, a failed lookup) clears it, since it no
+ * longer has a source. A hand-picked or label-read origin is never touched.
+ * The appellation and the grapes are never written, and a region with an
+ * appellation under it is left alone, so that appellation is never stranded
+ * under a different region.
  */
-export function applyInference(
+export function applyProducerRegion(
   s: ByHandState,
-  inf: ProducerInference | null,
+  home: ProducerHomeRegion | null,
 ): ByHandState {
-  if (!inf) return s;
-  const hasPrimary = Boolean(s.primaryGrapeId || s.primaryGrapePending.trim());
-  if (s.originSource === "none" || s.originSource === "inferred") {
+  if (s.originSource !== "none" && s.originSource !== "producer") return s;
+  if (s.appellationId) return s;
+  if (!home) {
+    if (s.originSource === "none") return s;
     return {
       ...s,
-      countryId: inf.countryId,
-      regionId: inf.regionId,
-      appellationId: inf.appellationId,
-      primaryGrapeId: inf.primaryGrapeId ?? (hasPrimary ? s.primaryGrapeId : ""),
-      primaryGrapePending: inf.primaryGrapeId ? "" : s.primaryGrapePending,
-      originSource: "inferred",
-      labels: {
-        country: inf.countryName,
-        region: inf.regionName,
-        appellation: inf.appellationName,
-        grape:
-          inf.primaryGrapeName ?? (hasPrimary && !inf.primaryGrapeId ? s.labels.grape : null),
-      },
+      countryId: "",
+      regionId: "",
+      originSource: "none",
+      labels: { ...s.labels, country: null, region: null },
     };
   }
-  let next = s;
-  const countryAgrees = !s.countryId || s.countryId === inf.countryId;
-  if (countryAgrees && !s.regionId) {
-    next = {
-      ...next,
-      countryId: inf.countryId,
-      regionId: inf.regionId,
-      appellationId: s.appellationId || inf.appellationId,
-      labels: {
-        ...next.labels,
-        country: inf.countryName,
-        region: inf.regionName,
-        appellation: s.appellationId ? next.labels.appellation : inf.appellationName,
-      },
-    };
-  } else if (s.regionId === inf.regionId && !s.appellationId) {
-    next = {
-      ...next,
-      appellationId: inf.appellationId,
-      labels: { ...next.labels, appellation: inf.appellationName },
-    };
+  if (
+    s.originSource === "producer" &&
+    s.countryId === home.countryId &&
+    s.regionId === home.regionId
+  ) {
+    return s;
   }
-  if (!hasPrimary && inf.primaryGrapeId) {
-    next = {
-      ...next,
-      primaryGrapeId: inf.primaryGrapeId,
-      primaryGrapePending: "",
-      labels: { ...next.labels, grape: inf.primaryGrapeName },
-    };
-  }
-  return next;
+  return {
+    ...s,
+    countryId: home.countryId,
+    regionId: home.regionId,
+    originSource: "producer",
+    labels: { ...s.labels, country: home.countryName, region: home.regionName },
+  };
 }
 
 export function parseYear(v: string): number | null {
@@ -225,9 +208,6 @@ export function missingFields(s: ByHandState): string[] {
   if (!s.primaryGrapeId && !s.primaryGrapePending.trim()) missing.push("grape");
   return missing;
 }
-
-/** Returns the origin-side names (for auto-expanding the pickers). */
-export const ORIGIN_FIELDS = ["country", "region", "appellation", "grape"] as const;
 
 /**
  * Map the state onto the identity contract. Pending grapes must already be
@@ -275,6 +255,8 @@ export function actionLabel(d: AddWineDestination | null): string {
   if (!d) return "Choose where it goes";
   if (d.kind === "flight") return `Add as ${glassLabel(d.position)}`;
   if (d.kind === "cellar") return "Add to cellar";
+  // Taste & rate: the wine is found or created in the catalog, then its note opens.
+  if (d.kind === "rate") return "Rate this wine";
   return "Add to the catalog";
 }
 

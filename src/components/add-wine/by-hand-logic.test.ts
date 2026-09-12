@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
 import {
   actionLabel,
-  applyInference,
+  applyProducerRegion,
   buildIdentity,
   colourGroupOf,
   missingFields,
@@ -14,15 +14,18 @@ import {
   type ByHandState,
 } from "./by-hand-logic";
 
-const inference = {
+// What producerHomeRegion returns: the producer's home region and nothing else.
+const piemonte = {
   countryId: "c-it",
   countryName: "Italy",
   regionId: "r-pie",
   regionName: "Piemonte",
-  appellationId: "a-pie",
-  appellationName: "Piemonte DOC",
-  primaryGrapeId: "g-neb",
-  primaryGrapeName: "Nebbiolo",
+};
+const bordeaux = {
+  countryId: "c-fr",
+  countryName: "France",
+  regionId: "r-bdx",
+  regionName: "Bordeaux",
 };
 
 const prefill: WineFormInitial = {
@@ -121,93 +124,128 @@ describe("colourGroupOf", () => {
   });
 });
 
-describe("applyInference", () => {
-  it("fills an untouched origin wholesale and marks it inferred", () => {
-    const s = applyInference(stateFromPrefill(null), inference);
+// Owner decision, 2026-09-12: a producer makes wines from many appellations
+// and grapes, so the ONLY thing the by-hand form takes from it is its home
+// region — and only into an origin nobody else set.
+describe("applyProducerRegion", () => {
+  it("fills an untouched origin with the producer's home region", () => {
+    const s = applyProducerRegion(stateFromPrefill(null), piemonte);
     expect(s.countryId).toBe("c-it");
     expect(s.regionId).toBe("r-pie");
-    expect(s.appellationId).toBe("a-pie");
-    expect(s.primaryGrapeId).toBe("g-neb");
-    expect(s.labels).toEqual({
-      country: "Italy",
-      region: "Piemonte",
-      appellation: "Piemonte DOC",
-      grape: "Nebbiolo",
-    });
-    expect(s.originSource).toBe("inferred");
+    expect(s.labels).toEqual({ country: "Italy", region: "Piemonte", appellation: null });
+    expect(s.originSource).toBe("producer");
   });
 
-  it("replaces a previous inference when the producer changes", () => {
-    const first = applyInference(stateFromPrefill(null), inference);
-    const s = applyInference(first, {
-      ...inference,
-      countryId: "c-fr",
-      countryName: "France",
-      regionId: "r-bdx",
-      regionName: "Bordeaux",
-      appellationId: "a-bdx",
-      appellationName: "Bordeaux AOP",
-      primaryGrapeId: "g-cs",
-      primaryGrapeName: "Cabernet Sauvignon",
-    });
-    expect(s.regionId).toBe("r-bdx");
-    expect(s.appellationId).toBe("a-bdx");
-    expect(s.primaryGrapeId).toBe("g-cs");
-  });
-
-  it("keeps a label-read origin and only fills what is empty", () => {
-    const s = applyInference(stateFromPrefill(prefill), inference);
-    expect(s.appellationId).toBe("a-barb");
-    expect(s.originSource).toBe("prefill");
-    // The pending grape name is a real value — not overwritten.
-    expect(s.primaryGrapeId).toBe("");
-    expect(s.primaryGrapePending).toBe("Nebbiolo");
-  });
-
-  it("fills the appellation and grape when the region agrees and they are empty", () => {
-    const base: ByHandState = {
-      ...stateFromPrefill(prefill),
-      appellationId: "",
-      primaryGrapePending: "",
-      labels: { country: null, region: null, appellation: null, grape: null },
-    };
-    const s = applyInference(base, inference);
-    expect(s.appellationId).toBe("a-pie");
-    expect(s.primaryGrapeId).toBe("g-neb");
-    expect(s.labels.appellation).toBe("Piemonte DOC");
-    expect(s.originSource).toBe("prefill");
-  });
-
-  it("fills region and appellation under a matching country", () => {
-    const base: ByHandState = {
-      ...stateFromPrefill(prefill),
+  it("fills the origin of a label read that found no origin", () => {
+    const read = stateFromPrefill({
+      ...prefill,
+      countryId: "",
       regionId: "",
       appellationId: "",
-    };
-    const s = applyInference(base, inference);
+      appellations: [],
+    });
+    expect(read.originSource).toBe("none");
+    const s = applyProducerRegion(read, piemonte);
     expect(s.regionId).toBe("r-pie");
-    expect(s.appellationId).toBe("a-pie");
+    expect(s.originSource).toBe("producer");
   });
 
-  it("leaves a conflicting manual origin alone", () => {
-    const base: ByHandState = {
+  it("never touches the appellation or the grape", () => {
+    const empty = applyProducerRegion(stateFromPrefill(null), piemonte);
+    expect(empty.appellationId).toBe("");
+    expect(empty.labels.appellation).toBeNull();
+    expect(empty.primaryGrapeId).toBe("");
+    expect(empty.primaryGrapePending).toBe("");
+    expect(empty.secondaryGrapeId).toBe("");
+
+    // A grape chosen first is kept as it is, and does not count as setting the origin.
+    const grapeFirst: ByHandState = { ...stateFromPrefill(null), primaryGrapeId: "g-neb" };
+    const s = applyProducerRegion(grapeFirst, piemonte);
+    expect(s.regionId).toBe("r-pie");
+    expect(s.primaryGrapeId).toBe("g-neb");
+
+    // A label's pending grape name survives too.
+    const read = stateFromPrefill({
+      ...prefill,
+      countryId: "",
+      regionId: "",
+      appellationId: "",
+      appellations: [],
+    });
+    const t = applyProducerRegion(read, piemonte);
+    expect(t.appellationId).toBe("");
+    expect(t.primaryGrapeId).toBe("");
+    expect(t.primaryGrapePending).toBe("Nebbiolo");
+    expect(t.secondaryGrapeId).toBe("g-bar");
+  });
+
+  it("replaces a previous producer's home region", () => {
+    const first = applyProducerRegion(stateFromPrefill(null), piemonte);
+    const s = applyProducerRegion(first, bordeaux);
+    expect(s.countryId).toBe("c-fr");
+    expect(s.regionId).toBe("r-bdx");
+    expect(s.labels).toEqual({ country: "France", region: "Bordeaux", appellation: null });
+    expect(s.originSource).toBe("producer");
+    // A producer from the same home region changes nothing.
+    expect(applyProducerRegion(first, piemonte)).toBe(first);
+  });
+
+  it("clears a previous producer's home region when the next producer has none", () => {
+    const first = applyProducerRegion(stateFromPrefill(null), piemonte);
+    const s = applyProducerRegion(first, null);
+    expect(s.countryId).toBe("");
+    expect(s.regionId).toBe("");
+    expect(s.labels).toEqual({ country: null, region: null, appellation: null });
+    expect(s.originSource).toBe("none");
+  });
+
+  it("never overrides a hand-picked origin, even a partial one", () => {
+    const countryOnly: ByHandState = {
+      ...stateFromPrefill(null),
+      countryId: "c-fr",
+      originSource: "manual",
+    };
+    expect(applyProducerRegion(countryOnly, piemonte)).toBe(countryOnly);
+    expect(applyProducerRegion(countryOnly, null)).toBe(countryOnly);
+
+    const full: ByHandState = {
       ...stateFromPrefill(null),
       countryId: "c-fr",
       regionId: "r-bdx",
-      appellationId: "",
+      appellationId: "a-bdx",
       originSource: "manual",
     };
-    const s = applyInference(base, inference);
-    expect(s.countryId).toBe("c-fr");
-    expect(s.regionId).toBe("r-bdx");
-    expect(s.appellationId).toBe("");
-    // A grape is not region-bound; an empty one still gets the suggestion.
-    expect(s.primaryGrapeId).toBe("g-neb");
+    expect(applyProducerRegion(full, piemonte)).toBe(full);
   });
 
-  it("is a no-op without an inference", () => {
+  it("never overrides a label-read origin, even a country-only read", () => {
+    const read = stateFromPrefill(prefill);
+    expect(read.originSource).toBe("prefill");
+    expect(applyProducerRegion(read, bordeaux)).toBe(read);
+    expect(applyProducerRegion(read, null)).toBe(read);
+
+    const countryOnly = stateFromPrefill({
+      ...prefill,
+      regionId: "",
+      appellationId: "",
+      appellations: [],
+    });
+    expect(countryOnly.originSource).toBe("prefill");
+    expect(applyProducerRegion(countryOnly, piemonte)).toBe(countryOnly);
+  });
+
+  it("never strands an appellation under a region it is not in", () => {
+    const withAppellation: ByHandState = {
+      ...applyProducerRegion(stateFromPrefill(null), piemonte),
+      appellationId: "a-barolo",
+    };
+    expect(applyProducerRegion(withAppellation, bordeaux)).toBe(withAppellation);
+    expect(applyProducerRegion(withAppellation, null)).toBe(withAppellation);
+  });
+
+  it("is a no-op when nothing is set and the producer has no home region", () => {
     const base = stateFromPrefill(null);
-    expect(applyInference(base, null)).toBe(base);
+    expect(applyProducerRegion(base, null)).toBe(base);
   });
 });
 
@@ -350,6 +388,8 @@ describe("actionLabel", () => {
     ).toBe("Add as glass 4");
     expect(actionLabel({ kind: "cellar" })).toBe("Add to cellar");
     expect(actionLabel({ kind: "catalog" })).toBe("Add to the catalog");
+    // Taste & rate: the form finds or creates the wine, then its note opens.
+    expect(actionLabel({ kind: "rate" })).toBe("Rate this wine");
     // No destination yet: the footer opens the 7i chooser, it does not add.
     expect(actionLabel(null)).toBe("Choose where it goes");
   });

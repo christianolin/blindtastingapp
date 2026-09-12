@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, EyeOff, ScanEye, NotebookPen, Target } from "lucide-react";
+import { ChevronDown, EyeOff, NotebookPen, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
 
-// The Taste page's primary action. Replaces the old four mode tiles: one button that
-// opens a menu of every taste flow, reusing the shared launcher popups.
+// The Taste page's primary action: one button that opens a menu of every taste
+// flow, reusing the shared launcher popups. Blind and semi-blind are a single
+// entry — the create-tasting sheet asks which one.
 export function StartTastingMenu() {
   const { openTaste } = useTasteLauncher();
   return (
@@ -25,9 +26,6 @@ export function StartTastingMenu() {
       <DropdownMenuContent align="start" className="min-w-56">
         <DropdownMenuItem onClick={() => openTaste("blind")}>
           <EyeOff /> Taste Blind
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openTaste("semi-blind")}>
-          <ScanEye /> Taste Semi-Blind
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => openTaste("rate")}>
           <NotebookPen /> Taste &amp; Rate

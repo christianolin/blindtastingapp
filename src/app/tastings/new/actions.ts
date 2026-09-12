@@ -70,6 +70,10 @@ function setupColumns(f: TastingSetupFields) {
     async_reveal_policy: f.asyncRevealPolicy,
     sequential_guessing: f.revealMode === "BLIND" && f.flow === "GUIDED",
     leaderboard_reveal: f.leaderboardReveal,
+    // The cover photo: a URL sets it and null clears it (a photo removed on
+    // step 1 after the row exists). A caller that leaves it undefined keeps
+    // whatever is stored — never silently wipe a photo it didn't send.
+    ...(f.imageUrl !== undefined ? { image_url: f.imageUrl?.trim() || null } : {}),
   };
 }
 
@@ -138,7 +142,6 @@ export async function createTasting(
       host_id: user.id,
       status: "DRAFT",
       description: fields.description ?? null,
-      image_url: fields.imageUrl ?? null,
     })
     .select()
     .single();
@@ -223,8 +226,8 @@ async function requireHostDraft(tastingId: string) {
 }
 
 // Step 1 revisited from a later step: name / mode / timing / source /
-// schedule / rules change in place while DRAFT. A mode switch keeps the
-// wines — nothing here touches `wines` or `wine_answers`.
+// schedule / rules / cover photo change in place while DRAFT. A mode switch
+// keeps the wines — nothing here touches `wines` or `wine_answers`.
 export async function updateTastingSetup(
   tastingId: string,
   fields: TastingSetupFields,

@@ -68,6 +68,8 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
     leaderboardReveal: v.leaderboardReveal,
     asyncRevealPolicy: v.asyncRevealPolicy,
     scheduledAt: localToIso(v.scheduledLocal),
+    // Always sent: null clears a photo removed after the row was created.
+    imageUrl: v.imageUrl,
   };
 }
 
@@ -111,6 +113,9 @@ export function NewTastingSheet({
     defaultSetup(defaultReveal === "SEMI_BLIND" ? "SEMI_BLIND" : "BLIND"),
   );
   const [saving, setSaving] = useState(false);
+  // Step 1's cover photo is still uploading: saving now would create the row
+  // without it, and the URL would land after step 1 had already been left.
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friend[] | "loading">(initialFriends ?? "loading");
@@ -198,6 +203,10 @@ export function NewTastingSheet({
     setError(null);
     if (!setup.name.trim()) {
       setError("Name is required.");
+      return null;
+    }
+    if (photoUploading) {
+      setError("Wait for the cover photo to finish uploading.");
       return null;
     }
     setSaving(true);
@@ -371,6 +380,8 @@ export function NewTastingSheet({
           onChange={setSetup}
           onSubmit={() => void goToWines()}
           formId={formId}
+          userId={userId}
+          onPhotoUploadingChange={setPhotoUploading}
           autoFocusName={isDesktop}
           regionSuggestion={suggestion}
         />
@@ -433,10 +444,22 @@ export function NewTastingSheet({
             You can add wines and invite people after saving.
           </span>
           <span className="flex flex-col gap-2 md:ml-auto md:flex-row md:items-center md:gap-[9px]">
-            <TextButton className="max-md:order-2" disabled={saving} onClick={() => void saveAsDraftFromSetup()}>
+            {/* Held while the cover photo uploads. A disabled default button
+                also blocks Enter-to-submit, so the name field can't jump
+                ahead of the upload either. */}
+            <TextButton
+              className="max-md:order-2"
+              disabled={saving || photoUploading}
+              onClick={() => void saveAsDraftFromSetup()}
+            >
               Save as draft
             </TextButton>
-            <PrimaryButton type="submit" form={formId} disabled={saving} className="max-md:order-1">
+            <PrimaryButton
+              type="submit"
+              form={formId}
+              disabled={saving || photoUploading}
+              className="max-md:order-1"
+            >
               {pendingLabel("Add the wines →")}
             </PrimaryButton>
           </span>

@@ -17,13 +17,16 @@ export type AddWineDestination =
       position: number;
     }
   | { kind: "cellar" }
-  | { kind: "catalog" };
+  | { kind: "catalog" }
+  /** Taste & rate (owner feedback, 2026-09-12): pick ONE wine, then its WSET
+      note opens. Never writes to a flight or a cellar; single pick. */
+  | { kind: "rate" };
 
 export type AddWineStart = "camera" | "search" | "cellar" | "byhand";
 
 export type AddWineOpenOptions = {
-  start?: AddWineStart;        // default: camera on phones, search on desktop
-  multi?: boolean;             // open straight into the 7d stacked mode (bulk)
+  start?: AddWineStart;        // default: camera on touch devices, the desktop view on a mouse / trackpad
+  multi?: boolean;             // open straight into the 7d stacked mode (bulk); ignored for rate
   /** Called after every successful add (the sheet stays open in multi mode). */
   onAdded?: (added: AddedWine) => void;
 };
@@ -31,10 +34,20 @@ export type AddWineOpenOptions = {
 export type AddedWine = {
   catalogWineId: string;
   label: string;               // "Produttori del Barbaresco 2018"
-  destination: NonNullable<AddWineDestination>["kind"];
+  /** A rate pick is not an add, so it never produces an AddedWine. */
+  destination: Exclude<AddWineDestination["kind"], "rate">;
   glass?: number;              // flight
   lotId?: string;              // cellar
   wineId?: string;             // flight: wines.id
+};
+
+/** What a rate pick hands the provider: the catalog wine whose WSET note
+    opens and, for a cellar bottle, the lot `NewNoteModal` draws down once
+    that note saves (only when `consume`). */
+export type RatePick = {
+  catalogWineId: string;
+  lotId?: string | null;
+  consume?: boolean;
 };
 
 /** A scanned bottle waiting for a fix before it can be added (7d "Fix"). */
@@ -73,7 +86,15 @@ export type ByHandIdentity = {
 
 export type AddSource =
   | { kind: "catalog"; catalogWineId: string }
-  | { kind: "lot"; lotId: string; consume: boolean }
+  | {
+      kind: "lot";
+      lotId: string;
+      consume: boolean;
+      /** The lot's catalog wine, carried from the row (every view that lists
+          lots already has it) so a rate pick needs no lookup. The writes
+          never read it — the server resolves the lot by `lotId` alone. */
+      catalogWineId?: string;
+    }
   | { kind: "identity"; identity: ByHandIdentity };
 
 export type AddResult =
@@ -107,7 +128,9 @@ export type SheetContext = {
   flightHint: FlightHint | null;
   userId: string;
   preferredCurrency: string;
-  /** `md+` viewport (matchMedia "(min-width: 768px)"). */
+  /** A mouse / trackpad device at any width — not a viewport size (the
+      device rule in use-camera.ts: `!(pointer: coarse)`). Scan, Scan next
+      and Many controls stay hidden when true. */
   isDesktop: boolean;
   /** `navigator.mediaDevices.getUserMedia` exists. The camera hook may still
       report `unavailable` / `denied` once it actually asks. */
@@ -156,10 +179,10 @@ export type ScanConfirmProps = {
   onPending: (prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial) => void;
   /** 7i, null destination only. The shell ADOPTS the choice as the sheet's
       destination (flight → `ctx.flightHint`'s tasting; cellar → the cellar
-      footer fields; rate / catalog-only → catalog) and resolves. The view
-      then calls `onAdd(source, { andScanNext: false })` exactly as it would
-      with a fixed destination; for "rate" the shell opens the WSET note once
-      that catalog add succeeds. */
+      footer fields; rate → the rate destination; catalog-only → catalog) and
+      resolves. The view then calls `onAdd(source, { andScanNext: false })`
+      exactly as it would with a fixed destination; for "rate" that is a rate
+      pick, which closes the sheet and opens the WSET note. */
   onChoose: (
     choice: { kind: "flight" } | { kind: "cellar" } | { kind: "rate" } | { kind: "catalog-only" },
   ) => Promise<void>;
@@ -213,6 +236,9 @@ export type DesktopViewProps = {
   onFixPending: (id: string, fix: PendingFix) => void;
   onRemovePending: (id: string) => void;
   busy: boolean;
+  /** The search field, so the shell can focus it when the confirm view's
+      "Search by name" lands here (a mouse device has no phone search view). */
+  inputRef?: import("react").Ref<HTMLInputElement>;
 };
 
 /** 7d: the added rows / pending "Fix" rows stacked above the viewfinder. */

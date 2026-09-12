@@ -3,6 +3,7 @@ import {
   addedWhere,
   chooserEyebrow,
   confidenceChip,
+  consumeLabel,
   flightHintSubtitle,
   flightNote,
   parseVintageYear,
@@ -45,6 +46,29 @@ describe("primaryAddLabel", () => {
     ).toBe("Add as glass 4");
     expect(primaryAddLabel({ kind: "cellar" })).toBe("Add to cellar");
     expect(primaryAddLabel({ kind: "catalog" })).toBe("Add to the catalog");
+    // Taste & rate adds nothing: the pick opens the wine's note.
+    expect(primaryAddLabel({ kind: "rate" })).toBe("Rate this wine");
+  });
+});
+
+describe("consumeLabel", () => {
+  it("draws the bottle down when poured into a flight", () => {
+    expect(consumeLabel(null)).toBe("Take it out of the cellar when we pour it");
+    expect(
+      consumeLabel({
+        kind: "flight",
+        tastingId: "t",
+        tastingName: "Nebbiolo vs Sangiovese",
+        revealMode: "BLIND",
+        wineSource: "HOST_PROVIDES",
+        position: 4,
+      }),
+    ).toBe("Take it out of the cellar when we pour it");
+  });
+  it("draws it down when the note is saved for a rate pick", () => {
+    expect(consumeLabel({ kind: "rate" })).toBe(
+      "Take a bottle out of the cellar when I save the note",
+    );
   });
 });
 
@@ -82,6 +106,7 @@ describe("flightNote", () => {
     expect(flightNote({ ...flight, revealMode: "OPEN" })).toBeNull();
     expect(flightNote({ kind: "cellar" })).toBeNull();
     expect(flightNote({ kind: "catalog" })).toBeNull();
+    expect(flightNote({ kind: "rate" })).toBeNull();
     expect(flightNote(null)).toBeNull();
   });
 });

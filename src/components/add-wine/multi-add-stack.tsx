@@ -15,7 +15,9 @@ import type { MultiAddStackProps, PendingScan } from "./types";
  * rose-tinted row with an inline Fix strip — never a blocking error.
  *
  * The "Next bottle · glass N" caption belongs to the viewfinder (the camera
- * view draws it), so `nextGlass` is not rendered here.
+ * view draws it), so `nextGlass` is not rendered here. The rate destination
+ * never reaches this stack: its pick is single, adds nothing (so there is no
+ * AddedWine to list) and closes the sheet into the WSET note.
  */
 export function MultiAddStack({
   added,

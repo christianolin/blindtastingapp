@@ -9,6 +9,7 @@ import type {
   WineSourceMode,
 } from "@/lib/supabase/database.types";
 import { Label } from "@/components/ui/label";
+import { ImageUploader } from "@/components/image-uploader";
 import {
   Select,
   SelectContent,
@@ -50,24 +51,35 @@ export function NewTastingForm({
   onChange,
   onSubmit,
   formId,
+  userId,
+  onPhotoUploadingChange,
   autoFocusName = false,
   regionSuggestion = null,
 }: {
   value: SetupValues;
-  onChange: (next: SetupValues) => void;
+  /** Always an updater (pass the sheet's setState) — see `set` below. */
+  onChange: (update: (prev: SetupValues) => SetupValues) => void;
   /** Enter in the name field — the sheet treats it as "Add the wines →". */
   onSubmit: () => void;
   formId: string;
+  /** The cover photo's Storage folder: RLS only lets a user write under their own id. */
+  userId: string;
+  /** true while the cover photo uploads, so the sheet can hold its footer. */
+  onPhotoUploadingChange?: (uploading: boolean) => void;
   /** Desktop only — an autofocus on phones pops the keyboard over the sheet. */
   autoFocusName?: boolean;
   regionSuggestion?: { region: string; n: number } | null;
 }) {
   const nameId = useId();
   const rulesId = useId();
+  const photoLabelId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
+  // Functional updates: the cover photo's URL arrives from an async upload,
+  // and a `{ ...value }` captured when the file was picked would roll back
+  // anything typed or toggled while it uploaded.
   const set = <K extends keyof SetupValues>(key: K, v: SetupValues[K]) =>
-    onChange({ ...value, [key]: v });
+    onChange((prev) => ({ ...prev, [key]: v }));
   const blind = value.revealMode === "BLIND";
   const suggestions = nameSuggestions(new Date(), regionSuggestion);
 
@@ -218,7 +230,35 @@ export function NewTastingForm({
         </label>
       </div>
 
-      {/* 4 · Rules and reveal (collapsed; Change ▾ opens the Selects) */}
+      {/* 4 · Cover photo (optional). The lobby header and the Taste cards
+          show it as a small square crop, so the preview is that crop too
+          (tap it for the full image). Every control in here is
+          type="button", so Enter in the name field still submits through
+          the footer's "Add the wines →". */}
+      <div
+        role="group"
+        aria-labelledby={photoLabelId}
+        className="flex flex-col gap-2 md:gap-[9px]"
+      >
+        <span className="flex items-baseline gap-[7px]">
+          <span id={photoLabelId} className="text-[12px] font-semibold md:text-[12.5px]">
+            Cover photo
+          </span>
+          <span className="text-[11.5px] text-muted-foreground md:text-[12px]">optional</span>
+        </span>
+        <ImageUploader
+          name="image_url"
+          bucket="tasting-images"
+          folder={userId}
+          initialUrl={value.imageUrl}
+          aspectClassName="aspect-square w-20"
+          removable
+          onChange={(url) => set("imageUrl", url)}
+          onPendingChange={onPhotoUploadingChange}
+        />
+      </div>
+
+      {/* 5 · Rules and reveal (collapsed; Change ▾ opens the Selects) */}
       <div className="flex flex-col gap-2 rounded-[10px] border border-border bg-background p-[12px_13px] md:rounded-[11px] md:p-[13px_15px]">
         <div className="flex items-center gap-[10px]">
           <span className="flex min-w-0 flex-1 flex-col gap-[2px] md:flex-row md:items-center md:gap-[10px]">

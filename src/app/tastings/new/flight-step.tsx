@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { Camera, ChevronDown, ChevronUp, Grape, Search, Wine, X } from "lucide-react";
+import { Camera, ChevronDown, ChevronUp, Grape, Search, Upload, Wine, X } from "lucide-react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { useAddWine } from "@/components/add-wine-context";
 import { addToFlight, searchAddWine } from "@/components/add-wine/actions";
-import type { AddSource, AddWineStart, SearchGroups } from "@/components/add-wine/types";
+import { enterHint, rowActionLabel } from "@/components/add-wine/desktop-format";
+import { RowActionButton } from "@/components/add-wine/desktop-view";
+import { useTouchPrimary } from "@/components/add-wine/use-camera";
+import type {
+  AddSource,
+  AddWineDestination,
+  AddWineStart,
+  SearchGroups,
+} from "@/components/add-wine/types";
 import { moveWine, removeWine } from "@/app/tastings/[id]/actions";
 import { cn } from "@/lib/utils";
 import type { FlightRow, FlightSnapshot } from "./actions";
@@ -112,13 +120,21 @@ function flattenGroups(g: SearchGroups): ResultRow[] {
 
 /**
  * Step 2 · the wines (handoff 6b): the add-wine search row inline — a plain
- * field that searches on desktop and adds on ↵ / Add, three shortcut chips
- * into the universal add-wine sheet (camera / cellar / by hand) — then the
- * ordered flight with ▲▼ reorder and per-row remove. On phones the field
- * itself opens the sheet in search mode (nothing actionable may live under
- * a phone keyboard). Rows come from `listFlight` (server) so the sheet and
- * the lobby apply one set of rules; this component owns only order and
- * the optimistic remove.
+ * field that searches on desktop with "↵ adds the first hit" beside it, and
+ * three shortcut chips into the universal add-wine sheet (scan or upload /
+ * cellar / by hand) on a line of their own below it — then the ordered
+ * flight with ▲▼ reorder and per-row remove. Every result row carries the
+ * same "Add as glass N" button as the sheet's desktop view (owner feedback
+ * 2026-09-12, `RowActionButton`); the row ↵ adds is marked by its gold tint
+ * alone. On phones the field itself opens the sheet in search mode (nothing
+ * actionable may live under a phone keyboard). Rows come from `listFlight`
+ * (server) so the sheet and the lobby apply one set of rules; this component
+ * owns only order and the optimistic remove.
+ *
+ * The first chip follows the sheet's device rule (use-camera.ts): "Scan a
+ * label" with a camera on a touch device; "Upload photos" on a mouse /
+ * trackpad device, where the same `start: "camera"` lands on the desktop
+ * view and its upload zone.
  */
 export function FlightStep({
   tastingId,
@@ -143,7 +159,12 @@ export function FlightStep({
   const [results, setResults] = useState<ResultRow[]>([]);
   const [searching, startSearch] = useTransition();
   const [busy, setBusy] = useState(false);
+  // The result row whose add is running — its button shows the loader.
+  const [addingKey, setAddingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Step 2 only mounts after a tap in step 1, so this is the real value from
+  // the first render (no server snapshot to hydrate past).
+  const touch = useTouchPrimary();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
   // Optimistic order / removal over the server snapshot.
@@ -164,18 +185,18 @@ export function FlightStep({
   const isByo = wineSource === "PARTICIPANT_CONTRIBUTED";
   const nextPosition = rows.length + 1;
 
+  // One destination for the sheet and for the result rows' label, so both
+  // say the same glass number.
+  const destination: AddWineDestination = {
+    kind: "flight",
+    tastingId,
+    tastingName,
+    revealMode,
+    wineSource,
+    position: nextPosition,
+  };
   const openSheet = (start: AddWineStart) =>
-    openAddWineSheet(
-      {
-        kind: "flight",
-        tastingId,
-        tastingName,
-        revealMode,
-        wineSource,
-        position: nextPosition,
-      },
-      { start, onAdded: onChanged },
-    );
+    openAddWineSheet(destination, { start, onAdded: onChanged });
 
   useEffect(() => {
     if (!isDesktop) return;
@@ -197,6 +218,7 @@ export function FlightStep({
   async function add(row: ResultRow) {
     if (busy || row.inFlight) return;
     setBusy(true);
+    setAddingKey(row.key);
     setError(null);
     try {
       const r = await addToFlight(tastingId, row.source);
@@ -209,6 +231,7 @@ export function FlightStep({
       onChanged();
     } finally {
       setBusy(false);
+      setAddingKey(null);
     }
   }
 
@@ -282,9 +305,24 @@ export function FlightStep({
               Search — producer, wine or appellation
             </button>
           )}
-          <span className="flex w-full items-center gap-[8px] text-[11.5px] md:ml-auto md:w-auto md:gap-[10px]">
-            <ShortcutChip onClick={() => openSheet("camera")} icon={<Camera className="size-3.5" />}>
-              Scan a label
+          {isDesktop ? (
+            // The same hint as the sheet's desktop view (7h).
+            <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground">
+              {enterHint(destination)}
+            </span>
+          ) : null}
+          {/* The shortcuts take a line of their own at every width: beside
+              the field and its ↵ hint they do not fit the 760px sheet. On
+              desktop they line up with the field's text. */}
+          <span className="flex w-full items-center gap-[8px] text-[11.5px] md:gap-[10px] md:pl-[26px]">
+            {/* The device rule: the live camera is touch-only, so a mouse /
+                trackpad device uploads photos — the same start lands on the
+                desktop view's upload zone. */}
+            <ShortcutChip
+              onClick={() => openSheet("camera")}
+              icon={touch ? <Camera className="size-3.5" /> : <Upload className="size-3.5" />}
+            >
+              {touch ? "Scan a label" : "Upload photos"}
             </ShortcutChip>
             <ShortcutChip onClick={() => openSheet("cellar")} icon={<Wine className="size-3.5" />}>
               From my cellar
@@ -303,15 +341,17 @@ export function FlightStep({
               </p>
             ) : (
               results.map((r, i) => {
-                const primary = firstAddable !== null && r.key === firstAddable.key;
+                // The row ↵ adds: its gold tint is the only mark — its
+                // button is the same as every other row's.
+                const enterTarget = firstAddable !== null && r.key === firstAddable.key;
                 return (
                   <div
                     key={r.key}
                     className={cn(
                       "flex items-center gap-3 p-[11px_14px]",
                       i > 0 && "border-t border-border-light",
-                      primary && "bg-gold/12",
-                      r.inFlight && "opacity-60",
+                      enterTarget && "bg-gold/12",
+                      r.inFlight && "opacity-70",
                     )}
                   >
                     <HatchThumb src={r.imageUrl} width={30} height={40} />
@@ -321,27 +361,14 @@ export function FlightStep({
                         {r.meta}
                       </span>
                     </span>
-                    {r.inFlight ? (
-                      <span className="text-[11.5px] text-muted-foreground">in flight</span>
-                    ) : primary ? (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void add(r)}
-                        className="font-mono text-[10.5px] text-muted-foreground hover:text-primary disabled:opacity-60"
-                      >
-                        ↵ adds it
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void add(r)}
-                        className="rounded-[7px] border border-border px-3 py-[6px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white disabled:opacity-60"
-                      >
-                        Add
-                      </button>
-                    )}
+                    <RowActionButton
+                      label={rowActionLabel(destination, r)}
+                      wineTitle={r.title}
+                      inFlight={r.inFlight}
+                      pending={addingKey === r.key}
+                      disabled={busy}
+                      onClick={() => void add(r)}
+                    />
                   </div>
                 );
               })
@@ -373,7 +400,8 @@ export function FlightStep({
           <p className="text-[12.5px] text-muted-foreground">Loading the flight…</p>
         ) : rows.length === 0 && (snapshot.waitingFor.length === 0 || !isByo) ? (
           <p className="rounded-[9px] border border-dashed border-border p-[10px_13px] text-[12.5px] text-muted-foreground">
-            No wines yet — search above, scan a label or enter one by hand.
+            No wines yet — search above, {touch ? "scan a label" : "upload label photos"} or
+            enter one by hand.
           </p>
         ) : null}
 

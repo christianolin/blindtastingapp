@@ -135,7 +135,25 @@ describe("localToIso", () => {
   });
 });
 
+describe("defaultSetup", () => {
+  it("starts without a cover photo", () => {
+    expect(defaultSetup("BLIND").imageUrl).toBeNull();
+    expect(defaultSetup("SEMI_BLIND").imageUrl).toBeNull();
+  });
+});
+
 describe("buildSetupFormData", () => {
+  it("posts the cover photo URL as image_url", () => {
+    const url =
+      "https://example.supabase.co/storage/v1/object/public/tasting-images/user-1/cover.jpg";
+    const fd = buildSetupFormData({ ...base, name: "Cover", imageUrl: url });
+    expect(fd.get("image_url")).toBe(url);
+  });
+
+  it("posts a blank image_url when there is no photo (the action reads it as null)", () => {
+    expect(buildSetupFormData({ ...base, name: "No cover" }).get("image_url")).toBe("");
+  });
+
   it("posts the action's field names, with the ISO schedule alongside the raw value", () => {
     const fd = buildSetupFormData({
       ...base,

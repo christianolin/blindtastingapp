@@ -71,7 +71,6 @@ export function MobileNav({
     close();
     if (kind === "catalog" || kind === "cellar") openAddWine(kind);
     else if (kind === "taste-blind") openTaste("blind");
-    else if (kind === "taste-semi-blind") openTaste("semi-blind");
     else openTaste("rate");
   };
 

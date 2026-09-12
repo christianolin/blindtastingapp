@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Camera, Plus, Search } from "lucide-react";
+import { Camera, ChevronRight, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { searchAddWine } from "./actions";
 import { ConsumeCheckbox } from "./cellar-view";
 import { bottlesLabel, catalogMeta, searchCellarMeta, tastedMeta } from "./row-format";
+import { consumeLabel } from "./scan-copy";
 import type { AddSource, SearchGroups, SearchViewProps } from "./types";
 
 const DEBOUNCE_MS = 250;
@@ -50,10 +51,17 @@ export function SearchView({
 
   const q = query.trim();
   const destKind = ctx.destination?.kind ?? null;
+  // Taste & rate: a tap picks the wine whose note opens — nothing is added.
+  const rate = destKind === "rate";
   // "In flight" is judged against the flight destination — or, with no
-  // destination, tonight's tasting, which is where the shell drops a lot.
+  // destination, tonight's tasting, which is where the shell drops a lot. A
+  // rate pick pours into nothing, so it checks no tasting at all.
   const tastingId =
-    ctx.destination?.kind === "flight" ? ctx.destination.tastingId : ctx.flightHint?.tastingId;
+    ctx.destination?.kind === "flight"
+      ? ctx.destination.tastingId
+      : rate
+        ? undefined
+        : ctx.flightHint?.tastingId;
   // The view is long-lived, so a return to it (or an add made meanwhile)
   // re-runs the search: the "in flight" flags are only as fresh as the fetch.
   const addedCount = ctx.added.length;
@@ -95,12 +103,14 @@ export function SearchView({
   const pourable = cellar.filter((r) => r.drinkNow).reduce((sum, r) => sum + r.quantity, 0);
   const consumeApplies = showCellar && destKind !== "catalog";
 
-  // The shell's header already carries the Scan pill whenever a camera
-  // exists (add-wine-sheet.tsx); this one fills the remaining case the rule
-  // allows — a phone with no getUserMedia, where the camera view still
-  // offers Library. If the shell's pill is ever removed, this becomes
-  // `hasCamera || !isDesktop`.
-  const showScan = !ctx.hasCamera && !ctx.isDesktop;
+  // Scan controls are touch-only (the device rule in use-camera.ts): the
+  // shell sets `ctx.isDesktop` on a mouse / trackpad device, which never
+  // shows this view anyway. On touch, the shell's header carries the Scan
+  // pill whenever a camera exists (add-wine-sheet.tsx); this one fills the
+  // remaining case — a touch device with no getUserMedia, where the camera
+  // view still offers Library. If the shell's pill is ever removed, this
+  // becomes `!ctx.isDesktop`.
+  const showScan = !ctx.isDesktop && !ctx.hasCamera;
 
   const add = async (key: string, source: AddSource) => {
     if (busy || addingKey) return;
@@ -112,10 +122,11 @@ export function SearchView({
     }
   };
 
+  // The lot carries its catalog wine so a rate pick needs no lookup.
   const cellarSource = (row: SearchGroups["cellar"][number]): AddSource =>
     destKind === "catalog"
       ? { kind: "catalog", catalogWineId: row.catalogWineId }
-      : { kind: "lot", lotId: row.lotId, consume };
+      : { kind: "lot", lotId: row.lotId, consume, catalogWineId: row.catalogWineId };
 
   const pending = busy || addingKey !== null;
 
@@ -184,17 +195,17 @@ export function SearchView({
                   checked={consume}
                   onChange={setConsume}
                   disabled={pending}
+                  label={consumeLabel(ctx.destination)}
                 />
               ) : null}
-              {cellar.map((row, i) => (
+              {cellar.map((row) => (
                 <ResultRow
                   key={row.lotId}
                   title={row.title}
                   meta={searchCellarMeta(row)}
                   imageUrl={row.imageUrl}
+                  pick={rate}
                   inFlight={row.inFlight}
-                  filled={i === 0 && !row.inFlight}
-                  highlighted={i === 0 && !row.inFlight}
                   pending={addingKey === `lot:${row.lotId}`}
                   disabled={pending}
                   onClick={() => void add(`lot:${row.lotId}`, cellarSource(row))}
@@ -211,6 +222,7 @@ export function SearchView({
                   title={row.title}
                   meta={catalogMeta(row)}
                   imageUrl={row.imageUrl}
+                  pick={rate}
                   inFlight={row.inFlight}
                   pending={addingKey === `catalog:${row.catalogWineId}`}
                   disabled={pending}
@@ -233,6 +245,7 @@ export function SearchView({
                   title={row.title}
                   meta={tastedMeta(row)}
                   imageUrl={row.imageUrl}
+                  pick={rate}
                   inFlight={inFlightIds.has(row.catalogWineId)}
                   pending={addingKey === `tasted:${row.catalogWineId}`}
                   disabled={pending}
@@ -277,16 +290,18 @@ function GroupHeader({ title, note }: { title: string; note?: string }) {
   );
 }
 
-// One result: 28×38 thumb, title, meta, and the trailing "+" disc (filled
-// bordeaux for the first cellar row, gold outline otherwise). A wine already
-// in the flight is not tappable and says so.
+// One result: 28×38 thumb, title, meta, and the trailing disc — the same
+// gold-outlined "+" on every row, a chevron instead for a rate pick (which
+// adds nothing). Owner feedback 2026-09-12: the handoff's filled bordeaux
+// disc and gold tint on the first cellar row read as a different action, and
+// this view has no ↵ shortcut for a marked row to stand for. A wine already
+// in the flight is not tappable and reads "In flight".
 function ResultRow({
   title,
   meta,
   imageUrl,
+  pick = false,
   inFlight,
-  filled = false,
-  highlighted = false,
   pending,
   disabled,
   onClick,
@@ -294,9 +309,9 @@ function ResultRow({
   title: string;
   meta: string;
   imageUrl: string | null;
+  /** Rate destination: the tap picks the wine for its note. */
+  pick?: boolean;
   inFlight: boolean;
-  filled?: boolean;
-  highlighted?: boolean;
   pending: boolean;
   disabled: boolean;
   onClick: () => void;
@@ -308,8 +323,7 @@ function ResultRow({
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-[11px] border-b border-border-light p-[12px_16px] text-left transition-colors md:px-[22px]",
-        highlighted && "bg-gold/10",
-        !inFlight && !highlighted && "md:hover:bg-background",
+        !inFlight && "md:hover:bg-background",
         inFlight && "cursor-default",
       )}
     >
@@ -321,18 +335,19 @@ function ResultRow({
         <span className="truncate text-[11.5px] text-muted-foreground">{meta}</span>
       </span>
       {inFlight ? (
-        <span className="shrink-0 text-[11.5px] text-muted-foreground">in flight</span>
+        <span className="shrink-0 text-[11.5px] text-muted-foreground">In flight</span>
       ) : (
         <span
           aria-hidden
-          className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-full",
-            filled
-              ? "bg-primary text-primary-foreground"
-              : "border-[1.5px] border-gold text-primary",
-          )}
+          className="flex size-7 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gold text-primary"
         >
-          {pending ? <WineGlassLoader size={16} /> : <Plus className="size-4" strokeWidth={2.5} />}
+          {pending ? (
+            <WineGlassLoader size={16} />
+          ) : pick ? (
+            <ChevronRight className="size-4" strokeWidth={2.5} />
+          ) : (
+            <Plus className="size-4" strokeWidth={2.5} />
+          )}
         </span>
       )}
     </button>

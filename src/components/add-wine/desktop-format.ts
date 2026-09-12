@@ -100,15 +100,31 @@ function capitalize(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
-/** The inline button: the destination action on the first addable row,
-    "Add" on the rest, "In flight" on a wine already poured. */
+/**
+ * The inline button, the SAME on every addable row of a result list (owner
+ * feedback 2026-09-12 — a first row reading "Add to cellar" over others
+ * reading "Add" looked like two different actions). It names the
+ * destination: "Add as glass N", "Add to cellar", "Add to the catalog",
+ * "Rate this wine", or plain "Add" with none; "In flight" on a wine already
+ * poured. The row ↵ adds is marked by its tint and the field hint, never by
+ * a different label.
+ */
 export function rowActionLabel(
   destination: AddWineDestination | null,
-  opts: { primary: boolean; inFlight: boolean },
+  opts: { inFlight: boolean },
 ): string {
   if (opts.inFlight) return "In flight";
-  if (!opts.primary || !destination) return "Add";
-  return primaryAddLabel(destination);
+  return destination ? primaryAddLabel(destination) : "Add";
+}
+
+/** The search field's ↵ hint. */
+export function enterHint(destination: AddWineDestination | null): string {
+  return destination?.kind === "rate" ? "↵ picks the first hit" : "↵ adds the first hit";
+}
+
+/** The footer button: a rate pick has no session to finish, so it closes. */
+export function footerButtonLabel(destination: AddWineDestination | null): string {
+  return destination?.kind === "rate" ? "Close" : "Done";
 }
 
 const KEEP_GOING = "Adding does not close this — keep going.";
@@ -119,9 +135,13 @@ const FLIGHT_KEEP_GOING = "Adding does not close this — keep going until the f
  * set = the next position minus one — the sheet re-reads position after
  * every add, so this stays true when the flight already had glasses before
  * the sheet opened); for the cellar and the catalog it counts this session's
- * adds (`added`).
+ * adds (`added`). A rate pick is single: the sheet closes on the pick, so
+ * there is nothing to keep going with.
  */
 export function footerSentence(destination: AddWineDestination | null, added: number): string {
+  if (destination?.kind === "rate") {
+    return "Pick the wine you are tasting — its note opens next.";
+  }
   if (destination?.kind === "flight") {
     const set = Math.max(0, destination.position - 1);
     if (set === 0) return `No glasses are set yet. ${FLIGHT_KEEP_GOING}`;
@@ -168,15 +188,20 @@ export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const IMAGE_EXT = /\.(jpe?g|png|webp|heic|heif|gif|avif)$/i;
 
-export type SkippedFile = { name: string; reason: "not an image" | "over 5MB" };
+export type SkippedFile = {
+  name: string;
+  reason: "not an image" | "over 5MB" | "one photo at a time";
+};
 
 /**
  * The drop zone's filter: images only (by MIME type, or by extension when the
- * OS reports none), up to the 5MB the zone's copy promises. Everything else
- * is named back so a dropped folder never fails silently.
+ * OS reports none), up to the 5MB the zone's copy promises, and at most `max`
+ * of them (a rate pick reads one photo — one FastCork credit). Everything
+ * else is named back so a dropped folder never fails silently.
  */
 export function pickImageFiles<T extends { name: string; size: number; type: string }>(
   files: T[],
+  opts: { max?: number } = {},
 ): { accepted: T[]; skipped: SkippedFile[] } {
   const accepted: T[] = [];
   const skipped: SkippedFile[] = [];
@@ -184,17 +209,46 @@ export function pickImageFiles<T extends { name: string; size: number; type: str
     const isImage = f.type ? f.type.startsWith("image/") : IMAGE_EXT.test(f.name);
     if (!isImage) skipped.push({ name: f.name, reason: "not an image" });
     else if (f.size > MAX_PHOTO_BYTES) skipped.push({ name: f.name, reason: "over 5MB" });
-    else accepted.push(f);
+    else if (opts.max != null && accepted.length >= opts.max) {
+      skipped.push({ name: f.name, reason: "one photo at a time" });
+    } else accepted.push(f);
   }
   return { accepted, skipped };
 }
 
 /** The drop zone's sentence, ending where the photos land. */
 export function uploadZoneCopy(destination: AddWineDestination | null): string {
+  if (destination?.kind === "rate") {
+    return "Upload a photo of the label — we find the wine, then its note opens.";
+  }
   const head =
     "Drop in the photos you took of the bottles — several at once. Each one is read and matched exactly as it is on the phone, and ";
   if (destination?.kind === "flight") return `${head}lands in this flight.`;
   if (destination?.kind === "cellar") return `${head}lands in your cellar.`;
   if (destination?.kind === "catalog") return `${head}lands in the catalog.`;
   return `${head}you choose where each one goes.`;
+}
+
+/** The drop zone's heading, picker lines and whether it takes several
+    files: one photo for a rate pick, several for every add. */
+export function uploadZoneLabels(destination: AddWineDestination | null): {
+  title: string;
+  drop: string;
+  hint: string;
+  multiple: boolean;
+} {
+  if (destination?.kind === "rate") {
+    return {
+      title: "Upload a label photo",
+      drop: "Drop a photo here",
+      hint: "or choose a file · JPG, PNG, up to 5MB",
+      multiple: false,
+    };
+  }
+  return {
+    title: "Upload label photos",
+    drop: "Drop photos here",
+    hint: "or choose files · JPG, PNG, up to 5MB each",
+    multiple: true,
+  };
 }

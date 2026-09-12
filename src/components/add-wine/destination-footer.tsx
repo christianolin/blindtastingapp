@@ -12,6 +12,7 @@ import {
 } from "@/app/cellar/new/actions";
 import { cn } from "@/lib/utils";
 import { glassLabel } from "./format";
+import { primaryAddLabel } from "./scan-copy";
 import type { AddWineDestination } from "./types";
 
 export type CellarLotFields = {
@@ -27,7 +28,8 @@ type ExistingLot = { id: string; quantity: number; storageLocation: string | nul
  * The per-destination footer: flight → "Add as glass N" (+ optional "Add and
  * scan the next"); cellar → quantity · rack · optional price → "Add to
  * cellar", with the duplicate-lot choice when the wine is already held;
- * catalog → "Add to the catalog". Sits in the sheet's `shrink-0 border-t`
+ * catalog → "Add to the catalog"; rate → "Rate this wine" (the shell mounts
+ * these fields only for the cellar today). Sits in the sheet's `shrink-0 border-t`
  * footer slot; `label` is the wine's display title shown as context.
  */
 export function DestinationFooter({
@@ -68,17 +70,7 @@ export function DestinationFooter({
           onSecondary={onSecondary}
           secondaryLabel={secondaryLabel}
         />
-      ) : destination.kind === "catalog" ? (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void onConfirm()}
-          className={actionButtonClass("primary", "text-[16.5px] disabled:opacity-60")}
-        >
-          {busy ? <WineGlassLoader /> : null}
-          Add to the catalog
-        </button>
-      ) : (
+      ) : destination.kind === "cellar" ? (
         <CellarFooter
           busy={busy}
           currency={currency}
@@ -88,6 +80,18 @@ export function DestinationFooter({
           secondaryLabel={secondaryLabel}
           onMergedIntoLot={onMergedIntoLot}
         />
+      ) : (
+        // Catalog, or rate: one action and no fields ("Add to the catalog" /
+        // "Rate this wine").
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void onConfirm()}
+          className={actionButtonClass("primary", "text-[16.5px] disabled:opacity-60")}
+        >
+          {busy ? <WineGlassLoader /> : null}
+          {primaryAddLabel(destination)}
+        </button>
       )}
     </div>
   );

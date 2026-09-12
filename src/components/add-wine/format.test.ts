@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   glassLabel,
   identityFromPrefill,
+  ratePickPlan,
   scanTitle,
   vintageLabel,
   wineMetaFromExtracted,
@@ -147,5 +148,34 @@ describe("identityFromPrefill", () => {
     const tawny = identityFromPrefill(prefill({ vintageKind: "TAWNY", vintageYear: "", tawnyYears: "20" }));
     expect(tawny?.vintageTawnyYears).toBe(20);
     expect(identityFromPrefill(prefill({ vintageKind: "TAWNY", vintageYear: "" }))).toBeNull();
+  });
+});
+
+describe("ratePickPlan", () => {
+  it("takes a catalog wine (a search row, a matched scan) as it is", () => {
+    expect(ratePickPlan({ kind: "catalog", catalogWineId: "w1" })).toEqual({
+      kind: "pick",
+      pick: { catalogWineId: "w1" },
+    });
+  });
+  it("carries a cellar lot's wine and its consume choice through, with no lookup", () => {
+    expect(
+      ratePickPlan({ kind: "lot", lotId: "lot1", consume: true, catalogWineId: "w1" }),
+    ).toEqual({ kind: "pick", pick: { catalogWineId: "w1", lotId: "lot1", consume: true } });
+    expect(
+      ratePickPlan({ kind: "lot", lotId: "lot1", consume: false, catalogWineId: "w1" }),
+    ).toEqual({ kind: "pick", pick: { catalogWineId: "w1", lotId: "lot1", consume: false } });
+  });
+  it("refuses a lot that arrives without its wine instead of guessing", () => {
+    const plan = ratePickPlan({ kind: "lot", lotId: "lot1", consume: true });
+    expect(plan.kind).toBe("error");
+  });
+  it("finds or creates a by-hand identity (an unmatched scan) in the catalog first", () => {
+    const identity = identityFromPrefill(prefill());
+    expect(identity).not.toBeNull();
+    expect(ratePickPlan({ kind: "identity", identity: identity! })).toEqual({
+      kind: "catalog-first",
+      source: { kind: "identity", identity },
+    });
   });
 });

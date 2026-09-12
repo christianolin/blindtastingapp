@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { AddWineStart } from "./types";
 
 export type CameraStatus = "idle" | "starting" | "live" | "unavailable" | "denied";
 
@@ -13,6 +14,84 @@ export function cameraSupported(): boolean {
     typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices?.getUserMedia === "function"
   );
+}
+
+// ---------------------------------------------------------------------------
+// The device rule (owner feedback, 2026-09-12): the live camera is for phones
+// and tablets only. The add-wine sheet routes by INPUT TYPE, never by width —
+// a PC with a webcam gets the 7h desktop view (upload label photos, search,
+// cellar, by hand) at any window width, and a tablet wider than `md` still
+// gets the camera. Only the sheet's frame (full-screen below `sm`, a centred
+// card above) stays width-based, and that lives in CSS.
+// ---------------------------------------------------------------------------
+
+/** Touch-primary: the device's primary pointer is a finger (phone, tablet). */
+export const TOUCH_PRIMARY_QUERY = "(pointer: coarse)";
+
+/** The device rule as a plain, SSR-safe read — for a `useState` initialiser,
+    which has to pick the opening view before any subscription exists. */
+export function isTouchPrimary(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(TOUCH_PRIMARY_QUERY).matches
+  );
+}
+
+/**
+ * A live media query. The server snapshot is `false`, so a server render and
+ * its hydration agree on "no match" and the client value follows right after
+ * (no hydration mismatch); a client-only mount reads the real value at once.
+ */
+export function useMediaQuery(query: string): boolean {
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    [query],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
+}
+
+/** The device rule as a hook: true on a phone or tablet, false on a mouse /
+    trackpad device — and on the server (see `useMediaQuery`). */
+export function useTouchPrimary(): boolean {
+  return useMediaQuery(TOUCH_PRIMARY_QUERY);
+}
+
+/** The sheet views the device rule decides between. */
+export type DeviceRoutedView = "camera" | "search" | "cellar" | "byhand" | "desktop";
+
+/** The view a `start` opens on. Touch: the phone views, as they always were.
+    Mouse / trackpad: "camera", "search" and no start all open the desktop
+    view; cellar and by hand are the same branch on either device. */
+export function startViewFor(
+  start: AddWineStart | undefined,
+  touch: boolean,
+): DeviceRoutedView {
+  if (start === "cellar") return "cellar";
+  if (start === "byhand") return "byhand";
+  if (!touch) return "desktop";
+  return start === "search" ? "search" : "camera";
+}
+
+/** Where the sheet goes back to after a read, a confirm or an add. */
+export function homeViewFor(touch: boolean): "camera" | "desktop" {
+  return touch ? "camera" : "desktop";
+}
+
+/** A mouse device never shows the camera, nor the phone search view (which
+    it could only leave by a Scan control it does not get): either becomes
+    the desktop view, whose own field is the search. Applied at render, so it
+    also covers a pointer type that changes while the sheet is open. */
+export function viewForDevice<V extends string>(view: V, touch: boolean): V | "desktop" {
+  return !touch && (view === "camera" || view === "search") ? "desktop" : view;
 }
 
 /**

@@ -30,7 +30,9 @@ export type Choice = "flight" | "cellar" | "rate" | "catalog-only";
  *
  * Adds never happen here: `onAdd` hands the shell the source — the chosen
  * catalog match, or the identity built from the prefill when the read is
- * complete. An incomplete read routes to the by-hand form prefilled.
+ * complete. An incomplete read routes to the by-hand form prefilled. For the
+ * rate destination the same footer reads "Rate this wine" and the shell turns
+ * the source into a rate pick (the note opens) instead of an add.
  */
 export function ScanConfirm({
   ctx,
@@ -108,6 +110,10 @@ export function ScanConfirm({
   }
 
   const note = flightNote(ctx.destination);
+  // "Add and scan the next" keeps a camera going: touch devices only (the
+  // device rule — a mouse device's home is the upload zone, 2026-09-12), and
+  // never for a rate pick, which is one wine and then its note.
+  const scanNext = !ctx.isDesktop && ctx.destination.kind !== "rate";
   const incompleteHint = !primary && !identity
     ? prefill.vintagePrompt
       ? "No vintage read — you can type it on the next step."
@@ -200,14 +206,16 @@ export function ScanConfirm({
             {busy ? <WineGlassLoader /> : null}
             {primaryAddLabel(ctx.destination)}
           </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void add(true)}
-            className="flex min-h-11 w-full items-center justify-center gap-[9px] rounded-[11px] border-[1.5px] border-primary bg-card p-[13px] text-[15px] font-semibold text-primary shadow-[0_2px_0_0_rgba(42,33,30,.12)] transition-colors hover:bg-background disabled:opacity-60"
-          >
-            Add and scan the next
-          </button>
+          {scanNext ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void add(true)}
+              className="flex min-h-11 w-full items-center justify-center gap-[9px] rounded-[11px] border-[1.5px] border-primary bg-card p-[13px] text-[15px] font-semibold text-primary shadow-[0_2px_0_0_rgba(42,33,30,.12)] transition-colors hover:bg-background disabled:opacity-60"
+            >
+              Add and scan the next
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

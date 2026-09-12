@@ -66,11 +66,11 @@ src/components/add-wine/
   multi-add-stack.tsx      "use client" — 7d added rows / fix rows above the camera
   search-view.tsx          "use client" — 7e three-group list, adds on tap
   cellar-view.tsx          "use client" — 7f racks, filter chips, consume checkbox
-  by-hand-form.tsx         "use client" — 7g four fields + inferred card + More detail
+  by-hand-form.tsx         "use client" — 7g four fields + origin pickers + More detail
   desktop-view.tsx         "use client" — 7h search-leads layout with upload zone
   destination-footer.tsx   "use client" — the per-destination footer (flight / cellar / catalog)
   use-camera.ts            getUserMedia hook with graceful fallback
-  actions.ts               "use server" — search, infer, and the three non-redirecting writes
+  actions.ts               "use server" — search, the producer's home region, and the three non-redirecting writes
 src/components/add-wine-context.tsx   rewired provider (same exported API + openAddWineSheet)
 ```
 
@@ -80,10 +80,14 @@ Deleted (replaced): `catalog-add-wine-modal.tsx`, `cellar-add-wine-modal.tsx`,
 `/wines/new` and `/wines/[wineId]/edit` routes — its "Scan the label instead"
 button now opens the sheet with the flight destination), `new-wine-form.tsx`
 and `cellar-lot-form.tsx` (the `/catalog/new`, `/cellar/new` routes and
-`EditWineModal`), `cellar-lot-picker.tsx` (RateWineModal), `scan-button.tsx`,
+`EditWineModal`), `scan-button.tsx`,
 `tasting-scan-registrar.tsx`, `add-wine-button.tsx`, `app/scan/actions.ts`
 (`identifyWineFromLabel`, `resolveWinePrefill`, `createScannedWine` — unchanged
 signatures; the sheet reuses them).
+
+Also deleted (owner feedback, 2026-09-12): `rate-wine-modal.tsx`
+(`RateWineModal`) and `cellar-lot-picker.tsx`, which only it used — Taste &
+rate is now the sheet's `rate` destination (see "Rate destination" below).
 
 ## Contracts (`src/components/add-wine/types.ts`)
 
@@ -101,13 +105,14 @@ export type AddWineDestination =
       position: number;
     }
   | { kind: "cellar" }
-  | { kind: "catalog" };
+  | { kind: "catalog" }
+  | { kind: "rate" };          // Taste & rate: one pick, then its WSET note (2026-09-12)
 
 export type AddWineStart = "camera" | "search" | "cellar" | "byhand";
 
 export type AddWineOpenOptions = {
-  start?: AddWineStart;        // default: camera on phones, search on desktop
-  multi?: boolean;             // open straight into the 7d stacked mode (bulk)
+  start?: AddWineStart;        // default: camera on touch devices, the desktop view on a mouse / trackpad
+  multi?: boolean;             // open straight into the 7d stacked mode (bulk); ignored for rate
   /** Called after every successful add (the sheet stays open in multi mode). */
   onAdded?: (added: AddedWine) => void;
 };
@@ -115,11 +120,14 @@ export type AddWineOpenOptions = {
 export type AddedWine = {
   catalogWineId: string;
   label: string;               // "Produttori del Barbaresco 2018"
-  destination: NonNullable<AddWineDestination>["kind"];
+  destination: Exclude<AddWineDestination["kind"], "rate">; // a rate pick is not an add
   glass?: number;              // flight
   lotId?: string;              // cellar
   wineId?: string;             // flight: wines.id
 };
+
+/** A rate pick → the provider's NewNoteModal (cellarConsume when consume && lotId). */
+export type RatePick = { catalogWineId: string; lotId?: string | null; consume?: boolean };
 
 /** A scanned bottle waiting for a fix before it can be added (7d "Fix"). */
 export type PendingScan = {
@@ -157,7 +165,7 @@ export type ByHandIdentity = {
 
 export type AddSource =
   | { kind: "catalog"; catalogWineId: string }
-  | { kind: "lot"; lotId: string; consume: boolean }
+  | { kind: "lot"; lotId: string; consume: boolean; catalogWineId?: string } // wine carried from the row for a rate pick; writes ignore it
   | { kind: "identity"; identity: ByHandIdentity };
 
 export type AddResult =
@@ -172,7 +180,7 @@ export type AddResult =
   2. **catalog**: `search_catalog_wines(p_query, p_limit: 20)` minus blind-pending rows, with `catalog_wine_ratings` (`avg_score`, `note_count`) and `image_url`.
   3. **tasted**: my `wset_notes` whose wine matches (join on the same ids), newest first, with my score and date.
   Empty query → all three empty (the sheet shows the hint). Never preload appellations/producers.
-- `inferFromProducer(producerId: string): Promise<{ countryId; countryName; regionId; regionName; appellationId; appellationName; primaryGrapeId; primaryGrapeName } | null>` — region/country from `producers.region_id`; appellation = the region's self-named appellation (`stripClassSuffix(fold(name)) === fold(region)`) else the most common appellation among that producer's `catalog_wines`; grape = the most common `primary_grape_id` among that producer's catalog wines, else the most common among the region's catalog wines, else null (the by-hand form then asks). Returns null when the producer has no region.
+- `producerHomeRegion(producerId: string): Promise<{ countryId; countryName; regionId; regionName } | null>` — the producer's home region: the region from `producers.region_id` and that region's country. Returns null when the producer has no region (the ~5% genuinely multi-region producers are left without one on purpose) or a row is missing. It never returns an appellation or a grape. **Owner decision, 2026-09-12:** this replaces `inferFromProducer`, which also guessed an appellation (the region's self-named one, else the producer's most common catalog appellation) and a grape (the producer's most common primary grape, else the region's). The owner called filling the grape or the appellation from the producer "nonsense": a producer makes wines from many appellations and many grapes, so nothing about a new wine's appellation or grape follows from its producer, from that producer's other catalog wines, or from the region's most common grape.
 - `addToFlight(tastingId: string, source: AddSource): Promise<AddResult>` — catalog → the existing private `insertTastingWineFromCatalog` (exported now as `insertTastingWineFromCatalogRow` or called via a new exported wrapper in `wines/new/actions.ts`); lot → `addTastingWineFromCellarLot(tastingId, lotId, { consume })` (existing; keep its best-effort consume + warning); identity → the `addWine` write path factored into a callable `insertTastingWineFromIdentity(tastingId, identity)` inside `wines/new/actions.ts` (same floor, same `find_or_create_catalog_wine`, `syncCatalogWine`, pending producer/grape created on save). All three end with `revalidatePath("/tastings/${tastingId}")` and return `{ ok, added: { glass: position, label, wineId, catalogWineId } }` — **no redirect**. Fix while here: `insertTastingWineFromCatalog` must set `is_revealed: reveal_mode === "OPEN"` like `addWine` does.
 - `addToCellar(source: Exclude<AddSource, {kind:"lot"}>, lot: { quantity: number; storageLocation: string | null; pricePerBottle: number | null; currency: string | null }): Promise<AddResult>` — `addCellarLot` (existing, returns `{id}|{error}`) with `catalogWineId` or the identity keys; `bottleSizeMl` 750; `revalidatePath("/cellar")`.
 - `addToCatalog(source: Exclude<AddSource, {kind:"lot"}>): Promise<AddResult>` — catalog: no-op success (already there); identity → `find_or_create_catalog_wine` through `createCatalogWine`'s payload rules (pending producer/grapes resolved first); `revalidatePath("/catalog")`.
@@ -186,7 +194,11 @@ State: `view: "camera" | "reading" | "confirm" | "search" | "cellar" | "byhand" 
 
 Header (dark on the camera views, parchment elsewhere): ✕ (or ← inside cellar/by-hand, returning to the previous view), two-line title — mono eyebrow with the context (tasting name; "Cellar"; "Catalog"; nothing when no destination) and the title: flight "Add wine · glass {position}", cellar "Add a bottle", catalog "Add a wine", none "Scan"; multi mode: title "Adding to the flight" + a gold "+{n} added" badge.
 
-Phones start on the camera unless `start` says otherwise; desktop (`md+`) starts on `desktop-view` (7h) unless `start === "camera"` and a camera is available.
+**Device rule — by input type, not width (owner feedback, 2026-09-12).** The live camera is for phones and tablets only. Shown the dark live Scan view with a PC's webcam in the viewfinder, the owner: "That shouldn't be possible on PC, only tablet and phone. It should be more like the add a bottle to cellar flow where you can add from photos." The sheet routes on `(pointer: coarse)` — `useTouchPrimary()` / `isTouchPrimary()` and the pure `startViewFor` / `homeViewFor` / `viewForDevice` in `use-camera.ts` — never on `md`:
+- **Touch-primary** (phones, and tablets at any width): the phone views exactly as before — camera home (Library when `getUserMedia` is missing), search, cellar, by hand, reading / confirm, multi-add with Many. A tablet gets the camera inside the centred card, which takes the full `88vh` on the photo views so the viewfinder keeps its height.
+- **Mouse / trackpad** (any window width): home is the desktop view (7h). `start: "camera"`, `start: "search"` and no `start` all open it; `"cellar"` and `"byhand"` open those views; after a read, a confirm or an add the sheet returns to it. No path reaches the camera view or the phone search view (the confirm view's "Search by name" lands on the desktop view's own field and focuses it), and no Scan, "Scan instead", "Add and scan the next" or Many control shows. The shell hides its own scan pills and drops the cellar-fields footer's "Add and scan the next" on a mouse device (`ctx.isDesktop` now means "mouse / trackpad device", so views gate on it); the confirm view's own "Add and scan the next" hides on `ctx.isDesktop` as well (closed 2026-09-12 alongside the rate destination). With no destination the photo views are titled "Add wine", not "Scan".
+- **Header button** (`scan-button.tsx`): opens the sheet the same way on both (`start: "camera"`), but a mouse device shows lucide `ImagePlus` labelled "Add a wine from label photos" (touch: `Camera`, "Scan a wine label"). The glyph is picked in CSS (`pointer-coarse:`) so the server HTML paints the right one; only the aria-label follows the hook after hydration.
+- Only the frame stays width-based (full-screen below `sm`, a centred card above). The legacy entries — `openScan`, `openBulkScan`, `openTastingScan` and the tasting wine form's "Scan the label instead" — pass `start: "camera"` and need no change: on a mouse device they open the desktop view (bulk: in multi mode, into the cellar).
 
 ### Camera view (7b, `camera-view.tsx` + `use-camera.ts`)
 - `useCamera()` → `{ status: "idle" | "starting" | "live" | "unavailable" | "denied"; videoRef; capture(): Promise<Blob | null>; stop() }` using `navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })`; capture draws the current frame to a canvas scaled to max 1600px on the long side, `toBlob("image/jpeg", 0.85)`. Stops tracks on unmount and when the sheet leaves the camera view.
@@ -199,25 +211,31 @@ Phones start on the camera unless `start` says otherwise; desktop (`md+`) starts
 - "Matched in the catalog": `matches[0]` as the gold-bordered primary card with a check disc; `matches[1..4]` as rows with "Use this" (swaps the primary). No matches → the card reads "Not in the catalog yet — we'll add it" and the footer adds by hand from the prefill.
 - Recovery row: "Wrong bottle?" Rescan · Search by name · By hand (by hand opens `by-hand-form` prefilled from `resolveWinePrefill(extracted)`).
 - Flight destination note: "Only you see this until the reveal. Tasters see "glass N"." (BYO: "Only you see this until the reveal.").
-- Footer: primary "Add as glass N" / "Add to cellar" (opens the cellar footer fields first) / "Add to the catalog"; secondary "Add and scan the next" (flight and cellar only; catalog too — it just keeps scanning). Prefill missing a vintage (`vintagePrompt`) and no catalog match → the row goes to `pending` with `problem: "no-vintage"` and the sheet returns to the camera (7d).
-- No destination (7i): the panel is the 7i dark footer instead — "Found in the catalog" eyebrow (or "Read from the label"), title, meta, then "Where does it go?": **Tonight's flight · glass N** (gold, only when `activeTasting` or the Overview's live/next tasting exists — passed in as `flightHint`), **My cellar** ("pick a rack after" → cellar footer with quantity 1), **Rate it now** (adds to the catalog if needed, then opens `NewNoteModal` for the catalog wine — via `TasteLauncherProvider`'s existing rate-pick path), **Just remember it — save to the catalog only**.
+- Footer: primary "Add as glass N" / "Add to cellar" (opens the cellar footer fields first) / "Add to the catalog" / "Rate this wine"; secondary "Add and scan the next" (flight and cellar only; catalog too — it just keeps scanning; hidden on a mouse / trackpad device and for rate). Prefill missing a vintage (`vintagePrompt`) and no catalog match → the row goes to `pending` with `problem: "no-vintage"` and the sheet returns to the camera (7d).
+- No destination (7i): the panel is the 7i dark footer instead — "Found in the catalog" eyebrow (or "Read from the label"), title, meta, then "Where does it go?": **Tonight's flight · glass N** (gold, only when `activeTasting` or the Overview's live/next tasting exists — passed in as `flightHint`), **My cellar** ("pick a rack after" → cellar footer with quantity 1), **Rate it now** (adopts the `rate` destination, so the add becomes a rate pick: finds or creates the catalog wine if needed, closes, and `AddWineProvider` opens `NewNoteModal` — see "Rate destination"), **Just remember it — save to the catalog only**.
 
 ### Multi-add (7d, `multi-add-stack.tsx`)
 Stack above the viewfinder: each `AddedWine` as a row with a gold check and "glass N" / "in cellar"; each `PendingScan` as a rose-tinted row "{title} · no vintage read" with **Fix** → an inline strip (year input, "NV" button) that completes the prefill and adds it. Viewfinder caption "Next bottle · glass {next}". Footer: gold "Done · {n} wines added" (closes; `router.refresh()`). This replaces `openBulkScan()`.
 
 ### Search (7e, `search-view.tsx`)
-Header gains a "Scan" button (back to camera; hidden on desktop without a camera). Search field autofocused only via the user's tap (the field is what they tapped to get here — focus synchronously in that handler, per the combobox rule), 250 ms debounce, "{n} found". Three groups with eyebrow headers "In your cellar" (+ "{n} bottles you can pour tonight" when `drinkNow` > 0), "In the catalog", "You have tasted before"; rows: 28×38 thumb, title 14.5px/600, meta line, a `+` disc (filled bordeaux for the first cellar row, gold-outlined otherwise); **tap adds** (`addToFlight`/`addToCellar`/`addToCatalog` per destination; cellar destination with a catalog row → the cellar footer fields appear inline under the row before adding; cellar rows are hidden when the destination is cellar). `inFlight` rows are disabled and read "in flight". Footer: "Nothing matches?" → **Add it by hand**. Empty query → hint "Search by producer, wine or appellation".
+Header gains a "Scan" button (back to camera; touch devices only — a mouse / trackpad device never shows this view, see the device rule under "The sheet"). Search field autofocused only via the user's tap (the field is what they tapped to get here — focus synchronously in that handler, per the combobox rule), 250 ms debounce, "{n} found". Three groups with eyebrow headers "In your cellar" (+ "{n} bottles you can pour tonight" when `drinkNow` > 0), "In the catalog", "You have tasted before"; rows: 28×38 thumb, title 14.5px/600, meta line, a `+` disc (filled bordeaux for the first cellar row, gold-outlined otherwise); **tap adds** (`addToFlight`/`addToCellar`/`addToCatalog` per destination; cellar destination with a catalog row → the cellar footer fields appear inline under the row before adding; cellar rows are hidden when the destination is cellar). `inFlight` rows are disabled and read "in flight". Footer: "Nothing matches?" → **Add it by hand**. Empty query → hint "Search by producer, wine or appellation".
 
 ### Cellar as a source (7f, `cellar-view.tsx`)
 Loads `listMyCellarLots()` (existing) plus drink windows and the flight's catalog ids. Header "From my cellar" + "{n} bottles". Filter chips: `Drink now {n}` (window open this year), then one chip per distinct `storage_location` ("Rack A"…), all toggleable single-select. Rows: thumb, title, "{rack} · {n} bottles · in its window"; selected row gets the check disc; `inFlight` rows disabled ("in flight" / "already glass N"). Footer (flight): checked checkbox "Take it out of the cellar when we pour it" + "Add as glass N" (`addToFlight({kind:"lot", consume})`). Cellar view is hidden for the cellar destination (a cellar bottle is already in the cellar) and offered for catalog only as "already catalogued" (no-op) — so the chip is shown only for flight/none.
 
 ### By hand (7g, `by-hand-form.tsx`)
 Four required fields in order: **Producer** (`SearchableCombobox` over `searchProducers`, `onCreate` pending — shows the gold "Cigliuti · Neive, Piedmont · 4 wines" suggestion row from `searchProducers` results with region name; no fork of reference data), **Wine name**, **Vintage** (year input; NV / tawny via a small segmented control YEAR · NV · Tawny), **Colour** (segmented Red · White · Other; "Other" reveals a Rosé / Orange pair). Style defaults to STILL; "Sparkling / Sweet / Fortified" live under More detail.
-Once a producer is picked, `inferFromProducer` fills the gold **"Filled in from the producer"** card (chips country / region / appellation / grape) with "Change ▾" expanding the full `WineIdentityFields`-style pickers (country → region → appellation cascade, grape blend) and the caveat copy verbatim. Missing inference → the pickers are shown expanded with the copy "We couldn't guess the origin — pick it here."
+**Origin: always the full pickers (owner decision, 2026-09-12).** Under the four fields the origin is always expanded: **Country → Region → Appellation** (the cascade: changing the country clears the region and appellation, changing the region clears the appellation), then **Grape**. All four are required (`missingFields` is unchanged). There is no collapsed chip card and no "Change ▾". The handoff's gold "Filled in from the producer" card was a mockup mistake. Owner feedback on the by-hand entry: filling the grape or the appellation from the producer "doesn't make sense at all". A producer makes wines from many appellations and many grapes, so nothing about a new wine's appellation or grape follows from its producer, from that producer's other catalog wines, or from the region's most common grape. The one convenience kept:
+- **Home region.** When the chosen producer has a home region (`producerHomeRegion`, from `producers.region_id`) and neither the taster nor a label read has set the country or region, both are prefilled from it (`applyProducerRegion`, `originSource: "producer"`). One muted line under Region says "From the producer's home region — change it if this wine comes from elsewhere." The appellation and grape start empty.
+- **Changing the producer.** Picking a different producer replaces a producer-prefilled region. A producer with no home region, a pending new producer or a failed lookup clears it, so it never stands under the wrong producer. A hand-picked origin (`manual`: any country, region or appellation pick) or a label-read one (`prefill`, even a country-only read) is never replaced. Picking an appellation commits the region above it, so an appellation is never stranded under another region. Picking the grape does not count as setting the origin.
+- **Label read.** A label-read origin shows "Read from the label — check it." under Region, or "Country read from the label — pick the region." when the read found only the country.
+- **Suggestion row.** The producer's gold suggestion row stays. It confirms which producer was picked and fills nothing.
 **More detail** (collapsed): secondary grape, type designation, style, alcohol %, description, label photo (`ImageUploader`, folder `catalog/staging/${userId}` or the tasting id for flight).
 Footer: destination action + "Also saved to the catalog, so nobody has to type it again." All fields are controlled state (the sheet can be open on a polling page).
 
-### Desktop (7h, `desktop-view.tsx`, `md+`)
+### Desktop (7h, `desktop-view.tsx`, mouse / trackpad devices at any width)
+**Owner feedback, 2026-09-12:** this view is the home of every mouse / trackpad device, not of `md+` — a PC with a webcam never gets the live camera (see the device rule under "The sheet"); "Upload label photos" is how a PC adds from photos, "more like the add a bottle to cellar flow". Because routing no longer follows width, it also lays out in a narrow desktop window: below `md` the upload zone and the two tiles stack vertically; below `sm` each result row moves its keep-in-cellar toggle and add button to a second line under the title, and the `↵` hint is hidden; the footer is sticky to the bottom of the scroll region (Done stays in reach under a long list) and its sentence wraps — nothing scrolls sideways at 390px. The confirm view's "Search by name" lands here with the search field focused.
+
 Search leads: full-width field with `↵ adds the first hit`; result rows state the source ("In your cellar · rack B · 2 bottles · ★ 91" / "Catalog · ★ 95 · 22 notes") with an inline "Add as glass N" (first row primary, others "Add"); Enter adds the first row. Below: **Upload label photos** dashed zone (multiple files; each goes through the phone's read-and-match path, stacking into the 7d list) and two tiles **From my cellar** ("{n} bottles · {m} ready to drink") and **Add it by hand** ("Producer, name, vintage, colour"). Footer: "Glasses 1–{n} are set. Adding does not close this — keep going until the flight is full." + **Done**. Cellar/catalog destinations use the same layout with their own footer sentence ("Added {n} to your cellar").
 
 ### Destination footer (`destination-footer.tsx`)
@@ -225,12 +243,25 @@ Search leads: full-width field with `↵ adds the first hit`; result rows state 
 - cellar: quantity stepper (default 1), rack (text, suggestions from existing `storage_location`s), optional price in the profile currency → **Add to cellar**. Duplicate-lot rule: if I already hold the wine, offer "Add {n} to the existing lot" vs "Keep as a separate lot" (existing `findMyCellarLotsForWine` / `increaseCellarLotQuantity`).
 - catalog: **Add to the catalog**.
 
+### Rate destination (Taste & rate, `{ kind: "rate" }`)
+**Owner feedback, 2026-09-12:** "When I click Taste and Rate on the PC, it prompts a taste and rate wine dialog window which lets you scan label. That shouldn't be possible on PC, only tablet and phone. It should be more like the add a bottle to cellar flow where you can add from photos." `RateWineModal` (Scan a label / From my cellar / Add manually + a catalog search) is **deleted**, with `cellar-lot-picker.tsx`. `openTaste("rate")` opens this sheet with `{ kind: "rate" }`, so the device rule applies unchanged: the camera on a phone or tablet, the desktop view (search, a label-photo upload, From my cellar, Add it by hand) on a mouse / trackpad device.
+- **Copy.** Header eyebrow "Taste & rate", title "Which wine are you tasting?" (on the cellar / by-hand branches the eyebrow stays "Taste & rate" and the title names the branch). The action on a row, a confirmed scan, the 7f footer and the by-hand form reads **Rate this wine** (desktop: the first row; the other rows read "Rate" and `↵ picks the first hit`; phone search rows swap the `+` disc for a chevron). Desktop upload zone: "Upload a label photo" · "Upload a photo of the label — we find the wine, then its note opens." It takes ONE file: the picker has no `multiple`, and extra dropped files are skipped by name ("one photo at a time"). Desktop footer: "Pick the wine you are tasting — its note opens next." with **Close** instead of Done.
+- **Single pick.** Never writes to a flight or a cellar. No multi mode (`options.multi` is ignored), no Many, no "Add and scan the next", no keep-going, no 7i chooser, and no "in flight" rows (no tasting is looked up, not even a registered flight hint). A rate pick produces no `AddedWine` and does not call `onAdded`.
+- **Resolving the wine** (`ratePickPlan` in `format.ts`, run by the shell's `pickToRate`):
+  - a catalog row or a matched scan → that `catalogWineId`;
+  - a cellar lot row → the lot's catalog wine, carried on the source (`{ kind: "lot", lotId, consume, catalogWineId }` — every view that lists lots already has it, so there is no lookup);
+  - a by-hand identity or an unmatched scan → `addToCatalog(source)` (the existing find-or-create) first, then its `catalogWineId`. An incomplete read goes through the prefilled by-hand form, whose submit is this identity case.
+  Then the sheet closes and calls `onRate(pick)`.
+- **Cellar bottles.** Cellar rows carry "Take a bottle out of the cellar when I save the note", **on** by default (desktop: on each row; phone search: the line above the cellar group; 7f: the footer checkbox for the selected lot). The sheet draws nothing down: `AddWineProvider` renders `NewNoteModal` with `cellarConsume={{ lotId }}` when the pick says `consume`, and `NewNoteModal` calls `consume_cellar_lot` (reason DRANK, linked to the note) only after the note saves. Closing the note unsaved leaves the cellar as it was.
+- **7i "Rate it now"** adopts `{ kind: "rate" }` and takes the same path through the same callback.
+
 ### Provider (`add-wine-context.tsx`)
 Same exported names, new semantics:
 - `openAddWine(kind, opts?)`: `"catalog"` → sheet with `{kind:"catalog"}`; `"cellar"` → `{kind:"cellar"}` (opts `cellarWine` → opens on the cellar footer for that wine; `cellarNew` → by-hand prefilled); `"tasting"` → `activeTasting` flight (no-op when none).
 - `openScan(target)`: catalog/cellar → those destinations with `start: "camera"`; `"choose"` → destination `null`, `start: "camera"`.
 - `openBulkScan()`: `{kind:"cellar"}`, `multi: true`, camera.
 - new `openAddWineSheet(destination: AddWineDestination | null, options?: AddWineOpenOptions)`.
+- the sheet's `onRate(pick: RatePick)` (the rate destination, and 7i "Rate it now") → `NewNoteModal` for `pick.catalogWineId`, with `cellarConsume={{ lotId }}` only when `pick.consume && pick.lotId`. The bottle is drawn down when the note saves, never by the sheet. `openTaste("rate")` is `openAddWineSheet({ kind: "rate" })`.
 - `activeTasting` now carries `{ tastingId, tastingName, revealMode, wineSource, position }` (registered by `TastingScanRegistrar`, which the tasting page renders whenever `canAddWine` — running or not, since adding mid-tasting is normal).
 - `flightHint` for 7i: the provider fetches nothing; the Overview passes its live/next tasting through `TastingScanRegistrar`-style registration (`registerFlightHint`) when the banner has one.
 
@@ -252,7 +283,7 @@ src/app/tastings/new/actions.ts             createTasting returns { id }; + upda
 src/app/j/[code]/page.tsx                   join by code
 ```
 
-`taste-launcher-context.tsx` keeps `openTaste(kind)`; `"blind"|"semi-blind"` open the sheet with that mode as the **default**; `"open"` is removed from the launcher (OPEN is "Soon" in the sheet and RateWineModal's "Taste together" button goes).
+`taste-launcher-context.tsx` keeps `openTaste(kind)` with `TasteKind = "blind" | "rate"`. `"blind"` opens this sheet (BLIND is the default; the sheet's own mode control switches to semi-blind). `"rate"` opens the add-wine sheet with `{ kind: "rate" }` (owner feedback, 2026-09-12: `RateWineModal` is deleted, see Part 1 "Rate destination"). `"open"` and `"semi-blind"` are not launcher kinds; OPEN is "Soon" in the sheet.
 
 ## Step 1 · Setup (6a / 6d)
 Header: eyebrow "Step 1 of 3 · setup", title "New tasting", the three-dash progress rail, ✕. Fields (all controlled):

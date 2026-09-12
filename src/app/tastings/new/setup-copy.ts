@@ -23,6 +23,8 @@ export type SetupValues = {
   flow: FlowChoice;
   leaderboardReveal: WineLeaderboardReveal;
   asyncRevealPolicy: AsyncRevealPolicy;
+  /** Public URL of the optional cover photo (Storage `tasting-images`), or null. */
+  imageUrl: string | null;
 };
 
 export function defaultSetup(revealMode: RevealMode): SetupValues {
@@ -35,6 +37,7 @@ export function defaultSetup(revealMode: RevealMode): SetupValues {
     flow: "GUIDED",
     leaderboardReveal: "PER_ATTRIBUTE",
     asyncRevealPolicy: "AFTER_ALL",
+    imageUrl: null,
   };
 }
 
@@ -69,6 +72,8 @@ export function buildSetupFormData(v: SetupValues): FormData {
   fd.set("async_reveal_policy", v.asyncRevealPolicy);
   fd.set("scheduled_at", v.scheduledLocal);
   fd.set("scheduled_at_iso", localToIso(v.scheduledLocal) ?? "");
+  // Blank when there is no photo; the action reads "" as null.
+  fd.set("image_url", v.imageUrl ?? "");
   fd.set("emails", "");
   return fd;
 }

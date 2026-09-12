@@ -17,11 +17,24 @@ export function confidenceChip(confidence: ExtractedLabel["confidence"]): {
   return { label: "HARD TO READ", tone: "hard" };
 }
 
-/** The confirm footer's primary action, per destination. */
+/** The confirm footer's primary action, per destination. A rate pick adds
+    nothing anywhere — it opens the wine's note. */
 export function primaryAddLabel(destination: AddWineDestination): string {
   if (destination.kind === "flight") return `Add as ${glassLabel(destination.position)}`;
   if (destination.kind === "cellar") return "Add to cellar";
+  if (destination.kind === "rate") return "Rate this wine";
   return "Add to the catalog";
+}
+
+/**
+ * A cellar lot's "draw it down" choice, default on everywhere. Poured into a
+ * flight, the add itself consumes the bottle; for a rate pick nothing is
+ * consumed until the WSET note saves (NewNoteModal's `cellarConsume`).
+ */
+export function consumeLabel(destination: AddWineDestination | null): string {
+  return destination?.kind === "rate"
+    ? "Take a bottle out of the cellar when I save the note"
+    : "Take it out of the cellar when we pour it";
 }
 
 /**

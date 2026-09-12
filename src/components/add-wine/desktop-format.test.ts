@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   cellarSummary,
   cellarTileSubtitle,
+  enterHint,
   flattenSearchGroups,
+  footerButtonLabel,
   footerSentence,
   pickImageFiles,
   rowActionLabel,
   uploadZoneCopy,
+  uploadZoneLabels,
 } from "./desktop-format";
 import type { AddWineDestination, SearchGroups } from "./types";
 
@@ -137,20 +140,49 @@ describe("flattenSearchGroups", () => {
 });
 
 describe("rowActionLabel", () => {
-  it("names the destination on the primary row and says Add elsewhere", () => {
-    expect(rowActionLabel(flight, { primary: true, inFlight: false })).toBe("Add as glass 4");
-    expect(rowActionLabel({ kind: "cellar" }, { primary: true, inFlight: false })).toBe(
-      "Add to cellar",
-    );
-    expect(rowActionLabel({ kind: "catalog" }, { primary: true, inFlight: false })).toBe(
-      "Add to the catalog",
-    );
-    expect(rowActionLabel(null, { primary: true, inFlight: false })).toBe("Add");
-    expect(rowActionLabel(flight, { primary: false, inFlight: false })).toBe("Add");
+  it("names the destination", () => {
+    expect(rowActionLabel(flight, { inFlight: false })).toBe("Add as glass 4");
+    expect(rowActionLabel({ kind: "cellar" }, { inFlight: false })).toBe("Add to cellar");
+    expect(rowActionLabel({ kind: "catalog" }, { inFlight: false })).toBe("Add to the catalog");
+    expect(rowActionLabel(null, { inFlight: false })).toBe("Add");
+  });
+  it("rates rather than adds for Taste & rate", () => {
+    expect(rowActionLabel({ kind: "rate" }, { inFlight: false })).toBe("Rate this wine");
   });
   it("reads In flight for a wine already poured", () => {
-    expect(rowActionLabel(flight, { primary: true, inFlight: true })).toBe("In flight");
-    expect(rowActionLabel(flight, { primary: false, inFlight: true })).toBe("In flight");
+    expect(rowActionLabel(flight, { inFlight: true })).toBe("In flight");
+    expect(rowActionLabel(null, { inFlight: true })).toBe("In flight");
+  });
+  // Owner feedback 2026-09-12: a first row reading "Add to cellar" over
+  // others reading "Add" looked like two different actions. The ↵ target is
+  // shown by the row's tint and the field hint, never by its button.
+  it("gives every addable row in a result list the same label", () => {
+    const g = groups();
+    g.catalog[2].inFlight = true;
+    const rows = flattenSearchGroups(g, { includeCellar: true, now });
+    expect(rows.map((r) => rowActionLabel(flight, r))).toEqual([
+      "Add as glass 4",
+      "Add as glass 4",
+      "In flight",
+    ]);
+    const cellarRows = flattenSearchGroups(groups(), { includeCellar: false, now });
+    const cellarLabels = cellarRows.map((r) => rowActionLabel({ kind: "cellar" }, r));
+    expect(new Set(cellarLabels)).toEqual(new Set(["Add to cellar"]));
+    expect(cellarLabels).toHaveLength(3);
+  });
+});
+
+describe("enterHint / footerButtonLabel", () => {
+  it("says what ↵ does", () => {
+    expect(enterHint(flight)).toBe("↵ adds the first hit");
+    expect(enterHint(null)).toBe("↵ adds the first hit");
+    expect(enterHint({ kind: "rate" })).toBe("↵ picks the first hit");
+  });
+  it("closes a rate pick, finishes an add session", () => {
+    expect(footerButtonLabel(flight)).toBe("Done");
+    expect(footerButtonLabel({ kind: "cellar" })).toBe("Done");
+    expect(footerButtonLabel(null)).toBe("Done");
+    expect(footerButtonLabel({ kind: "rate" })).toBe("Close");
   });
 });
 
@@ -181,6 +213,11 @@ describe("footerSentence", () => {
     );
     expect(footerSentence(null, 0)).toBe("Nothing added yet. Adding does not close this — keep going.");
     expect(footerSentence(null, 3)).toBe("Added 3 so far. Adding does not close this — keep going.");
+  });
+  it("points a rate pick at the note, with no keep-going", () => {
+    expect(footerSentence({ kind: "rate" }, 0)).toBe(
+      "Pick the wine you are tasting — its note opens next.",
+    );
   });
 });
 
@@ -233,6 +270,21 @@ describe("pickImageFiles", () => {
       pickImageFiles([{ name: "a.jpg", size: 5 * mb, type: "image/jpeg" }]).accepted,
     ).toHaveLength(1);
   });
+  it("keeps only the first usable photo when capped, naming the rest", () => {
+    const r = pickImageFiles(
+      [
+        { name: "notes.pdf", size: 1 * mb, type: "application/pdf" },
+        { name: "a.jpg", size: 1 * mb, type: "image/jpeg" },
+        { name: "b.jpg", size: 1 * mb, type: "image/jpeg" },
+      ],
+      { max: 1 },
+    );
+    expect(r.accepted.map((f) => f.name)).toEqual(["a.jpg"]);
+    expect(r.skipped).toEqual([
+      { name: "notes.pdf", reason: "not an image" },
+      { name: "b.jpg", reason: "one photo at a time" },
+    ]);
+  });
 });
 
 describe("uploadZoneCopy", () => {
@@ -243,5 +295,28 @@ describe("uploadZoneCopy", () => {
     expect(uploadZoneCopy({ kind: "cellar" })).toMatch(/and lands in your cellar\.$/);
     expect(uploadZoneCopy({ kind: "catalog" })).toMatch(/and lands in the catalog\.$/);
     expect(uploadZoneCopy(null)).toMatch(/and you choose where each one goes\.$/);
+    expect(uploadZoneCopy({ kind: "rate" })).toBe(
+      "Upload a photo of the label — we find the wine, then its note opens.",
+    );
+  });
+});
+
+describe("uploadZoneLabels", () => {
+  it("takes several photos for an add", () => {
+    expect(uploadZoneLabels(flight)).toEqual({
+      title: "Upload label photos",
+      drop: "Drop photos here",
+      hint: "or choose files · JPG, PNG, up to 5MB each",
+      multiple: true,
+    });
+    expect(uploadZoneLabels(null).multiple).toBe(true);
+  });
+  it("takes one photo for a rate pick", () => {
+    expect(uploadZoneLabels({ kind: "rate" })).toEqual({
+      title: "Upload a label photo",
+      drop: "Drop a photo here",
+      hint: "or choose a file · JPG, PNG, up to 5MB",
+      multiple: false,
+    });
   });
 });
