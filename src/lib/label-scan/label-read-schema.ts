@@ -157,10 +157,15 @@ function integerIn(v: unknown, min: number, max: number): number | null {
   return typeof v === "number" && Number.isInteger(v) && v >= min && v <= max ? v : null;
 }
 
-/** Rule 8: a value outside the schema's list is unknown, never a throw. */
+/** Rule 8: a value outside the schema's list is unknown, never a throw. Values
+    are compared folded, because the enums reach the API only as description
+    text: "Red", "Rosé" and "n/v" are the schema's RED, ROSE and NV, not unknowns.
+    No two options of one list fold alike. */
 function oneOf<T extends string>(options: readonly T[], v: unknown): T | null {
   const s = text(v);
-  return s !== null && (options as readonly string[]).includes(s) ? (s as T) : null;
+  if (s === null) return null;
+  const key = foldName(s);
+  return key === "" ? null : (options.find((option) => foldName(option) === key) ?? null);
 }
 
 /** Rule 7: in (0, 100) after rounding to one decimal, matching numeric(4,1) and
@@ -172,7 +177,10 @@ function alcohol(v: unknown): number | null {
 }
 
 /** Rule 6: trimmed names, blanks dropped, a percentage only in (0, 100], and
-    folded duplicates dropped with the first one kept. */
+    folded duplicates dropped with the first one kept. A name that folds to
+    nothing ("—", or a non-Latin spelling) is dropped too, not keyed on "" where
+    every such name would collide: it is no usable grape name, matching
+    `normaliseBlend`'s rule for pending rows in wine-identity/complete.ts. */
 function grapeList(v: unknown): LabelRead["grapes"] {
   if (!Array.isArray(v)) return [];
   const seen = new Set<string>();
@@ -183,7 +191,7 @@ function grapeList(v: unknown): LabelRead["grapes"] {
     const name = text(rawName);
     if (name === null) continue;
     const key = foldName(name);
-    if (seen.has(key)) continue;
+    if (key === "" || seen.has(key)) continue;
     seen.add(key);
     const percentage =
       typeof rawPercentage === "number" && Number.isFinite(rawPercentage) && rawPercentage > 0 && rawPercentage <= 100
@@ -205,9 +213,13 @@ export function coerceLabelRead(raw: unknown): LabelRead {
     typeof raw === "object" && raw !== null && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
 
   const vintageYear = integerIn(r.vintageYear, YEAR_MIN, YEAR_MAX);
-  const vintageKind = oneOf(VINTAGE_KINDS, r.vintageKind) ?? (vintageYear !== null ? "YEAR" : "NV");
+  const readKind = oneOf(VINTAGE_KINDS, r.vintageKind);
+  // Rule 8's default fills the shape; it is not something the label said.
+  const vintageKind = readKind ?? (vintageYear !== null ? "YEAR" : "NV");
   const vintageTawnyYears = vintageKind === "TAWNY" ? integerIn(r.vintageTawnyYears, TAWNY_MIN, TAWNY_MAX) : null;
-  // Rule 4: an empty YEAR or TAWNY shape never counts as read.
+  // Rule 4: an empty YEAR or TAWNY shape never counts as read, and neither does
+  // a kind rule 8 had to supply — a defaulted NV would otherwise complete the
+  // vintage (a "20 years" tawny saved as NV) and skip the partial-read path (D7).
   const vintageShapeFilled =
     vintageKind === "YEAR" ? vintageYear !== null : vintageKind === "TAWNY" ? vintageTawnyYears !== null : true;
   const noGeographicIndication = r.noGeographicIndication === true;
@@ -225,7 +237,7 @@ export function coerceLabelRead(raw: unknown): LabelRead {
     vintageKind,
     vintageYear,
     vintageTawnyYears,
-    vintageRead: r.vintageRead === true && vintageShapeFilled,
+    vintageRead: r.vintageRead === true && readKind !== null && vintageShapeFilled,
     colour: oneOf(COLOURS, r.colour),
     style: oneOf(STYLES, r.style),
     grapes: grapeList(r.grapes),
