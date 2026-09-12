@@ -26,9 +26,12 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
+// Not DATASET_URL: unlike the other country builders, which record the
+// human-readable dataset page, this one records SOURCE_URL — the exact WFS
+// GetFeature request the geometry came from. That is the more precise
+// provenance and is already what the live snapshots carry, so it stays.
 import {
   loadWeinlagenCache,
-  DATASET_URL,
   LICENCE,
   SOURCE_URL,
 } from "./fetch-rlp-weinlagen.mjs";

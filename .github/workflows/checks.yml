@@ -13,10 +13,10 @@ name: Checks
 # waits on advisory locks, none of which belongs on a pull request against a
 # database the app is also serving from.
 #
-# `npm run lint` is deliberately NOT here yet: it currently reports 13 errors,
-# all pre-existing and none in code this workflow would be gating. Adding it
-# would make the first run red for reasons unrelated to whatever is being
-# reviewed, which is how a check gets ignored. Fix the backlog, then add it.
+# `npm run lint` runs here now. It was held back while it reported 13 errors,
+# all of them one real bug in archetype-sheet.tsx; a check that is red on
+# arrival for unrelated reasons is one people learn to ignore. The backlog is
+# clear, so the gate goes on before a new one accumulates.
 
 on:
   pull_request:
@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   static:
-    name: Types and unit tests
+    name: Types, lint and unit tests
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -44,6 +44,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
+      # --max-warnings=0 so the next unused import is caught while it is one
+      # line, rather than accumulating into another backlog that has to be
+      # cleared before the gate can go on.
+      - run: npm run lint -- --max-warnings=0
       - run: npm test
       - run: node --test scripts/wine-map-tiles/lib.test.mjs
 
