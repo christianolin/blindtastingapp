@@ -30,7 +30,7 @@ export function RatingsCard({ data }: { data: OverviewRatings }) {
   return (
     <SubjectCard
       title="Your ratings"
-      pill={<LinkPill href="/cellar?tab=notes">All notes</LinkPill>}
+      pill={<LinkPill href="/taste/notes">All notes</LinkPill>}
       stats={
         <StatTrio
           stats={[

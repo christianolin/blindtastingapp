@@ -34,11 +34,16 @@ export const NAV_LINKS: NavLink[] = [
     href: "/taste",
     label: "Taste",
     match: ["/taste", "/tastings"],
-    // One way into a group tasting: the create sheet asks blind or
-    // semi-blind itself, so Semi-Blind is not a separate entry.
+    // All tastings is the page the parent lands on, listed first so it reads
+    // as a destination of its own. One way into a group tasting: the create
+    // sheet asks blind or semi-blind itself, so Semi-Blind is not a separate
+    // entry. Tasting notes is the archive of every note you write, out of
+    // Cellar (Taste & Rate ledger R4).
     children: [
+      { href: "/taste", label: "All tastings" },
       { href: "/tastings/new", label: "Taste Blind", modal: "taste-blind" },
       { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
+      { href: "/taste/notes", label: "Tasting notes" },
       { href: "/taste", label: "Training Room", soon: true },
     ],
   },
