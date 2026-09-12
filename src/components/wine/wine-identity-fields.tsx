@@ -24,6 +24,7 @@ import { ImageUploader } from "@/components/image-uploader";
 import { GrapeBlendEditor, type BlendRow } from "@/app/catalog/new/grape-blend-editor";
 import { orderedBlend } from "@/lib/wine-blend";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
+import { VINTAGE_YEAR_MIN, vintageYearMax } from "@/lib/wine-identity/complete";
 import {
   createAppellation,
   createCountry,
@@ -89,7 +90,6 @@ export function WineIdentityFields({
   tawnyInitial,
   tawnyYears,
   setTawnyYears,
-  unidentified = false,
   imageFolder,
   imageInitialUrl,
   imageAspect,
@@ -137,6 +137,8 @@ export function WineIdentityFields({
   tawnyInitial?: number | null;
   tawnyYears?: string;
   setTawnyYears?: (v: string) => void;
+  /** Not read any more: no field is marked mandatory in HTML, because the
+      caller checks completeness with the wine-identity module on save (D2). */
   unidentified?: boolean;
   imageFolder: string;
   imageInitialUrl: string | null;
@@ -317,7 +319,6 @@ export function WineIdentityFields({
               items={COLOUR_ITEMS}
               value={colour}
               onValueChange={(v) => setColour(v ?? "")}
-              required={!unidentified}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose the colour" />
@@ -337,7 +338,6 @@ export function WineIdentityFields({
               items={STYLE_ITEMS}
               value={style}
               onValueChange={(v) => setStyle(v ?? "")}
-              required={!unidentified}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose the style" />
@@ -367,7 +367,6 @@ export function WineIdentityFields({
               items={VINTAGE_KIND_ITEMS}
               value={vintageKind}
               onValueChange={(v) => setVintageKind(v as "YEAR" | "NV" | "TAWNY")}
-              required
             >
               <SelectTrigger id="vintage_kind" className="w-full">
                 <SelectValue />
@@ -383,11 +382,10 @@ export function WineIdentityFields({
                 name="vintage_year"
                 type="number"
                 placeholder="e.g. 2018"
-                min={1900}
-                max={2100}
+                min={VINTAGE_YEAR_MIN}
+                max={vintageYearMax()}
                 value={vintageYear}
                 onChange={(e) => setVintageYear(e.target.value)}
-                required
               />
             ) : null}
             {vintageKind === "TAWNY" ? (
@@ -403,7 +401,6 @@ export function WineIdentityFields({
                     ? undefined
                     : String(tawnyInitial)
                 }
-                required
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Choose the age statement" />

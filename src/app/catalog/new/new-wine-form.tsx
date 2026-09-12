@@ -9,16 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
+import { draftFromIdentityInput } from "@/components/wine/identity-draft";
 import { WineIdentityFields } from "@/components/wine/wine-identity-fields";
+import { missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
+import { describeMissing } from "@/lib/wine-identity/describe";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import {
   createCatalogWine,
-  createGrape,
-  createProducer,
   updateCatalogWine,
+  type CatalogWineInput,
   type WineProfileInput,
 } from "./actions";
 import { type BlendRow } from "./grape-blend-editor";
-import { resolvePendingBlend } from "@/lib/wine-blend";
 
 // Types, not values: the option lists themselves live in the shared
 // WineIdentityFields control, so a runtime array here was never read.
@@ -45,18 +47,12 @@ export type WineFormInitial = {
   style: Style | null;
   wineName: string;
   description: string | null;
-  /** Structured wine profile from the label read (producer background, nose,
-      palate, pairing, serving). Carried straight through to the catalog row —
-      the manual form doesn't edit these, so they're absent for a hand-added
-      wine and simply stay null. */
+  /** The wine's structured profile (producer background, nose, palate,
+      pairing, serving), edited under "Wine profile". */
   profile?: WineProfileInput | null;
   /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
   estimatedPrice: string;
-  /** A scanned retail price in USD (FastCork reports US retail). Kept apart
-      from `estimatedPrice` because that field is DKK: the auto-accept path
-      converts this to DKK at save time, and the manual form ignores it. */
-  retailPriceUsd?: number | null;
-  /** Scan couldn't read a vintage: ask the user instead of assuming NV. */
+  /** @deprecated removed in S5c */
   vintagePrompt?: boolean;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
@@ -157,91 +153,80 @@ export function NewWineForm({
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(initialWine?.imageUrl ?? null);
 
-  async function submit() {
-    setError(null);
-    const hasProducer = Boolean(producerId || producerLabel?.trim());
-    const hasPrimaryGrape = Boolean(
-      blend[0]?.grapeId || blend[0]?.pendingName?.trim(),
-    );
-    if (
-      !countryId || !regionId || !appellationId || !hasPrimaryGrape ||
-      !hasProducer || !colour || !style
-    ) {
-      setError(
-        "Country, region, appellation, primary grape, producer, colour and style are required.",
-      );
-      return;
-    }
-    if (vintageKind === "YEAR" && !vintageYear) {
-      setError("Enter the vintage year (or switch to NV / tawny).");
-      return;
-    }
-    setPending(true);
-    try {
-      // A scanned-but-unmatched producer is pending (label set, no id): create
-      // it now, on save, so opening the scanner never spawns a possibly-misread
-      // winery. createProducer is find-or-create, so an existing exact name is
-      // reused rather than duplicated.
-      let resolvedProducerId = producerId;
-      if (!resolvedProducerId && producerLabel?.trim()) {
-        const created = await createProducer(producerLabel.trim(), regionId || null);
-        resolvedProducerId = created.id;
-      }
-      // Turn any pending (scanned-but-unmatched) grapes into real ids now, on
-      // save — mirrors the producer handling. Row order is preserved; the
-      // catalog_wine_grapes trigger recomputes the primary grape.
-      const resolvedBlend = await resolvePendingBlend(blend, createGrape);
-      const payload = {
+  // The identity as a draft for the one completeness rule and the one write
+  // path (D2). A pending producer or grape name travels in it and is found or
+  // created by the write, so nothing is created before the save.
+  function currentDraft(): WineIdentityDraft {
+    const draft = draftFromIdentityInput(
+      {
         countryId,
         regionId,
         appellationId,
-        primaryGrapeId: resolvedBlend[0].grapeId,
-        secondaryGrapeId: resolvedBlend[1]?.grapeId ?? null,
-        grapes: resolvedBlend.map((r) => ({
-          grapeId: r.grapeId,
-          percentage: r.percentage.trim() ? Number(r.percentage) : null,
-        })),
-        producerId: resolvedProducerId,
-        typeDesignationId: typeDesignationId || null,
-        colour,
-        style,
-        wineName: wineName.trim() || null,
-        description: description.trim() || null,
+        blend,
+        producerId,
+        producerLabel,
+        typeDesignationId,
+        wineName,
+        colour: colour ?? "",
+        style: style ?? "",
         vintageKind,
-        vintageYear: vintageKind === "YEAR" ? Number(vintageYear) : null,
-        vintageTawnyYears: vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
+        vintageYear,
+        vintageTawnyYears: tawnyYears,
         imageUrl,
-        estimatedPrice:
-          estimatedPrice.trim() && Number.isFinite(Number(estimatedPrice))
-            ? Number(estimatedPrice)
+      },
+      { grapes: Object.fromEntries(grapes.map((g) => [g.id, g.name])) },
+    );
+    return normaliseDraft({ ...draft, description, alcohol: numOrNull(alcoholPercent) });
+  }
+
+  function fail(message: string) {
+    setError(message);
+    setPending(false);
+  }
+
+  async function submit() {
+    setError(null);
+    const draft = currentDraft();
+    const missing = missingWineFields(draft);
+    if (missing.length > 0) {
+      setError(`This wine ${describeMissing(missing)}.`);
+      return;
+    }
+    setPending(true);
+    const input: CatalogWineInput = {
+      draft,
+      estimatedPrice,
+      profile: {
+        wineryDescription: wineryDescription.trim() || null,
+        aroma: aroma.trim() || null,
+        tastingNotes: tastingNotes.trim() || null,
+        foodPairing: foodPairing.trim() || null,
+        // A range needs both ends to mean anything, so a half-filled pair is
+        // stored as no range rather than a bound the UI can't render.
+        servingTempC:
+          numOrNull(tempMin) != null && numOrNull(tempMax) != null
+            ? { min: numOrNull(tempMin)!, max: numOrNull(tempMax)! }
             : null,
-        profile: {
-          wineryDescription: wineryDescription.trim() || null,
-          aroma: aroma.trim() || null,
-          tastingNotes: tastingNotes.trim() || null,
-          foodPairing: foodPairing.trim() || null,
-          // A range needs both ends to mean anything, so a half-filled pair is
-          // stored as no range rather than a bound the UI can't render.
-          servingTempC:
-            numOrNull(tempMin) != null && numOrNull(tempMax) != null
-              ? { min: numOrNull(tempMin)!, max: numOrNull(tempMax)! }
-              : null,
-          decantMinutes: numOrNull(decantMinutes),
-          alcoholPercent: numOrNull(alcoholPercent),
-        },
-      };
+        decantMinutes: numOrNull(decantMinutes),
+        alcoholPercent: numOrNull(alcoholPercent),
+      },
+    };
+    try {
+      // Both actions return a refusal instead of throwing; its message already
+      // names the missing fields ("This wine needs a vintage.").
       if (wineId) {
-        await updateCatalogWine(wineId, payload);
+        const result = await updateCatalogWine(wineId, input);
+        if ("error" in result) return fail(result.error);
         if (onSaved) onSaved(wineId);
         else router.push(`/catalog/${wineId}`);
       } else {
-        const { id } = await createCatalogWine(payload);
-        if (onCreated) onCreated(id);
-        else router.push(`/catalog/${id}`);
+        const result = await createCatalogWine(input);
+        if ("error" in result) return fail(result.error);
+        if (onCreated) onCreated(result.catalogWineId);
+        else router.push(`/catalog/${result.catalogWineId}`);
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add the wine.");
-      setPending(false);
+    } catch {
+      fail(wineId ? "Could not save the wine." : "Could not add the wine.");
     }
   }
 
@@ -279,20 +264,6 @@ export function NewWineForm({
         setDescription={setDescription}
         colour={colour ?? ""}
         setColour={(v) => setColour((v || null) as Colour | null)}
-        vintageBanner={
-          initialWine?.vintagePrompt && vintageKind === "YEAR" && !vintageYear.trim() ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              <span>No vintage found on the label — type the year, or</span>
-              <button
-                type="button"
-                onClick={() => setVintageKind("NV")}
-                className="rounded-full border border-amber-400 px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-amber-100"
-              >
-                mark as Non-vintage (NV)
-              </button>
-            </div>
-          ) : null
-        }
         style={style ?? ""}
         setStyle={(v) => setStyle((v || null) as Style | null)}
         vintageKind={vintageKind}

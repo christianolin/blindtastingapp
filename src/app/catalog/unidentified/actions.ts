@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { withoutBlindPending } from "@/lib/catalog-visibility";
 import { createClient } from "@/lib/supabase/server";
 
 const cap = (s: string) => (s ? s[0] + s.slice(1).toLowerCase() : s);
@@ -11,7 +12,7 @@ export async function searchCatalogForResolve(query: string) {
     p_query: query,
     p_limit: 20,
   });
-  return (data ?? []).map((w) => {
+  const rows = (data ?? []).map((w) => {
     const vintage =
       w.vintage_kind === "YEAR" ? (w.vintage_year ? String(w.vintage_year) : "")
       : w.vintage_kind === "TAWNY" ? (w.vintage_tawny_years ? `${w.vintage_tawny_years}yo` : "Tawny")
@@ -28,6 +29,8 @@ export async function searchCatalogForResolve(query: string) {
       .join(" ");
     return { id: w.id, name: label, group: `${cap(w.colour)} · ${cap(w.style)}` };
   });
+  // A wine hidden in an unrevealed flight is never offered (spec §B.6; scan-2).
+  return withoutBlindPending(supabase, rows);
 }
 
 export async function resolveUnidentifiedWine(
