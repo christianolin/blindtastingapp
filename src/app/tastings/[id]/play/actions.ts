@@ -2,87 +2,40 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { guessBlockReason } from "@/lib/guess-guards";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
+import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
+import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
+import { maybeAutoRevealWine } from "./auto-reveal";
 
 // The row shape the ladder edits — defined in ladder-types.ts (pure types) so
 // client components can import it without touching this "use server" module.
 export type { GuessRow } from "./ladder-types";
 
-const NIL_UUID = "00000000-0000-0000-0000-000000000000";
-
-// Auto-reveals a wine once every participant who's supposed to guess it has
-// LOCKED IN, so an ASYNC host doesn't have to babysit "has everyone
-// answered?". LIVE tastings are NEVER auto-revealed — the host paces the
-// reveal manually with the Reveal button. Skips silently on any lookup
-// failure; a missed auto-reveal just means the host reveals manually.
-//
-// The ladder autosaves a guess row on the first tap, so "a row exists" no
-// longer means "done" — only rows with `locked_at` count. Eligible guessers
-// = JOINED participants minus the wine's contributor minus the host when the
-// host provides the wines (they set the answers and never guess; counting
-// them meant an ASYNC + HOST_PROVIDES tasting could never auto-reveal).
-async function maybeAutoRevealWine(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  wineId: string,
-) {
-  const { data: wine } = await supabase
-    .from("wines")
-    .select("tasting_id, is_revealed, contributor_participant_id")
-    .eq("id", wineId)
-    .maybeSingle();
-  if (!wine || wine.is_revealed) return;
-
-  const { data: tasting } = await supabase
-    .from("tastings")
-    .select("timing_mode, wine_source, host_id")
-    .eq("id", wine.tasting_id)
-    .maybeSingle();
-  if (!tasting || tasting.timing_mode !== "ASYNC") return;
-
-  const { data: joined } = await supabase
-    .from("tasting_participants")
-    .select("id, user_id")
-    .eq("tasting_id", wine.tasting_id)
-    .eq("status", "JOINED");
-  const eligibleCount = (joined ?? []).filter(
-    (p) =>
-      p.id !== (wine.contributor_participant_id ?? NIL_UUID) &&
-      !(tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id),
-  ).length;
-  if (eligibleCount <= 0) return;
-
-  const { count: lockedCount } = await supabase
-    .from("guesses")
-    .select("id", { count: "exact", head: true })
-    .eq("wine_id", wineId)
-    .not("locked_at", "is", null);
-
-  if ((lockedCount ?? 0) >= eligibleCount) {
-    // Known gap (no migration this round): reveal_wine's own non-host gate
-    // still counts the HOST_PROVIDES host among the expected guessers and
-    // counts unlocked drafts as guesses, so in ASYNC + HOST_PROVIDES tastings
-    // it raises "Not everyone has guessed yet" here and the wine waits for
-    // the host's manual reveal. Surfaced in the server log rather than
-    // swallowed so the next schema pass can realign the gate.
-    const { error } = await supabase.rpc("reveal_wine", { p_wine_id: wineId });
-    if (error) console.warn(`auto-reveal of wine ${wineId} refused: ${error.message}`);
-  }
-}
+type Client = Awaited<ReturnType<typeof createClient>>;
 
 // "One wine at a time" pacing: only the current (lowest-position unrevealed)
-// wine may be guessed. Null when in order (or not sequential).
+// wine may be guessed. LIVE blind tastings only (spec §D.1 #1): a self-paced
+// tasting may still carry a flag stored before that rule, and it is ignored
+// here. Null when in order (or not paced).
 async function sequentialOrderError(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Client,
   tastingId: string,
   wineId: string,
 ): Promise<string | null> {
   const { data: seqTasting } = await supabase
     .from("tastings")
-    .select("sequential_guessing, reveal_mode")
+    .select("sequential_guessing, reveal_mode, timing_mode")
     .eq("id", tastingId)
     .maybeSingle();
-  if (!seqTasting?.sequential_guessing || seqTasting.reveal_mode !== "BLIND") return null;
+  if (
+    !seqTasting?.sequential_guessing ||
+    seqTasting.reveal_mode !== "BLIND" ||
+    seqTasting.timing_mode !== "LIVE"
+  ) {
+    return null;
+  }
   const { data: current } = await supabase
     .from("wines")
     .select("id")
@@ -97,20 +50,103 @@ async function sequentialOrderError(
   return null;
 }
 
+type GuessableWine = NonNullable<Parameters<typeof guessBlockReason>[0]>;
+
+// play-8 (spec §D.2 #6): the wines rows guessBlockReason judges, looked up
+// inside this tasting only, so a wine id from another tasting (or one that
+// isn't a uuid) reads as "This glass isn't in this tasting."
+async function guessableWines(
+  supabase: Client,
+  tastingId: string,
+  wineIds: readonly string[],
+): Promise<{ wines: Map<string, GuessableWine> } | { error: string }> {
+  const { data, error } = await supabase
+    .from("wines")
+    .select("id, is_revealed, reveal_step, contributor_participant_id")
+    .eq("tasting_id", tastingId)
+    .in("id", [...wineIds]);
+  // 22P02 (invalid_text_representation): not a uuid, so no such glass.
+  if (error && error.code !== "22P02") return { error: error.message };
+  return {
+    wines: new Map<string, GuessableWine>(
+      (data ?? []).map((w) => [
+        w.id,
+        {
+          isRevealed: w.is_revealed,
+          revealStep: w.reveal_step,
+          contributorParticipantId: w.contributor_participant_id,
+        },
+      ]),
+    ),
+  };
+}
+
+// No new guess once a glass's reveal has started, and no guess on your own
+// bottle (play-8). Null when the participant may guess this glass.
+async function guessableWineError(
+  supabase: Client,
+  tastingId: string,
+  wineId: string,
+  participantId: string,
+): Promise<string | null> {
+  const result = await guessableWines(supabase, tastingId, [wineId]);
+  if ("error" in result) return result.error;
+  return guessBlockReason(result.wines.get(wineId) ?? null, participantId);
+}
+
+// Every glass in the tasting with no answer key yet (spec §C.8).
+// listIncompleteGlasses throws on an RPC error, so a failed read never passes
+// for "every glass is complete"; here the failure comes back as a value, since a
+// thrown server action lands in the error boundary instead of inline.
+async function readIncompleteGlasses(
+  supabase: Client,
+  tastingId: string,
+): Promise<{ rows: IncompleteGlass[] } | { error: string }> {
+  try {
+    return { rows: await listIncompleteGlasses(supabase, tastingId) };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+// The wines among wineIds that have an answer key, so ASYNC + IMMEDIATE scoring
+// waits on an incomplete glass (spec §C.8). A failed read counts none as
+// complete: scoring only waits, and scoreLockedGuess runs it once the locked-in
+// state sees the glass complete.
+async function completeGlassIds(
+  supabase: Client,
+  tastingId: string,
+  wineIds: readonly string[],
+): Promise<Set<string>> {
+  const incomplete = await readIncompleteGlasses(supabase, tastingId);
+  if ("error" in incomplete) {
+    console.warn(`deferred scoring for tasting ${tastingId}: ${incomplete.error}`);
+    return new Set();
+  }
+  const pending = new Set(incomplete.rows.map((glass) => glass.wineId));
+  return new Set(wineIds.filter((id) => !pending.has(id)));
+}
+
 export type GuessFormState = { error: string } | { success: true } | null;
+
+type Guesser = {
+  participantId: string;
+  /** ASYNC + IMMEDIATE: locking a complete glass scores it (score_own_guess). */
+  scoresOnLock: boolean;
+};
 
 // Resolves the caller's participant row and enforces that they may guess:
 // they must be a JOINED participant and the tasting must have started (host
 // pressed Start → status left 'DRAFT'). Returns the participant id or an
 // error message.
 async function resolveGuesser(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Client,
   tastingId: string,
   userId: string,
-): Promise<{ participantId: string } | { error: string }> {
+): Promise<Guesser | { error: string }> {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("status, wine_source, host_id")
+    .select("status, wine_source, host_id, timing_mode, async_reveal_policy")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) return { error: "Tasting not found." };
@@ -138,7 +174,10 @@ async function resolveGuesser(
   if (participant.status !== "JOINED") {
     return { error: "Accept your invitation before guessing." };
   }
-  return { participantId: participant.id };
+  return {
+    participantId: participant.id,
+    scoresOnLock: tasting.timing_mode === "ASYNC" && tasting.async_reveal_policy === "IMMEDIATE",
+  };
 }
 
 const LOCKED_ERROR = "This guess is locked — it's already been scored.";
@@ -146,7 +185,10 @@ const LOCKED_ERROR = "This guess is locked — it's already been scored.";
 // Autosave target for the guess ladder: called with the COMPLETE current
 // state after every pick (full-row replace — an absent field becomes null).
 // Scoring and auto-reveal no longer happen here; they moved to lockGuess so a
-// half-filled draft is never scored or counted as "done".
+// half-filled draft is never scored or counted as "done". It writes guess
+// fields only, never a scoring column (20260912093000), and it is refused once
+// the glass's reveal has started or on your own bottle (play-8). An incomplete
+// glass can still be guessed (spec §C.8).
 export async function submitGuess(
   _prevState: GuessFormState,
   formData: FormData,
@@ -166,7 +208,18 @@ export async function submitGuess(
   if ("error" in guesser) return { error: guesser.error };
   const participant = { id: guesser.participantId };
 
-  const orderError = await sequentialOrderError(supabase, tastingId, wineId);
+  // Independent reads, run together: this action fires on every autosave.
+  const [blocked, orderError, { data: existing }] = await Promise.all([
+    guessableWineError(supabase, tastingId, wineId, participant.id),
+    sequentialOrderError(supabase, tastingId, wineId),
+    supabase
+      .from("guesses")
+      .select("id, scored_at")
+      .eq("wine_id", wineId)
+      .eq("participant_id", participant.id)
+      .maybeSingle(),
+  ]);
+  if (blocked) return { error: blocked };
   if (orderError) return { error: orderError };
 
   const get = (name: string) => String(formData.get(name) ?? "") || null;
@@ -192,13 +245,6 @@ export async function submitGuess(
         : null,
   };
 
-  const { data: existing } = await supabase
-    .from("guesses")
-    .select("id, scored_at")
-    .eq("wine_id", wineId)
-    .eq("participant_id", participant.id)
-    .maybeSingle();
-
   // Once a guess has been scored (immediate-reveal async, or a revealed wine)
   // it's locked — you've already seen the answer, no re-guessing.
   if (existing?.scored_at) {
@@ -222,10 +268,11 @@ export async function submitGuess(
 export type LockResult = { ok: true } | { error: string };
 
 // Stamps locked_at on the caller's saved guess for one wine, then runs what
-// submitGuess used to run after every write: score_own_guess (immediate-mode
-// async only — a no-op elsewhere) and the ASYNC auto-reveal check. Locking is
-// a readiness signal, not a gate: the host can still reveal early and
-// reveal_wine scores whatever was saved. A taster with no row yet (skipped
+// submitGuess used to run after every write: score_own_guess (ASYNC +
+// IMMEDIATE only, and only for a complete glass — an incomplete one defers
+// scoring to scoreLockedGuess, spec §C.8) and the ASYNC auto-reveal check.
+// Locking is a readiness signal, not a gate: the host can still reveal early
+// and reveal_wine scores whatever was saved. A taster with no row yet (skipped
 // every field, or never opened a picker) locks a blank row — a blank scores 0
 // per category and is a valid guess, and without it "{locked} of {eligible}"
 // could never reach everyone.
@@ -243,6 +290,8 @@ export async function lockGuess(
 
   const guesser = await resolveGuesser(supabase, tastingId, user.id);
   if ("error" in guesser) return { error: guesser.error };
+  const blocked = await guessableWineError(supabase, tastingId, wineId, guesser.participantId);
+  if (blocked) return { error: blocked };
 
   const { data: existing } = await supabase
     .from("guesses")
@@ -274,8 +323,56 @@ export async function lockGuess(
     if (error) return { error: error.message };
   }
 
-  await supabase.rpc("score_own_guess", { p_wine_id: wineId });
+  if (guesser.scoresOnLock && (await completeGlassIds(supabase, tastingId, [wineId])).has(wineId)) {
+    await supabase.rpc("score_own_guess", { p_wine_id: wineId });
+  }
   await maybeAutoRevealWine(supabase, wineId);
+
+  revalidatePath(`/tastings/${tastingId}`);
+  revalidatePath(`/tastings/${tastingId}/play`);
+  return { ok: true };
+}
+
+// Deferred scoring for ASYNC + IMMEDIATE (spec §C.8). lockGuess and lockGuesses
+// skip score_own_guess while a glass is incomplete; once it is finished, the
+// locked-in state calls this once. Idempotent: it calls score_own_guess only for
+// the caller's own guess, only when that guess is locked and unscored and the
+// glass is complete, and otherwise returns ok without writing anything.
+export async function scoreLockedGuess(
+  tastingId: string,
+  wineId: string,
+): Promise<LockResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const guesser = await resolveGuesser(supabase, tastingId, user.id);
+  if ("error" in guesser) return { error: guesser.error };
+  if (!guesser.scoresOnLock) return { ok: true };
+
+  const { data: guess, error: guessError } = await supabase
+    .from("guesses")
+    .select("locked_at, scored_at")
+    .eq("wine_id", wineId)
+    .eq("participant_id", guesser.participantId)
+    .maybeSingle();
+  if (guessError) return { error: guessError.message };
+  // Not locked, or already scored (by an earlier call, or by a reveal): done.
+  if (!guess?.locked_at || guess.scored_at) return { ok: true };
+
+  const blocked = await guessableWineError(supabase, tastingId, wineId, guesser.participantId);
+  if (blocked) return { error: blocked };
+
+  const incomplete = await readIncompleteGlasses(supabase, tastingId);
+  if ("error" in incomplete) return { error: incomplete.error };
+  if (incomplete.rows.some((glass) => glass.wineId === wineId)) return { ok: true };
+
+  const { error } = await supabase.rpc("score_own_guess", { p_wine_id: wineId });
+  if (error) return { error: error.message };
 
   revalidatePath(`/tastings/${tastingId}`);
   revalidatePath(`/tastings/${tastingId}/play`);
@@ -324,7 +421,8 @@ export async function unlockGuess(
 // Semi-blind "Lock in all glasses": locks every unscored row among the given
 // wines in one call (after submitAllMatchGuesses has written them), then
 // scores/auto-reveals each. Rows that are already scored are skipped
-// silently, matching submitAllMatchGuesses.
+// silently, matching submitAllMatchGuesses. Your own bottles are skipped too;
+// any other refused glass (play-8) refuses the whole call.
 export async function lockGuesses(
   tastingId: string,
   wineIds: string[],
@@ -341,11 +439,24 @@ export async function lockGuesses(
   const guesser = await resolveGuesser(supabase, tastingId, user.id);
   if ("error" in guesser) return { error: guesser.error };
 
+  const guard = await guessableWines(supabase, tastingId, wineIds);
+  if ("error" in guard) return { error: guard.error };
+  const lockable: string[] = [];
+  for (const wineId of wineIds) {
+    const wine = guard.wines.get(wineId) ?? null;
+    // You never guess your own bottle, so there is nothing of yours to lock.
+    if (wine && wine.contributorParticipantId === guesser.participantId) continue;
+    const reason = guessBlockReason(wine, guesser.participantId);
+    if (reason) return { error: reason };
+    lockable.push(wineId);
+  }
+  if (lockable.length === 0) return { error: "No glasses to lock." };
+
   const { data: rows } = await supabase
     .from("guesses")
     .select("id, wine_id, scored_at, locked_at")
     .eq("participant_id", guesser.participantId)
-    .in("wine_id", wineIds);
+    .in("wine_id", lockable);
   const toLock = (rows ?? []).filter((r) => !r.scored_at && !r.locked_at);
   if (toLock.length > 0) {
     const { error } = await supabase
@@ -358,9 +469,19 @@ export async function lockGuesses(
     if (error) return { error: error.message };
   }
 
-  for (const row of rows ?? []) {
-    if (row.scored_at) continue;
-    await supabase.rpc("score_own_guess", { p_wine_id: row.wine_id });
+  const unscored = (rows ?? []).filter((r) => !r.scored_at);
+  const scorable =
+    guesser.scoresOnLock && unscored.length > 0
+      ? await completeGlassIds(
+          supabase,
+          tastingId,
+          unscored.map((r) => r.wine_id),
+        )
+      : new Set<string>();
+  for (const row of unscored) {
+    if (scorable.has(row.wine_id)) {
+      await supabase.rpc("score_own_guess", { p_wine_id: row.wine_id });
+    }
     await maybeAutoRevealWine(supabase, row.wine_id);
   }
 
@@ -404,6 +525,14 @@ export async function submitAllMatchGuesses(
   const guesser = await resolveGuesser(supabase, tastingId, user.id);
   if ("error" in guesser) return { error: guesser.error };
   const participant = { id: guesser.participantId };
+
+  // play-8: one refused glass refuses the whole batch, before anything is written.
+  const guard = await guessableWines(supabase, tastingId, wineIds);
+  if ("error" in guard) return { error: guard.error };
+  for (const wineId of wineIds) {
+    const reason = guessBlockReason(guard.wines.get(wineId) ?? null, participant.id);
+    if (reason) return { error: reason };
+  }
 
   const { data: existingGuesses } = await supabase
     .from("guesses")
@@ -462,6 +591,13 @@ export async function revealWine(
   if (tasting?.status === "CLOSED") {
     return { error: "This tasting is finished — reveals are closed." };
   }
+  // An incomplete glass (no answer key yet) is never revealed (spec §C.8). A
+  // failed read refuses too.
+  const incomplete = await readIncompleteGlasses(supabase, wine.tasting_id);
+  if ("error" in incomplete) return { error: incomplete.error };
+  const refusal = revealRefusal(incomplete.rows, wineId);
+  if (refusal) return { error: refusal };
+
   const { error } = await supabase.rpc("reveal_wine", { p_wine_id: wineId });
   if (error) {
     return { error: error.message };
