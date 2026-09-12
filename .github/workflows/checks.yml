@@ -1,0 +1,80 @@
+name: Checks
+
+# The repo had no pull-request CI at all: the only workflow was Wine Map Tiles,
+# which is workflow_dispatch and therefore runs when someone remembers. Things
+# drifted accordingly -- boundary-expectations.json went 104 rows stale across
+# several merges, and nothing said so until a tiles run went red for an
+# unrelated reason.
+#
+# These are the checks safe to run on every push: type checking, the unit
+# suites, and the read-only map guards. Anything that WRITES to the shared
+# database stays out. scripts/world-wine-map-foundation.test.mjs in particular
+# is run deliberately, not here -- it commits fixture rows, switches role and
+# waits on advisory locks, none of which belongs on a pull request against a
+# database the app is also serving from.
+#
+# `npm run lint` is deliberately NOT here yet: it currently reports 13 errors,
+# all pre-existing and none in code this workflow would be gating. Adding it
+# would make the first run red for reasons unrelated to whatever is being
+# reviewed, which is how a check gets ignored. Fix the backlog, then add it.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+concurrency:
+  # A force-push supersedes its own earlier run; nothing here writes, so
+  # cancelling midway is safe.
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Types and unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: node --test scripts/wine-map-tiles/lib.test.mjs
+
+  map-data:
+    name: Map data guards
+    runs-on: ubuntu-24.04
+    # Job-level, so the step conditions below can read it. A step's own `env:`
+    # is NOT visible to that step's `if:`, which silently evaluates to '' and
+    # skips the check it was meant to run.
+    env:
+      DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # No database needed: pure JSON, comparing the committed Italian comune
+      # lists against the committed geometry built from them.
+      - run: node --test scripts/wine-map-sources/italy-membership.test.mjs
+
+      # Secrets are not exposed to pull requests from forks. Skipping there
+      # rather than failing keeps an outside PR green on the checks it CAN run;
+      # the push to master afterwards has the secret and does the comparison for
+      # real, so nothing reaches the default branch unchecked.
+      - name: Boundary expectations (read-only)
+        if: env.DB_PASSWORD != ''
+        run: node --test scripts/wine-map-sources/boundary-expectations.test.mjs
+
+      - name: Say so when the boundary check could not run
+        if: env.DB_PASSWORD == ''
+        run: echo "::notice::boundary-expectations skipped - no DB_PASSWORD available to this run"
