@@ -120,7 +120,9 @@ async function ensureTasting({ name, hostId, participantIds, wines }) {
       timing_mode: "ASYNC",
       wine_source: "HOST_PROVIDES",
       reveal_mode: "BLIND",
-      status: "CLOSED",
+      // reveal_wine refuses CLOSED tastings (20260912092000), so the tasting
+      // starts IN_PROGRESS and is closed once its wines are revealed.
+      status: "IN_PROGRESS",
     })
     .select()
     .single();
@@ -216,9 +218,14 @@ async function revealAllWines(hostEmail, wineIds) {
   if (signInError) throw signInError;
   for (const wineId of wineIds) {
     const { error } = await client.rpc("reveal_wine", { p_wine_id: wineId });
-    if (error) console.error(`  reveal failed for ${wineId}:`, error.message);
+    if (error) throw new Error(`reveal failed for ${wineId}: ${error.message}`);
   }
   await client.auth.signOut();
+}
+
+async function closeTasting(tastingId) {
+  const { error } = await admin.from("tastings").update({ status: "CLOSED" }).eq("id", tastingId);
+  if (error) throw error;
 }
 
 // --- main ---
@@ -278,7 +285,10 @@ const tastingA = await ensureTasting({
   participantIds: [people.isabelle.id, people.marcus.id, people.diego.id, people.sofia.id],
   wines: bordeauxWines,
 });
-if (tastingA.wineIds) await revealAllWines(people.isabelle.email, tastingA.wineIds);
+if (tastingA.wineIds) {
+  await revealAllWines(people.isabelle.email, tastingA.wineIds);
+  await closeTasting(tastingA.id);
+}
 
 const tastingB = await ensureTasting({
   name: "New World Nights",
@@ -286,6 +296,9 @@ const tastingB = await ensureTasting({
   participantIds: [people.marcus.id, people.isabelle.id, people.diego.id, people.priya.id],
   wines: newWorldWines,
 });
-if (tastingB.wineIds) await revealAllWines(people.marcus.email, tastingB.wineIds);
+if (tastingB.wineIds) {
+  await revealAllWines(people.marcus.email, tastingB.wineIds);
+  await closeTasting(tastingB.id);
+}
 
 console.log("\nDone.");
