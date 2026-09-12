@@ -454,6 +454,9 @@ export type Database = {
           catalog_wine_id: string | null;
           unidentified_wine_id: string | null;
         };
+        // Clients may write only the guess fields and locked_at; the scoring
+        // columns, reveal_step and the timestamps are server-written (migration
+        // 20260912093000 revokes the column privileges).
         Insert: {
           wine_id: string;
           country_id: string;
@@ -508,10 +511,8 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
-          id?: string;
           wine_id: string;
           participant_id: string;
-          reveal_step?: number;
           locked_at?: string | null;
           country_id?: string | null;
           region_id?: string | null;
@@ -524,8 +525,6 @@ export type Database = {
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
           guessed_wine_id?: string | null;
-          submitted_at?: string;
-          updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guesses"]["Insert"]>;
         Relationships: [];
