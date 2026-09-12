@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { WSET } from "./tokens";
 
 // A snapping graded slider for the WSET scales. Value is one of `stops` or null
 // (the unrated ghost state). Pointer-capture drag snaps to the nearest stop.
@@ -60,7 +59,7 @@ export function SnapSlider<T extends string>({
       <div className="flex items-center gap-2.5">
         <span
           className={showLabelRow ? "sm:hidden" : undefined}
-          style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2, whiteSpace: "nowrap" }}
+          style={{ fontSize: 10.5, fontWeight: 500, color: "var(--muted-foreground)", whiteSpace: "nowrap" }}
         >
           {labels[stops[0]] ?? stops[0]}
         </span>
@@ -86,7 +85,7 @@ export function SnapSlider<T extends string>({
           position: "relative",
           height: 6,
           borderRadius: 3,
-          background: WSET.track,
+          background: "var(--secondary)",
           cursor: interactive ? "pointer" : "default",
           // Unrated single-value sliders fade back; range mode is always solid.
           opacity: !range && index === null ? 0.4 : 1,
@@ -101,7 +100,7 @@ export function SnapSlider<T extends string>({
               top: 0,
               height: 6,
               borderRadius: 3,
-              background: WSET.burgundy,
+              background: "var(--primary)",
               width: `${pct(rHi) - pct(rLo)}%`,
             }}
           />
@@ -113,7 +112,7 @@ export function SnapSlider<T extends string>({
               top: 0,
               height: 6,
               borderRadius: 3,
-              background: WSET.burgundy,
+              background: "var(--primary)",
               width: `${pct(index)}%`,
             }}
           />
@@ -137,8 +136,8 @@ export function SnapSlider<T extends string>({
                 borderRadius: "50%",
                 padding: 0,
                 cursor: interactive ? "pointer" : "default",
-                background: reached ? WSET.burgundy : WSET.dotUnfilled,
-                border: reached ? "none" : `1px solid ${WSET.dotBorder}`,
+                background: reached ? "var(--primary)" : "var(--muted)",
+                border: reached ? "none" : "1px solid var(--border-strong)",
               }}
             />
           );
@@ -157,9 +156,9 @@ export function SnapSlider<T extends string>({
                 height: 16,
                 borderRadius: "50%",
                 pointerEvents: "none",
-                background: WSET.burgundy,
-                border: `3px solid ${WSET.cream}`,
-                boxShadow: "0 1px 4px rgba(70,25,40,0.3)",
+                background: "var(--primary)",
+                border: "3px solid var(--card)",
+                boxShadow: "0 1px 4px rgba(42,33,30,0.3)",
               }}
             />
           ))
@@ -176,9 +175,9 @@ export function SnapSlider<T extends string>({
               borderRadius: "50%",
               transition: "left 80ms",
               pointerEvents: "none",
-              background: WSET.burgundy,
-              border: `3px solid ${WSET.cream}`,
-              boxShadow: "0 1px 5px rgba(70,25,40,0.35)",
+              background: "var(--primary)",
+              border: "3px solid var(--card)",
+              boxShadow: "0 1px 5px rgba(42,33,30,0.35)",
             }}
           />
         ) : null}
@@ -186,7 +185,7 @@ export function SnapSlider<T extends string>({
         </div>
         <span
           className={showLabelRow ? "sm:hidden" : undefined}
-          style={{ fontSize: 10.5, fontWeight: 500, color: WSET.muted2, whiteSpace: "nowrap" }}
+          style={{ fontSize: 10.5, fontWeight: 500, color: "var(--muted-foreground)", whiteSpace: "nowrap" }}
         >
           {labels[stops[n - 1]] ?? stops[n - 1]}
         </span>
@@ -213,7 +212,7 @@ export function SnapSlider<T extends string>({
                 border: "none",
                 padding: 0,
                 fontWeight: active ? 700 : 500,
-                color: active ? WSET.ink : WSET.muted2,
+                color: active ? "var(--foreground)" : "var(--placeholder)",
               }}
             >
               {labels[stop] ?? stop}

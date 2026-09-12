@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
-import { WSET } from "./tokens";
 import { AromaIcon } from "./aroma-icon";
 import {
   makeT,
@@ -211,9 +210,9 @@ export function AromaPicker({
                   padding: "5px 12px",
                   fontSize: 12.5,
                   cursor: "pointer",
-                  background: WSET.burgundy,
+                  background: "var(--primary)",
                   border: "none",
-                  color: WSET.creamText,
+                  color: "var(--primary-foreground)",
                 }}
               >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
@@ -231,8 +230,8 @@ export function AromaPicker({
               fontWeight: 600,
               cursor: "pointer",
               background: "transparent",
-              border: `1.5px dashed ${WSET.dotBorder}`,
-              color: "#7A5F35",
+              border: "1.5px dashed var(--border-strong)",
+              color: "var(--gold-dark)",
             }}
           >
             {t("add")}
@@ -248,8 +247,8 @@ export function AromaPicker({
                 fontWeight: 600,
                 cursor: "pointer",
                 background: "transparent",
-                border: `1px solid ${WSET.pillBorder}`,
-                color: "#7A5F35",
+                border: "1px solid var(--border-strong)",
+                color: "var(--gold-dark)",
               }}
             >
               {copyFrom!.label}
@@ -259,7 +258,7 @@ export function AromaPicker({
       </div>
 
       <div className="max-sm:hidden">
-      <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}` }}>
+      <div style={{ display: "flex", gap: 22, borderBottom: "1px solid var(--border-light)" }}>
         {ORIGINS.map(({ origin, labelKey }) => {
           const active = origin === activeOrigin;
           const count = countByOrigin[origin] ?? 0;
@@ -277,10 +276,10 @@ export function AromaPicker({
                 cursor: "pointer",
                 background: "none",
                 border: "none",
-                borderBottom: active ? `2px solid ${WSET.burgundy}` : "2px solid transparent",
+                borderBottom: active ? "2px solid var(--primary)" : "2px solid transparent",
                 marginBottom: -1,
                 fontWeight: active ? 600 : 500,
-                color: active ? WSET.ink : WSET.muted,
+                color: active ? "var(--foreground)" : "var(--muted-foreground)",
                 textAlign: "left",
               }}
             >
@@ -289,8 +288,8 @@ export function AromaPicker({
                 <span
                   style={{
                     borderRadius: 999,
-                    background: WSET.goldSoft,
-                    color: WSET.pillText,
+                    background: "var(--accent)",
+                    color: "var(--foreground)",
                     fontSize: 10.5,
                     fontWeight: 600,
                     padding: "1px 7px",
@@ -305,7 +304,7 @@ export function AromaPicker({
       </div>
 
       {/* The active tab's meaning, said once — not squeezed into every tab. */}
-      <div style={{ margin: "6px 0 10px", fontSize: 11, color: WSET.muted2 }}>
+      <div style={{ margin: "6px 0 10px", fontSize: 11, color: "var(--muted-foreground)" }}>
         {(() => {
           const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
           return c.charAt(0).toUpperCase() + c.slice(1);
@@ -316,7 +315,7 @@ export function AromaPicker({
       <div className="sm:columns-2 sm:gap-x-10">
       {groups.map((group) => (
         <div key={group.name} className="break-inside-avoid" style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, marginBottom: 6 }}>
+          <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: "var(--gold-dark)", marginBottom: 6 }}>
             {groupHeading(group.name)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -337,9 +336,9 @@ export function AromaPicker({
                     fontSize: 12.5,
                     lineHeight: 1.35,
                     cursor: "pointer",
-                    background: isSel ? WSET.burgundy : WSET.pillBg,
-                    border: `1px solid ${WSET.pillBorder}`,
-                    color: isSel ? WSET.creamText : WSET.pillText,
+                    background: isSel ? "var(--primary)" : "var(--card)",
+                    border: "1px solid var(--border-strong)",
+                    color: isSel ? "var(--primary-foreground)" : "var(--foreground)",
                     fontWeight: isSel ? 600 : 500,
                   }}
                 >
@@ -365,8 +364,8 @@ export function AromaPicker({
             fontWeight: 600,
             cursor: "pointer",
             background: "transparent",
-            border: `1px solid ${WSET.pillBorder}`,
-            color: "#7A5F35",
+            border: "1px solid var(--border-strong)",
+            color: "var(--gold-dark)",
           }}
         >
           {copyFrom.label}
@@ -374,9 +373,9 @@ export function AromaPicker({
       ) : null}
 
       {selectedIds.length > 0 ? (
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${WSET.border}` }}>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: WSET.gold }}>
+            <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
               {t("selected")} · {selectedIds.length}
             </span>
             {selectedIds.map((id) => {
@@ -395,9 +394,9 @@ export function AromaPicker({
                     padding: "4px 11px",
                     fontSize: 12.5,
                     cursor: "pointer",
-                    background: WSET.burgundy,
+                    background: "var(--primary)",
                     border: "none",
-                    color: WSET.creamText,
+                    color: "var(--primary-foreground)",
                   }}
                 >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
@@ -413,7 +412,7 @@ export function AromaPicker({
                 cursor: "pointer",
                 background: "none",
                 border: "none",
-                color: WSET.muted,
+                color: "var(--muted-foreground)",
                 textDecoration: "none",
               }}
             >
@@ -439,7 +438,7 @@ export function AromaPicker({
             style={{
               position: "absolute",
               inset: 0,
-              background: "rgba(30,10,17,0.45)",
+              background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
             }}
           />
           <div
@@ -451,20 +450,20 @@ export function AromaPicker({
               maxHeight: "88dvh",
               display: "flex",
               flexDirection: "column",
-              background: WSET.cream,
+              background: "var(--card)",
               borderRadius: "20px 20px 0 0",
-              boxShadow: "0 -12px 40px rgba(70,25,40,0.3)",
+              boxShadow: "0 -12px 40px rgba(42,33,30,0.3)",
             }}
           >
-            <div style={{ padding: "12px 16px 0", borderBottom: `1px solid ${WSET.hairline}` }}>
+            <div style={{ padding: "12px 16px 0", borderBottom: "1px solid var(--border-light)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span
                   className="font-heading"
-                  style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: WSET.ink }}
+                  style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}
                 >
                   {sheetTitle}
                 </span>
-                <span style={{ fontSize: 11.5, color: WSET.muted2, whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 11.5, color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                   {t("n_selected", { n: selectedIds.length })}
                 </span>
                 <button
@@ -477,8 +476,8 @@ export function AromaPicker({
                     fontWeight: 600,
                     cursor: "pointer",
                     border: "none",
-                    background: WSET.burgundy,
-                    color: WSET.creamText,
+                    background: "var(--primary)",
+                    color: "var(--primary-foreground)",
                   }}
                 >
                   {t("done")}
@@ -504,10 +503,10 @@ export function AromaPicker({
                         cursor: "pointer",
                         background: "none",
                         border: "none",
-                        borderBottom: active ? `2px solid ${WSET.burgundy}` : "2px solid transparent",
+                        borderBottom: active ? "2px solid var(--primary)" : "2px solid transparent",
                         marginBottom: -1,
                         fontWeight: active ? 600 : 500,
-                        color: active ? WSET.ink : WSET.muted,
+                        color: active ? "var(--foreground)" : "var(--muted-foreground)",
                       }}
                     >
                       {t(labelKey)}
@@ -515,8 +514,8 @@ export function AromaPicker({
                         <span
                           style={{
                             borderRadius: 999,
-                            background: WSET.goldSoft,
-                            color: WSET.pillText,
+                            background: "var(--accent)",
+                            color: "var(--foreground)",
                             fontSize: 10.5,
                             fontWeight: 600,
                             padding: "1px 7px",
@@ -530,7 +529,7 @@ export function AromaPicker({
                 })}
               </div>
             </div>
-            <div style={{ padding: "8px 16px 0", fontSize: 11, color: WSET.muted2 }}>
+            <div style={{ padding: "8px 16px 0", fontSize: 11, color: "var(--muted-foreground)" }}>
               {(() => {
                 const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
                 return c.charAt(0).toUpperCase() + c.slice(1);
@@ -548,8 +547,8 @@ export function AromaPicker({
                     fontWeight: 600,
                     cursor: "pointer",
                     background: "transparent",
-                    border: `1px solid ${WSET.pillBorder}`,
-                    color: "#7A5F35",
+                    border: "1px solid var(--border-strong)",
+                    color: "var(--gold-dark)",
                   }}
                 >
                   {copyFrom.label}
@@ -566,14 +565,14 @@ export function AromaPicker({
               {/* Every cluster open, name above its chips — scanning beats
                   tapping categories open one by one. */}
               {groups.map((group) => (
-                <div key={group.name} style={{ paddingTop: 10, borderBottom: `1px solid ${WSET.hairline}` }}>
+                <div key={group.name} style={{ paddingTop: 10, borderBottom: "1px solid var(--border-light)" }}>
                   <div
                     style={{
                       fontSize: 11,
                       textTransform: "uppercase",
                       letterSpacing: "0.07em",
                       fontWeight: 600,
-                      color: WSET.gold,
+                      color: "var(--gold-dark)",
                       marginBottom: 8,
                     }}
                   >
@@ -597,9 +596,9 @@ export function AromaPicker({
                             fontSize: 12.5,
                             lineHeight: 1.35,
                             cursor: "pointer",
-                            background: isSel ? WSET.burgundy : WSET.pillBg,
-                            border: `1px solid ${WSET.pillBorder}`,
-                            color: isSel ? WSET.creamText : WSET.pillText,
+                            background: isSel ? "var(--primary)" : "var(--card)",
+                            border: "1px solid var(--border-strong)",
+                            color: isSel ? "var(--primary-foreground)" : "var(--foreground)",
                             fontWeight: isSel ? 600 : 500,
                           }}
                         >
