@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Cigliuti",
+  "wineName": null,
+  "appellation": "Barbaresco DOCG",
+  "noGeographicIndication": false,
+  "region": "Piedmont",
+  "country": "Italy",
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": null,
+  "vintageTawnyYears": null,
+  "vintageRead": false,
+  "colour": "RED",
+  "style": "STILL",
+  "grapes": [{ "name": "Nebbiolo", "percentage": 100 }],
+  "alcoholPercent": null,
+  "description": "Family estate in Neive. Barbaresco DOCG is made entirely from Nebbiolo.",
+  "confidence": "high",
+  "rawText": "CIGLIUTI · BARBARESCO · DENOMINAZIONE DI ORIGINE CONTROLLATA E GARANTITA · NEIVE"
+}

@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Château Canon",
+  "wineName": null,
+  "appellation": "Saint-Émilion Grand Cru AOC",
+  "noGeographicIndication": false,
+  "region": "Bordeaux",
+  "country": "France",
+  "designation": "Premier Grand Cru Classé",
+  "vintageKind": "YEAR",
+  "vintageYear": 2016,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "RED",
+  "style": "STILL",
+  "grapes": [{ "name": "Merlot", "percentage": 70 }, { "name": "Cabernet Franc", "percentage": 30 }],
+  "alcoholPercent": 14,
+  "description": "Premier Grand Cru Classé estate on the limestone plateau beside the town of Saint-Émilion, owned by the Wertheimer family since 1996. The vineyard is planted mainly to Merlot, with Cabernet Franc.",
+  "confidence": "high",
+  "rawText": "CHÂTEAU CANON · SAINT-ÉMILION GRAND CRU · PREMIER GRAND CRU CLASSÉ · APPELLATION SAINT-ÉMILION GRAND CRU CONTRÔLÉE · 2016 · MIS EN BOUTEILLE AU CHÂTEAU · 14% vol"
+}
