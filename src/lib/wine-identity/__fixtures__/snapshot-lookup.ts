@@ -96,36 +96,12 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
     // given region first, then to any producer with a region link, then name, id
     // (spec §B.7).
     //
-    // KNOWN LIVE DIVERGENCE until 20260912101530 is applied live — this mirror
-    // encodes the contract above; 20260912101000's function inverts the first
-    // tie-break whenever a region is given. Its key is
-    // `(p_region_id is not null and p.region_id = p_region_id) desc`. With a
-    // region given, a candidate whose `region_id` is NULL makes that expression
-    // NULL (`true and null` → null), which DESC sorts NULLS FIRST — so a
-    // region-LESS duplicate beats the region-linked row the caller asked for.
-    // Verified read-only against the project database: 6 of 44 folded
-    // producer-name collision groups mix null and non-null regions, and in all 6
-    // a call with the linked row's region returns the region-less row — e.g.
-    // `find_producer_by_folded_name('Chateau Lascombes', <Bordeaux>)` returns
-    // 80f05804-…(region null) instead of 43c67107-…(region Bordeaux).
-    //
-    // With no region given the key is false for every row (`false and null` →
-    // false), so the region-linked row still wins; in all 6 groups the same call
-    // with a null region returns the linked row (43c67107-… for Lascombes). So
-    // step 7 ("region from the producer link") is NOT affected: it runs only
-    // while the draft has no region, which is exactly when step 6 passes a null
-    // one. What the defect breaks is producer identity on a lookup whose region
-    // is already known: step 6's `existing` id can be the region-less duplicate,
-    // and so can everything keyed on that id — the confident catalog match, which
-    // filters catalog wines by producer id, and `find_or_create_producer`, which
-    // reuses the duplicate instead of the region-linked row.
-    //
-    // Deliberately NOT mirrored, because mirroring the defect would encode it as
-    // the contract and silence the test that proves the intent. The SQL fix is
-    // 20260912101530_producer_folded_lookup_region_order, which recreates the
-    // function with `coalesce(p_region_id is not null and p.region_id =
-    // p_region_id, false) desc` as its first key (spec §E.2 now reads the same).
-    // Once the main session applies it live, this mirror and the database agree.
+    // 20260912101000's first version sorted `(p_region_id is not null and
+    // p.region_id = p_region_id) desc` first. With a region given, a region-less
+    // duplicate made that key NULL, which DESC sorts first, so it beat the
+    // region-linked row the caller asked for (6 of 44 folded collision groups).
+    // 20260912101530_producer_folded_lookup_region_order, applied live, wraps the
+    // key in `coalesce(..., false)`; this mirror and the database now agree.
     producerByFoldedName: async (name, regionId) => {
       const wanted = foldName(name);
       if (wanted === "") return null;

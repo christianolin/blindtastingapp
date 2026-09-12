@@ -209,11 +209,9 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     expect(covered.filter((n) => !appellationIds.has(n.appellation_id))).toEqual([]);
   });
   it("a folded producer collision resolves to the region-linked row, not the region-less one (spec §B.7)", async () => {
-    // With the region known (step 6 passes it), ties go to that region first. See
-    // snapshot-lookup.ts: 20260912101000's SQL inverts this tie-break for a
-    // region-less duplicate (its NULL sort key comes first under DESC), so until
-    // 20260912101530 is applied live this half passes here while production
-    // returns p-null.
+    // With the region known (step 6 passes it), ties go to that region first.
+    // 20260912101530 (applied live) fixed the SQL, which used to sort a
+    // region-less duplicate first; see snapshot-lookup.ts.
     const snap = two();
     snap.producers = [
       { id: "p-null", name: "Château Lascombes", region_id: null },
