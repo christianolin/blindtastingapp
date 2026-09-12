@@ -11547,6 +11547,33 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.hessische-bergstrasse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "hessische-bergstrasse",
+    "normalized_checksum_sha256": "CFF724E094CEA1B287B79A52E26ECBBC1765DD586EBDE6484A7CF2A24AC687FA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.hessische-bergstrasse.starkenburg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "starkenburg",
+    "normalized_checksum_sha256": "CFF724E094CEA1B287B79A52E26ECBBC1765DD586EBDE6484A7CF2A24AC687FA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.hessische-bergstrasse.umstadt",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "umstadt",
+    "normalized_checksum_sha256": "CFF724E094CEA1B287B79A52E26ECBBC1765DD586EBDE6484A7CF2A24AC687FA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "germany.mittelrhein",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "weinlagen-dissolve:mittelrhein",
@@ -22392,6 +22419,24 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.rheingau",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "rheingau",
+    "normalized_checksum_sha256": "CFF724E094CEA1B287B79A52E26ECBBC1765DD586EBDE6484A7CF2A24AC687FA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.rheingau.johannisberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "johannisberg",
+    "normalized_checksum_sha256": "CFF724E094CEA1B287B79A52E26ECBBC1765DD586EBDE6484A7CF2A24AC687FA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "germany.rheinhessen",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "weinlagen-dissolve:rheinhessen",
@@ -26352,6 +26397,195 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.abruzzo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-abruzzo",
+    "normalized_checksum_sha256": "99CB1C3F1B55CB0A6B08140E85DFA4C63C844287CACF6971DCBC47CE21737D0E",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.abruzzo.montepulciano-d-abruzzo-colline-teramane",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montepulciano-d-abruzzo-colline-teramane",
+    "normalized_checksum_sha256": "86DECC9265A417697E04059DBF6463E435ACC36532901271B6BC17146015E56B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.abruzzo.tullum",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "tullum",
+    "normalized_checksum_sha256": "F6AC42DA95D8D321A935C8C4591162652111EAAF977E8113D9B035A1BB00F0E4",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.abruzzo.villamagna",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "villamagna",
+    "normalized_checksum_sha256": "F6AC42DA95D8D321A935C8C4591162652111EAAF977E8113D9B035A1BB00F0E4",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.basilicata",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-basilicata",
+    "normalized_checksum_sha256": "D917E48ECEF710F45C852FBFEB614BCC3541586F66268849F490FEF44964992C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.basilicata.aglianico-del-vulture",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "aglianico-del-vulture",
+    "normalized_checksum_sha256": "739B478F0AE902CAC70B94830D8D459F90F54585F8CB404C242CDBEE19A76D31",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.calabria",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-calabria",
+    "normalized_checksum_sha256": "A13044027F52D99DAD25BC682AC40EC0959A320E9B0018AC0A4F4A2AAB6A231A",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.calabria.ciro",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "ciro",
+    "normalized_checksum_sha256": "01D407E704D8C85AA77149678829CF072D54B9D0FF012E2DCA9971B64C06B981",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.calabria.greco-di-bianco",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "greco-di-bianco",
+    "normalized_checksum_sha256": "01D407E704D8C85AA77149678829CF072D54B9D0FF012E2DCA9971B64C06B981",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-campania",
+    "normalized_checksum_sha256": "673A469D6573777396E99304846D2E850578A720EED4E5A4C94EF8C3353B8533",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania.aglianico-del-taburno",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "aglianico-del-taburno",
+    "normalized_checksum_sha256": "F2784713C012D46701890C359B28D367A5883B37AA4D0DA7C4F755C79B954E51",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania.fiano-di-avellino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "fiano-di-avellino",
+    "normalized_checksum_sha256": "68A52011250C83FAF31A70F61CB56FAF8638E1F996B8F2AF7DC5AEDDF5449532",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania.greco-di-tufo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "greco-di-tufo",
+    "normalized_checksum_sha256": "68A52011250C83FAF31A70F61CB56FAF8638E1F996B8F2AF7DC5AEDDF5449532",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania.taurasi",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "taurasi",
+    "normalized_checksum_sha256": "68A52011250C83FAF31A70F61CB56FAF8638E1F996B8F2AF7DC5AEDDF5449532",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.campania.vesuvio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "vesuvio",
+    "normalized_checksum_sha256": "2B062FEBFC56C751278937393926EE346358B890C247629495873F80AB2DFCDF",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-emilia-romagna",
+    "normalized_checksum_sha256": "F016937A5852A132FEDE591B4BBECC5AA7CFEA581970BFA6CB078727D5DE8C71",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna.colli-bolognesi-pignoletto",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "colli-bolognesi-pignoletto",
+    "normalized_checksum_sha256": "C9364103CAEA1859D95DF30E7F91B1869280960F115871AC1D2A9303C983C1CD",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna.gutturnio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "gutturnio",
+    "normalized_checksum_sha256": "C9364103CAEA1859D95DF30E7F91B1869280960F115871AC1D2A9303C983C1CD",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna.lambrusco-di-sorbara",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "lambrusco-di-sorbara",
+    "normalized_checksum_sha256": "1AFBCFD92BC4328AE454C4FE0A5502BCECB9C2596EEDB50C985BD579FF7448EB",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna.lambrusco-grasparossa-di-castelvetro",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "lambrusco-grasparossa-di-castelvetro",
+    "normalized_checksum_sha256": "1AFBCFD92BC4328AE454C4FE0A5502BCECB9C2596EEDB50C985BD579FF7448EB",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.emilia-romagna.romagna-albana",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "romagna-albana",
+    "normalized_checksum_sha256": "1AFBCFD92BC4328AE454C4FE0A5502BCECB9C2596EEDB50C985BD579FF7448EB",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.friuli",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "istat-regione-friuli",
@@ -26397,6 +26631,87 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.lazio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-lazio",
+    "normalized_checksum_sha256": "0D00CE83DAB6D446D3A28DF2669692DA52BAD757F22549E8ED7D9311DA98E46F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.lazio.cesanese-del-piglio",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "cesanese-del-piglio",
+    "normalized_checksum_sha256": "4645856D3417791A0D64E283891707D3EC700D3E2D7DB10B9A2836614465D17C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.lazio.est-est-est-di-montefiascone",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "est-est-est-di-montefiascone",
+    "normalized_checksum_sha256": "4645856D3417791A0D64E283891707D3EC700D3E2D7DB10B9A2836614465D17C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.lazio.frascati",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "frascati",
+    "normalized_checksum_sha256": "4645856D3417791A0D64E283891707D3EC700D3E2D7DB10B9A2836614465D17C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.lazio.marino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "marino",
+    "normalized_checksum_sha256": "4645856D3417791A0D64E283891707D3EC700D3E2D7DB10B9A2836614465D17C",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.liguria",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-liguria",
+    "normalized_checksum_sha256": "64ACCDDA9175C02546B8A28369869AED9DD25470474A7AD63B7C69A7C43B8C86",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.liguria.cinque-terre",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "cinque-terre",
+    "normalized_checksum_sha256": "BC2F6A9C657E945BE0D9845049A89747261BA5B3CBF23855DF5DAD13E224501B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.liguria.colli-di-luni",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "colli-di-luni",
+    "normalized_checksum_sha256": "BC2F6A9C657E945BE0D9845049A89747261BA5B3CBF23855DF5DAD13E224501B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.liguria.rossese-di-dolceacqua",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "rossese-di-dolceacqua",
+    "normalized_checksum_sha256": "BC2F6A9C657E945BE0D9845049A89747261BA5B3CBF23855DF5DAD13E224501B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.lombardia",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "istat-regione-lombardia",
@@ -26436,7 +26751,7 @@
     "canonical_key": "italy.lombardia.riviera-del-garda-classico",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "riviera-del-garda-classico",
-    "normalized_checksum_sha256": "543B517B181B10C5EBC5230112C0AB081BDE2B5F6E13A433DE7910A940603CCE",
+    "normalized_checksum_sha256": "E9C3E57E01E20D57A7E4C229CF534C48382C920210EDA84BFEA5DB6EF2D8B50B",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -26455,6 +26770,60 @@
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "valtellina-superiore",
     "normalized_checksum_sha256": "1247F09AD4A6C384F10D20A83955D999492DB66C4AEB98A12EEB765BBE33F595",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.marche",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-marche",
+    "normalized_checksum_sha256": "7214FBAD5B16D798AEEEEAEC59153DB4DA81E49FB92CAC0227B09121DCD8C6D6",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.marche.conero",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "conero",
+    "normalized_checksum_sha256": "CDABDB0E5AE1A12B5BE16EFAD65C5D4F6E62A212FDC53A726C22959DE4F1FB09",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.marche.offida",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "offida",
+    "normalized_checksum_sha256": "CDABDB0E5AE1A12B5BE16EFAD65C5D4F6E62A212FDC53A726C22959DE4F1FB09",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.marche.verdicchio-di-matelica",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "verdicchio-di-matelica",
+    "normalized_checksum_sha256": "CDABDB0E5AE1A12B5BE16EFAD65C5D4F6E62A212FDC53A726C22959DE4F1FB09",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.molise",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-molise",
+    "normalized_checksum_sha256": "2DEFDA4EE4DF98663A0F0E1DD2BE99D2373180BB4C7B767E644B198DC382CCBA",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.molise.biferno",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "biferno",
+    "normalized_checksum_sha256": "B276F32BD0964B9C44BD6AFA7D6702B13F98B49EC4B7925E06F251F5A6B19FC8",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -26509,6 +26878,15 @@
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "DOC_03",
     "normalized_checksum_sha256": "58147512BD14045174AF026F01FFE5B04F59B6C11A4AE890A2C1760AAF98A229",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.piemonte.barbera-dalba",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "DOC_04",
+    "normalized_checksum_sha256": "5EC4F766CBBB0555DAFAF052DBA775A6FDCB376DF6992EF8A82265ED3E3C30F1",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -26685,6 +27063,15 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.piemonte.dolcetto-dalba",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "DOC_20",
+    "normalized_checksum_sha256": "5EC4F766CBBB0555DAFAF052DBA775A6FDCB376DF6992EF8A82265ED3E3C30F1",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.piemonte.dolcetto-dasti",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "DOC_21",
@@ -26838,6 +27225,15 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.piemonte.nebbiolo-dalba",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "DOC_42",
+    "normalized_checksum_sha256": "5EC4F766CBBB0555DAFAF052DBA775A6FDCB376DF6992EF8A82265ED3E3C30F1",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.piemonte.nizza",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "DOC_63",
@@ -26928,6 +27324,105 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.puglia",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-puglia",
+    "normalized_checksum_sha256": "BD87E8EC5223AA4CA218C00ABEB88FFC9EC332AF03C5AB5F4BF70502CE10E3EB",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.castel-del-monte",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "castel-del-monte",
+    "normalized_checksum_sha256": "DD7E73717DE790DAF561C2C289A5ECECA76D101A17F2DCEF6616A0C550193F86",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.copertino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "copertino",
+    "normalized_checksum_sha256": "DD7E73717DE790DAF561C2C289A5ECECA76D101A17F2DCEF6616A0C550193F86",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.gioia-del-colle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "gioia-del-colle",
+    "normalized_checksum_sha256": "B692FBF3C6C19DA52EF91B4D1F0C39A373DAC9AD9E62B247CF180BF679BBE332",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.locorotondo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "locorotondo",
+    "normalized_checksum_sha256": "B692FBF3C6C19DA52EF91B4D1F0C39A373DAC9AD9E62B247CF180BF679BBE332",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.primitivo-di-manduria",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "primitivo-di-manduria",
+    "normalized_checksum_sha256": "876FC8A20F77926C08981E5F866A4D37DF6A78E5B82467C303E5BC9A4A3E0BC5",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.puglia.salice-salentino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "salice-salentino",
+    "normalized_checksum_sha256": "876FC8A20F77926C08981E5F866A4D37DF6A78E5B82467C303E5BC9A4A3E0BC5",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.sardegna",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-sardegna",
+    "normalized_checksum_sha256": "A27EFF36B10E27CD021C914BBD92D0FD471958B68D925E3D4E6BB2C2A5590976",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.sardegna.carignano-del-sulcis",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "carignano-del-sulcis",
+    "normalized_checksum_sha256": "3C7A522BEBF09E283EC945170D9613271ED54C118CE8B676AC5042C0D1F1ADE3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.sardegna.vermentino-di-gallura",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "vermentino-di-gallura",
+    "normalized_checksum_sha256": "316DB8E56DCB20368F16058C8FF16FB2F8C511572754ACE673AE4FA1274BAE64",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.sardegna.vernaccia-di-oristano",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "vernaccia-di-oristano",
+    "normalized_checksum_sha256": "3C7A522BEBF09E283EC945170D9613271ED54C118CE8B676AC5042C0D1F1ADE3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.sicilia",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "istat-regione-sicilia",
@@ -26949,7 +27444,7 @@
     "canonical_key": "italy.sicilia.etna",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "etna",
-    "normalized_checksum_sha256": "0A4E070FDE6D15F477E9D2AE9B376DC9152823086D88ACD9C62D376732441E90",
+    "normalized_checksum_sha256": "999C496E904972D2FA89B3EBA14D34CDF8183C76ED1777C8DEFA8C3002F7D03F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -27012,6 +27507,15 @@
     "canonical_key": "italy.toscana.bolgheri-sassicaia",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "bolgheri-sassicaia",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.brunello-di-montalcino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montalcino",
     "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
@@ -27216,6 +27720,15 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.toscana.moscadello-di-montalcino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montalcino",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.toscana.orcia",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "orcia",
@@ -27229,6 +27742,33 @@
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "pomino",
     "normalized_checksum_sha256": "AFF3EE297B11C78BD5D1B4344BCB03775A05BAD4F9AA56CBA166F7B94EB73B61",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.rosso-di-montalcino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montalcino",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.rosso-di-montepulciano",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montepulciano",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.sant-antimo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montalcino",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -27264,6 +27804,24 @@
     "canonical_key": "italy.toscana.vernaccia-di-san-gimignano",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "vernaccia-di-san-gimignano",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.vin-santo-di-montepulciano",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montepulciano",
+    "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.toscana.vino-nobile-di-montepulciano",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montepulciano",
     "normalized_checksum_sha256": "E2CACD65C5325E205A92297EEE8AB06AF00109325D5DA2EE92843BCED1A3007F",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
@@ -27378,10 +27936,100 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.umbria",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-umbria",
+    "normalized_checksum_sha256": "9ECA0760A7299B788A1E48DB4E9E5C046FBEBCC92DDD149129D09524B3A3754D",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.umbria.colli-del-trasimeno",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "colli-del-trasimeno",
+    "normalized_checksum_sha256": "8FCD12730FD648F47B058B8F2A2AC3FE0C69CF438D7B0FF1BBDB7EF48C08F9F3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.umbria.colli-martani",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "colli-martani",
+    "normalized_checksum_sha256": "8FCD12730FD648F47B058B8F2A2AC3FE0C69CF438D7B0FF1BBDB7EF48C08F9F3",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.umbria.montefalco-sagrantino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "montefalco-sagrantino",
+    "normalized_checksum_sha256": "F9AE5246B85D964CC66738480860B21EF969296F5E724DCDF4E3F264E480723A",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.umbria.orvieto",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "orvieto",
+    "normalized_checksum_sha256": "F9AE5246B85D964CC66738480860B21EF969296F5E724DCDF4E3F264E480723A",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.umbria.torgiano-rosso-riserva",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "torgiano-rosso-riserva",
+    "normalized_checksum_sha256": "F9AE5246B85D964CC66738480860B21EF969296F5E724DCDF4E3F264E480723A",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.valle-d-aosta",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "istat-regione-valle-d-aosta",
+    "normalized_checksum_sha256": "21330273C238B0FDA3B4ABB9B26A38E7AA43CFCF36B0300EC35E89EDBFD8E58F",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.valle-d-aosta.blanc-de-morgex-et-de-la-salle",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "blanc-de-morgex-et-de-la-salle",
+    "normalized_checksum_sha256": "4D359619B980FC4323F4F3D906C15BEBD895C8025C82B3B5259285714D2211EE",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.valle-d-aosta.donnas",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "donnas",
+    "normalized_checksum_sha256": "4D359619B980FC4323F4F3D906C15BEBD895C8025C82B3B5259285714D2211EE",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.veneto",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "istat-regione-veneto",
     "normalized_checksum_sha256": "78732B8EACA6F24452EC82CDAE71C86940568ACA9250372224761A0AB06215CC",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.veneto.amarone-della-valpolicella",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "valpolicella",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -27397,6 +28045,15 @@
   },
   {
     "canonical_key": "italy.veneto.bardolino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "bardolino",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.veneto.bardolino-superiore",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "bardolino",
     "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
@@ -27531,7 +28188,34 @@
     "documented": true
   },
   {
+    "canonical_key": "italy.veneto.recioto-della-valpolicella",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "valpolicella",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.veneto.recioto-di-soave",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "soave",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy.veneto.soave",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "soave",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.veneto.soave-superiore",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "soave",
     "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
@@ -27544,6 +28228,303 @@
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "valpolicella",
     "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "italy.veneto.valpolicella-ripasso",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "valpolicella",
+    "normalized_checksum_sha256": "94B84364F0ABB40C6547A39530EAD7137DB0792EC8B559FEFE86DCE88ED17F76",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_0_countries:PRT",
+    "normalized_checksum_sha256": "995E50B1F69345DFEB4D90DA71F46622F0558460D3009D78233CCF020858EA1B",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.alentejo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:alentejo",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.alentejo.alentejo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:alentejo",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.alentejo.granja-amareleja",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:alentejo-granja-amareleja",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.alentejo.vidigueira",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:alentejo-vidigueira",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.bairrada",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:bairrada",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.bairrada.bairrada",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:bairrada",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.dao",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:dao",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.dao.dao",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:dao",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro.baixo-corgo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro-baixo-corgo",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro.cima-corgo",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro-cima-corgo",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro.douro",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro.douro-superior",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro-douro-superior",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.douro.porto",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-freguesia-union:douro",
+    "normalized_checksum_sha256": "7122A2443024998933D0682D363A2B90F89D1FDF71D9616B7762D1725A8B8131",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.madeira",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-ram-union:madeira",
+    "normalized_checksum_sha256": "E96D1EB7BF3DDADE708BCF2AF3E915033D4E3919B97770C6ADFA0C61B96CA091",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.madeira.madeira",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-ram-union:madeira",
+    "normalized_checksum_sha256": "E96D1EB7BF3DDADE708BCF2AF3E915033D4E3919B97770C6ADFA0C61B96CA091",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.madeira.madeirense",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-ram-union:madeira",
+    "normalized_checksum_sha256": "E96D1EB7BF3DDADE708BCF2AF3E915033D4E3919B97770C6ADFA0C61B96CA091",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.amarante",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:minho-amarante",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.ave",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho-ave",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.baiao",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho-baiao",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.basto",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:minho-basto",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.cavado",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:minho-cavado",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.lima",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:minho-lima",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.moncao-e-melgaco",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:minho-moncao-melgaco",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.paiva",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho-paiva",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.sousa",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho-sousa",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.minho.vinho-verde",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:minho",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.peninsula-de-setubal",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-concelho-union:peninsula-de-setubal",
+    "normalized_checksum_sha256": "77FBC9FFCA0B14329F5B96AA191CE18F2D0299732CDEF5F5F3A82A361AD07593",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.peninsula-de-setubal.palmela",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:palmela",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "portugal.peninsula-de-setubal.setubal",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "caop2025-statute-union:palmela",
+    "normalized_checksum_sha256": "08FD2E69FFE47D04043B8067F74AFDF28CBF921EA1E3DEF129F7E0F30B317B12",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
@@ -27759,9 +28740,9 @@
     "canonical_key": "spain.castilla-la-mancha.ribera-del-jucar",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:ribera-del-jucar",
-    "normalized_checksum_sha256": "5149227B45557F3F113919877FA5CA41D57758323BF5CD4487532CB5186C3170",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T085231Z/ribera-del-jucar/raw-municipios.geojson",
-    "raw_checksum_sha256": "07BB6910E09012D4B387924610B66604079DC4F3875498DBFDDC0BBE4282BDD6",
+    "normalized_checksum_sha256": "8C0FF7E9E3F1637F5DECE9601423AC96DA8088CFAD6039AB4ECA1C401E58D193",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T092249Z/ribera-del-jucar/raw-municipios.geojson",
+    "raw_checksum_sha256": "DB9A8A4831E8559F3ADCAFA553EF48BA86ACFB2D86772ECBDD9B3B89D4498275",
     "documented": true
   },
   {
@@ -27840,9 +28821,9 @@
     "canonical_key": "spain.castilla-y-leon.ribera-del-duero",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:ribera-del-duero",
-    "normalized_checksum_sha256": "A59D533F02C5189FEC8325F0FBA13E9A0BFC1DCA75C2B63247B9881F4E42420C",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T085231Z/ribera-del-duero/raw-municipios.geojson",
-    "raw_checksum_sha256": "F420A2D9241E924D8C5C7862F0516982200AA3719335500ABEF3A06DF43EF340",
+    "normalized_checksum_sha256": "C4A48712FC13EF9E11C50FB28F1BD387E1B9843805AE7DF496EEC41702CEBFFA",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T091256Z/ribera-del-duero/raw-municipios.geojson",
+    "raw_checksum_sha256": "3316D729B77C2D3363F61D89E6675BF46B5B38C8DCDF79CF49582CAEDF8B7367",
     "documented": true
   },
   {
@@ -27867,9 +28848,9 @@
     "canonical_key": "spain.castilla-y-leon.tierra-de-leon",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:tierra-de-leon",
-    "normalized_checksum_sha256": "503CD0EEA22157EBA4D0E0EC07ED37D91D320584D4EED5C4A768105131EB2C33",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T085231Z/tierra-de-leon/raw-municipios.geojson",
-    "raw_checksum_sha256": "04ED63B00E3679B656F45B546CC2084647A9F6B2403CD055570B8406C8561C73",
+    "normalized_checksum_sha256": "A2430F99DAA070CFA86A7DF2140CEE090EA9789D2CD14841A76E224E690B06E3",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T092251Z/tierra-de-leon/raw-municipios.geojson",
+    "raw_checksum_sha256": "A44CE33500CB2C9AB9A9F7EB95EDF05372B1ED5D6E04DF966D618F817380C1FA",
     "documented": true
   },
   {
@@ -27957,9 +28938,9 @@
     "canonical_key": "spain.cataluna.montsant",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:montsant",
-    "normalized_checksum_sha256": "D625334554EF0930B3614F0C74519C3A455C624D589088CADD9D748E2F6E6E15",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T064120Z/montsant/raw-municipios.geojson",
-    "raw_checksum_sha256": "9D16886D3FE18DFC4C80BC13943FBE6AE39455E2A931DDBF330407FDF06D1F2F",
+    "normalized_checksum_sha256": "A75C0254E7BB82BDFB930FE31D88FF30A6BAF18FD93F171F35F1C6235B5ADA98",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T090000Z/montsant/raw-municipios.geojson",
+    "raw_checksum_sha256": "15442A9B7E86AC88FA68169C77B8362F11ADE07A039B1C5785F2BE22615167AB",
     "documented": true
   },
   {
@@ -27984,9 +28965,9 @@
     "canonical_key": "spain.cataluna.priorat",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:priorat",
-    "normalized_checksum_sha256": "0107FD00DBBBC6AF3D3475FAD7DB684831D03F806DEA96B7D15197F795E250CA",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260818T130336Z/priorat/raw-municipios.geojson",
-    "raw_checksum_sha256": "800A4A55569D73F1129030D8FC00C924BEC378E0254F2B236B4D489A70D7EF62",
+    "normalized_checksum_sha256": "DF3B21AF40C35938D3D0B045CD60C19FD0E57F376150BD6A214E46E3AD91AF9E",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T085958Z/priorat/raw-municipios.geojson",
+    "raw_checksum_sha256": "65F4B01ED433E8ACAE0BE9D865D7C0FB6C39ABB3E4970DB8773BDB2EB7C474AD",
     "documented": true
   },
   {
@@ -28191,9 +29172,9 @@
     "canonical_key": "spain.murcia.bullas",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:bullas",
-    "normalized_checksum_sha256": "C6551E5B373466D87A366FBFDED961E713F3EA25520085A231EC52ABD6F2B9D3",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T085231Z/bullas/raw-municipios.geojson",
-    "raw_checksum_sha256": "9EB6D6E283D8BB36283612602F641295506750F2FCBBDE902FA369A5F1284BC5",
+    "normalized_checksum_sha256": "4BC2C8AA3F86BD4FC207BCEF05DA394298BD5623FC5A9E7FD10292968D6498FE",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T092246Z/bullas/raw-municipios.geojson",
+    "raw_checksum_sha256": "755D5AF10CBCE21833E8090D6E3E0238D1C74BBD26054CC688E11E625B841E07",
     "documented": true
   },
   {
@@ -28272,9 +29253,9 @@
     "canonical_key": "spain.valencia.alicante",
     "boundary_method": "MANUAL",
     "source_feature_id": "do:alicante",
-    "normalized_checksum_sha256": "CC3649F0BCA7EF6B07A348BCDF975768350C591D651169EEBAD9FD1148A21FDB",
-    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T214451Z/alicante/raw-municipios.geojson",
-    "raw_checksum_sha256": "240A424A14755C837A042DF8F0AAF4D91D01E6558E2EA070DBAF42E606B460FD",
+    "normalized_checksum_sha256": "54444F9EB278951D6D6F2541B7611FE2641F8087D2EEC331DDA46653F96CB4D9",
+    "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T090003Z/alicante/raw-municipios.geojson",
+    "raw_checksum_sha256": "1BB8BAD68BFAF42B76CDC33A987A34718655197B15F1C1753FFAAE45A1672AFC",
     "documented": true
   },
   {
