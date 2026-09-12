@@ -359,6 +359,7 @@ const UI_DA: UiDict = {
   conclusion_short: "Konklusion",
   taster: "Smager",
   assessed_of: "{done} af {total} vurderet",
+  of: "af",
   discard: "Kassér",
   close: "Luk",
   save_note: "Gem note",
