@@ -358,11 +358,17 @@ try {
       name: boundary.name,
       matched_feature_count: features.length,
       matched_keys: features.map((f) => f.properties?.key ?? null),
+      // Recorded so a promotion migration can assert the boundary was built
+      // from the comune list it claims. Without it the count is only in the
+      // artifact, and a stale restage promotes silently.
+      comuni_count: features.reduce((n, f) => n + (f.properties?.comuni_count ?? 0), 0) || null,
       simplify_tolerance: SIMPLIFY_TOLERANCE,
       coordinate_precision: 5,
-      note:
-        "Comune-union footprint (ISTAT comune boundaries dissolved per the MASAF " +
-        "disciplinare comune list) — comune-level approximation; interior rings dropped for a solid fill.",
+      // The artifact states its own method, and that is no longer the same for
+      // every file: footprints rebuilt by build-italy-comuni-dissolved.mjs keep
+      // the interior ring where the disciplinare excludes an enclosed comune.
+      // Restating the method here let the two drift apart.
+      note: `Comune-union footprint. ${source._provenance.method}`,
     };
     const sourceFeatureRefs = {
       name: boundary.name,

@@ -167,7 +167,11 @@ try {
     const generation = {
       engine: "comune-union", name: b.name, comuni_count: feature.properties?.comuni_count ?? null,
       simplify_tolerance: SIMPLIFY_TOLERANCE, coordinate_precision: 5,
-      note: "Comune-union footprint (ISTAT comuni dissolved per MASAF disciplinare comune list) — comune-level approximation; interior rings dropped.",
+      // The artifact states its own method, and it is no longer the same for
+      // every file: footprints rebuilt by build-italy-comuni-dissolved.mjs keep
+      // the interior ring where the disciplinare excludes an enclosed comune.
+      // Restating it here let the two drift apart.
+      note: `Comune-union footprint. ${source._provenance.method}`,
     };
     const sourceFeatureRefs = { name: b.name, comuni_count: feature.properties?.comuni_count ?? null };
     const provenanceNote = `Comune-union footprint for "${b.name}" (ISTAT comuni per disciplinare), read from repo-committed ${SOURCE_FILE} (see its _provenance object). The committed file at its current git content is the immutable snapshot.`;
