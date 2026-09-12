@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, Wine } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { ordinal } from "@/lib/stats-math";
 import { cn } from "@/lib/utils";
-import { unlockGuess } from "./actions";
+import { scoreLockedGuess, unlockGuess } from "./actions";
 import { GuessLadder } from "./guess-ladder";
 import type { GuessLadderProps, RankChip } from "./ladder-types";
 
@@ -50,6 +50,18 @@ export type LockedInData = {
    *  standings (the tasting page's rail, the standalone leaderboard), else
    *  the results page. */
   standingsHref: string;
+  /** Whether "Change it" shows. Defaults to true, and nothing produces false
+   *  in this wave: the semi-blind freeze was its only producer and the
+   *  blind-tasting ledger drops it (D14 play-2). Unlocking is allowed until
+   *  the guess is scored, which is what `unlockGuess` enforces. */
+  canChange?: boolean;
+  /** "Your answer shows once glass 3's details are finished." — in ASYNC +
+   *  IMMEDIATE an incomplete glass defers scoring until its adder finishes
+   *  it (spec §C.8). Null (the default) when nothing is waiting. */
+  pendingNotice?: string | null;
+  /** ASYNC + IMMEDIATE only: the glass is complete now, but my locked guess
+   *  is still unscored, so the deferred score is due (spec §C.8). */
+  needsScoring?: boolean;
 };
 
 const LOCKED_CARD =
@@ -71,6 +83,11 @@ function decidingLine(names: string[]): string {
  * glass in `wineIds`, then `onUnlocked` so the parent reopens the ladder),
  * and the standings link for the wait. A scored guess cannot be unlocked —
  * the action says so and the line stays on screen.
+ *
+ * In ASYNC + IMMEDIATE it also carries the deferred score (spec §C.8): while
+ * the glass is unfinished it says so — "Change it" stays available throughout —
+ * and the moment the glass is complete it runs scoreLockedGuess once, after
+ * which AutoRefresh brings back the answer.
  */
 export function LockedIn({
   data,
@@ -84,6 +101,34 @@ export function LockedIn({
   const [error, setError] = useState<string | null>(null);
   const deciding = data.people.filter((p) => p.state === "deciding").map((p) => p.name);
   const resultsHref = `/tastings/${data.tastingId}/results`;
+  const canChange = data.canChange !== false;
+
+  // The deferred score, exactly once per set of glasses: the action is
+  // idempotent (it scores only my own locked, unscored guess on a complete
+  // glass), and the ref stops a re-render from firing a second call while the
+  // first is still in flight. It revalidates, so the server props come back
+  // resolved.
+  //
+  // `data.wineIds` is a fresh array on every server render, so the key — not
+  // the array — is the dependency; otherwise each AutoRefresh poll re-ran the
+  // effect. And no `cancelled` flag: the ref already guarantees a single run,
+  // while a teardown mid-flight would swallow the failure this card exists to
+  // show.
+  const wineKey = data.wineIds.join(",");
+  const scoreRequested = useRef<string | null>(null);
+  useEffect(() => {
+    if (!data.needsScoring || scoreRequested.current === wineKey) return;
+    scoreRequested.current = wineKey;
+    void (async () => {
+      for (const wineId of wineKey.split(",").filter(Boolean)) {
+        const result = await scoreLockedGuess(data.tastingId, wineId);
+        if ("error" in result) {
+          setError(result.error);
+          return;
+        }
+      }
+    })();
+  }, [data.needsScoring, data.tastingId, wineKey]);
 
   // A hash link only scrolls when its target exists on this surface; when
   // it does not (a rail that has not mounted its anchor), the dedicated
@@ -204,21 +249,26 @@ export function LockedIn({
           </div>
           <span className="mt-[3px] flex items-center gap-[9px]">
             <span className="text-[13px] text-console-ink">{data.stakeLine}</span>
-            <button
-              type="button"
-              onClick={change}
-              disabled={busy}
-              className="ml-auto flex min-h-11 items-center gap-2 rounded-[9px] border border-background/28 px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-60"
-            >
-              {busy ? (
-                <>
-                  <WineGlassLoader size={16} /> Unlocking…
-                </>
-              ) : (
-                "Change it"
-              )}
-            </button>
+            {canChange ? (
+              <button
+                type="button"
+                onClick={change}
+                disabled={busy}
+                className="ml-auto flex min-h-11 items-center gap-2 rounded-[9px] border border-background/28 px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-60"
+              >
+                {busy ? (
+                  <>
+                    <WineGlassLoader size={16} /> Unlocking…
+                  </>
+                ) : (
+                  "Change it"
+                )}
+              </button>
+            ) : null}
           </span>
+          {data.pendingNotice ? (
+            <p className="text-[12.5px] text-gold-light">{data.pendingNotice}</p>
+          ) : null}
           {error ? <p className="text-[12.5px] text-miss">{error}</p> : null}
         </div>
 
