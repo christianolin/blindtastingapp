@@ -7,7 +7,6 @@ import {
   qualityBand,
 } from "@/lib/wset/quality-curve.mjs";
 import { makeT, translateBand, type WsetLang } from "@/lib/wset/i18n";
-import { WSET } from "./tokens";
 
 const TICKS = [50, 70, 80, 85, 90, 95, 100];
 
@@ -43,11 +42,11 @@ export function QualitySlider({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10 }}>
-        <span className="font-heading" style={{ fontSize: 31, fontWeight: 700, color: WSET.ink }}>
+        <span className="font-heading" style={{ fontSize: 31, fontWeight: 700, color: "var(--foreground)" }}>
           {score === null ? "—" : score}
         </span>
         {score !== null ? (
-          <span style={{ fontSize: 12, fontWeight: 600, color: WSET.gold }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gold-dark)" }}>
             {translateBand(qualityBand(score), lang)}
           </span>
         ) : null}
@@ -66,7 +65,7 @@ export function QualitySlider({
             position: "relative",
             height: 6,
             borderRadius: 3,
-            background: WSET.track,
+            background: "var(--secondary)",
             cursor: "pointer",
           }}
         >
@@ -78,7 +77,7 @@ export function QualitySlider({
                 top: 0,
                 height: 6,
                 borderRadius: 3,
-                background: WSET.gold,
+                background: "var(--gold)",
                 width: `${pos}%`,
               }}
             />
@@ -93,7 +92,7 @@ export function QualitySlider({
               transform: "translate(-50%, -50%)",
               width: 2,
               height: 14,
-              background: WSET.gold,
+              background: "var(--gold-deep)",
             }}
           />
           {TICKS.map((t) => (
@@ -112,8 +111,8 @@ export function QualitySlider({
                 borderRadius: "50%",
                 padding: 0,
                 cursor: "pointer",
-                background: pos !== null && scoreToPct(t) <= pos ? WSET.gold : WSET.dotUnfilled,
-                border: `1px solid ${WSET.dotBorder}`,
+                background: pos !== null && scoreToPct(t) <= pos ? "var(--gold-deep)" : "var(--muted)",
+                border: "1px solid var(--border-strong)",
               }}
             />
           ))}
@@ -129,9 +128,9 @@ export function QualitySlider({
               borderRadius: "50%",
               transition: "left 60ms",
               pointerEvents: "none",
-              background: pos === null ? "transparent" : WSET.gold,
-              border: pos === null ? `2px dashed ${WSET.ghost}` : `3px solid ${WSET.cream}`,
-              boxShadow: pos === null ? "none" : "0 1px 5px rgba(70,25,40,0.35)",
+              background: pos === null ? "transparent" : "var(--gold)",
+              border: pos === null ? "2px dashed var(--placeholder-soft)" : "3px solid var(--card)",
+              boxShadow: pos === null ? "none" : "0 1px 5px rgba(42,33,30,0.35)",
             }}
           />
         </div>
@@ -152,7 +151,7 @@ export function QualitySlider({
                 border: "none",
                 padding: 0,
                 fontWeight: t === 85 ? 700 : 500,
-                color: t === 85 ? WSET.gold : WSET.muted2,
+                color: t === 85 ? "var(--gold-dark)" : "var(--muted-foreground)",
               }}
             >
               {t}
@@ -160,7 +159,7 @@ export function QualitySlider({
           ))}
         </div>
       </div>
-      <p style={{ marginTop: 8, fontSize: 11, color: WSET.muted2 }}>
+      <p style={{ marginTop: 8, fontSize: 11, color: "var(--muted-foreground)" }}>
         {t("quality_help")}
       </p>
     </div>

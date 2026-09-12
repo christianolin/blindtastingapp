@@ -2,15 +2,18 @@
 // seeded wset_aroma_terms (group_name + term). Guarantees: (1) every seeded term
 // has its own ICON_META entry (never the neutral "wine" fallback), (2) no two
 // distinct terms share the same (icon, colour) pair — i.e. no visual duplicate,
-// and (3) every ICON_META slug has a vendored SVG on disk. Node imports the .mjs
-// natively.
-import test from "node:test";
-import assert from "node:assert/strict";
+// and (3) every ICON_META slug has a vendored SVG on disk. Runs under vitest
+// (the earlier node:test file was never picked up by `vitest run`).
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { iconForTerm, slugForTerm, ICON_META } from "./aroma-icons.mjs";
+import { describe, expect, it } from "vitest";
+import { ICON_META, iconForTerm, slugForTerm } from "./aroma-icons.mjs";
 
-const LEXICON = {
+type IconMeta = { set: string; icon: string; color?: string };
+// The .mjs literal infers per-key shapes; widen it to one indexable record.
+const META: Record<string, IconMeta> = ICON_META;
+
+const LEXICON: Record<string, string[]> = {
   Floral: ["blossom", "acacia", "elderflower", "honeysuckle", "jasmine", "chamomile", "geranium", "rose", "violet"],
   "Green fruit": ["apple", "pear", "gooseberry", "grape", "quince"],
   "Citrus fruit": ["grapefruit", "lemon", "lime", "orange", "lemon peel", "orange peel"],
@@ -31,47 +34,61 @@ const LEXICON = {
   "Deliberately oxidised": ["almond", "marzipan", "hazelnut", "walnut", "chocolate", "coffee", "toffee", "caramel"],
 };
 
-test("every seeded term has its own ICON_META entry (no wine fallback)", () => {
-  for (const terms of Object.values(LEXICON)) {
-    for (const term of terms) {
-      const slug = slugForTerm(term);
-      assert.ok(ICON_META[slug], `"${term}" -> slug "${slug}" has no ICON_META entry`);
-      assert.notEqual(iconForTerm(term, ""), "wine", `"${term}" fell back to wine`);
-    }
-  }
-});
-
-test("no two ICON_META slugs share the same (set, icon, colour)", () => {
-  const seen = new Map();
-  for (const [slug, m] of Object.entries(ICON_META)) {
-    const key = `${m.set}|${m.icon}|${(m.color ?? "").toLowerCase()}`;
-    assert.ok(!seen.has(key), `duplicate icon: "${slug}" and "${seen.get(key)}" both ${key}`);
-    seen.set(key, slug);
-  }
-});
-
 // Only the emoji sets ship their own colours. Every other set is monochrome, so
 // an entry without a tint renders BLACK — which shipped once (a black quince, a
 // black apricot). Colour carries real meaning here (the brain ties colour to
 // smell/taste), so a missing tint is a bug, not a style nit.
-const EMOJI_SETS = new Set(["fluent-emoji", "fluent-emoji-flat", "noto", "twemoji", "openmoji", "emojione", "fxemoji", "streamline-emojis", "noto-v1"]);
+const EMOJI_SETS = new Set([
+  "fluent-emoji",
+  "fluent-emoji-flat",
+  "noto",
+  "twemoji",
+  "openmoji",
+  "emojione",
+  "fxemoji",
+  "streamline-emojis",
+  "noto-v1",
+]);
 
-test("every ICON_META entry names a set and an icon; every monochrome set is tinted", () => {
-  for (const [slug, m] of Object.entries(ICON_META)) {
-    assert.ok(m.set && m.icon, `${slug}: missing set/icon`);
-    if (!EMOJI_SETS.has(m.set)) {
-      assert.match(
-        m.color ?? "",
-        /^#[0-9a-f]{6}$/i,
-        `${slug}: "${m.set}" is monochrome and would render black without a colour`,
-      );
+describe("aroma icons", () => {
+  it("every seeded term has its own ICON_META entry (no wine fallback)", () => {
+    for (const terms of Object.values(LEXICON)) {
+      for (const term of terms) {
+        const slug = slugForTerm(term);
+        expect(META[slug], `"${term}" -> slug "${slug}" has no ICON_META entry`).toBeTruthy();
+        expect(iconForTerm(term, ""), `"${term}" fell back to wine`).not.toBe("wine");
+      }
     }
-  }
-});
+  });
 
-test("every ICON_META slug has a vendored SVG in public/emoji", () => {
-  const dir = fileURLToPath(new URL("../../../public/emoji/", import.meta.url));
-  for (const slug of Object.keys(ICON_META)) {
-    assert.ok(existsSync(`${dir}${slug}.svg`), `missing public/emoji/${slug}.svg`);
-  }
+  it("no two ICON_META slugs share the same (set, icon, colour)", () => {
+    const seen = new Map<string, string>();
+    for (const [slug, m] of Object.entries(META)) {
+      const key = `${m.set}|${m.icon}|${(m.color ?? "").toLowerCase()}`;
+      expect(
+        seen.has(key),
+        `duplicate icon: "${slug}" and "${seen.get(key)}" both ${key}`,
+      ).toBe(false);
+      seen.set(key, slug);
+    }
+  });
+
+  it("every ICON_META entry names a set and an icon; every monochrome set is tinted", () => {
+    for (const [slug, m] of Object.entries(META)) {
+      expect(m.set && m.icon, `${slug}: missing set/icon`).toBeTruthy();
+      if (!EMOJI_SETS.has(m.set)) {
+        expect(
+          m.color ?? "",
+          `${slug}: "${m.set}" is monochrome and would render black without a colour`,
+        ).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+    }
+  });
+
+  it("every ICON_META slug has a vendored SVG in public/emoji", () => {
+    const dir = fileURLToPath(new URL("../../../public/emoji/", import.meta.url));
+    for (const slug of Object.keys(META)) {
+      expect(existsSync(`${dir}${slug}.svg`), `missing public/emoji/${slug}.svg`).toBe(true);
+    }
+  });
 });

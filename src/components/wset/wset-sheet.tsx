@@ -32,7 +32,7 @@ import { AromaPicker } from "./aroma-picker";
 import { QualitySlider } from "./quality-slider";
 import { type SectionNavItem } from "./section-nav";
 import { LiveTastingNote } from "./live-tasting-note";
-import { WSET } from "./tokens";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const CLARITY = ["CLEAR", "HAZY"] as const;
@@ -76,24 +76,24 @@ export function Row({
   const heading = (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{rowLabel}</span>
         {value !== undefined ? (
           <>
-            <span aria-hidden style={{ fontSize: 12, color: WSET.muted2 }}>
+            <span aria-hidden style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
               ·
             </span>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: WSET.burgundy }}>{value}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary)" }}>{value}</span>
           </>
         ) : null}
       </div>
       {sub !== undefined ? (
-        <div style={{ fontSize: 11.5, color: WSET.muted2, marginTop: 2 }}>{sub}</div>
+        <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", marginTop: 2 }}>{sub}</div>
       ) : null}
     </div>
   );
   if (wide) {
     return (
-      <div style={{ padding: "16px 0", borderTop: `1px solid ${WSET.hairline}` }}>
+      <div style={{ padding: "16px 0", borderTop: "1px solid var(--border-light)" }}>
         <div style={{ marginBottom: 12 }}>{heading}</div>
         {children}
       </div>
@@ -136,11 +136,11 @@ export function SectionCard({
       // when a section is scrolled into view on switch.
       className={cn("scroll-mt-[118px] sm:scroll-mt-0", className)}
       style={{
-        background: WSET.cream,
-        border: `1px solid ${WSET.border}`,
+        background: "var(--card)",
+        border: "1px solid var(--border)",
         borderRadius: 18,
         padding: "var(--wset-card-pt,22px) var(--wset-card-px,26px) 8px",
-        boxShadow: "0 1px 2px rgba(70,25,40,0.04)",
+        boxShadow: "0 1px 2px rgba(42,33,30,0.04)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -154,16 +154,16 @@ export function SectionCard({
             height: "var(--wset-numeral,30px)",
             borderRadius: 8,
             fontSize: 14,
-            background: WSET.burgundy,
-            color: WSET.creamText,
+            background: "var(--primary)",
+            color: "var(--primary-foreground)",
           }}
         >
           {numeral}
         </span>
-        <h2 className="font-heading" style={{ flex: 1, fontSize: "var(--wset-title,22px)", fontWeight: 700, color: WSET.ink }}>
+        <h2 className="font-heading" style={{ flex: 1, fontSize: "var(--wset-title,22px)", fontWeight: 700, color: "var(--foreground)" }}>
           {title}
         </h2>
-        <span style={{ fontSize: 11.5, color: WSET.muted2 }}>{rated}</span>
+        <span style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>{rated}</span>
       </div>
       {children}
     </section>
@@ -290,7 +290,7 @@ export function WsetSheet({
         "wset-sheet min-w-0",
         embedded && "flex min-h-0 flex-1 flex-col",
       )}
-      style={{ color: WSET.body }}
+      style={{ color: "var(--foreground)" }}
     >
       <div
         className={cn(
@@ -312,27 +312,25 @@ export function WsetSheet({
           top: embedded ? 0 : 56,
           // Solid card-cream in the modal so nothing ghosts through; the page
           // keeps the translucent blur since content scrolls under it there.
-          background: embedded ? WSET.cream : "rgba(247,239,224,0.94)",
+          background: embedded ? "var(--card)" : "color-mix(in srgb, var(--background) 94%, transparent)",
           backdropFilter: embedded ? undefined : "blur(8px)",
-          borderBottom: `1px solid ${WSET.border}`,
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <span
-            className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold sm:text-base"
-            style={{ color: WSET.ink }}
+            className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold text-foreground sm:text-base"
           >
             {title}
           </span>
           <span
-            className="text-[11.5px] sm:text-[12.5px]"
-            style={{ color: WSET.muted, whiteSpace: "nowrap" }}
+            className="text-[11.5px] whitespace-nowrap text-muted-foreground sm:text-[12.5px]"
           >
             {t("assessed_of", { done, total })}
           </span>
           {/* EN/DA toggle — mirrors the map's; the sheet language is shared and
               persisted, so it also drives the read-only archetype view. */}
-          <div className="flex items-center rounded-md border p-0.5 text-[11px]" style={{ borderColor: WSET.border }}>
+          <div className="flex items-center rounded-md border border-border p-0.5 text-[11px]">
             {(["en", "da"] as const).map((lng) => (
               <button
                 key={lng}
@@ -341,8 +339,8 @@ export function WsetSheet({
                 aria-pressed={lang === lng}
                 className="rounded px-1.5 py-0.5 font-medium"
                 style={{
-                  background: lang === lng ? WSET.burgundy : "transparent",
-                  color: lang === lng ? WSET.creamText : WSET.muted,
+                  background: lang === lng ? "var(--primary)" : "transparent",
+                  color: lang === lng ? "var(--primary-foreground)" : "var(--muted-foreground)",
                 }}
               >
                 {lng.toUpperCase()}
@@ -364,9 +362,9 @@ export function WsetSheet({
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: "pointer",
-                border: `1px solid ${WSET.border}`,
+                border: "1px solid var(--border)",
                 background: "transparent",
-                color: WSET.muted,
+                color: "var(--muted-foreground)",
                 whiteSpace: "nowrap",
               }}
             >
@@ -384,8 +382,10 @@ export function WsetSheet({
               fontWeight: 600,
               cursor: "pointer",
               border: "none",
-              background: saveState === "saved" ? WSET.gold : WSET.burgundy,
-              color: WSET.creamText,
+              background: saveState === "saved" ? "var(--gold)" : "var(--primary)",
+              // Ink on the gold "Saved" fill (6.5:1), like every bg-gold button
+              // in the app; parchment is only for text on bordeaux.
+              color: saveState === "saved" ? "var(--foreground)" : "var(--primary-foreground)",
               whiteSpace: "nowrap",
             }}
           >
@@ -408,9 +408,9 @@ export function WsetSheet({
                   width: 30,
                   height: 30,
                   borderRadius: 999,
-                  border: `1px solid ${WSET.border}`,
+                  border: "1px solid var(--border)",
                   background: "transparent",
-                  color: WSET.muted,
+                  color: "var(--muted-foreground)",
                   fontSize: 16,
                   lineHeight: 1,
                   cursor: "pointer",
@@ -434,10 +434,10 @@ export function WsetSheet({
                       zIndex: 41,
                       minWidth: 150,
                       padding: 5,
-                      background: WSET.cream,
-                      border: `1px solid ${WSET.border}`,
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
                       borderRadius: 12,
-                      boxShadow: "0 8px 28px rgba(70,25,40,0.18)",
+                      boxShadow: "0 8px 28px rgba(42,33,30,0.18)",
                     }}
                   >
                     {onDiscard && dirty ? (
@@ -459,7 +459,7 @@ export function WsetSheet({
                           fontWeight: 600,
                           border: "none",
                           background: "none",
-                          color: WSET.ink,
+                          color: "var(--foreground)",
                           cursor: "pointer",
                         }}
                       >
@@ -485,7 +485,7 @@ export function WsetSheet({
                           fontWeight: 600,
                           border: "none",
                           background: "none",
-                          color: WSET.faultRed,
+                          color: "var(--destructive)",
                           cursor: "pointer",
                         }}
                       >
@@ -525,7 +525,7 @@ export function WsetSheet({
                 style={{
                   border: "none",
                   cursor: "pointer",
-                  background: active ? WSET.burgundy : "#F3EAD6",
+                  background: active ? "var(--primary)" : "var(--accent)",
                 }}
               >
                 <span
@@ -533,7 +533,7 @@ export function WsetSheet({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    color: active ? WSET.creamText : WSET.ink,
+                    color: active ? "var(--primary-foreground)" : "var(--foreground)",
                   }}
                 >
                   {s.id === "conclusions" ? t("conclusion_short") : s.name}
@@ -543,7 +543,7 @@ export function WsetSheet({
                   style={{
                     fontSize: 9.5,
                     fontWeight: 600,
-                    color: active ? WSET.creamText : complete ? WSET.gold : WSET.faint,
+                    color: active ? "var(--primary-foreground)" : complete ? "var(--gold-dark)" : "var(--muted-foreground)",
                   }}
                 >
                   {complete ? "✓" : `${s.done}/${s.total}`}
@@ -569,7 +569,7 @@ export function WsetSheet({
         {embedded ? null : (
         <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
           <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
-          <p style={{ fontSize: 10.5, color: WSET.faint }}>
+          <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
             {t("footer_wset")}
           </p>
         </aside>
@@ -695,13 +695,13 @@ export function WsetSheet({
                   width: "100%",
                   minHeight: 96,
                   resize: "vertical",
-                  background: WSET.insetBg,
-                  border: `1px solid ${WSET.border}`,
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 12,
                   padding: "12px 14px",
                   fontSize: 13,
                   lineHeight: 1.6,
-                  color: WSET.body,
+                  color: "var(--foreground)",
                 }}
               />
             </Row>
@@ -721,7 +721,7 @@ export function WsetSheet({
             alignItems: "center",
             justifyContent: "center",
             padding: 16,
-            background: "rgba(30,10,17,0.45)",
+            background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
           }}
         >
           <div
@@ -729,24 +729,24 @@ export function WsetSheet({
             style={{
               width: "100%",
               maxWidth: 360,
-              background: WSET.cream,
-              border: `1px solid ${WSET.border}`,
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 16,
               padding: 20,
-              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+              boxShadow: "0 12px 40px rgba(42,33,30,0.25)",
             }}
           >
-            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: "var(--foreground)", marginBottom: 6 }}>
               {t("discard_q")}
             </h3>
-            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: 18 }}>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)", lineHeight: 1.5, marginBottom: 18 }}>
               {t("discard_body")}
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 type="button"
                 onClick={() => setConfirmDiscard(false)}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)" }}
               >
                 {t("keep_editing")}
               </button>
@@ -756,7 +756,7 @@ export function WsetSheet({
                   setConfirmDiscard(false);
                   onDiscard?.();
                 }}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: WSET.burgundy, color: WSET.creamText }}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: "var(--primary)", color: "var(--primary-foreground)" }}
               >
                 {t("discard")}
               </button>
@@ -777,7 +777,7 @@ export function WsetSheet({
             alignItems: "center",
             justifyContent: "center",
             padding: 16,
-            background: "rgba(30,10,17,0.45)",
+            background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
           }}
         >
           <div
@@ -785,33 +785,34 @@ export function WsetSheet({
             style={{
               width: "100%",
               maxWidth: 360,
-              background: WSET.cream,
-              border: `1px solid ${WSET.border}`,
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 16,
               padding: 20,
-              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+              boxShadow: "0 12px 40px rgba(42,33,30,0.25)",
             }}
           >
-            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: "var(--foreground)", marginBottom: 6 }}>
               {t("delete_q")}
             </h3>
-            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)", lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
               {t("delete_body")}
             </p>
             {deleteError ? (
-              <p style={{ fontSize: 12.5, color: WSET.faultRed, marginBottom: 14 }}>{deleteError}</p>
+              <p style={{ fontSize: 12.5, color: "var(--rose)", marginBottom: 14 }}>{deleteError}</p>
             ) : null}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 type="button"
                 disabled={deleting}
                 onClick={() => setConfirmDelete(false)}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)" }}
               >
                 {t("keep_note")}
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
+                className="h-auto rounded-full px-4 py-[9px] text-[13px] font-semibold"
                 disabled={deleting}
                 onClick={async () => {
                   setDeleting(true);
@@ -828,10 +829,9 @@ export function WsetSheet({
                     );
                   }
                 }}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: deleting ? "default" : "pointer", border: "none", background: WSET.faultRed, color: WSET.creamText, opacity: deleting ? 0.7 : 1 }}
               >
                 {deleting ? t("deleting") : t("delete")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

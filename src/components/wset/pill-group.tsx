@@ -1,7 +1,5 @@
 "use client";
 
-import { WSET } from "./tokens";
-
 // Rounded pill selector. Single-select (default) holds one value or null and
 // deselects on a second click; multi-select holds an array and toggles. The
 // `multi` flag discriminates the prop shape so each caller gets precise types.
@@ -53,9 +51,9 @@ export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T
               lineHeight: 1.35,
               cursor: "pointer",
               transition: "transform 120ms, box-shadow 120ms",
-              background: selected ? WSET.burgundy : WSET.pillBg,
-              border: `1px solid ${WSET.pillBorder}`,
-              color: selected ? WSET.creamText : WSET.pillText,
+              background: selected ? "var(--primary)" : "var(--card)",
+              border: "1px solid var(--border-strong)",
+              color: selected ? "var(--primary-foreground)" : "var(--foreground)",
               fontWeight: selected ? 600 : 500,
             }}
           >

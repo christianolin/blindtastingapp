@@ -15,8 +15,9 @@
 //   - the icon must be the ACTUAL note, never a look-alike stand-in;
 //   - prefer a SINGLE object over a cluster — owner flagged multi-berry glyphs
 //     (cranberry/redcurrant) as too busy at pill size;
-//   - it must SURVIVE the cream pill (#FBF5E7): a cream or near-white tint is
-//     invisible there, so pale notes take a saturated stand-in colour;
+//   - it must SURVIVE the pill's card surface (`--card`, #FBF7EF in the light
+//     theme): a cream or near-white tint is invisible there, so pale notes
+//     take a saturated stand-in colour;
 //   - no two terms may share the same (set, icon, colour) — asserted by the test.
 //
 // ICON_META maps a slug -> { set, icon, color? }. `color` applies to game-icons
