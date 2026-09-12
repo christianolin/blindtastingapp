@@ -228,6 +228,13 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
     - Tests: the reducer transition, and the card's action list if its copy lives in a pure helper. No API calls.
     - This supersedes the spec's "The merge card is unchanged" only for this addition; sources-6 (a typed rack and price dropped by the merge) stays left to the owner.
 
+19. **Hand-offs from F8–F11 (wave B2, 2026-09-12).**
+    - **F13** also OWNS `src/app/tastings/[id]/wines/new/tasting-wine-writes.ts`: delete `syncCatalogWine` and its private `BlendGrape` type once `src/components/add-wine/actions.ts` stops importing them (F10 marked it `@deprecated removed in F13`; `fillCatalogWine` in `write.ts` replaces it).
+    - **F13** closes F9's runtime gap: `addToCellar` from an identity must go `prepareCompleteWine` → `upsertCatalogWine` → `addCellarLot({ catalogWineId, ...lot })`, dropping the cellar_lots read-back and the `syncCatalogWine` alcohol call. Until F13 lands, a cellar add from an identity is refused on the working branch (never pushed: compile-debt window).
+    - **F10 Acceptance 1** cannot print nothing: `addWine` matches the required `?addWine=byhand` redirect in `wines/new/page.tsx`. Treat that single line as expected.
+    - **F11** kept `PendingScan` / `PendingFix` (`@deprecated removed in S5c`) and the inline `WineFormInitial` imports for round-1 view props; debt-set tsc errors are expected to reach ~74 until S1–S6. `ScanConfirmProps.onChoose` now takes `{ kind: "note" }`.
+    - **Push rule during the window:** origin/master carries a revert of F7 (5a44457). When S6 is committed and the tree passes the checks, revert that revert on the integration branch before merging master.
+
 ## Working Rules
 
 1. **Ownership.** You may create, edit or delete only the files in your task's **OWNS** list. You may read anything. If the task needs a change in a file you do not own, stop and report the exact change to the orchestrator. Never make that change yourself.
