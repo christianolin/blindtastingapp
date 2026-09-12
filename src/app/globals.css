@@ -361,7 +361,7 @@
 }
 
 /* Add-wine sheet "reading" state: a gold scanline sweeping the label photo
-   while FastCork reads it. Positioned by the caller (absolute, inset-x);
+   while the label is read. Positioned by the caller (absolute, inset-x);
    reduced motion parks it a third of the way down. */
 @keyframes scanline {
   0% {
