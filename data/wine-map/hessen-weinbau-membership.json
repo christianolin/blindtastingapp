@@ -1,0 +1,72 @@
+{
+  "_readme": {
+    "purpose": "The Hessian wine regions as their governing authority defines them: which Gemeinden carry the Rebflächen of each bestimmtes Anbaugebiet and each Bereich, plus the registered Großlage and Einzellage names.",
+    "authority": "Regierungspräsidium Darmstadt, Dezernat Weinbau Eltville — the Weinbauamt that keeps the Hessian Weinbergsrolle.",
+    "source_document": "Info-Blatt: GEOGRAPHISCHE ANGABEN, Stand 01. November 2010",
+    "source_url": "https://rp-darmstadt.hessen.de/sites/rp-darmstadt.hessen.de/files/2022-11/_geografische_angaben.pdf",
+    "why_this_shape": "The statute names Gemeinden, NOT boundaries: each entry reads 'mit den Rebflächen in den Städten und Gemeinden'. A Gemeinde is therefore the containment parent of the vineyard, never the vineyard itself, and the union of these Gemeinden is NOT the Anbaugebiet. Rheingau's list includes Frankfurt am Main, Wiesbaden and Felsberg; its actual vineyard is a strip along the Rhine plus two detached sites. Unioning them whole would repeat the error the Spanish and Italian audits existed to remove, only larger.",
+    "how_geometry_is_built": "build-hessen-weinbau.mjs intersects the ATKIS Basis-DLM vineyard land-use class (AX_Landwirtschaft, vegetationsmerkmal 1020 'Weingarten') with these Gemeinden. The statute decides WHICH Gemeinden; ATKIS decides WHICH LAND inside them is vineyard. Neither source is used for what the other governs.",
+    "limits": [
+      "The Info-Blatt is dated 2010. It marks Lagen deleted from vintages 2005 and 2009, so it is maintained, but it should be re-checked against a newer edition before anyone treats the Einzellage list as current.",
+      "Großlage and Einzellage names are recorded here because the authority publishes them; NO geometry exists for them in any open source, so they are names only and must not be given footprints derived from anything else.",
+      "ATKIS records land use, not legal delimitation. A parcel planted with vines outside the Weinbergsrolle would be included, and a registered Lage lying fallow would be missed. This is an approximation of the Anbaugebiet, documented as such, and is not a substitute for the Weinbergsrolle that Rheinland-Pfalz publishes and Hessen does not."
+    ]
+  },
+  "anbaugebiete": {
+    "hessische-bergstrasse": {
+      "name": "Hessische Bergstraße",
+      "statute_section": "3.1.1",
+      "gemeinden": [
+        "Alsbach-Hähnlein", "Bensheim", "Brensbach", "Dietzenbach", "Groß-Umstadt",
+        "Heppenheim (Bergstraße)", "Rossdorf", "Seeheim-Jugenheim", "Zwingenberg"
+      ]
+    },
+    "rheingau": {
+      "name": "Rheingau",
+      "statute_section": "3.1.2",
+      "gemeinden": [
+        "Eltville am Rhein", "Felsberg", "Flörsheim am Main", "Frankfurt am Main",
+        "Geisenheim", "Hochheim am Main", "Kiedrich", "Lorch", "Oestrich-Winkel",
+        "Rüdesheim am Rhein", "Walluf", "Wiesbaden"
+      ],
+      "note": "Felsberg carries the detached Einzellage Böddiger Berg, some 120 km north near Kassel; Frankfurt am Main carries Lohrberger Hang. Both are genuine members and both are why a whole-Gemeinde union would be absurd here."
+    }
+  },
+  "bereiche": {
+    "starkenburg": {
+      "name": "Starkenburg",
+      "anbaugebiet": "hessische-bergstrasse",
+      "statute_section": "3.2.1",
+      "gemeinden": ["Alsbach-Hähnlein", "Bensheim", "Heppenheim (Bergstraße)", "Seeheim-Jugenheim", "Zwingenberg"]
+    },
+    "umstadt": {
+      "name": "Umstadt",
+      "anbaugebiet": "hessische-bergstrasse",
+      "statute_section": "3.2.2",
+      "gemeinden": ["Brensbach", "Dietzenbach", "Groß-Umstadt", "Rossdorf"]
+    },
+    "johannisberg": {
+      "name": "Johannisberg",
+      "anbaugebiet": "rheingau",
+      "statute_section": "3.2.3",
+      "note": "The Bereich list omits Frankfurt am Main and Felsberg, which the Anbaugebiet list includes. That is the statute's own distinction and is preserved here rather than tidied away.",
+      "gemeinden": [
+        "Eltville am Rhein", "Flörsheim am Main", "Geisenheim", "Hochheim am Main",
+        "Kiedrich", "Lorch", "Oestrich-Winkel", "Rüdesheim am Rhein", "Walluf", "Wiesbaden"
+      ]
+    }
+  },
+  "grosslagen": {
+    "hessische-bergstrasse": ["Auerbach Rott", "Bensheimer Wolfsmagen", "Heppenheimer Schloßberg"],
+    "rheingau": [
+      "Assmannshäuser Steil", "Erbacher Honigberg", "Hallgartener Mehrhölzchen",
+      "Hattenheimer Deutelsberg", "Hochheimer Daubhaus", "Johannisberger Erntebringer",
+      "Kiedricher Heiligenstock", "Kostheimer Daubhaus", "Lorcher Burgweg",
+      "Oestricher Gottesthal", "Rauenthaler Steinmächer", "Rüdesheimer Burgweg"
+    ]
+  },
+  "ortsteilbezeichnungen": [
+    "Kloster Eberbach", "Schloß Johannisberg", "Schloß Reichartshausen",
+    "Schloß Vollrads", "Steinberg"
+  ]
+}

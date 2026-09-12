@@ -23,7 +23,7 @@
 // run by hand when the disciplinari are re-pulled, not in CI.
 //
 // Usage: node scripts/wine-map-sources/fetch-italy-disciplinari.mjs [--refresh]
-import { mkdir, readdir, readFile, writeFile, stat } from "node:fs/promises";
+import { mkdir, readdir, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";

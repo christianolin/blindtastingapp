@@ -217,6 +217,17 @@ export const ATTRIBUTION = {
     key: "dgt-caop",
     text: "© Direção-Geral do Território — CAOP 2025 (CC BY 4.0); delimitação segundo os diplomas do IVV/IVDP",
   },
+  // Hessen: the only German state outside Rheinland-Pfalz whose wine regions can
+  // be built from open data, and not from a Weinbergsrolle — Hessen does not
+  // publish one. Two authorities contribute and both are credited, because
+  // neither result stands without the other: the Weinbauamt names WHICH
+  // Gemeinden carry the Rebflächen, ATKIS says WHICH LAND inside them is
+  // vineyard. See scripts/wine-map-sources/fetch-hessen-atkis.mjs.
+  HESSEN_ATKIS_WEINBAU: {
+    key: "hvbg-atkis",
+    text: "© HVBG — ATKIS Basis-DLM (§ 24 HVGG); Abgrenzung nach dem Verzeichnis des "
+      + "Regierungspräsidiums Darmstadt, Dezernat Weinbau Eltville",
+  },
 };
 
 export function attributionKeyFor(namespace) {

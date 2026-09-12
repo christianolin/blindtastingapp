@@ -44,46 +44,48 @@ export type ArchetypeView = {
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
-// The map's "a typical wine from here" — the WSET sheet's look, read-only, with
-// each scale drawn as its low→high band. Language follows the shared sheet
-// toggle; the helpers are closed over `L`/`lang` so every call site stays put.
-export function ArchetypeSheet({ a }: { a: ArchetypeView }) {
+// RangeSlider and AromaPills live out here, not inside ArchetypeSheet, and that
+// placement is load-bearing rather than stylistic. A component declared in a
+// render body is a NEW component type on every render, so React unmounts the
+// old one and mounts a replacement instead of updating it: state resets, DOM
+// nodes are thrown away, focus is lost. These two are read-only, so the visible
+// damage was limited to needless remounts, but the rule does not bend.
+//
+// They were nested because they close over the active language. They do not
+// need to: useWsetLang is a useSyncExternalStore over a module-level store with
+// no provider, so any component may call it and they all see the same value.
+// Reading it here instead of capturing it keeps every call site unchanged.
+
+/** Read-only band on the same slider used in the editable sheet. */
+function RangeSlider({
+  stops,
+  range,
+}: {
+  stops: readonly string[];
+  range: Range | undefined;
+}) {
   const { lang } = useWsetLang();
-  const t = makeT(lang);
-  const L = labelsFor(lang);
+  if (!range) {
+    return <p style={{ fontSize: 12, color: WSET.muted2 }}>{makeT(lang)("varies")}</p>;
+  }
+  return (
+    <SnapSlider
+      stops={stops}
+      labels={labelsFor(lang)}
+      value={null}
+      range={range as readonly [string, string]}
+      readOnly
+    />
+  );
+}
 
-  // A low→high band as words, in the active language.
-  const rangeLabel = (r: Range | undefined): string => {
-    if (!r) return "—";
-    return r[0] === r[1]
-      ? L[r[0]] ?? r[0]
-      : `${L[r[0]] ?? r[0]} → ${L[r[1]] ?? r[1]}`;
-  };
-
-  // Read-only band on the same slider used in the editable sheet.
-  const RangeSlider = ({
-    stops,
-    range,
-  }: {
-    stops: readonly string[];
-    range: Range | undefined;
-  }) => {
-    if (!range)
-      return <p style={{ fontSize: 12, color: WSET.muted2 }}>{t("varies")}</p>;
-    return (
-      <SnapSlider
-        stops={stops}
-        labels={L}
-        value={null}
-        range={range as readonly [string, string]}
-        readOnly
-      />
-    );
-  };
-
-  // Read-only aroma / flavour pills, shared by the Nose and Palate sections.
-  // The icon keeps the English term (its identity); the text is translated.
-  const AromaPills = ({ terms }: { terms: string[] }) => (
+/**
+ * Read-only aroma / flavour pills, shared by the Nose and Palate sections.
+ * The icon keeps the English term (its identity); the text is translated.
+ */
+function AromaPills({ terms }: { terms: string[] }) {
+  const { lang } = useWsetLang();
+  return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
       {terms.map((term) => (
         <span
@@ -105,6 +107,23 @@ export function ArchetypeSheet({ a }: { a: ArchetypeView }) {
       ))}
     </div>
   );
+}
+
+// The map's "a typical wine from here" — the WSET sheet's look, read-only, with
+// each scale drawn as its low→high band. Language follows the shared sheet
+// toggle; the helpers are closed over `L`/`lang` so every call site stays put.
+export function ArchetypeSheet({ a }: { a: ArchetypeView }) {
+  const { lang } = useWsetLang();
+  const t = makeT(lang);
+  const L = labelsFor(lang);
+
+  // A low→high band as words, in the active language.
+  const rangeLabel = (r: Range | undefined): string => {
+    if (!r) return "—";
+    return r[0] === r[1]
+      ? L[r[0]] ?? r[0]
+      : `${L[r[0]] ?? r[0]} → ${L[r[1]] ?? r[1]}`;
+  };
 
   const sat = a.sat;
   const hueStops = HUES_BY_COLOUR[a.colour] as readonly string[];
