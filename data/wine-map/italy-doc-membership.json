@@ -1,0 +1,3641 @@
+{
+  "_readme": {
+    "purpose": "Recovered comune membership for every Italian comune-union footprint. The build configs that held these lists were never committed (.tiles-build is git-ignored), so this file reconstructs them from the committed dissolved geometry and makes the 'per disciplinare' provenance claim checkable.",
+    "how_recovered": "For each footprint in data/wine-map/<region>-comuni-dissolved.geojson, every ISTAT comune of that region whose area lies >=90% inside the footprint is a member. Each footprint records the comuni_count it was originally built from; recovery asserts the recovered list matches it exactly, and reports any that do not.",
+    "important": "RECOVERY IS NOT VERIFICATION. This records what the map currently claims, not what the disciplinare says. Checking these lists against the MASAF disciplinari is separate work, and is the Italian equivalent of the Spanish pliego audit that found four wrong DOs.",
+    "geometry_source": "ISTAT comuni via openpolis/geojson-italy (CC BY 4.0), pinned at .tiles-build/sicily/it-comuni.geojson",
+    "three_discrepancies": "Three footprints recover one MORE comune than their artifact's comuni_count: abruzzo/montepulciano-d-abruzzo-colline-teramane (32 vs 31), campania/vesuvio (16 vs 15) and puglia/copertino (7 vs 6). Every recovered comune sits 99.97-100% inside the shipped footprint, so the geometry really does cover them -- they are not threshold artefacts, and none is an enclave absorbed by the interior-ring drop (tested). The recorded count is simply inconsistent with the shape that shipped. Which name the original list omitted cannot be determined from geometry, because all of them are covered. Resolving it needs the disciplinare, which is the follow-up work.",
+    "next_step": "Check each list against its MASAF disciplinare, the way the Spanish lists were checked against their pliegos. That audit found four wrong DOs in Spain -- two omissions and, more insidiously, names lifted from descriptive text (a river, a pedania) that matched the municipality register. Italy has had no equivalent check."
+  },
+  "generated_at": "2026-09-12",
+  "footprints": {
+    "abruzzo/montepulciano-d-abruzzo-colline-teramane": {
+      "region": "Abruzzo",
+      "recovered_count": 32,
+      "artifact_count": 31,
+      "reconciles": false,
+      "comuni": [
+        {
+          "istat": "067002",
+          "name": "Ancarano"
+        },
+        {
+          "istat": "067004",
+          "name": "Atri"
+        },
+        {
+          "istat": "067005",
+          "name": "Basciano"
+        },
+        {
+          "istat": "067006",
+          "name": "Bellante"
+        },
+        {
+          "istat": "067008",
+          "name": "Campli"
+        },
+        {
+          "istat": "067009",
+          "name": "Canzano"
+        },
+        {
+          "istat": "067011",
+          "name": "Castellalto"
+        },
+        {
+          "istat": "067013",
+          "name": "Castiglione Messer Raimondo"
+        },
+        {
+          "istat": "067014",
+          "name": "Castilenti"
+        },
+        {
+          "istat": "067015",
+          "name": "Cellino Attanasio"
+        },
+        {
+          "istat": "067016",
+          "name": "Cermignano"
+        },
+        {
+          "istat": "067017",
+          "name": "Civitella del Tronto"
+        },
+        {
+          "istat": "067019",
+          "name": "Colonnella"
+        },
+        {
+          "istat": "067020",
+          "name": "Controguerra"
+        },
+        {
+          "istat": "067021",
+          "name": "Corropoli"
+        },
+        {
+          "istat": "067025",
+          "name": "Giulianova"
+        },
+        {
+          "istat": "067047",
+          "name": "Martinsicuro"
+        },
+        {
+          "istat": "067027",
+          "name": "Montefino"
+        },
+        {
+          "istat": "067028",
+          "name": "Montorio al Vomano"
+        },
+        {
+          "istat": "067029",
+          "name": "Morro d'Oro"
+        },
+        {
+          "istat": "067030",
+          "name": "Mosciano Sant'Angelo"
+        },
+        {
+          "istat": "067031",
+          "name": "Nereto"
+        },
+        {
+          "istat": "067032",
+          "name": "Notaresco"
+        },
+        {
+          "istat": "067033",
+          "name": "Penna Sant'Andrea"
+        },
+        {
+          "istat": "067035",
+          "name": "Pineto"
+        },
+        {
+          "istat": "067037",
+          "name": "Roseto degli Abruzzi"
+        },
+        {
+          "istat": "067038",
+          "name": "Sant'Egidio alla Vibrata"
+        },
+        {
+          "istat": "067039",
+          "name": "Sant'Omero"
+        },
+        {
+          "istat": "067040",
+          "name": "Silvi"
+        },
+        {
+          "istat": "067041",
+          "name": "Teramo"
+        },
+        {
+          "istat": "067042",
+          "name": "Torano Nuovo"
+        },
+        {
+          "istat": "067044",
+          "name": "Tortoreto"
+        }
+      ]
+    },
+    "abruzzo/tullum": {
+      "region": "Abruzzo",
+      "recovered_count": 1,
+      "artifact_count": 1,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "069090",
+          "name": "Tollo"
+        }
+      ]
+    },
+    "abruzzo/villamagna": {
+      "region": "Abruzzo",
+      "recovered_count": 3,
+      "artifact_count": 3,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "069008",
+          "name": "Bucchianico"
+        },
+        {
+          "istat": "069098",
+          "name": "Vacri"
+        },
+        {
+          "istat": "069101",
+          "name": "Villamagna"
+        }
+      ]
+    },
+    "basilicata/aglianico-del-vulture": {
+      "region": "Basilicata",
+      "recovered_count": 15,
+      "artifact_count": 15,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "076002",
+          "name": "Acerenza"
+        },
+        {
+          "istat": "076006",
+          "name": "Atella"
+        },
+        {
+          "istat": "076009",
+          "name": "Banzi"
+        },
+        {
+          "istat": "076011",
+          "name": "Barile"
+        },
+        {
+          "istat": "076033",
+          "name": "Forenza"
+        },
+        {
+          "istat": "076036",
+          "name": "Genzano di Lucania"
+        },
+        {
+          "istat": "076099",
+          "name": "Ginestra"
+        },
+        {
+          "istat": "076043",
+          "name": "Lavello"
+        },
+        {
+          "istat": "076047",
+          "name": "Maschito"
+        },
+        {
+          "istat": "076048",
+          "name": "Melfi"
+        },
+        {
+          "istat": "076057",
+          "name": "Palazzo San Gervasio"
+        },
+        {
+          "istat": "076064",
+          "name": "Rapolla"
+        },
+        {
+          "istat": "076066",
+          "name": "Rionero in Vulture"
+        },
+        {
+          "istat": "076067",
+          "name": "Ripacandida"
+        },
+        {
+          "istat": "076095",
+          "name": "Venosa"
+        }
+      ]
+    },
+    "calabria/ciro": {
+      "region": "Calabria",
+      "recovered_count": 4,
+      "artifact_count": 4,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "101007",
+          "name": "Cirò"
+        },
+        {
+          "istat": "101008",
+          "name": "Cirò Marina"
+        },
+        {
+          "istat": "101011",
+          "name": "Crucoli"
+        },
+        {
+          "istat": "101014",
+          "name": "Melissa"
+        }
+      ]
+    },
+    "calabria/greco-di-bianco": {
+      "region": "Calabria",
+      "recovered_count": 2,
+      "artifact_count": 2,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "080009",
+          "name": "Bianco"
+        },
+        {
+          "istat": "080024",
+          "name": "Casignana"
+        }
+      ]
+    },
+    "campania/taurasi": {
+      "region": "Campania",
+      "recovered_count": 17,
+      "artifact_count": 17,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "064012",
+          "name": "Bonito"
+        },
+        {
+          "istat": "064023",
+          "name": "Castelfranci"
+        },
+        {
+          "istat": "064024",
+          "name": "Castelvetere sul Calore"
+        },
+        {
+          "istat": "064033",
+          "name": "Fontanarosa"
+        },
+        {
+          "istat": "064042",
+          "name": "Lapio"
+        },
+        {
+          "istat": "064045",
+          "name": "Luogosano"
+        },
+        {
+          "istat": "064050",
+          "name": "Mirabella Eclano"
+        },
+        {
+          "istat": "064053",
+          "name": "Montefalcione"
+        },
+        {
+          "istat": "064058",
+          "name": "Montemarano"
+        },
+        {
+          "istat": "064059",
+          "name": "Montemiletto"
+        },
+        {
+          "istat": "064070",
+          "name": "Paternopoli"
+        },
+        {
+          "istat": "064072",
+          "name": "Pietradefusi"
+        },
+        {
+          "istat": "064082",
+          "name": "San Mango sul Calore"
+        },
+        {
+          "istat": "064090",
+          "name": "Sant'Angelo all'Esca"
+        },
+        {
+          "istat": "064107",
+          "name": "Taurasi"
+        },
+        {
+          "istat": "064110",
+          "name": "Torre Le Nocelle"
+        },
+        {
+          "istat": "064116",
+          "name": "Venticano"
+        }
+      ]
+    },
+    "campania/greco-di-tufo": {
+      "region": "Campania",
+      "recovered_count": 8,
+      "artifact_count": 8,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "064002",
+          "name": "Altavilla Irpina"
+        },
+        {
+          "istat": "064027",
+          "name": "Chianche"
+        },
+        {
+          "istat": "064056",
+          "name": "Montefusco"
+        },
+        {
+          "istat": "064071",
+          "name": "Petruro Irpino"
+        },
+        {
+          "istat": "064074",
+          "name": "Prata di Principato Ultra"
+        },
+        {
+          "istat": "064093",
+          "name": "Santa Paolina"
+        },
+        {
+          "istat": "064111",
+          "name": "Torrioni"
+        },
+        {
+          "istat": "064113",
+          "name": "Tufo"
+        }
+      ]
+    },
+    "campania/fiano-di-avellino": {
+      "region": "Campania",
+      "recovered_count": 26,
+      "artifact_count": 26,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "064001",
+          "name": "Aiello del Sabato"
+        },
+        {
+          "istat": "064006",
+          "name": "Atripalda"
+        },
+        {
+          "istat": "064008",
+          "name": "Avellino"
+        },
+        {
+          "istat": "064016",
+          "name": "Candida"
+        },
+        {
+          "istat": "064018",
+          "name": "Capriglia Irpina"
+        },
+        {
+          "istat": "064026",
+          "name": "Cesinali"
+        },
+        {
+          "istat": "064029",
+          "name": "Contrada"
+        },
+        {
+          "istat": "064034",
+          "name": "Forino"
+        },
+        {
+          "istat": "064039",
+          "name": "Grottolella"
+        },
+        {
+          "istat": "064042",
+          "name": "Lapio"
+        },
+        {
+          "istat": "064046",
+          "name": "Manocalzati"
+        },
+        {
+          "istat": "064049",
+          "name": "Mercogliano"
+        },
+        {
+          "istat": "064053",
+          "name": "Montefalcione"
+        },
+        {
+          "istat": "064054",
+          "name": "Monteforte Irpino"
+        },
+        {
+          "istat": "064055",
+          "name": "Montefredane"
+        },
+        {
+          "istat": "064067",
+          "name": "Ospedaletto d'Alpinolo"
+        },
+        {
+          "istat": "064069",
+          "name": "Parolise"
+        },
+        {
+          "istat": "064075",
+          "name": "Pratola Serra"
+        },
+        {
+          "istat": "064081",
+          "name": "Salza Irpina"
+        },
+        {
+          "istat": "064084",
+          "name": "San Michele di Serino"
+        },
+        {
+          "istat": "064086",
+          "name": "San Potito Ultra"
+        },
+        {
+          "istat": "064091",
+          "name": "Sant'Angelo a Scala"
+        },
+        {
+          "istat": "064088",
+          "name": "Santa Lucia di Serino"
+        },
+        {
+          "istat": "064095",
+          "name": "Santo Stefano del Sole"
+        },
+        {
+          "istat": "064102",
+          "name": "Sorbo Serpico"
+        },
+        {
+          "istat": "064105",
+          "name": "Summonte"
+        }
+      ]
+    },
+    "campania/aglianico-del-taburno": {
+      "region": "Campania",
+      "recovered_count": 13,
+      "artifact_count": 13,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "062004",
+          "name": "Apollosa"
+        },
+        {
+          "istat": "062008",
+          "name": "Benevento"
+        },
+        {
+          "istat": "062009",
+          "name": "Bonea"
+        },
+        {
+          "istat": "062014",
+          "name": "Campoli del Monte Taburno"
+        },
+        {
+          "istat": "062018",
+          "name": "Castelpoto"
+        },
+        {
+          "istat": "062021",
+          "name": "Cautano"
+        },
+        {
+          "istat": "062030",
+          "name": "Foglianise"
+        },
+        {
+          "istat": "062043",
+          "name": "Montesarchio"
+        },
+        {
+          "istat": "062049",
+          "name": "Paupisi"
+        },
+        {
+          "istat": "062053",
+          "name": "Ponte"
+        },
+        {
+          "istat": "062075",
+          "name": "Tocco Caudio"
+        },
+        {
+          "istat": "062076",
+          "name": "Torrecuso"
+        },
+        {
+          "istat": "062077",
+          "name": "Vitulano"
+        }
+      ]
+    },
+    "campania/vesuvio": {
+      "region": "Campania",
+      "recovered_count": 16,
+      "artifact_count": 15,
+      "reconciles": false,
+      "comuni": [
+        {
+          "istat": "063008",
+          "name": "Boscoreale"
+        },
+        {
+          "istat": "063009",
+          "name": "Boscotrecase"
+        },
+        {
+          "istat": "063026",
+          "name": "Cercola"
+        },
+        {
+          "istat": "063064",
+          "name": "Ercolano"
+        },
+        {
+          "istat": "063092",
+          "name": "Massa di Somma"
+        },
+        {
+          "istat": "063051",
+          "name": "Ottaviano"
+        },
+        {
+          "istat": "063056",
+          "name": "Pollena Trocchia"
+        },
+        {
+          "istat": "063059",
+          "name": "Portici"
+        },
+        {
+          "istat": "063068",
+          "name": "San Giuseppe Vesuviano"
+        },
+        {
+          "istat": "063070",
+          "name": "San Sebastiano al Vesuvio"
+        },
+        {
+          "istat": "063072",
+          "name": "Sant'Anastasia"
+        },
+        {
+          "istat": "063079",
+          "name": "Somma Vesuviana"
+        },
+        {
+          "istat": "063082",
+          "name": "Terzigno"
+        },
+        {
+          "istat": "063083",
+          "name": "Torre Annunziata"
+        },
+        {
+          "istat": "063084",
+          "name": "Torre del Greco"
+        },
+        {
+          "istat": "063091",
+          "name": "Trecase"
+        }
+      ]
+    },
+    "emilia-romagna/romagna-albana": {
+      "region": "Emilia-Romagna",
+      "recovered_count": 22,
+      "artifact_count": 22,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "040003",
+          "name": "Bertinoro"
+        },
+        {
+          "istat": "037007",
+          "name": "Borgo Tossignano"
+        },
+        {
+          "istat": "039004",
+          "name": "Brisighella"
+        },
+        {
+          "istat": "037012",
+          "name": "Casalfiumanese"
+        },
+        {
+          "istat": "039005",
+          "name": "Casola Valsenio"
+        },
+        {
+          "istat": "039006",
+          "name": "Castel Bolognese"
+        },
+        {
+          "istat": "037020",
+          "name": "Castel San Pietro Terme"
+        },
+        {
+          "istat": "040005",
+          "name": "Castrocaro Terme e Terra del Sole"
+        },
+        {
+          "istat": "040007",
+          "name": "Cesena"
+        },
+        {
+          "istat": "037025",
+          "name": "Dozza"
+        },
+        {
+          "istat": "039010",
+          "name": "Faenza"
+        },
+        {
+          "istat": "037026",
+          "name": "Fontanelice"
+        },
+        {
+          "istat": "040012",
+          "name": "Forlì"
+        },
+        {
+          "istat": "040013",
+          "name": "Forlimpopoli"
+        },
+        {
+          "istat": "037032",
+          "name": "Imola"
+        },
+        {
+          "istat": "040018",
+          "name": "Longiano"
+        },
+        {
+          "istat": "040019",
+          "name": "Meldola"
+        },
+        {
+          "istat": "040028",
+          "name": "Montiano"
+        },
+        {
+          "istat": "037046",
+          "name": "Ozzano dell'Emilia"
+        },
+        {
+          "istat": "039015",
+          "name": "Riolo Terme"
+        },
+        {
+          "istat": "040037",
+          "name": "Roncofreddo"
+        },
+        {
+          "istat": "040045",
+          "name": "Savignano sul Rubicone"
+        }
+      ]
+    },
+    "emilia-romagna/lambrusco-di-sorbara": {
+      "region": "Emilia-Romagna",
+      "recovered_count": 12,
+      "artifact_count": 12,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "036001",
+          "name": "Bastiglia"
+        },
+        {
+          "istat": "036002",
+          "name": "Bomporto"
+        },
+        {
+          "istat": "036003",
+          "name": "Campogalliano"
+        },
+        {
+          "istat": "036004",
+          "name": "Camposanto"
+        },
+        {
+          "istat": "036005",
+          "name": "Carpi"
+        },
+        {
+          "istat": "036006",
+          "name": "Castelfranco Emilia"
+        },
+        {
+          "istat": "036023",
+          "name": "Modena"
+        },
+        {
+          "istat": "036027",
+          "name": "Nonantola"
+        },
+        {
+          "istat": "036034",
+          "name": "Ravarino"
+        },
+        {
+          "istat": "036036",
+          "name": "San Cesario sul Panaro"
+        },
+        {
+          "istat": "036039",
+          "name": "San Prospero"
+        },
+        {
+          "istat": "036044",
+          "name": "Soliera"
+        }
+      ]
+    },
+    "emilia-romagna/lambrusco-grasparossa-di-castelvetro": {
+      "region": "Emilia-Romagna",
+      "recovered_count": 14,
+      "artifact_count": 14,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "036006",
+          "name": "Castelfranco Emilia"
+        },
+        {
+          "istat": "036007",
+          "name": "Castelnuovo Rangone"
+        },
+        {
+          "istat": "036008",
+          "name": "Castelvetro di Modena"
+        },
+        {
+          "istat": "036013",
+          "name": "Fiorano Modenese"
+        },
+        {
+          "istat": "036015",
+          "name": "Formigine"
+        },
+        {
+          "istat": "036019",
+          "name": "Maranello"
+        },
+        {
+          "istat": "036020",
+          "name": "Marano sul Panaro"
+        },
+        {
+          "istat": "036023",
+          "name": "Modena"
+        },
+        {
+          "istat": "036033",
+          "name": "Prignano sulla Secchia"
+        },
+        {
+          "istat": "036036",
+          "name": "San Cesario sul Panaro"
+        },
+        {
+          "istat": "036040",
+          "name": "Sassuolo"
+        },
+        {
+          "istat": "036041",
+          "name": "Savignano sul Panaro"
+        },
+        {
+          "istat": "036045",
+          "name": "Spilamberto"
+        },
+        {
+          "istat": "036046",
+          "name": "Vignola"
+        }
+      ]
+    },
+    "emilia-romagna/colli-bolognesi-pignoletto": {
+      "region": "Emilia-Romagna",
+      "recovered_count": 6,
+      "artifact_count": 6,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "037011",
+          "name": "Casalecchio di Reno"
+        },
+        {
+          "istat": "037042",
+          "name": "Monte San Pietro"
+        },
+        {
+          "istat": "037057",
+          "name": "Sasso Marconi"
+        },
+        {
+          "istat": "036041",
+          "name": "Savignano sul Panaro"
+        },
+        {
+          "istat": "037061",
+          "name": "Valsamoggia"
+        },
+        {
+          "istat": "037060",
+          "name": "Zola Predosa"
+        }
+      ]
+    },
+    "emilia-romagna/gutturnio": {
+      "region": "Emilia-Romagna",
+      "recovered_count": 18,
+      "artifact_count": 18,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "033001",
+          "name": "Agazzano"
+        },
+        {
+          "istat": "033002",
+          "name": "Alseno"
+        },
+        {
+          "istat": "033049",
+          "name": "Alta Val Tidone"
+        },
+        {
+          "istat": "033006",
+          "name": "Borgonovo Val Tidone"
+        },
+        {
+          "istat": "033011",
+          "name": "Carpaneto Piacentino"
+        },
+        {
+          "istat": "033013",
+          "name": "Castel San Giovanni"
+        },
+        {
+          "istat": "033012",
+          "name": "Castell'Arquato"
+        },
+        {
+          "istat": "033022",
+          "name": "Gazzola"
+        },
+        {
+          "istat": "033025",
+          "name": "Gropparello"
+        },
+        {
+          "istat": "033026",
+          "name": "Lugagnano Val d'Arda"
+        },
+        {
+          "istat": "033033",
+          "name": "Pianello Val Tidone"
+        },
+        {
+          "istat": "033034",
+          "name": "Piozzano"
+        },
+        {
+          "istat": "033036",
+          "name": "Ponte dell'Olio"
+        },
+        {
+          "istat": "033038",
+          "name": "Rivergaro"
+        },
+        {
+          "istat": "033040",
+          "name": "San Giorgio Piacentino"
+        },
+        {
+          "istat": "033044",
+          "name": "Vernasca"
+        },
+        {
+          "istat": "033045",
+          "name": "Vigolzone"
+        },
+        {
+          "istat": "033048",
+          "name": "Ziano Piacentino"
+        }
+      ]
+    },
+    "friuli/Collio": {
+      "region": "Friuli-Venezia Giulia",
+      "recovered_count": 8,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "031001",
+          "name": "Capriva del Friuli"
+        },
+        {
+          "istat": "031002",
+          "name": "Cormons"
+        },
+        {
+          "istat": "031004",
+          "name": "Dolegna del Collio"
+        },
+        {
+          "istat": "031005",
+          "name": "Farra d'Isonzo"
+        },
+        {
+          "istat": "031007",
+          "name": "Gorizia"
+        },
+        {
+          "istat": "031014",
+          "name": "Mossa"
+        },
+        {
+          "istat": "031019",
+          "name": "San Floriano del Collio-Števerjan"
+        },
+        {
+          "istat": "031020",
+          "name": "San Lorenzo Isontino"
+        }
+      ]
+    },
+    "friuli/Friuli Colli Orientali": {
+      "region": "Friuli-Venezia Giulia",
+      "recovered_count": 19,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "030007",
+          "name": "Attimis"
+        },
+        {
+          "istat": "030014",
+          "name": "Buttrio"
+        },
+        {
+          "istat": "030026",
+          "name": "Cividale del Friuli"
+        },
+        {
+          "istat": "030030",
+          "name": "Corno di Rosazzo"
+        },
+        {
+          "istat": "030036",
+          "name": "Faedis"
+        },
+        {
+          "istat": "030052",
+          "name": "Magnano in Riviera"
+        },
+        {
+          "istat": "030055",
+          "name": "Manzano"
+        },
+        {
+          "istat": "030060",
+          "name": "Moimacco"
+        },
+        {
+          "istat": "030065",
+          "name": "Nimis"
+        },
+        {
+          "istat": "030078",
+          "name": "Povoletto"
+        },
+        {
+          "istat": "030083",
+          "name": "Premariacco"
+        },
+        {
+          "istat": "030085",
+          "name": "Prepotto"
+        },
+        {
+          "istat": "030090",
+          "name": "Reana del Rojale"
+        },
+        {
+          "istat": "030091",
+          "name": "Remanzacco"
+        },
+        {
+          "istat": "030101",
+          "name": "San Giovanni al Natisone"
+        },
+        {
+          "istat": "030103",
+          "name": "San Pietro al Natisone"
+        },
+        {
+          "istat": "030116",
+          "name": "Tarcento"
+        },
+        {
+          "istat": "030122",
+          "name": "Torreano"
+        },
+        {
+          "istat": "030127",
+          "name": "Tricesimo"
+        }
+      ]
+    },
+    "friuli/Carso": {
+      "region": "Friuli-Venezia Giulia",
+      "recovered_count": 12,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "031003",
+          "name": "Doberdò del Lago-Doberdob"
+        },
+        {
+          "istat": "032001",
+          "name": "Duino Aurisina-Devin Nabrežina"
+        },
+        {
+          "istat": "031006",
+          "name": "Fogliano Redipuglia"
+        },
+        {
+          "istat": "031012",
+          "name": "Monfalcone"
+        },
+        {
+          "istat": "032002",
+          "name": "Monrupino-Repentabor"
+        },
+        {
+          "istat": "032003",
+          "name": "Muggia"
+        },
+        {
+          "istat": "031016",
+          "name": "Ronchi dei Legionari"
+        },
+        {
+          "istat": "031017",
+          "name": "Sagrado"
+        },
+        {
+          "istat": "032004",
+          "name": "San Dorligo della Valle-Dolina"
+        },
+        {
+          "istat": "031022",
+          "name": "Savogna d'Isonzo-Sovodnje ob Soči"
+        },
+        {
+          "istat": "032005",
+          "name": "Sgonico-Zgonik"
+        },
+        {
+          "istat": "032006",
+          "name": "Trieste"
+        }
+      ]
+    },
+    "friuli/Friuli Isonzo": {
+      "region": "Friuli-Venezia Giulia",
+      "recovered_count": 20,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "031001",
+          "name": "Capriva del Friuli"
+        },
+        {
+          "istat": "031002",
+          "name": "Cormons"
+        },
+        {
+          "istat": "031005",
+          "name": "Farra d'Isonzo"
+        },
+        {
+          "istat": "031006",
+          "name": "Fogliano Redipuglia"
+        },
+        {
+          "istat": "031007",
+          "name": "Gorizia"
+        },
+        {
+          "istat": "031008",
+          "name": "Gradisca d'Isonzo"
+        },
+        {
+          "istat": "031010",
+          "name": "Mariano del Friuli"
+        },
+        {
+          "istat": "031011",
+          "name": "Medea"
+        },
+        {
+          "istat": "031012",
+          "name": "Monfalcone"
+        },
+        {
+          "istat": "031013",
+          "name": "Moraro"
+        },
+        {
+          "istat": "031014",
+          "name": "Mossa"
+        },
+        {
+          "istat": "031015",
+          "name": "Romans d'Isonzo"
+        },
+        {
+          "istat": "031016",
+          "name": "Ronchi dei Legionari"
+        },
+        {
+          "istat": "031017",
+          "name": "Sagrado"
+        },
+        {
+          "istat": "031018",
+          "name": "San Canzian d'Isonzo"
+        },
+        {
+          "istat": "031020",
+          "name": "San Lorenzo Isontino"
+        },
+        {
+          "istat": "031021",
+          "name": "San Pier d'Isonzo"
+        },
+        {
+          "istat": "031023",
+          "name": "Staranzano"
+        },
+        {
+          "istat": "031024",
+          "name": "Turriaco"
+        },
+        {
+          "istat": "031025",
+          "name": "Villesse"
+        }
+      ]
+    },
+    "lazio/frascati": {
+      "region": "Lazio",
+      "recovered_count": 4,
+      "artifact_count": 4,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "058039",
+          "name": "Frascati"
+        },
+        {
+          "istat": "058046",
+          "name": "Grottaferrata"
+        },
+        {
+          "istat": "058060",
+          "name": "Monte Compatri"
+        },
+        {
+          "istat": "058064",
+          "name": "Monte Porzio Catone"
+        }
+      ]
+    },
+    "lazio/marino": {
+      "region": "Lazio",
+      "recovered_count": 3,
+      "artifact_count": 3,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "058022",
+          "name": "Castel Gandolfo"
+        },
+        {
+          "istat": "058118",
+          "name": "Ciampino"
+        },
+        {
+          "istat": "058057",
+          "name": "Marino"
+        }
+      ]
+    },
+    "lazio/cesanese-del-piglio": {
+      "region": "Lazio",
+      "recovered_count": 5,
+      "artifact_count": 5,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "060002",
+          "name": "Acuto"
+        },
+        {
+          "istat": "060006",
+          "name": "Anagni"
+        },
+        {
+          "istat": "060046",
+          "name": "Paliano"
+        },
+        {
+          "istat": "060053",
+          "name": "Piglio"
+        },
+        {
+          "istat": "060071",
+          "name": "Serrone"
+        }
+      ]
+    },
+    "lazio/est-est-est-di-montefiascone": {
+      "region": "Lazio",
+      "recovered_count": 7,
+      "artifact_count": 7,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "056008",
+          "name": "Bolsena"
+        },
+        {
+          "istat": "056013",
+          "name": "Capodimonte"
+        },
+        {
+          "istat": "056028",
+          "name": "Gradoli"
+        },
+        {
+          "istat": "056030",
+          "name": "Grotte di Castro"
+        },
+        {
+          "istat": "056034",
+          "name": "Marta"
+        },
+        {
+          "istat": "056036",
+          "name": "Montefiascone"
+        },
+        {
+          "istat": "056047",
+          "name": "San Lorenzo Nuovo"
+        }
+      ]
+    },
+    "liguria/rossese-di-dolceacqua": {
+      "region": "Liguria",
+      "recovered_count": 14,
+      "artifact_count": 14,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "008002",
+          "name": "Apricale"
+        },
+        {
+          "istat": "008007",
+          "name": "Bajardo"
+        },
+        {
+          "istat": "008011",
+          "name": "Camporosso"
+        },
+        {
+          "istat": "008015",
+          "name": "Castel Vittorio"
+        },
+        {
+          "istat": "008029",
+          "name": "Dolceacqua"
+        },
+        {
+          "istat": "008032",
+          "name": "Isolabona"
+        },
+        {
+          "istat": "008040",
+          "name": "Perinaldo"
+        },
+        {
+          "istat": "008043",
+          "name": "Pigna"
+        },
+        {
+          "istat": "008051",
+          "name": "Rocchetta Nervina"
+        },
+        {
+          "istat": "008053",
+          "name": "San Biagio della Cima"
+        },
+        {
+          "istat": "008058",
+          "name": "Soldano"
+        },
+        {
+          "istat": "008062",
+          "name": "Vallebona"
+        },
+        {
+          "istat": "008063",
+          "name": "Vallecrosia"
+        },
+        {
+          "istat": "008065",
+          "name": "Ventimiglia"
+        }
+      ]
+    },
+    "liguria/cinque-terre": {
+      "region": "Liguria",
+      "recovered_count": 3,
+      "artifact_count": 3,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "011019",
+          "name": "Monterosso al Mare"
+        },
+        {
+          "istat": "011024",
+          "name": "Riomaggiore"
+        },
+        {
+          "istat": "011030",
+          "name": "Vernazza"
+        }
+      ]
+    },
+    "liguria/colli-di-luni": {
+      "region": "Liguria",
+      "recovered_count": 14,
+      "artifact_count": 14,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "011001",
+          "name": "Ameglia"
+        },
+        {
+          "istat": "011002",
+          "name": "Arcola"
+        },
+        {
+          "istat": "011003",
+          "name": "Beverino"
+        },
+        {
+          "istat": "011004",
+          "name": "Bolano"
+        },
+        {
+          "istat": "011008",
+          "name": "Calice al Cornoviglio"
+        },
+        {
+          "istat": "011011",
+          "name": "Castelnuovo Magra"
+        },
+        {
+          "istat": "011013",
+          "name": "Follo"
+        },
+        {
+          "istat": "011015",
+          "name": "La Spezia"
+        },
+        {
+          "istat": "011016",
+          "name": "Lerici"
+        },
+        {
+          "istat": "011020",
+          "name": "Luni"
+        },
+        {
+          "istat": "011023",
+          "name": "Riccò del Golfo di Spezia"
+        },
+        {
+          "istat": "011026",
+          "name": "Santo Stefano di Magra"
+        },
+        {
+          "istat": "011027",
+          "name": "Sarzana"
+        },
+        {
+          "istat": "011031",
+          "name": "Vezzano Ligure"
+        }
+      ]
+    },
+    "lombardia/Franciacorta": {
+      "region": "Lombardia",
+      "recovered_count": 19,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "017002",
+          "name": "Adro"
+        },
+        {
+          "istat": "017029",
+          "name": "Brescia"
+        },
+        {
+          "istat": "017038",
+          "name": "Capriolo"
+        },
+        {
+          "istat": "017046",
+          "name": "Cazzago San Martino"
+        },
+        {
+          "istat": "017048",
+          "name": "Cellatica"
+        },
+        {
+          "istat": "017056",
+          "name": "Coccaglio"
+        },
+        {
+          "istat": "017059",
+          "name": "Cologne"
+        },
+        {
+          "istat": "017062",
+          "name": "Corte Franca"
+        },
+        {
+          "istat": "017069",
+          "name": "Erbusco"
+        },
+        {
+          "istat": "017081",
+          "name": "Gussago"
+        },
+        {
+          "istat": "017085",
+          "name": "Iseo"
+        },
+        {
+          "istat": "017112",
+          "name": "Monticelli Brusati"
+        },
+        {
+          "istat": "017123",
+          "name": "Ome"
+        },
+        {
+          "istat": "017130",
+          "name": "Paderno Franciacorta"
+        },
+        {
+          "istat": "017134",
+          "name": "Paratico"
+        },
+        {
+          "istat": "017136",
+          "name": "Passirano"
+        },
+        {
+          "istat": "017156",
+          "name": "Provaglio d'Iseo"
+        },
+        {
+          "istat": "017163",
+          "name": "Rodengo Saiano"
+        },
+        {
+          "istat": "017166",
+          "name": "Rovato"
+        }
+      ]
+    },
+    "lombardia/Valtellina Superiore": {
+      "region": "Lombardia",
+      "recovered_count": 16,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "014005",
+          "name": "Ardenno"
+        },
+        {
+          "istat": "014007",
+          "name": "Berbenno di Valtellina"
+        },
+        {
+          "istat": "014008",
+          "name": "Bianzone"
+        },
+        {
+          "istat": "014010",
+          "name": "Buglio in Monte"
+        },
+        {
+          "istat": "014014",
+          "name": "Castello dell'Acqua"
+        },
+        {
+          "istat": "014015",
+          "name": "Castione Andevenno"
+        },
+        {
+          "istat": "014020",
+          "name": "Chiuro"
+        },
+        {
+          "istat": "014044",
+          "name": "Montagna in Valtellina"
+        },
+        {
+          "istat": "014051",
+          "name": "Poggiridenti"
+        },
+        {
+          "istat": "014052",
+          "name": "Ponte in Valtellina"
+        },
+        {
+          "istat": "014053",
+          "name": "Postalesio"
+        },
+        {
+          "istat": "014061",
+          "name": "Sondrio"
+        },
+        {
+          "istat": "014065",
+          "name": "Teglio"
+        },
+        {
+          "istat": "014066",
+          "name": "Tirano"
+        },
+        {
+          "istat": "014070",
+          "name": "Tresivio"
+        },
+        {
+          "istat": "014078",
+          "name": "Villa di Tirano"
+        }
+      ]
+    },
+    "lombardia/Oltrepò Pavese": {
+      "region": "Lombardia",
+      "recovered_count": 41,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "018016",
+          "name": "Borgo Priolo"
+        },
+        {
+          "istat": "018017",
+          "name": "Borgoratto Mormorolo"
+        },
+        {
+          "istat": "018020",
+          "name": "Bosnasco"
+        },
+        {
+          "istat": "018024",
+          "name": "Broni"
+        },
+        {
+          "istat": "018025",
+          "name": "Calvignano"
+        },
+        {
+          "istat": "018029",
+          "name": "Canneto Pavese"
+        },
+        {
+          "istat": "018036",
+          "name": "Castana"
+        },
+        {
+          "istat": "018037",
+          "name": "Casteggio"
+        },
+        {
+          "istat": "018042",
+          "name": "Cecima"
+        },
+        {
+          "istat": "018049",
+          "name": "Cigognola"
+        },
+        {
+          "istat": "018051",
+          "name": "Codevilla"
+        },
+        {
+          "istat": "018193",
+          "name": "Colli Verdi"
+        },
+        {
+          "istat": "018057",
+          "name": "Corvino San Quirico"
+        },
+        {
+          "istat": "018064",
+          "name": "Fortunago"
+        },
+        {
+          "istat": "018073",
+          "name": "Godiasco Salice Terme"
+        },
+        {
+          "istat": "018074",
+          "name": "Golferenzo"
+        },
+        {
+          "istat": "018082",
+          "name": "Lirio"
+        },
+        {
+          "istat": "018094",
+          "name": "Montalto Pavese"
+        },
+        {
+          "istat": "018095",
+          "name": "Montebello della Battaglia"
+        },
+        {
+          "istat": "018096",
+          "name": "Montecalvo Versiggia"
+        },
+        {
+          "istat": "018097",
+          "name": "Montescano"
+        },
+        {
+          "istat": "018098",
+          "name": "Montesegale"
+        },
+        {
+          "istat": "018100",
+          "name": "Montù Beccaria"
+        },
+        {
+          "istat": "018101",
+          "name": "Mornico Losana"
+        },
+        {
+          "istat": "018105",
+          "name": "Oliva Gessi"
+        },
+        {
+          "istat": "018111",
+          "name": "Pietra de' Giorgi"
+        },
+        {
+          "istat": "018117",
+          "name": "Ponte Nizza"
+        },
+        {
+          "istat": "018120",
+          "name": "Redavalle"
+        },
+        {
+          "istat": "018121",
+          "name": "Retorbido"
+        },
+        {
+          "istat": "018122",
+          "name": "Rivanazzano Terme"
+        },
+        {
+          "istat": "018125",
+          "name": "Rocca de' Giorgi"
+        },
+        {
+          "istat": "018126",
+          "name": "Rocca Susella"
+        },
+        {
+          "istat": "018131",
+          "name": "Rovescala"
+        },
+        {
+          "istat": "018134",
+          "name": "San Damiano al Colle"
+        },
+        {
+          "istat": "018140",
+          "name": "Santa Giuletta"
+        },
+        {
+          "istat": "018143",
+          "name": "Santa Maria della Versa"
+        },
+        {
+          "istat": "018153",
+          "name": "Stradella"
+        },
+        {
+          "istat": "018155",
+          "name": "Torrazza Coste"
+        },
+        {
+          "istat": "018161",
+          "name": "Torricella Verzate"
+        },
+        {
+          "istat": "018183",
+          "name": "Volpara"
+        },
+        {
+          "istat": "018187",
+          "name": "Zenevredo"
+        }
+      ]
+    },
+    "lombardia/Riviera del Garda Classico": {
+      "region": "Lombardia",
+      "recovered_count": 19,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "017014",
+          "name": "Bedizzole"
+        },
+        {
+          "istat": "017033",
+          "name": "Calvagese della Riviera"
+        },
+        {
+          "istat": "017067",
+          "name": "Desenzano del Garda"
+        },
+        {
+          "istat": "017074",
+          "name": "Gardone Riviera"
+        },
+        {
+          "istat": "017077",
+          "name": "Gavardo"
+        },
+        {
+          "istat": "017092",
+          "name": "Lonato del Garda"
+        },
+        {
+          "istat": "017102",
+          "name": "Manerba del Garda"
+        },
+        {
+          "istat": "017109",
+          "name": "Moniga del Garda"
+        },
+        {
+          "istat": "017116",
+          "name": "Muscoline"
+        },
+        {
+          "istat": "017129",
+          "name": "Padenghe sul Garda"
+        },
+        {
+          "istat": "017145",
+          "name": "Polpenazze del Garda"
+        },
+        {
+          "istat": "017151",
+          "name": "Pozzolengo"
+        },
+        {
+          "istat": "017158",
+          "name": "Puegnago del Garda"
+        },
+        {
+          "istat": "017164",
+          "name": "Roè Volciano"
+        },
+        {
+          "istat": "017170",
+          "name": "Salò"
+        },
+        {
+          "istat": "017171",
+          "name": "San Felice del Benaco"
+        },
+        {
+          "istat": "017179",
+          "name": "Sirmione"
+        },
+        {
+          "istat": "017180",
+          "name": "Soiano del Lago"
+        },
+        {
+          "istat": "017201",
+          "name": "Villanuova sul Clisi"
+        }
+      ]
+    },
+    "lombardia/Moscato di Scanzo": {
+      "region": "Lombardia",
+      "recovered_count": 1,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "016194",
+          "name": "Scanzorosciate"
+        }
+      ]
+    },
+    "lombardia/San Colombano al Lambro": {
+      "region": "Lombardia",
+      "recovered_count": 5,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "098028",
+          "name": "Graffignana"
+        },
+        {
+          "istat": "018077",
+          "name": "Inverno e Monteleone"
+        },
+        {
+          "istat": "018093",
+          "name": "Miradolo Terme"
+        },
+        {
+          "istat": "015191",
+          "name": "San Colombano al Lambro"
+        },
+        {
+          "istat": "098050",
+          "name": "Sant'Angelo Lodigiano"
+        }
+      ]
+    },
+    "marche/verdicchio-di-matelica": {
+      "region": "Marche",
+      "recovered_count": 8,
+      "artifact_count": 8,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "043007",
+          "name": "Camerino"
+        },
+        {
+          "istat": "043009",
+          "name": "Castelraimondo"
+        },
+        {
+          "istat": "042013",
+          "name": "Cerreto d'Esi"
+        },
+        {
+          "istat": "043016",
+          "name": "Esanatoglia"
+        },
+        {
+          "istat": "042017",
+          "name": "Fabriano"
+        },
+        {
+          "istat": "043020",
+          "name": "Gagliole"
+        },
+        {
+          "istat": "043024",
+          "name": "Matelica"
+        },
+        {
+          "istat": "043039",
+          "name": "Pioraco"
+        }
+      ]
+    },
+    "marche/conero": {
+      "region": "Marche",
+      "recovered_count": 7,
+      "artifact_count": 7,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "042002",
+          "name": "Ancona"
+        },
+        {
+          "istat": "042006",
+          "name": "Camerano"
+        },
+        {
+          "istat": "042010",
+          "name": "Castelfidardo"
+        },
+        {
+          "istat": "042032",
+          "name": "Numana"
+        },
+        {
+          "istat": "042033",
+          "name": "Offagna"
+        },
+        {
+          "istat": "042034",
+          "name": "Osimo"
+        },
+        {
+          "istat": "042048",
+          "name": "Sirolo"
+        }
+      ]
+    },
+    "marche/offida": {
+      "region": "Marche",
+      "recovered_count": 9,
+      "artifact_count": 9,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "044002",
+          "name": "Acquaviva Picena"
+        },
+        {
+          "istat": "044005",
+          "name": "Appignano del Tronto"
+        },
+        {
+          "istat": "044011",
+          "name": "Castel di Lama"
+        },
+        {
+          "istat": "044012",
+          "name": "Castignano"
+        },
+        {
+          "istat": "044013",
+          "name": "Castorano"
+        },
+        {
+          "istat": "044016",
+          "name": "Cossignano"
+        },
+        {
+          "istat": "044036",
+          "name": "Montefiore dell'Aso"
+        },
+        {
+          "istat": "044054",
+          "name": "Offida"
+        },
+        {
+          "istat": "044063",
+          "name": "Ripatransone"
+        }
+      ]
+    },
+    "molise/biferno": {
+      "region": "Molise",
+      "recovered_count": 42,
+      "artifact_count": 42,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "070001",
+          "name": "Acquaviva Collecroce"
+        },
+        {
+          "istat": "070006",
+          "name": "Campobasso"
+        },
+        {
+          "istat": "070008",
+          "name": "Campodipietra"
+        },
+        {
+          "istat": "070010",
+          "name": "Campomarino"
+        },
+        {
+          "istat": "070013",
+          "name": "Castelbottaccio"
+        },
+        {
+          "istat": "070014",
+          "name": "Castellino del Biferno"
+        },
+        {
+          "istat": "070021",
+          "name": "Colletorto"
+        },
+        {
+          "istat": "070023",
+          "name": "Ferrazzano"
+        },
+        {
+          "istat": "070025",
+          "name": "Gambatesa"
+        },
+        {
+          "istat": "070027",
+          "name": "Guardialfiera"
+        },
+        {
+          "istat": "070029",
+          "name": "Guglionesi"
+        },
+        {
+          "istat": "070031",
+          "name": "Larino"
+        },
+        {
+          "istat": "070032",
+          "name": "Limosano"
+        },
+        {
+          "istat": "070033",
+          "name": "Lucito"
+        },
+        {
+          "istat": "070034",
+          "name": "Lupara"
+        },
+        {
+          "istat": "070035",
+          "name": "Macchia Valfortore"
+        },
+        {
+          "istat": "070036",
+          "name": "Mafalda"
+        },
+        {
+          "istat": "070038",
+          "name": "Mirabello Sannitico"
+        },
+        {
+          "istat": "070041",
+          "name": "Montagano"
+        },
+        {
+          "istat": "070042",
+          "name": "Montecilfone"
+        },
+        {
+          "istat": "070043",
+          "name": "Montefalcone nel Sannio"
+        },
+        {
+          "istat": "070044",
+          "name": "Montelongo"
+        },
+        {
+          "istat": "070045",
+          "name": "Montemitro"
+        },
+        {
+          "istat": "070046",
+          "name": "Montenero di Bisaccia"
+        },
+        {
+          "istat": "070047",
+          "name": "Montorio nei Frentani"
+        },
+        {
+          "istat": "070050",
+          "name": "Palata"
+        },
+        {
+          "istat": "070051",
+          "name": "Petacciato"
+        },
+        {
+          "istat": "070052",
+          "name": "Petrella Tifernina"
+        },
+        {
+          "istat": "070053",
+          "name": "Pietracatella"
+        },
+        {
+          "istat": "070055",
+          "name": "Portocannone"
+        },
+        {
+          "istat": "070061",
+          "name": "Rotello"
+        },
+        {
+          "istat": "070064",
+          "name": "San Felice del Molise"
+        },
+        {
+          "istat": "070065",
+          "name": "San Giacomo degli Schiavoni"
+        },
+        {
+          "istat": "070066",
+          "name": "San Giovanni in Galdo"
+        },
+        {
+          "istat": "070068",
+          "name": "San Giuliano di Puglia"
+        },
+        {
+          "istat": "070069",
+          "name": "San Martino in Pensilis"
+        },
+        {
+          "istat": "070072",
+          "name": "Santa Croce di Magliano"
+        },
+        {
+          "istat": "070077",
+          "name": "Tavenna"
+        },
+        {
+          "istat": "070078",
+          "name": "Termoli"
+        },
+        {
+          "istat": "070080",
+          "name": "Toro"
+        },
+        {
+          "istat": "070082",
+          "name": "Tufara"
+        },
+        {
+          "istat": "070083",
+          "name": "Ururi"
+        }
+      ]
+    },
+    "puglia/primitivo-di-manduria": {
+      "region": "Puglia",
+      "recovered_count": 18,
+      "artifact_count": 18,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "073001",
+          "name": "Avetrana"
+        },
+        {
+          "istat": "073002",
+          "name": "Carosino"
+        },
+        {
+          "istat": "074006",
+          "name": "Erchie"
+        },
+        {
+          "istat": "073005",
+          "name": "Faggiano"
+        },
+        {
+          "istat": "073006",
+          "name": "Fragagnano"
+        },
+        {
+          "istat": "073010",
+          "name": "Leporano"
+        },
+        {
+          "istat": "073011",
+          "name": "Lizzano"
+        },
+        {
+          "istat": "073012",
+          "name": "Manduria"
+        },
+        {
+          "istat": "073014",
+          "name": "Maruggio"
+        },
+        {
+          "istat": "073018",
+          "name": "Monteparano"
+        },
+        {
+          "istat": "074011",
+          "name": "Oria"
+        },
+        {
+          "istat": "073022",
+          "name": "Pulsano"
+        },
+        {
+          "istat": "073023",
+          "name": "Roccaforzata"
+        },
+        {
+          "istat": "073024",
+          "name": "San Giorgio Ionico"
+        },
+        {
+          "istat": "073025",
+          "name": "San Marzano di San Giuseppe"
+        },
+        {
+          "istat": "073026",
+          "name": "Sava"
+        },
+        {
+          "istat": "074019",
+          "name": "Torre Santa Susanna"
+        },
+        {
+          "istat": "073028",
+          "name": "Torricella"
+        }
+      ]
+    },
+    "puglia/castel-del-monte": {
+      "region": "Puglia",
+      "recovered_count": 10,
+      "artifact_count": 10,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "110001",
+          "name": "Andria"
+        },
+        {
+          "istat": "072011",
+          "name": "Bitonto"
+        },
+        {
+          "istat": "110004",
+          "name": "Canosa di Puglia"
+        },
+        {
+          "istat": "072020",
+          "name": "Corato"
+        },
+        {
+          "istat": "110006",
+          "name": "Minervino Murge"
+        },
+        {
+          "istat": "072033",
+          "name": "Palo del Colle"
+        },
+        {
+          "istat": "072038",
+          "name": "Ruvo di Puglia"
+        },
+        {
+          "istat": "072043",
+          "name": "Terlizzi"
+        },
+        {
+          "istat": "072044",
+          "name": "Toritto"
+        },
+        {
+          "istat": "110009",
+          "name": "Trani"
+        }
+      ]
+    },
+    "puglia/salice-salentino": {
+      "region": "Puglia",
+      "recovered_count": 7,
+      "artifact_count": 7,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "075011",
+          "name": "Campi Salentina"
+        },
+        {
+          "istat": "074004",
+          "name": "Cellino San Marco"
+        },
+        {
+          "istat": "075034",
+          "name": "Guagnano"
+        },
+        {
+          "istat": "075065",
+          "name": "Salice Salentino"
+        },
+        {
+          "istat": "074013",
+          "name": "San Donaci"
+        },
+        {
+          "istat": "074015",
+          "name": "San Pancrazio Salentino"
+        },
+        {
+          "istat": "075092",
+          "name": "Veglie"
+        }
+      ]
+    },
+    "puglia/copertino": {
+      "region": "Puglia",
+      "recovered_count": 7,
+      "artifact_count": 6,
+      "reconciles": false,
+      "comuni": [
+        {
+          "istat": "075007",
+          "name": "Arnesano"
+        },
+        {
+          "istat": "075014",
+          "name": "Carmiano"
+        },
+        {
+          "istat": "075022",
+          "name": "Copertino"
+        },
+        {
+          "istat": "075029",
+          "name": "Galatina"
+        },
+        {
+          "istat": "075036",
+          "name": "Lequile"
+        },
+        {
+          "istat": "075048",
+          "name": "Monteroni di Lecce"
+        },
+        {
+          "istat": "075071",
+          "name": "San Pietro in Lama"
+        }
+      ]
+    },
+    "puglia/gioia-del-colle": {
+      "region": "Puglia",
+      "recovered_count": 16,
+      "artifact_count": 16,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "072001",
+          "name": "Acquaviva delle Fonti"
+        },
+        {
+          "istat": "072002",
+          "name": "Adelfia"
+        },
+        {
+          "istat": "072004",
+          "name": "Altamura"
+        },
+        {
+          "istat": "072015",
+          "name": "Casamassima"
+        },
+        {
+          "istat": "072016",
+          "name": "Cassano delle Murge"
+        },
+        {
+          "istat": "072017",
+          "name": "Castellana Grotte"
+        },
+        {
+          "istat": "072019",
+          "name": "Conversano"
+        },
+        {
+          "istat": "072021",
+          "name": "Gioia del Colle"
+        },
+        {
+          "istat": "072024",
+          "name": "Grumo Appula"
+        },
+        {
+          "istat": "072031",
+          "name": "Noci"
+        },
+        {
+          "istat": "072036",
+          "name": "Putignano"
+        },
+        {
+          "istat": "072037",
+          "name": "Rutigliano"
+        },
+        {
+          "istat": "072039",
+          "name": "Sammichele di Bari"
+        },
+        {
+          "istat": "072040",
+          "name": "Sannicandro di Bari"
+        },
+        {
+          "istat": "072041",
+          "name": "Santeramo in Colle"
+        },
+        {
+          "istat": "072047",
+          "name": "Turi"
+        }
+      ]
+    },
+    "puglia/locorotondo": {
+      "region": "Puglia",
+      "recovered_count": 3,
+      "artifact_count": 3,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "074005",
+          "name": "Cisternino"
+        },
+        {
+          "istat": "074007",
+          "name": "Fasano"
+        },
+        {
+          "istat": "072025",
+          "name": "Locorotondo"
+        }
+      ]
+    },
+    "sardegna/vermentino-di-gallura": {
+      "region": "Sardegna",
+      "recovered_count": 22,
+      "artifact_count": 22,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "113001",
+          "name": "Aggius"
+        },
+        {
+          "istat": "113002",
+          "name": "Aglientu"
+        },
+        {
+          "istat": "113004",
+          "name": "Arzachena"
+        },
+        {
+          "istat": "113005",
+          "name": "Badesi"
+        },
+        {
+          "istat": "113006",
+          "name": "Berchidda"
+        },
+        {
+          "istat": "113007",
+          "name": "Bortigiadas"
+        },
+        {
+          "istat": "113009",
+          "name": "Budoni"
+        },
+        {
+          "istat": "113010",
+          "name": "Calangianus"
+        },
+        {
+          "istat": "113011",
+          "name": "Golfo Aranci"
+        },
+        {
+          "istat": "113013",
+          "name": "Loiri Porto San Paolo"
+        },
+        {
+          "istat": "113014",
+          "name": "Luogosanto"
+        },
+        {
+          "istat": "113015",
+          "name": "Luras"
+        },
+        {
+          "istat": "113016",
+          "name": "Monti"
+        },
+        {
+          "istat": "113017",
+          "name": "Olbia"
+        },
+        {
+          "istat": "113018",
+          "name": "Oschiri"
+        },
+        {
+          "istat": "113020",
+          "name": "Palau"
+        },
+        {
+          "istat": "113021",
+          "name": "San Teodoro"
+        },
+        {
+          "istat": "113023",
+          "name": "Sant'Antonio di Gallura"
+        },
+        {
+          "istat": "113022",
+          "name": "Santa Teresa Gallura"
+        },
+        {
+          "istat": "113024",
+          "name": "Telti"
+        },
+        {
+          "istat": "113025",
+          "name": "Tempio Pausania"
+        },
+        {
+          "istat": "113026",
+          "name": "Trinità d'Agultu e Vignola"
+        }
+      ]
+    },
+    "sardegna/carignano-del-sulcis": {
+      "region": "Sardegna",
+      "recovered_count": 17,
+      "artifact_count": 17,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "119002",
+          "name": "Calasetta"
+        },
+        {
+          "istat": "119003",
+          "name": "Carbonia"
+        },
+        {
+          "istat": "119004",
+          "name": "Carloforte"
+        },
+        {
+          "istat": "119007",
+          "name": "Giba"
+        },
+        {
+          "istat": "119010",
+          "name": "Masainas"
+        },
+        {
+          "istat": "119012",
+          "name": "Narcao"
+        },
+        {
+          "istat": "119013",
+          "name": "Nuxis"
+        },
+        {
+          "istat": "119014",
+          "name": "Perdaxius"
+        },
+        {
+          "istat": "119015",
+          "name": "Piscinas"
+        },
+        {
+          "istat": "119016",
+          "name": "Portoscuso"
+        },
+        {
+          "istat": "119017",
+          "name": "San Giovanni Suergiu"
+        },
+        {
+          "istat": "119019",
+          "name": "Sant'Anna Arresi"
+        },
+        {
+          "istat": "119020",
+          "name": "Sant'Antioco"
+        },
+        {
+          "istat": "119018",
+          "name": "Santadi"
+        },
+        {
+          "istat": "119024",
+          "name": "Teulada"
+        },
+        {
+          "istat": "119021",
+          "name": "Tratalias"
+        },
+        {
+          "istat": "119023",
+          "name": "Villaperuccio"
+        }
+      ]
+    },
+    "sardegna/vernaccia-di-oristano": {
+      "region": "Sardegna",
+      "recovered_count": 17,
+      "artifact_count": 17,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "115011",
+          "name": "Baratili San Pietro"
+        },
+        {
+          "istat": "115019",
+          "name": "Cabras"
+        },
+        {
+          "istat": "115032",
+          "name": "Milis"
+        },
+        {
+          "istat": "115038",
+          "name": "Narbolia"
+        },
+        {
+          "istat": "115042",
+          "name": "Nurachi"
+        },
+        {
+          "istat": "115044",
+          "name": "Ollastra"
+        },
+        {
+          "istat": "115045",
+          "name": "Oristano"
+        },
+        {
+          "istat": "115046",
+          "name": "Palmas Arborea"
+        },
+        {
+          "istat": "115050",
+          "name": "Riola Sardo"
+        },
+        {
+          "istat": "115055",
+          "name": "San Vero Milis"
+        },
+        {
+          "istat": "115056",
+          "name": "Santa Giusta"
+        },
+        {
+          "istat": "115063",
+          "name": "Siamaggiore"
+        },
+        {
+          "istat": "115067",
+          "name": "Simaxis"
+        },
+        {
+          "istat": "115071",
+          "name": "Solarussa"
+        },
+        {
+          "istat": "115077",
+          "name": "Tramatza"
+        },
+        {
+          "istat": "115086",
+          "name": "Zeddiani"
+        },
+        {
+          "istat": "115087",
+          "name": "Zerfaliu"
+        }
+      ]
+    },
+    "sicily/Etna": {
+      "region": "Sicilia",
+      "recovered_count": 21,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "087005",
+          "name": "Aci Sant'Antonio"
+        },
+        {
+          "istat": "087004",
+          "name": "Acireale"
+        },
+        {
+          "istat": "087007",
+          "name": "Belpasso"
+        },
+        {
+          "istat": "087008",
+          "name": "Biancavilla"
+        },
+        {
+          "istat": "087014",
+          "name": "Castiglione di Sicilia"
+        },
+        {
+          "istat": "087017",
+          "name": "Giarre"
+        },
+        {
+          "istat": "087021",
+          "name": "Linguaglossa"
+        },
+        {
+          "istat": "087023",
+          "name": "Mascali"
+        },
+        {
+          "istat": "087026",
+          "name": "Milo"
+        },
+        {
+          "istat": "087031",
+          "name": "Nicolosi"
+        },
+        {
+          "istat": "087033",
+          "name": "Paternò"
+        },
+        {
+          "istat": "087034",
+          "name": "Pedara"
+        },
+        {
+          "istat": "087035",
+          "name": "Piedimonte Etneo"
+        },
+        {
+          "istat": "087058",
+          "name": "Ragalna"
+        },
+        {
+          "istat": "087038",
+          "name": "Randazzo"
+        },
+        {
+          "istat": "087046",
+          "name": "Sant'Alfio"
+        },
+        {
+          "istat": "087047",
+          "name": "Santa Maria di Licodia"
+        },
+        {
+          "istat": "087048",
+          "name": "Santa Venerina"
+        },
+        {
+          "istat": "087050",
+          "name": "Trecastagni"
+        },
+        {
+          "istat": "087053",
+          "name": "Viagrande"
+        },
+        {
+          "istat": "087055",
+          "name": "Zafferana Etnea"
+        }
+      ]
+    },
+    "sicily/Cerasuolo di Vittoria": {
+      "region": "Sicilia",
+      "recovered_count": 14,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "088001",
+          "name": "Acate"
+        },
+        {
+          "istat": "085003",
+          "name": "Butera"
+        },
+        {
+          "istat": "087011",
+          "name": "Caltagirone"
+        },
+        {
+          "istat": "088002",
+          "name": "Chiaramonte Gulfi"
+        },
+        {
+          "istat": "088003",
+          "name": "Comiso"
+        },
+        {
+          "istat": "085007",
+          "name": "Gela"
+        },
+        {
+          "istat": "087020",
+          "name": "Licodia Eubea"
+        },
+        {
+          "istat": "085009",
+          "name": "Mazzarino"
+        },
+        {
+          "istat": "087056",
+          "name": "Mazzarrone"
+        },
+        {
+          "istat": "085013",
+          "name": "Niscemi"
+        },
+        {
+          "istat": "088009",
+          "name": "Ragusa"
+        },
+        {
+          "istat": "085015",
+          "name": "Riesi"
+        },
+        {
+          "istat": "088010",
+          "name": "Santa Croce Camerina"
+        },
+        {
+          "istat": "088012",
+          "name": "Vittoria"
+        }
+      ]
+    },
+    "sicily/Marsala": {
+      "region": "Sicilia",
+      "recovered_count": 22,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "081002",
+          "name": "Buseto Palizzolo"
+        },
+        {
+          "istat": "081003",
+          "name": "Calatafimi-Segesta"
+        },
+        {
+          "istat": "081004",
+          "name": "Campobello di Mazara"
+        },
+        {
+          "istat": "081005",
+          "name": "Castellammare del Golfo"
+        },
+        {
+          "istat": "081006",
+          "name": "Castelvetrano"
+        },
+        {
+          "istat": "081007",
+          "name": "Custonaci"
+        },
+        {
+          "istat": "081008",
+          "name": "Erice"
+        },
+        {
+          "istat": "081010",
+          "name": "Gibellina"
+        },
+        {
+          "istat": "081011",
+          "name": "Marsala"
+        },
+        {
+          "istat": "081012",
+          "name": "Mazara del Vallo"
+        },
+        {
+          "istat": "081025",
+          "name": "Misiliscemi"
+        },
+        {
+          "istat": "081013",
+          "name": "Paceco"
+        },
+        {
+          "istat": "081015",
+          "name": "Partanna"
+        },
+        {
+          "istat": "081024",
+          "name": "Petrosino"
+        },
+        {
+          "istat": "081016",
+          "name": "Poggioreale"
+        },
+        {
+          "istat": "081017",
+          "name": "Salaparuta"
+        },
+        {
+          "istat": "081018",
+          "name": "Salemi"
+        },
+        {
+          "istat": "081020",
+          "name": "San Vito Lo Capo"
+        },
+        {
+          "istat": "081019",
+          "name": "Santa Ninfa"
+        },
+        {
+          "istat": "081021",
+          "name": "Trapani"
+        },
+        {
+          "istat": "081022",
+          "name": "Valderice"
+        },
+        {
+          "istat": "081023",
+          "name": "Vita"
+        }
+      ]
+    },
+    "sicily/Noto": {
+      "region": "Sicilia",
+      "recovered_count": 4,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "089002",
+          "name": "Avola"
+        },
+        {
+          "istat": "089013",
+          "name": "Noto"
+        },
+        {
+          "istat": "089014",
+          "name": "Pachino"
+        },
+        {
+          "istat": "089016",
+          "name": "Rosolini"
+        }
+      ]
+    },
+    "sicily/Menfi": {
+      "region": "Sicilia",
+      "recovered_count": 4,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "081006",
+          "name": "Castelvetrano"
+        },
+        {
+          "istat": "084023",
+          "name": "Menfi"
+        },
+        {
+          "istat": "084034",
+          "name": "Sambuca di Sicilia"
+        },
+        {
+          "istat": "084041",
+          "name": "Sciacca"
+        }
+      ]
+    },
+    "sicily/Faro": {
+      "region": "Sicilia",
+      "recovered_count": 1,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "083048",
+          "name": "Messina"
+        }
+      ]
+    },
+    "trentino/Teroldego Rotaliano": {
+      "region": "Trentino-Alto Adige/Südtirol",
+      "recovered_count": 3,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "022116",
+          "name": "Mezzocorona"
+        },
+        {
+          "istat": "022117",
+          "name": "Mezzolombardo"
+        },
+        {
+          "istat": "022167",
+          "name": "San Michele all'Adige"
+        }
+      ]
+    },
+    "trentino/Trentino": {
+      "region": "Trentino-Alto Adige/Südtirol",
+      "recovered_count": 66,
+      "artifact_count": null,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "022001",
+          "name": "Ala"
+        },
+        {
+          "istat": "022002",
+          "name": "Albiano"
+        },
+        {
+          "istat": "022003",
+          "name": "Aldeno"
+        },
+        {
+          "istat": "022235",
+          "name": "Altavalle"
+        },
+        {
+          "istat": "022236",
+          "name": "Altopiano della Vigolana"
+        },
+        {
+          "istat": "022006",
+          "name": "Arco"
+        },
+        {
+          "istat": "022007",
+          "name": "Avio"
+        },
+        {
+          "istat": "022013",
+          "name": "Besenello"
+        },
+        {
+          "istat": "022017",
+          "name": "Bleggio Superiore"
+        },
+        {
+          "istat": "022022",
+          "name": "Borgo Valsugana"
+        },
+        {
+          "istat": "022025",
+          "name": "Brentonico"
+        },
+        {
+          "istat": "022032",
+          "name": "Calceranica al Lago"
+        },
+        {
+          "istat": "022034",
+          "name": "Caldonazzo"
+        },
+        {
+          "istat": "022035",
+          "name": "Calliano"
+        },
+        {
+          "istat": "022043",
+          "name": "Carzano"
+        },
+        {
+          "istat": "022240",
+          "name": "Castel Ivano"
+        },
+        {
+          "istat": "022049",
+          "name": "Castelnuovo"
+        },
+        {
+          "istat": "022053",
+          "name": "Cavedine"
+        },
+        {
+          "istat": "022241",
+          "name": "Cembra Lisignago"
+        },
+        {
+          "istat": "022058",
+          "name": "Cimone"
+        },
+        {
+          "istat": "022061",
+          "name": "Civezzano"
+        },
+        {
+          "istat": "022228",
+          "name": "Comano Terme"
+        },
+        {
+          "istat": "022078",
+          "name": "Drena"
+        },
+        {
+          "istat": "022079",
+          "name": "Dro"
+        },
+        {
+          "istat": "022091",
+          "name": "Garniga Terme"
+        },
+        {
+          "istat": "022092",
+          "name": "Giovo"
+        },
+        {
+          "istat": "022098",
+          "name": "Isera"
+        },
+        {
+          "istat": "022103",
+          "name": "Lavis"
+        },
+        {
+          "istat": "022104",
+          "name": "Levico Terme"
+        },
+        {
+          "istat": "022243",
+          "name": "Madruzzo"
+        },
+        {
+          "istat": "022116",
+          "name": "Mezzocorona"
+        },
+        {
+          "istat": "022117",
+          "name": "Mezzolombardo"
+        },
+        {
+          "istat": "022123",
+          "name": "Mori"
+        },
+        {
+          "istat": "022124",
+          "name": "Nago-Torbole"
+        },
+        {
+          "istat": "022127",
+          "name": "Nogaredo"
+        },
+        {
+          "istat": "022128",
+          "name": "Nomi"
+        },
+        {
+          "istat": "022129",
+          "name": "Novaledo"
+        },
+        {
+          "istat": "022130",
+          "name": "Ospedaletto"
+        },
+        {
+          "istat": "022139",
+          "name": "Pergine Valsugana"
+        },
+        {
+          "istat": "022144",
+          "name": "Pomarolo"
+        },
+        {
+          "istat": "022153",
+          "name": "Riva del Garda"
+        },
+        {
+          "istat": "022156",
+          "name": "Roncegno Terme"
+        },
+        {
+          "istat": "022135",
+          "name": "Ronzo-Chienis"
+        },
+        {
+          "istat": "022160",
+          "name": "Roverè della Luna"
+        },
+        {
+          "istat": "022161",
+          "name": "Rovereto"
+        },
+        {
+          "istat": "022165",
+          "name": "Samone"
+        },
+        {
+          "istat": "022231",
+          "name": "San Lorenzo Dorsino"
+        },
+        {
+          "istat": "022167",
+          "name": "San Michele all'Adige"
+        },
+        {
+          "istat": "022171",
+          "name": "Scurelle"
+        },
+        {
+          "istat": "022172",
+          "name": "Segonzano"
+        },
+        {
+          "istat": "022180",
+          "name": "Spormaggiore"
+        },
+        {
+          "istat": "022182",
+          "name": "Stenico"
+        },
+        {
+          "istat": "022183",
+          "name": "Storo"
+        },
+        {
+          "istat": "022188",
+          "name": "Telve"
+        },
+        {
+          "istat": "022189",
+          "name": "Telve di Sopra"
+        },
+        {
+          "istat": "022190",
+          "name": "Tenna"
+        },
+        {
+          "istat": "022191",
+          "name": "Tenno"
+        },
+        {
+          "istat": "022193",
+          "name": "Terragnolo"
+        },
+        {
+          "istat": "022251",
+          "name": "Terre d'Adige"
+        },
+        {
+          "istat": "022200",
+          "name": "Ton"
+        },
+        {
+          "istat": "022203",
+          "name": "Trambileno"
+        },
+        {
+          "istat": "022205",
+          "name": "Trento"
+        },
+        {
+          "istat": "022210",
+          "name": "Vallarsa"
+        },
+        {
+          "istat": "022248",
+          "name": "Vallelaghi"
+        },
+        {
+          "istat": "022222",
+          "name": "Villa Lagarina"
+        },
+        {
+          "istat": "022224",
+          "name": "Volano"
+        }
+      ]
+    },
+    "umbria/montefalco-sagrantino": {
+      "region": "Umbria",
+      "recovered_count": 5,
+      "artifact_count": 5,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "054004",
+          "name": "Bevagna"
+        },
+        {
+          "istat": "054008",
+          "name": "Castel Ritaldi"
+        },
+        {
+          "istat": "054021",
+          "name": "Giano dell'Umbria"
+        },
+        {
+          "istat": "054022",
+          "name": "Gualdo Cattaneo"
+        },
+        {
+          "istat": "054030",
+          "name": "Montefalco"
+        }
+      ]
+    },
+    "umbria/torgiano-rosso-riserva": {
+      "region": "Umbria",
+      "recovered_count": 1,
+      "artifact_count": 1,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "054053",
+          "name": "Torgiano"
+        }
+      ]
+    },
+    "umbria/orvieto": {
+      "region": "Umbria",
+      "recovered_count": 13,
+      "artifact_count": 13,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "055002",
+          "name": "Allerona"
+        },
+        {
+          "istat": "055003",
+          "name": "Alviano"
+        },
+        {
+          "istat": "055007",
+          "name": "Baschi"
+        },
+        {
+          "istat": "055009",
+          "name": "Castel Giorgio"
+        },
+        {
+          "istat": "055010",
+          "name": "Castel Viscardo"
+        },
+        {
+          "istat": "055011",
+          "name": "Fabro"
+        },
+        {
+          "istat": "055013",
+          "name": "Ficulle"
+        },
+        {
+          "istat": "055015",
+          "name": "Guardea"
+        },
+        {
+          "istat": "055018",
+          "name": "Montecchio"
+        },
+        {
+          "istat": "055020",
+          "name": "Montegabbione"
+        },
+        {
+          "istat": "055021",
+          "name": "Monteleone d'Orvieto"
+        },
+        {
+          "istat": "055023",
+          "name": "Orvieto"
+        },
+        {
+          "istat": "055028",
+          "name": "Porano"
+        }
+      ]
+    },
+    "umbria/colli-del-trasimeno": {
+      "region": "Umbria",
+      "recovered_count": 10,
+      "artifact_count": 10,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "054009",
+          "name": "Castiglione del Lago"
+        },
+        {
+          "istat": "054012",
+          "name": "Città della Pieve"
+        },
+        {
+          "istat": "054015",
+          "name": "Corciano"
+        },
+        {
+          "istat": "054026",
+          "name": "Magione"
+        },
+        {
+          "istat": "054036",
+          "name": "Paciano"
+        },
+        {
+          "istat": "054037",
+          "name": "Panicale"
+        },
+        {
+          "istat": "054038",
+          "name": "Passignano sul Trasimeno"
+        },
+        {
+          "istat": "054039",
+          "name": "Perugia"
+        },
+        {
+          "istat": "054040",
+          "name": "Piegaro"
+        },
+        {
+          "istat": "054055",
+          "name": "Tuoro sul Trasimeno"
+        }
+      ]
+    },
+    "umbria/colli-martani": {
+      "region": "Umbria",
+      "recovered_count": 13,
+      "artifact_count": 13,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "054003",
+          "name": "Bettona"
+        },
+        {
+          "istat": "054004",
+          "name": "Bevagna"
+        },
+        {
+          "istat": "054006",
+          "name": "Cannara"
+        },
+        {
+          "istat": "054008",
+          "name": "Castel Ritaldi"
+        },
+        {
+          "istat": "054014",
+          "name": "Collazzone"
+        },
+        {
+          "istat": "054017",
+          "name": "Deruta"
+        },
+        {
+          "istat": "054021",
+          "name": "Giano dell'Umbria"
+        },
+        {
+          "istat": "054022",
+          "name": "Gualdo Cattaneo"
+        },
+        {
+          "istat": "054028",
+          "name": "Massa Martana"
+        },
+        {
+          "istat": "054029",
+          "name": "Monte Castello di Vibio"
+        },
+        {
+          "istat": "054030",
+          "name": "Montefalco"
+        },
+        {
+          "istat": "054051",
+          "name": "Spoleto"
+        },
+        {
+          "istat": "054052",
+          "name": "Todi"
+        }
+      ]
+    },
+    "valle-d-aosta/blanc-de-morgex-et-de-la-salle": {
+      "region": "Valle d'Aosta/Vallée d'Aoste",
+      "recovered_count": 2,
+      "artifact_count": 2,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "007040",
+          "name": "La Salle"
+        },
+        {
+          "istat": "007044",
+          "name": "Morgex"
+        }
+      ]
+    },
+    "valle-d-aosta/donnas": {
+      "region": "Valle d'Aosta/Vallée d'Aoste",
+      "recovered_count": 4,
+      "artifact_count": 4,
+      "reconciles": true,
+      "comuni": [
+        {
+          "istat": "007009",
+          "name": "Bard"
+        },
+        {
+          "istat": "007023",
+          "name": "Donnas"
+        },
+        {
+          "istat": "007048",
+          "name": "Perloz"
+        },
+        {
+          "istat": "007052",
+          "name": "Pont-Saint-Martin"
+        }
+      ]
+    }
+  }
+}
