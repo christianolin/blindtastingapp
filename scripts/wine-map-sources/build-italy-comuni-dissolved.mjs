@@ -47,8 +47,34 @@ const shoelace = (ring) => {
 
 const argv = process.argv.slice(2);
 const verify = argv.includes("--verify");
+const syncCounts = argv.includes("--sync-counts");
 const targets = argv.filter((a) => !a.startsWith("--"));
-assert.ok(verify || targets.length, "name the footprints to rebuild, or pass --verify");
+assert.ok(verify || syncCounts || targets.length,
+  "name the footprints to rebuild, or pass --verify / --sync-counts");
+
+// --sync-counts writes comuni_count onto every feature from the membership file
+// and touches nothing else. The four adapters that predate wave 5 never wrote
+// it, leaving 16 of the 61 features with no count at all -- and the count is
+// what italy-membership.test.mjs checks in CI, where the ISTAT gazetteer and
+// the database are both unavailable. Rebuilding those features instead would
+// re-union them and rewrite their geometry by about 0.005%, burying a real
+// change in float noise for no gain.
+if (syncCounts) {
+  const membership = JSON.parse(await readFile(MEMBERSHIP, "utf8"));
+  const files = new Map();
+  for (const [key, fp] of Object.entries(membership.footprints)) {
+    const [slug, name] = [key.slice(0, key.indexOf("/")), key.slice(key.indexOf("/") + 1)];
+    if (!files.has(slug)) files.set(slug, JSON.parse(await readFile(`data/wine-map/${slug}-comuni-dissolved.geojson`, "utf8")));
+    const feat = files.get(slug).features.find((f) => f.properties.name === name);
+    assert.ok(feat, `${key}: no feature of that name in the artifact`);
+    if (feat.properties.comuni_count === fp.comuni.length) continue;
+    console.log(`  ${key}: comuni_count ${feat.properties.comuni_count ?? "(absent)"} -> ${fp.comuni.length}`);
+    feat.properties.comuni_count = fp.comuni.length;
+  }
+  for (const [slug, fc] of files) await writeFile(`data/wine-map/${slug}-comuni-dissolved.geojson`, `${JSON.stringify(fc)}\n`);
+  console.log(`\nsynced ${files.size} artifact(s) from ${MEMBERSHIP}.`);
+  process.exit(0);
+}
 
 const env = Object.fromEntries(
   (await readFile(".env.local", "utf8")).split(/\r?\n/)
