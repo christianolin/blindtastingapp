@@ -4,11 +4,13 @@ import { useAddWine } from "@/components/add-wine-context";
 import { actionButtonClass } from "@/components/overview/action-button";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 
-// The next-up banner's "Add wine N": opens the universal add-wine sheet with
+// The next-up banner's "Add a wine": opens the universal add-wine sheet with
 // this tasting as the flight destination — the same entry point as the Wines
 // card, the host console and the header camera — instead of navigating to
-// the retained legacy /wines/new page. Rendered with the outline action
-// classes so it sits next to "Open the tasting" exactly as before.
+// the retained legacy /wines/new page. The label carries no glass number (it
+// used to read "Add wine 3"); `position` still tells the sheet which glass it
+// adds. Rendered with the outline action classes so it sits next to "Open the
+// tasting" exactly as before.
 export function AddWineBannerButton({
   tastingId,
   tastingName,
@@ -41,7 +43,7 @@ export function AddWineBannerButton({
       }
       className={actionButtonClass("outline", className)}
     >
-      Add wine {position}
+      Add a wine
     </button>
   );
 }

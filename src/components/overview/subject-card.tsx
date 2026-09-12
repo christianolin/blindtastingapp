@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils";
  * The Overview's subject card shell (Blind tastings / Your ratings / Your
  * cellar): bordered raised-parchment surface, a header with the title, a link
  * pill and the stat row, a body of rows, and the action pinned to the bottom
- * so the three cards' buttons sit on one line. On phones the card is a
- * `flex-1` column so the three fit one screen.
+ * so the three cards' buttons sit on one line. The card keeps its natural
+ * height at every width: on phones the cards stack and the page scrolls
+ * rather than squeezing them onto one screen (phone layout revision,
+ * 2026-09-12).
  */
 export function SubjectCard({
   title,
@@ -16,6 +18,7 @@ export function SubjectCard({
   children,
   action,
   actionInset = false,
+  hideActionOnPhone = false,
   className,
 }: {
   title: string;
@@ -25,16 +28,22 @@ export function SubjectCard({
   action?: ReactNode;
   /** Draw the action's top rule inside the body padding (the cellar card). */
   actionInset?: boolean;
+  /** Drop the action below `md`, where the Overview's tile row stands in for
+      the card actions. The body then gets a little bottom padding and its
+      rows lose their trailing rule, so the card ends cleanly on its phone row
+      instead of a hairline pressed against the border. */
+  hideActionOnPhone?: boolean;
   className?: string;
 }) {
   return (
     <section
-      // Only on phones may the card shrink below its content (`min-h-0`) —
-      // that is what lets the three share one screen. From `md` up the card
-      // keeps its natural height so a long list makes the page scroll instead
-      // of being clipped by overflow-hidden.
+      // `max-md:shrink-0`: on phones the cards stack in a flex column, and an
+      // overflow-hidden flex item's automatic minimum height is 0, so without
+      // it a height-bounded column could squeeze the rows away again. From
+      // `md` up the card is a grid item stretched to its row, so a long list
+      // makes the page scroll instead of being clipped by overflow-hidden.
       className={cn(
-        "flex flex-col overflow-hidden rounded-[13px] border border-border-strong bg-card max-md:min-h-0 max-md:flex-1 max-md:rounded-xl",
+        "flex flex-col overflow-hidden rounded-[13px] border border-border-strong bg-card max-md:shrink-0 max-md:rounded-xl",
         className,
       )}
     >
@@ -47,7 +56,14 @@ export function SubjectCard({
         </div>
         {stats ? <div className="mt-3 max-md:mt-[9px]">{stats}</div> : null}
       </header>
-      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col",
+          hideActionOnPhone && "max-md:pb-1.5 max-md:*:border-b-0",
+        )}
+      >
+        {children}
+      </div>
       {action ? (
         <div
           className={cn(
@@ -55,6 +71,7 @@ export function SubjectCard({
             actionInset
               ? "mx-[18px] pt-[13px] pb-[14px] max-md:mx-[14px] max-md:border-t-0 max-md:pt-1.5 max-md:pb-2"
               : "p-[14px_18px] max-md:border-t-0 max-md:p-[6px_14px_8px]",
+            hideActionOnPhone && "max-md:hidden",
           )}
         >
           {action}

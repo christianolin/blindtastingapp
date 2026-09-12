@@ -14,6 +14,7 @@ import type {
 import { StartTastingRow } from "./start-tasting-row";
 import { FlightHintRegistrar } from "./flight-hint-registrar";
 import { AddWineBannerButton } from "./add-wine-banner-button";
+import { nextUpMeta } from "./next-up-meta";
 
 // The banner slot above the three cards. Live tasting → the bordeaux banner;
 // otherwise the parchment "Next up" variant; nothing scheduled → the single
@@ -154,8 +155,8 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
               <LocalDateTime iso={banner.scheduledAt} />
             </>
           ) : null}
-          {/* The host clause is dropped on phones: date + host overrun one
-              eyebrow line at 390px, and the title carries the tasting. */}
+          {/* The host clause leaves the eyebrow on phones (date + host overrun
+              one eyebrow line at 390px) and moves to the meta line below. */}
           <span className="max-md:hidden">
             {" · "}
             {banner.hosting ? "you are hosting" : `hosted by ${banner.hostName}`}
@@ -164,10 +165,19 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
         <span className="font-heading text-[44px] leading-[1.02] font-semibold max-xl:text-[36px] max-md:text-[24px] max-md:leading-[1.04]">
           {banner.name}
         </span>
+        {/* Phones only: who hosts and the flight so far, which the wider
+            banner says with its eyebrow and numbered slot list. */}
+        <span className="-mt-1 text-[12px] leading-snug text-muted-foreground lining-nums tabular-nums md:hidden">
+          {nextUpMeta({
+            hosting: banner.hosting,
+            hostName: banner.hostName,
+            nextWinePosition: banner.nextWinePosition,
+          })}
+        </span>
       </div>
 
       {/* The flight: one numbered line per slot, gaps reading "Empty". Hidden
-          on phones, where the banner must stay short. */}
+          on phones, where the meta line under the title sums it up. */}
       {banner.slots.length > 0 ? (
         <ol className="grid grid-cols-2 gap-x-7 gap-y-[3px] text-[12.5px] max-md:hidden">
           {banner.slots.map((slot, i) => (

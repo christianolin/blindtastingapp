@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ChartColumn } from "lucide-react";
 import { MobileNav } from "@/components/mobile-nav";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { navWithAdmin } from "@/components/nav-links";
 import { createClient } from "@/lib/supabase/server";
@@ -20,11 +22,13 @@ const ICON_BUTTON =
 /**
  * The app's top bar — rendered inside the main column, to the right of the
  * persistent AppSidebar. Holds the global search (desktop only), the "Your
- * numbers" pill, the label scanner and the notifications bell at every width,
+ * numbers" link, the label scanner and the notifications bell at every width,
  * and the MobileNav hamburger drawer below `md` (where the sidebar is hidden).
- * On phones the bar reads burger · title … pill · scan · bell, the bell at the
- * far right as in the handoff. `title` is the page name shown next to the
- * burger on phones (the sidebar carries it on desktop).
+ * From `md` up Your numbers is the labelled gold pill; on phones it is an
+ * icon-only button styled like scan and bell (phone layout revision,
+ * 2026-09-12), so the bar reads burger · title … numbers · scan · bell, the
+ * bell at the far right as in the handoff. `title` is the page name shown next
+ * to the burger on phones (the sidebar carries it on desktop).
  * Renders nothing when logged out (those pages redirect to /login anyway).
  */
 export async function AppHeader({
@@ -91,13 +95,28 @@ export async function AppHeader({
         <GlobalSearch />
       </div>
       <div className="ml-auto flex items-center gap-2 md:gap-3">
+        {/* Phones: icon-only, in exactly the scan and bell buttons' classes.
+            buttonVariants on the Link, not `<Button render={<Link/>}>`: a
+            non-native Base UI button stamps role="button" on the anchor, and
+            this is a link, not a button. */}
         <Link
           href="/profile/numbers"
-          className="relative inline-flex h-8 items-center gap-1.5 rounded-[8px] border border-gold bg-card px-2.5 text-[11px] font-semibold text-primary transition-colors before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] hover:bg-white md:px-[13px] md:text-[12.5px] md:before:hidden"
+          aria-label="Your numbers"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon" }),
+            ICON_BUTTON,
+            "md:hidden",
+          )}
+        >
+          <ChartColumn aria-hidden />
+        </Link>
+        {/* md and up: the labelled gold-bordered pill. */}
+        <Link
+          href="/profile/numbers"
+          className="hidden h-8 items-center gap-1.5 rounded-[8px] border border-gold bg-card px-[13px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-white md:inline-flex"
         >
           <ChartColumn className="size-3.5" strokeWidth={2.25} />
-          <span className="md:hidden">Numbers</span>
-          <span className="hidden md:inline">Your numbers</span>
+          <span>Your numbers</span>
         </Link>
         <ScanButton className={ICON_BUTTON} />
         <NotificationsBell invites={invites} className={ICON_BUTTON} />

@@ -31,14 +31,14 @@ const EMPTY_TILE_LAUNCHER = cn(
  * The Your cellar card: bottles / producers / countries, the four newest
  * bottles as tiles plus a "+N" tile into the cellar, the Countries and Wine
  * type distribution bars, three "Recently added" lines, and the outline
- * "Add a bottle" launcher. Phones get the Countries bar only.
+ * "Add a bottle" launcher. Phones get the Countries bar only, and the
+ * launcher gives way to the page's tile row above the cards.
  */
 export function CellarCard({ data }: { data: OverviewCellar }) {
   const empty = data.tiles.length === 0;
   return (
     <SubjectCard
       title="Your cellar"
-      className="max-md:min-h-fit"
       pill={<LinkPill href="/cellar">Open cellar</LinkPill>}
       stats={
         <StatTrio
@@ -50,6 +50,7 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
         />
       }
       actionInset
+      hideActionOnPhone
       action={
         <ActionButtonClient launch="cellar" variant="outline">
           <Amphora />
@@ -119,12 +120,14 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
         ) : null}
       </div>
 
-      {/* Phone body: the Countries bar alone. */}
+      {/* Phone body: the Countries bar alone. It is the card's last row on a
+          phone (the launcher lives in the tile row above the cards), so it
+          draws no rule under it and the empty state points up. */}
       <div className="md:hidden">
         {empty ? (
-          <CardEmptyRow>No bottles yet — add one below.</CardEmptyRow>
+          <CardEmptyRow>No bottles yet — add one above.</CardEmptyRow>
         ) : (
-          <div className="border-b border-border-light p-[9px_14px]">
+          <div className="p-[9px_14px]">
             <DistributionBar items={data.byCountry} height={6} />
           </div>
         )}

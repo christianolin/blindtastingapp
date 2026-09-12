@@ -22,14 +22,14 @@ const CONTEXT_LABEL: Record<RatingRow["contextKind"], string> = {
 /**
  * The Your ratings card: distinct wines rated / mean score / note count, the
  * five newest notes (thumb, wine, when + context, score), and the bordeaux
- * "Rate a wine" launcher. Below `md` only the newest note is visible.
+ * "Rate a wine" launcher. Below `md` only the newest note is visible and the
+ * launcher gives way to the page's tile row above the cards.
  */
 export function RatingsCard({ data }: { data: OverviewRatings }) {
   const now = new Date();
   return (
     <SubjectCard
       title="Your ratings"
-      className="max-md:min-h-fit"
       pill={<LinkPill href="/cellar?tab=notes">All notes</LinkPill>}
       stats={
         <StatTrio
@@ -40,6 +40,7 @@ export function RatingsCard({ data }: { data: OverviewRatings }) {
           ]}
         />
       }
+      hideActionOnPhone
       action={
         <ActionButtonClient launch="taste-rate" variant="primary">
           <Wine />
@@ -48,7 +49,12 @@ export function RatingsCard({ data }: { data: OverviewRatings }) {
       }
     >
       {data.rows.length === 0 ? (
-        <CardEmptyRow>No notes yet — rate a wine below.</CardEmptyRow>
+        <CardEmptyRow>
+          {/* The launcher is under the card from md up, in the tile row
+              above the cards on phones. */}
+          <span className="max-md:hidden">No notes yet — rate a wine below.</span>
+          <span className="md:hidden">No notes yet — rate a wine above.</span>
+        </CardEmptyRow>
       ) : (
         data.rows.map((row, i) => (
           <CardRow
