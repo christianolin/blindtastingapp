@@ -354,24 +354,30 @@ export async function PlayExperience({
   }
   const incompleteByWineId = new Map(incompleteGlasses.map((g) => [g.wineId, g]));
 
-  // The shared reveal owns a glass from its first revealed category: no
-  // ladder, and since 20260912090000 no answer row a guesser can read.
-  // Only a blind tasting has step reveals (the console's chips are guided-LIVE
-  // only), so the semi-blind guard keeps a stray step from pulling a match
-  // glass out of its ladder. One helper, so the two readers cannot drift.
+  // A shared step reveal is under way: at least one category is out and the
+  // glass is not fully revealed yet. Since 20260912090000 no guesser can read
+  // its answer row in this state.
+  const midStepReveal = (wine: { is_revealed: boolean; reveal_step: number | null }) =>
+    !wine.is_revealed && (wine.reveal_step ?? 0) > 0;
+  // The shared reveal owns a blind glass from its first revealed category: the
+  // 6h reveal view, never a ladder. A semi-blind glass has no per-category
+  // view, so a stray step (reveal_next_category refuses no semi-blind glass)
+  // leaves it in the match ladder's batch instead of pulling it out.
   const ownedByReveal = (wine: { is_revealed: boolean; reveal_step: number | null }) =>
-    !isSemiBlind && !wine.is_revealed && (wine.reveal_step ?? 0) > 0;
+    !isSemiBlind && midStepReveal(wine);
   // "Resolved for me" = the answer is mine to see — the glass is revealed for
   // everyone, or my own guess is scored (ASYNC + IMMEDIATE). A glass mid
-  // step-reveal is never resolved, even with a scored guess: the reveal is
-  // still running and its answer row stays closed to a guesser.
+  // step-reveal is never resolved, in either mode, even with a scored guess
+  // (amendment 14): reveal_next_category stamps scored_at on every row from
+  // step 1, so reading that as "mine to see" would print a semi-blind match's
+  // result — which the category steps score 0 — before the glass is revealed.
   const resolvedForMe = (wine: {
     id: string;
     is_revealed: boolean;
     reveal_step: number | null;
   }) =>
     wine.is_revealed ||
-    (Boolean(myGuessByWineId.get(wine.id)?.scored_at) && !ownedByReveal(wine));
+    (Boolean(myGuessByWineId.get(wine.id)?.scored_at) && !midStepReveal(wine));
 
   // Deferred scoring (spec §C.8): my locked guess on a glass that was
   // incomplete when I locked it, now that the adder has finished it. "Once the
