@@ -7,114 +7,18 @@
 import { makeT, translateTerm, type WsetLang } from "../../../lib/wset/i18n";
 
 // --- Copy --------------------------------------------------------------------
-// Every new string on this page, EN + DA, shaped like i18n.ts's UI_EN / UI_DA
-// (snake_case keys, `{var}` fills, no key UI_EN already has) so the two tables
-// can be pasted into makeT's dictionaries once i18n.ts is free to edit. Keys
-// this page shares with All tastings (filter_all, newest_first, show_n_more)
-// carry the same words there. Anything not here, such as the section names on
-// the bars, falls through to makeT itself.
-type Dict = Record<string, string>;
+// Every word on this page lives in src/lib/wset/i18n.ts's UI_EN / UI_DA and is
+// read through makeT: the same dictionary as the note sheet, whose section
+// names the bars reuse, and as All tastings, which shares filter_all,
+// newest_first and show_n_more.
 
-const EN: Dict = {
-  tasting_notes: "Tasting notes",
-  taste_and_rate_a_wine: "Taste & rate a wine",
-  new_note_short: "+ Note",
-  notes_one: "1 note",
-  notes_many: "{n} notes",
-  complete_one: "1 complete",
-  complete_many: "{n} complete",
-  average_score: "average {avg}",
-  since_when: "since {when}",
-  no_notes_line: "No notes yet",
-  search_notes_label: "Search your notes",
-  search_notes_placeholder: "Search your notes — wine, grape, aroma, even a phrase you wrote",
-  search_notes_placeholder_short: "Search wine, grape, aroma…",
-  clear_search: "Clear search",
-  notes_filters_label: "Filter notes",
-  filter_all: "All",
-  filter_complete: "Complete",
-  filter_unfinished: "Unfinished",
-  filter_from_tastings: "From tastings",
-  newest_first: "Newest first",
-  section_done: "section done",
-  not_finished: "not finished",
-  section_state: "{section} {state}",
-  from_a_tasting: "from a tasting",
-  glass_n: "Glass {n}",
-  untitled_wine: "Untitled wine",
-  show_n_more: "Show {n} more",
-  open_note_on: "Open the note on {wine}",
-  not_scored: "not scored",
-  score_points: "{n} points",
-  no_notes_title: "No tasting notes yet",
-  no_notes_hint: "Every note you write lives here. Start with Taste & rate a wine.",
-  no_notes_match: "No notes match “{q}”.",
-  empty_complete: "No complete notes yet.",
-  empty_unfinished: "Every note here is complete.",
-  empty_from_tastings: "No notes from tastings yet.",
-  loading_notes: "Gathering your notes…",
-};
+/** A translator from makeT, bound to the page's language. */
+export type NotesT = ReturnType<typeof makeT>;
 
-const DA: Dict = {
-  tasting_notes: "Smagsnoter",
-  taste_and_rate_a_wine: "Smag og bedøm en vin",
-  new_note_short: "+ Note",
-  notes_one: "1 note",
-  notes_many: "{n} noter",
-  complete_one: "1 færdig",
-  complete_many: "{n} færdige",
-  average_score: "gennemsnit {avg}",
-  since_when: "siden {when}",
-  no_notes_line: "Ingen noter endnu",
-  search_notes_label: "Søg i dine noter",
-  search_notes_placeholder: "Søg i dine noter — vin, drue, aroma, selv en sætning, du skrev",
-  search_notes_placeholder_short: "Søg vin, drue, aroma…",
-  clear_search: "Ryd søgningen",
-  notes_filters_label: "Filtrér noter",
-  filter_all: "Alle",
-  filter_complete: "Færdige",
-  filter_unfinished: "Ufærdige",
-  filter_from_tastings: "Fra smagninger",
-  newest_first: "Nyeste først",
-  section_done: "afsnit færdigt",
-  not_finished: "ikke færdigt",
-  section_state: "{section}: {state}",
-  from_a_tasting: "fra en smagning",
-  glass_n: "Glas {n}",
-  untitled_wine: "Unavngiven vin",
-  show_n_more: "Vis {n} flere",
-  open_note_on: "Åbn noten om {wine}",
-  not_scored: "ingen point",
-  score_points: "{n} point",
-  no_notes_title: "Ingen smagsnoter endnu",
-  no_notes_hint: "Alle noter, du skriver, samles her. Start med Smag og bedøm en vin.",
-  no_notes_match: "Ingen noter matcher “{q}”.",
-  empty_complete: "Ingen færdige noter endnu.",
-  empty_unfinished: "Alle noter her er færdige.",
-  empty_from_tastings: "Ingen noter fra smagninger endnu.",
-  loading_notes: "Samler dine noter…",
-};
-
-export const NOTES_COPY: Record<WsetLang, Dict> = { en: EN, da: DA };
-
-export type NotesT = (key: string, vars?: Record<string, string | number>) => string;
-
-function fill(s: string, vars?: Record<string, string | number>): string {
-  if (!vars) return s;
-  let out = s;
-  for (const [k, v] of Object.entries(vars)) out = out.replace(`{${k}}`, String(v));
-  return out;
-}
-
-/** makeT's contract (English fallback, `{var}` fills) over this page's table, then makeT. */
-export function makeNotesT(lang: WsetLang): NotesT {
-  const page = NOTES_COPY[lang];
-  const sheet = makeT(lang);
-  return (key, vars) => {
-    const own = page[key] ?? EN[key];
-    return own === undefined ? sheet(key, vars) : fill(own, vars);
-  };
-}
+// makeT under the name src/app/taste/notes/loading.tsx still imports. That
+// file was outside the change that moved this page's copy into i18n.ts; point
+// it at makeT and delete this re-export.
+export { makeT as makeNotesT };
 
 /**
  * The page's language. Pinned to English, like All tastings: the app header,

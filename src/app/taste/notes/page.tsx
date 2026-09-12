@@ -3,11 +3,12 @@ import { Wine } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { ActionButtonClient } from "@/components/overview/action-button-client";
 import { createClient } from "@/lib/supabase/server";
+import { makeT } from "@/lib/wset/i18n";
 import { getNotesArchive } from "./notes-data";
 import { NotesList } from "./notes-list";
-import { NOTES_LANG, makeNotesT, notesStats, statsLine } from "./notes-search";
+import { NOTES_LANG, notesStats, statsLine } from "./notes-search";
 
-const t = makeNotesT(NOTES_LANG);
+const t = makeT(NOTES_LANG);
 
 // Tasting notes — every WSET note you have written, under Taste (Taste & Rate
 // ledger R4, T7/T7b). The header stats and the Taste & rate launcher, then a

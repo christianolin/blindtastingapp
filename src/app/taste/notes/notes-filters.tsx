@@ -2,9 +2,10 @@
 
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NOTES_LANG, NOTE_FILTERS, makeNotesT, type NoteFilter } from "./notes-search";
+import { makeT } from "@/lib/wset/i18n";
+import { NOTES_LANG, NOTE_FILTERS, type NoteFilter } from "./notes-search";
 
-const t = makeNotesT(NOTES_LANG);
+const t = makeT(NOTES_LANG);
 
 const LABEL: Record<NoteFilter, string> = {
   all: t("filter_all"),
