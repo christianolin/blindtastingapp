@@ -1,189 +1,119 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { BlindrMark } from "@/components/logo";
-import { PageHeader } from "@/components/patterns/page-header";
 import { createClient } from "@/lib/supabase/server";
-import { TastingsTabs } from "./tastings-tabs";
-import { TastingCard, type TastingCardData } from "./tasting-card";
+import { getCurrentUser } from "@/lib/tasting-request-cache";
+import { makeT } from "@/lib/wset/i18n";
+import { InvitationsBand } from "./invitations-band";
 import { StartTastingMenu } from "./start-tasting-menu";
+import { TastingsTabs } from "./tastings-tabs";
+import { getTasteArchive, readPlacements } from "./taste-archive-data";
+import {
+  ARCHIVE_LANG,
+  archiveCounts,
+  firstPagePlacementIds,
+  hasLivePoll,
+  invitationsOf,
+  parseFilter,
+  statsLine,
+} from "./taste-archive-math";
 
-// The Taste pillar page: the Start-tasting menu and your tastings, bucketed.
-// The marketing hero, explainer cards and mission copy that used to open this
-// page live on /about now; the logged-in landing page is /overview.
-export default async function TastePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const t = makeT(ARCHIVE_LANG);
+
+// All tastings — the Taste parent's landing page (ledger R5, T1/T1b): every
+// tasting you have been part of, with what you scored. The header stats and
+// the Start-a-tasting menu, the invitation band, then one list under
+// non-exclusive filter chips. The marketing hero and explainer cards that
+// used to open this page live on /about; the logged-in landing page is
+// /overview.
+export default async function TastePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, avatar_url")
-    .eq("id", user.id)
-    .single();
+  const supabase = await createClient();
+  const [{ data: profile }, archive, { tab }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle(),
+    getTasteArchive(),
+    searchParams,
+  ]);
 
-  const { data: participantRows } = await supabase
-    .from("tasting_participants")
-    .select("tasting_id, status")
-    .eq("user_id", user.id);
+  const filter = parseFilter(Array.isArray(tab) ? tab[0] : tab);
+  const invitations = invitationsOf(archive.tastings);
+  const counts = archiveCounts(archive.tastings);
 
-  const tastingIds = (participantRows ?? []).map((p) => p.tasting_id);
-  const [{ data: tastings }, { data: allParticipants }, { data: wines }] =
-    await Promise.all([
-      supabase
-        .from("tastings")
-        .select("*")
-        .in("id", tastingIds.length > 0 ? tastingIds : [""])
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("tasting_participants")
-        .select("tasting_id")
-        .in("tasting_id", tastingIds.length > 0 ? tastingIds : [""]),
-      supabase
-        .from("wines")
-        .select("tasting_id, is_revealed")
-        .in("tasting_id", tastingIds.length > 0 ? tastingIds : [""]),
-    ]);
+  // The page polls only while a live tasting I have joined is in progress:
+  // its "glass N of M" moves without me. Everything else changes only when I
+  // act, and acting revalidates /taste.
+  const livePoll = hasLivePoll(archive.tastings);
 
-  const statusByTastingId = new Map(
-    (participantRows ?? []).map((p) => [p.tasting_id, p.status]),
-  );
-
-  const participantCountByTastingId = new Map<string, number>();
-  for (const p of allParticipants ?? []) {
-    participantCountByTastingId.set(
-      p.tasting_id,
-      (participantCountByTastingId.get(p.tasting_id) ?? 0) + 1,
-    );
-  }
-  const wineCountByTastingId = new Map<string, { total: number; revealed: number }>();
-  for (const w of wines ?? []) {
-    const entry = wineCountByTastingId.get(w.tasting_id) ?? { total: 0, revealed: 0 };
-    entry.total++;
-    if (w.is_revealed) entry.revealed++;
-    wineCountByTastingId.set(w.tasting_id, entry);
-  }
-
-  // Dashboard buckets. Host rows are always JOINED participants, so a
-  // hosted tasting would also match "attending" — keep it only under Hosting.
-  const byId = new Map((tastings ?? []).map((t) => [t.id, t]));
-  const invitedTastings = (participantRows ?? [])
-    .filter((p) => p.status === "INVITED")
-    .map((p) => byId.get(p.tasting_id))
-    .filter((t): t is NonNullable<typeof t> => Boolean(t))
-    .filter((t) => t.status !== "CLOSED");
-  const hostingTastings = (tastings ?? []).filter(
-    (t) => t.host_id === user.id && t.status !== "CLOSED",
-  );
-  const attendingTastings = (tastings ?? []).filter(
-    (t) =>
-      t.host_id !== user.id &&
-      t.status !== "CLOSED" &&
-      statusByTastingId.get(t.id) === "JOINED",
-  );
-  // Finished tastings (hosted or attended) move to History; created_at
-  // ordering from the query keeps the most recent first.
-  const historyTastings = (tastings ?? []).filter(
-    (t) =>
-      t.status === "CLOSED" &&
-      (t.host_id === user.id || statusByTastingId.get(t.id) === "JOINED"),
-  );
-
-  const renderList = (
-    list: TastingCardData[],
-    accent: "primary" | "gold",
-    label: string,
-    emptyMsg: string,
-  ) =>
-    list.length === 0 ? (
-      <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-        {emptyMsg}
-      </p>
-    ) : (
-      <div className="flex flex-col gap-3">
-        {list.map((t, i) => (
-          <TastingCard
-            key={t.id}
-            tasting={t}
-            wineInfo={
-              wineCountByTastingId.get(t.id) ?? { total: 0, revealed: 0 }
-            }
-            participantCount={participantCountByTastingId.get(t.id) ?? 0}
-            badgeLabel={label}
-            accent={accent}
-            index={i}
-          />
-        ))}
-      </div>
-    );
+  // Placings for the first visible page of the chip the URL names (one
+  // leaderboard read per row); the client list loads further pages as "Show N
+  // more" or another chip reveals them. While the page polls, the server
+  // leaves even the first page to the client: a finished tasting's placing
+  // cannot change, and the client keeps what it loaded across every refresh,
+  // instead of the server re-reading a page of leaderboards every 15 seconds.
+  const initialPlacements = livePoll
+    ? {}
+    : await readPlacements(firstPagePlacementIds(archive.tastings, filter));
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col">
+      {livePoll ? <AutoRefresh intervalMs={15000} /> : null}
       <AppHeader
         userId={user.id}
         displayName={profile?.display_name ?? user.email ?? ""}
         avatarUrl={profile?.avatar_url ?? null}
+        title={t("all_tastings")}
       />
-      <div className="flex w-full flex-1 flex-col gap-6 p-6 sm:p-8">
-        <PageHeader
-          title="Taste"
-          subtitle="Blind tastings you host, join or have finished."
-          actions={<StartTastingMenu />}
-        />
+      <main className="flex w-full flex-1 flex-col gap-3 p-[14px] md:gap-5 md:p-8">
+        {/* The page header. On phones the top bar already names the page, so
+            the h1 is visually hidden there and the stats line shares a row
+            with "Start ▾"; from md up it is the pillar pages' Cormorant h1
+            with the menu on the right. */}
+        <header className="flex items-start justify-between gap-3 max-md:items-center">
+          <div className="min-w-0">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight max-md:sr-only">
+              {t("all_tastings")}
+            </h1>
+            <p className="mt-1 text-[13px] text-muted-foreground max-md:mt-0 max-md:text-[12.5px] max-md:leading-snug">
+              {statsLine(t, archive.stats)}
+            </p>
+          </div>
+          <StartTastingMenu />
+        </header>
 
-        <h2 className="font-heading text-2xl font-medium">Your tastings</h2>
-
-        {(tastings ?? []).length === 0 ? (
+        {archive.tastings.length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border py-16 text-center">
             <BlindrMark size={48} />
             <div>
-              <p className="font-heading text-xl font-medium">
-                No tastings yet
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Use Start tasting above to begin your first tasting.
-              </p>
+              <p className="font-heading text-xl font-medium">{t("no_tastings_yet")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("no_tastings_hint")}</p>
             </div>
           </div>
         ) : (
-          <TastingsTabs
-            counts={{
-              invited: invitedTastings.length,
-              hosting: hostingTastings.length,
-              attending: attendingTastings.length,
-              history: historyTastings.length,
-            }}
-            invited={renderList(
-              invitedTastings,
-              "primary",
-              "Invited",
-              "No pending invitations.",
-            )}
-            hosting={renderList(
-              hostingTastings,
-              "primary",
-              "Hosting",
-              "You're not hosting any tastings yet.",
-            )}
-            attending={renderList(
-              attendingTastings,
-              "gold",
-              "Attending",
-              "You haven't joined anyone else's tasting yet.",
-            )}
-            history={renderList(
-              historyTastings,
-              "gold",
-              "Finished",
-              "No finished tastings yet.",
-            )}
-          />
+          <>
+            <InvitationsBand invitations={invitations} />
+            <TastingsTabs
+              tastings={archive.tastings}
+              counts={counts}
+              invitationCount={invitations.length}
+              initialPlacements={initialPlacements}
+            />
+          </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

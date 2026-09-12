@@ -9,18 +9,18 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeNoteRow, type WsetNoteRow } from "@/lib/wset/note-summary";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { makeT } from "@/lib/wset/i18n";
 import type { WineStyle } from "@/lib/wset/types";
 import {
   NOTES_LANG,
   archiveRowTitle,
   glassNumbers,
-  makeNotesT,
   noteSearchText,
   sortNewestFirst,
   type NoteArchiveRow,
 } from "./notes-search";
 
-const t = makeNotesT(NOTES_LANG);
+const t = makeT(NOTES_LANG);
 
 // PostgREST answers at most 1000 rows per request, so the author's notes are
 // read page by page in a stable order, and the glass lookup goes in id chunks.

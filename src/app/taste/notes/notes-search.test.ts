@@ -1,7 +1,8 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { makeT } from "../../../lib/wset/i18n";
+import { makeT, uiStrings } from "../../../lib/wset/i18n";
 import {
-  NOTES_COPY,
   NOTE_FILTERS,
   PAGE_SIZE,
   archiveRowTitle,
@@ -9,7 +10,6 @@ import {
   filterCounts,
   glassNumbers,
   groupByMonth,
-  makeNotesT,
   matchesFilter,
   matchesQuery,
   monthYearLabel,
@@ -23,8 +23,8 @@ import {
   type NoteArchiveRow,
 } from "./notes-search";
 
-const t = makeNotesT("en");
-const tDa = makeNotesT("da");
+const t = makeT("en");
+const tDa = makeT("da");
 
 function flags(done: boolean[]) {
   const keys = ["appearance", "nose", "palate", "conclusion_short"];
@@ -49,22 +49,72 @@ function row(overrides: Partial<NoteArchiveRow> = {}): NoteArchiveRow {
   };
 }
 
-describe("copy", () => {
-  it("has a Danish entry for every English key", () => {
-    expect(Object.keys(NOTES_COPY.da).sort()).toEqual(Object.keys(NOTES_COPY.en).sort());
+// Every key the Tasting notes page reads from makeT's dictionaries (the
+// sheet's own words, such as the section names, are the sheet's to cover).
+const NOTES_KEYS = [
+  "tasting_notes", "taste_and_rate_a_wine", "new_note_short", "notes_one", "notes_many",
+  "complete_one", "complete_many", "average_score", "since_when", "no_notes_line",
+  "search_notes_label", "search_notes_placeholder", "search_notes_placeholder_short",
+  "clear_search", "notes_filters_label", "filter_all", "filter_complete", "filter_unfinished",
+  "filter_from_tastings", "newest_first", "section_done", "not_finished", "section_state",
+  "from_a_tasting", "glass_n", "untitled_wine", "show_n_more", "open_note_on", "not_scored",
+  "score_points", "no_notes_title", "no_notes_hint", "no_notes_match", "empty_complete",
+  "empty_unfinished", "empty_from_tastings", "loading_notes",
+];
+
+// The page's own files: every literal t("…") in them must be a real key,
+// because makeT prints a missing key verbatim instead of failing.
+const PAGE_FILES = [
+  "./page.tsx",
+  "./loading.tsx",
+  "./notes-list.tsx",
+  "./notes-filters.tsx",
+  "./notes-search.ts",
+  "./notes-data.ts",
+];
+
+const placeholders = (s: string) => (s.match(/\{[a-z]+\}/g) ?? []).sort();
+
+describe("copy — through makeT", () => {
+  const en = uiStrings("en");
+  const da = uiStrings("da");
+
+  it("every key the page uses has a non-empty English and Danish entry with the same placeholders", () => {
+    for (const key of NOTES_KEYS) {
+      expect(en[key]?.trim(), key).toBeTruthy();
+      expect(da[key]?.trim(), key).toBeTruthy();
+      expect(placeholders(da[key]), key).toEqual(placeholders(en[key]));
+    }
   });
 
-  it("adds no key the WSET sheet's chrome table already defines", () => {
-    const sheet = makeT("en");
-    for (const key of Object.keys(NOTES_COPY.en)) expect(sheet(key)).toBe(key);
+  it("every literal t(\"…\") in the page's files is a key in both dictionaries", () => {
+    let checked = 0;
+    for (const file of PAGE_FILES) {
+      const source = readFileSync(fileURLToPath(new URL(file, import.meta.url)), "utf8");
+      const keys = [...source.matchAll(/\bt\(\s*"([a-z0-9_]+)"/g)].map((m) => m[1]);
+      checked += keys.length;
+      for (const key of keys) {
+        expect(en[key], `${file}: ${key}`).toBeTruthy();
+        expect(da[key], `${file}: ${key}`).toBeTruthy();
+      }
+    }
+    // A file may only hand `t` on (notes-data.ts does), but the scan as a
+    // whole must find the page's calls, or the pattern itself has broken.
+    expect(checked).toBeGreaterThan(20);
   });
 
-  it("fills vars and falls back to makeT for the sheet's section names", () => {
+  it("fills vars, and the sheet's section names come from the same dictionary", () => {
     expect(t("notes_many", { n: 34 })).toBe("34 notes");
     expect(t("appearance")).toBe("Appearance");
     expect(t("conclusion_short")).toBe("Conclusion");
     expect(tDa("conclusion_short")).toBe("Konklusion");
     expect(tDa("tasting_notes")).toBe("Smagsnoter");
+  });
+
+  it("shares one entry with All tastings for the chip and paging words", () => {
+    expect(t("filter_all")).toBe("All");
+    expect(t("newest_first")).toBe("Newest first");
+    expect(tDa("show_n_more", { n: 20 })).toBe("Vis 20 flere");
   });
 });
 

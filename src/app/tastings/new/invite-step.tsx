@@ -75,7 +75,7 @@ export function InviteStep({
                   aria-pressed={on}
                   onClick={() => onToggleFriend(f.email)}
                   className={cn(
-                    "flex min-h-11 items-center gap-2 rounded-full p-[7px_13px_7px_8px] text-[13px] transition-colors md:min-h-0",
+                    "flex min-h-11 items-center gap-2 rounded-full p-[7px_13px_7px_8px] text-[13px] transition-colors md:pointer-fine:min-h-0",
                     on
                       ? "bg-primary font-semibold text-primary-foreground hover:bg-[#4A1523]"
                       : "border border-border bg-white text-foreground hover:border-gold",
@@ -100,7 +100,7 @@ export function InviteStep({
             <button
               type="button"
               onClick={onShowEmailField}
-              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-white md:min-h-0"
+              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-white md:pointer-fine:min-h-0"
             >
               <Plus className="size-3.5" aria-hidden /> email or name
             </button>

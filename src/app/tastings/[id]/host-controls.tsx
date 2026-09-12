@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Trash2,
   Play,
@@ -48,7 +49,7 @@ function StateMessage({ state }: { state: LobbyActionState }) {
     return <p className="text-sm text-destructive">{state.error}</p>;
   return (
     <>
-      <p className="text-sm text-[#3f5b42]">{state.success}</p>
+      <p className="text-sm text-chart-3">{state.success}</p>
       {state.warning ? (
         <p role="status" className="text-sm font-semibold text-gold-dark">
           {state.warning}
@@ -60,8 +61,11 @@ function StateMessage({ state }: { state: LobbyActionState }) {
 
 /**
  * Host-only controls with two surfaces:
- *  - "start": just the prominent Start action, rendered inline in the draft
- *    lobby's main column (the one primary call-to-action pre-start).
+ *  - "start": the prominent Start action (the one primary call-to-action
+ *    pre-start). The lobby mounts it once, inline above its columns, at a slot
+ *    its draft and running trees share, so what Start returned (its warning
+ *    above all) is still shown after the page re-renders into the running
+ *    board.
  *  - "menu": the settings the header cogwheel opens, branched by status —
  *    draft gets schedule / invite + share link / flow / delete; a running
  *    tasting gets finish / delete (an OPEN one keeps invite + share link).
@@ -82,14 +86,12 @@ export function HostControls({
   revealMode,
   wineSource,
   unrevealedGlasses = [],
+  shareLinkActive = true,
   surface,
 }: {
   tastingId: string;
   status: string;
   scheduledAt?: string | null;
-  /** Not read: Start has no wine-count gate (blind-tasting ledger B0). Still
-      accepted so existing callers type-check; they can stop passing it. */
-  wineCount?: number;
   friends?: { id: string; display_name: string; email: string }[];
   sequentialGuessing?: boolean;
   showSequentialToggle?: boolean;
@@ -107,6 +109,10 @@ export function HostControls({
   /** Glasses whose answers ending the tasting would leave hidden, in list
       order — the End confirm names them (reveal-4). */
   unrevealedGlasses?: readonly UnrevealedGlass[];
+  /** The menu's share link fetches only once this is true. HostControlsMenu
+      passes whether its keep-mounted popover has been opened, so a page view
+      that never opens the menu never calls `ensure_join_code`. */
+  shareLinkActive?: boolean;
   surface: "start" | "menu";
 }) {
   const router = useRouter();
@@ -118,20 +124,31 @@ export function HostControls({
     revealMode !== undefined &&
     wineSource !== undefined &&
     startLandsOnConsole({ timingMode, revealMode, wineSource });
-  // Wrapped rather than a `useEffect` on the returned state: the action's
-  // `revalidatePath` swaps in the started lobby, which no longer renders this
-  // "start" surface — an effect on an unmounting component may never run,
-  // whereas pushing as soon as the action resolves always does.
+  // Wrapped rather than a `useEffect` on the returned state, so the push goes
+  // out the moment the action resolves. Only a clean success goes on to the
+  // console: a success that carries a warning (an incomplete glass, a bottle
+  // that couldn't leave the cellar) keeps the host on the lobby, where this
+  // surface shows the warning with a Host console link, as the create sheet's
+  // step 3 does (spec §C.7, amendment 2).
   const [startState, startAction, startPending] = useActionState(
     async (prev: LobbyActionState, formData: FormData) => {
       const result = await startTasting(prev, formData);
-      if (result && "success" in result && landsOnConsole) {
+      if (
+        result &&
+        "success" in result &&
+        !result.warning &&
+        landsOnConsole
+      ) {
         router.push(`/tastings/${tastingId}/host`);
       }
       return result;
     },
     null,
   );
+  // A Start result belongs to the run it started. Finish (in the menu)
+  // re-renders this same mounted surface as CLOSED; from then on the result
+  // stays hidden, so a later Reopen doesn't bring back a stale warning.
+  const [startResultRetired, setStartResultRetired] = useState(false);
   const [finishState, finishAction, finishPending] = useActionState(
     finishTasting,
     null,
@@ -159,6 +176,10 @@ export function HostControls({
   if ((scheduledAt ?? null) !== seenScheduledAt) {
     setSeenScheduledAt(scheduledAt ?? null);
     setSchedule(isoToLocal(scheduledAt ?? null));
+  }
+
+  if (status === "CLOSED" && startState !== null && !startResultRetired) {
+    setStartResultRetired(true);
   }
 
   const notStarted = status === "DRAFT";
@@ -206,18 +227,41 @@ export function HostControls({
     </form>
   );
 
-  // Draft lobby's one primary action, rendered inline in the main column.
-  // Never gated on a wine count, and an incomplete glass never blocks it: the
+  // Draft lobby's one primary action, inline above the lobby's columns. Never
+  // gated on a wine count, and an incomplete glass never blocks it: the
   // server's error shows under the button, and so does a success's warning.
   if (surface === "start") {
     if (!notStarted) {
-      // A started tasting has no Start; a warning from the Start that got it
-      // there keeps showing for as long as this surface stays mounted.
-      return startState && "success" in startState && startState.warning ? (
+      // A started tasting has no Start. What shows is the result of the Start
+      // that got it here: startTasting revalidates the lobby, which re-renders
+      // into the running board in the same commit that delivers { success,
+      // warning }, and this surface (mounted at a slot both trees share) keeps
+      // that state. It shows the success, any warning and, when Start stayed
+      // here instead of going on to the console, the way on. Nothing on a
+      // plain page load, and nothing once the tasting has ended.
+      if (
+        !startState ||
+        !("success" in startState) ||
+        startResultRetired ||
+        status !== "IN_PROGRESS"
+      ) {
+        return null;
+      }
+      return (
         <div className="flex flex-col gap-2">
           <StateMessage state={startState} />
+          {landsOnConsole ? (
+            <Button
+              render={<Link href={`/tastings/${tastingId}/host`} />}
+              nativeButton={false}
+              size="lg"
+              className="min-h-11 w-full sm:w-fit md:pointer-fine:min-h-0"
+            >
+              Host console
+            </Button>
+          ) : null}
         </div>
-      ) : null;
+      );
     }
     return (
       <form action={startAction} className="flex flex-col gap-2">
@@ -226,7 +270,7 @@ export function HostControls({
           type="submit"
           size="lg"
           disabled={startPending}
-          className="w-full gap-1.5 sm:w-fit"
+          className="min-h-11 w-full gap-1.5 sm:w-fit md:pointer-fine:min-h-0"
         >
           {startPending ? (
             <>
@@ -279,7 +323,11 @@ export function HostControls({
           {inviteForm}
           {/* create-2: the share link beside "Invite more people". Only an
               OPEN tasting's link keeps working once it has started. */}
-          <JoinLinkRow tastingId={tastingId} worksUntilStart={!invitesStayOpen} />
+          <JoinLinkRow
+            tastingId={tastingId}
+            worksUntilStart={!invitesStayOpen}
+            active={shareLinkActive}
+          />
 
           {showSequentialToggle ? (
             <form action={setSequentialGuessing} className="flex flex-col gap-2">
@@ -339,7 +387,11 @@ export function HostControls({
           {invitesStayOpen ? (
             <>
               {inviteForm}
-              <JoinLinkRow tastingId={tastingId} worksUntilStart={false} />
+              <JoinLinkRow
+                tastingId={tastingId}
+                worksUntilStart={false}
+                active={shareLinkActive}
+              />
             </>
           ) : null}
           <form

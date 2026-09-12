@@ -6,6 +6,7 @@ import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { CardEmptyRow } from "@/components/overview/subject-card";
 import { NoteModal } from "@/components/wset/note-modal";
 import { cn } from "@/lib/utils";
+import { makeT } from "@/lib/wset/i18n";
 import { NotesFilterChips, NotesSearchField } from "./notes-filters";
 import {
   NOTES_LANG,
@@ -13,7 +14,6 @@ import {
   dayLabel,
   filterCounts,
   groupByMonth,
-  makeNotesT,
   matchesFilter,
   matchesQuery,
   sectionsLabel,
@@ -24,7 +24,7 @@ import {
   type NoteSectionFlag,
 } from "./notes-search";
 
-const t = makeNotesT(NOTES_LANG);
+const t = makeT(NOTES_LANG);
 
 const EMPTY: Record<NoteFilter, string> = {
   all: t("no_notes_line"),

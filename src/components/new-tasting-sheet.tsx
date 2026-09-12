@@ -587,7 +587,7 @@ function PrimaryButton({
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523] disabled:opacity-60 md:min-h-0 md:rounded-[9px] md:p-[12px_20px] md:text-[14.5px]",
+        "flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523] disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:p-[12px_20px] md:text-[14.5px]",
         className,
       )}
     >
@@ -602,7 +602,7 @@ function GoldButton({ className, children, ...props }: ComponentProps<"button">)
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] bg-gold p-[15px] text-[16px] font-bold text-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-gold-deep disabled:opacity-60 md:min-h-0 md:w-auto md:rounded-[9px] md:p-[12px_22px] md:text-[14.5px]",
+        "flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] bg-gold p-[15px] text-[16px] font-bold text-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-gold-deep disabled:opacity-60 md:pointer-fine:min-h-0 md:w-auto md:rounded-[9px] md:p-[12px_22px] md:text-[14.5px]",
         className,
       )}
     >
@@ -619,7 +619,7 @@ function TextButton({ className, children, ...props }: ComponentProps<"button">)
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground disabled:opacity-60 md:min-h-0 md:rounded-[9px] md:border md:border-border md:bg-card md:p-[11px_16px] md:text-[13.5px] md:text-foreground md:hover:border-gold md:hover:bg-white",
+        "flex min-h-11 items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:border md:border-border md:bg-card md:p-[11px_16px] md:text-[13.5px] md:text-foreground md:hover:border-gold md:hover:bg-white",
         className,
       )}
     >
@@ -635,7 +635,7 @@ function LinkButton({ className, children, ...props }: ComponentProps<"button">)
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 items-center justify-center p-[11px_8px] text-[13.5px] font-semibold text-primary hover:text-gold-deep md:min-h-0",
+        "flex min-h-11 items-center justify-center p-[11px_8px] text-[13.5px] font-semibold text-primary hover:text-gold-deep md:pointer-fine:min-h-0",
         className,
       )}
     >

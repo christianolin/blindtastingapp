@@ -519,7 +519,6 @@ export default async function TastingPage({
               tastingId={id}
               status={tasting.status}
               scheduledAt={tasting.scheduled_at}
-              wineCount={wineCount}
               friends={friends}
               sequentialGuessing={tasting.sequential_guessing}
               // Guided pacing is LIVE-only (create-1, play-1, reveal-2): a
@@ -544,6 +543,26 @@ export default async function TastingPage({
       </div>
 
       {inviteCard}
+
+      {/* Start sits at a slot the draft and running trees share, never inside
+          one branch. startTasting revalidates this page, so the lobby
+          re-renders into the running board in the same commit that delivers
+          its { success, warning }; mounted inside the draft column, the
+          surface and its action state would unmount with that commit and the
+          warning would never show (spec §C.7, amendment 2). Once running, it
+          renders only that result. */}
+      {isHost ? (
+        <HostControls
+          tastingId={id}
+          status={tasting.status}
+          // All three, so Start can decide where it lands (reveal-5):
+          // only a LIVE blind host-provides host goes to the console.
+          timingMode={tasting.timing_mode}
+          revealMode={tasting.reveal_mode}
+          wineSource={tasting.wine_source}
+          surface="start"
+        />
+      ) : null}
 
       {running && isOpen ? (
         <div className="flex flex-col gap-4">
@@ -669,19 +688,6 @@ export default async function TastingPage({
               <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
                 Waiting for the host to start the tasting.
               </p>
-            ) : null}
-            {isHost ? (
-              <HostControls
-                tastingId={id}
-                status={tasting.status}
-                wineCount={wineCount}
-                // All three, so Start can decide where it lands (reveal-5):
-                // only a LIVE blind host-provides host goes to the console.
-                timingMode={tasting.timing_mode}
-                revealMode={tasting.reveal_mode}
-                wineSource={tasting.wine_source}
-                surface="start"
-              />
             ) : null}
             {winesPanel}
           </div>

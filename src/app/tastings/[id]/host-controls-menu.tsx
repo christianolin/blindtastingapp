@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +31,6 @@ export function HostControlsMenu({
   tastingId: string;
   status: string;
   scheduledAt?: string | null;
-  /** Not read: Start has no wine-count gate (blind-tasting ledger B0). Still
-      accepted so existing callers type-check; they can stop passing it. */
-  wineCount?: number;
   friends?: { id: string; display_name: string; email: string }[];
   sequentialGuessing?: boolean;
   showSequentialToggle?: boolean;
@@ -42,8 +40,16 @@ export function HostControlsMenu({
   /** Forwarded to the End confirm, which lives in this menu (reveal-4). */
   unrevealedGlasses?: readonly UnrevealedGlass[];
 }) {
+  // Sticky: false until the menu first opens. The popover is keep-mounted, so
+  // without this its share link would call ensure_join_code on every host
+  // page view, including the ones that never open the menu.
+  const [opened, setOpened] = useState(false);
   return (
-    <Popover>
+    <Popover
+      onOpenChange={(open) => {
+        if (open) setOpened(true);
+      }}
+    >
       <PopoverTrigger
         render={
           <Button variant="outline" size="icon" aria-label="Host controls" />
@@ -64,6 +70,7 @@ export function HostControlsMenu({
           showLeaderboardToggle={showLeaderboardToggle}
           invitesStayOpen={invitesStayOpen}
           unrevealedGlasses={unrevealedGlasses}
+          shareLinkActive={opened}
           surface="menu"
         />
       </PopoverContent>
