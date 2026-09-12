@@ -13,6 +13,9 @@ import {
 } from "@/lib/tasting-request-cache";
 import { makeWineLabeler } from "@/lib/wine-label";
 import type { Database } from "@/lib/supabase/database.types";
+import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
+import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
+import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import {
   HostConsole,
   type ConsoleData,
@@ -26,9 +29,13 @@ type Guess = Database["public"]["Tables"]["guesses"]["Row"];
 
 // Chip / button labels per in-play step. The order and the optional steps
 // mirror the in_play_steps SQL helper (country → region → appellation? →
-// grapes → producer → type_designation? → vintage); producer and vintage are
-// always steps even when the answer lacks them (the RPC scores them 0), so
-// the label says so rather than promising a value that is not there.
+// grapes → producer → type_designation? → vintage): only the appellation and
+// the designation are ever optional. Producer and vintage are always steps,
+// and live `wine_answers.producer_id` and `vintage_kind` are NOT NULL (the
+// optional-producer migration never ran live — blind-tasting ledger amendment
+// 10), so a step with nothing on record is a defensive case; the note under
+// the reveal button then says the step scores nobody rather than promising a
+// value that is not there.
 const STEP_LABEL: Record<StepKey, string> = {
   country: "Country",
   region: "Region",
@@ -88,14 +95,30 @@ export default async function HostConsolePage({
   }
 
   const supabase = await createClient();
-  const [participants, wines, reference, leaderboard, { data: guessStatus }] =
-    await Promise.all([
-      getParticipantRows(tastingId),
-      getWineRows(tastingId),
-      getReferenceOptions(),
-      getTastingLeaderboard(tastingId),
-      supabase.rpc("tasting_guess_status", { p_tasting_id: tastingId }),
-    ]);
+  const [
+    participants,
+    wines,
+    reference,
+    leaderboard,
+    { data: guessStatus },
+    incompleteGlasses,
+  ] = await Promise.all([
+    getParticipantRows(tastingId),
+    getWineRows(tastingId),
+    getReferenceOptions(),
+    getTastingLeaderboard(tastingId),
+    supabase.rpc("tasting_guess_status", { p_tasting_id: tastingId }),
+    // Every glass with no answer key yet (spec §C.8). It can't be revealed, so
+    // the console shows the refusal instead of reveal chips. A failed read
+    // costs only that notice: revealNextCategory and revealFull run the same
+    // check server-side and refuse there.
+    listIncompleteGlasses(supabase, tastingId).catch((e: unknown) => {
+      console.warn(
+        `incomplete glasses for tasting ${tastingId}: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      return [] as IncompleteGlass[];
+    }),
+  ]);
 
   const userIds = participants.map((p) => p.user_id);
   const { data: profiles } = await supabase
@@ -114,6 +137,9 @@ export default async function HostConsolePage({
 
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
   const hostProvides = tasting.wine_source === "HOST_PROVIDES";
+  // Guided pacing is LIVE-only (spec §D.1 #1; create-1, play-1, reveal-2): a
+  // stored flag on a self-paced tasting is ignored on read, here as everywhere
+  // else, so there is no step reveal to drive.
   const guidedLive =
     tasting.timing_mode === "LIVE" && tasting.sequential_guessing && !isSemiBlind;
   const finished = tasting.status === "CLOSED";
@@ -195,6 +221,7 @@ export default async function HostConsolePage({
     lockedByWineId.set(row.wine_id, set);
   }
   const joined = participants.filter((p) => p.status === "JOINED");
+  const hostParticipant = participants.find((p) => p.user_id === tasting.host_id);
   // Who is expected to guess a glass: joined people minus whoever brought the
   // bottle, minus the host when the host set every answer.
   const eligibleFor = (wine: { contributor_participant_id: string | null }) =>
@@ -206,14 +233,31 @@ export default async function HostConsolePage({
 
   function buildGlass(wine: (typeof wines)[number], index: number): ConsoleGlass {
     const answer = answerByWineId.get(wine.id) ?? null;
-    const stepKeys: StepKey[] = isSemiBlind || !answer ? [] : inPlaySteps(answer);
-    const revealStep = wine.is_revealed ? stepKeys.length : (wine.reveal_step ?? 0);
+    // An incomplete glass has no answer key at all, so there is nothing to
+    // reveal: no chips, and the refusal sentence in their place (spec §C.8).
+    const refusal = revealRefusal(incompleteGlasses, wine.id);
+    const answerSteps: StepKey[] =
+      isSemiBlind || !answer || refusal ? [] : inPlaySteps(answer);
+    const revealStep = wine.is_revealed ? answerSteps.length : wine.reveal_step;
+    // reveal-1 (spec §D.3 #4): in bring-your-own the host guesses this glass
+    // too, and which optional steps a wine has is itself answer-key knowledge.
+    // Until the first step is revealed — which freezes every guess — such a
+    // host sees only the generic first step, never the answer-derived list.
+    // Never an empty list: that would drop "Reveal the country" for
+    // "Reveal the whole glass".
+    const hostGuesses =
+      !hostProvides &&
+      !isSemiBlind &&
+      wine.contributor_participant_id !== hostParticipant?.id;
+    const hideAnswerSteps =
+      hostGuesses && !refusal && !wine.is_revealed && revealStep === 0;
+    const stepKeys: StepKey[] = hideAnswerSteps ? ["country"] : answerSteps;
     const revealedKeys = new Set(stepKeys.slice(0, revealStep));
     const categoryVisible = (key: StepKey) =>
       hostProvides || wine.is_revealed || revealedKeys.has(key);
     const steps: ConsoleStep[] = stepKeys.map((key, i) => {
-      // "Not recorded" is a fact about the answer key, so in bring-your-own it
-      // is only surfaced once the category is revealed — same gate as facts.
+      // "Nothing on record" is a fact about the answer key, so in bring-your-own
+      // it is only surfaced once the category is revealed — same gate as facts.
       const missing = Boolean(
         (key === "producer" && answer && !answer.producer_id) ||
           (key === "vintage" && answer && !answer.vintage_kind),
@@ -321,6 +365,7 @@ export default async function HostConsolePage({
       eligible: eligible.length,
       notLockedNames,
       facts,
+      refusal,
     };
   }
 
@@ -346,13 +391,32 @@ export default async function HostConsolePage({
       lastRoundPoints: r.lastRoundPoints,
     }));
   const revealedCount = wines.filter((w) => w.is_revealed).length;
+  const glassesSoFar =
+    revealedCount > 0 ? `after glass ${revealedCount}` : "nothing revealed yet";
+  // reveal-7 (spec §D.3 #3): a per-wine leaderboard only moves when a whole
+  // glass is revealed, so naming the last category would date the standings to
+  // a reveal they have not caught up with yet.
   const lastRevealedStep =
     current && current.revealStep > 0 ? current.steps[current.revealStep - 1] : null;
-  const standingsAfter = lastRevealedStep
-    ? `after the ${STEP_LABEL[lastRevealedStep.key].toLowerCase()}`
-    : revealedCount > 0
-      ? `after glass ${revealedCount}`
-      : "nothing revealed yet";
+  const standingsAfter =
+    tasting.leaderboard_reveal === "PER_WINE"
+      ? glassesSoFar
+      : lastRevealedStep
+        ? `after the ${STEP_LABEL[lastRevealedStep.key].toLowerCase()}`
+        : glassesSoFar;
+
+  // Glasses whose answers ending the tasting would leave hidden (reveal-4),
+  // numbered by list order like every other glass number; a glass part-way
+  // through a step reveal is "half".
+  const unrevealedGlasses: UnrevealedGlass[] = [];
+  wines.forEach((w, i) => {
+    if (!w.is_revealed) {
+      unrevealedGlasses.push({
+        glass: i + 1,
+        state: w.reveal_step > 0 ? "half" : "hidden",
+      });
+    }
+  });
 
   const data: ConsoleData = {
     tastingId,
@@ -369,6 +433,7 @@ export default async function HostConsolePage({
     previous,
     standings,
     standingsAfter,
+    unrevealedGlasses,
   };
 
   const watermark = wines.reduce(
