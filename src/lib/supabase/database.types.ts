@@ -1309,6 +1309,34 @@ export type Database = {
         >;
         Relationships: [];
       };
+      // 20260912100100 (spec §E.1): owner-only retention of every label read.
+      // `read` is null exactly when `outcome` is "not-read".
+      label_reads: {
+        Row: {
+          id: string;
+          user_id: string;
+          image_path: string;
+          outcome: "ok" | "not-a-label" | "not-read";
+          read: unknown | null;
+          model: string;
+          input_tokens: number;
+          output_tokens: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          image_path: string;
+          outcome: "ok" | "not-a-label" | "not-read";
+          read?: unknown | null;
+          model: string;
+          input_tokens?: number;
+          output_tokens?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["label_reads"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
@@ -1388,6 +1416,16 @@ export type Database = {
       search_producers: {
         Args: { p_query: string; p_region_id?: string };
         Returns: { id: string; name: string; in_region: boolean }[];
+      };
+      // 20260912101000 (spec §E.2): the folded producer lookup. p_region_id
+      // accepts null, so a nullable regionId passes straight through (spec §B.7).
+      find_producer_by_folded_name: {
+        Args: { p_name: string; p_region_id?: string | null };
+        Returns: string | null;
+      };
+      find_or_create_producer: {
+        Args: { p_name: string; p_region_id?: string | null };
+        Returns: string;
       };
       tasting_guess_status: {
         Args: { p_tasting_id: string };
