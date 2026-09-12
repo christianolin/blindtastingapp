@@ -234,6 +234,17 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
     - **F10 Acceptance 1** cannot print nothing: `addWine` matches the required `?addWine=byhand` redirect in `wines/new/page.tsx`. Treat that single line as expected.
     - **F11** kept `PendingScan` / `PendingFix` (`@deprecated removed in S5c`) and the inline `WineFormInitial` imports for round-1 view props; debt-set tsc errors are expected to reach ~74 until S1–S6. `ScanConfirmProps.onChoose` now takes `{ kind: "note" }`.
     - **Push rule during the window:** origin/master carries a revert of F7 (5a44457). When S6 is committed and the tree passes the checks, revert that revert on the integration branch before merging master.
+20. **F12's reducer: a read keeps its turn (wave C re-review, 2026-09-13).** These rules supersede F12's, S5a's and S5b's task text where they differ.
+    - `SheetState` gains `confirmQueue: string[]` (finished reads waiting for their confirm, oldest first), beyond spec §C.4's type. Accepted.
+    - **Waiting.** With `multi` off, a finished read, or a single scan's failure (whichever bottle is active), opens its confirm only when a home view (camera or desktop) or that bottle's own reading view is on screen. Otherwise it waits in `confirmQueue`.
+    - **A turn ends only when the user acts on that bottle:** ← from its confirm (it stays a Fix/Remove row and is never offered again), `itemRemove` (Rescan), `itemAdded` or `itemFailed` for its id, or `lotSkipped` for it. Opening by hand, the lot step or the chooser from its confirm keeps the turn.
+    - **Landing home opens the next read.** Any transition that would land on a home view (`itemAdded`, `itemRemove`, `lotSkipped`, `followUpDone`, `go(home)`, ← reaching home) opens the oldest waiting read's confirm instead. A confirm opened from the queue that the user has not acted on goes back to the front of `confirmQueue` when something covers or leaves it (`followUp` for D3, `go(home)`), so `followUpDone`, D3's "Add it to my cellar" and `go(home)` reopen it.
+    - **Many.** `setMulti(true)`, including "Add and scan the next", moves every waiting read into the multi stack and clears `confirmQueue`: in Many, reads stack (§C.4). S5a's "`setMulti(true)` plus `go(home)`" stays as written.
+    - `itemAdded` also resets `followUp`. S5a dispatches `followUp` after `itemAdded` for a single catalog add (D3).
+    - **"Don't add it" returns to where the add started** (D17). `lotSkipped` pops history like ← and skips the dropped bottle's confirm: the camera for a scan, the search view for a phone search add, the desktop view on a laptop. If that lands on a home view, the rule above applies. `skippedLot`'s line shows there.
+    - **Ids.** Every add or failure started from a bottle's confirm, lot step or chooser dispatches that bottle's id (S5a). An `itemAdded` with a null id while a read's confirm is on screen logs a development warning and does not navigate.
+    - `itemRowCopy`'s added detail switches on the row's own `added.destination`, never the sheet's.
+    - **Tests.** Each reviewer probe (P1–P5 and the D3 paths) becomes a failing test first. F12 also adds a seeded, model-based test over random action sequences asserting: no home view while `confirmQueue` is non-empty and `multi` is off; every read or failed bottle is on screen, waiting, in the Many stack, or was left by ←; no bottle is added twice; `confirmQueue` has no duplicates and holds only read or failed bottles.
 
 ## Working Rules
 
