@@ -1,9 +1,11 @@
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
+import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 
 // ---------------------------------------------------------------------------
-// Contracts from docs/superpowers/specs/2026-09-12-add-wine-sheet-and-tasting-
-// flow-design.md ("Contracts"). Verbatim — every view and the provider build
-// against these; change the spec first.
+// Contracts from docs/superpowers/specs/2026-09-12-add-wine-v2-scan-and-flow-
+// fixes-design.md §C.1 (they replace the 2026-09-12 flows spec's "Contracts").
+// Verbatim — every view and the provider build against these; change the spec
+// first. Destination-dependent copy and rules live in ./matrix (§C.2).
 // ---------------------------------------------------------------------------
 
 export type AddWineDestination =
@@ -13,49 +15,64 @@ export type AddWineDestination =
       tastingName: string;
       revealMode: RevealMode;
       wineSource: WineSourceMode;
-      /** Next glass number = existing wine count + 1; re-read after each add. */
-      position: number;
+      position: number;            // existing wine count + 1; re-read after each add
     }
   | { kind: "cellar" }
   | { kind: "catalog" }
-  /** Taste & rate (owner feedback, 2026-09-12): pick ONE wine, then its WSET
-      note opens. Never writes to a flight or a cellar; single pick. */
-  | { kind: "rate" };
+  /** Taste & rate: one wine, then its WSET note opens (D4; was "rate"). */
+  | { kind: "note" };
 
 export type AddWineStart = "camera" | "search" | "cellar" | "byhand";
 
 export type AddWineOpenOptions = {
-  start?: AddWineStart;        // default: camera on touch devices, the desktop view on a mouse / trackpad
-  multi?: boolean;             // open straight into the 7d stacked mode (bulk); ignored for rate
-  /** Called after every successful add (the sheet stays open in multi mode). */
+  start?: AddWineStart;            // routed by canScan (C.3); cellar and byhand open those views on every device
+  multi?: boolean;                 // ignored for note
   onAdded?: (added: AddedWine) => void;
+  /** flight only: open the by-hand form on an existing glass (Edit; finishing an incomplete glass) */
+  edit?: { wineId: string };
 };
+
+/** wines.added_via (E.3) */
+export type AddedVia = "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND";
+
+export type AddSource =
+  | { kind: "catalog"; catalogWineId: string; via: "scan" | "search" }
+  | { kind: "lot"; lotId: string; consume: boolean; catalogWineId?: string }
+  | { kind: "plusOne"; lotId: string }                                          // cellar destination, a wine you own (D9)
+  | { kind: "identity"; draft: WineIdentityDraft; via: "scan" | "byhand"; readId: string | null }
+  | { kind: "unidentified"; draft: WineIdentityDraft }                          // flight only (byhand-7)
+  | { kind: "incomplete"; draft: WineIdentityDraft; via: "scan" | "byhand" };   // flight only (D7)
 
 export type AddedWine = {
-  catalogWineId: string;
-  label: string;               // "Produttori del Barbaresco 2018"
-  /** A rate pick is not an add, so it never produces an AddedWine. */
-  destination: Exclude<AddWineDestination["kind"], "rate">;
-  glass?: number;              // flight
-  lotId?: string;              // cellar
-  wineId?: string;             // flight: wines.id
+  label: string;                   // "Produttori del Barbaresco 2018"
+  destination: "flight" | "cellar" | "catalog";
+  catalogWineId: string | null;    // null for an incomplete or unidentified glass
+  glass?: number;                  // flight
+  wineId?: string;                 // flight: wines.id
+  lotId?: string;                  // cellar
+  incomplete?: { missing: WineFieldKey[] };
+  written?: boolean;               // catalog: a new row was created (D3's header)
 };
 
-/** What a rate pick hands the provider: the catalog wine whose WSET note
-    opens and, for a cellar bottle, the lot `NewNoteModal` draws down once
-    that note saves (only when `consume`). */
-export type RatePick = {
-  catalogWineId: string;
-  lotId?: string | null;
-  consume?: boolean;
-};
+export type AddResult =
+  | { ok: true; added: AddedWine; warning?: string }
+  | { error: string; missing?: WineFieldKey[] };
 
-/** A scanned bottle waiting for a fix before it can be added (7d "Fix"). */
-export type PendingScan = {
-  id: string;                  // client uuid
-  imageUrl: string;
-  prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial;
-  problem: "no-vintage" | "incomplete";
+/** What a note pick hands the provider (was RatePick). */
+export type NotePick = { catalogWineId: string; lotId?: string | null; consume?: boolean };
+
+/** The tasting a destination-less add can go to. */
+export type FlightHint = {
+  tastingId: string;
+  tastingName: string;
+  position: number;
+  /** D12 / entry-4; was `live: boolean`. Optional until every hint producer
+      passes it (T10); S5c makes it required. */
+  phase?: "live" | "self-paced" | "next";
+  /** @deprecated removed in S5c — use `phase`. */
+  live?: boolean;
+  revealMode: RevealMode;
+  wineSource: WineSourceMode;
 };
 
 export type SearchGroups = {
@@ -66,58 +83,35 @@ export type SearchGroups = {
   catalog: {
     catalogWineId: string; title: string; subtitle: string | null; imageUrl: string | null;
     avgScore: number | null; noteCount: number; inFlight: boolean;
+    /** Filled after the RPC so D1's row metas can compare a row with a draft (spec §C.1). */
+    producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
   }[];
   tasted: {
     catalogWineId: string; title: string; imageUrl: string | null;
     myScore: number | null; tastedOn: string;
+    producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
+    /** sources-8: tasted rows beyond the catalog RPC's first page carry their own flag. */
+    inFlight: boolean;
   }[];
 };
-
-export type ByHandIdentity = {
-  producerId: string | null; producerName: string;    // pending producer when id is null
-  wineName: string | null;
-  vintageKind: "YEAR" | "NV" | "TAWNY"; vintageYear: number | null; vintageTawnyYears: number | null;
-  colour: "RED" | "WHITE" | "ROSE" | "ORANGE"; style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
-  countryId: string; regionId: string; appellationId: string;
-  primaryGrapeId: string; secondaryGrapeId: string | null; typeDesignationId: string | null;
-  imageUrl: string | null; description: string | null;
-  alcoholPercent: number | null;
-};
-
-export type AddSource =
-  | { kind: "catalog"; catalogWineId: string }
-  | {
-      kind: "lot";
-      lotId: string;
-      consume: boolean;
-      /** The lot's catalog wine, carried from the row (every view that lists
-          lots already has it) so a rate pick needs no lookup. The writes
-          never read it — the server resolves the lot by `lotId` alone. */
-      catalogWineId?: string;
-    }
-  | { kind: "identity"; identity: ByHandIdentity };
-
-export type AddResult =
-  | { ok: true; added: AddedWine; warning?: string }
-  | { error: string };
 
 // ---------------------------------------------------------------------------
 // View contracts. The sheet shell (add-wine-sheet.tsx) owns the state machine
 // and passes these down; each view file implements exactly one of them. Views
 // never write to the database themselves — every add goes through `onAdd`, so
-// the shell can apply the destination rules (cellar footer first, 7i chooser,
-// multi mode, close + refresh) in one place.
+// the shell can apply the destination rules in one place. Round 1's prop types
+// stay until each S task rewrites its own view (plan F11).
 // ---------------------------------------------------------------------------
 
-/** The tasting a destination-less scan (7i) can be dropped into: the tasting
-    page's registration, or the Overview's live / next-up banner. */
-export type FlightHint = {
-  tastingId: string;
-  tastingName: string;
-  position: number;
-  live: boolean;
-  revealMode: RevealMode;
-  wineSource: WineSourceMode;
+/**
+ * A scanned bottle waiting for a fix before it can be added (7d "Fix").
+ * @deprecated removed in S5c — the sheet's `ScanItem` (sheet-state.ts) replaces it.
+ */
+export type PendingScan = {
+  id: string;                  // client uuid
+  imageUrl: string;
+  prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial;
+  problem: "no-vintage" | "incomplete";
 };
 
 export type SheetContext = {
@@ -128,16 +122,12 @@ export type SheetContext = {
   flightHint: FlightHint | null;
   userId: string;
   preferredCurrency: string;
-  /** A mouse / trackpad device at any width — not a viewport size (the
-      device rule in use-camera.ts: `!(pointer: coarse)`). Scan, Scan next
-      and Many controls stay hidden when true. */
-  isDesktop: boolean;
-  /** `navigator.mediaDevices.getUserMedia` exists. The camera hook may still
-      report `unavailable` / `denied` once it actually asks. */
-  hasCamera: boolean;
 };
 
-/** The 7d inline "Fix" for a pending scan: a typed year, or NV. */
+/**
+ * The 7d inline "Fix" for a pending scan: a typed year, or NV.
+ * @deprecated removed in S5c — Fix opens the by-hand form (D7).
+ */
 export type PendingFix = { vintageKind: "YEAR" | "NV"; vintageYear: number | null };
 
 export type CameraViewProps = {
@@ -168,8 +158,8 @@ export type ScanConfirmProps = {
   onByHand: (prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial) => void;
   /** Performs the add for the current destination. `source` is the primary
       catalog match ({kind:"catalog"}) or, with no match, the identity built
-      from the prefill (`identityFromPrefill` in ./format). `andScanNext`
-      keeps the sheet open in multi mode and returns to the camera. */
+      from the read. `andScanNext` keeps the sheet open in multi mode and
+      returns to the camera. */
   onAdd: (source: AddSource, opts: { andScanNext: boolean }) => Promise<void>;
   /** 7c → 7d: "Add and scan the next" on a read with no vintage and no
       catalog match — the shell stacks a Fix row for the prefill, switches
@@ -179,12 +169,12 @@ export type ScanConfirmProps = {
   onPending: (prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial) => void;
   /** 7i, null destination only. The shell ADOPTS the choice as the sheet's
       destination (flight → `ctx.flightHint`'s tasting; cellar → the cellar
-      footer fields; rate → the rate destination; catalog-only → catalog) and
+      footer fields; note → the note destination; catalog-only → catalog) and
       resolves. The view then calls `onAdd(source, { andScanNext: false })`
-      exactly as it would with a fixed destination; for "rate" that is a rate
+      exactly as it would with a fixed destination; for "note" that is a note
       pick, which closes the sheet and opens the WSET note. */
   onChoose: (
-    choice: { kind: "flight" } | { kind: "cellar" } | { kind: "rate" } | { kind: "catalog-only" },
+    choice: { kind: "flight" } | { kind: "cellar" } | { kind: "note" } | { kind: "catalog-only" },
   ) => Promise<void>;
   busy: boolean;
 };
@@ -227,7 +217,7 @@ export type DesktopViewProps = {
   ctx: SheetContext;
   onAdd: (source: AddSource) => Promise<void>;
   /** Dropped / picked label photos; each goes through the read-and-confirm
-      path in turn (one FastCork credit per file). */
+      path in turn (one label read per file). */
   onFiles: (files: File[]) => void;
   onCellar: () => void;
   onByHand: () => void;
