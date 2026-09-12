@@ -104,3 +104,37 @@ export function competitorRank(
 export function percent(part: number, whole: number): number {
   return whole > 0 ? Math.round((100 * part) / whole) : 0;
 }
+
+/**
+ * Dense ranking for a displayed standings list (reveal-6): highest score
+ * first, ties share a rank, and the next distinct score takes the following
+ * rank — the same rule as `competitorRank`, so a list, a rank chip and a delta
+ * pill always agree. Stable among ties: tied rows keep the order they arrived
+ * in. `tied` is true when another row has the same score.
+ */
+export function rankRows<T>(
+  rows: readonly T[],
+  score: (r: T) => number,
+): { row: T; rank: number; tied: boolean }[] {
+  const scored = rows
+    .map((row, index) => ({ row, index, value: score(row) }))
+    .sort((a, b) => b.value - a.value || a.index - b.index);
+  const countByValue = new Map<number, number>();
+  for (const s of scored) {
+    countByValue.set(s.value, (countByValue.get(s.value) ?? 0) + 1);
+  }
+  let rank = 0;
+  let previous: number | null = null;
+  return scored.map((s) => {
+    if (previous === null || s.value !== previous) {
+      rank += 1;
+      previous = s.value;
+    }
+    return { row: s.row, rank, tied: (countByValue.get(s.value) ?? 0) > 1 };
+  });
+}
+
+/** How a rank reads in a standings list: "=2" for a tie, otherwise "2". */
+export function rankLabel({ rank, tied }: { rank: number; tied: boolean }): string {
+  return tied ? `=${rank}` : String(rank);
+}

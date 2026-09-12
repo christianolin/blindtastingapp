@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Crown, Scale, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { rankLabel, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -14,18 +15,22 @@ import { cn } from "@/lib/utils";
 // Rank marks in the app's own palette — bordeaux for the winner, a gilt tint
 // for the rest of the podium. (This used to be metallic gold/silver/bronze
 // gradients, which put a cool grey-blue on an otherwise warm parchment page.)
+// `rank` is the dense rank (1 = top), never the row's place in the list, so
+// players on the same score get the same mark.
 function rankBadgeClass(rank: number, completed: boolean) {
-  if (!completed || rank > 2) return "bg-muted text-muted-foreground";
-  if (rank === 0) return "bg-primary text-primary-foreground";
+  if (!completed || rank > 3) return "bg-muted text-muted-foreground";
+  if (rank === 1) return "bg-primary text-primary-foreground";
   return "bg-gold/20 text-gold-deep ring-1 ring-gold/40";
 }
 
 /**
  * Participants + leaderboard merged into one right-rail panel. Joined
- * competitors are ranked by score (scores only count revealed wines, so it's
- * spoiler-safe mid-tasting); everyone else in the room — the organizer of an
- * organizer-selects tasting, plus invited/declined people — is listed beneath
- * so no one disappears. Self-contained (fetches its own data).
+ * competitors are ranked by score with dense ranks — ties share a rank and
+ * read "=2" (`rankRows` / `rankLabel`, the helper every standings list uses)
+ * — and scores only count revealed wines, so it's spoiler-safe mid-tasting.
+ * Everyone else in the room — the organizer of an organizer-selects tasting,
+ * plus invited/declined people — is listed beneath so no one disappears.
+ * Self-contained (fetches its own data).
  */
 export async function StandingsPanel({ tastingId }: { tastingId: string }) {
   const supabase = await createClient();
@@ -61,6 +66,7 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
     if (hostProvides && r.userId === hostId) return false;
     return true;
   });
+  const ranked = rankRows(competitors, (r) => r.total);
   const maxTotal = Math.max(1, ...competitors.map((r) => r.total));
 
   // Crown/medals only once the tasting is finished — during play the ranking
@@ -85,13 +91,13 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3">
-        {competitors.length === 0 ? (
+        {ranked.length === 0 ? (
           <p className="p-3 text-sm text-muted-foreground">
             No competitors yet.
           </p>
         ) : (
           <ol className="flex flex-col gap-1">
-            {competitors.map((row, i) => {
+            {ranked.map(({ row, rank, tied }, i) => {
               const isMe = row.userId === user?.id;
               const pct = Math.max(4, Math.round((row.total / maxTotal) * 100));
               return (
@@ -107,13 +113,17 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                     <span
                       className={cn(
                         "flex size-7 shrink-0 items-center justify-center rounded-full font-heading text-sm font-semibold lining-nums",
-                        rankBadgeClass(i, completed),
+                        tied && "text-xs",
+                        rankBadgeClass(rank, completed),
                       )}
                     >
-                      {completed && i === 0 ? (
-                        <Crown className="size-3.5" strokeWidth={2.5} />
+                      {completed && rank === 1 ? (
+                        <>
+                          <Crown className="size-3.5" strokeWidth={2.5} aria-hidden />
+                          <span className="sr-only">{rankLabel({ rank, tied })}</span>
+                        </>
                       ) : (
-                        i + 1
+                        rankLabel({ rank, tied })
                       )}
                     </span>
                     {row.avatarUrl ? (

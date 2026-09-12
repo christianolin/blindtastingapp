@@ -11,7 +11,7 @@ import {
   keyMaxPoints,
   type RevealKey,
 } from "@/lib/reveal-rows-math";
-import { ordinal } from "@/lib/stats-math";
+import { ordinal, rankLabel, rankRows } from "@/lib/stats-math";
 import { cn } from "@/lib/utils";
 import type { GuessRow } from "./ladder-types";
 
@@ -42,6 +42,13 @@ export type RevealStanding = {
   lastRoundPoints: number | null;
 };
 
+// A revealed category the answer key has nothing for (reveal-3). There was
+// nothing to match, so it reads "Not recorded" with a neutral "not scored"
+// verdict, never the rose miss style. Null points mean "not applicable",
+// never 0, so they stay null all the way to the markup.
+const NOT_RECORDED = "Not recorded";
+const NOT_SCORED = "not scored";
+
 function vintageLabel(v: {
   vintage_kind?: string | number | null;
   vintage_year?: string | number | null;
@@ -60,16 +67,44 @@ function vintageLabel(v: {
 type Row = {
   key: RevealKey;
   label: string;
-  /** The truth; null while hidden. */
+  /** The truth as text; null while hidden, "Not recorded" when a revealed
+   *  category has nothing on record. */
   truth: string | null;
+  /** A revealed category the answer key has nothing for: nothing to match. */
+  notRecorded: boolean;
   /** My answer as text; null when I skipped (or have not answered a hidden row). */
   mine: string | null;
-  /** Points landed; null while hidden. */
+  /** Points exactly as scored: null while hidden, and null when the row scored
+   *  nobody or my guess carries no score on it. Never coerced to 0. */
   points: number | null;
   /** What the row is worth — shown on hidden rows. */
   max: number;
   hidden: boolean;
 };
+
+type Verdict = "hit" | "miss" | "skipped" | "unscored";
+
+/**
+ * My verdict on a revealed row. Nothing on record, or no score on my guess,
+ * is a neutral "unscored": a hit or a miss needs real points (points !== null).
+ */
+function verdictOf(row: Row): Verdict {
+  if (row.notRecorded) return "unscored";
+  if (row.mine == null) return "skipped";
+  if (row.points === null) return "unscored";
+  return row.points > 0 ? "hit" : "miss";
+}
+
+function verdictText(row: Row, verdict: Verdict): string {
+  if (verdict === "skipped") return "You skipped this";
+  if (verdict === "unscored") {
+    return row.mine == null
+      ? `You skipped this · ${NOT_SCORED}`
+      : `You said ${row.mine} · ${NOT_SCORED}`;
+  }
+  const points = row.points ?? 0;
+  return `You said ${row.mine} · ${points > 0 ? `+${points}` : "0"} pts`;
+}
 
 /**
  * The participant's view of a glass mid-reveal (6h): the newest revealed
@@ -82,6 +117,9 @@ type Row = {
  * no one else's) and the leaderboard aggregates. Which optional categories
  * are in play is inferred from in_play_count + the revealed prefix
  * (`inPlayKeys`), never from the answer key.
+ *
+ * Standings use dense ranks (`rankRows`): ties share a rank and read "=2",
+ * and the delta pill's ordinal is the same dense rank, so list and pill agree.
  */
 export async function RevealView({
   wineId,
@@ -91,6 +129,7 @@ export async function RevealView({
   names,
   standings,
   spectator = false,
+  leaderboardReveal = "PER_ATTRIBUTE",
 }: {
   wineId: string;
   glassNumber: number;
@@ -103,6 +142,14 @@ export async function RevealView({
   /** True for someone who never guessed this glass (its contributor, or the
    *  host who set the wines): no verdict, no "you:" column. */
   spectator?: boolean;
+  /** The tasting's `leaderboard_reveal`. Under PER_WINE the standings only
+   *  move once a glass is fully revealed, so the rank delta is hidden while
+   *  this glass is partly revealed (it would describe the previous glass).
+   *  PER_ATTRIBUTE keeps the glass-so-far delta on every step (6h/6i).
+   *  Optional only until play-experience passes it (T8); absent behaves as
+   *  PER_ATTRIBUTE, the column's default and this view's behaviour before the
+   *  prop existed. */
+  leaderboardReveal?: "PER_ATTRIBUTE" | "PER_WINE";
 }) {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_wine_reveal", { p_wine_id: wineId });
@@ -113,6 +160,11 @@ export async function RevealView({
     rev.guesses.find((g) => g.participant_id === myParticipantId) ?? null;
   const myValues: Cell = me?.values ?? {};
   const myPoints = me?.points ?? {};
+  // A missing key and a JSON null both stay null — never read as 0 points.
+  const pointsOf = (key: string): number | null => {
+    const value = myPoints[key];
+    return typeof value === "number" ? value : null;
+  };
 
   // Only the truth's appellation/producer and my own can be missing from the
   // upstream map — nobody else's answers are rendered here.
@@ -169,6 +221,7 @@ export async function RevealView({
         key,
         label: keyLabel(key),
         truth: null,
+        notRecorded: false,
         mine: savedMine(key),
         points: null,
         max,
@@ -176,9 +229,11 @@ export async function RevealView({
       };
     }
     if (key === "grapes") {
-      const truth =
-        nameOf(rev.correct.primary_grape) +
-        (hasSecondary ? ` / ${nameOf(rev.correct.secondary_grape)}` : "");
+      const notRecorded = rev.correct.primary_grape == null;
+      const truth = notRecorded
+        ? NOT_RECORDED
+        : nameOf(rev.correct.primary_grape) +
+          (hasSecondary ? ` / ${nameOf(rev.correct.secondary_grape)}` : "");
       const mine =
         myValues.primary_grape != null
           ? nameOf(myValues.primary_grape)! +
@@ -186,12 +241,19 @@ export async function RevealView({
               ? ` / ${nameOf(myValues.secondary_grape)}`
               : "")
           : null;
+      // Each half keeps its own null (a null secondary means the wine has no
+      // second grape); the row is unscored only when neither half scored.
+      const primaryPoints = pointsOf("primary_grape");
+      const secondaryPoints = pointsOf("secondary_grape");
       const points =
-        (myPoints.primary_grape ?? 0) + (myPoints.secondary_grape ?? 0);
+        primaryPoints === null && secondaryPoints === null
+          ? null
+          : (primaryPoints ?? 0) + (secondaryPoints ?? 0);
       return {
         key,
         label: keyLabel(key, hasSecondary),
         truth,
+        notRecorded,
         mine,
         points,
         max: hasSecondary ? 10 : 8,
@@ -199,12 +261,14 @@ export async function RevealView({
       };
     }
     if (key === "vintage") {
+      const truth = vintageLabel(rev.correct);
       return {
         key,
         label: keyLabel(key),
-        truth: vintageLabel(rev.correct) ?? "Unknown",
+        truth: truth ?? NOT_RECORDED,
+        notRecorded: truth == null,
         mine: vintageLabel(myValues),
-        points: myPoints.vintage ?? 0,
+        points: pointsOf("vintage"),
         max,
         hidden: false,
       };
@@ -213,14 +277,10 @@ export async function RevealView({
     return {
       key,
       label: keyLabel(key),
-      truth:
-        truthId == null
-          ? key === "producer"
-            ? "Unknown producer"
-            : "—"
-          : nameOf(truthId),
+      truth: truthId == null ? NOT_RECORDED : nameOf(truthId),
+      notRecorded: truthId == null,
       mine: nameOf(myValues[key]),
-      points: (myPoints[key] as number | null) ?? 0,
+      points: pointsOf(key),
       max,
       hidden: false,
     };
@@ -228,18 +288,25 @@ export async function RevealView({
 
   const newestKey = revealedKeys[revealedKeys.length - 1];
   const hero = rows.find((r) => r.key === newestKey) ?? null;
-  const heroPoints = hero?.points ?? 0;
-  const verdict: "hit" | "miss" | "skipped" =
-    hero?.mine == null ? "skipped" : heroPoints > 0 ? "hit" : "miss";
+  const verdict: Verdict = hero ? verdictOf(hero) : "skipped";
 
-  const delta = rankDelta(
-    standings.map((s) => ({
-      participantId: s.participantId,
-      total: s.total,
-      lastRoundPoints: s.lastRoundPoints,
-    })),
-    myParticipantId,
-  );
+  // Dense ranks for the list; the delta pill below reads the same dense rank
+  // (rankDelta → competitorRank), and the gold top row keys on rank === 1.
+  const ranked = rankRows(standings, (s) => s.total);
+  const anyTied = ranked.some((r) => r.tied);
+  // Under PER_WINE the leaderboard holds still until the glass is fully
+  // revealed, so a mid-glass delta would restate the previous glass's move.
+  const showDelta = leaderboardReveal !== "PER_WINE" || rev.is_fully_revealed;
+  const delta = showDelta
+    ? rankDelta(
+        standings.map((s) => ({
+          participantId: s.participantId,
+          total: s.total,
+          lastRoundPoints: s.lastRoundPoints,
+        })),
+        myParticipantId,
+      )
+    : null;
 
   return (
     <div className="flex flex-col bg-console text-background">
@@ -263,7 +330,12 @@ export async function RevealView({
             <Eyebrow size="lg" className="text-console-ink">
               {heroLabel(hero.key, hero.key === "grapes" && hasSecondary)}
             </Eyebrow>
-            <span className="font-heading text-[46px] font-semibold leading-none text-gold-light lining-nums tabular-nums">
+            <span
+              className={cn(
+                "font-heading text-[46px] font-semibold leading-none lining-nums tabular-nums",
+                hero.notRecorded ? "text-console-ink" : "text-gold-light",
+              )}
+            >
               {hero.truth}
             </span>
             {spectator ? null : (
@@ -275,6 +347,8 @@ export async function RevealView({
                   verdict === "miss" && "border border-rose/60 bg-rose/15",
                   verdict === "skipped" &&
                     "border border-dashed border-background/30 text-console-ink",
+                  verdict === "unscored" &&
+                    "border border-background/30 text-console-ink",
                 )}
               >
                 {verdict === "hit" ? (
@@ -283,9 +357,7 @@ export async function RevealView({
                   </span>
                 ) : null}
                 <span className="text-[14.5px] font-bold">
-                  {verdict === "skipped"
-                    ? "You skipped this"
-                    : `You said ${hero.mine} · ${heroPoints > 0 ? `+${heroPoints}` : "0"} pts`}
+                  {verdictText(hero, verdict)}
                 </span>
               </span>
             )}
@@ -296,8 +368,11 @@ export async function RevealView({
         <div className="flex flex-col gap-[7px]">
           {rows.map((r) => {
             const isHero = hero?.key === r.key;
-            const hit = !r.hidden && (r.points ?? 0) > 0;
-            const miss = !r.hidden && r.mine != null && (r.points ?? 0) === 0;
+            // Hit and miss both need a real score: a row with nothing on
+            // record, or null points on my guess, stays neutral.
+            const scored = !r.hidden && !r.notRecorded && r.points !== null;
+            const hit = scored && (r.points ?? 0) > 0;
+            const miss = scored && r.mine != null && r.points === 0;
             return (
               <div
                 key={r.key}
@@ -323,7 +398,7 @@ export async function RevealView({
                 <span
                   className={cn(
                     "min-w-0 flex-1 truncate text-[13.5px]",
-                    r.hidden
+                    r.hidden || r.notRecorded
                       ? "text-console-ink"
                       : isHero
                         ? "font-bold"
@@ -348,19 +423,25 @@ export async function RevealView({
                 )}
                 <span
                   className={cn(
-                    "shrink-0 text-[13px] tabular-nums",
+                    "shrink-0 tabular-nums",
                     r.hidden
-                      ? "text-console-ink"
-                      : hit
-                        ? "font-bold text-gold-light"
-                        : "font-bold text-console-ink",
+                      ? "text-[13px] text-console-ink"
+                      : r.notRecorded
+                        ? "text-[12px] text-console-ink"
+                        : hit
+                          ? "text-[13px] font-bold text-gold-light"
+                          : "text-[13px] font-bold text-console-ink",
                   )}
                 >
                   {r.hidden
                     ? r.max
-                    : (r.points ?? 0) > 0
-                      ? `+${r.points}`
-                      : "0"}
+                    : r.notRecorded
+                      ? NOT_SCORED
+                      : r.points === null
+                        ? "—"
+                        : r.points > 0
+                          ? `+${r.points}`
+                          : "0"}
                 </span>
               </div>
             );
@@ -368,7 +449,7 @@ export async function RevealView({
         </div>
 
         {/* Standings */}
-        {standings.length > 0 ? (
+        {ranked.length > 0 ? (
           <div className="flex flex-col gap-[9px] rounded-[14px] border border-background/14 bg-console-card p-[13px_14px]">
             <div className="flex items-baseline gap-[9px]">
               <Eyebrow size="md" className="text-console-ink">
@@ -393,21 +474,22 @@ export async function RevealView({
                 </span>
               ) : null}
             </div>
-            {standings.map((s, i) => (
+            {ranked.map(({ row: s, rank, tied }, i) => (
               <span
                 key={s.participantId}
                 className={cn(
                   "flex items-baseline gap-[10px] py-1.5",
-                  i < standings.length - 1 && "border-b border-background/12",
+                  i < ranked.length - 1 && "border-b border-background/12",
                 )}
               >
                 <span
                   className={cn(
-                    "w-[15px] font-heading text-[15px] lining-nums tabular-nums",
-                    i === 0 ? "text-gold-light" : "text-console-ink",
+                    "shrink-0 font-heading text-[15px] lining-nums tabular-nums",
+                    anyTied ? "w-6" : "w-[15px]",
+                    rank === 1 ? "text-gold-light" : "text-console-ink",
                   )}
                 >
-                  {i + 1}
+                  {rankLabel({ rank, tied })}
                 </span>
                 <span
                   className={cn(

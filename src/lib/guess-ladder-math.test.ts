@@ -186,6 +186,9 @@ describe("rankDelta", () => {
       ),
     ).toEqual({ before: 2, after: 2 });
   });
+
+  it("rankDelta treats a null last_round_points as no change (reveal-7)", () =>
+    expect(rankDelta([{ participantId: "gustav", total: 10, lastRoundPoints: null }, { participantId: "ida", total: 12, lastRoundPoints: 6 }], "gustav")).toEqual({ before: 1, after: 2 }));
 });
 
 describe("flightSegments", () => {
