@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Nebbiolo",
+      "percentage": 100
+    }
+  ],
+  "region": "Piedmont",
+  "country": "Italy",
+  "rawText": "VECCHIE VIGNE - SORÌ PAITIN - BARBARESCO - DENOMINAZIONE DI ORIGINE PROTETTA - RISERVA 2015 - N°110 - Imbottigliato all'origine da PAITIN - Pasquero Elia - PROPRIETARI PRODUTTORI - NEIVE - ITALIA",
+  "producer": "Paitin",
+  "wineName": "Sorì Paitin - Vecchie Vigne",
+  "confidence": "high",
+  "appellation": "Barbaresco DOCG",
+  "description": "Barbaresco DOCG requires a minimum of 26 months' ageing for the base wine and 50 months for Riserva, of which at least 9 months in wood. Paitin is a historic estate in Neive, run by the Pasquero-Elia family, whose Sorì Paitin vineyard is one of the oldest single-vineyard sites in the Barbaresco zone. The Vecchie Vigne bottling is produced from old vines planted decades ago on this cru.",
+  "designation": "Riserva",
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2015,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

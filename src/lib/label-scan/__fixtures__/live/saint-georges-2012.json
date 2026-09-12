@@ -1,0 +1,34 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Merlot",
+      "percentage": 70
+    },
+    {
+      "name": "Cabernet Franc",
+      "percentage": 25
+    },
+    {
+      "name": "Cabernet Sauvignon",
+      "percentage": 5
+    }
+  ],
+  "region": "Bordeaux",
+  "country": "France",
+  "rawText": "GRAND CRU CLASSÉ / CHÂTEAU Saint Georges (Côte Pavie) / SAINT-EMILION GRAND CRU / 2012",
+  "producer": "Château Saint Georges",
+  "wineName": "Côte Pavie",
+  "confidence": "high",
+  "appellation": "Saint-Émilion Grand Cru AOC",
+  "description": "Château Saint Georges-Côte Pavie is a small Saint-Émilion Grand Cru Classé estate located on the Côte Pavie, adjacent to Château Pavie, on limestone-clay slopes typical of the appellation. The blend is dominated by Merlot with Cabernet Franc and a small proportion of Cabernet Sauvignon, aged in oak barrels typical of the region's Grand Cru Classé production.",
+  "designation": "Grand Cru Classé",
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2012,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

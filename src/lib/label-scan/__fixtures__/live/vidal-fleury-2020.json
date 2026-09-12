@@ -1,0 +1,30 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Grenache",
+      "percentage": null
+    },
+    {
+      "name": "Syrah",
+      "percentage": null
+    }
+  ],
+  "region": "Rhône",
+  "country": "France",
+  "rawText": "VIDAL-FLEURY 2020 VENTOUX VIDAL-FLEURY MAISON FONDÉE EN 1781 MARQUE DÉPOSÉE Élevé et mis en bouteille par VIDAL-FLEURY, RHÔNE, FRANCE",
+  "producer": "Vidal-Fleury",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Ventoux AOC",
+  "description": "Vidal-Fleury, founded in 1781, is one of the oldest négociant-producer houses in the Rhône Valley, based in Ampuis. The Ventoux AOC lies at the southern edge of the Rhône, on the slopes of Mont Ventoux, producing predominantly Grenache-Syrah blends from limestone and clay-limestone soils. Ventoux reds are typically vinified for early-to-medium term drinking, reflecting the appellation's warm Mediterranean climate.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2020,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

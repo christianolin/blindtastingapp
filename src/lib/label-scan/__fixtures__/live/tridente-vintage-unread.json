@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Tempranillo",
+      "percentage": 100
+    }
+  ],
+  "region": "Castilla-La Mancha",
+  "country": "Spain",
+  "rawText": "TRIDENTE TEMPRANILLO",
+  "producer": "Tridente",
+  "wineName": "Tridente",
+  "confidence": "medium",
+  "appellation": null,
+  "description": "Tridente is a Spanish red made from Tempranillo, typically sourced from central Spanish vineyards such as those in La Mancha. The wine is produced with a modern label style aimed at an easy-drinking, fruit-forward expression of the variety.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "NV",
+  "vintageRead": false,
+  "vintageYear": null,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

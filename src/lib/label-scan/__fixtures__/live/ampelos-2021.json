@@ -1,0 +1,30 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Syrah",
+      "percentage": 50
+    },
+    {
+      "name": "Grenache",
+      "percentage": 50
+    }
+  ],
+  "region": "Santa Barbara County",
+  "country": "United States",
+  "rawText": "ampelos syrache 2021 sta. rita hills Σ sigma: the sum ampelos vineyard",
+  "producer": "Ampelos",
+  "wineName": "Syrache Sigma: The Sum",
+  "confidence": "high",
+  "appellation": "Sta. Rita Hills AVA",
+  "description": "Syrache is a portmanteau blend of Syrah and Grenache produced by Ampelos Cellars from their estate Ampelos Vineyard in the Sta. Rita Hills AVA, a cool-climate region of Santa Barbara County known for maritime influence and diatomaceous, sandy-clay soils. The estate farms biodynamically and certified organic, with the blend intended to showcase the synergy between the two Rhône varieties grown side by side.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2021,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}
