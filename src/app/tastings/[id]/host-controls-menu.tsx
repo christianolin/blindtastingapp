@@ -7,27 +7,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
 import { HostControls } from "./host-controls";
 
 // The host settings menu: a cogwheel in the page header that opens a popover
-// with the status-appropriate controls (draft: schedule / invite / flow /
-// delete; running: finish / delete). Keeps administrative actions out of the
-// result content. The prominent Start action stays inline in the draft lobby.
+// with the status-appropriate controls (draft: schedule / invite + share link /
+// flow / delete; running: finish / delete). Keeps administrative actions out
+// of the result content. The prominent Start action stays inline in the draft
+// lobby.
 export function HostControlsMenu({
   tastingId,
   status,
   scheduledAt = null,
-  wineCount = 0,
   friends = [],
   sequentialGuessing = false,
   showSequentialToggle = false,
   leaderboardReveal = "PER_ATTRIBUTE",
   showLeaderboardToggle = false,
   invitesStayOpen = false,
+  unrevealedGlasses = [],
 }: {
   tastingId: string;
   status: string;
   scheduledAt?: string | null;
+  /** Not read: Start has no wine-count gate (blind-tasting ledger B0). Still
+      accepted so existing callers type-check; they can stop passing it. */
   wineCount?: number;
   friends?: { id: string; display_name: string; email: string }[];
   sequentialGuessing?: boolean;
@@ -35,6 +39,8 @@ export function HostControlsMenu({
   leaderboardReveal?: string;
   showLeaderboardToggle?: boolean;
   invitesStayOpen?: boolean;
+  /** Forwarded to the End confirm, which lives in this menu (reveal-4). */
+  unrevealedGlasses?: readonly UnrevealedGlass[];
 }) {
   return (
     <Popover>
@@ -51,13 +57,13 @@ export function HostControlsMenu({
           tastingId={tastingId}
           status={status}
           scheduledAt={scheduledAt}
-          wineCount={wineCount}
           friends={friends}
           sequentialGuessing={sequentialGuessing}
           showSequentialToggle={showSequentialToggle}
           leaderboardReveal={leaderboardReveal}
           showLeaderboardToggle={showLeaderboardToggle}
           invitesStayOpen={invitesStayOpen}
+          unrevealedGlasses={unrevealedGlasses}
           surface="menu"
         />
       </PopoverContent>

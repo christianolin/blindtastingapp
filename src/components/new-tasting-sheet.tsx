@@ -5,9 +5,7 @@ import {
   useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
-  useSyncExternalStore,
   type ComponentProps,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -15,12 +13,15 @@ import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
+import { useMediaQuery } from "@/components/add-wine/use-camera";
 import { createClient } from "@/lib/supabase/client";
+import { startLandsOnConsole } from "@/lib/tasting-lifecycle-copy";
 import { cn } from "@/lib/utils";
 import type { RevealMode } from "@/lib/supabase/database.types";
 import { NewTastingForm } from "@/app/tastings/new/new-tasting-form";
 import { FlightStep } from "@/app/tastings/new/flight-step";
 import { InviteStep, type Friend } from "@/app/tastings/new/invite-step";
+import { collectInviteEmails } from "@/app/tastings/new/invite-emails";
 import {
   createTasting,
   getNameSuggestionContext,
@@ -42,22 +43,6 @@ type Step = 1 | 2 | 3;
 const TITLE_CLASS =
   "truncate font-heading text-[20px] font-semibold leading-[1.05] text-foreground md:text-[27px]";
 
-function useMediaQuery(query: string): boolean {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      const mql = window.matchMedia(query);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
-
 function fieldsOf(v: SetupValues): TastingSetupFields {
   return {
     name: v.name,
@@ -76,11 +61,12 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
 /**
  * The create-tasting sheet (spec Part 2; handoff 6a–6d): one sheet, three
  * steps — Setup → Wines → Invite & start — with a persistent footer so the
- * host can stop after step 1. The tasting row is created at the end of step
- * 1 (createTasting returns the id, no redirect); steps 2 and 3 work on that
- * draft in place. Rendered by TasteLauncherProvider as a base-ui Dialog —
- * full-screen on phones, 640px (step 1) / 760px (steps 2–3) centred on
- * desktop — or, with `inline`, as the body of the /tastings/new page.
+ * host can stop after step 1 ("Create and finish later") or step 3 ("Invite
+ * later"). The tasting row is created at the end of step 1 (createTasting
+ * returns the id, no redirect); steps 2 and 3 work on that row in place.
+ * Rendered by TasteLauncherProvider as a base-ui Dialog — full-screen on
+ * phones, 640px (step 1) / 760px (steps 2–3) centred on desktop — or, with
+ * `inline`, as the body of the /tastings/new page.
  */
 export function NewTastingSheet({
   userId,
@@ -121,8 +107,19 @@ export function NewTastingSheet({
   const [friends, setFriends] = useState<Friend[] | "loading">(initialFriends ?? "loading");
   const [snapshot, setSnapshot] = useState<FlightSnapshot | null>(null);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  // Addresses typed into step 3's InviteField, reported on every add and
+  // remove — held here so they count in "N invited" and survive a step change.
+  const [typedEmails, setTypedEmails] = useState<string[]>([]);
+  const [hostEmail, setHostEmail] = useState<string | null>(null);
   const [showEmailField, setShowEmailField] = useState(false);
-  const emailFormRef = useRef<HTMLFormElement | null>(null);
+  // Start succeeded but came back with a warning (an incomplete glass, a
+  // bottle that couldn't leave the cellar): the sheet stays open to show it
+  // under Start, and the gold button goes on to where Start lands.
+  const [started, setStarted] = useState<{
+    warning: string;
+    href: string;
+    toConsole: boolean;
+  } | null>(null);
   const [suggestion, setSuggestion] = useState<{ region: string; n: number } | null>(
     regionSuggestion ?? null,
   );
@@ -166,6 +163,21 @@ export function NewTastingSheet({
       cancelled = true;
     };
   }, [supabase, userId, initialFriends]);
+
+  // The host's own address: typing it is not an invite, so it never counts in
+  // "N invited" (inviteToTasting drops it on the server as well).
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!cancelled) setHostEmail(data.user?.email ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   const refreshFlight = useCallback(
     (id: string) => {
@@ -238,11 +250,12 @@ export function NewTastingSheet({
     }
   }
 
-  async function saveAsDraftFromSetup() {
+  // "Create and finish later": writes the row and closes, leaving the host
+  // where they already are — no push to the lobby (blind-tasting ledger B0).
+  async function createAndFinishLater() {
     const id = await persistSetup();
     if (!id) return;
     close();
-    router.push(`/tastings/${id}`);
   }
 
   async function goToWines() {
@@ -252,26 +265,16 @@ export function NewTastingSheet({
     refreshFlight(id);
   }
 
-  // Step 3: friend chips + the typed InviteField addresses, deduped.
-  function collectEmails(): string[] {
-    const typed = emailFormRef.current
-      ? String(new FormData(emailFormRef.current).get("emails") ?? "")
-      : "";
-    return [
-      ...new Set(
-        [...selectedEmails, ...typed.split(/[\n,]/)]
-          .map((e) => e.trim().toLowerCase())
-          .filter(Boolean),
-      ),
-    ];
-  }
+  // Step 3's invite list: friend chips plus typed addresses, trimmed,
+  // lowercased, deduped, without the host (create-7). The same list is counted
+  // in "Ready to go" and sent at Start.
+  const inviteEmails = collectInviteEmails(selectedEmails, typedEmails, hostEmail);
 
   async function sendInvites(id: string): Promise<boolean> {
-    const emails = collectEmails();
-    if (emails.length === 0) return true;
+    if (inviteEmails.length === 0) return true;
     const fd = new FormData();
     fd.set("tasting_id", id);
-    fd.set("emails", emails.join("\n"));
+    fd.set("emails", inviteEmails.join("\n"));
     const r = await inviteToTasting(null, fd);
     if (r && "error" in r) {
       // "Nobody new" just means every chip was already a participant.
@@ -285,19 +288,18 @@ export function NewTastingSheet({
     return true;
   }
 
-  async function saveAsDraftFromInvite() {
+  // "Invite later": closes without creating participant rows or sending any
+  // email (blind-tasting ledger B0). The lobby's host controls carry the invite
+  // field and the share link for later.
+  function inviteLater() {
     if (!tastingId) return;
-    setError(null);
-    setSaving(true);
-    try {
-      if (!(await sendInvites(tastingId))) return;
-      close();
-      router.push(`/tastings/${tastingId}`);
-    } finally {
-      setSaving(false);
-    }
+    close();
+    router.push(`/tastings/${tastingId}`);
   }
 
+  // Start is never gated on a wine count, and an incomplete glass never blocks
+  // it (blind-tasting ledger B0): the server's error shows in the error line,
+  // a warning under the button.
   async function start() {
     if (!tastingId) return;
     setError(null);
@@ -311,13 +313,25 @@ export function NewTastingSheet({
         setError(r.error);
         return;
       }
+      // reveal-5: only a LIVE blind host-provides host lands on the console.
+      const toConsole = startLandsOnConsole(setup);
+      const href = toConsole ? `/tastings/${tastingId}/host` : `/tastings/${tastingId}`;
+      const warning = r && "success" in r ? r.warning : undefined;
+      if (warning) {
+        setStarted({ warning, href, toConsole });
+        return;
+      }
       close();
-      // The host of a live blind tasting lands on the host console.
-      const toConsole = setup.timingMode === "LIVE" && setup.revealMode !== "SEMI_BLIND";
-      router.push(toConsole ? `/tastings/${tastingId}/host` : `/tastings/${tastingId}`);
+      router.push(href);
     } finally {
       setSaving(false);
     }
+  }
+
+  function openStarted() {
+    if (!started) return;
+    close();
+    router.push(started.href);
   }
 
   const wineCount = snapshot?.wines.length ?? 0;
@@ -384,6 +398,7 @@ export function NewTastingSheet({
           onPhotoUploadingChange={setPhotoUploading}
           autoFocusName={isDesktop}
           regionSuggestion={suggestion}
+          wineCount={wineCount}
         />
       ) : step === 2 && tastingId ? (
         <FlightStep
@@ -408,7 +423,9 @@ export function NewTastingSheet({
           }}
           showEmailField={showEmailField}
           onShowEmailField={() => setShowEmailField(true)}
-          emailFormRef={emailFormRef}
+          typedEmails={typedEmails}
+          onTypedEmailsChange={setTypedEmails}
+          invitedCount={inviteEmails.length}
           setup={setup}
           scheduledIso={localToIso(setup.scheduledLocal)}
           wineCount={wineCount}
@@ -450,9 +467,9 @@ export function NewTastingSheet({
             <TextButton
               className="max-md:order-2"
               disabled={saving || photoUploading}
-              onClick={() => void saveAsDraftFromSetup()}
+              onClick={() => void createAndFinishLater()}
             >
-              Save as draft
+              Create and finish later
             </TextButton>
             <PrimaryButton
               type="submit"
@@ -467,8 +484,8 @@ export function NewTastingSheet({
       ) : step === 2 ? (
         <>
           <span className="max-w-[42ch] text-[12.5px] leading-[1.5] text-muted-foreground">
-            <strong className="font-semibold">One glass is enough to start.</strong> Wines can be
-            added while the tasting is running — the flight grows as you open bottles.
+            <strong className="font-semibold">Even none is enough.</strong> Wines can be added
+            while the tasting is running.
           </span>
           <span className="flex flex-col gap-2 md:ml-auto md:flex-row md:items-center md:gap-[9px]">
             <LinkButton className="max-md:order-2" onClick={() => go(1)}>
@@ -479,23 +496,32 @@ export function NewTastingSheet({
             </PrimaryButton>
           </span>
         </>
+      ) : started ? (
+        // The tasting has started: no way back to the wines and nothing left
+        // to invite — just the warning under the button that goes on.
+        <span className="flex flex-col items-center gap-1 md:ml-auto md:items-end">
+          <GoldButton onClick={openStarted}>
+            {started.toConsole ? "Host console" : "Tasting page"}
+          </GoldButton>
+          <span
+            role="status"
+            className="max-w-[56ch] text-center text-[11.5px] font-semibold leading-[1.5] text-gold-dark md:text-right"
+          >
+            {started.warning}
+          </span>
+        </span>
       ) : (
         <>
           <LinkButton className="max-md:order-3" onClick={() => go(2)}>
             ← Wines
           </LinkButton>
           <span className="flex flex-col gap-2 md:ml-auto md:flex-row md:items-center md:gap-[9px]">
-            <TextButton className="max-md:order-2" disabled={saving} onClick={() => void saveAsDraftFromInvite()}>
-              Save as draft
+            <TextButton className="max-md:order-2" disabled={saving} onClick={inviteLater}>
+              Invite later
             </TextButton>
-            <span className="flex flex-col items-center gap-1 max-md:order-1">
-              <GoldButton disabled={saving || wineCount < 1} onClick={() => void start()}>
-                {pendingLabel("Start the tasting")}
-              </GoldButton>
-              {wineCount < 1 ? (
-                <span className="text-[11.5px] text-muted-foreground">Add one glass to start</span>
-              ) : null}
-            </span>
+            <GoldButton className="max-md:order-1" disabled={saving} onClick={() => void start()}>
+              {pendingLabel("Start the tasting")}
+            </GoldButton>
           </span>
         </>
       )}
@@ -585,7 +611,8 @@ function GoldButton({ className, children, ...props }: ComponentProps<"button">)
   );
 }
 
-// "Save as draft": an outlined button on desktop, a centred text link on phones (6d).
+// "Create and finish later" / "Invite later": an outlined button on desktop,
+// a centred text link on phones (6d).
 function TextButton({ className, children, ...props }: ComponentProps<"button">) {
   return (
     <button

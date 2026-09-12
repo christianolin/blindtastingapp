@@ -11,10 +11,18 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function InviteField({
   friends,
+  onChange,
+  defaultEmails,
 }: {
   friends: { id: string; display_name: string; email: string }[];
+  /** Called with the whole list whenever an address is added or removed, so
+      a parent can count typed invites (the create sheet's "N invited"). */
+  onChange?: (emails: string[]) => void;
+  /** The list to start from — a parent that holds the typed addresses passes
+      them back when this field remounts (the create sheet's step changes). */
+  defaultEmails?: string[];
 }) {
-  const [emails, setEmails] = useState<string[]>([]);
+  const [emails, setEmails] = useState<string[]>(() => defaultEmails ?? []);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [friendPick, setFriendPick] = useState("");
@@ -23,6 +31,12 @@ export function InviteField({
   const friendOptions = friends
     .filter((f) => !emails.includes(f.email))
     .map((f) => ({ id: f.email, name: `${f.display_name} (${f.email})` }));
+
+  // One place that changes the list, so the parent hears every add and remove.
+  function commit(next: string[]) {
+    setEmails(next);
+    onChange?.(next);
+  }
 
   function addEmail(raw: string) {
     const email = raw.trim().toLowerCase();
@@ -35,7 +49,7 @@ export function InviteField({
       setError("Already added.");
       return;
     }
-    setEmails((list) => [...list, email]);
+    commit([...emails, email]);
     setError(null);
   }
 
@@ -115,9 +129,7 @@ export function InviteField({
               <button
                 type="button"
                 aria-label={`Remove ${email}`}
-                onClick={() =>
-                  setEmails((list) => list.filter((e) => e !== email))
-                }
+                onClick={() => commit(emails.filter((e) => e !== email))}
                 className="text-secondary-foreground/70 hover:text-secondary-foreground"
               >
                 <X className="size-3.5" />

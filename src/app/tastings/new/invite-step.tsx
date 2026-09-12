@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
 import { Check, Plus } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { LocalDateTime } from "@/components/local-date-time";
 import { cn } from "@/lib/utils";
 import { InviteField } from "./invite-field";
-import { getJoinLink } from "./actions";
+import { JoinLinkRow } from "./join-link-row";
 import { readySummary, type SetupValues } from "./setup-copy";
 
 export type Friend = { id: string; display_name: string; email: string };
@@ -14,12 +13,12 @@ export type Friend = { id: string; display_name: string; email: string };
 const DATE_SLOT = "__date__";
 
 /**
- * Step 3 · invite & start (handoff 6c). Friend chips toggle an email list
- * the sheet batches through inviteToTasting on Start / Save as draft; the
- * "+ email or name" chip reveals the existing InviteField (its hidden
- * `emails` input is read from `emailFormRef` at that moment); the share link
- * comes from getJoinLink (ensure_join_code) with a clipboard Copy; the gold
- * "Ready to go" block restates the setup in words.
+ * Step 3 · invite & start (handoff 6c). Friend chips toggle an email list; the
+ * "+ email or name" chip reveals InviteField, whose typed addresses the sheet
+ * holds (`onTypedEmailsChange`), so they count in "N invited" (create-7) and
+ * come back when this step remounts (`defaultEmails`). Start sends both lists
+ * through inviteToTasting; "Invite later" sends nothing. The share link is the
+ * shared JoinLinkRow; the gold "Ready to go" block restates the setup in words.
  */
 export function InviteStep({
   tastingId,
@@ -28,7 +27,9 @@ export function InviteStep({
   onToggleFriend,
   showEmailField,
   onShowEmailField,
-  emailFormRef,
+  typedEmails,
+  onTypedEmailsChange,
+  invitedCount,
   setup,
   scheduledIso,
   wineCount,
@@ -40,52 +41,19 @@ export function InviteStep({
   onToggleFriend: (email: string) => void;
   showEmailField: boolean;
   onShowEmailField: () => void;
-  emailFormRef: RefObject<HTMLFormElement | null>;
+  typedEmails: string[];
+  onTypedEmailsChange: (emails: string[]) => void;
+  /** Friend chips plus typed addresses, deduped, without the host's own. */
+  invitedCount: number;
   setup: SetupValues;
   scheduledIso: string | null;
   wineCount: number;
   feedback: string | null;
 }) {
-  const [link, setLink] = useState<{ url: string; code: string } | "loading" | { error: string }>(
-    "loading",
-  );
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    getJoinLink(tastingId)
-      .then((r) => {
-        if (!cancelled) setLink(r);
-      })
-      .catch(() => {
-        if (!cancelled) setLink({ error: "Couldn't create a join link." });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tastingId]);
-
-  useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(t);
-  }, [copied]);
-
-  async function copy() {
-    if (typeof link !== "object" || !("url" in link)) return;
-    try {
-      await navigator.clipboard.writeText(link.url);
-      setCopied(true);
-    } catch {
-      // Clipboard access can be refused (insecure context, permissions) —
-      // the link is still on screen to copy by hand.
-    }
-  }
-
   const parts = readySummary({
     setup,
     wineCount,
-    invitedCount: selectedEmails.length,
+    invitedCount,
     dateText: scheduledIso ? DATE_SLOT : null,
   });
 
@@ -142,17 +110,18 @@ export function InviteStep({
           Tap a face to invite. People who are not on Blindr get an email invitation
           to this tasting.
         </span>
-        {/* The existing invite input; its hidden `emails` field is read by the
-            sheet when Start / Save as draft is pressed. Kept mounted once
-            revealed so typed addresses survive a trip back to step 2. */}
-        <form
-          ref={emailFormRef}
-          onSubmit={(e) => e.preventDefault()}
+        {/* The typed addresses live in the sheet: InviteField reports every
+            add and remove, and starts from the sheet's list when it remounts. */}
+        <div
           hidden={!showEmailField}
           className="rounded-[11px] border border-border bg-white p-[13px_15px]"
         >
-          <InviteField friends={friends === "loading" ? [] : friends} />
-        </form>
+          <InviteField
+            friends={friends === "loading" ? [] : friends}
+            defaultEmails={typedEmails}
+            onChange={onTypedEmailsChange}
+          />
+        </div>
         {feedback ? (
           <p role="status" className="text-[12.5px] text-chart-3">
             {feedback}
@@ -160,27 +129,9 @@ export function InviteStep({
         ) : null}
       </div>
 
-      {/* Or share a link */}
-      <div className="flex items-center gap-3 rounded-[11px] border border-border bg-white p-[13px_15px]">
-        <div className="flex min-w-0 flex-col gap-[2px]">
-          <span className="text-[13.5px] font-semibold">Or share a link</span>
-          <span className="truncate font-mono text-[12px] text-muted-foreground">
-            {link === "loading"
-              ? "Making a link…"
-              : "error" in link
-                ? link.error
-                : link.url.replace(/^https?:\/\//, "")}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => void copy()}
-          disabled={link === "loading" || "error" in link}
-          className="ml-auto min-h-11 shrink-0 rounded-[8px] border border-border bg-background px-[14px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white disabled:opacity-60 md:min-h-0"
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      {/* Or share a link — the sheet never creates an OPEN tasting, so the
+          link always stops at Start here. */}
+      <JoinLinkRow tastingId={tastingId} worksUntilStart={setup.revealMode !== "OPEN"} />
 
       {/* Ready to go */}
       <div className="flex flex-col gap-[7px] rounded-[11px] border border-gold bg-background p-[14px_16px]">
@@ -194,7 +145,7 @@ export function InviteStep({
           ))}
         </span>
         <span className="text-[11.5px] text-muted-foreground">
-          Starting opens the table for everyone. Until then it sits in your drafts.
+          Starting opens the table for everyone.
         </span>
       </div>
     </div>
