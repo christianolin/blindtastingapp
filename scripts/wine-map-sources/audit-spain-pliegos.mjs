@@ -19,6 +19,24 @@
 // municipios when describing boundaries), which is exactly why the output is
 // a review list rather than a patch.
 //
+// WHY THERE IS NO GEOMETRIC GUARD FOR THIS. Every false inclusion this audit
+// found — Bocigas and Velilla (Ribera del Duero), Ulea (Bullas), Cea (Tierra de
+// Leon) — showed up as a small DETACHED part of the footprint, which made a
+// "flag small, distant parts" guard look obvious. It was measured before being
+// built, and it does not work. Detached parts are normal for Spanish DOs:
+// Vinos de Madrid is legitimately two clusters (the smaller 38% of its area),
+// Rias Baixas has 127 parts across five separate subzones, and Costers del
+// Segre has a legitimate single-municipality island. A 0.02% area-share
+// threshold — sitting in the gap between the false inclusions and Alicante's
+// offshore islets — trips 29 of the 69 current DOs. Distance discriminates even
+// worse: the false Ulea part sat ~1 km from the main body while Alicante's
+// genuine islets are 12 km out.
+//
+// The thing that separates a false inclusion from a legitimate island is not
+// its shape, it is that the municipality is absent from the statute. That is a
+// membership check, which is what this script does. Geometry cannot stand in
+// for reading the pliego.
+//
 // Requires pdftotext on PATH (poppler).
 //
 // Usage: node scripts/wine-map-sources/audit-spain-pliegos.mjs [--only <substr>] [--all]
