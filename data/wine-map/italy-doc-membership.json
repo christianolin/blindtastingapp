@@ -9,7 +9,7 @@
     "audited": {
       "source": "eAmbrosia, the EU register of geographical indications (https://webgate.ec.europa.eu/eambrosia-api/)",
       "method": "For each footprint, the registered GI's single document / technical file was downloaded and its section 5 'ZONA DELIMITATA' compared with our comune list. See scripts/wine-map-sources/audit-italy-disciplinari.mjs for what each zone shape can and cannot prove.",
-      "limit": "The single document is the EU's summary, not the national disciplinare, and the links it gives to politicheagricole.it are dead. A footprint marked 'open' needs the current disciplinare read by hand.",
+      "limit": "The single document is the EU's summary, not the national disciplinare: it compresses partial inclusions and can lag the national text by decades (the Etna document still shows the pre-1985 comune list). Where the two disagree the national disciplinare governs. fetch-italy-disciplinari.mjs pulls the current ones from MASAF for reading by hand.",
       "run_on": "2026-09-12"
     }
   },
@@ -19,7 +19,7 @@
       "region": "Abruzzo",
       "recovered_count": 32,
       "artifact_count": 31,
-      "reconciles": false,
+      "reconciles": true,
       "comuni": [
         {
           "istat": "067002",
@@ -90,10 +90,6 @@
           "name": "Martinsicuro"
         },
         {
-          "istat": "067027",
-          "name": "Montefino"
-        },
-        {
           "istat": "067028",
           "name": "Montorio al Vomano"
         },
@@ -155,14 +151,11 @@
         "gi_name": "Colline Teramane Montepulciano d’Abruzzo",
         "gi_id": "EUGI00000002561",
         "zone_shape": "ENUMERATED",
-        "verdict": "open",
-        "note": "The zone lists 31 comuni of the province of Teramo; Montefino is ours and is not among them. Needs the current national disciplinare.",
-        "differences": {
-          "ours_not_in_zone": [
-            "Montefino"
-          ]
-        }
-      }
+        "verdict": "corrected",
+        "note": "Was 32. Article 3 of the national disciplinare lists 31 comuni of the province of Teramo and Montefino is not among them, as does the EU single document republished at OJ C 198, 6.6.2023. Montefino is entirely enclosed by members, so the old artifact's dropped interior ring had been filling it back in; the rebuilt footprint keeps the 19.2 km2 hole. Now 31."
+      },
+      "corrected_count": 31,
+      "correction": "comune list corrected against the national disciplinare; recovered_count/artifact_count record the pre-correction geometry, which build-italy-comuni-dissolved.mjs has since rebuilt."
     },
     "abruzzo/tullum": {
       "region": "Abruzzo",
@@ -738,7 +731,7 @@
         "gi_id": "EUGI00000005061",
         "zone_shape": "ENUMERATED",
         "verdict": "confirmed",
-        "note": "Massa di Somma was split from San Sebastiano al Vesuvio in 1988, after the zone text was written; the zone names San Sebastiano al Vesuvio.",
+        "note": "Massa di Somma was split from San Sebastiano al Vesuvio in 1988, after the zone text was written; the zone names San Sebastiano al Vesuvio. The footprint was rebuilt for a different reason: the union leaves a 0.2 km2 hole, 1.8% of Pomigliano d'Arco, which is not a member and which Sant'Anastasia and its neighbours wrap around. The old artifact dropped that interior ring and so showed the land inside the zone.",
         "differences": {
           "ours_not_in_zone": [
             "Massa di Somma"
@@ -2092,6 +2085,10 @@
           "name": "Calvagese della Riviera"
         },
         {
+          "istat": "017036",
+          "name": "Capovalle"
+        },
+        {
           "istat": "017067",
           "name": "Desenzano del Garda"
         },
@@ -2100,8 +2097,20 @@
           "name": "Gardone Riviera"
         },
         {
+          "istat": "017076",
+          "name": "Gargnano"
+        },
+        {
           "istat": "017077",
           "name": "Gavardo"
+        },
+        {
+          "istat": "017082",
+          "name": "Idro"
+        },
+        {
+          "istat": "017089",
+          "name": "Limone sul Garda"
         },
         {
           "istat": "017092",
@@ -2132,12 +2141,20 @@
           "name": "Pozzolengo"
         },
         {
+          "istat": "017157",
+          "name": "Provaglio Val Sabbia"
+        },
+        {
           "istat": "017158",
           "name": "Puegnago del Garda"
         },
         {
           "istat": "017164",
           "name": "Roè Volciano"
+        },
+        {
+          "istat": "017168",
+          "name": "Sabbio Chiese"
         },
         {
           "istat": "017170",
@@ -2156,8 +2173,28 @@
           "name": "Soiano del Lago"
         },
         {
+          "istat": "017185",
+          "name": "Tignale"
+        },
+        {
+          "istat": "017187",
+          "name": "Toscolano-Maderno"
+        },
+        {
+          "istat": "017189",
+          "name": "Tremosine sul Garda"
+        },
+        {
+          "istat": "017191",
+          "name": "Treviso Bresciano"
+        },
+        {
           "istat": "017201",
           "name": "Villanuova sul Clisi"
+        },
+        {
+          "istat": "017204",
+          "name": "Vobarno"
         }
       ],
       "audit": {
@@ -2165,23 +2202,18 @@
         "gi_name": "Riviera del Garda Classico",
         "gi_id": "EUGI00000005067",
         "zone_shape": "ENUMERATED",
-        "verdict": "open",
-        "note": "The attached single document delimits \"Riviera del Garda Bresciano\"/\"Garda Bresciano\" over 29 comuni — the pre-2017 name and zone. Our 19 are all inside that list (the document writes Padenghe del Garda for Padenghe sul Garda) and look like the narrower Classico core, but the post-2017 delimitation has not been read.",
+        "verdict": "corrected",
+        "note": "Was 19 comuni, an exact match for the VALTENESI sub-zone rather than the DOC. Article 3 of the national disciplinare gives the DOC \"l'intero territorio dei seguenti comuni, in provincia di Brescia\" and lists 30, and the current EU single document (OJ C 2024/1496) lists the same 30 while delimiting Valtenesi separately over the 19 we had. Rebuilt to the DOC's 30. The remaining flags are the older document's spellings: Capo Valle for Capovalle, Padenghe del Garda for Padenghe sul Garda, Provaglio Valsabbia for Provaglio Val Sabbia.",
         "differences": {
-          "in_zone_not_ours": [
-            "Gargnano",
-            "Limone sul Garda",
-            "Sabbio Chiese",
-            "Tignale",
-            "Toscolano-Maderno",
-            "Treviso Bresciano",
-            "Vobarno"
-          ],
           "ours_not_in_zone": [
-            "Padenghe sul Garda"
+            "Capovalle",
+            "Padenghe sul Garda",
+            "Provaglio Val Sabbia"
           ]
         }
-      }
+      },
+      "corrected_count": 30,
+      "correction": "comune list corrected against the national disciplinare; recovered_count/artifact_count record the pre-correction geometry, which build-italy-comuni-dissolved.mjs has since rebuilt."
     },
     "lombardia/Moscato di Scanzo": {
       "region": "Lombardia",
@@ -2200,7 +2232,7 @@
         "gi_id": "EUGI00000003701",
         "zone_shape": "ENUMERATED",
         "verdict": "source_artifact",
-        "note": "\"Martinengo\" in the zone text is Via F. Martinengo, a street in the boundary description of Scanzorosciate, which happens to share its name with a Bergamo comune. The same failure mode as \"Ulea\" — a river — in the Bullas pliego. Our single-comune list is right.",
+        "note": "\"Martinengo\" in the zone text is Via F. Martinengo, a street in the boundary description of Scanzorosciate, which happens to share its name with a Bergamo comune. The same failure mode as \"Ulea\" — a river — in the Bullas pliego, and as \"S. Pietro in Lama\" in the Copertino disciplinare. Our single-comune list is right.",
         "differences": {
           "in_zone_not_ours": [
             "Martinengo"
@@ -2706,7 +2738,8 @@
         "gi_name": "Castel del Monte",
         "gi_id": "EUGI00000005463",
         "zone_shape": "ENUMERATED",
-        "verdict": "matches"
+        "verdict": "confirmed",
+        "note": "Article 3 takes Minervino Murge whole, nine comuni in part, and of Binetto only \"completamente l'isola amministrativa D'Ameli\" — its detached exclave, not its main territory. The rest of Binetto is therefore correctly absent from the list, and 16.1% of it -- 2.8 km2 enclosed by Bitonto, Palo del Colle and Toritto -- was being filled in by the old artifact's dropped interior ring. Rebuilt with that hole open; the D'Ameli exclave itself is not separately represented."
       }
     },
     "puglia/salice-salentino": {
@@ -2756,7 +2789,7 @@
       "region": "Puglia",
       "recovered_count": 7,
       "artifact_count": 6,
-      "reconciles": false,
+      "reconciles": true,
       "comuni": [
         {
           "istat": "075007",
@@ -2781,10 +2814,6 @@
         {
           "istat": "075048",
           "name": "Monteroni di Lecce"
-        },
-        {
-          "istat": "075071",
-          "name": "San Pietro in Lama"
         }
       ],
       "audit": {
@@ -2792,14 +2821,11 @@
         "gi_name": "Copertino",
         "gi_id": "EUGI00000005502",
         "zone_shape": "ENUMERATED",
-        "verdict": "open",
-        "note": "The zone gives Copertino, Carmiano, Arnesano and Monteroni whole, plus Galatina and Lequile in part. San Pietro in Lama is ours and is not named. Needs the current national disciplinare, which is later than this document.",
-        "differences": {
-          "ours_not_in_zone": [
-            "San Pietro in Lama"
-          ]
-        }
-      }
+        "verdict": "corrected",
+        "note": "Was 7. Article 3 gives Copertino, Carmiano, Arnesano and Monteroni whole plus Galatina and Lequile in part. San Pietro in Lama appears in the article only inside the boundary walk, as part of a ROAD — \"la strada Monteroni-S. Pietro in Lama-Lequile\" — which is the same failure as \"Ulea\", a river, in the Bullas pliego. It is entirely enclosed by members, so the filled interior ring had hidden the error on the map: removing it from the list alone would have changed nothing. Now 6, with the 8.1 km2 hole open, plus a second 0.4 km2 ring over a protrusion of Leverano."
+      },
+      "corrected_count": 6,
+      "correction": "comune list corrected against the national disciplinare; recovered_count/artifact_count record the pre-correction geometry, which build-italy-comuni-dissolved.mjs has since rebuilt."
     },
     "puglia/gioia-del-colle": {
       "region": "Puglia",
@@ -3000,6 +3026,10 @@
         {
           "istat": "113026",
           "name": "Trinità d'Agultu e Vignola"
+        },
+        {
+          "istat": "112065",
+          "name": "Viddalba"
         }
       ],
       "audit": {
@@ -3007,14 +3037,11 @@
         "gi_name": "Vermentino di Gallura",
         "gi_id": "EUGI00000004943",
         "zone_shape": "ENUMERATED",
-        "verdict": "open",
-        "note": "The zone reads \"... in Provincia di Olbia-Tempio, e Viddalba in Provincia di Sassari\". Viddalba is absent from our 22. This reads as a plain omission: the list should be 23.",
-        "differences": {
-          "in_zone_not_ours": [
-            "Viddalba"
-          ]
-        }
-      }
+        "verdict": "corrected",
+        "note": "Was 22. Article 3 closes \"... in Provincia di Olbia-Tempio, e Viddalba in Provincia di Sassari\"; Viddalba was simply missing. Now 23."
+      },
+      "corrected_count": 23,
+      "correction": "comune list corrected against the national disciplinare; recovered_count/artifact_count record the pre-correction geometry, which build-italy-comuni-dissolved.mjs has since rebuilt."
     },
     "sardegna/carignano-del-sulcis": {
       "region": "Sardegna",
@@ -3229,10 +3256,6 @@
           "name": "Nicolosi"
         },
         {
-          "istat": "087033",
-          "name": "Paternò"
-        },
-        {
           "istat": "087034",
           "name": "Pedara"
         },
@@ -3278,14 +3301,19 @@
         "gi_name": "Etna",
         "gi_id": "EUGI00000005523",
         "zone_shape": "ENUMERATED",
-        "verdict": "confirmed",
-        "note": "Ragalna was split from Paterno in 1985, after the zone text was written; the zone names Paterno.",
+        "verdict": "corrected",
+        "note": "Was 21. Article 3 of the national disciplinare names 20 comuni and Paterno is not one of them: Ragalna was split off from Paterno in 1985 and took the Etna-facing territory, and the current text lists Ragalna in its place. Our list carried both, the old membership and the new. The EU single document still shows the pre-1985 list, which is why the audit now reports the reverse difference — the register's summary is the stale side here. Now 20.",
         "differences": {
+          "in_zone_not_ours": [
+            "Paternò"
+          ],
           "ours_not_in_zone": [
             "Ragalna"
           ]
         }
-      }
+      },
+      "corrected_count": 20,
+      "correction": "comune list corrected against the national disciplinare; recovered_count/artifact_count record the pre-correction geometry, which build-italy-comuni-dissolved.mjs has since rebuilt."
     },
     "sicily/Cerasuolo di Vittoria": {
       "region": "Sicilia",
