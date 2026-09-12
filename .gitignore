@@ -44,3 +44,7 @@ scripts/scratch-apply.mjs
 
 # Superpowers brainstorm companion artifacts
 .superpowers/
+
+# Python bytecode from the wine-map extraction scripts.
+__pycache__/
+*.pyc
