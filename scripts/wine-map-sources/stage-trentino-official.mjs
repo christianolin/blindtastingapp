@@ -350,7 +350,12 @@ try {
 
     const report = reports[boundary.key];
     const generation = {
-      engine: "official-delimited-area",
+      // Not "official-delimited-area": that label is for a regulator's own GIS
+      // of the zone (Piemonte, Toscana, Veneto, Alto Adige), where the shape is
+      // the statute. This adapter dissolves ISTAT comuni per a comune list read
+      // out of the disciplinare, which is an approximation -- partial-territory
+      // comuni are taken whole -- and depends on that list being read right.
+      engine: "comune-union",
       name: boundary.name,
       matched_feature_count: features.length,
       matched_keys: features.map((f) => f.properties?.key ?? null),

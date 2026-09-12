@@ -47,6 +47,10 @@ jobs:
         run: echo "$HOME/tippecanoe-bin" >> "$GITHUB_PATH"
       - run: tippecanoe --version
       - run: node --test scripts/wine-map-tiles/lib.test.mjs
+      # Runs before export, which is the moment repo geometry becomes a release:
+      # if a comune list and the footprint built from it have drifted apart,
+      # failing here costs a re-run, whereas failing later ships the drift.
+      - run: node --test scripts/wine-map-sources/italy-membership.test.mjs
       - run: node scripts/wine-map-tiles/export.mjs
         env:
           DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
