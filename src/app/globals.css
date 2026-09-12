@@ -36,6 +36,11 @@
   --color-placeholder: var(--placeholder);
   --color-placeholder-soft: var(--placeholder-soft);
   --color-chart-oldest: var(--chart-oldest);
+  /* Flows handoff (add-wine sheet / play / host console). */
+  --color-miss: var(--miss);
+  --color-console: var(--console);
+  --color-console-card: var(--console-card);
+  --color-console-ink: var(--console-ink);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -112,6 +117,12 @@
   --placeholder: #a79574;
   --placeholder-soft: #c9b896;
   --chart-oldest: #e5d9c0;
+  /* Flows handoff: the miss-red used for a wrong answer on the dark reveal,
+     and the host console's dim-room palette (ground / card / muted ink). */
+  --miss: #e08a76;
+  --console: #1b1310;
+  --console-card: #241b16;
+  --console-ink: #b9a98c;
   --chart-1: #5c1a2b;
   --chart-2: #c3a25b;
   --chart-3: #3f5b42;
@@ -347,4 +358,25 @@
     var(--muted) 0 6px,
     var(--chart-oldest) 6px 12px
   );
+}
+
+/* Add-wine sheet "reading" state: a gold scanline sweeping the label photo
+   while FastCork reads it. Positioned by the caller (absolute, inset-x);
+   reduced motion parks it a third of the way down. */
+@keyframes scanline {
+  0% {
+    top: 16%;
+  }
+  100% {
+    top: 74%;
+  }
+}
+.animate-scanline {
+  animation: scanline 2.2s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-scanline {
+    animation: none;
+    top: 40%;
+  }
 }

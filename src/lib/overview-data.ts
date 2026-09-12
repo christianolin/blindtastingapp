@@ -396,6 +396,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       hosting: liveTasting.host_id === userId,
       hostName: hostNameOf(liveTasting),
       revealMode: liveTasting.reveal_mode,
+      wineSource: liveTasting.wine_source,
       wineIndex: revealedIndex === -1 ? liveWines.length : revealedIndex + 1,
       wineCount: liveWines.length,
       stage: bannerStage(revealedKeys, liveAllRevealed, liveTasting.reveal_mode),
@@ -439,6 +440,8 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
         (nextTasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
           nextTasting.myStatus === "JOINED"),
       nextWinePosition: flight.length + 1,
+      revealMode: nextTasting.reveal_mode,
+      wineSource: nextTasting.wine_source,
     };
   }
 

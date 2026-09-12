@@ -12,13 +12,49 @@ import type {
   OverviewBanner as BannerData,
 } from "@/lib/overview-types";
 import { StartTastingRow } from "./start-tasting-row";
+import { FlightHintRegistrar } from "./flight-hint-registrar";
+import { AddWineBannerButton } from "./add-wine-banner-button";
 
 // The banner slot above the three cards. Live tasting → the bordeaux banner;
 // otherwise the parchment "Next up" variant; nothing scheduled → the single
 // "Start a tasting" row. Never an empty bordeaux block.
+//
+// A live or next-up tasting is also registered as the header camera's
+// "Tonight's flight" (the 7i chooser) — for next-up only when the viewer may
+// add to it, which the banner data already knows.
 export function OverviewBanner({ banner }: { banner: BannerData }) {
-  if (banner.kind === "live") return <LiveBannerView banner={banner} />;
-  if (banner.kind === "next") return <NextUpBannerView banner={banner} />;
+  if (banner.kind === "live") {
+    return (
+      <>
+        <FlightHintRegistrar
+          tastingId={banner.tastingId}
+          tastingName={banner.name}
+          position={banner.wineCount + 1}
+          live
+          revealMode={banner.revealMode}
+          wineSource={banner.wineSource}
+        />
+        <LiveBannerView banner={banner} />
+      </>
+    );
+  }
+  if (banner.kind === "next") {
+    return (
+      <>
+        {banner.canAddWine ? (
+          <FlightHintRegistrar
+            tastingId={banner.tastingId}
+            tastingName={banner.name}
+            position={banner.nextWinePosition}
+            live={false}
+            revealMode={banner.revealMode}
+            wineSource={banner.wineSource}
+          />
+        ) : null}
+        <NextUpBannerView banner={banner} />
+      </>
+    );
+  }
   return <StartTastingRow />;
 }
 
@@ -162,14 +198,17 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
         >
           Open the tasting
         </ActionButton>
+        {/* Opens the universal add-wine sheet (flight destination), like every
+            other flight entry point — not the legacy /wines/new page. */}
         {banner.canAddWine ? (
-          <ActionButton
-            href={`${href}/wines/new`}
-            variant="outline"
+          <AddWineBannerButton
+            tastingId={banner.tastingId}
+            tastingName={banner.name}
+            revealMode={banner.revealMode}
+            wineSource={banner.wineSource}
+            position={banner.nextWinePosition}
             className="w-auto px-[22px] whitespace-nowrap max-md:flex-1 max-md:px-3"
-          >
-            Add wine {banner.nextWinePosition}
-          </ActionButton>
+          />
         ) : null}
       </div>
     </section>

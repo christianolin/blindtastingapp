@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { NewTastingForm } from "./new-tasting-form";
+import { NewTastingSheet } from "@/components/new-tasting-sheet";
+import { getNameSuggestionContext } from "./actions";
 
+// The old full-page route, kept so existing links work: it renders the same
+// three-step sheet inline (no dialog chrome). `?mode=semi-blind` still sets
+// the default mode; the tiles inside can change it.
 export default async function NewTastingPage({
   searchParams,
 }: {
@@ -20,10 +21,12 @@ export default async function NewTastingPage({
     redirect("/login");
   }
 
-  const { data: friendRows } = await supabase
-    .from("friendships")
-    .select("friend_id")
-    .eq("user_id", user.id);
+  // The name chip comes from the same helper the launcher sheet calls on
+  // open, so both entry points suggest the same "{Region} #{n}".
+  const [{ data: friendRows }, regionSuggestion] = await Promise.all([
+    supabase.from("friendships").select("friend_id").eq("user_id", user.id),
+    getNameSuggestionContext().catch(() => null),
+  ]);
   const friendIds = (friendRows ?? []).map((f) => f.friend_id);
   const { data: friends } = await supabase
     .from("profiles")
@@ -32,30 +35,14 @@ export default async function NewTastingPage({
     .order("display_name");
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6 sm:p-8">
-      <Link
-        href="/taste"
-        className="inline-flex items-center gap-1 self-start text-sm font-medium text-primary transition-colors hover:text-primary/80"
-      >
-        <ChevronLeft className="size-4" /> Back to tastings
-      </Link>
-      <div>
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          New {reveal === "BLIND" ? "blind" : "semi-blind"} tasting
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Set up the details and invite your group.
-        </p>
-      </div>
-      <Card>
-        <CardContent className="pt-6">
-          <NewTastingForm
-            friends={friends ?? []}
-            userId={user.id}
-            reveal={reveal}
-          />
-        </CardContent>
-      </Card>
+    <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col gap-4 p-4 sm:p-8">
+      <NewTastingSheet
+        inline
+        userId={user.id}
+        defaultReveal={reveal}
+        initialFriends={friends ?? []}
+        regionSuggestion={regionSuggestion}
+      />
     </div>
   );
 }

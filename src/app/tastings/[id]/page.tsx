@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Wine } from "lucide-react";
+import { ChevronRight, MapPin, Wine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
 import { HostControlsMenu } from "./host-controls-menu";
 import { StandingsPanel } from "./standings-panel";
-import { TastingAddWineButton } from "./tasting-add-wine-button";
+import { AddToFlightButton } from "./tasting-add-wine-button";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { PlayExperience } from "./play/play-experience";
 import { OpenBoard } from "./open-board";
@@ -214,21 +214,36 @@ export default async function TastingPage({
       isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
   }));
 
+  const addWineLabel =
+    tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine";
+  // The universal add-wine sheet's flight destination: the next glass number
+  // is the live count + 1 (the page re-renders after every add).
+  const addWineButton = canAddWine ? (
+    <AddToFlightButton
+      tastingId={id}
+      label={addWineLabel}
+      tastingName={tasting.name}
+      revealMode={tasting.reveal_mode}
+      wineSource={tasting.wine_source}
+      position={wineCount + 1}
+    />
+  ) : null;
+
   // The wine list (serving order + reveal state). Shown to everyone: host gets
   // the reveal / reorder / add / edit affordances, guessers see a read-only
-  // flight overview. Lives in the left rail while running, inline while setting
-  // up.
+  // flight overview. Inline while setting up; while running it sits above the
+  // host's play cards so mid-tasting adds and reorders of unrevealed wines
+  // happen on the page, not only in the console.
   const winesPanel = (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-3">
           Wines
-          {canAddWine ? (
-            <TastingAddWineButton
-              tastingId={id}
-              label={tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine"}
-            />
-          ) : null}
+          <span className="text-[12px] font-normal text-muted-foreground">
+            {wineCount} {wineCount === 1 ? "wine" : "wines"}
+            {isHost && !isByo ? " · only you can see them" : null}
+          </span>
+          {addWineButton ? <span className="ml-auto">{addWineButton}</span> : null}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -373,11 +388,40 @@ export default async function TastingPage({
       </Card>
     ) : null;
 
+  // The host's way into the dark console while a blind / semi-blind tasting
+  // runs: reveal glass by glass and watch who has locked in.
+  const hostConsoleCard =
+    isHost && hasStarted && !isOpen && tasting.status !== "CLOSED" ? (
+      <Link
+        href={`/tastings/${id}/host`}
+        className="flex items-center gap-4 rounded-[13px] bg-primary p-[14px_18px] text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523]"
+      >
+        <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+          <span className="font-heading text-[21px] font-semibold leading-[1.05]">
+            Host console
+          </span>
+          <span className="text-[12.5px] text-primary-foreground/78">
+            Reveal glass by glass, watch who has locked in.
+          </span>
+        </span>
+        <ChevronRight className="size-5 shrink-0" aria-hidden />
+      </Link>
+    ) : null;
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
       {hasStarted ? <AutoRefresh /> : null}
-      {canAddWine && !hasStarted ? (
-        <TastingScanRegistrar tastingId={id} />
+      {/* Registered whenever the viewer may add — running or not: adding
+          mid-tasting is normal, so the header camera keeps targeting this
+          flight. */}
+      {canAddWine ? (
+        <TastingScanRegistrar
+          tastingId={id}
+          tastingName={tasting.name}
+          revealMode={tasting.reveal_mode}
+          wineSource={tasting.wine_source}
+          position={wineCount + 1}
+        />
       ) : null}
       {/* Header: title + host settings, one prominent status, and secondary
           metadata as inline text rather than a row of equal-weight pills. The
@@ -455,17 +499,8 @@ export default async function TastingPage({
 
       {running && isOpen ? (
         <div className="flex flex-col gap-4">
-          {canAddWine ? (
-            <div className="flex justify-end">
-              <TastingAddWineButton
-                tastingId={id}
-                label={
-                  tasting.wine_source === "HOST_PROVIDES"
-                    ? "Add wine"
-                    : "Add a wine"
-                }
-              />
-            </div>
+          {addWineButton ? (
+            <div className="flex justify-end">{addWineButton}</div>
           ) : null}
           <OpenBoard
             tastingId={id}
@@ -526,22 +561,17 @@ export default async function TastingPage({
             </div>
           ) : null}
 
-          {canAddWine ? (
-            <div className="flex justify-end">
-              <TastingAddWineButton
-                tastingId={id}
-                label={
-                  tasting.wine_source === "HOST_PROVIDES"
-                    ? "Add wine"
-                    : "Add a wine"
-                }
-              />
-            </div>
+          {/* The host's Wines card (below) carries its own Add button; a
+              bring-your-own contributor who is not the host keeps this one. */}
+          {addWineButton && !isHost ? (
+            <div className="flex justify-end">{addWineButton}</div>
           ) : null}
 
           {/* Results (~70%) + standings (~30%). */}
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
             <div className="flex min-w-0 flex-col gap-6">
+              {hostConsoleCard}
+              {isHost ? winesPanel : null}
               {canGuess ? (
                 <PlayExperience tastingId={id} embedded />
               ) : (
@@ -577,6 +607,8 @@ export default async function TastingPage({
                 tastingId={id}
                 status={tasting.status}
                 wineCount={wineCount}
+                timingMode={tasting.timing_mode}
+                revealMode={tasting.reveal_mode}
                 surface="start"
               />
             ) : null}

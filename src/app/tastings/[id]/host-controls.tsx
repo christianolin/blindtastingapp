@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Trash2,
   Play,
@@ -63,6 +64,8 @@ export function HostControls({
   leaderboardReveal = "PER_ATTRIBUTE",
   showLeaderboardToggle = false,
   invitesStayOpen = false,
+  timingMode,
+  revealMode,
   surface,
 }: {
   tastingId: string;
@@ -76,10 +79,30 @@ export function HostControls({
   showLeaderboardToggle?: boolean;
   /** OPEN tastings keep the invite field in the running-tasting menu too. */
   invitesStayOpen?: boolean;
+  /** Only the "start" surface reads these: a LIVE blind tasting's Start
+      lands the host on the host console (the same rule as the create
+      sheet's step 3), everything else stays on the lobby. */
+  timingMode?: string;
+  revealMode?: string;
   surface: "start" | "menu";
 }) {
+  const router = useRouter();
+  // The console rule mirrors new-tasting-sheet.tsx: live + blind. Semi-blind
+  // and Taste & Rate (OPEN) tastings stay on the lobby (OPEN has no console
+  // card at all).
+  const startLandsOnConsole = timingMode === "LIVE" && revealMode === "BLIND";
+  // Wrapped rather than a `useEffect` on the returned state: the action's
+  // `revalidatePath` swaps in the started lobby, which no longer renders this
+  // "start" surface — an effect on an unmounting component may never run,
+  // whereas pushing as soon as the action resolves always does.
   const [startState, startAction, startPending] = useActionState(
-    startTasting,
+    async (prev: LobbyActionState, formData: FormData) => {
+      const result = await startTasting(prev, formData);
+      if (result && "success" in result && startLandsOnConsole) {
+        router.push(`/tastings/${tastingId}/host`);
+      }
+      return result;
+    },
     null,
   );
   const [finishState, finishAction, finishPending] = useActionState(

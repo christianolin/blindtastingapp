@@ -4,34 +4,18 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
-
-type ReferenceOption = { id: string; name: string };
-
-// Two lookups + an insert, kept simple and type-safe by taking the already
-// -built find/create queries as closures rather than a dynamic table name
-// (Supabase's typed client can't take a table name as a plain string).
-async function findOrCreate(
-  find: () => PromiseLike<{ data: ReferenceOption | null }>,
-  create: () => PromiseLike<{
-    data: ReferenceOption | null;
-    error: { code?: string; message: string } | null;
-  }>,
-): Promise<ReferenceOption> {
-  const { data: existing } = await find();
-  if (existing) return existing;
-
-  const { data: created, error } = await create();
-  if (!error && created) return created;
-
-  // Unique-constraint race: someone else inserted the same row between our
-  // check and our insert. Re-select rather than surface a spurious error.
-  if (error?.code === "23505") {
-    const { data: retried } = await find();
-    if (retried) return retried;
-  }
-
-  throw new Error(error?.message ?? "Could not create entry.");
-}
+// The write helpers (and find-or-create) live in a server-only module, NOT
+// here: every export of this "use server" file becomes a POST-reachable
+// action, and those helpers trust a caller-supplied client + user id. Only
+// real actions (each resolving auth itself) are exported from this file.
+import {
+  findOrCreate,
+  findOrCreateProducer,
+  insertTastingWineCore,
+  insertTastingWineFromCatalogRow,
+  syncCatalogWine,
+  type BlendGrape,
+} from "./tasting-wine-writes";
 
 export async function createCountry(name: string) {
   const trimmed = name.trim();
@@ -55,18 +39,8 @@ export async function createGrape(name: string) {
 }
 
 export async function createProducer(regionId: string | null, name: string) {
-  const trimmed = name.trim();
-  if (!trimmed) throw new Error("Name is required.");
   const supabase = await createClient();
-  return findOrCreate(
-    () => supabase.from("producers").select("id, name").eq("name", trimmed).maybeSingle(),
-    () =>
-      supabase
-        .from("producers")
-        .insert({ name: trimmed, region_id: regionId })
-        .select("id, name")
-        .single(),
-  );
+  return findOrCreateProducer(supabase, regionId, name);
 }
 
 export async function createTypeDesignation(name: string) {
@@ -131,8 +105,6 @@ export async function createAppellation(regionId: string, name: string) {
   );
 }
 
-type BlendGrape = { grapeId: string; percentage: number | null };
-
 // The wine forms submit the grape blend as one JSON field (grape_blend). The
 // lead entry is the primary grape, the next the secondary — no form shows a raw
 // primary/secondary picker outside blind guessing + scoring.
@@ -149,56 +121,6 @@ function parseBlend(formData: FormData): BlendGrape[] {
   } catch {
     return [];
   }
-}
-
-// Persist the full blend on the catalog wine (its trigger recomputes the lead
-// grape as primary/secondary). Only a wine this user owns is touched, so a
-// deduped/existing wine keeps its own blend.
-async function syncCatalogWine(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  catalogWineId: string,
-  userId: string,
-  blend: BlendGrape[],
-  imageUrl: string | null,
-  description: string | null,
-) {
-  const { data: cw } = await supabase
-    .from("catalog_wines")
-    .select("created_by, image_url, description")
-    .eq("id", catalogWineId)
-    .maybeSingle();
-  // Only the wine's creator may edit it — a deduped/existing wine keeps its own
-  // blend + photo (we never overwrite someone else's catalog entry).
-  if (cw?.created_by !== userId) return;
-  // Put the label photo on the shared catalog wine too, so it shows in the
-  // catalog and results — not only on the post-reveal answer row.
-  if (imageUrl && !cw.image_url) {
-    await supabase
-      .from("catalog_wines")
-      .update({ image_url: imageUrl })
-      .eq("id", catalogWineId);
-  }
-  // Seed the wine's description on the creator's catalog entry when it has none
-  // yet — never clobbering an existing writeup (mirrors the photo rule above).
-  if (description && !cw.description) {
-    await supabase
-      .from("catalog_wines")
-      .update({ description })
-      .eq("id", catalogWineId);
-  }
-  if (blend.length === 0) return;
-  await supabase
-    .from("catalog_wine_grapes")
-    .delete()
-    .eq("catalog_wine_id", catalogWineId);
-  await supabase.from("catalog_wine_grapes").insert(
-    blend.map((g, i) => ({
-      catalog_wine_id: catalogWineId,
-      grape_id: g.grapeId,
-      percentage: g.percentage,
-      sort_order: i,
-    })),
-  );
 }
 
 export type AddWineFormState = { error: string } | null;
@@ -268,112 +190,26 @@ export async function addWine(
     }
   }
 
-  const { data: tasting } = await supabase
-    .from("tastings")
-    .select("*")
-    .eq("id", tastingId)
-    .maybeSingle();
-  if (!tasting) {
-    return { error: "Tasting not found." };
-  }
-
-  let contributorParticipantId: string | null = null;
-  if (tasting.wine_source === "PARTICIPANT_CONTRIBUTED") {
-    const { data: participant } = await supabase
-      .from("tasting_participants")
-      .select("id")
-      .eq("tasting_id", tastingId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!participant) {
-      return { error: "You're not a participant in this tasting." };
-    }
-    // Bring-your-own allows any number of bottles per person (including
-    // none) — no one-wine-per-participant cap.
-    contributorParticipantId = participant.id;
-  } else if (tasting.host_id !== user.id) {
-    return { error: "Only the host can add wines to this tasting." };
-  }
-
-  const { count } = await supabase
-    .from("wines")
-    .select("id", { count: "exact", head: true })
-    .eq("tasting_id", tastingId);
-  const position = (count ?? 0) + 1;
-
-  const { data: wine, error: wineError } = await supabase
-    .from("wines")
-    .insert({
-      tasting_id: tastingId,
-      position,
-      contributor_participant_id: contributorParticipantId,
-      // OPEN (group Taste & Rate) hides nothing — wines are visible and
-      // scoreable the moment they're added, with no reveal step.
-      is_revealed: tasting.reveal_mode === "OPEN",
-    })
-    .select()
-    .single();
-  if (wineError || !wine) {
-    return { error: wineError?.message ?? "Could not add the wine." };
-  }
-
-  // Resolve (or create) the canonical catalog wine this answer describes, so
-  // every blind wine links to one source-of-truth entry. The link lives on the
-  // protected wine_answers row — invisible to participants until reveal.
-  const answerSnapshot = {
-    country_id: countryId,
-    region_id: regionId,
-    appellation_id: appellationId,
-    primary_grape_id: primaryGrapeId,
-    secondary_grape_id: secondaryGrapeId,
-    producer_id: producerId,
-    type_designation_id: typeDesignationId,
-    vintage_kind: vintageKind,
-    vintage_year: vintageYear,
-    vintage_tawny_years: vintageTawnyYears,
-    wine_name: wineName,
+  const r = await insertTastingWineCore(supabase, user.id, tastingId, {
+    countryId,
+    regionId,
+    appellationId,
+    primaryGrapeId,
+    secondaryGrapeId,
+    producerId: producerUnknown ? null : producerId,
+    typeDesignationId,
+    vintageKind: vintageUnknown ? null : vintageKind,
+    vintageYear,
+    vintageTawnyYears,
+    wineName,
     colour,
     style,
-  };
-  const { data: catalogWineId, error: catalogError } = await supabase.rpc(
-    "find_or_create_catalog_wine",
-    { p: answerSnapshot },
-  );
-  if (catalogError || !catalogWineId) {
-    await supabase.from("wines").delete().eq("id", wine.id);
-    return {
-      error: catalogError?.message ?? "Could not link the wine to the catalog.",
-    };
-  }
-
-  const { error: answerError } = await supabase.from("wine_answers").insert({
-    wine_id: wine.id,
-    country_id: countryId,
-    region_id: regionId,
-    appellation_id: appellationId,
-    primary_grape_id: primaryGrapeId,
-    secondary_grape_id: secondaryGrapeId,
-    producer_id: producerUnknown ? null : producerId,
-    type_designation_id: typeDesignationId,
-    image_url: imageUrl,
-    vintage_kind: vintageUnknown ? null : vintageKind,
-    vintage_year: vintageYear,
-    vintage_tawny_years: vintageTawnyYears,
-    catalog_wine_id: catalogWineId,
-  });
-  if (answerError) {
-    await supabase.from("wines").delete().eq("id", wine.id);
-    return { error: answerError.message };
-  }
-
-  await syncCatalogWine(
-    supabase,
-    catalogWineId,
-    user.id,
-    blend,
     imageUrl,
-    String(formData.get("description") ?? "").trim() || null,
-  );
+    description: String(formData.get("description") ?? "").trim() || null,
+    blend,
+    alcoholPercent: null,
+  });
+  if ("error" in r) return { error: r.error };
   redirect(`/tastings/${tastingId}`);
 }
 
@@ -574,83 +410,6 @@ export async function searchCatalogWines(query: string) {
   return mapped.sort((a, b) => a.group.localeCompare(b.group));
 }
 
-type TastingDb = Awaited<ReturnType<typeof createClient>>;
-
-// The insert half of "add a catalog wine to a tasting" (wines + wine_answers),
-// with NO redirect — so callers that must run more work afterwards (drawing a
-// cellar bottle down) can. Caller resolves auth first.
-async function insertTastingWineFromCatalog(
-  supabase: TastingDb,
-  userId: string,
-  tastingId: string,
-  catalogWineId: string,
-): Promise<{ error: string } | { ok: true }> {
-  const { data: tasting } = await supabase
-    .from("tastings")
-    .select("id, host_id, wine_source, reveal_mode")
-    .eq("id", tastingId)
-    .maybeSingle();
-  if (!tasting) return { error: "Tasting not found." };
-
-  let contributorParticipantId: string | null = null;
-  if (tasting.wine_source === "PARTICIPANT_CONTRIBUTED") {
-    const { data: participant } = await supabase
-      .from("tasting_participants")
-      .select("id")
-      .eq("tasting_id", tastingId)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (!participant) return { error: "You're not a participant in this tasting." };
-    contributorParticipantId = participant.id;
-  } else if (tasting.host_id !== userId) {
-    return { error: "Only the host can add wines to this tasting." };
-  }
-
-  const { data: cw } = await supabase
-    .from("catalog_wines")
-    .select(
-      "country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, producer_id, type_designation_id, vintage_kind, vintage_year, vintage_tawny_years",
-    )
-    .eq("id", catalogWineId)
-    .maybeSingle();
-  if (!cw) return { error: "That catalog wine no longer exists." };
-
-  const { count } = await supabase
-    .from("wines")
-    .select("id", { count: "exact", head: true })
-    .eq("tasting_id", tastingId);
-  const { data: wine, error: wineError } = await supabase
-    .from("wines")
-    .insert({
-      tasting_id: tastingId,
-      position: (count ?? 0) + 1,
-      contributor_participant_id: contributorParticipantId,
-    })
-    .select()
-    .single();
-  if (wineError || !wine) return { error: wineError?.message ?? "Could not add the wine." };
-
-  const { error: answerError } = await supabase.from("wine_answers").insert({
-    wine_id: wine.id,
-    country_id: cw.country_id,
-    region_id: cw.region_id,
-    appellation_id: cw.appellation_id,
-    primary_grape_id: cw.primary_grape_id,
-    secondary_grape_id: cw.secondary_grape_id,
-    producer_id: cw.producer_id,
-    type_designation_id: cw.type_designation_id,
-    vintage_kind: cw.vintage_kind,
-    vintage_year: cw.vintage_year,
-    vintage_tawny_years: cw.vintage_tawny_years,
-    catalog_wine_id: catalogWineId,
-  });
-  if (answerError) {
-    await supabase.from("wines").delete().eq("id", wine.id);
-    return { error: answerError.message };
-  }
-  return { ok: true };
-}
-
 export async function addWineFromCatalog(
   tastingId: string,
   catalogWineId: string,
@@ -660,7 +419,7 @@ export async function addWineFromCatalog(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const r = await insertTastingWineFromCatalog(supabase, user.id, tastingId, catalogWineId);
+  const r = await insertTastingWineFromCatalogRow(supabase, user.id, tastingId, catalogWineId);
   if ("error" in r) return { error: r.error };
   redirect(`/tastings/${tastingId}`);
 }
@@ -672,7 +431,10 @@ export async function addTastingWineFromCellarLot(
   tastingId: string,
   lotId: string,
   opts: { consume: boolean },
-): Promise<{ error: string } | { ok: true; warning?: string }> {
+): Promise<
+  | { error: string }
+  | { ok: true; warning?: string; wineId: string; position: number; catalogWineId: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -687,7 +449,7 @@ export async function addTastingWineFromCellarLot(
   if (!lot || lot.owner_id !== user.id) return { error: "That lot is not in your cellar." };
   if (lot.quantity < 1) return { error: "That lot has no bottles left." };
 
-  const r = await insertTastingWineFromCatalog(
+  const r = await insertTastingWineFromCatalogRow(
     supabase,
     user.id,
     tastingId,
@@ -710,7 +472,13 @@ export async function addTastingWineFromCellarLot(
     }
   }
   revalidatePath(`/tastings/${tastingId}`);
-  return { ok: true, warning };
+  return {
+    ok: true,
+    warning,
+    wineId: r.wineId,
+    position: r.position,
+    catalogWineId: lot.catalog_wine_id,
+  };
 }
 
 // The deliberate escape hatch: a bottle that genuinely can't be identified. It

@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Camera, Warehouse } from "lucide-react";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
-import { ScanModal } from "@/components/scan/scan-modal";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
+import { useAddWine } from "@/components/add-wine-context";
+import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import {
   addWine,
   addWineFromCatalog,
-  addTastingWineFromCellarLot,
   addWineUnidentified,
   updateWine,
   searchCatalogWines,
@@ -21,8 +21,6 @@ import {
 } from "./actions";
 import { type BlendRow } from "@/app/catalog/new/grape-blend-editor";
 import { WineIdentityFields } from "@/components/wine/wine-identity-fields";
-import { listMyCellarLots, type CellarLotOption } from "@/app/cellar/new/actions";
-import { CellarLotPicker } from "@/components/cellar-lot-picker";
 
 // Pre-filled values for edit mode — the wine's current answer key, plus the
 // producer's display name (SearchableCombobox can't derive it from the id).
@@ -45,19 +43,28 @@ export type WineFormInitial = {
   description: string | null;
 };
 
+/** The tasting as an add-wine sheet destination — what the "Scan the label
+    instead" / "Choose from my cellar" shortcuts open the sheet with. Absent
+    in edit mode (nothing to add there). */
+export type WineFormFlight = {
+  tastingName: string;
+  revealMode: RevealMode;
+  wineSource: WineSourceMode;
+  /** Next glass number = existing wine count + 1. */
+  position: number;
+};
+
 export function WineForm({
   tastingId,
-  userId,
   countries: initialCountries,
   regions: initialRegions,
   grapes: initialGrapes,
   typeDesignations: initialTypeDesignations,
   wineId,
   initial,
-  autoScan,
+  flight,
 }: {
   tastingId: string;
-  userId?: string;
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
@@ -65,8 +72,9 @@ export function WineForm({
   /** When set (with `initial`), the form edits this wine instead of adding one. */
   wineId?: string;
   initial?: WineFormInitial;
-  /** Open the label scanner immediately (app-header scan into this tasting). */
-  autoScan?: boolean;
+  /** When set, the scan / cellar shortcuts open the universal add-wine sheet
+      with this flight as the destination. */
+  flight?: WineFormFlight;
 }) {
   const isEditing = Boolean(wineId && initial);
   const [state, formAction, pending] = useActionState<
@@ -123,7 +131,6 @@ export function WineForm({
 
   // Catalog-first: pick an existing wine (default), or reveal the full creator.
   const [manualMode, setManualMode] = useState(false);
-  const [scanning, setScanning] = useState(Boolean(autoScan));
   const [unidentified, setUnidentified] = useState(false);
   const [pickedWine, setPickedWine] = useState<{ id: string; label: string } | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
@@ -139,43 +146,24 @@ export function WineForm({
   }
 
   const router = useRouter();
-  const [cellarMode, setCellarMode] = useState(false);
-  const [cellarLots, setCellarLots] = useState<CellarLotOption[] | null>(null);
-  const [selectedLotId, setSelectedLotId] = useState("");
-  const [consumeBottle, setConsumeBottle] = useState(false);
-  const [cellarError, setCellarError] = useState<string | null>(null);
-  const [cellarWarning, setCellarWarning] = useState<string | null>(null);
-  const [cellarPending, startCellar] = useTransition();
+  const { openAddWineSheet } = useAddWine();
 
-  function openCellar() {
-    setCellarMode(true);
-    setCellarError(null);
-    if (cellarLots === null) {
-      startCellar(async () => {
-        setCellarLots(await listMyCellarLots());
-      });
-    }
-  }
-
-  function submitCellar() {
-    if (!selectedLotId) return;
-    setCellarError(null);
-    setCellarWarning(null);
-    startCellar(async () => {
-      const r = await addTastingWineFromCellarLot(tastingId, selectedLotId, {
-        consume: consumeBottle,
-      });
-      if (r && "error" in r && r.error) {
-        setCellarError(r.error);
-        return;
-      }
-      if (r && "warning" in r && r.warning) {
-        setCellarWarning(r.warning);
-        return;
-      }
-      router.push(`/tastings/${tastingId}`);
-      router.refresh();
-    });
+  // The scan and cellar paths are the universal add-wine sheet's (camera /
+  // cellar views) with this tasting as the flight destination; an add there
+  // lands on the tasting page, as the old redirecting actions did.
+  function openSheet(start: "camera" | "cellar") {
+    if (!flight) return;
+    openAddWineSheet(
+      {
+        kind: "flight",
+        tastingId,
+        tastingName: flight.tastingName,
+        revealMode: flight.revealMode,
+        wineSource: flight.wineSource,
+        position: flight.position,
+      },
+      { start, onAdded: () => router.push(`/tastings/${tastingId}`) },
+    );
   }
 
 
@@ -215,114 +203,23 @@ export function WineForm({
               ? "← Back to catalog search"
               : "Not in the catalog? Add it manually"}
           </button>
-          {userId && !manualMode ? (
+          {flight && !manualMode ? (
             <button
               type="button"
-              onClick={() => setScanning(true)}
+              onClick={() => openSheet("camera")}
               className="inline-flex items-center gap-1.5 self-start rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Camera className="size-4" /> Scan the label instead
             </button>
           ) : null}
-          {scanning && userId ? (
-            <ScanModal
-              userId={userId}
-              context="tasting"
-              pickLabel="Add to tasting"
-              onClose={() => setScanning(false)}
-              onAddToCellar={(wine) => {
-                setScanning(false);
-                setPickError(null);
-                startPick(async () => {
-                  const r = await addWineFromCatalog(tastingId, wine.id);
-                  if (r?.error) setPickError(r.error);
-                });
-              }}
-              onAddNew={(catalog) => {
-                // Prefill the manual form from the scan so "add as new" isn't a
-                // blank form — including the label photo. An unmatched producer
-                // arrives as a label to pick or create.
-                setScanning(false);
-                setManualMode(true);
-                setCountryId(catalog.countryId);
-                setRegionId(catalog.regionId);
-                setAppellationId(catalog.appellationId);
-                setBlend(catalog.blend);
-                setProducerId(catalog.producerId);
-                setProducerLabel(catalog.producerLabel);
-                setTypeDesignationId(catalog.typeDesignationId);
-                setWineName(catalog.wineName);
-                setDescription(catalog.description ?? "");
-                setColour(catalog.colour ?? "");
-                setStyle(catalog.style ?? "");
-                setVintageKind(catalog.vintageKind);
-                setVintageYear(catalog.vintageYear);
-                setImageUrl(catalog.imageUrl);
-              }}
-            />
-          ) : null}
-          {userId && !manualMode ? (
+          {flight && !manualMode ? (
             <button
               type="button"
-              onClick={() => (cellarMode ? setCellarMode(false) : openCellar())}
+              onClick={() => openSheet("cellar")}
               className="inline-flex items-center gap-1.5 self-start rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <Warehouse className="size-4" />{" "}
-              {cellarMode ? "Hide my cellar" : "Choose from my cellar"}
+              <Warehouse className="size-4" /> Choose from my cellar
             </button>
-          ) : null}
-          {cellarMode && userId ? (
-            <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
-              <CellarLotPicker
-                lots={cellarLots}
-                selectedLotId={selectedLotId}
-                onPick={(l) => setSelectedLotId(l.lotId)}
-              />
-              {cellarLots && cellarLots.length > 0 ? (
-                <>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={consumeBottle}
-                      onChange={(e) => setConsumeBottle(e.target.checked)}
-                    />
-                    Remove a bottle from my cellar
-                  </label>
-                  {cellarWarning ? (
-                    <div className="flex flex-col gap-2 text-sm text-amber-600">
-                      <span>Added to the tasting — {cellarWarning}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          router.push(`/tastings/${tastingId}`);
-                          router.refresh();
-                        }}
-                      >
-                        Go to the tasting
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={submitCellar}
-                      disabled={cellarPending || !selectedLotId}
-                    >
-                      {cellarPending ? (
-                        <>
-                          <WineGlassLoader /> Adding…
-                        </>
-                      ) : (
-                        "Add this bottle to the tasting"
-                      )}
-                    </Button>
-                  )}
-                  {cellarError ? (
-                    <p className="text-sm text-destructive">{cellarError}</p>
-                  ) : null}
-                </>
-              ) : null}
-            </div>
           ) : null}
         </div>
       ) : null}

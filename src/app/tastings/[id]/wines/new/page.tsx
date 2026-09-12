@@ -67,6 +67,7 @@ export default async function NewWinePage({
     { data: regions },
     { data: grapes },
     { data: typeDesignations },
+    { count: wineCount },
   ] = await Promise.all([
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
@@ -76,6 +77,11 @@ export default async function NewWinePage({
       .select("id, name, category, country_id")
       .eq("is_active", true)
       .order("sort_order"),
+    // The next glass number for the add-wine sheet's flight destination.
+    supabase
+      .from("wines")
+      .select("id", { count: "exact", head: true })
+      .eq("tasting_id", tastingId),
   ]);
 
   return (
@@ -97,6 +103,12 @@ export default async function NewWinePage({
             regions={regions ?? []}
             grapes={grapes ?? []}
             typeDesignations={typeDesignations ?? []}
+            flight={{
+              tastingName: tasting.name,
+              revealMode: tasting.reveal_mode,
+              wineSource: tasting.wine_source,
+              position: (wineCount ?? 0) + 1,
+            }}
           />
         </CardContent>
       </Card>

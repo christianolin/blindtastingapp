@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { signIn, type AuthFormState } from "./actions";
 
-export function LoginForm() {
+export function LoginForm({ next = null }: { next?: string | null }) {
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(
     signIn,
     null,
@@ -16,6 +16,7 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoFocus />
@@ -38,7 +39,10 @@ export function LoginForm() {
       </Button>
       <p className="text-sm text-muted-foreground">
         No account yet?{" "}
-        <Link href="/signup" className="font-medium text-primary transition-colors hover:text-primary/80">
+        <Link
+          href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
+          className="font-medium text-primary transition-colors hover:text-primary/80"
+        >
           Sign up
         </Link>
       </p>

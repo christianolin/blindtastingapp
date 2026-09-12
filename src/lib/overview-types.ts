@@ -3,6 +3,8 @@
 // independently. Every field is computed from RLS-readable rows or an existing
 // SECURITY DEFINER RPC — no new migrations.
 
+import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
+
 export type DistributionItem = { label: string; count: number };
 
 export type LiveBanner = {
@@ -11,7 +13,9 @@ export type LiveBanner = {
   name: string;
   hosting: boolean;
   hostName: string;
-  revealMode: "BLIND" | "SEMI_BLIND" | "OPEN";
+  revealMode: RevealMode;
+  /** Rides along for the add-wine sheet's flight destination (7i hint). */
+  wineSource: WineSourceMode;
   /** 1-based index of the wine in play (the first not-fully-revealed wine). */
   wineIndex: number;
   wineCount: number;
@@ -41,6 +45,10 @@ export type NextUpBanner = {
   slots: { label: string; filled: boolean; note?: string }[];
   canAddWine: boolean;
   nextWinePosition: number;
+  /** The add-wine sheet's flight destination needs both — "Add wine N" opens
+      the sheet, not the legacy page. */
+  revealMode: RevealMode;
+  wineSource: WineSourceMode;
 };
 
 export type EmptyBanner = { kind: "none" };

@@ -135,9 +135,17 @@ export async function updateSchedule(
   const tasting = await assertHost(supabase, tastingId, user.id);
   if (!tasting) return { error: "Only the host can edit the schedule." };
 
+  // `scheduled_at_iso` (the client's own zone conversion, as in
+  // tastings/new/actions.ts) wins; the raw datetime-local value is the
+  // legacy fallback, parsed in the server's zone as before.
+  const iso = String(formData.get("scheduled_at_iso") ?? "").trim();
   const raw = String(formData.get("scheduled_at") ?? "").trim();
-  // datetime-local gives "YYYY-MM-DDTHH:mm" in local time; store as ISO.
-  const scheduledAt = raw ? new Date(raw).toISOString() : null;
+  const parsed = raw ? new Date(raw) : null;
+  const scheduledAt = iso
+    ? iso
+    : parsed && !Number.isNaN(parsed.getTime())
+      ? parsed.toISOString()
+      : null;
 
   const { error } = await supabase
     .from("tastings")
@@ -282,6 +290,47 @@ export async function moveWine(formData: FormData): Promise<void> {
   await supabase.from("wines").update({ position: b.position }).eq("id", a.id);
 
   revalidatePath(`/tastings/${tastingId}`);
+}
+
+// Host removes a wine from a draft flight (the create sheet's per-row ✕).
+// Deletes the `wines` row — wine_answers / guesses cascade — then closes the
+// gap in `position` so the next add (count + 1) can't collide with a
+// surviving row on the (tasting_id, position) unique constraint. Shifting
+// ascending is safe: each row moves into the slot the previous one just left.
+export async function removeWine(
+  tastingId: string,
+  wineId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const { supabase, user } = await requireUser();
+  const tasting = await assertHost(supabase, tastingId, user.id);
+  if (!tasting) return { error: "Only the host can remove wines." };
+  if (tasting.status !== "DRAFT") {
+    return { error: "Wines can only be removed before the tasting starts." };
+  }
+
+  const { data: wines } = await supabase
+    .from("wines")
+    .select("id, position")
+    .eq("tasting_id", tastingId)
+    .order("position");
+  const ordered = wines ?? [];
+  const removed = ordered.find((w) => w.id === wineId);
+  if (!removed) return { error: "That wine is no longer in the flight." };
+
+  const { error } = await supabase.from("wines").delete().eq("id", wineId);
+  if (error) return { error: error.message };
+
+  for (const w of ordered) {
+    if (w.position > removed.position) {
+      await supabase
+        .from("wines")
+        .update({ position: w.position - 1 })
+        .eq("id", w.id);
+    }
+  }
+
+  revalidatePath(`/tastings/${tastingId}`);
+  return { ok: true };
 }
 
 // A participant responds to their invite. Accept -> JOINED (can now guess);

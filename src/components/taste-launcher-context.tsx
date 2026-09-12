@@ -1,14 +1,15 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { NewTastingModal } from "./new-tasting-modal";
+import { NewTastingSheet } from "./new-tasting-sheet";
 import { RateWineModal } from "./rate-wine-modal";
 import { NewNoteModal } from "./new-note-modal";
 
-// Which Taste flow to launch. Blind / semi-blind / open create a tasting
-// popup ("open" = group Taste & Rate, nothing hidden); rate opens the solo
-// "find a wine to note" picker.
-export type TasteKind = "blind" | "semi-blind" | "rate" | "open";
+// Which Taste flow to launch. Blind / semi-blind open the create-tasting
+// sheet with that mode as the DEFAULT (the tiles inside switch it); rate
+// opens the solo "find a wine to note" picker. "open" (group Taste & Rate)
+// is not a launcher flow — OPEN is drawn as "Soon" in the sheet.
+export type TasteKind = "blind" | "semi-blind" | "rate";
 
 type Ctx = { openTaste: (kind: TasteKind) => void };
 const TasteCtx = createContext<Ctx | null>(null);
@@ -34,17 +35,18 @@ export function TasteLauncherProvider({
     lotId?: string;
     consume?: boolean;
   } | null>(null);
+  const sheetOpen = open === "blind" || open === "semi-blind";
   return (
     <TasteCtx.Provider value={{ openTaste: setOpen }}>
       {children}
-      {open === "blind" ? (
-        <NewTastingModal reveal="BLIND" userId={userId} onClose={() => setOpen(null)} />
-      ) : null}
-      {open === "semi-blind" ? (
-        <NewTastingModal reveal="SEMI_BLIND" userId={userId} onClose={() => setOpen(null)} />
-      ) : null}
-      {open === "open" ? (
-        <NewTastingModal reveal="OPEN" userId={userId} onClose={() => setOpen(null)} />
+      {sheetOpen ? (
+        <NewTastingSheet
+          // Remount per launch so a second open starts on a fresh step 1.
+          key={open}
+          userId={userId}
+          defaultReveal={open === "semi-blind" ? "SEMI_BLIND" : "BLIND"}
+          onClose={() => setOpen(null)}
+        />
       ) : null}
       {open === "rate" ? (
         <RateWineModal
