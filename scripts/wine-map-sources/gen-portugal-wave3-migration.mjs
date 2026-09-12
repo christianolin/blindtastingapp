@@ -1,0 +1,242 @@
+// Emit the Portugal wave-3 migration: statute-verified corrections to three
+// region/appellation footprints and four Vinho Verde sub-regions.
+//
+// Wave 1 built Portugal's footprints from consortium and tourism sources
+// rather than from the governing diploma. Wave 2 caught that for the Douro.
+// This wave went back to the statutes for the rest and found three more wrong:
+//
+//   Minho     DL 449/99 art. 2 lists 46 whole concelhos plus part of Resende
+//             and one freguesia of Oliveira de Azemeis. Wave 1 used the union
+//             of the NINE SUB-REGIONS as if it were the DO area, missing every
+//             concelho that belongs to no sub-region -- Caminha, Valenca,
+//             Gondomar, Maia, Matosinhos, Valongo, Arouca and more.
+//             7061 km2 -> 8398 km2.
+//   Bairrada  Portaria 212/2014 art. 3 includes only Anadia, Mealhada and
+//             Oliveira do Bairro whole; Agueda, Aveiro, Cantanhede, Coimbra
+//             and Vagos contribute named freguesias. Wave 1 took all eight
+//             whole. 1823 km2 -> 1049 km2, i.e. 42% of what shipped was
+//             outside the DO.
+//   Palmela   Portaria 783/2009 art. 2 is Montijo, Palmela and Setubal whole
+//             plus Sesimbra's freguesia of Castelo. Wave 1 omitted Sesimbra,
+//             and its recorded rationale had been taken by mistake from the
+//             Maca Riscadinha de Palmela APPLE DOP. 1044 km2 -> 1223 km2.
+//
+// Plus four Vinho Verde sub-regions that split a concelho between them
+// (Portaria 28/2001): Vizela divides between Ave and Sousa, Cinfaes between
+// Baiao and Paiva, and Baiao takes Resende except Barro, which is Douro.
+//
+// Old boundaries are retired, not deleted, so every correction stays auditable.
+//
+// Usage: node scripts/wine-map-sources/gen-portugal-wave3-migration.mjs
+import { readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+
+const OUT = "supabase/migrations/20260912100000_portugal_wave3_statute_corrections.sql";
+const ART = "data/wine-map/portugal-wave3-dissolved.geojson";
+const REVISION = "20260912T100000Z";
+const WINDOW = [-9.6, 36.9, -6.1, 42.2];
+
+const sha256 = (buf) => createHash("sha256").update(buf).digest("hex").toUpperCase();
+const sq = (s) => String(s).replace(/'/g, "''");
+
+// footprint -> the places sharing it, exactly as wave 1 assigned them.
+const ZONES = [
+  ["minho", ["portugal.minho", "portugal.minho.vinho-verde"]],
+  ["bairrada", ["portugal.bairrada", "portugal.bairrada.bairrada"]],
+  ["palmela", ["portugal.peninsula-de-setubal.palmela", "portugal.peninsula-de-setubal.setubal"]],
+  ["minho-ave", ["portugal.minho.ave"]],
+  ["minho-baiao", ["portugal.minho.baiao"]],
+  ["minho-paiva", ["portugal.minho.paiva"]],
+  ["minho-sousa", ["portugal.minho.sousa"]],
+];
+
+// Expected area bands, from the measurement recorded in the header. A
+// regression that restored an old footprint would pass every other gate.
+const EXPECTED_KM2 = {
+  "portugal.minho": [7900, 8900],
+  "portugal.bairrada": [900, 1200],
+  "portugal.peninsula-de-setubal.palmela": [1100, 1350],
+};
+
+const buf = await readFile(ART);
+const art = JSON.parse(buf.toString("utf8"));
+const byName = new Map(art.features.map((f) => [f.properties.name, f]));
+const checksum = sha256(buf);
+const allKeys = ZONES.flatMap(([, keys]) => keys);
+
+let sql = `-- Portugal wave 3: statute-verified corrections.
+--
+-- Wave 1 built Portugal's footprints from consortium and tourism sources
+-- rather than the governing diploma. Wave 2 caught that for the Douro; going
+-- back to the statutes for the rest found three more wrong.
+--
+--   Minho     DL 449/99 art. 2. Wave 1 used the union of the nine sub-regions
+--             as if it were the DO area, so every concelho belonging to no
+--             sub-region was missing -- Caminha, Valenca, Gondomar, Maia,
+--             Matosinhos, Valongo, Arouca among them. 7061 -> 8398 km2.
+--   Bairrada  Portaria 212/2014 art. 3. Only three concelhos are whole; five
+--             contribute named freguesias. Wave 1 took all eight whole, so
+--             42% of the shipped area was outside the DO. 1823 -> 1049 km2.
+--   Palmela   Portaria 783/2009 art. 2. Sesimbra's freguesia of Castelo was
+--             missing, and the recorded rationale had been taken in error from
+--             the Maca Riscadinha de Palmela apple DOP. 1044 -> 1223 km2.
+--
+-- Four Vinho Verde sub-regions are also refined (Portaria 28/2001): Vizela
+-- splits between Ave and Sousa, Cinfaes between Baiao and Paiva, and Baiao
+-- takes Resende except Barro, which belongs to the Douro.
+--
+-- CAOP 2025 shows several 2013 parish amalgamations since de-merged, so where
+-- a statute names a single freguesia it can now usually be included exactly
+-- rather than via its whole union. The exceptions are recorded per footprint.
+--
+-- Old boundaries are retired rather than deleted, keeping the corrections
+-- auditable. Generated by scripts/wine-map-sources/gen-portugal-wave3-migration.mjs.
+
+begin;
+
+update wine_place_boundaries b
+set is_current = false
+from wine_places p
+where p.id = b.wine_place_id
+  and p.canonical_key in (${allKeys.map((k) => `'${k}'`).join(", ")})
+  and b.is_current;
+
+`;
+
+for (const [slug, keys] of ZONES) {
+  const feat = byName.get(slug);
+  if (!feat) throw new Error(`footprint ${slug} missing from ${ART}`);
+  const props = feat.properties;
+  sql += `-- ${slug}: ${props.units} CAOP units${keys.length > 1 ? `, shared by ${keys.length} places` : ""}.
+with src as (
+  insert into wine_boundary_sources (source_namespace, source_feature_id, authority, jurisdiction)
+  values ('CAOP_FREGUESIAS', 'caop2025-statute-union:${slug}', 'Direção-Geral do Território', 'Portugal')
+  on conflict (source_namespace, source_feature_id) do update set authority = excluded.authority
+  returning id
+),
+snap as (
+  insert into wine_boundary_source_snapshots (
+    source_id, source_revision, retrieved_at, source_url, licence,
+    normalized_artifact_uri, normalized_checksum_sha256, provenance_note, importer_version
+  )
+  select id, '${REVISION}', now(),
+         'https://ogcapi.dgterritorio.gov.pt/collections/freguesias',
+         'CC BY 4.0 — © Direção-Geral do Território',
+         '${ART}', '${checksum}',
+         '${sq(props.legal ?? slug)}',
+         'scripts/wine-map-sources/build-portugal-freguesia-union.mjs'
+  from src returning id
+),
+geom as (
+  select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(
+    extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('${JSON.stringify(feat.geometry)}'), 4326)), 3)) g
+)
+insert into wine_place_boundaries (
+  wine_place_id, source_snapshot_id, boundary_method, quality_status,
+  display_geometry, label_point, bbox, source_feature_refs,
+  generation_parameters, revision, is_current, reviewed_at
+)
+select p.id, snap.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED', geom.g,
+       extensions.ST_PointOnSurface(geom.g),
+       array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
+             extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
+       jsonb_build_object('footprint', '${slug}', 'caop_units', ${props.units},
+                          'statute_freguesias', ${props.statute_names},
+                          'whole_concelhos', ${props.whole_concelhos}),
+       jsonb_build_object(
+         'engine', 'caop2025-freguesia-union',
+         'simplify', 'mapshaper 6% Visvalingam, keep-shapes',
+         'holes', 'dropped',
+         'coordinate_precision', 5,
+         'supersedes', 'wave-1 footprint built from a non-statutory source',
+         'partial_notes', '${sq(JSON.stringify(props.partial ?? {}))}'::jsonb,
+         'shares_zone_with', ${keys.length > 1 ? `jsonb_build_array(${keys.map((k) => `'${k}'`).join(", ")})` : "null"}
+       ),
+       '${REVISION}', true, now()
+from wine_places p, snap, geom
+where p.canonical_key in (${keys.map((k) => `'${k}'`).join(", ")});
+
+`;
+}
+
+sql += `do $$
+declare
+  n int;
+  bad record;
+  km2 numeric;
+begin
+  select count(*) into n
+  from wine_place_boundaries b join wine_places p on p.id = b.wine_place_id
+  where p.canonical_key like 'portugal%' and b.is_current and b.revision = '${REVISION}';
+  if n <> ${allKeys.length} then
+    raise exception 'expected ${allKeys.length} new current boundaries, got %', n;
+  end if;
+
+  for bad in
+    select p.canonical_key, count(*) c
+    from wine_place_boundaries b join wine_places p on p.id = b.wine_place_id
+    where p.canonical_key like 'portugal%' and b.is_current
+    group by 1 having count(*) <> 1
+  loop
+    raise exception '% has % current boundaries', bad.canonical_key, bad.c;
+  end loop;
+
+  -- Every corrected place must keep a retired predecessor, so the mistake
+  -- stays in the boundary history rather than vanishing.
+  select count(*) into n
+  from wine_places p
+  where p.canonical_key in (${allKeys.map((k) => `'${k}'`).join(", ")})
+    and not exists (
+      select 1 from wine_place_boundaries b
+      where b.wine_place_id = p.id and not b.is_current);
+  if n <> 0 then raise exception '% corrected places have no retired boundary', n; end if;
+
+`;
+
+for (const [key, [lo, hi]] of Object.entries(EXPECTED_KM2)) {
+  sql += `  select round((extensions.ST_Area(b.display_geometry::extensions.geography) / 1e6)::numeric)
+    into km2
+  from wine_place_boundaries b join wine_places p on p.id = b.wine_place_id
+  where p.canonical_key = '${key}' and b.is_current;
+  if km2 not between ${lo} and ${hi} then
+    raise exception 'corrected ${key} is % km2, outside the expected ${lo}-${hi} band', km2;
+  end if;
+
+`;
+}
+
+sql += `  -- Sub-regions must still sit inside their region. Independent
+  -- simplification makes strict containment the wrong test; overlap area is
+  -- the invariant that encodes membership.
+  for bad in
+    select c.canonical_key,
+           extensions.ST_Area(extensions.ST_Intersection(cb.display_geometry, pb.display_geometry))
+             / nullif(extensions.ST_Area(cb.display_geometry), 0) as inside
+    from wine_places c
+    join wine_places parent on parent.id = c.primary_parent_id
+    join wine_place_boundaries cb on cb.wine_place_id = c.id and cb.is_current
+    join wine_place_boundaries pb on pb.wine_place_id = parent.id and pb.is_current
+    where c.kind = 'SUBREGION' and c.canonical_key like 'portugal.%'
+  loop
+    if bad.inside is null or bad.inside < 0.995 then
+      raise exception 'sub-region % lies only %%% inside its region',
+        bad.canonical_key, round((coalesce(bad.inside, 0) * 100)::numeric, 3);
+    end if;
+  end loop;
+
+  for bad in
+    select p.canonical_key, b.bbox
+    from wine_place_boundaries b join wine_places p on p.id = b.wine_place_id
+    where b.revision = '${REVISION}' and b.is_current
+      and (b.bbox[1] < ${WINDOW[0]} or b.bbox[2] < ${WINDOW[1]}
+        or b.bbox[3] > ${WINDOW[2]} or b.bbox[4] > ${WINDOW[3]})
+  loop
+    raise exception 'boundary for % escapes the mainland window: %', bad.canonical_key, bad.bbox;
+  end loop;
+end $$;
+
+commit;
+`;
+
+await writeFile(OUT, sql);
+console.log(`WROTE ${OUT} bytes=${Buffer.byteLength(sql)} zones=${ZONES.length} boundaries=${allKeys.length}`);

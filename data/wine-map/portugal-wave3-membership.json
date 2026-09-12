@@ -1,0 +1,254 @@
+{
+  "_note": "Portugal wave 3: statute-verified corrections. Wave 1 built these three footprints from consortium and tourism sources rather than the governing diploma, and all three were wrong. Same failure mode as the Douro, caught the same way — by reading the delimitation article itself.",
+  "_output": "data/wine-map/portugal-wave3-dissolved.geojson",
+  "_sources": {
+    "minho": "Decreto-Lei n.º 449/99 de 4 de Novembro, artigo 2.º (Delimitação da região). Verified from the raw statute text, not a summary. Wave 1 used the union of the NINE SUB-REGIONS (Portaria 28/2001) as if it were the DO area; the DO is larger and takes in concelhos that belong to no sub-region at all, including Gondomar, Maia, Matosinhos and Valongo on Porto's edge.",
+    "bairrada": "Portaria n.º 212/2014, artigo 3.º (Delimitação da área de produção). Only three concelhos are included whole; five contribute named freguesias. Wave 1 included all eight whole.",
+    "palmela": "Portaria n.º 783/2009, artigo 2.º (Delimitação da Região). Montijo, Palmela and Setúbal whole plus the freguesia of Castelo in Sesimbra. Wave 1's recorded rationale was taken in error from the Maçã Riscadinha de Palmela APPLE DOP, which delimits different freguesias entirely.",
+    "minho_subregions": "Portaria n.º 28/2001 de 16 de Janeiro, n.º 1.º. Verified from raw statute text. Four sub-regions split two concelhos between them: Vizela is divided between Ave and Sousa, and Cinfaes between Baiao and Paiva, while Baiao takes all of Resende except Barro (which is Douro). Wave 1 gave all four whole concelhos, so Ave and Baiao were over-inclusive and Paiva and Sousa under-inclusive."
+  },
+  "concordance": {},
+  "footprints": {
+    "minho": {
+      "legal": "DL 449/99 art. 2: (a) 43 whole concelhos, (c) Arouca, Castelo de Paiva and Vale de Cambra whole, (b) 14 named freguesias of Resende, (d) the freguesia of Ossela in Oliveira de Azemeis.",
+      "whole_concelhos": [
+        "Melgaço",
+        "Monção",
+        "Caminha",
+        "Paredes de Coura",
+        "Valença",
+        "Vila Nova de Cerveira",
+        "Arcos de Valdevez",
+        "Ponte da Barca",
+        "Ponte de Lima",
+        "Viana do Castelo",
+        "Amares",
+        "Barcelos",
+        "Braga",
+        "Esposende",
+        "Fafe",
+        "Guimarães",
+        "Póvoa de Lanhoso",
+        "Santo Tirso",
+        "Trofa",
+        "Vieira do Minho",
+        "Vila Nova de Famalicão",
+        "Vila Verde",
+        "Terras de Bouro",
+        "Cabeceiras de Basto",
+        "Celorico de Basto",
+        "Mondim de Basto",
+        "Ribeira de Pena",
+        "Gondomar",
+        "Maia",
+        "Matosinhos",
+        "Póvoa de Varzim",
+        "Valongo",
+        "Vila do Conde",
+        "Felgueiras",
+        "Lousada",
+        "Paços de Ferreira",
+        "Paredes",
+        "Penafiel",
+        "Vizela",
+        "Amarante",
+        "Marco de Canaveses",
+        "Baião",
+        "Cinfães",
+        "Arouca",
+        "Castelo de Paiva",
+        "Vale de Cambra"
+      ],
+      "freguesias": {
+        "Resende": [
+          "Anreade",
+          "Cárquere",
+          "Feirão",
+          "Felgueiras",
+          "Freigil",
+          "Miomães",
+          "Ovadas",
+          "Panchorra",
+          "Paus",
+          "Resende",
+          "São Cipriano",
+          "São João de Fontoura",
+          "São Martinho de Mouros",
+          "São Romão de Aregos"
+        ],
+        "Oliveira de Azeméis": [
+          "Ossela"
+        ]
+      },
+      "partial": {
+        "Resende": "the statute names 14 freguesias, i.e. all of Resende except Barro, which is Douro (Baixo Corgo) under DL 173/2009",
+        "Oliveira de Azemeis / Ossela": "only this one freguesia of the concelho"
+      }
+    },
+    "bairrada": {
+      "legal": "Portaria 212/2014 art. 3: Anadia, Mealhada and Oliveira do Bairro whole, plus named freguesias of Agueda, Aveiro, Cantanhede, Coimbra and Vagos.",
+      "whole_concelhos": [
+        "Anadia",
+        "Mealhada",
+        "Oliveira do Bairro"
+      ],
+      "freguesias": {
+        "Águeda": [
+          "União das freguesias de Recardães e Espinhel",
+          "Águeda",
+          "Borralha",
+          "Barrô",
+          "Aguada de Baixo",
+          "União das freguesias de Travassô e Óis da Ribeira",
+          "Belazaima do Chão",
+          "Aguada de Cima",
+          "Fermentelos",
+          "Valongo do Vouga"
+        ],
+        "Aveiro": [
+          "Requeixo, Nossa Senhora de Fátima e Nariz"
+        ],
+        "Cantanhede": [
+          "União das freguesias de Sepins e Bolho",
+          "União das freguesias de Vilamar e Corticeiro de Cima",
+          "União das freguesias de Covões e Camarneira",
+          "União das freguesias de Portunhos e Outil",
+          "Cantanhede",
+          "Pocariça",
+          "Ançã",
+          "Cadima",
+          "Cordinhã",
+          "Febres",
+          "Murtede",
+          "Ourentã",
+          "Sanguinheira",
+          "São Caetano"
+        ],
+        "Coimbra": [
+          "União das freguesias de Souselas e Botão",
+          "União das freguesias de Trouxemil e Torre de Vilela",
+          "União das freguesias de Antuzede e Vil de Matos"
+        ],
+        "Vagos": [
+          "Covão do Lobo",
+          "Santa Catarina",
+          "Ouca",
+          "Sosa"
+        ]
+      },
+      "partial": {
+        "Agueda / Travasso e Ois da Ribeira": "statute names only Ois da Ribeira; CAOP still carries this as one union, so Travasso is included with it",
+        "Aveiro / Requeixo, Nossa Senhora de Fatima e Nariz": "statute names only Nariz; CAOP still carries this as one union",
+        "Coimbra / Antuzede e Vil de Matos": "statute names only Vil de Matos; CAOP still carries this as one union",
+        "_note": "Agueda's Agueda/Borralha/Barro/Aguada de Baixo/Belazaima do Chao and Vagos' Covao do Lobo and Santa Catarina were 2013 unions that CAOP 2025 shows de-merged, so those are now included exactly as the statute names them rather than as whole unions."
+      }
+    },
+    "palmela": {
+      "legal": "Portaria 783/2009 art. 2: the municipalities of Montijo, Palmela and Setubal, and the freguesia of Castelo in Sesimbra.",
+      "whole_concelhos": [
+        "Montijo",
+        "Palmela",
+        "Setúbal"
+      ],
+      "freguesias": {
+        "Sesimbra": [
+          "Castelo"
+        ]
+      },
+      "partial": {}
+    },
+    "minho-ave": {
+      "legal": "Portaria 28/2001 1.º b): nine whole concelhos plus Vizela except the freguesias of Vizela (Santo Adriao) and Barrosas (Santa Eulalia), which belong to Sousa.",
+      "whole_concelhos": [
+        "Vila Nova de Famalicão",
+        "Fafe",
+        "Guimarães",
+        "Santo Tirso",
+        "Trofa",
+        "Póvoa de Lanhoso",
+        "Vieira do Minho",
+        "Póvoa de Varzim",
+        "Vila do Conde"
+      ],
+      "freguesias": {
+        "Vizela": [
+          "Infias",
+          "União das freguesias de Caldas de Vizela (São Miguel e São João)",
+          "Tagilde",
+          "Vizela (São Paio)"
+        ]
+      },
+      "partial": {}
+    },
+    "minho-baiao": {
+      "legal": "Portaria 28/2001 1.º c): Baiao whole, Resende except Barro, Cinfaes except Travanca and Souselo.",
+      "whole_concelhos": [
+        "Baião"
+      ],
+      "freguesias": {
+        "Resende": [
+          "Cárquere",
+          "Paus",
+          "Resende",
+          "São Cipriano",
+          "São João de Fontoura",
+          "São Martinho de Mouros",
+          "União das freguesias de Anreade e São Romão de Aregos",
+          "União das freguesias de Felgueiras e Feirão",
+          "União das freguesias de Freigil e Miomães",
+          "União das freguesias de Ovadas e Panchorra"
+        ],
+        "Cinfães": [
+          "Cinfães",
+          "Espadanedo",
+          "Ferreiros de Tendais",
+          "Fornelos",
+          "Moimenta",
+          "Nespereira",
+          "Oliveira do Douro",
+          "Santiago de Piães",
+          "São Cristóvão de Nogueira",
+          "Tarouquela",
+          "Tendais",
+          "União das freguesias de Alhões, Bustelo, Gralheira e Ramires"
+        ]
+      },
+      "partial": {
+        "Resende / Barro": "excluded — it is Douro (Baixo Corgo) under DL 173/2009",
+        "Cinfaes / Travanca, Souselo": "excluded — they belong to the Paiva sub-region"
+      }
+    },
+    "minho-paiva": {
+      "legal": "Portaria 28/2001 1.º h): the concelho of Castelo de Paiva, plus the freguesias of Travanca and Souselo in Cinfaes.",
+      "whole_concelhos": [
+        "Castelo de Paiva"
+      ],
+      "freguesias": {
+        "Cinfães": [
+          "Travanca",
+          "Souselo"
+        ]
+      },
+      "partial": {}
+    },
+    "minho-sousa": {
+      "legal": "Portaria 28/2001 1.º i): five whole concelhos, plus the freguesias of Vizela (Santo Adriao) and Barrosas (Santa Eulalia) in Vizela.",
+      "whole_concelhos": [
+        "Paços de Ferreira",
+        "Paredes",
+        "Lousada",
+        "Felgueiras",
+        "Penafiel"
+      ],
+      "freguesias": {
+        "Vizela": [
+          "Vizela (Santo Adrião)",
+          "Santa Eulália"
+        ]
+      },
+      "partial": {
+        "Vizela / Santa Eulalia": "the statute writes this as Barrosas (Santa Eulalia); CAOP 2025 carries it as Santa Eulalia within Vizela"
+      }
+    }
+  }
+}

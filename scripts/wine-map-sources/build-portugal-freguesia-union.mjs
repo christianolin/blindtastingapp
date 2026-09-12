@@ -152,7 +152,9 @@ if (hadError) {
   process.exit(1);
 }
 
-const outPath = "data/wine-map/portugal-freguesias-dissolved.geojson";
+// Each wave writes its own artifact so an earlier wave's pinned checksum
+// stays valid; the config names it.
+const outPath = cfg._output ?? "data/wine-map/portugal-freguesias-dissolved.geojson";
 await writeFile(outPath, JSON.stringify({
   type: "FeatureCollection",
   _provenance: {
