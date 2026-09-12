@@ -19,9 +19,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
+  flowApplies,
+  leaderboardApplies,
   nameSuggestions,
+  rulesHint,
   rulesSummary,
   rulesSummaryShort,
+  WINE_SOURCE_LOCKED,
   type FlowChoice,
   type SetupValues,
 } from "./setup-copy";
@@ -55,6 +59,7 @@ export function NewTastingForm({
   onPhotoUploadingChange,
   autoFocusName = false,
   regionSuggestion = null,
+  wineCount = 0,
 }: {
   value: SetupValues;
   /** Always an updater (pass the sheet's setState) — see `set` below. */
@@ -69,10 +74,15 @@ export function NewTastingForm({
   /** Desktop only — an autofocus on phones pops the keyboard over the sheet. */
   autoFocusName?: boolean;
   regionSuggestion?: { region: string; n: number } | null;
+  /** Bottles already in the flight (the sheet passes it when the host comes
+      back to step 1). Above 0, who brings the wines is locked — the server
+      refuses the switch too (spec §D.1 #3). */
+  wineCount?: number;
 }) {
   const nameId = useId();
   const rulesId = useId();
   const photoLabelId = useId();
+  const sourceHintId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   // Functional updates: the cover photo's URL arrives from an async upload,
@@ -81,6 +91,12 @@ export function NewTastingForm({
   const set = <K extends keyof SetupValues>(key: K, v: SetupValues[K]) =>
     onChange((prev) => ({ ...prev, [key]: v }));
   const blind = value.revealMode === "BLIND";
+  // Flow exists only for blind LIVE tastings, the Leaderboard only for blind
+  // LIVE Guided ones (spec §D.1 #1, #5) — the same rules the summaries use.
+  const showFlow = flowApplies(value);
+  const showLeaderboard = leaderboardApplies(value);
+  const hint = rulesHint(value);
+  const sourceLocked = wineCount > 0;
   const suggestions = nameSuggestions(new Date(), regionSuggestion);
 
   // Focus in an effect, not `autoFocus`: on the SSR'd /tastings/new page the
@@ -204,16 +220,28 @@ export function NewTastingForm({
             label="Who pours"
             value={value.wineSource}
             onChange={(v) => set("wineSource", v)}
+            describedBy={sourceLocked ? sourceHintId : undefined}
             options={[
-              { value: "HOST_PROVIDES", desktop: "I bring the wines", phone: "I bring them" },
+              {
+                value: "HOST_PROVIDES",
+                desktop: "I bring the wines",
+                phone: "I bring them",
+                disabled: sourceLocked && value.wineSource !== "HOST_PROVIDES",
+              },
               {
                 value: "PARTICIPANT_CONTRIBUTED",
                 desktop: "Everyone brings one",
                 phone: "Everyone brings",
+                disabled: sourceLocked && value.wineSource !== "PARTICIPANT_CONTRIBUTED",
               },
             ]}
           />
         </div>
+        {sourceLocked ? (
+          <p id={sourceHintId} className="text-[11.5px] leading-[1.5] text-muted-foreground">
+            {WINE_SOURCE_LOCKED}
+          </p>
+        ) : null}
         <label className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-border bg-white p-[11px_13px] md:gap-[10px]">
           <Calendar className="size-4 shrink-0 text-muted-foreground max-md:hidden" aria-hidden />
           <span className="sr-only">Date and time</span>
@@ -286,15 +314,13 @@ export function NewTastingForm({
             />
           </button>
         </div>
-        {blind && !rulesOpen ? (
+        {hint && !rulesOpen ? (
           <span className="text-[11.5px] leading-[1.5] text-muted-foreground max-md:hidden">
-            Guided means everyone tastes the same glass at once and you drive the
-            reveal. Fine for almost every tasting — open this only if you want free
-            order or a quieter leaderboard.
+            {hint}
           </span>
         ) : null}
         <div id={rulesId} hidden={!rulesOpen} className="flex flex-col gap-4 pt-1">
-          {blind ? (
+          {showFlow ? (
             <div className="flex flex-col gap-2">
               <Label className="text-[12.5px]">Flow</Label>
               <Select
@@ -316,7 +342,7 @@ export function NewTastingForm({
               </p>
             </div>
           ) : null}
-          {blind ? (
+          {showLeaderboard ? (
             <div className="flex flex-col gap-2">
               <Label className="text-[12.5px]">Leaderboard</Label>
               <Select
@@ -440,16 +466,21 @@ function Segmented<T extends string>({
   value,
   onChange,
   options,
+  describedBy,
 }: {
   label: string;
   value: T;
   onChange: (v: T) => void;
-  options: { value: T; desktop: string; phone: string }[];
+  /** A disabled option can't be picked (e.g. the wine source once wines exist). */
+  options: { value: T; desktop: string; phone: string; disabled?: boolean }[];
+  /** Id of the hint explaining a disabled option. */
+  describedBy?: string;
 }) {
   return (
     <div
       role="radiogroup"
       aria-label={label}
+      aria-describedby={describedBy}
       className="flex flex-1 gap-[3px] rounded-[10px] bg-muted p-[3px] md:min-w-[250px]"
     >
       {options.map((o) => {
@@ -460,12 +491,15 @@ function Segmented<T extends string>({
             type="button"
             role="radio"
             aria-checked={active}
+            disabled={o.disabled}
             onClick={() => onChange(o.value)}
             className={cn(
               "min-h-11 flex-1 rounded-[8px] p-[10px] text-center text-[12.5px] transition-colors md:min-h-0 md:text-[13px]",
               active
                 ? "bg-card font-semibold text-foreground shadow-[0_1px_2px_rgba(42,33,30,.08)]"
-                : "text-muted-foreground hover:text-foreground",
+                : o.disabled
+                  ? "cursor-not-allowed text-muted-foreground opacity-50"
+                  : "text-muted-foreground hover:text-foreground",
             )}
           >
             <span className="max-md:hidden">{o.desktop}</span>

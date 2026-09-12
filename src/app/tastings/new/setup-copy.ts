@@ -78,17 +78,49 @@ export function buildSetupFormData(v: SetupValues): FormData {
   return fd;
 }
 
+// Guided pacing is a LIVE-only setting (spec §D.1 #1): a self-paced tasting
+// has no shared "current glass" to pace, so the Flow choice — and every
+// Guided/Free word — exists only for blind LIVE tastings. actions.ts stores
+// `sequential_guessing` under the same condition.
+export function flowApplies(v: SetupValues): boolean {
+  return v.revealMode === "BLIND" && v.timingMode === "LIVE";
+}
+
+// The Leaderboard setting only matters while one glass is revealed step by
+// step for everyone at once: blind, LIVE and Guided (spec §D.1 #5). The stored
+// value is written regardless; it just isn't offered or described otherwise.
+export function leaderboardApplies(v: SetupValues): boolean {
+  return flowApplies(v) && v.flow === "GUIDED";
+}
+
+// Who brings the wines can't switch once the flight has bottles (spec §D.1 #3).
+// updateTastingSetup refuses with it; the form shows it as the locked pair's hint.
+export const WINE_SOURCE_LOCKED =
+  "Remove the wines first — who brings the wines can't change once the flight has bottles.";
+
+// The collapsed rules card's desktop hint (handoff 6a), shown only where the
+// Flow choice exists. It promises "a quieter leaderboard" only while the
+// Leaderboard setting is actually behind "Change".
+export function rulesHint(v: SetupValues): string | null {
+  if (!flowApplies(v)) return null;
+  return `Guided means everyone tastes the same glass at once and you drive the reveal. Fine for almost every tasting — open this only if you want free order${
+    leaderboardApplies(v) ? " or a quieter leaderboard" : ""
+  }.`;
+}
+
 // The collapsed rules card, in words (spec Part 2, Step 1 · 4).
 export function rulesSummary(v: SetupValues): string {
   const parts: string[] = [];
   if (v.revealMode === "SEMI_BLIND") {
     parts.push("Semi-blind", "one point per glass");
   } else {
-    parts.push(
-      v.flow === "GUIDED" ? "Guided" : "Free",
-      `standings after ${v.leaderboardReveal === "PER_WINE" ? "the full wine" : "each attribute"}`,
-      "Danish Championship scoring",
-    );
+    if (flowApplies(v)) parts.push(v.flow === "GUIDED" ? "Guided" : "Free");
+    if (leaderboardApplies(v)) {
+      parts.push(
+        `standings after ${v.leaderboardReveal === "PER_WINE" ? "the full wine" : "each attribute"}`,
+      );
+    }
+    parts.push("Danish Championship scoring");
   }
   if (v.timingMode === "ASYNC") {
     parts.push(
@@ -107,10 +139,10 @@ export function rulesSummaryShort(v: SetupValues): string {
   if (v.revealMode === "SEMI_BLIND") {
     parts.push("Semi-blind", "1 pt per glass");
   } else {
-    parts.push(
-      v.flow === "GUIDED" ? "Guided" : "Free",
-      v.leaderboardReveal === "PER_WINE" ? "per wine" : "per attribute",
-    );
+    if (flowApplies(v)) parts.push(v.flow === "GUIDED" ? "Guided" : "Free");
+    if (leaderboardApplies(v)) {
+      parts.push(v.leaderboardReveal === "PER_WINE" ? "per wine" : "per attribute");
+    }
   }
   if (v.timingMode === "ASYNC") {
     parts.push(v.asyncRevealPolicy === "IMMEDIATE" ? "results at once" : "results after all");
@@ -135,7 +167,7 @@ export function readySummary({
     setup.revealMode === "SEMI_BLIND" ? "Semi-blind" : "Blind",
     setup.timingMode === "LIVE" ? "live" : "self-paced",
   ];
-  if (setup.revealMode === "BLIND") {
+  if (flowApplies(setup)) {
     parts.push(setup.flow === "GUIDED" ? "guided" : "free");
   }
   parts.push(
