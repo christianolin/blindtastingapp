@@ -67,6 +67,12 @@ export default async function TastingPage({
     (p) => p.user_id === user.id,
   );
   const myStatus = myParticipant?.status ?? null;
+  // Mirrors get_tasting_leaderboard's own guard, which is
+  // `is_tasting_host(...) or is_tasting_participant(...)`. Deliberately not
+  // myStatus === "JOINED": is_tasting_participant admits ANY participant row
+  // whatever its status, so an INVITED user does get real standings from the
+  // RPC, and a stricter gate here would hide a board they are entitled to.
+  const canSeeStandings = isHost || Boolean(myParticipant);
   const hasStarted = tasting.status !== "DRAFT";
   const wineCount = (wines ?? []).length;
   // The running (started) view is a 3-column board; the draft lobby stays a
@@ -567,8 +573,15 @@ export default async function TastingPage({
             <div className="flex justify-end">{addWineButton}</div>
           ) : null}
 
-          {/* Results (~70%) + standings (~30%). */}
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
+          {/* Results (~70%) + standings (~30%), or one column when the viewer
+              is not entitled to the standings and the rail would be dead space. */}
+          <div
+            className={
+              canSeeStandings
+                ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]"
+                : "grid gap-6"
+            }
+          >
             <div className="flex min-w-0 flex-col gap-6">
               {hostConsoleCard}
               {isHost ? winesPanel : null}
@@ -580,21 +593,31 @@ export default async function TastingPage({
                 </p>
               )}
             </div>
-            <aside
-              id="standings"
-              className="scroll-mt-24 lg:sticky lg:top-8 lg:self-start"
-            >
-              {/* Streamed: the standings do their own leaderboard query, and
-                  gating the revealed category behind it made every reveal feel
-                  slow for host and participants alike. */}
-              <Suspense
-                fallback={
-                  <div className="h-40 animate-pulse rounded-lg bg-muted/40" />
-                }
+            {/* An outsider must not get a board at all. get_tasting_leaderboard
+                withholds the scores from them, but it does so by returning NO
+                ROWS, and the panel builds its rows from tasting_participants and
+                profiles, which are readable under RLS. Rendering it anyway
+                produced a scoreboard that looked live and said everyone was on
+                zero — indistinguishable from a tasting where nobody has scored,
+                and wrong: the players had points. Withholding the numbers is not
+                the same as withholding the board. */}
+            {canSeeStandings ? (
+              <aside
+                id="standings"
+                className="scroll-mt-24 lg:sticky lg:top-8 lg:self-start"
               >
-                <StandingsPanel tastingId={id} />
-              </Suspense>
-            </aside>
+                {/* Streamed: the standings do their own leaderboard query, and
+                    gating the revealed category behind it made every reveal feel
+                    slow for host and participants alike. */}
+                <Suspense
+                  fallback={
+                    <div className="h-40 animate-pulse rounded-lg bg-muted/40" />
+                  }
+                >
+                  <StandingsPanel tastingId={id} />
+                </Suspense>
+              </aside>
+            ) : null}
           </div>
         </>
       ) : (
