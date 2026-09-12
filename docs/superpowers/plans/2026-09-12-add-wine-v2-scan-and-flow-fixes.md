@@ -211,6 +211,12 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
 
     Everyone else reads through the host, contributor, `is_revealed` or semi-blind clauses. Code that assumed "a scored guess opens the answer" (profile stats, the create sheet's name suggestion, results) treats unrevealed glasses as hidden.
 
+16. **Overview phone redesign landed first (T10).** Commit ea8cf26 (owner-approved design B, 2026-09-12) already edited `src/app/overview/banner.tsx`, `page.tsx`, the three cards, `add-wine-banner-button.tsx` and `src/components/overview/*`, and added `overview/quick-actions.tsx` and `overview/next-up-meta.ts`. T10 builds on that state:
+    - keep the phone-only meta line under the Next-up title, its `./next-up-meta` import, the `hideActionOnPhone` props and the "Add a wine" label (no position number; fix the stale "Add wine N" comment in `overview-types.ts`);
+    - when T10 removes the padded "Empty" slots (amendment 6) and adds bring-your-own waiting rows, keep the phone banner short: the slot list stays `max-md:hidden`;
+    - if T10 adds a joined-participant count to `NextUpBanner`, pass it as `joinedCount` to `nextUpMeta` so the phone line gains "· {k} in"; do not add the field only for that;
+    - `canAddWine` on the live banner also gates the tile row nothing; the tiles never depend on banner data except `bannerKind`.
+
 ## Working Rules
 
 1. **Ownership.** You may create, edit or delete only the files in your task's **OWNS** list. You may read anything. If the task needs a change in a file you do not own, stop and report the exact change to the orchestrator. Never make that change yourself.
