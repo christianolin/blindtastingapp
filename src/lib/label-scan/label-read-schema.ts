@@ -70,7 +70,7 @@ export const LabelReadSchema = z.object({
   vintageTawnyYears: z.number().int().nullable().describe(
     "For TAWNY only: the stated age in years (10, 20, 30, 40). Null otherwise.",
   ),
-  // the earlier Claude extractor (16e5bd6^) derived this in coerce(); now asked for, and still checked in coerceLabelRead
+  // pre-FastCork derived this in coerce(); now asked for, and still checked in coerceLabelRead
   vintageRead: z.boolean().describe(
     "True only when the vintage year, the NV statement or the tawny age is actually visible in this photo. " +
       "False when you inferred it or could not find it — most still wines carry a vintage somewhere, " +

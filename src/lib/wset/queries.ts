@@ -25,7 +25,7 @@ export type CellarWine = {
   typeDesignationName: string | null;
   /** Typical retail price per bottle in DKK; null when none was found. */
   estimatedPrice: number | null;
-  /** Structured wine profile, from an earlier label read or Manage wine. Each is
+  /** Structured wine profile, as returned by FastCork's label read. Each is
       null when that part wasn't reported. `description` above is the older
       free-text blurb, kept as a fallback for wines with no profile. */
   wineryDescription: string | null;
