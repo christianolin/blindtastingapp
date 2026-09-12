@@ -15,20 +15,30 @@ type LinkState = { url: string; code: string } | "loading" | { error: string };
  * `worksUntilStart` adds the hint for tastings whose link stops working at
  * Start: `join_tasting_by_code` refuses every started tasting except an OPEN
  * one, so only an OPEN tasting's link stays good while it runs.
+ *
+ * `active` holds the fetch back until the row is really shown. The lobby's
+ * host menu is a keep-mounted popover, so its row mounts with the page while
+ * the menu is still closed; fetching on mount there would call
+ * `ensure_join_code` (a write, the first time) on every host page view.
  */
 export function JoinLinkRow({
   tastingId,
   worksUntilStart,
+  active = true,
   className,
 }: {
   tastingId: string;
   worksUntilStart: boolean;
+  /** Fetch the link only once this is true, and keep it true after that.
+      Defaults to fetching on mount (step 3 of the create sheet). */
+  active?: boolean;
   className?: string;
 }) {
   const [link, setLink] = useState<LinkState>("loading");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
     getJoinLink(tastingId)
       .then((r) => {
@@ -40,7 +50,7 @@ export function JoinLinkRow({
     return () => {
       cancelled = true;
     };
-  }, [tastingId]);
+  }, [tastingId, active]);
 
   useEffect(() => {
     if (!copied) return;
@@ -85,7 +95,7 @@ export function JoinLinkRow({
         type="button"
         onClick={() => void copy()}
         disabled={link === "loading" || "error" in link}
-        className="ml-auto min-h-11 shrink-0 rounded-[8px] border border-border bg-background px-[14px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white disabled:opacity-60 md:min-h-0"
+        className="ml-auto min-h-11 shrink-0 rounded-[8px] border border-border bg-background px-[14px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white disabled:opacity-60 md:pointer-fine:min-h-0"
       >
         {copied ? "Copied" : "Copy"}
       </button>
