@@ -219,6 +219,15 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
 
 17. **All tastings replaces the Taste tabs (T10).** The Taste & Rate lane rebuilds `/taste` as "All tastings" with its own row component (`src/app/taste/tasting-row.tsx`), leaving `src/app/taste/tasting-card.tsx` untouched and unused. T10 therefore skips its `tasting-card.tsx` edit when `rg -n "TastingCard" src` shows no importer (Working Rule 5: delete it instead), and `tastingCardStatus` stays a pure helper the row component may import. If the T&R lane has not landed when T10 starts, T10 proceeds as written.
 
+18. **A way out of the "already in your cellar" card (S2, S1, S4, S5a, S5b, F12; owner 2026-09-12).** Owner: "we need a button to skip adding the wine — if you didn't remember you already had it in your cellar inventory on the app and don't want to add it again." The lot step's merge card ("You already have this wine in your cellar." / "Add N to the existing lot" / "Keep as a separate lot") gains a third, quieter action: **"Don't add it"** (a ghost/text button under the two adds, not a third outlined button competing with them).
+    - It writes nothing: no lot, no quantity change, no catalog write, no `label_reads` change.
+    - Single add (phone or laptop): the lot step returns to the view it was opened from (camera on a touch device, the desktop search on a mouse device) with one inline line "Not added — it's already in your cellar" and an "Open it" link to the existing lot. The sheet stays open, as after any laptop add; on a phone the user can scan the next bottle or close.
+    - Multi-add (Many, or several uploaded photos): that bottle's row leaves the stack as if removed, the same line shows on the stack, and the flow continues with the next bottle.
+    - Opened from a cellar lot row (`initialLot`, "+1 bottle") the merge card never shows, so nothing changes there.
+    - State: a sheet-state reducer action (for example `lotSkipped`) in `sheet-state.ts` — F12 adds it if F12 has not committed yet; otherwise S5b adds it (the shared-file table already lets S5 add actions). S2 owns the card's UI and copy; S4 mirrors it on the laptop view; S5a's adds hook treats a skip as no add (no `onAdded`, no `addedVia`).
+    - Tests: the reducer transition, and the card's action list if its copy lives in a pure helper. No API calls.
+    - This supersedes the spec's "The merge card is unchanged" only for this addition; sources-6 (a typed rack and price dropped by the merge) stays left to the owner.
+
 ## Working Rules
 
 1. **Ownership.** You may create, edit or delete only the files in your task's **OWNS** list. You may read anything. If the task needs a change in a file you do not own, stop and report the exact change to the orchestrator. Never make that change yourself.
