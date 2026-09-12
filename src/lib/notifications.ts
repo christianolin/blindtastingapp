@@ -12,7 +12,8 @@ export type InviteNotification = {
 // notifications bell. A "use server" action (not just a plain helper) so the
 // client-side bell can call it directly on a poll interval, not only on the
 // initial server render — otherwise a new invite only appeared after a full
-// page reload.
+// page reload. A finished (CLOSED) tasting can no longer be accepted (spec
+// §D.4 #5), so its leftover invite is not a notification.
 export async function getPendingInvites(): Promise<InviteNotification[]> {
   const supabase = await createClient();
   const {
@@ -30,16 +31,19 @@ export async function getPendingInvites(): Promise<InviteNotification[]> {
 
   const { data: tastings } = await supabase
     .from("tastings")
-    .select("id, name, host_id")
+    .select("id, name, host_id, status")
     .in("id", invitedIds);
-  const hostIds = [...new Set((tastings ?? []).map((t) => t.host_id))];
+  const open = (tastings ?? []).filter((t) => t.status !== "CLOSED");
+  if (open.length === 0) return [];
+
+  const hostIds = [...new Set(open.map((t) => t.host_id))];
   const { data: hosts } = await supabase
     .from("profiles")
     .select("id, display_name")
-    .in("id", hostIds.length > 0 ? hostIds : [""]);
+    .in("id", hostIds);
   const hostNameById = new Map((hosts ?? []).map((h) => [h.id, h.display_name]));
 
-  return (tastings ?? []).map((t) => ({
+  return open.map((t) => ({
     tastingId: t.id,
     tastingName: t.name,
     hostName: hostNameById.get(t.host_id) ?? "Someone",

@@ -4,8 +4,15 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { startWarning } from "@/lib/wine-identity/incomplete";
+import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 
-export type LobbyActionState = { error: string } | { success: string } | null;
+// `warning` rides along with a success that still needs the host's attention:
+// Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
+export type LobbyActionState =
+  | { error: string }
+  | { success: string; warning?: string }
+  | null;
 
 async function requireUser() {
   const supabase = await createClient();
@@ -23,15 +30,20 @@ async function assertHost(
 ) {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status, reveal_mode")
+    .select("id, host_id, status, reveal_mode, timing_mode")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== userId) return null;
   return tasting;
 }
 
-// Host presses "Start" — moves DRAFT → IN_PROGRESS so guessing opens. Requires
-// at least one wine (nothing to guess otherwise).
+// Host presses "Start" — moves DRAFT → IN_PROGRESS so guessing opens (spec
+// §C.7, as amended by the blind-tasting ledger B0). There is no wine count
+// gate: wines can be added while the tasting runs. An incomplete glass never
+// blocks Start either; it comes back as an inline warning, and only that
+// glass's own reveal is refused. The flip matches a DRAFT row only, so a
+// started or finished tasting can't be started again — which would otherwise
+// draw its cellar bottles down a second time.
 export async function startTasting(
   _prev: LobbyActionState,
   formData: FormData,
@@ -41,22 +53,59 @@ export async function startTasting(
   const tasting = await assertHost(supabase, tastingId, user.id);
   if (!tasting) return { error: "Only the host can start this tasting." };
 
-  const { count } = await supabase
-    .from("wines")
-    .select("id", { count: "exact", head: true })
-    .eq("tasting_id", tastingId);
-  if (!count || count < 1) {
-    return { error: "Add at least one wine before starting." };
+  // Read before the flip. A failed read comes back as the error and the
+  // tasting stays DRAFT, instead of passing for "every glass is complete".
+  let incompleteWarning: string | null;
+  try {
+    incompleteWarning = startWarning(
+      await listIncompleteGlasses(supabase, tastingId),
+    );
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
   }
 
-  const { error } = await supabase
+  const { data: started, error } = await supabase
     .from("tastings")
     .update({ status: "IN_PROGRESS" })
-    .eq("id", tastingId);
+    .eq("id", tastingId)
+    .eq("status", "DRAFT")
+    .select("id");
   if (error) return { error: error.message };
+  if (!started || started.length === 0) {
+    return { error: "This tasting has already started." };
+  }
+
+  // Pour every glass whose adder asked to take their bottle out of the cellar
+  // (D11). The RPC never pours a glass twice; each glass it couldn't draw down
+  // is named.
+  const warnings = incompleteWarning ? [incompleteWarning] : [];
+  const { data: pours, error: pourError } = await supabase.rpc(
+    "draw_down_flight_cellar_lots",
+    { p_tasting_id: tastingId },
+  );
+  if (pourError) {
+    // The tasting has already started, so this is a warning, not the error.
+    console.error(
+      `draw_down_flight_cellar_lots failed for ${tastingId}:`,
+      pourError.message,
+    );
+    warnings.push(
+      "Any cellar bottles in this flight couldn't be taken out of the cellar.",
+    );
+  }
+  for (const pour of pours ?? []) {
+    if (pour.outcome !== "drawn") {
+      warnings.push(
+        `Glass ${pour.glass}: the bottle couldn't be taken out of the cellar.`,
+      );
+    }
+  }
 
   revalidatePath(`/tastings/${tastingId}`);
-  return { success: "Tasting started — guessing is open." };
+  const success = "Tasting started — guessing is open.";
+  return warnings.length > 0
+    ? { success, warning: warnings.join(" ") }
+    : { success };
 }
 
 // Host presses "Finish" — moves IN_PROGRESS → CLOSED, one-way. Guessing and
@@ -227,12 +276,14 @@ export async function inviteToTasting(
     : { error: "Nobody new was added (already invited?)." };
 }
 
-// Host toggles "one wine at a time" pacing.
+// Host toggles "one wine at a time" pacing. Guided pacing is for LIVE
+// tastings only (spec §D.1 #1): a self-paced tasting ignores the request, and
+// any flag an older ASYNC row still stores is ignored wherever it is read.
 export async function setSequentialGuessing(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const tastingId = String(formData.get("tasting_id") ?? "");
   const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return;
+  if (!tasting || tasting.timing_mode === "ASYNC") return;
   const enabled = String(formData.get("enabled") ?? "") === "true";
   await supabase
     .from("tastings")
@@ -335,11 +386,24 @@ export async function removeWine(
 
 // A participant responds to their invite. Accept -> JOINED (can now guess);
 // decline -> DECLINED. RLS already lets a participant update their own row.
+// A finished (CLOSED) tasting can no longer be accepted (spec §D.4 #5). The
+// lobby card and the bell stop offering Accept there, so the refusal carries
+// no message and the Promise<void> form-action signature stays. Decline stays
+// allowed.
 export async function respondToInvite(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const tastingId = String(formData.get("tasting_id") ?? "");
   const response = String(formData.get("response") ?? "");
   if (response !== "accept" && response !== "decline") return;
+
+  if (response === "accept") {
+    const { data: tasting } = await supabase
+      .from("tastings")
+      .select("status")
+      .eq("id", tastingId)
+      .maybeSingle();
+    if (!tasting || tasting.status === "CLOSED") return;
+  }
 
   await supabase
     .from("tasting_participants")
