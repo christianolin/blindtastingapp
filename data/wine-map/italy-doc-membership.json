@@ -5,7 +5,13 @@
     "important": "RECOVERY IS NOT VERIFICATION. This records what the map currently claims, not what the disciplinare says. Checking these lists against the MASAF disciplinari is separate work, and is the Italian equivalent of the Spanish pliego audit that found four wrong DOs.",
     "geometry_source": "ISTAT comuni via openpolis/geojson-italy (CC BY 4.0), pinned at .tiles-build/sicily/it-comuni.geojson",
     "three_discrepancies": "Three footprints recover one MORE comune than their artifact's comuni_count: abruzzo/montepulciano-d-abruzzo-colline-teramane (32 vs 31), campania/vesuvio (16 vs 15) and puglia/copertino (7 vs 6). Every recovered comune sits 99.97-100% inside the shipped footprint, so the geometry really does cover them -- they are not threshold artefacts, and none is an enclave absorbed by the interior-ring drop (tested). The recorded count is simply inconsistent with the shape that shipped. Which name the original list omitted cannot be determined from geometry, because all of them are covered. Resolving it needs the disciplinare, which is the follow-up work.",
-    "next_step": "Check each list against its MASAF disciplinare, the way the Spanish lists were checked against their pliegos. That audit found four wrong DOs in Spain -- two omissions and, more insidiously, names lifted from descriptive text (a river, a pedania) that matched the municipality register. Italy has had no equivalent check."
+    "next_step": "Check each list against its MASAF disciplinare, the way the Spanish lists were checked against their pliegos. That audit found four wrong DOs in Spain -- two omissions and, more insidiously, names lifted from descriptive text (a river, a pedania) that matched the municipality register. Italy has had no equivalent check.",
+    "audited": {
+      "source": "eAmbrosia, the EU register of geographical indications (https://webgate.ec.europa.eu/eambrosia-api/)",
+      "method": "For each footprint, the registered GI's single document / technical file was downloaded and its section 5 'ZONA DELIMITATA' compared with our comune list. See scripts/wine-map-sources/audit-italy-disciplinari.mjs for what each zone shape can and cannot prove.",
+      "limit": "The single document is the EU's summary, not the national disciplinare, and the links it gives to politicheagricole.it are dead. A footprint marked 'open' needs the current disciplinare read by hand.",
+      "run_on": "2026-09-12"
+    }
   },
   "generated_at": "2026-09-12",
   "footprints": {
@@ -143,7 +149,20 @@
           "istat": "067044",
           "name": "Tortoreto"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Colline Teramane Montepulciano d’Abruzzo",
+        "gi_id": "EUGI00000002561",
+        "zone_shape": "ENUMERATED",
+        "verdict": "open",
+        "note": "The zone lists 31 comuni of the province of Teramo; Montefino is ours and is not among them. Needs the current national disciplinare.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Montefino"
+          ]
+        }
+      }
     },
     "abruzzo/tullum": {
       "region": "Abruzzo",
@@ -155,7 +174,14 @@
           "istat": "069090",
           "name": "Tollo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Terre Tollesi / Tullum",
+        "gi_id": "EUGI00000002941",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "abruzzo/villamagna": {
       "region": "Abruzzo",
@@ -175,7 +201,14 @@
           "istat": "069101",
           "name": "Villamagna"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Villamagna",
+        "gi_id": "EUGI00000003028",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "basilicata/aglianico-del-vulture": {
       "region": "Basilicata",
@@ -243,7 +276,14 @@
           "istat": "076095",
           "name": "Venosa"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Aglianico del Vulture",
+        "gi_id": "EUGI00000001823",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "calabria/ciro": {
       "region": "Calabria",
@@ -267,7 +307,14 @@
           "istat": "101014",
           "name": "Melissa"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Cirò",
+        "gi_id": "EUGI00000004658",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "calabria/greco-di-bianco": {
       "region": "Calabria",
@@ -283,7 +330,14 @@
           "istat": "080024",
           "name": "Casignana"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Greco di Bianco",
+        "gi_id": "EUGI00000004662",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "campania/taurasi": {
       "region": "Campania",
@@ -359,7 +413,20 @@
           "istat": "064116",
           "name": "Venticano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Taurasi",
+        "gi_id": "EUGI00000005004",
+        "zone_shape": "ENUMERATED",
+        "verdict": "source_artifact",
+        "note": "The zone list spells the comune \"Montemileto\"; the ISTAT name is Montemiletto. A typo in the single document, not a different place.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Montemiletto"
+          ]
+        }
+      }
     },
     "campania/greco-di-tufo": {
       "region": "Campania",
@@ -399,7 +466,14 @@
           "istat": "064113",
           "name": "Tufo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Greco di Tufo",
+        "gi_id": "EUGI00000005018",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "campania/fiano-di-avellino": {
       "region": "Campania",
@@ -511,7 +585,14 @@
           "istat": "064105",
           "name": "Summonte"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Fiano di Avellino",
+        "gi_id": "EUGI00000005013",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "campania/aglianico-del-taburno": {
       "region": "Campania",
@@ -571,7 +652,14 @@
           "istat": "062077",
           "name": "Vitulano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Aglianico del Taburno",
+        "gi_id": "EUGI00000005025",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "campania/vesuvio": {
       "region": "Campania",
@@ -643,7 +731,20 @@
           "istat": "063091",
           "name": "Trecase"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Vesuvio",
+        "gi_id": "EUGI00000005061",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Massa di Somma was split from San Sebastiano al Vesuvio in 1988, after the zone text was written; the zone names San Sebastiano al Vesuvio.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Massa di Somma"
+          ]
+        }
+      }
     },
     "emilia-romagna/romagna-albana": {
       "region": "Emilia-Romagna",
@@ -739,7 +840,14 @@
           "istat": "040045",
           "name": "Savignano sul Rubicone"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Romagna Albana",
+        "gi_id": "EUGI00000003641",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "emilia-romagna/lambrusco-di-sorbara": {
       "region": "Emilia-Romagna",
@@ -795,7 +903,14 @@
           "istat": "036044",
           "name": "Soliera"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Lambrusco di Sorbara",
+        "gi_id": "EUGI00000004481",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "emilia-romagna/lambrusco-grasparossa-di-castelvetro": {
       "region": "Emilia-Romagna",
@@ -859,7 +974,14 @@
           "istat": "036046",
           "name": "Vignola"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Lambrusco Grasparossa di Castelvetro",
+        "gi_id": "EUGI00000004482",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "emilia-romagna/colli-bolognesi-pignoletto": {
       "region": "Emilia-Romagna",
@@ -891,7 +1013,20 @@
           "istat": "037060",
           "name": "Zola Predosa"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Colli Bolognesi Pignoletto",
+        "gi_id": "EUGI00000003601",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Valsamoggia is the 2014 merger of Bazzano, Castello di Serravalle, Crespellano, Monteveglio and Savigno; the zone names Crespellano, Bazzano, Castello di Serravalle and Monteveglio. Savignano sul Panaro is named too, expressly \"della provincia di Modena\".",
+        "differences": {
+          "ours_not_in_zone": [
+            "Valsamoggia"
+          ]
+        }
+      }
     },
     "emilia-romagna/gutturnio": {
       "region": "Emilia-Romagna",
@@ -971,7 +1106,20 @@
           "istat": "033048",
           "name": "Ziano Piacentino"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Gutturnio",
+        "gi_id": "EUGI00000004462",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Alta Val Tidone is the 2018 merger of Caminata, Nibbiano and Pecorara; the zone names Nibbiano.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Alta Val Tidone"
+          ]
+        }
+      }
     },
     "friuli/Collio": {
       "region": "Friuli-Venezia Giulia",
@@ -1011,7 +1159,14 @@
           "istat": "031020",
           "name": "San Lorenzo Isontino"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Collio Goriziano / Collio",
+        "gi_id": "EUGI00000006201",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "friuli/Friuli Colli Orientali": {
       "region": "Friuli-Venezia Giulia",
@@ -1095,7 +1250,14 @@
           "istat": "030127",
           "name": "Tricesimo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Friuli Colli Orientali",
+        "gi_id": "EUGI00000006461",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "friuli/Carso": {
       "region": "Friuli-Venezia Giulia",
@@ -1151,7 +1313,14 @@
           "istat": "032006",
           "name": "Trieste"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Carso / Carso - Kras",
+        "gi_id": "EUGI00000006164",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "friuli/Friuli Isonzo": {
       "region": "Friuli-Venezia Giulia",
@@ -1239,7 +1408,14 @@
           "istat": "031025",
           "name": "Villesse"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Friuli Isonzo / Isonzo del Friuli",
+        "gi_id": "EUGI00000006448",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lazio/frascati": {
       "region": "Lazio",
@@ -1263,7 +1439,14 @@
           "istat": "058064",
           "name": "Monte Porzio Catone"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Frascati",
+        "gi_id": "EUGI00000006288",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lazio/marino": {
       "region": "Lazio",
@@ -1283,7 +1466,14 @@
           "istat": "058057",
           "name": "Marino"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Marino",
+        "gi_id": "EUGI00000006271",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lazio/cesanese-del-piglio": {
       "region": "Lazio",
@@ -1311,7 +1501,14 @@
           "istat": "060071",
           "name": "Serrone"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Cesanese del Piglio / Piglio",
+        "gi_id": "EUGI00000002362",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lazio/est-est-est-di-montefiascone": {
       "region": "Lazio",
@@ -1347,7 +1544,14 @@
           "istat": "056047",
           "name": "San Lorenzo Nuovo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Est! Est!! Est!!! di Montefiascone",
+        "gi_id": "EUGI00000006286",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "liguria/rossese-di-dolceacqua": {
       "region": "Liguria",
@@ -1411,7 +1615,14 @@
           "istat": "008065",
           "name": "Ventimiglia"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Rossese di Dolceacqua / Dolceacqua",
+        "gi_id": "EUGI00000005110",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "liguria/cinque-terre": {
       "region": "Liguria",
@@ -1431,7 +1642,14 @@
           "istat": "011030",
           "name": "Vernazza"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Cinque Terre / Cinque Terre Sciacchetrà",
+        "gi_id": "EUGI00000005006",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "liguria/colli-di-luni": {
       "region": "Liguria",
@@ -1495,7 +1713,14 @@
           "istat": "011031",
           "name": "Vezzano Ligure"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Colli di Luni",
+        "gi_id": "EUGI00000005063",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lombardia/Franciacorta": {
       "region": "Lombardia",
@@ -1579,7 +1804,14 @@
           "istat": "017166",
           "name": "Rovato"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Franciacorta",
+        "gi_id": "EUGI00000003568",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "lombardia/Valtellina Superiore": {
       "region": "Lombardia",
@@ -1651,7 +1883,14 @@
           "istat": "014078",
           "name": "Villa di Tirano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Valtellina Superiore",
+        "gi_id": "EUGI00000005931",
+        "zone_shape": "NARRATIVE",
+        "verdict": "matches"
+      }
     },
     "lombardia/Oltrepò Pavese": {
       "region": "Lombardia",
@@ -1823,7 +2062,20 @@
           "istat": "018187",
           "name": "Zenevredo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Oltrepò Pavese",
+        "gi_id": "EUGI00000003785",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Colli Verdi is the 2019 merger of Canevino, Ruino and Valverde; the zone names Canevino and Ruino.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Colli Verdi"
+          ]
+        }
+      }
     },
     "lombardia/Riviera del Garda Classico": {
       "region": "Lombardia",
@@ -1907,7 +2159,29 @@
           "istat": "017201",
           "name": "Villanuova sul Clisi"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Riviera del Garda Classico",
+        "gi_id": "EUGI00000005067",
+        "zone_shape": "ENUMERATED",
+        "verdict": "open",
+        "note": "The attached single document delimits \"Riviera del Garda Bresciano\"/\"Garda Bresciano\" over 29 comuni — the pre-2017 name and zone. Our 19 are all inside that list (the document writes Padenghe del Garda for Padenghe sul Garda) and look like the narrower Classico core, but the post-2017 delimitation has not been read.",
+        "differences": {
+          "in_zone_not_ours": [
+            "Gargnano",
+            "Limone sul Garda",
+            "Sabbio Chiese",
+            "Tignale",
+            "Toscolano-Maderno",
+            "Treviso Bresciano",
+            "Vobarno"
+          ],
+          "ours_not_in_zone": [
+            "Padenghe sul Garda"
+          ]
+        }
+      }
     },
     "lombardia/Moscato di Scanzo": {
       "region": "Lombardia",
@@ -1919,7 +2193,20 @@
           "istat": "016194",
           "name": "Scanzorosciate"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Scanzo / Moscato di Scanzo",
+        "gi_id": "EUGI00000003701",
+        "zone_shape": "ENUMERATED",
+        "verdict": "source_artifact",
+        "note": "\"Martinengo\" in the zone text is Via F. Martinengo, a street in the boundary description of Scanzorosciate, which happens to share its name with a Bergamo comune. The same failure mode as \"Ulea\" — a river — in the Bullas pliego. Our single-comune list is right.",
+        "differences": {
+          "in_zone_not_ours": [
+            "Martinengo"
+          ]
+        }
+      }
     },
     "lombardia/San Colombano al Lambro": {
       "region": "Lombardia",
@@ -1947,7 +2234,14 @@
           "istat": "098050",
           "name": "Sant'Angelo Lodigiano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "San Colombano al Lambro / San Colombano",
+        "gi_id": "EUGI00000005068",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "marche/verdicchio-di-matelica": {
       "region": "Marche",
@@ -1987,7 +2281,14 @@
           "istat": "043039",
           "name": "Pioraco"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Verdicchio di Matelica",
+        "gi_id": "EUGI00000004832",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "marche/conero": {
       "region": "Marche",
@@ -2023,7 +2324,14 @@
           "istat": "042048",
           "name": "Sirolo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Cònero",
+        "gi_id": "EUGI00000004829",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "marche/offida": {
       "region": "Marche",
@@ -2067,7 +2375,14 @@
           "istat": "044063",
           "name": "Ripatransone"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Offida",
+        "gi_id": "EUGI00000003229",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "molise/biferno": {
       "region": "Molise",
@@ -2243,7 +2558,14 @@
           "istat": "070083",
           "name": "Ururi"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Biferno",
+        "gi_id": "EUGI00000004884",
+        "zone_shape": "COUNTED",
+        "verdict": "matches"
+      }
     },
     "puglia/primitivo-di-manduria": {
       "region": "Puglia",
@@ -2323,7 +2645,14 @@
           "istat": "073028",
           "name": "Torricella"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Primitivo di Manduria",
+        "gi_id": "EUGI00000005023",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "puglia/castel-del-monte": {
       "region": "Puglia",
@@ -2371,7 +2700,14 @@
           "istat": "110009",
           "name": "Trani"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Castel del Monte",
+        "gi_id": "EUGI00000005463",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "puglia/salice-salentino": {
       "region": "Puglia",
@@ -2407,7 +2743,14 @@
           "istat": "075092",
           "name": "Veglie"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Salice Salentino",
+        "gi_id": "EUGI00000005017",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "puglia/copertino": {
       "region": "Puglia",
@@ -2443,7 +2786,20 @@
           "istat": "075071",
           "name": "San Pietro in Lama"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Copertino",
+        "gi_id": "EUGI00000005502",
+        "zone_shape": "ENUMERATED",
+        "verdict": "open",
+        "note": "The zone gives Copertino, Carmiano, Arnesano and Monteroni whole, plus Galatina and Lequile in part. San Pietro in Lama is ours and is not named. Needs the current national disciplinare, which is later than this document.",
+        "differences": {
+          "ours_not_in_zone": [
+            "San Pietro in Lama"
+          ]
+        }
+      }
     },
     "puglia/gioia-del-colle": {
       "region": "Puglia",
@@ -2515,7 +2871,14 @@
           "istat": "072047",
           "name": "Turi"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Gioia del Colle",
+        "gi_id": "EUGI00000005503",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "puglia/locorotondo": {
       "region": "Puglia",
@@ -2535,7 +2898,14 @@
           "istat": "072025",
           "name": "Locorotondo"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Locorotondo",
+        "gi_id": "EUGI00000005547",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sardegna/vermentino-di-gallura": {
       "region": "Sardegna",
@@ -2631,7 +3001,20 @@
           "istat": "113026",
           "name": "Trinità d'Agultu e Vignola"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Vermentino di Gallura",
+        "gi_id": "EUGI00000004943",
+        "zone_shape": "ENUMERATED",
+        "verdict": "open",
+        "note": "The zone reads \"... in Provincia di Olbia-Tempio, e Viddalba in Provincia di Sassari\". Viddalba is absent from our 22. This reads as a plain omission: the list should be 23.",
+        "differences": {
+          "in_zone_not_ours": [
+            "Viddalba"
+          ]
+        }
+      }
     },
     "sardegna/carignano-del-sulcis": {
       "region": "Sardegna",
@@ -2707,7 +3090,14 @@
           "istat": "119023",
           "name": "Villaperuccio"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Carignano del Sulcis",
+        "gi_id": "EUGI00000004811",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sardegna/vernaccia-di-oristano": {
       "region": "Sardegna",
@@ -2783,7 +3173,14 @@
           "istat": "115087",
           "name": "Zerfaliu"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Vernaccia di Oristano",
+        "gi_id": "EUGI00000004936",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sicily/Etna": {
       "region": "Sicilia",
@@ -2875,7 +3272,20 @@
           "istat": "087055",
           "name": "Zafferana Etnea"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Etna",
+        "gi_id": "EUGI00000005523",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Ragalna was split from Paterno in 1985, after the zone text was written; the zone names Paterno.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Ragalna"
+          ]
+        }
+      }
     },
     "sicily/Cerasuolo di Vittoria": {
       "region": "Sicilia",
@@ -2939,7 +3349,14 @@
           "istat": "088012",
           "name": "Vittoria"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Cerasuolo di Vittoria",
+        "gi_id": "EUGI00000005490",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sicily/Marsala": {
       "region": "Sicilia",
@@ -3035,7 +3452,14 @@
           "istat": "081023",
           "name": "Vita"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Marsala",
+        "gi_id": "EUGI00000005782",
+        "zone_shape": "WHOLE_PROV",
+        "verdict": "matches"
+      }
     },
     "sicily/Noto": {
       "region": "Sicilia",
@@ -3059,7 +3483,14 @@
           "istat": "089016",
           "name": "Rosolini"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Noto",
+        "gi_id": "EUGI00000005461",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sicily/Menfi": {
       "region": "Sicilia",
@@ -3083,7 +3514,14 @@
           "istat": "084041",
           "name": "Sciacca"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Menfi",
+        "gi_id": "EUGI00000005932",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "sicily/Faro": {
       "region": "Sicilia",
@@ -3095,7 +3533,14 @@
           "istat": "083048",
           "name": "Messina"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Faro",
+        "gi_id": "EUGI00000005526",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "trentino/Teroldego Rotaliano": {
       "region": "Trentino-Alto Adige/Südtirol",
@@ -3115,7 +3560,14 @@
           "istat": "022167",
           "name": "San Michele all'Adige"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Teroldego Rotaliano",
+        "gi_id": "EUGI00000004582",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "trentino/Trentino": {
       "region": "Trentino-Alto Adige/Südtirol",
@@ -3387,7 +3839,18 @@
           "istat": "022224",
           "name": "Volano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Trentino",
+        "gi_id": "EUGI00000004744",
+        "zone_shape": "COUNTED",
+        "verdict": "confirmed",
+        "note": "The zone states 72 comuni viticoli of the province of Trento. Trentino's 2015-16 merger wave cut the province from 217 comuni to 166, so 66 modern comuni covering 72 historic ones is the expected shape, not a shortfall.",
+        "differences": {
+          "zone_states_count": 72
+        }
+      }
     },
     "umbria/montefalco-sagrantino": {
       "region": "Umbria",
@@ -3415,7 +3878,14 @@
           "istat": "054030",
           "name": "Montefalco"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Montefalco Sagrantino",
+        "gi_id": "EUGI00000005682",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "umbria/torgiano-rosso-riserva": {
       "region": "Umbria",
@@ -3427,7 +3897,14 @@
           "istat": "054053",
           "name": "Torgiano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Torgiano Rosso Riserva",
+        "gi_id": "EUGI00000005683",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "umbria/orvieto": {
       "region": "Umbria",
@@ -3487,7 +3964,14 @@
           "istat": "055028",
           "name": "Porano"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Orvieto",
+        "gi_id": "EUGI00000005484",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "umbria/colli-del-trasimeno": {
       "region": "Umbria",
@@ -3535,7 +4019,14 @@
           "istat": "054055",
           "name": "Tuoro sul Trasimeno"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Colli del Trasimeno / Trasimeno",
+        "gi_id": "EUGI00000005222",
+        "zone_shape": "ENUMERATED",
+        "verdict": "matches"
+      }
     },
     "umbria/colli-martani": {
       "region": "Umbria",
@@ -3595,7 +4086,20 @@
           "istat": "054052",
           "name": "Todi"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Colli Martani",
+        "gi_id": "EUGI00000005223",
+        "zone_shape": "ENUMERATED",
+        "verdict": "source_artifact",
+        "note": "The zone list spells the comune \"Collazione\"; the ISTAT name is Collazzone. A typo in the single document.",
+        "differences": {
+          "ours_not_in_zone": [
+            "Collazzone"
+          ]
+        }
+      }
     },
     "valle-d-aosta/blanc-de-morgex-et-de-la-salle": {
       "region": "Valle d'Aosta/Vallée d'Aoste",
@@ -3611,7 +4115,16 @@
           "istat": "007044",
           "name": "Morgex"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Valle d'Aosta / Vallée d'Aoste",
+        "gi_id": "EUGI00000003121",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Filed inside the Valle d'Aosta / Vallee d'Aoste record, whose zone covers the whole DOC. A sub-denomination's own delimitation is not in the single document, so this footprint cannot be checked from it.",
+        "differences": {}
+      }
     },
     "valle-d-aosta/donnas": {
       "region": "Valle d'Aosta/Vallée d'Aoste",
@@ -3635,7 +4148,16 @@
           "istat": "007052",
           "name": "Pont-Saint-Martin"
         }
-      ]
+      ],
+      "audit": {
+        "register": "eAmbrosia",
+        "gi_name": "Valle d'Aosta / Vallée d'Aoste",
+        "gi_id": "EUGI00000003121",
+        "zone_shape": "ENUMERATED",
+        "verdict": "confirmed",
+        "note": "Filed inside the Valle d'Aosta / Vallee d'Aoste record, whose zone covers the whole DOC. A sub-denomination's own delimitation is not in the single document, so this footprint cannot be checked from it.",
+        "differences": {}
+      }
     }
   }
 }
