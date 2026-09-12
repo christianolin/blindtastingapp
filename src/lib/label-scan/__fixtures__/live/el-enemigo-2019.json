@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Cabernet Franc",
+      "percentage": null
+    }
+  ],
+  "region": "Mendoza",
+  "country": "Argentina",
+  "rawText": "EL ENEMIGO CABERNET FRANC 2019 Mendoza · Argentina",
+  "producer": "El Enemigo",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": null,
+  "description": "El Enemigo is a project of Alejandro Vigil and Adrianna Catena, based in Mendoza, Argentina. This Cabernet Franc is sourced from high-altitude vineyards in the Uco Valley, a sub-region known for its stony, alluvial soils and significant diurnal temperature variation, which favor aromatic freshness and structure in the variety.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2019,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": true
+}
