@@ -209,6 +209,9 @@ export type DesktopViewProps = {
   onCellar: () => void;
   onByHand: () => void;
   onDone: () => void;
+  /** The pending ("Fix") rows work as in the camera view (7d). */
+  onFixPending: (id: string, fix: PendingFix) => void;
+  onRemovePending: (id: string) => void;
   busy: boolean;
 };
 

@@ -9,7 +9,7 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from "react";
-import { Check, Search, Upload } from "lucide-react";
+import { Check, Search, Upload, X } from "lucide-react";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { Input } from "@/components/ui/input";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
@@ -27,8 +27,9 @@ import {
   type DesktopRow,
 } from "./desktop-format";
 import { scanTitle } from "./format";
+import { PendingFixStrip } from "./pending-fix";
 import { addedWhere, pendingProblemLabel } from "./scan-copy";
-import type { AddSource, DesktopViewProps, SearchGroups } from "./types";
+import type { AddSource, DesktopViewProps, PendingScan, SearchGroups } from "./types";
 
 const DEBOUNCE_MS = 250;
 const SEARCH_FAILED = "Search failed — try again.";
@@ -55,6 +56,8 @@ export function DesktopView({
   onCellar,
   onByHand,
   onDone,
+  onFixPending,
+  onRemovePending,
   busy,
 }: DesktopViewProps) {
   const destination = ctx.destination;
@@ -321,29 +324,13 @@ export function DesktopView({
               </li>
             ))}
             {ctx.pending.map((p) => (
-              <li
+              <DesktopPendingRow
                 key={p.id}
-                className="flex items-center gap-[10px] rounded-[10px] border border-rose/40 bg-rose/10 p-[9px_12px]"
-              >
-                <span
-                  aria-hidden
-                  className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-rose text-[10px] font-bold text-rose"
-                >
-                  !
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[13px]">
-                  {scanTitle(p.prefill)}{" "}
-                  <span className="text-rose">· {pendingProblemLabel(p.problem)}</span>
-                </span>
-                <button
-                  type="button"
-                  disabled={locked}
-                  onClick={onByHand}
-                  className="shrink-0 text-[11.5px] font-semibold text-primary hover:text-gold-dark disabled:opacity-60"
-                >
-                  Add it by hand
-                </button>
-              </li>
+                scan={p}
+                disabled={locked}
+                onFix={onFixPending}
+                onRemove={onRemovePending}
+              />
             ))}
           </ul>
         ) : null}
@@ -487,5 +474,71 @@ function Tile({
       <span className="text-[14px] font-semibold">{title}</span>
       <span className="text-[12px] text-muted-foreground">{subtitle}</span>
     </button>
+  );
+}
+
+/**
+ * A photo whose read needs a fix, on the parchment surface: the same
+ * year / NV strip as the camera view's 7d row (light tone), plus remove.
+ * The shell's onFixPending completes the scan — or, when the read is missing
+ * more than the vintage, hands the prefill to the by-hand form.
+ */
+function DesktopPendingRow({
+  scan,
+  disabled,
+  onFix,
+  onRemove,
+}: {
+  scan: PendingScan;
+  disabled: boolean;
+  onFix: DesktopViewProps["onFixPending"];
+  onRemove: DesktopViewProps["onRemovePending"];
+}) {
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const title = scanTitle(scan.prefill);
+  return (
+    <li className="flex flex-col rounded-[10px] border border-rose/40 bg-rose/10 p-[9px_12px]">
+      <div className="flex items-center gap-[10px]">
+        <span
+          aria-hidden
+          className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-rose text-[10px] font-bold text-rose"
+        >
+          !
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[13px]">
+          {title} <span className="text-rose">· {pendingProblemLabel(scan.problem)}</span>
+        </span>
+        <button
+          type="button"
+          aria-expanded={open}
+          disabled={disabled}
+          onClick={() => {
+            const next = !open;
+            setOpen(next);
+            if (next) inputRef.current?.focus({ preventScroll: true });
+          }}
+          className="shrink-0 text-[11.5px] font-semibold text-primary hover:text-gold-dark disabled:opacity-60"
+        >
+          {open ? "Close" : "Fix"}
+        </button>
+        <button
+          type="button"
+          aria-label={`Remove ${title}`}
+          disabled={disabled}
+          onClick={() => onRemove(scan.id)}
+          className="relative flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground disabled:opacity-60 after:absolute after:-inset-2 after:content-['']"
+        >
+          <X className="size-[13px]" />
+        </button>
+      </div>
+      <PendingFixStrip
+        open={open}
+        inputRef={inputRef}
+        tone="light"
+        disabled={disabled}
+        onFix={(fix) => onFix(scan.id, fix)}
+      />
+    </li>
   );
 }

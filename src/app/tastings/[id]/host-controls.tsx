@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Trash2,
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { InviteField } from "@/app/tastings/new/invite-field";
+import { isoToLocal, localToIso } from "@/app/tastings/new/setup-copy";
 import {
   startTasting,
   updateSchedule,
@@ -27,14 +28,6 @@ import {
   setLeaderboardReveal,
   type LobbyActionState,
 } from "./actions";
-
-function isoToLocalInput(iso: string) {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours(),
-  )}:${pad(d.getMinutes())}`;
-}
 
 function StateMessage({ state }: { state: LobbyActionState }) {
   if (!state) return null;
@@ -122,12 +115,17 @@ export function HostControls({
     null,
   );
 
-  const scheduleRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (scheduleRef.current && scheduledAt) {
-      scheduleRef.current.value = isoToLocalInput(scheduledAt);
-    }
-  }, [scheduledAt]);
+  // Controlled, like the create sheet's setup step: the datetime-local value
+  // is the host's wall-clock time, converted to ISO on the client so the
+  // server never guesses the zone (updateSchedule prefers `scheduled_at_iso`).
+  const [schedule, setSchedule] = useState(() => isoToLocal(scheduledAt ?? null));
+  // Re-seed from the prop when the server value changes (after a save), the
+  // adjust-state-during-render way rather than a setState in an effect.
+  const [seenScheduledAt, setSeenScheduledAt] = useState(scheduledAt ?? null);
+  if ((scheduledAt ?? null) !== seenScheduledAt) {
+    setSeenScheduledAt(scheduledAt ?? null);
+    setSchedule(isoToLocal(scheduledAt ?? null));
+  }
 
   const notStarted = status === "DRAFT";
 
@@ -201,11 +199,17 @@ export function HostControls({
               <CalendarClock className="size-4" /> Date &amp; time
             </Label>
             <div className="flex gap-2">
+              <input
+                type="hidden"
+                name="scheduled_at_iso"
+                value={localToIso(schedule) ?? ""}
+              />
               <Input
-                ref={scheduleRef}
                 id="scheduled_at_edit"
                 name="scheduled_at"
                 type="datetime-local"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
               />
               <Button type="submit" variant="outline" disabled={schedulePending}>
                 {schedulePending ? "Saving…" : "Save"}

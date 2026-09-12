@@ -828,6 +828,106 @@ a raw subquery, regardless of which two tables look involved at a glance.
     — and right after that hash login the first client-side navigation can
     throw "useAddWine must be used within <AddWineProvider>" once (stale
     logged-out shell); a reload clears it.
+- **Add-wine sheet, create-tasting sheet, guess ladder, host console
+  (2026-09 flows redesign).** Spec + plan:
+  `docs/superpowers/specs/2026-09-12-add-wine-sheet-and-tasting-flow-design.md`
+  and `docs/superpowers/plans/2026-09-12-add-wine-sheet-and-tasting-flow.md`;
+  the Claude Design handoff (`design_handoff_blindr_flows/`, screens 6a–6i
+  and 7a–7i) is the visual source of truth.
+  - **One add-wine sheet** (`src/components/add-wine/`) replaced the catalog,
+    cellar and tasting add-wine modals plus the scan and bulk-scan modals.
+    Open it with `useAddWine().openAddWineSheet(destination, { start,
+    onAdded })` — destination `flight` / `cellar` / `catalog` / `null`
+    (null = the header camera with no context: after the read it asks where
+    the bottle goes, offering "tonight's flight" when a live or next-up
+    tasting registered itself via `registerFlightHint`). Phones open on the
+    camera (`use-camera.ts`, `getUserMedia` with a file-input fallback);
+    `md` and up get the search-led desktop view (7h) with the upload zone,
+    which stays open after every add until Done. A scan uploads to Storage
+    `wine-images/catalog/staging/<userId>/` → `identifyWineFromLabel`
+    (FastCork — one credit per photo, NOT the Anthropic API) →
+    `resolveWinePrefill` → an explicit confirm; nothing is ever auto-added.
+    "Add it by hand" writes a catalog wine first and then adds it. Cellar
+    rows add as `{ kind: "lot", consume: true }` (the bottle is drawn down,
+    with a per-row "keep it in the cellar" toggle); the create sheet's
+    flight-step inline search adds catalog rows without consuming. A photo
+    whose vintage can't be read becomes a pending "Fix" row (year / NV
+    strip, `pending-fix.tsx`) on both the camera and desktop views.
+  - **Create-tasting sheet** (`src/components/new-tasting-sheet.tsx`,
+    launched by `TasteLauncherProvider`; `/tastings/new` renders the same
+    sheet): step 1 setup with the mode as a control (Blind / Semi-blind /
+    Taste & rate shown as "Soon"), timing, wine source and a rules
+    disclosure; step 2 the flight (inline search on desktop, shortcut chips
+    that open the add-wine sheet with the flight destination); step 3
+    invites (friend chips, an email field, the share link) and Start. The
+    tasting row is created at the end of step 1 (`createTasting` returns
+    `{ id }`); later setup saves go through `updateTastingSetup`, so going
+    back to change the mode keeps the wines. Escape with the add-wine sheet
+    stacked on top closes only the top sheet (the create sheet ignores an
+    Escape while more than one `dialog-content` is mounted).
+  - **Join codes.** `tastings.join_code` + `ensure_join_code(tasting_id)`
+    (host-only) and `join_tasting_by_code(code)` (SECURITY DEFINER; inserts
+    JOINED or flips INVITED → JOINED; refuses CLOSED tastings and started
+    non-OPEN ones — so people join by link BEFORE the host presses Start).
+    `/j/[code]` calls it and redirects to the lobby; signed-out visitors go
+    through `/login?next=/j/<code>` (and `/signup?next=…`, whose
+    confirmation link carries `next` into `/auth/callback`), validated by
+    `safeNext` in `src/lib/safe-next.ts`.
+  - **Start lands on the host console** for LIVE + BLIND tastings
+    (`/tastings/[id]/host`, dark `--console` palette) — both from the
+    sheet's step 3 and from the lobby's HostControls; semi-blind and OPEN
+    tastings stay on the lobby. The console's reveal-in-order chips call
+    `reveal_next_category(p_wine_id, p_expected_step)` (compare-and-set, so
+    two taps can't skip a step); "Reveal everything" is `reveal_wine`
+    behind a `window.confirm`. Standings and the "this glass" facts come
+    from `get_tasting_leaderboard` + `get_wine_reveal` (spoiler-safe: only
+    categories ≤ `reveal_step` are returned). There is deliberately no
+    Pause or Skip-glass control.
+  - **Guess ladder** (`play/guess-ladder.tsx`, `field-picker.tsx`,
+    `guess-ladder-math.ts`, `grape-shortlist.ts`): one row per field with
+    its points; each pick autosaves the COMPLETE row through `submitGuess`
+    (full-row replace; an absent field becomes null). `submitGuess` no
+    longer scores — readiness is `guesses.locked_at` (`lockGuess` /
+    `unlockGuess`; `tasting_guess_status` now returns `locked`), and
+    `score_own_guess` + the ASYNC auto-reveal run only on lock. Locking is
+    a readiness signal, not a gate: the host can reveal early and
+    `reveal_wine` scores whatever is saved (a taster with no row locks a
+    blank one so "N of M locked" can reach everyone). Pickers are
+    keep-mounted bottom sheets (centred on desktop) with synchronous focus
+    on the search field, a region-scoped shortlist group ("Grown in
+    Bourgogne", "Specific to Bourgogne"), auto-advance to the next field on
+    pick, and Escape returns focus to the row. Vintage is a year list; NV
+    and tawny live under "More" with secondary grape / type designation.
+    Semi-blind is an all-at-once ladder (`match-ladder.tsx`) locked with
+    `lockGuesses`. No WSET note can be written while a glass is locked.
+  - **Reveal for participants.** `RevealView` (6g) renders while a glass is
+    partially revealed ("The country was France · You said Italy · 0 pts",
+    hidden rows say "still hidden"); once fully revealed the classic
+    revealed card with the per-category breakdown takes over and the next
+    glass opens. `locked-in.tsx` is the waiting state ("N of M locked in",
+    what you said, Change it, a `#standings` link — the lobby's standings
+    aside carries that id).
+  - **RLS / migration notes** (`20260911100000_guess_lock_and_join_code.sql`,
+    live-applied with same-transaction assertions): the `wine_answers read`
+    policy was recreated WITH the SEMI_BLIND participant clause — the live
+    DB had lost it in an earlier recreate, which silently broke semi-blind
+    candidate lists. Any future recreate of that policy must keep
+    `is_tasting_host`, `has_scored_guess`, the revealed gate AND the
+    semi-blind participant clause.
+  - **Known caveat, not changed:** `reveal_wine`'s non-host gate ("not
+    everyone has guessed yet") counts every guess row, drafts included, and
+    counts the HOST_PROVIDES host among the eligible guessers. With
+    autosaved drafts that gate can pass before anyone has locked, and ASYNC
+    + HOST_PROVIDES effectively relies on the manual host reveal. The right
+    fix is to count only `locked_at` rows and exclude that host — a future
+    migration.
+  - Dev/verification gotchas: the in-app browser tool's "Return" key does
+    not reach React `onKeyDown` handlers (send "Enter"), and a
+    `window.confirm` swallows automated clicks (override it in the tab).
+    Demo sessions for the seeded `demo.*@blindr.invalid` people are minted
+    with `.superpowers/demo-session.mjs` (magiclink + `verifyOtp` →
+    `/auth/confirm-hash`), never by typing a password; switching users
+    re-mints, since all tabs share one cookie jar.
 - The LWIN import promoted every SITE/sub-region value to an appellation,
   which occasionally produced a nonsense row when LWIN's site column held a
   vineyard/lieu-dit name that collides with a famous term — e.g.

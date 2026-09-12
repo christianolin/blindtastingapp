@@ -200,7 +200,7 @@ export function FieldPicker({
               {title}
             </h2>
             <span className="ml-auto flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary lining-nums tabular-nums">
-              {points} pts
+              {points} {points === 1 ? "pt" : "pts"}
             </span>
           </div>
         </div>

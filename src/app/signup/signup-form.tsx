@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp, type SignUpFormState } from "./actions";
 
-export function SignUpForm() {
+export function SignUpForm({ next = null }: { next?: string | null }) {
   const [state, formAction, pending] = useActionState<
     SignUpFormState,
     FormData
@@ -24,6 +24,7 @@ export function SignUpForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="flex flex-col gap-2">
         <Label htmlFor="display_name">Name</Label>
         <Input id="display_name" name="display_name" required autoFocus />
@@ -56,7 +57,9 @@ export function SignUpForm() {
       </Button>
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary transition-colors hover:text-primary/80">
+        <Link
+          href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+          className="font-medium text-primary transition-colors hover:text-primary/80">
           Sign in
         </Link>
       </p>

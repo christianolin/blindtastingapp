@@ -862,6 +862,8 @@ export function AddWineSheet({
               onCellar={() => go("cellar")}
               onByHand={toByHand}
               onDone={close}
+              onFixPending={onFixPending}
+              onRemovePending={onRemovePending}
               busy={busy}
             />
           ) : null}

@@ -20,12 +20,17 @@ export function PendingFixStrip({
   inputRef,
   onFix,
   disabled = false,
+  tone = "dark",
 }: {
   open: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onFix: (fix: PendingFix) => void;
   disabled?: boolean;
+  /** "dark" sits on the camera view's console surface; "light" on the
+      desktop sheet's parchment. */
+  tone?: "dark" | "light";
 }) {
+  const dark = tone === "dark";
   const [year, setYear] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -65,13 +70,23 @@ export function PendingFixStrip({
           aria-label="Vintage year"
           tabIndex={open ? 0 : -1}
           disabled={disabled}
-          className="h-11 w-[96px] rounded-[8px] border border-primary-foreground/30 bg-primary-foreground/10 px-3 text-base text-primary-foreground outline-none placeholder:text-console-ink focus-visible:border-gold-light disabled:opacity-60"
+          className={cn(
+            "h-11 w-[96px] rounded-[8px] border px-3 text-base outline-none disabled:opacity-60",
+            dark
+              ? "border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground placeholder:text-console-ink focus-visible:border-gold-light"
+              : "border-border bg-white text-foreground placeholder:text-placeholder focus-visible:border-gold-deep",
+          )}
         />
         <button
           type="submit"
           tabIndex={open ? 0 : -1}
           disabled={disabled}
-          className="h-11 rounded-[8px] bg-gold-light px-4 text-[12.5px] font-bold text-console hover:bg-gold disabled:opacity-60"
+          className={cn(
+            "h-11 rounded-[8px] px-4 text-[12.5px] font-bold disabled:opacity-60",
+            dark
+              ? "bg-gold-light text-console hover:bg-gold"
+              : "bg-primary text-primary-foreground hover:bg-primary/90",
+          )}
         >
           Add
         </button>
@@ -83,13 +98,18 @@ export function PendingFixStrip({
             setError(null);
             onFix({ vintageKind: "NV", vintageYear: null });
           }}
-          className="h-11 rounded-[8px] border border-primary-foreground/30 px-3 text-[12.5px] font-semibold text-primary-foreground hover:border-gold-light disabled:opacity-60"
+          className={cn(
+            "h-11 rounded-[8px] border px-3 text-[12.5px] font-semibold disabled:opacity-60",
+            dark
+              ? "border-primary-foreground/30 text-primary-foreground hover:border-gold-light"
+              : "border-border text-foreground hover:border-gold-deep",
+          )}
         >
           NV
         </button>
       </div>
       {error ? (
-        <p role="alert" className="text-[11.5px] text-miss">
+        <p role="alert" className={cn("text-[11.5px]", dark ? "text-miss" : "text-rose")}>
           {error}
         </p>
       ) : null}

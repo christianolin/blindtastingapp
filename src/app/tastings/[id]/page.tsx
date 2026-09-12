@@ -580,7 +580,10 @@ export default async function TastingPage({
                 </p>
               )}
             </div>
-            <aside className="lg:sticky lg:top-8 lg:self-start">
+            <aside
+              id="standings"
+              className="scroll-mt-24 lg:sticky lg:top-8 lg:self-start"
+            >
               {/* Streamed: the standings do their own leaderboard query, and
                   gating the revealed category behind it made every reveal feel
                   slow for host and participants alike. */}
