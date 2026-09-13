@@ -7,6 +7,7 @@
 // be expressed server-side (distinct producers, "JOINED minus host", …) is
 // never approximated.
 import { createClient } from "@/lib/supabase/server";
+import { getTastingPlace } from "@/app/tastings/new/place";
 import { getProfileStats } from "@/lib/profile-stats";
 import { getTastingLeaderboard, type LeaderboardRow } from "@/lib/tasting-leaderboard";
 import { catalogWineTitle } from "@/lib/wset/queries";
@@ -368,7 +369,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     liveTasting !== null && liveTasting.reveal_mode !== "OPEN" && liveCurrentWine !== null;
   const wantLiveStandings = liveTasting !== null && liveTasting.reveal_mode !== "OPEN";
 
-  const [{ data: profileRows }, liveReveal, liveLeaderboard, finishedLeaderboards] =
+  const [{ data: profileRows }, liveReveal, liveLeaderboard, finishedLeaderboards, nextPlace] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -381,6 +382,10 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
         ? getTastingLeaderboard(liveTasting.id)
         : Promise.resolve<LeaderboardRow[]>([]),
       Promise.all(finishedShown.map((t) => getTastingLeaderboard(t.id))),
+      // Q2: host, JOINED and INVITED only — never public, never the record
+      // (never read for the live banner, the signed-out preview or a finished
+      // tasting). getTastingPlace runs under the viewer's own RLS.
+      nextTasting ? getTastingPlace(supabase, nextTasting.id) : Promise.resolve<string | null>(null),
     ]);
   const nameByUserId = new Map((profileRows ?? []).map((p) => [p.id, p.display_name]));
   const hostNameOf = (t: TastingRowDb) => nameByUserId.get(t.host_id) ?? HOST_FALLBACK;
@@ -440,6 +445,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       hosting,
       hostName: hostNameOf(nextTasting),
       scheduledAt: nextTasting.scheduled_at,
+      place: nextPlace,
       slots,
       canAddWine: canAddToFlight({
         wineSource: nextTasting.wine_source,

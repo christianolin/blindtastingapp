@@ -56,4 +56,11 @@ describe("nextUpMeta", () => {
       nextUpMeta({ hosting: true, hostName: "Ada", nextWinePosition: 4, joinedCount: 0 }),
     ).toBe("You're hosting · 3 glasses so far");
   });
+
+  it("ends with the place when one is set (B12)", () => {
+    expect(nextUpMeta({ hosting: true, hostName: "Christian", nextWinePosition: 4, place: "Nørrebro" }))
+      .toBe("You're hosting · 3 glasses so far · Nørrebro");
+    expect(nextUpMeta({ hosting: true, hostName: "Christian", nextWinePosition: 4, place: null }))
+      .toBe("You're hosting · 3 glasses so far");
+  });
 });

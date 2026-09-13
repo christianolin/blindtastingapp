@@ -22,6 +22,7 @@ export function nextUpMeta({
   hostName,
   nextWinePosition,
   joinedCount,
+  place,
 }: {
   hosting: boolean;
   hostName: string;
@@ -29,10 +30,13 @@ export function nextUpMeta({
   /** JOINED participants. NextUpBanner does not carry this count yet, so the
       banner passes nothing and "{k} in" stays off until the data does. */
   joinedCount?: number | null;
+  /** `NextUpBanner.place`. Always the last part when set (B12). */
+  place?: string | null;
 }): string {
   return joinEyebrow([
     hosting ? "You're hosting" : `Hosted by ${hostName}`,
     glassesSoFarPhrase(nextUpGlassCount(nextWinePosition)),
     joinedCount != null && joinedCount > 0 ? `${joinedCount} in` : null,
+    place,
   ]);
 }
