@@ -161,6 +161,31 @@
   --ring: #d4af6a;
   --gold: #d4af6a;
   --gold-deep: #c3a25b;
+  /* Redesign palette, same order as :root so the two blocks stay diffable.
+     Kept to the palette's own logic rather than invented: the border steps
+     become low-alpha parchment like --border and --input just above, the ink
+     and placeholder shades move into the muted-foreground family, and the gold
+     pair swaps direction because "dark gold" has to read ON near-black.
+
+     --chart-oldest inverts outright. In the light charts it is the palest
+     series, furthest from the ink; on a dark ground the oldest series is the
+     one closest to the GROUND, so it goes darker than the rest, not lighter. */
+  --rose: #c25f77;
+  --gold-light: #e0c288;
+  --gold-dark: #9a7c3a;
+  --live: #e07a63;
+  --border-light: rgba(245, 239, 227, 0.08);
+  --border-strong: rgba(245, 239, 227, 0.22);
+  --ink-photo: #d8cbb6;
+  --ink-caption: #b9a98c;
+  --placeholder: #8a7a5e;
+  --placeholder-soft: #5f5240;
+  --chart-oldest: #3a2e24;
+  /* NOT overridden, deliberately. --console/--console-card/--console-ink are
+     the host console's dim-room palette and --miss is the wrong-answer red on
+     the dark reveal: all four are already dark-surface values and the reveal is
+     dark in BOTH themes. Giving them ".dark" variants would invert a screen
+     that was never light. */
   --chart-1: #a8425a;
   --chart-2: #d4af6a;
   --chart-3: #6c8f70;

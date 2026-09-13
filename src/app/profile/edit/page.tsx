@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "./avatar-uploader";
 import { EditProfileForm } from "./edit-profile-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function EditProfilePage() {
   const supabase = await createClient();
@@ -44,6 +45,19 @@ export default async function EditProfilePage() {
               phone={profile?.phone ?? ""}
               favoriteWineType={profile?.favorite_wine_type ?? ""}
             />
+          </CardContent>
+        </Card>
+
+        {/* Its own card, not a row in the profile form: the theme is a device
+            preference kept in this browser, not a column on the profile, and
+            putting it inside a form that saves to the server would imply it
+            travels with the account. */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ThemeToggle />
           </CardContent>
         </Card>
       </div>
