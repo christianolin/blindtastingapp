@@ -1,9 +1,17 @@
 // The add-wine sheet's state (spec §C.4). The view, the scanned items, the
 // by-hand session and every field that must survive navigation live in one
 // reducer, so leaving a view never loses what was read or typed (RC8). The
-// shell renders from `useReducer(sheetReducer, initialSheetState(...))`; its
+// shell renders from `useReducer(reduceSheet, initialSheetState(...))`, and its
 // adds hook (use-sheet-adds.ts) performs the writes and reports back through
-// these actions. S5a and S5b may add actions; never rename or remove one.
+// these actions with `reduceSheet` too: one dispatch path, the reducer plus the
+// adoption give-back (plan amendment 22). The rules the hook enforces live here
+// as pure helpers (`routeAdd`, `addTargetId`, `shouldCloseAfterSingleAdd`,
+// `ticketFor`, `replyIsCurrent`, `unaddedItem`) and actions (`addLanded`,
+// `notePicked`: a note pick closes the sheet only when nothing else is left, or
+// asks first), since vitest cannot load the hook. Amendment 23: every action
+// that waits on the server carries the `ReplyTicket` it started with, and a
+// stale one is recorded but never moves the sheet. S5a and S5b may add actions;
+// never rename or remove one.
 //
 // Pure: no Supabase and no browser API, and every runtime import is relative
 // (vitest has no `@/` alias). Unit-tested in sheet-state.test.ts.
@@ -15,7 +23,7 @@ import { glassLabel } from "./format";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
 import type { CellarFilter } from "./row-format";
 import type {
-  AddSource, AddWineDestination, AddWineOpenOptions, AddWineStart, AddedWine, SearchGroups,
+  AddSource, AddWineDestination, AddWineOpenOptions, AddWineStart, AddedWine, NotePick, SearchGroups,
 } from "./types";
 import { homeViewFor, startViewFor } from "./use-camera";
 
@@ -50,6 +58,13 @@ export type ByHandSession = {
   focusField: WineFieldKey | null;
   attempted: boolean;                                          // show the refusal line after a save with gaps
   dirty: boolean;
+  /** Plan amendment 23 (wave C3 re-review): the sheet's `flow` when this
+      session opened. Reopening the same origin keeps the session and this
+      stamp (rule 1), so a by-hand save whose ticket was taken at a later flow
+      was made on this very session, and its landing ends it, edits made since
+      included (`recordLanded`). A session opened afresh meanwhile (after
+      Discard) is another wine, and stays. */
+  opened: number;
 };
 
 export type SheetState = {
@@ -74,7 +89,12 @@ export type SheetState = {
   added: AddedWine[];
   addedRowKeys: string[];                 // "lot:<id>" / "wine:<catalogWineId>" poured this session (rule 11)
   lastRack: string | null;                // the B1 preview tile's rack chip
-  closeAsk: { unfinished: number } | null;
+  /** Rule 7's footer ask. `note` (plan amendment 23, accepted) is the pick a
+      note waits on: Discard hands it on as the sheet closes, and every other
+      answer ends the ask without handing it on (`notePicked`, `reduceSheet`).
+      The pick itself stays while its own confirm, chooser or form is on
+      screen, so Rate it now or the form's save asks again. */
+  closeAsk: { unfinished: number; note?: NotePick } | null;
   closing: boolean;
   error: string | null;
   /** Plan amendment 18 (D17): "Don't add it" on the lot step's merge card wrote
@@ -91,7 +111,18 @@ export type SheetState = {
       and an add started there names the bottle (`addTargetId`). In Many, reads
       stack instead. */
   confirmQueue: string[];
+  /** Plan amendment 23: counts the user's steps that move or close the sheet —
+      navigation, ←, opening by hand, the lot step or the chooser, a photo
+      taking the screen, Rescan, Don't add it, `requestClose`, `cancelClose` and
+      Discard. Background steps (uploads, reads, failures, position and row
+      updates) and server replies leave it unchanged. A reply is current only
+      while it still matches its `ReplyTicket` (`replyIsCurrent`). */
+  flow: number;
 };
+
+/** Plan amendment 23: what an action that waits on the server started with —
+    the sheet's `flow`, the bottle in hand (`addTargetId`) and the view. */
+export type ReplyTicket = { flow: number; itemId: string | null; view: SheetView };
 
 export type SheetAction =
   | { type: "canScanResolved"; canScan: boolean }
@@ -106,7 +137,8 @@ export type SheetAction =
   | { type: "itemRemove"; id: string }
   | { type: "itemAdded"; id: string | null; added: AddedWine }
   | { type: "itemAddFailed"; id: string; error: string }
-  | { type: "openByHand"; origin: ByHandSession["origin"]; draft: WineIdentityDraft; focusField: WineFieldKey | null; unidentified?: boolean }
+  /** `ticket` (amendment 23): a form opened once a load returns (By hand on a matched read, Edit) opens only while its ticket is current. */
+  | { type: "openByHand"; origin: ByHandSession["origin"]; draft: WineIdentityDraft; focusField: WineFieldKey | null; unidentified?: boolean; ticket?: ReplyTicket }
   | { type: "byHandChange"; draft: WineIdentityDraft }
   | { type: "byHandUnidentified"; on: boolean }
   | { type: "byHandAttempted"; focusField: WineFieldKey | null }
@@ -118,7 +150,8 @@ export type SheetAction =
   | { type: "consume"; surface: "desktop" | "cellar"; consume: boolean }
   | { type: "cellarFilter"; filter: CellarFilter }
   | { type: "cellarSelect"; lotId: string | null }
-  | { type: "openLot"; source: AddSource }
+  /** `ticket` (amendment 23): catalog-then-lot's lot step opens only while the catalog write's ticket is current. */
+  | { type: "openLot"; source: AddSource; ticket?: ReplyTicket }
   | { type: "lotField"; field: "quantity" | "rack" | "price"; value: number | string }
   | { type: "choose"; source: AddSource | null; itemId: string | null; title: string; missing: WineFieldKey[] }
   | { type: "adopt"; destination: AddWineDestination }
@@ -135,7 +168,84 @@ export type SheetAction =
       card. Nothing is written. `itemId` is the scanned bottle the lot step was
       opened for (it leaves the stack as if removed), null for a search row;
       `lotId` is the existing lot that "Open it" links to. */
-  | { type: "lotSkipped"; itemId: string | null; lotId: string };
+  | { type: "lotSkipped"; itemId: string | null; lotId: string }
+  /** S5a (spec §C.5 A4b, D7): "Leave it for later" where a partial read is a
+      pending row (`matrix.partialRead.stacked === "pending-row"`: the cellar,
+      the catalog, no destination, an OPEN flight). Nothing is written. A Fix
+      session's row takes the form's draft and stays a pending row; a read not
+      yet added becomes one, so its confirm is never offered again. A new
+      session becomes a pending row of its own, `rowId`. The session ends, since
+      its row now holds the draft, and the sheet returns to the stack. A chooser
+      pick made for that bottle is given back (D12: an adoption covers one add),
+      so the next wine is chosen again (rule 6). A glass session is never a
+      row: its "Leave it for later" saves the glass. */
+  | { type: "byHandLeftForLater"; rowId: string }
+  /** S5a (spec §C.8): `saveFlightGlass` saved an existing glass: an Edit,
+      finishing an incomplete glass, or leaving it for later once more. A row
+      that added that glass this session follows it: added once complete,
+      otherwise still incomplete with the new gaps. The glass's session ends,
+      and the form, if it is on screen, gives way like ←. */
+  | { type: "glassSaved"; added: AddedWine; ticket?: ReplyTicket; draft?: WineIdentityDraft; closeSheet?: boolean }
+  /** S5a review (spec §C.4 rules 2 and 5; §C.5 E1): an add was refused — by
+      the server, by a call that threw, or as a note pick that cannot open. The
+      row it named keeps its place with the message (rule 2). A by-hand save's
+      refusal (`byHand`: the form's save, directly or through the lot step or
+      chooser it opened) flags the first `missing` field on the form. With no
+      requested destination an adoption can only be a chooser pick, so every
+      add made under one — the pick's own add, By hand opened for its gaps
+      (E1), the lot step it opened — gives the pick back and returns to the
+      chooser with the error (scan-4). Only a refusal the form on screen can
+      fix keeps the pick. Plan amendment 22: a by-hand save refused for missing
+      fields on the lot step or chooser its save opened returns to that form,
+      where the gap can be fixed, still giving the pick back; without missing
+      fields it returns to the chooser. D3's cellar follow-up (`requested`
+      catalog) stays where it is, with the error. */
+  | { type: "addRefused"; itemId: string | null; error: string; missing?: WineFieldKey[]; byHand: boolean; ticket?: ReplyTicket }
+  /** S5a review, round 2 (spec §C.4 rules 5 and 6; D12; sources-2, entry-3): an
+      adoption covers one add, made through its own chain: the by-hand form and
+      lot step opened on top of where it was made (E1's rows on a read's
+      confirm, the chooser, D3's follow-up). `reduceSheet`, which the shell's
+      reducer and the adds hook's `send` both run, applies this once `leavesAdoption`
+      says a dispatch left that chain without the add: ← to where it was made
+      or below, going home, Search or Search instead, Rescan, Discard, another
+      bottle or a photo taking the screen. The adoption is given back, so the
+      next wine is chosen again and nothing goes into a hinted flight on its
+      own. A chooser left behind goes with it; one still on screen keeps its
+      wine. */
+  | { type: "adoptionLeft" }
+  /** S5a, plan amendment 23 on the note hand-off (spec §C.5 C1, C2, D3 and
+      E1; §C.4 rules 3, 4 and 7): a note pick is ready to hand on. The note
+      opens once the sheet has closed, and closing for it drops nothing unasked.
+      A pick that waited on a catalog write carries its `ticket` and does
+      nothing once stale.
+      With nothing else in the sheet it closes (`closing`). Otherwise the footer
+      asks first, as rule 7 does, holding the pick (`closeAsk.note`) and
+      counting every row closing would drop, photos still uploading or being
+      read included (`queue`, `confirmQueue`), and a dirty by-hand form for
+      another wine. The pick's own bottle (`itemId`, its `addTargetId` when the
+      pick started) and the by-hand form whose save made it (`fromForm`) never
+      count. Discard hands the pick on; every other answer ends the ask, and the
+      pick is given back only once its own chain is gone (`reduceSheet`). */
+  | { type: "notePicked"; pick: NotePick; itemId: string | null; fromForm: boolean; ticket?: ReplyTicket }
+  /** Plan amendment 23 (spec §C.2 "After an add"): an add came back ok. One
+      step, so its ticket is judged once, before the add moves anything. It is
+      always recorded, once (`itemAdded` for `id`; a wine of its own when `id`
+      names a row already written). While the ticket is current it also
+      lands as round 1's hook did: the saved by-hand session ends, then "Add and
+      scan the next" (`scanNext`: Many on, then home), or D3 on a catalog sheet,
+      and a phone's single add closes when `shouldCloseAfterSingleAdd` allows
+      (`warning` keeps it open). A stale one moves nothing: see `recordLanded`. */
+  | {
+      type: "addLanded"; ticket: ReplyTicket; id: string | null; added: AddedWine; source: AddSource;
+      /** The by-hand form's save, directly or through the lot step or chooser it opened. */
+      byHand: boolean;
+      /** That form's draft when the save started, or null. */
+      draft: WineIdentityDraft | null;
+      /** The pick the add was made under (`adopted` when it started), or null. */
+      adopted: AddWineDestination | null;
+      scanNext: boolean;
+      warning: string | null;
+    };
 
 // ---------------------------------------------------------------------------
 // Internals
@@ -273,7 +383,9 @@ function turnHolder(s: SheetState): string | null {
 /** The bottle holding the turn — its reading or confirm view is on screen, or
     a view opened from its confirm — or null. For views: which bottle the
     laptop view is the search of, and whether a dropped photo only queues. An
-    add never names this; it names `addTargetId`, which also covers a row's Fix. */
+    add never names this; it names `addTargetId`, which also covers a row's Fix.
+    After a stale add it can name a bottle already written whose screen stayed
+    up (amendment 23): nothing started there names that bottle any more. */
 export function turnItemId(s: SheetState): string | null {
   return turnHolder(s);
 }
@@ -299,9 +411,15 @@ function fixChainRow(s: SheetState): string | null {
     - Otherwise the row whose Fix chain is up: the by-hand form Fix opened for
       it, and the lot step or chooser its save opened, before or after
       `byHandSaved` arrives.
-    - Otherwise null: a search row, the laptop home view, D3's cellar add. */
+    - Otherwise null: a search row, the laptop home view, D3's cellar add.
+    Never a bottle already written (plan amendment 23, wave C3 re-review): a
+    stale add leaves its screen up — the bottle's confirm, its search or laptop
+    view, the lot step, the chooser — but that bottle is in, so an add started
+    there is a wine of its own. It names no bottle, and lands, counts and spends
+    its lot step, chooser and pick like a search row's add. */
 export function addTargetId(s: SheetState): string | null {
-  return turnHolder(s) ?? fixChainRow(s);
+  const id = turnHolder(s) ?? fixChainRow(s);
+  return id !== null && unaddedItem(s, id) !== null ? id : null;
 }
 
 /** Shows `id`'s confirm. From a home view ← has nothing behind it but home. */
@@ -403,6 +521,14 @@ function sameOrigin(a: ByHandSession["origin"], b: ByHandSession["origin"]): boo
   }
 }
 
+/** A glass saved again replaces what its add said about it. A glass saved
+    complete carries no `incomplete`. */
+function savedGlass(before: AddedWine, saved: AddedWine): AddedWine {
+  const merged: AddedWine = { ...before, ...saved, glass: saved.glass ?? before.glass };
+  if (!saved.incomplete) delete merged.incomplete;
+  return merged;
+}
+
 function sameSource(a: AddSource, b: AddSource): boolean {
   if (a === b) return true;
   if (a.kind === "catalog" && b.kind === "catalog") return a.catalogWineId === b.catalogWineId;
@@ -452,12 +578,82 @@ export function initialSheetState(p: {
     error: null,
     skippedLot: null,
     confirmQueue: [],
+    flow: 0,
   };
 }
 
 export function sheetReducer(s: SheetState, a: SheetAction): SheetState {
   const next = step(s, a);
-  return next === s ? s : settle(s, next, a);
+  if (next === s) return s;
+  const settled = settle(s, next, a);
+  // Amendment 23: a user step that moves or closes the sheet starts a new flow
+  // (a nested step, like Discard's ←, has already counted it).
+  return movesSheet(s, settled, a) && settled.flow === s.flow ? { ...settled, flow: s.flow + 1 } : settled;
+}
+
+/** Amendment 23: the user's steps that move or close the sheet whenever they change it. */
+const USER_MOVES: readonly SheetAction["type"][] = [
+  "go", "back", "openByHand", "openLot", "choose", "byHandDiscard", "byHandLeftForLater", "lotSkipped", "followUpDone",
+  "requestClose", "cancelClose", "discardAndClose",
+];
+/** Amendment 23: user steps that count only when they take the screen — a photo, a Retry or a Rescan of the bottle on it. */
+const USER_MOVES_ON_SCREEN: readonly SheetAction["type"][] = ["enqueue", "itemRetry", "itemRemove"];
+
+function movesSheet(prev: SheetState, next: SheetState, a: SheetAction): boolean {
+  if (USER_MOVES.includes(a.type)) return true;
+  if (!USER_MOVES_ON_SCREEN.includes(a.type)) return false;
+  return next.view !== prev.view || next.activeItemId !== prev.activeItemId || !sameIds(next.history, prev.history);
+}
+
+/** The sheet's one dispatch path (plan amendments 22 and 23; D12; spec §C.4
+    rules 5 and 6): `sheetReducer`, then the adoption give-back, then the end of
+    a note pick's close-ask. A chooser pick, or D3's "Add it to my cellar",
+    covers one add made through its own chain; once a step leaves that chain
+    without the add (`leavesAdoption`), `adoptionLeft` gives the adoption back,
+    so the next wine is chosen again and nothing goes to a destination unasked.
+    That is the only way a pick is given back: a note pick's close-ask
+    (`notePicked`) waits for Discard, and any other answer ends the ask
+    (`endsNoteAsk`) while the pick stays for as long as its own confirm, chooser
+    or form is on screen (amendment 23). A stale reply never ends an ask.
+    The shell's `useReducer` and the adds hook's `send` both run it, so React's
+    state and the hook's `stateRef` take the same step, and the tests run
+    exactly what ships. */
+export function reduceSheet(s: SheetState, a: SheetAction): SheetState {
+  const stale = isStaleReply(s, a);
+  let next = sheetReducer(s, a);
+  if (leavesAdoption(s, next)) next = sheetReducer(next, { type: "adoptionLeft" });
+  if (stale || !endsNoteAsk(s, next, a)) return next;
+  // Rule 7's own ask (✕) may have replaced it; otherwise the ask goes.
+  return next.closeAsk === s.closeAsk ? { ...next, closeAsk: null } : next;
+}
+
+/** Plan amendment 23: the ticket an action that waits on the server takes when
+    it starts — read it from `stateRef.current` at that moment. */
+export function ticketFor(s: SheetState): ReplyTicket {
+  return { flow: s.flow, itemId: addTargetId(s), view: s.view };
+}
+
+/** Plan amendment 23: whether a server reply may still act — no user step has
+    moved or closed the sheet since it started (`flow`), the same bottle is in
+    hand and the same view is up. A reply started while the first view was
+    still resolving only needs the first two: nothing but ✕ can be tapped
+    there. A stale reply is still recorded, but never navigates, closes the
+    sheet, raises or ends a close-ask, or opens the note. */
+export function replyIsCurrent(s: SheetState, ticket: ReplyTicket): boolean {
+  return ticket.flow === s.flow && ticket.itemId === addTargetId(s) && (ticket.view === s.view || ticket.view === "resolving");
+}
+
+function isStaleReply(s: SheetState, a: SheetAction): boolean {
+  return "ticket" in a && a.ticket !== undefined && !replyIsCurrent(s, a.ticket);
+}
+
+/** The listed row `id`, unless it is already written (added, or an incomplete
+    glass): the only rows an add, a save or a chooser pick may start from, so a
+    confirm or form whose add landed while the user was away never writes it
+    again (amendment 23). */
+export function unaddedItem(s: SheetState, id: string): ScanItem | null {
+  const item = findItem(s, id);
+  return item !== undefined && !WRITTEN.includes(item.status) ? item : null;
 }
 
 function step(s: SheetState, a: SheetAction): SheetState {
@@ -626,6 +822,8 @@ function step(s: SheetState, a: SheetAction): SheetState {
       return findItem(s, a.id) ? patchItem(s, a.id, { error: a.error }) : s;
 
     case "openByHand": {
+      // Amendment 23: a form a load opens waits on the server, so a stale one never opens.
+      if (a.ticket && !replyIsCurrent(s, a.ticket)) return s;
       const session = s.byHand;
       // Rule 1: the same origin reuses its session, and the passed draft is ignored.
       const byHand: ByHandSession = session && sameOrigin(session.origin, a.origin)
@@ -637,6 +835,7 @@ function step(s: SheetState, a: SheetAction): SheetState {
           focusField: a.focusField,
           attempted: false,
           dirty: false,
+          opened: s.flow,
         };
       // Fix on a bottle's row makes that bottle the active one. If another
       // bottle held the turn (on a laptop, its search lists every row), that
@@ -695,6 +894,9 @@ function step(s: SheetState, a: SheetAction): SheetState {
       return { ...s, cellar: { ...s.cellar, selectedLotId: a.lotId } };
 
     case "openLot": {
+      // Amendment 23: catalog-then-lot's lot step waits on the catalog write, so
+      // a stale one never opens (the write happened; the user can add again).
+      if (a.ticket && !replyIsCurrent(s, a.ticket)) return s;
       // Reopening the same wine keeps what was typed (rule 1); another wine
       // starts from one bottle on the last rack used this session (B1).
       const lot = s.lot && sameSource(s.lot.source, a.source)
@@ -804,6 +1006,127 @@ function step(s: SheetState, a: SheetAction): SheetState {
       return popHistory(next, (view) => droppedInHand && (view === "confirm" || view === "reading" || view === "byhand"));
     }
 
+    case "addRefused": {
+      // Rule 2: the row stays as it was, with the server's message on it.
+      let next = a.itemId === null ? s : step(s, { type: "itemAddFailed", id: a.itemId, error: a.error });
+      // Amendment 23: a stale refusal is recorded (the row's error and the error
+      // line), but flags no field, gives no pick back and moves nothing.
+      if (a.ticket && !replyIsCurrent(s, a.ticket)) return { ...next, error: a.error };
+      const field = a.byHand && next.byHand !== null ? (a.missing?.[0] ?? null) : null;
+      if (field !== null) next = step(next, { type: "byHandAttempted", focusField: field });
+      const chooserPick = next.requested === null && next.adopted !== null;
+      if (!chooserPick || (field !== null && next.view === "byhand")) return step(next, { type: "error", error: a.error });
+      // Amendment 22: a by-hand save refused for what it is missing goes back to
+      // its form, where the gap can be fixed. The pick is given back all the
+      // same (its chooser or lot step is left behind), so the save asks again.
+      const form = field !== null ? backToForm(next) : null;
+      if (form !== null) return { ...form, adopted: null, chooseFor: null, error: a.error };
+      // Rule 5: back to the chooser the pick came from. One left behind by an
+      // earlier wine (← from it) is dropped, so its rows act on the bottle in
+      // hand: an E1 pick is made on that bottle's confirm, not the choose view.
+      const ownChooser = next.view === "choose" || next.history.includes("choose");
+      return step({ ...next, chooseFor: ownChooser ? next.chooseFor : null }, { type: "adoptFailed", error: a.error });
+    }
+
+    case "byHandLeftForLater": {
+      // S5a (A4b, D7): nothing is written. The row holds the form's draft from
+      // here on, so the session ends and the sheet returns to the stack. A read
+      // that becomes a pending row is no longer offerable, so `settle` never
+      // offers its confirm again, and moves on to a read waiting its turn. A
+      // chooser pick for that bottle covered no add, so it is given back (D12).
+      const session = s.byHand;
+      if (!session || session.origin.kind === "glass") return s;
+      const origin = session.origin;
+      let next: SheetState = s;
+      if (origin.kind === "new") {
+        if (findItem(s, a.rowId)) return s;
+        const row: ScanItem = {
+          id: a.rowId, photoUrl: session.draft.imageUrl ?? "", blob: null, imagePath: null,
+          status: "pending", read: null, draft: session.draft, added: null, error: null,
+        };
+        next = { ...s, items: [...s.items, row] };
+      } else {
+        const item = findItem(s, origin.itemId);
+        if (item && (item.status === "read" || item.status === "pending")) {
+          next = patchItem(s, item.id, { status: "pending", draft: session.draft });
+        }
+      }
+      return goHome({ ...next, byHand: null, skippedLot: null, adopted: null });
+    }
+
+    case "glassSaved": {
+      // S5a (§C.8): the glass was saved, not added again, so `added` keeps its
+      // count; only what it says about this glass changes.
+      const wineId = a.added.wineId;
+      if (!wineId) return s;
+      const session = s.byHand;
+      const glassSession = session?.origin.kind === "glass" && session.origin.wineId === wineId ? session : null;
+      // Amendment 23: a stale save is recorded on its rows, but never leaves the
+      // form or closes an Edit open. Its session ends only while it still holds
+      // the draft that was saved; edits made since stay.
+      const current = !a.ticket || replyIsCurrent(s, a.ticket);
+      const own = glassSession !== null && (current || glassSession.draft === a.draft) ? glassSession : null;
+      const next: SheetState = {
+        ...s,
+        items: s.items.map((item): ScanItem => {
+          if (!item.added || item.added.wineId !== wineId) return item;
+          return {
+            ...item,
+            status: a.added.incomplete ? "incomplete" : "added",
+            added: savedGlass(item.added, a.added),
+            draft: own ? own.draft : (a.draft ?? item.draft),
+            error: null,
+          };
+        }),
+        added: s.added.map((entry) => (entry.wineId === wineId ? savedGlass(entry, a.added) : entry)),
+        byHand: own ? null : s.byHand,
+        error: current ? null : s.error,
+      };
+      const shown = current && own && s.view === "byhand" ? popHistory(next, () => false) : next;
+      // An Edit open is for this one glass, so its save ends the sheet — asking
+      // first, like ✕, while other rows are unfinished (rule 7).
+      return current && a.closeSheet === true ? sheetReducer(shown, { type: "requestClose" }) : shown;
+    }
+
+    case "adoptionLeft":
+      // S5a review, round 2 (D12, rule 6): the adoption covered no add, so it is
+      // given back. A chooser on screen keeps its wine. One left behind is
+      // dropped, so a later refusal's return to the chooser acts on the wine in
+      // hand, never on it.
+      return s.adopted === null ? s : { ...s, adopted: null, chooseFor: s.view === "choose" ? s.chooseFor : null };
+
+    case "notePicked": {
+      // Amendment 23: a stale pick does nothing — its catalog write already
+      // happened, and the user can pick again. A current one closes only when
+      // nothing else is left; otherwise it asks first, holding the pick for
+      // Discard (rule 7).
+      if (a.ticket && !replyIsCurrent(s, a.ticket)) return s;
+      const left = leftForNote(s, a.itemId, a.fromForm);
+      return left > 0 ? { ...s, closeAsk: { unfinished: left, note: a.pick } } : { ...s, closeAsk: null, closing: true };
+    }
+
+    case "addLanded": {
+      if (!replyIsCurrent(s, a.ticket)) return recordLanded(s, a);
+      // Every write that came back ok is recorded once. A reply naming a row
+      // already written is a wine of its own, never that row again (rule 11).
+      const id = a.id !== null && findItem(s, a.id) !== undefined && unaddedItem(s, a.id) === null ? null : a.id;
+      let next = sheetReducer(s, { type: "itemAdded", id, added: a.added });
+      if (a.byHand) next = sheetReducer(next, { type: "byHandSaved" });
+      if (a.scanNext) {
+        next = sheetReducer(next, { type: "setMulti", multi: true });
+        return sheetReducer(next, { type: "go", view: next.canScan === false ? "desktop" : "camera" });
+      }
+      // D3 follows a single add on a catalog sheet. In Many, or a laptop queue,
+      // the row reads "Added to the catalog" instead; a chooser's "save to the
+      // catalog only" is terminal.
+      const { catalogWineId } = a.added;
+      if (a.added.destination === "catalog" && s.requested?.kind === "catalog" && !s.multi && catalogWineId !== null) {
+        next = sheetReducer(next, { type: "followUp", catalogWineId, title: a.added.label, written: a.added.written === true });
+      }
+      // Amendment 22: a phone's single add closes only when nothing is left.
+      return shouldCloseAfterSingleAdd(next, { warning: a.warning }) ? sheetReducer(next, { type: "requestClose" }) : next;
+    }
+
     default: {
       const unknown: never = a;
       throw new Error(`Unknown add-wine sheet action: ${JSON.stringify(unknown)}`);
@@ -823,6 +1146,19 @@ function popHistory(s: SheetState, skip: (view: SheetView) => boolean): SheetSta
   return { ...s, view: homeView(s.canScan), history: [] };
 }
 
+/** Amendment 22: the by-hand form under the lot step or chooser on screen,
+    shown again as ← would reach it, or null when the view on screen was not
+    opened by that form's save. */
+function backToForm(s: SheetState): SheetState | null {
+  if (s.view !== "lot" && s.view !== "choose") return null;
+  for (let i = s.history.length - 1; i >= 0; i--) {
+    const view = s.history[i];
+    if (view === "byhand") return { ...s, view, history: s.history.slice(0, i) };
+    if (!BACK_SKIPS.includes(view)) return null;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Selectors and dispatch helpers
 // ---------------------------------------------------------------------------
@@ -836,6 +1172,41 @@ export function currentDestination(s: SheetState): AddWineDestination | null {
   return { ...destination, position: s.positionOverride };
 }
 
+/** Where an adoption is made: E1's rows on a read's confirm, the chooser, D3's follow-up. */
+const ADOPTION_ORIGINS: readonly SheetView[] = ["confirm", "choose", "followup"];
+/** An adoption's own add runs through these, opened on top of where it was made. */
+const ADOPTION_CHAIN: readonly SheetView[] = ["byhand", "lot"];
+
+/** S5a review, round 2 (D12; spec §C.4 rules 5 and 6): whether the move from
+    `prev` to `next` left a live adoption's chain without its add, so
+    `reduceSheet` gives the adoption back (`adoptionLeft`). The chain is where
+    the adoption was made (the top-most confirm, chooser or follow-up of
+    `prev`'s view stack), with the by-hand form and lot step opened on top of
+    it. It is left when:
+    - the bottle in hand changes: Rescan, another bottle's confirm, a dropped
+      photo's reading view;
+    - the stack drops from the form or lot step back to where it was made, or
+      below it: ←, going home, Discard. While the add runs on the view where it
+      was made, the adoption stays;
+    - any other view opens on top: Search, Search instead, a reading view;
+    - the view where it was made is gone from the stack.
+    Its add landing (`itemAdded`) or being refused (`addRefused`) settles the
+    adoption on its own. */
+function leavesAdoption(prev: SheetState, next: SheetState): boolean {
+  if (prev.adopted === null || next.adopted === null) return false;
+  if (addTargetId(next) !== addTargetId(prev)) return true;
+  const before = [...prev.history, prev.view];
+  let origin = before.length - 1;
+  while (origin >= 0 && !ADOPTION_ORIGINS.includes(before[origin])) origin--;
+  if (origin < 0) return true;
+  const after = [...next.history, next.view];
+  if (after.length <= origin || after[origin] !== before[origin]) return true;
+  const above = after.slice(origin + 1);
+  if (above.some((view) => !ADOPTION_CHAIN.includes(view))) return true;
+  // Back down onto the view it was made on, from the form or lot step opened for it.
+  return above.length === 0 && origin < before.length - 1;
+}
+
 /** Rule 7: rows that are pending, failed, or read but not added, plus a dirty
     by-hand session. Incomplete flight glasses are already added (D7). */
 export function unfinishedCount(s: SheetState): number {
@@ -847,6 +1218,109 @@ export function unfinishedCount(s: SheetState): number {
   const onCountedRow =
     (origin.kind === "item" || origin.kind === "match") && unfinished.some((item) => item.id === origin.itemId);
   return unfinished.length + (onCountedRow ? 0 : 1);
+}
+
+/** Plan amendment 22: what keeps a phone's sheet open after a single add — a
+    photo still uploading or being read, and every row rule 7 would ask about. */
+const KEEPS_SHEET_OPEN: readonly ItemStatus[] = [...IN_PROGRESS, ...UNFINISHED];
+
+/** Plan amendment 22: the rows closing now would drop, by id — every row
+    uploading, reading, read, pending or failed, and whatever `queue` and
+    `confirmQueue` hold — besides `besides`, the bottle a note pick hands on. */
+function rowsLeft(s: SheetState, besides: string | null): Set<string> {
+  const ids = new Set([...s.queue, ...s.confirmQueue]);
+  for (const item of s.items) if (KEEPS_SHEET_OPEN.includes(item.status)) ids.add(item.id);
+  if (besides !== null) ids.delete(besides);
+  return ids;
+}
+
+/** Plan amendment 22 on the note hand-off: how many wines closing for a note
+    pick would drop. The rows `rowsLeft` finds besides the pick's own bottle,
+    plus a dirty by-hand form for another wine: never the form whose save made
+    the pick (`fromForm`), nor one on the pick's bottle or on a row already
+    counted, which is the same wine. */
+function leftForNote(s: SheetState, itemId: string | null, fromForm: boolean): number {
+  const rows = rowsLeft(s, itemId);
+  const session = s.byHand;
+  if (!session?.dirty || fromForm) return rows.size;
+  const origin = session.origin;
+  const row = origin.kind === "item" || origin.kind === "match" ? origin.itemId : null;
+  return rows.size + (row !== null && (row === itemId || rows.has(row)) ? 0 : 1);
+}
+
+/** What a note pick's close-ask survives (plan amendment 22): reports from the
+    background — an upload, a read or a failure landing, the glass position
+    moving on, a row marked in flight, the error line — that leave the screen
+    as it was. */
+const KEEPS_NOTE_ASK: readonly SheetAction["type"][] = ["itemUploaded", "itemRead", "itemFailed", "positionAdvanced", "rowAdded", "error"];
+
+/** Whether the step from `prev` to `next` ended a note pick's close-ask
+    without Discard: Keep going, ✕ asking rule 7's own question, ←, another
+    row, a tap anywhere, or the screen moving on under it. A step that changes
+    nothing, closes the sheet, or asks again for a new note pick does not. */
+function endsNoteAsk(prev: SheetState, next: SheetState, a: SheetAction): boolean {
+  const ask = prev.closeAsk;
+  if (ask?.note === undefined || next === prev || next.closing) return false;
+  if (next.closeAsk !== ask) return next.closeAsk?.note === undefined;
+  const sameScreen = next.view === prev.view && next.activeItemId === prev.activeItemId && sameIds(next.history, prev.history);
+  return !(sameScreen && KEEPS_NOTE_ASK.includes(a.type));
+}
+
+/** Plan amendment 23: a stale `addLanded`. The add is recorded — its bottle is
+    marked added and leaves both queues, and `added` counts it once, whatever
+    it names (a row already written is not marked again: the reply is a wine of
+    its own, rule 11) — and what the add started from is spent, so nothing
+    still on screen can write it again:
+    - the lot step's lot and the chooser's wine for that same source, and the
+      pick it was made under;
+    - the sessions a current landing ends too (`byHandSaved`, `itemAdded`): the
+      by-hand form whose save it was — the session already open when the save
+      started (`ByHandSession.opened`), edits made since included, so it can
+      never save the wine twice (wave C3 re-review) — and a Fix or By hand
+      session on the added bottle, whose edits have nowhere left to go. A form
+      opened afresh meanwhile is another wine and stays.
+    The view, its history, a close-ask, `closing` and D3 are never touched. */
+function recordLanded(s: SheetState, a: Extract<SheetAction, { type: "addLanded" }>): SheetState {
+  const named = a.id === null ? undefined : findItem(s, a.id);
+  const item = named && !WRITTEN.includes(named.status) ? named : undefined;
+  const base = item
+    ? patchItem(s, item.id, { status: a.added.incomplete ? "incomplete" : "added", added: a.added, blob: null, error: null })
+    : s;
+  const session = base.byHand;
+  const savedForm = a.byHand && session !== null && session.origin.kind !== "glass" && session.opened < a.ticket.flow;
+  const onBottle = item !== undefined && sessionRow(base) === item.id;
+  return {
+    ...base,
+    queue: item ? unqueue(base.queue, item.id) : base.queue,
+    confirmQueue: item ? unqueue(base.confirmQueue, item.id) : base.confirmQueue,
+    added: [...base.added, a.added],
+    byHand: savedForm || onBottle ? null : session,
+    lot: base.lot !== null && base.lot.source === a.source ? null : base.lot,
+    chooseFor: base.chooseFor !== null && base.chooseFor.source === a.source ? null : base.chooseFor,
+    adopted: a.adopted !== null && base.adopted === a.adopted ? null : base.adopted,
+  };
+}
+
+/** Plan amendment 22 (spec §C.2 "After an add"; §C.4 rule 3; amendment 20):
+    whether a phone's single add closes the sheet. The adds hook asks once the
+    add's own actions have run (`itemAdded`, `byHandSaved`, and D3's
+    `followUp`), and calls `requestClose` only on true, which is only when
+    nothing is left:
+    - a phone (`canScan`) with Many off; in Many and on the laptop the sheet
+      stays open;
+    - on the home view: not D3's follow-up, and not the confirm that landing
+      home just opened for a read waiting its turn (amendment 20);
+    - `queue` and `confirmQueue` empty, and no row uploading, reading, read,
+      pending or failed: a photo still being read is never dropped, and the
+      drain continues (rule 3);
+    - the add returned no warning ("Added — but …"): its notice stays until the
+      user taps Done.
+    Otherwise the sheet stays on whatever the reducer opened. A dirty by-hand
+    session is left to `requestClose`, which asks first (rule 7). */
+export function shouldCloseAfterSingleAdd(s: SheetState, add: { warning?: string | null } = {}): boolean {
+  if (add.warning) return false;
+  if (s.canScan !== true || s.multi || !isHome(s.view)) return false;
+  return rowsLeft(s, null).size === 0;
 }
 
 /** "Done · N wines added": every add this session, incomplete flight glasses included (A4). */

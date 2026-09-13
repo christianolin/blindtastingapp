@@ -1,70 +1,46 @@
 import { describe, expect, it } from "vitest";
-import {
-  glassLabel,
-  identityFromPrefill,
-  ratePickPlan,
-  scanTitle,
-  vintageLabel,
-  wineMetaFromExtracted,
-  wineTitleFromExtracted,
-} from "./format";
-import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
+import { emptyDraft } from "../../lib/wine-identity/complete";
+import type { WineIdentityDraft } from "../../lib/wine-identity/types";
+import { glassLabel, notePickPlan, starLabel, vintageLabel } from "./format";
+import type { AddSource } from "./types";
 
-const extracted = {
-  producer: "Produttori del Barbaresco",
-  wineName: "Barbaresco",
-  appellation: "Barbaresco DOCG",
-  region: "Piedmont",
-  country: "Italy",
-  vintageKind: "YEAR" as const,
-  vintageRead: true,
-  vintageYear: 2018,
-  grapes: [{ name: "Nebbiolo", percentage: null }],
+const complete: WineIdentityDraft = {
+  ...emptyDraft(), producer: { kind: "existing", id: "p", name: "Vietti" }, vintage: { kind: "YEAR", year: 2017, tawnyYears: null, read: false },
+  colour: "RED", style: "STILL", countryId: "it", regionId: "pie", appellationId: "barolo",
+  blend: [{ grape: { kind: "existing", id: "neb", name: "Nebbiolo" }, percentage: null }],
 };
+it("notePickPlan: a catalog source picks directly", () =>
+  expect(notePickPlan({ kind: "catalog", catalogWineId: "c1", via: "search" })).toEqual({ kind: "pick", pick: { catalogWineId: "c1" } }));
+it("notePickPlan: a lot carries its wine and consume", () =>
+  expect(notePickPlan({ kind: "lot", lotId: "l1", consume: true, catalogWineId: "c1" })).toEqual({ kind: "pick", pick: { catalogWineId: "c1", lotId: "l1", consume: true } }));
+it("notePickPlan: a complete identity is written to the catalog first", () =>
+  expect(notePickPlan({ kind: "identity", draft: complete, via: "byhand", readId: null }).kind).toBe("catalog-first"));
+it("notePickPlan: an identity with gaps opens By hand first (D7)", () =>
+  expect(notePickPlan({ kind: "identity", draft: emptyDraft(), via: "scan", readId: null }).kind).toBe("by-hand-first"));
 
-describe("wineTitleFromExtracted", () => {
-  it("joins producer, wine name and vintage with commas", () => {
-    expect(wineTitleFromExtracted(extracted)).toBe(
-      "Produttori del Barbaresco, Barbaresco 2018",
-    );
+describe("notePickPlan: the rest of a note's single pick (C1, C2, D7)", () => {
+  it("a complete identity goes to the catalog as it is, read id included", () => {
+    const source: Extract<AddSource, { kind: "identity" }> = { kind: "identity", draft: complete, via: "scan", readId: "r1" };
+    expect(notePickPlan(source)).toEqual({ kind: "catalog-first", source });
   });
-  it("omits an unread vintage and falls back when nothing was read", () => {
-    expect(
-      wineTitleFromExtracted({ ...extracted, vintageRead: false, vintageYear: null }),
-    ).toBe("Produttori del Barbaresco, Barbaresco");
-    expect(
-      wineTitleFromExtracted({
-        ...extracted,
-        producer: null,
-        wineName: null,
-        vintageRead: false,
-      }),
-    ).toBe("Unnamed wine");
+  it("By hand first carries the draft and names its gaps in completeness order", () => {
+    const draft: WineIdentityDraft = { ...complete, vintage: { kind: null, year: null, tawnyYears: null, read: false }, appellationId: null };
+    expect(notePickPlan({ kind: "identity", draft, via: "scan", readId: "r1" })).toEqual({ kind: "by-hand-first", draft, missing: ["vintage", "appellation"] });
   });
-  it("labels NV and tawny reads", () => {
-    expect(wineTitleFromExtracted({ ...extracted, vintageKind: "NV", vintageYear: null })).toBe(
-      "Produttori del Barbaresco, Barbaresco NV",
-    );
-    expect(
-      wineTitleFromExtracted({ ...extracted, vintageKind: "TAWNY", vintageYear: null }),
-    ).toBe("Produttori del Barbaresco, Barbaresco Tawny");
+  it("an incomplete or unidentified draft is finished by hand first; once complete it goes to the catalog as an identity", () => {
+    const gaps: WineIdentityDraft = { ...complete, producer: null };
+    expect(notePickPlan({ kind: "incomplete", draft: gaps, via: "scan" })).toEqual({ kind: "by-hand-first", draft: gaps, missing: ["producer"] });
+    expect(notePickPlan({ kind: "unidentified", draft: gaps })).toEqual({ kind: "by-hand-first", draft: gaps, missing: ["producer"] });
+    expect(notePickPlan({ kind: "incomplete", draft: complete, via: "scan" })).toEqual({ kind: "catalog-first", source: { kind: "identity", draft: complete, via: "scan", readId: null } });
+    expect(notePickPlan({ kind: "unidentified", draft: complete })).toEqual({ kind: "catalog-first", source: { kind: "identity", draft: complete, via: "byhand", readId: null } });
+  });
+  it("refuses a lot that arrives without its wine, and a +1 bottle, instead of guessing", () => {
+    expect(notePickPlan({ kind: "lot", lotId: "l1", consume: false }).kind).toBe("error");
+    expect(notePickPlan({ kind: "plusOne", lotId: "l1" }).kind).toBe("error");
   });
 });
 
-describe("wineMetaFromExtracted", () => {
-  it("joins appellation · region · country · grapes", () => {
-    expect(wineMetaFromExtracted(extracted)).toBe(
-      "Barbaresco DOCG · Piedmont · Italy · Nebbiolo",
-    );
-  });
-  it("drops blanks", () => {
-    expect(wineMetaFromExtracted({ ...extracted, appellation: null, grapes: [] })).toBe(
-      "Piedmont · Italy",
-    );
-  });
-});
-
-describe("glassLabel / vintageLabel / scanTitle", () => {
+describe("glassLabel / vintageLabel / starLabel", () => {
   it("formats a glass number", () => {
     expect(glassLabel(4)).toBe("glass 4");
   });
@@ -75,107 +51,8 @@ describe("glassLabel / vintageLabel / scanTitle", () => {
     expect(vintageLabel("TAWNY", null, 20)).toBe("20yo");
     expect(vintageLabel("TAWNY", null, null)).toBe("Tawny");
   });
-  it("titles a prefill the same way as a read", () => {
-    expect(scanTitle(prefill())).toBe("Cigliuti, Barbaresco 2017");
-  });
-});
-
-function prefill(over: Partial<WineFormInitial> = {}): WineFormInitial {
-  return {
-    countryId: "c1",
-    regionId: "r1",
-    appellationId: "a1",
-    blend: [{ grapeId: "g1", percentage: "" }],
-    producerId: "p1",
-    producerLabel: "Cigliuti",
-    typeDesignationId: "",
-    colour: "RED",
-    style: "STILL",
-    wineName: "Barbaresco",
-    description: null,
-    estimatedPrice: "",
-    vintageKind: "YEAR",
-    vintageYear: "2017",
-    tawnyYears: "",
-    imageUrl: "https://x/y.jpg",
-    appellations: [],
-    ...over,
-  };
-}
-
-describe("identityFromPrefill", () => {
-  it("maps a complete prefill to a ByHandIdentity", () => {
-    expect(identityFromPrefill(prefill())).toEqual({
-      producerId: "p1",
-      producerName: "Cigliuti",
-      wineName: "Barbaresco",
-      vintageKind: "YEAR",
-      vintageYear: 2017,
-      vintageTawnyYears: null,
-      colour: "RED",
-      style: "STILL",
-      countryId: "c1",
-      regionId: "r1",
-      appellationId: "a1",
-      primaryGrapeId: "g1",
-      secondaryGrapeId: null,
-      typeDesignationId: null,
-      imageUrl: "https://x/y.jpg",
-      description: null,
-      alcoholPercent: null,
-    });
-  });
-  it("keeps a pending producer by name", () => {
-    const id = identityFromPrefill(prefill({ producerId: "", producerLabel: "New Estate" }));
-    expect(id?.producerId).toBeNull();
-    expect(id?.producerName).toBe("New Estate");
-  });
-  it("returns null when the floor is missing", () => {
-    expect(identityFromPrefill(prefill({ appellationId: "" }))).toBeNull();
-    expect(identityFromPrefill(prefill({ vintageYear: "" }))).toBeNull();
-    expect(identityFromPrefill(prefill({ vintagePrompt: true }))).toBeNull();
-    expect(identityFromPrefill(prefill({ producerId: "", producerLabel: null }))).toBeNull();
-    expect(identityFromPrefill(prefill({ blend: [] }))).toBeNull();
-    expect(
-      identityFromPrefill(prefill({ blend: [{ grapeId: "", percentage: "", pendingName: "X" }] })),
-    ).toBeNull();
-    expect(identityFromPrefill(prefill({ colour: null }))).toBeNull();
-  });
-  it("accepts NV and tawny", () => {
-    expect(identityFromPrefill(prefill({ vintageKind: "NV", vintageYear: "" }))?.vintageKind).toBe(
-      "NV",
-    );
-    const tawny = identityFromPrefill(prefill({ vintageKind: "TAWNY", vintageYear: "", tawnyYears: "20" }));
-    expect(tawny?.vintageTawnyYears).toBe(20);
-    expect(identityFromPrefill(prefill({ vintageKind: "TAWNY", vintageYear: "" }))).toBeNull();
-  });
-});
-
-describe("ratePickPlan", () => {
-  it("takes a catalog wine (a search row, a matched scan) as it is", () => {
-    expect(ratePickPlan({ kind: "catalog", catalogWineId: "w1" })).toEqual({
-      kind: "pick",
-      pick: { catalogWineId: "w1" },
-    });
-  });
-  it("carries a cellar lot's wine and its consume choice through, with no lookup", () => {
-    expect(
-      ratePickPlan({ kind: "lot", lotId: "lot1", consume: true, catalogWineId: "w1" }),
-    ).toEqual({ kind: "pick", pick: { catalogWineId: "w1", lotId: "lot1", consume: true } });
-    expect(
-      ratePickPlan({ kind: "lot", lotId: "lot1", consume: false, catalogWineId: "w1" }),
-    ).toEqual({ kind: "pick", pick: { catalogWineId: "w1", lotId: "lot1", consume: false } });
-  });
-  it("refuses a lot that arrives without its wine instead of guessing", () => {
-    const plan = ratePickPlan({ kind: "lot", lotId: "lot1", consume: true });
-    expect(plan.kind).toBe("error");
-  });
-  it("finds or creates a by-hand identity (an unmatched scan) in the catalog first", () => {
-    const identity = identityFromPrefill(prefill());
-    expect(identity).not.toBeNull();
-    expect(ratePickPlan({ kind: "identity", identity: identity! })).toEqual({
-      kind: "catalog-first",
-      source: { kind: "identity", identity },
-    });
+  it("formats a rating average", () => {
+    expect(starLabel(91.4)).toBe("★ 91");
+    expect(starLabel(null)).toBeNull();
   });
 });
