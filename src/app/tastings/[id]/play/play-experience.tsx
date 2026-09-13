@@ -22,8 +22,13 @@ import { buildPickCounts, type PickCounts } from "./pick-counts";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
 import { currentGlass, pouredThrough, type PointerGlass } from "@/lib/pour-pointer";
 import { rankLabel, rankRows } from "@/lib/stats-math";
-import { getSemiBlindBoard, getSemiBlindCandidates } from "@/lib/semi-blind-data";
+import {
+  getSemiBlindBoard,
+  getSemiBlindCandidates,
+  getSemiBlindRevealedPicks,
+} from "@/lib/semi-blind-data";
 import type { BoardGlass } from "@/lib/semi-blind-board";
+import { candidateLabel } from "@/lib/semi-blind-copy";
 import {
   pendingAnswerNotice,
   type IncompleteGlass,
@@ -40,6 +45,7 @@ import { PausedBand } from "./paused-band";
 import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
 import { RevealView, type RevealStanding } from "./reveal-view";
+import { SemiBlindReveal, type SemiBlindRevealProps } from "./semi-blind-reveal";
 
 // One aligned row per scored attribute — the correct value, the taster's
 // guess, and the points — so the score reads as an auditable result sheet
@@ -583,6 +589,106 @@ export async function PlayExperience({
     ? (currentGlass(pointerGlasses, tasting.current_wine_id)?.id ?? null)
     : null;
 
+  // SB4 (BT-S4, spec §10.3 item 3): the one glass a `reveal_wine` call most
+  // recently finished revealing gets the full reveal treatment below
+  // (`SemiBlindReveal`); every other glass — open, locked, not-poured, or
+  // revealed earlier — stays inside the persistent MatchBoard above (BT-S3),
+  // which already draws a compact "Glass N was …" row for it. `revealed_at`
+  // (a plain, non-spoiler `wines` column, same RLS as is_revealed/reveal_step)
+  // is the only reliable "most recent" signal: reveal order need not follow
+  // list order once glasses resolve independently — ASYNC's per-glass reveal,
+  // or a LIVE host's Skip, can both leave a later glass revealed first.
+  let semiBlindReveal: { wineId: string; props: SemiBlindRevealProps } | null = null;
+  if (showMatchBoard && semiBlindBoard && semiBlindCandidates && revealedWineIds.length > 0) {
+    const { data: revealTimestamps } = await supabase
+      .from("wines")
+      .select("id, revealed_at")
+      .in("id", revealedWineIds);
+    let latestWineId: string | null = null;
+    let latestAt = "";
+    for (const row of revealTimestamps ?? []) {
+      const at = row.revealed_at ?? "";
+      if (at > latestAt) {
+        latestAt = at;
+        latestWineId = row.id;
+      }
+    }
+    const answer = latestWineId ? answerByWineId.get(latestWineId) : undefined;
+    const glassIndex = latestWineId ? (wines ?? []).findIndex((w) => w.id === latestWineId) : -1;
+    if (latestWineId && answer && glassIndex >= 0) {
+      // Every guesses row on a revealed glass, with no eligibility filter of
+      // its own (refinement 18) — a host-provides host's blank row or a
+      // contributor's own never counts towards "the table split" or the
+      // standings, so both are filtered through the same eligibleGuessers
+      // rule the rest of this page already uses.
+      const revealedPicks = await getSemiBlindRevealedPicks(tastingId);
+      const wineByIdForPicks = new Map((wines ?? []).map((w) => [w.id, w]));
+      const eligiblePicks = revealedPicks.filter((p) => {
+        const w = wineByIdForPicks.get(p.glassWineId);
+        return w ? eligibleGuessers(w).some((e) => e.id === p.participantId) : false;
+      });
+      const myPick = revealedPicks.find(
+        (p) => p.glassWineId === latestWineId && p.participantId === myParticipant.id,
+      );
+      const trueKey = semiBlindBoard.revealedKeyByGlass[latestWineId] ?? null;
+      const cardByKey = new Map(semiBlindCandidates.cards.map((c) => [c.key, c]));
+      const splitRows = (semiBlindBoard.splitByGlass[latestWineId] ?? []).map((row) => ({
+        label: candidateLabel(
+          cardByKey.get(row.key) ?? { producer: null, wineName: null, vintageLabel: "" },
+        ),
+        count: row.count,
+        correct: row.key === trueKey,
+      }));
+      const semiBlindCompetitors = joinedParticipants.filter((p) => !isHostProvidesHostRow(p));
+      const matchesByParticipant = new Map<string, number>();
+      for (const p of eligiblePicks) {
+        if (!p.correct) continue;
+        matchesByParticipant.set(p.participantId, (matchesByParticipant.get(p.participantId) ?? 0) + 1);
+      }
+      const semiBlindStandingsRows = semiBlindCompetitors.map((p) => ({
+        name: p.id === myParticipant.id ? "You" : (nameByParticipantId.get(p.id) ?? "Someone"),
+        matches: matchesByParticipant.get(p.id) ?? 0,
+      }));
+      semiBlindReveal = {
+        wineId: latestWineId,
+        props: {
+          glass: glassIndex + 1,
+          revealedCount,
+          total: totalWines,
+          identity: {
+            producer: name(answer.producer_id),
+            vintage: vintageLabel(answer),
+            meta: [
+              name(answer.appellation_id),
+              name(answer.region_id),
+              [
+                name(answer.primary_grape_id),
+                answer.secondary_grape_id ? name(answer.secondary_grape_id) : null,
+              ]
+                .filter(Boolean)
+                .join(" / "),
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          },
+          result: {
+            hit: myPick?.correct ?? false,
+            pickLabel: myPick?.pickLabel ?? null,
+            mine: eligiblePicks.filter((p) => p.participantId === myParticipant.id && p.correct)
+              .length,
+          },
+          split: splitRows,
+          poolCards: semiBlindCandidates.cards.filter(
+            (c) => !(c.key in semiBlindCandidates.revealedGlassByKey),
+          ),
+          standings: rankRows(semiBlindStandingsRows, (s) => s.matches).map(
+            ({ row, rank, tied }) => ({ rank, tied, name: row.name, matches: row.matches }),
+          ),
+        },
+      };
+    }
+  }
+
   // Standings: rank chip on the ladder / locked-in header, the rank delta on
   // the reveal, and the standalone leaderboard. Reuses getTastingLeaderboard
   // so partial per-attribute reveals count exactly as on the main page — not
@@ -884,12 +990,25 @@ export async function PlayExperience({
       ) : null}
 
       {(wines ?? []).map((wine, index) => {
-        // Semi-blind: every glass, whatever its state, is the matching
-        // board's job now (rendered once, below, over the whole flight) —
-        // this per-wine card never renders one (BT-S3; the old candidate
-        // intro and the per-glass "resolved" card it grew into are both
-        // superseded by MatchBoard, revealed rows included).
-        if (isSemiBlind) return null;
+        // Semi-blind: every glass except the one just revealed is the
+        // matching board's job (rendered once, below, over the whole
+        // flight) — this per-wine card never renders the blind flow's
+        // parchment answer card (BT-S3; the old candidate intro and the
+        // per-glass "resolved" card it grew into are both superseded by
+        // MatchBoard, revealed rows included). The glass a reveal just
+        // finished gets SB4's own full-bleed treatment instead (BT-S4).
+        if (isSemiBlind) {
+          if (semiBlindReveal && wine.id === semiBlindReveal.wineId) {
+            return (
+              <Card key={wine.id} id={`wine-${wine.id}`} className="scroll-mt-24">
+                <div className="-my-4">
+                  <SemiBlindReveal {...semiBlindReveal.props} />
+                </div>
+              </Card>
+            );
+          }
+          return null;
+        }
 
         const isMine = wine.contributor_participant_id === myParticipant.id;
         const answer = answerByWineId.get(wine.id);
