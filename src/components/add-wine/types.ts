@@ -1,5 +1,7 @@
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
+import type { SheetMatrix } from "./matrix";
+import type { ScanItem } from "./sheet-state";
 
 // ---------------------------------------------------------------------------
 // Contracts from docs/superpowers/specs/2026-09-12-add-wine-v2-scan-and-flow-
@@ -130,53 +132,38 @@ export type SheetContext = {
  */
 export type PendingFix = { vintageKind: "YEAR" | "NV"; vintageYear: number | null };
 
+/** A2 (B2, C2 and D2 use the same view): the camera, its search field, the
+    matrix's source chips and, in Many, the stack above the viewfinder. */
 export type CameraViewProps = {
-  ctx: SheetContext;
-  /** A shutter capture (JPEG Blob) or a Library file. The shell uploads it,
-      reads the label and moves to the reading / confirm views. */
-  onCaptured: (file: Blob | File) => void;
-  onSearch: () => void;
-  onCellar: () => void;
-  onByHand: () => void;
-  onToggleMulti: () => void;
-  /** Multi mode's "Done · n wines added" — closes the sheet. */
-  onDone: () => void;
-  onFixPending: (id: string, fix: PendingFix) => void;
-  onRemovePending: (id: string) => void;
-  busy: boolean;
+  matrix: SheetMatrix; destination: AddWineDestination | null; multi: boolean; items: ScanItem[]; addedCount: number;
+  onCapture: (blob: Blob) => void; onLibrary: (files: File[]) => void;
+  onOpenSearch: () => void;          // the shell unhides the parked search and focuses its input in the same tap
+  onChip: (chip: "cellar" | "byhand") => void; onMany: () => void; onDone: () => void;
+  onItemAction: (itemId: string, action: "fix" | "remove" | "retry") => void;
 };
 
-export type ScanConfirmProps = {
-  ctx: SheetContext;
-  imageUrl: string;
-  result: import("@/app/scan/actions").ScanResult;
-  prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial;
-  onRescan: () => void;
-  onSearch: () => void;
-  /** Opens the by-hand form prefilled from the read (the view may edit the
-      prefill first, e.g. swap the vintage). */
-  onByHand: (prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial) => void;
-  /** Performs the add for the current destination. `source` is the primary
-      catalog match ({kind:"catalog"}) or, with no match, the identity built
-      from the read. `andScanNext` keeps the sheet open in multi mode and
-      returns to the camera. */
-  onAdd: (source: AddSource, opts: { andScanNext: boolean }) => Promise<void>;
-  /** 7c → 7d: "Add and scan the next" on a read with no vintage and no
-      catalog match — the shell stacks a Fix row for the prefill, switches
-      to multi mode and returns to the camera, exactly as its read pipeline
-      does for later bottles, so the first bottle never lands in the
-      blocking by-hand form. */
-  onPending: (prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial) => void;
-  /** 7i, null destination only. The shell ADOPTS the choice as the sheet's
-      destination (flight → `ctx.flightHint`'s tasting; cellar → the cellar
-      footer fields; note → the note destination; catalog-only → catalog) and
-      resolves. The view then calls `onAdd(source, { andScanNext: false })`
-      exactly as it would with a fixed destination; for "note" that is a note
-      pick, which closes the sheet and opens the WSET note. */
-  onChoose: (
-    choice: { kind: "flight" } | { kind: "cellar" } | { kind: "note" } | { kind: "catalog-only" },
-  ) => Promise<void>;
-  busy: boolean;
+/** A3 = D2b, plus the E1/E1b footer: one read-and-confirm component for every
+    destination (read-confirm.tsx). */
+export type ReadConfirmProps = {
+  item: ScanItem; matrix: SheetMatrix; destination: AddWineDestination | null; canScan: boolean;
+  flightHint: FlightHint | null;
+  cellarHint: { owned: { bottles: number; rack: string | null } | null; totalBottles: number } | null;
+  sourceIsLot: boolean; busy: boolean; error: string | null;
+  onPrimary: () => void; onScanNext: () => void; onFix: () => void; onByHand: () => void;
+  onSearch: (query: string) => void; onRescan: () => void; onRetry: () => void; onRemove: () => void;
+  onChoose: (choice: "flight" | "cellar" | "note" | "catalog") => void;
+};
+
+/** E1's "Where does it go?" rows, exported from read-confirm.tsx as `Chooser`;
+    the shell's `choose` view reuses them under the header "Add wine". */
+export type ChooserProps = Pick<ReadConfirmProps, "flightHint" | "cellarHint" | "sourceIsLot" | "busy" | "onChoose">;
+
+/** D3: the catalog's follow-up after a single catalog add or confirm. */
+export type FollowUpViewProps = {
+  followUp: { catalogWineId: string; title: string; written: boolean };
+  onCellar: () => void;
+  onNote: () => void;
+  onDone: () => void;
 };
 
 export type SearchViewProps = {
@@ -231,12 +218,10 @@ export type DesktopViewProps = {
   inputRef?: import("react").Ref<HTMLInputElement>;
 };
 
-/** 7d: the added rows / pending "Fix" rows stacked above the viewfinder. */
+/** A4 (dark): one row per scanned bottle, its copy from `itemRowCopy`. Fix,
+    Retry and Remove report the row's id. */
 export type MultiAddStackProps = {
-  added: AddedWine[];
-  pending: PendingScan[];
-  /** Glass number the next bottle would take (flight only). */
-  nextGlass: number | null;
-  onFixPending: (id: string, fix: PendingFix) => void;
-  onRemovePending: (id: string) => void;
+  items: ScanItem[];
+  destination: AddWineDestination | null;
+  onItemAction: (itemId: string, action: "fix" | "remove" | "retry") => void;
 };
