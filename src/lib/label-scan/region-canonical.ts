@@ -33,11 +33,11 @@ const COUNTRY_SYNONYMS: Record<string, string> = {
 
 // Keys are lowercased; values are the exact catalog region name.
 const REGION_SYNONYMS: Record<string, Record<string, string>> = {
-  France: { burgundy: "Bourgogne", corse: "Corsica", savoy: "Savoie", bretagne: "Brittany", normandie: "Normandy", "languedoc-roussillon": "Languedoc", "south west": "Sud Ouest", "south west france": "Sud Ouest", "rhone valley": "Rhône", "rhône valley": "Rhône", "loire valley": "Loire" },
+  France: { burgundy: "Bourgogne", corse: "Corsica", savoy: "Savoie", bretagne: "Brittany", normandie: "Normandy", "languedoc-roussillon": "Languedoc", "south west": "Sud Ouest", "south west france": "Sud Ouest", "rhone valley": "Rhône", "rhône valley": "Rhône", "southern rhone": "Rhône", "southern rhône": "Rhône", "northern rhone": "Rhône", "northern rhône": "Rhône", "loire valley": "Loire" },
   Italy: { piedmont: "Piemonte", tuscany: "Toscana", sicily: "Sicilia", lombardy: "Lombardia", apulia: "Puglia", sardegna: "Sardinia", latium: "Lazio", "aosta valley": "Valle d'Aosta", "south tyrol": "Trentino Alto Adige", "alto adige": "Trentino Alto Adige", "trentino-alto adige": "Trentino Alto Adige", marches: "Marche", abruzzi: "Abruzzo", "emilia-romagna": "Emilia Romagna", "friuli-venezia giulia": "Friuli Venezia Giulia" },
   Spain: { catalunya: "Catalonia", cataluna: "Catalonia", andalusia: "Andalucia", "basque country": "Pais Vasco", navarre: "Navarra", "castile and leon": "Castilla y Leon", "castile-la mancha": "Castilla La Mancha", "castilla-la mancha": "Castilla La Mancha" },
-  Germany: { moselle: "Mosel", palatinate: "Pfalz", franconia: "Franken", saxony: "Sachsen", "rhenish hesse": "Rheinhessen", "middle rhine": "Mittelrhein" },
-  Portugal: { lisbon: "Lisboa", "setubal peninsula": "Peninsula de Setubal" },
+  Germany: { moselle: "Mosel", "mosel-saar-ruwer": "Mosel", palatinate: "Pfalz", franconia: "Franken", saxony: "Sachsen", "rhenish hesse": "Rheinhessen", "middle rhine": "Mittelrhein" },
+  Portugal: { lisbon: "Lisboa", "douro valley": "Douro", "setubal peninsula": "Peninsula de Setubal" },
   Austria: { "lower austria": "Niederosterreich", styria: "Steiermark", vienna: "Wien" },
   Greece: { attica: "Attiki" },
   Hungary: { tokay: "Tokaj" },

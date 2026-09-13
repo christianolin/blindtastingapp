@@ -3,7 +3,11 @@
 // to import from server components, client components and "use server" files.
 import type { ReferenceOption } from "@/components/reference-combobox";
 import type { TypeDesignationOption } from "@/components/type-designation-field";
-import type { VintageKind } from "@/lib/supabase/database.types";
+import type {
+  AsyncRevealPolicy,
+  TimingMode,
+  VintageKind,
+} from "@/lib/supabase/database.types";
 
 /**
  * One participant's guess for one glass — the columns the ladder edits, plus
@@ -95,6 +99,12 @@ export type GuessLadderProps = {
   /** Server-computed shortlist for initialGuess.region_id; the ladder
    *  re-fetches when the region changes. */
   shortlist?: GrapeShortlist | null;
+  /** The tasting's timing and results policy. In ASYNC + IMMEDIATE, locking
+   *  scores the glass and shows the answer for good, so the lock button, its
+   *  footer and a confirm say so (lock-copy.ts, play-4). Omitted → today's
+   *  lock copy. */
+  timingMode?: TimingMode;
+  asyncRevealPolicy?: AsyncRevealPolicy;
   /** Fired after lockGuess succeeds (the composition swaps to Locked in). */
   onLocked: () => void;
 };
@@ -130,7 +140,7 @@ export type FieldPickerProps = {
   groups: PickerGroup[];
   /** Currently chosen option id ("" when none). */
   value: string;
-  /** A row tap; null = "Not sure — skip it" (clears the field). */
+  /** A row tap; null = the footer's skip button (clears the field). */
   onPick: (id: string | null) => void;
   /** "Next: {field} →" / "Back to the glass". */
   onNext: () => void;
@@ -146,6 +156,11 @@ export type FieldPickerProps = {
    *  clear whenever `open`, `field` or this changes); pass the glass index
    *  when the same `field` is reused across glasses. */
   resetKey?: string | number;
+  /** The footer's skip button label (default "Not sure — skip it"); null
+   *  hides the button and "Next" takes the full width. The match ladder
+   *  passes null: every glass must be matched before it can lock, so a skip
+   *  would only lead to a dead end (play-7). */
+  skipLabel?: string | null;
 };
 
 /** Vintage option ids the picker emits; the ladder maps them onto

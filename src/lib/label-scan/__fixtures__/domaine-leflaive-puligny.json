@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Domaine Leflaive",
+  "wineName": null,
+  "appellation": "Puligny-Montrachet AOC",
+  "noGeographicIndication": false,
+  "region": "Bourgogne",
+  "country": "France",
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": 2019,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "WHITE",
+  "style": "STILL",
+  "grapes": [{ "name": "Chardonnay", "percentage": 100 }],
+  "alcoholPercent": 13,
+  "description": "Family domaine in Puligny-Montrachet, farmed biodynamically since 1997.",
+  "confidence": "high",
+  "rawText": "DOMAINE LEFLAIVE · PULIGNY-MONTRACHET · APPELLATION PULIGNY-MONTRACHET CONTRÔLÉE · 2019 · 13% vol"
+}

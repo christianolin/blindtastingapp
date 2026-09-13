@@ -1,0 +1,21 @@
+{
+  "isWineLabel": false,
+  "producer": null,
+  "wineName": null,
+  "appellation": null,
+  "noGeographicIndication": false,
+  "region": null,
+  "country": null,
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": null,
+  "vintageTawnyYears": null,
+  "vintageRead": false,
+  "colour": null,
+  "style": null,
+  "grapes": [],
+  "alcoholPercent": null,
+  "description": null,
+  "confidence": "low",
+  "rawText": "A photo of a kitchen counter, not a wine label."
+}

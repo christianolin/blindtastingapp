@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { WsetSheet } from "@/components/wset/wset-sheet";
+import { WsetSheet, type WsetSheetHandle } from "@/components/wset/wset-sheet";
 import type {
   WsetNoteState,
   AromaTerm,
@@ -27,6 +27,7 @@ export function NoteEditor({
   onClose,
   onDeleted,
   onSaved,
+  sheetRef,
 }: {
   wineId: string;
   wine: { colour: WineColour; style: WineStyle };
@@ -44,6 +45,9 @@ export function NoteEditor({
   /** Called after a successful save (with the saved note id); a modal uses it
       to close itself (and skip the route swap the standalone page does). */
   onSaved?: (savedId?: string) => void;
+  /** The open sheet's handle — a modal routes Escape and its backdrop through
+      it, so they take the same dirty-aware path as Close. */
+  sheetRef?: React.Ref<WsetSheetHandle>;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -134,6 +138,7 @@ export function NoteEditor({
 
   return (
     <WsetSheet
+      ref={sheetRef}
       wine={wine}
       title={title}
       terms={terms}

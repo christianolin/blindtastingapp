@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { EyeOff, ScanEye, Target, Wine, type LucideIcon } from "lucide-react";
+import { EyeOff, Target, Wine, type LucideIcon } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-// The About page: the photograph, the mission copy, the four modes, the real
+// The About page: the photograph, the mission copy, the three modes, the real
 // scoring table and "what Blindr keeps". Information only — the back link in
 // the top bar is the single interactive element; nothing else is a link, a
 // button or a clickable card.
@@ -32,14 +32,8 @@ const MODES: Mode[] = [
   {
     icon: EyeOff,
     title: "Taste Blind",
-    body: "Nothing is known in advance. Guess country, region, grape, vintage and producer; the host reveals field by field and the points land as they go.",
+    body: "Nothing is known in advance — or, semi-blind, the wines are known and the order is not. Guess country, region, grape, vintage and producer, or match each glass to a candidate; the host reveals field by field and the points land as they go.",
     border: "border border-gold",
-  },
-  {
-    icon: ScanEye,
-    title: "Taste Semi-Blind",
-    body: "The wines are known, the order is not. Match each glass to a candidate on the list — the fastest way to learn a flight of neighbours apart.",
-    border: "border border-border",
   },
   {
     icon: Wine,
@@ -176,7 +170,7 @@ export default async function AboutPage() {
         </p>
       </section>
 
-      {/* 3. Four ways to taste */}
+      {/* 3. Three ways to taste */}
       <section
         aria-labelledby="about-modes-heading"
         className="flex flex-col gap-[18px] border-b border-border bg-card p-[36px_30px] max-md:gap-3 max-md:p-[18px_16px]"
@@ -186,13 +180,13 @@ export default async function AboutPage() {
             id="about-modes-heading"
             className="font-heading text-[28px] leading-none font-semibold max-md:text-[23px]"
           >
-            Four ways to taste
+            Three ways to taste
           </h2>
           <span className="text-[13px] text-muted-foreground">
             Alone or around a table, on a phone or on a laptop.
           </span>
         </div>
-        <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-4 max-md:gap-3">
+        <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3 max-md:gap-3">
           {MODES.map((mode) => (
             <ModeBlock key={mode.title} mode={mode} />
           ))}
@@ -271,7 +265,7 @@ export default async function AboutPage() {
   );
 }
 
-// One of the four non-interactive mode blocks.
+// One of the three non-interactive mode blocks.
 function ModeBlock({ mode }: { mode: Mode }) {
   const Icon = mode.icon;
   return (

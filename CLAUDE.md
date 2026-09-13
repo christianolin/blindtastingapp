@@ -828,6 +828,20 @@ a raw subquery, regardless of which two tables look involved at a glance.
     — and right after that hash login the first client-side navigation can
     throw "useAddWine must be used within <AddWineProvider>" once (stale
     logged-out shell); a reload clears it.
+  - **Phone layout revision (2026-09-12, owner: "the front page on the phone
+    doesn't look that great").** Below `md` the Overview no longer squeezes the
+    banner and three cards onto one screen; the column scrolls and each card
+    takes its natural height with exactly one content row. The three card
+    actions are replaced on phones by one row of tiles under the banner
+    (`overview/quick-actions.tsx`: Taste blind · Rate a wine · Add a bottle,
+    sharing `useActionLauncher` with `ActionButtonClient`; the Taste-blind tile
+    is gold except when the banner is the "No tasting on the calendar" row,
+    which already carries a gold Start). `SubjectCard` takes
+    `hideActionOnPhone`; `StatTrio` spreads into three equal columns on phones;
+    the Next-up banner gains a phone meta line ("You're hosting · 3 glasses so
+    far", `overview/next-up-meta.ts`) and its add button reads "Add a wine";
+    the header's Numbers pill is icon-only below `md`. Tablet and desktop are
+    unchanged.
 - **Add-wine sheet, create-tasting sheet, guess ladder, host console
   (2026-09 flows redesign).** Spec + plan:
   `docs/superpowers/specs/2026-09-12-add-wine-sheet-and-tasting-flow-design.md`

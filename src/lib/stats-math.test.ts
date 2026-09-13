@@ -4,6 +4,8 @@ import {
   foldOther,
   ordinal,
   percent,
+  rankLabel,
+  rankRows,
   relativeTime,
   wineTypeLabel,
 } from "./stats-math";
@@ -134,4 +136,13 @@ describe("percent", () => {
     expect(percent(2, 3)).toBe(67);
     expect(percent(0, 0)).toBe(0);
   });
+});
+
+describe("rankRows (reveal-6)", () => {
+  it("dense ranks, highest first, stable among ties", () => {
+    const rows = [{ id: "a", t: 8 }, { id: "b", t: 10 }, { id: "c", t: 8 }, { id: "d", t: 5 }];
+    expect(rankRows(rows, (r) => r.t).map((x) => [x.row.id, x.rank, x.tied])).toEqual([["b", 1, false], ["a", 2, true], ["c", 2, true], ["d", 3, false]]);
+  });
+  it("empty", () => expect(rankRows([], () => 0)).toEqual([]));
+  it("labels ties", () => expect([rankLabel({ rank: 2, tied: true }), rankLabel({ rank: 1, tied: false })]).toEqual(["=2", "1"]));
 });

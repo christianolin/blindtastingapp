@@ -1,6 +1,6 @@
 "use client";
 
-import { WSET } from "./tokens";
+import { cn } from "@/lib/utils";
 
 // Rounded pill selector. Single-select (default) holds one value or null and
 // deselects on a second click; multi-select holds an array and toggles. The
@@ -20,6 +20,14 @@ type MultiProps<T extends string> = Base<T> & {
   onChange: (value: T[]) => void;
 };
 
+// Phone tap target: an invisible ::before strip, 44px tall and centred, lifts
+// a compact control's hit area without making it look chunky. Pills and chips
+// pair it with a 34px visual height and a 10px row gap, so two wrapped rows'
+// strips meet without overlapping (44px rows). From sm up the dense worksheet
+// sizes return and the strip goes (mouse precision; it would overlap there).
+export const PHONE_HIT_44 =
+  "relative before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 sm:before:hidden";
+
 export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T>) {
   const { options, labels } = props;
   const isSelected = (opt: T) =>
@@ -37,7 +45,7 @@ export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+    <div className="flex flex-wrap gap-x-1.5 gap-y-2.5 sm:gap-1">
       {options.map((opt) => {
         const selected = isSelected(opt);
         return (
@@ -46,18 +54,14 @@ export function PillGroup<T extends string>(props: SingleProps<T> | MultiProps<T
             type="button"
             aria-pressed={selected}
             onClick={() => toggle(opt)}
-            style={{
-              borderRadius: 999,
-              padding: "2px 9px",
-              fontSize: 11.5,
-              lineHeight: 1.35,
-              cursor: "pointer",
-              transition: "transform 120ms, box-shadow 120ms",
-              background: selected ? WSET.burgundy : WSET.pillBg,
-              border: `1px solid ${WSET.pillBorder}`,
-              color: selected ? WSET.creamText : WSET.pillText,
-              fontWeight: selected ? 600 : 500,
-            }}
+            className={cn(
+              PHONE_HIT_44,
+              "inline-flex min-h-[34px] cursor-pointer items-center rounded-full border border-border-strong px-3.5 text-[12.5px] leading-[1.35]",
+              "sm:min-h-0 sm:px-[9px] sm:py-0.5 sm:text-[11.5px]",
+              selected
+                ? "bg-primary font-semibold text-primary-foreground"
+                : "bg-card font-medium text-foreground",
+            )}
           >
             {labels[opt] ?? opt}
           </button>

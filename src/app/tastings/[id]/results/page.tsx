@@ -5,6 +5,8 @@ import { AnswerFacts } from "../answer-facts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
+import { rankLabel, rankRows } from "@/lib/stats-math";
+import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
@@ -22,6 +24,13 @@ const CATEGORY_MAX: Record<string, number> = {
   vintage: 2,
 };
 
+/**
+ * Standings plus a per-wine breakdown. The page is reachable while a tasting
+ * is still running (locked-in's Standings link, semi-blind /play), so it only
+ * speaks of a finished tasting — "Completed", "Final", the crown and the
+ * medals — once the tasting is CLOSED; before that the heading reads
+ * "Standings so far".
+ */
 export default async function ResultsPage({
   params,
 }: {
@@ -53,20 +62,22 @@ export default async function ResultsPage({
     { data: regions },
     { data: grapes },
     { data: typeDesignations },
+    leaderboard,
   ] = await Promise.all([
     supabase
       .from("tasting_participants")
-      .select("id, user_id")
+      .select("id, user_id, status")
       .eq("tasting_id", tastingId),
     supabase
       .from("wines")
-      .select("id, position, is_revealed, contributor_participant_id")
+      .select("id, position, is_revealed, reveal_step, contributor_participant_id")
       .eq("tasting_id", tastingId)
       .order("position"),
     supabase.from("countries").select("id, name"),
     supabase.from("regions").select("id, name"),
     supabase.from("grapes").select("id, name"),
     supabase.from("type_designations").select("id, name"),
+    getTastingLeaderboard(tastingId),
   ]);
 
   const nameById = new Map<string, string>();
@@ -153,22 +164,31 @@ export default async function ResultsPage({
     nameByParticipantId,
   );
 
-  const totalByParticipantId = new Map<string, number>();
-  for (const g of guesses ?? []) {
-    totalByParticipantId.set(
-      g.participant_id as string,
-      (totalByParticipantId.get(g.participant_id as string) ?? 0) +
-        ((g.total_points as number | null) ?? 0),
-    );
-  }
-
-  const leaderboard = (participants ?? [])
-    .map((p) => ({
-      participantId: p.id,
-      name: displayNameByParticipantId.get(p.id) ?? "Unknown",
-      total: totalByParticipantId.get(p.id) ?? 0,
-    }))
-    .sort((a, b) => b.total - a.total);
+  // Standings (reveal-6). Totals come from get_tasting_leaderboard, the same
+  // spoiler-safe aggregates the lobby's StandingsPanel shows, so a glass mid
+  // step-reveal counts here exactly as it does there. Competitors are
+  // StandingsPanel's too: JOINED participants, minus the host of a
+  // HOST_PROVIDES tasting, who set the answers and never guesses. Ranks are
+  // dense: ties share a rank and read "=2".
+  const hostProvides = tasting.wine_source === "HOST_PROVIDES";
+  const statusByParticipantId = new Map(
+    (participants ?? []).map((p) => [p.id, p.status]),
+  );
+  const standings = rankRows(
+    leaderboard.filter((r) => {
+      if (statusByParticipantId.get(r.participantId) !== "JOINED") return false;
+      if (hostProvides && r.userId === tasting.host_id) return false;
+      return true;
+    }),
+    (r) => r.total,
+  );
+  // The finished-state wording only once the host has ended the tasting.
+  const completed = tasting.status === "CLOSED";
+  // Standings show as soon as any glass has started revealing — the
+  // leaderboard counts partly revealed glasses, not just fully revealed ones.
+  const revealStarted = (wines ?? []).some(
+    (w) => w.is_revealed || (w.reveal_step ?? 0) > 0,
+  );
 
   function name(id: string | null) {
     return id ? (nameById.get(id) ?? "—") : "—";
@@ -229,7 +249,7 @@ export default async function ResultsPage({
 
   const wineCount = (wines ?? []).length;
   const participantCount = (participants ?? []).length;
-  const maxTotal = leaderboard[0]?.total ?? 0;
+  const maxTotal = standings[0]?.row.total ?? 0;
   const progressPct = Math.round(
     (revealedWines.length / Math.max(1, wineCount)) * 100,
   );
@@ -253,7 +273,7 @@ export default async function ResultsPage({
           <p className="mt-1.5 text-muted-foreground">{tasting.description}</p>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <Badge>Completed</Badge>
+          {completed ? <Badge>Completed</Badge> : null}
           <span className="text-muted-foreground">
             {wineCount} {wineCount === 1 ? "wine" : "wines"} · {participantCount}{" "}
             {participantCount === 1 ? "participant" : "participants"}
@@ -285,10 +305,20 @@ export default async function ResultsPage({
       {revealedWines.length > 0 ? (
         <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-heading text-sm font-semibold">Completed</span>
-            <span className="text-sm tabular-nums text-muted-foreground">
-              {progressPct}%
-            </span>
+            {completed ? (
+              <>
+                <span className="font-heading text-sm font-semibold">
+                  Completed
+                </span>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {progressPct}%
+                </span>
+              </>
+            ) : (
+              <span className="font-heading text-sm font-semibold tabular-nums">
+                {progressPct}% revealed
+              </span>
+            )}
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
@@ -323,32 +353,46 @@ export default async function ResultsPage({
 
       <Card className="overflow-hidden py-0">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
-          <CardTitle className="font-heading text-xl">Standings</CardTitle>
-          <Badge variant="secondary">Final</Badge>
+          <CardTitle className="font-heading text-xl">
+            {completed ? "Standings" : "Standings so far"}
+          </CardTitle>
+          {completed ? <Badge variant="secondary">Final</Badge> : null}
         </CardHeader>
         <CardContent className="p-3">
-          {revealedWines.length === 0 ? (
+          {!revealStarted ? (
             <p className="p-3 text-sm text-muted-foreground">
               No wines revealed yet.
             </p>
+          ) : standings.length === 0 ? (
+            <p className="p-3 text-sm text-muted-foreground">
+              No competitors yet.
+            </p>
           ) : (
             <ol className="flex flex-col gap-1">
-              {leaderboard.map((row, i) => (
+              {standings.map(({ row, rank, tied }) => (
                 <li
                   key={row.participantId}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2",
-                    i === 0 && "bg-gold/10",
+                    rank === 1 && "bg-gold/10",
                   )}
                 >
                   <span className="flex w-6 justify-center">
-                    {i === 0 ? (
-                      <Crown className="size-4 text-gold-deep" />
-                    ) : i < 3 ? (
-                      <Medal className="size-4 text-muted-foreground" />
+                    {completed && rank <= 3 ? (
+                      <>
+                        {rank === 1 ? (
+                          <Crown className="size-4 text-gold-deep" aria-hidden />
+                        ) : (
+                          <Medal
+                            className="size-4 text-muted-foreground"
+                            aria-hidden
+                          />
+                        )}
+                        <span className="sr-only">{rankLabel({ rank, tied })}</span>
+                      </>
                     ) : (
-                      <span className="text-sm text-muted-foreground">
-                        {i + 1}
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {rankLabel({ rank, tied })}
                       </span>
                     )}
                   </span>
@@ -366,9 +410,7 @@ export default async function ResultsPage({
                     ) : null}
                   </span>
                   <span className="font-heading text-lg font-semibold tabular-nums">
-                    {isSemiBlind
-                      ? `${row.total}/${revealedWines.length}`
-                      : row.total}
+                    {isSemiBlind ? `${row.total}/${row.totalWines}` : row.total}
                   </span>
                 </li>
               ))}

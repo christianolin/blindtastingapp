@@ -102,16 +102,16 @@ export const LABELS: Record<string, string> = {
   OUT_OF_CONDITION: "out of condition",
   CORK_TAINT: "cork taint",
   OTHER: "other",
-  // wset_price_category
+  // wset_price_category — the note's plain wording (Taste & Rate T4)
   INEXPENSIVE: "inexpensive",
-  MID_PRICED: "mid-priced",
-  HIGH_PRICED: "high-priced",
+  MID_PRICED: "mid-range",
+  HIGH_PRICED: "expensive",
   PREMIUM: "premium",
   DONT_KNOW: "don't know",
-  // wset_readiness
-  NEEDS_TIME: "needs time to develop",
-  READY_CAN_IMPROVE: "ready — can improve",
-  READY_WONT_IMPROVE: "ready — won't improve",
+  // wset_readiness — the note's plain wording (Taste & Rate T4)
+  NEEDS_TIME: "needs time",
+  READY_CAN_IMPROVE: "drink now, can keep",
+  READY_WONT_IMPROVE: "drink now",
   TOO_OLD: "too old",
   // wset_aroma_family
   FRUIT: "fruit",

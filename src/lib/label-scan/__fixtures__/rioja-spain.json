@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Ramón Bilbao",
+  "wineName": null,
+  "appellation": "Rioja DOCa",
+  "noGeographicIndication": false,
+  "region": "La Rioja",
+  "country": "Spain",
+  "designation": "Crianza",
+  "vintageKind": "YEAR",
+  "vintageYear": 2019,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "RED",
+  "style": "STILL",
+  "grapes": [{ "name": "Tempranillo", "percentage": null }],
+  "alcoholPercent": 14,
+  "description": "Rioja house founded in Haro in 1896. A red Rioja Crianza is aged for at least two years, at least one of them in oak casks, before release.",
+  "confidence": "high",
+  "rawText": "RAMÓN BILBAO · CRIANZA · RIOJA · DENOMINACIÓN DE ORIGEN CALIFICADA · 2019 · 14% vol"
+}

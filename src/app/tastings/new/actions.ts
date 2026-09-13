@@ -11,6 +11,7 @@ import type {
   WineLeaderboardReveal,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
+import { WINE_SOURCE_LOCKED } from "./setup-copy";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import type { FlightWine } from "@/app/tastings/[id]/wine-flight-list";
@@ -20,7 +21,8 @@ import type { FlightWine } from "@/app/tastings/[id]/wine-flight-list";
 export type CreateTastingFormState = { id: string } | { error: string } | null;
 
 // What step 1 edits, in the action's own vocabulary. `flow` is form-only:
-// it is persisted as `sequential_guessing` (blind + GUIDED), never a column.
+// it is persisted as `sequential_guessing` (blind + LIVE + GUIDED), never a
+// column.
 export type TastingSetupFields = {
   name: string;
   timingMode: TimingMode;
@@ -68,7 +70,9 @@ function setupColumns(f: TastingSetupFields) {
     reveal_mode: f.revealMode,
     scheduled_at: f.scheduledAt,
     async_reveal_policy: f.asyncRevealPolicy,
-    sequential_guessing: f.revealMode === "BLIND" && f.flow === "GUIDED",
+    // Guided pacing is LIVE-only (spec §D.1 #1): a self-paced tasting is
+    // stored free, whatever the form's flow value says.
+    sequential_guessing: f.revealMode === "BLIND" && f.timingMode === "LIVE" && f.flow === "GUIDED",
     leaderboard_reveal: f.leaderboardReveal,
     // The cover photo: a URL sets it and null clears it (a photo removed on
     // step 1 after the row exists). A caller that leaves it undefined keeps
@@ -239,6 +243,18 @@ export async function updateTastingSetup(
   }
   const invalid = validateSetup(fields);
   if (invalid) return invalid;
+
+  // Who brings the wines can't switch once the flight has a bottle (spec
+  // §D.1 #3) — refused before any write. The host reads every wine row of
+  // their own tasting (wines read), so the count covers every glass.
+  if (fields.wineSource !== tasting.wine_source) {
+    const { count, error: countError } = await supabase
+      .from("wines")
+      .select("id", { count: "exact", head: true })
+      .eq("tasting_id", tastingId);
+    if (countError) return { error: countError.message };
+    if ((count ?? 0) > 0) return { error: WINE_SOURCE_LOCKED };
+  }
 
   const { error: updateError } = await supabase
     .from("tastings")

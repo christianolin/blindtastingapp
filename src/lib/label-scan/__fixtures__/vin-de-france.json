@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Mas des Garrigues",
+  "wineName": "Vieilles Vignes",
+  "appellation": null,
+  "noGeographicIndication": true,
+  "region": null,
+  "country": "France",
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": 2022,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "RED",
+  "style": "STILL",
+  "grapes": [{ "name": "Grenache", "percentage": null }],
+  "alcoholPercent": 14,
+  "description": null,
+  "confidence": "high",
+  "rawText": "MAS DES GARRIGUES · VIEILLES VIGNES · GRENACHE · VIN DE FRANCE · 2022 · 14% vol"
+}

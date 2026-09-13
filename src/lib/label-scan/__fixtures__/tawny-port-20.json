@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Taylor's",
+  "wineName": null,
+  "appellation": "Porto DOC",
+  "noGeographicIndication": false,
+  "region": "Douro",
+  "country": "Portugal",
+  "designation": "Tawny",
+  "vintageKind": "TAWNY",
+  "vintageYear": null,
+  "vintageTawnyYears": 20,
+  "vintageRead": true,
+  "colour": "RED",
+  "style": "FORTIFIED",
+  "grapes": [{ "name": "Touriga Nacional", "percentage": null }],
+  "alcoholPercent": 20,
+  "description": "Port house founded in 1692, part of The Fladgate Partnership. An age-indicated tawny is blended from wines matured in oak casks; the stated age describes the character of the blend rather than a minimum age.",
+  "confidence": "high",
+  "rawText": "TAYLOR'S · 20 YEAR OLD TAWNY PORT · PORTO · PRODUCT OF PORTUGAL · 20% vol"
+}

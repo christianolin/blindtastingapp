@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Domaine Sylvain Pataille",
+  "wineName": null,
+  "appellation": "Bourgogne Aligoté AOC",
+  "noGeographicIndication": false,
+  "region": "Bourgogne",
+  "country": "France",
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": 2021,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "WHITE",
+  "style": "STILL",
+  "grapes": [{ "name": "Aligoté", "percentage": null }],
+  "alcoholPercent": 12.5,
+  "description": "Grower based in Marsannay-la-Côte, at the northern end of the Côte de Nuits. Bourgogne Aligoté is the regional appellation for white wine from the Aligoté grape.",
+  "confidence": "high",
+  "rawText": "DOMAINE SYLVAIN PATAILLE · BOURGOGNE ALIGOTÉ · APPELLATION BOURGOGNE ALIGOTÉ CONTRÔLÉE · 2021 · 12,5% vol"
+}

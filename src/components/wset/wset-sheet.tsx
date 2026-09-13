@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { Ellipsis, X } from "lucide-react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
   APPEARANCE_INTENSITY_STOPS,
@@ -26,13 +27,14 @@ import { useWsetLang } from "@/lib/wset/wset-lang";
 import { composeLiveNote } from "@/lib/wset/live-note.mjs";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { SnapSlider } from "./snap-slider";
-import { PillGroup } from "./pill-group";
+import { PillGroup, PHONE_HIT_44 } from "./pill-group";
 import { WineColourControl } from "./wine-colour-control";
 import { AromaPicker } from "./aroma-picker";
 import { QualitySlider } from "./quality-slider";
 import { type SectionNavItem } from "./section-nav";
 import { LiveTastingNote } from "./live-tasting-note";
-import { WSET } from "./tokens";
+import { Eyebrow } from "@/components/overview/eyebrow";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const CLARITY = ["CLEAR", "HAZY"] as const;
@@ -52,12 +54,32 @@ const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; uiKey: str
   { key: "taster", uiKey: "taster" },
 ];
 
+type SectionId = "appearance" | "nose" | "palate" | "conclusions";
+const SECTION_ORDER: readonly SectionId[] = ["appearance", "nose", "palate", "conclusions"];
+// On the note page a switched-to section scrolls in under the app header plus
+// this sheet's sticky bar (taller on phones: close, a two-line name, 44px tabs);
+// the modal resets its own scroll instead.
+const SECTION_SCROLL_MT = "scroll-mt-[190px] sm:scroll-mt-[160px]";
+
+// The bordeaux primary button, as on every other 2026-09 surface: radius 9–11,
+// the ink under-shadow, the one allowed hover literal.
+const PRIMARY_BUTTON =
+  "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-[#4A1523]";
+
 // The selected value's display label (in the active language), or nothing. An
 // empty control already says "not set" — spelling it out on every unrated row
 // was pure noise.
 function valueLabel(value: string | null, labels: Record<string, string>): string | undefined {
   return value ? labels[value] ?? value : undefined;
 }
+
+/** What a modal needs from the open sheet. */
+export type WsetSheetHandle = {
+  /** Close the way the header's Close does: an open confirm or menu is
+      dismissed first; then a dirty note asks before discarding and a clean one
+      exits. Modals route Escape and their backdrop through this. */
+  requestClose: () => void;
+};
 
 export function Row({
   label: rowLabel,
@@ -67,7 +89,7 @@ export function Row({
   wide,
 }: {
   label: string;
-  sub?: string;
+  sub?: React.ReactNode;
   /** The chosen value, shown emphasised beside the title: "Acidity · high". */
   value?: string;
   children: React.ReactNode;
@@ -76,24 +98,24 @@ export function Row({
   const heading = (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: WSET.ink }}>{rowLabel}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{rowLabel}</span>
         {value !== undefined ? (
           <>
-            <span aria-hidden style={{ fontSize: 12, color: WSET.muted2 }}>
+            <span aria-hidden style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
               ·
             </span>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: WSET.burgundy }}>{value}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary)" }}>{value}</span>
           </>
         ) : null}
       </div>
       {sub !== undefined ? (
-        <div style={{ fontSize: 11.5, color: WSET.muted2, marginTop: 2 }}>{sub}</div>
+        <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", marginTop: 2 }}>{sub}</div>
       ) : null}
     </div>
   );
   if (wide) {
     return (
-      <div style={{ padding: "16px 0", borderTop: `1px solid ${WSET.hairline}` }}>
+      <div style={{ padding: "16px 0", borderTop: "1px solid var(--border-light)" }}>
         <div style={{ marginBottom: 12 }}>{heading}</div>
         {children}
       </div>
@@ -133,14 +155,15 @@ export function SectionCard({
     <section
       id={id}
       // scroll-mt clears the taller mobile sticky bar (header + section tabs)
-      // when a section is scrolled into view on switch.
+      // when a section is scrolled into view on switch; the note sheet passes
+      // its own offsets.
       className={cn("scroll-mt-[118px] sm:scroll-mt-0", className)}
       style={{
-        background: WSET.cream,
-        border: `1px solid ${WSET.border}`,
-        borderRadius: 18,
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: 12,
         padding: "var(--wset-card-pt,22px) var(--wset-card-px,26px) 8px",
-        boxShadow: "0 1px 2px rgba(70,25,40,0.04)",
+        boxShadow: "0 1px 2px rgba(42,33,30,0.04)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -154,23 +177,21 @@ export function SectionCard({
             height: "var(--wset-numeral,30px)",
             borderRadius: 8,
             fontSize: 14,
-            background: WSET.burgundy,
-            color: WSET.creamText,
+            background: "var(--primary)",
+            color: "var(--primary-foreground)",
           }}
         >
           {numeral}
         </span>
-        <h2 className="font-heading" style={{ flex: 1, fontSize: "var(--wset-title,22px)", fontWeight: 700, color: WSET.ink }}>
+        <h2 className="font-heading" style={{ flex: 1, fontSize: "var(--wset-title,22px)", fontWeight: 600, color: "var(--foreground)" }}>
           {title}
         </h2>
-        <span style={{ fontSize: 11.5, color: WSET.muted2 }}>{rated}</span>
+        <span style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>{rated}</span>
       </div>
       {children}
     </section>
   );
 }
-
-type SectionId = "appearance" | "nose" | "palate" | "conclusions";
 
 export function WsetSheet({
   wine,
@@ -181,20 +202,23 @@ export function WsetSheet({
   onDiscard,
   onDelete,
   embedded = false,
+  ref,
 }: {
   wine: { colour: WineColour; style: WineStyle };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
   onSave: (state: WsetNoteState) => Promise<void>;
-  /** Exit without saving; renders a Discard button (confirms when dirty). */
+  /** Exit without saving; renders Close (✕ on phones), which confirms a
+      discard while the note has unsaved changes. */
   onDiscard?: () => void;
   /** Delete this saved note permanently (confirms first). Only passed for
       notes that already exist; the caller owns navigation afterwards. */
   onDelete?: () => Promise<void> | void;
-  // In a dialog: single column (no scroll-spy rail), header sticks to the
-  // popup top instead of below the app header.
+  // In a dialog: single column (no live-note aside), header and footer pinned
+  // to the popup edges while the sections scroll between them.
   embedded?: boolean;
+  ref?: React.Ref<WsetSheetHandle>;
 }) {
   const { lang, setLang } = useWsetLang();
   const L = labelsFor(lang);
@@ -202,7 +226,7 @@ export function WsetSheet({
   const [state, setState] = useState<WsetNoteState>(initial);
   // What the note looked like when last saved (or opened). Dirtiness compares
   // against THIS, not the mount-time initial — after a successful save the
-  // sheet is clean again, and Discard turns into a plain Close.
+  // sheet is clean again, and Close exits without asking.
   const [baseline, setBaseline] = useState<WsetNoteState>(initial);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -210,12 +234,12 @@ export function WsetSheet({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   // One WSET section on screen at a time, at every breakpoint — the tabs in
-  // the sticky bar switch between them. (Was phone-only; the owner extended
-  // it to tablet/desktop, which retired the scroll-spy rail.)
+  // the sticky bar and the footer's step switch between them. (Was phone-only;
+  // the owner extended it to tablet/desktop, which retired the scroll-spy rail.)
   const [mobileSection, setMobileSection] = useState<SectionId>("appearance");
   const [menuOpen, setMenuOpen] = useState(false);
   // In the modal the sections scroll INSIDE this container while the header
-  // bar stays put — switching section resets it to the top instead of
+  // and footer stay put — switching section resets it to the top instead of
   // yanking the whole dialog around.
   const scrollRef = useRef<HTMLDivElement>(null);
   const dirty = useMemo(
@@ -255,6 +279,36 @@ export function WsetSheet({
   ];
   const done = navItems.reduce((n, s) => n + s.done, 0);
   const total = navItems.reduce((n, s) => n + s.total, 0);
+  const donePct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  // A section's short name, as the tabs and the footer step print it.
+  const sectionName = (id: SectionId) => (id === "conclusions" ? t("conclusion_short") : t(id));
+
+  const goToSection = useCallback(
+    (id: SectionId) => {
+      setMobileSection(id);
+      // After the hidden card mounts: in the modal just reset the inner
+      // scroll; on the page line the card up under the bar.
+      requestAnimationFrame(() => {
+        if (scrollRef.current && embedded) {
+          scrollRef.current.scrollTo({ top: 0 });
+        } else {
+          document.getElementById(id)?.scrollIntoView();
+        }
+      });
+    },
+    [embedded],
+  );
+
+  // The footer's one step, as drawn: forward while a section lies ahead, back
+  // from the last one. The tabs above still jump anywhere.
+  const at = SECTION_ORDER.indexOf(mobileSection);
+  const step: { id: SectionId; forward: boolean } | null =
+    at < SECTION_ORDER.length - 1
+      ? { id: SECTION_ORDER[at + 1], forward: true }
+      : at > 0
+        ? { id: SECTION_ORDER[at - 1], forward: false }
+        : null;
 
   const handleSave = useCallback(async () => {
     setSaveState("saving");
@@ -273,16 +327,41 @@ export function WsetSheet({
     : saveState === "saved" ? t("saved")
     : saveState === "error" ? t("retry_save")
     : t("save_note");
-  const saveLabelShort =
-    saveState === "saving" ? t("saving")
-    : saveState === "saved" ? t("saved")
-    : saveState === "error" ? t("retry")
-    : t("save");
 
   const discard = useCallback(() => {
     if (dirty) setConfirmDiscard(true);
     else onDiscard?.();
   }, [dirty, onDiscard]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      requestClose: () => {
+        if (confirmDelete) {
+          if (!deleting) setConfirmDelete(false);
+          return;
+        }
+        if (confirmDiscard) {
+          setConfirmDiscard(false);
+          return;
+        }
+        if (menuOpen) {
+          setMenuOpen(false);
+          return;
+        }
+        discard();
+      },
+    }),
+    [confirmDelete, confirmDiscard, deleting, menuOpen, discard],
+  );
+
+  // Phones print just "optional"; desktop the sentence the handoff draws.
+  const optionalSub = (sentence: string) => (
+    <>
+      <span className="sm:hidden">{t("optional")}</span>
+      <span className="max-sm:hidden">{sentence}</span>
+    </>
+  );
 
   return (
     <div
@@ -290,7 +369,7 @@ export function WsetSheet({
         "wset-sheet min-w-0",
         embedded && "flex min-h-0 flex-1 flex-col",
       )}
-      style={{ color: WSET.body }}
+      style={{ color: "var(--foreground)" }}
     >
       <div
         className={cn(
@@ -305,44 +384,63 @@ export function WsetSheet({
           // detached. Negative margins cancel that padding on every side and
           // the top corners take over the dialog's own radius.
           embedded
-            ? "-mx-4 -mt-4 px-4 sm:rounded-t-xl sm:px-6"
+            ? "-mx-4 -mt-4 px-4 sm:rounded-t-[16px] sm:px-6"
             : "max-sm:mx-[calc(50%-50vw)] max-sm:px-4 sm:px-1",
         )}
         style={{
           top: embedded ? 0 : 56,
           // Solid card-cream in the modal so nothing ghosts through; the page
           // keeps the translucent blur since content scrolls under it there.
-          background: embedded ? WSET.cream : "rgba(247,239,224,0.94)",
+          background: embedded ? "var(--card)" : "color-mix(in srgb, var(--background) 94%, transparent)",
           backdropFilter: embedded ? undefined : "blur(8px)",
-          borderBottom: `1px solid ${WSET.border}`,
+          borderBottom: "1px solid var(--border)",
         }}
       >
+        {/* Desktop: eyebrow + wine name … EN/DA · Close · ⋯.
+            Phones: ✕ · wine name over the progress … EN/DA · ⋯. Save lives in
+            the footer at every width. */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <span
-            className="font-heading min-w-0 flex-1 truncate text-[15px] font-bold sm:text-base"
-            style={{ color: WSET.ink }}
-          >
-            {title}
-          </span>
-          <span
-            className="text-[11.5px] sm:text-[12.5px]"
-            style={{ color: WSET.muted, whiteSpace: "nowrap" }}
-          >
-            {t("assessed_of", { done, total })}
-          </span>
+          {onDiscard ? (
+            <button
+              type="button"
+              aria-label={t("close")}
+              onClick={discard}
+              className="-ml-2.5 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted sm:hidden"
+            >
+              <X aria-hidden className="size-5" />
+            </button>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <Eyebrow size="sm" className="block max-sm:hidden">
+              {t("tasting_note")}
+            </Eyebrow>
+            <p className="font-heading text-[16px] leading-[1.2] font-semibold text-foreground max-sm:line-clamp-2 sm:mt-0.5 sm:truncate sm:text-[17px]">
+              {title}
+            </p>
+            {/* Phones carry the progress in the bar; desktop keeps it in the
+                footer, beside Save. */}
+            <div className="mt-1 flex items-center gap-2 sm:hidden">
+              <span aria-hidden className="h-[5px] max-w-[120px] flex-1 overflow-hidden rounded-full bg-muted">
+                <span className="block h-full bg-primary" style={{ width: `${donePct}%` }} />
+              </span>
+              <span className="text-[11px] whitespace-nowrap text-muted-foreground tabular-nums">
+                {t("assessed_short", { done, total })}
+              </span>
+            </div>
+          </div>
           {/* EN/DA toggle — mirrors the map's; the sheet language is shared and
               persisted, so it also drives the read-only archetype view. */}
-          <div className="flex items-center rounded-md border p-0.5 text-[11px]" style={{ borderColor: WSET.border }}>
+          <div className="flex shrink-0 items-center rounded-md border border-border p-0.5 text-[11px]">
             {(["en", "da"] as const).map((lng) => (
               <button
                 key={lng}
                 type="button"
                 onClick={() => setLang(lng)}
                 aria-pressed={lang === lng}
-                className="rounded px-1.5 py-0.5 font-medium"
+                className={cn(PHONE_HIT_44, "rounded px-1.5 py-0.5 font-medium max-sm:min-w-9 max-sm:py-1")}
                 style={{
-                  background: lang === lng ? WSET.burgundy : "transparent",
-                  color: lang === lng ? WSET.creamText : WSET.muted,
+                  background: lang === lng ? "var(--primary)" : "transparent",
+                  color: lang === lng ? "var(--primary-foreground)" : "var(--muted-foreground)",
                 }}
               >
                 {lng.toUpperCase()}
@@ -350,73 +448,29 @@ export function WsetSheet({
             ))}
           </div>
           {onDiscard ? (
-            // With unsaved changes this is Discard (confirms); once the note
-            // is clean — freshly opened or just saved — it is a plain Close.
-            // Desktop always shows it; phones show Close in the bar but tuck
-            // the rarer Discard into the ⋯ menu.
+            // Always "Close": a clean note exits, a dirty one asks first (the
+            // same path Escape and the modal backdrop take).
             <button
               type="button"
-              className={dirty ? "max-sm:hidden" : undefined}
               onClick={discard}
-              style={{
-                borderRadius: 999,
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                border: `1px solid ${WSET.border}`,
-                background: "transparent",
-                color: WSET.muted,
-                whiteSpace: "nowrap",
-              }}
+              className="shrink-0 rounded-[8px] border border-border bg-card px-3.5 py-2 text-[12.5px] font-semibold whitespace-nowrap text-muted-foreground hover:bg-muted max-sm:hidden"
             >
-              {dirty ? t("discard") : t("close")}
+              {t("close")}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saveState === "saving"}
-            className="px-3.5 py-1.5 sm:px-4 sm:py-2"
-            style={{
-              borderRadius: 999,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              border: "none",
-              background: saveState === "saved" ? WSET.gold : WSET.burgundy,
-              color: WSET.creamText,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span className="sm:hidden">{saveLabelShort}</span>
-            <span className="max-sm:hidden">{saveLabel}</span>
-          </button>
-          {onDelete || (onDiscard && dirty) ? (
-            // The ⋯ menu: on phones it holds Discard (while dirty) and Delete;
-            // desktop only needs it for Delete — Discard sits in the bar there.
-            <div className={cn("relative", !onDelete && "sm:hidden")}>
+          {onDelete ? (
+            // The ⋯ menu holds Delete for a saved note — rare and destructive,
+            // so it stays out of the footer's reach.
+            <div className="relative shrink-0">
               <button
                 type="button"
                 aria-label={t("more_actions")}
+                aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((o) => !o)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 30,
-                  height: 30,
-                  borderRadius: 999,
-                  border: `1px solid ${WSET.border}`,
-                  background: "transparent",
-                  color: WSET.muted,
-                  fontSize: 16,
-                  lineHeight: 1,
-                  cursor: "pointer",
-                }}
+                className="-mr-2.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted sm:mr-0 sm:size-[30px] sm:border sm:border-border"
               >
-                ⋯
+                <Ellipsis aria-hidden className="size-4" />
               </button>
               {menuOpen ? (
                 <>
@@ -434,73 +488,32 @@ export function WsetSheet({
                       zIndex: 41,
                       minWidth: 150,
                       padding: 5,
-                      background: WSET.cream,
-                      border: `1px solid ${WSET.border}`,
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
                       borderRadius: 12,
-                      boxShadow: "0 8px 28px rgba(70,25,40,0.18)",
+                      boxShadow: "0 8px 28px rgba(42,33,30,0.18)",
                     }}
                   >
-                    {onDiscard && dirty ? (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        className="sm:hidden"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          discard();
-                        }}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "9px 12px",
-                          borderRadius: 8,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          border: "none",
-                          background: "none",
-                          color: WSET.ink,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {t("discard_changes")}
-                      </button>
-                    ) : null}
-                    {onDelete ? (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setDeleteError(null);
-                          setConfirmDelete(true);
-                        }}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "9px 12px",
-                          borderRadius: 8,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          border: "none",
-                          background: "none",
-                          color: WSET.faultRed,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {t("delete_note")}
-                      </button>
-                    ) : null}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setDeleteError(null);
+                        setConfirmDelete(true);
+                      }}
+                      className="block w-full rounded-[8px] px-3 py-[9px] text-left text-[13px] font-semibold text-destructive hover:bg-muted max-sm:min-h-11"
+                    >
+                      {t("delete_note")}
+                    </button>
                   </div>
                 </>
               ) : null}
             </div>
           ) : null}
         </div>
-        {/* Section chips: on phones they switch the visible section; in the
-            desktop modal (which has no scroll-spy rail) they double as the
-            sheet's table of contents and scroll to the section. */}
+        {/* Section tabs: one section on screen at a time; each tab carries its
+            count. Phones get a 4-column grid of 44px targets. */}
         <div className="mt-2 gap-1 max-sm:grid max-sm:grid-cols-4 sm:flex sm:gap-2">
           {navItems.map((s) => {
             const active = s.id === mobileSection;
@@ -509,23 +522,13 @@ export function WsetSheet({
               <button
                 key={s.id}
                 type="button"
-                onClick={() => {
-                  setMobileSection(s.id as SectionId);
-                  // After the hidden card mounts: in the modal just reset the
-                  // inner scroll; on the page line the card up under the bar.
-                  requestAnimationFrame(() => {
-                    if (scrollRef.current && embedded) {
-                      scrollRef.current.scrollTo({ top: 0 });
-                    } else {
-                      document.getElementById(s.id)?.scrollIntoView();
-                    }
-                  });
-                }}
-                className="rounded-[10px] px-0.5 py-[5px] sm:inline-flex sm:items-baseline sm:gap-1.5 sm:px-3 sm:py-1.5"
+                aria-pressed={active}
+                onClick={() => goToSection(s.id as SectionId)}
+                className="rounded-[10px] px-0.5 py-[5px] max-sm:min-h-11 sm:inline-flex sm:items-baseline sm:gap-1.5 sm:px-3 sm:py-1.5"
                 style={{
                   border: "none",
                   cursor: "pointer",
-                  background: active ? WSET.burgundy : "#F3EAD6",
+                  background: active ? "var(--primary)" : "var(--accent)",
                 }}
               >
                 <span
@@ -533,17 +536,17 @@ export function WsetSheet({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    color: active ? WSET.creamText : WSET.ink,
+                    color: active ? "var(--primary-foreground)" : "var(--foreground)",
                   }}
                 >
-                  {s.id === "conclusions" ? t("conclusion_short") : s.name}
+                  {sectionName(s.id as SectionId)}
                 </span>
                 <span
                   className="block sm:inline"
                   style={{
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: 600,
-                    color: active ? WSET.creamText : complete ? WSET.gold : WSET.faint,
+                    color: active ? "var(--primary-foreground)" : complete ? "var(--gold-dark)" : "var(--muted-foreground)",
                   }}
                 >
                   {complete ? "✓" : `${s.done}/${s.total}`}
@@ -562,21 +565,21 @@ export function WsetSheet({
           // the section boxes stay within the modal's padding on phones.
           "grid grid-cols-1 items-start gap-6",
           !embedded && "lg:grid-cols-[264px_minmax(0,1fr)]",
-          // The modal scrolls HERE, under the anchored header bar.
+          // The modal scrolls HERE, between the anchored header and footer.
           embedded && "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4",
         )}
       >
         {embedded ? null : (
         <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
           <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
-          <p style={{ fontSize: 10.5, color: WSET.faint }}>
+          <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
             {t("footer_wset")}
           </p>
         </aside>
         )}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(mobileSection !== "appearance" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "appearance" && "hidden")}>
             <RowPair>
               <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
                 <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
@@ -588,12 +591,12 @@ export function WsetSheet({
             <Row label={t("colour")} value={valueLabel(state.colourHue, L)}>
               <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} labels={L} lang={lang} />
             </Row>
-            <Row label={t("other_observations")} sub={t("optional")}>
+            <Row label={t("other_observations")} sub={optionalSub(t("optional_not_counted", { total }))}>
               <PillGroup multi options={OBSERVATIONS} labels={L} value={state.observations} onChange={(v) => set("observations", v)} />
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(mobileSection !== "nose" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "nose" && "hidden")}>
             <RowPair>
               <Row label={t("condition")} value={valueLabel(state.condition, L)}>
                 <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
@@ -614,7 +617,7 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle={t("aroma_characteristics")} lang={lang} />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(mobileSection !== "palate" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
+          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "palate" && "hidden")}>
             <RowPair>
               <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
                 <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
@@ -674,8 +677,8 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(mobileSection !== "conclusions" && "hidden", embedded ? "sm:scroll-mt-[104px]" : "sm:scroll-mt-[150px]")}>
-            <Row label={t("point_score")} sub={t("hundred_scale")}>
+          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "conclusions" && "hidden")}>
+            <Row label={t("score")}>
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
             </Row>
             <RowPair>
@@ -686,7 +689,7 @@ export function WsetSheet({
                 <PillGroup options={READINESS} labels={L} value={state.readiness} onChange={(v) => set("readiness", v)} />
               </Row>
             </RowPair>
-            <Row label={t("tasters_notes")} sub={t("free_text")}>
+            <Row label={t("tasters_notes")} sub={optionalSub(t("own_words_sub"))}>
               <textarea
                 value={state.tasterNotes}
                 onChange={(e) => set("tasterNotes", e.target.value)}
@@ -695,19 +698,84 @@ export function WsetSheet({
                   width: "100%",
                   minHeight: 96,
                   resize: "vertical",
-                  background: WSET.insetBg,
-                  border: `1px solid ${WSET.border}`,
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 12,
                   padding: "12px 14px",
                   fontSize: 13,
                   lineHeight: 1.6,
-                  color: WSET.body,
+                  color: "var(--foreground)",
                 }}
               />
             </Row>
           </SectionCard>
         </div>
       </div>
+
+      {/* The footer: progress (desktop) beside the section step and Save. In
+          the modal it is the popup's last row, so it stays pinned while the
+          sections scroll; on the note page it sticks to the viewport bottom. */}
+      <div
+        className={cn(
+          "flex items-center gap-[9px] sm:gap-3",
+          embedded
+            ? "-mx-4 -mb-4 border-t border-border bg-card px-4 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:rounded-b-[16px] sm:px-6 sm:py-3"
+            : "sticky bottom-0 z-30 mt-6 border-t border-border py-[11px] max-sm:mx-[calc(50%-50vw)] max-sm:px-4 max-sm:pb-[max(11px,env(safe-area-inset-bottom))] sm:px-1 sm:py-3",
+        )}
+        style={
+          embedded
+            ? undefined
+            : { background: "color-mix(in srgb, var(--background) 94%, transparent)", backdropFilter: "blur(8px)" }
+        }
+      >
+        <div className="min-w-0 max-sm:hidden">
+          <div className="flex items-baseline gap-[7px]">
+            <span className="font-heading text-[22px] leading-none font-semibold text-primary tabular-nums">
+              {done}
+            </span>
+            <span className="text-[11.5px] text-muted-foreground">
+              {t("of_total_assessed", { total })}
+            </span>
+          </div>
+          <p className="mt-1 text-[10.5px] leading-[1.45] text-muted-foreground">
+            {t("nothing_required")}
+          </p>
+        </div>
+        <div className="flex flex-1 items-center gap-[9px] sm:ml-auto sm:flex-none">
+          {step ? (
+            <button
+              type="button"
+              onClick={() => goToSection(step.id)}
+              className="min-h-11 rounded-[10px] border border-border bg-background p-[13px] text-[13.5px] font-semibold whitespace-nowrap text-primary hover:bg-muted max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[15px] sm:py-[10px] sm:text-[13px]"
+            >
+              {step.forward ? (
+                <>
+                  <span className="sm:hidden">{t("next_section_short", { section: sectionName(step.id) })}</span>
+                  <span className="max-sm:hidden">{t("next_section", { section: sectionName(step.id) })}</span>
+                </>
+              ) : (
+                t("prev_section", { section: sectionName(step.id) })
+              )}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saveState === "saving"}
+            className={cn(
+              "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors disabled:opacity-70 max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
+              // Ink on the gold "Saved" fill (6.5:1), like every bg-gold button
+              // in the app; parchment is only for text on bordeaux.
+              saveState === "saved"
+                ? "bg-gold text-foreground hover:bg-gold-deep"
+                : PRIMARY_BUTTON,
+            )}
+          >
+            {saveLabel}
+          </button>
+        </div>
+      </div>
+
       {confirmDiscard ? (
         <div
           role="dialog"
@@ -721,7 +789,7 @@ export function WsetSheet({
             alignItems: "center",
             justifyContent: "center",
             padding: 16,
-            background: "rgba(30,10,17,0.45)",
+            background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
           }}
         >
           <div
@@ -729,24 +797,24 @@ export function WsetSheet({
             style={{
               width: "100%",
               maxWidth: 360,
-              background: WSET.cream,
-              border: `1px solid ${WSET.border}`,
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 16,
               padding: 20,
-              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+              boxShadow: "0 12px 40px rgba(42,33,30,0.25)",
             }}
           >
-            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 600, color: "var(--foreground)", marginBottom: 6 }}>
               {t("discard_q")}
             </h3>
-            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: 18 }}>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)", lineHeight: 1.5, marginBottom: 18 }}>
               {t("discard_body")}
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 type="button"
                 onClick={() => setConfirmDiscard(false)}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+                className="rounded-[9px] border border-border bg-transparent px-4 py-[9px] text-[13px] font-semibold text-foreground hover:bg-muted max-sm:min-h-11"
               >
                 {t("keep_editing")}
               </button>
@@ -756,7 +824,7 @@ export function WsetSheet({
                   setConfirmDiscard(false);
                   onDiscard?.();
                 }}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: WSET.burgundy, color: WSET.creamText }}
+                className={cn("rounded-[9px] px-4 py-[9px] text-[13px] font-semibold max-sm:min-h-11", PRIMARY_BUTTON)}
               >
                 {t("discard")}
               </button>
@@ -777,7 +845,7 @@ export function WsetSheet({
             alignItems: "center",
             justifyContent: "center",
             padding: 16,
-            background: "rgba(30,10,17,0.45)",
+            background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
           }}
         >
           <div
@@ -785,33 +853,34 @@ export function WsetSheet({
             style={{
               width: "100%",
               maxWidth: 360,
-              background: WSET.cream,
-              border: `1px solid ${WSET.border}`,
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 16,
               padding: 20,
-              boxShadow: "0 12px 40px rgba(70,25,40,0.25)",
+              boxShadow: "0 12px 40px rgba(42,33,30,0.25)",
             }}
           >
-            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 700, color: WSET.ink, marginBottom: 6 }}>
+            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 600, color: "var(--foreground)", marginBottom: 6 }}>
               {t("delete_q")}
             </h3>
-            <p style={{ fontSize: 13, color: WSET.muted, lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
+            <p style={{ fontSize: 13, color: "var(--muted-foreground)", lineHeight: 1.5, marginBottom: deleteError ? 8 : 18 }}>
               {t("delete_body")}
             </p>
             {deleteError ? (
-              <p style={{ fontSize: 12.5, color: WSET.faultRed, marginBottom: 14 }}>{deleteError}</p>
+              <p style={{ fontSize: 12.5, color: "var(--rose)", marginBottom: 14 }}>{deleteError}</p>
             ) : null}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 type="button"
                 disabled={deleting}
                 onClick={() => setConfirmDelete(false)}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", border: `1px solid ${WSET.border}`, background: "transparent", color: WSET.ink }}
+                className="rounded-[9px] border border-border bg-transparent px-4 py-[9px] text-[13px] font-semibold text-foreground hover:bg-muted max-sm:min-h-11"
               >
                 {t("keep_note")}
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
+                className="h-auto rounded-[9px] px-4 py-[9px] text-[13px] font-semibold max-sm:min-h-11"
                 disabled={deleting}
                 onClick={async () => {
                   setDeleting(true);
@@ -828,10 +897,9 @@ export function WsetSheet({
                     );
                   }
                 }}
-                style={{ borderRadius: 999, padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: deleting ? "default" : "pointer", border: "none", background: WSET.faultRed, color: WSET.creamText, opacity: deleting ? 0.7 : 1 }}
               >
                 {deleting ? t("deleting") : t("delete")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

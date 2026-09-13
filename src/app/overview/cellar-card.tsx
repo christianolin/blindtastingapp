@@ -18,19 +18,27 @@ const TILE =
 // or "Add your first bottle" when empty.
 const DASHED_TILE =
   "flex h-16 items-center justify-center rounded-[5px] border border-dashed border-gold text-[11px] font-semibold text-primary transition-colors hover:bg-background";
+// The empty "Add your first bottle" tile opens the cellar sheet instead of
+// navigating, so it renders through ActionButtonClient; these trailing classes
+// merge away that button's white fill, press shadow and padding so it keeps
+// the dashed tile's look.
+const EMPTY_TILE_LAUNCHER = cn(
+  DASHED_TILE,
+  "col-span-5 bg-transparent p-0 shadow-none",
+);
 
 /**
  * The Your cellar card: bottles / producers / countries, the four newest
  * bottles as tiles plus a "+N" tile into the cellar, the Countries and Wine
  * type distribution bars, three "Recently added" lines, and the outline
- * "Add a bottle" launcher. Phones get the Countries bar only.
+ * "Add a bottle" launcher. Phones get the Countries bar only, and the
+ * launcher gives way to the page's tile row above the cards.
  */
 export function CellarCard({ data }: { data: OverviewCellar }) {
   const empty = data.tiles.length === 0;
   return (
     <SubjectCard
       title="Your cellar"
-      className="max-md:min-h-fit"
       pill={<LinkPill href="/cellar">Open cellar</LinkPill>}
       stats={
         <StatTrio
@@ -42,6 +50,7 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
         />
       }
       actionInset
+      hideActionOnPhone
       action={
         <ActionButtonClient launch="cellar" variant="outline">
           <Amphora />
@@ -56,9 +65,13 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
             README's tablet rule), measured on the card, not the viewport. */}
         <div className="grid grid-cols-5 gap-[7px] @max-[300px]:grid-cols-4">
           {empty ? (
-            <Link href="/cellar" className={cn(DASHED_TILE, "col-span-5")}>
+            <ActionButtonClient
+              launch="cellar"
+              variant="outline"
+              className={EMPTY_TILE_LAUNCHER}
+            >
               Add your first bottle
-            </Link>
+            </ActionButtonClient>
           ) : (
             <>
               {data.tiles.map((tile) => (
@@ -107,12 +120,14 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
         ) : null}
       </div>
 
-      {/* Phone body: the Countries bar alone. */}
+      {/* Phone body: the Countries bar alone. It is the card's last row on a
+          phone (the launcher lives in the tile row above the cards), so it
+          draws no rule under it and the empty state points up. */}
       <div className="md:hidden">
         {empty ? (
-          <CardEmptyRow>No bottles yet — add one below.</CardEmptyRow>
+          <CardEmptyRow>No bottles yet — add one above.</CardEmptyRow>
         ) : (
-          <div className="border-b border-border-light p-[9px_14px]">
+          <div className="p-[9px_14px]">
             <DistributionBar items={data.byCountry} height={6} />
           </div>
         )}

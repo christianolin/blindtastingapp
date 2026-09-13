@@ -419,6 +419,9 @@ export type Database = {
           is_revealed: boolean;
           reveal_step: number;
           created_at: string;
+          // 20260912102000 (spec §E.3): how a glass was added (D13). Null for
+          // legacy rows. The pour intent is its own table, never a wines column.
+          added_via: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
         };
         Insert: {
           id?: string;
@@ -428,6 +431,7 @@ export type Database = {
           is_revealed?: boolean;
           reveal_step?: number;
           created_at?: string;
+          added_via?: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
@@ -503,11 +507,12 @@ export type Database = {
           submitted_at: string;
           updated_at: string;
         };
+        // Clients may write only the guess fields and locked_at; the scoring
+        // columns, reveal_step and the timestamps are server-written (migration
+        // 20260912093000 revokes the column privileges).
         Insert: {
-          id?: string;
           wine_id: string;
           participant_id: string;
-          reveal_step?: number;
           locked_at?: string | null;
           country_id?: string | null;
           region_id?: string | null;
@@ -520,8 +525,6 @@ export type Database = {
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
           guessed_wine_id?: string | null;
-          submitted_at?: string;
-          updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guesses"]["Insert"]>;
         Relationships: [];
@@ -1309,6 +1312,84 @@ export type Database = {
         >;
         Relationships: [];
       };
+      // 20260912100100 (spec §E.1): owner-only retention of every label read.
+      // `read` is null exactly when `outcome` is "not-read".
+      label_reads: {
+        Row: {
+          id: string;
+          user_id: string;
+          image_path: string;
+          outcome: "ok" | "not-a-label" | "not-read";
+          read: unknown | null;
+          model: string;
+          input_tokens: number;
+          output_tokens: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          image_path: string;
+          outcome: "ok" | "not-a-label" | "not-read";
+          read?: unknown | null;
+          model: string;
+          input_tokens?: number;
+          output_tokens?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["label_reads"]["Insert"]>;
+        Relationships: [];
+      };
+      // 20260912102000 (spec §E.3): an incomplete glass's owner-only draft. The
+      // glass has no wine_answers row until it is complete; `missing` holds only
+      // field keys from src/lib/wine-identity and is never empty.
+      wine_identity_drafts: {
+        Row: {
+          wine_id: string;
+          owner_id: string;
+          draft: unknown;
+          missing: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          wine_id: string;
+          owner_id: string;
+          draft: unknown;
+          missing: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_identity_drafts"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      // 20260912103000 (spec §E.4): the adder's owner-only intent to pour their
+      // own cellar lot into a glass. There is no update policy; only the pour
+      // functions write cellar_consumption_id.
+      wine_pour_intents: {
+        Row: {
+          wine_id: string;
+          owner_id: string;
+          cellar_lot_id: string | null;
+          consume_on_start: boolean;
+          cellar_consumption_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          wine_id: string;
+          owner_id: string;
+          cellar_lot_id?: string | null;
+          consume_on_start?: boolean;
+          cellar_consumption_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_pour_intents"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
@@ -1388,6 +1469,37 @@ export type Database = {
       search_producers: {
         Args: { p_query: string; p_region_id?: string };
         Returns: { id: string; name: string; in_region: boolean }[];
+      };
+      // 20260912101000 (spec §E.2): the folded producer lookup. p_region_id
+      // accepts null, so a nullable regionId passes straight through (spec §B.7).
+      find_producer_by_folded_name: {
+        Args: { p_name: string; p_region_id?: string | null };
+        Returns: string | null;
+      };
+      find_or_create_producer: {
+        Args: { p_name: string; p_region_id?: string | null };
+        Returns: string;
+      };
+      // 20260912102000 (spec §E.3): the adder check, and every glass with no
+      // answer key yet with its list-order number and only its missing field
+      // keys (an empty list when the glass has no draft row).
+      is_wine_adder: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      tasting_incomplete_glasses: {
+        Args: { p_tasting_id: string };
+        Returns: { wine_id: string; glass: number; missing: string[] }[];
+      };
+      // 20260912103000 (spec §E.4): Start pours the flight's intents; a running
+      // flight pours one glass at once. Both are idempotent.
+      draw_down_flight_cellar_lots: {
+        Args: { p_tasting_id: string };
+        Returns: { wine_id: string; glass: number; outcome: string }[];
+      };
+      pour_cellar_lot_into_glass: {
+        Args: { p_wine_id: string };
+        Returns: string;
       };
       tasting_guess_status: {
         Args: { p_tasting_id: string };

@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { CountryFlag } from "@/components/country-flag";
 import { AddWineButton } from "@/components/add-wine-button";
-import { NoteModal } from "./note-modal";
+import { NoteModal } from "@/components/wset/note-modal";
 
 // One row per cellar lot (a wine can appear in several rows if held in
 // different sizes/vintages/locations). Carries everything the table renders so
@@ -283,7 +283,7 @@ export function CellarBottlesTable({
               className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Plus className="size-4" />
-              Add a wine
+              Add a bottle
             </AddWineButton>
           </>
         ) : null}

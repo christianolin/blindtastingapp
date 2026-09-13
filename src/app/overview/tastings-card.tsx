@@ -34,7 +34,8 @@ const isOther = (row: TastingRow): row is OtherRow => row.kind !== "invite";
  * The Blind tastings card: headline stats from the profile, then the rows in
  * the data module's order (invitations → drafts I host → self-paced →
  * finished, at most five), then the gold "Start a blind tasting" launcher.
- * Below `md` only the first row is visible.
+ * Below `md` only the first row is visible and the launcher gives way to the
+ * page's tile row above the cards ("Taste blind").
  */
 export function TastingsCard({ data }: { data: OverviewTastings }) {
   const invites = data.rows.filter(isInvite);
@@ -54,9 +55,6 @@ export function TastingsCard({ data }: { data: OverviewTastings }) {
   return (
     <SubjectCard
       title="Blind tastings"
-      // Never compress below the header + one row + action on phones: the
-      // page root scrolls instead of the card clipping its button.
-      className="max-md:min-h-fit"
       pill={<LinkPill href="/taste?tab=history">History</LinkPill>}
       stats={
         <>
@@ -64,6 +62,7 @@ export function TastingsCard({ data }: { data: OverviewTastings }) {
           <StatTrio stats={stats("region hits")} className="md:hidden" />
         </>
       }
+      hideActionOnPhone
       action={
         <ActionButtonClient launch="taste-blind" variant="gold">
           <EyeOff />
@@ -72,7 +71,12 @@ export function TastingsCard({ data }: { data: OverviewTastings }) {
       }
     >
       {data.rows.length === 0 ? (
-        <CardEmptyRow>No tastings yet — start one below.</CardEmptyRow>
+        <CardEmptyRow>
+          {/* The launcher is under the card from md up, in the tile row
+              above the cards on phones. */}
+          <span className="max-md:hidden">No tastings yet — start one below.</span>
+          <span className="md:hidden">No tastings yet — start one above.</span>
+        </CardEmptyRow>
       ) : (
         <>
           <InvitationRows invites={invites} />

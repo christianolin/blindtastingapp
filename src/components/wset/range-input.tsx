@@ -1,7 +1,5 @@
 "use client";
 
-import { WSET } from "./tokens";
-
 // Editable low→high band over a scale's stops. Clicking a stop outside the band
 // extends the nearer end to it; clicking inside moves the nearer end (shrinks).
 // value null = unset ("varies"); the first click seeds a single-stop band.
@@ -32,7 +30,7 @@ export function EditableRange({
 
   return (
     <div style={{ padding: "0 40px", userSelect: "none" }}>
-      <div style={{ position: "relative", height: 6, borderRadius: 3, background: WSET.track }}>
+      <div style={{ position: "relative", height: 6, borderRadius: 3, background: "var(--secondary)" }}>
         {set ? (
           <div
             style={{
@@ -41,7 +39,7 @@ export function EditableRange({
               width: `${pct(hi) - pct(lo)}%`,
               height: 6,
               borderRadius: 3,
-              background: WSET.burgundy,
+              background: "var(--primary)",
             }}
           />
         ) : null}
@@ -63,8 +61,8 @@ export function EditableRange({
                 borderRadius: "50%",
                 padding: 0,
                 cursor: "pointer",
-                background: on ? WSET.burgundy : WSET.dotUnfilled,
-                border: on ? "none" : `1px solid ${WSET.dotBorder}`,
+                background: on ? "var(--primary)" : "var(--muted)",
+                border: on ? "none" : "1px solid var(--border-strong)",
               }}
             />
           );
@@ -91,7 +89,7 @@ export function EditableRange({
                 border: "none",
                 padding: 0,
                 fontWeight: active ? 700 : 500,
-                color: active ? WSET.ink : WSET.muted2,
+                color: active ? "var(--foreground)" : "var(--muted-foreground)",
               }}
             >
               {labels[s] ?? s}

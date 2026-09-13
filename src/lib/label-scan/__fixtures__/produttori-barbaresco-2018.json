@@ -1,0 +1,21 @@
+{
+  "isWineLabel": true,
+  "producer": "Produttori del Barbaresco",
+  "wineName": "Barbaresco",
+  "appellation": "Barbaresco DOCG",
+  "noGeographicIndication": false,
+  "region": "Piedmont",
+  "country": "Italy",
+  "designation": null,
+  "vintageKind": "YEAR",
+  "vintageYear": 2018,
+  "vintageTawnyYears": null,
+  "vintageRead": true,
+  "colour": "RED",
+  "style": "STILL",
+  "grapes": [{ "name": "Nebbiolo", "percentage": 100 }],
+  "alcoholPercent": 14,
+  "description": "Cooperative winery in Barbaresco working Nebbiolo from its members' vineyards.",
+  "confidence": "high",
+  "rawText": "PRODUTTORI DEL BARBARESCO · BARBARESCO · DENOMINAZIONE DI ORIGINE CONTROLLATA E GARANTITA · 2018 · 14% vol"
+}

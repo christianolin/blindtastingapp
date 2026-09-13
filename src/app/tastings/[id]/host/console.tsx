@@ -15,6 +15,12 @@ import type {
   TimingMode,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
+import {
+  endTastingConfirm,
+  notRevealedEyebrow,
+  type UnrevealedGlass,
+} from "@/lib/tasting-lifecycle-copy";
+import { rankLabel, rankRows } from "@/lib/stats-math";
 import { finishTasting, type LobbyActionState } from "../actions";
 import {
   revealFull,
@@ -34,8 +40,9 @@ export type StepKey =
 export type ConsoleStep = {
   key: StepKey;
   label: string;
-  /** The answer key has no value for this step (producer/vintage are always
-      steps; the RPC scores them 0). Only ever true once the host may know. */
+  /** The answer key has nothing on record for this step. Producer and vintage
+      are always steps, and live both columns are NOT NULL, so this is a
+      defensive case. Only ever true once the host may know. */
   missing: boolean;
   state: "revealed" | "next" | "pending";
 };
@@ -57,6 +64,9 @@ export type ConsoleGlass = {
   eligible: number;
   notLockedNames: string[];
   facts: { label: string; value: string }[];
+  /** Why this glass can't be revealed yet — its details are unfinished
+      ("Finish glass 3's details before revealing"). Null when it can. */
+  refusal: string | null;
 };
 
 export type ConsoleData = {
@@ -82,16 +92,19 @@ export type ConsoleData = {
     lastRoundPoints: number | null;
   }[];
   standingsAfter: string;
+  /** Glasses whose answers ending the tasting would leave hidden, in list
+      order — the End confirm names them (reveal-4). */
+  unrevealedGlasses: UnrevealedGlass[];
 };
-
-const FINISH_CONFIRM =
-  "Finish this tasting? Guessing closes and it moves to History. This can't be undone.";
 
 // The handoff's dark-room button pair: gold primary, outlined secondary.
 const SECONDARY =
   "inline-flex min-h-11 items-center justify-center rounded-[10px] border border-background/25 p-[14px_20px] text-[14px] font-semibold text-background transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-50";
 const HEADER_BUTTON =
   "inline-flex min-h-11 items-center justify-center gap-[7px] rounded-[9px] border p-[9px_14px] text-[13px] font-semibold transition-colors md:min-h-0";
+// Three header controls don't fit one phone row: they wrap two-up, the odd one
+// out stretching across the next row. On md and up they sit inline again.
+const HEADER_SLOT = "flex-1 basis-[calc(50%-5px)] md:flex-none md:basis-auto";
 
 function joinNames(names: string[]) {
   if (names.length <= 1) return names[0] ?? "";
@@ -163,9 +176,10 @@ export function HostConsole({ data }: { data: ConsoleData }) {
     fullState?.error ??
     (finishState && "error" in finishState ? finishState.error : null);
 
+  // The sheet decides where a camera start actually lands (spec §C.6): a mouse
+  // or trackpad gets the desktop view, a phone or tablet the camera. The
+  // console never measures the viewport itself.
   function openAddWine() {
-    const isDesktop =
-      typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
     openAddWineSheet(
       {
         kind: "flight",
@@ -175,7 +189,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
         wineSource: data.wineSource,
         position: data.wineCount + 1,
       },
-      { start: isDesktop ? "search" : "camera" },
+      { start: "camera" },
     );
   }
 
@@ -185,8 +199,14 @@ export function HostConsole({ data }: { data: ConsoleData }) {
   }
 
   const canReveal = glass !== null && !glass.isRevealed && !data.finished;
+  // An unfinished glass (no answer key yet) can't be revealed at all: every
+  // reveal control on it is inert, with the refusal under it. They stay on
+  // screen rather than disappearing, so the host can see why (spec §C.8).
+  const revealBlocked = glass?.refusal != null;
   const showRevealAll =
     canReveal && data.guidedLive && glass !== null && glass.revealStep < glass.steps.length;
+  const ranked = rankRows(data.standings, (r) => r.total);
+  const anyTied = ranked.some((r) => r.tied);
 
   return (
     <div className="flex flex-1 flex-col bg-console text-background">
@@ -211,37 +231,45 @@ export function HostConsole({ data }: { data: ConsoleData }) {
         <h1 className="min-w-0 flex-1 truncate font-heading text-[22px] font-semibold md:text-[24px]">
           {data.tastingName}
         </h1>
-        <div className="flex w-full items-center gap-[10px] md:ml-auto md:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-[10px] md:ml-auto md:w-auto md:flex-nowrap">
           {!data.finished ? (
             <button
               type="button"
               onClick={openAddWine}
               className={cn(
                 HEADER_BUTTON,
-                "flex-1 border-gold-light text-gold-light hover:bg-gold-light/10 md:flex-none",
+                HEADER_SLOT,
+                "border-gold-light text-gold-light hover:bg-gold-light/10",
               )}
             >
               <Plus className="size-4" strokeWidth={2.5} />
               Add a wine
             </button>
           ) : null}
-          {data.finished ? (
-            <Link
-              href={`/tastings/${data.tastingId}`}
-              className={cn(
-                HEADER_BUTTON,
-                "flex-1 border-background/25 text-background hover:border-gold-light hover:text-gold-light md:flex-none",
-              )}
-            >
-              <ArrowLeft className="size-4" />
-              Back to the tasting
-            </Link>
-          ) : (
+          {/* reveal-5: the way back is always here, not only once the tasting
+              has finished — a host who opens the console straight from a link
+              would otherwise be stuck on it. */}
+          <Link
+            href={`/tastings/${data.tastingId}`}
+            className={cn(
+              HEADER_BUTTON,
+              HEADER_SLOT,
+              "border-background/25 text-background hover:border-gold-light hover:text-gold-light",
+            )}
+          >
+            <ArrowLeft className="size-4" />
+            {data.finished ? "Back to the tasting" : "Tasting page"}
+          </Link>
+          {!data.finished ? (
             <form
               action={finishAction}
-              className="flex flex-1 md:flex-none"
+              className={cn("flex", HEADER_SLOT)}
               onSubmit={(e) => {
-                if (!window.confirm(FINISH_CONFIRM)) e.preventDefault();
+                // reveal-4: ending is reversible, so the confirm never claims
+                // it is permanent — it names the glasses left hidden instead.
+                if (!window.confirm(endTastingConfirm(data.unrevealedGlasses))) {
+                  e.preventDefault();
+                }
               }}
             >
               <input type="hidden" name="tasting_id" value={data.tastingId} />
@@ -256,7 +284,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 {finishPending ? "Ending…" : "End tasting"}
               </button>
             </form>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -280,9 +308,13 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               <div className="flex flex-wrap items-end gap-5">
                 <div className="flex min-w-0 flex-col gap-[6px]">
                   <Eyebrow size="lg" className="tracking-[.15em] text-console-ink">
-                    {glass.isRevealed
-                      ? `Revealed · glass ${glass.number} of ${data.wineCount} so far`
-                      : `Pouring now · glass ${glass.number} of ${data.wineCount} so far`}
+                    {/* reveal-4: a finished tasting never says "pouring now" —
+                        a glass left hidden is named as such. */}
+                    {data.finished && !glass.isRevealed
+                      ? notRevealedEyebrow(glass.number, data.wineCount)
+                      : glass.isRevealed
+                        ? `Revealed · glass ${glass.number} of ${data.wineCount} so far`
+                        : `Pouring now · glass ${glass.number} of ${data.wineCount} so far`}
                   </Eyebrow>
                   <p className="font-heading text-[30px] font-semibold leading-[1.02] md:text-[38px]">
                     {glass.title}
@@ -364,7 +396,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       <input type="hidden" name="expected_step" value={glass.revealStep} />
                       <button
                         type="submit"
-                        disabled={pending}
+                        disabled={pending || revealBlocked}
                         className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold-light p-[15px_22px] text-[17px] font-bold text-console shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 md:p-[17px_30px] md:text-[18px]"
                       >
                         {nextPending ? (
@@ -378,30 +410,48 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       </button>
                       {glass.nextStep.missing ? (
                         <p className="max-w-[34ch] text-[12.5px] leading-[1.5] text-console-ink">
-                          No {glass.nextStep.label.toLowerCase()} was recorded for this glass —
-                          revealing scores it 0.
+                          No {glass.nextStep.label.toLowerCase()} on record for this glass —
+                          this step scores nobody.
                         </p>
                       ) : null}
                     </form>
                   ) : null}
 
                   {canReveal && !(data.guidedLive && glass.nextStep) ? (
-                    <form action={fullAction} onSubmit={() => setDwellOn(glass.wineId)}>
+                    <form
+                      action={fullAction}
+                      onSubmit={() => setDwellOn(glass.wineId)}
+                      className="flex flex-col items-start gap-2"
+                    >
                       <input type="hidden" name="wine_id" value={glass.wineId} />
-                      <button
-                        type="submit"
-                        disabled={pending}
-                        className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold-light p-[15px_22px] text-[17px] font-bold text-console shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 md:p-[17px_30px] md:text-[18px]"
-                      >
-                        {fullPending ? (
-                          <>
-                            <WineGlassLoader size={22} wineColor="var(--console)" />
-                            Revealing…
-                          </>
-                        ) : (
-                          "Reveal the whole glass"
-                        )}
-                      </button>
+                      {revealBlocked ? (
+                        // An unfinished glass has no answer key, so a full
+                        // reveal is not a primary action — the control stays on
+                        // screen, inert, with the reason under it (spec §C.8).
+                        <button type="submit" disabled className={SECONDARY}>
+                          Reveal everything
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          disabled={pending}
+                          className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold-light p-[15px_22px] text-[17px] font-bold text-console shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 md:p-[17px_30px] md:text-[18px]"
+                        >
+                          {fullPending ? (
+                            <>
+                              <WineGlassLoader size={22} wineColor="var(--console)" />
+                              Revealing…
+                            </>
+                          ) : (
+                            "Reveal the whole glass"
+                          )}
+                        </button>
+                      )}
+                      {glass.refusal ? (
+                        <p className="max-w-[34ch] text-[12.5px] leading-[1.5] text-console-ink">
+                          {glass.refusal}
+                        </p>
+                      ) : null}
                     </form>
                   ) : null}
 
@@ -417,7 +467,11 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       }}
                     >
                       <input type="hidden" name="wine_id" value={glass.wineId} />
-                      <button type="submit" disabled={pending} className={SECONDARY}>
+                      <button
+                        type="submit"
+                        disabled={pending || revealBlocked}
+                        className={SECONDARY}
+                      >
                         {fullPending ? "Revealing…" : "Reveal everything"}
                       </button>
                     </form>
@@ -466,23 +520,27 @@ export function HostConsole({ data }: { data: ConsoleData }) {
             <p className="text-[12.5px] text-console-ink">No competitors yet.</p>
           ) : (
             <ol className="flex flex-col gap-px">
-              {data.standings.map((row, i) => (
+              {/* Dense ranks (reveal-6): tied scores share a rank and read
+                  "=2", and the lead treatment keys on rank 1, never on the
+                  list index — two people on the same total are both first. */}
+              {ranked.map(({ row, rank, tied }) => (
                 <li
                   key={row.participantId}
                   className="flex items-baseline gap-[10px] border-b border-background/10 py-[9px] last:border-b-0"
                 >
                   <span
                     className={cn(
-                      "w-4 font-heading text-[16px] lining-nums tabular-nums",
-                      i === 0 ? "text-gold-light" : "text-console-ink",
+                      "font-heading text-[16px] lining-nums tabular-nums",
+                      anyTied ? "w-6" : "w-4",
+                      rank === 1 ? "text-gold-light" : "text-console-ink",
                     )}
                   >
-                    {i + 1}
+                    {rankLabel({ rank, tied })}
                   </span>
                   <span
                     className={cn(
                       "min-w-0 flex-1 truncate text-[14px]",
-                      i === 0 && "font-semibold",
+                      rank === 1 && "font-semibold",
                     )}
                   >
                     {row.name}
@@ -499,7 +557,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                   <span
                     className={cn(
                       "text-[14px] text-gold-light tabular-nums",
-                      i === 0 ? "font-bold" : "font-semibold",
+                      rank === 1 ? "font-bold" : "font-semibold",
                     )}
                   >
                     {data.isSemiBlind ? `${row.total}/${row.totalWines}` : row.total}

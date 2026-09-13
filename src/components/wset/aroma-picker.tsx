@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
-import { WSET } from "./tokens";
 import { AromaIcon } from "./aroma-icon";
+import { PHONE_HIT_44 } from "./pill-group";
 import {
   makeT,
   translateTerm,
@@ -105,8 +105,9 @@ function splitGroupName(groupName: string, term: string): string {
 // unions the nose selections in.
 //
 // Phones don't get the whole vocabulary inline — the tasting sheet shows only
-// the selected chips plus "+ Add", which opens a bottom sheet where the
-// clusters stack vertically and collapse (ones holding selections stay open).
+// "Selected · N" with a Clear, the selected chips and "+ Add", which opens a
+// bottom sheet where every cluster stacks vertically. Phone chip rows are 44px
+// (PHONE_HIT_44: a compact chip plus an invisible 44px strip).
 export function AromaPicker({
   terms,
   selectedIds,
@@ -145,6 +146,20 @@ export function AromaPicker({
     return () => {
       document.body.style.overflow = prev;
     };
+  }, [sheetOpen]);
+  // Escape closes the sheet, and only the sheet. Captured on window so it runs
+  // before the note dialog hears the key — otherwise Escape would ask to
+  // discard the whole note from underneath the open sheet.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setSheetOpen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [sheetOpen]);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const byId = useMemo(() => new Map(terms.map((t) => [t.id, t])), [terms]);
@@ -193,7 +208,23 @@ export function AromaPicker({
       {/* Phones: selection summary + Add. The vocabulary itself lives in the
           bottom sheet so the tasting note stays compact. */}
       <div className="sm:hidden">
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
+        {selectedIds.length > 0 ? (
+          <div className="mb-2 flex items-center gap-2">
+            <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
+              {t("selected")} · {selectedIds.length}
+            </span>
+            {/* Clear's 44px strip reaches up into the row heading (nothing to
+                tap there), not down into the chips below. */}
+            <button
+              type="button"
+              onClick={() => onChange([])}
+              className="relative ml-auto min-w-11 px-1 text-right text-[12px] font-semibold text-primary before:absolute before:inset-x-0 before:-bottom-1 before:h-11"
+            >
+              {t("clear_short")}
+            </button>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2.5">
           {selectedIds.map((id) => {
             const term = byId.get(id);
             if (!term) return null;
@@ -203,6 +234,7 @@ export function AromaPicker({
                 type="button"
                 aria-label={t("remove", { term: translateTerm(term.term, lang) })}
                 onClick={() => toggle(id)}
+                className={`${PHONE_HIT_44} min-h-[34px]`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -211,9 +243,9 @@ export function AromaPicker({
                   padding: "5px 12px",
                   fontSize: 12.5,
                   cursor: "pointer",
-                  background: WSET.burgundy,
+                  background: "var(--primary)",
                   border: "none",
-                  color: WSET.creamText,
+                  color: "var(--primary-foreground)",
                 }}
               >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
@@ -224,6 +256,7 @@ export function AromaPicker({
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
+            className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
             style={{
               borderRadius: 999,
               padding: "4px 12px",
@@ -231,8 +264,8 @@ export function AromaPicker({
               fontWeight: 600,
               cursor: "pointer",
               background: "transparent",
-              border: `1.5px dashed ${WSET.dotBorder}`,
-              color: "#7A5F35",
+              border: "1.5px dashed var(--border-strong)",
+              color: "var(--gold-dark)",
             }}
           >
             {t("add")}
@@ -241,6 +274,7 @@ export function AromaPicker({
             <button
               type="button"
               onClick={copyAll}
+              className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
               style={{
                 borderRadius: 999,
                 padding: "4px 12px",
@@ -248,8 +282,8 @@ export function AromaPicker({
                 fontWeight: 600,
                 cursor: "pointer",
                 background: "transparent",
-                border: `1px solid ${WSET.pillBorder}`,
-                color: "#7A5F35",
+                border: "1px solid var(--border-strong)",
+                color: "var(--gold-dark)",
               }}
             >
               {copyFrom!.label}
@@ -259,7 +293,7 @@ export function AromaPicker({
       </div>
 
       <div className="max-sm:hidden">
-      <div style={{ display: "flex", gap: 22, borderBottom: `1px solid ${WSET.hairline}` }}>
+      <div style={{ display: "flex", gap: 22, borderBottom: "1px solid var(--border-light)" }}>
         {ORIGINS.map(({ origin, labelKey }) => {
           const active = origin === activeOrigin;
           const count = countByOrigin[origin] ?? 0;
@@ -277,10 +311,10 @@ export function AromaPicker({
                 cursor: "pointer",
                 background: "none",
                 border: "none",
-                borderBottom: active ? `2px solid ${WSET.burgundy}` : "2px solid transparent",
+                borderBottom: active ? "2px solid var(--primary)" : "2px solid transparent",
                 marginBottom: -1,
                 fontWeight: active ? 600 : 500,
-                color: active ? WSET.ink : WSET.muted,
+                color: active ? "var(--foreground)" : "var(--muted-foreground)",
                 textAlign: "left",
               }}
             >
@@ -289,8 +323,8 @@ export function AromaPicker({
                 <span
                   style={{
                     borderRadius: 999,
-                    background: WSET.goldSoft,
-                    color: WSET.pillText,
+                    background: "var(--accent)",
+                    color: "var(--foreground)",
                     fontSize: 10.5,
                     fontWeight: 600,
                     padding: "1px 7px",
@@ -305,7 +339,7 @@ export function AromaPicker({
       </div>
 
       {/* The active tab's meaning, said once — not squeezed into every tab. */}
-      <div style={{ margin: "6px 0 10px", fontSize: 11, color: WSET.muted2 }}>
+      <div style={{ margin: "6px 0 10px", fontSize: 11, color: "var(--muted-foreground)" }}>
         {(() => {
           const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
           return c.charAt(0).toUpperCase() + c.slice(1);
@@ -316,7 +350,7 @@ export function AromaPicker({
       <div className="sm:columns-2 sm:gap-x-10">
       {groups.map((group) => (
         <div key={group.name} className="break-inside-avoid" style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: WSET.gold, marginBottom: 6 }}>
+          <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600, color: "var(--gold-dark)", marginBottom: 6 }}>
             {groupHeading(group.name)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -337,9 +371,9 @@ export function AromaPicker({
                     fontSize: 12.5,
                     lineHeight: 1.35,
                     cursor: "pointer",
-                    background: isSel ? WSET.burgundy : WSET.pillBg,
-                    border: `1px solid ${WSET.pillBorder}`,
-                    color: isSel ? WSET.creamText : WSET.pillText,
+                    background: isSel ? "var(--primary)" : "var(--card)",
+                    border: "1px solid var(--border-strong)",
+                    color: isSel ? "var(--primary-foreground)" : "var(--foreground)",
                     fontWeight: isSel ? 600 : 500,
                   }}
                 >
@@ -365,8 +399,8 @@ export function AromaPicker({
             fontWeight: 600,
             cursor: "pointer",
             background: "transparent",
-            border: `1px solid ${WSET.pillBorder}`,
-            color: "#7A5F35",
+            border: "1px solid var(--border-strong)",
+            color: "var(--gold-dark)",
           }}
         >
           {copyFrom.label}
@@ -374,9 +408,9 @@ export function AromaPicker({
       ) : null}
 
       {selectedIds.length > 0 ? (
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${WSET.border}` }}>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: WSET.gold }}>
+            <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.13em", fontWeight: 600, color: "var(--gold-dark)" }}>
               {t("selected")} · {selectedIds.length}
             </span>
             {selectedIds.map((id) => {
@@ -395,9 +429,9 @@ export function AromaPicker({
                     padding: "4px 11px",
                     fontSize: 12.5,
                     cursor: "pointer",
-                    background: WSET.burgundy,
+                    background: "var(--primary)",
                     border: "none",
-                    color: WSET.creamText,
+                    color: "var(--primary-foreground)",
                   }}
                 >
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
@@ -413,7 +447,7 @@ export function AromaPicker({
                 cursor: "pointer",
                 background: "none",
                 border: "none",
-                color: WSET.muted,
+                color: "var(--muted-foreground)",
                 textDecoration: "none",
               }}
             >
@@ -439,7 +473,7 @@ export function AromaPicker({
             style={{
               position: "absolute",
               inset: 0,
-              background: "rgba(30,10,17,0.45)",
+              background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
             }}
           />
           <div
@@ -451,25 +485,26 @@ export function AromaPicker({
               maxHeight: "88dvh",
               display: "flex",
               flexDirection: "column",
-              background: WSET.cream,
+              background: "var(--card)",
               borderRadius: "20px 20px 0 0",
-              boxShadow: "0 -12px 40px rgba(70,25,40,0.3)",
+              boxShadow: "0 -12px 40px rgba(42,33,30,0.3)",
             }}
           >
-            <div style={{ padding: "12px 16px 0", borderBottom: `1px solid ${WSET.hairline}` }}>
+            <div style={{ padding: "12px 16px 0", borderBottom: "1px solid var(--border-light)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span
                   className="font-heading"
-                  style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: WSET.ink }}
+                  style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}
                 >
                   {sheetTitle}
                 </span>
-                <span style={{ fontSize: 11.5, color: WSET.muted2, whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 11.5, color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                   {t("n_selected", { n: selectedIds.length })}
                 </span>
                 <button
                   type="button"
                   onClick={() => setSheetOpen(false)}
+                  className={PHONE_HIT_44}
                   style={{
                     borderRadius: 999,
                     padding: "7px 16px",
@@ -477,8 +512,8 @@ export function AromaPicker({
                     fontWeight: 600,
                     cursor: "pointer",
                     border: "none",
-                    background: WSET.burgundy,
-                    color: WSET.creamText,
+                    background: "var(--primary)",
+                    color: "var(--primary-foreground)",
                   }}
                 >
                   {t("done")}
@@ -486,7 +521,7 @@ export function AromaPicker({
               </div>
               {/* Origin tabs: names only here — the active tab's meaning sits
                   once below, instead of six concepts in one cramped row. */}
-              <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 20, marginTop: 16 }}>
                 {ORIGINS.map(({ origin, labelKey }) => {
                   const active = origin === activeOrigin;
                   const count = countByOrigin[origin] ?? 0;
@@ -495,6 +530,7 @@ export function AromaPicker({
                       key={origin}
                       type="button"
                       onClick={() => setActiveOrigin(origin)}
+                      className={PHONE_HIT_44}
                       style={{
                         display: "inline-flex",
                         alignItems: "baseline",
@@ -504,10 +540,10 @@ export function AromaPicker({
                         cursor: "pointer",
                         background: "none",
                         border: "none",
-                        borderBottom: active ? `2px solid ${WSET.burgundy}` : "2px solid transparent",
+                        borderBottom: active ? "2px solid var(--primary)" : "2px solid transparent",
                         marginBottom: -1,
                         fontWeight: active ? 600 : 500,
-                        color: active ? WSET.ink : WSET.muted,
+                        color: active ? "var(--foreground)" : "var(--muted-foreground)",
                       }}
                     >
                       {t(labelKey)}
@@ -515,8 +551,8 @@ export function AromaPicker({
                         <span
                           style={{
                             borderRadius: 999,
-                            background: WSET.goldSoft,
-                            color: WSET.pillText,
+                            background: "var(--accent)",
+                            color: "var(--foreground)",
                             fontSize: 10.5,
                             fontWeight: 600,
                             padding: "1px 7px",
@@ -530,7 +566,7 @@ export function AromaPicker({
                 })}
               </div>
             </div>
-            <div style={{ padding: "8px 16px 0", fontSize: 11, color: WSET.muted2 }}>
+            <div style={{ padding: "8px 16px 0", fontSize: 11, color: "var(--muted-foreground)" }}>
               {(() => {
                 const c = t(ORIGINS.find((o) => o.origin === activeOrigin)!.capKey);
                 return c.charAt(0).toUpperCase() + c.slice(1);
@@ -541,6 +577,7 @@ export function AromaPicker({
                 <button
                   type="button"
                   onClick={copyAll}
+                  className={`${PHONE_HIT_44} inline-flex min-h-[34px] items-center`}
                   style={{
                     borderRadius: 999,
                     padding: "5px 12px",
@@ -548,8 +585,8 @@ export function AromaPicker({
                     fontWeight: 600,
                     cursor: "pointer",
                     background: "transparent",
-                    border: `1px solid ${WSET.pillBorder}`,
-                    color: "#7A5F35",
+                    border: "1px solid var(--border-strong)",
+                    color: "var(--gold-dark)",
                   }}
                 >
                   {copyFrom.label}
@@ -566,20 +603,20 @@ export function AromaPicker({
               {/* Every cluster open, name above its chips — scanning beats
                   tapping categories open one by one. */}
               {groups.map((group) => (
-                <div key={group.name} style={{ paddingTop: 10, borderBottom: `1px solid ${WSET.hairline}` }}>
+                <div key={group.name} style={{ paddingTop: 10, borderBottom: "1px solid var(--border-light)" }}>
                   <div
                     style={{
                       fontSize: 11,
                       textTransform: "uppercase",
                       letterSpacing: "0.07em",
                       fontWeight: 600,
-                      color: WSET.gold,
+                      color: "var(--gold-dark)",
                       marginBottom: 8,
                     }}
                   >
                     {groupHeading(group.name)}
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 12 }}>
+                  <div className="flex flex-wrap gap-x-1.5 gap-y-2.5 pb-3">
                     {group.items.map((term) => {
                       const isSel = selected.has(term.id);
                       return (
@@ -588,6 +625,7 @@ export function AromaPicker({
                           type="button"
                           aria-pressed={isSel}
                           onClick={() => toggle(term.id)}
+                          className={`${PHONE_HIT_44} min-h-[34px]`}
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -597,9 +635,9 @@ export function AromaPicker({
                             fontSize: 12.5,
                             lineHeight: 1.35,
                             cursor: "pointer",
-                            background: isSel ? WSET.burgundy : WSET.pillBg,
-                            border: `1px solid ${WSET.pillBorder}`,
-                            color: isSel ? WSET.creamText : WSET.pillText,
+                            background: isSel ? "var(--primary)" : "var(--card)",
+                            border: "1px solid var(--border-strong)",
+                            color: isSel ? "var(--primary-foreground)" : "var(--foreground)",
                             fontWeight: isSel ? 600 : 500,
                           }}
                         >

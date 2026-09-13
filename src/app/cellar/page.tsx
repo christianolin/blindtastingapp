@@ -7,12 +7,10 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { CellarSummary } from "./cellar-summary";
 import { FileUp, Plus } from "lucide-react";
 import { type BottleRow } from "./cellar-bottles-table";
-import { type NoteRow } from "./my-notes-list";
 import { AddWineButton } from "@/components/add-wine-button";
 import { type HistoryRow } from "./history-list";
 import { computeCellarStats, type StatLotRow, type CellarStats } from "./stats";
 import { CellarVisibilityControl } from "./cellar-visibility-control";
-import { LABELS } from "@/lib/wset/vocab";
 
 type Rel = { name: string } | { name: string }[] | null;
 function relName(rel: Rel): string | null {
@@ -69,14 +67,10 @@ export default async function CellarPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
+  // Notes moved to Taste > Tasting notes: old /cellar?tab=notes links land there.
+  if (tabParam === "notes") redirect("/taste/notes");
   const tab =
-    tabParam === "notes"
-      ? "notes"
-      : tabParam === "history"
-        ? "history"
-        : tabParam === "stats"
-          ? "stats"
-          : "bottles";
+    tabParam === "history" ? "history" : tabParam === "stats" ? "stats" : "bottles";
 
   const supabase = await createClient();
   const {
@@ -217,89 +211,8 @@ export default async function CellarPage({
   // the four decision KPIs (own / bottles / worth / ready).
   void regionCounts;
 
-  // Notes, history and stats all load up front so CellarTabs can switch
-  // between them instantly, with no navigation.
-  let notes: NoteRow[] = [];
-  {
-    const { data: noteRows } = await supabase
-      .from("wset_notes")
-      .select(
-        "id, tasted_on, quality_score, context_kind, catalog_wine_id, " +
-          "sweetness, acidity, tannin, body, finish, taster_notes, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, image_url, " +
-          "producer:producers(name), appellation:appellations(name), " +
-          "region:regions(name), country:countries(name), " +
-          "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
-          "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
-      )
-      .eq("author_id", user.id)
-      .order("tasted_on", { ascending: false });
-    type NoteRowRaw = {
-      id: string;
-      tasted_on: string;
-      quality_score: number | null;
-      context_kind: "OPEN" | "BLIND" | "TRAINING";
-      catalog_wine_id: string;
-      sweetness: string | null;
-      acidity: string | null;
-      tannin: string | null;
-      body: string | null;
-      finish: string | null;
-      taster_notes: string | null;
-      catalog_wines: CatalogEmbed | CatalogEmbed[] | null;
-    };
-    const raw = (noteRows ?? []) as unknown as NoteRowRaw[];
-    // The descriptors each note picked, so the card can show what it SAYS.
-    const aromasByNote = new Map<string, string[]>();
-    if (raw.length > 0) {
-      const { data: aromaRows } = await supabase
-        .from("wset_note_aromas")
-        .select("note_id, term:wset_aroma_terms(term)")
-        .in("note_id", raw.map((n) => n.id));
-      for (const a of (aromaRows ?? []) as unknown as Array<{
-        note_id: string;
-        term: { term: string } | { term: string }[] | null;
-      }>) {
-        const t = unwrap(a.term)?.term;
-        if (!t) continue;
-        const list = aromasByNote.get(a.note_id) ?? [];
-        if (list.length < 5) list.push(t);
-        aromasByNote.set(a.note_id, list);
-      }
-    }
-    const structureBits = (n: NoteRowRaw): string[] => {
-      const L = (v: string | null) => (v ? (LABELS[v] ?? v) : null);
-      return [
-        L(n.sweetness),
-        n.acidity ? `${L(n.acidity)} acid` : null,
-        n.tannin ? `${L(n.tannin)} tannin` : null,
-        n.body ? `${L(n.body)} body` : null,
-        n.finish ? `${L(n.finish)} finish` : null,
-      ].filter(Boolean) as string[];
-    };
-    notes = raw.map((n) => {
-      const c = unwrap(n.catalog_wines);
-      return {
-        id: n.id,
-        catalogWineId: n.catalog_wine_id,
-        title: embedTitle(c),
-        subtitle: embedSubtitle(c),
-        grapes:
-          [relName(c?.primary_grape ?? null), relName(c?.secondary_grape ?? null)]
-            .filter(Boolean)
-            .join(", ") || null,
-        colour: c?.colour ?? null,
-        imageUrl: c?.image_url ?? null,
-        tastedOn: n.tasted_on,
-        qualityScore: n.quality_score,
-        contextKind: n.context_kind,
-        aromas: aromasByNote.get(n.id) ?? [],
-        structure: structureBits(n),
-        preview: n.taster_notes?.trim() || null,
-      };
-    });
-  }
-
+  // History and stats load up front so CellarTabs can switch between them
+  // instantly, with no navigation.
   let history: HistoryRow[] = [];
   {
     const { data: consRows } = await supabase
@@ -413,7 +326,7 @@ export default async function CellarPage({
                 className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <Plus className="size-4" />
-                Add a wine
+                Add a bottle
               </AddWineButton>
             </div>
             <CellarVisibilityControl userId={user.id} current={visibility} />
@@ -432,7 +345,6 @@ export default async function CellarPage({
 
       <CellarTabs
         bottles={bottleRows}
-        notes={notes}
         history={history}
         stats={stats}
         currency={preferredCurrency}

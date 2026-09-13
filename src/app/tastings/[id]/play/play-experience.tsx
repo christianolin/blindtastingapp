@@ -15,7 +15,12 @@ import { makeWineLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
-import { competitorRank } from "@/lib/stats-math";
+import { rankLabel, rankRows } from "@/lib/stats-math";
+import {
+  pendingAnswerNotice,
+  type IncompleteGlass,
+} from "@/lib/wine-identity/incomplete";
+import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
 import { cn } from "@/lib/utils";
@@ -147,10 +152,19 @@ export async function PlayExperience({
 
   const isHost = tasting.host_id === user.id;
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
+  // Guided pacing is LIVE-only (spec §D.1 #1): a self-paced tasting may still
+  // carry a flag stored before that rule, and it is ignored on read — no
+  // backfill. This one flag drives both the per-attribute reveal UI and the
+  // one-glass-at-a-time locking below.
   const guidedLive =
-    tasting.timing_mode === "LIVE" &&
-    tasting.sequential_guessing &&
-    !isSemiBlind;
+    tasting.timing_mode === "LIVE" && tasting.sequential_guessing && !isSemiBlind;
+  // ASYNC + IMMEDIATE: locking a COMPLETE glass scores it and shows the answer
+  // straight away, and a scored guess can no longer be unlocked — so the lock
+  // confirm's "it can't be changed afterwards" holds without the UI hiding
+  // anything. An INCOMPLETE glass is the one case that waits: it locks
+  // unscored, and the deferred-scoring pair below carries it.
+  const scoresOnLock =
+    tasting.timing_mode === "ASYNC" && tasting.async_reveal_policy === "IMMEDIATE";
   // The host who provided all the wines set the answers — they host, they
   // don't guess. (In bring-your-own the host guesses everyone else's bottles.)
   const hostProvidesHost = tasting.wine_source === "HOST_PROVIDES" && isHost;
@@ -322,10 +336,71 @@ export async function PlayExperience({
   const glassLabel = (wine: Parameters<typeof wineTitle>[0], index: number) =>
     tasting.wine_source === "HOST_PROVIDES" ? `Glass ${index + 1}` : wineTitle(wine);
 
-  const resolvedForMe = (wineId: string, isRevealed: boolean) =>
-    isRevealed || Boolean(myGuessByWineId.get(wineId)?.scored_at);
+  // Every glass with no answer key yet (spec §C.8). It can be guessed and
+  // locked; in ASYNC + IMMEDIATE its score waits until the adder finishes it.
+  // listIncompleteGlasses throws on an RPC error so nothing reads a failure as
+  // "every glass is complete"; here the failure is caught (a play surface that
+  // still renders beats an error boundary) and remembered, so the glasses stay
+  // *unknown* rather than silently complete. Same degrade as the host console.
+  let incompleteGlasses: IncompleteGlass[] = [];
+  let incompleteKnown = true;
+  try {
+    incompleteGlasses = await listIncompleteGlasses(supabase, tasting.id);
+  } catch (e) {
+    incompleteKnown = false;
+    console.warn(
+      `incomplete glasses for tasting ${tasting.id}: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
+  const incompleteByWineId = new Map(incompleteGlasses.map((g) => [g.wineId, g]));
 
-  const sequential = tasting.sequential_guessing && !isSemiBlind;
+  // A shared step reveal is under way: at least one category is out and the
+  // glass is not fully revealed yet. Since 20260912090000 no guesser can read
+  // its answer row in this state.
+  const midStepReveal = (wine: { is_revealed: boolean; reveal_step: number | null }) =>
+    !wine.is_revealed && (wine.reveal_step ?? 0) > 0;
+  // The shared reveal owns a blind glass from its first revealed category: the
+  // 6h reveal view, never a ladder. A semi-blind glass has no per-category
+  // view, so a stray step (reveal_next_category refuses no semi-blind glass)
+  // leaves it in the match ladder's batch instead of pulling it out.
+  const ownedByReveal = (wine: { is_revealed: boolean; reveal_step: number | null }) =>
+    !isSemiBlind && midStepReveal(wine);
+  // "Resolved for me" = the answer is mine to see — the glass is revealed for
+  // everyone, or my own guess is scored (ASYNC + IMMEDIATE). A glass mid
+  // step-reveal is never resolved, in either mode, even with a scored guess
+  // (amendment 14): reveal_next_category stamps scored_at on every row from
+  // step 1, so reading that as "mine to see" would print a semi-blind match's
+  // result — which the category steps score 0 — before the glass is revealed.
+  const resolvedForMe = (wine: {
+    id: string;
+    is_revealed: boolean;
+    reveal_step: number | null;
+  }) =>
+    wine.is_revealed ||
+    (Boolean(myGuessByWineId.get(wine.id)?.scored_at) && !midStepReveal(wine));
+
+  // Deferred scoring (spec §C.8): my locked guess on a glass that was
+  // incomplete when I locked it, now that the adder has finished it. "Once the
+  // glass is complete" means known-complete: while the read is unknown nothing
+  // is due, so a failed read costs no server action rather than one per glass.
+  const scoringDueFor = (wineId: string) => {
+    const guess = myGuessByWineId.get(wineId);
+    return (
+      scoresOnLock &&
+      incompleteKnown &&
+      !incompleteByWineId.has(wineId) &&
+      Boolean(guess?.locked_at) &&
+      !guess?.scored_at
+    );
+  };
+  // Why the answer is still hidden while that wait lasts.
+  const pendingNoticeFor = (wineId: string) => {
+    const row = incompleteByWineId.get(wineId);
+    return scoresOnLock && row ? pendingAnswerNotice(row.glass) : null;
+  };
+
+  // The pacing half of that same flag: one glass at a time, in order.
+  const sequential = guidedLive;
   const currentWineId = sequential
     ? ((wines ?? []).find((w) => !w.is_revealed)?.id ?? null)
     : null;
@@ -354,7 +429,8 @@ export async function PlayExperience({
         : ((wines ?? []).find(
             (w) =>
               !w.is_revealed &&
-              !resolvedForMe(w.id, w.is_revealed) &&
+              !ownedByReveal(w) &&
+              !resolvedForMe(w) &&
               !myGuessByWineId.get(w.id)?.locked_at &&
               w.contributor_participant_id !== myParticipant.id &&
               !(tasting.wine_source === "HOST_PROVIDES" && isHost),
@@ -363,7 +439,7 @@ export async function PlayExperience({
   const answerWineIds = [
     ...new Set(
       (wines ?? [])
-        .filter((w) => resolvedForMe(w.id, w.is_revealed))
+        .filter((w) => resolvedForMe(w))
         .map((w) => w.id),
     ),
   ];
@@ -467,21 +543,26 @@ export async function PlayExperience({
             lastRoundPoints: r.lastRoundPoints,
           }))
       : [];
-  const myRank = competitorRank(standings, myParticipant.id);
-  const rankChip: RankChip | null =
-    myRank && standings.length > 0
-      ? {
-          rank: myRank.rank,
-          points: standings.find((s) => s.isMe)?.total ?? 0,
-        }
-      : null;
+  // One dense rank feeds every surface here (reveal-6): the chip on the ladder
+  // and the locked-in header, and the standalone /play leaderboard — so the
+  // numbers never disagree, and the top row keys on rank === 1, never on the
+  // list index. The leaderboard prints the tie as "=2" (rankLabel); the chip
+  // shows the bare rank, because `RankChip` (ladder-types.ts, T6's file)
+  // carries no `tied` flag yet — reported to the orchestrator.
+  const ranked = rankRows(standings, (s) => s.total);
+  const mine = ranked.find((r) => r.row.isMe) ?? null;
+  const rankChip: RankChip | null = mine
+    ? { rank: mine.rank, points: mine.row.total }
+    : null;
   const leaderboard = !embedded
-    ? standings.map((s) => ({
-        participantId: s.participantId,
-        name: s.name,
-        isMe: s.isMe,
-        total: s.total,
-        delta: s.lastRoundPoints ?? 0,
+    ? ranked.map(({ row, rank, tied }) => ({
+        participantId: row.participantId,
+        name: row.name,
+        isMe: row.isMe,
+        total: row.total,
+        delta: row.lastRoundPoints ?? 0,
+        rank,
+        rankText: rankLabel({ rank, tied }),
       }))
     : [];
   // The 6g "Standings after glass N" row scrolls to the standings when this
@@ -500,7 +581,8 @@ export async function PlayExperience({
       !finished &&
       !hostProvidesHost &&
       !w.is_revealed &&
-      !resolvedForMe(w.id, w.is_revealed) &&
+      !ownedByReveal(w) &&
+      !resolvedForMe(w) &&
       w.contributor_participant_id !== myParticipant.id &&
       (!sequential || w.id === currentWineId),
   );
@@ -698,12 +780,12 @@ export async function PlayExperience({
                 <span
                   className={cn(
                     "flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-                    i === 0
+                    row.rank === 1
                       ? "bg-gold/20 text-gold-deep"
                       : "bg-muted text-muted-foreground",
                   )}
                 >
-                  {i + 1}
+                  {row.rankText}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">
                   {row.name}
@@ -779,7 +861,7 @@ export async function PlayExperience({
         const guessedCandidate = guess?.guessed_wine_id
           ? candidateByWineId.get(guess.guessed_wine_id)
           : null;
-        const resolved = resolvedForMe(wine.id, wine.is_revealed);
+        const resolved = resolvedForMe(wine);
         const locked = Boolean(guess?.locked_at);
         // A draft (autosaved, unlocked) row is "in progress", not "guessed".
         const hasDraft = isSemiBlind ? Boolean(guess?.guessed_wine_id) : Boolean(guess);
@@ -814,8 +896,10 @@ export async function PlayExperience({
         // Which body this card gets. The three "live" states (6h reveal, 6g
         // locked in, 6e ladder) are full-bleed sections in their own palette;
         // everything else is ordinary card content.
-        const revealing =
-          guidedLive && !wine.is_revealed && (wine.reveal_step ?? 0) > 0;
+        // Once a category is out, the shared reveal owns the glass whether or
+        // not the tasting is guided: the 6h reveal view takes over, never a
+        // ladder and never an answer card.
+        const revealing = ownedByReveal(wine);
         const canGuessNow =
           !revealing &&
           !(resolved && answer) &&
@@ -858,6 +942,10 @@ export async function PlayExperience({
               },
               frequentGrapeIds,
               shortlist: shortlistByWineId.get(wine.id) ?? null,
+              // ASYNC + IMMEDIATE gets its own lock label, footer and confirm
+              // (play-4); every other mode keeps today's copy.
+              timingMode: tasting.timing_mode,
+              asyncRevealPolicy: tasting.async_reveal_policy,
             }}
             lockedIn={{
               tastingId,
@@ -873,6 +961,14 @@ export async function PlayExperience({
               standingsLabel:
                 glassNumber > 1 ? `Standings after glass ${glassNumber - 1}` : "See the standings",
               standingsHref,
+              // No `canChange` producer in this wave: the blind-tasting ledger
+              // drops the semi-blind freeze (amendment 3), which was its only
+              // one. "Change it" therefore matches the server — unlockGuess
+              // refuses a scored guess and allows a locked, unscored one (the
+              // deferred case), and a glass mid step-reveal shows the reveal
+              // view rather than this card at all.
+              pendingNotice: pendingNoticeFor(wine.id),
+              needsScoring: scoringDueFor(wine.id),
             }}
           />
         ) : null;
@@ -951,6 +1047,7 @@ export async function PlayExperience({
                     names={nameById}
                     standings={standings}
                     spectator={isMine || hostProvidesHost}
+                    leaderboardReveal={tasting.leaderboard_reveal}
                   />
                 ) : (
                   stage
@@ -1176,7 +1273,7 @@ export async function PlayExperience({
               .map((w, i) => ({ w, i }))
               .filter(
                 ({ w }) =>
-                  !resolvedForMe(w.id, w.is_revealed) &&
+                  !resolvedForMe(w) &&
                   w.contributor_participant_id !== myParticipant.id,
               )
               .map(({ w, i }) => ({
@@ -1201,6 +1298,8 @@ export async function PlayExperience({
                     glasses={glasses}
                     candidates={matchCandidates}
                     initialLocked={allLocked}
+                    timingMode={tasting.timing_mode}
+                    asyncRevealPolicy={tasting.async_reveal_policy}
                     lockedIn={{
                       tastingId,
                       eyebrow: tasting.name,
@@ -1211,6 +1310,14 @@ export async function PlayExperience({
                       eligibleCount: eligible.length,
                       standingsLabel: "See the standings",
                       standingsHref,
+                      // Same deferred-scoring rules as a blind glass (spec
+                      // §C.8): the batch locks every glass, so the first glass
+                      // still waiting explains the wait and any finished one
+                      // among them is scored. No `canChange` here either —
+                      // amendment 3 voids the semi-blind freeze.
+                      pendingNotice:
+                        glasses.map((g) => pendingNoticeFor(g.wineId)).find(Boolean) ?? null,
+                      needsScoring: glasses.some((g) => scoringDueFor(g.wineId)),
                     }}
                   />
                 </div>
