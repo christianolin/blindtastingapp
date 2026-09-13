@@ -49,3 +49,43 @@ export function makeWineLabeler(
     return `Wine ${numberByWineId.get(wine.id) ?? wine.position}`;
   };
 }
+
+/**
+ * The guest-facing counterpart of `makeWineLabeler` (MISSED-01, B10): the
+ * identical numbering and signature, "Glass {n}" in place of "Wine {n}" for
+ * a host-provided wine with no place of its own in the contributor scheme.
+ * `makeWineLabeler`'s "Wine N" stays the host's own lobby Wines card;
+ * everywhere else guest-facing (the running page's navigator and progress,
+ * `/play`'s glass cards, the result and the record) uses this one instead.
+ */
+export function makeGlassLabeler(
+  wines: WineRow[],
+  wineSource: "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED",
+  nameByParticipantId: Map<string, string>,
+) {
+  const numberByWineId = new Map<string, number>();
+  const ordinalByWineId = new Map<string, number>();
+  const totalByContributor = new Map<string, number>();
+  [...wines]
+    .sort((a, b) => a.position - b.position)
+    .forEach((w, index) => {
+      numberByWineId.set(w.id, index + 1);
+      const contributor = w.contributor_participant_id;
+      if (contributor) {
+        const n = (totalByContributor.get(contributor) ?? 0) + 1;
+        totalByContributor.set(contributor, n);
+        ordinalByWineId.set(w.id, n);
+      }
+    });
+
+  return (wine: WineRow) => {
+    if (wineSource === "PARTICIPANT_CONTRIBUTED" && wine.contributor_participant_id) {
+      const who =
+        nameByParticipantId.get(wine.contributor_participant_id) ?? "Someone";
+      const total = totalByContributor.get(wine.contributor_participant_id) ?? 1;
+      const n = ordinalByWineId.get(wine.id) ?? 1;
+      return total > 1 ? `${who}'s wine #${n}` : `${who}'s wine`;
+    }
+    return `Glass ${numberByWineId.get(wine.id) ?? wine.position}`;
+  };
+}

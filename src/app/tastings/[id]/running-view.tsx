@@ -7,7 +7,15 @@ import { LiveShell } from "@/components/live-shell";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { cn } from "@/lib/utils";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
-import { getCurrentUser, getTastingRow, getViewerParticipant, getWineRows } from "@/lib/tasting-request-cache";
+import { createClient } from "@/lib/supabase/server";
+import {
+  getCurrentUser,
+  getParticipantRows,
+  getTastingRow,
+  getViewerParticipant,
+  getWineRows,
+} from "@/lib/tasting-request-cache";
+import { makeGlassLabeler } from "@/lib/wine-label";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { SheetFromQuery } from "./sheet-from-query";
 import { TastingPageHeader } from "./tasting-page-header";
@@ -47,6 +55,32 @@ export async function RunningView({
   const wineCount = wines.length;
   const revealedCount = wines.filter((w) => w.is_revealed).length;
   const progressPct = wineCount > 0 ? Math.round((revealedCount / wineCount) * 100) : 0;
+
+  // "Glass N" by list order, or the contributor label in bring-your-own
+  // (MISSED-01, B10) — the navigator chips below use it, same as every other
+  // guest-facing surface on the running page. Skipped for OPEN (its own
+  // OpenBoard never uses it) and an empty flight, so this never runs a
+  // participant/profile query it does not need.
+  let glassLabel: (w: (typeof wines)[number]) => string = () => "";
+  if (!isOpen && wineCount > 0) {
+    const participantRows = await getParticipantRows(tastingId);
+    const userIds = participantRows.map((p) => p.user_id);
+    const supabase = await createClient();
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, email")
+      .in("id", userIds.length > 0 ? userIds : [""]);
+    const profileByUserId = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const nameByParticipantId = new Map(
+      participantRows.map((p) => [
+        p.id,
+        profileByUserId.get(p.user_id)?.display_name ??
+          profileByUserId.get(p.user_id)?.email ??
+          "Someone",
+      ]),
+    );
+    glassLabel = makeGlassLabeler(wines, tasting.wine_source, nameByParticipantId);
+  }
   const derivedStatus =
     tasting.status === "CLOSED"
       ? "Completed"
@@ -152,7 +186,7 @@ export async function RunningView({
       {wineCount > 0 ? (
         <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3.5">
           <div className="flex flex-wrap gap-2">
-            {wines.map((w, i) => {
+            {wines.map((w) => {
               const active = derivedStatus !== "Completed" && w.id === activeChipId;
               return (
                 <a
@@ -177,7 +211,7 @@ export async function RunningView({
                           : "bg-muted-foreground/40",
                     )}
                   />
-                  Wine {i + 1}
+                  {glassLabel(w)}
                 </a>
               );
             })}
@@ -190,7 +224,7 @@ export async function RunningView({
               />
             </div>
             <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
-              {derivedStatus === "Completed" ? "Completed" : `${revealedCount} of ${wineCount} wines`}
+              {derivedStatus === "Completed" ? "Completed" : `${revealedCount} of ${wineCount} glasses`}
             </span>
           </div>
         </div>

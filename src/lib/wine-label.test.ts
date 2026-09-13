@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeWineLabeler } from "./wine-label";
+import { makeGlassLabeler, makeWineLabeler } from "./wine-label";
 
 type Row = { id: string; position: number; contributor_participant_id: string | null };
 type Source = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
@@ -85,5 +85,22 @@ describe("makeWineLabeler — bring your own", () => {
   it("numbers a bottle with no contributor by list order", () => {
     const rows = [wine("h", 9), wine("p", 4, "p-anna")];
     expect(labelsOf(rows, "PARTICIPANT_CONTRIBUTED", names)).toEqual(["Wine 2", "Anna's wine"]);
+  });
+});
+
+describe("makeGlassLabeler (MISSED-01)", () => {
+  const wines = [
+    { id: "w3", position: 7, contributor_participant_id: null },
+    { id: "w1", position: 2, contributor_participant_id: null },
+    { id: "w2", position: 5, contributor_participant_id: "p1" },
+  ];
+  it("numbers guest-facing glasses by list order", () => {
+    const label = makeGlassLabeler(wines, "HOST_PROVIDES", new Map());
+    expect(wines.map(label)).toEqual(["Glass 3", "Glass 1", "Glass 2"]);
+  });
+  it("keeps the contributor label in bring-your-own", () => {
+    const label = makeGlassLabeler(wines, "PARTICIPANT_CONTRIBUTED", new Map([["p1", "Gustav"]]));
+    expect(label(wines[2])).toBe("Gustav's wine");
+    expect(label(wines[0])).toBe("Glass 3");
   });
 });

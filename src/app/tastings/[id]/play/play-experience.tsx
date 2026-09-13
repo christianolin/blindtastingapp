@@ -11,9 +11,10 @@ import {
   getWineRows,
 } from "@/lib/tasting-request-cache";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
-import { makeWineLabeler } from "@/lib/wine-label";
+import { makeGlassLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
-import { eligibleForGlass } from "@/lib/glass-eligibility";
+import { eligibleForGlass, joinedAfterReveal } from "@/lib/glass-eligibility";
+import { stepRevealApplies } from "@/lib/console-copy";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
 import { getReferenceCounts } from "@/lib/reference-counts";
 import { canNoteHiddenGlass } from "@/lib/wset/hidden-note";
@@ -168,12 +169,16 @@ export async function PlayExperience({
 
   const isHost = tasting.host_id === user.id;
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
-  // Guided pacing is LIVE-only (spec §D.1 #1): a self-paced tasting may still
-  // carry a flag stored before that rule, and it is ignored on read — no
-  // backfill. This one flag drives both the per-attribute reveal UI and the
-  // one-glass-at-a-time locking below.
-  const guidedLive =
-    tasting.timing_mode === "LIVE" && tasting.sequential_guessing && !isSemiBlind;
+  // Q8 (REVEAL-02): the one predicate that gates step-by-step reveal, shared
+  // with the host console (`stepRevealApplies`) — a free-order LIVE blind
+  // tasting (or any ASYNC/semi-blind one) reveals whole glasses instead. This
+  // also drives the one-glass-at-a-time locking below, and RevealView renders
+  // only where it holds (`ownedByReveal`).
+  const guidedLive = stepRevealApplies({
+    revealMode: tasting.reveal_mode,
+    timingMode: tasting.timing_mode,
+    sequentialGuessing: tasting.sequential_guessing,
+  });
   // ASYNC + IMMEDIATE: locking a COMPLETE glass scores it and shows the answer
   // straight away, and a scored guess can no longer be unlocked — so the lock
   // confirm's "it can't be changed afterwards" holds without the UI hiding
@@ -187,7 +192,7 @@ export async function PlayExperience({
 
   const { data: myParticipant } = await supabase
     .from("tasting_participants")
-    .select("id, status")
+    .select("id, status, joined_at")
     .eq("tasting_id", tastingId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -381,15 +386,10 @@ export async function PlayExperience({
   const hasRowFor = (wineId: string, participantId: string) =>
     statusByWineId.get(wineId)?.has(participantId) === true;
 
-  const wineTitle = makeWineLabeler(
-    wines ?? [],
-    tasting.wine_source,
-    nameByParticipantId,
-  );
-  // "Glass 3" in the ladders (the handoff's word), the contributor label in
-  // bring-your-own.
-  const glassLabel = (wine: Parameters<typeof wineTitle>[0], index: number) =>
-    tasting.wine_source === "HOST_PROVIDES" ? `Glass ${index + 1}` : wineTitle(wine);
+  // "Glass N" by list order, or the contributor label in bring-your-own
+  // (MISSED-01, B10) — every guest-facing surface on this page uses this one
+  // labeler, never the host lobby's "Wine N" (`makeWineLabeler`).
+  const glassLabel = makeGlassLabeler(wines ?? [], tasting.wine_source, nameByParticipantId);
 
   // Every glass with no answer key yet (spec §C.8). It can be guessed and
   // locked; in ASYNC + IMMEDIATE its score waits until the adder finishes it.
@@ -417,9 +417,14 @@ export async function PlayExperience({
   // The shared reveal owns a blind glass from its first revealed category: the
   // 6h reveal view, never a ladder. A semi-blind glass has no per-category
   // view, so a stray step (reveal_next_category refuses no semi-blind glass)
-  // leaves it in the match ladder's batch instead of pulling it out.
+  // leaves it in the match ladder's batch instead of pulling it out. Gated on
+  // `guidedLive` (stepRevealApplies), not a bare `!isSemiBlind`: only a
+  // guided LIVE blind tasting ever advances `wines.reveal_step` above 0
+  // (RevealControls is the only caller of reveal_next_category, and it only
+  // renders there), so this is the literal "RevealView renders only where
+  // stepRevealApplies holds" (spec §11.3 item 5).
   const ownedByReveal = (wine: { is_revealed: boolean; reveal_step: number | null }) =>
-    !isSemiBlind && midStepReveal(wine);
+    guidedLive && midStepReveal(wine);
   // "Resolved for me" = the answer is mine to see — the glass is revealed for
   // everyone, or my own guess is scored (ASYNC + IMMEDIATE). A glass mid
   // step-reveal is never resolved, in either mode, even with a scored guess
@@ -472,14 +477,26 @@ export async function PlayExperience({
     .filter((w) => w.is_revealed)
     .map((w) => w.id);
 
+  // wines.revealed_at (M3): shared by the semi-blind "most recently revealed
+  // glass" pick further down and the blind "You joined after this glass"
+  // check (B4) below — one query, not two.
+  const { data: revealTimestamps } =
+    revealedWineIds.length > 0
+      ? await supabase.from("wines").select("id, revealed_at").in("id", revealedWineIds)
+      : { data: [] };
+  const revealedAtByWineId = new Map<string, string | null>(
+    (revealTimestamps ?? []).map((w) => [w.id, w.revealed_at]),
+  );
+
   // Progress: overall reveal progress drives the bar; in guided (sequential)
-  // mode we also surface which wine is live as "Wine N of M".
+  // mode we also surface which wine is live as "Glass N of M" — list order,
+  // never the raw stored position (MISSED-01).
   const totalWines = (wines ?? []).length;
   const revealedCount = revealedWineIds.length;
   const progressPct = totalWines > 0 ? Math.round((revealedCount / totalWines) * 100) : 0;
-  const currentWinePosition = currentWineId
-    ? ((wines ?? []).find((w) => w.id === currentWineId)?.position ?? null)
-    : null;
+  const currentWineIndex = currentWineId
+    ? (wines ?? []).findIndex((w) => w.id === currentWineId)
+    : -1;
 
   // The one wine the player should focus on now: the guided current wine, or
   // (free mode) the first wine they can still guess. Its card gets the
@@ -600,17 +617,13 @@ export async function PlayExperience({
   // or a LIVE host's Skip, can both leave a later glass revealed first.
   let semiBlindReveal: { wineId: string; props: SemiBlindRevealProps } | null = null;
   if (showMatchBoard && semiBlindBoard && semiBlindCandidates && revealedWineIds.length > 0) {
-    const { data: revealTimestamps } = await supabase
-      .from("wines")
-      .select("id, revealed_at")
-      .in("id", revealedWineIds);
     let latestWineId: string | null = null;
     let latestAt = "";
-    for (const row of revealTimestamps ?? []) {
-      const at = row.revealed_at ?? "";
+    for (const [id, at0] of revealedAtByWineId) {
+      const at = at0 ?? "";
       if (at > latestAt) {
         latestAt = at;
-        latestWineId = row.id;
+        latestWineId = id;
       }
     }
     const answer = latestWineId ? answerByWineId.get(latestWineId) : undefined;
@@ -918,8 +931,8 @@ export async function PlayExperience({
             <span className="font-heading text-lg font-semibold">
               {finished
                 ? "Tasting finished"
-                : sequential && currentWinePosition
-                  ? `Wine ${currentWinePosition} of ${totalWines}`
+                : sequential && currentWineIndex >= 0
+                  ? `Glass ${currentWineIndex + 1} of ${totalWines}`
                   : `${revealedCount} of ${totalWines} revealed`}
             </span>
             <span className="text-sm tabular-nums text-muted-foreground">
@@ -1038,6 +1051,22 @@ export async function PlayExperience({
               .slice()
               .sort((a, b) => (b.total_points ?? 0) - (a.total_points ?? 0))
           : [];
+        // B4 (spec §5.3 item 4): this glass was revealed before I joined, so
+        // I never had a chance to guess it — "in place of its verdict" means
+        // this note replaces the silence a missing row in `everyone` would
+        // otherwise leave, without hiding how everyone else who did guess it
+        // scored.
+        const joinedAfterMe =
+          wine.is_revealed &&
+          joinedAfterReveal(
+            { id: myParticipant.id, userId: user.id, status: "JOINED", joinedAt: myParticipant.joined_at },
+            {
+              contributorParticipantId: wine.contributor_participant_id,
+              isRevealed: wine.is_revealed,
+              revealedAt: revealedAtByWineId.get(wine.id) ?? null,
+            },
+          ) &&
+          !everyone.some((g) => g.participant_id === myParticipant.id);
 
         const isActive = wine.id === activeWineId;
         const eligible = eligibleGuessers(wine);
@@ -1085,7 +1114,7 @@ export async function PlayExperience({
               return {
                 tastingWineId: wine.id,
                 tastingName: tasting.name,
-                glassLabel: glassLabel(wine, index),
+                glassLabel: glassLabel(wine),
                 existing: note
                   ? {
                       noteId: note.id,
@@ -1144,7 +1173,7 @@ export async function PlayExperience({
               tastingId,
               wineIds: [wine.id],
               eyebrow: tasting.name,
-              title: `${glassLabel(wine, index)} · locked in`,
+              title: `${glassLabel(wine)} · locked in`,
               rankChip,
               people: peopleFor(eligible, (pid) => lockedFor(wine.id, pid)),
               lockedCount,
@@ -1190,7 +1219,7 @@ export async function PlayExperience({
               id={`wine-${wine.id}`}
               className="flex min-h-[44px] scroll-mt-24 items-center rounded-[12px] border border-dashed border-border-light bg-card px-[16px] text-[13.5px] text-muted-foreground"
             >
-              {glassLabel(wine, index)} · opens after the reveal
+              {glassLabel(wine)} · opens after the reveal
             </div>
           );
         }
@@ -1213,7 +1242,7 @@ export async function PlayExperience({
                   </span>
                 ) : null}
                 <CardTitle className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate">{wineTitle(wine)}</span>
+                  <span className="min-w-0 truncate">{glassLabel(wine)}</span>
                   <div className="flex items-center gap-2">
                     <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                     {/* Guided live tastings get progressive controls (reveal one
@@ -1247,6 +1276,8 @@ export async function PlayExperience({
                     standings={standings}
                     spectator={isMine || hostProvidesHost}
                     leaderboardReveal={tasting.leaderboard_reveal}
+                    hostName={hostName}
+                    eligibleIds={eligible.map((p) => p.id)}
                   />
                 ) : (
                   stage
@@ -1286,6 +1317,16 @@ export async function PlayExperience({
                         </div>
                       </div>
                     </div>
+
+                    {/* B4: I joined after this glass was revealed — say so
+                        in place of the verdict my missing row would
+                        otherwise leave unexplained, above everyone else's
+                        results (still shown below, unaffected). */}
+                    {joinedAfterMe ? (
+                      <p className="text-sm text-muted-foreground">
+                        You joined after this glass.
+                      </p>
+                    ) : null}
 
                     {/* Once globally revealed, show everyone's result; otherwise
                         (immediate async) just mine. */}
@@ -1356,7 +1397,7 @@ export async function PlayExperience({
                   // get the collapsed row above): same line, inside the card
                   // that carries their reveal controls.
                   <p className="text-[13.5px] text-muted-foreground">
-                    {glassLabel(wine, index)} · opens after the reveal
+                    {glassLabel(wine)} · opens after the reveal
                   </p>
                 ) : (
                   // Free mode, not the spotlighted glass: the ladder waits
