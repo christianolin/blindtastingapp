@@ -1562,8 +1562,12 @@ returns boolean language sql stable security definer set search_path = public as
   );
 $$;
 
+-- Is this glass revealed? VOLATILE on purpose: every call reads with a fresh
+-- snapshot, so the write policies below see a reveal that committed while the
+-- write was waiting on the glass (wset_notes_glass_resolve_on_write). A STABLE
+-- helper would judge that row by the statement's older snapshot and refuse it.
 create or replace function public.is_tasting_wine_revealed(p_wine_id uuid)
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql volatile security definer set search_path = public as $$
   select coalesce((select is_revealed from wines where id = p_wine_id), false);
 $$;
 
@@ -1643,6 +1647,20 @@ create policy "wset note aromas read" on public.wset_note_aromas
 --                                 then unidentified_wine_id
 --                                 else (p_note->>'unidentified_wine_id')::uuid end,
 
+-- resolve_unidentified_wine, recreated from its live definition with one edit. A
+-- hue is judged only against a known colour (wset_hue_fits_colour, and
+-- wset_notes_check_hue, which reads catalog_wines only), so a note on an
+-- unidentified wine may hold any hue: that wine may have no colour, and no write
+-- checks its colour. When the wine resolves to a catalog wine, its notes keep a
+-- hue only when it fits that wine's colour (the reveal's rule), so a taster's hue
+-- can never fail the resolution. It stays SECURITY DEFINER with its live checks:
+--   update wset_notes
+--     set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null,
+--         colour_hue = case when public.wset_hue_fits_colour(colour_hue,
+--                                  (select cw.colour from catalog_wines cw where cw.id = p_catalog_wine_id))
+--                           then colour_hue end
+--     where unidentified_wine_id = p_unidentified_id;
+
 -- At the reveal every hidden note on the glass takes the glass's identity,
 -- and a hue that does not fit the revealed colour is cleared so the reveal
 -- can never fail on a taster's colour guess.
@@ -1684,22 +1702,118 @@ create trigger wines_drop_unresolved_notes
   before delete on public.wines
   for each row execute function public.wines_drop_unresolved_notes();
 
+-- Moving a note onto a glass needs the same membership as inserting one there.
+-- The update policy re-checks membership only for a hidden note, and RLS cannot
+-- compare a row's new tasting_wine_id with its old one, so without this guard an
+-- author could point a catalog note at any revealed glass: by an update, or
+-- through save_wset_note, whose update sets tasting_wine_id = coalesce(payload,
+-- current). An edit that keeps the glass (by an author since set DECLINED too), a
+-- detach to null (the FK's SET NULL) and the resolve paths, which never set
+-- tasting_wine_id, still pass. Membership is by auth.uid(), so a caller with no
+-- signed-in user (service_role, the owner) cannot move a note onto a glass either:
+-- no later migration or repair may re-point notes as the owner.
+create or replace function public.wset_notes_glass_move_guard()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.tasting_wine_id is not null
+     and new.tasting_wine_id is distinct from old.tasting_wine_id then
+    if not public.can_note_tasting_wine(new.tasting_wine_id) then
+      raise exception 'a note can only be tied to a glass of a tasting you host or have joined'
+        using errcode = 'insufficient_privilege';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger wset_notes_glass_move_guard
+  before update of tasting_wine_id on public.wset_notes
+  for each row execute function public.wset_notes_glass_move_guard();
+
+-- A note written without an identity onto a glass that is already revealed takes
+-- that glass's identity as it is written, by the reveal's rule: the answer's
+-- catalog (or unidentified) wine, and a hue that does not fit its colour cleared.
+-- FOR SHARE waits for a reveal that is flipping the glass right now and then reads
+-- the committed row, so a save that races a reveal still attaches: either the
+-- reveal commits first and this copies the identity, or this write commits first
+-- and the reveal's own trigger resolves the note. It runs for an insert and for an
+-- update that moves the note to another glass. An edit that keeps its glass takes
+-- no lock: the reveal's trigger reaches that note through its row, and a lock here
+-- could deadlock with it. Membership stays the policies' and the move guard's job;
+-- by name this fires after the move guard and before the hue check.
+create or replace function public.wset_notes_glass_resolve_on_write()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_revealed boolean;
+  v_catalog_wine_id uuid;
+  v_unidentified_wine_id uuid;
+  v_colour wine_colour;
+begin
+  if new.tasting_wine_id is null
+     or num_nonnulls(new.catalog_wine_id, new.unidentified_wine_id) <> 0 then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' then
+    if new.tasting_wine_id is not distinct from old.tasting_wine_id then
+      return new;
+    end if;
+  end if;
+  select w.is_revealed into v_revealed
+    from wines w
+   where w.id = new.tasting_wine_id
+     for share;
+  if coalesce(v_revealed, false) then
+    select a.catalog_wine_id, a.unidentified_wine_id, coalesce(cw.colour, u.colour)
+      into v_catalog_wine_id, v_unidentified_wine_id, v_colour
+      from wine_answers a
+      left join catalog_wines cw on cw.id = a.catalog_wine_id
+      left join catalog_wines_unidentified u on u.id = a.unidentified_wine_id
+     where a.wine_id = new.tasting_wine_id;
+    if found then
+      new.catalog_wine_id := v_catalog_wine_id;
+      new.unidentified_wine_id := v_unidentified_wine_id;
+      new.colour_hue := case when public.wset_hue_fits_colour(new.colour_hue, v_colour)
+                             then new.colour_hue end;
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger wset_notes_glass_resolve_on_write
+  before insert or update of tasting_wine_id on public.wset_notes
+  for each row execute function public.wset_notes_glass_resolve_on_write();
+
 revoke all on function public.can_note_tasting_wine(uuid), public.is_tasting_wine_revealed(uuid)
   from public, anon;
 grant execute on function public.can_note_tasting_wine(uuid), public.is_tasting_wine_revealed(uuid)
   to authenticated;
+-- Trigger functions: no client role may call them; the triggers still fire.
+revoke execute on function public.wset_notes_resolve_on_reveal(), public.wines_drop_unresolved_notes(),
+  public.wset_notes_glass_move_guard(), public.wset_notes_glass_resolve_on_write()
+  from public, anon, authenticated;
 ```
 
 **Security reasoning (rule 1)**
 
 - Before the reveal a hidden note has no identity. The read policy returns it to its author only; its aromas follow the note's visibility; `glass_removal_impact` (§3) reveals only a count.
 - The author learns nothing from the database — the row stores what they wrote — and nobody else can read it, so nothing about a glass passes between tasters.
-- **No note maps a hidden glass to its wine.** A note tied to an unrevealed glass carries no identity — whoever writes it: the host, a contributor, a guesser, or a crafted `?blindWine=` link. Inserts need the caller to be JOINED in, or host of, the glass's tasting, and so do a hidden note's updates. An identity-less note on a revealed glass is refused, so a resolved note cannot be hidden again, and `save_wset_note` never removes an identity a note already has.
+- **No note maps a hidden glass to its wine.** A note tied to an unrevealed glass carries no identity — whoever writes it: the host, a contributor, a guesser, or a crafted `?blindWine=` link. Inserts need the caller to be JOINED in, or host of, the glass's tasting. So do a hidden note's updates, and any update that moves a note onto a different glass (`wset_notes_glass_move_guard`): RLS cannot compare the new `tasting_wine_id` with the old, so without the guard an author could point a catalog note at any revealed glass. A note written without an identity onto a revealed glass takes that glass's identity (`wset_notes_glass_resolve_on_write`). An update that removes a resolved note's identity is refused, and `save_wset_note` never removes an identity a note already has, so a resolved note cannot be hidden again.
+- **Owner-only callers.** The move guard judges membership by `auth.uid()`, so a caller with no signed-in user (service_role, the owner) cannot move a note onto a glass either. No server path re-points a note, and M6 and later migrations must not re-point notes as the owner.
 - At the reveal the note takes the glass's identity inside the reveal's transaction; no reveal function is recreated. An ASYNC IMMEDIATE guesser who already saw their own answer keeps an unresolved note until the glass is revealed for everyone (documented; nothing leaks).
+- **A save racing the reveal still attaches.** Under READ COMMITTED, a save whose statement began before the reveal committed would pass the policies as a hidden note after the reveal's trigger had run, leaving an identity-less note on a revealed glass that nothing resolves. `wset_notes_glass_resolve_on_write` (SECURITY DEFINER) fires for an insert, and for an update that moves an identity-less note to another glass. It reads the glass `FOR SHARE`, which conflicts with the reveal's row lock:
+  - a save that arrives while a reveal is flipping the glass waits, then copies the committed identity;
+  - a save that holds the glass first commits before the reveal's trigger runs, and that trigger resolves it.
+  - The write policies judge the copied identity through `is_tasting_wine_revealed`. It is VOLATILE so its fresh snapshot sees the committed reveal; a STABLE helper would refuse the row by the statement's older snapshot.
+  - An edit that keeps its glass takes no lock, because the reveal's trigger reaches that note through its row lock and a glass lock there could deadlock with the reveal. Such an edit re-reads the resolved row, and `save_wset_note` keeps its identity.
+  - The copy is only ever an identity the glass already shows everyone, and the policies still decide whether the write happens.
+- **A hue never fails a reveal or a resolution.** A hue is judged only against a known colour (`wset_hue_fits_colour`, `wset_notes_check_hue`). The reveal and the write trigger clear a hue that does not fit the glass's colour, and a null colour (an unidentified wine without one) fits any hue. A note on an unidentified wine can therefore hold a hue its eventual catalog wine does not allow, and no write checks an unidentified wine's own colour. `resolve_unidentified_wine` is recreated from live with one edit: the notes it re-points keep a hue only when it fits the catalog wine's colour.
 - `catalog_wine_mark_blind` still ignores notes without a catalog id, so a hidden note never marks `blind_pending` and never shows in a catalog or public list.
 - **Recursion:** the new policies reach `wines`, `tastings` and `tasting_participants` only through SECURITY DEFINER helpers; the aromas policy subqueries `wset_notes`, whose policies reference no tasting table.
 - **Data loss, stated:** removing a glass or deleting a tasting deletes the unresolved notes on it; §3's removal sentence counts them.
-- **Assertions:** pre-assert the four live policies' text, the constraint's text and `md5(prosrc)` of `save_wset_note`; post-assert the new ones, both triggers, `save_wset_note`'s body differing from live only in the two edits (still SECURITY INVOKER), `wset_note_aromas.note_id` still `on delete cascade`, the helpers SECURITY DEFINER with `search_path=public` and EXECUTE authenticated-only.
+- **Assertions:** pre-assert the four live policies' text, the constraint's text and `md5(prosrc)` of `save_wset_note` and `resolve_unidentified_wine`. Post-assert:
+  - the new policies and constraint;
+  - the two triggers on `wines`, and the four on `wset_notes` (the move guard and the write resolve next to the two live ones, firing in that order before the hue check);
+  - `save_wset_note`'s body differing from live only in the two edits (still SECURITY INVOKER), and `resolve_unidentified_wine`'s only in the hue edit (still SECURITY DEFINER, its ACL unchanged);
+  - `wset_note_aromas.note_id` still `on delete cascade`;
+  - the helpers SECURITY DEFINER with `search_path=public` and EXECUTE authenticated-only (`can_note_tasting_wine` STABLE, `is_tasting_wine_revealed` VOLATILE);
+  - no client EXECUTE on the four trigger functions (the move guard SECURITY INVOKER, the other three SECURITY DEFINER).
 
 ### 9.5 Tests
 
@@ -1708,14 +1822,26 @@ grant execute on function public.can_note_tasting_wine(uuid), public.is_tasting_
   - a JOINED guesser inserts a hidden note on an unrevealed glass; INVITED users and outsiders are refused;
   - another participant can select neither the note nor its aromas;
   - `reveal_wine` fills `catalog_wine_id`; a RUBY hue on a white wine becomes null and the reveal succeeds;
-  - a hidden insert on a revealed glass is refused; an update that nulls a resolved note's identity is refused;
+  - a hidden (identity-less) insert on a revealed glass takes that glass's identity, with a hue that does not fit its colour cleared; a non-member's is still refused. An update that nulls a resolved note's identity is refused;
   - deleting the glass deletes the unresolved note and keeps a resolved one (with `tasting_wine_id` null);
   - `catalog_wines.blind_pending` does not change when a hidden note is inserted;
   - an identity-bearing note with the `tasting_wine_id` of an unrevealed glass — by its host, by its contributor and by a JOINED guesser — is refused;
   - a minimal note `{ catalog_wine_id, context_kind: 'BLIND', tasting_wine_id: <revealed glass> }`: by a JOINED participant → OK; by the host → OK; by an INVITED user or an outsider → refused; with another tasting's glass id → refused;
   - `save_wset_note` inserts a note with `unidentified_wine_id` on a revealed glass whose wine is unidentified → OK;
   - a hidden note resolved by `reveal_wine`, then saved through `save_wset_note` with a null `catalog_wine_id` in the payload → keeps its catalog id;
-  - an author set DECLINED since then updates their note on a revealed glass → OK.
+  - an author set DECLINED since then updates their note on a revealed glass → OK;
+  - moving a note onto another tasting's revealed glass, by update or through `save_wset_note`, as an outsider, an INVITED or a DECLINED user → refused (`wset_notes_glass_move_guard`). A member moving a note onto their own tasting's glass → OK. A caller with no signed-in user → refused (documented);
+  - `resolve_unidentified_wine` when the wine's notes hold a hue that does not fit the catalog wine → the resolution succeeds and clears the hue; a fitting hue is kept; a caller who is neither the creator nor a curator is still refused. Cases:
+    - a hidden note resolved at a reveal onto an unidentified wine with no colour;
+    - one resolved onto an unidentified wine with a colour;
+    - a note written with a hue its unidentified wine's colour does not explain;
+  - a reveal emulated inside a hidden-note save, after the save's statement snapshot (rollback-only, on the database): the note attaches; with a STABLE `is_tasting_wine_revealed` it is refused; with neither the write trigger nor the VOLATILE helper it stays identity-less on the revealed glass;
+  - a reveal racing a hidden-note save, with real commits on two connections (a disposable local cluster, because the database cannot hold a committed reveal rollback-only):
+    - a save that arrives while the reveal holds the glass waits and attaches;
+    - a save holding the glass makes the reveal wait and is resolved by it;
+    - a re-save of a note the reveal's trigger holds succeeds and keeps the identity;
+    - an edit that lands inside the reveal's locked window does not deadlock;
+    - two savers wait together and both attach.
 
 ### 9.6 Verification
 
@@ -2519,7 +2645,7 @@ Versions are chosen at implementation time (§1.6): checked absent live and on a
 | M2 | `tasting_places` | §13 | The private place | fn `is_tasting_member`; table `tasting_places` with RLS, four policies, grants, `tasting_places_set_updated_at` trigger | — | none (the app reads null until §2/§13 ship) |
 | M3 | `tasting_lifecycle_stamps` | §5, §11 | When a tasting started and finished, when a glass was revealed | columns `tastings.started_at`, `tastings.finished_at`, `wines.revealed_at`; fns and triggers `tastings_stamp_lifecycle`, `wines_stamp_revealed_at` | — | none |
 | M4 | `join_preview_and_late_join` | §4, §5 | The link preview and the signed-in invitation, the host's record, joining until CLOSED, leaving before Start, a server-owned `joined_at`, longer join codes | fns `host_tastings_count`, `get_join_preview` (anon + authenticated); `join_tasting_by_code` and `generate_join_code` recreated from live; fns and triggers `tasting_participants_leave_guard`, `tasting_participants_stamp_joined_at` | — | after add-wine V2 (late joining changes a flow V1 checks); the old `/j/[code]` page still joins |
-| M5 | `hidden_glass_notes` | §9 | Private notes on a hidden glass, resolved at the reveal; no public note on a hidden glass | fns `can_note_tasting_wine`, `is_tasting_wine_revealed`, `wset_hue_fits_colour`; constraint `wset_notes_one_identity`; policies `wset notes read` / `insert` / `update`, `wset note aromas read`; `save_wset_note` recreated from live; fns and triggers `wset_notes_resolve_on_reveal` (AFTER UPDATE OF `is_revealed` on `wines`), `wines_drop_unresolved_notes` (BEFORE DELETE on `wines`) | — | after add-wine V2 (its Taste & rate checks write notes); deployed code writes identity-bearing notes on revealed glasses only (live count of notes on unrevealed glasses: 0) |
+| M5 | `hidden_glass_notes` | §9 | Private notes on a hidden glass, resolved at the reveal (a save racing the reveal too); no public note on a hidden glass; a note's hue never fails a reveal or a resolution | fns `can_note_tasting_wine`, `is_tasting_wine_revealed` (VOLATILE), `wset_hue_fits_colour`; constraint `wset_notes_one_identity`; policies `wset notes read` / `insert` / `update`, `wset note aromas read`; `save_wset_note` and `resolve_unidentified_wine` recreated from live; fns and triggers `wset_notes_resolve_on_reveal` (AFTER UPDATE OF `is_revealed` on `wines`), `wines_drop_unresolved_notes` (BEFORE DELETE on `wines`), `wset_notes_glass_move_guard` (BEFORE UPDATE OF `tasting_wine_id` on `wset_notes`), `wset_notes_glass_resolve_on_write` (BEFORE INSERT OR UPDATE OF `tasting_wine_id` on `wset_notes`) | — | after add-wine V2 (its Taste & rate checks write notes); deployed code writes identity-bearing notes on revealed glasses only (live count of notes on unrevealed glasses: 0) |
 | M6 | `flight_edits_until_first_step` | §3 (and §2's reorder) | The adder pinned at insert; the `wines` column privileges; the setup lock after Start; the adder's edit window in RLS (OPEN kept); atomic reorder and removal; removal counts | column `wines.added_by_host`, trigger `wines_pin_adder`; UPDATE on `wines` narrowed to `position`, `added_via`; fn and trigger `tastings_lock_setup_after_start`; `is_wine_adder` recreated from live; fns `can_edit_flight_glass`, `can_remove_flight_glass`, `can_delete_flight_glass_row`, `move_flight_glass`, `remove_flight_glass`, `set_flight_glass_added_via`, `glass_removal_impact`; policies `wine_answers insert`, `wine_answers update`; `wines delete host` replaced by `wines delete adder` | M5 (the count reads hidden notes) | after add-wine V2 and F13, with the probe's OPEN rows re-run against F13's committed `addToFlight` and `saveFlightGlassCore`. Deployed code updates only `wines.position`, adds OPEN glasses revealed, and removes as the DRAFT host — all still allowed |
 | M7 | `tasting_pacing` | §7 | Pause (LIVE only) and the pour pointer | column `tastings.paused_at`; fns and triggers `tastings_pointer_in_tasting`, `tastings_pause_follows_status`, `wines_refuse_reveal_while_paused`; `get_tasting_leaderboard` recreated from live (`t` and `live_round` only) | — | none (deployed code never pauses or points); applied in version order after M6 |
 | M8 | `guess_lock_pin` | §8 | A locked guess keeps its answers (the FK's SET NULL excepted) | fn and trigger `guesses_refuse_locked_edit` | — | after add-wine V2: the deployed ladder can race a debounced save against `lockGuess`, which M8 would surface as an error during V1/V2; "Change it" unlocks first |
@@ -2569,7 +2695,7 @@ Rule 1: nobody sees an unrevealed wine they did not add — not in a lobby, a no
 | 24 | Result and record loaders | participants; readers of the tasting | answer keys of fully revealed glasses; excluded glasses by number | No unrevealed identity, maximum or category | §11 |
 | 25 | `export.csv` | host, JOINED; CLOSED only | the flight | Never-revealed glasses carry no identity (`flightCsvRows`, tested) | §11 |
 | 26 | `saveAllToRatings` | JOINED, host | writes notes on revealed glasses | Revealed glasses only; M5's policy refuses anything else | §11 |
-| 26b | `wset_notes` insert and update carrying a `tasting_wine_id` | the author (JOINED or host for new notes and hidden notes) | a write | An unrevealed glass only ever gets an identity-less note | §9 |
+| 26b | `wset_notes` insert and update carrying a `tasting_wine_id` | the author (JOINED or host for new notes, hidden notes and moves onto a glass) | a write | An unrevealed glass only ever gets an identity-less note; a note written identity-less onto a revealed glass takes that glass's identity, which is already public | §9 |
 | 27 | Share text | the viewer | placing and points | No wine | §11 |
 | 28 | `transfer_tasting_host` | host | void | The new host inherits no answer key (no `added_by_host` glass; M9's narrowed host clause) | §12 |
 

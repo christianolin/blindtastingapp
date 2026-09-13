@@ -798,16 +798,24 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 **Does** (spec §9.4, B8)
 - The SQL of spec §9.4, verbatim.
 - `save_wset_note`: dump the live definition and recreate it with exactly the two edits of spec §9.4 (the insert writes `unidentified_wine_id`; the update keeps an existing identity). Pre-assert its live `md5(prosrc)`; post-assert the edited md5; the probe prints the diff. It stays SECURITY INVOKER.
+- `resolve_unidentified_wine` (BT-SQL5x): dump the live definition and recreate it with exactly the one edit of spec §9.4, so the notes it re-points keep a hue only when it fits the catalog wine's colour. Pre-assert its live `md5(prosrc)` and attributes; post-assert the edited md5 and the unchanged ACL; the probe prints the diff (one hunk). It stays SECURITY DEFINER.
+- The move guard (BT-SQL5 review) and the write resolve (BT-SQL5x) sit inside spec §9.4's block. `wset_notes_glass_move_guard` is SECURITY INVOKER. `wset_notes_glass_resolve_on_write` is SECURITY DEFINER and reads the glass `FOR SHARE`. `is_tasting_wine_revealed` is VOLATILE, so the write policies see a reveal that committed while the write waited.
 - Before writing: `rg -n "tastingWineId|tasting_wine_id" src` and report every path that writes a note with a `tasting_wine_id`. Each must write an identity-bearing note only for a revealed glass, or an identity-less BLIND note for a hidden one; the M5 policies refuse anything else.
 - `wset_hue_fits_colour` keeps `else true` for ORANGE. The live `wset_notes_check_hue` has branches for WHITE, ROSE and RED only (read-only check 2026-09-13); `HUES_BY_COLOUR.ORANGE` in `src/lib/wset/vocab.ts` is a UI list, not the database rule. The probe proves the helper equals the trigger for every pair.
 - Pre-assert: the live text of `wset notes read`, `wset notes insert`, `wset notes update`, `wset note aromas read` (`pg_policies.qual` / `with_check`) and `pg_get_constraintdef` of `wset_notes_one_identity` equal the dump. Also zero `wset_notes` rows whose `tasting_wine_id` points at an unrevealed glass, and zero whose author is neither the host nor a JOINED participant of that glass's tasting (read-only checks 2026-09-13: 0 and 0).
-- Post-assert: spec §9.4 "Assertions" — the new policy texts, the constraint, both triggers, `wset_note_aromas.note_id` still `on delete cascade`, both helpers SECURITY DEFINER with `search_path=public` and EXECUTE authenticated-only; `wset_hue_fits_colour` IMMUTABLE.
+- Post-assert: spec §9.4 "Assertions":
+  - the new policy texts and the constraint;
+  - the two triggers on `wines`, and the four on `wset_notes` (the move guard and the write resolve next to the live two);
+  - `wset_note_aromas.note_id` still `on delete cascade`;
+  - both helpers SECURITY DEFINER with `search_path=public` and EXECUTE authenticated-only (`can_note_tasting_wine` STABLE, `is_tasting_wine_revealed` VOLATILE);
+  - no client EXECUTE on the four trigger functions; `wset_hue_fits_colour` IMMUTABLE;
+  - `save_wset_note` and `resolve_unidentified_wine` carrying exactly their edits.
 
 **Tests — behavioural probe** (spec §9.5, plus hue equivalence)
 - A JOINED guesser inserts an identity-less BLIND note on an unrevealed glass → OK; INVITED user and outsider → refused.
 - Another participant selects neither the note nor its aromas.
 - `reveal_wine` on that glass fills `catalog_wine_id`; a RUBY hue on a WHITE wine becomes null and the reveal succeeds.
-- A hidden insert on a revealed glass → refused; an update that nulls a resolved note's identity → refused.
+- A hidden (identity-less) insert on a revealed glass → before refused / after it takes the glass's identity, with a hue that does not fit cleared; a non-member's → refused. An update that nulls a resolved note's identity → refused.
 - Deleting the glass deletes the unresolved note and keeps a resolved one (with `tasting_wine_id` null).
 - `catalog_wines.blind_pending` is unchanged by a hidden-note insert.
 - `score_own_guess` (ASYNC IMMEDIATE) does not resolve the note; the later global reveal does.
@@ -826,12 +834,45 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 | N9 | an OPEN-board note by a JOINED participant on an OPEN glass (inserted revealed) | OK | OK |
 - **Equivalence:** for each colour in `WHITE, ROSE, RED, ORANGE` × each of the 12 `ColourHue` values, `wset_hue_fits_colour(h, c)` equals "inserting a note with hue `h` on a catalog wine of colour `c` passes `wset_notes_check_hue`" (one savepoint per pair).
 
+| # | Hardening: moves, hues, the reveal race (BT-SQL5 review; BT-SQL5x) | Before | After |
+|---|---|---|---|
+| W1–W6 | an outsider, an INVITED and a DECLINED user move their own note onto that tasting's revealed glass, by update or through `save_wset_note` | OK | refused (`wset_notes_glass_move_guard`) |
+| W7–W8 | a JOINED participant moves a note to another tasting's revealed glass; an author since set DECLINED re-points theirs | OK | refused (the move guard) |
+| W10–W12 | a member moves a note onto their own tasting's glass; the host re-points one; a DECLINED author detaches one | OK | OK |
+| W13 | service_role (no signed-in user) moves a note onto a glass | OK | refused (documented) |
+| K1–K3 | an identity-less save on a revealed glass (a catalog wine; an unidentified wine; an unidentified wine with no colour) | refused | OK; takes the glass's identity; a hue that does not fit is cleared, and a null colour keeps it |
+| K4–K6 | the same by an outsider, an INVITED or a DECLINED user | refused | refused (RLS) |
+| K7–K8 | a member moves a hidden note onto a revealed glass (update; `save_wset_note`) | — | OK; takes that glass's identity |
+| K10 | service_role, an identity-less insert on a revealed glass | refused | OK; takes the glass's identity |
+| Y1–Y2 | a hidden note resolved at a reveal onto an unidentified wine (no colour; RED) keeps RUBY; `resolve_unidentified_wine` to a WHITE catalog wine | — | OK; RUBY cleared |
+| Y3, Y5, Y8 | a note on an unidentified wine with a hue that does not fit the target (no colour → WHITE; RED with LEMON → RED; a Save-all glass note with RUBY → WHITE), then `resolve_unidentified_wine` | refused (the hue check) | OK; the hue cleared |
+| Y4, Y7 | a fitting hue; a caller who is neither creator nor curator | OK, hue kept; refused | the same |
+| M1 | a reveal emulated inside a hidden-note save, after its statement snapshot | — | OK; the note attaches |
+| M2 | M1 with `is_tasting_wine_revealed` STABLE | — | refused (why it is VOLATILE) |
+| M3 | M1 on BT-SQL5's shape (no write resolve, STABLE helper) | — | the note stays identity-less on the revealed glass |
+| M4 | M1 without the write resolve | — | refused (why the trigger is needed) |
+| D5 | `resolve_unidentified_wine` differs from live only by the hue edit | — | one hunk |
+
+- **Race probe** (`20260914094500-hidden-notes-race.mjs`): two connections with real commits on a disposable local PostgreSQL cluster, because the database cannot hold a committed reveal rollback-only. The migration applies there verbatim, assertions included.
+  - RACE1: a save that arrives while the reveal holds the glass waits and attaches.
+  - RACE2: a save holding the glass makes the reveal wait and is resolved by it.
+  - RACE3: a re-save of a note the reveal's trigger holds succeeds and keeps the identity.
+  - RACE4 and RACE4b: an edit that keeps its glass never deadlocks with the reveal. A glass lock on every update does deadlock, and the reveal is the side aborted.
+  - RACE5: a move onto a glass under reveal attaches.
+  - RACE6: a note on an unidentified wine with no colour keeps RUBY, then `resolve_unidentified_wine` clears it.
+  - RACE7: two savers wait together.
+  - In the same interleavings, the committed BT-SQL5 file, a STABLE helper and a missing write resolve each leave a stuck note or a refused save.
+
 **Steps**
 - [ ] Dump; write; probe (EXPECT first); dry-run; run; tsc check.
 
-**Acceptance:** `DRY-OK 20260914094500 hidden_glass_notes`; every row matches, all 48 pairs equal; the tsc check is clean.
+**Acceptance:**
+- `DRY-OK 20260914094500 hidden_glass_notes`, standalone and concatenated after M4 while M4 is not live.
+- Every probe row matches, and all 48 pairs are equal.
+- The race probe passes on a disposable local cluster: `node .superpowers/blind-tasting/probes/20260914094500-hidden-notes-race.mjs --port <port>`.
+- The tsc check is clean.
 
-**Closes:** spec §9.4, §9.5, §11.5 (the minimal-note scenarios), §15 M5, §16.2 (public notes on hidden glasses); ledger B8, B10 (Save all's notes accepted); map PLAY-38 (schema), XCUT-52 (schema), RECORD-13 (policy).
+**Closes:** spec §9.4, §9.5, §11.5 (the minimal-note scenarios), §15 M5, §16.2 (public notes on hidden glasses); ledger B8, B10 (Save all's notes accepted); map PLAY-38 (schema), XCUT-52 (schema), RECORD-13 (policy); BT-SQL5's review issues (moving a note onto a glass; a hue on a note tied to an unidentified wine; a save racing the reveal).
 
 ---
 

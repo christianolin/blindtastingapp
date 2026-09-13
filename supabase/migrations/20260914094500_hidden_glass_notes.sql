@@ -2,13 +2,13 @@
 -- to that glass's wine at the reveal; no note can tie an unrevealed glass to a
 -- wine.
 --
--- Blind-tasting v3, M5 (BT-SQL5): spec §9.4, §9.5, §11.3 item 16 (Save all's
--- minimal notes), §15 M5, §16.1 rows 17, 18, 26 and 26b, §16.2 (a BLIND note
--- carrying a catalog identity and an unrevealed glass's tasting_wine_id is
--- public); ledger B8 (reverses "No WSET note can be written while a glass is
--- locked") and B10 (Save all's notes).
+-- Blind-tasting v3, M5 (BT-SQL5, hardened before its apply by BT-SQL5x): spec
+-- §9.4, §9.5, §11.3 item 16 (Save all's minimal notes), §15 M5, §16.1 rows 17,
+-- 18, 26 and 26b, §16.2 (a BLIND note carrying a catalog identity and an
+-- unrevealed glass's tasting_wine_id is public); ledger B8 (reverses "No WSET
+-- note can be written while a glass is locked") and B10 (Save all's notes).
 --
--- Written against the LIVE state (read-only dump, 2026-09-13:
+-- Written against the LIVE state (read-only dumps, 2026-09-13:
 -- .superpowers/blind-tasting/probes/20260914094500-live-defs.sql), never an
 -- older migration file:
 -- * wset_notes: catalog_wine_id and unidentified_wine_id are nullable and
@@ -25,6 +25,11 @@
 -- * save_wset_note(jsonb, jsonb): SECURITY INVOKER, search_path=public,
 --   Supabase's default function ACL. It never writes unidentified_wine_id, and
 --   its update sets catalog_wine_id straight from the payload.
+-- * resolve_unidentified_wine(uuid, uuid): SECURITY DEFINER, search_path=public,
+--   Supabase's default function ACL. It re-points wine_answers and wset_notes
+--   from the unidentified wine to the catalog wine and leaves a note's
+--   colour_hue as it is, so wset_notes_check_hue fails the whole resolution
+--   when a note's hue does not fit the catalog wine's colour.
 -- * Blind marking: catalog_wine_mark_blind fires on wine_answers (AFTER INSERT
 --   OR UPDATE OF catalog_wine_id) and ignores a row without a catalog id;
 --   catalog_wine_unmark_blind fires on wines (AFTER UPDATE OF is_revealed).
@@ -32,40 +37,45 @@
 -- * Data: no note carries a tasting_wine_id yet, so none is tied to an
 --   unrevealed glass or written by a non-member, and every note has exactly
 --   one identity.
--- M1-M4 (20260914090500 ... 20260914093500) touch none of these objects: this
--- file applies on live as it is, and after them (BT-SQL5 dry-ran it both ways,
--- and its probe's chain phase applies M1-M4 first).
+-- M1-M3 (20260914090500 ... 20260914092500) are live and M4 (20260914093500)
+-- is not. None of them touches these objects: this file applies on live as it
+-- is, and after M4 (BT-SQL5x dry-ran it both ways, and its probe's chain phase
+-- applies M4 first).
 --
 -- What this migration does:
 -- 1. Spec §9.4's SQL block, verbatim (between the two banners below):
---    * the helpers can_note_tasting_wine and is_tasting_wine_revealed
---      (SECURITY DEFINER, EXECUTE for authenticated only), and
---      wset_hue_fits_colour (IMMUTABLE, invoker: the mapping
---      wset_notes_check_hue enforces; ORANGE, and a null hue or colour, fit
---      anything);
+--    * the helpers can_note_tasting_wine (STABLE) and is_tasting_wine_revealed
+--      (VOLATILE, so a write policy sees a reveal that committed while the
+--      write waited on the glass), both SECURITY DEFINER with EXECUTE for
+--      authenticated only; and wset_hue_fits_colour (IMMUTABLE, invoker, the
+--      default ACL: the mapping wset_notes_check_hue enforces; ORANGE, and a
+--      null hue or colour, fit anything);
 --    * wset_notes_one_identity also admits an identity-less BLIND note tied to
 --      a tasting glass;
 --    * the read, insert and update policies on wset_notes, and the aromas read
 --      policy;
---    * the resolve trigger on wines (AFTER UPDATE OF is_revealed, false ->
---      true) and the unresolved-note delete trigger (BEFORE DELETE).
+--    * on wines: the resolve trigger (AFTER UPDATE OF is_revealed, false ->
+--      true) and the unresolved-note delete trigger (BEFORE DELETE);
+--    * on wset_notes: wset_notes_glass_move_guard (BEFORE UPDATE OF
+--      tasting_wine_id, SECURITY INVOKER: moving a note onto a glass needs the
+--      same membership as inserting one there, which RLS cannot check because
+--      it cannot see the old glass), and wset_notes_glass_resolve_on_write
+--      (BEFORE INSERT OR UPDATE OF tasting_wine_id, SECURITY DEFINER: an
+--      identity-less note written onto a revealed glass takes that glass's
+--      identity, reading the glass FOR SHARE so a save racing the reveal still
+--      attaches);
+--    * EXECUTE on all four trigger functions revoked from PUBLIC, anon and
+--      authenticated (the triggers still fire).
 -- 2. save_wset_note recreated from pg_get_functiondef with exactly the two
 --    edits spec §9.4 names: the insert also writes unidentified_wine_id, and
 --    the update takes catalog_wine_id and unidentified_wine_id from the payload
 --    only while the note has no identity. CREATE OR REPLACE keeps its ACL,
 --    SECURITY INVOKER, search_path and volatility (asserted).
--- 3. Beyond the spec block (Global Constraints' SECURITY DEFINER rule, M4's
---    pattern for trigger functions): EXECUTE on the two SECURITY DEFINER
---    trigger functions is revoked from PUBLIC, anon and authenticated; the
---    triggers still fire. wset_hue_fits_colour keeps the default ACL: it is not
---    SECURITY DEFINER and reads nothing.
--- 4. Beyond the spec block (BT-SQL5 review fix): wset_notes_glass_move_guard, a
---    BEFORE UPDATE OF tasting_wine_id trigger on wset_notes (SECURITY INVOKER,
---    search_path=public, EXECUTE revoked from PUBLIC, anon and authenticated).
---    Moving a note onto a different glass needs the caller to be JOINED in, or
---    the host of, that glass's tasting, the same as inserting one there. RLS
---    cannot see the old glass, so the spec's update policy alone let an author
---    point a catalog note at any revealed glass.
+-- 3. resolve_unidentified_wine recreated from pg_get_functiondef with exactly
+--    the one edit spec §9.4 names: the notes it re-points keep a hue only when
+--    it fits the catalog wine's colour, the rule the reveal applies. CREATE OR
+--    REPLACE keeps its ACL, SECURITY DEFINER, search_path and volatility
+--    (asserted).
 --
 -- Security (spec §9.4 "Security reasoning", §16):
 -- * Rule 1. A note tied to an unrevealed glass carries no identity, whoever
@@ -74,20 +84,45 @@
 --   identity-less note is readable by its author only, and its aromas follow
 --   it.
 -- * Only a JOINED participant or the host of the glass's tasting can insert a
---   note tied to a glass, move a note onto a glass (the move guard, item 4), or
---   keep editing a hidden one. An author who has since left can still edit a
---   note on a revealed glass, or detach it, but cannot move it to another glass.
+--   note tied to a glass, move a note onto a glass (the move guard), or keep
+--   editing a hidden one. An author who has since left can still edit a note
+--   on a revealed glass, or detach it, but cannot move it to another glass.
+--   The write trigger copies only an identity the glass already shows everyone
+--   (it is revealed), and the policies still decide whether the write happens.
 -- * The identity arrives inside the reveal's own transaction
 --   (wset_notes_resolve_on_reveal), whichever path flips is_revealed:
 --   reveal_wine, the last reveal_next_category step, the ASYNC auto-reveal.
 --   No reveal function is recreated. score_own_guess never sets is_revealed,
 --   so an ASYNC IMMEDIATE guesser's note stays hidden until the glass is
 --   revealed for everyone.
+-- * A save that races the reveal still attaches (BT-SQL5x). Under READ
+--   COMMITTED a save whose statement began before the reveal committed would
+--   pass the policies as a hidden note after the reveal's trigger had run,
+--   leaving an identity-less note on a revealed glass that nothing resolves.
+--   wset_notes_glass_resolve_on_write reads the glass FOR SHARE, which
+--   conflicts with the reveal's row lock. So the save either waits for the
+--   reveal to commit and copies the identity itself, or commits first and the
+--   reveal's trigger sees the note. The policies judge the copied identity
+--   through the VOLATILE is_tasting_wine_revealed, whose fresh snapshot sees
+--   the committed reveal. An edit that keeps its glass takes no lock: the
+--   reveal's trigger reaches that note through its row lock, and locking the
+--   glass as well could deadlock with it. That edit re-reads the resolved row,
+--   and save_wset_note keeps its identity. The interleavings, with real
+--   commits, are replayed on a disposable local cluster by
+--   .superpowers/blind-tasting/probes/20260914094500-hidden-notes-race.mjs.
 -- * A resolved note cannot be hidden again. On a revealed glass the policies
---   require exactly one identity, and save_wset_note neither removes an
---   identity a note already has nor swaps it for the payload's.
--- * The resolve clears a hue that does not fit the revealed colour, so a
---   taster's colour guess can never fail the reveal.
+--   require exactly one identity, save_wset_note neither removes an identity
+--   a note already has nor swaps it for the payload's, and an identity-less
+--   note written onto a revealed glass takes that glass's identity.
+-- * A hue never fails a reveal or a resolution. A hue is judged only against a
+--   known colour: the reveal and the write trigger clear one that does not fit
+--   the glass's colour (a null colour fits anything), and
+--   resolve_unidentified_wine clears one that does not fit the catalog wine it
+--   resolves to.
+-- * Owner-only callers: the move guard judges membership by auth.uid(), so a
+--   caller with no signed-in user (service_role, the owner) cannot move a note
+--   onto a glass. No server path re-points a note, and no later migration or
+--   repair may do so as the owner.
 -- * catalog_wine_mark_blind ignores notes entirely, and a hidden note has no
 --   catalog id to appear under in any catalog or public list.
 -- * Recursion: the new policies reach wines, tastings and tasting_participants
@@ -138,13 +173,14 @@ begin
   where p.pronamespace = 'public'::regnamespace
     and p.proname in ('can_note_tasting_wine', 'is_tasting_wine_revealed', 'wset_hue_fits_colour',
                       'wset_notes_resolve_on_reveal', 'wines_drop_unresolved_notes',
-                      'wset_notes_glass_move_guard');
+                      'wset_notes_glass_move_guard', 'wset_notes_glass_resolve_on_write');
   if v_text is not null then
     raise exception 'a function M5 creates already exists: %; re-dump and rebuild this migration', v_text;
   end if;
   select string_agg(format('%s on %s', t.tgname, t.tgrelid::regclass), ', ') into v_text
   from pg_trigger t
-  where t.tgname in ('wset_notes_resolve_on_reveal', 'wines_drop_unresolved_notes', 'wset_notes_glass_move_guard');
+  where t.tgname in ('wset_notes_resolve_on_reveal', 'wines_drop_unresolved_notes', 'wset_notes_glass_move_guard',
+                     'wset_notes_glass_resolve_on_write');
   if v_text is not null then
     raise exception 'a trigger M5 creates already exists: %', v_text;
   end if;
@@ -173,6 +209,34 @@ begin
      or v_fn.acl is distinct from
           '{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}' then
     raise exception 'save_wset_note attributes differ from the dump: security definer %, config %, volatility %, language %, returns %, arguments (%), acl %',
+      v_fn.prosecdef, v_fn.config, v_fn.volatile, v_fn.lang, v_fn.rettype, v_fn.args, v_fn.acl;
+  end if;
+
+  -- 2b. resolve_unidentified_wine: the dumped body; SECURITY DEFINER,
+  --     search_path=public, volatile, plpgsql, returns void; Supabase's default
+  --     function ACL.
+  select md5(p.prosrc) as md5, p.prosecdef, p.proconfig::text as config, p.provolatile::text as volatile,
+         l.lanname::text as lang, format_type(p.prorettype, null) as rettype,
+         pg_get_function_identity_arguments(p.oid) as args, p.proacl::text as acl
+    into v_fn
+  from pg_proc p
+  join pg_language l on l.oid = p.prolang
+  where p.oid = to_regprocedure('public.resolve_unidentified_wine(uuid,uuid)');
+  if not found then
+    raise exception 'resolve_unidentified_wine(uuid, uuid) does not exist';
+  end if;
+  if v_fn.md5 is distinct from 'a615f723ecd96628c462b295ac3413e7' then
+    raise exception 'resolve_unidentified_wine is not the dumped live body (md5 %); re-dump and rebuild this migration', v_fn.md5;
+  end if;
+  if not v_fn.prosecdef
+     or v_fn.config is distinct from '{search_path=public}'
+     or v_fn.volatile is distinct from 'v'
+     or v_fn.lang is distinct from 'plpgsql'
+     or v_fn.rettype is distinct from 'void'
+     or v_fn.args is distinct from 'p_unidentified_id uuid, p_catalog_wine_id uuid'
+     or v_fn.acl is distinct from
+          '{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}' then
+    raise exception 'resolve_unidentified_wine attributes differ from the dump: security definer %, config %, volatility %, language %, returns %, arguments (%), acl %',
       v_fn.prosecdef, v_fn.config, v_fn.volatile, v_fn.lang, v_fn.rettype, v_fn.args, v_fn.acl;
   end if;
 
@@ -363,8 +427,12 @@ returns boolean language sql stable security definer set search_path = public as
   );
 $$;
 
+-- Is this glass revealed? VOLATILE on purpose: every call reads with a fresh
+-- snapshot, so the write policies below see a reveal that committed while the
+-- write was waiting on the glass (wset_notes_glass_resolve_on_write). A STABLE
+-- helper would judge that row by the statement's older snapshot and refuse it.
 create or replace function public.is_tasting_wine_revealed(p_wine_id uuid)
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql volatile security definer set search_path = public as $$
   select coalesce((select is_revealed from wines where id = p_wine_id), false);
 $$;
 
@@ -444,6 +512,20 @@ create policy "wset note aromas read" on public.wset_note_aromas
 --                                 then unidentified_wine_id
 --                                 else (p_note->>'unidentified_wine_id')::uuid end,
 
+-- resolve_unidentified_wine, recreated from its live definition with one edit. A
+-- hue is judged only against a known colour (wset_hue_fits_colour, and
+-- wset_notes_check_hue, which reads catalog_wines only), so a note on an
+-- unidentified wine may hold any hue: that wine may have no colour, and no write
+-- checks its colour. When the wine resolves to a catalog wine, its notes keep a
+-- hue only when it fits that wine's colour (the reveal's rule), so a taster's hue
+-- can never fail the resolution. It stays SECURITY DEFINER with its live checks:
+--   update wset_notes
+--     set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null,
+--         colour_hue = case when public.wset_hue_fits_colour(colour_hue,
+--                                  (select cw.colour from catalog_wines cw where cw.id = p_catalog_wine_id))
+--                           then colour_hue end
+--     where unidentified_wine_id = p_unidentified_id;
+
 -- At the reveal every hidden note on the glass takes the glass's identity,
 -- and a hue that does not fit the revealed colour is cleared so the reveal
 -- can never fail on a taster's colour guess.
@@ -485,10 +567,92 @@ create trigger wines_drop_unresolved_notes
   before delete on public.wines
   for each row execute function public.wines_drop_unresolved_notes();
 
+-- Moving a note onto a glass needs the same membership as inserting one there.
+-- The update policy re-checks membership only for a hidden note, and RLS cannot
+-- compare a row's new tasting_wine_id with its old one, so without this guard an
+-- author could point a catalog note at any revealed glass: by an update, or
+-- through save_wset_note, whose update sets tasting_wine_id = coalesce(payload,
+-- current). An edit that keeps the glass (by an author since set DECLINED too), a
+-- detach to null (the FK's SET NULL) and the resolve paths, which never set
+-- tasting_wine_id, still pass. Membership is by auth.uid(), so a caller with no
+-- signed-in user (service_role, the owner) cannot move a note onto a glass either:
+-- no later migration or repair may re-point notes as the owner.
+create or replace function public.wset_notes_glass_move_guard()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.tasting_wine_id is not null
+     and new.tasting_wine_id is distinct from old.tasting_wine_id then
+    if not public.can_note_tasting_wine(new.tasting_wine_id) then
+      raise exception 'a note can only be tied to a glass of a tasting you host or have joined'
+        using errcode = 'insufficient_privilege';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger wset_notes_glass_move_guard
+  before update of tasting_wine_id on public.wset_notes
+  for each row execute function public.wset_notes_glass_move_guard();
+
+-- A note written without an identity onto a glass that is already revealed takes
+-- that glass's identity as it is written, by the reveal's rule: the answer's
+-- catalog (or unidentified) wine, and a hue that does not fit its colour cleared.
+-- FOR SHARE waits for a reveal that is flipping the glass right now and then reads
+-- the committed row, so a save that races a reveal still attaches: either the
+-- reveal commits first and this copies the identity, or this write commits first
+-- and the reveal's own trigger resolves the note. It runs for an insert and for an
+-- update that moves the note to another glass. An edit that keeps its glass takes
+-- no lock: the reveal's trigger reaches that note through its row, and a lock here
+-- could deadlock with it. Membership stays the policies' and the move guard's job;
+-- by name this fires after the move guard and before the hue check.
+create or replace function public.wset_notes_glass_resolve_on_write()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_revealed boolean;
+  v_catalog_wine_id uuid;
+  v_unidentified_wine_id uuid;
+  v_colour wine_colour;
+begin
+  if new.tasting_wine_id is null
+     or num_nonnulls(new.catalog_wine_id, new.unidentified_wine_id) <> 0 then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' then
+    if new.tasting_wine_id is not distinct from old.tasting_wine_id then
+      return new;
+    end if;
+  end if;
+  select w.is_revealed into v_revealed
+    from wines w
+   where w.id = new.tasting_wine_id
+     for share;
+  if coalesce(v_revealed, false) then
+    select a.catalog_wine_id, a.unidentified_wine_id, coalesce(cw.colour, u.colour)
+      into v_catalog_wine_id, v_unidentified_wine_id, v_colour
+      from wine_answers a
+      left join catalog_wines cw on cw.id = a.catalog_wine_id
+      left join catalog_wines_unidentified u on u.id = a.unidentified_wine_id
+     where a.wine_id = new.tasting_wine_id;
+    if found then
+      new.catalog_wine_id := v_catalog_wine_id;
+      new.unidentified_wine_id := v_unidentified_wine_id;
+      new.colour_hue := case when public.wset_hue_fits_colour(new.colour_hue, v_colour)
+                             then new.colour_hue end;
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger wset_notes_glass_resolve_on_write
+  before insert or update of tasting_wine_id on public.wset_notes
+  for each row execute function public.wset_notes_glass_resolve_on_write();
+
 revoke all on function public.can_note_tasting_wine(uuid), public.is_tasting_wine_revealed(uuid)
   from public, anon;
 grant execute on function public.can_note_tasting_wine(uuid), public.is_tasting_wine_revealed(uuid)
   to authenticated;
+-- Trigger functions: no client role may call them; the triggers still fire.
+revoke execute on function public.wset_notes_resolve_on_reveal(), public.wines_drop_unresolved_notes(),
+  public.wset_notes_glass_move_guard(), public.wset_notes_glass_resolve_on_write()
+  from public, anon, authenticated;
 -- ===========================================================================
 -- End of spec §9.4.
 -- ===========================================================================
@@ -615,49 +779,56 @@ begin
 end;
 $function$;
 
--- Beyond spec §9.4's block: neither SECURITY DEFINER trigger function is
--- callable by a client role (M4's pattern). Triggers still fire.
-revoke execute on function public.wset_notes_resolve_on_reveal(), public.wines_drop_unresolved_notes()
-  from public, anon, authenticated;
-
 -- ---------------------------------------------------------------------------
--- Beyond spec §9.4's block (BT-SQL5 review fix): moving a note onto a glass
--- needs the same membership as inserting one there. The update policy re-checks
--- membership only for a hidden note, and RLS cannot compare a row's new
--- tasting_wine_id with its old one. Without this guard an author could insert a
--- plain catalog note and then point it at any revealed glass: by a direct
--- update, or through save_wset_note, whose update always sets
--- tasting_wine_id = coalesce(payload, current).
--- The guard refuses only a change to a different, non-null glass the caller
--- may not note (JOINED in, or host of, its tasting; can_note_tasting_wine).
--- These still pass:
--- * an edit that keeps the glass, including by an author since set DECLINED;
--- * a detach to null (the FK's SET NULL when a glass is deleted);
--- * the resolve trigger and resolve_unidentified_wine, which never set
---   tasting_wine_id.
--- Membership is by auth.uid(), so a caller with no signed-in user
--- (service_role, the owner) is refused too. No server path re-points a note.
--- SECURITY INVOKER: the only privileged read goes through
--- can_note_tasting_wine, which authenticated may execute.
+-- resolve_unidentified_wine, recreated from its live pg_get_functiondef (the
+-- dump) with exactly the one edit spec §9.4 names: the notes it re-points onto
+-- the catalog wine keep a hue only when it fits that wine's colour
+-- (wset_hue_fits_colour, the rule the reveal applies), so a hue a note took on
+-- while its wine was unidentified can never fail the resolution. Everything
+-- else is the live body. It stays SECURITY DEFINER with search_path=public, and
+-- CREATE OR REPLACE keeps its ACL (asserted).
 -- ---------------------------------------------------------------------------
-create or replace function public.wset_notes_glass_move_guard()
-returns trigger language plpgsql set search_path = public as $$
+CREATE OR REPLACE FUNCTION public.resolve_unidentified_wine(p_unidentified_id uuid, p_catalog_wine_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  v_uid uuid := auth.uid();
+  v_created_by uuid;
+  v_is_curator boolean;
 begin
-  if new.tasting_wine_id is not null
-     and new.tasting_wine_id is distinct from old.tasting_wine_id then
-    if not public.can_note_tasting_wine(new.tasting_wine_id) then
-      raise exception 'a note can only be tied to a glass of a tasting you host or have joined'
-        using errcode = 'insufficient_privilege';
-    end if;
+  select created_by into v_created_by
+  from catalog_wines_unidentified where id = p_unidentified_id;
+  if v_created_by is null then
+    raise exception 'unidentified wine % not found', p_unidentified_id;
   end if;
-  return new;
-end $$;
 
-create trigger wset_notes_glass_move_guard
-  before update of tasting_wine_id on public.wset_notes
-  for each row execute function public.wset_notes_glass_move_guard();
+  select coalesce(is_curator, false) into v_is_curator from profiles where id = v_uid;
+  if v_uid is null or (v_uid <> v_created_by and not coalesce(v_is_curator, false)) then
+    raise exception 'not authorised to resolve this wine';
+  end if;
 
-revoke execute on function public.wset_notes_glass_move_guard() from public, anon, authenticated;
+  if not exists (
+    select 1 from catalog_wines where id = p_catalog_wine_id and merged_into is null
+  ) then
+    raise exception 'target catalog wine % not found', p_catalog_wine_id;
+  end if;
+
+  update wine_answers
+    set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null
+    where unidentified_wine_id = p_unidentified_id;
+  update wset_notes
+    set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null,
+        colour_hue = case when public.wset_hue_fits_colour(colour_hue,
+                                 (select cw.colour from catalog_wines cw where cw.id = p_catalog_wine_id))
+                          then colour_hue end
+    where unidentified_wine_id = p_unidentified_id;
+  update catalog_wines_unidentified
+    set resolved_into_catalog_wine_id = p_catalog_wine_id, updated_at = now()
+    where id = p_unidentified_id;
+end $function$;
 
 -- ---------------------------------------------------------------------------
 -- Post-state, same transaction.
@@ -668,13 +839,15 @@ declare
   v_fn record;
   v_n int;
 begin
-  -- 1. The five new functions and the recreated save_wset_note: attributes,
-  --    bodies (md5 of the text as written in this file, carriage returns
-  --    removed) and EXECUTE holders. The helpers are SECURITY DEFINER with
-  --    search_path=public and EXECUTE for authenticated (plus the owner and
-  --    service_role); wset_hue_fits_colour is IMMUTABLE with the default ACL;
-  --    neither trigger function is callable by a client role; save_wset_note is
-  --    still SECURITY INVOKER with the default ACL.
+  -- 1. The seven new functions and the two recreated ones: attributes, bodies
+  --    (md5 of the text as written in this file, carriage returns removed) and
+  --    EXECUTE holders. The helpers are SECURITY DEFINER with search_path=public
+  --    and EXECUTE for authenticated (plus the owner and service_role);
+  --    can_note_tasting_wine is STABLE and is_tasting_wine_revealed VOLATILE;
+  --    wset_hue_fits_colour is IMMUTABLE with the default ACL; no trigger
+  --    function is callable by a client role; save_wset_note is still SECURITY
+  --    INVOKER and resolve_unidentified_wine still SECURITY DEFINER, both with
+  --    the default ACL.
   for v_fn in
     select s.sig, s.secdef, s.config, s.volatile, s.lang, s.rettype, s.args, s.body_md5, s.grantees,
            p.oid, p.prosecdef, p.proconfig::text as config_now, p.provolatile::text as volatile_now,
@@ -690,7 +863,7 @@ begin
     from (values
       ('public.can_note_tasting_wine(uuid)', true, '{search_path=public}', 's', 'sql', 'boolean',
        'p_wine_id uuid', 'a00510361d87a2361be2a01a6f4d03fd', 'OWNER,authenticated,service_role'),
-      ('public.is_tasting_wine_revealed(uuid)', true, '{search_path=public}', 's', 'sql', 'boolean',
+      ('public.is_tasting_wine_revealed(uuid)', true, '{search_path=public}', 'v', 'sql', 'boolean',
        'p_wine_id uuid', '2f7c57ceac063efc36c01c08cfa87d98', 'OWNER,authenticated,service_role'),
       ('public.wset_hue_fits_colour(wset_colour_hue,wine_colour)', false, '{search_path=public}', 'i', 'sql', 'boolean',
        'p_hue wset_colour_hue, p_colour wine_colour', '96339c7d5a5a84074ffc33db8e89d6ba',
@@ -701,8 +874,13 @@ begin
        '', 'adb5d9b44b1df4797afea832f1fccbf6', 'OWNER,service_role'),
       ('public.wset_notes_glass_move_guard()', false, '{search_path=public}', 'v', 'plpgsql', 'trigger',
        '', '172509fd276619b608499b9c5e80caf0', 'OWNER,service_role'),
+      ('public.wset_notes_glass_resolve_on_write()', true, '{search_path=public}', 'v', 'plpgsql', 'trigger',
+       '', '62031fa9057120c76cc472f72fac3564', 'OWNER,service_role'),
       ('public.save_wset_note(jsonb,jsonb)', false, '{search_path=public}', 'v', 'plpgsql', 'uuid',
-       'p_note jsonb, p_aromas jsonb', '9ac29b18bbda5b08bcd9a12e19beb932', 'OWNER,PUBLIC,anon,authenticated,service_role')
+       'p_note jsonb, p_aromas jsonb', '9ac29b18bbda5b08bcd9a12e19beb932', 'OWNER,PUBLIC,anon,authenticated,service_role'),
+      ('public.resolve_unidentified_wine(uuid,uuid)', true, '{search_path=public}', 'v', 'plpgsql', 'void',
+       'p_unidentified_id uuid, p_catalog_wine_id uuid', '915e17733e5f48577fbf777fdcd81af8',
+       'OWNER,PUBLIC,anon,authenticated,service_role')
     ) as s (sig, secdef, config, volatile, lang, rettype, args, body_md5, grantees)
     left join pg_proc p on p.oid = to_regprocedure(s.sig)
     left join pg_language l on l.oid = p.prolang
@@ -743,6 +921,21 @@ begin
        is distinct from '{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}' then
     raise exception 'save_wset_note grants changed post-migration';
   end if;
+  --    resolve_unidentified_wine: the hue edit in place, the old note update
+  --    gone, and its ACL exactly the live one.
+  select replace(p.prosrc, chr(13), '') into v_text
+  from pg_proc p where p.oid = to_regprocedure('public.resolve_unidentified_wine(uuid,uuid)');
+  if strpos(v_text, '  update wset_notes' || chr(10)
+                    || '    set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null,' || chr(10)
+                    || '        colour_hue = case when public.wset_hue_fits_colour(colour_hue,' || chr(10)) = 0
+     or strpos(v_text, '  update wset_notes' || chr(10)
+                       || '    set catalog_wine_id = p_catalog_wine_id, unidentified_wine_id = null' || chr(10)) <> 0 then
+    raise exception 'resolve_unidentified_wine does not carry the spec §9.4 hue edit';
+  end if;
+  if (select p.proacl::text from pg_proc p where p.oid = to_regprocedure('public.resolve_unidentified_wine(uuid,uuid)'))
+       is distinct from '{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}' then
+    raise exception 'resolve_unidentified_wine grants changed post-migration';
+  end if;
 
   -- 3. wset_notes_one_identity: exactly one identity, or none on a BLIND note
   --    tied to a tasting glass; validated against every existing row.
@@ -774,8 +967,10 @@ begin
   end if;
 
   -- 5. The two new triggers on wines, as spec §9.4 defines them and enabled;
-  --    on wset_notes the move guard (BEFORE UPDATE OF tasting_wine_id, row)
-  --    next to the two live triggers.
+  --    on wset_notes the move guard (BEFORE UPDATE OF tasting_wine_id, row) and
+  --    the write resolve (BEFORE INSERT OR UPDATE OF tasting_wine_id, row) next
+  --    to the two live triggers. BEFORE triggers fire in name order, so the
+  --    guard runs first and the write resolve runs before the hue check.
   select string_agg(format('%s %s', t.tgenabled, pg_get_triggerdef(t.oid)), '; ' order by t.tgname::text collate "C")
     into v_text
   from pg_trigger t
@@ -800,14 +995,21 @@ begin
   where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal;
   if v_text is distinct from
        'wset_notes_glass_move_guard 19 O wset_notes_glass_move_guard; '
+       || 'wset_notes_glass_resolve_on_write 23 O wset_notes_glass_resolve_on_write; '
        || 'wset_notes_hue_matches_colour 23 O wset_notes_check_hue; wset_notes_set_updated_at 19 O set_updated_at'
      or (select pg_get_triggerdef(t.oid) from pg_trigger t
          where t.tgrelid = 'public.wset_notes'::regclass and t.tgname = 'wset_notes_glass_move_guard')
        is distinct from 'CREATE TRIGGER wset_notes_glass_move_guard BEFORE UPDATE OF tasting_wine_id ON public.wset_notes FOR EACH ROW EXECUTE FUNCTION wset_notes_glass_move_guard()'
+     or (select pg_get_triggerdef(t.oid) from pg_trigger t
+         where t.tgrelid = 'public.wset_notes'::regclass and t.tgname = 'wset_notes_glass_resolve_on_write')
+       is distinct from 'CREATE TRIGGER wset_notes_glass_resolve_on_write BEFORE INSERT OR UPDATE OF tasting_wine_id ON public.wset_notes FOR EACH ROW EXECUTE FUNCTION wset_notes_glass_resolve_on_write()'
      or not exists (select 1 from pg_trigger t
                     where t.tgrelid = 'public.wset_notes'::regclass and t.tgname = 'wset_notes_glass_move_guard'
-                      and t.tgfoid = to_regprocedure('public.wset_notes_glass_move_guard()')) then
-    raise exception 'the triggers on wset_notes are not the two live ones plus the move guard: %', v_text;
+                      and t.tgfoid = to_regprocedure('public.wset_notes_glass_move_guard()'))
+     or not exists (select 1 from pg_trigger t
+                    where t.tgrelid = 'public.wset_notes'::regclass and t.tgname = 'wset_notes_glass_resolve_on_write'
+                      and t.tgfoid = to_regprocedure('public.wset_notes_glass_resolve_on_write()')) then
+    raise exception 'the triggers on wset_notes are not the two live ones plus the move guard and the write resolve: %', v_text;
   end if;
 
   -- 6. Foreign keys unchanged: the aromas still cascade with their note, and a
@@ -832,8 +1034,11 @@ begin
      or has_function_privilege('authenticated', 'public.wines_drop_unresolved_notes()', 'EXECUTE')
      or has_function_privilege('anon', 'public.wset_notes_glass_move_guard()', 'EXECUTE')
      or has_function_privilege('authenticated', 'public.wset_notes_glass_move_guard()', 'EXECUTE')
-     or not has_function_privilege('authenticated', 'public.save_wset_note(jsonb,jsonb)', 'EXECUTE') then
-    raise exception 'EXECUTE on the M5 functions is not: helpers authenticated only; trigger functions no client role; save_wset_note authenticated';
+     or has_function_privilege('anon', 'public.wset_notes_glass_resolve_on_write()', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.wset_notes_glass_resolve_on_write()', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.save_wset_note(jsonb,jsonb)', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.resolve_unidentified_wine(uuid,uuid)', 'EXECUTE') then
+    raise exception 'EXECUTE on the M5 functions is not: helpers authenticated only; trigger functions no client role; save_wset_note and resolve_unidentified_wine authenticated';
   end if;
 
   -- 8. Unchanged bodies: the hue trigger the helper mirrors, and the blind
