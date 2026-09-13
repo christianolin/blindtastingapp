@@ -161,6 +161,34 @@ export type FieldPickerProps = {
    *  passes null: every glass must be matched before it can lock, so a skip
    *  would only lead to a dead end (play-7). */
   skipLabel?: string | null;
+  /** "sheet" (default, unchanged) is the phone bottom sheet. "popover" (S8b)
+   *  anchors to `anchorRef` instead: base-ui `Popover`, `positionMethod`
+   *  `"fixed"`, `keepMounted`, no dimming backdrop — outside click or
+   *  Escape closes it (the caller's `onClose` is what returns focus to the
+   *  row; the picker itself does not). Both presentations stay mounted, so
+   *  the ladder's synchronous `inputRef.current.focus()` inside the opening
+   *  tap always has an input to focus. */
+  presentation?: "sheet" | "popover";
+  /** The row to anchor the popover to (base-ui's `Positioner` `anchor`).
+   *  Required, and only read, when `presentation` is `"popover"`. */
+  anchorRef?: React.RefObject<HTMLElement | null>;
+  /** The field's full reference-table size, unfiltered (S9; spec §8.3 item
+   *  8) — grapes/countries/regions from `getReferenceOptions()` lengths,
+   *  appellations/producers from a `head: true` count, type designations
+   *  from the preloaded active list, vintages from
+   *  `vintageOptions(now).years.length`. Drives
+   *  `searchPlaceholder(field, totalCount, { phone })` (phone = the sheet
+   *  presentation) in place of the plain `searchPlaceholder` prop, and
+   *  overrides a group literally headed "Everything else" to
+   *  `everythingElseHeading(totalCount)`, laid out two columns wide on the
+   *  popover. Omitted keeps both as the caller wrote them. */
+  totalCount?: number;
+  /** Ids the viewer has picked at least `OFTEN_THRESHOLD` times before, for
+   *  this field (`pick-counts.ts`'s `buildPickCounts` + `oftenPicked`). A
+   *  row whose id is a member gets ladder-copy's `OFTEN_SUFFIX` appended to
+   *  its context line (or, for a row with no context line of its own, shown
+   *  bare). */
+  oftenIds?: ReadonlySet<string>;
 };
 
 /** Vintage option ids the picker emits; the ladder maps them onto

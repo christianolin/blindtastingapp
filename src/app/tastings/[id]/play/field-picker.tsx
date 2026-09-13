@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Check } from "lucide-react";
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import {
   Command,
   CommandEmpty,
@@ -19,27 +20,45 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Eyebrow } from "@/components/overview/eyebrow";
+import { useLiveTheme } from "@/components/live-shell";
 import { deaccent } from "@/lib/deaccent";
 import { cn } from "@/lib/utils";
+import {
+  everythingElseHeading,
+  OFTEN_SUFFIX,
+  searchPlaceholder as computeSearchPlaceholder,
+} from "./ladder-copy";
 import type { FieldPickerProps, PickerGroup, PickerOption } from "./ladder-types";
 
 /**
  * The 6f field picker: a bottom sheet on phones (centred 480px dialog from
- * `md`), one per ladder — the ladder swaps `field` and the sheet re-skins.
+ * `md` when no `anchorRef`-anchored popover is requested — the match ladder
+ * still uses this path at every width), or, from S8b, a popover anchored to
+ * its row on laptops (`presentation="popover"`, chosen by the caller — the
+ * guess ladder switches at `md`).
  *
- * Dependency-free portaled overlay like MobileNav, not a base-ui Dialog: the
- * sheet has to stay MOUNTED while closed so the ladder can call
- * `inputRef.current.focus()` synchronously inside the tap that opens it —
- * mobile browsers only pop the virtual keyboard when focus() runs in the
- * original trusted gesture. A display:none/inert element cannot take focus,
- * so the closed sheet is parked off-screen (translated out of the viewport,
- * pointer-events off, aria-hidden, controls tabIndex=-1) rather than hidden.
+ * Dependency-free portaled overlay like MobileNav for the sheet, base-ui
+ * `Popover` for the popover — either way both presentations stay MOUNTED
+ * while closed so the ladder can call `inputRef.current.focus()`
+ * synchronously inside the tap that opens it — mobile browsers only pop the
+ * virtual keyboard when focus() runs in the original trusted gesture. The
+ * sheet parks its closed state off-screen (translated out of the viewport,
+ * pointer-events off, aria-hidden, controls tabIndex=-1) since a
+ * display:none/inert element cannot take focus; the popover relies on
+ * base-ui's own `keepMounted` portal.
  *
  * Search is cmdk's CommandInput (a custom Input did not register typed
  * characters on mobile — see searchable-combobox.tsx). "client" mode lets
  * cmdk filter the given groups accent-insensitively; a function is a server
  * search (debounced 250 ms, 0 for the empty query) whose results replace the
  * groups, bucketed by their `group` label.
+ *
+ * Dark (B5, XCUT-04): both presentations portal to `document.body`, breaking
+ * out of the running view's `.dark`-classed LiveShell subtree, so each reads
+ * `useLiveTheme()` itself and adds the `dark` class to its own root — the
+ * same mechanism `components/ui/popover.tsx` uses for every other popover.
+ * Every surface color below is a token (`bg-card`, `border-border`, …), so
+ * that class is the only thing dark mode needs.
  */
 export function FieldPicker({
   open,
@@ -54,9 +73,13 @@ export function FieldPicker({
   search,
   onClose,
   inputRef,
-  searchPlaceholder = "Search",
+  searchPlaceholder: searchPlaceholderProp = "Search",
   resetKey,
   skipLabel = "Not sure — skip it",
+  presentation = "sheet",
+  anchorRef,
+  totalCount,
+  oftenIds,
 }: FieldPickerProps) {
   const titleId = useId();
   const [query, setQuery] = useState("");
@@ -64,6 +87,8 @@ export function FieldPicker({
   const [pending, startTransition] = useTransition();
   const requestIdRef = useRef(0);
   const serverSearch = typeof search === "function" ? search : null;
+  const isPopover = presentation === "popover";
+  const dark = useLiveTheme() === "dark";
 
   // Portal only after hydration: the server renders nothing here, so the
   // first client render must match (server snapshot false, client true).
@@ -102,12 +127,16 @@ export function FieldPicker({
     return () => clearTimeout(timer);
   }, [query, open, field, resetKey, serverSearch]);
 
-  // Lock the page behind the sheet while it is open; Escape closes it. On
-  // close, drop focus if the search input still holds it: a backdrop tap or
-  // "Back to the glass" does not move focus on iOS, so without this the
-  // keyboard stays up over the ladder with focus parked in the aria-hidden,
-  // off-screen sheet.
+  // Lock the page behind the sheet while it is open; Escape closes it. Only
+  // the sheet needs this: the popover is deliberately non-modal (no
+  // backdrop, `modal={false}` below) and base-ui's own dismiss handling
+  // already closes it on Escape or an outside press. On close, drop focus
+  // if the search input still holds it: a backdrop tap or "Back to the
+  // glass" does not move focus on iOS, so without this the keyboard stays
+  // up over the ladder with focus parked in the aria-hidden, off-screen
+  // sheet.
   useEffect(() => {
+    if (isPopover) return;
     if (!open) {
       const el = inputRef.current;
       if (el && document.activeElement === el) el.blur();
@@ -123,7 +152,7 @@ export function FieldPicker({
       document.body.style.overflow = previous;
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose, inputRef]);
+  }, [open, onClose, inputRef, isPopover]);
 
   const hasQuery = query.trim().length > 0;
 
@@ -150,6 +179,26 @@ export function FieldPicker({
           ? "No matches."
           : "Nothing to pick from yet.";
 
+  // The rest/catch-all group every caller (guess-ladder.tsx, match-ladder.tsx)
+  // literally heads "Everything else". Detected by that exact text rather
+  // than a shared export: on the popover it renders two columns wide
+  // (PLAY-31) and, once `totalCount` is given, its heading gains the count
+  // (S9's "Everything else · all {n}").
+  const REST_HEADING = "Everything else";
+  const decoratedGroups = shown.map((group) => {
+    const isRest = group.heading === REST_HEADING;
+    return {
+      ...group,
+      heading: isRest && totalCount !== undefined ? everythingElseHeading(totalCount) : group.heading,
+      isRest,
+    };
+  });
+
+  const resolvedPlaceholder =
+    totalCount !== undefined
+      ? computeSearchPlaceholder(field, totalCount, { phone: !isPopover })
+      : searchPlaceholderProp;
+
   // cmdk's filter is a fuzzy subsequence scorer over value + keywords, so in
   // client mode the filterable string is the bare name (an embedded uuid let
   // "ca", "de" or "2" match every row). cmdk also keys items by value, so a
@@ -165,9 +214,209 @@ export function FieldPicker({
 
   if (!mounted || typeof document === "undefined") return null;
 
+  // Shared between both presentations: the search field and the result
+  // list. Rendered once so a row's often-guessed suffix, the rest group's
+  // two-column layout and the reset-on-open-change behaviour never drift
+  // between the sheet and the popover.
+  const resultsBody = (
+    <Command
+      shouldFilter={!serverSearch}
+      className="h-auto min-h-0 flex-1 rounded-none! bg-transparent p-0"
+    >
+      {/* The search field sits in the header band. CommandInput forces
+          its InputGroup to h-8 / rounded-lg / border-input/30 / bg-input/30
+          (a 32px translucent palette field), so the 6f values — a solid
+          surface, 1px border, 10px radius, 44px tap height, 12px inset —
+          are re-imposed from here through slot-targeted overrides. 16px
+          text on phones keeps iOS from zooming on focus; 14px from md as
+          drawn. */}
+      <div className="shrink-0 border-b border-border bg-card px-4 pt-2 pb-[10px] [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-11! [&_[data-slot=input-group]]:rounded-[10px]! [&_[data-slot=input-group]]:border-border! [&_[data-slot=input-group]]:bg-card! [&_[data-slot=input-group]]:shadow-none! [&_[data-slot=input-group-addon]]:pl-3! [&_[data-slot=input-group-addon]]:text-muted-foreground [&_[data-slot=input-group-addon]_svg]:opacity-100">
+        <CommandInput
+          ref={inputRef}
+          value={query}
+          onValueChange={setQuery}
+          placeholder={resolvedPlaceholder}
+          tabIndex={open ? 0 : -1}
+          className="pr-3 text-base placeholder:text-muted-foreground md:text-[14px]"
+        />
+      </div>
+
+      <CommandList className="min-h-0 max-h-none flex-1 overscroll-contain">
+        <CommandEmpty className="px-4 text-muted-foreground">{emptyText}</CommandEmpty>
+
+        {decoratedGroups.map((group, i) => (
+          <CommandGroup
+            key={`${group.heading ?? "ungrouped"}-${i}`}
+            className={cn(
+              "p-0 **:[[cmdk-group-heading]]:p-0",
+              isPopover &&
+                group.isRest &&
+                "**:[[cmdk-group-items]]:grid **:[[cmdk-group-items]]:grid-cols-2 **:[[cmdk-group-items]]:gap-x-3",
+            )}
+            heading={
+              group.heading || group.note ? (
+                <span
+                  className={cn(
+                    "flex items-center gap-2 px-4 pt-[11px] pb-[7px]",
+                    i > 0 && "border-t border-border-light bg-background",
+                  )}
+                >
+                  {group.heading ? (
+                    <Eyebrow size="sm">{group.heading}</Eyebrow>
+                  ) : null}
+                  {group.note ? (
+                    <span className="text-[11px] text-muted-foreground">
+                      {group.note}
+                    </span>
+                  ) : null}
+                </span>
+              ) : undefined
+            }
+          >
+            {group.options.map((option) => {
+              const selected = option.id === value;
+              const sub = withOftenSuffix(option.sub, oftenIds?.has(option.id) ?? false);
+              return (
+                <CommandItem
+                  key={option.id}
+                  value={itemValue(option)}
+                  keywords={serverSearch ? undefined : [deaccent(option.name)]}
+                  onSelect={() => onPick(option.id)}
+                  className={cn(
+                    "min-h-11 cursor-pointer gap-[11px] rounded-none border-t border-border-light px-4 py-[13px] text-[15.5px] data-selected:bg-muted/60 [&>svg:last-child]:hidden md:hover:bg-background",
+                    selected && "bg-gold/10",
+                  )}
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-px">
+                    <span
+                      className={cn(
+                        "truncate",
+                        (sub || selected) && "font-semibold",
+                      )}
+                    >
+                      {option.name}
+                    </span>
+                    {sub ? (
+                      <span className="truncate text-[11.5px] text-muted-foreground">
+                        {sub}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full",
+                      selected
+                        ? "bg-primary text-primary-foreground"
+                        : "border-[1.5px] border-border",
+                    )}
+                  >
+                    {selected ? <Check className="size-3" strokeWidth={3} /> : null}
+                  </span>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </Command>
+  );
+
+  // Shared footer, as shipped: "Not sure — skip it" · "Next: {field} →". The
+  // match ladder passes skipLabel={null} (every glass must be matched before
+  // it can lock), which drops the skip button and lets Next take the row.
+  const footer = (
+    <div className="flex shrink-0 items-center gap-[10px] border-t border-border bg-background px-4 pt-[11px] pb-[max(22px,env(safe-area-inset-bottom))] md:pb-[14px]">
+      {skipLabel !== null ? (
+        <button
+          type="button"
+          tabIndex={open ? 0 : -1}
+          onClick={() => onPick(null)}
+          className="flex min-h-11 flex-1 items-center text-left text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {skipLabel}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        tabIndex={open ? 0 : -1}
+        onClick={onNext}
+        className={cn(
+          "flex min-h-11 items-center justify-center rounded-[11px] bg-primary px-[22px] py-[13px] text-[15px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-primary-hover",
+          // No skip button (the match ladder): Next takes the full width.
+          skipLabel === null && "flex-1",
+        )}
+      >
+        {nextLabel}
+      </button>
+    </div>
+  );
+
+  if (isPopover) {
+    return createPortal(
+      <PopoverPrimitive.Root
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        modal={false}
+      >
+        <PopoverPrimitive.Portal keepMounted>
+          <PopoverPrimitive.Positioner
+            anchor={anchorRef}
+            positionMethod="fixed"
+            side="bottom"
+            align="start"
+            sideOffset={10}
+            collisionPadding={16}
+            className="z-50"
+          >
+            <PopoverPrimitive.Popup
+              aria-labelledby={titleId}
+              // The ladder already focuses `inputRef` synchronously in the
+              // tap that opens the picker (the combobox rule) — base-ui's
+              // own default initial focus would otherwise land on the
+              // header's Skip button, the first tabbable element here.
+              // finalFocus is likewise left to the caller: `onClose` is
+              // what returns focus to the row (rowRefs, guess-ladder.tsx).
+              initialFocus={false}
+              finalFocus={false}
+              className={cn(
+                "flex max-h-[75vh] w-[520px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0_12px_32px_rgba(42,33,30,.22)] ring-1 ring-foreground/10 outline-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+                dark && "dark",
+              )}
+            >
+              <div className="flex shrink-0 items-center gap-[9px] border-b border-border px-4 py-[13px]">
+                <h2 id={titleId} className="font-heading text-[19px] font-semibold">
+                  {title}
+                </h2>
+                <span className="flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary lining-nums tabular-nums">
+                  {points} {points === 1 ? "pt" : "pts"}
+                </span>
+                {skipLabel !== null ? (
+                  <button
+                    type="button"
+                    onClick={() => onPick(null)}
+                    className="ml-auto min-h-9 px-1 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Skip
+                  </button>
+                ) : null}
+              </div>
+
+              {resultsBody}
+              {footer}
+            </PopoverPrimitive.Popup>
+          </PopoverPrimitive.Positioner>
+        </PopoverPrimitive.Portal>
+      </PopoverPrimitive.Root>,
+      document.body,
+    );
+  }
+
   return createPortal(
     <div
-      className={cn("fixed inset-0 z-50", !open && "pointer-events-none")}
+      className={cn("fixed inset-0 z-50", !open && "pointer-events-none", dark && "dark")}
       aria-hidden={!open}
     >
       {open ? (
@@ -206,125 +455,8 @@ export function FieldPicker({
           </div>
         </div>
 
-        <Command
-          shouldFilter={!serverSearch}
-          className="h-auto min-h-0 flex-1 rounded-none! bg-transparent p-0"
-        >
-          {/* The search field sits in the header band. CommandInput forces
-              its InputGroup to h-8 / rounded-lg / border-input/30 / bg-input/30
-              (a 32px translucent palette field), so the 6f values — white,
-              1px border, 10px radius, 44px tap height, 12px inset — are
-              re-imposed from here through slot-targeted overrides. 16px text
-              on phones keeps iOS from zooming on focus; 14px from md as drawn. */}
-          <div className="shrink-0 border-b border-border bg-card px-4 pt-2 pb-[10px] [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-11! [&_[data-slot=input-group]]:rounded-[10px]! [&_[data-slot=input-group]]:border-border! [&_[data-slot=input-group]]:bg-white! [&_[data-slot=input-group]]:shadow-none! [&_[data-slot=input-group-addon]]:pl-3! [&_[data-slot=input-group-addon]]:text-muted-foreground [&_[data-slot=input-group-addon]_svg]:opacity-100">
-            <CommandInput
-              ref={inputRef}
-              value={query}
-              onValueChange={setQuery}
-              placeholder={searchPlaceholder}
-              tabIndex={open ? 0 : -1}
-              className="pr-3 text-base placeholder:text-muted-foreground md:text-[14px]"
-            />
-          </div>
-
-          <CommandList className="min-h-0 max-h-none flex-1 overscroll-contain">
-            <CommandEmpty className="px-4 text-muted-foreground">{emptyText}</CommandEmpty>
-
-            {shown.map((group, i) => (
-              <CommandGroup
-                key={`${group.heading ?? "ungrouped"}-${i}`}
-                className="p-0 **:[[cmdk-group-heading]]:p-0"
-                heading={
-                  group.heading || group.note ? (
-                    <span
-                      className={cn(
-                        "flex items-center gap-2 px-4 pt-[11px] pb-[7px]",
-                        i > 0 && "border-t border-border-light bg-background",
-                      )}
-                    >
-                      {group.heading ? (
-                        <Eyebrow size="sm">{group.heading}</Eyebrow>
-                      ) : null}
-                      {group.note ? (
-                        <span className="text-[11px] text-muted-foreground">
-                          {group.note}
-                        </span>
-                      ) : null}
-                    </span>
-                  ) : undefined
-                }
-              >
-                {group.options.map((option) => {
-                  const selected = option.id === value;
-                  return (
-                    <CommandItem
-                      key={option.id}
-                      value={itemValue(option)}
-                      keywords={serverSearch ? undefined : [deaccent(option.name)]}
-                      onSelect={() => onPick(option.id)}
-                      className={cn(
-                        "min-h-11 cursor-pointer gap-[11px] rounded-none border-t border-border-light px-4 py-[13px] text-[15.5px] data-selected:bg-muted/60 [&>svg:last-child]:hidden md:hover:bg-background",
-                        selected && "bg-gold/10",
-                      )}
-                    >
-                      <span className="flex min-w-0 flex-1 flex-col gap-px">
-                        <span
-                          className={cn(
-                            "truncate",
-                            (option.sub || selected) && "font-semibold",
-                          )}
-                        >
-                          {option.name}
-                        </span>
-                        {option.sub ? (
-                          <span className="truncate text-[11.5px] text-muted-foreground">
-                            {option.sub}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "flex size-6 shrink-0 items-center justify-center rounded-full",
-                          selected
-                            ? "bg-primary text-primary-foreground"
-                            : "border-[1.5px] border-border",
-                        )}
-                      >
-                        {selected ? <Check className="size-3" strokeWidth={3} /> : null}
-                      </span>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            ))}
-          </CommandList>
-        </Command>
-
-        <div className="flex shrink-0 items-center gap-[10px] border-t border-border bg-background px-4 pt-[11px] pb-[max(22px,env(safe-area-inset-bottom))] md:pb-[14px]">
-          {skipLabel !== null ? (
-            <button
-              type="button"
-              tabIndex={open ? 0 : -1}
-              onClick={() => onPick(null)}
-              className="flex min-h-11 flex-1 items-center text-left text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {skipLabel}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            tabIndex={open ? 0 : -1}
-            onClick={onNext}
-            className={cn(
-              "flex min-h-11 items-center justify-center rounded-[11px] bg-primary px-[22px] py-[13px] text-[15px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523]",
-              // No skip button (the match ladder): Next takes the full width.
-              skipLabel === null && "flex-1",
-            )}
-          >
-            {nextLabel}
-          </button>
-        </div>
+        {resultsBody}
+        {footer}
       </div>
     </div>,
     document.body,
@@ -345,4 +477,13 @@ function bucket(results: PickerOption[]): PickerGroup[] {
     else out.push({ heading: option.group, options: [option] });
   }
   return out;
+}
+
+// Appends ladder-copy's OFTEN_SUFFIX (" · you guess this often") to an
+// existing context line, or — for a row with no context line of its own
+// (plain country/appellation/producer rows carry no `sub`) — shows the
+// phrase bare, without OFTEN_SUFFIX's leading " · " separator.
+function withOftenSuffix(sub: string | undefined, often: boolean): string | undefined {
+  if (!often) return sub;
+  return sub ? `${sub}${OFTEN_SUFFIX}` : OFTEN_SUFFIX.replace(/^ · /, "");
 }
