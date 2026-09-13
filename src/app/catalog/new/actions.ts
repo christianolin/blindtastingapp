@@ -146,35 +146,6 @@ export async function createAppellation(regionId: string, name: string): Promise
   return data;
 }
 
-/**
- * @deprecated removed in S3b
- *
- * A producer found or created through `find_or_create_producer` (spec §B.7): a
- * name that folds equal to an existing producer reuses it, and a new one takes
- * `regionId` as its region link. The catalog and cellar forms no longer call
- * this; a pending producer travels in the draft and the write creates it.
- */
-export async function createProducer(
-  name: string,
-  regionId: string | null,
-): Promise<ReferenceOption> {
-  const trimmed = name.trim();
-  if (!trimmed) throw new Error("Producer name is required.");
-  const supabase = await createClient();
-  const { data: id, error } = await supabase.rpc("find_or_create_producer", {
-    p_name: trimmed,
-    p_region_id: regionId,
-  });
-  if (error || !id) throw new Error(error?.message ?? "Could not create the producer.");
-  const { data, error: readError } = await supabase
-    .from("producers")
-    .select("id, name")
-    .eq("id", id)
-    .single();
-  if (readError) throw new Error(readError.message);
-  return data;
-}
-
 /** A catalog wine's structured profile, stored as distinct catalog columns and
     edited in Manage wine. Every part is optional. */
 export type WineProfileInput = {

@@ -9,24 +9,16 @@
 //
 // Pure: runtime imports are relative (vitest has no `@/` alias); the `@/` type
 // imports are erased.
-import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
-import { deaccent } from "../../lib/deaccent";
 import { missingWineFields } from "../../lib/wine-identity/complete";
 import { foldName } from "../../lib/wine-identity/fold";
 import type { GrapeSuggestion } from "../../lib/wine-identity/grape-suggestion";
 import type {
   FieldProvenance,
   RefChoice,
-  VintageKind as DraftVintageKind,
-  WineColour,
   WineFieldKey,
   WineIdentityDraft,
-  WineStyle,
 } from "../../lib/wine-identity/types";
-import type { ProducerHomeRegion } from "./actions";
-import { glassLabel } from "./format";
 import type { SheetMatrix } from "./matrix";
-import type { AddWineDestination } from "./types";
 
 // ---------------------------------------------------------------------------
 // Field chips (spec §B.4)
@@ -141,7 +133,23 @@ function linkMayWrite(source: FieldProvenance | undefined): boolean {
   return source === undefined || source === "none" || source === "producer-region";
 }
 
-function applyLinkToDraft(draft: WineIdentityDraft, link: ProducerRegionLink | null): WineIdentityDraft {
+/**
+ * Fold the chosen producer's region link into the draft — the one thing a
+ * producer says about a new wine (owner decision, 2026-09-12: a producer makes
+ * wines from many appellations and grapes, so neither follows from it).
+ * - Returns the draft unchanged once an appellation is chosen.
+ * - Writes country or region only where that field's provenance is absent,
+ *   `none` or `producer-region` — never over a manual or read value.
+ * - A link sets each such field, with provenance `producer-region`. Beside a
+ *   kept half it writes only when it agrees with it — the kept country is the
+ *   link's country, or the kept region is the link's region (resolve.ts step 7).
+ * - Every field still marked `producer-region` that the link does not write (no
+ *   link, or a link that disagrees with the kept half) is cleared and its
+ *   provenance key deleted, so the note never names the wrong producer.
+ * - Never touches the appellation or a grape. Returns the same object when
+ *   nothing changes.
+ */
+export function applyProducerRegion(draft: WineIdentityDraft, link: ProducerRegionLink | null): WineIdentityDraft {
   // A chosen appellation is never stranded under a different region.
   if (draft.appellationId) return draft;
   const { provenance } = draft;
@@ -175,34 +183,6 @@ function applyLinkToDraft(draft: WineIdentityDraft, link: ProducerRegionLink | n
   if (writeRegion) next.region = "producer-region";
   else if (clearRegion) delete next.region;
   return { ...draft, countryId, regionId, provenance: next };
-}
-
-/**
- * Fold the chosen producer's region link into the draft — the one thing a
- * producer says about a new wine (owner decision, 2026-09-12: a producer makes
- * wines from many appellations and grapes, so neither follows from it).
- * - Returns the draft unchanged once an appellation is chosen.
- * - Writes country or region only where that field's provenance is absent,
- *   `none` or `producer-region` — never over a manual or read value.
- * - A link sets each such field, with provenance `producer-region`. Beside a
- *   kept half it writes only when it agrees with it — the kept country is the
- *   link's country, or the kept region is the link's region (resolve.ts step 7).
- * - Every field still marked `producer-region` that the link does not write (no
- *   link, or a link that disagrees with the kept half) is cleared and its
- *   provenance key deleted, so the note never names the wrong producer.
- * - Never touches the appellation or a grape. Returns the same object when
- *   nothing changes.
- */
-export function applyProducerRegion(draft: WineIdentityDraft, link: ProducerRegionLink | null): WineIdentityDraft;
-/** @deprecated removed in S3b — round 1's `ByHandState` call from by-hand-form.tsx; use the draft overload. */
-export function applyProducerRegion(state: ByHandState, home: ProducerHomeRegion | null): ByHandState;
-export function applyProducerRegion(
-  input: WineIdentityDraft | ByHandState,
-  link: ProducerRegionLink | ProducerHomeRegion | null,
-): WineIdentityDraft | ByHandState {
-  // Only round 1's state has `originSource`; its overload always passes a ProducerHomeRegion.
-  if ("originSource" in input) return applyHomeRegionToState(input, link as ProducerHomeRegion | null);
-  return applyLinkToDraft(input, link);
 }
 
 // ---------------------------------------------------------------------------
@@ -289,252 +269,15 @@ export const NO_GI_HINT =
   "No geographic indication on the label? In France pick Vin de France; elsewhere pick No geographic indication.";
 
 // ---------------------------------------------------------------------------
-// Round 1 — kept only while by-hand-form.tsx still imports them (Working Rule 5).
+// Alcohol and the producer summary
 
-/** @deprecated removed in S3b — use `WineColour` from wine-identity/types. */
-export type Colour = WineColour;
-/** @deprecated removed in S3b — the round-1 Red / White / Other control; D8 has four colours. */
-export type ColourGroup = "RED" | "WHITE" | "OTHER";
-/** @deprecated removed in S3b — use `WineStyle` from wine-identity/types. */
-export type Style = WineStyle;
-/** @deprecated removed in S3b — use `VintageKind` from wine-identity/types. */
-export type VintageKind = DraftVintageKind;
-
-/** @deprecated removed in S3b — the draft's per-field provenance replaces it. */
-export type OriginSource = "none" | "producer" | "prefill" | "manual";
-
-/** @deprecated removed in S3b — part of `ByHandState`. */
-export type OriginLabels = {
-  country: string | null;
-  region: string | null;
-  appellation: string | null;
-};
-
-/** @deprecated removed in S3b — the form is controlled by `ByHandSession` and a `WineIdentityDraft`. */
-export type ByHandState = {
-  producerId: string;
-  /** The chosen producer's name, or a pending (not yet created) one. */
-  producerName: string;
-  wineName: string;
-  vintageKind: VintageKind;
-  vintageYear: string;
-  tawnyYears: string;
-  colourGroup: ColourGroup | null;
-  colour: Colour | null;
-  style: Style;
-  countryId: string;
-  regionId: string;
-  appellationId: string;
-  primaryGrapeId: string;
-  /** A scanned grape name not yet matched to a row; created on submit. */
-  primaryGrapePending: string;
-  secondaryGrapeId: string;
-  secondaryGrapePending: string;
-  typeDesignationId: string;
-  alcohol: string;
-  description: string;
-  imageUrl: string | null;
-  originSource: OriginSource;
-  /** Display names the reference lists may not hold yet. */
-  labels: OriginLabels;
-};
-
-/** Round 1's identity contract (formerly `ByHandIdentity` in types.ts), kept for `buildIdentity`. */
-type RoundOneIdentity = {
-  producerId: string | null;
-  producerName: string;
-  wineName: string;
-  vintageKind: VintageKind;
-  vintageYear: number | null;
-  vintageTawnyYears: number | null;
-  colour: Colour;
-  style: Style;
-  countryId: string;
-  regionId: string;
-  appellationId: string;
-  primaryGrapeId: string;
-  secondaryGrapeId: string | null;
-  typeDesignationId: string | null;
-  imageUrl: string | null;
-  description: string | null;
-  alcoholPercent: number | null;
-};
-
-const NO_LABELS: OriginLabels = { country: null, region: null, appellation: null };
-
-/** @deprecated removed in S3b — part of the round-1 colour control. */
-export function colourGroupOf(colour: Colour | null): ColourGroup | null {
-  if (colour === "RED" || colour === "WHITE") return colour;
-  if (colour === "ROSE" || colour === "ORANGE") return "OTHER";
-  return null;
-}
-
-/** @deprecated removed in S3b — the sheet opens the form with a `WineIdentityDraft`. */
-export function stateFromPrefill(p: WineFormInitial | null): ByHandState {
-  if (!p) {
-    return {
-      producerId: "",
-      producerName: "",
-      wineName: "",
-      vintageKind: "YEAR",
-      vintageYear: "",
-      tawnyYears: "",
-      colourGroup: null,
-      colour: null,
-      style: "STILL",
-      countryId: "",
-      regionId: "",
-      appellationId: "",
-      primaryGrapeId: "",
-      primaryGrapePending: "",
-      secondaryGrapeId: "",
-      secondaryGrapePending: "",
-      typeDesignationId: "",
-      alcohol: "",
-      description: "",
-      imageUrl: null,
-      originSource: "none",
-      labels: NO_LABELS,
-    };
-  }
-  const primary = p.blend[0];
-  const secondary = p.blend[1];
-  const hasOrigin = Boolean(p.countryId || p.regionId || p.appellationId);
-  return {
-    producerId: p.producerId ?? "",
-    producerName: p.producerLabel ?? "",
-    wineName: p.wineName ?? "",
-    // "No vintage read" is a year still to type — never NV by default.
-    vintageKind: p.vintagePrompt ? "YEAR" : p.vintageKind,
-    vintageYear: p.vintagePrompt ? "" : p.vintageYear ?? "",
-    tawnyYears: p.tawnyYears ?? "",
-    colourGroup: colourGroupOf(p.colour),
-    colour: p.colour,
-    style: p.style ?? "STILL",
-    countryId: p.countryId ?? "",
-    regionId: p.regionId ?? "",
-    appellationId: p.appellationId ?? "",
-    primaryGrapeId: primary?.grapeId ?? "",
-    primaryGrapePending: primary?.grapeId ? "" : primary?.pendingName ?? "",
-    secondaryGrapeId: secondary?.grapeId ?? "",
-    secondaryGrapePending: secondary?.grapeId ? "" : secondary?.pendingName ?? "",
-    typeDesignationId: p.typeDesignationId ?? "",
-    alcohol: p.profile?.alcoholPercent != null ? String(p.profile.alcoholPercent) : "",
-    description: p.description ?? "",
-    imageUrl: p.imageUrl ?? null,
-    originSource: hasOrigin ? "prefill" : "none",
-    labels: {
-      ...NO_LABELS,
-      appellation: p.appellations.find((a) => a.id === p.appellationId)?.name ?? null,
-    },
-  };
-}
-
-// Round 1's body of `applyProducerRegion`, reached only through its deprecated overload.
-function applyHomeRegionToState(s: ByHandState, home: ProducerHomeRegion | null): ByHandState {
-  if (s.originSource !== "none" && s.originSource !== "producer") return s;
-  if (s.appellationId) return s;
-  if (!home) {
-    if (s.originSource === "none") return s;
-    return {
-      ...s,
-      countryId: "",
-      regionId: "",
-      originSource: "none",
-      labels: { ...s.labels, country: null, region: null },
-    };
-  }
-  if (s.originSource === "producer" && s.countryId === home.countryId && s.regionId === home.regionId) {
-    return s;
-  }
-  return {
-    ...s,
-    countryId: home.countryId,
-    regionId: home.regionId,
-    originSource: "producer",
-    labels: { ...s.labels, country: home.countryName, region: home.regionName },
-  };
-}
-
-/** @deprecated removed in S3b — `missingWineFields` decides a valid vintage. */
-export function parseYear(v: string): number | null {
-  const t = v.trim();
-  if (!/^\d{4}$/.test(t)) return null;
-  const n = Number(t);
-  return n >= 1900 && n <= 2100 ? n : null;
-}
-
+/** A typed alcohol percentage ("13,5" reads as 13.5); null when blank, not a
+    number, or outside 0–100. The draft keeps it only inside (0, 100) (normaliseDraft). */
 export function parseAlcohol(v: string): number | null {
   const t = v.trim().replace(",", ".");
   if (!t) return null;
   const n = Number(t);
   return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
-}
-
-/** @deprecated removed in S3b — `missingWineFields` decides a valid vintage. */
-function vintageOk(s: ByHandState): boolean {
-  if (s.vintageKind === "YEAR") return parseYear(s.vintageYear) != null;
-  if (s.vintageKind === "TAWNY") return Number.isFinite(Number.parseInt(s.tawnyYears, 10));
-  return true;
-}
-
-/** @deprecated removed in S3b — use `missingWineFields` and `describeMissing`. */
-export function missingFields(s: ByHandState): string[] {
-  const missing: string[] = [];
-  if (!s.producerId && !s.producerName.trim()) missing.push("producer");
-  if (!s.wineName.trim()) missing.push("wine name");
-  if (!vintageOk(s)) missing.push("vintage");
-  if (!s.colour) missing.push("colour");
-  if (!s.countryId) missing.push("country");
-  if (!s.regionId) missing.push("region");
-  if (!s.appellationId) missing.push("appellation");
-  if (!s.primaryGrapeId && !s.primaryGrapePending.trim()) missing.push("grape");
-  return missing;
-}
-
-/** @deprecated removed in S3b — the add carries the `WineIdentityDraft` itself. */
-export function buildIdentity(
-  s: ByHandState,
-  grapes: { primaryGrapeId: string; secondaryGrapeId: string | null },
-): RoundOneIdentity | null {
-  const producerName = s.producerName.trim();
-  const wineName = s.wineName.trim();
-  if (
-    !s.colour || !wineName || (!s.producerId && !producerName) ||
-    !s.countryId || !s.regionId || !s.appellationId || !grapes.primaryGrapeId ||
-    !vintageOk(s)
-  ) {
-    return null;
-  }
-  return {
-    producerId: s.producerId || null,
-    producerName,
-    wineName,
-    vintageKind: s.vintageKind,
-    vintageYear: s.vintageKind === "YEAR" ? parseYear(s.vintageYear) : null,
-    vintageTawnyYears: s.vintageKind === "TAWNY" ? Number.parseInt(s.tawnyYears, 10) : null,
-    colour: s.colour,
-    style: s.style,
-    countryId: s.countryId,
-    regionId: s.regionId,
-    appellationId: s.appellationId,
-    primaryGrapeId: grapes.primaryGrapeId,
-    secondaryGrapeId: grapes.secondaryGrapeId,
-    typeDesignationId: s.typeDesignationId || null,
-    imageUrl: s.imageUrl,
-    description: s.description.trim() || null,
-    alcoholPercent: parseAlcohol(s.alcohol),
-  };
-}
-
-/** @deprecated removed in S3b — use `matrix.byHand.primary(finishing)`. */
-export function actionLabel(d: AddWineDestination | null): string {
-  // No destination yet (E1): the footer opens the chooser, it does not add.
-  if (!d) return "Choose where it goes";
-  if (d.kind === "flight") return `Add as ${glassLabel(d.position)}`;
-  if (d.kind === "cellar") return "Add to cellar";
-  if (d.kind === "note") return "Start the note";
-  return "Add to the catalog";
 }
 
 /** What by-hand-actions.ts's `producerSummary` returns about a producer. */
@@ -543,28 +286,3 @@ export type ProducerSummary = {
   countryName: string | null;
   wineCount: number;
 };
-
-/** @deprecated removed in S3b — the suggestion row reads "Did you mean {name}? · Use". */
-export function producerRowLabel(name: string, summary: ProducerSummary): string {
-  const place = [summary.regionName, summary.countryName].filter(Boolean).join(", ");
-  const count =
-    summary.wineCount === 0
-      ? "no wines yet"
-      : summary.wineCount === 1
-        ? "1 wine"
-        : `${summary.wineCount} wines`;
-  return [name, place || null, count].filter(Boolean).join(" · ");
-}
-
-const roundOneFold = (s: string) => deaccent(s).toLowerCase().trim();
-
-/** @deprecated removed in S3b — use `pickProducerAdoption`. */
-export function pickProducerSuggestion(
-  name: string,
-  hits: { id: string; name: string }[],
-): { id: string; name: string } | null {
-  const wanted = roundOneFold(name);
-  const exact = hits.find((h) => roundOneFold(h.name) === wanted);
-  const pick = exact ?? hits[0];
-  return pick ? { id: pick.id, name: pick.name } : null;
-}

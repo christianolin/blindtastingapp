@@ -2,8 +2,9 @@ import type { Ref } from "react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
+import type { ByHandReferences } from "./by-hand-actions";
 import type { CellarFilter, CellarSheet } from "./row-format";
-import type { ScanItem } from "./sheet-state";
+import type { ByHandSession, ScanItem } from "./sheet-state";
 
 // ---------------------------------------------------------------------------
 // Contracts from docs/superpowers/specs/2026-09-12-add-wine-v2-scan-and-flow-
@@ -232,12 +233,18 @@ export type CellarLotStepProps = {
   onSkip: (lotId: string) => void;
 };
 
+/** A7 / A4b: the by-hand form, controlled by the sheet's `ByHandSession` (spec
+    §C.4 rule 1). The shell mounts it hidden from the first paint (rule 9), so its
+    field refs exist before any tap; every add and save goes through the shell. */
 export type ByHandFormProps = {
-  ctx: SheetContext;
-  prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial | null;
-  onAdd: (source: AddSource) => Promise<void>;
-  onBack: () => void;
-  busy: boolean;
+  session: ByHandSession | null;                 // null: the shell has mounted the form hidden; render emptyDraft(), inert
+  matrix: SheetMatrix; destination: AddWineDestination | null;
+  references: ByHandReferences;                  // from F13's loadByHandReferences(), loaded once by the shell
+  finishing: { glass: number | null } | null;    // the A4b header when set
+  busy: boolean; error: string | null; userId: string;
+  onChange: (draft: WineIdentityDraft) => void; onUnidentified: (on: boolean) => void;
+  onSave: () => void; onLeaveForLater: (() => void) | null; onSearchInstead: () => void;
+  fieldRefs: React.MutableRefObject<Partial<Record<WineFieldKey, HTMLElement | null>>>;  // registered even while hidden, so the shell can focus inside the tap
 };
 
 export type DesktopViewProps = {

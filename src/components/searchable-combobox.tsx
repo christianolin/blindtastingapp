@@ -13,12 +13,26 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { foldName } from "@/lib/wine-identity/fold";
 
 // `group` is an optional heading label — consecutive results sharing one
 // render under a CommandGroup heading (the producer field's "Specific to
 // {region}" / "Other producers" split). Results without a group render as
 // today's flat list, so callers like the appellation field are unaffected.
-export type SearchOption = { id: string; name: string; group?: string };
+// `matchName` is the stored name when `name` is only a display label ("Just the
+// region · Bourgogne AOC"), so the Add row's duplicate check still sees it.
+export type SearchOption = { id: string; name: string; group?: string; matchName?: string };
+
+/** True when the option already stands for the typed name, by its label or its
+    stored name, so the Add row stays hidden (spec §B.7): accents, case and
+    punctuation never make a duplicate. */
+export function optionFoldsEqual(option: SearchOption, query: string): boolean {
+  const key = foldName(query);
+  return (
+    foldName(option.name) === key ||
+    (option.matchName !== undefined && foldName(option.matchName) === key)
+  );
+}
 
 // For reference tables too large to preload (thousands of appellations,
 // tens of thousands of producers after the LWIN import) — queries the
@@ -187,15 +201,12 @@ export function SearchableCombobox({
                   ))}
                   {/* Creation used to hide whenever the search returned any
                       near-miss results — the only way to add a new entry was
-                      a query with zero matches. Always offer it unless the
-                      exact name already exists. */}
+                      a query with zero matches. Always offer it unless a
+                      result already folds equal to the query (spec §B.7):
+                      accents, case and punctuation never make a duplicate. */}
                   {hasQuery &&
                   onCreate &&
-                  !results.some(
-                    (r) =>
-                      r.name.trim().toLowerCase() ===
-                      query.trim().toLowerCase(),
-                  ) ? (
+                  !results.some((r) => optionFoldsEqual(r, query)) ? (
                     <CommandGroup>
                       <CommandItem
                         value="__create__"
