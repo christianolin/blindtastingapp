@@ -878,32 +878,54 @@ begin
 end;
 $$;
 
--- A participant may leave only before Start; the host never leaves their own tasting.
+-- A guest may leave only before Start, and the host never leaves their own
+-- tasting. Once the tasting has started (its status is not DRAFT, or M3 has
+-- stamped its started_at, which no later status change clears) a JOINED row
+-- stays JOINED, and stays in the table, for every signed-in caller, the host
+-- included; only deleting the tasting itself removes it. service_role
+-- (auth.uid() null) is not a client and stays free.
 create or replace function public.tasting_participants_leave_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_status tasting_status;
+  v_started timestamptz;
   v_host uuid;
 begin
+  if tg_op = 'DELETE' then
+    if old.status = 'JOINED' and auth.uid() is not null then
+      select status, started_at into v_status, v_started from tastings where id = old.tasting_id;
+      -- No tasting row: the tasting itself is being deleted (the cascade from deleteTasting).
+      if found and (v_status <> 'DRAFT' or v_started is not null) then
+        raise exception 'A guest who has joined stays in the tasting once it has started.'; -- (plan copy)
+      end if;
+    end if;
+    return old;
+  end if;
   if old.status = 'JOINED' and new.status <> 'JOINED' then
-    select status, host_id into v_status, v_host from tastings where id = new.tasting_id;
+    select status, started_at, host_id into v_status, v_started, v_host from tastings where id = new.tasting_id;
     if new.user_id = v_host then
       raise exception 'the host cannot leave their own tasting';
     end if;
-    if auth.uid() = new.user_id and v_status <> 'DRAFT' then
-      raise exception 'you can only leave before the tasting starts';
+    if auth.uid() is not null and (v_status <> 'DRAFT' or v_started is not null) then
+      if auth.uid() = new.user_id then
+        raise exception 'you can only leave before the tasting starts';
+      end if;
+      raise exception 'A guest who has joined stays in the tasting once it has started.'; -- (plan copy)
     end if;
   end if;
   return new;
 end $$;
 
 create trigger tasting_participants_leave_guard
-  before update of status on public.tasting_participants
+  before update of status or delete on public.tasting_participants
   for each row execute function public.tasting_participants_leave_guard();
 
--- joined_at belongs to the server: stamped whenever a row becomes JOINED
--- (by the link, by accepting, or by a DECLINED guest coming back), never taken
--- from a client (respondToInvite and the create action send one today).
+-- joined_at belongs to the server and is stamped once: now() the first time a
+-- row becomes JOINED (on insert, by accepting, or by the link), then never
+-- moved. A later flip to JOINED keeps an existing joined_at (a guest who left
+-- before Start and comes back keeps the first one); a DECLINED invitee who
+-- never joined gets theirs on the first join. A client-sent value is never
+-- taken (respondToInvite and the create action send one today).
 create or replace function public.tasting_participants_stamp_joined_at()
 returns trigger language plpgsql set search_path = public as $$
 begin
@@ -911,7 +933,7 @@ begin
     new.joined_at := case when new.status = 'JOINED' then now() end;
   else
     new.joined_at := old.joined_at;
-    if new.status = 'JOINED' and old.status is distinct from 'JOINED' then
+    if new.status = 'JOINED' and old.status is distinct from 'JOINED' and old.joined_at is null then
       new.joined_at := now();
     end if;
   end if;
@@ -933,10 +955,10 @@ revoke all on function public.tasting_participants_leave_guard(),
 - **Enumeration.** Codes minted from now on carry 10 characters from a 32-letter alphabet (about 50 bits), out of reach of guessing through the anon key. The one existing 6-character code keeps working, because rotating it would break a link already shared. The RPC has no per-caller rate limit (§16.3). A hit discloses the reduced preview to anon, and to a signed-in guesser also the joined names; joining then shows the place — which is why new codes got longer.
 - `host_tastings_count` returns one integer about a public profile (the People directory is open by design).
 - `getInvitation` reads under the viewer's RLS: a `wines` count (any participant row can already read `wines`), `tasting_participants`, `profiles`, `tasting_places`. It never reads `wine_answers`. Rule 1 holds: a count, never a wine.
-- The leave guard stops a JOINED guest from lowering the eligible count after Start, which would otherwise let the remaining participants pass `reveal_wine`'s participant gate early.
-- **`joined_at` is trigger-owned,** so neither a participant nor the host can move it to turn glasses into, or out of, "joined after" (§5, §11).
+- **The leave guard** keeps `reveal_wine`'s eligible count from dropping after Start, which would otherwise let the remaining participants pass its participant gate early: once the tasting has started, no signed-in caller, the host included, moves a JOINED row out of JOINED or deletes it. A tasting counts as started when its status is not DRAFT or its `started_at` is set (M3, §11.4), which no later status change clears: the host can write `tastings.status`, so a status test alone would let a host set a running tasting back to DRAFT, take a guest out, and start it again. A guest is told "you can only leave before the tasting starts"; the host, "A guest who has joined stays in the tasting once it has started." (plan copy). Only deleting the tasting itself removes such a row: the guard lets it go once its tasting row is gone, which is how `deleteTasting`'s cascade reaches it. Before Start a guest can leave and the host can take a guest off the list; the host's own row never leaves JOINED, whoever writes it. INVITED and DECLINED rows can still be deleted. `service_role` (no `auth.uid()`) is not a client and stays free. Limit: a tasting that reached a started status without M3's Start stamp — the three live tastings started before M3 (no backfill), or one moved from DRAFT straight to OPEN or CLOSED by a direct update — has no `started_at`, so for it only the status test applies.
+- **`joined_at` is trigger-owned and stamped once:** `now()` the first time a row becomes JOINED, never a client's value, and kept on every later flip to JOINED — a guest who left before Start and comes back keeps the first stamp, and a DECLINED invitee who never joined gets theirs on the first join. With the leave guard, neither a participant nor the host can move it to turn glasses into, or out of, "joined after" (§5, §11).
 - Lane N: `tasting_participants_pin_identity` stays; the new triggers only read or stamp.
-- **Assertions:** both new functions SECURITY DEFINER with `search_path=public`; `get_join_preview` returns exactly the twelve columns and EXECUTE exactly anon + authenticated (+ owner, service_role); `host_tastings_count` authenticated-only; `generate_join_code`'s body differs from live only in the loop bound; both triggers exist, enabled — the leave guard BEFORE UPDATE OF status, the joined-at stamp BEFORE INSERT OR UPDATE.
+- **Assertions:** both new functions SECURITY DEFINER with `search_path=public`; `get_join_preview` returns exactly the twelve columns and EXECUTE exactly anon + authenticated (+ owner, service_role); `host_tastings_count` authenticated-only; `generate_join_code`'s body differs from live only in the loop bound; both triggers exist, enabled — the leave guard BEFORE UPDATE OF status OR DELETE, the joined-at stamp BEFORE INSERT OR UPDATE; the leave guard carries the DELETE branch and the host-worded refusal and counts a set `started_at` as started, and the stamp keeps an existing `joined_at`; M3's `tastings_stamp_lifecycle` is pinned before and after.
 
 ### 4.5 Tests
 
@@ -1019,10 +1041,10 @@ S3/S3b's share-link row. Joining late is otherwise not drawn (`XCUT-59`).
   --     raise exception 'that tasting has already started';
   --   end if;
   ```
-  Its `joined_at = coalesce(tasting_participants.joined_at, now())` stays as written: M4's `tasting_participants_stamp_joined_at` trigger (§4.4) replaces the value with `now()` on every flip to JOINED.
+  Its `joined_at = coalesce(tasting_participants.joined_at, now())` stays as written and agrees with M4's `tasting_participants_stamp_joined_at` trigger (§4.4), which owns the value: it keeps an existing `joined_at` and stamps `now()` only on a row's first flip to JOINED.
 - **Assertions:** a text diff of `pg_get_functiondef` before and after shows only that edit (lane N's `reveal_wine` pattern); EXECUTE stays authenticated-only.
 
-**Security reasoning.** Late joining is the owner's call (Q6). Rule 1: a late joiner sees what any JOINED participant sees; revealed glasses were already readable to every signed-in user (`is_revealed`), so nothing new leaks. `joined_at` is server-owned, so neither the participant nor the host can move it to turn glasses into, or out of, "joined after".
+**Security reasoning.** Late joining is the owner's call (Q6). Rule 1: a late joiner sees what any JOINED participant sees; revealed glasses were already readable to every signed-in user (`is_revealed`), so nothing new leaks. `joined_at` is server-owned and stamped once, and once the tasting has started (its status is not DRAFT, or its `started_at` is set) no signed-in caller, the host included, moves a JOINED row out of JOINED or deletes it, not even after setting the tasting back to DRAFT (§4.4's leave guard; only deleting the tasting removes it), so neither the participant nor the host can move it to turn glasses into, or out of, "joined after".
 
 ### 5.5 Tests
 
