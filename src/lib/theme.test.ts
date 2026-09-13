@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   THEME_KEY,
   applyTheme,
   readChoice,
   readTheme,
   setThemeChoice,
+  subscribeToTheme,
 } from "./theme";
 
 // vitest runs in the node environment by design (see vitest.config.mts), so
@@ -32,13 +34,25 @@ function stubWindow(opts: { stored?: Stored; osDark?: boolean; throws?: boolean 
     },
     matchMedia: (q: string) => ({
       matches: q.includes("dark") && Boolean(opts.osDark),
-      addEventListener: () => {},
+      addEventListener: (_t: string, cb: () => void) => void mediaListeners.push(cb),
       removeEventListener: () => {},
     }),
+    addEventListener: (t: string, cb: (e: unknown) => void) => {
+      if (t === "storage") storageListeners.push(cb);
+    },
+    removeEventListener: () => {},
   };
   vi.stubGlobal("window", win);
   return store;
 }
+
+// The listeners subscribe() hands to the browser, so a test can fire the two
+// events that change the theme without a page load: another tab writing the
+// key, and the OS flipping.
+let mediaListeners: Array<() => void> = [];
+let storageListeners: Array<(e: unknown) => void> = [];
+const fireOsChange = () => mediaListeners.forEach((cb) => cb());
+const fireStorage = (key: string) => storageListeners.forEach((cb) => cb({ key }));
 
 function stubDocument() {
   const classes = new Set<string>();
@@ -55,7 +69,11 @@ function stubDocument() {
   return { classes, root };
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  mediaListeners = [];
+  storageListeners = [];
+});
 
 describe("readTheme", () => {
   it("follows the OS when nothing is stored", () => {
@@ -137,5 +155,55 @@ describe("applyTheme", () => {
     applyTheme("light");
     expect(classes.has("dark")).toBe(false);
     expect(root.style.colorScheme).toBe("light");
+  });
+});
+
+describe("subscribeToTheme", () => {
+  // These two are the reason ThemeSync subscribes rather than applying once.
+  // Both shipped broken: the store noticed the change and reported it, and the
+  // page stayed in the old theme because nothing put the new one on <html>.
+  it("fires when the OS flips for someone following it", () => {
+    stubWindow({ osDark: false });
+    let fired = 0;
+    subscribeToTheme(() => { fired += 1; });
+    fireOsChange();
+    expect(fired).toBe(1);
+  });
+
+  it("fires when another tab writes the key", () => {
+    stubWindow();
+    let fired = 0;
+    subscribeToTheme(() => { fired += 1; });
+    fireStorage(THEME_KEY);
+    expect(fired).toBe(1);
+  });
+
+  it("ignores another tab writing an unrelated key", () => {
+    stubWindow();
+    let fired = 0;
+    subscribeToTheme(() => { fired += 1; });
+    fireStorage("something-else");
+    expect(fired).toBe(0);
+  });
+});
+
+describe("the anti-flash script in the root layout", () => {
+  // It cannot import THEME_KEY -- it has to run before any module loads -- so
+  // the key is written out twice. Nothing but this ties them together, and a
+  // rename on one side would silently stop every returning user's theme from
+  // surviving a reload, with no error anywhere.
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+
+  it("reads the same localStorage key the store writes", () => {
+    expect(layout).toContain(`"${THEME_KEY}"`);
+  });
+
+  it("sets both the class and colorScheme, as applyTheme does", () => {
+    expect(layout).toMatch(/classList\.toggle\("dark"/);
+    expect(layout).toMatch(/style\.colorScheme/);
+  });
+
+  it("falls back to the OS preference when nothing is stored", () => {
+    expect(layout).toContain("prefers-color-scheme: dark");
   });
 });

@@ -726,7 +726,7 @@ function ItemActionButton({
       variant="outline"
       disabled={disabled}
       onClick={onClick}
-      className="relative h-7 shrink-0 rounded-[7px] border-primary bg-transparent px-[11px] text-[11.5px] font-bold text-primary after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:bg-gold/15 hover:text-primary"
+      className="relative h-7 shrink-0 rounded-[7px] border-primary bg-transparent px-[11px] text-[11.5px] font-bold text-primary after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:bg-gold/15 hover:text-primary dark:hover:text-foreground"
     >
       {action === "fix" ? "Fix" : "Retry"}
     </Button>

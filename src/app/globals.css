@@ -184,116 +184,135 @@
   --sidebar-ring: #c3a25b;
 }
 
-.dark {
-  /* Wine cellar at night — near-black, warm parchment ink, gold catching the light. */
-  --background: #1b1310;
-  --foreground: #f5efe3;
-  --card: #241b16;
-  --card-foreground: #f5efe3;
-  --popover: #241b16;
-  --popover-foreground: #f5efe3;
-  /* Indigo, not the rose the handoff started from. The rose read as hot pink
-     across the whole left rail (the sidebar is a plain bg-primary panel) and
-     every filled button. Indigo is calmer at that size, sits better beside the
-     gold accent, and measures better everywhere it is used:
+/* The dark palette is a SCREEN concern. Scoped to @media screen so that
+ * printing falls back to :root -- the light tokens -- on its own, instead of
+ * laying down a near-black page. Nothing has to be listed twice for that to
+ * work: .dark only ever OVERRIDES :root, so removing it from the cascade in
+ * print restores the parchment palette entirely.
+ *
+ * The console tokens stay dark in print, as they already do in light: the
+ * reveal screen is dark in every theme and that is not a printing decision. */
+@media print {
+  /* JS sets color-scheme as an INLINE style on <html>, which outranks any
+     ordinary rule, so this one needs the flag to win. Without it the printed
+     page keeps dark form controls and scrollbar chrome. */
+  html {
+    color-scheme: light !important;
+  }
+}
 
-       label #f5efe3 on the fill   5.11 -> 11.86
-       gold  #d4af6a on the fill   2.82 ->  6.56   (fixes the "Live now" strip)
+@media screen {
+  .dark {
+    /* Wine cellar at night — near-black, warm parchment ink, gold catching the light. */
+    --background: #1b1310;
+    --foreground: #f5efe3;
+    --card: #241b16;
+    --card-foreground: #f5efe3;
+    --popover: #241b16;
+    --popover-foreground: #f5efe3;
+    /* Indigo, not the rose the handoff started from. The rose read as hot pink
+       across the whole left rail (the sidebar is a plain bg-primary panel) and
+       every filled button. Indigo is calmer at that size, sits better beside the
+       gold accent, and measures better everywhere it is used:
 
-     Deep on purpose. Contrast against the page runs the OTHER way as the fill
-     darkens -- 1.75 at #3b3a6b, 1.35 here, 1.15 by #262544 -- and somewhere
-     past this the banner stops reading as its own panel and merges into the
-     cards beside it. This is about as dark as it goes while the rail still
-     reads as a rail; the cool hue against the warm near-black ground carries
-     more of that separation than the luminance figure suggests.
+         label #f5efe3 on the fill   5.11 -> 11.86
+         gold  #d4af6a on the fill   2.82 ->  6.56   (fixes the "Live now" strip)
 
-     Light keeps its Bordeaux: #5c1a2b was never the complaint. */
-  --primary: #2b2a4f;
-  --primary-foreground: #f5efe3;
-  --secondary: #3a2e24;
-  --secondary-foreground: #f5efe3;
-  --muted: #2e2419;
-  --muted-foreground: #b9a98c;
-  --accent: #3f3225;
-  --accent-foreground: #f5efe3;
-  --destructive: #c6543f;
-  --border: rgba(245, 239, 227, 0.14);
-  --input: rgba(245, 239, 227, 0.16);
-  --ring: #d4af6a;
-  --gold: #d4af6a;
-  --gold-deep: #c3a25b;
-  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the redesign and
-     flows tokens completed for the dark surface — a miss turns miss-red, a
-     hover lifts, gold-on-dark keeps reading gold. */
-  --surface-deep: #15100d;
-  /* Warm, one step up from --card, NOT lighter-of-the-light. #2f251e is also
-     the only candidate in that range that keeps --placeholder on it at AA
-     (4.55:1); #302620 and up drop the placeholder text below 4.5. */
-  --surface-raised: #2f251e;
-  --primary-hover: #383663;
-  --gold-dark: #d4af6a;
-  --gold-light: #d4af6a;
-  --rose: #e08a76;
-  --miss: #e08a76;
-  --border-light: rgba(245, 239, 227, 0.08);
-  --border-strong: rgba(245, 239, 227, 0.22);
-  /* The rest of :root, completed for the dark surface. BT-D1 and the dark-mode
-     toggle landed at the same time and covered overlapping ground: where both
-     set a token BT-D1's value stands, because it is the handoff's and these
-     were derived. Both arrived at the same --border-light and --border-strong
-     independently, which is a good sign for the reading of the surface.
+       Deep on purpose. Contrast against the page runs the OTHER way as the fill
+       darkens -- 1.75 at #3b3a6b, 1.35 here, 1.15 by #262544 -- and somewhere
+       past this the banner stops reading as its own panel and merges into the
+       cards beside it. This is about as dark as it goes while the rail still
+       reads as a rail; the cool hue against the warm near-black ground carries
+       more of that separation than the luminance figure suggests.
 
-     These seven are the ones BT-D1 did not reach. Left unset they are light
-     values on a near-black ground -- --border-light was #f0e6d1 and
-     --chart-oldest #e5d9c0, both near-white lines, and --ink-photo and
-     --ink-caption dark browns that disappear into it.
+       Light keeps its Bordeaux: #5c1a2b was never the complaint. */
+    --primary: #2b2a4f;
+    --primary-foreground: #f5efe3;
+    --secondary: #3a2e24;
+    --secondary-foreground: #f5efe3;
+    --muted: #2e2419;
+    --muted-foreground: #b9a98c;
+    --accent: #3f3225;
+    --accent-foreground: #f5efe3;
+    --destructive: #c6543f;
+    --border: rgba(245, 239, 227, 0.14);
+    --input: rgba(245, 239, 227, 0.16);
+    --ring: #d4af6a;
+    --gold: #d4af6a;
+    --gold-deep: #c3a25b;
+    /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the redesign and
+       flows tokens completed for the dark surface — a miss turns miss-red, a
+       hover lifts, gold-on-dark keeps reading gold. */
+    --surface-deep: #15100d;
+    /* Warm, one step up from --card, NOT lighter-of-the-light. #2f251e is also
+       the only candidate in that range that keeps --placeholder on it at AA
+       (4.55:1); #302620 and up drop the placeholder text below 4.5. */
+    --surface-raised: #2f251e;
+    --primary-hover: #383663;
+    --gold-dark: #d4af6a;
+    --gold-light: #d4af6a;
+    --rose: #e08a76;
+    --miss: #e08a76;
+    --border-light: rgba(245, 239, 227, 0.08);
+    --border-strong: rgba(245, 239, 227, 0.22);
+    /* The rest of :root, completed for the dark surface. BT-D1 and the dark-mode
+       toggle landed at the same time and covered overlapping ground: where both
+       set a token BT-D1's value stands, because it is the handoff's and these
+       were derived. Both arrived at the same --border-light and --border-strong
+       independently, which is a good sign for the reading of the surface.
 
-     The two placeholder shades were measured on the running app and raised
-     twice. First from #8a7a5e / #5f5240, which gave 4.04:1 and 2.41:1 on
-     --card. Then again when --surface-raised arrived: #2f251e is lighter than
-     the card, and on a DARK ground a lighter background means LESS contrast for
-     ink, so -soft fell back to 4.10:1 there. Now 5.41:1 and 4.55:1 on the
-     raised surface, better on the card and page, with -soft still the dimmer.
+       These seven are the ones BT-D1 did not reach. Left unset they are light
+       values on a near-black ground -- --border-light was #f0e6d1 and
+       --chart-oldest #e5d9c0, both near-white lines, and --ink-photo and
+       --ink-caption dark browns that disappear into it.
 
-     --chart-oldest inverts outright. In the light charts it is the palest
-     series, furthest from the ink; on a dark ground the oldest series is the
-     one closest to the GROUND, so it goes darker than the rest, not lighter. */
-  --live: #e07a63;
-  --ink-photo: #d8cbb6;
-  --ink-caption: #b9a98c;
-  --placeholder: #a89a80;
-  --placeholder-soft: #9c8c6e;
-  --chart-oldest: #3a2e24;
-  /* --primary as INK, and the one token here that is NOT just a darker-ground
-     restating of its light value.
+       The two placeholder shades were measured on the running app and raised
+       twice. First from #8a7a5e / #5f5240, which gave 4.04:1 and 2.41:1 on
+       --card. Then again when --surface-raised arrived: #2f251e is lighter than
+       the card, and on a DARK ground a lighter background means LESS contrast for
+       ink, so -soft fell back to 4.10:1 there. Now 5.41:1 and 4.55:1 on the
+       raised surface, better on the card and page, with -soft still the dimmer.
 
-     --primary serves two roles. As a SURFACE it is the sidebar and the filled
-     buttons, where #f5efe3 on the indigo measures 9.15:1. As INK it is links,
-     scores, small labels -- and a surface colour dark enough to carry parchment
-     text is by definition too dark to BE text on a near-black ground. One token
-     cannot do both jobs here.
+       --chart-oldest inverts outright. In the light charts it is the palest
+       series, furthest from the ink; on a dark ground the oldest series is the
+       one closest to the GROUND, so it goes darker than the rest, not lighter. */
+    --live: #e07a63;
+    --ink-photo: #d8cbb6;
+    --ink-caption: #b9a98c;
+    --placeholder: #a89a80;
+    --placeholder-soft: #9c8c6e;
+    --chart-oldest: #3a2e24;
+    /* --primary as INK, and the one token here that is NOT just a darker-ground
+       restating of its light value.
 
-     #8a87c8 measures 5.13:1 on --card and 5.56:1 on --background, and stays in
-     the indigo family so ink and surface still read as the same accent. */
-  --primary-ink: #8a87c8;
-  /* NOT overridden, deliberately: --console/--console-card/--console-ink are
-     the host console's dim-room palette, already dark-surface values, and the
-     reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
-     screen that was never light. (--miss was on this list until BT-D1 set it
-     explicitly above, to the same value it has in light.) */
-  --chart-1: #7d7ad0;
-  --chart-2: #d4af6a;
-  --chart-3: #6c8f70;
-  --chart-4: #b9a98c;
-  --chart-5: #c6543f;
-  --sidebar: #241b16;
-  --sidebar-foreground: #f5efe3;
-  --sidebar-primary: #2b2a4f;
-  --sidebar-primary-foreground: #f5efe3;
-  --sidebar-accent: #3f3225;
-  --sidebar-accent-foreground: #f5efe3;
-  --sidebar-border: rgba(245, 239, 227, 0.14);
-  --sidebar-ring: #d4af6a;
+       --primary serves two roles. As a SURFACE it is the sidebar and the filled
+       buttons, where #f5efe3 on the indigo measures 9.15:1. As INK it is links,
+       scores, small labels -- and a surface colour dark enough to carry parchment
+       text is by definition too dark to BE text on a near-black ground. One token
+       cannot do both jobs here.
+
+       #8a87c8 measures 5.13:1 on --card and 5.56:1 on --background, and stays in
+       the indigo family so ink and surface still read as the same accent. */
+    --primary-ink: #8a87c8;
+    /* NOT overridden, deliberately: --console/--console-card/--console-ink are
+       the host console's dim-room palette, already dark-surface values, and the
+       reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
+       screen that was never light. (--miss was on this list until BT-D1 set it
+       explicitly above, to the same value it has in light.) */
+    --chart-1: #7d7ad0;
+    --chart-2: #d4af6a;
+    --chart-3: #6c8f70;
+    --chart-4: #b9a98c;
+    --chart-5: #c6543f;
+    --sidebar: #241b16;
+    --sidebar-foreground: #f5efe3;
+    --sidebar-primary: #2b2a4f;
+    --sidebar-primary-foreground: #f5efe3;
+    --sidebar-accent: #3f3225;
+    --sidebar-accent-foreground: #f5efe3;
+    --sidebar-border: rgba(245, 239, 227, 0.14);
+    --sidebar-ring: #d4af6a;
+  }
 }
 
 /* --primary as ink takes --primary-ink instead, in dark only.
