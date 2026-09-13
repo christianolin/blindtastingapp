@@ -8,6 +8,7 @@ import { WinesCard } from "./wines-card";
 import { PlayExperience } from "./play/play-experience";
 import { StandingsPanel } from "./standings-panel";
 import { respondToInvite } from "./actions";
+import { viewerCanSeeStandings } from "./view-route";
 
 // The CLOSED board (BT-D2, moved without change from page.tsx): the same
 // content a running tasting shows, since CLOSED was never distinguished
@@ -59,6 +60,10 @@ export async function FinishedView({
   const wines = await getWineRows(tastingId);
   const wineCount = wines.length;
   const canGuess = myStatus === "JOINED" && wineCount > 0;
+  // The same gate as running-view.tsx (upstream 1c6e738): the host or any
+  // participant row, whatever its status — viewerCanSeeStandings says why.
+  const isHost = tasting.host_id === user.id;
+  const canSeeStandings = viewerCanSeeStandings({ isHost, viewer });
   // Every glass is revealed by definition of CLOSED (reveal_wine refuses a
   // CLOSED tasting), so the navigator never shows an "active" chip here.
   const activeChipId: string | null = null;
@@ -111,7 +116,15 @@ export async function FinishedView({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
+      {/* Results + standings, or one column when the viewer is not entitled
+          to the standings and the rail would be dead space. */}
+      <div
+        className={
+          canSeeStandings
+            ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]"
+            : "grid gap-6"
+        }
+      >
         <div className="flex min-w-0 flex-col gap-6">
           <WinesCard tastingId={tastingId} />
           {canGuess ? (
@@ -122,11 +135,19 @@ export async function FinishedView({
             </p>
           )}
         </div>
-        <aside id="standings" className="scroll-mt-24 lg:sticky lg:top-8 lg:self-start">
-          <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-muted/40" />}>
-            <StandingsPanel tastingId={tastingId} />
-          </Suspense>
-        </aside>
+        {/* An outsider must not get a board at all: get_tasting_leaderboard
+            withholds their scores by returning NO ROWS, but the panel builds
+            its rows from tasting_participants and profiles, which are
+            readable under RLS — so it would show a live-looking board with
+            everyone on zero, and the players had points. Withholding the
+            numbers is not the same as withholding the board. */}
+        {canSeeStandings ? (
+          <aside id="standings" className="scroll-mt-24 lg:sticky lg:top-8 lg:self-start">
+            <Suspense fallback={<div className="h-40 animate-pulse rounded-lg bg-muted/40" />}>
+              <StandingsPanel tastingId={tastingId} />
+            </Suspense>
+          </aside>
+        ) : null}
       </div>
     </div>
   );

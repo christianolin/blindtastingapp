@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeTastingView } from "./view-route";
+import { routeTastingView, viewerCanSeeStandings } from "./view-route";
 
 describe("routeTastingView (B2 one running page, B3, B5)", () => {
   it.each([
@@ -18,4 +18,20 @@ describe("routeTastingView (B2 one running page, B3, B5)", () => {
     // OpenBoard on `running && isOpen`, page.tsx:721).
     [{ revealMode: "OPEN", status: "DRAFT", viewerStatus: "JOINED", isHost: true }, "lobby"],
   ] as const)("%j → %s", (input, view) => expect(routeTastingView(input)).toBe(view));
+});
+
+describe("viewerCanSeeStandings (upstream 1c6e738)", () => {
+  it.each([
+    [{ isHost: true, viewer: null }, true],
+    [{ isHost: true, viewer: { status: "JOINED" } }, true],
+    [{ isHost: false, viewer: { status: "JOINED" } }, true],
+    // Any participant row, whatever its status: is_tasting_participant's own
+    // rule, so the RPC returns real standings to these viewers too.
+    [{ isHost: false, viewer: { status: "INVITED" } }, true],
+    [{ isHost: false, viewer: { status: "DECLINED" } }, true],
+    // A signed-in outsider on the link: the RPC returns no rows, so no board.
+    [{ isHost: false, viewer: null }, false],
+  ] as const)("%j → %s", (input, expected) =>
+    expect(viewerCanSeeStandings(input)).toBe(expected),
+  );
 });

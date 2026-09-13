@@ -47,3 +47,20 @@ export function routeTastingView(input: {
   // status, unrelated to reveal_mode "OPEN" handled above).
   return "running";
 }
+
+/**
+ * Whether the viewer gets the standings board on the running and finished
+ * views (upstream 1c6e738, ported into the split views).
+ *
+ * Mirrors get_tasting_leaderboard's own guard, which is
+ * `is_tasting_host(...) or is_tasting_participant(...)`. Deliberately not
+ * viewer.status === "JOINED": is_tasting_participant admits ANY participant
+ * row whatever its status, so an INVITED user does get real standings from
+ * the RPC, and a stricter gate here would hide a board they are entitled to.
+ */
+export function viewerCanSeeStandings(input: {
+  isHost: boolean;
+  viewer: { status: ParticipantStatus } | null;
+}): boolean {
+  return input.isHost || Boolean(input.viewer);
+}
