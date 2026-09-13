@@ -36,6 +36,7 @@
   --color-placeholder: var(--placeholder);
   --color-placeholder-soft: var(--placeholder-soft);
   --color-chart-oldest: var(--chart-oldest);
+  --color-link: var(--link);
   /* Flows handoff (add-wine sheet / play / host console). */
   --color-miss: var(--miss);
   --color-console: var(--console);
@@ -117,6 +118,9 @@
   --placeholder: #a79574;
   --placeholder-soft: #c9b896;
   --chart-oldest: #e5d9c0;
+  /* Inline link ink. In light this IS --primary, so nothing changes; the token
+     exists because in dark it cannot be. See the .dark note below. */
+  --link: #5c1a2b;
   /* Flows handoff: the miss-red used for a wrong answer on the dark reveal,
      and the host console's dim-room palette (ground / card / muted ink). */
   --miss: #e08a76;
@@ -181,6 +185,20 @@
   --placeholder: #8a7a5e;
   --placeholder-soft: #5f5240;
   --chart-oldest: #3a2e24;
+  /* Link ink, and the one token here that is NOT just a darker-ground restating
+     of its light value.
+
+     --primary serves two roles. As a SURFACE it is the filled button: #a8425a
+     under #f5efe3 text measures 5.11:1, which is right and which the handoff
+     chose. As INK it is inline links -- and #a8425a on the --card ground is
+     2.89:1, under the 3:1 floor and well under AA's 4.5:1 for body text.
+     Lightening --primary to fix the ink would drop the button to 3.53:1, so
+     one token cannot do both jobs on a dark ground.
+
+     Hence a separate link ink. #cc6b82 measures 4.82:1 on --card and 5.22:1 on
+     --background, so it clears AA on either, and it stays in the same rose
+     family as the button it sits beside. */
+  --link: #cc6b82;
   /* NOT overridden, deliberately. --console/--console-card/--console-ink are
      the host console's dim-room palette and --miss is the wrong-answer red on
      the dark reveal: all four are already dark-surface values and the reveal is
@@ -199,6 +217,28 @@
   --sidebar-accent-foreground: #f5efe3;
   --sidebar-border: rgba(245, 239, 227, 0.14);
   --sidebar-ring: #d4af6a;
+}
+
+/* Inline links take the link ink instead of --primary, in dark only.
+ *
+ * Done here rather than by editing 61 call sites across 30 files. Those sites
+ * are not wrong -- text-primary is the right thing to write for a link in this
+ * design system -- and rewriting them all would leave the next link anyone adds
+ * to regress silently. This holds for links that do not exist yet.
+ *
+ * Scoped to anchors deliberately. text-primary is also on icons, badges and
+ * figures, which sit on their own grounds and are not body text; retinting them
+ * would be a palette change nobody asked for.
+ *
+ * The :hover rule has to be here too. Tailwind's hover:text-primary/80 would
+ * otherwise take over on hover and send the link DARKER than its rest state,
+ * which is the bug again with an extra step. `a.text-primary:hover` outweighs
+ * the utility's single class, so this wins without !important. */
+.dark a.text-primary {
+  color: var(--link);
+}
+.dark a.text-primary:hover {
+  color: color-mix(in oklab, var(--link) 80%, transparent);
 }
 
 @layer base {
