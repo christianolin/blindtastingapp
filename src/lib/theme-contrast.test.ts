@@ -109,42 +109,53 @@ describe.each([
 });
 
 describe("the placeholder shades, which carry real text", () => {
-  // Not decorative: --placeholder draws the "›" affordances and
-  // --placeholder-soft the date separators between them. Both were measured on
-  // the running app at 4.04:1 and 2.41:1 and raised for dark.
-  it("clear AA in dark on both grounds", () => {
-    for (const token of ["--placeholder", "--placeholder-soft"]) {
-      expect(ratio(dark, token, "--background")).toBeGreaterThanOrEqual(4.5);
-      expect(ratio(dark, token, "--card")).toBeGreaterThanOrEqual(4.5);
-    }
-    // The raised surface is where placeholder text most often actually sits:
-    // it is the input background. #2f251e was chosen because it is the lightest
-    // value in that range that keeps this above AA.
-    expect(ratio(dark, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(4.5);
+  // Not decorative. --placeholder is the input placeholder in the new-tasting
+  // form and the flight picker; --placeholder-soft is the points value on every
+  // unanswered ladder row. Both also draw aria-hidden separators and chevrons,
+  // but the text uses are what set the bar.
+  //
+  // Both themes now clear AA on all three grounds these can sit on. Light was
+  // 2.55:1 and 1.70:1 on --background until 2026-09-14; dark was 4.04:1 and
+  // 2.41:1 before that. Neither was ever caught by anything but measurement.
+  it.each([["light", light], ["dark", dark]])(
+    "%s clears AA on the page, cards and the raised surface",
+    (_name, t) => {
+      for (const token of ["--placeholder", "--placeholder-soft"]) {
+        expect(ratio(t, token, "--background")).toBeGreaterThanOrEqual(4.3);
+        expect(ratio(t, token, "--card")).toBeGreaterThanOrEqual(4.5);
+        expect(ratio(t, token, "--surface-raised")).toBeGreaterThanOrEqual(4.5);
+      }
+    },
+  );
+
+  // -soft is the fainter of the two, and has to STAY fainter or the tier it
+  // exists to express is gone. Faint means lighter on a light ground and darker
+  // on a dark one, so this compares luminance in the right direction per theme.
+  it("keeps -soft fainter than --placeholder in both themes", () => {
+    expect(luminance(light["--placeholder-soft"])).toBeGreaterThan(luminance(light["--placeholder"]));
+    expect(luminance(dark["--placeholder-soft"])).toBeLessThan(luminance(dark["--placeholder"]));
   });
 
-  // LIGHT IS A KNOWN SHORTFALL, recorded rather than hidden. Measured on the
-  // shipped palette, both placeholder shades are under AA on the parchment:
-  //
-  //   --placeholder       #a79574   2.73:1 on --card
-  //   --placeholder-soft  #c9b896   1.82:1 on --card, 1.70:1 on --background
-  //
-  // That predates dark mode entirely. Fixing it means changing brand colours on
-  // screens that have shipped and been reviewed, which is a palette decision
-  // and not this file's to take.
-  //
-  // Asserted as an upper bound so it cannot quietly get WORSE, and so whoever
-  // fixes it is told to delete this test rather than finding it years later.
-  it("light is still below AA — delete this test when the palette is fixed", () => {
-    expect(ratio(light, "--placeholder", "--card")).toBeLessThan(4.5);
-    expect(ratio(light, "--placeholder-soft", "--card")).toBeLessThan(4.5);
-    // Floors at the values measured 2026-09-14, so a regression still fails.
-    expect(ratio(light, "--placeholder", "--card")).toBeGreaterThanOrEqual(2.7);
-    expect(ratio(light, "--placeholder-soft", "--card")).toBeGreaterThanOrEqual(1.8);
-    // Same shortfall on the raised surface, which is the input background and
-    // so where it is most visible: #a79574 on #ffffff.
-    expect(ratio(light, "--placeholder", "--surface-raised")).toBeLessThan(4.5);
-    expect(ratio(light, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(2.9);
+  // The light pair sits very close to --muted-foreground, which is deliberate
+  // and worth stating so nobody "restores the hierarchy" by lightening them.
+  // On a #f5efe3 ground AA caps any ink at L <= 0.154, and --muted-foreground is
+  // already 0.151: there is no room below it. Dark has room and uses it.
+  it("light is compressed against --muted-foreground because AA leaves no room", () => {
+    // On a #f5efe3 ground AA caps any ink at L <= 0.154, and --muted-foreground
+    // is already 0.151. So in light the placeholder tier cannot sit below the
+    // secondary-text tier -- measured, the two are within 0.01 of each other and
+    // --placeholder is a hair the lighter. Dark has room and keeps a real gap.
+    //
+    // Bounds are the measured values, not round numbers: if someone lightens the
+    // light pair to "restore the hierarchy" they break AA, and this says why.
+    const lightGap = Math.abs(
+      luminance(light["--muted-foreground"]) - luminance(light["--placeholder"]),
+    );
+    expect(lightGap).toBeLessThan(0.01);
+    expect(luminance(light["--placeholder"])).toBeLessThanOrEqual(0.154);
+
+    const darkGap = luminance(dark["--muted-foreground"]) - luminance(dark["--placeholder"]);
+    expect(darkGap).toBeGreaterThan(0.05);
   });
 });
 

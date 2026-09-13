@@ -226,7 +226,7 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
             <ol className="grid grid-cols-2 gap-x-7 gap-y-[3px] text-[12.5px]">
               {banner.slots.map((slot, i) => (
                 <li key={`${slot.label}-${i}`} className="flex items-baseline gap-2.5">
-                  <span className="w-4 shrink-0 text-right font-mono text-[10.5px] text-placeholder tabular-nums">
+                  <span className="w-4 shrink-0 text-right font-mono text-[10.5px] text-primary-foreground/70 tabular-nums">
                     {i + 1}
                   </span>
                   {slot.filled ? (

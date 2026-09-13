@@ -120,8 +120,20 @@
   --border-strong: #dcceb0;
   --ink-photo: #5a4b3c;
   --ink-caption: #6b5b45;
-  --placeholder: #a79574;
-  --placeholder-soft: #c9b896;
+  /* Darkened from #a79574 / #c9b896, which were 2.55:1 and 1.70:1 on the
+     parchment -- far under AA, and these carry real text: the input
+     placeholders, and the points value on each unanswered ladder row.
+     Now 4.59 and 4.32 on --background, 4.92 and 4.63 on --card, 5.25 and 4.95
+     on --surface-raised, which is where the inputs actually sit.
+     -soft stays the fainter of the two, just.
+
+     They are close to --muted-foreground now, and that is not an oversight:
+     on a #f5efe3 ground, AA puts a ceiling of L<=0.154 on any ink, and
+     --muted-foreground is already at 0.151. The "fainter than secondary text"
+     tier simply does not exist at AA on parchment. Dark has room and keeps a
+     visible gap. */
+  --placeholder: #7a6a4d;
+  --placeholder-soft: #7f6e4e;
   --chart-oldest: #e5d9c0;
   /* --primary as INK rather than as a surface. In light this simply IS
      --primary, so nothing changes; the token exists because in dark it cannot
@@ -227,10 +239,12 @@
      --chart-oldest #e5d9c0, both near-white lines, and --ink-photo and
      --ink-caption dark browns that disappear into it.
 
-     The two placeholder shades were measured on the running app and raised:
-     #8a7a5e gave 4.04:1 on --card and #5f5240 only 2.41:1, and both carry real
-     text -- the "92 points" scores, the date separators. Now 5.14:1 and 4.58:1,
-     with -soft still the dimmer of the two.
+     The two placeholder shades were measured on the running app and raised
+     twice. First from #8a7a5e / #5f5240, which gave 4.04:1 and 2.41:1 on
+     --card. Then again when --surface-raised arrived: #2f251e is lighter than
+     the card, and on a DARK ground a lighter background means LESS contrast for
+     ink, so -soft fell back to 4.10:1 there. Now 5.41:1 and 4.55:1 on the
+     raised surface, better on the card and page, with -soft still the dimmer.
 
      --chart-oldest inverts outright. In the light charts it is the palest
      series, furthest from the ink; on a dark ground the oldest series is the
@@ -238,8 +252,8 @@
   --live: #e07a63;
   --ink-photo: #d8cbb6;
   --ink-caption: #b9a98c;
-  --placeholder: #9c8c6e;
-  --placeholder-soft: #948468;
+  --placeholder: #a89a80;
+  --placeholder-soft: #9c8c6e;
   --chart-oldest: #3a2e24;
   /* --primary as INK, and the one token here that is NOT just a darker-ground
      restating of its light value.
