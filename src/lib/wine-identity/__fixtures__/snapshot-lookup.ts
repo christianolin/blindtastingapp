@@ -18,6 +18,10 @@ export type ReferenceSnapshot = {
       the folded lookup's third tie-break (20260914112500). Absent means false, so
       a snapshot exported before the field still loads and resolves as before. */
   producers: { id: string; name: string; region_id: string | null; has_wines?: boolean }[];
+  /** Curated alternative producer names (20260914113500_producer_aliases): the folded
+      lookup's fallback when no producer row folds equal. Absent means none, so a
+      snapshot exported before the table still loads and resolves as before. */
+  aliases?: { id: string; producer_id: string; alias: string }[];
   grapes: { id: string; name: string }[];
   type_designations: { id: string; name: string; country_id: string | null }[];
 };
@@ -108,6 +112,14 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
     // region given, a region-less duplicate made that key NULL, which DESC sorts
     // first (6 of 44 folded collision groups). 20260912101530 wraps it in
     // `coalesce(..., false)`, and this mirror keeps that.
+    //
+    // Only when no producer row folds equal (20260914113500, owner approvals 1 and 2
+    // after L1 round 2): the producer of the alias whose folded name equals the
+    // query's, whatever the region. A producer row always beats an alias, and an alias
+    // never joins the tie-break. The unique index on alias_folded allows one such alias
+    // and the foreign key guarantees its producer, so two folded-equal aliases, or an
+    // alias whose producer the snapshot lacks, throw as a broken snapshot instead of
+    // resolving differently from the database.
     producerByFoldedName: async (name, regionId) => {
       const wanted = foldName(name);
       if (wanted === "") return null;
@@ -126,7 +138,17 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
           a.k.reduce((order, key, i) => order || Number(b.k[i]) - Number(key), 0)
           || a.p.name.localeCompare(b.p.name)
           || a.p.id.localeCompare(b.p.id))[0]?.p;
-      return hit ? { id: hit.id, name: hit.name, regionId: hit.region_id } : null;
+      if (hit) return { id: hit.id, name: hit.name, regionId: hit.region_id };
+      const aliases = (snapshot.aliases ?? []).filter((a) => foldName(a.alias) === wanted);
+      if (aliases.length === 0) return null;
+      if (aliases.length > 1) {
+        throw new Error(`snapshot aliases ${aliases.map((a) => a.id).join(", ")} fold equal ("${wanted}")`);
+      }
+      const target = snapshot.producers.find((p) => p.id === aliases[0].producer_id);
+      if (!target) {
+        throw new Error(`snapshot alias ${aliases[0].id} names producer ${aliases[0].producer_id}, which the snapshot does not carry`);
+      }
+      return { id: target.id, name: target.name, regionId: target.region_id };
     },
 
     regionById: async (id) => {
