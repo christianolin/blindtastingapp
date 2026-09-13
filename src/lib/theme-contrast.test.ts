@@ -9,7 +9,12 @@ import { describe, expect, it } from "vitest";
 //
 // WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large text and UI boundaries.
 
-const CSS = readFileSync("src/app/globals.css", "utf8");
+// Comments are stripped BEFORE parsing. The declaration regex is naive by
+// design -- it only has to read this one file -- but prose like "one step above
+// --card: inputs, panels..." inside a comment reads as a declaration to it, and
+// silently redefines the token with the rest of the paragraph. That happened,
+// and every ratio in the file went undefined at once.
+const CSS = readFileSync("src/app/globals.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 function block(selector: string): Record<string, string> {
   const m = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(CSS);
@@ -20,7 +25,13 @@ function block(selector: string): Record<string, string> {
 }
 
 const light = block(":root");
-const dark = block("\\.dark");
+const darkOnly = block("\\.dark");
+// The .dark block OVERRIDES :root, it does not replace it: a token dark leaves
+// alone still resolves to its light value at runtime. Merging the two is what
+// the browser actually computes, and so what these ratios must be measured on.
+// --on-accent is the case in point — declared once, deliberately the same ink
+// in both themes, and absent from .dark entirely.
+const dark = { ...light, ...darkOnly };
 
 /** Relative luminance, WCAG 2.x. Hex only -- the rgba() tokens are borders. */
 function luminance(hex: string): number {
@@ -61,8 +72,8 @@ describe.each([
   it("inline links clear AA on both grounds they appear on", () => {
     // The regression this file was written for. --primary was serving as link
     // ink and measured 2.89:1 on --card in dark.
-    expect(ratio(t, "--link", "--background")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(t, "--link", "--card")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--primary-ink", "--background")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--primary-ink", "--card")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("the filled primary button clears AA for its own label", () => {
@@ -72,9 +83,68 @@ describe.each([
     expect(ratio(t, "--primary-foreground", "--primary")).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("the raised surface carries body text and placeholders", () => {
+    // --surface-raised is inputs, dropdown panels and the new-tasting rows.
+    // It was `bg-white` at 41 call sites, which rendered a literal white panel
+    // on the near-black page.
+    //
+    // Placeholder text on it is asserted for DARK below, not here: in light it
+    // is 2.92:1, the same shipped shortfall the placeholder block records, and
+    // renaming the class did not cause it -- bg-white was already #ffffff.
+    expect(ratio(t, "--foreground", "--surface-raised")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("labels on the gold accent stay readable, in both themes", () => {
+    // Gold is a LIGHT surface whichever theme is on. Letting its label follow
+    // --foreground put parchment on gold in dark: 1.81:1, the worst contrast
+    // in the app. --on-accent is fixed dark ink for exactly this.
+    expect(ratio(t, "--on-accent", "--gold")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--on-accent", "--gold-deep")).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("the destructive colour is readable as text on both grounds", () => {
     expect(ratio(t, "--destructive", "--background")).toBeGreaterThanOrEqual(3);
     expect(ratio(t, "--destructive", "--card")).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("the placeholder shades, which carry real text", () => {
+  // Not decorative: --placeholder draws the "›" affordances and
+  // --placeholder-soft the date separators between them. Both were measured on
+  // the running app at 4.04:1 and 2.41:1 and raised for dark.
+  it("clear AA in dark on both grounds", () => {
+    for (const token of ["--placeholder", "--placeholder-soft"]) {
+      expect(ratio(dark, token, "--background")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(dark, token, "--card")).toBeGreaterThanOrEqual(4.5);
+    }
+    // The raised surface is where placeholder text most often actually sits:
+    // it is the input background. #2f251e was chosen because it is the lightest
+    // value in that range that keeps this above AA.
+    expect(ratio(dark, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // LIGHT IS A KNOWN SHORTFALL, recorded rather than hidden. Measured on the
+  // shipped palette, both placeholder shades are under AA on the parchment:
+  //
+  //   --placeholder       #a79574   2.73:1 on --card
+  //   --placeholder-soft  #c9b896   1.82:1 on --card, 1.70:1 on --background
+  //
+  // That predates dark mode entirely. Fixing it means changing brand colours on
+  // screens that have shipped and been reviewed, which is a palette decision
+  // and not this file's to take.
+  //
+  // Asserted as an upper bound so it cannot quietly get WORSE, and so whoever
+  // fixes it is told to delete this test rather than finding it years later.
+  it("light is still below AA — delete this test when the palette is fixed", () => {
+    expect(ratio(light, "--placeholder", "--card")).toBeLessThan(4.5);
+    expect(ratio(light, "--placeholder-soft", "--card")).toBeLessThan(4.5);
+    // Floors at the values measured 2026-09-14, so a regression still fails.
+    expect(ratio(light, "--placeholder", "--card")).toBeGreaterThanOrEqual(2.7);
+    expect(ratio(light, "--placeholder-soft", "--card")).toBeGreaterThanOrEqual(1.8);
+    // Same shortfall on the raised surface, which is the input background and
+    // so where it is most visible: #a79574 on #ffffff.
+    expect(ratio(light, "--placeholder", "--surface-raised")).toBeLessThan(4.5);
+    expect(ratio(light, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(2.9);
   });
 });
 
@@ -101,10 +171,15 @@ describe("the dark palette's coverage of the light one", () => {
     // --miss is allowed but no longer absent: BT-D1 set it explicitly, to the
     // same value it already had in light. Kept in the list because it is still
     // legitimately either way.
+    //
+    // --on-accent is the same kind of exception from the other direction: it is
+    // ink for the GOLD surface, and gold is light in both themes, so the ink
+    // must NOT flip with the theme. That is the whole point of it.
     const allowed = new Set([
       "--radius", "--miss", "--console", "--console-card", "--console-ink",
+      "--on-accent",
     ]);
-    const missing = Object.keys(light).filter((k) => !(k in dark) && !allowed.has(k));
+    const missing = Object.keys(light).filter((k) => !(k in darkOnly) && !allowed.has(k));
     expect(missing).toEqual([]);
   });
 });

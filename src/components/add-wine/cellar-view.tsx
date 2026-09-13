@@ -276,7 +276,7 @@ function FilterChip({
         "relative shrink-0 rounded-full px-[14px] py-[7px] text-[12.5px] whitespace-nowrap transition-colors max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-[6px] max-md:after:content-['']",
         active
           ? "bg-primary font-semibold text-primary-foreground"
-          : "border border-border text-muted-foreground md:hover:border-gold md:hover:bg-white",
+          : "border border-border text-muted-foreground md:hover:border-gold md:hover:bg-surface-raised",
       )}
     >
       {children}

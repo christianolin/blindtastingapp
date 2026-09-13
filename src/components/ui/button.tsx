@@ -21,7 +21,7 @@ const buttonVariants = cva(
         // dark ground --primary is a button FILL, and as ink it measures
         // 2.89:1. This variant can render as a <button>, which the anchor rule
         // there does not reach.
-        link: "text-primary hover:text-primary/80 dark:text-link dark:hover:text-link/80",
+        link: "text-primary hover:text-primary/80 dark:text-primary-ink dark:hover:text-primary-ink/80",
       },
       size: {
         default:

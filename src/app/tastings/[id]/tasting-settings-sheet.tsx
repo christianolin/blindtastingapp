@@ -280,7 +280,7 @@ export function TastingSettingsSheet({
             <button
               type="button"
               onClick={() => setInnerView("invitations")}
-              className="flex min-h-11 items-center gap-2 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left text-[13px] font-semibold text-foreground transition-colors hover:border-gold hover:bg-white md:pointer-fine:min-h-0"
+              className="flex min-h-11 items-center gap-2 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left text-[13px] font-semibold text-foreground transition-colors hover:border-gold hover:bg-surface-raised md:pointer-fine:min-h-0"
             >
               <UserPlus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               {MANAGE_INVITATIONS}

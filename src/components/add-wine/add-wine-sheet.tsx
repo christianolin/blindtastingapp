@@ -737,7 +737,7 @@ export function AddWineSheet({
             <button
               type="button"
               onClick={() => adds.send({ type: "go", view: "camera" })}
-              className="flex min-h-11 shrink-0 items-center gap-[6px] rounded-full border border-border px-[13px] text-[13px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white"
+              className="flex min-h-11 shrink-0 items-center gap-[6px] rounded-full border border-border px-[13px] text-[13px] font-semibold text-primary transition-colors hover:border-gold hover:bg-surface-raised"
             >
               <Camera className="size-4" aria-hidden />
               Scan

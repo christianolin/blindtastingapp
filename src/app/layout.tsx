@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { ThemeSync } from "@/components/theme-sync";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -60,6 +61,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* Re-applies the theme after hydration. THEME_SCRIPT wins the first
+            paint; React can then overwrite the class attribute it owns on
+            <html>, and on some routes it does. See theme-sync.tsx. */}
+        <ThemeSync />
         <AppShell>{children}</AppShell>
       </body>
     </html>

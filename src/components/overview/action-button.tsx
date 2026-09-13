@@ -9,7 +9,7 @@ const VARIANT: Record<ActionVariant, string> = {
   primary:
     "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-[#4A1523]",
   outline:
-    "border-[1.5px] border-primary bg-white text-primary shadow-[0_2px_0_0_rgba(42,33,30,.12)] hover:bg-background",
+    "border-[1.5px] border-primary bg-surface-raised text-primary shadow-[0_2px_0_0_rgba(42,33,30,.12)] hover:bg-background",
 };
 
 // The card action button's classes (full width, 44px+ tall, pressable

@@ -75,7 +75,7 @@ export function JoinLinkRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-[11px] border border-border bg-white p-[13px_15px]",
+        "flex items-center gap-3 rounded-[11px] border border-border bg-surface-raised p-[13px_15px]",
         className,
       )}
     >
@@ -98,7 +98,7 @@ export function JoinLinkRow({
         type="button"
         onClick={() => void copy()}
         disabled={link === "loading" || "error" in link}
-        className="ml-auto min-h-11 shrink-0 rounded-[8px] border border-border bg-background px-[14px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white disabled:opacity-60 md:pointer-fine:min-h-0"
+        className="ml-auto min-h-11 shrink-0 rounded-[8px] border border-border bg-background px-[14px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-surface-raised disabled:opacity-60 md:pointer-fine:min-h-0"
       >
         {copied ? "Copied" : "Copy"}
       </button>

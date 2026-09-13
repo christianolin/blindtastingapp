@@ -78,7 +78,7 @@ export function InviteStep({
                     "flex min-h-11 items-center gap-2 rounded-full p-[7px_13px_7px_8px] text-[13px] transition-colors md:pointer-fine:min-h-0",
                     on
                       ? "bg-primary font-semibold text-primary-foreground hover:bg-[#4A1523]"
-                      : "border border-border bg-white text-foreground hover:border-gold",
+                      : "border border-border bg-surface-raised text-foreground hover:border-gold",
                   )}
                 >
                   <span
@@ -100,7 +100,7 @@ export function InviteStep({
             <button
               type="button"
               onClick={onShowEmailField}
-              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-white md:pointer-fine:min-h-0"
+              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-surface-raised md:pointer-fine:min-h-0"
             >
               <Plus className="size-3.5" aria-hidden /> email or name
             </button>
@@ -114,7 +114,7 @@ export function InviteStep({
             add and remove, and starts from the sheet's list when it remounts. */}
         <div
           hidden={!showEmailField}
-          className="rounded-[11px] border border-border bg-white p-[13px_15px]"
+          className="rounded-[11px] border border-border bg-surface-raised p-[13px_15px]"
         >
           <InviteField
             friends={friends === "loading" ? [] : friends}

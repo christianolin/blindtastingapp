@@ -17,7 +17,7 @@ import { ScanButton } from "@/components/scan/scan-button";
 // 19px override its 16px default. Below md a ::before pseudo-element extends
 // the 32px box to a 44px tap target without changing how it looks.
 const ICON_BUTTON =
-  "relative before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] md:before:hidden rounded-[8px] border border-border bg-card transition-colors hover:border-gold hover:bg-white [&_svg:not([class*='size-'])]:size-[19px]";
+  "relative before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] md:before:hidden rounded-[8px] border border-border bg-card transition-colors hover:border-gold hover:bg-surface-raised [&_svg:not([class*='size-'])]:size-[19px]";
 
 /**
  * The app's top bar — rendered inside the main column, to the right of the
@@ -113,7 +113,7 @@ export async function AppHeader({
         {/* md and up: the labelled gold-bordered pill. */}
         <Link
           href="/profile/numbers"
-          className="hidden h-8 items-center gap-1.5 rounded-[8px] border border-gold bg-card px-[13px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-white md:inline-flex"
+          className="hidden h-8 items-center gap-1.5 rounded-[8px] border border-gold bg-card px-[13px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-surface-raised md:inline-flex"
         >
           <ChartColumn className="size-3.5" strokeWidth={2.25} />
           <span>Your numbers</span>

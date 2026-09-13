@@ -33,13 +33,15 @@
   --color-border-strong: var(--border-strong);
   /* Dark-means-live handoff (BT-D1, spec §6.3 item 1). */
   --color-surface-deep: var(--surface-deep);
+  --color-surface-raised: var(--surface-raised);
   --color-primary-hover: var(--primary-hover);
   --color-ink-photo: var(--ink-photo);
   --color-ink-caption: var(--ink-caption);
   --color-placeholder: var(--placeholder);
   --color-placeholder-soft: var(--placeholder-soft);
   --color-chart-oldest: var(--chart-oldest);
-  --color-link: var(--link);
+  --color-primary-ink: var(--primary-ink);
+  --color-on-accent: var(--on-accent);
   /* Flows handoff (add-wine sheet / play / host console). */
   --color-miss: var(--miss);
   --color-console: var(--console);
@@ -121,9 +123,13 @@
   --placeholder: #a79574;
   --placeholder-soft: #c9b896;
   --chart-oldest: #e5d9c0;
-  /* Inline link ink. In light this IS --primary, so nothing changes; the token
-     exists because in dark it cannot be. See the .dark note below. */
-  --link: #5c1a2b;
+  /* --primary as INK rather than as a surface. In light this simply IS
+     --primary, so nothing changes; the token exists because in dark it cannot
+     be. See the .dark note below. */
+  --primary-ink: #5c1a2b;
+  /* Ink for text sitting on the gold accent. Gold is a LIGHT surface in both
+     themes, so its label cannot follow --foreground, which flips. */
+  --on-accent: #2a211e;
   /* Flows handoff: the miss-red used for a wrong answer on the dark reveal,
      and the host console's dim-room palette (ground / card / muted ink). */
   --miss: #e08a76;
@@ -134,6 +140,12 @@
      surface (pinned bars, header strips) and the bordeaux hover step, each
      defined for both the parchment and the dark surface below. */
   --surface-deep: #ede4d1;
+  /* One step ABOVE --card: inputs, dropdown panels, the rows in the new-tasting
+     flow. This was written as `bg-white` at 41 call sites, which is a colour
+     and not a role -- and a literal white panel on a near-black page is exactly
+     what that produces in dark. The lift over --card is deliberately slight
+     here (1.07) and stays slight there (1.13). */
+  --surface-raised: #ffffff;
   --primary-hover: #4a1523;
   --chart-1: #5c1a2b;
   --chart-2: #c3a25b;
@@ -159,7 +171,23 @@
   --card-foreground: #f5efe3;
   --popover: #241b16;
   --popover-foreground: #f5efe3;
-  --primary: #a8425a;
+  /* Indigo, not the rose the handoff started from. The rose read as hot pink
+     across the whole left rail (the sidebar is a plain bg-primary panel) and
+     every filled button. Indigo is calmer at that size, sits better beside the
+     gold accent, and measures better everywhere it is used:
+
+       label #f5efe3 on the fill   5.11 -> 11.86
+       gold  #d4af6a on the fill   2.82 ->  6.56   (fixes the "Live now" strip)
+
+     Deep on purpose. Contrast against the page runs the OTHER way as the fill
+     darkens -- 1.75 at #3b3a6b, 1.35 here, 1.15 by #262544 -- and somewhere
+     past this the banner stops reading as its own panel and merges into the
+     cards beside it. This is about as dark as it goes while the rail still
+     reads as a rail; the cool hue against the warm near-black ground carries
+     more of that separation than the luminance figure suggests.
+
+     Light keeps its Bordeaux: #5c1a2b was never the complaint. */
+  --primary: #2b2a4f;
   --primary-foreground: #f5efe3;
   --secondary: #3a2e24;
   --secondary-foreground: #f5efe3;
@@ -177,7 +205,11 @@
      flows tokens completed for the dark surface — a miss turns miss-red, a
      hover lifts, gold-on-dark keeps reading gold. */
   --surface-deep: #15100d;
-  --primary-hover: #b04961;
+  /* Warm, one step up from --card, NOT lighter-of-the-light. #2f251e is also
+     the only candidate in that range that keeps --placeholder on it at AA
+     (4.55:1); #302620 and up drop the placeholder text below 4.5. */
+  --surface-raised: #2f251e;
+  --primary-hover: #383663;
   --gold-dark: #d4af6a;
   --gold-light: #d4af6a;
   --rose: #e08a76;
@@ -195,42 +227,45 @@
      --chart-oldest #e5d9c0, both near-white lines, and --ink-photo and
      --ink-caption dark browns that disappear into it.
 
+     The two placeholder shades were measured on the running app and raised:
+     #8a7a5e gave 4.04:1 on --card and #5f5240 only 2.41:1, and both carry real
+     text -- the "92 points" scores, the date separators. Now 5.14:1 and 4.58:1,
+     with -soft still the dimmer of the two.
+
      --chart-oldest inverts outright. In the light charts it is the palest
      series, furthest from the ink; on a dark ground the oldest series is the
      one closest to the GROUND, so it goes darker than the rest, not lighter. */
   --live: #e07a63;
   --ink-photo: #d8cbb6;
   --ink-caption: #b9a98c;
-  --placeholder: #8a7a5e;
-  --placeholder-soft: #5f5240;
+  --placeholder: #9c8c6e;
+  --placeholder-soft: #948468;
   --chart-oldest: #3a2e24;
-  /* Link ink, and the one token here that is NOT just a darker-ground restating
-     of its light value.
+  /* --primary as INK, and the one token here that is NOT just a darker-ground
+     restating of its light value.
 
-     --primary serves two roles. As a SURFACE it is the filled button: #a8425a
-     under #f5efe3 text measures 5.11:1, which is right and which the handoff
-     chose. As INK it is inline links -- and #a8425a on the --card ground is
-     2.89:1, under the 3:1 floor and well under AA's 4.5:1 for body text.
-     Lightening --primary to fix the ink would drop the button to 3.53:1, so
-     one token cannot do both jobs on a dark ground.
+     --primary serves two roles. As a SURFACE it is the sidebar and the filled
+     buttons, where #f5efe3 on the indigo measures 9.15:1. As INK it is links,
+     scores, small labels -- and a surface colour dark enough to carry parchment
+     text is by definition too dark to BE text on a near-black ground. One token
+     cannot do both jobs here.
 
-     Hence a separate link ink. #cc6b82 measures 4.82:1 on --card and 5.22:1 on
-     --background, so it clears AA on either, and it stays in the same rose
-     family as the button it sits beside. */
-  --link: #cc6b82;
+     #8a87c8 measures 5.13:1 on --card and 5.56:1 on --background, and stays in
+     the indigo family so ink and surface still read as the same accent. */
+  --primary-ink: #8a87c8;
   /* NOT overridden, deliberately: --console/--console-card/--console-ink are
      the host console's dim-room palette, already dark-surface values, and the
      reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
      screen that was never light. (--miss was on this list until BT-D1 set it
      explicitly above, to the same value it has in light.) */
-  --chart-1: #a8425a;
+  --chart-1: #7d7ad0;
   --chart-2: #d4af6a;
   --chart-3: #6c8f70;
   --chart-4: #b9a98c;
   --chart-5: #c6543f;
   --sidebar: #241b16;
   --sidebar-foreground: #f5efe3;
-  --sidebar-primary: #a8425a;
+  --sidebar-primary: #2b2a4f;
   --sidebar-primary-foreground: #f5efe3;
   --sidebar-accent: #3f3225;
   --sidebar-accent-foreground: #f5efe3;
@@ -238,26 +273,37 @@
   --sidebar-ring: #d4af6a;
 }
 
-/* Inline links take the link ink instead of --primary, in dark only.
+/* --primary as ink takes --primary-ink instead, in dark only.
  *
- * Done here rather than by editing 61 call sites across 30 files. Those sites
- * are not wrong -- text-primary is the right thing to write for a link in this
- * design system -- and rewriting them all would leave the next link anyone adds
- * to regress silently. This holds for links that do not exist yet.
+ * Done here rather than by editing 94 call sites across 30 files. Those sites
+ * are not wrong -- text-primary is the right thing to write in this design
+ * system -- and rewriting them would leave the next one anyone adds to regress
+ * silently. This holds for code that does not exist yet.
  *
- * Scoped to anchors deliberately. text-primary is also on icons, badges and
- * figures, which sit on their own grounds and are not body text; retinting them
- * would be a palette change nobody asked for.
+ * NOT scoped to anchors. It was, and walking the signed-in app showed that was
+ * too narrow: the scores ("92 points"), the quick-action buttons ("Rate a
+ * wine", "Add a bottle") and the row affordances are spans and buttons, not
+ * links, and every one of them sat at 2.89:1. There is no case where --primary
+ * works as a foreground on a dark ground, so the rule covers all of them.
  *
  * The :hover rule has to be here too. Tailwind's hover:text-primary/80 would
- * otherwise take over on hover and send the link DARKER than its rest state,
- * which is the bug again with an extra step. `a.text-primary:hover` outweighs
- * the utility's single class, so this wins without !important. */
-.dark a.text-primary {
-  color: var(--link);
+ * otherwise take over on hover and send the text DARKER than its rest state,
+ * which is the same bug with an extra step. Two classes plus :hover outweighs
+ * the utility's one, so this wins without !important.
+ *
+ * Text on the GOLD accent is the mirror image. Gold is a light surface in both
+ * themes, but text-foreground flips to parchment in dark, leaving 1.81:1 on
+ * the "Back to the table" and "Taste blind" buttons -- the worst contrast in
+ * the app. Those labels take a fixed dark ink instead. */
+.dark .text-primary {
+  color: var(--primary-ink);
 }
-.dark a.text-primary:hover {
-  color: color-mix(in oklab, var(--link) 80%, transparent);
+.dark .text-primary:hover {
+  color: color-mix(in oklab, var(--primary-ink) 80%, transparent);
+}
+.dark .bg-gold.text-foreground,
+.dark .bg-gold .text-foreground {
+  color: var(--on-accent);
 }
 
 @layer base {

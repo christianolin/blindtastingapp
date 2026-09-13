@@ -450,7 +450,7 @@ function FixButton({
         "relative h-7 rounded-[7px] px-[11px] text-[11.5px] font-bold after:absolute after:-inset-x-1 after:-inset-y-2 after:content-['']",
         tone === "dark"
           ? "border-gold-light bg-transparent text-gold-light hover:bg-primary-foreground/10 hover:text-gold-light"
-          : "border-gold-deep bg-card text-primary hover:border-gold hover:bg-white hover:text-primary",
+          : "border-gold-deep bg-card text-primary hover:border-gold hover:bg-surface-raised hover:text-primary",
       )}
     >
       Fix
@@ -508,7 +508,7 @@ function RecoveryRow({
     "h-auto min-h-11 flex-1 gap-[6px] rounded-[9px] px-2 py-[11px] text-[12.5px] font-semibold",
     dark
       ? "border-primary-foreground/30 bg-transparent text-primary-foreground hover:border-gold-light hover:bg-primary-foreground/10 hover:text-primary-foreground"
-      : "border-border bg-card text-primary hover:border-gold hover:bg-white hover:text-primary",
+      : "border-border bg-card text-primary hover:border-gold hover:bg-surface-raised hover:text-primary",
   );
   return (
     <div className="flex flex-col gap-[7px]">
