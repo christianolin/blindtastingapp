@@ -7,6 +7,7 @@ import type {
   TastingStatus,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
+import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
 import { emptyDraft, missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
 import {
   draftFromAnswerKey,
@@ -145,6 +146,9 @@ export async function findOrCreateProducer(
  * The one permission check every insert helper runs first (spec §D.4 #1; D13;
  * scan-7, sources-5, entry-2):
  * - a CLOSED tasting refuses every add;
+ * - a semi-blind flight is fixed once the tasting starts — no add (Q7,
+ *   flight-glass-rules.ts's semiBlindAddRefusal): a new glass would join the
+ *   candidate list guests already see in the same refresh;
  * - bring-your-own needs the caller's JOINED participant row, which becomes the
  *   glass's contributor (any number of bottles per person, including none);
  * - host-provides needs the host.
@@ -163,6 +167,11 @@ export async function resolveTastingAdder(
   if (error) return { error: error.message };
   if (!tasting) return { error: TASTING_NOT_FOUND };
   if (tasting.status === "CLOSED") return { error: TASTING_CLOSED };
+  const semiBlindRefusal = semiBlindAddRefusal({
+    revealMode: tasting.reveal_mode,
+    tastingStatus: tasting.status,
+  });
+  if (semiBlindRefusal) return { error: semiBlindRefusal };
 
   let contributorParticipantId: string | null = null;
   if (tasting.wine_source === "PARTICIPANT_CONTRIBUTED") {
