@@ -26397,6 +26397,15 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.saale-unstrut",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "saale-unstrut",
+    "normalized_checksum_sha256": "80208FA438035E8AC4E217CF3340C00372E6BFA4E9F48F9EFFE4014D826DF984",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "italy",
     "boundary_method": "MANUAL",
     "source_feature_id": "georef-comune-dissolve:ITA",

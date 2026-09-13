@@ -50,7 +50,8 @@ const WANTED = {
   Franken: { slug: "franken", states: ["BY"] },
   Baden: { slug: "baden", states: ["BW"] },
   Württemberg: { slug: "wuerttemberg", states: ["BW"] },
-  "Saale-Unstrut": { slug: "saale-unstrut", states: ["ST", "TH"] },
+  // Brandenburg too: four Gemarkungen of Stadt Werder/Havel, ~90 km detached.
+  "Saale-Unstrut": { slug: "saale-unstrut", states: ["ST", "TH", "BB"] },
   Sachsen: { slug: "sachsen", states: ["SN"] },
 };
 
@@ -133,29 +134,66 @@ function sectionLines(text) {
   if (start < 0) return null;
   let end = lines.findIndex((l, i) => i > start && SECTION_END.test(l));
   if (end < 0) end = Math.min(lines.length, start + 240);
-  return lines.slice(start + 1, end).map((l) => l.replace(/\s+/g, " ").trim());
+  return lines.slice(start + 1, end)
+    // The PDFs carry SOFT HYPHENS, which pdftotext renders as ¬ (U+00AC).
+    // Left in, "Bur¬gen¬land-kreis" is not a place name and resolves to
+    // nothing. They are typographic, never part of the name.
+    .map((l) => l.replace(/¬/g, ""))
+    .map((l) => l.replace(/\s+/g, " ").trim());
+}
+
+// A word broken across a line break rejoins: "...Landkreisen Burgenland-" +
+// "kreis, Harz..." is one Kreis and two others, not three fragments.
+//
+// The negative lookahead is not optional. German suspends a shared stem with a
+// trailing hyphen -- "Ober- und Unterbalbach" is two Gemarkungen -- and
+// joining that pair yields "Oberund", destroying both.
+function dehyphenate(body) {
+  return body
+    .replace(/(\p{L})-\s+(?!und\b|oder\b|bzw\b|sowie\b|bis\b)(\p{Ll})/gu, "$1$2")
+    // "der Stadt Werder/" + "Havel" is one name broken at the slash.
+    .replace(/\/\s+(?=\p{Lu})/gu, "/");
 }
 
 function parseSection(text) {
   const lines = sectionLines(text);
   if (!lines) return { shape: "NO_SECTION" };
-  const body = lines.join(" ");
+  const body = dehyphenate(lines.join(" "));
 
   if (NARRATIVE_HINT.test(body) && !FLAT_LEAD.test(body)) {
     return { shape: "NARRATIVE", places: [] };
   }
 
   if (KREIS_ONLY_LEAD.test(body)) {
-    // "... in den Landkreisen A, B, C des Landes X, in Y in den Landkreisen
-    // D, E ..." -- take every run between a "Landkreisen" lead and the next
-    // clause, plus the named kreisfreie Städte.
+    // Saale-Unstrut is delimited at three different levels in one sentence, and
+    // flattening them loses what each one means:
+    //
+    //   Landkreise        five in Sachsen-Anhalt, five in Thüringen
+    //   kreisfreie Städte Jena and Erfurt
+    //   Ortsteile         Schöndorf and Tiefurt, within Weimar
+    //   Gemarkungen       Werder/Havel, Phöben, Plessow and Neu Töplitz, in
+    //                     Brandenburg, ~90 km from the rest of the region
+    //
+    // The last two are sub-municipal, so their own boundaries are cadastral
+    // rather than administrative. They are captured separately and NOT mixed
+    // into the Kreis list, because clipping to a Kreis and clipping to an
+    // Ortsteil are different claims.
     const kreise = [];
     for (const m of body.matchAll(/Landkreisen\s+([^.]+?)(?:\s+des\s+Landes|\s+in\s+[A-ZÄÖÜ]|,\s*in\s|\.|$)/g)) {
-      kreise.push(...splitNames(m[1].replace(/­/g, ""), "Landkreis").map((g) => g.name));
+      kreise.push(...splitNames(m[1], "Landkreis", true).map((g) => g.name));
     }
     const staedte = [...body.matchAll(/kreisfreien\s+Städten\s+([^.]+?)(?:\.|$)/g)]
-      .flatMap((m) => splitNames(m[1], "Stadt").map((g) => g.name));
-    return { shape: "KREIS_ONLY", places: [...new Set([...kreise, ...staedte])], level: "kreis" };
+      .flatMap((m) => splitNames(m[1], "Stadt", true).map((g) => g.name));
+    const ortsteile = [...body.matchAll(/in\s+([A-ZÄÖÜ][\wäöüß-]*)\s+in\s+den\s+Ortsteilen\s+([^.]+?)(?:\s+sowie|\.|$)/g)]
+      .flatMap((m) => splitNames(m[2], m[1], true).map((g) => ({ name: g.name, within: m[1] })));
+    const gemarkungen = [...body.matchAll(/Gemarkungen\s+([^.]+?)\s+der\s+Stadt\s+([^,.]+?)\s+im\s+Landkreis/g)]
+      .flatMap((m) => splitNames(m[1], m[2], true).map((g) => ({ name: g.name, within: m[2].trim() })));
+    return {
+      shape: "KREIS_ONLY",
+      places: [...new Set([...kreise, ...staedte])],
+      ortsteile, gemarkungen,
+      level: "kreis",
+    };
   }
 
   if (FLAT_LEAD.test(body)) {
@@ -197,8 +235,12 @@ function parseSection(text) {
     : { shape: "UNPARSED", places: [] };
 }
 
-function splitNames(s, kreis) {
-  return s.split(",")
+// `splitUnd` is off by default: in the flat Baden / Württemberg runs a name may
+// legitimately carry "und" ("Ober- und Unterbalbach"), so only the prose-shaped
+// Saale-Unstrut sentence, where "Jena und Erfurt" is two kreisfreie Stadte,
+// asks for it.
+function splitNames(s, kreis, splitUnd = false) {
+  return s.split(splitUnd ? /,|\bund\b/ : ",")
     .map((n) => n.replace(/\.$/, "").trim())
     .filter((n) => n && n.length > 1 && !/^(und|sowie)$/i.test(n))
     .map((name) => ({ name, kreis }));
@@ -228,6 +270,8 @@ for (const [protectedName, cfg] of Object.entries(WANTED)) {
     places: parsed.places ?? [],
     ...(parsed.kreise ? { kreise: parsed.kreise } : {}),
     ...(parsed.in_kreis ? { in_kreis: parsed.in_kreis } : {}),
+    ...(parsed.ortsteile?.length ? { ortsteile: parsed.ortsteile } : {}),
+    ...(parsed.gemarkungen?.length ? { gemarkungen: parsed.gemarkungen } : {}),
     ...(parsed.shape === "NARRATIVE"
       ? { buildable: false, why: "The specification delimits the zone as metes and bounds -- roads, river banks, a named Einzellage edge -- and names no Gemeinden. There is nothing to resolve against an administrative register, and inferring a place list from the prose is the exact failure the Spanish and Italian audits existed to remove." }
       : { buildable: true }),
