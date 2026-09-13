@@ -110,7 +110,7 @@ export function InvitationRow({
             onClick={() => onRespond(row.tastingId, "accept")}
             className={cn(
               BUTTON,
-              "bg-primary px-[13px] text-primary-foreground hover:bg-[#4A1523] max-md:px-[11px]",
+              "bg-primary px-[13px] text-primary-foreground hover:bg-primary-hover max-md:px-[11px]",
             )}
           >
             {labels.accept}
