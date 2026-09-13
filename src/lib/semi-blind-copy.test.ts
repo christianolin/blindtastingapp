@@ -77,6 +77,11 @@ describe("matchRefusalSentence (BT-S2)", () => {
     expect(matchRefusalSentence({ message: "this glass is locked in" }, ctx)).toBe("LOCKED-IN");
     expect(matchRefusalSentence({ message: "matching is closed" }, ctx)).toBe("Matching is closed.");
   });
+  it("M8's lock-pin refusal is the locked-in sentence, not the capitalised raw default", () => {
+    // `guesses_refuse_locked_edit` (M8): a lock racing an assign on a glass that had no row yet.
+    expect(matchRefusalSentence({ message: "this guess is locked in — change it first", details: null }, ctx)).toBe("LOCKED-IN");
+    expect(matchRefusalSentence({ message: " This guess is locked in — change it first " }, ctx)).toBe("LOCKED-IN");
+  });
 });
 
 describe("the reveal (SB4)", () => {
