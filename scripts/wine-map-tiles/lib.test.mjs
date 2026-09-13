@@ -223,6 +223,15 @@ test("the German namespaces resolve to their own credits", () => {
   // specification rather than a state Weinbergsrolle, so they carry their own
   // credit naming both the survey authority and the register.
   assert.equal(attributionKeyFor("DE_SPEC_ATKIS_WEINBAU"), "de-spec-atkis");
+  // Every state whose survey data is in that namespace has to be named in the
+  // credit, because dl-de/by-2-0 and CC BY 4.0 both pay for the data in
+  // attribution. Saale-Unstrut alone added three. Adding a state's geometry
+  // without adding its authority here puts the map in breach, and nothing else
+  // in the build notices.
+  for (const authority of [/Bayerische Vermessungsverwaltung/, /LVermGeo Sachsen-Anhalt/,
+                           /TLBG Th/, /LGB Brandenburg/, /eAmbrosia/]) {
+    assert.match(ATTRIBUTION.DE_SPEC_ATKIS_WEINBAU.text, authority);
+  }
   assert.match(ATTRIBUTION.BKG_VG250.text, /BKG/);
   assert.match(ATTRIBUTION.LWK_RLP_WEINLAGEN.text, /Weinbergsrolle/);
 });
