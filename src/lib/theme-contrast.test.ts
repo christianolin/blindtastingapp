@@ -9,7 +9,12 @@ import { describe, expect, it } from "vitest";
 //
 // WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large text and UI boundaries.
 
-const CSS = readFileSync("src/app/globals.css", "utf8");
+// Comments are stripped BEFORE parsing. The declaration regex is naive by
+// design -- it only has to read this one file -- but prose like "one step above
+// --card: inputs, panels..." inside a comment reads as a declaration to it, and
+// silently redefines the token with the rest of the paragraph. That happened,
+// and every ratio in the file went undefined at once.
+const CSS = readFileSync("src/app/globals.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 function block(selector: string): Record<string, string> {
   const m = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(CSS);
@@ -78,6 +83,17 @@ describe.each([
     expect(ratio(t, "--primary-foreground", "--primary")).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("the raised surface carries body text and placeholders", () => {
+    // --surface-raised is inputs, dropdown panels and the new-tasting rows.
+    // It was `bg-white` at 41 call sites, which rendered a literal white panel
+    // on the near-black page.
+    //
+    // Placeholder text on it is asserted for DARK below, not here: in light it
+    // is 2.92:1, the same shipped shortfall the placeholder block records, and
+    // renaming the class did not cause it -- bg-white was already #ffffff.
+    expect(ratio(t, "--foreground", "--surface-raised")).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("labels on the gold accent stay readable, in both themes", () => {
     // Gold is a LIGHT surface whichever theme is on. Letting its label follow
     // --foreground put parchment on gold in dark: 1.81:1, the worst contrast
@@ -101,6 +117,10 @@ describe("the placeholder shades, which carry real text", () => {
       expect(ratio(dark, token, "--background")).toBeGreaterThanOrEqual(4.5);
       expect(ratio(dark, token, "--card")).toBeGreaterThanOrEqual(4.5);
     }
+    // The raised surface is where placeholder text most often actually sits:
+    // it is the input background. #2f251e was chosen because it is the lightest
+    // value in that range that keeps this above AA.
+    expect(ratio(dark, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(4.5);
   });
 
   // LIGHT IS A KNOWN SHORTFALL, recorded rather than hidden. Measured on the
@@ -121,6 +141,10 @@ describe("the placeholder shades, which carry real text", () => {
     // Floors at the values measured 2026-09-14, so a regression still fails.
     expect(ratio(light, "--placeholder", "--card")).toBeGreaterThanOrEqual(2.7);
     expect(ratio(light, "--placeholder-soft", "--card")).toBeGreaterThanOrEqual(1.8);
+    // Same shortfall on the raised surface, which is the input background and
+    // so where it is most visible: #a79574 on #ffffff.
+    expect(ratio(light, "--placeholder", "--surface-raised")).toBeLessThan(4.5);
+    expect(ratio(light, "--placeholder", "--surface-raised")).toBeGreaterThanOrEqual(2.9);
   });
 });
 

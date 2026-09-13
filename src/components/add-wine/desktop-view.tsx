@@ -221,7 +221,7 @@ export function DesktopView({
         {/* Search leads. */}
         <div className="flex flex-col gap-[6px]">
           {leadLine ? <p className="text-[12px] font-semibold">{leadLine}</p> : null}
-          <label className="flex items-center gap-[10px] rounded-[11px] border-[1.5px] border-primary bg-white p-[13px_14px] focus-within:ring-3 focus-within:ring-ring/40">
+          <label className="flex items-center gap-[10px] rounded-[11px] border-[1.5px] border-primary bg-surface-raised p-[13px_14px] focus-within:ring-3 focus-within:ring-ring/40">
             <Search className="size-[17px] shrink-0 text-primary" aria-hidden />
             <Input
               ref={inputRef}
@@ -251,7 +251,7 @@ export function DesktopView({
         </div>
 
         {q ? (
-          <div className="overflow-hidden rounded-[12px] border border-border bg-white">
+          <div className="overflow-hidden rounded-[12px] border border-border bg-surface-raised">
             {rows.length > 0 ? (
               <ul id={listId} aria-label="Search results">
                 {rows.map((row, i) => {
@@ -448,7 +448,7 @@ export function DesktopView({
             type="button"
             onClick={onFooterButton}
             disabled={busy}
-            className="ml-auto min-h-11 shrink-0 rounded-[9px] border border-border bg-card px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors hover:border-gold hover:bg-white disabled:opacity-60"
+            className="ml-auto min-h-11 shrink-0 rounded-[9px] border border-border bg-card px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors hover:border-gold hover:bg-surface-raised disabled:opacity-60"
           >
             {matrix.footer.button}
           </button>
@@ -461,7 +461,7 @@ export function DesktopView({
 // A white face, so the button reads the same on the focused row's tint as on a
 // plain or hovered one. Shared by the button and its link variant.
 const ROW_ACTION_CLASS =
-  "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-white px-[14px] py-2 text-[12.5px] font-semibold text-primary transition-colors hover:border-gold";
+  "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-surface-raised px-[14px] py-2 text-[12.5px] font-semibold text-primary transition-colors hover:border-gold";
 
 /**
  * A result row's inline action — one button for every row of every add-wine
@@ -547,7 +547,7 @@ function Tile({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex min-h-11 flex-1 flex-col justify-center gap-1 rounded-[12px] border border-border bg-white p-[14px] text-left transition-[border-color,box-shadow] hover:border-gold hover:shadow-[0_6px_14px_-8px_rgba(42,33,30,.5)] disabled:opacity-60"
+      className="flex min-h-11 flex-1 flex-col justify-center gap-1 rounded-[12px] border border-border bg-surface-raised p-[14px] text-left transition-[border-color,box-shadow] hover:border-gold hover:shadow-[0_6px_14px_-8px_rgba(42,33,30,.5)] disabled:opacity-60"
     >
       <span className="text-[14px] font-semibold">{title}</span>
       <span className="text-[12px] text-muted-foreground">{subtitle}</span>

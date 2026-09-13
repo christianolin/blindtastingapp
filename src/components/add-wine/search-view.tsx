@@ -129,7 +129,7 @@ export function SearchView({
     <div className="flex min-h-full flex-col">
       {/* Search row — stays put while the list scrolls under it. */}
       <div className="sticky top-0 z-10 flex shrink-0 items-center gap-[9px] bg-card p-[11px_16px] md:px-[22px]">
-        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-[9px] rounded-[11px] border-[1.5px] border-primary bg-white px-[13px]">
+        <div className="flex min-h-11 min-w-0 flex-1 items-center gap-[9px] rounded-[11px] border-[1.5px] border-primary bg-surface-raised px-[13px]">
           <label htmlFor={inputId} className="flex shrink-0 items-center">
             <Search className="size-4 text-primary" aria-hidden />
             <span className="sr-only">Search wines</span>

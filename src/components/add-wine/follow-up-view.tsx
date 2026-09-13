@@ -46,7 +46,7 @@ export function FollowUpView({ followUp, onCellar, onNote, onDone }: FollowUpVie
           type="button"
           variant="ghost"
           onClick={onDone}
-          className="h-auto min-h-11 w-full justify-start rounded-[11px] border border-dashed border-border px-[14px] py-3 text-left text-[13.5px] font-normal whitespace-normal text-muted-foreground hover:border-gold hover:bg-white hover:text-foreground"
+          className="h-auto min-h-11 w-full justify-start rounded-[11px] border border-dashed border-border px-[14px] py-3 text-left text-[13.5px] font-normal whitespace-normal text-muted-foreground hover:border-gold hover:bg-surface-raised hover:text-foreground"
         >
           Done — add another wine
         </Button>
@@ -61,7 +61,7 @@ function FollowUpRow({ title, subtitle, onClick }: { title: string; subtitle: st
       type="button"
       variant="outline"
       onClick={onClick}
-      className="h-auto min-h-11 w-full justify-start gap-[11px] rounded-[11px] border-gold bg-background px-[14px] py-[13px] text-left whitespace-normal text-foreground hover:bg-white hover:text-foreground"
+      className="h-auto min-h-11 w-full justify-start gap-[11px] rounded-[11px] border-gold bg-background px-[14px] py-[13px] text-left whitespace-normal text-foreground hover:bg-surface-raised hover:text-foreground"
     >
       <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
         <span className="text-[14px] font-semibold">{title}</span>

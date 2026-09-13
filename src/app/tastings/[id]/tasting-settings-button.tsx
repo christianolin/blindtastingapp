@@ -49,7 +49,7 @@ export function TastingSettingsButton({
         <button
           type="button"
           onClick={openSheet}
-          className="flex min-h-11 shrink-0 items-center gap-[7px] rounded-[9px] border-[1.5px] border-primary bg-card px-[13px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-white md:pointer-fine:min-h-0"
+          className="flex min-h-11 shrink-0 items-center gap-[7px] rounded-[9px] border-[1.5px] border-primary bg-card px-[13px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-surface-raised md:pointer-fine:min-h-0"
         >
           <Settings className="size-4" aria-hidden />
           Tasting settings

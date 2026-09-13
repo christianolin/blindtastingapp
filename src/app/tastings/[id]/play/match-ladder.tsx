@@ -231,7 +231,7 @@ export function MatchLadder({
               className={cn(
                 "flex min-h-[56px] w-full items-center gap-[11px] rounded-[11px] px-[13px] py-3 text-left transition-colors",
                 answered
-                  ? "border border-border bg-white md:hover:bg-background"
+                  ? "border border-border bg-surface-raised md:hover:bg-background"
                   : "border border-dashed border-border bg-card md:hover:bg-background",
               )}
             >

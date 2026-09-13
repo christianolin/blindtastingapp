@@ -33,6 +33,7 @@
   --color-border-strong: var(--border-strong);
   /* Dark-means-live handoff (BT-D1, spec §6.3 item 1). */
   --color-surface-deep: var(--surface-deep);
+  --color-surface-raised: var(--surface-raised);
   --color-primary-hover: var(--primary-hover);
   --color-ink-photo: var(--ink-photo);
   --color-ink-caption: var(--ink-caption);
@@ -139,6 +140,12 @@
      surface (pinned bars, header strips) and the bordeaux hover step, each
      defined for both the parchment and the dark surface below. */
   --surface-deep: #ede4d1;
+  /* One step ABOVE --card: inputs, dropdown panels, the rows in the new-tasting
+     flow. This was written as `bg-white` at 41 call sites, which is a colour
+     and not a role -- and a literal white panel on a near-black page is exactly
+     what that produces in dark. The lift over --card is deliberately slight
+     here (1.07) and stays slight there (1.13). */
+  --surface-raised: #ffffff;
   --primary-hover: #4a1523;
   --chart-1: #5c1a2b;
   --chart-2: #c3a25b;
@@ -198,6 +205,10 @@
      flows tokens completed for the dark surface — a miss turns miss-red, a
      hover lifts, gold-on-dark keeps reading gold. */
   --surface-deep: #15100d;
+  /* Warm, one step up from --card, NOT lighter-of-the-light. #2f251e is also
+     the only candidate in that range that keeps --placeholder on it at AA
+     (4.55:1); #302620 and up drop the placeholder text below 4.5. */
+  --surface-raised: #2f251e;
   --primary-hover: #383663;
   --gold-dark: #d4af6a;
   --gold-light: #d4af6a;

@@ -46,7 +46,7 @@ export function AboutBand({ className }: { className?: string }) {
           bottle leaves you a little sharper than the last.
         </p>
         <div className="mt-0.5 flex flex-wrap items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-primary bg-card px-4 py-2 text-[13px] font-semibold text-primary transition-colors group-hover:bg-white">
+          <span className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-primary bg-card px-4 py-2 text-[13px] font-semibold text-primary transition-colors group-hover:bg-surface-raised">
             About Blindr
             <span className="text-[14px] leading-none" aria-hidden>
               ›
