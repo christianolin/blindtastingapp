@@ -194,10 +194,10 @@ const CASES: Case[] = [
   },
   {
     entry: 13, file: "vidal-fleury-2020.json", labelReadId: "828c9403-1a51-4e9e-a752-b105ae2c0708",
-    why: "producer hit by name, but on the folded twin 'Vidal Fleury' (no catalog wine), not 'Vidal-Fleury': both link to Rhône and the tie-break goes by name (spec §B.7) — a duplicate row for the owner",
+    why: "producer hit by name on 'Vidal-Fleury', the copy holding the catalog wine: the exact spelling wins the folded tie (20260914112500, owner approval 3)",
     resolved: {
       country: "France", region: "Rhône", appellation: "Ventoux AOC",
-      producer: existing("9f9c976f-f10f-421e-824c-17c4d86978dc", "Vidal Fleury"),
+      producer: existing("58116bac-f5d6-43fa-bc89-8a32147049f9", "Vidal-Fleury"),
       grapes: [["existing", "Grenache", null], ["existing", "Syrah", null]],
       vintage: year(2020), colour: "RED", style: "STILL", designation: null, missing: [],
     },
@@ -278,7 +278,7 @@ describe("what the live misses turn on", () => {
     expect([folded("borges"), folded("borgesirmao"), folded("borgessociedadedosvinhosborgessa")])
       .toEqual([["Borges"], ["Borges & Irmao"], ["Borges (Sociedade dos Vinhos Borges, S.A.)"]]);
     expect((await replay(read("sociedade-dos-vinhos-borges-2004.json"))).producer).toEqual(pending("Sociedade dos Vinhos Borges"));
-    // #13: two Rhône-linked rows fold to "vidalfleury"; the name tie-break picks "Vidal Fleury".
+    // #13: two Rhône-linked rows fold to "vidalfleury"; the exact spelling picks "Vidal-Fleury".
     expect(folded("vidalfleury")).toEqual(["Vidal Fleury", "Vidal-Fleury"]);
     // #15: "Bodegas Tridente" (Castilla y Leon) is never reached from "Tridente": title words are never stripped.
     expect(folded("bodegastridente")).toEqual(["Bodegas Tridente"]);
