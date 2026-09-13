@@ -1200,8 +1200,8 @@ S7 (console, laptop), S7b (console, phone).
    - **"Reveal everything"** as an inline two-tap confirm in the button: the first tap arms it and relabels it "Tap again to reveal everything" for 5 seconds; the second tap submits `revealFull`. `window.confirm` goes. Pure `revealEverythingState(armedAt, now)`.
    - "Skip to glass {N} →".
    - **Not-locked line**, they/them for every name (`notLockedLine(names, phone)` in new `src/lib/console-copy.ts`):
-     - one name: "{name} has not locked in. They are scored on whatever they already answered — nothing at all if they have not started.";
-     - two: "{a} and {b} have not locked in. They are scored on whatever they already answered — nothing at all if they have not started."; three or more: "{a}, {b} and {n} others have not locked in. …";
+     - one name: "{name} has not locked in. They are scored on whatever they have already answered — nothing at all if they have not started.";
+     - two: "{a} and {b} have not locked in. They are scored on whatever they have already answered — nothing at all if they have not started."; three or more: "{a}, {b} and {n} others have not locked in. …";
      - phone: "{name} is scored on what they have answered — nothing if they have not started." / "{a} and {b} are scored on what they have answered — nothing if they have not started."
 5. **Standings and facts** (right rail on laptops; cards on phones).
    - Standings with per-round deltas: "{rank} {name} +{lastRoundPoints} {total}", under the existing "after {step}" / "after glass N" label. Phone: the top two plus "All {n} ›", which opens a popover (dark through `useLiveTheme`) with the full list.
@@ -2661,7 +2661,7 @@ Rule 1: nobody sees an unrevealed wine they did not add — not in a lobby, a no
 - **The README's radii are not applied app-wide** (`XCUT-22`): retuning `--radius` would restyle every shadcn surface outside this handoff (catalog, cellar, Overview, and the add-wine sheet, which keeps its own look under B5). New tasting surfaces use the README radii through explicit classes.
 - **The grape shortlist reads "Common grapes in {region}"** (S9), replacing "Grown in {region}"; the handoff's note that no grape-to-region table exists is stale, its copy is not.
 - **A reload of a dismissed result never flashes it:** the page renders its header until it hydrates, then the record. localStorage stays the store (B5).
-- **Open for the main session:** the not-locked line pins the ledger's "They are scored on whatever they already answered", while the canvas (S7) reads "she has already answered". If the ledger's missing "have" is a slip, the ledger line and `notLockedLine` change together.
+- **Settled by the main session (2026-09-13):** the not-locked line reads "They are scored on whatever they have already answered — nothing at all if they have not started." The ledger had dropped the canvas's "has"; the ledger, this spec and BT-P4 now agree.
 - **Taste & Rate's R5 row** routes a LIVE semi-blind host-provides host to `/host` once `startLandsOnConsole` includes it (§2.3 item 13); the main session updates that R-ledger row.
 - **(spec copy)** strings, all marked in place: the paused bands; "Pause is for live tastings."; the flight refusals (a later glass seen; the semi-blind flight fixed); "The list of tonight's wines opens when {host} starts."; Skip's refusal; the settings lock footer and eyebrow; "Swap glass {n}" / "Swap into glass {n}"; "Couldn't match {n} lines"; the people-search empty line; "Your bottle", "locked", the SB4 miss line and the data-driven pool sentences; the ASYNC guest-lobby lines; the host's result line; "All saved to your ratings"; the hand-hosting sentences; the place length error; the Danish hidden-note hint.
 

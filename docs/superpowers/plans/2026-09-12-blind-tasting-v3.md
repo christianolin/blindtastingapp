@@ -2080,7 +2080,7 @@ describe("guessOrderAllows (refinement 6)", () => {
 - `console-copy.ts`: the not-locked line (they/them for every name), the paused band and refusals, the pour eyebrows, Skip, the "to go" chip, and the generic two-tap confirm (`twoTapState`, 5 seconds) that Reveal everything (BT-H2) and Delete the tasting (BT-L4) share.
 - `host-facts.ts`: "This glass" facts from revealed categories only, counted over eligible participants whose row has `locked_at` or `scored_at`. Its step keys are `RevealKey` from `./reveal-rows-math` (the `StepKey` union in `host/console.tsx` repeats it; BT-H2 switches the console to `RevealKey`). BT-H2 (host) and BT-R1 (participants) both use it.
 - `console-copy.ts` also holds `stepRevealApplies` (spec §7.3 item 10; Q8), the one rule for which tastings reveal attribute by attribute, and `nextChipLabel` takes a null count: the bare "Next" at step 0, after M1.
-- **Pending for the main session:** `notLockedLine` pins the ledger's "They are scored on whatever they already answered"; the canvas (S7:862) reads "she has already answered". If the main session confirms the ledger dropped "have" by accident, the ledger line and this string change together (spec §19.2).
+- **Settled (2026-09-13):** `notLockedLine` pins "They are scored on whatever they have already answered — nothing at all if they have not started." (the canvas's "has" restored in the ledger and spec).
 
 **Interfaces — produces**
 ```ts
@@ -2136,7 +2136,7 @@ import {
 } from "./console-copy";
 
 describe("notLockedLine (S7, S7b)", () => {
-  const tail = "They are scored on whatever they already answered — nothing at all if they have not started.";
+  const tail = "They are scored on whatever they have already answered — nothing at all if they have not started.";
   it("laptop", () => {
     expect(notLockedLine([], { phone: false })).toBeNull();
     expect(notLockedLine(["Maja"], { phone: false })).toBe(`Maja has not locked in. ${tail}`);
