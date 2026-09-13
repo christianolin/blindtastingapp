@@ -32,7 +32,7 @@ The evening, end to end · create → lobby → invite → play → reveal → r
 - `lane-n/probe-092000.mjs`: the behavioural-probe pattern every migration task copies.
 - Upstream: `docs/superpowers/plans/2026-09-12-add-wine-v2-scan-and-flow-fixes.md` (Global Constraints, Amendments 1–20, the G1–G4 and V1–V3 gates), `.superpowers/add-wine-v2/owns.json`, `.superpowers/taste-rate/decisions.md` (R4, R5, R6), `.superpowers/queue.md` (push procedure and the F7-revert window).
 
-**Base:** `master` at `3d4c270` (after add-wine amendment 20 and L1; F11 and T10 are committed). F12 is uncommitted in the tree; F13, T12 and S1–S7 are queued in wave C, then G1 → (G2 ∥ G4) → G3 → V1 → V2 → V3. Taste & Rate R6 waits for add-wine S5c. Live `supabase_migrations.schema_migrations` ends at `20260913180000` (`germany_franken_promote`); the local `origin/master` ref (`5a44457`) lags at `20260913160000` (read-only checks, 2026-09-13). BT-A0 restates this line when it runs.
+**Base:** `master` at `a925925` (BT-A0 ran at `8d4eb71`; restated here after the pre-apply hardening round 2 that followed it — BT-SQL4x, M5x2, M6x and P6x committed, refinement 25). Add-wine F1–F13, L1, S1–S7 and Taste & Rate R6 (`d11f9a6`) are committed; T1–T14 are committed. G1–G4 and V1–V3 are not yet in history. Live `supabase_migrations.schema_migrations` ends at `20260914113500` (add-wine's `producer_aliases`; M1–M3, `20260914090500`–`092500`, are live, M4–M10 are committed in the tree but not applied — read-only checks, 2026-09-13). The local `origin/master` ref is stale relative to both; restate it here once the main session fetches.
 
 **Id conventions:** blind-tasting tasks are `BT-…`. Add-wine v2 tasks appear as `AW-<id>` (for example `AW-S7`), Taste & Rate tasks as `TR-<id>`. Migrations are `M1`…`M10` as in spec §15, with M9 split into `M9a` and `M9b` (refinement 1).
 
@@ -132,7 +132,7 @@ Every task's requirements implicitly include this section.
   5. `npm run build`
 - **No push ahead of the database:** never push a commit whose code calls a migration object that is not live yet (check the BT-M log).
 - **M9b only after the deploy:** M9b is applied only after the production deployment of a commit containing BT-S5 and everything it depends on is Ready (BT-M9b).
-- **Compile-debt window:** while add-wine F7…S5c are committed but AW-S6 is not, push only green commits (queue.md; amendment 19). queue.md's procedure covers blind-tasting commits too: the integrate branch keeps the revert of F7 (`5a44457`) until S6 lands. Before AW-S6, cherry-pick green BT commits (wave 0–1's pure modules and migrations) onto integrate instead of merging master; once S6 lands, `git revert` the F7 revert on integrate first, then merge master.
+- **Compile-debt window: closed (BT-A0).** AW-S6 (`951e729`) is committed, so Working Rule 5's "From AW-S6 on, a bare `npx tsc --noEmit` must print nothing" branch now applies everywhere — confirmed: a bare `npx tsc --noEmit` prints nothing on the current tree. Historical, while the window was open: add-wine F7…S5c were committed but AW-S6 was not, so only green commits were pushed (queue.md; amendment 19); queue.md's procedure covered blind-tasting commits too, the integrate branch kept the revert of F7 (`5a44457`) until S6 landed, and green BT commits (wave 0–1's pure modules and migrations) were cherry-picked onto integrate instead of merging master. On S6 landing, `git revert` the F7 revert on integrate first, then merge master.
 - **Gate base:** when BT wave 0 starts, the main session records master's sha as `BT_BASE` in `.superpowers/blind-tasting/probes/live-applies.log`. Every BT-V gate that reads history reads only blind-tasting commits (`git log --grep='^feat(blind-tasting)'`), never a range that includes add-wine work.
 - **Lockfile:** the pre-existing `package-lock.json` diff is never committed and the working-tree file is never rewritten.
 
@@ -200,7 +200,7 @@ Every task's requirements implicitly include this section.
 24. **M8 binds the client roles only, and applies behind a deploy gate (main session, 2026-09-13; BT-SQL8x).**
     - `guesses_refuse_locked_edit` refuses a locked row's answer change only when `current_user` is `anon` or `authenticated`, or the request's JWT role (`request.jwt.claims`, the expression `auth.role()` uses) is one of them. A SECURITY DEFINER function or a foreign-key action that runs inside a client request therefore stays bound. `service_role`, and the owner or a superuser outside a client request, pass: maintenance that repoints `guesses` foreign keys (`scripts/dedupe-producer-orthographic-variants.mjs`, `scripts/fix-lwin-producer-titles.mjs`, data migrations) is never blocked by a locked row. Nothing in `src` writes `guesses` with the admin client. The rest of spec §8.4's SQL, the SET NULL exemption included, is unchanged.
     - M8 also pins `reveal_own_next_category`, the fourth live writer, and fails closed unless every function that inserts into or updates `guesses` is one of the four live writers or M9a's `assign_semi_blind_match` / `clear_semi_blind_match`, and unless only `authenticated`, `service_role` and the owner hold UPDATE on `guesses`.
-    - BT-M8 applies only once production runs BT-Y1, BT-S2 and BT-S3 (BT-SQL8 "Deploy gate"), because the deployed `submitGuess` and `submitAllMatchGuesses` rewrite locked rows. BT-S2 needs M9a live, so BT-M9a no longer waits for BT-M8, and M8's version then sits below the live tail (Global Constraints "Versions" allows it). BT-M9b still needs BT-M8. BT-SQL9's probe runs M9a's RPCs on locked glasses with M8 applied after M9a ("With M8"), and the pin's sentence needs no `matchRefusalSentence` case (BT-SQL8 "Deploy gate" check 3). This supersedes spec §15's M8 gate ("after add-wine V2") and §1.5's "needs no other gate" for M8.
+    - BT-M8 applies only once production runs BT-Y1, BT-S2 and BT-S3 (BT-SQL8 "Deploy gate"), because the deployed `submitGuess` and `submitAllMatchGuesses` rewrite locked rows. BT-S2 needs M9a live, so BT-M9a no longer waits for BT-M8, and M8's version then sits below the live tail (Global Constraints "Versions" allows it). BT-M9b still needs BT-M8. BT-SQL9's probe runs M9a's RPCs on locked glasses with M8 applied after M9a ("With M8"), and `matchRefusalSentence` maps the pin's sentence to `ctx.lockedIn` (BT-P6x, committed 3269919), so BT-S2 shows `LOCKED_EDIT_REFUSAL` (BT-SQL8 "Deploy gate" check 3). This supersedes spec §15's M8 gate ("after add-wine V2") and §1.5's "needs no other gate" for M8.
 25. **Pre-apply hardening round 2 (main session, 2026-09-13).** The decisions taken on the wave-2 reviews (BT-SQL4x, BT-SQL5x, BT-SQL8x, BT-SQL6, BT-SQL7, BT-SQL9) and the hardening round after them (M5x2, M6x, P6x), with what actually committed. M1–M3 are live; every migration below is committed and none is live yet, so BT-M4 onward still apply them in the BT-M order. The spec carries each change (§1.5, §3.4, §3.5, §4.4, §4.5, §5.3–§5.5, §7.4, §8.4, §9.4, §9.5, §10.4 (b), §15, §16, §19.1).
     - **M4: `joined_at` stamped once; no leaving and no delete after Start (BT-SQL4x, committed 4a09f6b).**
       - `tasting_participants_stamp_joined_at` stamps `now()` the first time a row becomes JOINED and keeps it on every later flip to JOINED. A guest who left before Start and rejoins keeps the first stamp, so the glasses revealed while they were away read as ordinary misses (0 against the maximum), not "You joined after this glass" (BT-P2, BT-R1, BT-R2). A DECLINED invitee who never joined is stamped on the first join.
@@ -219,7 +219,7 @@ Every task's requirements implicitly include this section.
       - M7 and M9a kept in step: only M7's `wines_pin_adder` md5 pin changed (in 7f832c5); the M9a file and its probe needed no change, and M9a's header note that a started semi-blind list stays complete holds once M6 is live.
       - Pending (main session): confirm the inclusive range (a revealed, mid-step or guessed glass "moved" to its own place is refused, probe Y7; skipping the range check when the place is unchanged would allow it), the server-appended position rather than a refusal, and the same-tasting contributor refusal, which cannot be relaxed later because `pin_tasting_participant_identity` never moves a participant row to another tasting.
       - BT-M6: before applying, re-run O1–O4, C1, K7, N8, W1, Y10, Q2, Q8 and Q13 against the then-committed write path. The apply writes `started_at` on three live tastings (42e8c830 and 295dc289 CLOSED, cd6c5ab8 IN_PROGRESS) and takes SHARE ROW EXCLUSIVE on `tastings` and ACCESS EXCLUSIVE on `wines`, so BT-M6 and BT-M7 expect to retry on a `lock_timeout` or a deadlock against live traffic (the M9a probe's chain hit both). The race probe (`20260914095500-flight-edits-race.mjs`) runs on a disposable local cluster.
-    - **M8: the client-role scope (BT-SQL8x, committed d3c0dce; refinement 24).** Spec §8.4's SQL now carries it verbatim, and spec §15 and §1.5 carry its deploy gate. P6x (committed 3269919) maps the pin's sentence "this guess is locked in — change it first" in `matchRefusalSentence` to the ladder's locked-in sentence, so refinement 24's "needs no `matchRefusalSentence` case" no longer holds (BT-SQL8 "Deploy gate" check 3 updated).
+    - **M8: the client-role scope (BT-SQL8x, committed d3c0dce; refinement 24).** Spec §8.4's SQL now carries it verbatim, and spec §15 and §1.5 carry its deploy gate. P6x (committed 3269919) maps the pin's sentence "this guess is locked in — change it first" in `matchRefusalSentence` to `ctx.lockedIn`, the ladder's locked-in sentence, so BT-S2 shows `LOCKED_EDIT_REFUSAL` (refinement 24's own "Deploy gate" check 3 bullet already states this).
     - **M7 and M9a (BT-SQL7, committed a069e8e; BT-SQL9, committed 43773f9).** Spec §7.4 and §16.1 row 13 now name every reader of `current_wine_id` and `paused_at`; spec §10.4 (b), §16.1 row 19 and the `database.types.ts` comment carry M9a's reviewed candidates rule (from Start every card once nothing is pending; until then only the cards of glasses the caller added).
     - **Hand-offs.**
       - BT-H1: `revealNextCategory`, `revealFull` and `revealWine` map a database error whose message is "The tasting is paused" (P0001 from M7's `wines_refuse_reveal_while_paused`, reached when a pause commits after the action's own check) to `PAUSED_REFUSAL`.
@@ -252,7 +252,6 @@ Every task's requirements implicitly include this section.
 | "One point for each glass you match · results after everyone has guessed" | `rulesSummary`, self-paced semi-blind (BT-C1) | first letter upper-cased when no flow word leads |
 | "Free · 1 pt a match", "1 pt a match · results at once" | `rulesSummaryShort` (BT-C1) | the spec writes only the guided phone line |
 | "Couldn't match 1 line" | `couldntMatchHeading(1)` (BT-P8) | the singular of the spec's "Couldn't match {n} lines" |
-| "Smagenote" (Danish for "Tasting note") | the hidden-note sheet eyebrow (BT-N1), only if the WSET dictionary has no such key | the spec gives Danish for the hint only; the owner reviews it |
 | "The tasting is not running." | `skipPlan` outside IN_PROGRESS (BT-H1) | the spec names no refusal for a Skip on a tasting that is not running |
 | "That glass is no longer the one pouring." | `skipPlan` with a stale glass or one past step 0 (BT-H1) | a second console tab can race the first |
 | "A guest who has joined stays in the tasting once it has started." | `tasting_participants_leave_guard` (M4; BT-SQL4x): after Start, the refusal the host gets for moving a guest's JOINED row out of JOINED, and any signed-in caller gets for deleting a JOINED row, the host's own included | the spec words only the guest's own refusal, "you can only leave before the tasting starts" |
@@ -475,7 +474,7 @@ Condition 3 holds for every pair except the shared files below, and each of thos
 | `src/app/globals.css` | T&R's pending `.wset-row` hairline (the R1 follow-up) and BT-D1, never at the same time; whichever lands second rebases on the other | F7 committed the file; the T&R lane left that one line waiting for it |
 | `src/app/taste/taste-archive-math.test.ts` | TR-R5 (committed) → BT-C1 | the "live semi-blind host" case flips with `startLandsOnConsole`; the main session updates the R-ledger's R5 row |
 | `src/app/overview/next-up-meta.ts` + test | Overview phone redesign (committed) → BT-Q1 | the place joins the phone meta line |
-| `src/components/add-wine/by-hand-actions.ts` | AW-F13 → AW-S5a → BT-R5 | `loadUnidentifiedWineDraft` |
+| `src/components/add-wine/by-hand-actions.ts` | AW-F13 → BT-R5 | `loadUnidentifiedWineDraft` (BT-A0: owns.json gives this file to F13 only, not also AW-S5a) |
 | `src/app/tastings/new/actions.ts` | AW-S6 → BT-C1 | S6 `listFlight`; C1 setup, place, poured region |
 | `src/components/new-tasting-sheet.tsx` | AW-S6 → BT-C1 → BT-C3 | C1 suggestions, footers; C3 friends and summaries |
 | `src/app/tastings/new/new-tasting-form.tsx` | BT-C1 → BT-L4 | C1 place row and chips; L4 `mode="settings"` |
@@ -507,7 +506,7 @@ Condition 3 holds for every pair except the shared files below, and each of thos
 | `src/components/add-wine/sheet-state.ts` + test | AW-F12 → AW-S5a → AW-S5b → BT-L3 → BT-R5 | the swap state and actions (add only); the preselect cases |
 | `src/components/add-wine/use-sheet-adds.ts` | AW-S5a → BT-L3 | adds routed to the swap |
 | `src/components/add-wine/by-hand-form.tsx` | AW-S3b → BT-L3 | the Swap and Remove rows |
-| `src/components/add-wine-context.tsx` | AW-S5c → TR-R6 → BT-L3 (only if BT-A0 finds the options are not forwarded whole) → BT-R5 | the provider |
+| `src/components/add-wine-context.tsx` | AW-S5c → TR-R6 → BT-R5 | the provider (BT-A0: `add-wine-context.tsx:238-242` already forwards `AddWineOpenOptions` whole, so BT-L3 does not own this file — dropped from the chain) |
 | `src/components/add-wine/actions.ts` | AW-F13 → BT-L3 → BT-N1 (only where tsc flags the nullable note id) | `swapFlightGlass`; the types fix |
 | `src/components/new-note-modal.tsx` | TR-R6 → BT-N1 → BT-R5 | R6 `onSaved`; the hidden-glass target; the unidentified target |
 | `src/lib/overview-data.ts` | BT-Q1 → BT-N1 | place; identity-less notes skipped in the ratings read |
@@ -517,13 +516,14 @@ Condition 3 holds for every pair except the shared files below, and each of thos
 
 | Consumer | Provider | Contract |
 |---|---|---|
-| AW-F13 (in flight) | BT-H1 | `maybeAutoRevealWine(supabase, wineId)` in `play/auto-reveal.ts` keeps its signature |
+| AW-F13 (committed a68833b) | BT-H1 | `maybeAutoRevealWine(supabase, wineId)` in `play/auto-reveal.ts` keeps its signature |
 | BT-A0 | AW-F12, AW-F13, AW-S5a, AW-S5b, AW-S5c, AW-S6, AW-S7, TR-R6 | every add-wine and Taste & Rate contract named in this table and in the Interfaces blocks, re-verified on the landed code |
 | BT-D2 | AW-S7 | the Wines card's content, `SheetFromQuery({ destination, canAddWine, editableWineIds })` and `?editWine=` |
 | BT-L1 | AW-F13 | `resolveTastingAdder`, `editRefusal` and the refusal constants, diffed against BT-P1 before delegating |
-| BT-L3 | AW-F12 and amendment 20 | `ByHandSession["origin"]` `{ kind: "glass"; wineId; incomplete }` (`sheet-state.ts:48`); `confirmQueue`, the landing rule, the seeded model-based test |
-| BT-R5 | AW-S5b | `initialSheetState({ destination, options, canScan, initialLot })` |
-| BT-R5 | AW-S5a | `loadCatalogWineDraft`, `openByHand` |
+| BT-L3 | AW-F12 and amendments 20–23 | `ByHandSession["origin"]` `{ kind: "glass"; wineId; incomplete }` (BT-A0: `sheet-state.ts:56`, not `:48`); `confirmQueue`, `parkedByHand`, the landing rule, `reduceSheet`/`replyIsCurrent`, and three seeded model-based tests (`sheet-state.test.ts:593`, `:1168`, `:1847`), not one |
+| BT-R5 | AW-S5b | `initialSheetState({ destination, options, canScan, initialLot })` — BT-A0: `initialLot` is `AddSource \| null` (`sheet-state.ts:581-586`), not `{ catalogWineId }`; `canScan` is `boolean \| null` (`null` = resolving) |
+| BT-R5 | AW-F13 | `loadCatalogWineDraft` (`add-wine/actions.ts:656`, BT-A0: not `by-hand-actions.ts`) |
+| BT-R5 | AW-F12 / AW-S5a | BT-A0: `openByHand` is a `SheetAction` sent through `adds.send` (`use-sheet-adds.ts:142`), not an exported function |
 | BT-R5, BT-N1 | BT-SQL5 | `save_wset_note` writes `unidentified_wine_id` and keeps an existing identity |
 | BT-Y3 | AW-F12 / AW-S6 | `useMediaQuery` exported from `src/components/add-wine/use-camera.ts` (BT-A0 confirms it survives S6) |
 | BT-H1, BT-H2 | BT-P2 | `eligibleForGlass` |
@@ -612,7 +612,7 @@ Condition 3 holds for every pair except the shared files below, and each of thos
   - AW-S5b: `initialSheetState({ destination, options, canScan, initialLot })` (BT-R5);
   - AW-S5a and AW-F13: `loadCatalogWineDraft`, `loadFlightGlassForEdit`, `openByHand`, `searchAddWine`, `addToFlight`, `saveFlightGlassCore`, `resolveTastingAdder` and the refusal constants in `tasting-wine-writes.ts` (BT-C2, BT-L1, BT-L3, BT-R5);
   - AW-F12 and amendment 20: `ByHandSession["origin"]`, `confirmQueue`, the landing rule and the seeded model-based test (BT-L3);
-  - AW-S6: the FlightStep write queue, its captions and waiting rows (BT-C1, BT-C2), and whether `src/components/add-wine/use-camera.ts` still exports `useMediaQuery` (BT-Y3; if not, BT-Y3 adds a neutral `src/lib/use-media-query.ts` to its OWNS);
+  - AW-S6: the FlightStep write queue, its captions and waiting rows (BT-C1, BT-C2); `src/components/add-wine/use-camera.ts` still exports `useMediaQuery` (`:34`) — confirmed by BT-A0, no `src/lib/use-media-query.ts` fallback needed (BT-Y3);
   - TR-R6: `NewNoteModal.onSaved`, the hidden-note sentence, and whether it adopted `safe-storage.ts` (BT-N1, BT-R5).
 - Re-anchor every `file:line` this plan and the spec cite in an add-wine-owned file.
 - Add a dated "BT-A0 amendments" list under Plan refinements (the add-wine plan's amendment pattern) for every contract that changed, and adjust the affected tasks' Does, OWNS and Depends on. The spec changes only in its line anchors; a changed decision goes to the owner report instead.
@@ -1051,7 +1051,7 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 **Does** (spec §8.4, B7; refinement 24 — BT-SQL8x, main session 2026-09-13)
 - The SQL of spec §8.4, including the exemption for `guessed_wine_id` becoming null on a locked row, plus the client-role scope below. No types change.
 - **Client roles only.** The trigger returns early unless `current_user` is `anon` or `authenticated`, or the request's JWT role is one of them (`coalesce(nullif(current_setting('request.jwt.claim.role', true), ''), nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')`, the expression `auth.role()` uses). A SECURITY DEFINER function or a foreign-key action runs as the owner inside the request, so the JWT half keeps it bound; a direct client write runs as `authenticated`, whatever its JWT claims. `service_role`, and the owner or a superuser outside any client request, pass.
-  - Checked before relying on it (read-only, 2026-09-13): `createAdminClient` has two call sites in `src` (`src/app/tastings/new/actions.ts:171`, `src/app/tastings/[id]/actions.ts:237`), and both only call `admin.auth.admin.inviteUserByEmail`. Every `from("guesses")` write in `src` uses the request's client, so nothing writes a guess with the service role on a user's behalf.
+  - Checked before relying on it (read-only, 2026-09-13): `createAdminClient` has two call sites in `src` (`src/app/tastings/new/actions.ts:175`, `src/app/tastings/[id]/actions.ts:237`), and both only call `admin.auth.admin.inviteUserByEmail`. Every `from("guesses")` write in `src` uses the request's client, so nothing writes a guess with the service role on a user's behalf.
   - What it frees: `scripts/dedupe-producer-orthographic-variants.mjs` (service-role key; `update({ producer_id })` and `update({ appellation_id })` over `guesses`), `scripts/fix-lwin-producer-titles.mjs` (pg as `postgres`; `update guesses set producer_id`), and data migrations through `scripts/scratch-apply.mjs` (as `postgres`). Every answer FK on `guesses` is NO ACTION on delete and on update, so only such maintenance repoints them.
 - Pre-assert:
   - `guesses` carries exactly the live non-internal triggers `guesses_block_after_reveal`, `guesses_pin_identity` and `guesses_set_updated_at` (read-only check 2026-09-13);
@@ -3322,7 +3322,7 @@ describe("normalisePlace (B12)", () => {
 - **`LiveShell`** (client), spec §6.3 item 2 verbatim: active renders `<div className="dark flex flex-1 flex-col bg-background text-foreground">` inside a context; inactive renders a fragment. `useLiveTheme()` reads the context.
 - **Popover:** `PopoverContent` adds the class `dark` when `useLiveTheme() === "dark"`. Keep `keepMounted`, `positionMethod="fixed"` and the touch `initialFocus` rule exactly as they are. `Dialog` is untouched (the add-wine sheet keeps its own look).
 - **Dates:** `LocalDateTime` gains `format?: "default" | "eyebrow" | "eyebrow-short" | "card"` and keeps its `useSyncExternalStore` server snapshot. The strings come from the pure `formatTastingDate(iso, format, timeZone?)`: English words, the viewer's time zone (undefined → the runtime's), 24-hour clock.
-- **Hover:** `invitation-row.tsx`'s `hover:bg-[#4A1523]` becomes `hover:bg-primary-hover`. The other raw hovers move with the tasks that own their files: BT-C1 (`new-tasting-sheet.tsx:590`), BT-C3 (`invite-step.tsx:80`), BT-L3 (`by-hand-form.tsx:376`, as `hover:text-primary-hover`), BT-Y2 (`field-picker.tsx:320`), BT-D2 (`page.tsx:427`, as it moves) and BT-S3 (`match-ladder.tsx`, deleted). Files no BT task owns — `src/components/wset/wset-sheet.tsx:67` (Taste & Rate), `src/components/overview/action-button.tsx:10` and `src/app/overview/invitation-row.tsx:67` (Overview) — go to their lanes as a follow-up the main session queues once BT-D1 lands; add-wine deletes `src/components/add-wine/scan-confirm.tsx`.
+- **Hover:** `invitation-row.tsx`'s `hover:bg-[#4A1523]` becomes `hover:bg-primary-hover`. The other raw hovers move with the tasks that own their files: BT-C1 (`new-tasting-sheet.tsx:590`), BT-C3 (`invite-step.tsx:80`), BT-Y2 (`field-picker.tsx:320`), BT-D2 (`page.tsx:575`, as it moves) and BT-S3 (`match-ladder.tsx`, deleted). BT-A0: `by-hand-form.tsx:376` no longer applies — S3b (`63fc436`) already removed every `#4A1523` from that file, so BT-L3 owns no raw hover here. Files no BT task owns — `src/components/wset/wset-sheet.tsx:67` (Taste & Rate), `src/components/overview/action-button.tsx:10` and `src/app/overview/invitation-row.tsx:67` (Overview) — go to their lanes as a follow-up the main session queues once BT-D1 lands; add-wine deletes `src/components/add-wine/scan-confirm.tsx`.
 
 **Interfaces — produces**
 ```ts
@@ -3392,7 +3392,7 @@ describe("formatTastingDate (S4 eyebrow, S5 card, S5b chip)", () => {
 **Does** (spec §6.3 item 3; §3 and §4 "the page split"; refinement 3; B2 "one running page", B5)
 - A refactor with two behaviour changes: everything below `AppHeader` on an IN_PROGRESS tasting renders inside `<LiveShell active>`, and the running view keeps the Wines card after Start for the host and for a JOINED bring-your-own contributor (below). No copy, layout or data change otherwise; later tasks restyle.
 - **Routing** (pure `view-route.ts`):
-  - reveal mode OPEN → `"open-board"` (the existing `open-board.tsx` branch; if AW-S7's page routes OPEN differently, encode what it does and adjust the test first);
+  - reveal mode OPEN and the tasting has started (`status !== "DRAFT"`) → `"open-board"` (BT-A0: S7 gates the existing `open-board.tsx` branch on `running && isOpen`, page.tsx:721, where `running = hasStarted` at page.tsx:111; a DRAFT OPEN tasting falls through to the DRAFT routing below, page.tsx's DRAFT branch at :821+, so this needs `status !== "DRAFT"` too, not a bare reveal-mode check);
   - status CLOSED → `"finished"` (an INVITED viewer's T4 "This tasting has finished" card renders first inside it);
   - viewer INVITED (not host) → `"invitation"`;
   - status DRAFT: JOINED non-host → `"guest-lobby"`; everyone else who can read the tasting → `"lobby"`;
@@ -3406,7 +3406,7 @@ describe("formatTastingDate (S4 eyebrow, S5 card, S5b chip)", () => {
   - the DRAFT host lobby layout (Start, cards, `TastingScanRegistrar`, `SheetFromQuery`) → `lobby-view.tsx`;
   - the INVITED card → `invitation-view.tsx`;
   - the JOINED guest's DRAFT layout → `guest-lobby.tsx`;
-  - the IN_PROGRESS board (navigator, standings aside, `PlayExperience`, `AutoRefresh`, `RevealSync`, registrar) → `running-view.tsx`, wrapped in `LiveShell`, **plus `WinesCard` and `SheetFromQuery`** for the host and for a JOINED bring-your-own contributor. The host sees every row as today; a contributor sees their own rows with Edit and the others' as labels (AW-S7's contributor view). `editableWineIds` holds the viewer's added glasses for which `glassEditRefusal` returns null (BT-P1), so Edit, Swap and Remove stay reachable after Start (spec §3.3 item 4). The contributor's separate Add button (`page.tsx:627`) goes, because the card carries Add; in a semi-blind tasting after Start `canAddWine` is false (`semiBlindAddRefusal`, spec §10.3 item 7);
+  - the IN_PROGRESS board (navigator, standings aside, `PlayExperience`, `AutoRefresh`, `RevealSync`, registrar) → `running-view.tsx`, wrapped in `LiveShell`, **plus `WinesCard` and `SheetFromQuery`** for the host and for a JOINED bring-your-own contributor (S7's own gate is `showWinesWhileRunning = isHost || myWineIds.length > 0`, page.tsx:395). The host sees every row as today; a contributor sees their own rows with Edit and the others' as labels (AW-S7's contributor view). BT-A0: in landed S7, `editableWineIds` (page.tsx:364) is computed inline from each glass's `editable` flag (page.tsx:354-358: the adder, not CLOSED, not revealed, and incomplete or `reveal_step === 0`) — this task replaces that inline computation so `editableWineIds` instead holds the viewer's added glasses for which `glassEditRefusal` returns null (BT-P1), so Edit, Swap and Remove stay reachable after Start (spec §3.3 item 4). The contributor's separate Add button (`page.tsx:787`, `addWineButton && !showWinesWhileRunning`) goes, because the card carries Add; in a semi-blind tasting after Start `canAddWine` is already false in landed S7 (`semiBlindAddRefusal`, page.tsx:179, spec §10.3 item 7 — f67dd9c);
   - the CLOSED board → `finished-view.tsx`.
 - Moved code that carries `hover:bg-[#4A1523]` switches to `hover:bg-primary-hover`.
 - The shared components keep the `({ tastingId }: { tastingId: string })` signature (Contract dependencies).
@@ -3448,6 +3448,9 @@ describe("routeTastingView (B2 one running page, B3, B5)", () => {
     [{ revealMode: "BLIND", status: "DRAFT", viewerStatus: null, isHost: true }, "lobby"],
     [{ revealMode: "BLIND", status: "IN_PROGRESS", viewerStatus: "JOINED", isHost: false }, "running"],
     [{ revealMode: "BLIND", status: "OPEN", viewerStatus: null, isHost: false }, "running"],
+    // BT-A0: a DRAFT OPEN tasting gets the lobby, not open-board (S7 gates
+    // OpenBoard on `running && isOpen`, page.tsx:721).
+    [{ revealMode: "OPEN", status: "DRAFT", viewerStatus: "JOINED", isHost: true }, "lobby"],
   ] as const)("%j → %s", (input, view) => expect(routeTastingView(input)).toBe(view));
 });
 ```
@@ -3661,7 +3664,7 @@ describe("startLandsOnConsole (B6: LIVE semi-blind host-provides too)", () => {
   - Unmatched lines are listed under `couldntMatchHeading(n)`, each with "By hand" → `openAddWineSheet(destination, { start: "byhand" })`.
   - Paste never adds an incomplete glass. The textarea stays controlled; the button shows progress while lines resolve.
 - Waiting contributor rows keep AW-S6's design: no ✕ (not adopted).
-- **Contributor rows arrive** (spec §2.3 item 8; `CREATE-38`). In bring-your-own, step 2 re-reads `listFlight` every 5 seconds while it is open and `document.visibilityState` is `visible`, through the step's existing read path. A read never interrupts a drag or the paste panel, and waits for the write queue to drain.
+- **Contributor rows arrive** (spec §2.3 item 8; `CREATE-38`). In bring-your-own, step 2 re-reads the flight every 5 seconds while it is open and `document.visibilityState` is `visible` — BT-A0: `FlightStep` never calls `listFlight` itself; the sheet does (`refreshFlight`, `new-tasting-sheet.tsx:182-184`), passed down as `<FlightStep snapshot onChanged={() => refreshFlight(tastingId)}>` (`:404-410`), so this task calls its `onChanged` prop on the 5-second interval, not a `listFlight` call of its own. BT-C2 does not own `new-tasting-sheet.tsx`. A read never interrupts a drag or the paste panel, and waits for the write queue to drain.
 
 **Interfaces**
 - Consumes: `moveFlightGlass` (BT-L1); `reorderIds`, `dropIndex` (BT-P1); `splitPastedLines`, `pickPasteMatch`, `couldntMatchHeading`, `PASTE_LIST_BUTTON`, `ADD_THESE` (BT-P8); `searchAddWine`, `addToFlight` (AW-F13); `useAddWine().openAddWineSheet` (AW-S5c).
@@ -3788,7 +3791,7 @@ BT-C1 covers `friendContextLine`; BT-V5 covers the UI.
 **OWNS**
 - create `src/app/tastings/[id]/flight-actions.ts`
 - modify `src/app/tastings/[id]/actions.ts` (`removeWine`, `moveWine`, `setLeaderboardReveal`, `updateSchedule` only)
-- modify `src/app/tastings/[id]/wines/new/tasting-wine-writes.ts` (`editRefusal`, the three refusal constants, and `resolveTastingAdder`'s semi-blind refusal only)
+- modify `src/app/tastings/[id]/wines/new/tasting-wine-writes.ts` (`editRefusal`, the three refusal constants, `resolveTastingAdder`'s semi-blind refusal, and `GlassState` / `loadGlassState`'s `tastings` select — BT-A0: add `reveal_mode` — only)
 
 **Does** (spec §3.3 items 5, 10, 12, 14; ledger B2; B0 edit guard)
 - **`flight-actions.ts`** (`"use server"`):
@@ -3800,8 +3803,8 @@ BT-C1 covers `friendContextLine`; BT-V5 covers the UI.
   - `setLeaderboardReveal`: returns without writing unless the tasting is DRAFT (the rules lock).
   - `updateSchedule`: `/** @deprecated removed in BT-L4 */` (the settings sheet's When row saves through `updateTastingSetup`).
 - **`tasting-wine-writes.ts`:**
-  - First diff F10's three refusal strings in AW-F13's committed file against BT-P1's constants. If F13 reworded one, update BT-P1's constant and its test in this task before delegating, and report it.
-  - `editRefusal(state)` returns `glassEditRefusal({ tastingStatus: state.status, revealMode, isRevealed: state.isRevealed, revealStep: state.revealStep, viewerIsAdder: true, viewerIsHost: false, laterGlassSeen: false })` (the adder is checked where it is today; `revealMode` is read with the status). `TASTING_CLOSED`, `NOT_ADDER` and `ALREADY_REVEALED` import from `@/lib/flight-glass-rules`; the other local constants stay. A complete glass at `reveal_step > 0` now reads `GLASS_STEP_STARTED`.
+  - First diff F10's three refusal strings in AW-F13's committed file against BT-P1's constants. BT-A0: `TASTING_CLOSED` (`:72`), `NOT_ADDER` (`:75`) and `ALREADY_REVEALED` (`:76`) are byte-identical to `flight-glass-rules.ts:28-30` already — F13 reworded nothing, so this diff is a no-op; still run it and report the result.
+  - BT-A0: as landed, `GlassState` (`tasting-wine-writes.ts:553-560`) carries no reveal mode, and `loadGlassState`'s `tastings` select (`:582`) reads only `status` — this task adds `reveal_mode` to both, so `editRefusal(state)` returns `glassEditRefusal({ tastingStatus: state.status, revealMode, isRevealed: state.isRevealed, revealStep: state.revealStep, viewerIsAdder: true, viewerIsHost: false, laterGlassSeen: false })` (the adder is checked where it is today; `revealMode` now comes from `state`, read with the status). `TASTING_CLOSED`, `NOT_ADDER` and `ALREADY_REVEALED` import from `@/lib/flight-glass-rules`; the other local constants stay. A complete glass at `reveal_step > 0` now reads `GLASS_STEP_STARTED`.
   - `resolveTastingAdder` returns `semiBlindAddRefusal({ revealMode, tastingStatus })` as its refusal before any insert, so no path adds a glass to a started semi-blind tasting (spec §10.3 item 7); M9b's trigger is the floor.
 
 **Interfaces**
@@ -3938,22 +3941,22 @@ BT-C1 covers `friendContextLine`; BT-V5 covers the UI.
 
 ### BT-L3 — Edit a wine: Swap and Remove (S4c)
 
-**Depends on:** AW-S3b, AW-S5a, AW-S5b, AW-S5c, AW-F13, BT-A0, BT-L1, BT-P1, BT-M5, BT-M6; TR-R6 only if BT-A0 finds that S5c's provider does not forward `AddWineOpenOptions` whole (then `add-wine-context.tsx` stays in OWNS; otherwise BT-A0 removes both)
+**Depends on:** AW-S3b, AW-S5a, AW-S5b, AW-S5c, AW-F13, BT-A0, BT-L1, BT-P1, BT-M5, BT-M6, TR-R6 (BT-A0: `add-wine-context.tsx:238-242` already forwards `AddWineOpenOptions` whole, so the conditional is resolved — TR-R6 is a plain dependency, committed `d11f9a6`)
 
 **OWNS**
 - modify `src/components/add-wine/types.ts` (`AddWineOpenOptions.swap` only)
 - modify `src/components/add-wine/sheet-state.ts`, `src/components/add-wine/sheet-state.test.ts` (add the swap state and two actions; never rename one)
 - modify `src/components/add-wine/add-wine-sheet.tsx` (the swap header and footer; adds routed to the swap)
 - modify `src/components/add-wine/use-sheet-adds.ts` (call `swapFlightGlass` while swapping)
-- modify `src/components/add-wine/by-hand-form.tsx` (the two rows in flight-edit mode; the impact line; `hover:text-[#4A1523]` at :376 → `hover:text-primary-hover`)
+- modify `src/components/add-wine/by-hand-form.tsx` (the two rows in flight-edit mode; the impact line — BT-A0: no `#4A1523` hover left to rename here, S3b (`63fc436`) already removed every occurrence from this file)
 - modify `src/components/add-wine/actions.ts` (`swapFlightGlass`)
-- modify `src/components/add-wine-context.tsx` (only if AW-S5c's provider does not forward `AddWineOpenOptions` whole)
 
 **Does** (spec §3.3 items 9, 11, 12; ledger B2 S4c)
-- **Two rows** at the bottom of the by-hand form, rendered only when the session edits a flight glass — `session.origin.kind === "glass"`, F12's origin `{ kind: "glass"; wineId; incomplete }` (`sheet-state.ts:48`), never a `destination.kind` test (add-wine G1 gate 4 scans `by-hand-form.tsx`) — and each only while its refusal is null (`glassSwapRefusal`, `glassRemoveRefusal`): `swapCopy(n).row` with `swapCopy(n).rowSub` and a chevron; `swapCopy(n).remove` as a destructive text button. Field order and header copy stay the add-wine form's (D8, A4b; MISSED-05).
+- **Two rows** at the bottom of the by-hand form, rendered only when the session edits a flight glass — `session.origin.kind === "glass"`, F12's origin `{ kind: "glass"; wineId; incomplete }` (BT-A0: `sheet-state.ts:56`, the glass variant of the `origin` union at `:52-56`), never a `destination.kind` test (add-wine G1 gate 4 scans `by-hand-form.tsx`) — and each only while its refusal is null (`glassSwapRefusal`, `glassRemoveRefusal`): `swapCopy(n).row` with `swapCopy(n).rowSub` and a chevron; `swapCopy(n).remove` as a destructive text button. Field order and header copy stay the add-wine form's (D8, A4b; MISSED-05).
 - **Remove:** `getGlassRemovalImpact(wineId)` loads when the form opens; `removalImpactLine(guesses, privateNotes)` shows before the tap (nothing when both are 0). The tap calls `removeWine(tastingId, wineId)` — no dialog; a refusal shows inline; success closes the sheet.
 - **Swap:** the Swap row dispatches `swapStarted { wineId, glass }`, which stores `swap` and routes to the flight destination's start view (the matrix's normal sources). The header reads `swapCopy(n).header`, the footer primary `swapCopy(n).primary`; `swapCancelled` returns to the edit form. `options.swap` opens straight into the same state (glass number resolved on load).
-- **Amendment 20 holds** (the add-wine reducer's turn rules): `swapStarted` leaves the state unchanged while `items` or `confirmQueue` is non-empty (a read keeps its turn; the edit form never has one, so this only guards a stray dispatch); it forces `multi` off; a `swapCancelled` with no edit form behind it lands home by the landing rule, opening the oldest waiting read if there is one. Both actions join the seeded model-based test's generator, whose invariants must still hold.
+- **Amendment 20 holds** (the add-wine reducer's turn rules): `swapStarted` leaves the state unchanged while `items` or `confirmQueue` is non-empty (a read keeps its turn; the edit form never has one, so this only guards a stray dispatch); it forces `multi` off; a `swapCancelled` with no edit form behind it lands home by the landing rule, opening the oldest waiting read if there is one.
+- **BT-A0, against the state as F12/S5a/S5b landed it (amendments 20–23):** `swapStarted` and `swapCancelled` join `USER_MOVES` (`sheet-state.ts:633-636`), so a swap advances `flow` and any reply already in flight when it starts goes stale (`replyIsCurrent`, `sheet-state.ts:681-683`). `swapStarted` on a dirty edit form keeps it rather than dropping it: park it in `parkedByHand` (the same give-back `openEdit` already does, `sheet-state.ts:880-901`) so `swapCancelled` reopens it through `sessionToReopen` (`sheet-state.ts:702`), and it counts toward `unfinishedCount`. `initialSheetState`'s start rule (`sheet-state.ts:589`, currently `p.options.edit ? "byhand" : p.options.start`) needs an `options.swap` branch alongside the existing `edit` one. Both actions join the seeded model-based test's generator (`sheet-state.test.ts:593`, amendment 20's; and `:1847`, amendment 23's late-replies generator), whose invariants must still hold.
 - **`swapFlightGlass(tastingId, wineId, source)`** (spec §3.3 item 11):
   1. re-check `glassSwapRefusal` (the adder through `is_wine_adder`; a semi-blind glass after Start refuses);
   2. resolve the wine through the one write path (`prepareCompleteWine` / `upsertCatalogWine`, or `prepareUnidentifiedWine`, in `src/lib/wine-identity/server/write.ts`);
@@ -3976,19 +3979,20 @@ BT-C1 covers `friendContextLine`; BT-V5 covers the UI.
   export async function swapFlightGlass(tastingId: string, wineId: string, source: AddSource): Promise<AddResult>;
   ```
 
-**Tests (write first)** — add to `src/components/add-wine/sheet-state.test.ts` (it already has `run`, `flight` and `initialSheetState`). Build the edit form's `openByHand` action with F12's origin `{ kind: "glass", wineId: "w3", incomplete: false }` (the shape `openEdit` uses); the assertions stay as written:
+**Tests (write first)** — add to `src/components/add-wine/sheet-state.test.ts` (it already has `flight` and `initialSheetState`; BT-A0: the file has no bare, file-scope `run` or `ship` — `run = (s, ...a) => a.reduce(sheetReducer, s)` is a single module-scope const at `:19`, and every `ship = (s, ...a) => a.reduce(reduceSheet, s)` is redeclared per describe block, e.g. `:992`, `:1358`, `:1423`, `:1559`, `:1629`, `:1767`, `:2408` — this block needs its own `ship`, not `run`: amendment 22 says the tests run what ships, i.e. `reduceSheet`, the same path `use-sheet-adds.ts`'s `send` and the shell's `useReducer` both call). Build the edit form's `openByHand` action with F12's origin `{ kind: "glass", wineId: "w3", incomplete: false }` (the shape `openEdit` uses); the assertions stay as written:
 ```ts
 describe("swap a flight glass (S4c, BT-L3)", () => {
+  const ship = (s: SheetState, ...actions: SheetAction[]) => actions.reduce(reduceSheet, s);
   it("swapStarted keeps the glass and leaves the edit form; swapCancelled returns to it", () => {
-    let s = run(
+    let s = ship(
       initialSheetState({ destination: flight, options: { edit: { wineId: "w3" } }, canScan: true }),
       { type: "openByHand", origin: EDIT_ORIGIN_W3, draft: emptyDraft(), focusField: null },
     );
     expect(s.view).toBe("byhand");
-    s = run(s, { type: "swapStarted", wineId: "w3", glass: 3 });
+    s = ship(s, { type: "swapStarted", wineId: "w3", glass: 3 });
     expect(s.swap).toEqual({ wineId: "w3", glass: 3 });
     expect(s.view).not.toBe("byhand");
-    s = run(s, { type: "swapCancelled" });
+    s = ship(s, { type: "swapCancelled" });
     expect(s.swap).toBeNull();
     expect(s.view).toBe("byhand");
   });
@@ -3997,7 +4001,7 @@ describe("swap a flight glass (S4c, BT-L3)", () => {
     expect(s.swap).toEqual({ wineId: "w3", glass: null });
   });
   it("amendment 20: a swap forces Many off", () => {
-    const s = run(
+    const s = ship(
       initialSheetState({ destination: flight, options: { multi: true, edit: { wineId: "w3" } }, canScan: true }),
       { type: "swapStarted", wineId: "w3", glass: 3 },
     );
@@ -4005,7 +4009,7 @@ describe("swap a flight glass (S4c, BT-L3)", () => {
   });
 });
 ```
-`EDIT_ORIGIN_W3` is a `const` declared above the block: `{ kind: "glass", wineId: "w3", incomplete: false }`. Inside amendment 20's describe block (which defines `open`, `photo` and `read`), add one more case: with a read waiting, `swapStarted` returns the state unchanged. Add `swapStarted` and `swapCancelled` to the seeded model-based test's action generator.
+`EDIT_ORIGIN_W3` is a `const` declared above the block: `{ kind: "glass", wineId: "w3", incomplete: false }`. Inside amendment 20's describe block (which defines `open`, `photo` and `read`), add one more case: with a read waiting, `swapStarted` returns the state unchanged. Add `swapStarted` and `swapCancelled` to both seeded model-based tests' action generators (`sheet-state.test.ts:593` and `:1847`), and run those generators' own sequences through their block's existing `ship`, as they already do.
 
 **Steps**
 - [ ] Add the tests; watch them fail; add the state and actions until green.
@@ -4474,7 +4478,7 @@ BT-P5 covers the groups and ranges; BT-SQL8's probe covers the locked pin and th
 - **Rows:** points first, the field name, the answer; the row whose picker is open is bordeaux-bordered; "just now" on the row set last; unanswered rows dashed "Skip, or name one"; vintage `VINTAGE_LABEL` / `VINTAGE_EMPTY`; the grape row is a plain row (refinement 15); secondary grape and type designation under More with `LADDER_EXTRAS_NOTE`.
 - **The grape shortlist heading** (S9; spec §8.3 item 8): the group heading built at `guess-ladder.tsx:474` becomes `shortlistHeading(shortlist?.placeName ?? regionName ?? "the region")` — "Common grapes in Piedmont" instead of "Grown in Piedmont". The producers' "Specific to {region}" stays.
 - **Laptop (S8b, from `md`):** two columns; `LadderRail` sticky on the right: the stake card; `lockedInRosterHeading(k, n)` with "{name} ✓" / "{name}…" (eligible participants, from `tasting_guess_status`); `standingsAfterHeading(N − 1)` with the top three (hidden before any glass is revealed); `lockButtonText(n)` + `lockFooterText({ phone: false })`. The phone footer uses `lockButtonText(n)` + `lockFooterText({ phone: true })`.
-- **The picker** opens as `presentation="popover"` from `md` (`useMediaQuery("(min-width: 768px)")` from `src/components/add-wine/use-camera.ts`, a layout choice; if BT-A0 found that export gone after AW-S6, this task creates a neutral `src/lib/use-media-query.ts` and adds it to OWNS), anchored to the row; `totalCount` and `oftenIds` are passed.
+- **The picker** opens as `presentation="popover"` from `md` (`useMediaQuery("(min-width: 768px)")` from `src/components/add-wine/use-camera.ts:34`, a layout choice; BT-A0 confirms that export survives AW-S6, so no neutral `src/lib/use-media-query.ts` fallback is needed), anchored to the row; `totalCount` and `oftenIds` are passed.
 - **`play-experience.tsx`:**
   - `pickCounts = buildPickCounts(rows)` from the viewer's own `guesses` across tastings: extend the existing read (the one selecting `primary_grape_id, secondary_grape_id`) to the seven id columns; `frequentGrapeIds` (threshold 2) goes;
   - `getReferenceCounts()` from `src/lib/reference-counts.ts` (`React.cache`): countries, regions and grapes from `getReferenceOptions()` lengths; `appellations` and `producers` via `select("id", { count: "exact", head: true })`, once per request — never rows; type designations from the length of the active list the ladder already preloads (`.eq("is_active", true)`); vintages from `vintageOptions(new Date()).years.length`;
@@ -4562,7 +4566,7 @@ BT-P5 covers the groups and ranges; BT-SQL8's probe covers the locked pin and th
 
 **Does** (spec §9.3 items 2–4; refinements 11, 12; B8)
 - **`hidden-note.ts`:** `canNoteHiddenGlass({ status, isRevealed, eligible })` (IN_PROGRESS or legacy OPEN status, unrevealed, an eligible guesser); `hiddenNoteTitle(tastingName, glassLabel)`; `hueGroupsFor(family)` (the family's hues from `HUES_BY_COLOUR`, or the WHITE, ROSE and RED groups when the family is unknown); `HIDDEN_NOTE_HINT` (the dictionary key).
-- **Dictionary:** `hidden_note_hint` EN "Only you can read this until the glass is revealed. Then it attaches to the wine." and DA "Kun du kan læse den, indtil glasset afsløres. Så knyttes den til vinen." The eyebrow reuses the dictionary's existing "Tasting note" key; if none exists, add EN "Tasting note" and DA "Smagenote" (plan copy; the owner reviews the Danish).
+- **Dictionary:** `hidden_note_hint` EN "Only you can read this until the glass is revealed. Then it attaches to the wine." and DA "Kun du kan læse den, indtil glasset afsløres. Så knyttes den til vinen." BT-A0: `tasting_note` already exists (EN "Tasting note" `i18n.ts:254`, DA "Smagsnote" `:467`) — the eyebrow just reuses it; no new key or plan-copy Danish is needed.
 - **`NewNoteModal`:** `wineId` becomes optional and a new optional `target?: NoteTarget` takes precedence, so existing callers (the provider, the catalog, the cellar) keep compiling:
   ```ts
   export type NoteTarget =
@@ -4570,7 +4574,7 @@ BT-P5 covers the groups and ranges; BT-SQL8's probe covers the locked pin and th
     | { kind: "hidden-glass"; tastingWineId: string; tastingName: string; glassLabel: string; noteId?: string };
   ```
   A `hidden-glass` target loads no catalog wine (only the aroma terms, and the note itself when `noteId` is set, via `queries.ts`). The header shows the eyebrow, the title `hiddenNoteTitle(...)`, and under it the hint through `makeT`.
-- **`NoteEditor`:** `wineId: string | null`; `wine: { colour: WineColour | null; style: WineStyle | null }`. It saves `{ catalog_wine_id: wineId, context_kind: "BLIND", tasting_wine_id }` through the unchanged `save_wset_note`; a null style uses the still-wine sections and `noteTotal(null)`.
+- **`NoteEditor`:** `wineId: string | null`; `wine: { colour: WineColour | null; style: WineStyle | null }`. It saves `{ catalog_wine_id: wineId, context_kind: "BLIND", tasting_wine_id }` through the unchanged `save_wset_note`; a null style uses the still-wine sections and `noteTotal(null)`. Keep R6's `NoteEditor` `onSaved(savedId, saved)` signature unchanged. BT-A0: a hidden-glass target's save passes `catalogWineId: null` to `noteSavedReport` (`note-saved.ts:63-81`), so `noteAttachment` resolves to `"pending-reveal"` and R6's confirmation reads "It will attach to the wine when the glass is revealed." (`note-saved.ts:148-149`) — as landed today the modal always passes `catalogWineId: wineId` with no `unidentifiedWineId`, so every save currently reports `"catalog"`. BT-R5's later unidentified target passes `unidentifiedWineId` instead, which reads `"bottle"` ("It is also attached to this bottle.", `:146-147`).
 - **`WineColourControl`:** `colour: WineColour | null`; null renders `hueGroupsFor(null)` grouped by family instead of the read-only family line.
 - **Types:** `wset_notes` Row `catalog_wine_id: string | null; unidentified_wine_id: string | null`; Insert and Update optional.
 - **Stats readers** (refinement 11): the author-scoped `wset_notes` reads in `overview-data.ts`, `your-numbers.ts` and `cellar/page.tsx` add `.or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null")`, so a hidden note counts as a rating only once it resolves.
@@ -4709,7 +4713,7 @@ describe("hidden-glass notes (B8)", () => {
 - `assignMatch(tastingId, glassWineId, candidateKey)`:
   1. `resolveGuesser`; `sequentialOrderError` (semi-blind guided refuses a glass beyond `pouredThrough`);
   2. `rpc("assign_semi_blind_match", { p_wine_id: glassWineId, p_candidate_key: candidateKey })`;
-  3. errors go through `matchRefusalSentence(error, { glassNumberOf, candidateKey, revealedKeys, lockedIn: LOCKED_EDIT_REFUSAL })` (BT-P6, tested there): "glass locked" (its `detail` is the holder's wine id) → `lockedHolderLabel(holderGlass)` with the glass number from the tasting's wines in list order; "that wine is not in your pool" → `REVEALED_WINE_REFUSAL` when that key is revealed, otherwise the RPC sentence capitalised; "this glass is locked in" → `LOCKED_EDIT_REFUSAL`; anything else → the RPC sentence capitalised;
+  3. errors go through `matchRefusalSentence(error, { glassNumberOf, candidateKey, revealedKeys, lockedIn: LOCKED_EDIT_REFUSAL })` (BT-P6, tested there): "glass locked" (its `detail` is the holder's wine id) → `lockedHolderLabel(holderGlass)` with the glass number from the tasting's wines in list order; "that wine is not in your pool" → `REVEALED_WINE_REFUSAL` when that key is revealed, otherwise the RPC sentence capitalised; "this glass is locked in" → `LOCKED_EDIT_REFUSAL`; M8's "this guess is locked in — change it first" (BT-P6x) → `LOCKED_EDIT_REFUSAL` too — `matchRefusalSentence` maps both to `ctx.lockedIn`; anything else → the RPC sentence capitalised;
   4. no `revalidatePath`; returns `{ ok: true, swappedWith }`.
 - `clearMatch(tastingId, glassWineId)` → `rpc("clear_semi_blind_match", { p_wine_id })`, errors mapped the same way.
 - `lockGuess` on a semi-blind glass refuses `chooseFirst(n)` when the caller's board row has no key (read through `getSemiBlindBoard`, never `guessed_wine_id`).
@@ -5182,7 +5186,7 @@ describe("recordRowModel (S13 rows)", () => {
 - create `src/app/tastings/[id]/results/[glass]/page.tsx`
 - modify `src/app/tastings/[id]/record/record-view.tsx` (the laptop in-place expansion)
 - modify `src/components/add-wine/types.ts` (`AddWineOpenOptions.preselect` only)
-- modify `src/components/add-wine-context.tsx` (the preselect routing only)
+- modify `src/components/add-wine-context.tsx` (the preselect routing; BT-A0: also `OpenNote`, `add-wine-context.tsx:109`, currently `{ seq; pick }` — see Does)
 - modify `src/components/add-wine/add-wine-sheet.tsx` (the cellar preselect → lot step; unidentified → by hand, prefilled)
 - modify `src/components/add-wine/sheet-state.ts`, `src/components/add-wine/sheet-state.test.ts` (the preselect cases; add only, never rename)
 - modify `src/components/add-wine/by-hand-actions.ts` (`loadUnidentifiedWineDraft` only)
@@ -5192,14 +5196,14 @@ describe("recordRowModel (S13 rows)", () => {
 - **`RecordGlass({ tastingId, glass, layout })`:** ← back; eyebrow "{tasting} · tonight" (or "· {d Mon}"); "Glass {n} of {m}"; ‹ ›; the identity with the country; the label photo (hatch fallback); "{points} of {glass max}"; six lines (plus secondary grape and designation when in play) with the truth, "you: {answer}" or "you: skipped it", and "+{n}" gold-tinted for a hit, "+1" for a near vintage, "0" otherwise; "Do something with it"; footer prev / next "Glass {n−1} · {producer short}" and "Glass {n+1} · {producer short} ›". It walks revealed glasses only; a never-revealed glass number 404s.
 - **Route** `/tastings/[id]/results/[glass]` renders `layout="page"` (phones); `RecordView` expands a laptop row in place with `layout="inline"`.
 - **`GlassActions`** (client) through `useAddWine().openAddWineSheet`:
-  - Rate it → `openAddWineSheet({ kind: "note" }, { preselect: { catalogWineId, tastingWineId } })`: the provider skips the pick and opens `NewNoteModal` on that wine with `tastingWineId` and `contextKind: "BLIND"`; R6's confirmation follows the save.
-  - Add to my cellar → `openAddWineSheet({ kind: "cellar" }, { preselect: { catalogWineId } })`: the sheet opens on its lot step (the `openAddWine("cellar", { cellarWine })` path).
+  - Rate it → `openAddWineSheet({ kind: "note" }, { preselect: { catalogWineId, tastingWineId } })`: the provider skips the pick and opens `NewNoteModal` on that wine with `tastingWineId` and `contextKind: "BLIND"`. BT-A0: as landed, the provider's `OpenNote` state (`add-wine-context.tsx:109`) is only `{ seq; pick }`, and it renders `NewNoteModal` with just `wineId` and `cellarConsume` (`:323-335`) — no `tastingWineId` or `contextKind` reach the modal today, so this task must add both fields to `OpenNote` and thread them through, inside its own "preselect routing" OWNS entry. (Alternative, if that plumbing proves awkward: `GlassActions` mounts `NewNoteModal` itself instead of going through the provider's note state.) Either way R6's confirmation still fires: `NoteSavedStepContext` wraps every child (`add-wine-context.tsx:308`), so it is unaffected by which path opens the modal. `NotePick` itself (`types.ts:68`, `{ catalogWineId; lotId?; consume? }`) needs no change.
+  - Add to my cellar → BT-A0: reuse the provider's existing `openAddWine("cellar", { cellarWine: { id, label } })` path (`add-wine-context.tsx:244-262`), not a new `preselect`/`initialLot` plumbing path — it already opens straight on the lot step with a title, which is all this needs.
   - Open it in the catalog → `/catalog/{catalogWineId}`.
-  - An unidentified wine: Rate it opens the note with `unidentifiedWineId` (M5's `save_wset_note` writes it); Add to my cellar loads `loadUnidentifiedWineDraft(unidentifiedWineId)` and dispatches `openByHand({ kind: "new" }, draft)` (the form writes the catalog wine first); no catalog link.
-  - The cellar preselect reaches the lot step through AW-S5b's `initialSheetState({ destination, options, canScan, initialLot })`; the unidentified preselect lands on by hand. Both are reducer cases with tests.
+  - An unidentified wine: Rate it opens the note with `unidentifiedWineId` (M5's `save_wset_note` writes it); Add to my cellar loads `loadUnidentifiedWineDraft(unidentifiedWineId)` and dispatches the `openByHand` `SheetAction` through `adds.send` — `adds.send({ type: "openByHand", origin: { kind: "new" }, draft, focusField: null })` (BT-A0: `openByHand` is not an exported function to call directly — it is a `SheetAction`, `sheet-state.ts:153`, sent through `use-sheet-adds.ts:142` — the earlier `openByHand({ kind: "new" }, draft)` call form does not exist) — the form writes the catalog wine first; no catalog link.
+  - BT-A0: the cellar path above reuses existing provider plumbing and needs no new reducer case; only the unidentified preselect (landing on by hand) is a new reducer case, with a test.
 
 **Interfaces**
-- Consumes: AW-S5b's `initialSheetState({ destination, options, canScan, initialLot })`; AW-S5a's `openByHand`; the draft mapping `by-hand-actions.ts` already uses for catalog wines.
+- Consumes: AW-S5b's `initialSheetState({ destination, options, canScan, initialLot })` (BT-A0: `initialLot` is `AddSource | null`, e.g. `{ kind: "catalog", catalogWineId, via: "search" }`, not `{ catalogWineId }`; `canScan` is `boolean | null`, where `null` means "resolving"); AW-F12/AW-S5a's `openByHand` `SheetAction` (not a function); AW-F13's `loadCatalogWineDraft` (`add-wine/actions.ts:656`) as the model for this task's own `loadUnidentifiedWineDraft` — BT-A0: model it on `draftFromStoredAnswer` (`tasting-wine-writes.ts:624-716`, which reads `catalog_wines_unidentified`), since `by-hand-actions.ts` carries no catalog-wine draft mapping to reuse (it exports only `producerSummary`, `loadByHandReferences` and `regionSelfNamedAppellation`).
 - Produces: `loadUnidentifiedWineDraft(unidentifiedWineId: string): Promise<WineIdentityDraft | null>` (`by-hand-actions.ts`); `AddWineOpenOptions.preselect?: { catalogWineId?: string; unidentifiedWineId?: string; tastingWineId?: string }`; `RecordGlass(props: { tastingId: string; glass: number; layout: "page" | "inline" }): Promise<React.JSX.Element>`; `GlassActions(props: { catalogWineId: string | null; unidentifiedWineId: string | null; tastingWineId: string })`.
 
 **Tests:** none new.
@@ -5213,7 +5217,7 @@ describe("preselect from the record (S13c, BT-R5)", () => {
   it("a cellar preselect with its lot opens the lot step", () => {
     const s = initialSheetState({
       destination: { kind: "cellar" }, options: { preselect: { catalogWineId: "c7" } }, canScan: true,
-      initialLot: { catalogWineId: "c7" },
+      initialLot: { kind: "catalog", catalogWineId: "c7", via: "search" },
     });
     expect(s.view).toBe("lot");
   });
@@ -5227,7 +5231,7 @@ describe("preselect from the record (S13c, BT-R5)", () => {
   });
 });
 ```
-Match `initialLot`'s shape to AW-S5b's committed type (BT-A0 records it); the assertions stay.
+`initialLot`'s shape is AW-S5b's committed type, `AddSource | null` (`sheet-state.ts:581-586`) — BT-A0 confirms it, above; the assertions stay.
 
 **Acceptance:** `npx vitest run src/components/add-wine/sheet-state.test.ts` is green, the seeded model-based test included; the tsc check is clean; `rg -n "preselect" src/components/add-wine-context.tsx src/components/add-wine/types.ts` matches both; `rg -n "loadUnidentifiedWineDraft" src/components/add-wine/by-hand-actions.ts` matches.
 

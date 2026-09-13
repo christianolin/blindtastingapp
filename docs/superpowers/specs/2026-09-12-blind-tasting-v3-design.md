@@ -205,17 +205,17 @@ S1 (setup, laptop), S1b (setup, phone), S2 and S2b (the flight), S3 and S3b (inv
 ### 2.2 Current state
 
 - **The sheet.** `src/components/new-tasting-sheet.tsx` (T2; S6 edits the `<FlightStep/>` call site) runs three steps.
-  - Step 1 creates the row with `createTasting`, which returns `{ id }` (`src/app/tastings/new/actions.ts:116-213`). Later saves call `updateTastingSetup` (`actions.ts:235-269`: DRAFT only; the wine-source lock at :250-257).
+  - Step 1 creates the row with `createTasting`, which returns `{ id }` (`src/app/tastings/new/actions.ts:120-217`). Later saves call `updateTastingSetup` (`actions.ts:239-273`: DRAFT only; the wine-source lock at :254-261).
   - The footers already read "Create and finish later" (`new-tasting-sheet.tsx:472`), "Even none is enough." (:487), "Invite later" (:520) and "Start the tasting" (:523).
   - Start routes through `startLandsOnConsole` (:317; `src/lib/tasting-lifecycle-copy.ts:21-31`: LIVE + BLIND + HOST_PROVIDES only).
 - **Name chips.** `nameSuggestions(today, region)` (`src/app/tastings/new/setup-copy.ts:194-203`):
   - chip 1 is "{today's weekday} blind", whatever the mode and the scheduled date;
-  - chip 2 comes from `getNameSuggestionContext` (`actions.ts:280-299`), which takes the region of the wines behind the caller's *scored guesses* — what they tasted, not what they poured — and falls back to "Burgundy #1";
-  - its doc comment (`actions.ts:276-279`) still says a scored guess grants `wine_answers` access, which 20260912090000 narrowed.
+  - chip 2 comes from `getNameSuggestionContext` (`actions.ts:284-303`), which takes the region of the wines behind the caller's *scored guesses* — what they tasted, not what they poured — and falls back to "Burgundy #1";
+  - its doc comment (`actions.ts:280-283`) still says a scored guess grants `wine_answers` access, which 20260912090000 narrowed.
 - **Rules card.** `rulesSummary` (`setup-copy.ts:112-133`) gives "Guided · standings after each attribute · Danish Championship scoring" for blind (as B1 wants) but "Semi-blind · one point per glass" for semi-blind.
-- **Guided pacing is blind-only.** `setupColumns` stores `sequential_guessing` for BLIND + LIVE + GUIDED (`actions.ts:75`); `flowApplies` is BLIND + LIVE (`setup-copy.ts:85-87`); `flowWord` says "Guided" only for BLIND (`src/lib/tasting-eyebrow.ts:73-81`).
+- **Guided pacing is blind-only.** `setupColumns` stores `sequential_guessing` for BLIND + LIVE + GUIDED (`actions.ts:79`); `flowApplies` is BLIND + LIVE (`setup-copy.ts:85-87`); `flowWord` says "Guided" only for BLIND (`src/lib/tasting-eyebrow.ts:73-81`).
 - **Place.** No row and no storage (B12).
-- **Step 2.** `src/app/tastings/new/flight-step.tsx` (S6 rewrites it on the matrix): rows with ✕, no drag handles, no paste. `listFlight` (`actions.ts:380-529`) is S6's.
+- **Step 2.** `src/app/tastings/new/flight-step.tsx` (S6 rewrites it on the matrix): rows with ✕, no drag handles, no paste. `listFlight` (`actions.ts:395-615`) is S6's.
 - **Step 3.** `src/app/tastings/new/invite-step.tsx` (T2):
   - friend chips (`Friend = { id; display_name; email }`, :11) and typed email chips (`invite-field.tsx`);
   - `JoinLinkRow` with the hint "Works until you start the tasting." (`join-link-row.tsx:90`);
@@ -249,7 +249,7 @@ S1 (setup, laptop), S1b (setup, phone), S2 and S2b (the flight), S3 and S3b (inv
    - `leaderboardApplies(v)` stays BLIND + LIVE + GUIDED.
    - `rulesSummary` for semi-blind: the flow word when it applies, then "one point for each glass you match", then the ASYNC results clause. The default reads "Guided · one point for each glass you match". Blind is unchanged.
    - `rulesSummaryShort` for semi-blind: "Guided · 1 pt a match" (**spec copy**, the phone one-liner).
-   - `setupColumns` (`actions.ts:75`): `sequential_guessing: f.revealMode !== "OPEN" && f.timingMode === "LIVE" && f.flow === "GUIDED"`.
+   - `setupColumns` (`actions.ts:79`): `sequential_guessing: f.revealMode !== "OPEN" && f.timingMode === "LIVE" && f.flow === "GUIDED"`.
    - `flowWord` (`tasting-eyebrow.ts`): "Guided" for any non-OPEN LIVE tasting with `sequentialGuessing`.
 5. **Footer note.** "A name is all it takes. Wines and people can wait — the tasting exists from here and you can leave it empty." (`CREATE-17`; add it where step 1 lacks it).
 
@@ -327,17 +327,17 @@ S4 (lobby, laptop), S4b (lobby, phone), S4c (edit a wine), S4d (tasting settings
 ### 3.2 Current state
 
 - **`src/app/tastings/[id]/page.tsx`** (678 lines; T4 committed; S7 rewrites the Wines card):
-  - Header: thumbnail, name, description, a `derivedStatus` badge with "{n} wines · {m} participants · date" (:477-492), then "Live session · Host-selected wines · Danish Championship scoring" (:493-507).
+  - Header: thumbnail, name, description, a `derivedStatus` badge with "{n} wines · {m} participants · date" (:638-652), then "Live session · Host-selected wines · Danish Championship scoring" (:653-667).
   - The cog is an icon-only popover, `HostControlsMenu` (`host-controls-menu.tsx:53-59`, `aria-label="Host controls"`).
-  - Start is `HostControls surface="start"` (:548-559) with T2x's inline warning.
-  - The Wines card (:250-285) is shown to every viewer, guests included ("Wine N · Hidden"; `GUEST-35`), with "{n} wines · only you can see them" for the host-provides host.
-  - The Participants card (:289-373) lists every status, Declined included, and counts every row (`LOBBY-17`).
+  - Start is `HostControls surface="start"` (:708-719) with T2x's inline warning.
+  - The Wines card (:396-433) is shown to every viewer, guests included ("Wine N · Hidden"; `GUEST-35`), with "{n} wines · only you can see them" for the host-provides host.
+  - The Participants card (:437-523) lists every status, Declined included, and counts every row (`LOBBY-17`).
 - **`wine-flight-list.tsx`** (S7): "Wine N", badges, an Edit link to `/wines/[wineId]/edit` (S7 replaces it with `openAddWineSheet(…, { start: "byhand", edit: { wineId } })`), ▲▼ through `moveWine` (a swap through a temporary `-1` slot, `tastings/[id]/actions.ts:317-344`).
-- **Edit guard.** F10's `editRefusal` (`src/app/tastings/[id]/wines/new/tasting-wine-writes.ts:658-668`, amendment 7): not CLOSED, unrevealed, and `reveal_step = 0` for a complete glass.
-- **Remove.** `removeWine` (`actions.ts:351-385`) is host-only and DRAFT-only; it deletes, then closes the gap with one `update wines set position` per later row. RLS `wines delete host` (a raw subquery) lets the host delete any glass, revealed or not. `insertGlassRow` puts a new glass at `count + 1` (`tasting-wine-writes.ts:259-287`), so a gap left by a removal would collide on `(tasting_id, position)` at the next add.
-- **`wines` writes (live).** Clients hold UPDATE on every column and `wines update host` is host-only: a contributor's renumbering updates would silently touch 0 rows, while a host can write `contributor_participant_id`, `is_revealed` and `reveal_step` (§0.1). F10's undo `removeGlassIfHost` (`tasting-wine-writes.ts:296-310`) deletes a just-added glass when its answer-key write fails, and OPEN glasses are inserted revealed (`:281`).
-- **Running page.** Once IN_PROGRESS the Wines card renders only for the host (`page.tsx:635`); a bring-your-own contributor gets only an Add button (`:627`), so nothing reaches Edit on their own bottle after Start.
-- **Settings.** `updateTastingSetup` is DRAFT-only (`tastings/new/actions.ts:241-243`); `updateSchedule` has no status guard (`actions.ts:178-207`); nor has `setLeaderboardReveal` (:298-312).
+- **Edit guard.** F10's `editRefusal` (`src/app/tastings/[id]/wines/new/tasting-wine-writes.ts:610-615`, amendment 7): not CLOSED, unrevealed, and `reveal_step = 0` for a complete glass.
+- **Remove.** `removeWine` (`actions.ts:351-385`) is host-only and DRAFT-only; it deletes, then closes the gap with one `update wines set position` per later row. RLS `wines delete host` (a raw subquery) lets the host delete any glass, revealed or not. `insertGlassRow` puts a new glass at `count + 1` (`tasting-wine-writes.ts:209-236`), so a gap left by a removal would collide on `(tasting_id, position)` at the next add.
+- **`wines` writes (live).** Clients hold UPDATE on every column and `wines update host` is host-only: a contributor's renumbering updates would silently touch 0 rows, while a host can write `contributor_participant_id`, `is_revealed` and `reveal_step` (§0.1). F10's undo `removeGlassIfHost` (`tasting-wine-writes.ts:244-258`) deletes a just-added glass when its answer-key write fails, and OPEN glasses are inserted revealed (`:229`).
+- **Running page.** Once IN_PROGRESS the Wines card renders only for the host (`page.tsx:795`, `showWinesWhileRunning ? winesPanel : null`, gated by `showWinesWhileRunning = isHost || myWineIds.length > 0` at `:395`); a bring-your-own contributor gets only an Add button (`:787-789`), so nothing reaches Edit on their own bottle after Start.
+- **Settings.** `updateTastingSetup` is DRAFT-only (`tastings/new/actions.ts:245-247`); `updateSchedule` has no status guard (`actions.ts:178-207`); nor has `setLeaderboardReveal` (:298-312).
 - **Answer-key RLS (live).** `wine_answers update` lets the host update any answer key of the tasting — revealed or not, a bring-your-own contributor's included — and the contributor while unrevealed. `wine_answers insert` allows the host or the contributor at any time.
 
 ### 3.3 Change
@@ -836,11 +836,11 @@ S5 (the invitation, phone), S5b (the invitation, laptop Overview card), S6 (join
 
 ### 4.2 Current state
 
-- An INVITED viewer of `/tastings/[id]` gets a small "You're invited" card on top of the lobby, with the Wines card still visible (`page.tsx:378-419`).
+- An INVITED viewer of `/tastings/[id]` gets a small "You're invited" card on top of the lobby, with the Wines card still visible (`page.tsx:526-567`).
 - Overview: pending invitations are rows in the Blind tastings card (`src/app/overview/invitation-row.tsx`; `tastings-card.tsx:41-82`). There is no top card and no "Overview · what's happening now" eyebrow (`GUEST-01`; `overview/page.tsx:44-51` renders only `AppHeader title="Overview"` above the banner).
 - R5's shared compact row: `src/components/tastings/invitation-row.tsx` (`InvitationRow`, `useInvitationResponses`).
 - `/j/[code]` (`src/app/j/[code]/page.tsx:12-54`): signed out → `/login?next=`; signed in → `join_tasting_by_code` joins silently and redirects.
-- A JOINED guest before Start sees "Waiting for the host to start the tasting." above the Wines card (`page.tsx:664-669`). `AutoRefresh` mounts only once started (:443).
+- A JOINED guest before Start sees "Waiting for the host to start the tasting." above the Wines card (`page.tsx:824-828`). `AutoRefresh` mounts only once started (:591).
 - `calendar.ics` (lane N): host or JOINED, a 404 for everyone else, no LOCATION yet.
 - No leave action. `tasting_participants_pin_identity` (091000) pins `tasting_id` and `user_id`; `participants update own or host` lets a participant change their own status at any time.
 - No hosted-count helper: under RLS a client cannot count someone else's hosted tastings.
@@ -1183,7 +1183,7 @@ Every live screen: S7, S7b, S8, S8b, S9, S10, S10b, S11, S11b, S12, S12b, SB2, S
 - `globals.css:5` defines `@custom-variant dark (&:is(.dark *))`. The `.dark` block (:142-176) is never applied.
 - The console palette lives in separate `:root` tokens (:122-125, and `--gold-light` at :110): `--console #1b1310`, `--console-card #241b16`, `--console-ink #b9a98c`, `--miss #e08a76`, `--gold-light #d4af6a`. `host/console.tsx`, `locked-in.tsx` and `reveal-view.tsx` use them.
 - The ladder (`guess-ladder.tsx:778` `bg-background`, rows `bg-white`), the picker (`field-picker.tsx:188` `bg-card`, a forced white search field), `match-ladder.tsx`, `standings-panel.tsx` and the revealed cards are parchment inside the parchment running page.
-- Buttons hard-code `hover:bg-[#4A1523]` (`guess-ladder.tsx:852`, `page.tsx:427`, `components/tastings/invitation-row.tsx:113`).
+- Buttons hard-code `hover:bg-[#4A1523]` (`guess-ladder.tsx:852`, `page.tsx:575`, `components/tastings/invitation-row.tsx:113`).
 - `PopoverContent` renders in a portal (`components/ui/popover.tsx`), outside any wrapper's class.
 
 ### 6.3 Change
@@ -1555,7 +1555,7 @@ S8 (guessing, phone), S8b (guessing, laptop), S9 (a picker), S10 (locked in, wai
    - "Standings after glass {N−1}" with the top three (hidden before any glass is revealed);
    - "Lock in glass {N}" and "Saved as you go. Locking stops edits and tells the table you are ready."
    - The phone footer reads "Lock in glass {N}" and "Saved as you go. Locking stops edits and shows the others you are ready."
-   - **Picker presentation:** `FieldPicker` gains `presentation: "sheet" | "popover"`. The ladder chooses `"popover"` from `md` (the shared `useMediaQuery("(min-width: 768px)")` from `src/components/add-wine/use-camera.ts:46` — a layout choice, not device routing; the plan's BT-A0 confirms the export survives add-wine S6, and a neutral `src/lib/use-media-query.ts` takes its place if it does not). Both presentations stay mounted and receive `.focus()` synchronously in the opening tap. The popover is base-ui `Popover` with `positionMethod="fixed"` and `keepMounted`, anchored to its row, with "Everything else" in two columns.
+   - **Picker presentation:** `FieldPicker` gains `presentation: "sheet" | "popover"`. The ladder chooses `"popover"` from `md` (the shared `useMediaQuery("(min-width: 768px)")` from `src/components/add-wine/use-camera.ts:34` — a layout choice, not device routing; the plan's BT-A0 confirms the export survives add-wine S6, so no `src/lib/use-media-query.ts` fallback is needed). Both presentations stay mounted and receive `.focus()` synchronously in the opening tap. The popover is base-ui `Popover` with `positionMethod="fixed"` and `keepMounted`, anchored to its row, with "Everything else" in two columns.
 8. **The picker (S9).**
    - Title "Which {field}?" with a gold pill "{points} pts"; search "Search {count} grapes" (phone) or "Type to search all {count} grapes" (laptop), and the same per field ("Search {count} producers", …); "Skip" beside the pill on laptops.
    - The shortlist header: grapes "Common grapes in {region}" (S9; it replaces "Grown in {region}" — the handoff's note that no grape-to-region table exists is stale, but its copy stands); producers keep "Specific to {region}". Each row keeps its context line (existing place lines for grapes), plus " · you guess this often" when the viewer has picked that id at least 3 times.
@@ -1663,10 +1663,10 @@ S10 ("Note this glass"), S10b ("Note this glass · Attaches to the wine at the r
 ### 9.2 Current state
 
 - `locked-in.tsx` offers no note. CLAUDE.md: "No WSET note can be written while a glass is locked."
-- **Notes.** `wset_notes_one_identity` requires exactly one of `catalog_wine_id` / `unidentified_wine_id`. `wset notes read` and `wset note aromas read` are `using (true)`; insert and update are author-only. Notes are saved through `save_wset_note(p_note, p_aromas)` (SECURITY INVOKER; `src/app/catalog/[wineId]/notes/note-editor.tsx:91`), which writes `catalog_wine_id`, `context_kind` and `tasting_wine_id` from the payload.
+- **Notes.** `wset_notes_one_identity` requires exactly one of `catalog_wine_id` / `unidentified_wine_id`. `wset notes read` and `wset note aromas read` are `using (true)`; insert and update are author-only. Notes are saved through `save_wset_note(p_note, p_aromas)` (SECURITY INVOKER; `src/app/catalog/[wineId]/notes/note-editor.tsx:93`), which writes `catalog_wine_id`, `context_kind` and `tasting_wine_id` from the payload.
 - `save_wset_note` never writes `unidentified_wine_id`, and on update sets `catalog_wine_id` from the payload (§0.1). A sheet opened on a hidden glass before its reveal would null the identity the resolve trigger set, and an unidentified wine can get no note at all.
 - `/catalog/<any wine>/notes/new?blindWine=<glass id>` (`src/app/catalog/[wineId]/notes/new/page.tsx:47-48`) writes a BLIND note carrying a catalog identity and `tasting_wine_id` for any glass, revealed or not. With `wset notes read` public, a crafted link publishes a glass-to-wine mapping.
-- `src/components/new-note-modal.tsx:28-47`: `NewNoteModal({ wineId, onClose, cellarConsume, tastingWineId, contextKind, onSaved })` loads a catalog wine by `wineId`.
+- `src/components/new-note-modal.tsx:28` (`NoteSaved`) and `:36-53` (props): `NewNoteModal({ wineId, onClose, cellarConsume, tastingWineId, contextKind, onSaved })` loads a catalog wine by `wineId`.
 - `wset_notes_check_hue` (a BEFORE trigger) validates `colour_hue` against `catalog_wines.colour` when the note has a catalog wine.
 - `catalog_wine_mark_blind` ignores notes without a catalog id.
 - Deleting a glass sets `wset_notes.tasting_wine_id` to null (`on delete set null`).
@@ -2310,7 +2310,7 @@ grant select (id, wine_id, participant_id,
 
 App consequences, all shipped before M9 applies:
 
-- Every `supabase.from("guesses").select("*")` becomes an explicit list from `src/lib/guess-columns.ts` (`GUESS_READ_COLUMNS`). Today's readers: `host/page.tsx:172`, `play-experience.tsx:280,488,602`, `results/page.tsx:112`, `u/[id]/tastings/[tastingId]/page.tsx:89`, `overview-data.ts:239`, `profile-stats.ts:196,353`, `your-numbers.ts:117`, `taste-archive-data.ts:123`, `tastings/new/actions.ts:316`, and `play/actions.ts`.
+- Every `supabase.from("guesses").select("*")` becomes an explicit list from `src/lib/guess-columns.ts` (`GUESS_READ_COLUMNS`). Today's readers: `host/page.tsx:172`, `play-experience.tsx:280,488,602`, `results/page.tsx:112`, `u/[id]/tastings/[tastingId]/page.tsx:89`, `overview-data.ts:239`, `profile-stats.ts:196,353`, `your-numbers.ts:117`, `taste-archive-data.ts:123`, `tastings/new/actions.ts:320`, and `play/actions.ts`.
 - Every reader of `guessed_wine_id` moves to the RPCs: `host/page.tsx`, `play-experience.tsx`, `results/page.tsx`, `u/[id]/tastings/[tastingId]/page.tsx`, and the result and record loaders (§11).
 - Plan grep gates: every hit of `rg -n 'from\("guesses"\)' src` passes an explicit column list; `rg -n "guessed_wine_id" src` hits only `database.types.ts`, `result-math.ts` comments and the RPC result types.
 - `RevealSync`'s `postgres_changes` subscription on `guesses` is probed after the revoke. If Realtime cannot deliver it without table-wide SELECT, the component drops that channel and relies on the `wines` channel plus `AutoRefresh` (the task decides by the probe).
@@ -2396,12 +2396,12 @@ S11 (reveal, phone), S11b (reveal, laptop), S12 and S12b (the finish), S13 and S
 ### 11.2 Current state
 
 - **`src/app/tastings/[id]/play/reveal-view.tsx`** (517 lines; T7): dark (console tokens); reads `get_wine_reveal`; hero, verdict pill, rows (truth, "you:", points); hidden rows read "still hidden" with their values (:408); "{reveal_step} of {in_play_count} attributes" (:322); standings with `rankDelta` (:294-310), the delta hidden under PER_WINE while a glass is only partly revealed (:299); nothing at step 0 (:157). No locked line, no facts for participants, no motion.
-- **Numbering.** The running page's navigator says "Wine {i + 1}" (`page.tsx:604`) and "{revealed} of {n} wines" (:619). `/play`'s header says "Wine {position} of {total}" from the raw stored position (`play-experience.tsx:418-420, 739-740`). Glass cards and `/results` use `makeWineLabeler` ("Wine N"; list order since lane N).
+- **Numbering.** The running page's navigator says "Wine {i + 1}" (`page.tsx:764`) and "{revealed} of {n} wines" (:779). `/play`'s header says "Wine {position} of {total}" from the raw stored position (`play-experience.tsx:418-420, 739-740`). Glass cards and `/results` use `makeWineLabeler` ("Wine N"; list order since lane N).
 - **CLOSED.** The running page shows "Completed" over the same board; there is no result screen (`RESULT-01`).
 - **`results/page.tsx`** (626 lines; T7): standings (`rankRows`; "Standings so far" until CLOSED, :357-359) and a per-wine breakdown of fully revealed wines; it reads `guesses` with `select("*")` (:112) and `guessed_wine_id` (:567-576).
 - **`/u/[id]/tastings/[tastingId]/page.tsx`**: a per-person breakdown that reads `guessed_wine_id` (:95-104, :187-188).
 - **`src/lib/result-math.ts`** (lane N): `blindResult`, `semiBlindResult`, `glassMaxPoints`, `glassMarks`, `bestGlass`, `strongestAttribute`, `blindAgreedLeast`, `semiBlindAgreedLeast`; semi-blind rows take `guessed_wine_id`.
-- No CSV export, no "Save all", no S13c. `AddWineOpenOptions` has no preselect (`src/components/add-wine/types.ts:27-33`).
+- No CSV export, no "Save all", no S13c. `AddWineOpenOptions` has no preselect (`src/components/add-wine/types.ts:33-39`).
 - No `tastings.started_at` / `finished_at`, no `wines.revealed_at`.
 
 ### 11.3 Change
