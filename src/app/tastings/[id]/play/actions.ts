@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { guessBlockReason } from "@/lib/guess-guards";
 import { PAUSED_REFUSAL } from "@/lib/console-copy";
 import { createClient } from "@/lib/supabase/server";
+import { chooseFirst, matchRefusalSentence } from "@/lib/semi-blind-copy";
+import type { SemiBlindBoardJson } from "@/lib/semi-blind-board";
 import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { maybeAutoRevealWine } from "./auto-reveal";
@@ -50,6 +52,92 @@ async function completeGlassIds(
   }
   const pending = new Set(incomplete.rows.map((glass) => glass.wineId));
   return new Set(wineIds.filter((id) => !pending.has(id)));
+}
+
+// ── Semi-blind matching (BT-S2, spec §10.3 item 2) ──────────────────────────
+//
+// assignMatch/clearMatch call assign_semi_blind_match/clear_semi_blind_match
+// (M9a) and map a refusal through matchRefusalSentence (BT-P6), which needs
+// two small lookups the RPC's own refusal doesn't carry: which list-order
+// glass a holder wine id is ("glass locked") and which candidate keys are
+// currently revealed ("that wine is not in your pool"). Both are fetched only
+// when the specific refusal that needs them actually happens.
+
+// wineId → list-order glass number ("Glass 3"), never the stored position —
+// same convention as semi-blind-board.ts's BoardGlass.glass.
+async function glassNumberLookup(
+  supabase: Client,
+  tastingId: string,
+): Promise<(wineId: string) => number | null> {
+  const { data } = await supabase
+    .from("wines")
+    .select("id")
+    .eq("tasting_id", tastingId)
+    .order("position");
+  const index = new Map((data ?? []).map((w, i) => [w.id, i + 1]));
+  return (wineId: string) => index.get(wineId) ?? null;
+}
+
+// The candidate keys of every currently revealed glass, from get_semi_blind_board
+// — never semi_blind_candidate_keys directly (RLS reserves that table for the
+// SECURITY DEFINER functions; rule 1: the board speaks in opaque keys only).
+async function revealedCandidateKeys(
+  supabase: Client,
+  tastingId: string,
+): Promise<ReadonlySet<string>> {
+  const { data } = await supabase.rpc("get_semi_blind_board", { p_tasting_id: tastingId });
+  const board = data as SemiBlindBoardJson | null;
+  return new Set((board?.revealed ?? []).map((row) => row.key));
+}
+
+// assign_semi_blind_match / clear_semi_blind_match's error → the sentence the
+// board shows (spec §10.3 item 2). glassNumberOf and revealedKeys are only
+// fetched for the one refusal each actually explains.
+async function matchErrorMessage(
+  supabase: Client,
+  tastingId: string,
+  candidateKey: string,
+  error: { message: string; details?: string | null },
+): Promise<string> {
+  const message = error.message.trim().toLowerCase();
+  const glassNumberOf =
+    message === "glass locked" ? await glassNumberLookup(supabase, tastingId) : () => null;
+  const revealedKeys =
+    message === "that wine is not in your pool"
+      ? await revealedCandidateKeys(supabase, tastingId)
+      : new Set<string>();
+  return matchRefusalSentence(error, {
+    glassNumberOf,
+    candidateKey,
+    revealedKeys,
+    lockedIn: LOCKED_EDIT_REFUSAL,
+  });
+}
+
+// lockGuess's app guard for a semi-blind glass (spec §10.3 item 2, "Lock per
+// glass"): chooseFirst(n) when the caller has not assigned this glass yet,
+// read through get_semi_blind_board — never guessed_wine_id (rule 1). Null
+// for a BLIND tasting (nothing to guard) and whenever a key is already
+// assigned.
+async function semiBlindLockGuard(
+  supabase: Client,
+  tastingId: string,
+  wineId: string,
+): Promise<string | null> {
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("reveal_mode")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (tasting?.reveal_mode !== "SEMI_BLIND") return null;
+
+  const { data } = await supabase.rpc("get_semi_blind_board", { p_tasting_id: tastingId });
+  const board = data as SemiBlindBoardJson | null;
+  const mine = board?.mine.find((row) => row.glass_wine_id === wineId);
+  if (mine?.key != null) return null;
+
+  const glassNumberOf = await glassNumberLookup(supabase, tastingId);
+  return chooseFirst(glassNumberOf(wineId) ?? 0);
 }
 
 export type GuessFormState = { error: string } | { success: true } | null;
@@ -170,6 +258,8 @@ export async function lockGuess(
   if ("error" in guesser) return { error: guesser.error };
   const blocked = await guessableWineError(supabase, tastingId, wineId, guesser.participantId);
   if (blocked) return { error: blocked };
+  const matchGuard = await semiBlindLockGuard(supabase, tastingId, wineId);
+  if (matchGuard) return { error: matchGuard };
 
   const { data: existing } = await supabase
     .from("guesses")
@@ -303,11 +393,106 @@ export async function unlockGuess(
   return { ok: true };
 }
 
+// Semi-blind matching (B9, spec §10.3 item 2): puts candidateKey on the
+// caller's glassWineId row. assign_semi_blind_match does the swap itself (a
+// candidate already held by another open, unlocked glass moves to this
+// glass's previous candidate, or leaves it empty) — applyAssignment
+// (semi-blind-board.ts) mirrors the same rule for the optimistic board, so
+// this only ever needs to apply the RPC's own answer, never recompute a
+// swap. No revalidatePath: like saveGuessFields, this is a background
+// autosave the board already shows optimistically.
+export async function assignMatch(
+  tastingId: string,
+  glassWineId: string,
+  candidateKey: string,
+): Promise<{ ok: true; swappedWith: string | null } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const guesser = await resolveGuesser(supabase, tastingId, user.id);
+  if ("error" in guesser) return { error: guesser.error };
+  // Review round 1: bind glassWineId to tastingId the same way every other
+  // guess action does, before trusting either for pacing — sequentialOrderError
+  // reads *this* tasting's glasses/pointer, so without this a glass id from a
+  // different tasting the caller also belongs to would have its pacing judged
+  // against the wrong tasting's settings (and could bypass pacing entirely by
+  // naming a non-LIVE or non-guided tasting as tastingId).
+  const blocked = await guessableWineError(supabase, tastingId, glassWineId, guesser.participantId);
+  if (blocked) return { error: blocked };
+  // Refinement 6: semi-blind guided pacing refuses a glass beyond pouredThrough
+  // on the server too, with the same sentence a not-in-order blind guess gets.
+  const orderError = await sequentialOrderError(supabase, tastingId, glassWineId);
+  if (orderError) return { error: orderError };
+
+  let { data, error } = await supabase.rpc("assign_semi_blind_match", {
+    p_wine_id: glassWineId,
+    p_candidate_key: candidateKey,
+  });
+  // BT-SQL9 review: 40P01 (a deadlock between this participant's own two row
+  // locks, taken in a different order by an overlapping call) and 23505 (a
+  // race on guesses_one_open_glass_per_candidate) are transient concurrency
+  // artifacts, not a real refusal — a lone retry resolves them silently
+  // rather than surfacing a raw Postgres sentence (the same retry-once
+  // pattern upsertCatalogWine uses for its own 23505 race).
+  if (error && (error.code === "40P01" || error.code === "23505")) {
+    ({ data, error } = await supabase.rpc("assign_semi_blind_match", {
+      p_wine_id: glassWineId,
+      p_candidate_key: candidateKey,
+    }));
+  }
+  if (error) {
+    return { error: await matchErrorMessage(supabase, tastingId, candidateKey, error) };
+  }
+
+  const result = data as { glass: string; swapped_with: string | null } | null;
+  return { ok: true, swappedWith: result?.swapped_with ?? null };
+}
+
+// The caller's own unlocked, unscored row on glassWineId loses its
+// candidate. No pacing guard (clear_semi_blind_match has none — pacing only
+// ever stops a glass from being assigned in the first place); errors mapped
+// the same way as assignMatch.
+export async function clearMatch(
+  tastingId: string,
+  glassWineId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const guesser = await resolveGuesser(supabase, tastingId, user.id);
+  if ("error" in guesser) return { error: guesser.error };
+  // Same binding as assignMatch (review round 1) — clearMatch has no pacing
+  // guard of its own, but glassNumberLookup below still reads *this* tasting's
+  // wines for the "glass locked" sentence, so glassWineId must belong to it.
+  const blocked = await guessableWineError(supabase, tastingId, glassWineId, guesser.participantId);
+  if (blocked) return { error: blocked };
+
+  let { error } = await supabase.rpc("clear_semi_blind_match", { p_wine_id: glassWineId });
+  if (error && (error.code === "40P01" || error.code === "23505")) {
+    ({ error } = await supabase.rpc("clear_semi_blind_match", { p_wine_id: glassWineId }));
+  }
+  if (error) {
+    return { error: await matchErrorMessage(supabase, tastingId, "", error) };
+  }
+  return { ok: true };
+}
+
 // Semi-blind "Lock in all glasses": locks every unscored row among the given
 // wines in one call (after submitAllMatchGuesses has written them), then
 // scores/auto-reveals each. Rows that are already scored are skipped
 // silently, matching submitAllMatchGuesses. Your own bottles are skipped too;
 // any other refused glass (play-8) refuses the whole call.
+/** @deprecated removed in BT-S3 — superseded by assignMatch/clearMatch's per-glass lockGuess. */
 export async function lockGuesses(
   tastingId: string,
   wineIds: string[],
@@ -379,6 +564,7 @@ export async function lockGuesses(
 // paired to a candidate at once), not per-glass — see match-guess-form.tsx
 // for why partial submission doesn't make sense here. Like saveGuessFields,
 // this only writes: scoring/auto-reveal happen in lockGuesses.
+/** @deprecated removed in BT-S3 — superseded by assignMatch's per-glass autosave. */
 export async function submitAllMatchGuesses(
   _prevState: GuessFormState,
   formData: FormData,
