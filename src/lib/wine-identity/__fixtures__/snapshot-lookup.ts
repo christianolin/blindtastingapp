@@ -14,7 +14,10 @@ export type ReferenceSnapshot = {
   regions: { id: string; name: string; country_id: string }[];
   appellations: { id: string; name: string; region_id: string }[];
   none: { country_id: string; region_id: string; appellation_id: string }[];
-  producers: { id: string; name: string; region_id: string | null }[];
+  /** `has_wines`: a catalog_wines or wine_answers row carries the producer's id —
+      the folded lookup's third tie-break (20260914112500). Absent means false, so
+      a snapshot exported before the field still loads and resolves as before. */
+  producers: { id: string; name: string; region_id: string | null; has_wines?: boolean }[];
   grapes: { id: string; name: string }[];
   type_designations: { id: string; name: string; country_id: string | null }[];
 };
@@ -92,26 +95,37 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
       return none ? { regionId: none.region_id, appellationId: none.appellation_id } : null;
     },
 
-    // find_producer_by_folded_name (20260912101000): folded equality, ties to the
-    // given region first, then to any producer with a region link, then name, id
-    // (spec §B.7).
+    // find_producer_by_folded_name: folded equality (20260912101000), and among
+    // folded-equal producers, in order (20260914112500, owner approval 3):
+    //   1. the given region;
+    //   2. the exact spelling, lower(name) = lower(btrim(query));
+    //   3. a producer that holds wines (has_wines; absent means false);
+    //   4. any region link;
+    //   5. the name, then the id (spec §B.7).
     //
-    // 20260912101000's first version sorted `(p_region_id is not null and
-    // p.region_id = p_region_id) desc` first. With a region given, a region-less
-    // duplicate made that key NULL, which DESC sorts first, so it beat the
-    // region-linked row the caller asked for (6 of 44 folded collision groups).
-    // 20260912101530_producer_folded_lookup_region_order, applied live, wraps the
-    // key in `coalesce(..., false)`; this mirror and the database now agree.
+    // The region key is null-safe. 20260912101000's first version sorted
+    // `(p_region_id is not null and p.region_id = p_region_id) desc` first; with a
+    // region given, a region-less duplicate made that key NULL, which DESC sorts
+    // first (6 of 44 folded collision groups). 20260912101530 wraps it in
+    // `coalesce(..., false)`, and this mirror keeps that.
     producerByFoldedName: async (name, regionId) => {
       const wanted = foldName(name);
       if (wanted === "") return null;
+      // btrim(text) trims spaces only, not tabs or newlines.
+      const spelling = name.replace(/^ +| +$/g, "").toLowerCase();
+      const keys = (p: (typeof snapshot.producers)[number]): boolean[] => [
+        regionId !== null && p.region_id === regionId,
+        p.name.toLowerCase() === spelling,
+        p.has_wines === true,
+        p.region_id !== null,
+      ];
       const hit = snapshot.producers
         .filter((p) => foldName(p.name) === wanted)
+        .map((p) => ({ p, k: keys(p) }))
         .sort((a, b) =>
-          Number(regionId !== null && b.region_id === regionId) - Number(regionId !== null && a.region_id === regionId)
-          || Number(b.region_id !== null) - Number(a.region_id !== null)
-          || a.name.localeCompare(b.name)
-          || a.id.localeCompare(b.id))[0];
+          a.k.reduce((order, key, i) => order || Number(b.k[i]) - Number(key), 0)
+          || a.p.name.localeCompare(b.p.name)
+          || a.p.id.localeCompare(b.p.id))[0]?.p;
       return hit ? { id: hit.id, name: hit.name, regionId: hit.region_id } : null;
     },
 
