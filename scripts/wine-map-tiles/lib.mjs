@@ -231,13 +231,23 @@ export const ATTRIBUTION = {
   // The German regions delimited by their EU product specification rather than
   // by a state Weinbergsrolle. One namespace, not one per state, because the
   // membership half is the same source for all of them and the geometry half is
-  // whichever state's ATKIS the region sits in -- currently Bavaria, with
-  // Baden-Württemberg and Saale-Unstrut to follow. Both contributing
-  // authorities are credited: neither result stands without the other.
+  // whichever state's survey data the region sits in -- Bavaria for Franken,
+  // and three states at once for Saale-Unstrut, with Baden-Württemberg to
+  // follow. Both contributing halves are credited: neither result stands
+  // without the other.
+  //
+  // EVERY survey authority is named, not just the first. Bavaria publishes
+  // under CC BY 4.0 and the other three under Datenlizenz Deutschland —
+  // Namensnennung 2.0, and naming the source is what both licences require in
+  // exchange for the data. A region whose authority is missing here is being
+  // shown in breach of the licence it was obtained under, which is why this
+  // string grows with each state rather than staying generic.
   DE_SPEC_ATKIS_WEINBAU: {
     key: "de-spec-atkis",
-    text: "© Landesvermessung (ATKIS Basis-DLM), Bayern: Bayerische Vermessungsverwaltung "
-      + "(CC BY 4.0); Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia",
+    text: "© Landesvermessung: Bayerische Vermessungsverwaltung (ATKIS Basis-DLM, CC BY 4.0); "
+      + "GeoBasis-DE / LVermGeo Sachsen-Anhalt, GDI-Th / TLBG Thüringen, "
+      + "LGB Brandenburg (ATKIS Basis-DLM und ALKIS, dl-de/by-2-0); "
+      + "Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia",
   },
 };
 
