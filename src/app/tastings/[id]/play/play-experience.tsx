@@ -13,8 +13,10 @@ import {
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
+import { eligibleForGlass } from "@/lib/glass-eligibility";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
+import { currentGlass, type PointerGlass } from "@/lib/pour-pointer";
 import { rankLabel, rankRows } from "@/lib/stats-math";
 import {
   pendingAnswerNotice,
@@ -27,6 +29,7 @@ import { cn } from "@/lib/utils";
 import type { GrapeShortlist, GuessRow, RankChip } from "./ladder-types";
 import { GlassStage, type LockedInPerson } from "./locked-in";
 import { MatchLadder, type MatchCandidate, type MatchGlass } from "./match-ladder";
+import { PausedBand } from "./paused-band";
 import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
 import { RevealView, type RevealStanding } from "./reveal-view";
@@ -304,6 +307,12 @@ export async function PlayExperience({
         "Someone",
     ]),
   );
+  // Q1: the host's name for the paused band (below). The host is always a
+  // JOINED participant, so their profile is already in the fetch above.
+  const hostName =
+    profileByUserId.get(tasting.host_id)?.display_name ??
+    profileByUserId.get(tasting.host_id)?.email ??
+    "Someone";
   // Per wine: who has a guess row, and whether it is locked. A row that
   // exists but is not locked is an autosaved draft — "in progress".
   const statusByWineId = new Map<string, Map<string, boolean>>();
@@ -317,9 +326,24 @@ export async function PlayExperience({
   );
   const isHostProvidesHostRow = (p: { user_id: string }) =>
     tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id;
-  const eligibleGuessers = (wine: { contributor_participant_id: string | null }) =>
-    joinedParticipants.filter(
-      (p) => p.id !== wine.contributor_participant_id && !isHostProvidesHostRow(p),
+  // Single source of truth (BT-P2) for who's expected to guess a glass, so
+  // this never drifts from the console, the ASYNC auto-reveal or the result
+  // and record loaders. joinedAt is unused by eligibleForGlass itself (only
+  // joinedAfterReveal reads it), so it's fine left null here.
+  const eligibleGuessers = (wine: {
+    contributor_participant_id: string | null;
+    is_revealed: boolean;
+  }) =>
+    (participantRows ?? []).filter((p) =>
+      eligibleForGlass(
+        { id: p.id, userId: p.user_id, status: p.status, joinedAt: null },
+        {
+          contributorParticipantId: wine.contributor_participant_id,
+          isRevealed: wine.is_revealed,
+          revealedAt: null,
+        },
+        { wineSource: tasting.wine_source, hostId: tasting.host_id },
+      ),
     );
   const lockedFor = (wineId: string, participantId: string) =>
     statusByWineId.get(wineId)?.get(participantId) === true;
@@ -401,8 +425,16 @@ export async function PlayExperience({
 
   // The pacing half of that same flag: one glass at a time, in order.
   const sequential = guidedLive;
+  // The pour pointer's glass (BT-P3), not a bare lowest-position check: a
+  // Skip moves tastings.current_wine_id, and a late joiner should open on
+  // whichever glass is actually pouring now, skips included.
+  const pointerGlasses: PointerGlass[] = (wines ?? []).map((w) => ({
+    id: w.id,
+    isRevealed: w.is_revealed,
+    revealStep: w.reveal_step ?? 0,
+  }));
   const currentWineId = sequential
-    ? ((wines ?? []).find((w) => !w.is_revealed)?.id ?? null)
+    ? (currentGlass(pointerGlasses, tasting.current_wine_id)?.id ?? null)
     : null;
 
   const revealedWineIds = (wines ?? [])
@@ -727,6 +759,10 @@ export async function PlayExperience({
       ) : (
         <AutoRefresh />
       )}
+
+      {/* Q1: reveals and Skip wait while the host has paused; guessing and
+          locking still work, so nothing else on this page is gated by it. */}
+      {tasting.paused_at ? <PausedBand hostName={hostName} /> : null}
 
       {/* Always-visible progress so players know where they are in the flight.
           Suppressed when embedded — the tasting page shows it in the left rail. */}
