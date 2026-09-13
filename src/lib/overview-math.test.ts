@@ -24,17 +24,41 @@ describe("a self-paced tasting reads 'in progress' (entry-4)", () => {
 });
 
 describe("canAddToFlight — the flight hint registers only for people who may add (D12)", () => {
+  // Base fields cover the pre-existing BLIND/DRAFT cases; each spread adds
+  // revealMode/tastingStatus explicitly where the case under test cares.
+  const draftBlind = { revealMode: "BLIND", tastingStatus: "DRAFT" } as const;
+
   it("host-provides: only the host", () => {
-    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED" })).toBe(true);
-    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "INVITED" })).toBe(true);
-    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "g", myStatus: "JOINED" })).toBe(false);
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "INVITED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "g", myStatus: "JOINED", ...draftBlind })).toBe(false);
   });
 
   it("bring-your-own: any JOINED participant, the host included, nobody else", () => {
-    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED" })).toBe(true);
-    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "JOINED" })).toBe(true);
-    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "INVITED" })).toBe(false);
-    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "DECLINED" })).toBe(false);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "INVITED", ...draftBlind })).toBe(false);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "DECLINED", ...draftBlind })).toBe(false);
+  });
+
+  it("a started SEMI_BLIND tasting refuses everyone — the flight is fixed once it starts (owner Q7)", () => {
+    const startedSemiBlind = { revealMode: "SEMI_BLIND", tastingStatus: "IN_PROGRESS" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...startedSemiBlind })).toBe(false);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...startedSemiBlind })).toBe(false);
+    // A legacy OPEN status also counts as started, same as isRunningStatus.
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", revealMode: "SEMI_BLIND", tastingStatus: "OPEN" })).toBe(false);
+  });
+
+  it("a DRAFT SEMI_BLIND tasting is unaffected — the flight isn't fixed until it starts", () => {
+    const draftSemiBlind = { revealMode: "SEMI_BLIND", tastingStatus: "DRAFT" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...draftSemiBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...draftSemiBlind })).toBe(true);
+  });
+
+  it("a started BLIND tasting is unaffected — the fixed-flight rule is semi-blind only", () => {
+    const startedBlind = { revealMode: "BLIND", tastingStatus: "IN_PROGRESS" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...startedBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...startedBlind })).toBe(true);
   });
 });
 

@@ -6,10 +6,12 @@
 // them RLS-readable rows.
 import type { TastingRow } from "@/lib/overview-types";
 import type {
+  RevealMode,
   TastingStatus,
   TimingMode,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
+import { semiBlindAddRefusal } from "./flight-glass-rules";
 import { joinEyebrow, statusWord, timingWord } from "./tasting-eyebrow";
 import { makeWineLabeler } from "./wine-label";
 
@@ -167,16 +169,25 @@ export function tastingCardStatus(status: TastingStatus, timingMode: TimingMode)
 /**
  * Who may add a wine to a tasting's flight — the same rule the server's
  * `resolveTastingAdder` enforces: the host of a host-provides tasting, or any
- * JOINED participant of a bring-your-own one. The Overview registers its
- * flight hint (and offers "Add a wine") only when this holds, so the sheet
- * never draws a flight row you cannot take (D12; scan-4, sources-2, entry-3).
+ * JOINED participant of a bring-your-own one, and never once a started
+ * semi-blind tasting has fixed its flight (`semiBlindAddRefusal`, owner Q7) —
+ * the server already refuses that add (`resolveTastingAdder`), this just
+ * keeps the Overview from registering a flight hint (and a paid label scan)
+ * for a glass it would only reject. The Overview registers its flight hint
+ * (and offers "Add a wine") only when this holds, so the sheet never draws a
+ * flight row you cannot take (D12; scan-4, sources-2, entry-3).
  */
 export function canAddToFlight(t: {
   wineSource: WineSourceMode;
   hostId: string;
   myId: string;
   myStatus: string;
+  revealMode: RevealMode;
+  tastingStatus: TastingStatus;
 }): boolean {
+  if (semiBlindAddRefusal({ revealMode: t.revealMode, tastingStatus: t.tastingStatus })) {
+    return false;
+  }
   return t.wineSource === "HOST_PROVIDES" ? t.hostId === t.myId : t.myStatus === "JOINED";
 }
 
