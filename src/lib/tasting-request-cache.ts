@@ -49,6 +49,20 @@ export const getParticipantRows = cache(async (tastingId: string) => {
   return data ?? [];
 });
 
+/**
+ * The signed-in viewer's own participant row for this tasting (BT-D2), or
+ * null when they have none (not a participant, or not signed in). Derived
+ * from getParticipantRows rather than its own query, so every view that
+ * needs "am I the host / am I JOINED / INVITED / DECLINED" for the router
+ * and its own render costs nothing extra beyond the one cached read.
+ */
+export const getViewerParticipant = cache(async (tastingId: string) => {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const rows = await getParticipantRows(tastingId);
+  return rows.find((p) => p.user_id === user.id) ?? null;
+});
+
 export const getWineRows = cache(async (tastingId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
