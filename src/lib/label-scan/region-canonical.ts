@@ -46,6 +46,39 @@ const REGION_SYNONYMS: Record<string, Record<string, string>> = {
   Romania: { transylvania: "Transilvania" },
 };
 
+// Curated appellation synonyms (owner approval 4, 2026-09-13): a label's longer
+// official origin that names the same reference appellation. Never a general
+// heuristic — add a spelling only when it is evidently the same appellation.
+// Scoped by canonical country, then by the stored region name, so a synonym
+// applies only when the read's own region resolved to that region; the resolver
+// tries it only after no reference row agreed with the read's text, and takes
+// its target only when exactly one row of that name sits in the region
+// (resolve.ts step 4). Keys are the read trimmed, lowercased, with runs of
+// whitespace collapsed; values are the exact stored appellation name.
+export const APPELLATION_SYNONYMS: Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>> = {
+  China: {
+    Ningxia: {
+      // 贺兰山东麓 — "Helan Mountain East(ern) Foothills", Ningxia's official origin
+      // (round 2's #4 Changyu Moser XV label), stored as the region's own
+      // appellation "Ningxia". The same words without the province, and the
+      // shortened "Helan Mountain East" form, name the same origin.
+      "ningxia helan mountain eastern foothills": "Ningxia",
+      "ningxia helan mountain east": "Ningxia",
+      "helan mountain eastern foothills": "Ningxia",
+    },
+  },
+};
+
+// The stored appellation name a curated synonym gives a read's appellation text
+// inside `region` of `country` (both canonical stored names), or null. Own keys
+// only, so read text such as "constructor" never reaches Object.prototype.
+export function curatedAppellationName(appellation: string, country: string, region: string): string | null {
+  const own = <T>(map: Readonly<Record<string, T>> | undefined, key: string): T | undefined =>
+    map !== undefined && Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+  const key = appellation.trim().toLowerCase().replace(/\s+/g, " ");
+  return own(own(own(APPELLATION_SYNONYMS, country), region), key) ?? null;
+}
+
 // Map a scanned country name onto the catalog's canonical spelling.
 export function canonicalCountryName(country: string): string {
   return COUNTRY_SYNONYMS[country.trim().toLowerCase()] ?? country.trim();
