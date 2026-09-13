@@ -24,11 +24,6 @@ function submitsImmediately({ timingMode, asyncRevealPolicy }: LockMode): boolea
 export const LADDER_EXTRAS_NOTE =
   "Secondary grape and type designation only score if the wine has one (2 pts each). They're under More for every glass.";
 
-/** The match ladder's footer helper (play-7): there is no skip, every glass
- *  must be matched before it can lock. */
-export const MATCH_FOOTER =
-  "Every glass needs a match — a wrong match just scores 0. Locking saves every match at once and shows the others you are ready.";
-
 /**
  * The lock button's label in ASYNC + IMMEDIATE — one glass on the guess
  * ladder, every glass on the match ladder — or null to keep today's label.

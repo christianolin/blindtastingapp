@@ -20,8 +20,10 @@ import { canNoteHiddenGlass } from "@/lib/wset/hidden-note";
 import { assessedOf, summarizeNoteRow } from "@/lib/wset/note-summary";
 import { buildPickCounts, type PickCounts } from "./pick-counts";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
-import { currentGlass, type PointerGlass } from "@/lib/pour-pointer";
+import { currentGlass, pouredThrough, type PointerGlass } from "@/lib/pour-pointer";
 import { rankLabel, rankRows } from "@/lib/stats-math";
+import { getSemiBlindBoard, getSemiBlindCandidates } from "@/lib/semi-blind-data";
+import type { BoardGlass } from "@/lib/semi-blind-board";
 import {
   pendingAnswerNotice,
   type IncompleteGlass,
@@ -32,7 +34,7 @@ import { RevealSync } from "@/components/reveal-sync";
 import { cn } from "@/lib/utils";
 import type { GrapeShortlist, GuessRow, RankChip } from "./ladder-types";
 import { GlassStage, type LockedInPerson } from "./locked-in";
-import { MatchLadder, type MatchCandidate, type MatchGlass } from "./match-ladder";
+import { MatchBoard } from "./match-board";
 import type { NoteThisGlassData } from "./note-this-glass";
 import { PausedBand } from "./paused-band";
 import { RevealButton } from "./reveal-button";
@@ -229,33 +231,7 @@ export async function PlayExperience({
     vintage_tawny_years: number | null;
   };
 
-  function describeAnswer(answer: AnswerLike) {
-    return (
-      `${nameById.get(answer.country_id)} · ${nameById.get(answer.region_id)}` +
-      `${answer.appellation_id ? ` · ${nameById.get(answer.appellation_id)}` : ""}` +
-      ` — ${nameById.get(answer.primary_grape_id)}` +
-      `${answer.secondary_grape_id ? ` / ${nameById.get(answer.secondary_grape_id)}` : ""}` +
-      ` — ${answer.producer_id ? (nameById.get(answer.producer_id) ?? "—") : "Producer unknown"}` +
-      `${answer.type_designation_id ? ` (${nameById.get(answer.type_designation_id)})` : ""}` +
-      ` — ${vintageLabel(answer)}`
-    );
-  }
   const name = (id: string | null) => (id ? (nameById.get(id) ?? "—") : "—");
-
-  // The same answer as a picker row for the semi-blind match ladder: the
-  // producer + vintage as the name, origin and grapes as the sub line.
-  function candidateOption(a: { wine_id: string } & AnswerLike): MatchCandidate {
-    return {
-      id: a.wine_id,
-      name: `${a.producer_id ? name(a.producer_id) : "Producer unknown"} · ${vintageLabel(a)}`,
-      sub:
-        `${name(a.country_id)} · ${name(a.region_id)}` +
-        `${a.appellation_id ? ` · ${name(a.appellation_id)}` : ""}` +
-        ` — ${name(a.primary_grape_id)}` +
-        `${a.secondary_grape_id ? ` / ${name(a.secondary_grape_id)}` : ""}` +
-        `${a.type_designation_id ? ` (${name(a.type_designation_id)})` : ""}`,
-    };
-  }
 
   // Same answer, as labelled columns for the post-reveal card.
   function answerFacts(answer: AnswerLike): AnswerFact[] {
@@ -532,17 +508,6 @@ export async function PlayExperience({
     (resolvedAnswers ?? []).map((a) => [a.wine_id, a]),
   );
 
-  const { data: allAnswers } = isSemiBlind
-    ? await supabase
-        .from("wine_answers")
-        .select("*")
-        .in("wine_id", wineIds.length > 0 ? wineIds : [""])
-    : { data: [] };
-  const candidateByWineId = new Map((allAnswers ?? []).map((a) => [a.wine_id, a]));
-  for (const a of allAnswers ?? []) {
-    if (!answerByWineId.has(a.wine_id)) answerByWineId.set(a.wine_id, a);
-  }
-
   // A wine picked from the catalog carries no photo on its own answer row, so
   // fall back to the linked catalog entry's label photo.
   const catalogIdsNeedingImage = [
@@ -580,25 +545,43 @@ export async function PlayExperience({
   const lookedUpNames = await lookupAppellationAndProducerNames({
     appellationIds: [
       ...(resolvedAnswers ?? []).map((a) => a.appellation_id),
-      ...(allAnswers ?? []).map((a) => a.appellation_id),
       ...(allRevealedGuesses ?? []).map((g) => g.appellation_id),
       ...(myGuesses ?? []).map((g) => g.appellation_id),
     ],
     producerIds: [
       ...(resolvedAnswers ?? []).map((a) => a.producer_id),
-      ...(allAnswers ?? []).map((a) => a.producer_id),
       ...(allRevealedGuesses ?? []).map((g) => g.producer_id),
       ...(myGuesses ?? []).map((g) => g.producer_id),
     ],
   });
   for (const [id, n] of lookedUpNames) nameById.set(id, n);
 
-  const candidates = (allAnswers ?? [])
-    .map((a) => ({ id: a.wine_id, name: describeAnswer(a) }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const matchCandidates: MatchCandidate[] = (allAnswers ?? [])
-    .map(candidateOption)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Semi-blind: the matching board (BT-S3, SB2/SB3). Its list and pool never
+  // read wine_answers directly (rule 1) — get_semi_blind_candidates and
+  // get_semi_blind_board are the only source, one call each for the whole
+  // flight, never per glass. Skipped for the host-provides host (nothing to
+  // match) and once the tasting is finished.
+  const showMatchBoard = isSemiBlind && !hostProvidesHost && !finished;
+  const semiBlindCandidates = showMatchBoard ? await getSemiBlindCandidates(tastingId) : null;
+  const boardGlasses: BoardGlass[] = (wines ?? []).map((w, i) => ({
+    wineId: w.id,
+    glass: i + 1,
+    isRevealed: w.is_revealed,
+    revealStep: w.reveal_step ?? 0,
+    ownBottle: w.contributor_participant_id === myParticipant.id,
+  }));
+  const semiBlindBoard = showMatchBoard ? await getSemiBlindBoard(tastingId, boardGlasses) : null;
+  // The semi-blind flight has its own guided pointer, separate from
+  // `sequential`/`guidedLive` above (blind-only — Q8's step reveal never
+  // applies here): LIVE + sequential_guessing paces one glass at a time for
+  // matching too (refinement 6), otherwise every glass is open at once.
+  const semiBlindGuided = isSemiBlind && tasting.timing_mode === "LIVE" && tasting.sequential_guessing;
+  const semiBlindPouredThroughIndex = semiBlindGuided
+    ? pouredThrough(pointerGlasses, tasting.current_wine_id)
+    : null;
+  const semiBlindCurrentWineId = semiBlindGuided
+    ? (currentGlass(pointerGlasses, tasting.current_wine_id)?.id ?? null)
+    : null;
 
   // Standings: rank chip on the ladder / locked-in header, the rank delta on
   // the reveal, and the standalone leaderboard. Reuses getTastingLeaderboard
@@ -900,67 +883,22 @@ export async function PlayExperience({
         </div>
       ) : null}
 
-      {isSemiBlind && candidates.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>The wines in this tasting</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-3 text-sm text-muted-foreground">
-              {`These are the ${candidates.length} wines being poured — you just don't know which glass is which. Match each glass below.`}
-            </p>
-            <ul className="flex flex-col gap-1.5 text-sm">
-              {candidates.map((c) => (
-                <li key={c.id}>{c.name}</li>
-              ))}
-            </ul>
-            {(() => {
-              const eligible = joinedParticipants.filter((p) => !isHostProvidesHostRow(p));
-              if (eligible.length === 0) return null;
-              // Submitted = locked in on at least one glass (the batch locks
-              // every glass at once); a draft row is not a submission.
-              const submitted = new Set<string>();
-              for (const m of statusByWineId.values())
-                for (const [pid, locked] of m) if (locked) submitted.add(pid);
-              const readyCount = eligible.filter((p) =>
-                submitted.has(p.id),
-              ).length;
-              return (
-                <div className="mt-4 border-t pt-3">
-                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-                    {readyCount}/{eligible.length} submitted their matches
-                  </p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {eligible.map((p) => {
-                      const ready = submitted.has(p.id);
-                      return (
-                        <span key={p.id} className={ready ? "text-[#3f5b42]" : ""}>
-                          {ready ? "✓" : "○"} {nameByParticipantId.get(p.id)}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      ) : null}
-
       {(wines ?? []).map((wine, index) => {
+        // Semi-blind: every glass, whatever its state, is the matching
+        // board's job now (rendered once, below, over the whole flight) —
+        // this per-wine card never renders one (BT-S3; the old candidate
+        // intro and the per-glass "resolved" card it grew into are both
+        // superseded by MatchBoard, revealed rows included).
+        if (isSemiBlind) return null;
+
         const isMine = wine.contributor_participant_id === myParticipant.id;
         const answer = answerByWineId.get(wine.id);
         const guess = myGuessByWineId.get(wine.id);
-        const guessedCandidate = guess?.guessed_wine_id
-          ? candidateByWineId.get(guess.guessed_wine_id)
-          : null;
         const resolved = resolvedForMe(wine);
         const locked = Boolean(guess?.locked_at);
         // A draft (autosaved, unlocked) row is "in progress", not "guessed".
-        const hasDraft = isSemiBlind ? Boolean(guess?.guessed_wine_id) : Boolean(guess);
+        const hasDraft = Boolean(guess);
         const glassNumber = index + 1;
-
-        if (!resolved && !isMine && isSemiBlind) return null;
 
         const statusBadge = wine.is_revealed
           ? { label: "Revealed", variant: "default" as const }
@@ -1257,60 +1195,25 @@ export async function PlayExperience({
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                   <span className="font-heading text-sm font-semibold tabular-nums">
-                                    {isSemiBlind
-                                      ? g.total_points
-                                        ? "✓"
-                                        : "✗"
-                                      : `${g.total_points ?? 0} pts`}
+                                    {g.total_points ?? 0} pts
                                   </span>
                                   <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                                 </span>
                               </summary>
                               <div className="px-2.5 pb-2.5">
-                                {isSemiBlind ? (
-                                  <p className="text-xs text-muted-foreground">
-                                    {g.guessed_wine_id
-                                      ? `guessed ${
-                                          candidateByWineId.get(g.guessed_wine_id)
-                                            ? describeAnswer(
-                                                candidateByWineId.get(
-                                                  g.guessed_wine_id,
-                                                )!,
-                                              )
-                                            : "another wine"
-                                        }`
-                                      : "no match"}
-                                  </p>
-                                ) : (
-                                  <AttributeSheet rows={scoredRows(answer, g)} />
-                                )}
+                                <AttributeSheet rows={scoredRows(answer, g)} />
                               </div>
                             </details>
                           ))}
                         </div>
                       )
                     ) : guess ? (
-                      isSemiBlind ? (
-                        <div>
-                          <h3 className="mb-1 text-sm font-medium">
-                            {guess.total_points
-                              ? "✓ Correct match"
-                              : "✗ Wrong match"}
-                          </h3>
-                          {guessedCandidate ? (
-                            <p className="text-sm text-muted-foreground">
-                              You guessed: {describeAnswer(guessedCandidate)}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1.5">
-                          <p className="text-sm font-medium">
-                            Your result — {guess.total_points ?? 0} pts
-                          </p>
-                          <AttributeSheet rows={scoredRows(answer, guess)} />
-                        </div>
-                      )
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-sm font-medium">
+                          Your result — {guess.total_points ?? 0} pts
+                        </p>
+                        <AttributeSheet rows={scoredRows(answer, guess)} />
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
                         You didn&apos;t submit a guess for this wine.
@@ -1329,7 +1232,7 @@ export async function PlayExperience({
                   <p className="text-sm text-muted-foreground">
                     This tasting is finished — guessing is closed.
                   </p>
-                ) : isSemiBlind ? null : sequential && wine.id !== currentWineId ? (
+                ) : sequential && wine.id !== currentWineId ? (
                   // Only the bring-your-own host reaches this (participants
                   // get the collapsed row above): same line, inside the card
                   // that carries their reveal controls.
@@ -1409,71 +1312,29 @@ export async function PlayExperience({
         );
       })}
 
-      {isSemiBlind && !hostProvidesHost && !finished
-        ? (() => {
-            const glasses: MatchGlass[] = (wines ?? [])
-              .map((w, i) => ({ w, i }))
-              .filter(
-                ({ w }) =>
-                  !resolvedForMe(w) &&
-                  w.contributor_participant_id !== myParticipant.id,
-              )
-              .map(({ w, i }) => ({
-                wineId: w.id,
-                label: glassLabel(w, i),
-                existingGuessedWineId:
-                  myGuessByWineId.get(w.id)?.guessed_wine_id ?? null,
-              }));
-            if (glasses.length === 0) return null;
-            const eligible = joinedParticipants.filter((p) => !isHostProvidesHostRow(p));
-            const lockedAnywhere = (pid: string) =>
-              [...statusByWineId.values()].some((m) => m.get(pid) === true);
-            const allLocked = glasses.every((g) =>
-              Boolean(myGuessByWineId.get(g.wineId)?.locked_at),
-            );
-            return (
-              <Card id="match-glasses" className="scroll-mt-24">
-                <div className="-my-4">
-                  <MatchLadder
-                    tastingId={tastingId}
-                    tastingName={tasting.name}
-                    glasses={glasses}
-                    candidates={matchCandidates}
-                    initialLocked={allLocked}
-                    timingMode={tasting.timing_mode}
-                    asyncRevealPolicy={tasting.async_reveal_policy}
-                    lockedIn={{
-                      tastingId,
-                      eyebrow: tasting.name,
-                      title: "Locked in",
-                      rankChip: null,
-                      people: peopleFor(eligible, lockedAnywhere),
-                      lockedCount: eligible.filter((p) => lockedAnywhere(p.id)).length,
-                      eligibleCount: eligible.length,
-                      standingsLabel: "See the standings",
-                      standingsHref,
-                      // Same deferred-scoring rules as a blind glass (spec
-                      // §C.8): the batch locks every glass, so the first glass
-                      // still waiting explains the wait and any finished one
-                      // among them is scored. No `canChange` here either —
-                      // amendment 3 voids the semi-blind freeze.
-                      pendingNotice:
-                        glasses.map((g) => pendingNoticeFor(g.wineId)).find(Boolean) ?? null,
-                      needsScoring: glasses.some((g) => scoringDueFor(g.wineId)),
-                      hostName,
-                      // Semi-blind has no per-attribute reveal (Q8) — this
-                      // combined card spans several glasses at once, so there
-                      // is no single reveal_step to gate "Change it" on.
-                      revealStep: 0,
-                      timingMode: tasting.timing_mode,
-                      asyncRevealPolicy: tasting.async_reveal_policy,
-                    }}
-                  />
-                </div>
-              </Card>
-            );
-          })()
-        : null}
+      {/* Semi-blind: one persistent board over the whole flight (BT-S3;
+          SB2 phone, SB3 laptop) — every glass renders here (open, locked,
+          not-poured, revealed, the viewer's own bottle), never a batch that
+          shrinks as glasses resolve. Data comes only from the two RPCs
+          above, never wine_answers or the picked-wine column (rule 1). */}
+      {showMatchBoard && semiBlindBoard ? (
+        <Card id="match-glasses" className="scroll-mt-24">
+          <div className="-my-4">
+            <MatchBoard
+              tastingId={tastingId}
+              tastingName={tasting.name}
+              hostName={hostName}
+              cards={semiBlindCandidates?.cards ?? []}
+              board={semiBlindBoard}
+              pouredThroughIndex={semiBlindPouredThroughIndex}
+              currentGlassWineId={semiBlindCurrentWineId}
+              timingMode={tasting.timing_mode}
+              asyncRevealPolicy={tasting.async_reveal_policy}
+              pending={semiBlindCandidates?.pending ?? 0}
+            />
+          </div>
+        </Card>
+      ) : null}
     </div>
   );
 }
