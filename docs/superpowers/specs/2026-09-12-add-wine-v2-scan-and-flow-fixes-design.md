@@ -963,7 +963,13 @@ The resolution steps, in order:
    - `regionId` becomes that region; `countryId` becomes its country if still empty;
    - provenance `producer-region`;
    - it never sets the appellation and never sets a grape (owner rule, RC10).
-8. **Designation.** Folded equality of `read.designation` against `typeDesignations()`. Prefer a row whose `countryId` equals the draft's country, then a row with no country; otherwise leave it null.
+8. **Designation**, against `typeDesignations()`. A row scoped to another country is never taken; the resolver never guesses.
+   1. **Folded equality** of `read.designation` against the row's name. Prefer a row whose `countryId` equals the draft's country, then a row with no country.
+   2. **Short form** (owner approval 1b, 2026-09-13). This runs only when step 8.1 picked nothing, including when every folded-equal row belongs to another country.
+      - A candidate is a row whose name ends in exactly one bracket ("Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"), whose `countryId` is the draft's country or null, and whose bracket content ("LBV") or name without the bracket ("Grosses Gewächs") folds equal to the read. A bracket mid-name, or two brackets, gives no short form.
+      - Exactly one candidate → it is the designation.
+      - Two or more → nothing. A country row and a country-less row sharing a short form collide too. "Vintage" alone therefore matches neither "Vintage Port" nor "Late Bottled Vintage (LBV)".
+   3. Otherwise the designation stays null.
 9. **Grapes.** Each read grape name goes through `canonicalGrapeName`, then folded equality against `grapes()`: `existing` on a match, otherwise `pending` with the canonical name. Percentages are kept, and the blend gets provenance `label`.
 10. **Vintage.**
     - With `read.vintageRead`: `{ kind, year, tawnyYears, read: true }`, provenance `label`.
@@ -1036,7 +1042,15 @@ export type CatalogMatch = {
 
 **SQL.** `find_producer_by_folded_name(p_name, p_region_id)` and `find_or_create_producer(p_name, p_region_id)` (E.2).
 - Both sides are folded with `f_search_norm`.
-- Ties go first to the given region, then to any producer with a region link, then by name and id.
+- Ties go, in order:
+  1. to the given region;
+  2. to the exact spelling, `lower(p.name) = lower(btrim(p_name))`;
+  3. to a producer that holds wines: a `catalog_wines` or `wine_answers` row carries its id, read under the caller's RLS;
+  4. to any producer with a region link;
+  5. then by name and id.
+- The region stays first, so a label read in one region never takes another region's copy just because it is spelled the same. The exact spelling beats the wines: a copy the label matches letter for letter is what the label says.
+- The region is a tie-break, never a filter. A name that folds to a single row returns that row whatever its region: "Borges" read from a Porto label folds only to the Madeira house (F.3 Q22).
+- History: 20260912101000 ordered by region, region link, name and id; 20260912101530 made the region key null-safe; 20260914112500 (owner approval 3, 2026-09-13) added keys 2 and 3 (E.2).
 
 **Server.** `resolveProducer(supabase, choice: RefChoice, regionId: string | null): Promise<string>` lives in `server/write.ts`.
 - An `existing` choice is verified by id.
@@ -2714,7 +2728,19 @@ grant execute on function public.find_or_create_producer(text, uuid) to authenti
 **Design notes**
 - **SECURITY INVOKER is enough.** Any authenticated user may read and insert `producers` (init_schema.sql:319-320).
 - **The index is usable.** `f_search_norm` is IMMUTABLE (20260829260000), so the btree functional index serves the equality lookup.
-- **Existing folded collisions are tolerated.** The lookup order is deterministic. The migration `raise notice`s how many there are; it does not merge them.
+- **Existing folded collisions are tolerated.** The lookup order is deterministic. The migration `raise notice`s how many there are; it does not merge them. Merging a duplicate set is a data change the owner approves per set, never part of a lookup migration (owner approval 3, 2026-09-13: the J.M. Boillot and Vidal-Fleury sets, run by the main session).
+- **The order today: `20260914112500_producer_lookup_exact_then_wines.sql`** (owner approval 3; commit aa54499; dry-run only, the main session applies it live). It recreates the function above with only its ORDER BY changed. The signature, SECURITY INVOKER, `search_path` and grants stay, and `find_or_create_producer` takes the new order at run time:
+  ```sql
+  order by coalesce(p_region_id is not null and p.region_id = p_region_id, false) desc,
+           lower(p.name) = lower(btrim(p_name)) desc,
+           (exists (select 1 from catalog_wines w where w.producer_id = p.id)
+             or exists (select 1 from wine_answers a where a.producer_id = p.id)) desc,
+           (p.region_id is not null) desc,
+           p.name,
+           p.id
+  ```
+  - The wines key reads `wine_answers` under the caller's RLS, so an answer key the caller may not see never decides which copy they get. A SECURITY DEFINER lookup would let anyone learn that a hidden answer key uses a particular spelling.
+  - The same migration adds `wine_answers_producer_id_idx` on `wine_answers (producer_id)` and runs `analyze public.producers`, so the planner probes answer rows per candidate instead of scanning them all.
 - **A race is accepted.** Two different spellings that fold equal, inserted at the same moment, can both land, because the plain `unique (name)` constraint does not fold. The next lookup is still deterministic.
 
 **Assertions**
@@ -3364,7 +3390,16 @@ pour_cellar_lot_into_glass: { Args: { p_wine_id: string }; Returns: string };
     - byhand-6 item 7's origin chip, "the lead grape, with +n", is superseded. The handoff's meta line shows the primary grape, and the full blend lives in More detail with its "Scored as" line.
     - byhand-5's hint is built, adapted to B.5 (C.5 A7).
 21. **Cellar quantities at Start.** A PUBLIC or FRIENDS cellar shows lot quantities, which drop at Start or at a running pour. Someone who can view the adder's cellar could infer which wines are in the flight. Drink history stays private.
-22. **Model misses in the live reads.** A live read whose appellation or region text is wrong is reported with its tokens (G.5). Fixing it with a prompt or schema change needs new reads within the cap, so that is the owner's call.
+22. **Model misses in the live reads — answered by the owner (2026-09-13).** L1's model misses and observations went to the owner, who approved five instruction changes. They are in `label-read-schema.ts` (commit 11d4c3f) and supersede A.3's descriptions of these fields:
+    - `noGeographicIndication`: true only for the table-wine categories themselves; false whenever the label names a place of origin below country level ("Mendoza"), with or without a designation term.
+    - `designation`: the examples are the reference names that exist ("Vintage Port", "Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"), and B.5 step 8 adds the short-form rule.
+    - `producer`: the name the label presents as its brand ("J.M. Boillot"); a bottler or company line only when no other name is printed.
+    - `appellation`: an official regional origin printed without a designation term (Changyu's "Ningxia") is returned as that origin's name.
+    - `region`: null when only a brand and a grape are printed and the origin is not certain.
+
+    The owner also approved one re-read of each of the five photos (#2, #4, #7, #12, #15), about $0.11, which caps the development total at 20 of the 30 reads before V3's one read. The re-reads are pending. Still open:
+    - **#12 under the brand rule.** A re-read will probably return "Borges", which folds only to the Madeira house (B.7). The owner decides, before #12 is re-read, between options such as a region-scoped match, an alias, or relating the row to "Borges & Irmao".
+    - Any further prompt or schema change, or a read past 20 before V3, needs a new approval.
 
 ---
 
