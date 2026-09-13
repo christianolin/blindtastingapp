@@ -168,3 +168,9 @@ export type FieldPickerProps = {
 export const VINTAGE_NV_ID = "nv";
 export const vintageYearId = (year: number) => `year:${year}`;
 export const vintageTawnyId = (years: number) => `tawny:${years}`;
+
+/** The tawny group's "enter it yourself" row for an age outside the four
+ *  presets (10/20/30/40). Never written as-is — picking it opens a number
+ *  input (1–100), and the save uses vintageTawnyId(years) like any other
+ *  tawny age. */
+export const VINTAGE_TAWNY_OTHER_ID = "tawny:other";
