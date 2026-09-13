@@ -25,13 +25,16 @@ const SOURCE_FILE = "data/wine-map/germany-weinbau-dissolved.geojson";
 const NAMESPACE = "DE_SPEC_ATKIS_WEINBAU";
 const JURISDICTION = "Germany";
 const SIMPLIFY_TOLERANCE = 0.0002;
-// Germany, padded. Deliberately the whole country: this adapter is meant to
-// take Baden, Württemberg and Saale-Unstrut too once their states' ATKIS is
-// wired up, and those reach well beyond Bavaria.
+// Germany, padded. Deliberately the whole country: Saale-Unstrut alone reaches
+// from Thüringen to a Brandenburg exclave near Potsdam, and Baden and
+// Württemberg are still to come.
 const WINDOW = { minLon: 5.5, minLat: 47.0, maxLon: 15.5, maxLat: 55.5 };
 const revision = releaseVersion();
 
-const TARGETS = { franken: "germany.franken" };
+const TARGETS = {
+  franken: "germany.franken",
+  "saale-unstrut": "germany.saale-unstrut",
+};
 
 // Fail here, not in CI. A namespace with no entry in lib.mjs's ATTRIBUTION map
 // stages and promotes happily, then takes the whole tiles run down at export
@@ -131,7 +134,7 @@ try {
       name: props.name,
       state: props.state,
       gi_id: props.gi_id,
-      gemeinden_count: props.gemeinden_count,
+      named_units: props.named_units,
       parcels: props.parcels,
       hectares_planted: props.hectares,
       hectares_displayed: props.display_hectares,
@@ -141,8 +144,8 @@ try {
       note: source._provenance.method,
     };
     const provenanceNote =
-      `Vineyard-clip footprint for "${props.name}": ATKIS ${props.state} Rebfläche clipped to the `
-      + `${props.gemeinden_count} Gemeinden named in eAmbrosia ${props.gi_id}, read from repo-committed `
+      `Vineyard-clip footprint for "${props.name}": recorded vineyard land in ${props.state} clipped `
+      + `to the ${props.named_units} areas named in eAmbrosia ${props.gi_id}, read from repo-committed `
       + `${SOURCE_FILE} (see its _provenance). The committed file at its current git content is the `
       + `immutable snapshot.`;
     const result = await client.query(
@@ -159,7 +162,7 @@ try {
               $13::jsonb,$14::jsonb,$5,false,null
          from wine_places place, source, snapshot, geom where place.canonical_key = $15 returning id`,
       [NAMESPACE, slug,
-       `${props.state} ATKIS Basis-DLM (vineyard land use) / eAmbrosia product specification (membership)`,
+       `${props.attribution} (vineyard land use) / eAmbrosia product specification (membership)`,
        JURISDICTION, revision,
        "https://ec.europa.eu/geographical-indications-register/",
        props.licence, SOURCE_FILE, sourceSha256, provenanceNote, importer, rep.geojson,

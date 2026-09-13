@@ -5,7 +5,7 @@
     "why": "German wine law delegates delimitation to the Produktspezifikation (e.g. BayWeinRAV § 1), and the register is where that document lives. One source covers every German region; no state publishes an equivalent of the Hessen info sheet.",
     "important": "The specification names GEMEINDEN, not boundaries: the zone is their vineyard areas 'wenn ihre Eignung zur Erzeugung von Qualitätswein festgestellt wird'. A Gemeinde is the containment parent, never the zone. build-germany-weinbau.mjs clips these to the ATKIS vineyard class.",
     "not_included": "Mosel, Rheinhessen, Pfalz, Nahe, Ahr and Mittelrhein come from the Rheinland-Pfalz Weinbergsrolle (a legal boundary, better than a land-use clip); Rheingau and Hessische Bergstraße from the Weinbauamt Eltville info sheet.",
-    "retrieved": "2026-09-12"
+    "retrieved": "2026-09-13"
   },
   "anbaugebiete": {
     "franken": {
@@ -1048,12 +1048,13 @@
       "gi_id": "EUGI00000004655",
       "states": [
         "ST",
-        "TH"
+        "TH",
+        "BB"
       ],
       "shape": "KREIS_ONLY",
       "level": "kreis",
       "places": [
-        "Bur¬gen¬land- kreis",
+        "Burgenlandkreis",
         "Harz",
         "Mansfeld-Südharz",
         "Saalekreis",
@@ -1063,7 +1064,36 @@
         "Saalfeld-Rudolstadt",
         "Sömmerda",
         "Unstrut-Hainich-Kreis",
-        "Jena und Erfurt"
+        "Jena",
+        "Erfurt"
+      ],
+      "ortsteile": [
+        {
+          "name": "Schöndorf",
+          "within": "Weimar"
+        },
+        {
+          "name": "Tiefurt",
+          "within": "Weimar"
+        }
+      ],
+      "gemarkungen": [
+        {
+          "name": "Werder/Havel",
+          "within": "Werder/Havel"
+        },
+        {
+          "name": "Phöben",
+          "within": "Werder/Havel"
+        },
+        {
+          "name": "Plessow",
+          "within": "Werder/Havel"
+        },
+        {
+          "name": "Neu Töplitz",
+          "within": "Werder/Havel"
+        }
       ],
       "buildable": true
     },
