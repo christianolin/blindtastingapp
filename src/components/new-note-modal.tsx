@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
 import { emptyNoteState } from "@/lib/wset/note-state";
+import { noteSavedReport } from "@/lib/wset/note-saved";
+import type { NoteSummary } from "@/lib/wset/note-summary";
 import type {
   AromaTerm,
   WineColour,
@@ -12,6 +14,7 @@ import type {
   WsetNoteState,
 } from "@/lib/wset/types";
 import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
+import { useNoteSavedStep } from "@/components/note-saved-sheet";
 import type { WsetSheetHandle } from "@/components/wset/wset-sheet";
 
 type Data = {
@@ -21,10 +24,15 @@ type Data = {
   initial: WsetNoteState;
 };
 
+/** What a save hands back (Taste & Rate ledger R6): the note's id and its summary. */
+export type NoteSaved = { savedId: string; summary: NoteSummary };
+
 // Taste & Rate opens the WSET note as a popup — full-screen on phones, a centred
 // card on desktop — instead of navigating to the /catalog note page. It renders
 // the very same editor the note route uses, so save/discard behave identically;
-// the wine + aroma vocabulary are fetched on open.
+// the wine + aroma vocabulary are fetched on open. After a save it reports to
+// the provider's after-save step (R6), which shows "Note saved" as this modal
+// closes — on every path that opens it, after the first save of a new note.
 export function NewNoteModal({
   wineId,
   onClose,
@@ -39,12 +47,14 @@ export function NewNoteModal({
   /** Attaches the note to a tasting wine (group Taste & Rate scoring). */
   tastingWineId?: string | null;
   contextKind?: string | null;
-  /** Extra work after save (e.g. refresh the tasting board), then close. */
-  onSaved?: () => void;
+  /** Extra work after save (e.g. refresh the tasting board), handed the saved
+      note's id and summary; the modal closes afterwards. */
+  onSaved?: (saved: NoteSaved) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<Data | null | "loading">("loading");
   const sheetRef = useRef<WsetSheetHandle>(null);
+  const reportNoteSaved = useNoteSavedStep();
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +132,8 @@ export function NewNoteModal({
             embedded
             sheetRef={sheetRef}
             onClose={onClose}
-            onSaved={async (savedId) => {
+            onSaved={async (savedId, saved) => {
+              // A cellar bottle is drawn down only now that the note is saved.
               if (cellarConsume && savedId) {
                 await supabase.rpc("consume_cellar_lot", {
                   p: {
@@ -133,7 +144,19 @@ export function NewNoteModal({
                   },
                 });
               }
-              onSaved?.();
+              if (savedId) {
+                const report = noteSavedReport({
+                  savedId,
+                  saved,
+                  style: data.wine.style,
+                  title: data.title,
+                  catalogWineId: wineId,
+                });
+                onSaved?.({ savedId, summary: report.summary });
+                // The provider-level step: "Note saved" takes this modal's
+                // place as it closes, unless it is an edit or was dismissed.
+                reportNoteSaved?.(report);
+              }
               onClose();
             }}
           />

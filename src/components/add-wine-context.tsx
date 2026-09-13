@@ -18,12 +18,25 @@ import type {
 } from "@/lib/supabase/database.types";
 import { AddWineSheet, type InitialLot } from "@/components/add-wine/add-wine-sheet";
 import { NewNoteModal } from "@/components/new-note-modal";
+import { NoteSavedSheet, NoteSavedStepContext } from "@/components/note-saved-sheet";
+import type { StorageLike } from "@/lib/safe-storage";
+import {
+  FRESH_VISIT,
+  dismissNoteSaved,
+  shouldShowNoteSaved,
+  type NoteSavedReport,
+  type NoteSavedVisit,
+} from "@/lib/wset/note-saved";
 import type {
   AddWineDestination,
   AddWineOpenOptions,
   FlightHint,
   NotePick,
 } from "@/components/add-wine/types";
+
+// The device's localStorage for R6's "Don't show this again". safe-storage calls
+// this getter inside its try, because a blocked store throws on the accessor.
+const browserStorage = (): StorageLike | null => window.localStorage;
 
 // Which destination a pillar's add button means: the catalog's "Add a wine" or
 // the cellar's "Add a bottle". Every other launcher calls openAddWineSheet.
@@ -113,6 +126,24 @@ export function AddWineProvider({
   const supabase = useMemo(() => createClient(), []);
   const openCount = useRef(0);
   const pickCount = useRef(0);
+
+  // R6 "Note saved": every NewNoteModal reports its saves through
+  // NoteSavedStepContext, and the confirmation shows after the first save of a
+  // new note. `seq` keys each showing, so its checkbox starts unticked. The
+  // visit keeps "Don't show this again" even when the device write fails
+  // (safe-storage returns false), so it stays away until the next load.
+  const [noteSaved, setNoteSaved] = useState<{ seq: number; report: NoteSavedReport } | null>(null);
+  const savedCount = useRef(0);
+  const noteSavedVisit = useRef<NoteSavedVisit>(FRESH_VISIT);
+  const reportNoteSaved = useCallback((report: NoteSavedReport) => {
+    if (!shouldShowNoteSaved(report, noteSavedVisit.current, browserStorage)) return;
+    savedCount.current += 1;
+    setNoteSaved({ seq: savedCount.current, report });
+  }, []);
+  const closeNoteSaved = useCallback((seq: number, remember: boolean) => {
+    if (remember) noteSavedVisit.current = dismissNoteSaved(browserStorage).visit;
+    setNoteSaved((shown) => (shown?.seq === seq ? null : shown));
+  }, []);
 
   // The profile currency labels and stores a new lot's price, so it is read
   // lazily — once, the first time a sheet that can reach the lot step opens:
@@ -274,33 +305,43 @@ export function AddWineProvider({
 
   return (
     <AddWineCtx.Provider value={value}>
-      {children}
-      {sheet ? (
-        <AddWineSheet
-          key={sheet.seq}
-          userId={userId}
-          preferredCurrency={preferredCurrency}
-          destination={sheet.destination}
-          options={sheet.options}
-          flightHint={flightHint}
-          initialLot={sheet.initialLot}
-          onClose={() => closeSheet(sheet.seq)}
-          onNote={(pick) => pickNote(sheet.seq, pick)}
-        />
-      ) : null}
-      {note ? (
-        <NewNoteModal
-          // Keyed per pick, so a second pick never starts on the last note.
-          key={note.seq}
-          wineId={note.pick.catalogWineId}
-          // The sheet draws nothing down: the bottle leaves the cellar only
-          // once the note saves, and only when the pick asked for it.
-          cellarConsume={
-            note.pick.consume && note.pick.lotId ? { lotId: note.pick.lotId } : null
-          }
-          onClose={() => setNote(null)}
-        />
-      ) : null}
+      <NoteSavedStepContext.Provider value={reportNoteSaved}>
+        {children}
+        {sheet ? (
+          <AddWineSheet
+            key={sheet.seq}
+            userId={userId}
+            preferredCurrency={preferredCurrency}
+            destination={sheet.destination}
+            options={sheet.options}
+            flightHint={flightHint}
+            initialLot={sheet.initialLot}
+            onClose={() => closeSheet(sheet.seq)}
+            onNote={(pick) => pickNote(sheet.seq, pick)}
+          />
+        ) : null}
+        {note ? (
+          <NewNoteModal
+            // Keyed per pick, so a second pick never starts on the last note.
+            key={note.seq}
+            wineId={note.pick.catalogWineId}
+            // The sheet draws nothing down: the bottle leaves the cellar only
+            // once the note saves, and only when the pick asked for it.
+            cellarConsume={
+              note.pick.consume && note.pick.lotId ? { lotId: note.pick.lotId } : null
+            }
+            onClose={() => setNote(null)}
+          />
+        ) : null}
+        {noteSaved ? (
+          // R6: "Note saved" in place of the note that just closed.
+          <NoteSavedSheet
+            key={noteSaved.seq}
+            report={noteSaved.report}
+            onClose={(remember) => closeNoteSaved(noteSaved.seq, remember)}
+          />
+        ) : null}
+      </NoteSavedStepContext.Provider>
     </AddWineCtx.Provider>
   );
 }
