@@ -1021,14 +1021,19 @@ export async function PlayExperience({
               standingsLabel:
                 glassNumber > 1 ? `Standings after glass ${glassNumber - 1}` : "See the standings",
               standingsHref,
-              // No `canChange` producer in this wave: the blind-tasting ledger
-              // drops the semi-blind freeze (amendment 3), which was its only
-              // one. "Change it" therefore matches the server — unlockGuess
-              // refuses a scored guess and allows a locked, unscored one (the
-              // deferred case), and a glass mid step-reveal shows the reveal
-              // view rather than this card at all.
+              // No explicit `canChange` producer in this wave: the
+              // blind-tasting ledger drops the semi-blind freeze (amendment
+              // 3), which was its only one. `LockedIn` still hides "Change
+              // it" once `revealStep` is above 0 (PLAY-37) — a glass mid
+              // step-reveal shows the reveal view rather than this card at
+              // all, so that gate mostly guards the moment reveal_step just
+              // flipped, before the next poll swaps the view.
               pendingNotice: pendingNoticeFor(wine.id),
               needsScoring: scoringDueFor(wine.id),
+              hostName,
+              revealStep: wine.reveal_step ?? 0,
+              timingMode: tasting.timing_mode,
+              asyncRevealPolicy: tasting.async_reveal_policy,
             }}
           />
         ) : null;
@@ -1378,6 +1383,13 @@ export async function PlayExperience({
                       pendingNotice:
                         glasses.map((g) => pendingNoticeFor(g.wineId)).find(Boolean) ?? null,
                       needsScoring: glasses.some((g) => scoringDueFor(g.wineId)),
+                      hostName,
+                      // Semi-blind has no per-attribute reveal (Q8) — this
+                      // combined card spans several glasses at once, so there
+                      // is no single reveal_step to gate "Change it" on.
+                      revealStep: 0,
+                      timingMode: tasting.timing_mode,
+                      asyncRevealPolicy: tasting.async_reveal_policy,
                     }}
                   />
                 </div>
