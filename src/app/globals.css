@@ -169,11 +169,18 @@
      every filled button. Indigo is calmer at that size, sits better beside the
      gold accent, and measures better everywhere it is used:
 
-       label #f5efe3 on the fill   5.11 -> 9.15
-       gold  #d4af6a on the fill   2.82 -> 5.06   (fixes the "Live now" strip)
+       label #f5efe3 on the fill   5.11 -> 11.86
+       gold  #d4af6a on the fill   2.82 ->  6.56   (fixes the "Live now" strip)
+
+     Deep on purpose. Contrast against the page runs the OTHER way as the fill
+     darkens -- 1.75 at #3b3a6b, 1.35 here, 1.15 by #262544 -- and somewhere
+     past this the banner stops reading as its own panel and merges into the
+     cards beside it. This is about as dark as it goes while the rail still
+     reads as a rail; the cool hue against the warm near-black ground carries
+     more of that separation than the luminance figure suggests.
 
      Light keeps its Bordeaux: #5c1a2b was never the complaint. */
-  --primary: #3b3a6b;
+  --primary: #2b2a4f;
   --primary-foreground: #f5efe3;
   --secondary: #3a2e24;
   --secondary-foreground: #f5efe3;
@@ -191,7 +198,7 @@
      flows tokens completed for the dark surface — a miss turns miss-red, a
      hover lifts, gold-on-dark keeps reading gold. */
   --surface-deep: #15100d;
-  --primary-hover: #4a4880;
+  --primary-hover: #383663;
   --gold-dark: #d4af6a;
   --gold-light: #d4af6a;
   --rose: #e08a76;
@@ -247,7 +254,7 @@
   --chart-5: #c6543f;
   --sidebar: #241b16;
   --sidebar-foreground: #f5efe3;
-  --sidebar-primary: #3b3a6b;
+  --sidebar-primary: #2b2a4f;
   --sidebar-primary-foreground: #f5efe3;
   --sidebar-accent: #3f3225;
   --sidebar-accent-foreground: #f5efe3;
