@@ -10,9 +10,8 @@ import { vintageLabel as draftVintageLabel } from "../../lib/wine-identity/descr
 import { foldName } from "../../lib/wine-identity/fold";
 import type { WineIdentityDraft } from "../../lib/wine-identity/types";
 import { starLabel } from "./format";
-import { sheetMatrix } from "./matrix";
 import { bottlesLabel, tastedMeta, windowContains } from "./row-format";
-import type { AddWineDestination, SearchGroups } from "./types";
+import type { SearchGroups } from "./types";
 
 /** Where a row's add comes from; the shell adds `consume` to a lot itself. */
 export type DesktopRowSource =
@@ -247,25 +246,6 @@ export function resolveFocusAnchor(
   if (!anchor) return -1;
   const own = rows.findIndex((row) => row.key === anchor.key);
   return own >= 0 ? own : rows.findIndex((row) => row.catalogWineId === anchor.catalogWineId);
-}
-
-/**
- * A result row's button label, from the matrix (a catalog row).
- * @deprecated removed in S6 — read `sheetMatrix(destination, canScan).row(...)`.
- */
-export function rowActionLabel(
-  destination: AddWineDestination | null,
-  opts: { inFlight: boolean },
-): string {
-  return sheetMatrix(destination, false).row({ source: "catalog", inFlight: opts.inFlight, owned: false }).label;
-}
-
-/**
- * The search field's ↵ hint, from the matrix.
- * @deprecated removed in S6 — read `sheetMatrix(destination, canScan).enterHint`.
- */
-export function enterHint(destination: AddWineDestination | null): string {
-  return sheetMatrix(destination, false).enterHint;
 }
 
 export type CellarSummary = { bottles: number; readyToDrink: number };

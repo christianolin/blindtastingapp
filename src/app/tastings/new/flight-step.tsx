@@ -7,9 +7,11 @@ import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { useAddWine } from "@/components/add-wine-context";
 import { addToFlight, searchAddWine } from "@/components/add-wine/actions";
-import { enterHint, rowActionLabel } from "@/components/add-wine/desktop-format";
+import { ConsumeCheckbox } from "@/components/add-wine/cellar-view";
+import { flattenSearchGroups, type DesktopRow } from "@/components/add-wine/desktop-format";
 import { RowActionButton } from "@/components/add-wine/desktop-view";
-import { useTouchPrimary } from "@/components/add-wine/use-camera";
+import { sheetMatrix } from "@/components/add-wine/matrix";
+import { useCanScan } from "@/components/add-wine/use-can-scan";
 import type {
   AddSource,
   AddWineDestination,
@@ -20,121 +22,40 @@ import { moveWine, removeWine } from "@/app/tastings/[id]/actions";
 import { cn } from "@/lib/utils";
 import type { FlightRow, FlightSnapshot } from "./actions";
 
-type ResultRow = {
-  key: string;
-  catalogWineId: string;
-  title: string;
-  meta: string;
-  imageUrl: string | null;
-  inFlight: boolean;
-  source: AddSource;
-};
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-// The three groups flattened in the handoff's order (cellar → catalog →
-// tasted), one row per catalog wine, each stating its source.
-function flattenGroups(g: SearchGroups): ResultRow[] {
-  const rating = new Map(g.catalog.map((c) => [c.catalogWineId, c]));
-  const rows: ResultRow[] = [];
-  const seen = new Set<string>();
-  const star = (id: string) => {
-    const r = rating.get(id);
-    return r?.avgScore != null ? `★ ${Math.round(r.avgScore)}` : null;
-  };
-  for (const l of g.cellar) {
-    if (seen.has(l.catalogWineId)) continue;
-    seen.add(l.catalogWineId);
-    rows.push({
-      key: `lot-${l.lotId}`,
-      catalogWineId: l.catalogWineId,
-      title: l.title,
-      meta: [
-        "In your cellar",
-        l.rack,
-        `${l.quantity} ${l.quantity === 1 ? "bottle" : "bottles"}`,
-        l.drinkNow ? "drink now" : null,
-        star(l.catalogWineId),
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      imageUrl: l.imageUrl,
-      inFlight: l.inFlight,
-      source: { kind: "catalog", catalogWineId: l.catalogWineId },
-    });
-  }
-  for (const c of g.catalog) {
-    if (seen.has(c.catalogWineId)) continue;
-    seen.add(c.catalogWineId);
-    rows.push({
-      key: `cat-${c.catalogWineId}`,
-      catalogWineId: c.catalogWineId,
-      title: c.title,
-      meta: [
-        "Catalog",
-        c.subtitle,
-        star(c.catalogWineId),
-        c.noteCount > 0 ? `${c.noteCount} ${c.noteCount === 1 ? "note" : "notes"}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      imageUrl: c.imageUrl,
-      inFlight: c.inFlight,
-      source: { kind: "catalog", catalogWineId: c.catalogWineId },
-    });
-  }
-  for (const t of g.tasted) {
-    if (seen.has(t.catalogWineId)) continue;
-    seen.add(t.catalogWineId);
-    const month = MONTHS[new Date(t.tastedOn).getMonth()] ?? null;
-    rows.push({
-      key: `tasted-${t.catalogWineId}`,
-      catalogWineId: t.catalogWineId,
-      title: t.title,
-      meta: [
-        "You have tasted before",
-        t.myScore != null ? `you rated it ${t.myScore}${month ? ` in ${month}` : ""}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      imageUrl: t.imageUrl,
-      inFlight: rating.get(t.catalogWineId)?.inFlight ?? false,
-      source: { kind: "catalog", catalogWineId: t.catalogWineId },
-    });
-  }
-  return rows;
-}
+/**
+ * A search reply and what it answers: the text searched, and FlightStep's
+ * `flight` count when the search went out.
+ */
+type SearchReply = { query: string; flight: number; groups: SearchGroups };
 
 /**
- * Step 2 · the wines (handoff 6b): the add-wine search row inline — a plain
- * field that searches on desktop with "↵ adds the first hit" beside it, and
- * three shortcut chips into the universal add-wine sheet (scan or upload /
- * cellar / by hand) on a line of their own below it — then the ordered
- * flight with ▲▼ reorder and per-row remove. Every result row carries the
- * same "Add as glass N" button as the sheet's desktop view (owner feedback
- * 2026-09-12, `RowActionButton`); the row ↵ adds is marked by its gold tint
- * alone. On phones the field itself opens the sheet in search mode (nothing
- * actionable may live under a phone keyboard). Rows come from `listFlight`
- * (server) so the sheet and the lobby apply one set of rules; this component
- * owns only order and the optimistic remove.
+ * Step 2 · the wines (handoff 6b): the add-wine search row inline, three
+ * shortcut chips into the universal add-wine sheet on a line of their own
+ * below it, then the ordered flight with ▲▼ reorder and per-row remove. Rows
+ * come from `listFlight` (server), so the sheet and the lobby apply one set of
+ * rules (the knowledge rule, spec §C.9); this component owns only order and
+ * the optimistic remove.
  *
- * The first chip follows the sheet's device rule (use-camera.ts): "Scan a
- * label" with a camera on a touch device; "Upload photos" on a mouse /
- * trackpad device, where the same `start: "camera"` lands on the desktop
- * view and its upload zone.
+ * Everything that depends on the destination comes from the flight's matrix
+ * (spec §C.6, D13):
+ * - The chips: "Scan a label" where the device can scan (`canScan`, D5),
+ *   otherwise "Upload photos", where the same `start: "camera"` lands on the
+ *   laptop view's upload zone; "My cellar" when the matrix offers the cellar
+ *   as a source; "By hand".
+ * - The inline search, on laptop widths only (on phones the field opens the
+ *   sheet's search: nothing actionable may live under a phone keyboard), lists
+ *   the laptop view's rows with the laptop cells' labels on the same
+ *   `RowActionButton` (owner feedback 2026-09-12). A cellar lot pours that
+ *   bottle, carrying the draw-down choice under the list (C.7); a catalog or
+ *   tasted hit is a catalog add. In-flight rows follow the server's flags. The
+ *   row ↵ adds is marked by its gold tint alone.
+ * - A search reply lists rows only for the flight as it was when the search
+ *   went out, and ↵ acts only once the rows answer the text typed (A8, the
+ *   laptop view's rule). Clearing the field, or an inline add returning,
+ *   retires every search still on its way, so a late reply never lists or
+ *   pours anything (amendment 23).
+ * - The adder's own unfinished glass reads `flightRowNeeds` in dark gold, and
+ *   its Edit opens the sheet's by-hand form on that glass (C.8).
  */
 export function FlightStep({
   tastingId,
@@ -155,17 +76,25 @@ export function FlightStep({
   isDesktop: boolean;
 }) {
   const { openAddWineSheet } = useAddWine();
+  // Null until the device check resolves; until then the chip offers Upload.
+  const canScan = useCanScan() === true;
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ResultRow[]>([]);
+  // The newest search reply, with what it answers.
+  const [found, setFound] = useState<SearchReply | null>(null);
   const [searching, startSearch] = useTransition();
+  // Counts the flight changes that a listed row's in-flight flag may predate:
+  // every add, glass save or remove made here or through the add-wine sheet
+  // (`flightChanged`), and every fresh snapshot.
+  const [flight, setFlight] = useState(0);
   const [busy, setBusy] = useState(false);
   // The result row whose add is running — its button shows the loader.
   const [addingKey, setAddingKey] = useState<string | null>(null);
+  // C.7: "Take it out of the cellar when we pour it", checked by default.
+  const [consume, setConsume] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Step 2 only mounts after a tap in step 1, so this is the real value from
-  // the first render (no server snapshot to hydrate past).
-  const touch = useTouchPrimary();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A lot add that went in with a warning ("Added — but …").
+  const [notice, setNotice] = useState<string | null>(null);
+  // Only the newest search lands; bumping this retires every search on its way.
   const requestIdRef = useRef(0);
   // Optimistic order / removal over the server snapshot.
   const [rows, setRows] = useState<FlightRow[]>(snapshot?.wines ?? []);
@@ -175,6 +104,8 @@ export function FlightStep({
   if (snapshot !== seenSnapshot) {
     setSeenSnapshot(snapshot);
     setRows(snapshot?.wines ?? []);
+    // The flight may have changed under the listed rows: search them again.
+    setFlight((n) => n + 1);
   }
   // Serialise every position-mutating write (move AND remove): two
   // overlapping swaps would collide on the (tasting_id, position) unique
@@ -185,9 +116,9 @@ export function FlightStep({
   const isByo = wineSource === "PARTICIPANT_CONTRIBUTED";
   const nextPosition = rows.length + 1;
 
-  // One destination for the sheet and for the result rows' label, so both
-  // say the same glass number.
-  const destination: AddWineDestination = {
+  // One destination for the sheet, the inline adds and the result rows' label,
+  // so all three say the same glass number.
+  const destination: Extract<AddWineDestination, { kind: "flight" }> = {
     kind: "flight",
     tastingId,
     tastingName,
@@ -195,41 +126,84 @@ export function FlightStep({
     wineSource,
     position: nextPosition,
   };
+  // The inline search is the laptop's, so it reads the laptop cells.
+  const matrix = sheetMatrix(destination, false);
+  const includeCellar = matrix.searchGroups.includes("cellar");
+  // The flight changed, or may have: no search sent before now lands, and the
+  // rows are searched again before any is listed. Called straight from each
+  // add, save and remove, so a failed re-read of the flight cannot leave rows
+  // with old in-flight flags listed.
+  const flightChanged = () => {
+    requestIdRef.current++;
+    setFlight((n) => n + 1);
+  };
+  // Every add and glass save the add-wine sheet makes.
+  const sheetAdded = () => {
+    flightChanged();
+    onChanged();
+  };
   const openSheet = (start: AddWineStart) =>
-    openAddWineSheet(destination, { start, onAdded: onChanged });
+    openAddWineSheet(destination, { start, onAdded: sheetAdded });
+  const openEdit = (wineId: string) =>
+    openAddWineSheet(destination, { start: "byhand", edit: { wineId }, onAdded: sheetAdded });
 
+  const q = query.trim();
+
+  // The inline search, 250ms after the text or the flight last changed.
   useEffect(() => {
-    if (!isDesktop) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const q = query.trim();
-    if (!q) return;
-    debounceRef.current = setTimeout(() => {
+    if (!isDesktop || !q) return;
+    const timer = setTimeout(() => {
       const requestId = ++requestIdRef.current;
       startSearch(async () => {
         const groups = await searchAddWine(q, { tastingId });
-        if (requestId === requestIdRef.current) setResults(flattenGroups(groups));
+        if (requestId === requestIdRef.current) setFound({ query: q, flight, groups });
       });
     }, 250);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query, tastingId, isDesktop]);
+    return () => clearTimeout(timer);
+  }, [q, tastingId, isDesktop, flight]);
 
-  async function add(row: ResultRow) {
-    if (busy || row.inFlight) return;
+  // Rows read before the flight last changed are never listed: their in-flight
+  // flags may be out of date, and the server has no duplicate check (§C.9).
+  const listed = q !== "" && found !== null && found.flight === flight ? found.groups : null;
+  const results = listed ? flattenSearchGroups(listed, { includeCellar }) : [];
+  // The previous text's rows stay listed while the new search runs, but ↵
+  // waits until the rows answer what is typed (A8; desktop-view.tsx's rule).
+  const stale = searching || found === null || found.query !== q || found.flight !== flight;
+  const cellFor = (row: DesktopRow) =>
+    matrix.row({ source: row.listedAs, inFlight: row.inFlight, owned: row.source.kind === "lot" });
+  const firstAddable = results.find((r) => !cellFor(r).disabled) ?? null;
+  const lotsListed = results.some((r) => r.source.kind === "lot");
+  const showResults = isDesktop && q.length > 0;
+
+  async function add(row: DesktopRow) {
+    if (busy || cellFor(row).disabled) return;
+    // The text this add came from: the field clears only while it still holds it.
+    const addedFrom = q;
+    // A cellar lot pours that bottle and carries the draw-down choice (C.7);
+    // any other hit adds its catalog wine.
+    const source: AddSource =
+      row.source.kind === "lot"
+        ? { kind: "lot", lotId: row.source.lotId, consume, catalogWineId: row.catalogWineId }
+        : { kind: "catalog", catalogWineId: row.catalogWineId, via: "search" };
     setBusy(true);
     setAddingKey(row.key);
     setError(null);
+    setNotice(null);
     try {
-      const r = await addToFlight(tastingId, row.source);
+      const r = await addToFlight(destination, source);
       if ("error" in r) {
         setError(r.error);
         return;
       }
-      setQuery("");
-      setResults([]);
+      if (r.warning) setNotice(r.warning);
+      // Text typed while the add ran stays, and is searched again below.
+      setQuery((text) => (text.trim() === addedFrom ? "" : text));
       onChanged();
     } finally {
+      // Whatever came back (an add, a refusal, a failed call), the flight may
+      // have changed: no search sent before now may land, and the rows are
+      // read again before any is listed.
+      flightChanged();
       setBusy(false);
       setAddingKey(null);
     }
@@ -260,11 +234,9 @@ export function FlightStep({
     writeQueue.current = run.catch(() => {});
     const r = await run;
     if ("error" in r) setError(r.error);
+    flightChanged();
     onChanged();
   }
-
-  const firstAddable = results.find((r) => !r.inFlight) ?? null;
-  const showResults = isDesktop && query.trim().length > 0;
 
   return (
     <div className="flex flex-col gap-[14px]">
@@ -283,13 +255,19 @@ export function FlightStep({
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                if (!e.target.value.trim()) setResults([]);
+                // A cleared field retires the search on its way: its rows
+                // never come back under the next text.
+                if (!e.target.value.trim()) {
+                  requestIdRef.current++;
+                  setFound(null);
+                }
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (firstAddable) void add(firstAddable);
-                }
+                if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+                e.preventDefault();
+                // While a search runs the rows listed may answer the previous
+                // text, so ↵ waits for the rows of what is typed.
+                if (!stale && firstAddable) void add(firstAddable);
               }}
               placeholder="Search — producer, wine or appellation"
               aria-label="Search for a wine to add"
@@ -308,27 +286,28 @@ export function FlightStep({
           {isDesktop ? (
             // The same hint as the sheet's desktop view (7h).
             <span className="ml-auto shrink-0 font-mono text-[10.5px] text-muted-foreground">
-              {enterHint(destination)}
+              {matrix.enterHint}
             </span>
           ) : null}
           {/* The shortcuts take a line of their own at every width: beside
               the field and its ↵ hint they do not fit the 760px sheet. On
               desktop they line up with the field's text. */}
           <span className="flex w-full items-center gap-[8px] text-[11.5px] md:gap-[10px] md:pl-[26px]">
-            {/* The device rule: the live camera is touch-only, so a mouse /
-                trackpad device uploads photos — the same start lands on the
-                desktop view's upload zone. */}
+            {/* D5: the live camera only where the device can scan; anywhere
+                else the same start lands on the laptop view's upload zone. */}
             <ShortcutChip
               onClick={() => openSheet("camera")}
-              icon={touch ? <Camera className="size-3.5" /> : <Upload className="size-3.5" />}
+              icon={canScan ? <Camera className="size-3.5" /> : <Upload className="size-3.5" />}
             >
-              {touch ? "Scan a label" : "Upload photos"}
+              {canScan ? "Scan a label" : "Upload photos"}
             </ShortcutChip>
-            <ShortcutChip onClick={() => openSheet("cellar")} icon={<Wine className="size-3.5" />}>
-              From my cellar
-            </ShortcutChip>
+            {matrix.cellarSource ? (
+              <ShortcutChip onClick={() => openSheet("cellar")} icon={<Wine className="size-3.5" />}>
+                My cellar
+              </ShortcutChip>
+            ) : null}
             <ShortcutChip onClick={() => openSheet("byhand")} icon={<Grape className="size-3.5" />}>
-              Enter manually
+              By hand
             </ShortcutChip>
           </span>
         </div>
@@ -337,10 +316,11 @@ export function FlightStep({
           <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-gold bg-white">
             {results.length === 0 ? (
               <p className="p-[11px_14px] text-[12.5px] text-muted-foreground">
-                {searching ? "Searching…" : "Nothing matches — try Enter manually."}
+                {stale ? "Searching…" : "Nothing matches — try By hand."}
               </p>
             ) : (
               results.map((r, i) => {
+                const cell = cellFor(r);
                 // The row ↵ adds: its gold tint is the only mark — its
                 // button is the same as every other row's.
                 const enterTarget = firstAddable !== null && r.key === firstAddable.key;
@@ -351,7 +331,7 @@ export function FlightStep({
                       "flex items-center gap-3 p-[11px_14px]",
                       i > 0 && "border-t border-border-light",
                       enterTarget && "bg-gold/12",
-                      r.inFlight && "opacity-70",
+                      cell.disabled && "opacity-70",
                     )}
                   >
                     <HatchThumb src={r.imageUrl} width={30} height={40} />
@@ -362,9 +342,9 @@ export function FlightStep({
                       </span>
                     </span>
                     <RowActionButton
-                      label={rowActionLabel(destination, r)}
+                      label={cell.label}
                       wineTitle={r.title}
-                      inFlight={r.inFlight}
+                      inFlight={cell.disabled}
                       pending={addingKey === r.key}
                       disabled={busy}
                       onClick={() => void add(r)}
@@ -373,6 +353,16 @@ export function FlightStep({
                 );
               })
             )}
+            {lotsListed && matrix.consumeLabel ? (
+              <div className="border-t border-border-light p-[10px_14px]">
+                <ConsumeCheckbox
+                  checked={consume}
+                  onChange={setConsume}
+                  disabled={busy}
+                  label={matrix.consumeLabel}
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -382,13 +372,22 @@ export function FlightStep({
           {error}
         </p>
       ) : null}
+      {notice ? (
+        <p role="status" className="text-[12.5px] text-gold-dark">
+          {notice}
+        </p>
+      ) : null}
 
       {/* Poured in this order */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-baseline gap-x-[10px] gap-y-1">
           <Eyebrow size="sm">Poured in this order</Eyebrow>
           <span className="text-[12px] text-muted-foreground md:ml-auto">
-            Reorder · tasters only ever see the number
+            {/* create-6 (spec §D.1 #6): bring-your-own glasses carry their
+                contributor's name. */}
+            {isByo
+              ? "Reorder · tasters see whose bottle each glass is"
+              : "Reorder · tasters only ever see the number"}
           </span>
           <span className="text-[12px] text-muted-foreground max-md:hidden">·</span>
           <span className="text-[12px] font-semibold text-primary max-md:hidden">
@@ -400,7 +399,7 @@ export function FlightStep({
           <p className="text-[12.5px] text-muted-foreground">Loading the flight…</p>
         ) : rows.length === 0 && (snapshot.waitingFor.length === 0 || !isByo) ? (
           <p className="rounded-[9px] border border-dashed border-border p-[10px_13px] text-[12.5px] text-muted-foreground">
-            No wines yet — search above, {touch ? "scan a label" : "upload label photos"} or
+            No wines yet — search above, {canScan ? "scan a label" : "upload label photos"} or
             enter one by hand.
           </p>
         ) : null}
@@ -420,9 +419,28 @@ export function FlightStep({
                     {w.title}
                   </span>
                   {w.meta ? (
-                    <span className="truncate text-[11.5px] text-muted-foreground">{w.meta}</span>
+                    <span
+                      className={cn(
+                        "text-[11.5px]",
+                        // The adder's unfinished glass: its needs line wraps
+                        // on a phone rather than hiding what is missing.
+                        w.incomplete ? "text-gold-dark md:truncate" : "truncate text-muted-foreground",
+                      )}
+                    >
+                      {w.meta}
+                    </span>
                   ) : null}
                 </span>
+                {w.incomplete && w.editable ? (
+                  <button
+                    type="button"
+                    aria-label={`Edit ${w.title}`}
+                    onClick={() => openEdit(w.id)}
+                    className="flex min-h-11 shrink-0 items-center rounded-[6px] border border-border bg-background px-3 text-[12px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white md:min-h-8 md:px-2.5"
+                  >
+                    Edit
+                  </button>
+                ) : null}
                 {w.canReorder ? (
                   <span className="flex shrink-0 items-center">
                     <IconButton

@@ -1,37 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { TOUCH_PRIMARY_QUERY, homeViewFor, isTouchPrimary, startViewFor } from "./use-camera";
+import { describe, expect, it } from "vitest";
+import { homeViewFor, startViewFor } from "./use-camera";
 
 // The add-wine sheet routes by `canScan` (D5, spec §C.3): a coarse pointer AND
-// a video input. `isTouchPrimary` is round 1's touch rule, deprecated until S6
-// removes it together with its last importer.
-
-describe("isTouchPrimary", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("is false without a window (a server render)", () => {
-    expect(isTouchPrimary()).toBe(false);
-  });
-
-  it("asks the coarse-pointer query, not a width", () => {
-    const matchMedia = vi.fn((q: string) => ({ matches: q === "(pointer: coarse)" }));
-    vi.stubGlobal("window", { matchMedia });
-    expect(TOUCH_PRIMARY_QUERY).toBe("(pointer: coarse)");
-    expect(isTouchPrimary()).toBe(true);
-    expect(matchMedia).toHaveBeenCalledWith(TOUCH_PRIMARY_QUERY);
-  });
-
-  it("is false on a mouse / trackpad device", () => {
-    vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
-    expect(isTouchPrimary()).toBe(false);
-  });
-
-  it("is false when matchMedia is missing", () => {
-    vi.stubGlobal("window", {});
-    expect(isTouchPrimary()).toBe(false);
-  });
-});
+// a video input, resolved in use-can-scan.ts. Never by touch alone, never by
+// width.
 
 describe("routing by canScan (D5)", () => {
   it.each([

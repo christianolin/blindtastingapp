@@ -6,14 +6,12 @@ import {
   cellarSummary,
   clampFocus,
   effectiveFocus,
-  enterHint,
   firstAddableIndex,
   flattenSearchGroups,
   focusAnchorAt,
   lotPreviewChips,
   pickImageFiles,
   resolveFocusAnchor,
-  rowActionLabel,
 } from "./desktop-format";
 import { sheetMatrix } from "./matrix";
 import { markAddedInFlight } from "./sheet-state";
@@ -385,35 +383,6 @@ describe("Enter twice pours one glass (spec §C.4 rule 11, §C.5 A8, V1 18)", ()
     expect(refetched.cells[1]).toMatchObject({ label: "+1 bottle", action: "plusOne" });
     const second = resolveFocusAnchor(anchor, refetched.rows);
     expect(refetched.rows[second].catalogWineId).toBe("w2");
-  });
-});
-
-describe("rowActionLabel / enterHint (deprecated wrappers over the matrix)", () => {
-  it("name the destination's row action", () => {
-    expect(rowActionLabel(flight, { inFlight: false })).toBe("Add as glass 4");
-    expect(rowActionLabel({ kind: "cellar" }, { inFlight: false })).toBe("Add to cellar");
-    expect(rowActionLabel({ kind: "note" }, { inFlight: false })).toBe("Start the note");
-    expect(rowActionLabel(null, { inFlight: false })).toBe("Add");
-  });
-  it("read In flight for a wine already poured", () => {
-    expect(rowActionLabel(flight, { inFlight: true })).toBe("In flight");
-  });
-  // Owner feedback 2026-09-12: a first row reading "Add to cellar" over
-  // others reading "Add" looked like two different actions. The ↵ target is
-  // shown by the row's tint and the ↵ mark, never by its button.
-  it("give every addable row in a result list the same label", () => {
-    const g = groups();
-    g.catalog[2].inFlight = true;
-    const rows = flattenSearchGroups(g, { includeCellar: true, now });
-    expect(rows.map((r) => rowActionLabel(flight, r))).toEqual([
-      "Add as glass 4",
-      "Add as glass 4",
-      "In flight",
-    ]);
-  });
-  it("say what ↵ does", () => {
-    expect(enterHint(flight)).toBe("↵ adds the first hit");
-    expect(enterHint({ kind: "note" })).toBe("↵ opens a note on the first hit");
   });
 });
 

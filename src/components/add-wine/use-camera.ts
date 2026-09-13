@@ -26,18 +26,6 @@ export function cameraSupported(): boolean {
 // (full-screen below `sm`, a centred card above) stays width-based, in CSS.
 // ---------------------------------------------------------------------------
 
-/** @deprecated removed in S6 — route by `canScan` (use-can-scan.ts). */
-export const TOUCH_PRIMARY_QUERY = "(pointer: coarse)";
-
-/** @deprecated removed in S6 — route by `canScan` (use-can-scan.ts). */
-export function isTouchPrimary(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia(TOUCH_PRIMARY_QUERY).matches
-  );
-}
-
 /**
  * A live media query. The server snapshot is `false`, so a server render and
  * its hydration agree on "no match" and the client value follows right after
@@ -59,14 +47,6 @@ export function useMediaQuery(query: string): boolean {
   );
 }
 
-/** @deprecated removed in S6 — use `useCanScan()` (use-can-scan.ts). */
-export function useTouchPrimary(): boolean {
-  return useMediaQuery(TOUCH_PRIMARY_QUERY);
-}
-
-/** @deprecated removed in S6 — `startViewFor` no longer opens a phone search view. */
-export type DeviceRoutedView = "camera" | "search" | "cellar" | "byhand" | "desktop";
-
 /** The view a launcher's `start` opens on. `cellar` and `byhand` open those
     views on every device; `camera`, `search` and no start open the camera when
     `canScan`, otherwise the laptop view, whose own field is the search. */
@@ -82,11 +62,6 @@ export function startViewFor(
 /** Where the sheet goes back to after a read, a confirm or an add. */
 export function homeViewFor(canScan: boolean): "camera" | "desktop" {
   return canScan ? "camera" : "desktop";
-}
-
-/** @deprecated removed in S6 — sheet-state.ts moves the views when `canScan` changes. */
-export function viewForDevice<V extends string>(view: V, touch: boolean): V | "desktop" {
-  return !touch && (view === "camera" || view === "search") ? "desktop" : view;
 }
 
 /**
