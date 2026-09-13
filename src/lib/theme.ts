@@ -53,7 +53,8 @@ export function readTheme(): Theme {
 const listeners = new Set<() => void>();
 const notify = () => { for (const cb of listeners) cb(); };
 
-function subscribe(cb: () => void): () => void {
+/** Exported so tests can prove the OS and cross-tab paths actually fire. */
+export function subscribeToTheme(cb: () => void): () => void {
   listeners.add(cb);
   // Another tab changing the setting updates this one.
   const onStorage = (e: StorageEvent) => { if (e.key === THEME_KEY) cb(); };
@@ -104,7 +105,7 @@ export function useTheme(): {
   choice: ThemeChoice;
   setChoice: (choice: ThemeChoice) => void;
 } {
-  const theme = useSyncExternalStore(subscribe, readTheme, () => "light" as Theme);
-  const choice = useSyncExternalStore(subscribe, readChoice, () => null);
+  const theme = useSyncExternalStore(subscribeToTheme, readTheme, () => "light" as Theme);
+  const choice = useSyncExternalStore(subscribeToTheme, readChoice, () => null);
   return { theme, choice, setChoice: setThemeChoice };
 }
