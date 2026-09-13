@@ -176,6 +176,15 @@ async function resolveBlend(read: LabelRead, lookup: RefLookup): Promise<BlendRo
   });
 }
 
+/** A reference designation name that ends in its one bracket, split into the
+    name before the bracket and the bracket's content: "Late Bottled Vintage
+    (LBV)" → { name: "Late Bottled Vintage ", short: "LBV" }. Null for a name with
+    no bracket, a bracket that does not end the name, or more than one bracket. */
+function bracketParts(name: string): { name: string; short: string } | null {
+  const match = /^([^()]*)\(([^()]*)\)\s*$/.exec(name);
+  return match ? { name: match[1], short: match[2] } : null;
+}
+
 async function resolveDesignation(
   designation: string,
   lookup: RefLookup,
@@ -183,16 +192,30 @@ async function resolveDesignation(
 ): Promise<string | null> {
   const wanted = foldName(designation);
   if (wanted === "") return null;
-  const matches = (await lookup.typeDesignations()).filter((row) => foldName(row.name) === wanted);
+  const rows = await lookup.typeDesignations();
   // Spec §B.5 step 8: the draft's country first, then a designation with no
   // country, "otherwise leave it null". There is deliberately no fall back to the
   // first remaining row: a designation scoped to another country is a read the
   // resolver could not place, and this module never guesses. The user still picks
   // it by hand on the confirm screen, and the field is not a completeness field.
-  const preferred =
-    (countryId !== null ? matches.find((row) => row.countryId === countryId) : undefined)
-    ?? matches.find((row) => row.countryId === null);
-  return preferred?.id ?? null;
+  const inDraftCountry = (row: { countryId: string | null }) => countryId !== null && row.countryId === countryId;
+  const matches = rows.filter((row) => foldName(row.name) === wanted);
+  const preferred = matches.find(inDraftCountry) ?? matches.find((row) => row.countryId === null);
+  if (preferred !== undefined) return preferred.id;
+
+  // Owner approval 1b (2026-09-13), only when folded equality picked nothing: a
+  // reference row whose bracketed short form ("LBV" → "Late Bottled Vintage (LBV)")
+  // or whose name without its bracket ("Grosses Gewächs" → "Grosses Gewächs (GG)")
+  // folds equal to the read. A candidate obeys the same country rule (the draft's
+  // country, or no country). Exactly one candidate is a match; two or more pick
+  // nothing. "Vintage" alone therefore matches neither "Vintage Port" nor "Late
+  // Bottled Vintage (LBV)".
+  const candidates = rows.filter((row) => {
+    if (row.countryId !== null && !inDraftCountry(row)) return false;
+    const parts = bracketParts(row.name);
+    return parts !== null && [parts.short, parts.name].some((part) => foldName(part) === wanted);
+  });
+  return candidates.length === 1 ? candidates[0].id : null;
 }
 
 /**
