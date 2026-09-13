@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
+import { Eyebrow } from "@/components/overview/eyebrow";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -8,11 +9,15 @@ import {
   getTastingRow,
   getWineRows,
 } from "@/lib/tasting-request-cache";
-import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
-import { HostControlsMenu } from "./host-controls-menu";
+import { getTastingPlace } from "@/app/tastings/new/place";
+import { lobbyEyebrowParts } from "@/lib/lobby-copy";
+import { glassesSoFarPhrase } from "@/lib/tasting-eyebrow";
+import { TastingSettingsButton } from "./tasting-settings-button";
 
-// The thumbnail, name, description, badges, the /rules link and the host's
-// settings cogwheel (BT-D2, moved without change from page.tsx). Every view
+// The thumbnail, eyebrow, name, description, the place line and the host's
+// "Tasting settings" entry (spec §3.3 items 1–2, BT-L2; moved and rebuilt
+// from the pre-BT-L2 header, which drew a Badge + meta line instead of the
+// eyebrow and opened an icon-only popover of host controls). Every view
 // renders this at its own top — it loads its own data through the shared
 // per-request cache, so rendering it from five different views costs one
 // round trip's worth of reads, not five.
@@ -22,64 +27,31 @@ export async function TastingPageHeader({
   tastingId: string;
 }): Promise<React.JSX.Element | null> {
   const supabase = await createClient();
-  const [user, tasting, participantRows, wines] = await Promise.all([
+  const [user, tasting, participantRows, wines, place] = await Promise.all([
     getCurrentUser(),
     getTastingRow(tastingId),
     getParticipantRows(tastingId),
     getWineRows(tastingId),
+    getTastingPlace(supabase, tastingId),
   ]);
   if (!user || !tasting) return null;
 
   const isHost = tasting.host_id === user.id;
-  const hasStarted = tasting.status !== "DRAFT";
-  const isOpen = tasting.reveal_mode === "OPEN";
   const wineCount = wines.length;
-  const participantCount = participantRows.length;
-  const revealedCount = wines.filter((w) => w.is_revealed).length;
 
-  // Derived session state — "All revealed" and "Completed" are real phases,
-  // not "In progress" sitting at 100% (owner: status must reflect actual
-  // state).
-  const derivedStatus =
-    tasting.status === "CLOSED"
-      ? "Completed"
-      : tasting.status === "IN_PROGRESS"
-        ? wineCount > 0 && revealedCount === wineCount
-          ? "All revealed"
-          : "In progress"
-        : "Not started";
+  const eyebrowInput = {
+    status: tasting.status,
+    timingMode: tasting.timing_mode,
+    revealMode: tasting.reveal_mode,
+    participants: participantRows,
+  };
+  const laptopEyebrow = lobbyEyebrowParts(eyebrowInput, { phone: false });
+  const phoneEyebrow = lobbyEyebrowParts(eyebrowInput, { phone: true });
 
-  // Glasses whose answers ending the tasting would leave hidden (reveal-4).
-  // Numbered by list order, not the stored position, like every other glass
-  // number in the app; a glass part-way through a step reveal is "half".
-  const unrevealedGlasses: UnrevealedGlass[] = [];
-  wines.forEach((w, i) => {
-    if (!w.is_revealed) {
-      unrevealedGlasses.push({
-        glass: i + 1,
-        state: w.reveal_step > 0 ? "half" : "hidden",
-      });
-    }
-  });
-
-  // Friends for the host's "invite more people" picker (only fetched for the
-  // host, and only needed while the tasting is still in draft). OPEN
-  // tastings have nothing to protect, so the host can invite after the
-  // tasting has started too — not only while it's a draft.
-  let friends: { id: string; display_name: string; email: string }[] = [];
-  if (isHost && (!hasStarted || isOpen)) {
-    const { data: friendRows } = await supabase
-      .from("friendships")
-      .select("friend_id")
-      .eq("user_id", user.id);
-    const friendIds = (friendRows ?? []).map((f) => f.friend_id);
-    const { data: friendProfiles } = await supabase
-      .from("profiles")
-      .select("id, display_name, email")
-      .in("id", friendIds.length > 0 ? friendIds : [""])
-      .order("display_name");
-    friends = friendProfiles ?? [];
-  }
+  // A HOST_PROVIDES guest — never the host, who already gets the Wines
+  // card's own caption — gets the flight's running total under the eyebrow
+  // (spec §3.3 item 6, LOBBY-05): never a planned count.
+  const showGlassesSoFar = !isHost && tasting.wine_source === "HOST_PROVIDES";
 
   return (
     <div className="flex items-start justify-between gap-4">
@@ -93,72 +65,75 @@ export async function TastingPageHeader({
           />
         ) : null}
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {tasting.name}
-          </h1>
-          {tasting.description ? (
-            <p className="mt-1.5 text-muted-foreground">
-              {tasting.description}
-            </p>
-          ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-            <Badge variant={hasStarted ? "default" : "outline"}>
-              {derivedStatus}
-            </Badge>
-            <span className="text-muted-foreground">
-              {wineCount} {wineCount === 1 ? "wine" : "wines"} ·{" "}
-              {participantCount}{" "}
-              {participantCount === 1 ? "participant" : "participants"}
-              {tasting.scheduled_at ? (
-                <>
-                  {" · "}
-                  <LocalDateTime iso={tasting.scheduled_at} />
-                </>
-              ) : null}
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {tasting.timing_mode === "LIVE" ? "Live session" : "Self-paced"} ·{" "}
-            {tasting.wine_source === "HOST_PROVIDES"
-              ? "Host-selected wines"
-              : "Everyone brings wines"}{" "}
-            ·{" "}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Eyebrow size="md">
+              <span className="hidden lg:inline">
+                {laptopEyebrow.before.join(" · ")}
+                {tasting.scheduled_at ? (
+                  <>
+                    {" · "}
+                    <LocalDateTime iso={tasting.scheduled_at} format="eyebrow" />
+                  </>
+                ) : null}
+                {laptopEyebrow.after.length > 0
+                  ? ` · ${laptopEyebrow.after.join(" · ")}`
+                  : ""}
+              </span>
+              <span className="lg:hidden">
+                {phoneEyebrow.before.join(" · ")}
+                {tasting.scheduled_at ? (
+                  <>
+                    {" · "}
+                    <LocalDateTime iso={tasting.scheduled_at} format="eyebrow-short" />
+                  </>
+                ) : null}
+              </span>
+            </Eyebrow>
+            {/* The existing /rules link, beside the eyebrow (spec §3.3 item
+                1; the CLAUDE.md badge rule, LOBBY-03): BLIND names the
+                Danish Championship rules, SEMI_BLIND its own. */}
             <Link
               href="/rules"
-              className="text-primary transition-colors hover:text-primary/80"
+              className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
             >
               {tasting.reveal_mode === "SEMI_BLIND"
                 ? "Semi-blind scoring"
                 : "Danish Championship scoring"}
             </Link>
-          </p>
+          </div>
+          <h1 className="mt-1.5 font-heading text-3xl font-semibold tracking-tight">
+            {tasting.name}
+          </h1>
+          {tasting.description ? (
+            <p className="mt-1.5 text-muted-foreground">{tasting.description}</p>
+          ) : null}
+          {/* The place line, members only — RLS on tasting_places hands
+              getTastingPlace null for anyone else (spec §3.3 item 1, §13). */}
+          {place ? (
+            <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" />
+              {place}
+            </p>
+          ) : null}
+          {showGlassesSoFar ? (
+            <span className="mt-2 inline-flex w-fit items-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              {glassesSoFarPhrase(wineCount)}
+            </span>
+          ) : null}
         </div>
       </div>
       {isHost ? (
         <div className="shrink-0">
-          <HostControlsMenu
-            tastingId={tastingId}
-            status={tasting.status}
-            scheduledAt={tasting.scheduled_at}
-            friends={friends}
-            sequentialGuessing={tasting.sequential_guessing}
-            // Guided pacing is LIVE-only (create-1, play-1, reveal-2): a
-            // self-paced tasting has no shared "current glass" to gate on.
-            showSequentialToggle={
-              tasting.reveal_mode === "BLIND" && tasting.timing_mode === "LIVE"
-            }
-            leaderboardReveal={tasting.leaderboard_reveal}
-            // The standings setting only bites on a guided LIVE blind
-            // tasting, where attributes are revealed one at a time
-            // (create-8).
-            showLeaderboardToggle={
-              tasting.reveal_mode === "BLIND" &&
-              tasting.timing_mode === "LIVE" &&
-              tasting.sequential_guessing
-            }
-            invitesStayOpen={isOpen}
-            unrevealedGlasses={unrevealedGlasses}
-          />
+          {/* "Tasting settings" (spec §3.3 item 2, LOBBY-04): a labelled
+              button from lg, a 34px gear icon below it — TastingSettingsButton
+              itself renders each form, so both copies are mounted and only
+              one is ever visible. */}
+          <span className="hidden lg:inline-flex">
+            <TastingSettingsButton tastingId={tastingId} phone={false} />
+          </span>
+          <span className="lg:hidden">
+            <TastingSettingsButton tastingId={tastingId} phone={true} />
+          </span>
         </div>
       ) : null}
     </div>

@@ -9,8 +9,10 @@ import {
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { semiBlindAddRefusal, glassEditRefusal } from "@/lib/flight-glass-rules";
 import { makeWineLabeler } from "@/lib/wine-label";
+import { winesCaption } from "@/lib/lobby-copy";
 import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
 import { flightRowNeeds, toIncompleteGlasses } from "@/lib/wine-identity/incomplete";
+import { describeMissing } from "@/lib/wine-identity/describe";
 import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { AddedVia } from "@/components/add-wine/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -246,22 +248,27 @@ export async function WinesCard({
         const producer = a.producer_id ? (names.get(a.producer_id) ?? null) : null;
         const cuvee = a.catalog_wine_id ? (wineName.get(a.catalog_wine_id) ?? null) : null;
         const via = addedVia.get(a.wine_id);
+        const appellationNm = a.appellation_id ? names.get(a.appellation_id) : null;
+        const grapeNm = grapeName.get(a.primary_grape_id);
         linesByWineId.set(a.wine_id, {
           // "Vietti, Barolo Castiglione 2017"
           title:
             [[producer, cuvee].filter(Boolean).join(", "), vintage]
               .filter(Boolean)
               .join(" ") || null,
-          // "{appellation} · {region} · {primary grape} · {source}"
+          // Laptop: "{appellation} · {region} · {primary grape} · {source}".
           meta:
             [
-              a.appellation_id ? names.get(a.appellation_id) : null,
+              appellationNm,
               regionName.get(a.region_id),
-              grapeName.get(a.primary_grape_id),
+              grapeNm,
               via ? ADDED_VIA_COPY[via] : null,
             ]
               .filter(Boolean)
               .join(" · ") || null,
+          // Phone (LOBBY-24): the same line, without the region or the
+          // provenance — "{appellation} · {primary grape}".
+          metaPhone: [appellationNm, grapeNm].filter(Boolean).join(" · ") || null,
           incomplete: false,
         });
       }
@@ -278,7 +285,10 @@ export async function WinesCard({
         ]).flatMap((glass) => glass.missing);
         linesByWineId.set(w.id, {
           title: draftTitle(stored ? parseStoredDraft(stored.draft) : null),
+          // Laptop: "needs a vintage — tap Edit to finish" (LOBBY-13).
           meta: flightRowNeeds(missing),
+          // Phone: the shorter "needs a vintage" alone (LOBBY-13).
+          metaPhone: describeMissing(missing),
           incomplete: true,
         });
       });
@@ -287,8 +297,8 @@ export async function WinesCard({
 
   // Per-wine display state for the flight list, computed here (server) so
   // the WineFlightList client component only owns the *order* — reordering
-  // is optimistic there, moveWine persists it. `contributorLabel` null =>
-  // the row is numbered positionally from its live index.
+  // is optimistic there, moveFlightGlass persists it. `contributorLabel` null
+  // => the row is numbered positionally from its live index.
   const flightWines: FlightWine[] = wines.map((w) => {
     const lines = linesByWineId.get(w.id) ?? null;
     return {
@@ -313,6 +323,9 @@ export async function WinesCard({
         }) === null,
       canReorder: isHost && !w.is_revealed,
       canReveal: isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
+      // move_flight_glass's own "already seen" rule (M6): mirrored locally by
+      // crossesSeenGlass so a doomed drag or ▲▼ tap never round-trips.
+      seen: w.is_revealed || w.reveal_step > 0,
     };
   });
   // No bring-your-own slots: one waiting row per JOINED participant without
@@ -342,12 +355,12 @@ export async function WinesCard({
         <CardTitle className="flex flex-wrap items-center gap-x-3 gap-y-1">
           Wines
           {/* Only the host of a host-provides tasting gets a subtitle (spec
-              §2.1 row 15): in bring-your-own each contributor sees only
-              their own bottles. */}
+              §2.1 row 15; §3.3 item 3): in bring-your-own each contributor
+              sees only their own bottles. */}
           {isHost && !isByo ? (
             <span className="text-[12px] font-normal text-muted-foreground">
-              {wineCount} {wineCount === 1 ? "wine" : "wines"} · only you can
-              see them
+              <span className="hidden lg:inline">{winesCaption(wineCount, { phone: false })}</span>
+              <span className="lg:hidden">{winesCaption(wineCount, { phone: true })}</span>
             </span>
           ) : null}
           {addWineButton ? <span className="ml-auto">{addWineButton}</span> : null}
@@ -360,7 +373,7 @@ export async function WinesCard({
           <div className="flex flex-col gap-3">
             {isHost && !isByo && wineCount > 0 ? (
               <p className="text-xs text-muted-foreground">
-                This is the serving order — use the arrows to reorder.
+                This is the serving order — drag or use the arrows to reorder.
               </p>
             ) : null}
             <WineFlightList

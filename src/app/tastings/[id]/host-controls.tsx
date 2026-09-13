@@ -35,18 +35,33 @@ function StateMessage({ state }: { state: LobbyActionState }) {
 /**
  * Host-only controls. Used to have two surfaces; since BT-L4 only "start"
  * remains here — the prominent Start action (the one primary call-to-action
- * pre-start). The lobby mounts it once, inline above its columns, at a slot
- * its draft and running trees share, so what Start returned (its warning
- * above all) is still shown after the page re-renders into the running
- * board.
+ * pre-start).
+ *
+ * KNOWN GAP (review round 1, confirmed, unresolved — the fix needs BT-D2's
+ * files, outside BT-L2's OWNS): this component is mounted only by
+ * `StartBar`, only inside `LobbyView`, which `page.tsx`'s switch
+ * (`view-route.ts`) renders only while `status === "DRAFT"`. The instant
+ * `startTasting`'s `revalidatePath` flips status, `page.tsx` swaps in a
+ * structurally different component at that tree position — `RunningView`,
+ * which never mounts `StartBar`/`HostControls` — so this instance unmounts
+ * in the same transition that delivered its result, taking the local
+ * `useActionState` with it. In other words draft and running are NOT a
+ * slot the two trees share: the `!notStarted` branch below is dead code,
+ * since `HostControls` is never mounted with `status !== "DRAFT"` in the
+ * first place. A success's `warning` (and the Host console link, when
+ * `landsOnConsole` is false) is silently lost whenever Start doesn't itself
+ * `router.push` away — i.e. every bring-your-own, semi-blind, ASYNC or
+ * non-LIVE-blind-host-provides Start, and any Start that returns a warning
+ * regardless of mode. Fixing this needs `running-view.tsx` and/or
+ * `page.tsx` to read the result some other way (e.g. a short-lived query
+ * param or cookie), not a change confined to this file.
  *
  * The old "menu" surface (schedule / invite + share link / pacing and
  * leaderboard toggles / Finish / Reopen / Delete — what the header cogwheel's
- * popover, `HostControlsMenu`, used to open) is gone: every one of those
- * controls now lives in `TastingSettingsSheet`. `surface: "menu"` is kept in
- * the prop type, and this component still renders nothing for it, only so
- * `host-controls-menu.tsx` (deleted, along with the header's cogwheel, by
- * BT-L2) keeps type-checking in the meantime.
+ * popover used to open) is gone: every one of those controls now lives in
+ * `TastingSettingsSheet`. `surface: "menu"` stays in the prop type, and this
+ * component still renders nothing for it, since nothing calls it any more
+ * (BT-L2 deleted the popover along with the header's cogwheel).
  */
 export function HostControls({
   tastingId,
@@ -71,11 +86,6 @@ export function HostControls({
   leaderboardReveal?: string;
   /** @deprecated unused since BT-L4. */
   showLeaderboardToggle?: boolean;
-  /** @deprecated removed in BT-L2. B4/Q6: invites and the share link now
-      stay open in the running menu for every tasting that is not CLOSED, so
-      this no longer gates anything here — its last passer lives in the
-      header BT-L2 rewrites. */
-  invitesStayOpen?: boolean;
   /** Only the "start" surface reads these three: where Start lands
       (`startLandsOnConsole`). A caller that leaves one out keeps the host on
       the lobby, which links to the console anyway. */
@@ -138,13 +148,12 @@ export function HostControls({
   // gated on a wine count, and an incomplete glass never blocks it: the
   // server's error shows under the button, and so does a success's warning.
   if (!notStarted) {
-    // A started tasting has no Start. What shows is the result of the Start
-    // that got it here: startTasting revalidates the lobby, which re-renders
-    // into the running board in the same commit that delivers { success,
-    // warning }, and this surface (mounted at a slot both trees share) keeps
-    // that state. It shows the success, any warning and, when Start stayed
-    // here instead of going on to the console, the way on. Nothing on a
-    // plain page load, and nothing once the tasting has ended.
+    // Dead in practice (see the file doc-comment above, "KNOWN GAP"):
+    // page.tsx never mounts this component once status leaves DRAFT, so
+    // `startState` here is always still `useActionState`'s initial `null`.
+    // Kept rather than deleted — removing it is a bigger change than
+    // BT-L2's authorized scope for this file — but nothing below this
+    // comment currently renders for a real host.
     if (
       !startState ||
       !("success" in startState) ||

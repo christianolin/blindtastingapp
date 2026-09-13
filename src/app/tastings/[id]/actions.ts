@@ -8,7 +8,6 @@ import { startWarning } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { INVITES_CLOSE_WHEN_ENDED } from "@/lib/lobby-copy";
 import { glassRemoveRefusal } from "@/lib/flight-glass-rules";
-import { moveFlightGlass } from "./flight-actions";
 
 // `warning` rides along with a success that still needs the host's attention:
 // Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
@@ -283,37 +282,6 @@ export async function setLeaderboardReveal(formData: FormData): Promise<void> {
     .update({ leaderboard_reveal: value })
     .eq("id", tastingId);
   revalidatePath(`/tastings/${tastingId}`);
-}
-
-// Host reorders a wine one step up/down the serving order (the ▲▼ fallback
-// next to the lobby's drag handles). A thin wrapper over `moveFlightGlass`
-// (spec §3.3 item 5): finds the glass's 0-based place in list order and
-// hands the RPC the 1-based target `moveFlightGlass`/`reorderIds` expect —
-// one place earlier for "up" (idx), one later for "down" (idx + 2). Out of
-// range (already first/last) or refused (a glass the table has seen) is a
-// silent no-op, as it always was; `moveFlightGlass` is now the one place that
-// writes `position`.
-/** @deprecated removed in BT-L2 (after BT-C2 drops the flight-step importer). */
-export async function moveWine(formData: FormData): Promise<void> {
-  const { supabase, user } = await requireUser();
-  const tastingId = String(formData.get("tasting_id") ?? "");
-  const wineId = String(formData.get("wine_id") ?? "");
-  const direction = String(formData.get("direction") ?? "");
-  const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return;
-
-  const { data: wines } = await supabase
-    .from("wines")
-    .select("id")
-    .eq("tasting_id", tastingId)
-    .order("position");
-  const ordered = wines ?? [];
-  const idx = ordered.findIndex((w) => w.id === wineId);
-  if (idx === -1) return;
-  const toIndex = direction === "up" ? idx : idx + 2;
-  if (toIndex < 1 || toIndex > ordered.length) return;
-
-  await moveFlightGlass(tastingId, wineId, toIndex);
 }
 
 // Removes a wine from the flight (the lobby's Remove, and the create sheet's
