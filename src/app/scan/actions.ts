@@ -6,7 +6,7 @@
 // a confident catalog match and builds the confirm screen's title and meta. The
 // client never sends a URL, and nothing here writes a wine: the confirm screen's
 // explicit add does that (D6).
-import { readLabel, type ExtractedLabel, type LabelReadOutcome } from "@/lib/label-scan/extract";
+import { readLabel, type LabelReadOutcome } from "@/lib/label-scan/extract";
 import { isOwnStagingPath, labelReadRow } from "@/lib/label-scan/guards";
 import { createClient } from "@/lib/supabase/server";
 import { missingWineFields } from "@/lib/wine-identity/complete";
@@ -132,8 +132,3 @@ export async function readLabelPhoto(input: {
     return { ok: false, reason: "service" };
   }
 }
-
-/** @deprecated removed in S5c */
-export type ScanMatch = { id: string; name: string };
-/** @deprecated removed in S5c */
-export type ScanResult = { extracted: ExtractedLabel; matches: ScanMatch[] };

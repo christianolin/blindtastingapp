@@ -72,11 +72,8 @@ export type FlightHint = {
   tastingId: string;
   tastingName: string;
   position: number;
-  /** D12 / entry-4; was `live: boolean`. Optional until every hint producer
-      passes it (T10); S5c makes it required. */
-  phase?: "live" | "self-paced" | "next";
-  /** @deprecated removed in S5c — use `phase`. */
-  live?: boolean;
+  /** D12 / entry-4: the chooser reads it "live now", "in progress" or "next up". */
+  phase: "live" | "self-paced" | "next";
   revealMode: RevealMode;
   wineSource: WineSourceMode;
 };
@@ -105,36 +102,17 @@ export type SearchGroups = {
 // View contracts. The sheet shell (add-wine-sheet.tsx) owns the state machine
 // and passes these down; each view file implements exactly one of them. Views
 // never write to the database themselves — every add goes through `onAdd`, so
-// the shell can apply the destination rules in one place. Round 1's prop types
-// stay until each S task rewrites its own view (plan F11).
+// the shell can apply the destination rules in one place.
 // ---------------------------------------------------------------------------
-
-/**
- * A scanned bottle waiting for a fix before it can be added (7d "Fix").
- * @deprecated removed in S5c — the sheet's `ScanItem` (sheet-state.ts) replaces it.
- */
-export type PendingScan = {
-  id: string;                  // client uuid
-  imageUrl: string;
-  prefill: import("@/app/catalog/new/new-wine-form").WineFormInitial;
-  problem: "no-vintage" | "incomplete";
-};
 
 export type SheetContext = {
   destination: AddWineDestination | null;
   multi: boolean;
   added: AddedWine[];
-  pending: PendingScan[];
   flightHint: FlightHint | null;
   userId: string;
   preferredCurrency: string;
 };
-
-/**
- * The 7d inline "Fix" for a pending scan: a typed year, or NV.
- * @deprecated removed in S5c — Fix opens the by-hand form (D7).
- */
-export type PendingFix = { vintageKind: "YEAR" | "NV"; vintageYear: number | null };
 
 /** A2 (B2, C2 and D2 use the same view): the camera, its search field, the
     matrix's source chips and, in Many, the stack above the viewfinder. */

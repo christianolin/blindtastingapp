@@ -52,8 +52,6 @@ export type WineFormInitial = {
   profile?: WineProfileInput | null;
   /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
   estimatedPrice: string;
-  /** @deprecated removed in S5c */
-  vintagePrompt?: boolean;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
