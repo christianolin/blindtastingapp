@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Tempranillo",
+      "percentage": 100
+    }
+  ],
+  "region": "Castilla-La Mancha",
+  "country": "Spain",
+  "rawText": "TRIDENTE / TEMPRANILLO",
+  "producer": "Tridente",
+  "wineName": "Tridente",
+  "confidence": "medium",
+  "appellation": null,
+  "description": "Tempranillo is Spain's principal red grape, valued for its balance of fruit, acidity and structure, and here it is bottled as a varietal wine typical of central Spanish producers working with modern, fruit-forward styles. The label does not specify a DO, suggesting a broader regional or Vino de la Tierra classification.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "NV",
+  "vintageRead": false,
+  "vintageYear": null,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

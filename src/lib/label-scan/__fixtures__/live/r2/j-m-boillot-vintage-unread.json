@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "WHITE",
+  "grapes": [
+    {
+      "name": "Chardonnay",
+      "percentage": 100
+    }
+  ],
+  "region": "Burgundy",
+  "country": "France",
+  "rawText": "J.M. Boillot | Bourgogne | APPELLATION BOURGOGNE CONTRÔLÉE | Mis en bouteille par JEAN-MARC BOILLOT | À POMMARD, CÔTE-D'OR, FRANCE | PRODUCT OF FRANCE - CONTIENT DES SULFITES - CONTAINS SULPHITES",
+  "producer": "J.M. Boillot",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Bourgogne AOC",
+  "description": "Jean-Marc Boillot is a domaine based in Pommard, Côte-d'Or, with vineyard holdings across the Côte de Beaune, producing both red and white wines. This regional Bourgogne AOC appellation permits Chardonnay for white wines sourced from vineyards across Burgundy outside the more specific village or premier/grand cru appellations. Such wines are typically vinified and aged partly in oak barrels for a period of several months to a year.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "NV",
+  "vintageRead": false,
+  "vintageYear": null,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}
