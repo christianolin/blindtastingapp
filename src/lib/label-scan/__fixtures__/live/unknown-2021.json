@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Pinot Noir",
+      "percentage": 100
+    }
+  ],
+  "region": null,
+  "country": "France",
+  "rawText": "PINOT NOIR 2021 L'envolée \"FLY AWAY\"",
+  "producer": null,
+  "wineName": "L'envolée \"Fly Away\"",
+  "confidence": "medium",
+  "appellation": null,
+  "description": "A varietal Pinot Noir bottled as a Vin de France, allowing the producer freedom from appellation restrictions on grape sourcing and winemaking. The playful balloon-themed label and 'Fly Away' name suggest an approachable, fruit-forward style typical of entry-level French Pinot Noir.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2021,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": true
+}

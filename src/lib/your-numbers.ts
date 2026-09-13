@@ -443,7 +443,10 @@ export async function getYourNumbers(
           "catalog_wines(colour, style, country:countries(name), " +
           "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name))",
       )
-      .eq("author_id", userId),
+      .eq("author_id", userId)
+      // A hidden-glass note (blind-tasting B8) carries neither identity until
+      // its glass is revealed — it counts as a rating only once resolved.
+      .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null"),
     supabase
       .from("cellar_lots")
       .select(

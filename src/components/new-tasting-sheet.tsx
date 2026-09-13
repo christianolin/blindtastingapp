@@ -24,7 +24,7 @@ import { InviteStep, type Friend } from "@/app/tastings/new/invite-step";
 import { collectInviteEmails } from "@/app/tastings/new/invite-emails";
 import {
   createTasting,
-  getNameSuggestionContext,
+  getPouredRegionSuggestion,
   listFlight,
   updateTastingSetup,
   type FlightSnapshot,
@@ -34,6 +34,7 @@ import {
   buildSetupFormData,
   defaultSetup,
   localToIso,
+  STEP1_FOOTER_NOTE,
   type SetupValues,
 } from "@/app/tastings/new/setup-copy";
 import { inviteToTasting, startTasting } from "@/app/tastings/[id]/actions";
@@ -55,6 +56,10 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
     scheduledAt: localToIso(v.scheduledLocal),
     // Always sent: null clears a photo removed after the row was created.
     imageUrl: v.imageUrl,
+    // No description field in this sheet yet (S4d's settings sheet, BT-L4,
+    // adds one) — left undefined so a re-save from step 1 never wipes a
+    // description set some other way, the same rule `imageUrl` follows.
+    place: v.place,
   };
 }
 
@@ -130,7 +135,7 @@ export function NewTastingSheet({
   useEffect(() => {
     if (regionSuggestion !== undefined) return;
     let cancelled = false;
-    getNameSuggestionContext()
+    getPouredRegionSuggestion()
       .then((r) => {
         if (!cancelled && r) setSuggestion(r);
       })
@@ -457,8 +462,8 @@ export function NewTastingSheet({
     <footer className="flex shrink-0 flex-col gap-2 border-t border-border bg-background p-[11px_16px] pb-[max(22px,env(safe-area-inset-bottom))] md:flex-row md:items-center md:gap-3 md:p-[16px_24px]">
       {step === 1 ? (
         <>
-          <span className="text-[12.5px] text-muted-foreground max-md:hidden">
-            You can add wines and invite people after saving.
+          <span className="max-w-[42ch] text-[12.5px] leading-[1.5] text-muted-foreground">
+            {STEP1_FOOTER_NOTE}
           </span>
           <span className="flex flex-col gap-2 md:ml-auto md:flex-row md:items-center md:gap-[9px]">
             {/* Held while the cover photo uploads. A disabled default button
@@ -488,12 +493,21 @@ export function NewTastingSheet({
             while the tasting is running.
           </span>
           <span className="flex flex-col gap-2 md:ml-auto md:flex-row md:items-center md:gap-[9px]">
-            <LinkButton className="max-md:order-2" onClick={() => go(1)}>
+            <LinkButton className="max-md:order-3" onClick={() => go(1)}>
               ← Setup
             </LinkButton>
             <PrimaryButton className="max-md:order-1" onClick={() => go(3)}>
               Invite people →
             </PrimaryButton>
+            {/* (plan refinement 9) — phone only; desktop already has a way
+                back without saving. */}
+            <TextButton
+              className="max-md:order-2 md:hidden"
+              disabled={saving}
+              onClick={() => void createAndFinishLater()}
+            >
+              Create and finish later
+            </TextButton>
           </span>
         </>
       ) : started ? (
@@ -587,7 +601,7 @@ function PrimaryButton({
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523] disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:p-[12px_20px] md:text-[14.5px]",
+        "flex min-h-11 items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-primary-hover disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:p-[12px_20px] md:text-[14.5px]",
         className,
       )}
     >

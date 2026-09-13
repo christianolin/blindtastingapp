@@ -1,0 +1,30 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Cabernet Sauvignon",
+      "percentage": 85
+    },
+    {
+      "name": "Cabernet Franc",
+      "percentage": 15
+    }
+  ],
+  "region": "Tuscany",
+  "country": "Italy",
+  "rawText": "SASSICAIA 2022 BOLGHERI SASSICAIA Denominazione di Origine Controllata Tenuta San Guido - Castagneto Carducci ITALIA 750ml 13.5% Imported by Amrel Wines Ltd, WA 0LG UK",
+  "producer": "Tenuta San Guido",
+  "wineName": "Sassicaia",
+  "confidence": "high",
+  "appellation": "Bolgheri Sassicaia DOC",
+  "description": "Sassicaia is produced by Tenuta San Guido in the Bolgheri area of coastal Tuscany, from vineyards planted with Cabernet Sauvignon and Cabernet Franc on soils with significant stony, galestro-like composition that give the wine its name (sasso meaning stone). It was the first wine to define the Bolgheri Sassicaia DOC, a sub-zone created specifically for this estate in 1994. The wine is aged in French oak barriques for approximately 18-24 months before release.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2022,
+  "alcoholPercent": 13.5,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

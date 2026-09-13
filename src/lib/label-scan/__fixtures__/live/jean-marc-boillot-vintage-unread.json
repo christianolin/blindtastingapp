@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "WHITE",
+  "grapes": [
+    {
+      "name": "Chardonnay",
+      "percentage": 100
+    }
+  ],
+  "region": "Burgundy",
+  "country": "France",
+  "rawText": "J.M. Boillot — Bourgogne — Appellation Bourgogne Contrôlée — Mis en bouteille par Jean-Marc Boillot à Pommard, Côte-d'Or, France — Product of France - Contient des sulfites - Contains sulphites",
+  "producer": "Jean-Marc Boillot",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Bourgogne AOC",
+  "description": "Domaine Jean-Marc Boillot is based in Pommard, Côte-d'Or, and produces this regional Bourgogne AOC from Chardonnay grapes sourced from various parcels across the Côte de Beaune. The appellation permits yields up to 65 hl/ha and requires the wine to be made entirely from Chardonnay for white Bourgogne. Jean-Marc Boillot took over the family domaine in the late 1980s, having previously worked at Olivier Leflaive, and is known for precise, terroir-driven Burgundy whites.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": false,
+  "vintageYear": null,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

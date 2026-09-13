@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { buildTastingIcs, icsFilename } from "@/lib/ics";
+import { getTastingPlace } from "@/app/tastings/new/place";
 import { createClient } from "@/lib/supabase/server";
 
 // "Add to your calendar" (B3): the tasting as an .ics download, for its host
@@ -7,8 +8,9 @@ import { createClient } from "@/lib/supabase/server";
 // does not exist, so the route never confirms that one does: signed out,
 // still INVITED, DECLINED, or a stranger who can read the tasting row because
 // one of its wines is revealed. A tasting with no time, or one that has ended
-// (CLOSED), has nothing to put in a calendar and 404s too.
-// No LOCATION yet: the place has no storage until B12.
+// (CLOSED), has nothing to put in a calendar and 404s too. LOCATION comes
+// from getTastingPlace under the same RLS the route already gates on (Q2:
+// host and JOINED only — the same set this route already limits to).
 
 function notFound() {
   return new Response("Not found", {
@@ -57,12 +59,15 @@ export async function GET(
     "",
   );
 
+  const location = await getTastingPlace(supabase, tasting.id);
+
   const body = buildTastingIcs({
     uid: `${tasting.id}@blindr`,
     title: tasting.name,
     description: tasting.description,
     start,
     url: `${base}/tastings/${tasting.id}`,
+    location,
     now: new Date(),
   });
 

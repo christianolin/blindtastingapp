@@ -23,6 +23,19 @@ export default async function NewNotePage({
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
+  // A ?blindWine= link only ever means a REVEALED glass this viewer may note
+  // (spec §9.3 item 5) — the database refuses the write regardless (M5's
+  // "wset notes insert" policy hides an unrevealed glass's identity from
+  // everyone), but a stale, pre-reveal or forged link should read as "not
+  // found" rather than silently landing on an ordinary catalog note.
+  if (blindWine) {
+    const [{ data: revealed }, { data: allowed }] = await Promise.all([
+      supabase.rpc("is_tasting_wine_revealed", { p_wine_id: blindWine }),
+      supabase.rpc("can_note_tasting_wine", { p_wine_id: blindWine }),
+    ]);
+    if (!revealed || !allowed) notFound();
+  }
+
   const { data: termRows } = await supabase
     .from("wset_aroma_terms")
     .select("id, family, origin, group_name, term, sort_order")

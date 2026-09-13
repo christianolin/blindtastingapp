@@ -8,6 +8,10 @@ import type {
   TimingMode,
   VintageKind,
 } from "@/lib/supabase/database.types";
+// Both are type-only (erased at build time), so the mutual import back from
+// pick-counts.ts and reference-counts.ts never becomes a runtime cycle.
+import type { PickCounts } from "./pick-counts";
+import type { ReferenceCounts } from "@/lib/reference-counts";
 
 /**
  * One participant's guess for one glass — the columns the ladder edits, plus
@@ -93,9 +97,6 @@ export type GuessLadderProps = {
   /** Display names for the two ids the reference lists do not carry
    *  (looked up via lookupAppellationAndProducerNames by the composition). */
   initialLabels: { producer?: string; appellation?: string };
-  /** Grape ids I have guessed at least twice before — drives the picker's
-   *  "you guess this often" secondary line. */
-  frequentGrapeIds: string[];
   /** Server-computed shortlist for initialGuess.region_id; the ladder
    *  re-fetches when the region changes. */
   shortlist?: GrapeShortlist | null;
@@ -105,6 +106,29 @@ export type GuessLadderProps = {
    *  lock copy. */
   timingMode?: TimingMode;
   asyncRevealPolicy?: AsyncRevealPolicy;
+  /** Ids I have picked before, per field, from my own guesses across every
+   *  tasting (S9; spec §8.3 item 8) — drives each picker's "you guess this
+   *  often" secondary line via pick-counts.ts's oftenPicked. Replaces the
+   *  ladder's old grape-only, threshold-2 array — the same mechanism now
+   *  covers every field. */
+  pickCounts: PickCounts;
+  /** Each field's full reference-table size, unfiltered — feeds the
+   *  picker's "Search {n} …" placeholder and "Everything else · all {n}"
+   *  heading (S9; spec §8.3 item 8). */
+  referenceCounts: ReferenceCounts;
+  /** The tasting's host, for the laptop header eyebrow ("Live · {host} is
+   *  hosting", PLAY-05) — laptop only, the phone header omits it. */
+  hostName: string;
+  /** How many people compete on this tasting (JOINED, minus a
+   *  HOST_PROVIDES host) — the rank chip's "of {competitors}" on laptops. */
+  competitors: number;
+  /** Who else can guess this glass and whether they have locked in yet
+   *  (from tasting_guess_status) — the laptop rail's roster (S8b) and the
+   *  phone header's "{k} of {n} locked" count the same set. */
+  roster: { name: string; locked: boolean; isMe: boolean }[];
+  /** The top three standings as of now, for the laptop rail's "Standings
+   *  after glass {N-1}" (S8b) — null before any glass has been revealed. */
+  standingsAfterPrevious: { rank: number; tied: boolean; name: string; total: number }[] | null;
   /** Fired after lockGuess succeeds (the composition swaps to Locked in). */
   onLocked: () => void;
 };
@@ -161,6 +185,34 @@ export type FieldPickerProps = {
    *  passes null: every glass must be matched before it can lock, so a skip
    *  would only lead to a dead end (play-7). */
   skipLabel?: string | null;
+  /** "sheet" (default, unchanged) is the phone bottom sheet. "popover" (S8b)
+   *  anchors to `anchorRef` instead: base-ui `Popover`, `positionMethod`
+   *  `"fixed"`, `keepMounted`, no dimming backdrop — outside click or
+   *  Escape closes it (the caller's `onClose` is what returns focus to the
+   *  row; the picker itself does not). Both presentations stay mounted, so
+   *  the ladder's synchronous `inputRef.current.focus()` inside the opening
+   *  tap always has an input to focus. */
+  presentation?: "sheet" | "popover";
+  /** The row to anchor the popover to (base-ui's `Positioner` `anchor`).
+   *  Required, and only read, when `presentation` is `"popover"`. */
+  anchorRef?: React.RefObject<HTMLElement | null>;
+  /** The field's full reference-table size, unfiltered (S9; spec §8.3 item
+   *  8) — grapes/countries/regions from `getReferenceOptions()` lengths,
+   *  appellations/producers from a `head: true` count, type designations
+   *  from the preloaded active list, vintages from
+   *  `vintageOptions(now).years.length`. Drives
+   *  `searchPlaceholder(field, totalCount, { phone })` (phone = the sheet
+   *  presentation) in place of the plain `searchPlaceholder` prop, and
+   *  overrides a group literally headed "Everything else" to
+   *  `everythingElseHeading(totalCount)`, laid out two columns wide on the
+   *  popover. Omitted keeps both as the caller wrote them. */
+  totalCount?: number;
+  /** Ids the viewer has picked at least `OFTEN_THRESHOLD` times before, for
+   *  this field (`pick-counts.ts`'s `buildPickCounts` + `oftenPicked`). A
+   *  row whose id is a member gets ladder-copy's `OFTEN_SUFFIX` appended to
+   *  its context line (or, for a row with no context line of its own, shown
+   *  bare). */
+  oftenIds?: ReadonlySet<string>;
 };
 
 /** Vintage option ids the picker emits; the ladder maps them onto
@@ -168,3 +220,9 @@ export type FieldPickerProps = {
 export const VINTAGE_NV_ID = "nv";
 export const vintageYearId = (year: number) => `year:${year}`;
 export const vintageTawnyId = (years: number) => `tawny:${years}`;
+
+/** The tawny group's "enter it yourself" row for an age outside the four
+ *  presets (10/20/30/40). Never written as-is — picking it opens a number
+ *  input (1–100), and the save uses vintageTawnyId(years) like any other
+ *  tawny age. */
+export const VINTAGE_TAWNY_OTHER_ID = "tawny:other";

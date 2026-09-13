@@ -1,9 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { logClientTiming } from "@/lib/reveal-timing";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
+import {
+  TWO_TAP_WINDOW_MS,
+  revealEverythingLabel,
+  type TwoTapState,
+} from "@/lib/console-copy";
 import {
   revealNextCategory,
   revealFull,
@@ -46,6 +51,20 @@ export function RevealControls({
     FormData
   >(revealFull, null);
 
+  // The inline two-tap confirm that replaces window.confirm (refinement 7):
+  // shared with the host console's own "Reveal everything" button, so both
+  // read the same copy and arm for the same five seconds.
+  const [armedAt, setArmedAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (armedAt === null) return;
+    const id = setTimeout(() => setArmedAt(null), TWO_TAP_WINDOW_MS);
+    return () => clearTimeout(id);
+  }, [armedAt]);
+  // Equivalent to twoTapState(armedAt, Date.now()) — the timeout above already
+  // clears armedAt once the window elapses, so "armed" needs no impure clock
+  // read during render (react-hooks/purity).
+  const tapState: TwoTapState = armedAt === null ? "idle" : "armed";
+
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
@@ -64,17 +83,23 @@ export function RevealControls({
             )}
           </Button>
         </form>
-        <form
-          action={fullAction}
-          onSubmit={(e) => {
-            if (!window.confirm("Reveal the full answer now?")) {
-              e.preventDefault();
-            }
-          }}
-        >
+        <form action={fullAction}>
           <input type="hidden" name="wine_id" value={wineId} />
-          <Button type="submit" size="sm" variant="outline" disabled={fullPending}>
-            {fullPending ? "…" : "Reveal full answer"}
+          <Button
+            type="submit"
+            size="sm"
+            variant="outline"
+            disabled={fullPending}
+            onClick={(e) => {
+              if (tapState !== "armed") {
+                e.preventDefault();
+                setArmedAt(Date.now());
+                return;
+              }
+              setArmedAt(null);
+            }}
+          >
+            {fullPending ? "…" : revealEverythingLabel(tapState)}
           </Button>
         </form>
       </div>

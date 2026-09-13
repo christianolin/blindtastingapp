@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "WHITE",
+  "grapes": [
+    {
+      "name": "Chardonnay",
+      "percentage": 100
+    }
+  ],
+  "region": "Languedoc-Roussillon",
+  "country": "France",
+  "rawText": "CHÂTEAU DE FLANDRY | CHARDONNAY LIMOUX | APPELLATION D'ORIGINE CONTRÔLÉE | 2023",
+  "producer": "Château de Flandry",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Limoux AOC",
+  "description": "Limoux AOC is a Languedoc appellation in the Aude department known for producing still Chardonnay-based white wines, distinct from the sparkling Blanquette and Crémant de Limoux made in the same zone. The appellation permits Chardonnay, often blended with a small proportion of Mauzac and Chenin Blanc, though many estates bottle a varietal Chardonnay. Vineyards lie on limestone and clay soils in the foothills of the Pyrenees, benefiting from a cooler mesoclimate favorable to Chardonnay ripening.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2023,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

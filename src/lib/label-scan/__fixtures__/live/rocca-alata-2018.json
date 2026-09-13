@@ -1,0 +1,34 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Corvina",
+      "percentage": null
+    },
+    {
+      "name": "Rondinella",
+      "percentage": null
+    },
+    {
+      "name": "Molinara",
+      "percentage": null
+    }
+  ],
+  "region": "Veneto",
+  "country": "Italy",
+  "rawText": "Rocca Alata, VALPOLICELLA RIPASSO, Denominazione di Origine Controllata, 2018, Decanter World Wine Awards Bronze, Product of Italy, 13% vol, 750ml",
+  "producer": "Rocca Alata",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Valpolicella Ripasso DOC",
+  "description": "Valpolicella Ripasso DOC is produced by re-passing Valpolicella wine over the fermented Amarone or Recioto grape skins (pomace), adding structure, body and complexity compared to base Valpolicella. The wine is made from the traditional Corvina, Rondinella and Molinara blend grown in the Valpolicella zone of Veneto. This bottling received a Bronze medal at the Decanter World Wine Awards.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2018,
+  "alcoholPercent": 13,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

@@ -3,30 +3,30 @@
 import { Camera, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddWine } from "@/components/add-wine-context";
-import { useTouchPrimary } from "@/components/add-wine/use-camera";
+import { useCanScan } from "@/components/add-wine/use-can-scan";
 
 // App-wide entry point for adding a wine from its label. It always opens the
-// universal add-wine sheet with `start: "camera"` and lets the sheet apply
-// the device rule (use-camera.ts): a phone or tablet lands on the live camera,
-// a mouse / trackpad device on the desktop view with "Upload label photos" —
-// the live camera is touch-only (owner, 2026-09-12). On a tasting page that
-// has registered itself (TastingScanRegistrar) the wine goes straight into
-// that flight; anywhere else the sheet opens with no destination and asks
-// where the bottle goes after the read (7i).
+// universal add-wine sheet with `start: "camera"` and lets the sheet route by
+// `canScan` (spec §C.3, D5): a device with a coarse pointer and a camera lands
+// on the live camera, every other device on the laptop view with "Upload label
+// photos". On a tasting page that has registered itself (TastingScanRegistrar)
+// the wine goes straight into that flight; anywhere else the sheet opens with
+// no destination and asks where the bottle goes after the read (E1).
 //
-// The glyph is picked in CSS by the same `(pointer: coarse)` query, so the
-// server HTML already paints the right icon on every device and nothing
-// swaps after hydration. Only the aria-label needs the hook: its server
-// snapshot is false, so SSR and hydration agree on the mouse label and a
-// touch device corrects it straight after — an attribute, nothing visible.
+// The icon and label follow `useCanScan()`. While it is unresolved (the server
+// render and hydration) the glyph is picked in CSS by `(pointer: coarse)`, so a
+// mouse device paints ImagePlus from the server HTML and keeps it; only a
+// coarse-pointer device without a camera swaps its glyph once resolved.
 export function ScanButton({ className }: { className?: string }) {
   const { openAddWineSheet, activeTasting } = useAddWine();
-  const touch = useTouchPrimary();
+  const canScan = useCanScan();
+  const label =
+    canScan === null ? "Scan or upload a label" : canScan ? "Scan a label" : "Upload a label photo";
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={touch ? "Scan a wine label" : "Add a wine from label photos"}
+      aria-label={label}
       className={className}
       onClick={() =>
         activeTasting
@@ -44,8 +44,16 @@ export function ScanButton({ className }: { className?: string }) {
           : openAddWineSheet(null, { start: "camera" })
       }
     >
-      <Camera aria-hidden className="hidden pointer-coarse:block" />
-      <ImagePlus aria-hidden className="pointer-coarse:hidden" />
+      {canScan === true ? (
+        <Camera aria-hidden />
+      ) : canScan === false ? (
+        <ImagePlus aria-hidden />
+      ) : (
+        <>
+          <Camera aria-hidden className="hidden pointer-coarse:block" />
+          <ImagePlus aria-hidden className="pointer-coarse:hidden" />
+        </>
+      )}
     </Button>
   );
 }

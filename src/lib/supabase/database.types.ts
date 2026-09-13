@@ -9,6 +9,16 @@
 // types require those exact keys to exist or its generic inference silently
 // collapses to `never`.
 
+// A jsonb value (the `supabase gen types` shape). jsonb RPC results are typed
+// Json and narrowed by a local type at the call site.
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
 export type TimingMode = "LIVE" | "ASYNC";
 export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
 export type RevealMode = "BLIND" | "SEMI_BLIND" | "OPEN";
@@ -240,6 +250,28 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
       };
+      // 20260914113500: curated alternative producer names. alias_folded is
+      // GENERATED ALWAYS AS (f_search_norm(alias)) STORED — never writable.
+      producer_aliases: {
+        Row: {
+          id: string;
+          producer_id: string;
+          alias: string;
+          alias_folded: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          producer_id: string;
+          alias: string;
+          alias_folded?: never;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["producer_aliases"]["Insert"]
+        >;
+        Relationships: [];
+      };
       producers: {
         Row: { id: string; name: string; region_id: string | null };
         Insert: { id?: string; name: string; region_id?: string | null };
@@ -362,6 +394,19 @@ export type Database = {
           image_url: string | null;
           description: string | null;
           join_code: string | null;
+          // 20260914092500 (blind-tasting spec §11.4, §5.4): server-owned
+          // lifecycle stamps. A BEFORE INSERT OR UPDATE trigger replaces any
+          // client-sent value: `started_at` on an insert as IN_PROGRESS or OPEN
+          // or on the DRAFT → IN_PROGRESS flip (a restart keeps the first);
+          // `finished_at` on CLOSED, cleared on reopen. Null on tastings from
+          // before the migration (no backfill).
+          started_at: string | null;
+          finished_at: string | null;
+          // 20260914100500 (blind-tasting spec §7.4, B6, Q1): set by the host
+          // to pause a LIVE tasting; while set, the database refuses every
+          // reveal write on its glasses. A trigger clears it on any tasting that
+          // is not LIVE and IN_PROGRESS (so End tasting clears it too).
+          paused_at: string | null;
         };
         Insert: {
           id?: string;
@@ -382,6 +427,9 @@ export type Database = {
           image_url?: string | null;
           description?: string | null;
           join_code?: string | null;
+          started_at?: string | null;
+          finished_at?: string | null;
+          paused_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
         Relationships: [];
@@ -393,6 +441,10 @@ export type Database = {
           tasting_id: string;
           user_id: string;
           status: ParticipantStatus;
+          // 20260914093500 (blind-tasting spec §4.4, §5.3): server-owned. A
+          // BEFORE INSERT OR UPDATE trigger replaces any client-sent value:
+          // now() the first time a row becomes JOINED (insert, accept, link); a
+          // later flip to JOINED keeps it; null for a row that never joined.
           joined_at: string | null;
           created_at: string;
         };
@@ -410,6 +462,30 @@ export type Database = {
         Relationships: [];
       };
 
+      // 20260914091500 (blind-tasting spec §13.4, B12): a tasting's private
+      // place, outside `tastings` because a tasting row goes public once a wine
+      // is revealed. Readable by the host and JOINED and INVITED participants
+      // only; written by the host only. `place` is 1–200 characters with no
+      // surrounding spaces; the BEFORE UPDATE trigger owns `updated_at`.
+      tasting_places: {
+        Row: {
+          tasting_id: string;
+          place: string;
+          updated_at: string;
+        };
+        Insert: {
+          tasting_id: string;
+          place: string;
+          updated_at?: string;
+        };
+        Update: {
+          tasting_id?: string;
+          place?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
       wines: {
         Row: {
           id: string;
@@ -422,6 +498,20 @@ export type Database = {
           // 20260912102000 (spec §E.3): how a glass was added (D13). Null for
           // legacy rows. The pour intent is its own table, never a wines column.
           added_via: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
+          // 20260914092500 (blind-tasting spec §11.4, §5.4): when the glass was
+          // revealed. Server-owned: a BEFORE INSERT OR UPDATE trigger stamps it
+          // on the reveal flip (or an insert already revealed), clears it when
+          // is_revealed goes back to false, and replaces any client-sent value.
+          // Null on glasses revealed before the migration (no backfill), which
+          // are never "joined after" (glass-eligibility.ts).
+          revealed_at: string | null;
+          // 20260914095500 (blind-tasting spec §3.4, B2): who added the glass,
+          // fixed at insert — true when it was inserted with no contributor.
+          // Trigger-owned (wines_pin_adder): an insert's value is replaced, and
+          // an update never changes it, so nulling or deleting a contributor
+          // never turns their glass into a host-added one. is_wine_adder keys
+          // on it. Clients update only `position` and `added_via` (M6).
+          added_by_host: boolean;
         };
         Insert: {
           id?: string;
@@ -432,6 +522,8 @@ export type Database = {
           reveal_step?: number;
           created_at?: string;
           added_via?: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
+          revealed_at?: string | null;
+          added_by_host?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
@@ -1115,7 +1207,12 @@ export type Database = {
       wset_notes: {
         Row: {
           id: string;
-          catalog_wine_id: string;
+          // Both nullable live (BT-N1; blind-tasting B8): a note on a still-
+          // hidden tasting glass carries neither identity until the glass is
+          // revealed (M5's wset_notes_one_identity: exactly one of the two,
+          // or neither alongside a BLIND context_kind + tasting_wine_id).
+          catalog_wine_id: string | null;
+          unidentified_wine_id: string | null;
           context_kind: "OPEN" | "BLIND" | "TRAINING";
           tasting_wine_id: string | null;
           author_id: string;
@@ -1146,7 +1243,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          catalog_wine_id: string;
+          catalog_wine_id?: string | null;
+          unidentified_wine_id?: string | null;
           context_kind?: "OPEN" | "BLIND" | "TRAINING";
           tasting_wine_id?: string | null;
           author_id: string;
@@ -1509,6 +1607,8 @@ export type Database = {
         Args: { p_tasting_id: string };
         Returns: string;
       };
+      // 20260914093500 (blind-tasting spec §5.4): refuses only a CLOSED tasting,
+      // so people can join by link after Start (B4).
       join_tasting_by_code: {
         Args: { p_code: string };
         Returns: string;
@@ -1624,6 +1724,160 @@ export type Database = {
       import_cellar_lots: {
         Args: { rows: unknown };
         Returns: unknown;
+      };
+      // 20260914091500 (blind-tasting spec §13.4): the `tasting places read`
+      // helper — true for the host and JOINED or INVITED participants.
+      is_tasting_member: {
+        Args: { p_tasting_id: string };
+        Returns: boolean;
+      };
+      // 20260914093500 (blind-tasting spec §4.4): a host's record — how many
+      // tastings they have started or closed. Authenticated only.
+      host_tastings_count: {
+        Args: { p_user_id: string };
+        Returns: number;
+      };
+      // 20260914093500 (blind-tasting spec §4.4, Q3): the share-link preview,
+      // callable by anon. Never the place, description, cover or any wine
+      // beyond a count; an OPEN-mode tasting's code returns no row.
+      get_join_preview: {
+        Args: { p_code: string };
+        Returns: {
+          name: string;
+          host_name: string | null;
+          host_avatar_url: string | null;
+          scheduled_at: string | null;
+          reveal_mode: RevealMode;
+          timing_mode: TimingMode;
+          sequential_guessing: boolean;
+          glass_count: number;
+          status: TastingStatus;
+          // Only for the host and JOINED or INVITED rows (a DECLINED guest gets null).
+          viewer_tasting_id: string | null;
+          host_id: string | null; // signed-in callers only
+          joined_names: string[] | null; // signed-in callers only
+        }[];
+      };
+      // 20260914094500 (blind-tasting spec §9.4, B8): may the caller attach a
+      // note to this tasting glass? True for its tasting's host and JOINED
+      // participants. Authenticated only.
+      can_note_tasting_wine: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914094500 (spec §9.4): whether a tasting glass is revealed (false
+      // for an unknown id). Authenticated only.
+      is_tasting_wine_revealed: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914094500 (spec §9.4): the hue-to-colour mapping
+      // wset_notes_check_hue enforces. A null hue or colour, and an ORANGE
+      // wine, fit anything.
+      wset_hue_fits_colour: {
+        Args: { p_hue: WsetColourHue | null; p_colour: WineColour | null };
+        Returns: boolean;
+      };
+      // 20260914095500 (blind-tasting spec §3.4, B2): the adder's edit window —
+      // the glass's adder (wines.added_by_host), while the tasting is not
+      // CLOSED and the glass is unrevealed at reveal_step 0; on an OPEN board
+      // while not CLOSED. The `wine_answers` insert/update policies use it.
+      can_edit_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): Remove — the edit window, or the host for
+      // any glass while DRAFT; never a semi-blind glass after Start, never
+      // while a later glass is revealed or has started its reveal (OPEN exempt).
+      can_remove_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): a direct `wines` delete (`wines delete
+      // adder`) — Remove's rule, and the host in DRAFT or the adder's last glass.
+      can_delete_flight_glass_row: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): reorder atomically to the 1-based
+      // p_to_index. Host only; refused on a CLOSED tasting and whenever a glass
+      // the table has seen would change its number.
+      move_flight_glass: {
+        Args: { p_wine_id: string; p_to_index: number };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4): delete a glass and close the gap in one
+      // transaction, whoever the adder is (can_remove_flight_glass).
+      remove_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4): Swap's provenance write (a contributor
+      // holds no UPDATE on `wines` rows). Edit's window; never a semi-blind
+      // glass after Start. p_added_via is one of SCAN, CATALOG, CELLAR, BY_HAND.
+      set_flight_glass_added_via: {
+        Args: { p_wine_id: string; p_added_via: string };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4, §16.1 row 6): what a removal takes with it —
+      // counts only, one row to whoever may remove the glass, no row otherwise.
+      // private_notes counts identity-less (hidden) notes on the glass.
+      glass_removal_impact: {
+        Args: { p_wine_id: string };
+        Returns: { guesses: number; private_notes: number }[];
+      };
+      // 20260914102500 (blind-tasting spec §10.4 b, B9): may the caller see the
+      // semi-blind list — the host or a JOINED participant of a SEMI_BLIND
+      // tasting. Authenticated only. (semi_blind_candidate_keys and
+      // ensure_semi_blind_keys are not typed: no client can reach them.)
+      can_see_semi_blind_list: {
+        Args: { p_tasting_id: string };
+        Returns: boolean;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 19): { cards: [{ key, producer,
+      // wine_name, vintage_kind, vintage_year, vintage_tawny_years, appellation,
+      // grape, revealed_glass }], pending } ordered by the random key, or null.
+      // DRAFT callers see their own cards (the glasses they added), and pending
+      // only the host. From Start pending goes to every caller, and every card
+      // once nothing is pending; until then only the cards of glasses they
+      // added. Narrow at the call site.
+      get_semi_blind_candidates: {
+        Args: { p_tasting_id: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 20): { mine, revealed, split,
+      // own_bottles, known } in candidate keys, or null. Narrow at the call site.
+      get_semi_blind_board: {
+        Args: { p_tasting_id: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 21): per revealed glass, who
+      // picked which key; pick_label only when the picked wine is revealed or the
+      // caller is the host or a JOINED participant.
+      get_semi_blind_revealed_picks: {
+        Args: { p_tasting_id: string };
+        Returns: {
+          glass_wine_id: string;
+          participant_id: string;
+          correct: boolean;
+          pick_key: string | null;
+          pick_label: string | null;
+        }[];
+      };
+      // 20260914102500 (spec §10.4 c, B9): assign a candidate to the caller's
+      // glass (swaps with an open holder) → { glass, swapped_with }. Refusals:
+      // "matching is closed", "you cannot match this glass", "that wine is not in
+      // your pool", "this glass is locked in", "glass locked" (detail = the
+      // holder's glass id).
+      assign_semi_blind_match: {
+        Args: { p_wine_id: string; p_candidate_key: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 c): the caller's open row on this glass loses
+      // its candidate; refuses a locked row ("this glass is locked in").
+      clear_semi_blind_match: {
+        Args: { p_wine_id: string };
+        Returns: undefined;
       };
     };
   };

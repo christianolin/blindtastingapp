@@ -1,8 +1,19 @@
 // Pure selection rules for the Overview page — which tasting the banner shows,
-// what its stage line says, and how the Blind tastings card orders its rows.
-// Kept free of any Next/Supabase import so vitest's node environment can test
-// them; getOverviewData (overview-data.ts) feeds them RLS-readable rows.
+// what its stage line and words say, who may add to its flight, and how the
+// Blind tastings card orders its rows. Kept free of any Next/Supabase import
+// so vitest's node environment can test them (runtime imports are relative
+// only: vitest has no "@/" alias); getOverviewData (overview-data.ts) feeds
+// them RLS-readable rows.
 import type { TastingRow } from "@/lib/overview-types";
+import type {
+  RevealMode,
+  TastingStatus,
+  TimingMode,
+  WineSourceMode,
+} from "@/lib/supabase/database.types";
+import { semiBlindAddRefusal } from "./flight-glass-rules";
+import { joinEyebrow, statusWord, timingWord } from "./tasting-eyebrow";
+import { makeWineLabeler } from "./wine-label";
 
 export type LiveCandidate = {
   id: string;
@@ -108,6 +119,112 @@ export function bannerStage(
   if (revealedKeys.length === 0) return "guessing open";
   const last = revealedKeys[revealedKeys.length - 1];
   return `${STAGE_LABEL[last] ?? last} revealed`;
+}
+
+/**
+ * The add-wine flight hint's phase for a running tasting (D12, entry-4): only
+ * a LIVE tasting is "live"; a started ASYNC one is "self-paced", which the
+ * sheet's subtitle reads as "in progress". A next-up draft is "next" — the
+ * banner sets that one itself.
+ */
+export function bannerPhase(timingMode: TimingMode): "live" | "self-paced" {
+  return timingMode === "LIVE" ? "live" : "self-paced";
+}
+
+export type LiveBannerCopy = {
+  /** "ping" = the pulsing LiveDot; "still" = a static dot. */
+  dot: "ping" | "still";
+  eyebrow: string;
+  cta: string;
+};
+
+/**
+ * The running banner's words (spec §D.4 #2, entry-4). Only a LIVE tasting —
+ * people at one table right now — reads "Live now" behind the pulsing dot and
+ * sends you "Back to the table"; a self-paced one reads "In progress ·
+ * self-paced" behind a still dot and sends you to "Continue guessing". `host`
+ * is the host clause the banner builds ("hosted by Ida" / "you are hosting").
+ */
+export function liveBannerCopy(timingMode: TimingMode, host: string): LiveBannerCopy {
+  if (timingMode === "LIVE") {
+    return { dot: "ping", eyebrow: joinEyebrow(["Live now", host]), cta: "Back to the table" };
+  }
+  return {
+    dot: "still",
+    eyebrow: joinEyebrow([statusWord("IN_PROGRESS", timingMode), timingWord(timingMode), host]),
+    cta: "Continue guessing",
+  };
+}
+
+/**
+ * The status label a tasting card shows for a running tasting: "Live now"
+ * only for a LIVE one, otherwise "In progress" (entry-4). Null for every
+ * other status, which keeps its own label.
+ */
+export function tastingCardStatus(status: TastingStatus, timingMode: TimingMode): string | null {
+  if (status !== "IN_PROGRESS") return null;
+  return timingMode === "LIVE" ? "Live now" : statusWord(status, timingMode);
+}
+
+/**
+ * Who may add a wine to a tasting's flight — the same rule the server's
+ * `resolveTastingAdder` enforces: the host of a host-provides tasting, or any
+ * JOINED participant of a bring-your-own one, and never once a started
+ * semi-blind tasting has fixed its flight (`semiBlindAddRefusal`, owner Q7) —
+ * the server already refuses that add (`resolveTastingAdder`), this just
+ * keeps the Overview from registering a flight hint (and a paid label scan)
+ * for a glass it would only reject. The Overview registers its flight hint
+ * (and offers "Add a wine") only when this holds, so the sheet never draws a
+ * flight row you cannot take (D12; scan-4, sources-2, entry-3).
+ */
+export function canAddToFlight(t: {
+  wineSource: WineSourceMode;
+  hostId: string;
+  myId: string;
+  myStatus: string;
+  revealMode: RevealMode;
+  tastingStatus: TastingStatus;
+}): boolean {
+  if (semiBlindAddRefusal({ revealMode: t.revealMode, tastingStatus: t.tastingStatus })) {
+    return false;
+  }
+  return t.wineSource === "HOST_PROVIDES" ? t.hostId === t.myId : t.myStatus === "JOINED";
+}
+
+/** One line of the next-up banner's flight list. */
+export type FlightLine = { label: string; filled: boolean; note?: string };
+
+/**
+ * The next-up banner's flight: the real glasses, never padded to a planned
+ * count (none exists, and a host may pour more — amendment 6). Host-provides
+ * glasses read "Wine N · set" by list order. Bring-your-own lists every glass
+ * by contributor ("Gustav's wine", "Ida's wine #2"), then one "waiting for
+ * {name} to add it" row per JOINED participant who has not brought a bottle
+ * yet, in participant order — the create sheet's and the lobby's rows, with no
+ * per-person slots (spec §D.4 #3). `participants` is the tasting's whole list,
+ * so a glass from someone who has since left keeps their name.
+ */
+export function nextUpFlight(
+  wineSource: WineSourceMode,
+  wines: { id: string; position: number; contributor_participant_id: string | null }[],
+  participants: { id: string; status: string; name: string }[],
+): FlightLine[] {
+  const ordered = [...wines].sort((a, b) => a.position - b.position);
+  const label = makeWineLabeler(
+    ordered,
+    wineSource,
+    new Map(participants.map((p) => [p.id, p.name])),
+  );
+  if (wineSource === "HOST_PROVIDES") {
+    return ordered.map((w) => ({ label: label(w), filled: true, note: "set" }));
+  }
+  const brought = new Set(ordered.map((w) => w.contributor_participant_id));
+  return [
+    ...ordered.map((w) => ({ label: label(w), filled: true })),
+    ...participants
+      .filter((p) => p.status === "JOINED" && !brought.has(p.id))
+      .map((p) => ({ label: `waiting for ${p.name} to add it`, filled: false })),
+  ];
 }
 
 /**

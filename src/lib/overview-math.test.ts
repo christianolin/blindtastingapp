@@ -1,12 +1,121 @@
 import { describe, expect, it } from "vitest";
 import type { TastingRow } from "./overview-types";
 import {
+  bannerPhase,
   bannerStage,
+  canAddToFlight,
   isRunningStatus,
+  liveBannerCopy,
+  nextUpFlight,
   orderTastingRows,
   pickLiveTasting,
   pickNextTasting,
+  tastingCardStatus,
 } from "./overview-math";
+
+describe("a self-paced tasting reads 'in progress' (entry-4)", () => {
+  it("phase", () => expect([bannerPhase("LIVE"), bannerPhase("ASYNC")]).toEqual(["live", "self-paced"]));
+  it("banner copy", () => {
+    expect(liveBannerCopy("LIVE", "Ida")).toEqual({ dot: "ping", eyebrow: "Live now · Ida", cta: "Back to the table" });
+    expect(liveBannerCopy("ASYNC", "Ida")).toEqual({ dot: "still", eyebrow: "In progress · self-paced · Ida", cta: "Continue guessing" });
+  });
+  it("taste card", () =>
+    expect([tastingCardStatus("IN_PROGRESS", "LIVE"), tastingCardStatus("IN_PROGRESS", "ASYNC"), tastingCardStatus("DRAFT", "LIVE")]).toEqual(["Live now", "In progress", null]));
+});
+
+describe("canAddToFlight — the flight hint registers only for people who may add (D12)", () => {
+  // Base fields cover the pre-existing BLIND/DRAFT cases; each spread adds
+  // revealMode/tastingStatus explicitly where the case under test cares.
+  const draftBlind = { revealMode: "BLIND", tastingStatus: "DRAFT" } as const;
+
+  it("host-provides: only the host", () => {
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "INVITED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "g", myStatus: "JOINED", ...draftBlind })).toBe(false);
+  });
+
+  it("bring-your-own: any JOINED participant, the host included, nobody else", () => {
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "JOINED", ...draftBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "INVITED", ...draftBlind })).toBe(false);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "h", myStatus: "DECLINED", ...draftBlind })).toBe(false);
+  });
+
+  it("a started SEMI_BLIND tasting refuses everyone — the flight is fixed once it starts (owner Q7)", () => {
+    const startedSemiBlind = { revealMode: "SEMI_BLIND", tastingStatus: "IN_PROGRESS" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...startedSemiBlind })).toBe(false);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...startedSemiBlind })).toBe(false);
+    // A legacy OPEN status also counts as started, same as isRunningStatus.
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", revealMode: "SEMI_BLIND", tastingStatus: "OPEN" })).toBe(false);
+  });
+
+  it("a DRAFT SEMI_BLIND tasting is unaffected — the flight isn't fixed until it starts", () => {
+    const draftSemiBlind = { revealMode: "SEMI_BLIND", tastingStatus: "DRAFT" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...draftSemiBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...draftSemiBlind })).toBe(true);
+  });
+
+  it("a started BLIND tasting is unaffected — the fixed-flight rule is semi-blind only", () => {
+    const startedBlind = { revealMode: "BLIND", tastingStatus: "IN_PROGRESS" } as const;
+    expect(canAddToFlight({ wineSource: "HOST_PROVIDES", hostId: "h", myId: "h", myStatus: "JOINED", ...startedBlind })).toBe(true);
+    expect(canAddToFlight({ wineSource: "PARTICIPANT_CONTRIBUTED", hostId: "h", myId: "g", myStatus: "JOINED", ...startedBlind })).toBe(true);
+  });
+});
+
+describe("nextUpFlight — no padded slots (amendment 6, spec §D.4 #3)", () => {
+  const wine = (id: string, position: number, contributor: string | null = null) => ({
+    id,
+    position,
+    contributor_participant_id: contributor,
+  });
+
+  it("host-provides lists the real glasses in list order and never pads", () => {
+    expect(nextUpFlight("HOST_PROVIDES", [wine("b", 7), wine("a", 2)], [])).toEqual([
+      { label: "Wine 1", filled: true, note: "set" },
+      { label: "Wine 2", filled: true, note: "set" },
+    ]);
+    expect(nextUpFlight("HOST_PROVIDES", [], [])).toEqual([]);
+  });
+
+  it("bring-your-own lists every glass by contributor, then one waiting row per JOINED person without a bottle", () => {
+    const people = [
+      { id: "p-gustav", status: "JOINED", name: "Gustav" },
+      { id: "p-ida", status: "JOINED", name: "Ida" },
+      { id: "p-maja", status: "JOINED", name: "Maja" },
+      { id: "p-ole", status: "INVITED", name: "Ole" },
+      { id: "p-kim", status: "DECLINED", name: "Kim" },
+    ];
+    const flight = [wine("w3", 3, "p-ida"), wine("w1", 1, "p-ida"), wine("w2", 2, "p-gustav")];
+    expect(nextUpFlight("PARTICIPANT_CONTRIBUTED", flight, people)).toEqual([
+      { label: "Ida's wine #1", filled: true },
+      { label: "Gustav's wine", filled: true },
+      { label: "Ida's wine #2", filled: true },
+      { label: "waiting for Maja to add it", filled: false },
+    ]);
+  });
+
+  it("an empty bring-your-own flight is only waiting rows, in participant order", () => {
+    const people = [
+      { id: "p-host", status: "JOINED", name: "Ida" },
+      { id: "p-gustav", status: "JOINED", name: "Gustav" },
+    ];
+    expect(nextUpFlight("PARTICIPANT_CONTRIBUTED", [], people)).toEqual([
+      { label: "waiting for Ida to add it", filled: false },
+      { label: "waiting for Gustav to add it", filled: false },
+    ]);
+  });
+
+  it("never draws an 'Empty' row", () => {
+    const rows = [
+      ...nextUpFlight("HOST_PROVIDES", [wine("a", 1)], []),
+      ...nextUpFlight("PARTICIPANT_CONTRIBUTED", [wine("a", 1, "p-left")], [
+        { id: "p-left", status: "DECLINED", name: "Kim" },
+        { id: "p-joined", status: "JOINED", name: "Maja" },
+      ]),
+    ];
+    expect(rows.map((r) => r.label)).toEqual(["Wine 1", "Kim's wine", "waiting for Maja to add it"]);
+  });
+});
 
 describe("pickLiveTasting", () => {
   const base = {

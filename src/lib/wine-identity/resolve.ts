@@ -5,11 +5,15 @@
 // The rules it exists to hold (RC3, RC4, RC5, RC10, scan-3):
 // - nothing is ever guessed: a miss leaves the field null and the draft partial;
 // - an appellation is set only when exactly one reference row agrees — there is
-//   no first-hit fallback, and no falling back to a region's self-named row;
-// - a producer link may fill the region, never the appellation and never a grape.
+//   no first-hit fallback, and no falling back to a region's self-named row. The
+//   one other way in is a curated appellation synonym (owner approval 4), only for
+//   text no reference row agreed with, and only inside the read's own region;
+// - a producer link may fill the region, never the appellation and never a grape;
+//   and a region read with no appellation text that the producer's link places in
+//   another region of the same country is left empty (owner approval 3).
 import { canonicalGrapeName } from "../label-scan/grape-canonical";
 import type { LabelRead } from "../label-scan/label-read-schema";
-import { canonicalCountryName, canonicalRegionName } from "../label-scan/region-canonical";
+import { canonicalCountryName, canonicalRegionName, curatedAppellationName } from "../label-scan/region-canonical";
 import { emptyDraft, normaliseDraft } from "./complete";
 import { DESIGNATION_SUFFIXES, foldName, foldWords, isTitleOnly, normaliseCru, stripDesignationSuffix } from "./fold";
 import type { BlendRow, FieldProvenance, ProvenanceKey, RefChoice, WineIdentityDraft } from "./types";
@@ -149,19 +153,23 @@ async function resolveAppellation(
   lookup: RefLookup,
   countryId: string | null,
   regionCandidateId: string | null,
-): Promise<AppellationRow | null> {
+): Promise<AppellationAttempt> {
+  // `agreed` is the verdict of the last attempt made: the first, or the 4.7 retry
+  // when no row agreed with the first. So `agreed: false` means no reference row
+  // agreed with the text in any attempt — the only case step 4.10's curated
+  // synonym may take over.
   const query = normaliseCru(appellation);
   const readSuffix = designationSuffix(query);
   const base = stripDesignationSuffix(query);
-  if (base === "") return null;
+  if (base === "") return { row: null, agreed: false };
 
   const first = await attemptAppellation(base, readSuffix, lookup, countryId, regionCandidateId);
-  if (first.row !== null || first.agreed) return first.row;
+  if (first.row !== null || first.agreed) return first;
 
   // 4.7 — the one retry: drop a trailing Grand Cru / Premier Cru, once.
   const retryBase = withoutCruQualifier(base);
-  if (retryBase === null || retryBase === "") return null;
-  return (await attemptAppellation(retryBase, readSuffix, lookup, countryId, regionCandidateId)).row;
+  if (retryBase === null || retryBase === "") return first;
+  return attemptAppellation(retryBase, readSuffix, lookup, countryId, regionCandidateId);
 }
 
 async function resolveBlend(read: LabelRead, lookup: RefLookup): Promise<BlendRow[]> {
@@ -176,6 +184,15 @@ async function resolveBlend(read: LabelRead, lookup: RefLookup): Promise<BlendRo
   });
 }
 
+/** A reference designation name that ends in its one bracket, split into the
+    name before the bracket and the bracket's content: "Late Bottled Vintage
+    (LBV)" → { name: "Late Bottled Vintage ", short: "LBV" }. Null for a name with
+    no bracket, a bracket that does not end the name, or more than one bracket. */
+function bracketParts(name: string): { name: string; short: string } | null {
+  const match = /^([^()]*)\(([^()]*)\)\s*$/.exec(name);
+  return match ? { name: match[1], short: match[2] } : null;
+}
+
 async function resolveDesignation(
   designation: string,
   lookup: RefLookup,
@@ -183,16 +200,30 @@ async function resolveDesignation(
 ): Promise<string | null> {
   const wanted = foldName(designation);
   if (wanted === "") return null;
-  const matches = (await lookup.typeDesignations()).filter((row) => foldName(row.name) === wanted);
+  const rows = await lookup.typeDesignations();
   // Spec §B.5 step 8: the draft's country first, then a designation with no
   // country, "otherwise leave it null". There is deliberately no fall back to the
   // first remaining row: a designation scoped to another country is a read the
   // resolver could not place, and this module never guesses. The user still picks
   // it by hand on the confirm screen, and the field is not a completeness field.
-  const preferred =
-    (countryId !== null ? matches.find((row) => row.countryId === countryId) : undefined)
-    ?? matches.find((row) => row.countryId === null);
-  return preferred?.id ?? null;
+  const inDraftCountry = (row: { countryId: string | null }) => countryId !== null && row.countryId === countryId;
+  const matches = rows.filter((row) => foldName(row.name) === wanted);
+  const preferred = matches.find(inDraftCountry) ?? matches.find((row) => row.countryId === null);
+  if (preferred !== undefined) return preferred.id;
+
+  // Owner approval 1b (2026-09-13), only when folded equality picked nothing: a
+  // reference row whose bracketed short form ("LBV" → "Late Bottled Vintage (LBV)")
+  // or whose name without its bracket ("Grosses Gewächs" → "Grosses Gewächs (GG)")
+  // folds equal to the read. A candidate obeys the same country rule (the draft's
+  // country, or no country). Exactly one candidate is a match; two or more pick
+  // nothing. "Vintage" alone therefore matches neither "Vintage Port" nor "Late
+  // Bottled Vintage (LBV)".
+  const candidates = rows.filter((row) => {
+    if (row.countryId !== null && !inDraftCountry(row)) return false;
+    const parts = bracketParts(row.name);
+    return parts !== null && [parts.short, parts.name].some((part) => foldName(part) === wanted);
+  });
+  return candidates.length === 1 ? candidates[0].id : null;
 }
 
 /**
@@ -232,16 +263,29 @@ export async function resolveLabelRead(
     }
   } else {
     // 3. Region candidate — a candidate only, not a value yet.
-    let regionCandidateId: string | null = null;
+    let regionCandidate: { id: string; name: string } | null = null;
     if (country !== null && read.region !== null) {
       const wanted = foldName(canonicalRegionName(read.region, country.name));
-      regionCandidateId =
-        (await lookup.regionsInCountry(country.id)).find((row) => foldName(row.name) === wanted)?.id ?? null;
+      regionCandidate =
+        (await lookup.regionsInCountry(country.id)).find((row) => foldName(row.name) === wanted) ?? null;
     }
+    const regionCandidateId = regionCandidate?.id ?? null;
 
     // 4. Appellation — exactly one agreeing row, or nothing.
     if (read.appellation !== null) {
-      const row = await resolveAppellation(read.appellation, lookup, draft.countryId, regionCandidateId);
+      const direct = await resolveAppellation(read.appellation, lookup, draft.countryId, regionCandidateId);
+      let row = direct.row;
+      // 4.10 — a curated appellation synonym (owner approval 4, region-canonical.ts).
+      //   Only when no reference row agreed with the read's own text (4.3, 4.7), and
+      //   only inside the region the read itself named (step 3). The synonym's target
+      //   goes through the same steps and must be the one row in that region.
+      if (row === null && !direct.agreed && country !== null && regionCandidate !== null) {
+        const synonym = curatedAppellationName(read.appellation, country.name, regionCandidate.name);
+        if (synonym !== null) {
+          const target = (await resolveAppellation(synonym, lookup, country.id, regionCandidate.id)).row;
+          if (target !== null && target.regionId === regionCandidate.id) row = target;
+        }
+      }
       if (row !== null) {
         draft.appellationId = row.id;
         draft.regionId = row.regionId;
@@ -271,18 +315,33 @@ export async function resolveLabelRead(
       : { kind: "pending", name: read.producer };
     provenance.producer = "label";
 
-    // 7. Region from the producer's region link — only when the region is still
-    //    empty and the link's country is consistent. Never the appellation, and
-    //    never a grape (owner rule, RC10).
-    if (draft.regionId === null && hit !== null && hit.regionId !== null) {
-      const linked = await lookup.regionById(hit.regionId);
-      if (linked !== null && (draft.countryId === null || draft.countryId === linked.countryId)) {
-        draft.regionId = linked.id;
-        provenance.region = "producer-region";
-        if (draft.countryId === null) {
-          draft.countryId = linked.countryId;
-          provenance.country = "producer-region";
-        }
+    // 7. The producer's region link. Never the appellation, and never a grape
+    //    (owner rule, RC10).
+    //    - A region read with no appellation text (not the no-GI path) came from the
+    //      read's region field alone (step 5). When the link places the producer in
+    //      another region of the same country, that region is a wrong answer that
+    //      looks right, so it is left empty for the user and listed as missing
+    //      (owner approval 3, 2026-09-13) — and the link does not fill it either.
+    //      The draft has no field for the reason; the region simply carries no
+    //      provenance, like any field nothing filled.
+    //    - Otherwise the link fills the region only when it is still empty and the
+    //      link's country is consistent.
+    const regionReadAlone = !read.noGeographicIndication && read.appellation === null && draft.regionId !== null;
+    const linked =
+      hit !== null && hit.regionId !== null && hit.regionId !== draft.regionId && (draft.regionId === null || regionReadAlone)
+        ? await lookup.regionById(hit.regionId)
+        : null;
+    if (linked !== null && draft.regionId !== null) {
+      if (draft.countryId === linked.countryId) {
+        draft.regionId = null;
+        delete provenance.region;
+      }
+    } else if (linked !== null && (draft.countryId === null || draft.countryId === linked.countryId)) {
+      draft.regionId = linked.id;
+      provenance.region = "producer-region";
+      if (draft.countryId === null) {
+        draft.countryId = linked.countryId;
+        provenance.country = "producer-region";
       }
     }
   }

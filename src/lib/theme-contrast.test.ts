@@ -80,8 +80,8 @@ describe.each([
 
 describe("the console palette, which is dark in BOTH themes", () => {
   it("keeps its ink readable on its own ground", () => {
-    // These four are deliberately not overridden in .dark. If someone ever adds
-    // a .dark variant for them, this is what should still hold.
+    // These three are deliberately not overridden in .dark. If someone ever
+    // adds a .dark variant for them, this is what should still hold.
     expect(ratio(light, "--console-ink", "--console")).toBeGreaterThanOrEqual(4.5);
     expect(ratio(light, "--console-ink", "--console-card")).toBeGreaterThanOrEqual(4.5);
   });
@@ -92,11 +92,15 @@ describe("the console palette, which is dark in BOTH themes", () => {
 });
 
 describe("the dark palette's coverage of the light one", () => {
-  it("overrides every colour token except the four that are already dark", () => {
-    // --radius is not a colour; the console four and --miss are dark-surface
-    // values the reveal screen uses in both themes. Anything ELSE missing here
-    // is a light value bleeding onto a near-black ground, which is how
-    // --border-light at #f0e6d1 nearly shipped.
+  it("overrides every colour token except the console ones already dark", () => {
+    // --radius is not a colour; the console three are dark-surface values the
+    // reveal screen uses in both themes. Anything ELSE missing here is a light
+    // value bleeding onto a near-black ground, which is how --border-light at
+    // #f0e6d1 nearly shipped.
+    //
+    // --miss is allowed but no longer absent: BT-D1 set it explicitly, to the
+    // same value it already had in light. Kept in the list because it is still
+    // legitimately either way.
     const allowed = new Set([
       "--radius", "--miss", "--console", "--console-card", "--console-ink",
     ]);

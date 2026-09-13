@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { coerceLabelRead } from "../label-scan/label-read-schema";
+import { APPELLATION_SYNONYMS } from "../label-scan/region-canonical";
 import { missingWineFields } from "./complete";
 import { foldName, stripDesignationSuffix } from "./fold";
 import { resolveLabelRead } from "./resolve";
@@ -209,11 +210,9 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     expect(covered.filter((n) => !appellationIds.has(n.appellation_id))).toEqual([]);
   });
   it("a folded producer collision resolves to the region-linked row, not the region-less one (spec §B.7)", async () => {
-    // With the region known (step 6 passes it), ties go to that region first. See
-    // snapshot-lookup.ts: 20260912101000's SQL inverts this tie-break for a
-    // region-less duplicate (its NULL sort key comes first under DESC), so until
-    // 20260912101530 is applied live this half passes here while production
-    // returns p-null.
+    // With the region known (step 6 passes it), ties go to that region first.
+    // 20260912101530 (applied live) fixed the SQL, which used to sort a
+    // region-less duplicate first; see snapshot-lookup.ts.
     const snap = two();
     snap.producers = [
       { id: "p-null", name: "Château Lascombes", region_id: null },
@@ -506,5 +505,321 @@ describe("the country and region filters, the cru retry trigger and a foreign de
   it("step 9 keeps the canonical name on a pending grape", async () => {
     const d = await resolve("vin-de-france.json", { ...plain, grapes: [{ name: "Garnacha", percentage: 100 }] }, two());
     expect(d.blend).toEqual([{ grape: { kind: "pending", name: "Grenache" }, percentage: 100 }]);
+  });
+});
+
+// Owner approval 1b (2026-09-13). Step 8 still tries folded equality first. Only
+// when that picks nothing does it try a reference designation's bracketed short
+// form ("LBV" → "Late Bottled Vintage (LBV)") or its name without the bracket
+// ("Grosses Gewächs" → "Grosses Gewächs (GG)"). The country rule is unchanged: a
+// candidate is a row in the draft's country or a row with no country. Two or more
+// candidates pick nothing (never a first hit).
+describe("step 8: a designation's bracketed short form, or its name without the bracket (owner approval 1b)", () => {
+  // Shaped like the live table (checked read-only 2026-09-13): names are UNIQUE,
+  // and exactly these four active rows carry a bracket.
+  const des = (): ReferenceSnapshot => ({
+    countries: [{ id: "pt", name: "Portugal" }, { id: "de", name: "Germany" }, { id: "at", name: "Austria" }, { id: "fr", name: "France" }],
+    regions: [], appellations: [], none: [], producers: [], grapes: [],
+    type_designations: [
+      { id: "vp", name: "Vintage Port", country_id: "pt" },
+      { id: "lbv", name: "Late Bottled Vintage (LBV)", country_id: "pt" },
+      { id: "gg", name: "Grosses Gewächs (GG)", country_id: "de" },
+      { id: "ba", name: "Beerenauslese (BA)", country_id: "de" },
+      { id: "tba", name: "Trockenbeerenauslese (TBA)", country_id: "de" },
+      { id: "brut", name: "Brut", country_id: null },
+    ],
+  });
+  const plain = { noGeographicIndication: false, appellation: null, region: null, producer: null, designation: null, grapes: [] };
+  const pick = async (country: string | null, designation: string, s: ReferenceSnapshot = des()) => {
+    const d = await resolve("vin-de-france.json", { ...plain, country, designation }, s);
+    return [d.typeDesignationId, d.provenance.typeDesignation ?? null];
+  };
+
+  it.each([
+    ["Portugal", "LBV", "lbv"],
+    ["Portugal", "lbv", "lbv"],
+    ["Portugal", "Late Bottled Vintage", "lbv"],
+    ["Germany", "GG", "gg"],
+    ["Germany", "Grosses Gewächs", "gg"],
+    ["Germany", "Großes Gewächs", "gg"],
+    ["Germany", "BA", "ba"],
+    ["Germany", "TBA", "tba"],
+    ["Germany", "Beerenauslese", "ba"],
+    ["Germany", "Trockenbeerenauslese", "tba"],
+  ] as const)("%s · %s resolves by the bracket and is read from the label", async (country, designation, id) =>
+    expect(await pick(country, designation)).toEqual([id, "label"]));
+
+  it("folded equality runs first, so a row literally named by the short form wins over the bracket", async () => {
+    expect(await pick("Portugal", "Late Bottled Vintage (LBV)")).toEqual(["lbv", "label"]);
+    const s = des();
+    s.type_designations.push({ id: "lbv-plain", name: "LBV", country_id: "pt" });
+    expect(await pick("Portugal", "LBV", s)).toEqual(["lbv-plain", "label"]);
+  });
+
+  it("'Vintage' alone stays unresolved: it is neither a short form nor a name without its bracket", async () => {
+    // #12's stored read says "Vintage"; the rows are "Vintage Port" and "Late Bottled Vintage (LBV)".
+    expect(await pick("Portugal", "Vintage")).toEqual([null, null]);
+    expect(await pick("Portugal", "Bottled Vintage")).toEqual([null, null]);
+    expect(await pick("Germany", "Gewächs")).toEqual([null, null]);
+    expect(await pick("Germany", "Auslese")).toEqual([null, null]);
+  });
+
+  it("a short form shared by two rows stays unresolved", async () => {
+    const s = des();
+    s.type_designations.push({ id: "gg2", name: "Gran Gusto (GG)", country_id: "de" });
+    expect(await pick("Germany", "GG", s)).toEqual([null, null]);
+    // A row with no country is a candidate in every country, so it collides too.
+    const t = des();
+    t.type_designations.push({ id: "gg-any", name: "Gold Grade (GG)", country_id: null });
+    expect(await pick("Germany", "GG", t)).toEqual([null, null]);
+  });
+
+  it("a name without its bracket shared by two rows stays unresolved", async () => {
+    const s = des();
+    s.type_designations.push({ id: "lbv-unf", name: "Late Bottled Vintage (Unfiltered)", country_id: "pt" });
+    expect(await pick("Portugal", "Late Bottled Vintage", s)).toEqual([null, null]);
+    expect(await pick("Portugal", "LBV", s)).toEqual(["lbv", "label"]);
+  });
+
+  it("the country rule still holds: another country's row is never a candidate", async () => {
+    expect(await pick("France", "LBV")).toEqual([null, null]);
+    expect(await pick(null, "GG")).toEqual([null, null]);
+    // So a short form another country's row shares does not block this country's row.
+    const s = des();
+    s.type_designations.push({ id: "ba-at", name: "Bergauslese (BA)", country_id: "at" });
+    expect(await pick("Austria", "BA", s)).toEqual(["ba-at", "label"]);
+    expect(await pick("Germany", "BA", s)).toEqual(["ba", "label"]);
+  });
+
+  it("a bracket must close the name: a bracket elsewhere, or two, is no short form", async () => {
+    const s = des();
+    s.type_designations.push(
+      { id: "mid", name: "Alpha (AL) Reserve", country_id: "pt" },
+      { id: "two", name: "Beta (BE) (BT)", country_id: "pt" },
+    );
+    for (const designation of ["AL", "Alpha Reserve", "BE", "BT", "Beta"]) {
+      expect([designation, ...(await pick("Portugal", designation, s))]).toEqual([designation, null, null]);
+    }
+  });
+});
+
+// Owner approval 3 (2026-09-13): "a blank is safer than a wrong answer that looks
+// right". A read with no appellation text places its region from its region field
+// alone (step 5). When the producer it found (step 6) is an existing row linked to
+// ANOTHER region of the SAME country, that region is left empty for the user — so
+// it is listed as missing — and step 7 does not refill it from the link. Every
+// other path keeps today's behaviour.
+describe("a read-only region that disagrees with the producer's region link is left blank (owner approval 3)", () => {
+  const es = (): ReferenceSnapshot => ({
+    countries: [{ id: "es", name: "Spain" }, { id: "pt", name: "Portugal" }],
+    regions: [
+      { id: "clm", name: "Castilla La Mancha", country_id: "es" },
+      { id: "cyl", name: "Castilla y Leon", country_id: "es" },
+      { id: "es-none", name: "None", country_id: "es" },
+      { id: "dou", name: "Douro", country_id: "pt" },
+    ],
+    appellations: [
+      { id: "clm-a", name: "Castilla La Mancha", region_id: "clm" },
+      { id: "rib", name: "Ribera del Duero DO", region_id: "cyl" },
+      { id: "es-none-a", name: "None", region_id: "es-none" },
+    ],
+    none: [{ country_id: "es", region_id: "es-none", appellation_id: "es-none-a" }],
+    producers: [
+      { id: "p-cyl", name: "Bodegas Norte", region_id: "cyl" },
+      { id: "p-clm", name: "Bodegas Sur", region_id: "clm" },
+      { id: "p-unlinked", name: "Bodegas Sin Enlace", region_id: null },
+      { id: "p-pt", name: "Quinta Lusa", region_id: "dou" },
+    ],
+    grapes: [{ id: "tem", name: "Tempranillo" }],
+    type_designations: [],
+  });
+  // "Castilla-La Mancha" resolves through Spain's region synonyms (step 3).
+  const read = {
+    noGeographicIndication: false, country: "Spain", region: "Castilla-La Mancha", appellation: null,
+    producer: null, designation: null, grapes: [{ name: "Tempranillo", percentage: 100 }],
+  };
+  const placed = async (patch: Record<string, unknown>) => {
+    const d = await resolve("vin-de-france.json", { ...read, ...patch }, es());
+    return {
+      producer: d.producer, countryId: d.countryId, regionId: d.regionId, appellationId: d.appellationId,
+      region: d.provenance.region ?? null, missing: missingWineFields(d, { now: NOW }),
+    };
+  };
+
+  it("the read's region is dropped and listed as missing, and step 7 does not refill it from the link", async () => {
+    expect(await placed({ producer: "Bodegas Norte" })).toEqual({
+      producer: { kind: "existing", id: "p-cyl", name: "Bodegas Norte" },
+      countryId: "es", regionId: null, appellationId: null, region: null,
+      missing: ["region", "appellation"],
+    });
+  });
+
+  it.each([
+    ["a producer linked to the read's own region", "Bodegas Sur", { kind: "existing", id: "p-clm", name: "Bodegas Sur" }],
+    ["a pending producer", "Bodegas Desconocidas", { kind: "pending", name: "Bodegas Desconocidas" }],
+    ["a bare title word", "Bodegas", { kind: "pending", name: "Bodegas" }],
+    ["a producer with no region link", "Bodegas Sin Enlace", { kind: "existing", id: "p-unlinked", name: "Bodegas Sin Enlace" }],
+    ["a producer linked to another country", "Quinta Lusa", { kind: "existing", id: "p-pt", name: "Quinta Lusa" }],
+  ] as const)("%s keeps the read's region, as today", async (_case, producer, choice) => {
+    expect(await placed({ producer })).toEqual({
+      producer: choice, countryId: "es", regionId: "clm", appellationId: null, region: "label", missing: ["appellation"],
+    });
+  });
+
+  it("a read with appellation text keeps its region: the resolved appellation's, or the read's own when no row agreed", async () => {
+    // Ribera del Duero sits in Castilla y Leon; the producer's link is Castilla La Mancha.
+    expect(await placed({ appellation: "Ribera del Duero DO", producer: "Bodegas Sur" }))
+      .toMatchObject({ regionId: "cyl", appellationId: "rib", region: "label", missing: [] });
+    // The blank case's region and producer, but the read carried appellation text no row agrees with.
+    expect(await placed({ appellation: "Vino de la Tierra de Castilla", producer: "Bodegas Norte" }))
+      .toMatchObject({ regionId: "clm", appellationId: null, region: "label", missing: ["appellation"] });
+  });
+
+  it("a no-geographic-indication read keeps its country's tier beside a producer linked elsewhere in the country", async () => {
+    expect(await placed({ noGeographicIndication: true, producer: "Bodegas Norte" }))
+      .toMatchObject({ regionId: "es-none", appellationId: "es-none-a", region: "label", missing: [] });
+  });
+
+  it("step 7 still fills the region from the link when the read named no region, or one that resolves to nothing", async () => {
+    for (const region of [null, "Atlantis"]) {
+      expect([region, await placed({ region, producer: "Bodegas Norte" })]).toMatchObject([
+        region, { regionId: "cyl", region: "producer-region", missing: ["appellation"] },
+      ]);
+    }
+  });
+});
+
+// Owner approval 4 (2026-09-13): a curated appellation synonym, not a heuristic.
+// Round 2's #4 read names the label's full origin, "Ningxia Helan Mountain Eastern
+// Foothills", which the catalog stores as region Ningxia's own appellation
+// "Ningxia". The synonym is tried only when no reference row agreed with the
+// read's own text (steps 4.3 and 4.7), only when the read's region resolved to the
+// synonym's region, and its target must be exactly one row in that region. A read
+// with no appellation text never reaches it (step 5 still holds).
+describe("step 4: a curated appellation synonym (owner approval 4)", () => {
+  const cn = (): ReferenceSnapshot => ({
+    countries: [{ id: "cn", name: "China" }, { id: "fr", name: "France" }],
+    regions: [{ id: "nx", name: "Ningxia", country_id: "cn" }, { id: "sd", name: "Shandong", country_id: "cn" }],
+    appellations: [{ id: "nx-a", name: "Ningxia", region_id: "nx" }, { id: "sd-a", name: "Shandong", region_id: "sd" }],
+    none: [], producers: [], grapes: [], type_designations: [],
+  });
+  const read = { noGeographicIndication: false, country: "China", region: "Ningxia", appellation: null, producer: null, designation: null, grapes: [] };
+  const pick = async (patch: Record<string, unknown>, s?: ReferenceSnapshot) => {
+    const d = await resolve("vin-de-france.json", { ...read, ...patch }, s);
+    return [d.appellationId, d.regionId, d.provenance.appellation ?? null];
+  };
+  const FULL = "Ningxia Helan Mountain Eastern Foothills";
+
+  it.each([FULL, FULL.toUpperCase(), "Ningxia Helan Mountain East", "Helan Mountain Eastern Foothills"])(
+    "%s, read in region Ningxia, is the snapshot's Ningxia appellation, read from the label",
+    async (appellation) => {
+      const ningxia = snap.appellations.find((a) => a.id === "328c774b-dc53-4cfc-b95d-7003ea470b6b")!;
+      expect(ningxia.name).toBe("Ningxia");
+      expect(await pick({ appellation })).toEqual([ningxia.id, ningxia.region_id, "label"]);
+    },
+  );
+
+  it("every curated synonym names exactly one stored appellation in its own region, and resolves to it", async () => {
+    const entries = Object.entries(APPELLATION_SYNONYMS).flatMap(([countryName, regions]) =>
+      Object.entries(regions).flatMap(([regionName, spellings]) =>
+        Object.entries(spellings).map(([spelling, target]) => ({ countryName, regionName, spelling, target }))));
+    expect(entries.map((e) => e.spelling).sort()).toEqual(
+      ["helan mountain eastern foothills", "ningxia helan mountain east", "ningxia helan mountain eastern foothills"],
+    );
+    for (const { countryName, regionName, spelling, target } of entries) {
+      const c = snap.countries.find((row) => row.name === countryName);
+      const r = snap.regions.find((row) => row.country_id === c?.id && row.name === regionName);
+      const rows = snap.appellations.filter((row) => row.region_id === r?.id && row.name === target);
+      expect([spelling, rows.length]).toEqual([spelling, 1]);
+      expect([spelling, ...(await pick({ country: countryName, region: regionName, appellation: spelling }))])
+        .toEqual([spelling, rows[0].id, r!.id, "label"]);
+    }
+  });
+
+  it("never outside the synonym's region: another region, no region, or a region the read's country lacks", async () => {
+    expect(await pick({ appellation: FULL }, cn())).toEqual(["nx-a", "nx", "label"]); // the control
+    expect(await pick({ appellation: FULL, region: "Shandong" }, cn())).toEqual([null, "sd", null]);
+    expect(await pick({ appellation: FULL, region: null }, cn())).toEqual([null, null, null]);
+    expect(await pick({ appellation: FULL, country: "France" }, cn())).toEqual([null, null, null]);
+  });
+
+  it("a partial string is no synonym", async () => {
+    for (const appellation of ["Helan Mountain", "Ningxia Helan", "Eastern Foothills", "Ningxia Helan Mountain Eastern", "Mountain Eastern Foothills"]) {
+      expect([appellation, ...(await pick({ appellation }, cn()))]).toEqual([appellation, null, "nx", null]);
+    }
+  });
+
+  it("a read that matched an appellation row keeps it, and rows that agreed but tie are not replaced by the synonym", async () => {
+    const own = cn();
+    own.appellations.push({ id: "helan", name: "Helan Mountain Eastern Foothills", region_id: "nx" });
+    expect(await pick({ appellation: "Helan Mountain Eastern Foothills" }, own)).toEqual(["helan", "nx", "label"]);
+
+    // Both rows agree with the read (a designation suffix is stripped), so step 4.9
+    // picks nothing — the read matched rows, and only could not tell them apart.
+    const tied = cn();
+    tied.appellations.push(
+      { id: "helan-gi", name: "Helan Mountain Eastern Foothills GI", region_id: "nx" },
+      { id: "helan-pgi", name: "Helan Mountain Eastern Foothills PGI", region_id: "nx" },
+    );
+    expect(await pick({ appellation: "Helan Mountain Eastern Foothills" }, tied)).toEqual([null, "nx", null]);
+  });
+
+  it("the synonym's target must be the one row in the read's region", async () => {
+    const moved = cn();
+    moved.appellations = [{ id: "nx-a", name: "Ningxia", region_id: "sd" }, { id: "sd-a", name: "Shandong", region_id: "sd" }];
+    expect(await pick({ appellation: FULL }, moved)).toEqual([null, "nx", null]);
+  });
+
+  it("a region-level read in Ningxia never becomes the self-named appellation, and never searches (spec §B.5 step 5)", async () => {
+    const inner = snapshotLookup(snap);
+    const searched: string[] = [];
+    const d = await resolveLabelRead(
+      coerceLabelRead({ ...fixture("vin-de-france.json"), ...read }),
+      {
+        ...inner,
+        searchAppellations: (words: string, regionId?: string) => {
+          searched.push(words);
+          return inner.searchAppellations(words, regionId);
+        },
+      },
+      { imageUrl: null },
+    );
+    expect([d.appellationId, snap.regions.find((r) => r.id === d.regionId)?.name, searched]).toEqual([null, "Ningxia", []]);
+    expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+});
+
+describe("a prefix-named designation row never agrees until renamed to the suffix form (20260914114217, Sassicaia/Etna live-bug fix)", () => {
+  // Same failure class pinned live for Sassicaia in live-replay.test.ts (#16), here
+  // in isolation for Etna DOC (09a2296a-b7be-4d0b-b904-3e95a30e7295): it is not
+  // named by any live read fixture, so it never entered the committed reference
+  // snapshot, and is pinned here against a synthetic one instead. Before the
+  // migration this row was named "DOC Etna" — designation as a prefix.
+  // stripDesignationSuffix (fold.ts) strips only a TRAILING designation word, so
+  // "DOC Etna" folds to "docetna", never equal to a suffix-spelled read's base
+  // "etna" — even though search_appellations (step 4.2) still finds the row by
+  // substring, step 4.3's fold comparison rejects it. The migration renamed it to
+  // "Etna DOC" (suffix form, matching Sicilia's other Etna rows), so it now agrees.
+  const sicily = (name: string): ReferenceSnapshot => ({
+    countries: [{ id: "it", name: "Italy" }],
+    regions: [{ id: "sic", name: "Sicilia", country_id: "it" }],
+    appellations: [{ id: "09a2296a-b7be-4d0b-b904-3e95a30e7295", name, region_id: "sic" }],
+    none: [], producers: [], grapes: [], type_designations: [],
+  });
+  const read = {
+    noGeographicIndication: false, country: "Italy", region: "Sicilia", appellation: "Etna DOC",
+    producer: null, designation: null, grapes: [],
+  };
+
+  it("the old prefix-named row \"DOC Etna\" is found by search but never agrees with an \"Etna DOC\" read", async () => {
+    const d = await resolve("vin-de-france.json", read, sicily("DOC Etna"));
+    expect(d.appellationId).toBeNull();
+    expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+
+  it("renamed to the suffix form \"Etna DOC\", the same read resolves to it, and appellation is no longer missing", async () => {
+    const d = await resolve("vin-de-france.json", read, sicily("Etna DOC"));
+    expect(d.appellationId).toBe("09a2296a-b7be-4d0b-b904-3e95a30e7295");
+    expect(missingWineFields(d, { now: NOW })).not.toContain("appellation");
   });
 });

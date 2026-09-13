@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Cabernet Sauvignon",
+      "percentage": 100
+    }
+  ],
+  "region": "Ningxia",
+  "country": "China",
+  "rawText": "CHANGYU MOSER XV / MOSER FAMILY / CABERNET SAUVIGNON / 2022 / 宁夏贺兰山东麓产区 / NINGXIA HELAN MOUNTAIN EASTERN FOOTHILLS REGION",
+  "producer": "Changyu Moser XV",
+  "wineName": "Moser Family",
+  "confidence": "high",
+  "appellation": null,
+  "description": "Changyu Moser XV is a joint venture between China's Changyu Pioneer Wine Company and Austrian winemaker Lenz Moser, based in the Ningxia Helan Mountain Eastern Foothills region. This area has emerged as one of China's most promising fine-wine regions, with high-altitude vineyards, alkaline soils and a dry continental climate suited to Cabernet Sauvignon. The wine is produced under the guidance of Lenz Moser, applying Austrian and international winemaking techniques to locally grown fruit.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2022,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

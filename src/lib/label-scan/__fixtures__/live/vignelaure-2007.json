@@ -1,0 +1,34 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Cabernet Sauvignon",
+      "percentage": null
+    },
+    {
+      "name": "Syrah",
+      "percentage": null
+    },
+    {
+      "name": "Grenache",
+      "percentage": null
+    }
+  ],
+  "region": "Provence",
+  "country": "France",
+  "rawText": "VIN ROUGE PRODUIT DE FRANCE / RED WINE PRODUCT OF FRANCE / SANS LE SOLEIL, JE NE SUIS RIEN / CHATEAU VIGNELAURE / 2007 / COTEAUX D'AIX EN PROVENCE / APPELLATION COTEAUX D'AIX EN PROVENCE CONTRÔLEE / MIS EN BOUTEILLE AU CHATEAU / PAR VIGNELAURE SAS, PROPRIÉTAIRE À 83560 RIANS (FRANCE) / CETTE BOUTEILLE PORTE LE N° 37170 / WWW.VIGNELAURE.COM / METTE ET BENGT SUNDSTROM PROPRIÉTAIRES",
+  "producer": "Château Vignelaure",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Coteaux d'Aix-en-Provence AOC",
+  "description": "Château Vignelaure is a historic estate in the Coteaux d'Aix-en-Provence appellation, at the border with Côtes de Provence, known for pioneering Cabernet Sauvignon plantings in Provence alongside Syrah and Grenache. The estate's vineyards lie on clay-limestone soils at relatively high altitude for the region, contributing to a structured, age-worthy style. Ownership passed to the Sundström family in the early 2000s, continuing the estate's focus on Bordeaux-Rhône blends.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2007,
+  "alcoholPercent": 14,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

@@ -1,0 +1,30 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Sangiovese",
+      "percentage": null
+    },
+    {
+      "name": "Merlot",
+      "percentage": null
+    }
+  ],
+  "region": "Tuscany",
+  "country": "Italy",
+  "rawText": "Gaslini Alberti - Badia di Morrona - Rosso della Badia - Particolare decoro mattonella Secolo XV - Dalla collezione della famiglia Gaslini Alberti - Toscana Indicazione Geografica Tipica Rosso",
+  "producer": "Badia di Morrona",
+  "wineName": "Rosso della Badia",
+  "confidence": "high",
+  "appellation": "Toscana IGT",
+  "description": "Badia di Morrona is a Tuscan estate near Terricciola in the Pisan hills, owned by the Gaslini Alberti family, whose origins as a monastic property date back centuries. Rosso della Badia is an entry-level IGT Toscana blend, typically based on Sangiovese with Merlot, aimed at everyday drinking rather than long ageing.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "NV",
+  "vintageRead": false,
+  "vintageYear": null,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

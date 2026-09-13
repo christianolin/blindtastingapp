@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { SearchableCombobox } from "@/components/searchable-combobox";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
+import { draftFromIdentityInput } from "@/components/wine/identity-draft";
 import { WineIdentityFields } from "@/components/wine/wine-identity-fields";
-import { createGrape, createProducer } from "@/app/catalog/new/actions";
 import { type BlendRow } from "@/app/catalog/new/grape-blend-editor";
-import { orderedBlend, resolvePendingBlend } from "@/lib/wine-blend";
 import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
+import { missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
+import { describeMissing } from "@/lib/wine-identity/describe";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import {
   addCellarLot,
   findMyCellarLotsForWine,
@@ -149,6 +151,32 @@ export function CellarLotForm({
   >(null);
   const [mergeTargetLotId, setMergeTargetLotId] = useState("");
 
+  // A new wine as a draft for the one completeness rule and the one write path
+  // (D2). A pending producer or grape name travels in it and is found or
+  // created by the write, so nothing is created before the save.
+  function currentDraft(): WineIdentityDraft {
+    const draft = draftFromIdentityInput(
+      {
+        countryId,
+        regionId,
+        appellationId,
+        blend,
+        producerId,
+        producerLabel,
+        typeDesignationId,
+        wineName,
+        colour: colour ?? "",
+        style: style ?? "",
+        vintageKind,
+        vintageYear,
+        vintageTawnyYears: tawnyYears,
+        imageUrl,
+      },
+      { grapes: Object.fromEntries(grapes.map((g) => [g.id, g.name])) },
+    );
+    return normaliseDraft({ ...draft, description });
+  }
+
   async function submit() {
     setError(null);
     const qty = Number(quantity);
@@ -157,29 +185,10 @@ export function CellarLotForm({
       return;
     }
     if (!catalogWineId) {
-      const hasProducer = Boolean(producerId || producerLabel?.trim());
-      const hasPrimaryGrape = Boolean(
-        blend[0]?.grapeId || blend[0]?.pendingName?.trim(),
-      );
-      // Name what's actually missing: a label scan often resolves only part of
-      // the identity, and "fill in these seven fields" doesn't say which.
-      const missing = [
-        !countryId && "country",
-        !regionId && "region",
-        !appellationId && "appellation",
-        !hasPrimaryGrape && "primary grape",
-        !hasProducer && "producer",
-        !colour && "colour",
-        !style && "style",
-      ].filter(Boolean) as string[];
+      // Names exactly what is missing ("This wine needs a vintage and a grape.").
+      const missing = missingWineFields(currentDraft());
       if (missing.length > 0) {
-        setError(
-          `Still missing: ${missing.join(", ")}. Fill these in, or pick an existing wine above.`,
-        );
-        return;
-      }
-      if (vintageKind === "YEAR" && !vintageYear) {
-        setError("Enter the vintage year (or switch to NV / tawny).");
+        setError(`This wine ${describeMissing(missing)}.`);
         return;
       }
     }
@@ -207,36 +216,11 @@ export function CellarLotForm({
     }
     setPending(true);
     try {
-      // Create a scanned-but-unmatched (pending) producer on save — only when
-      // adding a new wine, since an existing catalog pick ignores these fields.
-      let resolvedProducerId = producerId;
-      if (!catalogWineId && !resolvedProducerId && producerLabel?.trim()) {
-        const created = await createProducer(producerLabel.trim(), regionId || null);
-        resolvedProducerId = created.id;
-      }
-      // Same for pending (scanned-but-unmatched) grapes — resolved to real ids
-      // only for a new wine; an existing catalog pick ignores the blend.
-      const resolvedGrapes = catalogWineId
-        ? []
-        : orderedBlend(await resolvePendingBlend(blend, createGrape));
+      // An existing catalog pick needs no identity; a new wine travels as a
+      // draft, and the write resolves its pending producer and grapes.
       const result = await addCellarLot({
         catalogWineId: catalogWineId || null,
-        countryId,
-        regionId,
-        appellationId,
-        grapes: resolvedGrapes,
-        producerId: resolvedProducerId,
-        typeDesignationId: typeDesignationId || null,
-        colour: colour ?? undefined,
-        style: style ?? undefined,
-        wineName: wineName.trim() || null,
-        description: description.trim() || null,
-        vintageKind,
-        vintageYear:
-          vintageKind === "YEAR" && vintageYear ? Number(vintageYear) : null,
-        vintageTawnyYears:
-          vintageKind === "TAWNY" && tawnyYears ? Number(tawnyYears) : null,
-        imageUrl,
+        draft: catalogWineId ? null : currentDraft(),
         quantity: qty,
         bottleSizeMl: bottleSize,
         pricePerBottle: price ? Number(price) : null,
@@ -255,16 +239,10 @@ export function CellarLotForm({
       }
       if (onAdded) onAdded();
       else router.push("/cellar");
-    } catch (e) {
-      // Anything still thrown out of a server action (creating the pending
-      // producer/grape) reaches us with its message redacted by Next in
-      // production — don't show the user that placeholder.
-      const msg = e instanceof Error ? e.message : "";
-      setError(
-        !msg || msg.includes("Server Components render")
-          ? "Couldn't save this wine. Please try again — if it keeps failing, check the producer and grape names."
-          : msg,
-      );
+    } catch {
+      // addCellarLot returns its refusals; a throw here is a failed request,
+      // whose message Next redacts in production — don't show that placeholder.
+      setError("Couldn't save this wine. Please try again.");
       setPending(false);
     }
   }

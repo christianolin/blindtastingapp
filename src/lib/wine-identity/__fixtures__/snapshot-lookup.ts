@@ -14,7 +14,14 @@ export type ReferenceSnapshot = {
   regions: { id: string; name: string; country_id: string }[];
   appellations: { id: string; name: string; region_id: string }[];
   none: { country_id: string; region_id: string; appellation_id: string }[];
-  producers: { id: string; name: string; region_id: string | null }[];
+  /** `has_wines`: a catalog_wines or wine_answers row carries the producer's id —
+      the folded lookup's third tie-break (20260914112500). Absent means false, so
+      a snapshot exported before the field still loads and resolves as before. */
+  producers: { id: string; name: string; region_id: string | null; has_wines?: boolean }[];
+  /** Curated alternative producer names (20260914113500_producer_aliases): the folded
+      lookup's fallback when no producer row folds equal. Absent means none, so a
+      snapshot exported before the table still loads and resolves as before. */
+  aliases?: { id: string; producer_id: string; alias: string }[];
   grapes: { id: string; name: string }[];
   type_designations: { id: string; name: string; country_id: string | null }[];
 };
@@ -92,51 +99,56 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
       return none ? { regionId: none.region_id, appellationId: none.appellation_id } : null;
     },
 
-    // find_producer_by_folded_name (20260912101000): folded equality, ties to the
-    // given region first, then to any producer with a region link, then name, id
-    // (spec §B.7).
+    // find_producer_by_folded_name: folded equality (20260912101000), and among
+    // folded-equal producers, in order (20260914112500, owner approval 3):
+    //   1. the given region;
+    //   2. the exact spelling, lower(name) = lower(btrim(query));
+    //   3. a producer that holds wines (has_wines; absent means false);
+    //   4. any region link;
+    //   5. the name, then the id (spec §B.7).
     //
-    // KNOWN LIVE DIVERGENCE until 20260912101530 is applied live — this mirror
-    // encodes the contract above; 20260912101000's function inverts the first
-    // tie-break whenever a region is given. Its key is
-    // `(p_region_id is not null and p.region_id = p_region_id) desc`. With a
-    // region given, a candidate whose `region_id` is NULL makes that expression
-    // NULL (`true and null` → null), which DESC sorts NULLS FIRST — so a
-    // region-LESS duplicate beats the region-linked row the caller asked for.
-    // Verified read-only against the project database: 6 of 44 folded
-    // producer-name collision groups mix null and non-null regions, and in all 6
-    // a call with the linked row's region returns the region-less row — e.g.
-    // `find_producer_by_folded_name('Chateau Lascombes', <Bordeaux>)` returns
-    // 80f05804-…(region null) instead of 43c67107-…(region Bordeaux).
+    // The region key is null-safe. 20260912101000's first version sorted
+    // `(p_region_id is not null and p.region_id = p_region_id) desc` first; with a
+    // region given, a region-less duplicate made that key NULL, which DESC sorts
+    // first (6 of 44 folded collision groups). 20260912101530 wraps it in
+    // `coalesce(..., false)`, and this mirror keeps that.
     //
-    // With no region given the key is false for every row (`false and null` →
-    // false), so the region-linked row still wins; in all 6 groups the same call
-    // with a null region returns the linked row (43c67107-… for Lascombes). So
-    // step 7 ("region from the producer link") is NOT affected: it runs only
-    // while the draft has no region, which is exactly when step 6 passes a null
-    // one. What the defect breaks is producer identity on a lookup whose region
-    // is already known: step 6's `existing` id can be the region-less duplicate,
-    // and so can everything keyed on that id — the confident catalog match, which
-    // filters catalog wines by producer id, and `find_or_create_producer`, which
-    // reuses the duplicate instead of the region-linked row.
-    //
-    // Deliberately NOT mirrored, because mirroring the defect would encode it as
-    // the contract and silence the test that proves the intent. The SQL fix is
-    // 20260912101530_producer_folded_lookup_region_order, which recreates the
-    // function with `coalesce(p_region_id is not null and p.region_id =
-    // p_region_id, false) desc` as its first key (spec §E.2 now reads the same).
-    // Once the main session applies it live, this mirror and the database agree.
+    // Only when no producer row folds equal (20260914113500, owner approvals 1 and 2
+    // after L1 round 2): the producer of the alias whose folded name equals the
+    // query's, whatever the region. A producer row always beats an alias, and an alias
+    // never joins the tie-break. The unique index on alias_folded allows one such alias
+    // and the foreign key guarantees its producer, so two folded-equal aliases, or an
+    // alias whose producer the snapshot lacks, throw as a broken snapshot instead of
+    // resolving differently from the database.
     producerByFoldedName: async (name, regionId) => {
       const wanted = foldName(name);
       if (wanted === "") return null;
+      // btrim(text) trims spaces only, not tabs or newlines.
+      const spelling = name.replace(/^ +| +$/g, "").toLowerCase();
+      const keys = (p: (typeof snapshot.producers)[number]): boolean[] => [
+        regionId !== null && p.region_id === regionId,
+        p.name.toLowerCase() === spelling,
+        p.has_wines === true,
+        p.region_id !== null,
+      ];
       const hit = snapshot.producers
         .filter((p) => foldName(p.name) === wanted)
+        .map((p) => ({ p, k: keys(p) }))
         .sort((a, b) =>
-          Number(regionId !== null && b.region_id === regionId) - Number(regionId !== null && a.region_id === regionId)
-          || Number(b.region_id !== null) - Number(a.region_id !== null)
-          || a.name.localeCompare(b.name)
-          || a.id.localeCompare(b.id))[0];
-      return hit ? { id: hit.id, name: hit.name, regionId: hit.region_id } : null;
+          a.k.reduce((order, key, i) => order || Number(b.k[i]) - Number(key), 0)
+          || a.p.name.localeCompare(b.p.name)
+          || a.p.id.localeCompare(b.p.id))[0]?.p;
+      if (hit) return { id: hit.id, name: hit.name, regionId: hit.region_id };
+      const aliases = (snapshot.aliases ?? []).filter((a) => foldName(a.alias) === wanted);
+      if (aliases.length === 0) return null;
+      if (aliases.length > 1) {
+        throw new Error(`snapshot aliases ${aliases.map((a) => a.id).join(", ")} fold equal ("${wanted}")`);
+      }
+      const target = snapshot.producers.find((p) => p.id === aliases[0].producer_id);
+      if (!target) {
+        throw new Error(`snapshot alias ${aliases[0].id} names producer ${aliases[0].producer_id}, which the snapshot does not carry`);
+      }
+      return { id: target.id, name: target.name, regionId: target.region_id };
     },
 
     regionById: async (id) => {

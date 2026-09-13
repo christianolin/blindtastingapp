@@ -129,9 +129,9 @@ export function InviteStep({
         ) : null}
       </div>
 
-      {/* Or share a link — the sheet never creates an OPEN tasting, so the
-          link always stops at Start here. */}
-      <JoinLinkRow tastingId={tastingId} worksUntilStart={setup.revealMode !== "OPEN"} />
+      {/* Or share a link — B4/Q6: it works until the tasting ends, whatever
+          the mode. */}
+      <JoinLinkRow tastingId={tastingId} />
 
       {/* Ready to go */}
       <div className="flex flex-col gap-[7px] rounded-[11px] border border-gold bg-background p-[14px_16px]">

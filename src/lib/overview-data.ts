@@ -7,14 +7,16 @@
 // be expressed server-side (distinct producers, "JOINED minus host", …) is
 // never approximated.
 import { createClient } from "@/lib/supabase/server";
+import { getTastingPlace } from "@/app/tastings/new/place";
 import { getProfileStats } from "@/lib/profile-stats";
 import { getTastingLeaderboard, type LeaderboardRow } from "@/lib/tasting-leaderboard";
 import { catalogWineTitle } from "@/lib/wset/queries";
-import { makeWineLabeler } from "@/lib/wine-label";
 import { competitorRank, foldOther, percent, wineTypeLabel } from "@/lib/stats-math";
 import {
   bannerStage,
+  canAddToFlight,
   isRunningStatus,
+  nextUpFlight,
   orderTastingRows,
   pickLiveTasting,
   pickNextTasting,
@@ -41,7 +43,6 @@ import type {
 } from "@/lib/supabase/database.types";
 
 const ROW_CAP = 5;
-const FLIGHT_SLOTS = 6;
 const RATING_ROWS = 5;
 const CELLAR_TILES = 4;
 const CELLAR_RECENT = 3;
@@ -248,6 +249,9 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
           "producer:producers(name), appellation:appellations(name))",
       )
       .eq("author_id", userId)
+      // A hidden-glass note (blind-tasting B8) carries neither identity until
+      // its glass is revealed — it counts as a rating only once resolved.
+      .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null")
       .order("tasted_on", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(RATING_ROWS),
@@ -258,7 +262,8 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     supabase
       .from("wset_notes")
       .select("catalog_wine_id, quality_score")
-      .eq("author_id", userId),
+      .eq("author_id", userId)
+      .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null"),
     supabase
       .from("cellar_lots")
       .select(
@@ -352,11 +357,14 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
   // Round 3 — names and standings for the handful of tastings we render.
   const hostIds = new Set<string>();
   for (const t of [liveTasting, nextTasting, ...inviteTastings]) if (t) hostIds.add(t.host_id);
-  const slotUserIds =
+  // A bring-your-own next-up flight names its contributors and the JOINED
+  // people still bringing a bottle — so everyone on the tasting, which keeps
+  // a glass from someone who has since declined under their own name.
+  const flightUserIds =
     nextTasting?.wine_source === "PARTICIPANT_CONTRIBUTED"
-      ? joinedOf(nextTasting.id).map((p) => p.user_id)
+      ? participantsOf(nextTasting.id).map((p) => p.user_id)
       : [];
-  const profileIds = [...new Set([...hostIds, ...slotUserIds])];
+  const profileIds = [...new Set([...hostIds, ...flightUserIds])];
 
   const liveWines = liveTasting ? winesOf(liveTasting.id) : [];
   const liveAllRevealed = liveWines.length > 0 && liveWines.every((w) => w.is_revealed);
@@ -365,7 +373,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     liveTasting !== null && liveTasting.reveal_mode !== "OPEN" && liveCurrentWine !== null;
   const wantLiveStandings = liveTasting !== null && liveTasting.reveal_mode !== "OPEN";
 
-  const [{ data: profileRows }, liveReveal, liveLeaderboard, finishedLeaderboards] =
+  const [{ data: profileRows }, liveReveal, liveLeaderboard, finishedLeaderboards, nextPlace] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -378,6 +386,10 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
         ? getTastingLeaderboard(liveTasting.id)
         : Promise.resolve<LeaderboardRow[]>([]),
       Promise.all(finishedShown.map((t) => getTastingLeaderboard(t.id))),
+      // Q2: host, JOINED and INVITED only — never public, never the record
+      // (never read for the live banner, the signed-out preview or a finished
+      // tasting). getTastingPlace runs under the viewer's own RLS.
+      nextTasting ? getTastingPlace(supabase, nextTasting.id) : Promise.resolve<string | null>(null),
     ]);
   const nameByUserId = new Map((profileRows ?? []).map((p) => [p.id, p.display_name]));
   const hostNameOf = (t: TastingRowDb) => nameByUserId.get(t.host_id) ?? HOST_FALLBACK;
@@ -397,6 +409,16 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       hostName: hostNameOf(liveTasting),
       revealMode: liveTasting.reveal_mode,
       wineSource: liveTasting.wine_source,
+      timingMode: liveTasting.timing_mode,
+      // pickLiveTasting already rules out a CLOSED tasting.
+      canAddWine: canAddToFlight({
+        wineSource: liveTasting.wine_source,
+        hostId: liveTasting.host_id,
+        myId: userId,
+        myStatus: liveTasting.myStatus,
+        revealMode: liveTasting.reveal_mode,
+        tastingStatus: liveTasting.status,
+      }),
       wineIndex: revealedIndex === -1 ? liveWines.length : revealedIndex + 1,
       wineCount: liveWines.length,
       stage: bannerStage(revealedKeys, liveAllRevealed, liveTasting.reveal_mode),
@@ -407,25 +429,18 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     };
   } else if (nextTasting) {
     const flight = winesOf(nextTasting.id);
-    let slots: { label: string; filled: boolean; note?: string }[];
-    if (nextTasting.wine_source === "HOST_PROVIDES") {
-      // Numbered by list order (like the play/results pages), not the raw
-      // stored position; pad to six so an unfinished flight shows its gaps.
-      slots = flight.map((_, i) => ({ label: `Wine ${i + 1}`, filled: true, note: "set" }));
-      while (slots.length < FLIGHT_SLOTS) slots.push({ label: "Empty", filled: false });
-    } else {
-      const joined = joinedOf(nextTasting.id);
-      const nameByParticipantId = new Map(
-        joined.map((p) => [p.id, nameByUserId.get(p.user_id) ?? HOST_FALLBACK]),
-      );
-      const label = makeWineLabeler(flight, "PARTICIPANT_CONTRIBUTED", nameByParticipantId);
-      slots = joined.map((p) => {
-        const theirs = flight.find((w) => w.contributor_participant_id === p.id);
-        return theirs
-          ? { label: label(theirs), filled: true }
-          : { label: "Empty", filled: false };
-      });
-    }
+    // The real glasses by list order (like the play/results pages), never
+    // padded to a planned count; bring-your-own then adds one "waiting for
+    // {name} to add it" row per JOINED participant without a bottle.
+    const slots = nextUpFlight(
+      nextTasting.wine_source,
+      flight,
+      participantsOf(nextTasting.id).map((p) => ({
+        id: p.id,
+        status: p.status,
+        name: nameByUserId.get(p.user_id) ?? HOST_FALLBACK,
+      })),
+    );
     const hosting = nextTasting.host_id === userId;
     banner = {
       kind: "next",
@@ -434,11 +449,16 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       hosting,
       hostName: hostNameOf(nextTasting),
       scheduledAt: nextTasting.scheduled_at,
+      place: nextPlace,
       slots,
-      canAddWine:
-        (nextTasting.wine_source === "HOST_PROVIDES" && hosting) ||
-        (nextTasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
-          nextTasting.myStatus === "JOINED"),
+      canAddWine: canAddToFlight({
+        wineSource: nextTasting.wine_source,
+        hostId: nextTasting.host_id,
+        myId: userId,
+        myStatus: nextTasting.myStatus,
+        revealMode: nextTasting.reveal_mode,
+        tastingStatus: nextTasting.status,
+      }),
       nextWinePosition: flight.length + 1,
       revealMode: nextTasting.reveal_mode,
       wineSource: nextTasting.wine_source,

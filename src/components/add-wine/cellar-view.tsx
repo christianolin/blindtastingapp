@@ -1,43 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { actionButtonClass } from "@/components/overview/action-button";
 import { cn } from "@/lib/utils";
-import { listCellarForSheet } from "./cellar-actions";
-import { glassLabel } from "./format";
-import { consumeLabel, primaryAddLabel } from "./scan-copy";
 import {
+  cellarListState,
   cellarLotMeta,
   filterLots,
   rackChips,
   type CellarFilter,
-  type CellarSheet,
   type CellarSheetLot,
 } from "./row-format";
 import type { CellarViewProps } from "./types";
 
 /**
- * "Take it out of the cellar when we pour it" — the consume toggle drawn in
- * the 7f footer (gold-bordered card) and as a one-line row inside the 7e
- * search list; worded "Take a bottle out of the cellar when I save the note"
- * for a rate pick (`consumeLabel`). A button with the checkbox role, so the
- * whole line is the tap target and no native control has to be restyled.
+ * The consume toggle, worded by the matrix's `consumeLabel` ("Take it out of
+ * the cellar when we pour it", or "Take a bottle out of the cellar when I save
+ * the note"): a gold-bordered card in the A5 / A6 footers, or a one-line row.
+ * A button with the checkbox role, so the whole line is the tap target and no
+ * native control has to be restyled.
  */
 export function ConsumeCheckbox({
   checked,
   onChange,
   disabled = false,
   variant = "card",
-  label = consumeLabel(null),
+  label,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   disabled?: boolean;
   variant?: "card" | "inline";
-  label?: string;
+  label: string;
 }) {
   return (
     <button
@@ -69,109 +65,61 @@ export function ConsumeCheckbox({
   );
 }
 
-type Mode = "flight" | "catalog" | "cellar" | "rate" | "none";
+function sameFilter(current: CellarFilter, next: NonNullable<CellarFilter>): boolean {
+  if (!current || current.kind !== next.kind) return false;
+  return current.kind === "drinkNow" || (next.kind === "rack" && current.rack === next.rack);
+}
 
 /**
- * 7f — the cellar as a source: racks, not a search box. Filter chips (Drink
- * now · one per rack), a lot per row, the selected one with a check disc,
- * bottles already in the flight disabled, and a footer with the consume
- * checkbox + "Add as glass N". For a catalog destination the rows are
- * informational (every cellar bottle is already a catalog wine). For a rate
- * pick the same select-then-confirm footer reads "Take a bottle out of the
- * cellar when I save the note" (on by default) + "Rate this wine"; the lot is
- * only drawn down once the note saves, and no tasting is looked up.
+ * A6 — the cellar as a source: racks, not a search box. Filter chips (Drink
+ * now · one per rack), a lot per row with `cellarLotMeta` ("… · already glass
+ * 1" only when the glass is known, C.9), a lot already in the flight disabled
+ * with the matrix's "in flight", and a tap selects a row (✓). The footer
+ * carries the consume checkbox and the matrix's primary: "Add as glass N",
+ * "Start the note", or "Choose where it goes" with no destination.
+ *
+ * The shell loads the cellar, keeps filter, selection and consume in sheet
+ * state, and draws the header (the matrix title as eyebrow, "From my cellar",
+ * "{n} bottles"). A load that fails before any sheet is in hand says so in the
+ * list area (`loadFailed`) instead of spinning on. Destinations without a cellar source (`matrix.cellarSource`
+ * false: the cellar itself, the catalog) never open this view.
  */
-export function CellarView({ ctx, onAdd, onBack, busy, onLoaded }: CellarViewProps) {
-  const [data, setData] = useState<CellarSheet | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [filter, setFilter] = useState<CellarFilter>(null);
-  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
-  const [consume, setConsume] = useState(true);
-  // The lot whose add is in flight, so its row (or the footer) shows the loader.
-  const [addingLotId, setAddingLotId] = useState<string | null>(null);
-  const adding = addingLotId !== null;
-
-  const flight = ctx.destination?.kind === "flight" ? ctx.destination : null;
-  // A rate pick pours into no tasting, so it looks none up — not even
-  // tonight's hint — and no bottle reads "in flight".
-  const rate = ctx.destination?.kind === "rate";
-  // A destination-less sheet can still pour into tonight's flight (the shell
-  // adopts `flightHint` for a lot add), so the flight lookup follows it too.
-  const tastingId = rate ? undefined : (flight?.tastingId ?? ctx.flightHint?.tastingId);
-  const glass = rate ? null : (flight?.position ?? ctx.flightHint?.position ?? null);
-  const mode: Mode = ctx.destination?.kind ?? (ctx.flightHint ? "flight" : "none");
-
-  useEffect(() => {
-    let cancelled = false;
-    listCellarForSheet(tastingId)
-      .then((d) => {
-        if (cancelled) return;
-        setData(d);
-        onLoaded?.(d.totalBottles);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tastingId, onLoaded]);
-
-  const lots = data?.lots ?? [];
+export function CellarView({
+  matrix,
+  sheet,
+  filter,
+  onFilter,
+  selectedLotId,
+  onSelect,
+  consume,
+  onConsume,
+  onAdd,
+  onScanOrSearch,
+  loadFailed = false,
+  busy = false,
+  error = null,
+}: CellarViewProps) {
+  const lots = sheet?.lots ?? [];
   const racks = rackChips(lots);
   const drinkNowCount = lots.filter((l) => l.drinkNow).length;
   const visible = filterLots(lots, filter);
-  const selected = lots.find((l) => l.lotId === selectedLotId) ?? null;
-  const selectable = mode === "flight" || mode === "rate";
-  // The flight needs the glass number; a rate pick needs only the lot.
-  const canAdd = selected !== null && (mode === "rate" || glass != null);
-  const pending = busy || adding;
+  const listState = cellarListState({ sheet, loadFailed, visibleCount: visible.length });
+  const unavailable = (lot: CellarSheetLot) =>
+    lot.inFlight || matrix.row({ source: "lot", inFlight: lot.inFlight, owned: true }).disabled;
+  // A selection that has since gone into the flight no longer counts.
+  const selected = lots.find((l) => l.lotId === selectedLotId && !unavailable(l)) ?? null;
 
-  const toggleFilter = (next: NonNullable<CellarFilter>) => {
-    setFilter((cur) =>
-      cur &&
-      cur.kind === next.kind &&
-      (cur.kind !== "rack" || next.kind !== "rack" || cur.rack === next.rack)
-        ? null
-        : next,
-    );
-  };
+  const toggleFilter = (next: NonNullable<CellarFilter>) =>
+    onFilter(sameFilter(filter, next) ? null : next);
 
   const tapRow = (lot: CellarSheetLot) => {
-    if (pending || lot.inFlight) return;
-    if (mode === "catalog") {
-      // Informational: the wine is a catalog row already; the add is a no-op
-      // that still hands the sheet a labelled result.
-      setAddingLotId(lot.lotId);
-      void onAdd({ kind: "catalog", catalogWineId: lot.catalogWineId }).finally(() =>
-        setAddingLotId(null),
-      );
-      return;
-    }
-    if (!selectable) return;
-    setSelectedLotId((cur) => (cur === lot.lotId ? null : lot.lotId));
-  };
-
-  const add = async () => {
-    if (!selected || !canAdd || pending) return;
-    setAddingLotId(selected.lotId);
-    try {
-      await onAdd({
-        kind: "lot",
-        lotId: selected.lotId,
-        consume,
-        catalogWineId: selected.catalogWineId,
-      });
-    } finally {
-      setAddingLotId(null);
-    }
+    if (busy || unavailable(lot)) return;
+    onSelect(selected?.lotId === lot.lotId ? null : lot.lotId);
   };
 
   return (
     <div className="flex min-h-full flex-col">
-      {/* The sheet's header carries ← · "Add wine · glass N" · "From my
-          cellar" · "38 bottles" (7f, via `onLoaded`); the filter chips stay
-          put here while the racks scroll under them. */}
+      {/* The filter chips stay put while the racks scroll under them. */}
       <div className="sticky top-0 z-10 shrink-0 bg-card">
         {lots.length > 0 && (drinkNowCount > 0 || racks.length > 0) ? (
           <div className="no-scrollbar flex gap-[7px] overflow-x-auto border-b border-border-light p-[11px_16px] md:px-[22px]">
@@ -197,25 +145,34 @@ export function CellarView({ ctx, onAdd, onBack, busy, onLoaded }: CellarViewPro
       </div>
 
       {/* The racks */}
-      {!data && !failed ? (
+      {listState === "loading" ? (
         <Centered>
           <WineGlassLoader className="text-primary" />
           <span>Opening your cellar…</span>
         </Centered>
-      ) : failed ? (
-        <Centered>Couldn&rsquo;t load your cellar right now.</Centered>
-      ) : lots.length === 0 ? (
+      ) : listState === "failed" ? (
         <Centered>
-          <span>Your cellar has no bottles in stock.</span>
+          <span>Couldn&rsquo;t load your cellar right now.</span>
           <button
             type="button"
-            onClick={onBack}
+            onClick={onScanOrSearch}
             className="min-h-11 text-[13px] font-semibold text-primary underline-offset-2 hover:underline"
           >
             Scan or search instead
           </button>
         </Centered>
-      ) : visible.length === 0 ? (
+      ) : listState === "empty" ? (
+        <Centered>
+          <span>Your cellar has no bottles in stock.</span>
+          <button
+            type="button"
+            onClick={onScanOrSearch}
+            className="min-h-11 text-[13px] font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Scan or search instead
+          </button>
+        </Centered>
+      ) : listState === "filteredEmpty" ? (
         <Centered>
           {filter?.kind === "drinkNow"
             ? "Nothing is in its drinking window this year."
@@ -224,20 +181,20 @@ export function CellarView({ ctx, onAdd, onBack, busy, onLoaded }: CellarViewPro
       ) : (
         <ul className="flex flex-col">
           {visible.map((lot) => {
-            const isSelected = selectable && lot.lotId === selectedLotId;
-            const disabled = lot.inFlight || mode === "cellar" || mode === "none";
+            const off = unavailable(lot);
+            const isSelected = selected?.lotId === lot.lotId;
             return (
               <li key={lot.lotId}>
                 <button
                   type="button"
-                  disabled={disabled || pending}
-                  aria-pressed={selectable ? isSelected : undefined}
+                  disabled={off || busy}
+                  aria-pressed={isSelected}
                   onClick={() => tapRow(lot)}
                   className={cn(
-                    "flex w-full items-center gap-[11px] border-b border-border-light p-[13px_16px] text-left transition-colors md:px-[22px]",
+                    "flex min-h-11 w-full items-center gap-[11px] border-b border-border-light p-[13px_16px] text-left transition-colors md:px-[22px]",
                     isSelected && "bg-gold/10",
-                    !disabled && !isSelected && "md:hover:bg-background",
-                    disabled && "cursor-default",
+                    !off && !isSelected && "md:hover:bg-background",
+                    off && "cursor-default",
                   )}
                 >
                   <HatchThumb src={lot.imageUrl} width={30} height={40} />
@@ -249,10 +206,12 @@ export function CellarView({ ctx, onAdd, onBack, busy, onLoaded }: CellarViewPro
                       {cellarLotMeta(lot)}
                     </span>
                   </span>
-                  {lot.inFlight ? (
-                    <span className="shrink-0 text-[11.5px] text-muted-foreground">In flight</span>
-                  ) : mode === "cellar" || mode === "none" ? null : (
-                    <Disc checked={isSelected} pending={addingLotId === lot.lotId} />
+                  {off ? (
+                    <span className="shrink-0 text-[11.5px] text-muted-foreground">
+                      {matrix.inFlightMeta}
+                    </span>
+                  ) : (
+                    <Disc checked={isSelected} />
                   )}
                 </button>
               </li>
@@ -261,43 +220,39 @@ export function CellarView({ ctx, onAdd, onBack, busy, onLoaded }: CellarViewPro
         </ul>
       )}
 
-      {/* Footer — pinned to the bottom of the sheet's scroll region. */}
-      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-[10px] border-t border-border bg-background p-[12px_16px] pb-[max(22px,env(safe-area-inset-bottom))] sm:pb-3 md:px-[22px]">
-        {mode === "flight" || mode === "rate" ? (
-          <>
+      {/* Footer — pinned to the bottom of the sheet's scroll region; only
+          once there are lots to pick from. */}
+      {listState === "list" || listState === "filteredEmpty" ? (
+        <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-[10px] border-t border-border bg-background p-[12px_16px] pb-[max(22px,env(safe-area-inset-bottom))] sm:pb-3 md:px-[22px]">
+          {matrix.consumeLabel ? (
             <ConsumeCheckbox
               checked={consume}
-              onChange={setConsume}
-              disabled={pending}
-              label={consumeLabel(ctx.destination)}
+              onChange={onConsume}
+              disabled={busy}
+              label={matrix.consumeLabel}
             />
-            <button
-              type="button"
-              disabled={!canAdd || pending}
-              onClick={() => void add()}
-              className={actionButtonClass(
-                "primary",
-                "rounded-[11px] py-[15px] text-[16.5px] disabled:opacity-60 max-md:py-[13px]",
-              )}
-            >
-              {adding ? <WineGlassLoader /> : null}
-              {mode === "rate"
-                ? primaryAddLabel({ kind: "rate" })
-                : glass == null
-                  ? "Add to the flight"
-                  : `Add as ${glassLabel(glass)}`}
-            </button>
-          </>
-        ) : (
-          <p className="text-center text-[12.5px] text-muted-foreground">
-            {mode === "catalog"
-              ? "Already in the catalog"
-              : mode === "cellar"
-                ? "Already in your cellar"
-                : "No tasting tonight to pour a bottle into — scan or search instead."}
-          </p>
-        )}
-      </div>
+          ) : null}
+          {error ? (
+            <p role="alert" className="text-[12.5px] text-rose">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            disabled={!selected || busy}
+            onClick={() => {
+              if (selected && !busy) onAdd();
+            }}
+            className={actionButtonClass(
+              "primary",
+              "rounded-[11px] py-[15px] text-[16.5px] disabled:opacity-60 max-md:py-[13px]",
+            )}
+          >
+            {busy ? <WineGlassLoader /> : null}
+            {matrix.footer.primary}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -333,7 +288,7 @@ function FilterChip({
 // bordeaux check once selected. Only the selection changes it, never a row's
 // place in the list — every unselected row carries the same disc (owner
 // feedback 2026-09-12).
-function Disc({ checked, pending }: { checked: boolean; pending: boolean }) {
+function Disc({ checked }: { checked: boolean }) {
   return (
     <span
       aria-hidden
@@ -344,9 +299,7 @@ function Disc({ checked, pending }: { checked: boolean; pending: boolean }) {
           : "border-[1.5px] border-gold text-primary",
       )}
     >
-      {pending ? (
-        <WineGlassLoader size={16} />
-      ) : checked ? (
+      {checked ? (
         <Check className="size-3.5" strokeWidth={3} />
       ) : (
         <Plus className="size-4" strokeWidth={2.5} />

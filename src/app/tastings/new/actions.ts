@@ -11,18 +11,28 @@ import type {
   WineLeaderboardReveal,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
-import { WINE_SOURCE_LOCKED } from "./setup-copy";
+import {
+  pickPouredRegion,
+  settingsChangeRefusal,
+  type FlowChoice,
+  type LockedSetup,
+} from "./setup-copy";
+import { normalisePlace, setTastingPlace } from "./place";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import type { FlightWine } from "@/app/tastings/[id]/wine-flight-list";
+import { callerKnowsWine } from "@/components/add-wine/flight-knowledge";
+import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
+import { flightRowNeeds, toIncompleteGlasses } from "@/lib/wine-identity/incomplete";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 
 // Success now carries the new id — the sheet continues to step 2 in place
 // instead of the action redirecting to the draft page.
 export type CreateTastingFormState = { id: string } | { error: string } | null;
 
 // What step 1 edits, in the action's own vocabulary. `flow` is form-only:
-// it is persisted as `sequential_guessing` (blind + LIVE + GUIDED), never a
-// column.
+// it is persisted as `sequential_guessing` (any non-OPEN LIVE tasting with
+// Guided chosen, spec §D.1 #1 / B6), never a column.
 export type TastingSetupFields = {
   name: string;
   timingMode: TimingMode;
@@ -35,6 +45,8 @@ export type TastingSetupFields = {
   scheduledAt: string | null;
   description?: string | null;
   imageUrl?: string | null;
+  /** The tasting's private place (B12) — raw, normalised by `normalisePlace`. */
+  place?: string;
 };
 
 // The one validator both create and update run — same strings the form has
@@ -70,15 +82,32 @@ function setupColumns(f: TastingSetupFields) {
     reveal_mode: f.revealMode,
     scheduled_at: f.scheduledAt,
     async_reveal_policy: f.asyncRevealPolicy,
-    // Guided pacing is LIVE-only (spec §D.1 #1): a self-paced tasting is
-    // stored free, whatever the form's flow value says.
-    sequential_guessing: f.revealMode === "BLIND" && f.timingMode === "LIVE" && f.flow === "GUIDED",
+    // Guided pacing is a LIVE-only setting (spec §D.1 #1, B6): a self-paced
+    // tasting is stored free, whatever the form's flow value says, and since
+    // B6 the flag covers any non-OPEN LIVE tasting — semi-blind's pour
+    // pointer needs it too, not just blind.
+    sequential_guessing: f.revealMode !== "OPEN" && f.timingMode === "LIVE" && f.flow === "GUIDED",
     leaderboard_reveal: f.leaderboardReveal,
-    // The cover photo: a URL sets it and null clears it (a photo removed on
-    // step 1 after the row exists). A caller that leaves it undefined keeps
-    // whatever is stored — never silently wipe a photo it didn't send.
+    // The cover photo and the description: a caller that leaves either
+    // undefined keeps whatever is stored — never silently wipe one it didn't
+    // send (this sheet has no description field yet; S4d's settings sheet,
+    // BT-L4, does, and its edits must not get clobbered by a step-1 re-save).
     ...(f.imageUrl !== undefined ? { image_url: f.imageUrl?.trim() || null } : {}),
+    ...(f.description !== undefined ? { description: f.description?.trim() || null } : {}),
   };
+}
+
+// Reconstructs the stored `flow` choice from `sequential_guessing` (spec §D.1
+// #1: the column only means something while Guided/Free applies at all — see
+// `flowApplies` in setup-copy.ts). Where it doesn't apply, the caller's own
+// submitted value is the fallback, so an incidental "flow" mismatch on a
+// setting that was never shown never trips `settingsChangeRefusal`.
+function lockedFlowFromRow(
+  row: { reveal_mode: RevealMode; timing_mode: TimingMode; sequential_guessing: boolean },
+  fallback: FlowChoice,
+): FlowChoice {
+  const applies = row.reveal_mode !== "OPEN" && row.timing_mode === "LIVE";
+  return applies ? (row.sequential_guessing ? "GUIDED" : "FREE") : fallback;
 }
 
 // FormData → fields. `scheduled_at_iso` (the client's own zone conversion)
@@ -110,6 +139,7 @@ function fieldsFromFormData(formData: FormData): TastingSetupFields {
     scheduledAt,
     description: String(formData.get("description") ?? "").trim() || null,
     imageUrl: String(formData.get("image_url") ?? "").trim() || null,
+    place: String(formData.get("place") ?? ""),
   };
 }
 
@@ -128,6 +158,10 @@ export async function createTasting(
   const fields = fieldsFromFormData(formData);
   const invalid = validateSetup(fields);
   if (invalid) return invalid;
+  // Validated before any write (spec §13.3 item 2), so a too-long place never
+  // leaves a half-written tasting behind.
+  const placeCheck = normalisePlace(fields.place ?? "");
+  if ("error" in placeCheck) return placeCheck;
 
   const emailsRaw = String(formData.get("emails") ?? "");
   const emails = [
@@ -142,10 +176,11 @@ export async function createTasting(
   const { data: tasting, error: tastingError } = await supabase
     .from("tastings")
     .insert({
+      // `fieldsFromFormData` always sets `description` (never undefined), so
+      // `setupColumns` already writes it here.
       ...setupColumns(fields),
       host_id: user.id,
       status: "DRAFT",
-      description: fields.description ?? null,
     })
     .select()
     .single();
@@ -163,6 +198,14 @@ export async function createTasting(
     });
   if (hostParticipantError) {
     return { error: hostParticipantError.message };
+  }
+
+  // Written after the tasting row exists — `setTastingPlace` needs the id,
+  // and the host-only RLS policy keys on `tastings.host_id`, already set on
+  // insert. Skipped entirely when there is nothing to write.
+  if (placeCheck.place !== null) {
+    const placeResult = await setTastingPlace(supabase, tasting.id, fields.place ?? "");
+    if ("error" in placeResult) return placeResult;
   }
 
   // Still honoured when a caller posts emails (the sheet posts none — its
@@ -212,7 +255,7 @@ export async function createTasting(
   return { id: tasting.id };
 }
 
-async function requireHostDraft(tastingId: string) {
+async function requireHost(tastingId: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -220,7 +263,9 @@ async function requireHostDraft(tastingId: string) {
   if (!user) redirect("/login");
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status, name, reveal_mode, wine_source")
+    .select(
+      "id, host_id, status, name, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy",
+    )
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== user.id) {
@@ -229,32 +274,57 @@ async function requireHostDraft(tastingId: string) {
   return { supabase, user, tasting, error: null };
 }
 
-// Step 1 revisited from a later step: name / mode / timing / source /
-// schedule / rules / cover photo change in place while DRAFT. A mode switch
-// keeps the wines — nothing here touches `wines` or `wine_answers`.
+// Step 1 revisited from a later step, and S4d's settings sheet after Start:
+// name / mode / timing / source / schedule / rules / cover photo / place
+// change in place. A mode switch keeps the wines — nothing here touches
+// `wines` or `wine_answers`. `settingsChangeRefusal` (spec §3.3 item 14) is
+// the single status-aware gate: DRAFT allows everything but a wine-source
+// switch once the flight has bottles; IN_PROGRESS, CLOSED and legacy OPEN
+// allow only name, description, image, schedule and place to change.
 export async function updateTastingSetup(
   tastingId: string,
   fields: TastingSetupFields,
 ): Promise<{ ok: true } | { error: string }> {
-  const { supabase, tasting, error } = await requireHostDraft(tastingId);
+  const { supabase, tasting, error } = await requireHost(tastingId);
   if (!tasting) return { error };
-  if (tasting.status !== "DRAFT") {
-    return { error: "Settings lock once the tasting has started." };
-  }
   const invalid = validateSetup(fields);
   if (invalid) return invalid;
+  const placeCheck = normalisePlace(fields.place ?? "");
+  if ("error" in placeCheck) return placeCheck;
 
-  // Who brings the wines can't switch once the flight has a bottle (spec
-  // §D.1 #3) — refused before any write. The host reads every wine row of
-  // their own tasting (wines read), so the count covers every glass.
-  if (fields.wineSource !== tasting.wine_source) {
+  // Who brings the wines can't switch once the flight has a bottle while
+  // still DRAFT (spec §D.1 #3) — refused before any write. The host reads
+  // every wine row of their own tasting (wines read), so the count covers
+  // every glass. Once started, `settingsChangeRefusal` below refuses any
+  // wine-source change outright, wine count aside.
+  let wineCount = 0;
+  if (tasting.status === "DRAFT" && fields.wineSource !== tasting.wine_source) {
     const { count, error: countError } = await supabase
       .from("wines")
       .select("id", { count: "exact", head: true })
       .eq("tasting_id", tastingId);
     if (countError) return { error: countError.message };
-    if ((count ?? 0) > 0) return { error: WINE_SOURCE_LOCKED };
+    wineCount = count ?? 0;
   }
+
+  const before: LockedSetup = {
+    revealMode: tasting.reveal_mode,
+    timingMode: tasting.timing_mode,
+    wineSource: tasting.wine_source,
+    flow: lockedFlowFromRow(tasting, fields.flow as FlowChoice),
+    leaderboardReveal: tasting.leaderboard_reveal,
+    asyncRevealPolicy: tasting.async_reveal_policy,
+  };
+  const after: LockedSetup = {
+    revealMode: fields.revealMode,
+    timingMode: fields.timingMode,
+    wineSource: fields.wineSource,
+    flow: fields.flow as FlowChoice,
+    leaderboardReveal: fields.leaderboardReveal,
+    asyncRevealPolicy: fields.asyncRevealPolicy,
+  };
+  const refusal = settingsChangeRefusal({ status: tasting.status, wineCount, before, after });
+  if (refusal) return { error: refusal };
 
   const { error: updateError } = await supabase
     .from("tastings")
@@ -262,22 +332,28 @@ export async function updateTastingSetup(
     .eq("id", tastingId);
   if (updateError) return { error: updateError.message };
 
+  const placeResult = await setTastingPlace(supabase, tastingId, fields.place ?? "");
+  if ("error" in placeResult) return placeResult;
+
   revalidatePath(`/tastings/${tastingId}`);
   revalidatePath("/taste");
   revalidatePath("/overview");
   return { ok: true };
 }
 
-/** Step 1's second name chip — "{Region} #{n}" — for the caller: their
-    most-tasted region and one more than the tastings they have hosted.
-    Null when they have no scored guesses yet (the form then shows the
-    handoff's "Burgundy #1"). Shared by the /tastings/new page (server) and
-    the launcher sheet (called lazily on open), so both entry points agree.
-    Deliberately NOT getProfileStats — that computes category accuracy and
-    the full tasting history for one chip. Every read is RLS-bound to the
-    caller: a scored guess is exactly what grants wine_answers access
-    (has_scored_guess), so nothing unrevealed can come back. */
-export async function getNameSuggestionContext(): Promise<{
+/** Step 1's second name chip — "{Region} #{n}" — for the caller (spec §2.3
+    item 2, B1): the most frequent `wine_answers.region_id` among the wines of
+    tastings they host, where the wine is host-added (`wines.added_by_host`,
+    M6) or already revealed — a bring-your-own host's flight would otherwise
+    surface every contributor's still-hidden answer key through today's
+    `wine_answers read` host clause. `n` is one more than the tastings that
+    poured it (`pickPouredRegion`, a pure pick). Null when nothing qualifies
+    (the form then shows just the two other chips). Shared by the
+    /tastings/new page (server) and the launcher sheet (called lazily on
+    open), so both entry points agree. Every read runs under the caller's own
+    RLS — no `guesses` read, unlike the region-suggestion helper this
+    replaces. */
+export async function getPouredRegionSuggestion(): Promise<{
   region: string;
   n: number;
 } | null> {
@@ -287,63 +363,36 @@ export async function getNameSuggestionContext(): Promise<{
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ count: hostedCount }, region] = await Promise.all([
-    supabase
-      .from("tastings")
-      .select("id", { count: "exact", head: true })
-      .eq("host_id", user.id),
-    mostTastedRegionName(supabase, user.id),
-  ]);
-  if (!region) return null;
-  return { region, n: (hostedCount ?? 0) + 1 };
-}
+  const { data: tastings } = await supabase.from("tastings").select("id").eq("host_id", user.id);
+  const tastingIds = (tastings ?? []).map((t) => t.id);
+  if (tastingIds.length === 0) return null;
 
-// The mode region_id of the wine_answers behind the caller's scored guesses
-// (tasting the glass, not guessing it right, is what counts as exposure —
-// the same rule as profile-stats' "tasted most").
-async function mostTastedRegionName(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-): Promise<string | null> {
-  const { data: participants } = await supabase
-    .from("tasting_participants")
-    .select("id")
-    .eq("user_id", userId);
-  const participantIds = (participants ?? []).map((p) => p.id);
-  if (participantIds.length === 0) return null;
-
-  const { data: guesses } = await supabase
-    .from("guesses")
-    .select("wine_id")
-    .in("participant_id", participantIds)
-    .not("scored_at", "is", null);
-  const wineIds = [...new Set((guesses ?? []).map((g) => g.wine_id))];
-  if (wineIds.length === 0) return null;
+  const { data: wines } = await supabase
+    .from("wines")
+    .select("id, tasting_id")
+    .in("tasting_id", tastingIds)
+    .or("added_by_host.eq.true,is_revealed.eq.true");
+  const rows = wines ?? [];
+  if (rows.length === 0) return null;
 
   const { data: answers } = await supabase
     .from("wine_answers")
-    .select("region_id")
-    .in("wine_id", wineIds);
-  const counts = new Map<string, number>();
-  for (const a of answers ?? []) {
-    counts.set(a.region_id, (counts.get(a.region_id) ?? 0) + 1);
-  }
-  let modeId: string | null = null;
-  let best = 0;
-  for (const [id, count] of counts) {
-    if (count > best) {
-      best = count;
-      modeId = id;
-    }
-  }
-  if (!modeId) return null;
+    .select("wine_id, region_id")
+    .in(
+      "wine_id",
+      rows.map((w) => w.id),
+    );
+  const regionByWine = new Map((answers ?? []).map((a) => [a.wine_id, a.region_id]));
+  if (regionByWine.size === 0) return null;
 
-  const { data: region } = await supabase
-    .from("regions")
-    .select("name")
-    .eq("id", modeId)
-    .maybeSingle();
-  return region?.name ?? null;
+  const regionIds = [...new Set([...regionByWine.values()])];
+  const { data: regions } = await supabase.from("regions").select("id, name").in("id", regionIds);
+  const names = new Map((regions ?? []).map((r) => [r.id, r.name]));
+
+  const pickerRows = rows
+    .filter((w) => regionByWine.has(w.id))
+    .map((w) => ({ tastingId: w.tasting_id, regionId: regionByWine.get(w.id)! }));
+  return pickPouredRegion(pickerRows, names);
 }
 
 // Step 3's share link: the host-only RPC mints the code on first use.
@@ -363,10 +412,14 @@ export async function getJoinLink(
 
 /** One step-2 row: the lobby's FlightWine plus the title/meta the sheet's
     list draws ("Vietti, Barolo Castiglione 2017" · "Barolo DOCG · Nebbiolo").
-    Title/meta come from the answer key and are only ever filled for the
-    HOST_PROVIDES host, exactly like the lobby's identity line — a
-    bring-your-own host sees contributor labels and nothing else. */
-export type FlightRow = FlightWine & { title: string; meta: string | null };
+    Title, meta and the identity line follow the knowledge rule (spec §C.9,
+    D10): they are filled only for a glass the caller already knows — the host
+    of a host-provides tasting, the glass's contributor, or anyone once it is
+    revealed. Anyone else's hidden glass carries its label and nothing more.
+    `incomplete` marks the adder's own glass with no answer key (D7): its title
+    is the draft's "{producer}, {wine name}" and its meta is `flightRowNeeds`,
+    drawn in dark gold. */
+export type FlightRow = FlightWine & { title: string; meta: string | null; incomplete: boolean };
 
 export type FlightSnapshot = {
   wines: FlightRow[];
@@ -374,6 +427,13 @@ export type FlightSnapshot = {
   waitingFor: string[];
   hasStarted: boolean;
 };
+
+// An incomplete glass's title: "{producer name}, {wine name}", leaving out
+// empty parts (spec §C.5 A1). Null when the draft has neither.
+function draftTitle(draft: WineIdentityDraft | null): string | null {
+  if (!draft) return null;
+  return [draft.producer?.name.trim(), draft.wineName?.trim()].filter(Boolean).join(", ") || null;
+}
 
 // A fresh read of the flight for step 2, computed with the same rules as
 // tastings/[id]/page.tsx so the sheet and the lobby never disagree.
@@ -385,6 +445,7 @@ export async function listFlight(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in." };
+  const userId = user.id;
 
   const [{ data: tasting }, { data: participants }, { data: wines }] =
     await Promise.all([
@@ -399,7 +460,7 @@ export async function listFlight(
         .eq("tasting_id", tastingId),
       supabase
         .from("wines")
-        .select("id, position, is_revealed, contributor_participant_id")
+        .select("id, position, is_revealed, reveal_step, contributor_participant_id")
         .eq("tasting_id", tastingId)
         .order("position"),
     ]);
@@ -407,10 +468,9 @@ export async function listFlight(
 
   const rows = wines ?? [];
   const people = participants ?? [];
-  const isHost = tasting.host_id === user.id;
+  const isHost = tasting.host_id === userId;
   const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
   const hasStarted = tasting.status !== "DRAFT";
-  const myParticipant = people.find((p) => p.user_id === user.id);
 
   const userIds = [...new Set(people.map((p) => p.user_id))];
   const { data: profiles } = userIds.length
@@ -430,18 +490,47 @@ export async function listFlight(
   );
   const wineLabel = makeWineLabeler(rows, tasting.wine_source, nameByParticipantId);
 
-  // Host-provided wines: the host set these answers, so a short identity per
-  // row keeps reordering legible. NEVER in bring-your-own (the host guesses
-  // the others' bottles too).
+  // Who added each glass (is_wine_adder's rule: the host for a glass with no
+  // contributor, else the contributor) and which glasses the caller already
+  // knows (spec §C.9). A contributor whose participant row this read cannot
+  // see resolves to nobody, so both fail closed.
+  type WineRow = (typeof rows)[number];
+  const userByParticipantId = new Map(people.map((p) => [p.id, p.user_id]));
+  const contributorUserId = (w: WineRow): string | null =>
+    w.contributor_participant_id
+      ? (userByParticipantId.get(w.contributor_participant_id) ?? null)
+      : null;
+  const isAdder = (w: WineRow): boolean =>
+    w.contributor_participant_id ? contributorUserId(w) === userId : isHost;
+  const known = rows.filter((w) =>
+    callerKnowsWine(
+      {
+        hostId: tasting.host_id,
+        wineSource: tasting.wine_source,
+        isRevealed: w.is_revealed,
+        contributorUserId: contributorUserId(w),
+      },
+      userId,
+    ),
+  );
+
+  // A known glass's answer key: a short identity per row keeps reordering
+  // legible. Never for anyone else's hidden glass: wine_answers RLS hands a
+  // bring-your-own host every answer, and they guess the others' bottles too.
   const identity = new Map<string, { title: string; meta: string | null; line: string }>();
-  if (isHost && !isByo && rows.length > 0) {
-    const wineIds = rows.map((w) => w.id);
-    const { data: answers } = await supabase
+  const answered = new Set<string>();
+  if (known.length > 0) {
+    const { data: answers, error: answersError } = await supabase
       .from("wine_answers")
       .select(
         "wine_id, region_id, appellation_id, primary_grape_id, producer_id, vintage_kind, vintage_year, vintage_tawny_years, catalog_wine_id",
       )
-      .in("wine_id", wineIds);
+      .in(
+        "wine_id",
+        known.map((w) => w.id),
+      );
+    // A failed read must never show the adder's finished glasses as unfinished.
+    if (answersError) return { error: answersError.message };
     const list = answers ?? [];
     const catalogIds = list
       .map((a) => a.catalog_wine_id)
@@ -468,6 +557,7 @@ export async function listFlight(
     const regionName = new Map((regions ?? []).map((r) => [r.id, r.name]));
     const grapeName = new Map((grapes ?? []).map((g) => [g.id, g.name]));
     for (const a of list) {
+      answered.add(a.wine_id);
       const vintage =
         a.vintage_kind === "YEAR"
           ? String(a.vintage_year ?? "")
@@ -494,24 +584,65 @@ export async function listFlight(
     }
   }
 
+  // The adder's own glasses with no answer key (D7). Drafts are owner-only
+  // (wine_identity_drafts RLS); a glass with no draft row, a failed second
+  // write (spec §C.8), needs every field.
+  const unfinished = new Set(
+    known.filter((w) => isAdder(w) && !answered.has(w.id)).map((w) => w.id),
+  );
+  const drafts = new Map<string, { draft: unknown; missing: string[] }>();
+  if (unfinished.size > 0) {
+    const { data: draftRows, error: draftsError } = await supabase
+      .from("wine_identity_drafts")
+      .select("wine_id, draft, missing")
+      .in("wine_id", [...unfinished]);
+    if (draftsError) return { error: draftsError.message };
+    for (const d of draftRows ?? []) {
+      drafts.set(d.wine_id, { draft: d.draft, missing: d.missing });
+    }
+  }
+
   const flight: FlightRow[] = rows.map((w, i) => {
-    const id = identity.get(w.id);
     const contributorLabel = isByo ? wineLabel(w) : null;
-    return {
+    const label = contributorLabel ?? `Wine ${i + 1}`;
+    const incomplete = unfinished.has(w.id);
+    const wine: FlightWine = {
       id: w.id,
       contributorLabel,
       isRevealed: w.is_revealed,
       isByo,
-      identity: id?.line ?? null,
+      identity: identity.get(w.id)?.line ?? null,
+      // The server's edit guard (editRefusal in wines/new/tasting-wine-writes.ts,
+      // plan amendment 7): the adder, never on a CLOSED tasting or a revealed
+      // glass, and a complete glass only until its first reveal step.
       editable:
-        !hasStarted &&
-        (w.contributor_participant_id
-          ? w.contributor_participant_id === myParticipant?.id
-          : isHost),
+        isAdder(w) &&
+        tasting.status !== "CLOSED" &&
+        !w.is_revealed &&
+        (incomplete || w.reveal_step === 0),
       canReorder: isHost && !w.is_revealed,
       canReveal: isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
-      title: id?.title ?? contributorLabel ?? `Wine ${i + 1}`,
-      meta: id?.meta ?? null,
+    };
+    if (incomplete) {
+      const stored = drafts.get(w.id);
+      // The draft row's keys, in contract order (the same mapping as the
+      // tasting_incomplete_glasses rows).
+      const missing = toIncompleteGlasses([
+        { wine_id: w.id, glass: i + 1, missing: stored?.missing ?? [] },
+      ]).flatMap((glass) => glass.missing);
+      return {
+        ...wine,
+        title: draftTitle(stored ? parseStoredDraft(stored.draft) : null) ?? label,
+        meta: flightRowNeeds(missing),
+        incomplete: true,
+      };
+    }
+    const answer = identity.get(w.id);
+    return {
+      ...wine,
+      title: answer?.title ?? label,
+      meta: answer?.meta ?? null,
+      incomplete: false,
     };
   });
 

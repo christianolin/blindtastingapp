@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Gamay",
+      "percentage": 100
+    }
+  ],
+  "region": "Beaujolais",
+  "country": "France",
+  "rawText": "GEORGES DUBOEUF - 2022 - BEAUJOLAIS-VILLAGES - APPELLATION D'ORIGINE PROTEGEE - MIS EN BOUTEILLE PAR LES VINS GEORGES DUBOEUF 71570 ROMANECHE-THORINS - FRANCE - PRODUCE OF FRANCE",
+  "producer": "Georges Duboeuf",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Beaujolais-Villages AOC",
+  "description": "Beaujolais-Villages AOC covers 38 communes in the northern Beaujolais region, on granite and schist soils considered superior to those of basic Beaujolais AOC. The wine is made from Gamay Noir, typically vinified by semi-carbonic maceration to emphasize fresh red-fruit character. Georges Duboeuf, founded in 1964 in Romanèche-Thorins, is one of the region's largest négociant houses and a major force in popularizing Beaujolais internationally.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2022,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

@@ -1,6 +1,7 @@
 import type {
   AsyncRevealPolicy,
   RevealMode,
+  TastingStatus,
   TimingMode,
   WineLeaderboardReveal,
   WineSourceMode,
@@ -25,6 +26,9 @@ export type SetupValues = {
   asyncRevealPolicy: AsyncRevealPolicy;
   /** Public URL of the optional cover photo (Storage `tasting-images`), or null. */
   imageUrl: string | null;
+  /** The tasting's private place (B12) — host, JOINED and INVITED only. */
+  place: string;
+  description: string;
 };
 
 export function defaultSetup(revealMode: RevealMode): SetupValues {
@@ -38,6 +42,8 @@ export function defaultSetup(revealMode: RevealMode): SetupValues {
     leaderboardReveal: "PER_ATTRIBUTE",
     asyncRevealPolicy: "AFTER_ALL",
     imageUrl: null,
+    place: "",
+    description: "",
   };
 }
 
@@ -74,23 +80,27 @@ export function buildSetupFormData(v: SetupValues): FormData {
   fd.set("scheduled_at_iso", localToIso(v.scheduledLocal) ?? "");
   // Blank when there is no photo; the action reads "" as null.
   fd.set("image_url", v.imageUrl ?? "");
+  fd.set("place", v.place);
+  fd.set("description", v.description);
   fd.set("emails", "");
   return fd;
 }
 
-// Guided pacing is a LIVE-only setting (spec §D.1 #1): a self-paced tasting
-// has no shared "current glass" to pace, so the Flow choice — and every
-// Guided/Free word — exists only for blind LIVE tastings. actions.ts stores
+// Guided pacing is a LIVE-only setting (spec §D.1 #1, refinement/B6: it now
+// applies to any non-OPEN LIVE tasting, not just blind — semi-blind's pour
+// pointer needs a Guided/Free choice too). actions.ts stores
 // `sequential_guessing` under the same condition.
 export function flowApplies(v: SetupValues): boolean {
-  return v.revealMode === "BLIND" && v.timingMode === "LIVE";
+  return v.revealMode !== "OPEN" && v.timingMode === "LIVE";
 }
 
 // The Leaderboard setting only matters while one glass is revealed step by
-// step for everyone at once: blind, LIVE and Guided (spec §D.1 #5). The stored
-// value is written regardless; it just isn't offered or described otherwise.
+// step for everyone at once: blind, LIVE and Guided (spec §D.1 #5) — this
+// stays blind-only even though `flowApplies` now also covers semi-blind. The
+// stored value is written regardless; it just isn't offered or described
+// otherwise.
 export function leaderboardApplies(v: SetupValues): boolean {
-  return flowApplies(v) && v.flow === "GUIDED";
+  return v.revealMode === "BLIND" && v.timingMode === "LIVE" && v.flow === "GUIDED";
 }
 
 // Who brings the wines can't switch once the flight has bottles (spec §D.1 #3).
@@ -99,20 +109,30 @@ export const WINE_SOURCE_LOCKED =
   "Remove the wines first — who brings the wines can't change once the flight has bottles.";
 
 // The collapsed rules card's desktop hint (handoff 6a), shown only where the
-// Flow choice exists. It promises "a quieter leaderboard" only while the
-// Leaderboard setting is actually behind "Change".
+// Flow choice exists for a BLIND tasting — this talks about tasting "the same
+// glass" and a quieter leaderboard, neither of which is semi-blind's picture,
+// so it stays gated on BLIND specifically rather than the wider `flowApplies`.
 export function rulesHint(v: SetupValues): string | null {
-  if (!flowApplies(v)) return null;
+  if (v.revealMode !== "BLIND" || v.timingMode !== "LIVE") return null;
   return `Guided means everyone tastes the same glass at once and you drive the reveal. Fine for almost every tasting — open this only if you want free order${
     leaderboardApplies(v) ? " or a quieter leaderboard" : ""
   }.`;
 }
 
-// The collapsed rules card, in words (spec Part 2, Step 1 · 4).
+// The collapsed rules card, in words (spec Part 2, Step 1 · 4; §2.3 item 4 for
+// semi-blind). Semi-blind's line is the flow word (when it applies) followed
+// by "one point for each glass you match", sentence-cased when no flow word
+// leads it (plan copy: self-paced semi-blind has no flow word).
 export function rulesSummary(v: SetupValues): string {
   const parts: string[] = [];
   if (v.revealMode === "SEMI_BLIND") {
-    parts.push("Semi-blind", "one point per glass");
+    const flow = flowApplies(v) ? (v.flow === "GUIDED" ? "Guided" : "Free") : null;
+    const matchLine = "one point for each glass you match";
+    if (flow) {
+      parts.push(flow, matchLine);
+    } else {
+      parts.push(matchLine.charAt(0).toUpperCase() + matchLine.slice(1));
+    }
   } else {
     if (flowApplies(v)) parts.push(v.flow === "GUIDED" ? "Guided" : "Free");
     if (leaderboardApplies(v)) {
@@ -137,7 +157,8 @@ export function rulesSummary(v: SetupValues): string {
 export function rulesSummaryShort(v: SetupValues): string {
   const parts: string[] = [];
   if (v.revealMode === "SEMI_BLIND") {
-    parts.push("Semi-blind", "1 pt per glass");
+    if (flowApplies(v)) parts.push(v.flow === "GUIDED" ? "Guided" : "Free");
+    parts.push("1 pt a match"); // (plan copy)
   } else {
     if (flowApplies(v)) parts.push(v.flow === "GUIDED" ? "Guided" : "Free");
     if (leaderboardApplies(v)) {
@@ -151,17 +172,23 @@ export function rulesSummaryShort(v: SetupValues): string {
 }
 
 // Step 3's gold "Ready to go" line, as separate segments (the caller joins
-// them with " · " so the date can be a <LocalDateTime/> element).
+// them with " · " so the date can be a <LocalDateTime/> element). `place` and
+// `phone` are optional so every earlier caller (no place row, no phone
+// variant) keeps its old output.
 export function readySummary({
   setup,
   wineCount,
   invitedCount,
   dateText,
+  place,
+  phone,
 }: {
   setup: SetupValues;
   wineCount: number;
   invitedCount: number;
   dateText: string | null;
+  place?: string | null;
+  phone?: boolean;
 }): string[] {
   const parts = [
     setup.revealMode === "SEMI_BLIND" ? "Semi-blind" : "Blind",
@@ -170,12 +197,13 @@ export function readySummary({
   if (flowApplies(setup)) {
     parts.push(setup.flow === "GUIDED" ? "guided" : "free");
   }
-  parts.push(
-    `${wineCount} ${wineCount === 1 ? "wine" : "wines"} so far`,
-    dateText ?? "no date",
-    `${invitedCount} invited`,
-    "add more as you pour",
-  );
+  if (setup.wineSource === "PARTICIPANT_CONTRIBUTED") {
+    parts.push("everyone brings");
+  }
+  parts.push(`${wineCount} ${wineCount === 1 ? "wine" : "wines"} so far`, dateText ?? "no date");
+  if (place) parts.push(place);
+  parts.push(`${invitedCount} invited`);
+  if (!phone) parts.push("add more as you pour");
   return parts;
 }
 
@@ -189,15 +217,106 @@ const WEEKDAYS = [
   "Saturday",
 ];
 
-// Three name chips: today's weekday, the host's most-tasted region numbered
-// by how many they have hosted, and the handoff's fixed third.
-export function nameSuggestions(
-  today: Date,
-  region: { region: string; n: number } | null,
-): [string, string, string] {
-  return [
-    `${WEEKDAYS[today.getDay()]} blind`,
-    region ? `${region.region} #${region.n}` : "Burgundy #1",
-    "Six glasses, no mercy",
+// Step 1's three name chips (spec §2.3 item 1, B1). Chip 1 is the scheduled
+// date's weekday when it parses, else today's, plus the mode word; chip 2 is
+// "{region} #{n}" only when a poured region is known (the earlier fixed
+// region fallback named a region the host never poured, so it is gone); chip
+// 3 is fixed.
+export function nameSuggestions(input: {
+  today: Date;
+  scheduledLocal: string;
+  revealMode: RevealMode;
+  pouredRegion: { region: string; n: number } | null;
+}): string[] {
+  const scheduled = input.scheduledLocal.trim() ? new Date(input.scheduledLocal) : null;
+  const date = scheduled && !Number.isNaN(scheduled.getTime()) ? scheduled : input.today;
+  const modeWord = input.revealMode === "SEMI_BLIND" ? "semi-blind" : "blind";
+  const chips = [`${WEEKDAYS[date.getDay()]} ${modeWord}`];
+  if (input.pouredRegion) chips.push(`${input.pouredRegion.region} #${input.pouredRegion.n}`);
+  chips.push("Six glasses, no mercy");
+  return chips;
+}
+
+// The name chip's region: the region poured most often among the caller's own
+// tastings (`getPouredRegionSuggestion` builds the rows; this is the pure
+// pick), numbered by how many of the caller's tastings poured it, plus one
+// for the tasting about to be created. Ties go to the name that sorts first —
+// deterministic and never RLS-order-dependent.
+export function pickPouredRegion(
+  rows: readonly { tastingId: string; regionId: string }[],
+  names: ReadonlyMap<string, string>,
+): { region: string; n: number } | null {
+  const byRegion = new Map<string, { rowCount: number; tastingIds: Set<string> }>();
+  for (const row of rows) {
+    if (!names.has(row.regionId)) continue;
+    const entry = byRegion.get(row.regionId) ?? { rowCount: 0, tastingIds: new Set<string>() };
+    entry.rowCount += 1;
+    entry.tastingIds.add(row.tastingId);
+    byRegion.set(row.regionId, entry);
+  }
+
+  let best: { regionId: string; rowCount: number; tastingIds: Set<string> } | null = null;
+  for (const [regionId, entry] of byRegion) {
+    const name = names.get(regionId)!;
+    const bestName = best ? names.get(best.regionId)! : null;
+    if (!best || entry.rowCount > best.rowCount || (entry.rowCount === best.rowCount && name < bestName!)) {
+      best = { regionId, rowCount: entry.rowCount, tastingIds: entry.tastingIds };
+    }
+  }
+  if (!best) return null;
+  return { region: names.get(best.regionId)!, n: best.tastingIds.size + 1 };
+}
+
+// Step 3's per-friend context line (spec §2.3 item 9, CREATE-48): one
+// `getBulkProfileSummaries` call feeds every chip, never a per-friend fetch.
+export function friendContextLine(
+  summary: { tastingsAttended: number; winesGuessed: number; averagePoints: number } | undefined,
+): string {
+  if (!summary || summary.tastingsAttended === 0) return "new to Blindr";
+  const noun = summary.tastingsAttended === 1 ? "tasting" : "tastings";
+  return `${summary.tastingsAttended} ${noun} · ${summary.averagePoints.toFixed(1)} avg`;
+}
+
+// Step 1's footer note (CREATE-17, plan refinement — shown wherever step 1
+// otherwise lacked one, i.e. on phones too).
+export const STEP1_FOOTER_NOTE =
+  "A name is all it takes. Wines and people can wait — the tasting exists from here and you can leave it empty.";
+
+// The locked-once-started subset of SetupValues (spec §3.3 item 14, S4d).
+export type LockedSetup = Pick<
+  SetupValues,
+  "revealMode" | "timingMode" | "wineSource" | "flow" | "leaderboardReveal" | "asyncRevealPolicy"
+>;
+
+export const SETTINGS_LOCKED_AFTER_START =
+  "Mode, timing, rules and who brings the wines lock once the tasting has started.";
+
+// `updateTastingSetup`'s status-aware gate: DRAFT allows everything except a
+// wine-source switch once the flight has bottles (unchanged rule, spec §D.1
+// #3); IN_PROGRESS, CLOSED and legacy OPEN allow only name, description,
+// image, schedule and place to change — anything else in `LockedSetup` is
+// refused before any write.
+export function settingsChangeRefusal(input: {
+  status: TastingStatus;
+  wineCount: number;
+  before: LockedSetup;
+  after: LockedSetup;
+}): string | null {
+  const { status, wineCount, before, after } = input;
+  if (status === "DRAFT") {
+    if (before.wineSource !== after.wineSource && wineCount > 0) return WINE_SOURCE_LOCKED;
+    return null;
+  }
+  const keys: (keyof LockedSetup)[] = [
+    "revealMode",
+    "timingMode",
+    "wineSource",
+    "flow",
+    "leaderboardReveal",
+    "asyncRevealPolicy",
   ];
+  for (const key of keys) {
+    if (before[key] !== after[key]) return SETTINGS_LOCKED_AFTER_START;
+  }
+  return null;
 }

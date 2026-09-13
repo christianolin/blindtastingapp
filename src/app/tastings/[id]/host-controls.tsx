@@ -3,43 +3,16 @@
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Trash2,
-  Play,
-  Flag,
-  CalendarClock,
-  UserPlus,
-  ListOrdered,
-  Trophy,
-} from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
-import { InviteField } from "@/app/tastings/new/invite-field";
-import { JoinLinkRow } from "@/app/tastings/new/join-link-row";
-import { isoToLocal, localToIso } from "@/app/tastings/new/setup-copy";
 import type {
   RevealMode,
   TimingMode,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
-import {
-  endTastingConfirm,
-  startLandsOnConsole,
-  type UnrevealedGlass,
-} from "@/lib/tasting-lifecycle-copy";
-import {
-  startTasting,
-  updateSchedule,
-  inviteToTasting,
-  deleteTasting,
-  finishTasting,
-  reopenTasting,
-  setSequentialGuessing,
-  setLeaderboardReveal,
-  type LobbyActionState,
-} from "./actions";
+import { startLandsOnConsole, type UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
+import { startTasting, type LobbyActionState } from "./actions";
 
 // A success can carry a warning that still needs the host (Start's incomplete
 // glasses, a cellar bottle that couldn't be drawn down) — shown under it.
@@ -60,58 +33,70 @@ function StateMessage({ state }: { state: LobbyActionState }) {
 }
 
 /**
- * Host-only controls with two surfaces:
- *  - "start": the prominent Start action (the one primary call-to-action
- *    pre-start). The lobby mounts it once, inline above its columns, at a slot
- *    its draft and running trees share, so what Start returned (its warning
- *    above all) is still shown after the page re-renders into the running
- *    board.
- *  - "menu": the settings the header cogwheel opens, branched by status —
- *    draft gets schedule / invite + share link / flow / delete; a running
- *    tasting gets finish / delete (an OPEN one keeps invite + share link).
+ * Host-only controls. Used to have two surfaces; since BT-L4 only "start"
+ * remains here — the prominent Start action (the one primary call-to-action
+ * pre-start).
  *
- * Setup props are optional so the cogwheel can render either state.
+ * KNOWN GAP (review round 1, confirmed, unresolved — the fix needs BT-D2's
+ * files, outside BT-L2's OWNS): this component is mounted only by
+ * `StartBar`, only inside `LobbyView`, which `page.tsx`'s switch
+ * (`view-route.ts`) renders only while `status === "DRAFT"`. The instant
+ * `startTasting`'s `revalidatePath` flips status, `page.tsx` swaps in a
+ * structurally different component at that tree position — `RunningView`,
+ * which never mounts `StartBar`/`HostControls` — so this instance unmounts
+ * in the same transition that delivered its result, taking the local
+ * `useActionState` with it. In other words draft and running are NOT a
+ * slot the two trees share: the `!notStarted` branch below is dead code,
+ * since `HostControls` is never mounted with `status !== "DRAFT"` in the
+ * first place. A success's `warning` (and the Host console link, when
+ * `landsOnConsole` is false) is silently lost whenever Start doesn't itself
+ * `router.push` away — i.e. every bring-your-own, semi-blind, ASYNC or
+ * non-LIVE-blind-host-provides Start, and any Start that returns a warning
+ * regardless of mode. Fixing this needs `running-view.tsx` and/or
+ * `page.tsx` to read the result some other way (e.g. a short-lived query
+ * param or cookie), not a change confined to this file.
+ *
+ * The old "menu" surface (schedule / invite + share link / pacing and
+ * leaderboard toggles / Finish / Reopen / Delete — what the header cogwheel's
+ * popover used to open) is gone: every one of those controls now lives in
+ * `TastingSettingsSheet`. `surface: "menu"` stays in the prop type, and this
+ * component still renders nothing for it, since nothing calls it any more
+ * (BT-L2 deleted the popover along with the header's cogwheel).
  */
 export function HostControls({
   tastingId,
   status,
-  scheduledAt = null,
-  friends = [],
-  sequentialGuessing = false,
-  showSequentialToggle = false,
-  leaderboardReveal = "PER_ATTRIBUTE",
-  showLeaderboardToggle = false,
-  invitesStayOpen = false,
   timingMode,
   revealMode,
   wineSource,
-  unrevealedGlasses = [],
-  shareLinkActive = true,
   surface,
 }: {
   tastingId: string;
   status: string;
+  /** @deprecated unused since BT-L4 — kept only for host-controls-menu.tsx's
+      still-compiling call until BT-L2 deletes it. */
   scheduledAt?: string | null;
+  /** @deprecated unused since BT-L4 (Manage invitations moved to the sheet). */
   friends?: { id: string; display_name: string; email: string }[];
+  /** @deprecated unused since BT-L4 (the pacing toggle moved to the sheet). */
   sequentialGuessing?: boolean;
+  /** @deprecated unused since BT-L4. */
   showSequentialToggle?: boolean;
+  /** @deprecated unused since BT-L4 (the rules card now covers this). */
   leaderboardReveal?: string;
+  /** @deprecated unused since BT-L4. */
   showLeaderboardToggle?: boolean;
-  /** OPEN tastings keep the invite field and the share link in the running
-      menu too (`join_tasting_by_code` still accepts them). */
-  invitesStayOpen?: boolean;
   /** Only the "start" surface reads these three: where Start lands
       (`startLandsOnConsole`). A caller that leaves one out keeps the host on
       the lobby, which links to the console anyway. */
   timingMode?: TimingMode;
   revealMode?: RevealMode;
   wineSource?: WineSourceMode;
-  /** Glasses whose answers ending the tasting would leave hidden, in list
-      order — the End confirm names them (reveal-4). */
+  /** @deprecated unused since BT-L4 (End's confirm now reads it inside the
+      sheet). */
   unrevealedGlasses?: readonly UnrevealedGlass[];
-  /** The menu's share link fetches only once this is true. HostControlsMenu
-      passes whether its keep-mounted popover has been opened, so a page view
-      that never opens the menu never calls `ensure_join_code`. */
+  /** @deprecated unused since BT-L4 (the share link now lives in the
+      sheet's Manage invitations view). */
   shareLinkActive?: boolean;
   surface: "start" | "menu";
 }) {
@@ -145,38 +130,11 @@ export function HostControls({
     },
     null,
   );
-  // A Start result belongs to the run it started. Finish (in the menu)
-  // re-renders this same mounted surface as CLOSED; from then on the result
-  // stays hidden, so a later Reopen doesn't bring back a stale warning.
+  // A Start result belongs to the run it started. Finish (now in the
+  // settings sheet) re-renders this same mounted surface as CLOSED; from
+  // then on the result stays hidden, so a later Reopen doesn't bring back a
+  // stale warning.
   const [startResultRetired, setStartResultRetired] = useState(false);
-  const [finishState, finishAction, finishPending] = useActionState(
-    finishTasting,
-    null,
-  );
-  const [reopenState, reopenAction, reopenPending] = useActionState(
-    reopenTasting,
-    null,
-  );
-  const [scheduleState, scheduleAction, schedulePending] = useActionState(
-    updateSchedule,
-    null,
-  );
-  const [inviteState, inviteAction, invitePending] = useActionState(
-    inviteToTasting,
-    null,
-  );
-
-  // Controlled, like the create sheet's setup step: the datetime-local value
-  // is the host's wall-clock time, converted to ISO on the client so the
-  // server never guesses the zone (updateSchedule prefers `scheduled_at_iso`).
-  const [schedule, setSchedule] = useState(() => isoToLocal(scheduledAt ?? null));
-  // Re-seed from the prop when the server value changes (after a save), the
-  // adjust-state-during-render way rather than a setState in an effect.
-  const [seenScheduledAt, setSeenScheduledAt] = useState(scheduledAt ?? null);
-  if ((scheduledAt ?? null) !== seenScheduledAt) {
-    setSeenScheduledAt(scheduledAt ?? null);
-    setSchedule(isoToLocal(scheduledAt ?? null));
-  }
 
   if (status === "CLOSED" && startState !== null && !startResultRetired) {
     setStartResultRetired(true);
@@ -184,278 +142,62 @@ export function HostControls({
 
   const notStarted = status === "DRAFT";
 
-  const deleteForm = (
-    <form
-      action={deleteTasting}
-      onSubmit={(e) => {
-        if (
-          !window.confirm(
-            "Delete this tasting for everyone? This can't be undone.",
-          )
-        ) {
-          e.preventDefault();
-        }
-      }}
-    >
-      <input type="hidden" name="tasting_id" value={tastingId} />
-      <Button
-        type="submit"
-        variant="destructive"
-        className="w-full justify-start gap-1.5"
-      >
-        <Trash2 className="size-4" /> Delete tasting
-      </Button>
-    </form>
-  );
-
-  const inviteForm = (
-    <form action={inviteAction} className="flex flex-col gap-2">
-      <input type="hidden" name="tasting_id" value={tastingId} />
-      <Label className="flex items-center gap-1.5">
-        <UserPlus className="size-4" /> Invite more people
-      </Label>
-      <InviteField friends={friends} />
-      <Button
-        type="submit"
-        variant="outline"
-        disabled={invitePending}
-        className="w-fit"
-      >
-        {invitePending ? "Sending…" : "Send invites"}
-      </Button>
-      <StateMessage state={inviteState} />
-    </form>
-  );
+  if (surface === "menu") return null;
 
   // Draft lobby's one primary action, inline above the lobby's columns. Never
   // gated on a wine count, and an incomplete glass never blocks it: the
   // server's error shows under the button, and so does a success's warning.
-  if (surface === "start") {
-    if (!notStarted) {
-      // A started tasting has no Start. What shows is the result of the Start
-      // that got it here: startTasting revalidates the lobby, which re-renders
-      // into the running board in the same commit that delivers { success,
-      // warning }, and this surface (mounted at a slot both trees share) keeps
-      // that state. It shows the success, any warning and, when Start stayed
-      // here instead of going on to the console, the way on. Nothing on a
-      // plain page load, and nothing once the tasting has ended.
-      if (
-        !startState ||
-        !("success" in startState) ||
-        startResultRetired ||
-        status !== "IN_PROGRESS"
-      ) {
-        return null;
-      }
-      return (
-        <div className="flex flex-col gap-2">
-          <StateMessage state={startState} />
-          {landsOnConsole ? (
-            <Button
-              render={<Link href={`/tastings/${tastingId}/host`} />}
-              nativeButton={false}
-              size="lg"
-              className="min-h-11 w-full sm:w-fit md:pointer-fine:min-h-0"
-            >
-              Host console
-            </Button>
-          ) : null}
-        </div>
-      );
+  if (!notStarted) {
+    // Dead in practice (see the file doc-comment above, "KNOWN GAP"):
+    // page.tsx never mounts this component once status leaves DRAFT, so
+    // `startState` here is always still `useActionState`'s initial `null`.
+    // Kept rather than deleted — removing it is a bigger change than
+    // BT-L2's authorized scope for this file — but nothing below this
+    // comment currently renders for a real host.
+    if (
+      !startState ||
+      !("success" in startState) ||
+      startResultRetired ||
+      status !== "IN_PROGRESS"
+    ) {
+      return null;
     }
     return (
-      <form action={startAction} className="flex flex-col gap-2">
-        <input type="hidden" name="tasting_id" value={tastingId} />
-        <Button
-          type="submit"
-          size="lg"
-          disabled={startPending}
-          className="min-h-11 w-full gap-1.5 sm:w-fit md:pointer-fine:min-h-0"
-        >
-          {startPending ? (
-            <>
-              <WineGlassLoader /> Starting…
-            </>
-          ) : (
-            <>
-              <Play className="size-4" /> Start tasting
-            </>
-          )}
-        </Button>
+      <div className="flex flex-col gap-2">
         <StateMessage state={startState} />
-      </form>
+        {landsOnConsole ? (
+          <Button
+            render={<Link href={`/tastings/${tastingId}/host`} />}
+            nativeButton={false}
+            size="lg"
+            className="min-h-11 w-full sm:w-fit md:pointer-fine:min-h-0"
+          >
+            Host console
+          </Button>
+        ) : null}
+      </div>
     );
   }
-
-  // surface === "menu": the header cogwheel's settings, branched by status.
   return (
-    <div className="flex flex-col gap-4">
-      {notStarted ? (
-        <>
-          <form action={scheduleAction} className="flex flex-col gap-2">
-            <input type="hidden" name="tasting_id" value={tastingId} />
-            <Label
-              htmlFor="scheduled_at_edit"
-              className="flex items-center gap-1.5"
-            >
-              <CalendarClock className="size-4" /> Date &amp; time
-            </Label>
-            <div className="flex gap-2">
-              <input
-                type="hidden"
-                name="scheduled_at_iso"
-                value={localToIso(schedule) ?? ""}
-              />
-              <Input
-                id="scheduled_at_edit"
-                name="scheduled_at"
-                type="datetime-local"
-                value={schedule}
-                onChange={(e) => setSchedule(e.target.value)}
-              />
-              <Button type="submit" variant="outline" disabled={schedulePending}>
-                {schedulePending ? "Saving…" : "Save"}
-              </Button>
-            </div>
-            <StateMessage state={scheduleState} />
-          </form>
-
-          {inviteForm}
-          {/* create-2: the share link beside "Invite more people". Only an
-              OPEN tasting's link keeps working once it has started. */}
-          <JoinLinkRow
-            tastingId={tastingId}
-            worksUntilStart={!invitesStayOpen}
-            active={shareLinkActive}
-          />
-
-          {showSequentialToggle ? (
-            <form action={setSequentialGuessing} className="flex flex-col gap-2">
-              <input type="hidden" name="tasting_id" value={tastingId} />
-              <input
-                type="hidden"
-                name="enabled"
-                value={String(!sequentialGuessing)}
-              />
-              <Label className="flex items-center gap-1.5">
-                <ListOrdered className="size-4" /> Flow —{" "}
-                {sequentialGuessing ? "Guided" : "Free"}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {sequentialGuessing
-                  ? "Guided — everyone tastes the same wine together; reveal a wine to open the next."
-                  : "Free — participants can guess any wine in any order."}
-              </p>
-              <Button type="submit" variant="outline" className="w-fit">
-                {sequentialGuessing ? "Switch to Free" : "Switch to Guided"}
-              </Button>
-            </form>
-          ) : null}
-
-          {showLeaderboardToggle ? (
-            <form action={setLeaderboardReveal} className="flex flex-col gap-2">
-              <input type="hidden" name="tasting_id" value={tastingId} />
-              <input
-                type="hidden"
-                name="value"
-                value={
-                  leaderboardReveal === "PER_WINE"
-                    ? "PER_ATTRIBUTE"
-                    : "PER_WINE"
-                }
-              />
-              <Label className="flex items-center gap-1.5">
-                <Trophy className="size-4" /> Leaderboard —{" "}
-                {leaderboardReveal === "PER_WINE"
-                  ? "After the full wine"
-                  : "After each attribute"}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                When the standings move during a progressive reveal — after
-                every attribute, or only once the whole wine is revealed.
-              </p>
-              <Button type="submit" variant="outline" className="w-fit">
-                {leaderboardReveal === "PER_WINE"
-                  ? "Switch to after each attribute"
-                  : "Switch to after the full wine"}
-              </Button>
-            </form>
-          ) : null}
-        </>
-      ) : status === "IN_PROGRESS" ? (
-        <>
-          {invitesStayOpen ? (
-            <>
-              {inviteForm}
-              <JoinLinkRow
-                tastingId={tastingId}
-                worksUntilStart={false}
-                active={shareLinkActive}
-              />
-            </>
-          ) : null}
-          <form
-            action={finishAction}
-            className="flex flex-col gap-2"
-            onSubmit={(e) => {
-              // reveal-4: ending is reversible, so the confirm never says it
-              // can't be undone — it names the glasses left hidden instead.
-              if (!window.confirm(endTastingConfirm(unrevealedGlasses))) {
-                e.preventDefault();
-              }
-            }}
-          >
-            <input type="hidden" name="tasting_id" value={tastingId} />
-            <p className="text-sm text-muted-foreground">
-              Finish when you&apos;re done to close guessing and move it to
-              History.
-            </p>
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={finishPending}
-              className="w-full justify-start gap-1.5"
-            >
-              {finishPending ? (
-                <>
-                  <WineGlassLoader /> Finishing…
-                </>
-              ) : (
-                <>
-                  <Flag className="size-4" /> Finish tasting
-                </>
-              )}
-            </Button>
-            <StateMessage state={finishState} />
-          </form>
-        </>
-      ) : (
-        <form action={reopenAction} className="flex flex-col gap-2">
-          <input type="hidden" name="tasting_id" value={tastingId} />
-          <p className="text-sm text-muted-foreground">
-            This tasting is finished. Reopen it to add wines or keep tasting —
-            all guesses and scores stay intact.
-          </p>
-          <Button
-            type="submit"
-            variant="outline"
-            disabled={reopenPending}
-            className="w-full justify-start gap-1.5"
-          >
-            {reopenPending ? (
-              <>
-                <WineGlassLoader /> Reopening…
-              </>
-            ) : (
-              <>
-                <Play className="size-4" /> Reopen tasting
-              </>
-            )}
-          </Button>
-          <StateMessage state={reopenState} />
-        </form>
-      )}
-      {deleteForm}
-    </div>
+    <form action={startAction} className="flex flex-col gap-2">
+      <input type="hidden" name="tasting_id" value={tastingId} />
+      <Button
+        type="submit"
+        size="lg"
+        disabled={startPending}
+        className="min-h-11 w-full gap-1.5 sm:w-fit md:pointer-fine:min-h-0"
+      >
+        {startPending ? (
+          <>
+            <WineGlassLoader /> Starting…
+          </>
+        ) : (
+          <>
+            <Play className="size-4" /> Start tasting
+          </>
+        )}
+      </Button>
+      <StateMessage state={startState} />
+    </form>
   );
 }

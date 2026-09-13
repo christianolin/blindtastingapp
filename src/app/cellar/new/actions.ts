@@ -1,26 +1,24 @@
 "use server";
 
+import { withoutBlindPending } from "@/lib/catalog-visibility";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
+import { emptyDraft } from "@/lib/wine-identity/complete";
+import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
+import {
+  prepareCompleteWine,
+  upsertCatalogWine,
+  type WriteRefusal,
+} from "@/lib/wine-identity/server/write";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle } from "@/lib/wset/queries";
 
 export type CellarLotInput = {
+  /** Attach the lot to this existing catalog wine. */
   catalogWineId?: string | null;
-  // identity (used only when creating a new catalog wine)
-  countryId?: string;
-  regionId?: string;
-  appellationId?: string;
-  grapes?: { grapeId: string; percentage: number | null }[];
-  producerId?: string;
-  typeDesignationId?: string | null;
-  colour?: string;
-  style?: string;
-  wineName?: string | null;
-  vintageKind?: "YEAR" | "NV" | "TAWNY";
-  vintageYear?: number | null;
-  vintageTawnyYears?: number | null;
-  imageUrl?: string | null;
-  description?: string | null;
+  /** Otherwise the wine, found or created in the catalog first through the one
+      write path (D2). A pending producer or grape name travels in it. */
+  draft?: WineIdentityDraft | null;
   // lot
   quantity: number;
   bottleSizeMl: number;
@@ -34,108 +32,68 @@ export type CellarLotInput = {
   lotNote?: string | null;
 };
 
-// Add a lot to the caller's cellar. Reuses the catalog find-or-create via the
-// add_cellar_lot RPC: pass catalog_wine_id to attach to an existing wine, or the
-// identity fields to resolve/create one. RLS + auth.uid() are enforced in the RPC.
+// Add a lot to the caller's cellar (spec §B.9 "Cellar page lot create"). Pass
+// `catalogWineId` to attach to an existing wine. Otherwise the draft goes
+// through `prepareCompleteWine` and `upsertCatalogWine` first, which link an
+// identity already in the catalog or create it, and fill its photo, description
+// and blend only on a row the caller created and only where empty. The
+// add_cellar_lot RPC then receives the catalog wine id only. RLS + auth.uid()
+// are enforced in the RPC.
 //
 // Failures are RETURNED, not thrown: Next redacts the message of any error
 // thrown out of a server action in production ("An error occurred in the Server
 // Components render…"), which hid the real Postgres reason from the user and
 // from us. The database message is genuinely useful here — it names the column
-// or constraint that rejected the row.
+// or constraint that rejected the row. A refusal for an incomplete wine names
+// its fields ("This wine needs a vintage.") and carries `missing`.
 export async function addCellarLot(
   input: CellarLotInput,
-): Promise<{ id: string } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be signed in to add a wine." };
+): Promise<{ id: string } | WriteRefusal> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { error: "You must be signed in to add a wine." };
 
-  const p: Record<string, unknown> = {
-    quantity: input.quantity,
-    bottle_size_ml: input.bottleSizeMl,
-    price_per_bottle: input.pricePerBottle ?? null,
-    currency: input.currency ?? null,
-    purchased_on: input.purchasedOn ?? null,
-    purchase_source: input.purchaseSource ?? null,
-    drink_from: input.drinkFrom ?? null,
-    drink_to: input.drinkTo ?? null,
-    storage_location: input.storageLocation ?? null,
-    lot_note: input.lotNote ?? null,
-  };
-  if (input.catalogWineId) {
-    p.catalog_wine_id = input.catalogWineId;
-  } else {
-    p.country_id = input.countryId;
-    p.region_id = input.regionId;
-    p.appellation_id = input.appellationId;
-    p.primary_grape_id = input.grapes?.[0]?.grapeId;
-    p.secondary_grape_id = input.grapes?.[1]?.grapeId ?? null;
-    p.producer_id = input.producerId;
-    p.type_designation_id = input.typeDesignationId ?? null;
-    p.colour = input.colour;
-    p.style = input.style;
-    p.wine_name = input.wineName ?? null;
-    p.vintage_kind = input.vintageKind;
-    p.vintage_year = input.vintageYear ?? null;
-    p.vintage_tawny_years = input.vintageTawnyYears ?? null;
-  }
-
-  const { data, error } = await supabase.rpc("add_cellar_lot", { p });
-  if (error) {
-    // Logged server-side too, so the cause is in the Vercel runtime logs even
-    // when the user only reports "it wouldn't save".
-    console.error("addCellarLot failed", { error, payload: p });
-    return { error: error.message };
-  }
-  const lotId = data as string;
-
-  // A newly-created catalog wine owned by this user gets its full blend (its
-  // trigger recomputes the lead grape as primary) and its bottle photo. An
-  // existing/deduped wine (or one created by someone else) is left untouched.
-  const hasBlend = !!(input.grapes && input.grapes.length > 0);
-  if (!input.catalogWineId && (hasBlend || input.imageUrl || input.description)) {
-    const { data: lot } = await supabase
-      .from("cellar_lots")
-      .select("catalog_wine_id")
-      .eq("id", lotId)
-      .maybeSingle();
-    const catalogWineId = lot?.catalog_wine_id;
-    if (catalogWineId) {
-      const { data: cw } = await supabase
-        .from("catalog_wines")
-        .select("created_by")
-        .eq("id", catalogWineId)
-        .maybeSingle();
-      if (cw?.created_by === user.id) {
-        const wineFields: { image_url?: string; description?: string } = {};
-        if (input.imageUrl) wineFields.image_url = input.imageUrl;
-        if (input.description) wineFields.description = input.description;
-        if (Object.keys(wineFields).length > 0) {
-          await supabase
-            .from("catalog_wines")
-            .update(wineFields)
-            .eq("id", catalogWineId);
-        }
-        if (hasBlend && input.grapes) {
-          await supabase
-            .from("catalog_wine_grapes")
-            .delete()
-            .eq("catalog_wine_id", catalogWineId);
-          await supabase.from("catalog_wine_grapes").insert(
-            input.grapes.map((g, i) => ({
-              catalog_wine_id: catalogWineId,
-              grape_id: g.grapeId,
-              percentage: g.percentage,
-              sort_order: i,
-            })),
-          );
-        }
-      }
+    let catalogWineId = input.catalogWineId || null;
+    if (!catalogWineId) {
+      // A malformed payload counts as a draft with every field missing.
+      const draft = parseStoredDraft(input.draft) ?? emptyDraft();
+      const prepared = await prepareCompleteWine(supabase, draft);
+      if ("error" in prepared) return prepared;
+      const upserted = await upsertCatalogWine(supabase, user.id, prepared.wine);
+      if ("error" in upserted) return upserted;
+      catalogWineId = upserted.catalogWineId;
     }
+
+    const p = {
+      catalog_wine_id: catalogWineId,
+      quantity: input.quantity,
+      bottle_size_ml: input.bottleSizeMl,
+      price_per_bottle: input.pricePerBottle ?? null,
+      currency: input.currency ?? null,
+      purchased_on: input.purchasedOn ?? null,
+      purchase_source: input.purchaseSource ?? null,
+      drink_from: input.drinkFrom ?? null,
+      drink_to: input.drinkTo ?? null,
+      storage_location: input.storageLocation ?? null,
+      lot_note: input.lotNote ?? null,
+    };
+    const { data, error } = await supabase.rpc("add_cellar_lot", { p });
+    if (error || !data) {
+      // Logged server-side too, so the cause is in the Vercel runtime logs even
+      // when the user only reports "it wouldn't save".
+      console.error("addCellarLot failed", { error, payload: p });
+      return { error: error?.message ?? "Couldn't save this wine. Please try again." };
+    }
+    return { id: data };
+  } catch (error) {
+    console.error("addCellarLot failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return { error: "Couldn't save this wine. Please try again." };
   }
-  return { id: lotId };
 }
 
 // The caller's lots (quantity > 0) for a catalog wine, so the add form can warn
@@ -204,7 +162,8 @@ export async function increaseCellarLotQuantity(
   return { id: lotId };
 }
 
-// Search the shared catalog for the "already added?" picker.
+// Search the shared catalog for the "already added?" picker. A wine hidden in
+// an unrevealed flight is never offered (spec §B.6; scan-2).
 export async function searchCellarCatalog(
   query: string,
 ): Promise<{ id: string; name: string }[]> {
@@ -214,17 +173,7 @@ export async function searchCellarCatalog(
     p_query: query,
     p_limit: 20,
   });
-  return (
-    (data ?? []) as Array<{
-      id: string;
-      wine_name: string;
-      producer: string;
-      appellation: string;
-      vintage_kind: string;
-      vintage_year: number | null;
-      vintage_tawny_years: number | null;
-    }>
-  ).map((w) => {
+  const rows = (data ?? []).map((w) => {
     const vintage =
       w.vintage_kind === "YEAR"
         ? w.vintage_year
@@ -240,6 +189,7 @@ export async function searchCellarCatalog(
       .join(" ");
     return { id: w.id, name: name || "Untitled wine" };
   });
+  return withoutBlindPending(supabase, rows);
 }
 
 export type CellarLotOption = {

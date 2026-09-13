@@ -73,11 +73,20 @@ describe("flowWord", () => {
       "Free order",
     );
     expect(
-      flowWord({ revealMode: "SEMI_BLIND", timingMode: "LIVE", sequentialGuessing: true }),
-    ).toBe("Free order");
-    expect(
       flowWord({ revealMode: "SEMI_BLIND", timingMode: "LIVE", sequentialGuessing: false }),
     ).toBe("Free order");
+    expect(flowWord({ revealMode: "OPEN", timingMode: "LIVE", sequentialGuessing: true })).toBe(
+      "Free order",
+    );
+  });
+
+  it("LIVE semi-blind with guided pacing reads Guided (B6)", () => {
+    expect(flowWord({ revealMode: "SEMI_BLIND", timingMode: "LIVE", sequentialGuessing: true })).toBe(
+      "Guided",
+    );
+    expect(flowWord({ revealMode: "SEMI_BLIND", timingMode: "LIVE", sequentialGuessing: false })).toBe(
+      "Free order",
+    );
     expect(flowWord({ revealMode: "OPEN", timingMode: "LIVE", sequentialGuessing: true })).toBe(
       "Free order",
     );

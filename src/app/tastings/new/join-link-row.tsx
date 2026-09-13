@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LINK_WORKS_UNTIL_END } from "@/lib/lobby-copy";
 import { getJoinLink } from "./actions";
 
 type LinkState = { url: string; code: string } | "loading" | { error: string };
@@ -12,9 +13,11 @@ type LinkState = { url: string; code: string } | "loading" | { error: string };
  * a clipboard Copy. One row for both places a host shares it — step 3 of the
  * create sheet and the draft lobby's host controls.
  *
- * `worksUntilStart` adds the hint for tastings whose link stops working at
- * Start: `join_tasting_by_code` refuses every started tasting except an OPEN
- * one, so only an OPEN tasting's link stays good while it runs.
+ * `showExpiryHint` shows the hint that the link works until the tasting ends
+ * (B4/Q6: `join_tasting_by_code` now refuses only CLOSED, so every tasting's
+ * link stays good for as long as the tasting itself does — the hint is no
+ * longer conditional on mode, just occasionally redundant with context
+ * already on screen). Defaults to true.
  *
  * `active` holds the fetch back until the row is really shown. The lobby's
  * host menu is a keep-mounted popover, so its row mounts with the page while
@@ -23,12 +26,12 @@ type LinkState = { url: string; code: string } | "loading" | { error: string };
  */
 export function JoinLinkRow({
   tastingId,
-  worksUntilStart,
+  showExpiryHint = true,
   active = true,
   className,
 }: {
   tastingId: string;
-  worksUntilStart: boolean;
+  showExpiryHint?: boolean;
   /** Fetch the link only once this is true, and keep it true after that.
       Defaults to fetching on mount (step 3 of the create sheet). */
   active?: boolean;
@@ -85,9 +88,9 @@ export function JoinLinkRow({
               ? link.error
               : link.url.replace(/^https?:\/\//, "")}
         </span>
-        {worksUntilStart ? (
+        {showExpiryHint ? (
           <span className="text-[11.5px] text-muted-foreground">
-            Works until you start the tasting.
+            {LINK_WORKS_UNTIL_END}
           </span>
         ) : null}
       </div>

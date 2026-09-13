@@ -1,0 +1,38 @@
+{
+  "style": "FORTIFIED",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Touriga Nacional",
+      "percentage": null
+    },
+    {
+      "name": "Touriga Franca",
+      "percentage": null
+    },
+    {
+      "name": "Tinta Roriz",
+      "percentage": null
+    },
+    {
+      "name": "Tinta Barroca",
+      "percentage": null
+    }
+  ],
+  "region": "Douro",
+  "country": "Portugal",
+  "rawText": "PRODUCE OF PORTUGAL, VINTAGE PORT, 2004, BORGES PORTO, PORTWINE GROWERS, PRODUCED AND BOTTLED BY SOCIEDADE DOS VINHOS BORGES, S.A., GONDOMAR - PORTUGAL",
+  "producer": "Sociedade dos Vinhos Borges",
+  "wineName": null,
+  "confidence": "high",
+  "appellation": "Porto DOC",
+  "description": "Vintage Port from the Douro Valley, declared only in exceptional years and bottled unfiltered after about two years in wood before further ageing in bottle. Produced by Sociedade dos Vinhos Borges, a long-established Gondomar-based Port house. Made from the traditional Douro field-blend of indigenous varieties grown on schistous terraces.",
+  "designation": "Vintage",
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2004,
+  "alcoholPercent": 20,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

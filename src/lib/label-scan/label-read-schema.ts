@@ -18,16 +18,20 @@ export const LabelReadSchema = z.object({
     "True when the photo shows a wine bottle label, front or back. False for anything else; " +
       "then leave every other field null or empty and set confidence to low.",
   ),
-  // (pre), extended with the title word
+  // (pre), extended with the title word; owner approval 1c (2026-09-13): the name the
+  // label presents as its brand, a bottler or company line only as a last resort (L1 #2)
   producer: z.string().nullable().describe(
-    "Winery / producer name as printed, including a title word that is part of the name " +
-      "(Château, Domaine, Weingut, Tenuta…), or null.",
+    'The producer name the label presents as its brand, as printed ("J.M. Boillot"), including a title word ' +
+      "that is part of the name (Château, Domaine, Weingut, Tenuta…). " +
+      'Use a bottler or company line ("Mis en bouteille par…", "Produced and bottled by…") only when no other name is printed. ' +
+      "Null when there is none.",
   ),
   // (pre)
   wineName: z.string().nullable().describe(
     "The cuvée / special bottling name — not the producer, not the appellation — or null.",
   ),
-  // (pre) plus D1's official-name instruction
+  // (pre) plus D1's official-name instruction; owner approval 1d (2026-09-13): an
+  // official regional origin printed without a designation term (L1 #4)
   appellation: z.string().nullable().describe(
     "The wine's geographic denomination under its official name as used in the wine's own country, " +
       "with its designation — AOC/AOP, DOC/DOCG, DO/DOCa, IGT/IGP, PDO/PGI, AVA, etc. " +
@@ -37,27 +41,33 @@ export const LabelReadSchema = z.object({
       'return the traditional form ("Puglia IGT", not "Puglia IGP"). ' +
       "Keep Grand Cru / Premier Cru when it is part of the official name. " +
       'Repeat the name even when it equals the region ("Bourgogne AOC"). ' +
+      'When the label prints an official regional origin without a designation term (a Chinese 产区 such as "Ningxia", an Argentine IG), ' +
+      "return that origin's name. " +
       "Null when noGeographicIndication is true, or when you genuinely cannot tell.",
   ),
-  // D1
+  // D1; owner approval 1a (2026-09-13): any place of origin below country level is a
+  // geographic indication (L1 #7)
   noGeographicIndication: z.boolean().describe(
-    "True ONLY when the wine legally carries no geographic indication: Vin de France, Vino d'Italia, " +
-      "Deutscher Wein, Vino de España, a plain table wine. Appellation is then null. " +
-      "False otherwise — including when the appellation simply could not be read.",
+    "True ONLY for the table-wine categories themselves, which legally carry no geographic indication: " +
+      "Vin de France, Vino d'Italia, Deutscher Wein, Vino de España, a plain table wine. Appellation is then null. " +
+      'False whenever the label names a place of origin below country level (a region, province or state such as "Mendoza"), ' +
+      "with or without a designation term. False too when the appellation simply could not be read.",
   ),
-  // (pre)
+  // (pre); owner approval 1e (2026-09-13): no region guessed from a brand and a grape (L1 #15)
   region: z.string().nullable().describe(
     "The wine region — infer it from the appellation or producer even when not printed " +
-      "(Amarone della Valpolicella → Veneto), or null.",
+      "(Amarone della Valpolicella → Veneto), or null. " +
+      "Null too when only a brand and a grape are printed and you are not certain of the origin.",
   ),
   // (pre), "in English" added
   country: z.string().nullable().describe("The country, in English — infer it too (→ Italy), or null."),
-  // (pre)
+  // (pre); owner approval 1b (2026-09-13): every example is an active type_designations
+  // name, checked live; "Gran Selezione" and "VORS" have no row and were dropped (L1 #12)
   designation: z.string().nullable().describe(
     "The label's legal quality, ageing or style term, in its canonical form: " +
-      '"Gran Reserva", "Reserva", "Crianza", "Riserva", "Gran Selezione", "Kabinett", "Spätlese", "Auslese", ' +
-      '"Grosses Gewächs", "Grand Cru", "Premier Cru", "Brut", "Brut Nature", "Extra Dry", "Vintage", "LBV", ' +
-      '"Colheita", "Fino", "Amontillado", "VORS"… Return the term itself, not a sentence. ' +
+      '"Gran Reserva", "Reserva", "Crianza", "Riserva", "Kabinett", "Spätlese", "Auslese", "Grosses Gewächs (GG)", ' +
+      '"Grand Cru", "Premier Cru", "Brut", "Brut Nature", "Extra Dry", "Vintage Port", "Late Bottled Vintage (LBV)", ' +
+      '"Colheita", "Fino", "Amontillado"… Return the term itself, not a sentence. ' +
       "Null when the label carries none. Do NOT put grape names or fantasy names here.",
   ),
   // (pre), tawny example added
@@ -70,7 +80,7 @@ export const LabelReadSchema = z.object({
   vintageTawnyYears: z.number().int().nullable().describe(
     "For TAWNY only: the stated age in years (10, 20, 30, 40). Null otherwise.",
   ),
-  // pre-FastCork derived this in coerce(); now asked for, and still checked in coerceLabelRead
+  // the earlier Claude extractor (16e5bd6^) derived this in coerce(); now asked for, and still checked in coerceLabelRead
   vintageRead: z.boolean().describe(
     "True only when the vintage year, the NV statement or the tawny age is actually visible in this photo. " +
       "False when you inferred it or could not find it — most still wines carry a vintage somewhere, " +

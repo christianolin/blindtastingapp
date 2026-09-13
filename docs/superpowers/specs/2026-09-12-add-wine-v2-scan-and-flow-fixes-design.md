@@ -950,20 +950,44 @@ The resolution steps, in order:
       - Nothing else is ever stripped, and never from the middle; the greedy `.*$` at scan/actions.ts:154-159 is gone.
       - "Saint-Émilion Grand Cru AOC" therefore resolves to Saint-Émilion Grand Cru, not Saint-Émilion.
    8. Exactly one row → it sets `appellationId`, and its `regionId` and `countryId` fill the draft. All three get provenance `label`.
-   9. Otherwise `appellationId` stays null. **There is no first-hit fallback**: scan/actions.ts:296 is deleted (RC4, scan-3).
+   9. Otherwise `appellationId` stays null, unless 4.10 picks a row. **There is no first-hit fallback**: scan/actions.ts:296 is deleted (RC4, scan-3).
+   10. **A curated appellation synonym** (owner approval 4, 2026-09-13). Tried only when no row was picked and both of these hold:
+       - no reference row agreed with the read's text (4.3) in any attempt, 4.7's retry included. Rows that agreed but tied, or were filtered out by country, region or suffix, never fall through to a synonym;
+       - the country resolved, and the read's own region resolved to a candidate (the region candidate of step 3).
+
+       `curatedAppellationName(read.appellation, country, region)` in region-canonical.ts looks the text up in `APPELLATION_SYNONYMS`. The table is keyed by the canonical country, then the candidate region's stored name, then the text trimmed, lowercased and with runs of whitespace collapsed. Only own keys count, so text such as "constructor" never reaches `Object.prototype`, and a partial string is no synonym.
+       - A hit is an exact stored appellation name. It goes through 4.1–4.8 with the read's country and region candidate, and is taken only when that picks exactly one row and the row sits in the candidate region. The row then fills the draft as in 4.8, provenance `label`.
+       - No region, another region, no hit, or no single row in the region → `appellationId` stays null.
+       - The list is curated, never a heuristic: a spelling is added only when it evidently names the same appellation. Today it holds one origin, from #4's round-2 read (Changyu Moser XV): "Ningxia Helan Mountain Eastern Foothills", "Ningxia Helan Mountain East" and "Helan Mountain Eastern Foothills" → "Ningxia" (`328c774b`) in region Ningxia, China.
 5. **Region from the read.** If the region is still empty and a candidate exists, the region becomes the candidate, provenance `label`.
-   - A region-level read never silently becomes the region's self-named appellation.
+   - A region-level read never silently becomes the region's self-named appellation. Step 4.10 is no exception: a synonym needs appellation text, so a read without it never reaches one, even where a synonym's target is the region's self-named row (Ningxia).
+   - A region set here from the read alone can still be emptied by step 7's region conflict.
    - The model already repeats "Bourgogne AOC" as the appellation (A.3).
    - A read without an appellation is a partial read; the user fixes it with "Just the region" (C.5 A7).
 6. **Producer.** Only when `read.producer` is set and not `isTitleOnly`:
-   - `producerByFoldedName(read.producer, regionId)`. A hit is `existing`, provenance `label`.
+   - `producerByFoldedName(read.producer, regionId)`. A hit is `existing`, provenance `label`. The hit is a producer row that folds equal or, only when none does, the producer a curated alternative name names (B.7). Either way it carries that producer's own name and region link.
    - Otherwise the producer is `pending` with the read name, provenance `label`, and the confirm screen shows "new producer" (D6, scan-3).
    - A title-only name ("Domaine") becomes `pending` without a lookup.
-7. **Region from the producer link.** Only when the region is still empty and the producer is `existing` with a region link whose country equals `countryId` (or `countryId` is null):
-   - `regionId` becomes that region; `countryId` becomes its country if still empty;
-   - provenance `producer-region`;
-   - it never sets the appellation and never sets a grape (owner rule, RC10).
-8. **Designation.** Folded equality of `read.designation` against `typeDesignations()`. Prefer a row whose `countryId` equals the draft's country, then a row with no country; otherwise leave it null.
+7. **The producer's region link.** Only when the producer is `existing` with a region link that differs from `regionId`. The link never sets the appellation and never sets a grape (owner rule, RC10).
+   1. **A region conflict leaves the region empty** (owner approval 3, 2026-09-13). This applies when the region was read alone: `read.appellation` is null, `read.noGeographicIndication` is not set, and step 5 set the region. When the link is another region of the same country:
+      - `regionId` becomes null and loses its provenance, so `missing` lists the region, beside the appellation, for the user to fill in;
+      - the link does not refill it. A blank is safer than a wrong answer that looks right;
+      - the producer stays `existing`, and the country stays.
+
+      A link in another country leaves the read's region as it is. Example (#15, once the approved Tridente merge and its alternative name are live): a label read as Castilla-La Mancha whose "Tridente" reaches Bodegas Tridente, linked to Castilla y Leon, keeps Spain and leaves the region blank.
+   2. **Otherwise the link fills an empty region.** Only when the region is still empty and the link's country equals `countryId` (or `countryId` is null):
+      - `regionId` becomes that region; `countryId` becomes its country if still empty;
+      - provenance `producer-region`.
+   3. **Nothing else moves.** A read with appellation text keeps its region: the resolved appellation's, or the read's own candidate when no row agreed. A no-geographic-indication read keeps its country's tier (step 2).
+
+   `regionById` is read only for 7.1 and 7.2; on the server it is a memoized point read.
+8. **Designation**, against `typeDesignations()`. A row scoped to another country is never taken; the resolver never guesses.
+   1. **Folded equality** of `read.designation` against the row's name. Prefer a row whose `countryId` equals the draft's country, then a row with no country.
+   2. **Short form** (owner approval 1b, 2026-09-13). This runs only when step 8.1 picked nothing, including when every folded-equal row belongs to another country.
+      - A candidate is a row whose name ends in exactly one bracket ("Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"), whose `countryId` is the draft's country or null, and whose bracket content ("LBV") or name without the bracket ("Grosses Gewächs") folds equal to the read. A bracket mid-name, or two brackets, gives no short form.
+      - Exactly one candidate → it is the designation.
+      - Two or more → nothing. A country row and a country-less row sharing a short form collide too. "Vintage" alone therefore matches neither "Vintage Port" nor "Late Bottled Vintage (LBV)".
+   3. Otherwise the designation stays null.
 9. **Grapes.** Each read grape name goes through `canonicalGrapeName`, then folded equality against `grapes()`: `existing` on a match, otherwise `pending` with the canonical name. Percentages are kept, and the blend gets provenance `label`.
 10. **Vintage.**
     - With `read.vintageRead`: `{ kind, year, tawnyYears, read: true }`, provenance `label`.
@@ -981,6 +1005,8 @@ The resolution steps, in order:
   - Mosel-Saar-Ruwer → Mosel (Germany).
 
 Every target name is checked against the reference snapshot (G.2), which therefore includes Germany's regions. A synonym whose target does not exist is not added. resolve.test.ts asserts that every synonym on the map resolves to its stored region.
+
+`region-canonical.ts` also holds `APPELLATION_SYNONYMS` (owner approval 4, 2026-09-13), the curated table step 4.10 reads, and `curatedAppellationName`, its own-key lookup. resolve.test.ts asserts that every entry names exactly one stored appellation in its own region and resolves to it, and that no entry applies in another region, with no region, or in a region the read's country lacks.
 
 ### B.6 Confident catalog match (D6; scan-1, scan-2)
 
@@ -1036,7 +1062,22 @@ export type CatalogMatch = {
 
 **SQL.** `find_producer_by_folded_name(p_name, p_region_id)` and `find_or_create_producer(p_name, p_region_id)` (E.2).
 - Both sides are folded with `f_search_norm`.
-- Ties go first to the given region, then to any producer with a region link, then by name and id.
+- Ties go, in order:
+  1. to the given region;
+  2. to the exact spelling, `lower(p.name) = lower(btrim(p_name))`;
+  3. to a producer that holds wines: a `catalog_wines` or `wine_answers` row carries its id, read under the caller's RLS;
+  4. to any producer with a region link;
+  5. then by name and id.
+- The region stays first, so a label read in one region never takes another region's copy just because it is spelled the same. The exact spelling beats the wines: a copy the label matches letter for letter is what the label says.
+- The region is a tie-break, never a filter. A name that folds to a single row returns that row whatever its region: "Borges" read from a Porto label folds only to the Madeira house (F.3 Q22).
+- **Alternative names** (owner approvals 1 and 2 after round 2, 2026-09-13; E.2). Only when no producer row folds equal, the lookup returns the producer of the curated `producer_aliases` row whose folded alias equals the folded name.
+  - A producer row always beats an alias, and an alias never joins the tie-break.
+  - The region never filters or orders an alias hit. When the hit's region link disagrees with a region the label gave alone, the resolver leaves the region empty (B.5 step 7).
+  - `find_or_create_producer` takes the fallback at run time, so a pending name that folds to an alias reuses that producer instead of inserting one.
+  - Aliases are curated and change only through migrations. A printed brand that no producer row carries gets one only when it names one producer beyond doubt: "Borges Porto" → Sociedade dos Vinhos Borges (`6aaef358`). There is deliberately no plain "Borges" alias, because that name is the Madeira house (`25612e68`).
+  - The Tridente merge (owner approval 2) ships with a "Tridente" alias for Bodegas Tridente (`7f46bd24`). "Tridente" does not fold equal to the survivor's name, so without the alias a later save would recreate the deleted duplicate. The Château Lascombes copy folds equal to its survivor and needs none.
+  - `__fixtures__/snapshot-lookup.ts` mirrors the fallback (optional `aliases`; absent means none). Two folded-equal aliases, or an alias whose producer the snapshot lacks, throw as a broken snapshot.
+- History: 20260912101000 ordered by region, region link, name and id; 20260912101530 made the region key null-safe; 20260914112500 (owner approval 3, 2026-09-13) added keys 2 and 3; 20260914113500 (owner approvals 1 and 2 after round 2, 2026-09-13) added the alternative-name fallback (E.2).
 
 **Server.** `resolveProducer(supabase, choice: RefChoice, regionId: string | null): Promise<string>` lives in `server/write.ts`.
 - An `existing` choice is verified by id.
@@ -2714,7 +2755,76 @@ grant execute on function public.find_or_create_producer(text, uuid) to authenti
 **Design notes**
 - **SECURITY INVOKER is enough.** Any authenticated user may read and insert `producers` (init_schema.sql:319-320).
 - **The index is usable.** `f_search_norm` is IMMUTABLE (20260829260000), so the btree functional index serves the equality lookup.
-- **Existing folded collisions are tolerated.** The lookup order is deterministic. The migration `raise notice`s how many there are; it does not merge them.
+- **Existing folded collisions are tolerated.** The lookup order is deterministic. The migration `raise notice`s how many there are; it does not merge them. Merging a duplicate set is a data change the owner approves per set, never part of a lookup migration (owner approval 3, 2026-09-13: the J.M. Boillot and Vidal-Fleury sets, run by the main session). After round 2 the owner approved two more, the empty "Tridente" into Bodegas Tridente and the region-less "Château Lascombes" copy into Chateau Lascombes, also run by the main session (plan amendment 24).
+- **The order today: `20260914112500_producer_lookup_exact_then_wines.sql`** (owner approval 3; commit aa54499; dry-run only, the main session applies it live). It recreates the function above with only its ORDER BY changed. The signature, SECURITY INVOKER, `search_path` and grants stay, and `find_or_create_producer` takes the new order at run time:
+  ```sql
+  order by coalesce(p_region_id is not null and p.region_id = p_region_id, false) desc,
+           lower(p.name) = lower(btrim(p_name)) desc,
+           (exists (select 1 from catalog_wines w where w.producer_id = p.id)
+             or exists (select 1 from wine_answers a where a.producer_id = p.id)) desc,
+           (p.region_id is not null) desc,
+           p.name,
+           p.id
+  ```
+  - The wines key reads `wine_answers` under the caller's RLS, so an answer key the caller may not see never decides which copy they get. A SECURITY DEFINER lookup would let anyone learn that a hidden answer key uses a particular spelling.
+  - The same migration adds `wine_answers_producer_id_idx` on `wine_answers (producer_id)` and runs `analyze public.producers`, so the planner probes answer rows per candidate instead of scanning them all.
+- **Alternative names: `20260914113500_producer_aliases.sql`** (owner approvals 1 and 2 after round 2, 2026-09-13; commit b505cbf; dry-run only, the main session applies it live). It adds a curated table and recreates the lookup, keeping 20260914112500's producer query word for word as the first argument of `coalesce`:
+  ```sql
+  create table public.producer_aliases (
+    id uuid primary key default gen_random_uuid(),
+    producer_id uuid not null references public.producers (id) on delete cascade,
+    alias text not null,
+    alias_folded text not null generated always as (public.f_search_norm(alias)) stored,
+    created_at timestamptz not null default now(),
+    constraint producer_aliases_alias_trimmed check (alias = btrim(regexp_replace(alias, '[[:space:]]+', ' ', 'g'))),
+    constraint producer_aliases_alias_folds check (public.f_search_norm(alias) <> '')
+  );
+  create unique index producer_aliases_alias_folded_key on public.producer_aliases (alias_folded);
+  create index producer_aliases_producer_id_idx on public.producer_aliases (producer_id);
+
+  create or replace function public.find_producer_by_folded_name(p_name text, p_region_id uuid default null)
+  returns uuid
+  language sql
+  stable
+  security invoker
+  set search_path = public
+  as $$
+    select coalesce(
+      (select p.id
+       from producers p
+       where public.f_search_norm(p_name) <> ''
+         and public.f_search_norm(p.name) = public.f_search_norm(p_name)
+       order by coalesce(p_region_id is not null and p.region_id = p_region_id, false) desc,
+                lower(p.name) = lower(btrim(p_name)) desc,
+                (exists (select 1 from catalog_wines w where w.producer_id = p.id)
+                  or exists (select 1 from wine_answers a where a.producer_id = p.id)) desc,
+                (p.region_id is not null) desc,
+                p.name,
+                p.id
+       limit 1),
+      (select pa.producer_id
+       from producer_aliases pa
+       join producers ap on ap.id = pa.producer_id
+       where public.f_search_norm(p_name) <> ''
+         and pa.alias_folded = public.f_search_norm(p_name))
+    )
+  $$;
+
+  insert into public.producer_aliases (producer_id, alias) values
+    ('6aaef358-1645-4811-bd99-daa63c585391', 'Borges Porto'),
+    ('7f46bd24-f237-48e2-a151-ea52e66c2d09', 'Tridente');
+  ```
+  - **Access mirrors `producers`, with no write.** Row level security is on with producers' select policy (`for select to authenticated using (true)`), and anon, authenticated and service_role hold SELECT only. Rows change only through migrations. anon keeps SELECT, as it has on `producers`, because the SECURITY INVOKER lookup is executable by PUBLIC and Postgres checks the privileges of every table a query names before it runs. Row level security still shows anon no alias.
+  - **An alias answers only when no producer row folds equal.** The region never filters or orders the alias half. The unique index lets it return at most one row, so it has no tie-break and no limit. The join to `producers` returns only a producer the caller can see, and `on delete cascade` takes a merged-away producer's aliases along.
+  - **Everything else stays**: the signature, LANGUAGE sql, STABLE, SECURITY INVOKER, `search_path = public`, the owner and the grants. `find_or_create_producer` is not recreated; it calls the lookup at run time.
+  - **The seeds fail closed.** Before the change, the migration asserts that the live body is 20260914112500's, each target exists under its expected name, the Madeira "Borges" (`25612e68`) is as it is, "Borges Porto" folds to no producer, and "Tridente" folds to none but the duplicate `0d1d099c`. The duplicate may be present or already merged away: while it exists its row wins, and once the merge deletes it the alias answers.
+  - **Its assertions:**
+    - the table's columns, defaults, generated fold, primary key, its one foreign key (to `producers (id)`, on delete cascade), both check constraints and both indexes, and no trigger;
+    - row level security on, with exactly producers' select policy; table grants SELECT only for anon, authenticated and service_role, and no column grants;
+    - the lookup unchanged but for its body, which is 20260914112500's query with the alias fallback; `find_or_create_producer` unchanged and still calling it;
+    - exactly the two approved aliases, none folding to "Borges" or naming the Madeira house;
+    - the pick unchanged for a sample of producers' own names and for names no alias touches, and the approved names resolving as approved;
+    - synthetic rows, in a subtransaction that always rolls back: the checks refuse an untrimmed or unfoldable alias and the unique index a folded twin; a producer row beats the alias, even in the alias producer's region; authenticated cannot insert, update or delete an alias, service_role cannot insert one, and anon sees none and gets null; once the producer row is deleted the alias answers in any region, and `find_or_create_producer` reuses its producer without inserting one; deleting the alias's producer removes the alias.
 - **A race is accepted.** Two different spellings that fold equal, inserted at the same moment, can both land, because the plain `unique (name)` constraint does not fold. The next lookup is still deterministic.
 
 **Assertions**
@@ -3364,7 +3474,16 @@ pour_cellar_lot_into_glass: { Args: { p_wine_id: string }; Returns: string };
     - byhand-6 item 7's origin chip, "the lead grape, with +n", is superseded. The handoff's meta line shows the primary grape, and the full blend lives in More detail with its "Scored as" line.
     - byhand-5's hint is built, adapted to B.5 (C.5 A7).
 21. **Cellar quantities at Start.** A PUBLIC or FRIENDS cellar shows lot quantities, which drop at Start or at a running pour. Someone who can view the adder's cellar could infer which wines are in the flight. Drink history stays private.
-22. **Model misses in the live reads.** A live read whose appellation or region text is wrong is reported with its tokens (G.5). Fixing it with a prompt or schema change needs new reads within the cap, so that is the owner's call.
+22. **Model misses in the live reads — answered by the owner (2026-09-13).** L1's model misses and observations went to the owner, who approved five instruction changes. They are in `label-read-schema.ts` (commit 11d4c3f) and supersede A.3's descriptions of these fields:
+    - `noGeographicIndication`: true only for the table-wine categories themselves; false whenever the label names a place of origin below country level ("Mendoza"), with or without a designation term.
+    - `designation`: the examples are the reference names that exist ("Vintage Port", "Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"), and B.5 step 8 adds the short-form rule.
+    - `producer`: the name the label presents as its brand ("J.M. Boillot"); a bottler or company line only when no other name is printed.
+    - `appellation`: an official regional origin printed without a designation term (Changyu's "Ningxia") is returned as that origin's name.
+    - `region`: null when only a brand and a grape are printed and the origin is not certain.
+
+    The owner also approved one re-read of each of the five photos (#2, #4, #7, #12, #15), about $0.11, which caps the development total at 20 of the 30 reads before V3's one read. The re-reads are pending. Still open:
+    - **#12 under the brand rule.** A re-read will probably return "Borges", which folds only to the Madeira house (B.7). The owner decides, before #12 is re-read, between options such as a region-scoped match, an alias, or relating the row to "Borges & Irmao".
+    - Any further prompt or schema change, or a read past 20 before V3, needs a new approval.
 
 ---
 
