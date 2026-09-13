@@ -1545,142 +1545,152 @@
   {
    "id": "0d1d099c-3ee0-4601-99ee-d0d4f5ffd194",
    "name": "Tridente",
-   "region_id": "528b5672-5bee-4cd3-8435-870571f42907"
+   "region_id": "528b5672-5bee-4cd3-8435-870571f42907",
+   "has_wines": false
   },
   {
    "id": "0e6cfed9-bd22-4ae8-997d-e38a57334b03",
    "name": "Cigliuti",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6"
+   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
+   "has_wines": false
   },
   {
    "id": "22c8b23c-b49f-4136-80d1-207c48746970",
    "name": "Badia di Morrona",
-   "region_id": "ffc67771-ce43-4472-93c8-14c521340743"
+   "region_id": "ffc67771-ce43-4472-93c8-14c521340743",
+   "has_wines": true
   },
   {
    "id": "2445418f-b499-4a61-9a97-8d7476ffd27c",
    "name": "Chateau Vignelaure",
-   "region_id": null
+   "region_id": null,
+   "has_wines": true
   },
   {
    "id": "25612e68-9bcb-4dc7-b19c-02a6a76e522a",
    "name": "Borges",
-   "region_id": "5b7cf561-e8fc-4f18-8c76-a6b1fa833bdf"
+   "region_id": "5b7cf561-e8fc-4f18-8c76-a6b1fa833bdf",
+   "has_wines": false
   },
   {
    "id": "266af94b-186b-465c-bea3-f4e9c0215f0a",
    "name": "J.M. Boillot",
-   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a"
+   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a",
+   "has_wines": true
   },
   {
    "id": "34673de2-4ac0-4855-8e28-d9e89cdd2995",
    "name": "Château de Flandry",
-   "region_id": "bbe4c63f-b80e-4ac2-97d4-1fff9082386d"
+   "region_id": "bbe4c63f-b80e-4ac2-97d4-1fff9082386d",
+   "has_wines": true
   },
   {
    "id": "373cbe79-d827-4f15-9970-2d5209be198d",
    "name": "Château Saint Georges",
-   "region_id": "77bc1081-b476-4ea9-878c-297912d57e68"
+   "region_id": "77bc1081-b476-4ea9-878c-297912d57e68",
+   "has_wines": true
   },
   {
    "id": "38a85744-e998-4063-96b1-8717e9914766",
    "name": "Vecchie Vigne Paitin",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6"
+   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
+   "has_wines": false
   },
   {
    "id": "3e01b802-336e-4d19-864d-a8bf4466e271",
    "name": "Georges Duboeuf",
-   "region_id": "13232953-3da6-4c27-a201-26581834b5f9"
+   "region_id": "13232953-3da6-4c27-a201-26581834b5f9",
+   "has_wines": true
   },
   {
    "id": "58116bac-f5d6-43fa-bc89-8a32147049f9",
    "name": "Vidal-Fleury",
-   "region_id": "89488ef5-ff59-4eb7-b093-2c8dd4ca3ff9"
+   "region_id": "89488ef5-ff59-4eb7-b093-2c8dd4ca3ff9",
+   "has_wines": true
   },
   {
    "id": "5cdcbe7d-dd64-4320-9265-4731b8f65b36",
    "name": "Paitin di Pasquero-Elia",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6"
+   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
+   "has_wines": false
   },
   {
    "id": "6aaef358-1645-4811-bd99-daa63c585391",
-   "name": "Borges (Sociedade dos Vinhos Borges, S.A.)",
-   "region_id": "5e7040d2-3717-4ad4-8714-003a682cc2c8"
+   "name": "Sociedade dos Vinhos Borges",
+   "region_id": "5e7040d2-3717-4ad4-8714-003a682cc2c8",
+   "has_wines": true
   },
   {
    "id": "6b90fa8b-abef-45f0-8702-3b12b502dc95",
    "name": "Gasleni Alberti",
-   "region_id": "ffc67771-ce43-4472-93c8-14c521340743"
-  },
-  {
-   "id": "745fc108-dabb-4c81-b33b-40fa6b438de7",
-   "name": "J. M. Boillot",
-   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a"
+   "region_id": "ffc67771-ce43-4472-93c8-14c521340743",
+   "has_wines": false
   },
   {
    "id": "78aca61f-bb0e-4396-b4fd-0dcc5a52c32e",
    "name": "Rocca Alata",
-   "region_id": "3175e6dd-e25e-4773-a633-49ddbad0b711"
+   "region_id": "3175e6dd-e25e-4773-a633-49ddbad0b711",
+   "has_wines": true
   },
   {
    "id": "795ca7d6-da8c-405a-a6cb-15734f07f37c",
    "name": "Ampelos Vineyard",
-   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3",
+   "has_wines": true
   },
   {
    "id": "7f46bd24-f237-48e2-a151-ea52e66c2d09",
    "name": "Bodegas Tridente",
-   "region_id": "eecc95bf-0f6f-48cf-a50a-66119f5e771e"
+   "region_id": "eecc95bf-0f6f-48cf-a50a-66119f5e771e",
+   "has_wines": true
   },
   {
    "id": "8830840e-402e-41c7-bb93-76ea4b027151",
    "name": "Borges & Irmao",
-   "region_id": "5e7040d2-3717-4ad4-8714-003a682cc2c8"
+   "region_id": "5e7040d2-3717-4ad4-8714-003a682cc2c8",
+   "has_wines": false
   },
   {
    "id": "9b7ac186-2f2b-4a8b-ab96-44750e518198",
    "name": "L'Envolee",
-   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
-  },
-  {
-   "id": "9f9c976f-f10f-421e-824c-17c4d86978dc",
-   "name": "Vidal Fleury",
-   "region_id": "89488ef5-ff59-4eb7-b093-2c8dd4ca3ff9"
+   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3",
+   "has_wines": true
   },
   {
    "id": "a2e0f8f0-69c6-45cd-b635-56b0e67015b6",
    "name": "Ampelos",
-   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+   "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3",
+   "has_wines": true
   },
   {
    "id": "a87b88ca-70ea-4587-95f6-2ed116e958d4",
    "name": "Changyu Moser XV",
-   "region_id": "1aec3b90-cec4-4a1e-a913-cdc6a8bc4505"
-  },
-  {
-   "id": "b50dfcdf-94d1-4378-a68d-6d34da7397d8",
-   "name": "J. M.Boillot",
-   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a"
+   "region_id": "1aec3b90-cec4-4a1e-a913-cdc6a8bc4505",
+   "has_wines": true
   },
   {
    "id": "c5b25ba2-5fa4-4bc7-9820-cf7b924fe190",
    "name": "Paitin",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6"
+   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
+   "has_wines": true
   },
   {
    "id": "c62f9410-27e3-4832-993d-a06cb724ab40",
    "name": "Domaine Battault",
-   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a"
+   "region_id": "e3b0a9f4-7834-408b-a4d1-b587319cb82a",
+   "has_wines": true
   },
   {
    "id": "c883ffd4-792d-4707-bec4-19e634e00214",
    "name": "Produttori del Barbaresco",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6"
+   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
+   "has_wines": false
   },
   {
    "id": "db803410-9cdd-4322-b53d-43b408a23b06",
    "name": "El Enemigo",
-   "region_id": "4ea28dde-0c29-4b6b-80ad-8718d28754ff"
+   "region_id": "4ea28dde-0c29-4b6b-80ad-8718d28754ff",
+   "has_wines": true
   }
  ],
  "grapes": [
