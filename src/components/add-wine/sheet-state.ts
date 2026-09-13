@@ -118,11 +118,23 @@ export type SheetState = {
       updates) and server replies leave it unchanged. A reply is current only
       while it still matches its `ReplyTicket` (`replyIsCurrent`). */
   flow: number;
+  /** S5b review (spec §C.4 rule 1: a session ends only on a successful save, on
+      Discard, or when the sheet closes): the by-hand forms with typing in them
+      that another form's open set aside, oldest first. Never the form in
+      `byHand`, and at most one per wine (`sessionToReopen`). Opening that wine
+      again reopens it; rule 7's ask and a note pick's ask count it like the
+      form on screen. It ends only when its own save lands (the reply's
+      `ticket.form`), its glass is saved, its row is added or removed, or Discard
+      closes the sheet. A form with nothing typed in it is not kept. */
+  parkedByHand: ByHandSession[];
 };
 
 /** Plan amendment 23: what an action that waits on the server started with —
-    the sheet's `flow`, the bottle in hand (`addTargetId`) and the view. */
-export type ReplyTicket = { flow: number; itemId: string | null; view: SheetView };
+    the sheet's `flow`, the bottle in hand (`addTargetId`) and the view. `form`
+    (S5b review, spec §C.4 rule 1) is the `opened` stamp of the by-hand form the
+    sheet held then, absent while it held none: a save's landing ends exactly
+    that form, on screen or set aside (`parkedByHand`). */
+export type ReplyTicket = { flow: number; itemId: string | null; view: SheetView; form?: number };
 
 export type SheetAction =
   | { type: "canScanResolved"; canScan: boolean }
@@ -318,8 +330,10 @@ function dropItem(s: SheetState, id: string): SheetState {
     confirmQueue: unqueue(s.confirmQueue, id),
     activeItemId: s.activeItemId === id ? null : s.activeItemId,
     // A session for a row that is gone has nowhere left to go, and a dirty one
-    // would keep the close-ask counting a wine the user removed or skipped.
+    // would keep the close-ask counting a wine the user removed or skipped —
+    // on screen or set aside.
     byHand: sessionRow(s) === id ? null : s.byHand,
+    parkedByHand: withoutRowForms(s.parkedByHand, id),
   };
 }
 
@@ -521,6 +535,29 @@ function sameOrigin(a: ByHandSession["origin"], b: ByHandSession["origin"]): boo
   }
 }
 
+/** Rule 1 (S5b review): the same wine's form. A Fix and a By hand on one bottle
+    are that bottle's form, whichever opened it. */
+function sameForm(a: ByHandSession["origin"], b: ByHandSession["origin"]): boolean {
+  if (sameOrigin(a, b)) return true;
+  return (a.kind === "item" || a.kind === "match") && (b.kind === "item" || b.kind === "match") && a.itemId === b.itemId;
+}
+
+/** The row a form was opened for (Fix, or By hand on a read), or null. */
+function formRow(form: ByHandSession): string | null {
+  return form.origin.kind === "item" || form.origin.kind === "match" ? form.origin.itemId : null;
+}
+
+/** The forms set aside, without those for row `id`; the same list when there are none. */
+function withoutRowForms(forms: ByHandSession[], id: string): ByHandSession[] {
+  return forms.some((form) => formRow(form) === id) ? forms.filter((form) => formRow(form) !== id) : forms;
+}
+
+/** Every by-hand form with typing in it: the one in `byHand`, then those set aside (rule 1). */
+function typedForms(s: SheetState): ByHandSession[] {
+  const shown = s.byHand?.dirty ? [s.byHand] : [];
+  return [...shown, ...s.parkedByHand.filter((form) => form.dirty)];
+}
+
 /** A glass saved again replaces what its add said about it. A glass saved
     complete carries no `incomplete`. */
 function savedGlass(before: AddedWine, saved: AddedWine): AddedWine {
@@ -579,6 +616,7 @@ export function initialSheetState(p: {
     skippedLot: null,
     confirmQueue: [],
     flow: 0,
+    parkedByHand: [],
   };
 }
 
@@ -630,7 +668,8 @@ export function reduceSheet(s: SheetState, a: SheetAction): SheetState {
 /** Plan amendment 23: the ticket an action that waits on the server takes when
     it starts — read it from `stateRef.current` at that moment. */
 export function ticketFor(s: SheetState): ReplyTicket {
-  return { flow: s.flow, itemId: addTargetId(s), view: s.view };
+  const ticket: ReplyTicket = { flow: s.flow, itemId: addTargetId(s), view: s.view };
+  return s.byHand === null ? ticket : { ...ticket, form: s.byHand.opened };
 }
 
 /** Plan amendment 23: whether a server reply may still act — no user step has
@@ -654,6 +693,15 @@ function isStaleReply(s: SheetState, a: SheetAction): boolean {
 export function unaddedItem(s: SheetState, id: string): ScanItem | null {
   const item = findItem(s, id);
   return item !== undefined && !WRITTEN.includes(item.status) ? item : null;
+}
+
+/** Rule 1 (S5b review): the form an open of `origin` reopens — the one on
+    screen, or one set aside — for the same wine (a Fix and a By hand on one
+    bottle are that bottle's form), or null when the open starts a form of its
+    own. The reducer's `openByHand` and the shell's By hand both ask it. */
+export function sessionToReopen(s: SheetState, origin: ByHandSession["origin"]): ByHandSession | null {
+  if (s.byHand !== null && sameForm(s.byHand.origin, origin)) return s.byHand;
+  return s.parkedByHand.find((form) => sameForm(form.origin, origin)) ?? null;
 }
 
 function step(s: SheetState, a: SheetAction): SheetState {
@@ -785,9 +833,10 @@ function step(s: SheetState, a: SheetAction): SheetState {
       const base = item
         ? patchItem(s, item.id, { status: a.added.incomplete ? "incomplete" : "added", added: a.added, blob: null, error: null })
         : s;
-      // A by-hand session for this bottle ends with its add (say the wine was
-      // found through Search instead): its edits have nowhere left to go, and a
-      // dirty one would keep the close-ask counting a wine already added.
+      // A by-hand session for this bottle — on screen or set aside — ends with its
+      // add (say the wine was found through Search instead): its edits have
+      // nowhere left to go, and a dirty one would keep the close-ask counting a
+      // wine already added.
       const origin = base.byHand?.origin;
       const endsSession = item !== undefined && (origin?.kind === "item" || origin?.kind === "match") && origin.itemId === item.id;
       const recorded: SheetState = {
@@ -796,6 +845,7 @@ function step(s: SheetState, a: SheetAction): SheetState {
         confirmQueue: item ? unqueue(base.confirmQueue, item.id) : base.confirmQueue,
         added: [...base.added, a.added],
         byHand: endsSession ? null : base.byHand,
+        parkedByHand: item ? withoutRowForms(base.parkedByHand, item.id) : base.parkedByHand,
         closeAsk: null,
       };
       // While a bottle is in hand (its turn, or its Fix chain), an add that does
@@ -825,9 +875,11 @@ function step(s: SheetState, a: SheetAction): SheetState {
       // Amendment 23: a form a load opens waits on the server, so a stale one never opens.
       if (a.ticket && !replyIsCurrent(s, a.ticket)) return s;
       const session = s.byHand;
-      // Rule 1: the same origin reuses its session, and the passed draft is ignored.
-      const byHand: ByHandSession = session && sameOrigin(session.origin, a.origin)
-        ? { ...session, focusField: a.focusField }
+      // Rule 1: the same wine reuses its form — the one on screen, or one set
+      // aside — and the passed draft is ignored.
+      const kept = sessionToReopen(s, a.origin);
+      const byHand: ByHandSession = kept !== null
+        ? { ...kept, focusField: a.focusField }
         : {
           draft: a.draft,
           origin: a.origin,
@@ -837,11 +889,16 @@ function step(s: SheetState, a: SheetAction): SheetState {
           dirty: false,
           opened: s.flow,
         };
+      // Rule 1 (S5b review): another form's open never drops typing. A form with
+      // typing in it is set aside, still counted by rule 7, until its wine opens
+      // it again; one with nothing typed in it has nothing to keep.
+      const others = kept === null ? s.parkedByHand : s.parkedByHand.filter((form) => form !== kept);
+      const parkedByHand = session !== null && session !== kept && session.dirty ? [...others, session] : others;
       // Fix on a bottle's row makes that bottle the active one. If another
       // bottle held the turn (on a laptop, its search lists every row), that
       // turn is covered and its bottle waits again (amendment 20).
       const row = a.origin.kind === "item" || a.origin.kind === "match" ? findItem(s, a.origin.itemId) : undefined;
-      return goTo({ ...s, byHand, skippedLot: null, activeItemId: row ? row.id : s.activeItemId }, "byhand");
+      return goTo({ ...s, byHand, parkedByHand, skippedLot: null, activeItemId: row ? row.id : s.activeItemId }, "byhand");
     }
 
     case "byHandChange": {
@@ -971,6 +1028,7 @@ function step(s: SheetState, a: SheetAction): SheetState {
         queue: [],
         confirmQueue: [],
         byHand: null,
+        parkedByHand: [],
         closeAsk: null,
         closing: true,
       };
@@ -1066,6 +1124,10 @@ function step(s: SheetState, a: SheetAction): SheetState {
       // the draft that was saved; edits made since stay.
       const current = !a.ticket || replyIsCurrent(s, a.ticket);
       const own = glassSession !== null && (current || glassSession.draft === a.draft) ? glassSession : null;
+      // The same holds for its form set aside (rule 1, S5b review).
+      const parked = s.parkedByHand.find((form) => form.origin.kind === "glass" && form.origin.wineId === wineId) ?? null;
+      const ownParked = parked !== null && (current || parked.draft === a.draft) ? parked : null;
+      const saved = own ?? ownParked;
       const next: SheetState = {
         ...s,
         items: s.items.map((item): ScanItem => {
@@ -1074,12 +1136,13 @@ function step(s: SheetState, a: SheetAction): SheetState {
             ...item,
             status: a.added.incomplete ? "incomplete" : "added",
             added: savedGlass(item.added, a.added),
-            draft: own ? own.draft : (a.draft ?? item.draft),
+            draft: saved ? saved.draft : (a.draft ?? item.draft),
             error: null,
           };
         }),
         added: s.added.map((entry) => (entry.wineId === wineId ? savedGlass(entry, a.added) : entry)),
         byHand: own ? null : s.byHand,
+        parkedByHand: ownParked ? s.parkedByHand.filter((form) => form !== ownParked) : s.parkedByHand,
         error: current ? null : s.error,
       };
       const shown = current && own && s.view === "byhand" ? popHistory(next, () => false) : next;
@@ -1207,17 +1270,18 @@ function leavesAdoption(prev: SheetState, next: SheetState): boolean {
   return above.length === 0 && origin < before.length - 1;
 }
 
-/** Rule 7: rows that are pending, failed, or read but not added, plus a dirty
-    by-hand session. Incomplete flight glasses are already added (D7). */
+/** Rule 7: rows that are pending, failed, or read but not added, plus every
+    by-hand form with typing in it — the one on screen and those set aside
+    (rule 1, S5b review). Incomplete flight glasses are already added (D7). */
 export function unfinishedCount(s: SheetState): number {
   const unfinished = s.items.filter((item) => UNFINISHED.includes(item.status));
-  const session = s.byHand;
-  if (!session?.dirty) return unfinished.length;
-  // A dirty session on a row that already counts is the same wine.
-  const origin = session.origin;
-  const onCountedRow =
-    (origin.kind === "item" || origin.kind === "match") && unfinished.some((item) => item.id === origin.itemId);
-  return unfinished.length + (onCountedRow ? 0 : 1);
+  const counted = new Set(unfinished.map((item) => item.id));
+  // A typed form on a row that already counts is the same wine.
+  const forms = typedForms(s).filter((form) => {
+    const row = formRow(form);
+    return row === null || !counted.has(row);
+  });
+  return unfinished.length + forms.length;
 }
 
 /** Plan amendment 22: what keeps a phone's sheet open after a single add — a
@@ -1236,16 +1300,18 @@ function rowsLeft(s: SheetState, besides: string | null): Set<string> {
 
 /** Plan amendment 22 on the note hand-off: how many wines closing for a note
     pick would drop. The rows `rowsLeft` finds besides the pick's own bottle,
-    plus a dirty by-hand form for another wine: never the form whose save made
-    the pick (`fromForm`), nor one on the pick's bottle or on a row already
+    plus every dirty by-hand form for another wine, on screen or set aside
+    (rule 1, S5b review): never the form whose save made the pick (`fromForm`,
+    the one on screen), nor one on the pick's bottle or on a row already
     counted, which is the same wine. */
 function leftForNote(s: SheetState, itemId: string | null, fromForm: boolean): number {
   const rows = rowsLeft(s, itemId);
-  const session = s.byHand;
-  if (!session?.dirty || fromForm) return rows.size;
-  const origin = session.origin;
-  const row = origin.kind === "item" || origin.kind === "match" ? origin.itemId : null;
-  return rows.size + (row !== null && (row === itemId || rows.has(row)) ? 0 : 1);
+  const forms = typedForms(s).filter((form) => {
+    if (fromForm && form === s.byHand) return false;
+    const row = formRow(form);
+    return row === null || (row !== itemId && !rows.has(row));
+  });
+  return rows.size + forms.length;
 }
 
 /** What a note pick's close-ask survives (plan amendment 22): reports from the
@@ -1274,11 +1340,13 @@ function endsNoteAsk(prev: SheetState, next: SheetState, a: SheetAction): boolea
     - the lot step's lot and the chooser's wine for that same source, and the
       pick it was made under;
     - the sessions a current landing ends too (`byHandSaved`, `itemAdded`): the
-      by-hand form whose save it was — the session already open when the save
-      started (`ByHandSession.opened`), edits made since included, so it can
-      never save the wine twice (wave C3 re-review) — and a Fix or By hand
-      session on the added bottle, whose edits have nowhere left to go. A form
-      opened afresh meanwhile is another wine and stays.
+      by-hand form whose save it was — the form the reply's ticket names
+      (`ticket.form`, its `ByHandSession.opened`), on screen or set aside, edits
+      made since included, so it can never save the wine twice (wave C3
+      re-review; S5b review) — and a Fix or By hand session on the added bottle,
+      set aside or not, whose edits have nowhere left to go. A form opened
+      afresh meanwhile, or one set aside before the save, is another wine and
+      stays.
     The view, its history, a close-ask, `closing` and D3 are never touched. */
 function recordLanded(s: SheetState, a: Extract<SheetAction, { type: "addLanded" }>): SheetState {
   const named = a.id === null ? undefined : findItem(s, a.id);
@@ -1287,14 +1355,18 @@ function recordLanded(s: SheetState, a: Extract<SheetAction, { type: "addLanded"
     ? patchItem(s, item.id, { status: a.added.incomplete ? "incomplete" : "added", added: a.added, blob: null, error: null })
     : s;
   const session = base.byHand;
-  const savedForm = a.byHand && session !== null && session.origin.kind !== "glass" && session.opened < a.ticket.flow;
-  const onBottle = item !== undefined && sessionRow(base) === item.id;
+  // A ticket without `form` names the form on screen that was open before it started.
+  const savedForm = (form: ByHandSession): boolean =>
+    a.byHand && form.origin.kind !== "glass"
+    && (a.ticket.form !== undefined ? form.opened === a.ticket.form : form === session && form.opened < a.ticket.flow);
+  const ends = (form: ByHandSession): boolean => savedForm(form) || (item !== undefined && formRow(form) === item.id);
   return {
     ...base,
     queue: item ? unqueue(base.queue, item.id) : base.queue,
     confirmQueue: item ? unqueue(base.confirmQueue, item.id) : base.confirmQueue,
     added: [...base.added, a.added],
-    byHand: savedForm || onBottle ? null : session,
+    byHand: session !== null && ends(session) ? null : session,
+    parkedByHand: base.parkedByHand.some(ends) ? base.parkedByHand.filter((form) => !ends(form)) : base.parkedByHand,
     lot: base.lot !== null && base.lot.source === a.source ? null : base.lot,
     chooseFor: base.chooseFor !== null && base.chooseFor.source === a.source ? null : base.chooseFor,
     adopted: a.adopted !== null && base.adopted === a.adopted ? null : base.adopted,

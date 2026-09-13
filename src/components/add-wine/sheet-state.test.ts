@@ -4,7 +4,7 @@ import { emptyDraft, missingWineFields } from "../../lib/wine-identity/complete"
 import { notePickPlan } from "./format";
 import { sheetMatrix } from "./matrix";
 import {
-  addTargetId, currentDestination, footerCount, initialSheetState, itemRowCopy, markAddedInFlight, reduceSheet, replyIsCurrent, routeAdd, sheetReducer, shouldCloseAfterSingleAdd, stackPartialRead, ticketFor, turnItemId, unaddedItem, unfinishedCount,
+  addTargetId, currentDestination, footerCount, initialSheetState, itemRowCopy, markAddedInFlight, reduceSheet, replyIsCurrent, routeAdd, sessionToReopen, sheetReducer, shouldCloseAfterSingleAdd, stackPartialRead, ticketFor, turnItemId, unaddedItem, unfinishedCount,
   type ReplyTicket,
   type ScanItem, type SheetAction, type SheetState,
 } from "./sheet-state";
@@ -1890,7 +1890,31 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
   const originKey = (o: NonNullable<SheetState["byHand"]>["origin"]) =>
     o.kind === "glass" ? `glass:${o.wineId}` : o.kind === "new" ? "new" : `${o.kind}:${o.itemId}`;
   /** What a sequence's first replay also counts: the shapes the wave C3 re-review found (P1, P2: a call started over a written bottle; P3: a stale form save). */
-  type FormCoverage = { writtenHolderCalls: number; staleFormLandings: number; staleFormEditedSince: number; freshFormKept: number };
+  type FormCoverage = { writtenHolderCalls: number; staleFormLandings: number; staleFormEditedSince: number; freshFormKept: number; formsSetAside: number; formsReopened: number; formsSetAsideSaved: number };
+  type Form = NonNullable<SheetState["byHand"]>;
+  /** Every by-hand form the sheet holds: the one on screen and the ones set aside (rule 1, S5b review). */
+  const heldForms = (st: SheetState): Form[] => [st.byHand, ...st.parkedByHand].filter((x): x is Form => x !== null);
+  const formRow = (x: Form): string | null => (x.origin.kind === "item" || x.origin.kind === "match" ? x.origin.itemId : null);
+  /** Rule 1 (S5b review): a form with typing in it ends only when it is saved (its own save landing, by the form its
+      reply names), discarded, left for later, its row is added or removed, its glass is saved, or Discard closes the
+      sheet. Opening another form never drops it. Returns what `a` dropped otherwise, or null. */
+  const droppedTypedForm = (prev: SheetState, next: SheetState, a: SheetAction): string | null => {
+    const kept = new Set(heldForms(next).map((x) => x.opened));
+    for (const was of heldForms(prev)) {
+      if (!was.dirty || kept.has(was.opened)) continue;
+      const row = formRow(was);
+      const onScreen = prev.byHand?.opened === was.opened;
+      const ends =
+        a.type === "discardAndClose"
+        || ((a.type === "byHandSaved" || a.type === "byHandDiscard" || a.type === "byHandLeftForLater") && onScreen)
+        || ((a.type === "itemAdded" || a.type === "itemRemove") && row !== null && row === a.id)
+        || (a.type === "lotSkipped" && row !== null && row === a.itemId)
+        || (a.type === "glassSaved" && was.origin.kind === "glass" && was.origin.wineId === a.added.wineId)
+        || (a.type === "addLanded" && ((a.byHand && a.ticket.form === was.opened) || (row !== null && row === a.id)));
+      if (!ends) return `${a.type} dropped by-hand form #${was.opened} (${originKey(was.origin)}, typed in${onScreen ? "" : ", set aside"}) without saving, discarding or closing it`;
+    }
+    return null;
+  };
   /** The amendment's user steps, counted by the model on its own rather than through `flow`: these types whenever they change the sheet, and a photo, Retry or Rescan only when it takes the screen. */
   const MODEL_MOVES: readonly SheetAction["type"][] = ["go", "back", "openByHand", "openLot", "choose", "byHandDiscard", "byHandLeftForLater", "lotSkipped", "followUpDone", "requestClose", "cancelClose", "discardAndClose"];
   const MODEL_MOVES_ON_SCREEN: readonly SheetAction["type"][] = ["enqueue", "itemRetry", "itemRemove"];
@@ -2128,8 +2152,9 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
     let s = initialSheetState({ destination: sc.destination, options: { multi: sc.multi }, canScan: sc.canScan });
     /** Each open call's reply → the user steps that moved or closed the sheet since its call started, counted by the model. */
     const since = new Map<SheetAction, number>();
-    /** The model's by-hand form identity: a form starts when one appears or its origin changes, and ends when none is open. */
-    let formSeq = 0;
+    /** The model's by-hand form identity: the on-screen form's `opened` stamp. A form keeps it for its whole life —
+        reopened by the same wine, or set aside and reopened (rule 1, S5b review) — and a form opened afresh never
+        shares it, so a form set aside and reopened is still the form it was. */
     let form: number | null = null;
     /** Each form save's reply → the form it was made on; and the forms whose save landed. */
     const savedOn = new Map<SheetAction, number | null>();
@@ -2138,8 +2163,15 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
       const prev = s;
       s = reduceSheet(prev, a);
       const formBefore: number | null = form;
-      if (s.byHand === null) form = null;
-      else if (prev.byHand === null || form === null || originKey(prev.byHand.origin) !== originKey(s.byHand.origin)) form = ++formSeq;
+      form = s.byHand === null ? null : s.byHand.opened;
+      if (seen !== undefined) {
+        const shown = prev.byHand;
+        if (shown !== null && s.parkedByHand.some((x) => x.opened === shown.opened) && !prev.parkedByHand.some((x) => x.opened === shown.opened)) seen.formsSetAside++;
+        if (s.byHand !== null && prev.parkedByHand.some((x) => x.opened === s.byHand?.opened)) seen.formsReopened++;
+        // A save whose form was set aside while it ran, landing (the double-save shape, S5b review).
+        const savedForm = a.type === "addLanded" && a.byHand ? a.ticket.form : undefined;
+        if (savedForm !== undefined && prev.parkedByHand.some((x) => x.opened === savedForm)) seen.formsSetAsideSaved++;
+      }
       const ticket = ticketOf(a);
       const steps = since.get(a);
       // The model's own verdict; a reply whose call-start marker was shrunk away has none, and the reducer's is used.
@@ -2158,6 +2190,8 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
         if ((prev.lot === null && s.lot !== null) || (prev.chooseFor === null && s.chooseFor !== null) || s.followUp !== prev.followUp) return `${at}: a stale reply opened a lot step, a chooser or D3`;
         if ((a.type === "notePicked" || a.type === "openLot" || a.type === "openByHand") && s !== prev) return `${at}: a stale ${a.type} changed the sheet`;
       }
+      const lost = droppedTypedForm(prev, s, a);
+      if (lost !== null) return `${at}: ${lost}`;
       const inHand = addTargetId(s);
       if (inHand !== null && isWritten(s, inHand)) return `${at}: ${inHand} is already written (${statusOf(s, inHand)}), yet an add starting now would name it (${s.view})`;
       if (a.type === "addLanded") {
@@ -2182,6 +2216,7 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
           if (on !== undefined && on !== null) {
             landedForms.add(on);
             if (form === on) return `${at}: by-hand form #${on} saved its wine (its add landed ${stale ? "stale" : "current"}), yet it is still open on ${s.view}`;
+            if (s.parkedByHand.some((x) => x.opened === on)) return `${at}: by-hand form #${on} saved its wine (its add landed ${stale ? "stale" : "current"}), yet it is still set aside`;
           }
           if (seen !== undefined && stale) {
             seen.staleFormLandings++;
@@ -2261,7 +2296,7 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
       replies: 0, stale: 0, staleLanded: 0, staleRefused: 0, staleNote: 0, staleLot: 0, staleForm: 0, staleGlass: 0,
       staleUnderAsk: 0, staleOnSameScreen: 0, noteAsks: 0, noteAskEndedPickKept: 0, closes: 0,
     };
-    const forms: FormCoverage = { writtenHolderCalls: 0, staleFormLandings: 0, staleFormEditedSince: 0, freshFormKept: 0 };
+    const forms: FormCoverage = { writtenHolderCalls: 0, staleFormLandings: 0, staleFormEditedSince: 0, freshFormKept: 0, formsSetAside: 0, formsReopened: 0, formsSetAsideSaved: 0 };
     try {
       for (let seed = 1; seed <= SEQUENCES; seed++) {
         const r = prng(seed);
@@ -2354,5 +2389,144 @@ describe("model-based: late replies never act (plan amendment 23)", () => {
     expect(forms.staleFormLandings, seen).toBeGreaterThan(9);
     expect(forms.staleFormEditedSince, seen).toBeGreaterThan(2);
     expect(forms.freshFormKept, seen).toBeGreaterThan(4);
+    // S5b review (rule 1): typed forms set aside by another form's open, and reopened by their own wine.
+    expect(forms.formsSetAside, seen).toBeGreaterThan(55);
+    expect(forms.formsReopened, seen).toBeGreaterThan(25);
+    expect(forms.formsSetAsideSaved, seen).toBeGreaterThan(1);
+  });
+});
+
+describe("a form with typing in it is set aside, never dropped, when another form opens (spec §C.4 rule 1; S5b review)", () => {
+  const finished = { ...partial.draft, vintage: { kind: "YEAR" as const, year: 2016, tawnyYears: null, read: true } };
+  const matched: LabelPhotoRead = {
+    ...partial, readId: "r20", missing: [], draft: finished,
+    match: { catalogWineId: "c9", title: "Barbaresco DOCG 2016", meta: "14 notes" },
+    display: { ...partial.display, title: "Cigliuti, Barbaresco 2016" },
+  };
+  const photos = (...ids: string[]): SheetAction => ({ type: "enqueue", items: ids.map((id) => ({ id, photoUrl: `blob:${id}`, blob: new Blob() })) });
+  const read = (id: string, label: LabelPhotoRead, stack = false): SheetAction => ({ type: "itemRead", id, read: label, stack });
+  const ship = (s: SheetState, ...actions: SheetAction[]) => actions.reduce(reduceSheet, s);
+  const open = (destination: AddWineDestination | null, canScan = true, multi = false) => initialSheetState({ destination, options: { multi }, canScan });
+  /** The By hand chip, tile, "Add it by hand" or "Neither of these": a new wine. */
+  const newWine: SheetAction = { type: "openByHand", origin: { kind: "new" }, draft: emptyDraft(), focusField: null };
+  const fix = (itemId: string, draft = partial.draft): SheetAction => ({ type: "openByHand", origin: { kind: "item", itemId }, draft, focusField: "vintage" });
+  /** By hand on a matched read, once the catalog wine loads. */
+  const byHandOnMatch = (itemId: string): SheetAction => ({ type: "openByHand", origin: { kind: "match", itemId }, draft: finished, focusField: null });
+  /** An Edit open's form, or Fix on an incomplete glass's row. */
+  const glassForm = (wineId: string, incomplete = false, draft: LabelPhotoRead["draft"] = finished): SheetAction =>
+    ({ type: "openByHand", origin: { kind: "glass", wineId, incomplete }, draft, focusField: incomplete ? "vintage" : null });
+  const typing = (wineName: string, draft: LabelPhotoRead["draft"] = finished): SheetAction => ({ type: "byHandChange", draft: { ...draft, wineName } });
+  const glass4: AddedWine = { label: "Cigliuti, Barbaresco 2016", destination: "flight", catalogWineId: "c4", glass: 4, wineId: "w4" };
+  type Landed = Extract<SheetAction, { type: "addLanded" }>;
+  /** The adds hook's reply to a save started on `at` (its contextFor). */
+  const reply = (at: SheetState, added: AddedWine, source: AddSource, byHand = false): Landed => ({
+    type: "addLanded", ticket: ticketFor(at), id: addTargetId(at), added, source, byHand,
+    draft: byHand ? (at.byHand?.draft ?? null) : null, adopted: at.adopted, scanNext: false, warning: null,
+  });
+
+  it("review probe 1 (Edit open): a typed glass form left by back stays when By hand opens a new wine; closing asks, and the glass's form reopens with the typing", () => {
+    const edit = ship(initialSheetState({ destination: flight, options: { edit: { wineId: "w3" } }, canScan: null }), { type: "canScanResolved", canScan: true },
+      glassForm("w3"), typing("Rocche"), { type: "back" });
+    expect([edit.view, unfinishedCount(edit)]).toEqual(["camera", 1]);
+    const chip = ship(edit, newWine);
+    expect([chip.view, chip.byHand?.origin, unfinishedCount(chip)]).toEqual(["byhand", { kind: "new" }, 1]);
+    expect(ship(chip, { type: "requestClose" })).toMatchObject({ closeAsk: { unfinished: 1 }, closing: false });
+    expect(unfinishedCount(ship(chip, typing("Giacosa", emptyDraft())))).toBe(2);
+    const reopened = ship(chip, glassForm("w3"));
+    expect([reopened.byHand?.origin, reopened.byHand?.draft.wineName, reopened.byHand?.dirty, unfinishedCount(reopened)])
+      .toEqual([{ kind: "glass", wineId: "w3", incomplete: false }, "Rocche", true, 1]);
+  });
+
+  it("review probe 2 (matched read): By hand's correction survives back, Search and Add it by hand, for a catalog, a cellar or no destination; By hand or Fix on that bottle reopens it", () => {
+    for (const destination of [{ kind: "catalog" }, { kind: "cellar" }, null] as const) {
+      const label = String(destination?.kind ?? "none");
+      const searched = ship(open(destination), photos("i1"), read("i1", matched),
+        byHandOnMatch("i1"), typing("Castiglione"), { type: "back" }, { type: "searchQuery", query: "cigliuti" }, { type: "go", view: "search" }, newWine);
+      expect([searched.view, searched.byHand?.origin, unfinishedCount(searched)], label).toEqual(["byhand", { kind: "new" }, 1]);
+      const byHand = ship(searched, { type: "back" }, { type: "back" }, byHandOnMatch("i1"));
+      expect([byHand.view, byHand.byHand?.origin, byHand.byHand?.draft.wineName], label).toEqual(["byhand", { kind: "match", itemId: "i1" }, "Castiglione"]);
+      const fixed = ship(searched, { type: "back" }, { type: "back" }, { type: "back" }, fix("i1", matched.draft));
+      expect([fixed.view, fixed.byHand?.origin, fixed.byHand?.draft.wineName], label).toEqual(["byhand", { kind: "match", itemId: "i1" }, "Castiglione"]);
+    }
+  });
+
+  it("review probe 3: Fix on another row keeps a typed glass form (laptop flight) or a typed match form (phone catalog); Fix on its own row reopens it", () => {
+    const incomplete: AddedWine = { label: "Cigliuti, Barbaresco", destination: "flight", catalogWineId: null, glass: 4, wineId: "w4", incomplete: { missing: ["vintage"] } };
+    const laptop = ship(open(flight, false), photos("i1", "i2"), read("i1", partial), read("i2", partial), { type: "itemAdded", id: "i1", added: incomplete },
+      glassForm("w4", true, partial.draft), typing("Serraboella", partial.draft), { type: "go", view: "desktop" }, fix("i2"));
+    expect([laptop.byHand?.origin, unfinishedCount(laptop)]).toEqual([{ kind: "item", itemId: "i2" }, 2]);
+    const glassAgain = ship(laptop, { type: "go", view: "desktop" }, glassForm("w4", true, partial.draft));
+    expect([glassAgain.byHand?.origin, glassAgain.byHand?.draft.wineName]).toEqual([{ kind: "glass", wineId: "w4", incomplete: true }, "Serraboella"]);
+
+    const phone = ship(open({ kind: "catalog" }), photos("m1"), read("m1", matched), byHandOnMatch("m1"), typing("Castiglione"), { type: "back" }, { type: "back" },
+      photos("m2"), read("m2", partial), { type: "back" }, fix("m2"));
+    expect([phone.view, phone.byHand?.origin, unfinishedCount(phone)]).toEqual(["byhand", { kind: "item", itemId: "m2" }, 2]);
+    const matchAgain = ship(phone, { type: "back" }, fix("m1", matched.draft));
+    expect([matchAgain.byHand?.origin, matchAgain.byHand?.draft.wineName]).toEqual([{ kind: "match", itemId: "m1" }, "Castiglione"]);
+  });
+
+  it("a typed new wine survives Fix on a row: rule 7 counts both, and By hand reopens the typing", () => {
+    const typed = ship(open({ kind: "cellar" }, true, true), photos("i1"), read("i1", partial, true), newWine, typing("Rocche dei Manzoni", emptyDraft()), { type: "back" });
+    expect([typed.view, unfinishedCount(typed)]).toEqual(["camera", 2]);
+    const fixing = ship(typed, fix("i1"));
+    expect([fixing.byHand?.origin, unfinishedCount(fixing), sessionToReopen(fixing, { kind: "new" })?.draft.wineName]).toEqual([{ kind: "item", itemId: "i1" }, 2, "Rocche dei Manzoni"]);
+    expect(sessionToReopen(fixing, { kind: "match", itemId: "i1" })).toBe(fixing.byHand);
+    const reopened = ship(fixing, { type: "back" }, newWine);
+    expect([reopened.byHand?.draft.wineName, reopened.byHand?.dirty, unfinishedCount(reopened)]).toEqual(["Rocche dei Manzoni", true, 2]);
+  });
+
+  it("a set-aside form ends when its own save lands late, so it never saves twice; a form set aside before that save keeps its typing (the reply names its form)", () => {
+    const rows = ship(open(flight), photos("i1"), read("i1", partial), { type: "back" });
+    const form = ship(rows, newWine, typing("Rocche"));
+    const save = reply(form, glass4, { kind: "identity", draft: form.byHand!.draft, via: "byhand", readId: null }, true);
+    // During the write: back, and Fix on i1 with typing, set the new wine aside.
+    const away = ship(form, { type: "back" }, fix("i1"), typing("Serraboella", partial.draft));
+    expect([away.byHand?.origin, unfinishedCount(away)]).toEqual([{ kind: "item", itemId: "i1" }, 2]);
+    const late = ship(away, save);
+    expect([late.view, late.byHand?.draft.wineName, late.added.length, unfinishedCount(late)]).toEqual(["byhand", "Serraboella", 1, 1]);
+    const again = ship(late, { type: "back" }, newWine);
+    expect([again.byHand?.dirty, again.byHand?.draft.wineName]).toEqual([false, null]);
+
+    // The other way round: the new wine is set aside first; Fix's save starts; back and By hand bring the new wine back.
+    const kept = ship(rows, newWine, typing("Kept"), { type: "back" }, fix("i1"), typing("Serraboella"));
+    const itemSave = reply(kept, glass4, { kind: "identity", draft: kept.byHand!.draft, via: "scan", readId: "r1" }, true);
+    expect(itemSave.id).toBe("i1");
+    const swapped = ship(kept, { type: "back" }, newWine);
+    expect([swapped.byHand?.draft.wineName, unfinishedCount(swapped)]).toEqual(["Kept", 2]);
+    const landedLate = ship(swapped, itemSave);
+    expect([landedLate.byHand?.draft.wineName, landedLate.byHand?.dirty, landedLate.items[0].status, landedLate.parkedByHand, unfinishedCount(landedLate)])
+      .toEqual(["Kept", true, "added", [], 1]);
+  });
+
+  it("a note pick asks first while a typed form is set aside, and Discard drops every form as the sheet closes", () => {
+    const pick: NotePick = { catalogWineId: "c9" };
+    const onForm = ship(open({ kind: "note" }), newWine, typing("Typed", emptyDraft()), { type: "back" },
+      photos("i1"), read("i1", partial), fix("i1"), typing("Serraboella"));
+    expect([onForm.view, onForm.activeItemId, unfinishedCount(onForm)]).toEqual(["byhand", "i1", 2]);
+    const asked = ship(onForm, { type: "notePicked", pick, itemId: "i1", fromForm: true, ticket: ticketFor(onForm) });
+    expect([asked.closing, asked.closeAsk]).toEqual([false, { unfinished: 1, note: pick }]);
+    const discarded = ship(asked, { type: "discardAndClose" });
+    expect([discarded.closing, discarded.byHand, discarded.parkedByHand, unfinishedCount(discarded)]).toEqual([true, null, [], 0]);
+  });
+
+  it("a set-aside form for a row ends with that row: Remove, or its add landing", () => {
+    const stack = ship(open({ kind: "cellar" }, true, true), photos("i1", "i2"), read("i1", partial, true), read("i2", partial, true),
+      fix("i1"), typing("Serraboella"), { type: "back" }, fix("i2"));
+    expect([stack.parkedByHand.map((x) => x.origin), unfinishedCount(stack)]).toEqual([[{ kind: "item", itemId: "i1" }], 2]);
+    const removed = ship(stack, { type: "itemRemove", id: "i1" });
+    expect([removed.parkedByHand, unfinishedCount(removed)]).toEqual([[], 1]);
+    const added = ship(stack, { type: "itemAdded", id: "i1", added: { label: "Cigliuti, Barbaresco 2016", destination: "cellar", catalogWineId: "c4", lotId: "l4" } });
+    expect([added.parkedByHand, unfinishedCount(added)]).toEqual([[], 1]);
+  });
+
+  it("a glass form set aside ends when its save lands late holding the draft saved; typed further, it stays for another save", () => {
+    const edit = ship(initialSheetState({ destination: flight, options: { edit: { wineId: "w3" } }, canScan: true }), glassForm("w3"), typing("Rocche"));
+    const saved = (at: SheetState): SheetAction => ({ type: "glassSaved", added: { ...glass4, glass: 3, wineId: "w3" }, ticket: ticketFor(at), draft: at.byHand!.draft, closeSheet: true });
+    const aside = ship(edit, { type: "back" }, newWine);
+    const late = ship(aside, saved(edit));
+    expect([late.view, late.closing, late.byHand?.origin, late.parkedByHand, unfinishedCount(late)]).toEqual(["byhand", false, { kind: "new" }, [], 0]);
+    const typedMore = ship(edit, typing("Rocche 2"), { type: "back" }, newWine);
+    const stays = ship(typedMore, saved(edit));
+    expect([stays.parkedByHand.map((x) => x.draft.wineName), unfinishedCount(stays)]).toEqual([["Rocche 2"], 1]);
   });
 });
