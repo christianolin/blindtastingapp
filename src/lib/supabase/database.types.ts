@@ -250,6 +250,28 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
       };
+      // 20260914113500: curated alternative producer names. alias_folded is
+      // GENERATED ALWAYS AS (f_search_norm(alias)) STORED — never writable.
+      producer_aliases: {
+        Row: {
+          id: string;
+          producer_id: string;
+          alias: string;
+          alias_folded: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          producer_id: string;
+          alias: string;
+          alias_folded?: never;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["producer_aliases"]["Insert"]
+        >;
+        Relationships: [];
+      };
       producers: {
         Row: { id: string; name: string; region_id: string | null };
         Insert: { id?: string; name: string; region_id?: string | null };
@@ -420,9 +442,9 @@ export type Database = {
           user_id: string;
           status: ParticipantStatus;
           // 20260914093500 (blind-tasting spec §4.4, §5.3): server-owned. A
-          // BEFORE INSERT OR UPDATE trigger replaces any client-sent value: now()
-          // when a row becomes JOINED (insert, accept, link, a DECLINED guest
-          // coming back), otherwise kept; null for a row that never joined.
+          // BEFORE INSERT OR UPDATE trigger replaces any client-sent value:
+          // now() the first time a row becomes JOINED (insert, accept, link); a
+          // later flip to JOINED keeps it; null for a row that never joined.
           joined_at: string | null;
           created_at: string;
         };
@@ -1809,8 +1831,10 @@ export type Database = {
       // 20260914102500 (spec §10.4 b, §16.1 row 19): { cards: [{ key, producer,
       // wine_name, vintage_kind, vintage_year, vintage_tawny_years, appellation,
       // grape, revealed_glass }], pending } ordered by the random key, or null.
-      // While DRAFT only the caller's own glasses' cards, and pending only to the
-      // host. Narrow at the call site.
+      // DRAFT callers see their own cards (the glasses they added), and pending
+      // only the host. From Start pending goes to every caller, and every card
+      // once nothing is pending; until then only the cards of glasses they
+      // added. Narrow at the call site.
       get_semi_blind_candidates: {
         Args: { p_tasting_id: string };
         Returns: Json;
