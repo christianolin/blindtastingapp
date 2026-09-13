@@ -467,6 +467,13 @@ export type Database = {
           // Null on glasses revealed before the migration (no backfill), which
           // are never "joined after" (glass-eligibility.ts).
           revealed_at: string | null;
+          // 20260914095500 (blind-tasting spec §3.4, B2): who added the glass,
+          // fixed at insert — true when it was inserted with no contributor.
+          // Trigger-owned (wines_pin_adder): an insert's value is replaced, and
+          // an update never changes it, so nulling or deleting a contributor
+          // never turns their glass into a host-added one. is_wine_adder keys
+          // on it. Clients update only `position` and `added_via` (M6).
+          added_by_host: boolean;
         };
         Insert: {
           id?: string;
@@ -478,6 +485,7 @@ export type Database = {
           created_at?: string;
           added_via?: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
           revealed_at?: string | null;
+          added_by_host?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
@@ -1725,6 +1733,54 @@ export type Database = {
       wset_hue_fits_colour: {
         Args: { p_hue: WsetColourHue | null; p_colour: WineColour | null };
         Returns: boolean;
+      };
+      // 20260914095500 (blind-tasting spec §3.4, B2): the adder's edit window —
+      // the glass's adder (wines.added_by_host), while the tasting is not
+      // CLOSED and the glass is unrevealed at reveal_step 0; on an OPEN board
+      // while not CLOSED. The `wine_answers` insert/update policies use it.
+      can_edit_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): Remove — the edit window, or the host for
+      // any glass while DRAFT; never a semi-blind glass after Start, never
+      // while a later glass is revealed or has started its reveal (OPEN exempt).
+      can_remove_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): a direct `wines` delete (`wines delete
+      // adder`) — Remove's rule, and the host in DRAFT or the adder's last glass.
+      can_delete_flight_glass_row: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914095500 (spec §3.4): reorder atomically to the 1-based
+      // p_to_index. Host only; refused on a CLOSED tasting and whenever a glass
+      // the table has seen would change its number.
+      move_flight_glass: {
+        Args: { p_wine_id: string; p_to_index: number };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4): delete a glass and close the gap in one
+      // transaction, whoever the adder is (can_remove_flight_glass).
+      remove_flight_glass: {
+        Args: { p_wine_id: string };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4): Swap's provenance write (a contributor
+      // holds no UPDATE on `wines` rows). Edit's window; never a semi-blind
+      // glass after Start. p_added_via is one of SCAN, CATALOG, CELLAR, BY_HAND.
+      set_flight_glass_added_via: {
+        Args: { p_wine_id: string; p_added_via: string };
+        Returns: undefined;
+      };
+      // 20260914095500 (spec §3.4, §16.1 row 6): what a removal takes with it —
+      // counts only, one row to whoever may remove the glass, no row otherwise.
+      // private_notes counts identity-less (hidden) notes on the glass.
+      glass_removal_impact: {
+        Args: { p_wine_id: string };
+        Returns: { guesses: number; private_notes: number }[];
       };
     };
   };
