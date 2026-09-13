@@ -403,6 +403,10 @@ export type Database = {
           tasting_id: string;
           user_id: string;
           status: ParticipantStatus;
+          // 20260914093500 (blind-tasting spec §4.4, §5.3): server-owned. A
+          // BEFORE INSERT OR UPDATE trigger replaces any client-sent value: now()
+          // when a row becomes JOINED (insert, accept, link, a DECLINED guest
+          // coming back), otherwise kept; null for a row that never joined.
           joined_at: string | null;
           created_at: string;
         };
@@ -1551,6 +1555,8 @@ export type Database = {
         Args: { p_tasting_id: string };
         Returns: string;
       };
+      // 20260914093500 (blind-tasting spec §5.4): refuses only a CLOSED tasting,
+      // so people can join by link after Start (B4).
       join_tasting_by_code: {
         Args: { p_code: string };
         Returns: string;
@@ -1672,6 +1678,33 @@ export type Database = {
       is_tasting_member: {
         Args: { p_tasting_id: string };
         Returns: boolean;
+      };
+      // 20260914093500 (blind-tasting spec §4.4): a host's record — how many
+      // tastings they have started or closed. Authenticated only.
+      host_tastings_count: {
+        Args: { p_user_id: string };
+        Returns: number;
+      };
+      // 20260914093500 (blind-tasting spec §4.4, Q3): the share-link preview,
+      // callable by anon. Never the place, description, cover or any wine
+      // beyond a count; an OPEN-mode tasting's code returns no row.
+      get_join_preview: {
+        Args: { p_code: string };
+        Returns: {
+          name: string;
+          host_name: string | null;
+          host_avatar_url: string | null;
+          scheduled_at: string | null;
+          reveal_mode: RevealMode;
+          timing_mode: TimingMode;
+          sequential_guessing: boolean;
+          glass_count: number;
+          status: TastingStatus;
+          // Only for the host and JOINED or INVITED rows (a DECLINED guest gets null).
+          viewer_tasting_id: string | null;
+          host_id: string | null; // signed-in callers only
+          joined_names: string[] | null; // signed-in callers only
+        }[];
       };
     };
   };
