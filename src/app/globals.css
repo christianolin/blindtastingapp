@@ -195,14 +195,19 @@
      --chart-oldest #e5d9c0, both near-white lines, and --ink-photo and
      --ink-caption dark browns that disappear into it.
 
+     The two placeholder shades were measured on the running app and raised:
+     #8a7a5e gave 4.04:1 on --card and #5f5240 only 2.41:1, and both carry real
+     text -- the "92 points" scores, the date separators. Now 5.14:1 and 4.58:1,
+     with -soft still the dimmer of the two.
+
      --chart-oldest inverts outright. In the light charts it is the palest
      series, furthest from the ink; on a dark ground the oldest series is the
      one closest to the GROUND, so it goes darker than the rest, not lighter. */
   --live: #e07a63;
   --ink-photo: #d8cbb6;
   --ink-caption: #b9a98c;
-  --placeholder: #8a7a5e;
-  --placeholder-soft: #5f5240;
+  --placeholder: #9c8c6e;
+  --placeholder-soft: #948468;
   --chart-oldest: #3a2e24;
   /* Link ink, and the one token here that is NOT just a darker-ground restating
      of its light value.

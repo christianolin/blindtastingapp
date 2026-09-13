@@ -78,6 +78,38 @@ describe.each([
   });
 });
 
+describe("the placeholder shades, which carry real text", () => {
+  // Not decorative: --placeholder draws the "›" affordances and
+  // --placeholder-soft the date separators between them. Both were measured on
+  // the running app at 4.04:1 and 2.41:1 and raised for dark.
+  it("clear AA in dark on both grounds", () => {
+    for (const token of ["--placeholder", "--placeholder-soft"]) {
+      expect(ratio(dark, token, "--background")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(dark, token, "--card")).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // LIGHT IS A KNOWN SHORTFALL, recorded rather than hidden. Measured on the
+  // shipped palette, both placeholder shades are under AA on the parchment:
+  //
+  //   --placeholder       #a79574   2.73:1 on --card
+  //   --placeholder-soft  #c9b896   1.82:1 on --card, 1.70:1 on --background
+  //
+  // That predates dark mode entirely. Fixing it means changing brand colours on
+  // screens that have shipped and been reviewed, which is a palette decision
+  // and not this file's to take.
+  //
+  // Asserted as an upper bound so it cannot quietly get WORSE, and so whoever
+  // fixes it is told to delete this test rather than finding it years later.
+  it("light is still below AA — delete this test when the palette is fixed", () => {
+    expect(ratio(light, "--placeholder", "--card")).toBeLessThan(4.5);
+    expect(ratio(light, "--placeholder-soft", "--card")).toBeLessThan(4.5);
+    // Floors at the values measured 2026-09-14, so a regression still fails.
+    expect(ratio(light, "--placeholder", "--card")).toBeGreaterThanOrEqual(2.7);
+    expect(ratio(light, "--placeholder-soft", "--card")).toBeGreaterThanOrEqual(1.8);
+  });
+});
+
 describe("the console palette, which is dark in BOTH themes", () => {
   it("keeps its ink readable on its own ground", () => {
     // These three are deliberately not overridden in .dark. If someone ever
