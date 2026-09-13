@@ -155,7 +155,7 @@ Every task's requirements implicitly include this section.
 
 | Q | Default this plan builds | Tasks |
 |---|---|---|
-| Q1 Pause | LIVE tastings only; `tastings.paused_at`; a band on every live screen; reveals and Skip disabled and refused by the database; guesses stay editable and lockable | BT-SQL7, BT-H1, BT-H2 |
+| Q1 Pause | LIVE tastings only; `tastings.paused_at`; a band on every live screen; reveals and Skip disabled; reveals refused by the database (M7's `wines_refuse_reveal_while_paused`), Skip refused by the action (`skipPlan`), not the database; guesses stay editable and lockable | BT-SQL7, BT-H1, BT-H2 |
 | Q2 Place | host, JOINED and INVITED only; never public, never in a preview or the record | BT-SQL2, BT-P8, BT-C1, BT-L2, BT-L4, BT-G1, BT-G2, BT-Q1 |
 | Q3 Signed-out preview | name, host name and avatar, time, mode and flow words, glass count, scoring rows; nothing else | BT-SQL4, BT-G3 |
 | Q4 Hand hosting | host only, DRAFT, a JOINED target, no host-added glass and no host draft or pour intent; the former host stays JOINED | BT-SQL11, BT-K1 |
@@ -201,6 +201,41 @@ Every task's requirements implicitly include this section.
     - `guesses_refuse_locked_edit` refuses a locked row's answer change only when `current_user` is `anon` or `authenticated`, or the request's JWT role (`request.jwt.claims`, the expression `auth.role()` uses) is one of them. A SECURITY DEFINER function or a foreign-key action that runs inside a client request therefore stays bound. `service_role`, and the owner or a superuser outside a client request, pass: maintenance that repoints `guesses` foreign keys (`scripts/dedupe-producer-orthographic-variants.mjs`, `scripts/fix-lwin-producer-titles.mjs`, data migrations) is never blocked by a locked row. Nothing in `src` writes `guesses` with the admin client. The rest of spec §8.4's SQL, the SET NULL exemption included, is unchanged.
     - M8 also pins `reveal_own_next_category`, the fourth live writer, and fails closed unless every function that inserts into or updates `guesses` is one of the four live writers or M9a's `assign_semi_blind_match` / `clear_semi_blind_match`, and unless only `authenticated`, `service_role` and the owner hold UPDATE on `guesses`.
     - BT-M8 applies only once production runs BT-Y1, BT-S2 and BT-S3 (BT-SQL8 "Deploy gate"), because the deployed `submitGuess` and `submitAllMatchGuesses` rewrite locked rows. BT-S2 needs M9a live, so BT-M9a no longer waits for BT-M8, and M8's version then sits below the live tail (Global Constraints "Versions" allows it). BT-M9b still needs BT-M8. BT-SQL9's probe runs M9a's RPCs on locked glasses with M8 applied after M9a ("With M8"), and the pin's sentence needs no `matchRefusalSentence` case (BT-SQL8 "Deploy gate" check 3). This supersedes spec §15's M8 gate ("after add-wine V2") and §1.5's "needs no other gate" for M8.
+25. **Pre-apply hardening round 2 (main session, 2026-09-13).** The decisions taken on the wave-2 reviews (BT-SQL4x, BT-SQL5x, BT-SQL8x, BT-SQL6, BT-SQL7, BT-SQL9) and the hardening round after them (M5x2, M6x, P6x), with what actually committed. M1–M3 are live; every migration below is committed and none is live yet, so BT-M4 onward still apply them in the BT-M order. The spec carries each change (§1.5, §3.4, §3.5, §4.4, §4.5, §5.3–§5.5, §7.4, §8.4, §9.4, §9.5, §10.4 (b), §15, §16, §19.1).
+    - **M4: `joined_at` stamped once; no leaving and no delete after Start (BT-SQL4x, committed 4a09f6b).**
+      - `tasting_participants_stamp_joined_at` stamps `now()` the first time a row becomes JOINED and keeps it on every later flip to JOINED. A guest who left before Start and rejoins keeps the first stamp, so the glasses revealed while they were away read as ordinary misses (0 against the maximum), not "You joined after this glass" (BT-P2, BT-R1, BT-R2). A DECLINED invitee who never joined is stamped on the first join.
+      - `tasting_participants_leave_guard` fires `BEFORE UPDATE OF status OR DELETE` (tgtype 27). Once the tasting has started (the status is not DRAFT, or `started_at` is set) no signed-in caller, the host included, moves a JOINED row out of JOINED or deletes it. The guest hears "you can only leave before the tasting starts"; the host, and any delete, "A guest who has joined stays in the tasting once it has started." (plan copy). Deleting the tasting still cascades. `service_role` and the owner (`auth.uid()` null) stay exempt, as committed.
+      - Probes that delete a JOINED contributor's participant row stage it in DRAFT, or run it as `service_role` after Start (BT-SQL6 H5, BT-SQL10, BT-SQL11).
+    - **M5: membership before the glass lock (M5x2, committed ce80f9e).** On BT-SQL5x's base (4c5b9e6: a save racing the reveal attaches, `is_tasting_wine_revealed` is VOLATILE, a hue never fails a reveal or a resolution), `wset_notes_glass_resolve_on_write` now returns before its `FOR SHARE` for a client request (JWT role `anon` or `authenticated`) from anyone who may not note the glass (`can_note_tasting_wine`), so a write RLS refuses never holds up a reveal, a reveal step or a position change. `service_role`, and the owner outside a client request, still lock and attach.
+      - M5x2's spec §9.4/§9.5 edits (probe rows L1 and G3 compare them with the migration byte for byte) and its BT-SQL5 plan edits were outside its commit paths; they land in the commit that adds this refinement.
+      - Residual, stated in §9.4: the gate reads membership with a fresh snapshot and the insert policy with the statement's, so they disagree only when the writer's own membership is removed while that write runs; after Start M4's leave guard prevents it.
+      - Pending (main session): whether the gate raises 42501 instead of returning. That one change would close the residual and the SECURITY DEFINER writer caveat (BT-N1 below); the md5, the structural post-assert, spec §9.4 and the probe expectations would change together.
+    - **M6: the setup lock, hidden inserts, lock-first removal and moves after Start (M6x, committed 7f832c5).** Spec §3.4's block now carries the four reviewed replacements of `20260914095500-flight-edits.m6x-pairs.txt` (block md5 6ed62072… → 83dfc8f2…), which probe row L0 accepts.
+      - Decision 1: a tasting that has left DRAFT never goes back to DRAFT for a client (`anon` or `authenticated`, or a request whose JWT names one: refinement 24's expression). `tastings_lock_setup_after_start` carries the refusal and now also fires on `status`; its setup lock counts a stamped `started_at` as started (the BT-SQL6 review line). `service_role`, and the owner outside a client request, still can.
+      - Decision 2: the tastings that left DRAFT before M3 get `started_at = created_at` once, with `tastings_stamp_lifecycle` disabled for that one statement; the count is asserted (stamped = found, none left). With decision 1 this closes spec §4.4's limit once M6 is live.
+      - Decision 3: a client's insert of a revealed glass, or of one past step 0, is refused unless the tasting is OPEN. With it (the M6x review) a client's glass goes to `max(position) + 1` whatever position it sends, and its contributor must be a participant of the glass's own tasting.
+      - Decision 4: `remove_flight_glass` checks host-or-adder, takes the flight's row lock, then evaluates `can_remove_flight_glass`; its second renumbering statement flips back only the glasses the first moved below zero.
+      - Decision 5: `move_flight_glass` takes the row lock before every check. After Start it refuses a semi-blind flight (Q7) and any move whose moved glass, or any glass between its old and new places (both ends included), is revealed, mid-step or guessed. It refuses a null place and a glass that vanished while it waited, and renumbers only the glasses it locked.
+      - M7 and M9a kept in step: only M7's `wines_pin_adder` md5 pin changed (in 7f832c5); the M9a file and its probe needed no change, and M9a's header note that a started semi-blind list stays complete holds once M6 is live.
+      - Pending (main session): confirm the inclusive range (a revealed, mid-step or guessed glass "moved" to its own place is refused, probe Y7; skipping the range check when the place is unchanged would allow it), the server-appended position rather than a refusal, and the same-tasting contributor refusal, which cannot be relaxed later because `pin_tasting_participant_identity` never moves a participant row to another tasting.
+      - BT-M6: before applying, re-run O1–O4, C1, K7, N8, W1, Y10, Q2, Q8 and Q13 against the then-committed write path. The apply writes `started_at` on three live tastings (42e8c830 and 295dc289 CLOSED, cd6c5ab8 IN_PROGRESS) and takes SHARE ROW EXCLUSIVE on `tastings` and ACCESS EXCLUSIVE on `wines`, so BT-M6 and BT-M7 expect to retry on a `lock_timeout` or a deadlock against live traffic (the M9a probe's chain hit both). The race probe (`20260914095500-flight-edits-race.mjs`) runs on a disposable local cluster.
+    - **M8: the client-role scope (BT-SQL8x, committed d3c0dce; refinement 24).** Spec §8.4's SQL now carries it verbatim, and spec §15 and §1.5 carry its deploy gate. P6x (committed 3269919) maps the pin's sentence "this guess is locked in — change it first" in `matchRefusalSentence` to the ladder's locked-in sentence, so refinement 24's "needs no `matchRefusalSentence` case" no longer holds (BT-SQL8 "Deploy gate" check 3 updated).
+    - **M7 and M9a (BT-SQL7, committed a069e8e; BT-SQL9, committed 43773f9).** Spec §7.4 and §16.1 row 13 now name every reader of `current_wine_id` and `paused_at`; spec §10.4 (b), §16.1 row 19 and the `database.types.ts` comment carry M9a's reviewed candidates rule (from Start every card once nothing is pending; until then only the cards of glasses the caller added).
+    - **Hand-offs.**
+      - BT-H1: `revealNextCategory`, `revealFull` and `revealWine` map a database error whose message is "The tasting is paused" (P0001 from M7's `wines_refuse_reveal_while_paused`, reached when a pause commits after the action's own check) to `PAUSED_REFUSAL`.
+      - BT-N1: a note re-saved after its glass's reveal, or racing it, with a hue that no longer fits the revealed wine is still refused by `wset_notes_check_hue` (the author's own write); BT-N1 re-opens it as a catalog note after the reveal or maps that error to copy, so the edit is never lost silently. An identity-less note written onto an already revealed glass is not refused: it attaches and takes that glass's identity, whatever its context. A note-writing RPC added by BT-N1 or later is SECURITY INVOKER through `save_wset_note`, or checks `can_note_tasting_wine` itself: a SECURITY DEFINER writer acting for a non-member would leave an identity-less note on a revealed glass (M5x2).
+      - BT-S1, and every loader of the semi-blind reads: `get_semi_blind_candidates`, `get_semi_blind_board` and `get_semi_blind_revealed_picks` are VOLATILE (they mint keys through `ensure_semi_blind_keys`), so they are called as ordinary POST RPCs, never `rpc(…, { get: true })` and never inside a read-only transaction.
+      - BT-R2 and BT-R3: `get_semi_blind_revealed_picks` returns every `guesses` row on a revealed glass with no eligibility filter (a host-provides host's blank row, a contributor's row, non-JOINED rows); the result and record loaders filter them with `eligibleForGlass`.
+      - BT-L1 and BT-L2: close probe row Y10. The host's direct `position` writes (deployed `moveWine`) still reorder a started semi-blind flight or a guessed or revealed glass; route every reorder through `move_flight_glass`, retire `moveWine`, then revoke `authenticated` UPDATE (`position`), moving `removeWine`'s DRAFT renumber into `remove_flight_glass`, or refuse a client's position write after Start (spec §16.3).
+      - BT-P1 / BT-L1 (`src/lib/flight-glass-rules.ts`): mirror decision 5 (a started semi-blind move; a guessed, seen or unmoved glass in the range) and map M6's new database sentences to UI copy: "a semi-blind flight is fixed once the tasting has started" (the spec's existing refusal copy for a fixed semi-blind flight), "a glass that has been guessed or seen cannot change its number once the tasting has started", "a tasting that has started cannot go back to DRAFT", "a new glass starts hidden, before its first reveal step" and "a glass is brought by someone in its own tasting".
+      - BT-S2: serialise one participant's assigns through the save queue, and treat 40P01 and 23505 as a refresh or retry, not a sentence (BT-SQL9 review).
+      - BT-Y1: `saveGuessFields` maps `error.code === "42501"` to `LOCKED_EDIT_REFUSAL` on the server; the client sees only the message (BT-SQL8x review).
+      - BT-DOC1 adds these CLAUDE.md lines:
+        - the lock pin: `guesses_refuse_locked_edit` refuses a change to a locked row's answers or `guessed_wine_id` with 42501 for `anon` and `authenticated`, SECURITY DEFINER functions and FK actions inside their requests included; `service_role` and owner maintenance pass; lock, unlock, the score columns and the FK's SET NULL pass; any new function that writes `guesses` is probed against the pin;
+        - `joined_at`: trigger-owned and stamped once (a later flip to JOINED keeps it); after Start no signed-in caller moves a JOINED row out of JOINED or deletes it, except by deleting the tasting;
+        - `wines delete adder`: M6 replaces `wines delete host` with `can_delete_flight_glass_row`, and the `wine_answers` insert and update policies (the edit-wine bullet's 20260722090000 policy) with `can_edit_flight_glass`;
+        - the setup lock: mode, timing and wine source lock once a tasting has started; a started tasting never returns to DRAFT for a client (`service_role` and the owner can); tastings started before M3 carry `started_at = created_at`; a client's glass is inserted hidden except on OPEN boards, at the end of the flight and from its own tasting; `remove_flight_glass` and `move_flight_glass` lock the flight before they check; after Start `move_flight_glass` moves no semi-blind flight and no range holding a revealed, stepped or guessed glass, and the direct `moveWine` path is not covered yet.
+    - Optional, not scheduled: refuse a `reveal_mode` change away from OPEN while a glass is revealed (probe N9; spec §16.3).
 
 ### Plan copy (strings the spec does not supply)
 
@@ -220,6 +255,7 @@ Every task's requirements implicitly include this section.
 | "Smagenote" (Danish for "Tasting note") | the hidden-note sheet eyebrow (BT-N1), only if the WSET dictionary has no such key | the spec gives Danish for the hint only; the owner reviews it |
 | "The tasting is not running." | `skipPlan` outside IN_PROGRESS (BT-H1) | the spec names no refusal for a Skip on a tasting that is not running |
 | "That glass is no longer the one pouring." | `skipPlan` with a stale glass or one past step 0 (BT-H1) | a second console tab can race the first |
+| "A guest who has joined stays in the tasting once it has started." | `tasting_participants_leave_guard` (M4; BT-SQL4x): after Start, the refusal the host gets for moving a guest's JOINED row out of JOINED, and any signed-in caller gets for deleting a JOINED row, the host's own included | the spec words only the guest's own refusal, "you can only leave before the tasting starts" |
 
 ---
 
@@ -755,7 +791,7 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 - Post-assert:
   - both new functions SECURITY DEFINER with `search_path=public`;
   - `get_join_preview` EXECUTE for exactly `anon` and `authenticated` (plus the owner and `service_role`); `host_tastings_count` for `authenticated` only; `join_tasting_by_code` EXECUTE unchanged (authenticated only);
-  - both triggers exist and are enabled: the leave guard `BEFORE UPDATE OF status`, the joined-at stamp `BEFORE INSERT OR UPDATE`.
+  - both triggers exist and are enabled: the leave guard `BEFORE UPDATE OF status OR DELETE` (tgtype 27, with its DELETE branch; BT-SQL4x), the joined-at stamp `BEFORE INSERT OR UPDATE`.
 - Types (Functions):
   ```ts
   host_tastings_count: { Args: { p_user_id: string }; Returns: number };
@@ -776,11 +812,11 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 - anon `get_join_preview(<valid code>)` returns exactly the ten columns; an unknown code and an OPEN-mode tasting's code return no row; lower-case and padded codes match.
 - `viewer_tasting_id` is null for anon, a signed-in stranger and a DECLINED user, and set for an INVITED user, a JOINED user and the host.
 - `host_id` and `joined_names` are null for anon; for a signed-in stranger `joined_names` lists the JOINED display names, host excluded, earliest `joined_at` first.
-- `joined_at`: a participant's and the host's `update tasting_participants set joined_at = '2020-01-01'` leave it unchanged; an INVITED insert carrying a client value stores null; INVITED → JOINED stamps `now()`.
+- `joined_at`: a participant's and the host's `update tasting_participants set joined_at = '2020-01-01'` leave it unchanged; an INVITED insert carrying a client value stores null; INVITED → JOINED stamps `now()`; a later flip back to JOINED keeps it (BT-SQL4x).
 - `ensure_join_code` on a codeless tasting returns 6 characters before and 10 after; the existing live code still joins.
 - `host_tastings_count` counts IN_PROGRESS and CLOSED hosted tastings, not DRAFT.
-- Leave guard: JOINED → DECLINED as that user in DRAFT OK; in IN_PROGRESS refused; the host's own row refused in both.
-- `join_tasting_by_code` on an IN_PROGRESS tasting: before refused / after OK with `joined_at` ≈ now; CLOSED refused in both; a DECLINED user joining becomes JOINED with a fresh `joined_at` (after).
+- Leave guard: JOINED → DECLINED as that user in DRAFT OK; in IN_PROGRESS refused; the host's own row refused in both. BT-SQL4x: after Start the host moving a guest's JOINED row out of JOINED, and any signed-in delete of a JOINED row, are refused with "A guest who has joined stays in the tasting once it has started.", also after the tasting is set back to DRAFT (its `started_at` stays set); deleting the tasting still cascades; `service_role` passes.
+- `join_tasting_by_code` on an IN_PROGRESS tasting: before refused / after OK with `joined_at` ≈ now; CLOSED refused in both; a DECLINED invitee who never joined becomes JOINED stamped `now()`, and a guest who joined, left before Start and rejoins keeps the first `joined_at` (after; BT-SQL4x).
 - `respondToInvite`'s update (INVITED → JOINED as the user) still OK; lane N's `tasting_participants_pin_identity` still refuses moving a row.
 
 **Steps**
@@ -805,13 +841,13 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 - The SQL of spec §9.4, verbatim.
 - `save_wset_note`: dump the live definition and recreate it with exactly the two edits of spec §9.4 (the insert writes `unidentified_wine_id`; the update keeps an existing identity). Pre-assert its live `md5(prosrc)`; post-assert the edited md5; the probe prints the diff. It stays SECURITY INVOKER.
 - `resolve_unidentified_wine` (BT-SQL5x): dump the live definition and recreate it with exactly the one edit of spec §9.4, so the notes it re-points keep a hue only when it fits the catalog wine's colour. Pre-assert its live `md5(prosrc)` and attributes; post-assert the edited md5 and the unchanged ACL; the probe prints the diff (one hunk). It stays SECURITY DEFINER.
-- The move guard (BT-SQL5 review) and the write resolve (BT-SQL5x) sit inside spec §9.4's block. `wset_notes_glass_move_guard` is SECURITY INVOKER. `wset_notes_glass_resolve_on_write` is SECURITY DEFINER and reads the glass `FOR SHARE`. `is_tasting_wine_revealed` is VOLATILE, so the write policies see a reveal that committed while the write waited.
+- The move guard (BT-SQL5 review) and the write resolve (BT-SQL5x) sit inside spec §9.4's block. `wset_notes_glass_move_guard` is SECURITY INVOKER. `wset_notes_glass_resolve_on_write` is SECURITY DEFINER and reads the glass `FOR SHARE`, but only for a caller who may note that glass (M5x2): a client request (JWT role `anon` or `authenticated`) from anyone who is neither the host nor JOINED returns before the lock and copies nothing, so a write RLS refuses never holds up a reveal; service_role and the owner outside a client request still lock and attach. `is_tasting_wine_revealed` is VOLATILE, so the write policies see a reveal that committed while the write waited.
 - Before writing: `rg -n "tastingWineId|tasting_wine_id" src` and report every path that writes a note with a `tasting_wine_id`. Each must write an identity-bearing note only for a revealed glass, or an identity-less BLIND note for a hidden one; the M5 policies refuse anything else.
 - `wset_hue_fits_colour` keeps `else true` for ORANGE. The live `wset_notes_check_hue` has branches for WHITE, ROSE and RED only (read-only check 2026-09-13); `HUES_BY_COLOUR.ORANGE` in `src/lib/wset/vocab.ts` is a UI list, not the database rule. The probe proves the helper equals the trigger for every pair.
 - Pre-assert: the live text of `wset notes read`, `wset notes insert`, `wset notes update`, `wset note aromas read` (`pg_policies.qual` / `with_check`) and `pg_get_constraintdef` of `wset_notes_one_identity` equal the dump. Also zero `wset_notes` rows whose `tasting_wine_id` points at an unrevealed glass, and zero whose author is neither the host nor a JOINED participant of that glass's tasting (read-only checks 2026-09-13: 0 and 0).
 - Post-assert: spec §9.4 "Assertions":
   - the new policy texts and the constraint;
-  - the two triggers on `wines`, and the four on `wset_notes` (the move guard and the write resolve next to the live two);
+  - the two triggers on `wines`, and the four on `wset_notes` (the move guard and the write resolve next to the live two); the write resolve returning for a client who may not note the glass before its `FOR SHARE` (M5x2);
   - `wset_note_aromas.note_id` still `on delete cascade`;
   - both helpers SECURITY DEFINER with `search_path=public` and EXECUTE authenticated-only (`can_note_tasting_wine` STABLE, `is_tasting_wine_revealed` VOLATILE);
   - no client EXECUTE on the four trigger functions; `wset_hue_fits_colour` IMMUTABLE;
@@ -850,6 +886,10 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 | K4–K6 | the same by an outsider, an INVITED or a DECLINED user | refused | refused (RLS) |
 | K7–K8 | a member moves a hidden note onto a revealed glass (update; `save_wset_note`) | — | OK; takes that glass's identity |
 | K10 | service_role, an identity-less insert on a revealed glass | refused | OK; takes the glass's identity |
+| K11–K12 | a JOINED guesser and the host write an identity-less note onto a hidden and a revealed glass (M5x2; the glass row's xmax read around the write resolve) | — | OK; the glass locked; the revealed glass's identity copied |
+| K13–K16 | the same by an outsider, an INVITED and a DECLINED user (`save_wset_note`), and anon (a direct insert) | — | refused (RLS); no lock, no copy |
+| K17 | service_role, a direct insert | — | OK; the glass locked; the revealed glass's identity copied |
+| K18 | K13 and K16 on BT-SQL5x's write resolve (git 4c5b9e6) | — | refused, but the glass locked first (why the gate is needed) |
 | Y1–Y2 | a hidden note resolved at a reveal onto an unidentified wine (no colour; RED) keeps RUBY; `resolve_unidentified_wine` to a WHITE catalog wine | — | OK; RUBY cleared |
 | Y3, Y5, Y8 | a note on an unidentified wine with a hue that does not fit the target (no colour → WHITE; RED with LEMON → RED; a Save-all glass note with RUBY → WHITE), then `resolve_unidentified_wine` | refused (the hue check) | OK; the hue cleared |
 | Y4, Y7 | a fitting hue; a caller who is neither creator nor curator | OK, hue kept; refused | the same |
@@ -868,6 +908,11 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
   - RACE6: a note on an unidentified wine with no colour keeps RUBY, then `resolve_unidentified_wine` clears it.
   - RACE7: two savers wait together.
   - In the same interleavings, the committed BT-SQL5 file, a STABLE helper and a missing write resolve each leave a stuck note or a refused save.
+  - RACE8 (M5x2): an outsider's and anon's refused writes never wait on a reveal that holds the glass.
+  - RACE9 (M5x2): a reveal that starts while an outsider's or anon's refused write is running is not held up.
+  - RACE10 (M5x2): a member's save in the RACE9 interleaving holds the reveal and is resolved by it.
+  - RACE11 (M5x2): service_role's insert racing the reveal waits and attaches.
+  - On BT-SQL5x's committed file (git 4c5b9e6), RACE8 and RACE9 wait: the lock that M5x2 removes.
 
 **Steps**
 - [ ] Dump; write; probe (EXPECT first); dry-run; run; tsc check.
@@ -878,7 +923,7 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 - The race probe passes on a disposable local cluster: `node .superpowers/blind-tasting/probes/20260914094500-hidden-notes-race.mjs --port <port>`.
 - The tsc check is clean.
 
-**Closes:** spec §9.4, §9.5, §11.5 (the minimal-note scenarios), §15 M5, §16.2 (public notes on hidden glasses); ledger B8, B10 (Save all's notes accepted); map PLAY-38 (schema), XCUT-52 (schema), RECORD-13 (policy); BT-SQL5's review issues (moving a note onto a glass; a hue on a note tied to an unidentified wine; a save racing the reveal).
+**Closes:** spec §9.4, §9.5, §11.5 (the minimal-note scenarios), §15 M5, §16.2 (public notes on hidden glasses); ledger B8, B10 (Save all's notes accepted); map PLAY-38 (schema), XCUT-52 (schema), RECORD-13 (policy); BT-SQL5's review issues (moving a note onto a glass; a hue on a note tied to an unidentified wine; a save racing the reveal); the wave-2 review's glass lock taken before RLS refuses a write (M5x2).
 
 ---
 
@@ -928,7 +973,7 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 | H2 | host `update wines set reveal_step = 7`, then `get_wine_reveal` on that glass | OK, steps readable | permission denied |
 | H3 | host `update wines set is_revealed = true` | refused inside the trigger once M1 is live | permission denied |
 | H4 | host `update wines set position = …` (deployed `moveWine`) | OK | OK |
-| H5 | the host deletes a contributor's participant row, then updates that glass's key | OK, then OK | OK, then refused; `added_by_host` still false; `is_wine_adder` false for host and ex-contributor |
+| H5 | the host deletes a contributor's participant row (in DRAFT: after Start M4's leave guard refuses the host), then updates that glass's key | OK, then OK | OK, then refused; `added_by_host` still false; `is_wine_adder` false for host and ex-contributor |
 | O1 | OPEN: the host inserts a revealed `wines` row, then its `wine_answers` | OK | OK |
 | O2 | OPEN: the host updates that key | OK | OK |
 | O3 | OPEN: the host deletes that last glass (F10's undo) | OK | OK |
@@ -956,7 +1001,7 @@ Every task in this track follows Global Constraints "Migrations" and Working Rul
 
 **Steps**
 - [ ] Confirm the `wines` update callers; dump; write; probe (EXPECT first); dry-run (concatenated if needed); run; tsc check.
-- [ ] Record which rows exercised AW-F13's committed code; BT-M6 re-runs O1–O3 and C1 before the live apply if F13 changed after this task.
+- [ ] Record which rows exercised AW-F13's committed code; BT-M6 re-runs O1–O4, C1, K7, N8, W1, Y10, Q2, Q8 and Q13 before the live apply (refinement 25).
 
 **Acceptance:** `DRY-OK 20260914095500 flight_edits_until_first_step`; every row matches; the tsc check is clean.
 
@@ -1048,7 +1093,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 1. `git log origin/master --format=%s | grep -E "BT-(Y1|S2|S3) —"` prints three lines.
 2. The production deployment of an `origin/master` commit containing all three is Ready (Vercel). On that commit, `git grep -n -E "submitGuess\b|submitAllMatchGuesses|lockGuesses" <sha> -- src` prints nothing.
 3. BT-M9a is live, and BT-SQL9's probe log shows every "With M8" row passing, or stop: with this file applied after M9a, `assign_semi_blind_match` and `clear_semi_blind_match` refuse a locked glass with their own sentences and never raise this file's `42501`. If this file changed after BT-SQL9 ran (`git merge-base --is-ancestor "$(git log -1 --format=%H -- supabase/migrations/20260914101500_guess_lock_pin.sql)" <BT-SQL9 sha>` exits non-zero), first re-run that phase on the then-live database with `--m8-phase`.
-   - No `matchRefusalSentence` case is needed for this file's sentence, so `src/lib/semi-blind-copy.ts` does not change. Once BT-S2 and BT-S3 are deployed, no app path inserts a locked semi-blind row, so the assign's `insert … on conflict` never lands on one: `lockGuess` refuses `chooseFirst(n)` while the glass's board row has no key, and `lockGuesses` is deleted. Both RPCs read the caller's row, and the assign also the holder, `FOR UPDATE` and check `locked_at` before they write. A lock that commits first is refused by that check; a lock that comes second waits for the RPC's commit and then sets `locked_at` alone, which the pin allows. Should the sentence still arrive, BT-S2 shows the capitalised default, "This guess is locked in — change it first."
+   - Once BT-S2 and BT-S3 are deployed, no app path inserts a locked semi-blind row: `lockGuess` refuses `chooseFirst(n)` while the glass's board row has no key, and `lockGuesses` is deleted. Both RPCs read the caller's row, and the assign also the holder, `FOR UPDATE` and check `locked_at` before they write. A lock that commits first is refused by that check; a lock that comes second waits for the RPC's commit and then sets `locked_at` alone, which the pin allows. One race stays practically unreachable: while the caller has no row yet the `FOR UPDATE` read locks nothing, so a second tab that inserts and locks that row inside one assign call makes the assign's `insert … on conflict do update` meet the pin, which refuses instead of overwriting a locked pick. `matchRefusalSentence` maps the pin's sentence to the ladder's locked-in sentence (P6x, 3269919; refinement 25), so BT-S2 shows `LOCKED_EDIT_REFUSAL`.
 4. The dry run of this file against the then-live database (M4–M7 and M9a applied) prints `DRY-OK`, and this probe passes every row. If M4–M7 broke a fixture, the main session re-expects that row; the lock-pin rows' outcomes never change.
 5. Read-only, for the log: `select count(*) from guesses where locked_at is not null and scored_at is null` (the rows the pin will hold until "Change it").
 
@@ -1080,7 +1125,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
   - without the exemption: D1a and X2, plus the Z1 body check;
   - without the role scope: K3, X1s, MS1 and MS2, plus Z1.
 
-**Closes:** spec §8.4, §15 M8; ledger B7 (locked rows keep their answers); map PLAY-17 (server refusal); refinement 24; the BT-SQL8 review's four low issues (maintenance scripts blocked by a locked row, the delete-order reason for the exemption, the incomplete deploy gate, the unprobed fourth writer); the BT-SQL8x review's gate check 3 (BT-SQL9's "With M8" rows; no `matchRefusalSentence` case, unreachable once BT-S2 is deployed).
+**Closes:** spec §8.4, §15 M8; ledger B7 (locked rows keep their answers); map PLAY-17 (server refusal); refinement 24; the BT-SQL8 review's four low issues (maintenance scripts blocked by a locked row, the delete-order reason for the exemption, the incomplete deploy gate, the unprobed fourth writer); the BT-SQL8x review's gate check 3 (BT-SQL9's "With M8" rows; the pin's sentence mapped by `matchRefusalSentence`, P6x).
 
 ---
 
@@ -1284,7 +1329,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
   end $$;
   ```
 - Grants: every new function `revoke all … from public, anon` and `grant execute … to authenticated`, except `ensure_semi_blind_keys` (revoked from `authenticated` too: owner-only).
-- Verify the column names against live before writing (`catalog_wines.wine_name`, `catalog_wines_unidentified.wine_name`, `wine_answers.unidentified_wine_id`, `tastings.async_reveal_policy`, and M6's `wines.added_by_host` — concatenate M6 into the dry-run while it is not live).
+- Verify the column names against live before writing (`catalog_wines.wine_name`, `catalog_wines_unidentified.wine_name`, `wine_answers.unidentified_wine_id`, `tastings.async_reveal_policy`, and M6's `wines.added_by_host` — concatenate every earlier BT migration that is not live yet, M4–M7 in apply order, into the dry-run).
 - Post-assert: RLS enabled on `semi_blind_candidate_keys` with no policies; `has_table_privilege('authenticated', 'public.semi_blind_candidate_keys', 'select')` false; every new function SECURITY DEFINER with `search_path=public`; EXECUTE matrix as above.
 - Types (Functions; `semi_blind_candidate_keys` and `ensure_semi_blind_keys` are not typed, clients cannot reach them):
   ```ts
@@ -1314,14 +1359,14 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
   - assign, swap and clear on unlocked rows → OK, as without M8;
   - lock a matched glass, unlock it ("Change it"), then assign it again → OK.
   - M8's writer pre-assert passes, because its list names `assign_semi_blind_match(uuid,text)` and `clear_semi_blind_match(uuid)`. If this file needs another signature, stop and report it: the M8 file's list then changes in a reviewed edit before BT-M8.
-  - `--m8-phase` runs this phase alone, applying M6, M7 and this file only where they are not live yet, so BT-M8's gate can repeat it on the then-live database.
+  - `--m8-phase` runs this phase alone, applying M4–M7 (every earlier BT migration, in apply order) and this file only where they are not live yet, so BT-M8's gate can repeat it on the then-live database.
 
 **Steps**
 - [ ] Verify column names; write; probe (EXPECT first, the "With M8" rows included); dry-run, alone and with M8 after it; run; tsc check.
 
 **Acceptance**
 - `DRY-OK 20260914102500 semi_blind_rpcs`; every row matches, the "With M8" rows included; the tsc check is clean.
-- `DRY-OK 20260914101500 guess_lock_pin` for M8 after this file: a scratch concatenation in apply order (M6 and M7 while they are not live, this file, then M8), saved under M8's file name.
+- `DRY-OK 20260914101500 guess_lock_pin` for M8 after this file: a scratch concatenation in apply order (M4–M7 in apply order while they are not live, this file, then M8), saved under M8's file name.
 
 **Closes:** spec §10.4 (a)–(c), §15 M9 (first half); refinement 24 (the RPCs under the lock pin; BT-M8's gate check 3); ledger B9 (opaque keys, swap, per-glass clear); map SB-04, SB-17 (server), SB-19 (server), SB-27 (server), SB-31 (data), SB-40 (own bottles), GUEST-36 (list), RESULT-13 (picks data); supporting: RECORD-15.
 
@@ -1337,6 +1382,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - create `.superpowers/blind-tasting/probes/20260914103500-semi-blind-lockdown.mjs` (+ outputs, live-defs)
 
 **Does** (spec §10.4 (d), (e), (f); refinement 1)
+- M8 is not live when this task runs: BT-M8 waits for its deploy gate and applies just before BT-M9b (refinement 24). So the dry run concatenates M8 and then this file (any earlier BT migration still not live goes in front, in apply order), and the probe's after phase applies M8 first in the same rolled-back transaction; the pre-assert on `guesses_refuse_locked_edit` and the pool-release row need it.
 - First, read-only: count duplicate open holdings in live data.
   ```sql
   select participant_id, guessed_wine_id, count(*)
@@ -1359,12 +1405,12 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - A client `update guesses set guessed_wine_id = …` → after permission denied; `assign_semi_blind_match` still works.
 - The unique index refuses a direct duplicate (service role).
 - `reveal_wine` on glass A clears and unlocks another unrevealed glass holding A's wine, passes `guesses_refuse_locked_edit`, and scores A's rows 1 / 0 exactly as the before phase.
-- A BYO host who deleted a contributor's participant row reads that glass's `wine_answers` → before 1 row / after 0.
+- A BYO host who deleted a contributor's participant row (staged in DRAFT, or as `service_role` after Start: M4's leave guard refuses the host once the tasting has started) reads that glass's `wine_answers` → before 1 row / after 0.
 - Inserting a glass into an IN_PROGRESS semi-blind tasting → before OK / after refused; into a DRAFT one → OK in both.
 - Deleting a semi-blind tasting whose guesses hold locked matches and a pick on a revealed glass → OK in both phases.
 
 **Steps**
-- [ ] Count duplicates (read-only); dump; write; probe; dry-run; run; types; bare tsc.
+- [ ] Count duplicates (read-only); dump; write; probe (M8 applied first); dry-run (concatenated after M8); run; types; bare tsc.
 
 **Acceptance:** `DRY-OK 20260914103500 semi_blind_lockdown`; every row matches; `npx tsc --noEmit` prints nothing; `rg -n "guessed_wine_id" src --glob '!src/lib/supabase/database.types.ts'` prints nothing.
 
@@ -1374,7 +1420,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 
 ### BT-SQL11 — M10 `20260914104500_transfer_tasting_host`
 
-**Depends on:** BT-SQL10 (dry-run concatenated with M9b while M9b is not live)
+**Depends on:** BT-SQL10 (M8 and M9b are not live when this task runs: the dry run concatenates M8, then M9b, then this file, and the probe applies M8 and M9b first in the same transaction)
 
 **OWNS**
 - create `supabase/migrations/20260914104500_transfer_tasting_host.sql`
@@ -1389,7 +1435,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 **Tests — behavioural probe** (spec §12.5)
 - A non-host → refused; IN_PROGRESS → refused; an INVITED target → refused; a host-added glass → refused; a host draft or pour intent → refused.
 - Success moves `host_id` and keeps the former host JOINED; the new host can update the tasting, the former host cannot.
-- With M9b in the same transaction: a BYO new host cannot read a contributor's hidden answer key, even after the former host deleted that contributor's participant row.
+- With M8 and M9b in the same transaction: a BYO new host cannot read a contributor's hidden answer key, even after the former host deleted that contributor's participant row (staged in DRAFT, or as `service_role` after Start).
 - A bring-your-own tasting whose contributor row was deleted (its glass now has a null contributor and `added_by_host = false`) → not refused as a host-added glass.
 
 **Steps**
@@ -1406,7 +1452,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 **Procedure (every BT-M task)**
 - [ ] The SQL task is committed, and its probe log shows every EXPECT row passing.
 - [ ] `git fetch origin`, then re-check the version is absent live and upstream (Global Constraints "Versions").
-- [ ] BT-M4 onward: the session log records add-wine V2 as done. BT-M6: rows O1–O3 and C1 of its probe are green on AW-F13's committed code. BT-M8: every check in BT-SQL8 "Deploy gate" holds.
+- [ ] BT-M4 onward: the session log records add-wine V2 as done. BT-M6: rows O1–O4, C1, K7, N8, W1, Y10, Q2, Q8 and Q13 of its probe are green on the then-committed write path (AW-F13's code and anything since), and the apply is retried on a `lock_timeout` or a deadlock (refinement 25). BT-M8: every check in BT-SQL8 "Deploy gate" holds.
 - [ ] `node scripts/scratch-apply.mjs --file <file> --mode dry` → `DRY-OK`, then `--mode live` → `LIVE-APPLIED <version> <name>`.
 - [ ] Run the spot check below with `node --env-file=.env.local --input-type=module` using `pg` and `pgConfig()`, inside `begin read only … rollback`. Append the output to `.superpowers/blind-tasting/probes/live-applies.log`.
 - [ ] Stop at the first `FAILED`. Never edit an applied migration.
@@ -1418,7 +1464,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 | BT-M3 | `20260914092500_tasting_lifecycle_stamps.sql` | `select column_name from information_schema.columns where table_schema='public' and ((table_name='tastings' and column_name in ('started_at','finished_at')) or (table_name='wines' and column_name='revealed_at'))` → 3 rows |
 | BT-M4 | `20260914093500_join_preview_and_late_join.sql` | `select has_function_privilege('anon','public.get_join_preview(text)','execute'), has_function_privilege('anon','public.host_tastings_count(uuid)','execute')` → true, false; `select count(*) from pg_trigger where tgname = 'tasting_participants_stamp_joined_at'` → 1 |
 | BT-M5 | `20260914094500_hidden_glass_notes.sql` | `select pg_get_constraintdef(oid) from pg_constraint where conname = 'wset_notes_one_identity'` contains `tasting_wine_id IS NOT NULL` |
-| BT-M6 | `20260914095500_flight_edits_until_first_step.sql` | `select policyname from pg_policies where tablename = 'wines' and cmd = 'DELETE'` → only `wines delete adder`; `select has_column_privilege('authenticated','public.wines','reveal_step','update'), has_column_privilege('authenticated','public.wines','position','update')` → false, true |
+| BT-M6 | `20260914095500_flight_edits_until_first_step.sql` | `select policyname from pg_policies where tablename = 'wines' and cmd = 'DELETE'` → only `wines delete adder`; `select has_column_privilege('authenticated','public.wines','reveal_step','update'), has_column_privilege('authenticated','public.wines','position','update')` → false, true; `select count(*) from tastings where status <> 'DRAFT' and started_at is null` → 0 |
 | BT-M7 | `20260914100500_tasting_pacing.sql` | `select tgname from pg_trigger where tgname in ('tastings_pointer_in_tasting','tastings_pause_follows_status','wines_refuse_reveal_while_paused')` → 3 rows |
 | BT-M8 | `20260914101500_guess_lock_pin.sql` | `select tgname from pg_trigger where tgrelid = 'public.guesses'::regclass and not tgisinternal order by 1` → four names; `select md5(replace(prosrc, chr(13), '')) from pg_proc where oid = 'public.guesses_refuse_locked_edit()'::regprocedure` → the migration's `c_body_md5` |
 | BT-M9a | `20260914102500_semi_blind_rpcs.sql` | `select to_regprocedure('public.assign_semi_blind_match(uuid,text)') is not null, has_table_privilege('authenticated','public.semi_blind_candidate_keys','select')` → true, false |
@@ -1428,7 +1474,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 
 ### BT-M9b — Deploy gate, apply M9b, Realtime check
 
-**Depends on:** BT-V3 (push A pushed), BT-SQL10, BT-M9a
+**Depends on:** BT-V3 (push A pushed), BT-SQL10, BT-M9a, BT-M8
 
 - [ ] **Gate.** All of these hold, or stop:
   1. `origin/master` contains the BT-S5, BT-S2, BT-S3, BT-S4 and BT-H2 commits (`git log origin/master --format=%s | grep -E "BT-(S5|S2|S3|S4|H2) —"`).
@@ -5841,7 +5887,7 @@ All 371 items in `map.json`, each exactly once. "Built" names the tasks that bui
 | XCUT-45 | stale: no route to redirect; not built |
 | XCUT-53 | partial: BT-P5, BT-Y1 (per-group saves in the tested `guess-save-queue.ts`; a failed group reverts alone; Lock waits for the queues) |
 | PLAY-15 | partial: BT-P5, BT-Y1 (years 1900 to next UTC year, tawny 1–100) |
-| CREATE-51 | a DECLINED guest may rejoin through the link: B4 keeps it, with a fresh `joined_at` (BT-SQL4's `viewer_tasting_id` rule and joined-at trigger; BT-G3) |
+| CREATE-51 | a DECLINED guest may rejoin through the link: B4 keeps it; the first join's `joined_at` stays, and a DECLINED invitee who never joined is stamped on that first join (BT-SQL4's `viewer_tasting_id` rule and joined-at trigger, stamped once since BT-SQL4x; BT-G3) |
 | CREATE-22 | stale: DRAFT stays; copy landed in add-wine T2 |
 | XCUT-42 | partial: landed in add-wine T2 |
 | LOBBY-17 | Declined collapsed and not counted: BT-P1, BT-L2 |
