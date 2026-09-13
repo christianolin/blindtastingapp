@@ -370,6 +370,11 @@ export type Database = {
           // before the migration (no backfill).
           started_at: string | null;
           finished_at: string | null;
+          // 20260914100500 (blind-tasting spec §7.4, B6, Q1): set by the host
+          // to pause a LIVE tasting; while set, the database refuses every
+          // reveal write on its glasses. A trigger clears it on any tasting that
+          // is not LIVE and IN_PROGRESS (so End tasting clears it too).
+          paused_at: string | null;
         };
         Insert: {
           id?: string;
@@ -392,6 +397,7 @@ export type Database = {
           join_code?: string | null;
           started_at?: string | null;
           finished_at?: string | null;
+          paused_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
         Relationships: [];
