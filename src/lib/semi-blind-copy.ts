@@ -164,6 +164,10 @@ export function poolHelperLines(poolCards: readonly Pick<CandidateCard, "grape">
 const GLASS_LOCKED = "glass locked";
 const NOT_IN_POOL = "that wine is not in your pool";
 const THIS_GLASS_LOCKED_IN = "this glass is locked in";
+// `guesses_refuse_locked_edit`'s exception message (M8). An assign meets it only
+// in a race: another tab inserts and locks the row while this call runs, and the
+// assign's `insert … on conflict do update` then lands on a locked row.
+const THIS_GUESS_LOCKED_IN = "this guess is locked in — change it first";
 
 function asSentence(message: string): string {
   if (message === "") return message;
@@ -178,7 +182,8 @@ function asSentence(message: string): string {
  *   "Glass {N} · locked" through `glassNumberOf`.
  * - "that wine is not in your pool" says "That wine has been revealed." when
  *   the candidate is revealed.
- * - "this glass is locked in" is the ladder's locked-in sentence, passed in.
+ * - "this glass is locked in", and M8's lock pin "this guess is locked in —
+ *   change it first", are the ladder's locked-in sentence, passed in.
  * - Anything else is the RPC's own sentence, capitalised.
  *
  * PostgREST puts a `raise … using detail` into `details`, so a PostgrestError
@@ -203,6 +208,7 @@ export function matchRefusalSentence(
     case NOT_IN_POOL:
       return ctx.revealedKeys.has(ctx.candidateKey) ? REVEALED_WINE_REFUSAL : asSentence(message);
     case THIS_GLASS_LOCKED_IN:
+    case THIS_GUESS_LOCKED_IN:
       return ctx.lockedIn;
     default:
       return asSentence(message);
