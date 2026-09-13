@@ -3,7 +3,7 @@
 // independently. Every field is computed from RLS-readable rows or an existing
 // SECURITY DEFINER RPC — no new migrations.
 
-import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
+import type { RevealMode, TimingMode, WineSourceMode } from "@/lib/supabase/database.types";
 
 export type DistributionItem = { label: string; count: number };
 
@@ -16,6 +16,13 @@ export type LiveBanner = {
   revealMode: RevealMode;
   /** Rides along for the add-wine sheet's flight destination (7i hint). */
   wineSource: WineSourceMode;
+  /** LIVE reads "Live now"; a self-paced (ASYNC) tasting reads "In progress ·
+      self-paced" (`liveBannerCopy`, entry-4), and its hint phase follows. */
+  timingMode: TimingMode;
+  /** The viewer may add a wine to this flight: the host of a host-provides
+      tasting, or a JOINED participant of a bring-your-own one
+      (`canAddToFlight`). The flight hint registers only then (D12). */
+  canAddWine: boolean;
   /** 1-based index of the wine in play (the first not-fully-revealed wine). */
   wineIndex: number;
   wineCount: number;
@@ -39,13 +46,16 @@ export type NextUpBanner = {
   hosting: boolean;
   hostName: string;
   scheduledAt: string | null;
-  /** The flight's slots (padded to 6 for a host-provides flight). `note` is
-      a muted suffix after a filled label — "set" for a host-provides wine;
-      bring-your-own slots carry the contributor's name and no note. */
+  /** The flight so far, never padded to a planned count (`nextUpFlight`,
+      amendment 6): one filled line per real glass — "Wine N" with the muted
+      `note` "set" for host-provides, the contributor label ("Gustav's wine")
+      and no note for bring-your-own — then, for bring-your-own only, one
+      unfilled "waiting for {name} to add it" line per JOINED participant
+      without a bottle. */
   slots: { label: string; filled: boolean; note?: string }[];
   canAddWine: boolean;
   nextWinePosition: number;
-  /** The add-wine sheet's flight destination needs both — "Add wine N" opens
+  /** The add-wine sheet's flight destination needs both — "Add a wine" opens
       the sheet, not the legacy page. */
   revealMode: RevealMode;
   wineSource: WineSourceMode;

@@ -42,9 +42,11 @@ export function NoteEditor({
   onClose?: () => void;
   /** Called after the note was deleted; defaults to going to the wine page. */
   onDeleted?: () => void;
-  /** Called after a successful save (with the saved note id); a modal uses it
-      to close itself (and skip the route swap the standalone page does). */
-  onSaved?: (savedId?: string) => void;
+  /** Called after a successful save with the saved note id and the state that
+      was saved (its id is the note's id before this save: null when this save
+      created the note); a modal uses it to close itself (and skip the route
+      swap the standalone page does) and to summarise the note (ledger R6). */
+  onSaved?: (savedId: string, saved: WsetNoteState) => void;
   /** The open sheet's handle — a modal routes Escape and its backdrop through
       it, so they take the same dirty-aware path as Close. */
   sheetRef?: React.Ref<WsetSheetHandle>;
@@ -104,7 +106,7 @@ export function NoteEditor({
       // A modal (Taste & Rate) closes itself after saving; the standalone
       // route instead swaps to the saved note's own URL.
       if (onSaved) {
-        onSaved(savedId);
+        onSaved(savedId, state);
       } else if (!state.id && savedId) {
         router.replace(`/catalog/${wineId}/notes/${savedId}`);
       }

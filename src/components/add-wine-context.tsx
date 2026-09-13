@@ -10,60 +10,81 @@ import {
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
-import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
-import { AddWineSheet, type InitialSource } from "@/components/add-wine/add-wine-sheet";
+import type {
+  RevealMode,
+  TastingStatus,
+  TimingMode,
+  WineSourceMode,
+} from "@/lib/supabase/database.types";
+import { AddWineSheet, type InitialLot } from "@/components/add-wine/add-wine-sheet";
 import { NewNoteModal } from "@/components/new-note-modal";
+import { NoteSavedSheet, NoteSavedStepContext } from "@/components/note-saved-sheet";
+import type { StorageLike } from "@/lib/safe-storage";
+import {
+  FRESH_VISIT,
+  dismissNoteSaved,
+  shouldShowNoteSaved,
+  type NoteSavedReport,
+  type NoteSavedVisit,
+} from "@/lib/wset/note-saved";
 import type {
   AddWineDestination,
   AddWineOpenOptions,
   FlightHint,
-  RatePick,
+  NotePick,
 } from "@/components/add-wine/types";
 
-// Which destination a legacy caller means. All three now open the one
-// universal sheet with the matching destination.
-export type AddWineKind = "catalog" | "cellar" | "tasting";
+// The device's localStorage for R6's "Don't show this again". safe-storage calls
+// this getter inside its try, because a blocked store throws on the accessor.
+const browserStorage = (): StorageLike | null => window.localStorage;
+
+// Which destination a pillar's add button means: the catalog's "Add a wine" or
+// the cellar's "Add a bottle". Every other launcher calls openAddWineSheet.
+export type AddWineKind = "catalog" | "cellar";
 
 export type AddWineOpts = {
-  // Prefill the by-hand form (e.g. a label scan's "add as new").
-  catalog?: WineFormInitial;
-  // Prefill the by-hand form for a cellar add (creates the wine + a lot).
-  cellarNew?: WineFormInitial;
-  // Open straight on the cellar fields for an existing catalog wine.
+  /** Cellar only: open on the lot step for a wine already in the catalog (a
+      catalog row's "Add to cellar"). `label` is set under "Into your cellar". */
   cellarWine?: { id: string; label: string };
 };
 
 /** The tasting the viewer is on and may add wines to (registered by the
-    tasting page). `position` is the next glass number. */
+    tasting page). `position` is the next glass number; `phase` is how the
+    chooser names it (D12, entry-4). */
 export type ActiveTasting = {
   tastingId: string;
   tastingName: string;
   revealMode: RevealMode;
   wineSource: WineSourceMode;
   position: number;
+  phase: FlightHint["phase"];
 };
 
-/** A registration may carry only the id (the pre-sheet registrar); the
-    provider then reads the rest itself so the sheet still gets a full
-    flight destination. */
+/** A tasting's flight-hint phase (spec §D.4 #2): a DRAFT is next up, a running
+    ASYNC tasting is self-paced ("in progress"), anything else is live. */
+export function tastingPhase(
+  status: TastingStatus | undefined,
+  timingMode: TimingMode | undefined,
+): FlightHint["phase"] {
+  if (status === "DRAFT") return "next";
+  return timingMode === "ASYNC" ? "self-paced" : "live";
+}
+
+/** A registration may carry only the id; the provider then reads the rest
+    itself, so the sheet still gets a full flight destination and hint. */
 type ActiveTastingInput = { tastingId: string } & Partial<Omit<ActiveTasting, "tastingId">>;
 
 type Ctx = {
+  /** A pillar's add button: the catalog, or the cellar (on a wine's lot step with `cellarWine`). */
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
-  openScan: (target?: "catalog" | "cellar" | "choose") => void;
-  // Scan a stack of labels into the cellar in one pass (7d multi mode).
-  openBulkScan: () => void;
   activeTasting: ActiveTasting | null;
   setActiveTasting: (t: ActiveTastingInput | null) => void;
-  // The header camera while a tasting is registered: scan straight into it.
-  openTastingScan: () => void;
-  // `{ kind: "rate" }` is Taste & rate: pick one wine, then its WSET note opens.
+  /** Any destination. `{ kind: "note" }` is Taste & rate: pick one wine, then its WSET note opens. */
   openAddWineSheet: (
     destination: AddWineDestination | null,
     options?: AddWineOpenOptions,
   ) => void;
-  // The Overview's live / next-up tasting, offered by the 7i chooser.
+  /** The Overview's live or next-up tasting, offered by the E1 chooser. */
   registerFlightHint: (hint: FlightHint | null) => void;
 };
 const AddWineCtx = createContext<Ctx | null>(null);
@@ -75,23 +96,17 @@ export function useAddWine(): Ctx {
   return ctx;
 }
 
+/** One open of the sheet. `seq` counts opens and keys the sheet, so every open
+    starts on a fresh reducer. */
 type OpenSheet = {
+  seq: number;
   destination: AddWineDestination | null;
   options: AddWineOpenOptions;
-  initialSource: InitialSource | null;
-  initialPrefill: WineFormInitial | null;
+  initialLot: InitialLot | null;
 };
 
-function flightOf(t: ActiveTasting): AddWineDestination {
-  return {
-    kind: "flight",
-    tastingId: t.tastingId,
-    tastingName: t.tastingName,
-    revealMode: t.revealMode,
-    wineSource: t.wineSource,
-    position: t.position,
-  };
-}
+/** A note pick waiting on its WSET note. `seq` counts picks and keys the modal. */
+type OpenNote = { seq: number; pick: NotePick };
 
 // Holds the single add-wine sheet for the whole authed app, so the sidebar,
 // the header camera and any page's button open the same dialog instead of
@@ -104,23 +119,43 @@ export function AddWineProvider({
   children: ReactNode;
 }) {
   const [sheet, setSheet] = useState<OpenSheet | null>(null);
+  const [note, setNote] = useState<OpenNote | null>(null);
   const [activeTasting, setActiveTastingState] = useState<ActiveTasting | null>(null);
-  const [flightHint, setFlightHint] = useState<FlightHint | null>(null);
-  // A rate pick waiting on its WSET note (the rate destination, or 7i).
-  const [notePick, setNotePick] = useState<RatePick | null>(null);
+  const [overviewHint, setOverviewHint] = useState<FlightHint | null>(null);
   const [preferredCurrency, setPreferredCurrency] = useState("DKK");
   const supabase = useMemo(() => createClient(), []);
+  const openCount = useRef(0);
+  const pickCount = useRef(0);
 
-  // The profile currency only labels the cellar fields' price, so it is read
-  // lazily — once, the first time a sheet that can reach those fields opens
-  // (a cellar destination, or none: the 7i chooser may pick the cellar) —
-  // not on every page load. Until it lands the footer shows "DKK", the same
-  // fallback it always had. The guard is set before the request so two
-  // quick opens do not fetch twice; a failed read clears it for a retry.
+  // R6 "Note saved": every NewNoteModal reports its saves through
+  // NoteSavedStepContext, and the confirmation shows after the first save of a
+  // new note. `seq` keys each showing, so its checkbox starts unticked. The
+  // visit keeps "Don't show this again" even when the device write fails
+  // (safe-storage returns false), so it stays away until the next load.
+  const [noteSaved, setNoteSaved] = useState<{ seq: number; report: NoteSavedReport } | null>(null);
+  const savedCount = useRef(0);
+  const noteSavedVisit = useRef<NoteSavedVisit>(FRESH_VISIT);
+  const reportNoteSaved = useCallback((report: NoteSavedReport) => {
+    if (!shouldShowNoteSaved(report, noteSavedVisit.current, browserStorage)) return;
+    savedCount.current += 1;
+    setNoteSaved({ seq: savedCount.current, report });
+  }, []);
+  const closeNoteSaved = useCallback((seq: number, remember: boolean) => {
+    if (remember) noteSavedVisit.current = dismissNoteSaved(browserStorage).visit;
+    setNoteSaved((shown) => (shown?.seq === seq ? null : shown));
+  }, []);
+
+  // The profile currency labels and stores a new lot's price, so it is read
+  // lazily — once, the first time a sheet that can reach the lot step opens:
+  // the cellar, the catalog (D3's "Add it to my cellar") or no destination (the
+  // E1 chooser may pick the cellar). A flight or a note never writes a lot.
+  // Until it lands the step shows "DKK", the same fallback it always had. The
+  // guard is set before the request so two quick opens do not fetch twice; a
+  // failed read clears it for a retry.
   const currencyLoadedRef = useRef(false);
   const ensureCurrency = useCallback(
     (destination: AddWineDestination | null) => {
-      if (destination && destination.kind !== "cellar") return;
+      if (destination?.kind === "flight" || destination?.kind === "note") return;
       if (currencyLoadedRef.current) return;
       currencyLoadedRef.current = true;
       supabase
@@ -153,7 +188,8 @@ export function AddWineProvider({
         t.tastingName !== undefined &&
         t.revealMode !== undefined &&
         t.wineSource !== undefined &&
-        t.position !== undefined
+        t.position !== undefined &&
+        t.phase !== undefined
       ) {
         setActiveTastingState(t as ActiveTasting);
         return;
@@ -164,7 +200,7 @@ export function AddWineProvider({
         const [{ data: tasting }, { count }] = await Promise.all([
           supabase
             .from("tastings")
-            .select("id, name, reveal_mode, wine_source")
+            .select("id, name, reveal_mode, wine_source, status, timing_mode")
             .eq("id", t.tastingId)
             .maybeSingle(),
           supabase
@@ -179,134 +215,133 @@ export function AddWineProvider({
           revealMode: t.revealMode ?? tasting.reveal_mode,
           wineSource: t.wineSource ?? tasting.wine_source,
           position: t.position ?? (count ?? 0) + 1,
+          phase: t.phase ?? tastingPhase(tasting.status, tasting.timing_mode),
         });
       })().catch(() => {});
     },
     [supabase],
   );
 
-  const openAddWineSheet = useCallback(
-    (destination: AddWineDestination | null, options: AddWineOpenOptions = {}) => {
+  const openSheet = useCallback(
+    (
+      destination: AddWineDestination | null,
+      options: AddWineOpenOptions,
+      initialLot: InitialLot | null,
+    ) => {
       ensureCurrency(destination);
-      setSheet({ destination, options, initialSource: null, initialPrefill: null });
+      openCount.current += 1;
+      setSheet({ seq: openCount.current, destination, options, initialLot });
     },
     [ensureCurrency],
   );
 
+  const openAddWineSheet = useCallback(
+    (destination: AddWineDestination | null, options: AddWineOpenOptions = {}) =>
+      openSheet(destination, options, null),
+    [openSheet],
+  );
+
   const openAddWine = useCallback(
-    (kind: AddWineKind, o: AddWineOpts = {}) => {
+    (kind: AddWineKind, opts: AddWineOpts = {}) => {
       if (kind === "catalog") {
-        setSheet({
-          destination: { kind: "catalog" },
-          options: o.catalog ? { start: "byhand" } : {},
-          initialSource: null,
-          initialPrefill: o.catalog ?? null,
-        });
+        openSheet({ kind: "catalog" }, {}, null);
         return;
       }
-      if (kind === "cellar") {
-        ensureCurrency({ kind: "cellar" });
-        setSheet({
-          destination: { kind: "cellar" },
-          options: o.cellarNew ? { start: "byhand" } : {},
-          initialSource: o.cellarWine
-            ? {
-                source: { kind: "catalog", catalogWineId: o.cellarWine.id },
-                label: o.cellarWine.label,
-              }
-            : null,
-          initialPrefill: o.cellarNew ?? null,
-        });
-        return;
-      }
-      // "tasting": the registered flight, or nothing to open.
-      if (activeTasting) openAddWineSheet(flightOf(activeTasting));
+      // A catalog row's "Add to cellar" opens on that wine's lot step, where
+      // the merge card still checks for a lot already held.
+      const wine = opts.cellarWine;
+      openSheet(
+        { kind: "cellar" },
+        {},
+        wine
+          ? { source: { kind: "catalog", catalogWineId: wine.id, via: "search" }, title: wine.label }
+          : null,
+      );
     },
-    [activeTasting, openAddWineSheet, ensureCurrency],
+    [openSheet],
   );
 
-  const openScan = useCallback(
-    (target: "catalog" | "cellar" | "choose" = "catalog") => {
-      openAddWineSheet(target === "choose" ? null : { kind: target }, { start: "camera" });
-    },
-    [openAddWineSheet],
+  // A sheet's close and its note pick act only for that open: a late call from
+  // a sheet a newer open replaced neither closes the new sheet nor opens a note.
+  const closeSheet = useCallback((seq: number) => {
+    setSheet((open) => (open?.seq === seq ? null : open));
+  }, []);
+  const pickNote = useCallback((seq: number, pick: NotePick) => {
+    if (seq !== openCount.current) return;
+    pickCount.current += 1;
+    setNote({ seq: pickCount.current, pick });
+  }, []);
+
+  const registerFlightHint = useCallback((hint: FlightHint | null) => setOverviewHint(hint), []);
+
+  // The registered tasting is also the E1 "Tonight's flight" candidate, ahead
+  // of the Overview's hint (you are looking at it right now), and it keeps its
+  // own phase. Otherwise the Overview's hint.
+  const flightHint = useMemo<FlightHint | null>(
+    () =>
+      activeTasting
+        ? {
+            tastingId: activeTasting.tastingId,
+            tastingName: activeTasting.tastingName,
+            position: activeTasting.position,
+            phase: activeTasting.phase,
+            revealMode: activeTasting.revealMode,
+            wineSource: activeTasting.wineSource,
+          }
+        : overviewHint,
+    [activeTasting, overviewHint],
   );
-
-  const openBulkScan = useCallback(() => {
-    openAddWineSheet({ kind: "cellar" }, { start: "camera", multi: true });
-  }, [openAddWineSheet]);
-
-  const openTastingScan = useCallback(() => {
-    if (activeTasting) openAddWineSheet(flightOf(activeTasting), { start: "camera" });
-  }, [activeTasting, openAddWineSheet]);
-
-  const registerFlightHint = useCallback((hint: FlightHint | null) => setFlightHint(hint), []);
-
-  // The registered tasting is also the 7i "Tonight's flight" candidate, ahead
-  // of the Overview's banner (you are looking at it right now).
-  const hint: FlightHint | null = activeTasting
-    ? {
-        tastingId: activeTasting.tastingId,
-        tastingName: activeTasting.tastingName,
-        position: activeTasting.position,
-        live: flightHint?.tastingId === activeTasting.tastingId ? flightHint.live : false,
-        revealMode: activeTasting.revealMode,
-        wineSource: activeTasting.wineSource,
-      }
-    : flightHint;
 
   const value = useMemo<Ctx>(
     () => ({
       openAddWine,
-      openScan,
-      openBulkScan,
       activeTasting,
       setActiveTasting,
-      openTastingScan,
       openAddWineSheet,
       registerFlightHint,
     }),
-    [
-      openAddWine,
-      openScan,
-      openBulkScan,
-      activeTasting,
-      setActiveTasting,
-      openTastingScan,
-      openAddWineSheet,
-      registerFlightHint,
-    ],
+    [openAddWine, activeTasting, setActiveTasting, openAddWineSheet, registerFlightHint],
   );
 
   return (
     <AddWineCtx.Provider value={value}>
-      {children}
-      {sheet ? (
-        <AddWineSheet
-          userId={userId}
-          preferredCurrency={preferredCurrency}
-          destination={sheet.destination}
-          options={sheet.options}
-          flightHint={hint}
-          initialSource={sheet.initialSource}
-          initialPrefill={sheet.initialPrefill}
-          onClose={() => setSheet(null)}
-          onRate={(pick) => setNotePick(pick)}
-        />
-      ) : null}
-      {notePick ? (
-        <NewNoteModal
-          // Remount per pick so a second rate never starts on the last note.
-          key={`${notePick.catalogWineId}:${notePick.lotId ?? ""}`}
-          wineId={notePick.catalogWineId}
-          // The sheet draws nothing down: the bottle leaves the cellar only
-          // once the note saves, and only when the pick asked for it.
-          cellarConsume={
-            notePick.consume && notePick.lotId ? { lotId: notePick.lotId } : null
-          }
-          onClose={() => setNotePick(null)}
-        />
-      ) : null}
+      <NoteSavedStepContext.Provider value={reportNoteSaved}>
+        {children}
+        {sheet ? (
+          <AddWineSheet
+            key={sheet.seq}
+            userId={userId}
+            preferredCurrency={preferredCurrency}
+            destination={sheet.destination}
+            options={sheet.options}
+            flightHint={flightHint}
+            initialLot={sheet.initialLot}
+            onClose={() => closeSheet(sheet.seq)}
+            onNote={(pick) => pickNote(sheet.seq, pick)}
+          />
+        ) : null}
+        {note ? (
+          <NewNoteModal
+            // Keyed per pick, so a second pick never starts on the last note.
+            key={note.seq}
+            wineId={note.pick.catalogWineId}
+            // The sheet draws nothing down: the bottle leaves the cellar only
+            // once the note saves, and only when the pick asked for it.
+            cellarConsume={
+              note.pick.consume && note.pick.lotId ? { lotId: note.pick.lotId } : null
+            }
+            onClose={() => setNote(null)}
+          />
+        ) : null}
+        {noteSaved ? (
+          // R6: "Note saved" in place of the note that just closed.
+          <NoteSavedSheet
+            key={noteSaved.seq}
+            report={noteSaved.report}
+            onClose={(remember) => closeNoteSaved(noteSaved.seq, remember)}
+          />
+        ) : null}
+      </NoteSavedStepContext.Provider>
     </AddWineCtx.Provider>
   );
 }

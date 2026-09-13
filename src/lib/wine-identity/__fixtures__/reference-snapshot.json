@@ -1543,12 +1543,6 @@
  ],
  "producers": [
   {
-   "id": "0d1d099c-3ee0-4601-99ee-d0d4f5ffd194",
-   "name": "Tridente",
-   "region_id": "528b5672-5bee-4cd3-8435-870571f42907",
-   "has_wines": false
-  },
-  {
    "id": "0e6cfed9-bd22-4ae8-997d-e38a57334b03",
    "name": "Cigliuti",
    "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
@@ -1591,12 +1585,6 @@
    "has_wines": true
   },
   {
-   "id": "38a85744-e998-4063-96b1-8717e9914766",
-   "name": "Vecchie Vigne Paitin",
-   "region_id": "0fe06997-393b-4d1d-946e-0fdd74d64ec6",
-   "has_wines": false
-  },
-  {
    "id": "3e01b802-336e-4d19-864d-a8bf4466e271",
    "name": "Georges Duboeuf",
    "region_id": "13232953-3da6-4c27-a201-26581834b5f9",
@@ -1619,12 +1607,6 @@
    "name": "Sociedade dos Vinhos Borges",
    "region_id": "5e7040d2-3717-4ad4-8714-003a682cc2c8",
    "has_wines": true
-  },
-  {
-   "id": "6b90fa8b-abef-45f0-8702-3b12b502dc95",
-   "name": "Gasleni Alberti",
-   "region_id": "ffc67771-ce43-4472-93c8-14c521340743",
-   "has_wines": false
   },
   {
    "id": "78aca61f-bb0e-4396-b4fd-0dcc5a52c32e",
@@ -1691,6 +1673,18 @@
    "name": "El Enemigo",
    "region_id": "4ea28dde-0c29-4b6b-80ad-8718d28754ff",
    "has_wines": true
+  }
+ ],
+ "aliases": [
+  {
+   "id": "368aeed6-fb56-4a66-a80c-b0c4f99eeb25",
+   "producer_id": "6aaef358-1645-4811-bd99-daa63c585391",
+   "alias": "Borges Porto"
+  },
+  {
+   "id": "a4459428-ccc3-42ad-b4e7-99cd306b5274",
+   "producer_id": "7f46bd24-f237-48e2-a151-ea52e66c2d09",
+   "alias": "Tridente"
   }
  ],
  "grapes": [

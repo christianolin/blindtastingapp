@@ -4,7 +4,9 @@ import { LocalDateTime } from "@/components/local-date-time";
 import { ActionButton } from "@/components/overview/action-button";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { LiveDot } from "@/components/overview/live-dot";
+import { bannerPhase, liveBannerCopy } from "@/lib/overview-math";
 import { ordinal } from "@/lib/stats-math";
+import { glassesSoFarPhrase, joinEyebrow } from "@/lib/tasting-eyebrow";
 import { cn } from "@/lib/utils";
 import type {
   LiveBanner,
@@ -14,27 +16,32 @@ import type {
 import { StartTastingRow } from "./start-tasting-row";
 import { FlightHintRegistrar } from "./flight-hint-registrar";
 import { AddWineBannerButton } from "./add-wine-banner-button";
-import { nextUpMeta } from "./next-up-meta";
+import { nextUpGlassCount, nextUpMeta } from "./next-up-meta";
 
-// The banner slot above the three cards. Live tasting → the bordeaux banner;
-// otherwise the parchment "Next up" variant; nothing scheduled → the single
-// "Start a tasting" row. Never an empty bordeaux block.
+// The banner slot above the three cards. A running tasting → the bordeaux
+// banner ("Live now" for a LIVE tasting, "In progress · self-paced" for an
+// ASYNC one); otherwise the parchment "Next up" variant; nothing scheduled →
+// the single "Start a tasting" row. Never an empty bordeaux block.
 //
-// A live or next-up tasting is also registered as the header camera's
-// "Tonight's flight" (the 7i chooser) — for next-up only when the viewer may
-// add to it, which the banner data already knows.
+// A running or next-up tasting is also registered as the header camera's
+// "Tonight's flight" (the 7i chooser) — only when the viewer may add to it,
+// which the banner data already knows, so a guest who cannot add is never
+// offered a flight row (D12). The hint carries the tasting's phase: "live",
+// "self-paced" (the sheet reads it "in progress") or "next".
 export function OverviewBanner({ banner }: { banner: BannerData }) {
   if (banner.kind === "live") {
     return (
       <>
-        <FlightHintRegistrar
-          tastingId={banner.tastingId}
-          tastingName={banner.name}
-          position={banner.wineCount + 1}
-          live
-          revealMode={banner.revealMode}
-          wineSource={banner.wineSource}
-        />
+        {banner.canAddWine ? (
+          <FlightHintRegistrar
+            tastingId={banner.tastingId}
+            tastingName={banner.name}
+            position={banner.wineCount + 1}
+            phase={bannerPhase(banner.timingMode)}
+            revealMode={banner.revealMode}
+            wineSource={banner.wineSource}
+          />
+        ) : null}
         <LiveBannerView banner={banner} />
       </>
     );
@@ -47,7 +54,7 @@ export function OverviewBanner({ banner }: { banner: BannerData }) {
             tastingId={banner.tastingId}
             tastingName={banner.name}
             position={banner.nextWinePosition}
-            live={false}
+            phase="next"
             revealMode={banner.revealMode}
             wineSource={banner.wineSource}
           />
@@ -90,19 +97,35 @@ function liveMeta(b: LiveBanner): string {
   return parts.join(" · ");
 }
 
+// A self-paced tasting's dot: LiveDot's size without the ping, in gold on the
+// bordeaux ground — nobody is gathered at one table right now (entry-4).
+function StillDot({ size = 7 }: { size?: number }) {
+  return (
+    <span
+      className="inline-flex shrink-0 rounded-full bg-gold-light"
+      style={{ width: size, height: size }}
+      aria-hidden
+    />
+  );
+}
+
 function LiveBannerView({ banner }: { banner: LiveBanner }) {
   const host = banner.hosting ? "you are hosting" : `hosted by ${banner.hostName}`;
+  // LIVE: the pulsing dot, "Live now · {host}", "Back to the table". A
+  // self-paced tasting: a still dot, "In progress · self-paced · {host}",
+  // "Continue guessing".
+  const copy = liveBannerCopy(banner.timingMode, host);
   // The phone eyebrow folds the standing in ("Live now · hosting · 2nd of 7")
   // because the meta line is dropped there.
-  const phoneEyebrow = [
-    "Live now",
-    banner.hosting ? "hosting" : `hosted by ${banner.hostName}`,
-    banner.standing
-      ? `${ordinal(banner.standing.rank)} of ${banner.standing.competitors}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const phoneEyebrow = liveBannerCopy(
+    banner.timingMode,
+    joinEyebrow([
+      banner.hosting ? "hosting" : `hosted by ${banner.hostName}`,
+      banner.standing
+        ? `${ordinal(banner.standing.rank)} of ${banner.standing.competitors}`
+        : null,
+    ]),
+  ).eyebrow;
 
   return (
     <Link
@@ -117,8 +140,8 @@ function LiveBannerView({ banner }: { banner: LiveBanner }) {
           size="md"
           className="flex items-center gap-2 tracking-[.15em] text-gold-light max-md:gap-[7px]"
         >
-          <LiveDot />
-          <span className="min-w-0 truncate max-md:hidden">Live now · {host}</span>
+          {copy.dot === "ping" ? <LiveDot /> : <StillDot />}
+          <span className="min-w-0 truncate max-md:hidden">{copy.eyebrow}</span>
           <span className="min-w-0 truncate md:hidden">{phoneEyebrow}</span>
         </Eyebrow>
         <span className="font-heading text-[31px] leading-[1.05] font-semibold max-xl:text-[27px] max-md:text-[24px] max-md:leading-[1.04]">
@@ -130,7 +153,7 @@ function LiveBannerView({ banner }: { banner: LiveBanner }) {
       </div>
       <span className="flex items-center gap-[9px] rounded-[9px] bg-gold px-[22px] py-[13px] text-[14.5px] font-bold text-foreground max-md:min-h-11 max-md:justify-center max-md:gap-2 max-md:p-3">
         <Wine className="size-4 shrink-0" aria-hidden />
-        Back to the table
+        {copy.cta}
       </span>
     </Link>
   );
@@ -138,6 +161,7 @@ function LiveBannerView({ banner }: { banner: LiveBanner }) {
 
 function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
   const href = `/tastings/${banner.tastingId}`;
+  const hostProvides = banner.wineSource === "HOST_PROVIDES";
   return (
     <section
       aria-label="Next up"
@@ -166,7 +190,7 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
           {banner.name}
         </span>
         {/* Phones only: who hosts and the flight so far, which the wider
-            banner says with its eyebrow and numbered slot list. */}
+            banner says with its eyebrow and flight list. */}
         <span className="-mt-1 text-[12px] leading-snug text-muted-foreground lining-nums tabular-nums md:hidden">
           {nextUpMeta({
             hosting: banner.hosting,
@@ -176,28 +200,41 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
         </span>
       </div>
 
-      {/* The flight: one numbered line per slot, gaps reading "Empty". Hidden
-          on phones, where the meta line under the title sums it up. */}
-      {banner.slots.length > 0 ? (
-        <ol className="grid grid-cols-2 gap-x-7 gap-y-[3px] text-[12.5px] max-md:hidden">
-          {banner.slots.map((slot, i) => (
-            <li key={`${slot.label}-${i}`} className="flex items-baseline gap-2.5">
-              <span className="w-4 shrink-0 text-right font-mono text-[10.5px] text-placeholder tabular-nums">
-                {i + 1}
-              </span>
-              {slot.filled ? (
-                <span className="truncate">
-                  <span className="font-semibold">{slot.label}</span>
-                  {slot.note ? (
-                    <span className="text-muted-foreground"> · {slot.note}</span>
-                  ) : null}
-                </span>
-              ) : (
-                <span className="text-muted-foreground italic">{slot.label}</span>
-              )}
-            </li>
-          ))}
-        </ol>
+      {/* The flight so far, never padded to a planned count (none exists, and
+          a host may pour more). Host-provides says how many glasses are set
+          above its real glasses; bring-your-own lists each glass by
+          contributor, then who is still bringing one ("waiting for Gustav to
+          add it") — no per-person slots. Hidden on phones, where the meta line
+          under the title sums it up. */}
+      {hostProvides || banner.slots.length > 0 ? (
+        <div className="flex flex-col gap-1.5 max-md:hidden">
+          {hostProvides ? (
+            <span className="text-[12.5px] text-muted-foreground lining-nums tabular-nums">
+              {glassesSoFarPhrase(nextUpGlassCount(banner.nextWinePosition))}
+            </span>
+          ) : null}
+          {banner.slots.length > 0 ? (
+            <ol className="grid grid-cols-2 gap-x-7 gap-y-[3px] text-[12.5px]">
+              {banner.slots.map((slot, i) => (
+                <li key={`${slot.label}-${i}`} className="flex items-baseline gap-2.5">
+                  <span className="w-4 shrink-0 text-right font-mono text-[10.5px] text-placeholder tabular-nums">
+                    {i + 1}
+                  </span>
+                  {slot.filled ? (
+                    <span className="truncate">
+                      <span className="font-semibold">{slot.label}</span>
+                      {slot.note ? (
+                        <span className="text-muted-foreground"> · {slot.note}</span>
+                      ) : null}
+                    </span>
+                  ) : (
+                    <span className="truncate text-muted-foreground italic">{slot.label}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2.5 max-md:w-full">

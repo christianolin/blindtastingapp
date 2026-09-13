@@ -15,6 +15,10 @@ import { WINE_SOURCE_LOCKED } from "./setup-copy";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import type { FlightWine } from "@/app/tastings/[id]/wine-flight-list";
+import { callerKnowsWine } from "@/components/add-wine/flight-knowledge";
+import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
+import { flightRowNeeds, toIncompleteGlasses } from "@/lib/wine-identity/incomplete";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 
 // Success now carries the new id — the sheet continues to step 2 in place
 // instead of the action redirecting to the draft page.
@@ -363,10 +367,14 @@ export async function getJoinLink(
 
 /** One step-2 row: the lobby's FlightWine plus the title/meta the sheet's
     list draws ("Vietti, Barolo Castiglione 2017" · "Barolo DOCG · Nebbiolo").
-    Title/meta come from the answer key and are only ever filled for the
-    HOST_PROVIDES host, exactly like the lobby's identity line — a
-    bring-your-own host sees contributor labels and nothing else. */
-export type FlightRow = FlightWine & { title: string; meta: string | null };
+    Title, meta and the identity line follow the knowledge rule (spec §C.9,
+    D10): they are filled only for a glass the caller already knows — the host
+    of a host-provides tasting, the glass's contributor, or anyone once it is
+    revealed. Anyone else's hidden glass carries its label and nothing more.
+    `incomplete` marks the adder's own glass with no answer key (D7): its title
+    is the draft's "{producer}, {wine name}" and its meta is `flightRowNeeds`,
+    drawn in dark gold. */
+export type FlightRow = FlightWine & { title: string; meta: string | null; incomplete: boolean };
 
 export type FlightSnapshot = {
   wines: FlightRow[];
@@ -374,6 +382,13 @@ export type FlightSnapshot = {
   waitingFor: string[];
   hasStarted: boolean;
 };
+
+// An incomplete glass's title: "{producer name}, {wine name}", leaving out
+// empty parts (spec §C.5 A1). Null when the draft has neither.
+function draftTitle(draft: WineIdentityDraft | null): string | null {
+  if (!draft) return null;
+  return [draft.producer?.name.trim(), draft.wineName?.trim()].filter(Boolean).join(", ") || null;
+}
 
 // A fresh read of the flight for step 2, computed with the same rules as
 // tastings/[id]/page.tsx so the sheet and the lobby never disagree.
@@ -385,6 +400,7 @@ export async function listFlight(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "You must be signed in." };
+  const userId = user.id;
 
   const [{ data: tasting }, { data: participants }, { data: wines }] =
     await Promise.all([
@@ -399,7 +415,7 @@ export async function listFlight(
         .eq("tasting_id", tastingId),
       supabase
         .from("wines")
-        .select("id, position, is_revealed, contributor_participant_id")
+        .select("id, position, is_revealed, reveal_step, contributor_participant_id")
         .eq("tasting_id", tastingId)
         .order("position"),
     ]);
@@ -407,10 +423,9 @@ export async function listFlight(
 
   const rows = wines ?? [];
   const people = participants ?? [];
-  const isHost = tasting.host_id === user.id;
+  const isHost = tasting.host_id === userId;
   const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
   const hasStarted = tasting.status !== "DRAFT";
-  const myParticipant = people.find((p) => p.user_id === user.id);
 
   const userIds = [...new Set(people.map((p) => p.user_id))];
   const { data: profiles } = userIds.length
@@ -430,18 +445,47 @@ export async function listFlight(
   );
   const wineLabel = makeWineLabeler(rows, tasting.wine_source, nameByParticipantId);
 
-  // Host-provided wines: the host set these answers, so a short identity per
-  // row keeps reordering legible. NEVER in bring-your-own (the host guesses
-  // the others' bottles too).
+  // Who added each glass (is_wine_adder's rule: the host for a glass with no
+  // contributor, else the contributor) and which glasses the caller already
+  // knows (spec §C.9). A contributor whose participant row this read cannot
+  // see resolves to nobody, so both fail closed.
+  type WineRow = (typeof rows)[number];
+  const userByParticipantId = new Map(people.map((p) => [p.id, p.user_id]));
+  const contributorUserId = (w: WineRow): string | null =>
+    w.contributor_participant_id
+      ? (userByParticipantId.get(w.contributor_participant_id) ?? null)
+      : null;
+  const isAdder = (w: WineRow): boolean =>
+    w.contributor_participant_id ? contributorUserId(w) === userId : isHost;
+  const known = rows.filter((w) =>
+    callerKnowsWine(
+      {
+        hostId: tasting.host_id,
+        wineSource: tasting.wine_source,
+        isRevealed: w.is_revealed,
+        contributorUserId: contributorUserId(w),
+      },
+      userId,
+    ),
+  );
+
+  // A known glass's answer key: a short identity per row keeps reordering
+  // legible. Never for anyone else's hidden glass: wine_answers RLS hands a
+  // bring-your-own host every answer, and they guess the others' bottles too.
   const identity = new Map<string, { title: string; meta: string | null; line: string }>();
-  if (isHost && !isByo && rows.length > 0) {
-    const wineIds = rows.map((w) => w.id);
-    const { data: answers } = await supabase
+  const answered = new Set<string>();
+  if (known.length > 0) {
+    const { data: answers, error: answersError } = await supabase
       .from("wine_answers")
       .select(
         "wine_id, region_id, appellation_id, primary_grape_id, producer_id, vintage_kind, vintage_year, vintage_tawny_years, catalog_wine_id",
       )
-      .in("wine_id", wineIds);
+      .in(
+        "wine_id",
+        known.map((w) => w.id),
+      );
+    // A failed read must never show the adder's finished glasses as unfinished.
+    if (answersError) return { error: answersError.message };
     const list = answers ?? [];
     const catalogIds = list
       .map((a) => a.catalog_wine_id)
@@ -468,6 +512,7 @@ export async function listFlight(
     const regionName = new Map((regions ?? []).map((r) => [r.id, r.name]));
     const grapeName = new Map((grapes ?? []).map((g) => [g.id, g.name]));
     for (const a of list) {
+      answered.add(a.wine_id);
       const vintage =
         a.vintage_kind === "YEAR"
           ? String(a.vintage_year ?? "")
@@ -494,24 +539,65 @@ export async function listFlight(
     }
   }
 
+  // The adder's own glasses with no answer key (D7). Drafts are owner-only
+  // (wine_identity_drafts RLS); a glass with no draft row, a failed second
+  // write (spec §C.8), needs every field.
+  const unfinished = new Set(
+    known.filter((w) => isAdder(w) && !answered.has(w.id)).map((w) => w.id),
+  );
+  const drafts = new Map<string, { draft: unknown; missing: string[] }>();
+  if (unfinished.size > 0) {
+    const { data: draftRows, error: draftsError } = await supabase
+      .from("wine_identity_drafts")
+      .select("wine_id, draft, missing")
+      .in("wine_id", [...unfinished]);
+    if (draftsError) return { error: draftsError.message };
+    for (const d of draftRows ?? []) {
+      drafts.set(d.wine_id, { draft: d.draft, missing: d.missing });
+    }
+  }
+
   const flight: FlightRow[] = rows.map((w, i) => {
-    const id = identity.get(w.id);
     const contributorLabel = isByo ? wineLabel(w) : null;
-    return {
+    const label = contributorLabel ?? `Wine ${i + 1}`;
+    const incomplete = unfinished.has(w.id);
+    const wine: FlightWine = {
       id: w.id,
       contributorLabel,
       isRevealed: w.is_revealed,
       isByo,
-      identity: id?.line ?? null,
+      identity: identity.get(w.id)?.line ?? null,
+      // The server's edit guard (editRefusal in wines/new/tasting-wine-writes.ts,
+      // plan amendment 7): the adder, never on a CLOSED tasting or a revealed
+      // glass, and a complete glass only until its first reveal step.
       editable:
-        !hasStarted &&
-        (w.contributor_participant_id
-          ? w.contributor_participant_id === myParticipant?.id
-          : isHost),
+        isAdder(w) &&
+        tasting.status !== "CLOSED" &&
+        !w.is_revealed &&
+        (incomplete || w.reveal_step === 0),
       canReorder: isHost && !w.is_revealed,
       canReveal: isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
-      title: id?.title ?? contributorLabel ?? `Wine ${i + 1}`,
-      meta: id?.meta ?? null,
+    };
+    if (incomplete) {
+      const stored = drafts.get(w.id);
+      // The draft row's keys, in contract order (the same mapping as the
+      // tasting_incomplete_glasses rows).
+      const missing = toIncompleteGlasses([
+        { wine_id: w.id, glass: i + 1, missing: stored?.missing ?? [] },
+      ]).flatMap((glass) => glass.missing);
+      return {
+        ...wine,
+        title: draftTitle(stored ? parseStoredDraft(stored.draft) : null) ?? label,
+        meta: flightRowNeeds(missing),
+        incomplete: true,
+      };
+    }
+    const answer = identity.get(w.id);
+    return {
+      ...wine,
+      title: answer?.title ?? label,
+      meta: answer?.meta ?? null,
+      incomplete: false,
     };
   });
 

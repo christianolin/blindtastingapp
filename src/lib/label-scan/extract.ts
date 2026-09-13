@@ -109,39 +109,3 @@ export async function readLabel(imageUrl: string): Promise<LabelReadOutcome> {
     throw error;
   }
 }
-
-// Round 1's read shape, kept as a type only for the add-wine files that still
-// import it (format.ts, scan-copy.ts, scan-confirm.tsx).
-/** @deprecated removed in S5c */
-export type ExtractedLabel = {
-  producer: string | null;
-  wineName: string | null;
-  appellation: string | null;
-  region: string | null;
-  country: string | null;
-  /** The label's quality/ageing/style term. */
-  designation: string | null;
-  vintageKind: "YEAR" | "NV" | "TAWNY";
-  /** False when no vintage could actually be read — the user must confirm. */
-  vintageRead: boolean;
-  vintageYear: number | null;
-  colour: "WHITE" | "ROSE" | "RED" | "ORANGE" | null;
-  style: "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED" | null;
-  grapes: { name: string; percentage: number | null }[];
-  /** The read's prose, kept as separate facts rather than one blurb — the
-      catalog stores and renders them as distinct sections. */
-  wineryDescription: string | null;
-  aroma: string | null;
-  tastingNotes: string | null;
-  foodPairing: string | null;
-  confidence: "high" | "medium" | "low";
-  rawText: string;
-  /** Typical retail price for one bottle, in USD. */
-  retailPriceUsd: number | null;
-  /** Serving temperature range in °C, when reported. */
-  servingTempC: { min: number; max: number } | null;
-  /** Recommended decanting time in minutes (0 = none), when reported. */
-  decantMinutes: number | null;
-  /** Stated alcohol by volume, when reported. */
-  alcoholPercent: number | null;
-};

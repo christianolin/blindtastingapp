@@ -24,6 +24,7 @@ import { ImageUploader } from "@/components/image-uploader";
 import { GrapeBlendEditor, type BlendRow } from "@/app/catalog/new/grape-blend-editor";
 import { orderedBlend } from "@/lib/wine-blend";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
+import { VINTAGE_YEAR_MIN, vintageYearMax } from "@/lib/wine-identity/complete";
 import {
   createAppellation,
   createCountry,
@@ -31,6 +32,8 @@ import {
   createRegion,
   createTypeDesignation,
 } from "@/app/tastings/[id]/wines/new/actions";
+import { appellationPlaceholder } from "@/components/add-wine/self-named-appellation";
+import { regionSelfNamedAppellation } from "@/components/add-wine/by-hand-actions";
 
 const VINTAGE_KIND_ITEMS = {
   YEAR: "A specific vintage year",
@@ -50,8 +53,9 @@ const STYLE_ITEMS = { STILL: "Still", SPARKLING: "Sparkling", SWEET: "Sweet", FO
 // lifted once from the add-wine forms. Controlled: the caller owns the state and
 // keeps its own submit; the fields still carry `name` attrs so a caller that
 // submits via `<form action>` (the tasting answer flow) serializes unchanged.
-// The appellation loader and region-scoped producer search live here so no
-// caller repeats them.
+// The appellation loader (with the region's self-named appellation behind "Just
+// the region") and the region-scoped producer search live here so no caller
+// repeats them.
 export function WineIdentityFields({
   countries,
   setCountries,
@@ -89,7 +93,6 @@ export function WineIdentityFields({
   tawnyInitial,
   tawnyYears,
   setTawnyYears,
-  unidentified = false,
   imageFolder,
   imageInitialUrl,
   imageAspect,
@@ -137,6 +140,8 @@ export function WineIdentityFields({
   tawnyInitial?: number | null;
   tawnyYears?: string;
   setTawnyYears?: (v: string) => void;
+  /** Not read any more: no field is marked mandatory in HTML, because the
+      caller checks completeness with the wine-identity module on save (D2). */
   unidentified?: boolean;
   imageFolder: string;
   imageInitialUrl: string | null;
@@ -147,15 +152,45 @@ export function WineIdentityFields({
   setDescription?: (v: string) => void;
 }) {
   const [appellations, setAppellations] = useState<ReferenceOption[]>([]);
+  // The region's self-named appellation (spec §D.4 #8, byhand-5), behind the
+  // "Just the region" placeholder and first option. Null when the region has none.
+  const [justTheRegion, setJustTheRegion] = useState<ReferenceOption | null>(null);
   const [appellationsPending, startAppellations] = useTransition();
 
-  useEffect(() => {
-    startAppellations(async () => {
-      setAppellations(regionId ? await listAppellationsForRegions([regionId]) : []);
-    });
-  }, [regionId]);
-
   const regionName = regions.find((r) => r.id === regionId)?.name;
+
+  useEffect(() => {
+    // A superseded region's results never land: its self-named row belongs to
+    // another region.
+    let current = true;
+    startAppellations(async () => {
+      let list: ReferenceOption[] = [];
+      let selfNamed: ReferenceOption | null = null;
+      if (regionId) {
+        // One transition, so the list, the first option and the placeholder
+        // change together (the client sends server functions one at a time).
+        [list, selfNamed] = await Promise.all([
+          listAppellationsForRegions([regionId]),
+          regionName ? regionSelfNamedAppellation(regionId, regionName) : null,
+        ]);
+      }
+      if (!current) return;
+      setAppellations(list);
+      setJustTheRegion(selfNamed);
+    });
+    return () => {
+      current = false;
+    };
+  }, [regionId, regionName]);
+
+  // "Just the region · {name}" leads the list when the region has a self-named
+  // appellation; that row is not repeated further down.
+  const appellationOptions: ReferenceOption[] = justTheRegion
+    ? [
+        { id: justTheRegion.id, name: `Just the region · ${justTheRegion.name}` },
+        ...appellations.filter((a) => a.id !== justTheRegion.id),
+      ]
+    : appellations;
   async function searchProducersGrouped(query: string) {
     const found = await searchProducers(query, regionId || undefined);
     return found.map(({ id, name, in_region }) => ({
@@ -217,7 +252,7 @@ export function WineIdentityFields({
             <Label>Appellation</Label>
             <ReferenceCombobox
               formFieldName="appellation_id"
-              options={appellations}
+              options={appellationOptions}
               value={appellationId}
               onValueChange={setAppellationId}
               onOptionCreated={(o) => setAppellations((a) => [...a, o])}
@@ -226,12 +261,11 @@ export function WineIdentityFields({
                   ? "Choose a region first"
                   : appellationsPending
                     ? "Loading appellations…"
-                    : "None — just the region above"
+                    : appellationPlaceholder(justTheRegion !== null)
               }
               createLabel="appellation"
               onCreate={regionId ? (name) => createAppellation(regionId, name) : undefined}
               disabled={!regionId || appellationsPending}
-              allowClear
             />
           </div>
         </div>
@@ -317,7 +351,6 @@ export function WineIdentityFields({
               items={COLOUR_ITEMS}
               value={colour}
               onValueChange={(v) => setColour(v ?? "")}
-              required={!unidentified}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose the colour" />
@@ -337,7 +370,6 @@ export function WineIdentityFields({
               items={STYLE_ITEMS}
               value={style}
               onValueChange={(v) => setStyle(v ?? "")}
-              required={!unidentified}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose the style" />
@@ -367,7 +399,6 @@ export function WineIdentityFields({
               items={VINTAGE_KIND_ITEMS}
               value={vintageKind}
               onValueChange={(v) => setVintageKind(v as "YEAR" | "NV" | "TAWNY")}
-              required
             >
               <SelectTrigger id="vintage_kind" className="w-full">
                 <SelectValue />
@@ -383,11 +414,10 @@ export function WineIdentityFields({
                 name="vintage_year"
                 type="number"
                 placeholder="e.g. 2018"
-                min={1900}
-                max={2100}
+                min={VINTAGE_YEAR_MIN}
+                max={vintageYearMax()}
                 value={vintageYear}
                 onChange={(e) => setVintageYear(e.target.value)}
-                required
               />
             ) : null}
             {vintageKind === "TAWNY" ? (
@@ -403,7 +433,6 @@ export function WineIdentityFields({
                     ? undefined
                     : String(tawnyInitial)
                 }
-                required
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Choose the age statement" />

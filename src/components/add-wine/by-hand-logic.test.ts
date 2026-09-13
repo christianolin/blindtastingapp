@@ -1,428 +1,235 @@
 import { describe, expect, it } from "vitest";
-import type { WineFormInitial } from "@/app/catalog/new/new-wine-form";
+import { emptyDraft } from "../../lib/wine-identity/complete";
+import type { WineIdentityDraft } from "../../lib/wine-identity/types";
+import { sheetMatrix } from "./matrix";
 import {
-  actionLabel,
-  applyProducerRegion,
-  buildIdentity,
-  colourGroupOf,
-  missingFields,
-  parseAlcohol,
-  parseYear,
-  pickProducerSuggestion,
-  producerRowLabel,
-  stateFromPrefill,
-  type ByHandState,
+  NO_GI_HINT, applyProducerRegion, blendScoredLine, byHandHeader, fieldChip, grapeSuggestionNote, pickProducerAdoption, regionFirstLabel,
 } from "./by-hand-logic";
 
-// What producerHomeRegion returns: the producer's home region and nothing else.
-const piemonte = {
-  countryId: "c-it",
-  countryName: "Italy",
-  regionId: "r-pie",
-  regionName: "Piemonte",
-};
-const bordeaux = {
-  countryId: "c-fr",
-  countryName: "France",
-  regionId: "r-bdx",
-  regionName: "Bordeaux",
-};
+const ctx = { attempted: false, focusField: null, readAttempted: false, producerRegionName: null } as const;
+const cigliuti = { kind: "existing", id: "p", name: "Cigliuti" } as const;
 
-const prefill: WineFormInitial = {
-  countryId: "c-it",
-  regionId: "r-pie",
-  appellationId: "a-barb",
-  blend: [
-    { grapeId: "", percentage: "", pendingName: "Nebbiolo" },
-    { grapeId: "g-bar", percentage: "" },
-  ],
-  producerId: "",
-  producerLabel: "Cigliuti",
-  typeDesignationId: "td-docg",
-  colour: "ROSE",
-  style: "SPARKLING",
-  wineName: "Serraboella",
-  description: "  A single vineyard.  ",
-  profile: {
-    wineryDescription: null,
-    aroma: null,
-    tastingNotes: null,
-    foodPairing: null,
-    servingTempC: null,
-    decantMinutes: null,
-    alcoholPercent: 14.5,
-  },
-  estimatedPrice: "",
-  vintagePrompt: false,
-  vintageKind: "YEAR",
-  vintageYear: "2017",
-  tawnyYears: "",
-  imageUrl: "https://x/label.jpg",
-  appellations: [{ id: "a-barb", name: "Barbaresco DOCG" }],
-};
+describe("fieldChip (spec B.4)", () => {
+  it("producer", () => {
+    expect(fieldChip("producer", { ...emptyDraft(), producer: cigliuti }, { ...ctx, producerRegionName: "Piedmont" }).chip).toBe("matched · Piedmont");
+    expect(fieldChip("producer", { ...emptyDraft(), producer: { kind: "pending", name: "Cigliuti" } }, ctx).chip).toBe("new producer");
+    expect(fieldChip("producer", emptyDraft(), ctx).chip).toBe("required");
+  });
+  it("vintage", () => {
+    const read: WineIdentityDraft = { ...emptyDraft(), vintage: { kind: "YEAR", year: 2017, tawnyYears: null, read: true }, provenance: { vintage: "label" } };
+    expect(fieldChip("vintage", read, ctx).chip).toBe("read from the label");
+    expect(fieldChip("vintage", emptyDraft(), { ...ctx, readAttempted: true }).chip).toBe("did not read");
+    expect(fieldChip("vintage", emptyDraft(), ctx).chip).toBe("required");
+    expect(fieldChip("vintage", emptyDraft(), { ...ctx, readAttempted: true, focusField: "vintage" }).chip).toBe("did not read — required");
+  });
+  it("wine name has a hint, never a required chip (D3)", () =>
+    expect(fieldChip("wineName", emptyDraft(), ctx)).toEqual({ chip: null, note: "Leave blank if the label has no cuvée name" }));
+  it("country and region from the producer link", () => {
+    const d: WineIdentityDraft = { ...emptyDraft(), producer: cigliuti, countryId: "it", regionId: "pie", provenance: { country: "producer-region", region: "producer-region" } };
+    expect(fieldChip("region", d, ctx).note).toBe("Filled from Cigliuti's region link. Change either if the bottle disagrees.");
+  });
+  it("appellation and grape", () => {
+    expect(fieldChip("appellation", emptyDraft(), ctx).chip).toBe("you choose");
+    expect(fieldChip("appellation", emptyDraft(), { ...ctx, readAttempted: true }).chip).toBe("did not read");
+    expect(fieldChip("primaryGrape", emptyDraft(), ctx).chip).toBe("you confirm");
+  });
+});
 
-function complete(): ByHandState {
-  return {
-    ...stateFromPrefill(prefill),
-    producerId: "p-cig",
-    primaryGrapeId: "g-neb",
-    primaryGrapePending: "",
+describe("applyProducerRegion (round-1 rules kept: country and region only)", () => {
+  const link = { regionId: "pie", countryId: "it" };
+  it("fills both while untouched, never the appellation or a grape", () =>
+    expect(applyProducerRegion(emptyDraft(), link)).toMatchObject({ countryId: "it", regionId: "pie", appellationId: null, blend: [], provenance: { country: "producer-region", region: "producer-region" } }));
+  it("replaces a previous producer's link", () =>
+    expect(applyProducerRegion(applyProducerRegion(emptyDraft(), { regionId: "bdx", countryId: "fr" }), link)).toMatchObject({ countryId: "it", regionId: "pie" }));
+  it("never overwrites a manual or read value", () => {
+    const manual: WineIdentityDraft = { ...emptyDraft(), countryId: "fr", provenance: { country: "manual" } };
+    expect(applyProducerRegion(manual, link)).toMatchObject({ countryId: "fr", regionId: null });
+  });
+  it("no link leaves an untouched draft alone", () => expect(applyProducerRegion(emptyDraft(), null)).toEqual(emptyDraft()));
+  it("a producer with no link clears the previous producer's link-filled fields", () => {
+    const cleared = applyProducerRegion(applyProducerRegion(emptyDraft(), link), null);
+    expect([cleared.countryId, cleared.regionId, cleared.provenance.country, cleared.provenance.region]).toEqual([null, null, undefined, undefined]);
+  });
+  it("changes nothing once an appellation is chosen", () => {
+    const chosen: WineIdentityDraft = { ...applyProducerRegion(emptyDraft(), link), appellationId: "bbr" };
+    expect(applyProducerRegion(chosen, { regionId: "bdx", countryId: "fr" })).toEqual(chosen);
+    expect(applyProducerRegion(chosen, null)).toEqual(chosen);
+  });
+});
+
+describe("pickProducerAdoption (byhand-1)", () => {
+  const hits = [{ id: "p1", name: "Château Palmer", regionId: "bdx" }, { id: "p2", name: "Château Pape Clément", regionId: "bdx" }];
+  it("adopts a folded-equal hit", () => expect(pickProducerAdoption("chateau palmer", hits)).toEqual({ adopt: hits[0] }));
+  it("suggests the top hit otherwise", () => expect(pickProducerAdoption("Chateau Pal", hits)).toEqual({ suggest: hits[0] }));
+  it("stays pending with no hits", () => expect(pickProducerAdoption("Domaine Nouveau", [])).toEqual({ pending: "Domaine Nouveau" }));
+});
+
+describe("grape suggestion note, blend line, headers, labels", () => {
+  it("suggestion notes (B.8)", () => {
+    expect(grapeSuggestionNote({ grape: "Nebbiolo", appellation: "Barbaresco DOCG", source: "place" })).toBe("Barbaresco DOCG is Nebbiolo by law — that is the appellation talking, not the producer. Change it if the bottle disagrees.");
+    expect(grapeSuggestionNote({ grape: "Nebbiolo", appellation: "Langhe DOC", source: "catalog" })).toBe("Most Langhe DOC wines in the catalog are Nebbiolo. Change it if the bottle disagrees.");
+  });
+  it("blend scored line", () => expect(blendScoredLine(["Merlot", "Cabernet Franc", "Malbec"])).toBe("Scored as Merlot (primary) · Cabernet Franc (secondary)"));
+  it("A7 and A4b headers", () => {
+    const flight = sheetMatrix({ kind: "flight", tastingId: "t", tastingName: "Barolo night", revealMode: "BLIND", wineSource: "HOST_PROVIDES", position: 6 }, true);
+    expect(byHandHeader({ matrix: flight, finishing: null, gaps: 0 })).toEqual({ eyebrow: "Add wine · glass 6 · by hand", title: "A wine we have never seen", badge: null, intro: null });
+    expect(byHandHeader({ matrix: flight, finishing: { glass: 6 }, gaps: 1 })).toEqual({ eyebrow: "Glass 6 · already added", title: "Finish this wine", badge: "1 GAP", intro: "Filled in from your scan. Correct anything the camera got wrong." });
+    expect(byHandHeader({ matrix: sheetMatrix({ kind: "cellar" }, true), finishing: { glass: null }, gaps: 2 })).toMatchObject({ eyebrow: "Cellar · by hand", badge: "2 GAPS" });
+  });
+  it("the appellation list label and the no-GI hint (A7, byhand-5)", () => {
+    expect(regionFirstLabel("Piedmont")).toBe("Piedmont first");
+    expect(NO_GI_HINT).toBe("No geographic indication on the label? In France pick Vin de France; elsewhere pick No geographic indication.");
+  });
+});
+
+// Beyond the plan's pinned block: the remaining rows of the spec B.4 table and
+// the edges of the rules above. Only the new exports are imported here, so S3b
+// can delete the deprecated round-1 exports without touching this file.
+describe("fieldChip, the rest of the B.4 table", () => {
+  const afterRead = { ...ctx, readAttempted: true } as const;
+  const nebbiolo = { grape: { kind: "existing", id: "neb", name: "Nebbiolo" }, percentage: null } as const;
+
+  it("a value read by the scan reads from the label, with no note", () => {
+    // The resolver's shape: its grapes carry the blend's provenance only (spec B.5 step 9).
+    const d: WineIdentityDraft = {
+      ...emptyDraft(), wineName: "Serraboella", colour: "RED", style: "STILL", countryId: "it", regionId: "pie", appellationId: "bbr", blend: [nebbiolo],
+      provenance: { wineName: "label", colour: "label", style: "label", country: "label", region: "label", appellation: "label", blend: "label" },
+    };
+    for (const field of ["wineName", "colour", "style", "country", "region", "appellation", "primaryGrape"] as const) {
+      expect(fieldChip(field, d, afterRead)).toEqual({ chip: "read from the label", note: null });
+    }
+  });
+  it("the grape reads the blend's provenance when it has none of its own", () => {
+    const scanned: WineIdentityDraft = { ...emptyDraft(), blend: [nebbiolo], provenance: { blend: "label" } };
+    expect(fieldChip("primaryGrape", scanned, afterRead)).toEqual({ chip: "read from the label", note: null });
+    expect(fieldChip("primaryGrape", { ...scanned, provenance: { blend: "catalog-match" } }, ctx)).toEqual({ chip: null, note: null });
+    // A pick or a tapped suggestion stamps the grape itself, and that wins.
+    expect(fieldChip("primaryGrape", { ...scanned, provenance: { blend: "label", primaryGrape: "appellation-suggestion" } }, afterRead).chip).toBe("you confirm");
+  });
+  it("empty colour, style, country and region are required", () => {
+    for (const field of ["colour", "style", "country", "region"] as const) {
+      expect(fieldChip(field, emptyDraft(), ctx)).toEqual({ chip: "required", note: null });
+    }
+  });
+  it("a picked value that was not read carries no chip, except the appellation and grape prompts", () => {
+    const d: WineIdentityDraft = {
+      ...emptyDraft(), vintage: { kind: "NV", year: null, tawnyYears: null, read: false }, colour: "WHITE", countryId: "fr", appellationId: "cha", blend: [nebbiolo],
+      provenance: { vintage: "manual", colour: "manual", country: "manual", appellation: "manual", primaryGrape: "appellation-suggestion" },
+    };
+    for (const field of ["vintage", "colour", "country"] as const) expect(fieldChip(field, d, afterRead).chip).toBeNull();
+    expect(fieldChip("appellation", d, afterRead).chip).toBe("you choose");
+    expect(fieldChip("primaryGrape", d, afterRead).chip).toBe("you confirm");
+  });
+  it("a producer with no region link reads matched", () =>
+    expect(fieldChip("producer", { ...emptyDraft(), producer: cigliuti }, ctx)).toEqual({ chip: "matched", note: null }));
+  it("a blank pending producer is still required", () =>
+    expect(fieldChip("producer", { ...emptyDraft(), producer: { kind: "pending", name: "  " } }, ctx).chip).toBe("required"));
+  it("a draft from a matched catalog wine: the producer reads matched, the other fields carry no chip", () => {
+    const d: WineIdentityDraft = {
+      ...emptyDraft(), producer: cigliuti, colour: "RED", countryId: "it", appellationId: "bbr", blend: [nebbiolo],
+      provenance: { producer: "catalog-match", colour: "catalog-match", country: "catalog-match", appellation: "catalog-match", primaryGrape: "catalog-match", blend: "catalog-match" },
+    };
+    expect(fieldChip("producer", d, ctx).chip).toBe("matched");
+    for (const field of ["colour", "country", "appellation", "primaryGrape"] as const) expect(fieldChip(field, d, ctx).chip).toBeNull();
+  });
+  it("the producer-link note needs the producer it names", () => {
+    const orphan: WineIdentityDraft = { ...emptyDraft(), countryId: "it", provenance: { country: "producer-region" } };
+    expect(fieldChip("country", orphan, ctx)).toEqual({ chip: null, note: null });
+    const linked: WineIdentityDraft = { ...orphan, producer: cigliuti };
+    expect(fieldChip("country", linked, ctx)).toEqual({ chip: null, note: "Filled from Cigliuti's region link. Change either if the bottle disagrees." });
+  });
+  it("unidentified (byhand-7): producer, colour and style are no longer required", () => {
+    const unidentified = { ...ctx, unidentified: true, attempted: true } as const;
+    for (const field of ["producer", "colour", "style"] as const) expect(fieldChip(field, emptyDraft(), unidentified).chip).toBeNull();
+    expect(fieldChip("country", emptyDraft(), unidentified).chip).toBe("required");
+    expect(fieldChip("appellation", emptyDraft(), unidentified).chip).toBe("you choose");
+  });
+  it("a Fix-focused or post-save missing field is flagged, and says 'did not read' only after a read", () => {
+    expect(fieldChip("appellation", emptyDraft(), { ...ctx, focusField: "appellation" }).chip).toBe("required");
+    expect(fieldChip("primaryGrape", emptyDraft(), { ...ctx, attempted: true }).chip).toBe("required");
+    expect(fieldChip("producer", emptyDraft(), { ...afterRead, attempted: true }).chip).toBe("did not read — required");
+    expect(fieldChip("appellation", emptyDraft(), { ...afterRead, focusField: "vintage" }).chip).toBe("did not read");
+    expect(fieldChip("wineName", emptyDraft(), { ...afterRead, attempted: true })).toEqual({ chip: null, note: "Leave blank if the label has no cuvée name" });
+  });
+  it("a present value is never flagged, and an out-of-range year counts as missing", () => {
+    const d: WineIdentityDraft = { ...emptyDraft(), countryId: "it", provenance: { country: "manual" } };
+    expect(fieldChip("country", d, { ...afterRead, attempted: true, focusField: "country" })).toEqual({ chip: null, note: null });
+    const tooOld: WineIdentityDraft = { ...emptyDraft(), vintage: { kind: "YEAR", year: 1850, tawnyYears: null, read: true } };
+    expect(fieldChip("vintage", tooOld, { ...afterRead, focusField: "vintage" }).chip).toBe("did not read — required");
+  });
+});
+
+describe("applyProducerRegion, edges", () => {
+  const link = { regionId: "pie", countryId: "it" };
+  const nouveau = { kind: "pending", name: "Domaine Nouveau" } as const;
+  const palmer = { kind: "existing", id: "p-pal", name: "Château Palmer" } as const;
+  // resolve.ts step 7: the read named the country and the producer's region link filled the region.
+  const scanned: WineIdentityDraft = {
+    ...emptyDraft(), producer: { kind: "existing", id: "p-las", name: "Château Lascombes" }, countryId: "fr", regionId: "bdx",
+    provenance: { producer: "label", country: "label", region: "producer-region" },
   };
-}
 
-describe("stateFromPrefill", () => {
-  it("starts empty with the form defaults", () => {
-    const s = stateFromPrefill(null);
-    expect(s.producerId).toBe("");
-    expect(s.producerName).toBe("");
-    expect(s.vintageKind).toBe("YEAR");
-    expect(s.style).toBe("STILL");
-    expect(s.colour).toBeNull();
-    expect(s.colourGroup).toBeNull();
-    expect(s.originSource).toBe("none");
-    expect(s.imageUrl).toBeNull();
+  it("returns the same draft when nothing changes", () => {
+    const untouched = emptyDraft();
+    expect(applyProducerRegion(untouched, null)).toBe(untouched);
+    const linked = applyProducerRegion(emptyDraft(), link);
+    expect(applyProducerRegion(linked, { ...link })).toBe(linked);
   });
-
-  it("seeds every field from a scan prefill, pending names included", () => {
-    const s = stateFromPrefill(prefill);
-    expect(s.producerId).toBe("");
-    expect(s.producerName).toBe("Cigliuti");
-    expect(s.wineName).toBe("Serraboella");
-    expect(s.vintageKind).toBe("YEAR");
-    expect(s.vintageYear).toBe("2017");
-    expect(s.colour).toBe("ROSE");
-    expect(s.colourGroup).toBe("OTHER");
-    expect(s.style).toBe("SPARKLING");
-    expect(s.countryId).toBe("c-it");
-    expect(s.regionId).toBe("r-pie");
-    expect(s.appellationId).toBe("a-barb");
-    expect(s.primaryGrapeId).toBe("");
-    expect(s.primaryGrapePending).toBe("Nebbiolo");
-    expect(s.secondaryGrapeId).toBe("g-bar");
-    expect(s.typeDesignationId).toBe("td-docg");
-    expect(s.alcohol).toBe("14.5");
-    expect(s.description).toBe("  A single vineyard.  ");
-    expect(s.imageUrl).toBe("https://x/label.jpg");
-    expect(s.originSource).toBe("prefill");
-    expect(s.labels.appellation).toBe("Barbaresco DOCG");
+  it("never overwrites a label-read region, nor fills the country above it", () => {
+    const read: WineIdentityDraft = { ...emptyDraft(), regionId: "bdx", provenance: { region: "label" } };
+    expect(applyProducerRegion(read, link)).toBe(read);
   });
-
-  it("treats an unread vintage as a year still to type, not NV", () => {
-    const s = stateFromPrefill({ ...prefill, vintagePrompt: true, vintageKind: "NV", vintageYear: "" });
-    expect(s.vintageKind).toBe("YEAR");
-    expect(s.vintageYear).toBe("");
+  it("a scan's link-filled region is cleared by a producer with no link, or by a link in another country", () => {
+    for (const next of [null, link]) {
+      const switched = applyProducerRegion({ ...scanned, producer: nouveau }, next);
+      expect(switched).toMatchObject({ countryId: "fr", regionId: null, provenance: { producer: "label", country: "label" } });
+      expect("region" in switched.provenance).toBe(false);
+      expect(fieldChip("region", switched, ctx)).toEqual({ chip: "required", note: null });
+    }
   });
-});
-
-describe("colourGroupOf", () => {
-  it("maps the four colours onto the three segments", () => {
-    expect(colourGroupOf("RED")).toBe("RED");
-    expect(colourGroupOf("WHITE")).toBe("WHITE");
-    expect(colourGroupOf("ROSE")).toBe("OTHER");
-    expect(colourGroupOf("ORANGE")).toBe("OTHER");
-    expect(colourGroupOf(null)).toBeNull();
+  it("a link in the kept country fills the region, and the note names the new producer (resolve.ts step 7)", () => {
+    const switched = applyProducerRegion({ ...scanned, producer: palmer }, { regionId: "mar", countryId: "fr" });
+    expect(switched).toMatchObject({ countryId: "fr", regionId: "mar", provenance: { country: "label", region: "producer-region" } });
+    expect(fieldChip("region", switched, ctx).note).toBe("Filled from Château Palmer's region link. Change either if the bottle disagrees.");
+    const manual: WineIdentityDraft = { ...emptyDraft(), countryId: "it", provenance: { country: "manual" } };
+    expect(applyProducerRegion(manual, link)).toMatchObject({ countryId: "it", regionId: "pie", provenance: { country: "manual", region: "producer-region" } });
+  });
+  it("a hand-picked region: the country the old link filled is cleared, unless the new link names that region", () => {
+    const repicked: WineIdentityDraft = { ...applyProducerRegion(emptyDraft(), link), producer: cigliuti, regionId: "lan", provenance: { country: "producer-region", region: "manual" } };
+    for (const next of [{ regionId: "bdx", countryId: "fr" }, null]) {
+      const switched = applyProducerRegion({ ...repicked, producer: palmer }, next);
+      expect([switched.countryId, switched.regionId, "country" in switched.provenance, switched.provenance.region]).toEqual([null, "lan", false, "manual"]);
+      expect(fieldChip("country", switched, ctx)).toEqual({ chip: "required", note: null });
+    }
+    expect(applyProducerRegion(repicked, { regionId: "lan", countryId: "it" })).toBe(repicked);
+  });
+  it("an explicit none provenance counts as untouched", () => {
+    const none: WineIdentityDraft = { ...emptyDraft(), provenance: { country: "none", region: "none" } };
+    expect(applyProducerRegion(none, link)).toMatchObject({ countryId: "it", regionId: "pie", provenance: { country: "producer-region", region: "producer-region" } });
+  });
+  it("keeps every other provenance key when it clears the link", () => {
+    const d: WineIdentityDraft = { ...applyProducerRegion(emptyDraft(), link), vintage: { kind: "NV", year: null, tawnyYears: null, read: false } };
+    const withVintage: WineIdentityDraft = { ...d, provenance: { ...d.provenance, vintage: "manual" } };
+    expect(applyProducerRegion(withVintage, null).provenance).toEqual({ vintage: "manual" });
   });
 });
 
-// Owner decision, 2026-09-12: a producer makes wines from many appellations
-// and grapes, so the ONLY thing the by-hand form takes from it is its home
-// region — and only into an origin nobody else set.
-describe("applyProducerRegion", () => {
-  it("fills an untouched origin with the producer's home region", () => {
-    const s = applyProducerRegion(stateFromPrefill(null), piemonte);
-    expect(s.countryId).toBe("c-it");
-    expect(s.regionId).toBe("r-pie");
-    expect(s.labels).toEqual({ country: "Italy", region: "Piemonte", appellation: null });
-    expect(s.originSource).toBe("producer");
-  });
-
-  it("fills the origin of a label read that found no origin", () => {
-    const read = stateFromPrefill({
-      ...prefill,
-      countryId: "",
-      regionId: "",
-      appellationId: "",
-      appellations: [],
-    });
-    expect(read.originSource).toBe("none");
-    const s = applyProducerRegion(read, piemonte);
-    expect(s.regionId).toBe("r-pie");
-    expect(s.originSource).toBe("producer");
-  });
-
-  it("never touches the appellation or the grape", () => {
-    const empty = applyProducerRegion(stateFromPrefill(null), piemonte);
-    expect(empty.appellationId).toBe("");
-    expect(empty.labels.appellation).toBeNull();
-    expect(empty.primaryGrapeId).toBe("");
-    expect(empty.primaryGrapePending).toBe("");
-    expect(empty.secondaryGrapeId).toBe("");
-
-    // A grape chosen first is kept as it is, and does not count as setting the origin.
-    const grapeFirst: ByHandState = { ...stateFromPrefill(null), primaryGrapeId: "g-neb" };
-    const s = applyProducerRegion(grapeFirst, piemonte);
-    expect(s.regionId).toBe("r-pie");
-    expect(s.primaryGrapeId).toBe("g-neb");
-
-    // A label's pending grape name survives too.
-    const read = stateFromPrefill({
-      ...prefill,
-      countryId: "",
-      regionId: "",
-      appellationId: "",
-      appellations: [],
-    });
-    const t = applyProducerRegion(read, piemonte);
-    expect(t.appellationId).toBe("");
-    expect(t.primaryGrapeId).toBe("");
-    expect(t.primaryGrapePending).toBe("Nebbiolo");
-    expect(t.secondaryGrapeId).toBe("g-bar");
-  });
-
-  it("replaces a previous producer's home region", () => {
-    const first = applyProducerRegion(stateFromPrefill(null), piemonte);
-    const s = applyProducerRegion(first, bordeaux);
-    expect(s.countryId).toBe("c-fr");
-    expect(s.regionId).toBe("r-bdx");
-    expect(s.labels).toEqual({ country: "France", region: "Bordeaux", appellation: null });
-    expect(s.originSource).toBe("producer");
-    // A producer from the same home region changes nothing.
-    expect(applyProducerRegion(first, piemonte)).toBe(first);
-  });
-
-  it("clears a previous producer's home region when the next producer has none", () => {
-    const first = applyProducerRegion(stateFromPrefill(null), piemonte);
-    const s = applyProducerRegion(first, null);
-    expect(s.countryId).toBe("");
-    expect(s.regionId).toBe("");
-    expect(s.labels).toEqual({ country: null, region: null, appellation: null });
-    expect(s.originSource).toBe("none");
-  });
-
-  it("never overrides a hand-picked origin, even a partial one", () => {
-    const countryOnly: ByHandState = {
-      ...stateFromPrefill(null),
-      countryId: "c-fr",
-      originSource: "manual",
-    };
-    expect(applyProducerRegion(countryOnly, piemonte)).toBe(countryOnly);
-    expect(applyProducerRegion(countryOnly, null)).toBe(countryOnly);
-
-    const full: ByHandState = {
-      ...stateFromPrefill(null),
-      countryId: "c-fr",
-      regionId: "r-bdx",
-      appellationId: "a-bdx",
-      originSource: "manual",
-    };
-    expect(applyProducerRegion(full, piemonte)).toBe(full);
-  });
-
-  it("never overrides a label-read origin, even a country-only read", () => {
-    const read = stateFromPrefill(prefill);
-    expect(read.originSource).toBe("prefill");
-    expect(applyProducerRegion(read, bordeaux)).toBe(read);
-    expect(applyProducerRegion(read, null)).toBe(read);
-
-    const countryOnly = stateFromPrefill({
-      ...prefill,
-      regionId: "",
-      appellationId: "",
-      appellations: [],
-    });
-    expect(countryOnly.originSource).toBe("prefill");
-    expect(applyProducerRegion(countryOnly, piemonte)).toBe(countryOnly);
-  });
-
-  it("never strands an appellation under a region it is not in", () => {
-    const withAppellation: ByHandState = {
-      ...applyProducerRegion(stateFromPrefill(null), piemonte),
-      appellationId: "a-barolo",
-    };
-    expect(applyProducerRegion(withAppellation, bordeaux)).toBe(withAppellation);
-    expect(applyProducerRegion(withAppellation, null)).toBe(withAppellation);
-  });
-
-  it("is a no-op when nothing is set and the producer has no home region", () => {
-    const base = stateFromPrefill(null);
-    expect(applyProducerRegion(base, null)).toBe(base);
-  });
+describe("pickProducerAdoption, edges", () => {
+  const hits = [{ id: "p1", name: "Château Palmer" }, { id: "p2", name: "Château Pape-Clément" }];
+  it("adopts a folded-equal hit even when it is not the top hit", () =>
+    expect(pickProducerAdoption("CHATEAU PAPE CLEMENT", hits)).toEqual({ adopt: hits[1] }));
+  it("trims a pending name", () => expect(pickProducerAdoption("  Domaine Nouveau ", [])).toEqual({ pending: "Domaine Nouveau" }));
+  it("a query with nothing to fold adopts nothing", () => expect(pickProducerAdoption("—", hits)).toEqual({ suggest: hits[0] }));
 });
 
-describe("missingFields", () => {
-  it("lists every required field, in form order, for an empty state", () => {
-    expect(missingFields(stateFromPrefill(null))).toEqual([
-      "producer",
-      "wine name",
-      "vintage",
-      "colour",
-      "country",
-      "region",
-      "appellation",
-      "grape",
-    ]);
+describe("blend line and header, edges", () => {
+  it("one grape names only the primary; no grapes, no line", () => {
+    expect(blendScoredLine(["Merlot"])).toBe("Scored as Merlot (primary)");
+    expect(blendScoredLine([" ", "Merlot"])).toBe("Scored as Merlot (primary)");
+    expect(blendScoredLine([])).toBeNull();
   });
-
-  it("is empty for a complete state", () => {
-    expect(missingFields(complete())).toEqual([]);
-  });
-
-  it("accepts a pending producer and a pending grape as answers", () => {
-    const s: ByHandState = {
-      ...complete(),
-      producerId: "",
-      producerName: "New Estate",
-      primaryGrapeId: "",
-      primaryGrapePending: "Nebbiolo",
-    };
-    expect(missingFields(s)).toEqual([]);
-  });
-
-  it("needs a real year for YEAR and an age for TAWNY, nothing for NV", () => {
-    expect(missingFields({ ...complete(), vintageYear: "" })).toEqual(["vintage"]);
-    expect(missingFields({ ...complete(), vintageYear: "17" })).toEqual(["vintage"]);
-    expect(missingFields({ ...complete(), vintageKind: "TAWNY", tawnyYears: "" })).toEqual([
-      "vintage",
-    ]);
-    expect(missingFields({ ...complete(), vintageKind: "TAWNY", tawnyYears: "20" })).toEqual([]);
-    expect(missingFields({ ...complete(), vintageKind: "NV", vintageYear: "" })).toEqual([]);
-  });
-
-  it("needs a colour even when the Other segment is chosen", () => {
-    expect(missingFields({ ...complete(), colourGroup: "OTHER", colour: null })).toEqual([
-      "colour",
-    ]);
-  });
-});
-
-describe("parseYear / parseAlcohol", () => {
-  it("parses a four-digit year in range only", () => {
-    expect(parseYear("2017")).toBe(2017);
-    expect(parseYear(" 1999 ")).toBe(1999);
-    expect(parseYear("17")).toBeNull();
-    expect(parseYear("2200")).toBeNull();
-    expect(parseYear("")).toBeNull();
-  });
-
-  it("parses alcohol with a comma or a dot, rejecting nonsense", () => {
-    expect(parseAlcohol("13,5")).toBe(13.5);
-    expect(parseAlcohol("14")).toBe(14);
-    expect(parseAlcohol("")).toBeNull();
-    expect(parseAlcohol("abc")).toBeNull();
-    expect(parseAlcohol("-1")).toBeNull();
-  });
-});
-
-describe("buildIdentity", () => {
-  it("maps the state onto the ByHandIdentity contract", () => {
-    const id = buildIdentity(
-      { ...complete(), alcohol: "13,5", secondaryGrapePending: "" },
-      { primaryGrapeId: "g-neb", secondaryGrapeId: "g-bar" },
-    );
-    expect(id).toEqual({
-      producerId: "p-cig",
-      producerName: "Cigliuti",
-      wineName: "Serraboella",
-      vintageKind: "YEAR",
-      vintageYear: 2017,
-      vintageTawnyYears: null,
-      colour: "ROSE",
-      style: "SPARKLING",
-      countryId: "c-it",
-      regionId: "r-pie",
-      appellationId: "a-barb",
-      primaryGrapeId: "g-neb",
-      secondaryGrapeId: "g-bar",
-      typeDesignationId: "td-docg",
-      imageUrl: "https://x/label.jpg",
-      description: "A single vineyard.",
-      alcoholPercent: 13.5,
-    });
-  });
-
-  it("keeps a pending producer as a name with a null id", () => {
-    const id = buildIdentity(
-      { ...complete(), producerId: "", producerName: "  New Estate " },
-      { primaryGrapeId: "g-neb", secondaryGrapeId: null },
-    );
-    expect(id?.producerId).toBeNull();
-    expect(id?.producerName).toBe("New Estate");
-  });
-
-  it("carries tawny years and blanks the year for TAWNY, both for NV", () => {
-    const tawny = buildIdentity(
-      { ...complete(), vintageKind: "TAWNY", tawnyYears: "20" },
-      { primaryGrapeId: "g-neb", secondaryGrapeId: null },
-    );
-    expect(tawny?.vintageYear).toBeNull();
-    expect(tawny?.vintageTawnyYears).toBe(20);
-    const nv = buildIdentity(
-      { ...complete(), vintageKind: "NV" },
-      { primaryGrapeId: "g-neb", secondaryGrapeId: null },
-    );
-    expect(nv?.vintageYear).toBeNull();
-    expect(nv?.vintageTawnyYears).toBeNull();
-  });
-
-  it("returns null when a required value is still missing", () => {
-    expect(
-      buildIdentity({ ...complete(), colour: null }, { primaryGrapeId: "g-neb", secondaryGrapeId: null }),
-    ).toBeNull();
-    expect(
-      buildIdentity({ ...complete(), wineName: " " }, { primaryGrapeId: "g-neb", secondaryGrapeId: null }),
-    ).toBeNull();
-  });
-});
-
-describe("actionLabel", () => {
-  it("names the destination action", () => {
-    expect(
-      actionLabel({
-        kind: "flight",
-        tastingId: "t",
-        tastingName: "Nebbiolo vs Sangiovese",
-        revealMode: "BLIND",
-        wineSource: "HOST_PROVIDES",
-        position: 4,
-      }),
-    ).toBe("Add as glass 4");
-    expect(actionLabel({ kind: "cellar" })).toBe("Add to cellar");
-    expect(actionLabel({ kind: "catalog" })).toBe("Add to the catalog");
-    // Taste & rate: the form finds or creates the wine, then its note opens.
-    expect(actionLabel({ kind: "rate" })).toBe("Rate this wine");
-    // No destination yet: the footer opens the 7i chooser, it does not add.
-    expect(actionLabel(null)).toBe("Choose where it goes");
-  });
-});
-
-describe("producerRowLabel", () => {
-  it("joins name, place and wine count", () => {
-    expect(
-      producerRowLabel("Cigliuti", { regionName: "Piemonte", countryName: "Italy", wineCount: 4 }),
-    ).toBe("Cigliuti · Piemonte, Italy · 4 wines");
-    expect(
-      producerRowLabel("Cigliuti", { regionName: null, countryName: null, wineCount: 1 }),
-    ).toBe("Cigliuti · 1 wine");
-    expect(
-      producerRowLabel("Cigliuti", { regionName: "Piemonte", countryName: null, wineCount: 0 }),
-    ).toBe("Cigliuti · Piemonte · no wines yet");
-  });
-});
-
-describe("pickProducerSuggestion", () => {
-  const hits = [
-    { id: "p1", name: "Château Cigliuti" },
-    { id: "p2", name: "Cigliuti" },
-  ];
-  it("prefers an exact (accent-insensitive) name match over the first hit", () => {
-    expect(pickProducerSuggestion("cigliuti", hits)).toEqual({ id: "p2", name: "Cigliuti" });
-    expect(pickProducerSuggestion("chateau cigliuti", hits)).toEqual({
-      id: "p1",
-      name: "Château Cigliuti",
-    });
-  });
-  it("falls back to the first hit, and to nothing", () => {
-    expect(pickProducerSuggestion("cigl", hits)).toEqual({ id: "p1", name: "Château Cigliuti" });
-    expect(pickProducerSuggestion("cigl", [])).toBeNull();
-  });
+  it("finishing with no gaps left shows no badge", () =>
+    expect(byHandHeader({ matrix: sheetMatrix({ kind: "catalog" }, false), finishing: { glass: null }, gaps: 0 })).toEqual({
+      eyebrow: "Catalog · by hand", title: "Finish this wine", badge: null, intro: "Filled in from your scan. Correct anything the camera got wrong.",
+    }));
 });

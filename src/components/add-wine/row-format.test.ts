@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest";
 import {
   bottlesLabel,
   catalogMeta,
+  cellarListState,
   cellarLotMeta,
+  existingLotLabel,
   filterLots,
   glassNumbers,
+  mergeCardCopy,
+  pourableBottles,
   rackChips,
   searchCellarMeta,
+  searchListGroups,
+  skippedLotNotice,
   tastedMeta,
   windowContains,
   type CellarSheetLot,
 } from "./row-format";
+import type { SearchGroups } from "./types";
 
 function lot(over: Partial<CellarSheetLot> = {}): CellarSheetLot {
   return {
@@ -115,6 +122,86 @@ describe("cellarLotMeta (7f)", () => {
   });
 });
 
+// S2 regression pin (plan §S2 Tests): the knowledge rule's glass number. The
+// rack is the stored `storage_location`, printed as typed — so the fixture
+// stores "rack B" for the handoff's "rack B · …" meta (the plan's `rack: "B"`
+// would print "B · …"; the meta has never prefixed the word).
+describe("cellarLotMeta and the knowledge rule", () => {
+  const lot: CellarSheetLot = { lotId: "l1", catalogWineId: "c1", title: "Vietti, Barolo Castiglione 2017", imageUrl: null, rack: "rack B", quantity: 2, drinkNow: true, inFlight: true, glass: 1 };
+  it("an in-flight lot names its glass only when the caller may know it (C.9)", () => {
+    expect(cellarLotMeta(lot)).toBe("rack B · 2 bottles · already glass 1");
+    expect(cellarLotMeta({ ...lot, glass: null })).toBe(cellarLotMeta({ ...lot, inFlight: false, glass: null }));
+  });
+});
+
+describe("searchListGroups (A5)", () => {
+  const cellarRow = (lotId: string, catalogWineId: string, o: Partial<SearchGroups["cellar"][number]> = {}) => ({
+    lotId, catalogWineId, title: `Lot ${lotId}`, imageUrl: null, rack: "Rack B", quantity: 2, drinkNow: true, inFlight: false, ...o,
+  });
+  const catalogRow = (catalogWineId: string): SearchGroups["catalog"][number] => ({
+    catalogWineId, title: `Wine ${catalogWineId}`, subtitle: null, imageUrl: null, avgScore: null, noteCount: 0, inFlight: false,
+    producerId: "p", wineName: null, appellationId: "a", vintageLabel: "2018",
+  });
+  const tastedRow = (catalogWineId: string): SearchGroups["tasted"][number] => ({
+    catalogWineId, title: `Wine ${catalogWineId}`, imageUrl: null, myScore: 92, tastedOn: "2026-05-14",
+    producerId: "p", wineName: null, appellationId: "a", vintageLabel: "2018", inFlight: false,
+  });
+  const groups: SearchGroups = {
+    cellar: [cellarRow("l1", "c1"), cellarRow("l2", "c1", { rack: "Rack C" })],
+    catalog: [catalogRow("c1"), catalogRow("c2")],
+    tasted: [tastedRow("c1"), tastedRow("c3")],
+  };
+  const shape = (order: readonly ("cellar" | "catalog" | "tasted")[], g: SearchGroups = groups) =>
+    searchListGroups(g, order).map((group) => [group.kind, group.rows.map((r) => ("lotId" in r ? r.lotId : r.catalogWineId))]);
+
+  it("follows the matrix's group order and lists a wine you own once, as its lot rows", () => {
+    expect(shape(["cellar", "catalog", "tasted"])).toEqual([
+      ["cellar", ["l1", "l2"]],
+      ["catalog", ["c2"]],
+      ["tasted", ["c3"]],
+    ]);
+  });
+  it("without the cellar group (the catalog destination) nothing is dropped", () => {
+    expect(shape(["catalog", "tasted"])).toEqual([
+      ["catalog", ["c1", "c2"]],
+      ["tasted", ["c1", "c3"]],
+    ]);
+  });
+  it("leaves out empty groups", () => {
+    expect(shape(["cellar", "catalog", "tasted"], { cellar: [], catalog: [catalogRow("c2")], tasted: [] })).toEqual([["catalog", ["c2"]]]);
+  });
+  it("counts the bottles you can pour tonight: drink-now lots only", () => {
+    expect(pourableBottles([cellarRow("l1", "c1", { quantity: 2 }), cellarRow("l2", "c2", { quantity: 3, drinkNow: false }), cellarRow("l3", "c3", { quantity: 4 })])).toBe(6);
+    expect(pourableBottles([])).toBe(0);
+  });
+});
+
+describe("the merge card and its way out (plan amendment 18, D17)", () => {
+  it("offers the two adds, then \"Don't add it\"", () => {
+    expect(mergeCardCopy(3)).toEqual({
+      title: "You already have this wine in your cellar.",
+      actions: [
+        { id: "merge", label: "Add 3 to the existing lot" },
+        { id: "separate", label: "Keep as a separate lot" },
+        { id: "skip", label: "Don't add it" },
+      ],
+    });
+    expect(mergeCardCopy(1).actions[0].label).toBe("Add 1 to the existing lot");
+  });
+  it("names an existing lot by its bottles and rack", () => {
+    expect(existingLotLabel({ quantity: 2, storageLocation: "Rack B" })).toBe("2 btl · Rack B");
+    expect(existingLotLabel({ quantity: 1, storageLocation: null })).toBe("1 btl");
+    expect(existingLotLabel({ quantity: 1, storageLocation: "  " })).toBe("1 btl");
+  });
+  it("after a skip: one line and a link to the lot you already have", () => {
+    expect(skippedLotNotice("lot-9")).toEqual({
+      line: "Not added — it's already in your cellar",
+      open: "Open it",
+      href: "/cellar/lot-9/edit",
+    });
+  });
+});
+
 describe("rackChips", () => {
   it("lists distinct racks in order, skipping blanks", () => {
     const lots = [
@@ -140,6 +227,24 @@ describe("filterLots", () => {
   it("filters by drink window and by rack", () => {
     expect(filterLots(lots, { kind: "drinkNow" }).map((l) => l.lotId)).toEqual(["a", "c"]);
     expect(filterLots(lots, { kind: "rack", rack: "Rack B" }).map((l) => l.lotId)).toEqual(["b"]);
+  });
+});
+
+describe("cellarListState (A6's list area)", () => {
+  const sheet = { lots: [lot()], totalBottles: 2 };
+  it("spins while the cellar loads, and says so when the load fails", () => {
+    expect(cellarListState({ sheet: null, loadFailed: false, visibleCount: 0 })).toBe("loading");
+    expect(cellarListState({ sheet: null, loadFailed: true, visibleCount: 0 })).toBe("failed");
+  });
+  it("keeps a cellar already in hand when a later reload fails", () => {
+    expect(cellarListState({ sheet, loadFailed: true, visibleCount: 1 })).toBe("list");
+  });
+  it("tells an empty cellar from a filter that hides every lot", () => {
+    expect(
+      cellarListState({ sheet: { lots: [], totalBottles: 0 }, loadFailed: false, visibleCount: 0 }),
+    ).toBe("empty");
+    expect(cellarListState({ sheet, loadFailed: false, visibleCount: 0 })).toBe("filteredEmpty");
+    expect(cellarListState({ sheet, loadFailed: false, visibleCount: 1 })).toBe("list");
   });
 });
 

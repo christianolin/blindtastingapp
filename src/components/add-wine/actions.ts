@@ -1,29 +1,74 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import type { VintageKind } from "@/lib/supabase/database.types";
-import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
-import { addCellarLot } from "@/app/cellar/new/actions";
-import { addTastingWineFromCellarLot } from "@/app/tastings/[id]/wines/new/actions";
+
+import { addCellarLot, increaseCellarLotQuantity } from "@/app/cellar/new/actions";
+import { maybeAutoRevealWine } from "@/app/tastings/[id]/play/auto-reveal";
 import {
-  findOrCreateProducer,
+  insertIncompleteGlass,
   insertTastingWineFromCatalogRow,
   insertTastingWineFromIdentity,
-  syncCatalogWine,
+  insertTastingWineFromLot,
+  insertTastingWineUnidentified,
+  loadFlightGlassCore,
+  saveFlightGlassCore,
 } from "@/app/tastings/[id]/wines/new/tasting-wine-writes";
+import { createClient } from "@/lib/supabase/server";
+import type { VintageKind } from "@/lib/supabase/database.types";
+import { readDisplay, vintageLabel } from "@/lib/wine-identity/describe";
+import { draftFromCatalogWine, parseStoredDraft } from "@/lib/wine-identity/from-sources";
+import {
+  pickGrapeSuggestion,
+  type CatalogGrapeCount,
+  type PlaceGrape,
+} from "@/lib/wine-identity/grape-suggestion";
+import {
+  prepareCompleteWine,
+  upsertCatalogWine,
+  type WriteRefusal,
+} from "@/lib/wine-identity/server/write";
+import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
+import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
+import { addedVia } from "./added-via";
+import { callerKnowsWine } from "./flight-knowledge";
 import { windowContains } from "./row-format";
 import type {
   AddResult,
   AddSource,
-  ByHandIdentity,
+  AddWineDestination,
+  AddedWine,
   SearchGroups,
 } from "./types";
 
+// The add-wine sheet's server actions (spec §C.1 dispatch, §C.8, §B.8, §B.9).
+// Every wine write goes through the one write path (D2): the flight helpers in
+// tasting-wine-writes.ts, or prepareCompleteWine + upsertCatalogWine for the
+// cellar and the catalog. Nothing here decides whether a wine is complete.
+//
+// Every export is a server action reachable by a direct POST, so each one
+// authenticates the caller itself and checks the shape of what it was sent
+// before any write (node_modules/next/dist/docs/01-app/02-guides/data-security.md).
+
 type Db = Awaited<ReturnType<typeof createClient>>;
 
-const fold = (s: string) =>
-  s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Ids per `in(...)` filter, so a long id list never builds an over-long URL. */
+const ID_CHUNK = 100;
+
+/** The catalog fallback of the grape suggestion reads at most this many wines (§B.8). */
+const GRAPE_SAMPLE = 500;
+
+const SIGNED_OUT = "You must be signed in.";
+const UNTITLED = "Untitled wine";
+const NOT_A_FLIGHT = "Choose a tasting to add this wine to.";
+const UNKNOWN_SOURCE = "That wine can't be added from here.";
+const PLUS_ONE_CELLAR_ONLY = "+1 bottle adds to a lot in your cellar.";
+const LOT_FLIGHT_ONLY = "A cellar lot can only be poured into a flight.";
+const MALFORMED_DRAFT = "Couldn't read this wine's details. Please try again.";
+const CATALOG_WINE_GONE = "That catalog wine no longer exists.";
+const LOT_NOT_YOURS = "That lot is not in your cellar.";
+const QUANTITY_REQUIRED = "Enter how many bottles you have (at least 1).";
 
 async function currentUser(supabase: Db) {
   const {
@@ -32,11 +77,83 @@ async function currentUser(supabase: Db) {
   return user;
 }
 
+const SOURCE_KINDS: Record<AddSource["kind"], true> = {
+  catalog: true,
+  lot: true,
+  plusOne: true,
+  identity: true,
+  unidentified: true,
+  incomplete: true,
+};
+
+/** A server action receives whatever is posted: only a known source kind goes on. */
+function knownSource(source: unknown): source is AddSource {
+  if (typeof source !== "object" || source === null) return false;
+  const kind = (source as { kind?: unknown }).kind;
+  return typeof kind === "string" && Object.prototype.hasOwnProperty.call(SOURCE_KINDS, kind);
+}
+
+/**
+ * A draft from the client, checked field by field before any write. Keys holding
+ * `undefined` are dropped first, as JSON drops them, so an unset optional key reads
+ * as absent. Null when the payload is not a draft.
+ */
+function clientDraft(value: unknown): WineIdentityDraft | null {
+  try {
+    return parseStoredDraft(JSON.parse(JSON.stringify(value ?? null)));
+  } catch {
+    return null;
+  }
+}
+
+/** A write refusal as an AddResult, keeping the field keys (D2). */
+function refusal(r: WriteRefusal): AddResult {
+  return r.missing ? { error: r.error, missing: r.missing } : { error: r.error };
+}
+
 // One readable label per catalog wine, the same title the cellar and note
 // views use (catalogWineTitle over fetchCatalogWine).
 async function labelFor(supabase: Db, catalogWineId: string): Promise<string> {
   const wine = await fetchCatalogWine(supabase, catalogWineId);
-  return wine ? catalogWineTitle(wine) : "Untitled wine";
+  return wine ? catalogWineTitle(wine) : UNTITLED;
+}
+
+/** The label of a glass with no catalog wine (incomplete or unidentified): the
+    read-display title, "Cigliuti, Barbaresco 2017". Only the adder receives it. */
+async function draftLabel(supabase: Db, draft: WineIdentityDraft | null): Promise<string> {
+  if (!draft) return UNTITLED;
+  let appellation: string | null = null;
+  if (draft.appellationId && UUID.test(draft.appellationId)) {
+    const { data } = await supabase
+      .from("appellations")
+      .select("name")
+      .eq("id", draft.appellationId)
+      .maybeSingle();
+    appellation = data?.name ?? null;
+  }
+  const { title } = readDisplay(draft, {
+    producer: null,
+    appellation,
+    region: null,
+    country: null,
+    primaryGrape: null,
+  });
+  return title || UNTITLED;
+}
+
+/** Grape names by id, in chunks. Throws on a database error. */
+async function grapeNames(supabase: Db, ids: readonly string[]): Promise<Map<string, string>> {
+  const unique = [...new Set(ids)];
+  const names = new Map<string, string>();
+  for (let from = 0; from < unique.length; from += ID_CHUNK) {
+    const { data, error } = await supabase
+      .from("grapes")
+      .select("id, name")
+      .in("id", unique.slice(from, from + ID_CHUNK));
+    if (error) throw new Error(`grape names failed: ${error.message}`);
+    for (const grape of data ?? []) names.set(grape.id, grape.name);
+  }
+  return names;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +171,9 @@ async function labelFor(supabase: Db, catalogWineId: string): Promise<string> {
 // ---------------------------------------------------------------------------
 
 const EMPTY: SearchGroups = { cellar: [], catalog: [], tasted: [] };
+
+const fold = (s: string) =>
+  s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
 
 // Mirrors public.f_search_norm: accents folded, lowercased, everything but
 // [a-z0-9] removed (so "Fleur-Pétrus" and "fleur petrus" meet).
@@ -135,17 +255,68 @@ function matchingWine(rel: unknown, tokens: string[]): EmbeddedWine | null {
   return tokens.every((t) => text.includes(t)) ? w : null;
 }
 
+type CatalogIdentityRow = {
+  id: string;
+  blind_pending: boolean;
+  image_url: string | null;
+  primary_grape_id: string;
+  producer_id: string;
+  wine_name: string | null;
+  appellation_id: string;
+  vintage_kind: VintageKind;
+  vintage_year: number | null;
+  vintage_tawny_years: number | null;
+};
+
+/** The columns behind every catalog and tasted row (spec §C.1): the RPC returns
+    names only. A failed chunk is logged and its rows read as absent, so the search
+    drops them rather than show a row it could not check for `blind_pending`. */
+async function catalogIdentities(supabase: Db, ids: readonly string[]): Promise<Map<string, CatalogIdentityRow>> {
+  const out = new Map<string, CatalogIdentityRow>();
+  for (let from = 0; from < ids.length; from += ID_CHUNK) {
+    const { data, error } = await supabase
+      .from("catalog_wines")
+      .select(
+        "id, blind_pending, image_url, primary_grape_id, producer_id, wine_name, appellation_id, " +
+          "vintage_kind, vintage_year, vintage_tawny_years",
+      )
+      .in("id", ids.slice(from, from + ID_CHUNK));
+    if (error) {
+      console.error("add-wine search: catalog identity read failed", { message: error.message });
+      continue;
+    }
+    for (const row of (data ?? []) as unknown as CatalogIdentityRow[]) out.set(row.id, row);
+  }
+  return out;
+}
+
+/** D1's row-meta fields for a catalog wine (spec §C.1). */
+function identityFields(w: CatalogIdentityRow) {
+  return {
+    producerId: w.producer_id,
+    wineName: w.wine_name,
+    appellationId: w.appellation_id,
+    vintageLabel: vintageLabel({
+      kind: w.vintage_kind,
+      year: w.vintage_year,
+      tawnyYears: w.vintage_tawny_years,
+      read: false,
+    }),
+  };
+}
+
 export async function searchAddWine(
   query: string,
   opts: { tastingId?: string } = {},
 ): Promise<SearchGroups> {
-  const q = query.trim();
+  const q = typeof query === "string" ? query.trim() : "";
   if (!q) return EMPTY;
   const tokens = queryTokens(q);
   if (tokens.length === 0) return EMPTY;
   const supabase = await createClient();
   const user = await currentUser(supabase);
   if (!user) return EMPTY;
+  const tastingId = typeof opts?.tastingId === "string" ? opts.tastingId : null;
 
   const [hits, lots, notes, flightIds] = await Promise.all([
     supabase.rpc("search_catalog_wines", { p_query: q, p_limit: 20 }),
@@ -162,7 +333,7 @@ export async function searchAddWine(
       .eq("author_id", user.id)
       .order("tasted_on", { ascending: false })
       .order("created_at", { ascending: false }),
-    opts.tastingId ? flightCatalogIds(supabase, opts.tastingId) : Promise.resolve(new Set<string>()),
+    tastingId ? flightCatalogIds(supabase, user.id, tastingId) : Promise.resolve(new Set<string>()),
   ]);
   const thisYear = new Date().getUTCFullYear();
 
@@ -196,7 +367,9 @@ export async function searchAddWine(
     .sort((a, b) => a.title.localeCompare(b.title));
 
   // --- tasted: one row per wine I have a note for — the newest note wins
-  // (the query is ordered newest first, so the first sighting is kept) ---
+  // (the query is ordered newest first, so the first sighting is kept). These
+  // rows reach beyond the RPC's page, so each carries its own in-flight flag
+  // (sources-8). ---
   const noteRows = (notes.data ?? []) as unknown as Array<{
     catalog_wine_id: string;
     quality_score: number | null;
@@ -205,13 +378,13 @@ export async function searchAddWine(
     catalog_wines: unknown;
   }>;
   const seen = new Set<string>();
-  const tasted: SearchGroups["tasted"] = [];
+  const tastedHits: { catalogWineId: string; title: string; imageUrl: string | null; myScore: number | null; tastedOn: string }[] = [];
   for (const n of noteRows) {
     if (seen.has(n.catalog_wine_id)) continue;
     const w = matchingWine(n.catalog_wines, tokens);
     if (!w) continue;
     seen.add(n.catalog_wine_id);
-    tasted.push({
+    tastedHits.push({
       catalogWineId: n.catalog_wine_id,
       title: embeddedTitle(w),
       imageUrl: w.image_url,
@@ -220,42 +393,53 @@ export async function searchAddWine(
     });
   }
 
-  // --- catalog: the RPC's page, minus blind-pending placeholders ---
+  // --- one catalog_wines read fills every catalog and tasted row ---
   const rows = hits.data ?? [];
-  if (rows.length === 0) return { cellar, catalog: [], tasted };
-  const ids = rows.map((r) => r.id);
-  const [wines, ratings] = await Promise.all([
-    supabase
-      .from("catalog_wines")
-      .select("id, blind_pending, image_url, primary_grape_id")
-      .in("id", ids),
-    supabase
-      .from("catalog_wine_ratings")
-      .select("catalog_wine_id, avg_score, note_count")
-      .in("catalog_wine_id", ids),
-  ]);
-  const wineById = new Map((wines.data ?? []).map((w) => [w.id, w]));
-  const ratingById = new Map(
-    (ratings.data ?? []).map((r) => [r.catalog_wine_id ?? "", r]),
-  );
-  const grapeIds = Array.from(
-    new Set((wines.data ?? []).map((w) => w.primary_grape_id).filter(Boolean)),
-  );
-  const { data: grapes } = grapeIds.length
-    ? await supabase.from("grapes").select("id, name").in("id", grapeIds)
-    : { data: [] as { id: string; name: string }[] };
-  const grapeName = new Map((grapes ?? []).map((g) => [g.id, g.name]));
+  const hitIds = rows.map((r) => r.id);
+  const ids = [...new Set([...hitIds, ...tastedHits.map((t) => t.catalogWineId)])];
+  if (ids.length === 0) return { cellar, catalog: [], tasted: [] };
 
-  const catalog: SearchGroups["catalog"] = rows
-    .filter((r) => wineById.get(r.id)?.blind_pending !== true)
-    .map((r) => {
-      const w = wineById.get(r.id);
-      const rating = ratingById.get(r.id);
-      const subtitle =
-        [r.appellation, r.region, w ? grapeName.get(w.primary_grape_id) : null]
-          .filter(Boolean)
-          .join(" · ") || null;
-      return {
+  const [identities, ratings] = await Promise.all([
+    catalogIdentities(supabase, ids),
+    hitIds.length > 0
+      ? supabase
+          .from("catalog_wine_ratings")
+          .select("catalog_wine_id, avg_score, note_count")
+          .in("catalog_wine_id", hitIds)
+          .then(({ data }) => data ?? [])
+      : Promise.resolve([]),
+  ]);
+
+  const tasted: SearchGroups["tasted"] = tastedHits.flatMap((t) => {
+    const w = identities.get(t.catalogWineId);
+    if (!w || w.blind_pending) return [];
+    return [{ ...t, ...identityFields(w), inFlight: flightIds.has(t.catalogWineId) }];
+  });
+
+  // --- catalog: the RPC's page, minus blind-pending placeholders ---
+  const ratingById = new Map(ratings.map((r) => [r.catalog_wine_id ?? "", r]));
+  const visibleHits = rows.filter((r) => {
+    const w = identities.get(r.id);
+    return w !== undefined && !w.blind_pending;
+  });
+  const grapeName = await grapeNames(
+    supabase,
+    visibleHits.map((r) => identities.get(r.id)?.primary_grape_id ?? "").filter(Boolean),
+  ).catch((error: unknown) => {
+    console.error("add-wine search: grape names failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return new Map<string, string>();
+  });
+
+  const catalog: SearchGroups["catalog"] = visibleHits.flatMap((r) => {
+    const w = identities.get(r.id);
+    if (!w) return [];
+    const rating = ratingById.get(r.id);
+    const subtitle =
+      [r.appellation, r.region, grapeName.get(w.primary_grape_id)].filter(Boolean).join(" · ") || null;
+    return [
+      {
         catalogWineId: r.id,
         title: catalogWineTitle({
           producerName: r.producer || null,
@@ -266,33 +450,70 @@ export async function searchAddWine(
           appellationName: r.appellation || null,
         }),
         subtitle,
-        imageUrl: w?.image_url ?? null,
+        imageUrl: w.image_url,
         avgScore: rating?.avg_score == null ? null : Number(rating.avg_score),
         noteCount: rating?.note_count ?? 0,
         inFlight: flightIds.has(r.id),
-      };
-    });
+        ...identityFields(w),
+      },
+    ];
+  });
 
   return { cellar, catalog, tasted };
 }
 
-// The catalog wines already poured into a tasting. wine_answers is RLS-gated,
-// so the host sees every glass and a BYO contributor only their own — either
-// way it is exactly the set the caller is allowed to know about.
-async function flightCatalogIds(supabase: Db, tastingId: string): Promise<Set<string>> {
-  const { data: wines } = await supabase
-    .from("wines")
-    .select("id")
-    .eq("tasting_id", tastingId);
-  const wineIds = (wines ?? []).map((w) => w.id);
-  if (wineIds.length === 0) return new Set();
+/**
+ * The catalog wines already poured into a tasting that the caller already knows
+ * (spec §C.9, D10; sources-3, create-3): the host of a host-provides tasting, the
+ * glass's contributor, or anyone once it is revealed. wine_answers RLS alone would
+ * also hand a semi-blind participant every candidate, so the rule is applied here.
+ * Fails closed: a failed read marks nothing.
+ */
+async function flightCatalogIds(supabase: Db, userId: string, tastingId: string): Promise<Set<string>> {
+  if (!UUID.test(tastingId)) return new Set();
+  const [{ data: tasting }, { data: wines }] = await Promise.all([
+    supabase.from("tastings").select("host_id, wine_source").eq("id", tastingId).maybeSingle(),
+    supabase
+      .from("wines")
+      .select("id, is_revealed, contributor_participant_id")
+      .eq("tasting_id", tastingId),
+  ]);
+  if (!tasting || !wines || wines.length === 0) return new Set();
+
+  const contributorIds = [
+    ...new Set(wines.flatMap((w) => (w.contributor_participant_id ? [w.contributor_participant_id] : []))),
+  ];
+  const contributorUser = new Map<string, string>();
+  if (contributorIds.length > 0) {
+    const { data: participants } = await supabase
+      .from("tasting_participants")
+      .select("id, user_id")
+      .in("id", contributorIds);
+    for (const p of participants ?? []) contributorUser.set(p.id, p.user_id);
+  }
+
+  const knownIds = wines
+    .filter((w) =>
+      callerKnowsWine(
+        {
+          hostId: tasting.host_id,
+          wineSource: tasting.wine_source,
+          isRevealed: w.is_revealed,
+          contributorUserId: w.contributor_participant_id
+            ? (contributorUser.get(w.contributor_participant_id) ?? null)
+            : null,
+        },
+        userId,
+      ),
+    )
+    .map((w) => w.id);
+  if (knownIds.length === 0) return new Set();
+
   const { data: answers } = await supabase
     .from("wine_answers")
     .select("catalog_wine_id")
-    .in("wine_id", wineIds);
-  return new Set(
-    (answers ?? []).map((a) => a.catalog_wine_id).filter((id): id is string => !!id),
-  );
+    .in("wine_id", knownIds);
+  return new Set((answers ?? []).flatMap((a) => (a.catalog_wine_id ? [a.catalog_wine_id] : [])));
 }
 
 // ---------------------------------------------------------------------------
@@ -348,247 +569,486 @@ export async function producerHomeRegion(
   };
 }
 
+/**
+ * The grape suggestion for an appellation (spec §B.8, D8). The place's PRINCIPAL,
+ * permitted `wine_place_grapes` decide first (RLS limits them to PUBLISHED rows on
+ * VERIFIED places); only when they do not, the primary grapes of up to 500 live
+ * catalog wines of the appellation are counted. `pickGrapeSuggestion` decides.
+ * The form offers the result as a chip; it is never selected automatically.
+ */
+export async function suggestGrapeForAppellation(
+  appellationId: string,
+): Promise<{ grape: { id: string; name: string }; source: "place" | "catalog" } | null> {
+  if (typeof appellationId !== "string" || !UUID.test(appellationId)) return null;
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return null;
+
+  try {
+    const placeGrapes = await principalPlaceGrapes(supabase, appellationId);
+    // With no catalog counts, pickGrapeSuggestion answers from the place alone.
+    const suggestion =
+      pickGrapeSuggestion(placeGrapes, []) ??
+      pickGrapeSuggestion(placeGrapes, await catalogGrapeCounts(supabase, appellationId));
+    return suggestion && suggestion.grape.name !== "" ? suggestion : null;
+  } catch (error) {
+    console.error("suggestGrapeForAppellation failed", {
+      appellationId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+async function principalPlaceGrapes(supabase: Db, appellationId: string): Promise<PlaceGrape[]> {
+  const { data: appellation, error } = await supabase
+    .from("appellations")
+    .select("wine_place_id")
+    .eq("id", appellationId)
+    .maybeSingle();
+  if (error) throw new Error(`appellation read failed: ${error.message}`);
+  if (!appellation?.wine_place_id) return [];
+
+  const { data: rows, error: rowsError } = await supabase
+    .from("wine_place_grapes")
+    .select("grape_id, share_pct")
+    .eq("wine_place_id", appellation.wine_place_id)
+    .eq("role", "PRINCIPAL")
+    .eq("permitted", true);
+  if (rowsError) throw new Error(`place grapes read failed: ${rowsError.message}`);
+  const list = rows ?? [];
+  if (list.length === 0) return [];
+
+  const names = await grapeNames(supabase, list.map((row) => row.grape_id));
+  return list.map((row) => ({
+    grapeId: row.grape_id,
+    name: names.get(row.grape_id) ?? "",
+    sharePct: row.share_pct === null ? null : Number(row.share_pct),
+  }));
+}
+
+async function catalogGrapeCounts(supabase: Db, appellationId: string): Promise<CatalogGrapeCount[]> {
+  const { data, error } = await supabase
+    .from("catalog_wines")
+    .select("primary_grape_id")
+    .eq("appellation_id", appellationId)
+    .eq("blind_pending", false)
+    // `merged_into` is not in the hand-written types, so the untyped filter.
+    .filter("merged_into", "is", null)
+    .limit(GRAPE_SAMPLE);
+  if (error) throw new Error(`catalog grape counts failed: ${error.message}`);
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    counts.set(row.primary_grape_id, (counts.get(row.primary_grape_id) ?? 0) + 1);
+  }
+  if (counts.size === 0) return [];
+  const names = await grapeNames(supabase, [...counts.keys()]);
+  return [...counts].map(([grapeId, count]) => ({ grapeId, name: names.get(grapeId) ?? "", count }));
+}
+
+/**
+ * A live catalog wine as a draft (spec §C.5 A3): "By hand" from a matched read.
+ * Its producer name and full blend come along; a wine with no blend rows falls
+ * back to its primary and secondary grape. Null when the wine does not exist, was
+ * merged away, or a read fails.
+ */
+export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineIdentityDraft | null> {
+  if (typeof catalogWineId !== "string" || !UUID.test(catalogWineId)) return null;
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return null;
+
+  try {
+    const { data: wine, error } = await supabase
+      .from("catalog_wines")
+      .select(
+        "id, producer_id, wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, style, " +
+          "country_id, region_id, appellation_id, type_designation_id, alcohol_percent, description, " +
+          "image_url, primary_grape_id, secondary_grape_id",
+      )
+      .eq("id", catalogWineId)
+      // `merged_into` is not in the hand-written types, so the untyped filter.
+      .filter("merged_into", "is", null)
+      .maybeSingle();
+    if (error) throw new Error(`catalog wine read failed: ${error.message}`);
+    if (!wine) return null;
+    const w = wine as unknown as {
+      id: string; producer_id: string; wine_name: string | null;
+      vintage_kind: VintageKind; vintage_year: number | null; vintage_tawny_years: number | null;
+      colour: Parameters<typeof draftFromCatalogWine>[0]["colour"];
+      style: Parameters<typeof draftFromCatalogWine>[0]["style"];
+      country_id: string; region_id: string; appellation_id: string; type_designation_id: string | null;
+      alcohol_percent: number | string | null; description: string | null; image_url: string | null;
+      primary_grape_id: string; secondary_grape_id: string | null;
+    };
+
+    const [producer, blend] = await Promise.all([
+      supabase.from("producers").select("id, name").eq("id", w.producer_id).maybeSingle(),
+      supabase
+        .from("catalog_wine_grapes")
+        .select("grape_id, percentage")
+        .eq("catalog_wine_id", catalogWineId)
+        .order("sort_order"),
+    ]);
+    if (producer.error) throw new Error(`producer read failed: ${producer.error.message}`);
+    if (blend.error) throw new Error(`blend read failed: ${blend.error.message}`);
+
+    const blendRows = (blend.data ?? []).length > 0
+      ? (blend.data ?? []).map((row) => ({
+          grapeId: row.grape_id,
+          percentage: row.percentage === null ? null : Number(row.percentage),
+        }))
+      : [w.primary_grape_id, w.secondary_grape_id]
+          .filter((id): id is string => id !== null)
+          .map((grapeId) => ({ grapeId, percentage: null }));
+    const names = await grapeNames(supabase, blendRows.map((row) => row.grapeId));
+
+    return draftFromCatalogWine({
+      id: w.id,
+      producer: { id: w.producer_id, name: producer.data?.name ?? "" },
+      wineName: w.wine_name,
+      vintageKind: w.vintage_kind,
+      vintageYear: w.vintage_year,
+      vintageTawnyYears: w.vintage_tawny_years,
+      colour: w.colour,
+      style: w.style,
+      countryId: w.country_id,
+      regionId: w.region_id,
+      appellationId: w.appellation_id,
+      typeDesignationId: w.type_designation_id,
+      alcohol: w.alcohol_percent === null ? null : Number(w.alcohol_percent),
+      description: w.description,
+      imageUrl: w.image_url,
+      grapes: blendRows.map((row) => ({
+        id: row.grapeId,
+        name: names.get(row.grapeId) ?? "",
+        percentage: row.percentage,
+      })),
+    });
+  } catch (error) {
+    console.error("loadCatalogWineDraft failed", {
+      catalogWineId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
-// The three non-redirecting writes. Every one returns; the sheet decides
-// whether to stay open (multi mode) or close + router.refresh().
+// The three sheet writes (spec §C.1 dispatch). Every one returns; the sheet
+// decides whether to stay open (multi mode, a laptop) or close.
 // ---------------------------------------------------------------------------
 
+/**
+ * A glass for a flight, dispatched by source kind (spec §C.1), with
+ * `addedVia(source)` recorded on the glass:
+ * catalog → insertTastingWineFromCatalogRow; lot → insertTastingWineFromLot (its
+ * warning passes through); identity → insertTastingWineFromIdentity; unidentified →
+ * insertTastingWineUnidentified; incomplete → insertIncompleteGlass (D7). A plusOne
+ * is a cellar-only increment and is refused. Every helper runs resolveTastingAdder
+ * first (CLOSED tastings, joined contributors, the host).
+ */
 export async function addToFlight(
-  tastingId: string,
+  destination: Extract<AddWineDestination, { kind: "flight" }>,
   source: AddSource,
 ): Promise<AddResult> {
+  if (destination?.kind !== "flight" || typeof destination.tastingId !== "string") {
+    return { error: NOT_A_FLIGHT };
+  }
+  if (!knownSource(source)) return { error: UNKNOWN_SOURCE };
+  if (source.kind === "plusOne") return { error: PLUS_ONE_CELLAR_ONLY };
+  const via = addedVia(source);
+  if (via === null) return { error: UNKNOWN_SOURCE };
+
   const supabase = await createClient();
   const user = await currentUser(supabase);
-  if (!user) return { error: "You must be signed in." };
+  if (!user) return { error: SIGNED_OUT };
+  const { tastingId } = destination;
 
-  let wineId: string;
-  let position: number;
-  let catalogWineId: string;
+  let glass: { wineId: string; position: number };
+  let catalogWineId: string | null = null;
+  let labelDraft: WineIdentityDraft | null = null;
+  let incomplete: { missing: WineFieldKey[] } | null = null;
   let warning: string | undefined;
 
-  if (source.kind === "catalog") {
-    const r = await insertTastingWineFromCatalogRow(
-      supabase,
-      user.id,
-      tastingId,
-      source.catalogWineId,
-    );
-    if ("error" in r) return { error: r.error };
-    ({ wineId, position } = r);
-    catalogWineId = source.catalogWineId;
-  } else if (source.kind === "lot") {
-    const r = await addTastingWineFromCellarLot(tastingId, source.lotId, {
-      consume: source.consume,
-    });
-    if ("error" in r) return { error: r.error };
-    ({ wineId, position, catalogWineId, warning } = r);
-  } else {
-    const r = await insertTastingWineFromIdentity(
-      supabase,
-      user.id,
-      tastingId,
-      source.identity,
-    );
-    if ("error" in r) return { error: r.error };
-    ({ wineId, position, catalogWineId } = r);
+  switch (source.kind) {
+    case "catalog": {
+      const r = await insertTastingWineFromCatalogRow(supabase, user.id, tastingId, source.catalogWineId, via);
+      if ("error" in r) return { error: r.error };
+      glass = r;
+      catalogWineId = source.catalogWineId;
+      break;
+    }
+    case "lot": {
+      const r = await insertTastingWineFromLot(supabase, user.id, tastingId, source.lotId, source.consume === true);
+      if ("error" in r) return { error: r.error };
+      glass = r;
+      catalogWineId = r.catalogWineId;
+      warning = r.warning;
+      break;
+    }
+    case "identity": {
+      const draft = clientDraft(source.draft);
+      if (!draft) return { error: MALFORMED_DRAFT };
+      const r = await insertTastingWineFromIdentity(supabase, user.id, tastingId, draft, via);
+      if ("error" in r) return refusal(r);
+      glass = r;
+      catalogWineId = r.catalogWineId;
+      break;
+    }
+    case "unidentified": {
+      const draft = clientDraft(source.draft);
+      if (!draft) return { error: MALFORMED_DRAFT };
+      const r = await insertTastingWineUnidentified(supabase, user.id, tastingId, draft);
+      if ("error" in r) return refusal(r);
+      glass = r;
+      labelDraft = draft;
+      break;
+    }
+    case "incomplete": {
+      const draft = clientDraft(source.draft);
+      if (!draft) return { error: MALFORMED_DRAFT };
+      const r = await insertIncompleteGlass(
+        supabase,
+        user.id,
+        tastingId,
+        draft,
+        source.via === "scan" ? "scan" : "byhand",
+      );
+      if ("error" in r) return { error: r.error };
+      glass = r;
+      labelDraft = draft;
+      incomplete = { missing: r.missing };
+      break;
+    }
+    default:
+      return { error: UNKNOWN_SOURCE };
   }
 
-  const label = await labelFor(supabase, catalogWineId);
+  const label = catalogWineId ? await labelFor(supabase, catalogWineId) : await draftLabel(supabase, labelDraft);
   revalidatePath(`/tastings/${tastingId}`);
+  const added: AddedWine = {
+    label,
+    destination: "flight",
+    catalogWineId,
+    glass: glass.position,
+    wineId: glass.wineId,
+  };
+  if (incomplete) added.incomplete = incomplete;
+  return warning ? { ok: true, added, warning } : { ok: true, added };
+}
+
+type LotFields = {
+  quantity: number;
+  bottleSizeMl: number;
+  pricePerBottle: number | null;
+  currency: string | null;
+  storageLocation: string | null;
+};
+
+/** The lot step's fields as addCellarLot takes them. An unparseable price is
+    dropped, as the lot step always did; the quantity must be at least 1. */
+function lotFields(lot: unknown): LotFields | { error: string } {
+  if (typeof lot !== "object" || lot === null) return { error: QUANTITY_REQUIRED };
+  const { quantity, rack, price, currency } = lot as Record<string, unknown>;
+  const count = typeof quantity === "number" ? Math.floor(quantity) : Number.NaN;
+  if (!Number.isFinite(count) || count < 1) return { error: QUANTITY_REQUIRED };
+  const priceValue = typeof price === "string" ? Number.parseFloat(price.replace(",", ".")) : Number.NaN;
   return {
-    ok: true,
-    added: { catalogWineId, label, destination: "flight", glass: position, wineId },
-    warning,
+    quantity: count,
+    bottleSizeMl: 750,
+    pricePerBottle: Number.isFinite(priceValue) && priceValue >= 0 ? priceValue : null,
+    currency: typeof currency === "string" ? currency.trim().toUpperCase() || null : null,
+    storageLocation: typeof rack === "string" ? rack.trim() || null : null,
   };
 }
 
+/**
+ * Into the caller's cellar (spec §B.9 "Cellar add from an identity", D9):
+ * catalog → a lot on that wine; identity → prepareCompleteWine + upsertCatalogWine,
+ * then a lot with the catalog id only; plusOne → one more bottle on that lot, no
+ * lot fields. A lot source is a flight pour and is refused here.
+ */
 export async function addToCellar(
-  source: Exclude<AddSource, { kind: "lot" }>,
-  lot: {
-    quantity: number;
-    storageLocation: string | null;
-    pricePerBottle: number | null;
-    currency: string | null;
-  },
+  source: AddSource,
+  lot: { quantity: number; rack: string; price: string; currency: string } | null,
 ): Promise<AddResult> {
+  if (!knownSource(source)) return { error: UNKNOWN_SOURCE };
+  if (source.kind === "lot") return { error: LOT_FLIGHT_ONLY };
+  if (source.kind !== "catalog" && source.kind !== "identity" && source.kind !== "plusOne") {
+    return { error: UNKNOWN_SOURCE };
+  }
+
   const supabase = await createClient();
   const user = await currentUser(supabase);
-  if (!user) return { error: "You must be signed in." };
-  const quantity = Math.floor(lot.quantity);
-  if (!Number.isFinite(quantity) || quantity < 1) {
-    return { error: "Enter how many bottles you have (at least 1)." };
-  }
-  const lotFields = {
-    quantity,
-    bottleSizeMl: 750,
-    pricePerBottle: lot.pricePerBottle,
-    currency: lot.currency?.trim().toUpperCase() || null,
-    storageLocation: lot.storageLocation?.trim() || null,
-  };
+  if (!user) return { error: SIGNED_OUT };
 
-  let r: { id: string } | { error: string };
-  if (source.kind === "catalog") {
-    r = await addCellarLot({ catalogWineId: source.catalogWineId, ...lotFields });
-  } else {
-    const resolved = await resolveIdentity(supabase, source.identity);
-    if ("error" in resolved) return resolved;
-    const id = resolved.identity;
-    r = await addCellarLot({
-      countryId: id.countryId,
-      regionId: id.regionId,
-      appellationId: id.appellationId,
-      grapes: blendOf(id),
-      producerId: resolved.producerId,
-      typeDesignationId: id.typeDesignationId,
-      colour: id.colour,
-      style: id.style,
-      wineName: id.wineName,
-      vintageKind: id.vintageKind,
-      vintageYear: id.vintageYear,
-      vintageTawnyYears: id.vintageTawnyYears,
-      imageUrl: id.imageUrl,
-      description: id.description,
-      ...lotFields,
-    });
-  }
-  if ("error" in r) return { error: r.error };
-
-  let catalogWineId: string | null =
-    source.kind === "catalog" ? source.catalogWineId : null;
-  if (!catalogWineId) {
-    const { data: created } = await supabase
+  if (source.kind === "plusOne") {
+    if (!UUID.test(source.lotId)) return { error: LOT_NOT_YOURS };
+    try {
+      await increaseCellarLotQuantity(source.lotId, 1);
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Couldn't add the bottle." };
+    }
+    const { data: lotRow } = await supabase
       .from("cellar_lots")
       .select("catalog_wine_id")
-      .eq("id", r.id)
+      .eq("id", source.lotId)
       .maybeSingle();
-    catalogWineId = created?.catalog_wine_id ?? null;
-    if (catalogWineId && source.kind === "identity") {
-      // addCellarLot seeds photo/description/blend; the alcohol % is the one
-      // by-hand field it does not carry.
-      await syncCatalogWine(
-        supabase,
-        catalogWineId,
-        user.id,
-        [],
-        null,
-        null,
-        source.identity.alcoholPercent,
-      );
-    }
+    const catalogWineId = lotRow?.catalog_wine_id ?? null;
+    const label = catalogWineId ? await labelFor(supabase, catalogWineId) : UNTITLED;
+    revalidatePath("/cellar");
+    return { ok: true, added: { label, destination: "cellar", catalogWineId, lotId: source.lotId } };
   }
-  if (!catalogWineId) return { error: "The lot was saved but its wine could not be read back." };
 
+  const fields = lotFields(lot);
+  if ("error" in fields) return fields;
+
+  let catalogWineId: string;
+  if (source.kind === "catalog") {
+    if (!UUID.test(source.catalogWineId)) return { error: CATALOG_WINE_GONE };
+    catalogWineId = source.catalogWineId;
+  } else {
+    const draft = clientDraft(source.draft);
+    if (!draft) return { error: MALFORMED_DRAFT };
+    const prepared = await prepareCompleteWine(supabase, draft);
+    if ("error" in prepared) return refusal(prepared);
+    const upserted = await upsertCatalogWine(supabase, user.id, prepared.wine);
+    if ("error" in upserted) return refusal(upserted);
+    catalogWineId = upserted.catalogWineId;
+  }
+
+  const created = await addCellarLot({ catalogWineId, ...fields });
+  if ("error" in created) return refusal(created);
   const label = await labelFor(supabase, catalogWineId);
   revalidatePath("/cellar");
-  return { ok: true, added: { catalogWineId, label, destination: "cellar", lotId: r.id } };
+  return { ok: true, added: { label, destination: "cellar", catalogWineId, lotId: created.id } };
 }
 
-export async function addToCatalog(
-  source: Exclude<AddSource, { kind: "lot" }>,
-): Promise<AddResult> {
+/**
+ * Into the catalog (spec §B.9, D3): identity → prepareCompleteWine +
+ * upsertCatalogWine, with `written` true only when a new row was created; a
+ * catalog source only confirms the wine (`written: false`). Anything else is
+ * refused. A note pick from an identity comes through here too.
+ */
+export async function addToCatalog(source: AddSource): Promise<AddResult> {
+  if (!knownSource(source)) return { error: UNKNOWN_SOURCE };
+  if (source.kind !== "catalog" && source.kind !== "identity") return { error: UNKNOWN_SOURCE };
+
   const supabase = await createClient();
   const user = await currentUser(supabase);
-  if (!user) return { error: "You must be signed in." };
+  if (!user) return { error: SIGNED_OUT };
 
   if (source.kind === "catalog") {
-    const label = await labelFor(supabase, source.catalogWineId);
+    if (!UUID.test(source.catalogWineId)) return { error: CATALOG_WINE_GONE };
+    const wine = await fetchCatalogWine(supabase, source.catalogWineId);
+    if (!wine) return { error: CATALOG_WINE_GONE };
     return {
       ok: true,
-      added: { catalogWineId: source.catalogWineId, label, destination: "catalog" },
-    };
-  }
-
-  const resolved = await resolveIdentity(supabase, source.identity);
-  if ("error" in resolved) return resolved;
-  const id = resolved.identity;
-  // The same payload keys addWine builds — one identity rule for every path.
-  const { data: catalogWineId, error } = await supabase.rpc(
-    "find_or_create_catalog_wine",
-    {
-      p: {
-        country_id: id.countryId,
-        region_id: id.regionId,
-        appellation_id: id.appellationId,
-        primary_grape_id: id.primaryGrapeId,
-        secondary_grape_id: id.secondaryGrapeId,
-        producer_id: resolved.producerId,
-        type_designation_id: id.typeDesignationId,
-        vintage_kind: id.vintageKind,
-        vintage_year: id.vintageYear,
-        vintage_tawny_years: id.vintageTawnyYears,
-        wine_name: id.wineName ?? "",
-        colour: id.colour,
-        style: id.style,
+      added: {
+        label: catalogWineTitle(wine),
+        destination: "catalog",
+        catalogWineId: source.catalogWineId,
+        written: false,
       },
-    },
-  );
-  if (error || !catalogWineId) {
-    return { error: error?.message ?? "Could not add the wine to the catalog." };
-  }
-  // Photo / description / blend / alcohol only land on a row this user
-  // created (syncCatalogWine's created_by rule) — a deduped hit is untouched.
-  await syncCatalogWine(
-    supabase,
-    catalogWineId,
-    user.id,
-    blendOf(id),
-    id.imageUrl,
-    id.description,
-    id.alcoholPercent,
-  );
-  const label = await labelFor(supabase, catalogWineId);
-  revalidatePath("/catalog");
-  return { ok: true, added: { catalogWineId, label, destination: "catalog" } };
-}
-
-function blendOf(id: ByHandIdentity): { grapeId: string; percentage: number | null }[] {
-  const blend = [{ grapeId: id.primaryGrapeId, percentage: null }];
-  if (id.secondaryGrapeId) blend.push({ grapeId: id.secondaryGrapeId, percentage: null });
-  return blend;
-}
-
-// Validate the write floor and create a pending producer on save (never at
-// scan time) — the same copy the tasting path uses. The identity handed back
-// is normalised per vintage kind (year only for YEAR, tawny years only for
-// TAWNY), as insertTastingWineFromIdentity does, so a leftover value from a
-// switched kind never reaches the catalog_wines_vintage_shape check.
-async function resolveIdentity(
-  supabase: Db,
-  identity: ByHandIdentity,
-): Promise<{ error: string } | { identity: ByHandIdentity; producerId: string }> {
-  const producerName = identity.producerName.trim();
-  if (
-    !identity.countryId || !identity.regionId || !identity.appellationId ||
-    !identity.primaryGrapeId || (!identity.producerId && !producerName) ||
-    !identity.colour || !identity.style
-  ) {
-    return {
-      error:
-        "Country, region, appellation, grape, producer, colour and style are required.",
     };
   }
-  if (identity.vintageKind === "YEAR" && !Number.isFinite(identity.vintageYear ?? Number.NaN)) {
-    return { error: "Enter a vintage year." };
-  }
-  if (
-    identity.vintageKind === "TAWNY" &&
-    !Number.isFinite(identity.vintageTawnyYears ?? Number.NaN)
-  ) {
-    return { error: "Choose the tawny age statement." };
-  }
-  const normalized: ByHandIdentity = {
-    ...identity,
-    vintageYear: identity.vintageKind === "YEAR" ? identity.vintageYear : null,
-    vintageTawnyYears:
-      identity.vintageKind === "TAWNY" ? identity.vintageTawnyYears : null,
+
+  const draft = clientDraft(source.draft);
+  if (!draft) return { error: MALFORMED_DRAFT };
+  const prepared = await prepareCompleteWine(supabase, draft);
+  if ("error" in prepared) return refusal(prepared);
+  const upserted = await upsertCatalogWine(supabase, user.id, prepared.wine);
+  if ("error" in upserted) return refusal(upserted);
+
+  const label = await labelFor(supabase, upserted.catalogWineId);
+  revalidatePath("/catalog");
+  return {
+    ok: true,
+    added: { label, destination: "catalog", catalogWineId: upserted.catalogWineId, written: upserted.written },
   };
-  let producerId = identity.producerId;
-  if (!producerId) {
+}
+
+// ---------------------------------------------------------------------------
+// Edit a flight glass (spec §C.8, D7): load it into the by-hand form, save it back
+// ---------------------------------------------------------------------------
+
+/** A glass loaded for Edit or for finishing, adder only (`is_wine_adder`). */
+export async function loadFlightGlassForEdit(
+  wineId: string,
+): Promise<
+  | { draft: WineIdentityDraft; incomplete: boolean; unidentified: boolean; glass: number; canEdit: boolean }
+  | { error: string }
+> {
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return { error: SIGNED_OUT };
+  return loadFlightGlassCore(supabase, typeof wineId === "string" ? wineId : "");
+}
+
+/**
+ * A glass saved from Edit, finished, or left for later again (spec §C.8), behind
+ * the core's adder and edit guards. Finishing an incomplete glass in a running
+ * ASYNC tasting runs the auto-reveal check it skipped while the glass was
+ * incomplete.
+ */
+export async function saveFlightGlass(input: {
+  wineId: string;
+  draft: WineIdentityDraft;
+  unidentified: boolean;
+  leaveForLater: boolean;
+}): Promise<AddResult> {
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return { error: SIGNED_OUT };
+
+  const wineId = typeof input?.wineId === "string" ? input.wineId : "";
+  const draft = clientDraft(input?.draft);
+  if (!draft) return { error: MALFORMED_DRAFT };
+  const saved = await saveFlightGlassCore(supabase, user.id, {
+    wineId,
+    draft,
+    unidentified: input.unidentified === true,
+    leaveForLater: input.leaveForLater === true,
+  });
+  if ("error" in saved) return refusal(saved);
+
+  const label = saved.catalogWineId
+    ? await labelFor(supabase, saved.catalogWineId)
+    : await draftLabel(supabase, draft);
+  const added: AddedWine = { label, destination: "flight", catalogWineId: saved.catalogWineId, wineId };
+  if (saved.incomplete) added.incomplete = saved.incomplete;
+
+  const { data: wine } = await supabase
+    .from("wines")
+    .select("tasting_id, position")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (!wine) return { ok: true, added };
+
+  const [{ count }, { data: tasting }] = await Promise.all([
+    supabase
+      .from("wines")
+      .select("id", { count: "exact", head: true })
+      .eq("tasting_id", wine.tasting_id)
+      .lte("position", wine.position),
+    supabase.from("tastings").select("status, timing_mode").eq("id", wine.tasting_id).maybeSingle(),
+  ]);
+  added.glass = count ?? wine.position;
+
+  const running = tasting?.status === "IN_PROGRESS" || tasting?.status === "OPEN";
+  if (saved.finishedIncomplete && running && tasting?.timing_mode === "ASYNC") {
     try {
-      producerId = (await findOrCreateProducer(supabase, identity.regionId, producerName)).id;
-    } catch (e) {
-      return { error: e instanceof Error ? e.message : "Could not create the producer." };
+      await maybeAutoRevealWine(supabase, wineId);
+    } catch (error) {
+      console.warn("auto-reveal after finishing a glass failed", {
+        wineId,
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
   }
-  return { identity: normalized, producerId };
+
+  revalidatePath(`/tastings/${wine.tasting_id}`);
+  return { ok: true, added };
 }

@@ -6,10 +6,12 @@ import { cellarSummary, type CellarSummary } from "./desktop-format";
 const EMPTY: CellarSummary = { bottles: 0, readyToDrink: 0 };
 
 /**
- * The 7h "From my cellar" tile: bottles in stock and how many are in an open
- * drink window this year. One owner-scoped read of cellar_lots (RLS already
- * limits the table to the caller's own lots) — `listMyCellarLots` carries no
- * drink window, so this reads the three columns it needs directly.
+ * The counts behind the laptop view's "From my cellar" tile (A8, C1): bottles
+ * in stock and how many are in an open drink window this year. The shell loads
+ * it once per open and the matrix's `cellarTileSubtitle` words it. One
+ * owner-scoped read of cellar_lots (RLS already limits the table to the
+ * caller's own lots) — `listMyCellarLots` carries no drink window, so this
+ * reads the three columns it needs directly.
  */
 export async function getCellarSummary(): Promise<CellarSummary> {
   const supabase = await createClient();

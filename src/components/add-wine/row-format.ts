@@ -1,6 +1,7 @@
-// Pure row/meta helpers for the search (7e) and cellar (7f) views, kept out of
-// the "use server" module so they can be unit-tested and shared with the
-// client components. No React, no Supabase.
+// Pure row/meta helpers for the search (A5) and cellar (A6) views and the lot
+// step, kept out of the "use server" modules so they can be unit-tested and
+// shared with the client components. No React, no Supabase; type-only imports.
+import type { SearchGroups } from "./types";
 
 /** One in-stock lot as the cellar view lists it (`listCellarForSheet`). */
 export type CellarSheetLot = {
@@ -41,7 +42,7 @@ export function bottlesLabel(n: number): string {
   return `${n} ${n === 1 ? "bottle" : "bottles"}`;
 }
 
-/** 7e cellar row: "rack B · 2 bottles · drink now". */
+/** A5 cellar row: "rack B · 2 bottles · drink now". */
 export function searchCellarMeta(row: {
   rack: string | null;
   quantity: number;
@@ -52,7 +53,7 @@ export function searchCellarMeta(row: {
     .join(" · ");
 }
 
-/** 7e catalog row: "★ 95 · 22 notes", else the origin line, else a stub. */
+/** A5 catalog row: "★ 95 · 22 notes", else the origin line, else a stub. */
 export function catalogMeta(row: {
   avgScore: number | null;
   noteCount: number;
@@ -67,7 +68,7 @@ export function catalogMeta(row: {
 
 const MONTH = new Intl.DateTimeFormat("en", { month: "long", timeZone: "UTC" });
 
-/** 7e tasted row: "you rated it 92 in May" (year added once it is not this
+/** A5 tasted row: "you rated it 92 in May" (year added once it is not this
     year). `tastedOn` is a date-only string, so it is read as UTC parts —
     no timezone shift can move it a day. */
 export function tastedMeta(
@@ -85,7 +86,9 @@ export function tastedMeta(
   return `${head} in ${when}`;
 }
 
-/** 7f row: "rack B · 2 bottles · in its window" / "… · already glass 1". */
+/** A6 row: "rack B · 2 bottles · in its window" / "… · already glass 1". The
+    glass is named only when the caller may know it (C.9: `glass` is null
+    otherwise), so a hidden glass's lot reads like any other. */
 export function cellarLotMeta(lot: CellarSheetLot): string {
   const tail =
     lot.inFlight && lot.glass != null
@@ -114,9 +117,103 @@ export function filterLots(lots: CellarSheetLot[], filter: CellarFilter): Cellar
   return lots.filter((l) => l.rack?.trim() === filter.rack);
 }
 
+/** What A6's list area shows. A failed load replaces the spinner only while no
+    sheet is in hand ("Couldn't load your cellar right now."); a cellar already
+    listed stays listed if a later reload fails. With lots in hand, "empty"
+    (none in stock) is told apart from "filteredEmpty" (a chip hides them all). */
+export type CellarListState = "loading" | "failed" | "empty" | "filteredEmpty" | "list";
+
+export function cellarListState(input: {
+  sheet: CellarSheet | null;
+  loadFailed: boolean;
+  visibleCount: number;
+}): CellarListState {
+  if (!input.sheet) return input.loadFailed ? "failed" : "loading";
+  if (input.sheet.lots.length === 0) return "empty";
+  return input.visibleCount === 0 ? "filteredEmpty" : "list";
+}
+
 /** Glass numbers follow list order (sorted by position), not the raw stored
     position — the same rule the play/results pages use. */
 export function glassNumbers(wines: { id: string; position: number }[]): Map<string, number> {
   const sorted = [...wines].sort((a, b) => a.position - b.position);
   return new Map(sorted.map((w, i) => [w.id, i + 1]));
+}
+
+// ---------------------------------------------------------------------------
+// A5: the phone search list
+// ---------------------------------------------------------------------------
+
+export type SearchListGroup =
+  | { kind: "cellar"; rows: SearchGroups["cellar"] }
+  | { kind: "catalog"; rows: SearchGroups["catalog"] }
+  | { kind: "tasted"; rows: SearchGroups["tasted"] };
+
+/** The groups in the matrix's `searchGroups` order, empty ones left out. A
+    wine you own is listed once, as its lot rows: whenever the cellar group is
+    listed, that wine's catalog and tasted rows drop out (the laptop's
+    `flattenSearchGroups` keeps the same rule). Without the cellar group (the
+    catalog destination) nothing is dropped. */
+export function searchListGroups(
+  groups: SearchGroups,
+  order: readonly ("cellar" | "catalog" | "tasted")[],
+): SearchListGroup[] {
+  const held = new Set(order.includes("cellar") ? groups.cellar.map((r) => r.catalogWineId) : []);
+  const list: SearchListGroup[] = [];
+  for (const kind of order) {
+    if (kind === "cellar") {
+      if (groups.cellar.length > 0) list.push({ kind, rows: groups.cellar });
+    } else if (kind === "catalog") {
+      const rows = groups.catalog.filter((r) => !held.has(r.catalogWineId));
+      if (rows.length > 0) list.push({ kind, rows });
+    } else {
+      const rows = groups.tasted.filter((r) => !held.has(r.catalogWineId));
+      if (rows.length > 0) list.push({ kind, rows });
+    }
+  }
+  return list;
+}
+
+/** The n in "{n} bottles you can pour tonight": the bottles in lots whose
+    drink window holds this year. */
+export function pourableBottles(rows: readonly { quantity: number; drinkNow: boolean }[]): number {
+  return rows.reduce((sum, r) => (r.drinkNow ? sum + r.quantity : sum), 0);
+}
+
+// ---------------------------------------------------------------------------
+// The lot step's merge card (B1/B2) and its way out (plan amendment 18, D17)
+// ---------------------------------------------------------------------------
+
+export type MergeCardAction = { id: "merge" | "separate" | "skip"; label: string };
+
+/** The merge card, top to bottom: the two adds, then the quieter "Don't add
+    it", which writes nothing (the owner's way out when the bottle was already
+    recorded). */
+export function mergeCardCopy(quantity: number): {
+  title: string;
+  actions: [MergeCardAction, MergeCardAction, MergeCardAction];
+} {
+  return {
+    title: "You already have this wine in your cellar.",
+    actions: [
+      { id: "merge", label: `Add ${quantity} to the existing lot` },
+      { id: "separate", label: "Keep as a separate lot" },
+      { id: "skip", label: "Don't add it" },
+    ],
+  };
+}
+
+/** "2 btl · Rack B": a lot you already hold, on the merge card. */
+export function existingLotLabel(lot: { quantity: number; storageLocation: string | null }): string {
+  return [`${lot.quantity} btl`, lot.storageLocation?.trim() || null].filter(Boolean).join(" · ");
+}
+
+/** After "Don't add it": the line the view the add started from shows, and a
+    link to the lot you already have (its page is `/cellar/[lotId]/edit`). */
+export function skippedLotNotice(lotId: string): { line: string; open: string; href: string } {
+  return {
+    line: "Not added — it's already in your cellar",
+    open: "Open it",
+    href: `/cellar/${encodeURIComponent(lotId)}/edit`,
+  };
 }

@@ -12,12 +12,12 @@ import { useAddWine } from "./add-wine-context";
 import { NewTastingSheet } from "./new-tasting-sheet";
 
 // Which Taste flow to launch. "blind" opens the create-tasting sheet (BLIND
-// by default; the sheet's own mode control switches to semi-blind). "rate"
-// opens the universal add-wine sheet with the rate destination: pick one wine
-// (the camera on a phone or tablet, search + a label-photo upload on a PC),
-// then its WSET note opens (owner feedback, 2026-09-12 — this replaced the
-// separate RateWineModal). "open" (group Taste & Rate) is not a launcher flow
-// — OPEN is drawn as "Soon" in the create sheet.
+// by default; the sheet's own mode control switches to semi-blind). "rate" is
+// Taste & rate: it opens the universal add-wine sheet with the note
+// destination (D4) — pick one wine, then its WSET note opens. The launcher
+// keeps the product's name ("rate"); the sheet's destination is "note". "open"
+// (group Taste & Rate) is not a launcher flow — OPEN is drawn as "Soon" in the
+// create sheet.
 export type TasteKind = "blind" | "rate";
 
 type Ctx = { openTaste: (kind: TasteKind) => void };
@@ -31,7 +31,7 @@ export function useTasteLauncher(): Ctx {
 
 // One shared Taste launcher for the whole authed app, so the mode tiles and the
 // sidebar sub-nav open the same popups instead of navigating to a page. It
-// renders inside AddWineProvider (app-shell.tsx), which owns the rate flow's
+// renders inside AddWineProvider (app-shell.tsx), which owns the note flow's
 // sheet and the WSET note it opens.
 export function TasteLauncherProvider({
   userId,
@@ -45,7 +45,7 @@ export function TasteLauncherProvider({
 
   const openTaste = useCallback(
     (kind: TasteKind) => {
-      if (kind === "rate") openAddWineSheet({ kind: "rate" });
+      if (kind === "rate") openAddWineSheet({ kind: "note" });
       else setCreating(true);
     },
     [openAddWineSheet],
