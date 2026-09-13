@@ -177,39 +177,6 @@ export async function deleteTasting(formData: FormData): Promise<void> {
   redirect("/taste");
 }
 
-// Host edits the scheduled date/time. Allowed any time (harmless).
-/** @deprecated removed in BT-L4 — the settings sheet's When row saves through updateTastingSetup. */
-export async function updateSchedule(
-  _prev: LobbyActionState,
-  formData: FormData,
-): Promise<LobbyActionState> {
-  const { supabase, user } = await requireUser();
-  const tastingId = String(formData.get("tasting_id") ?? "");
-  const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return { error: "Only the host can edit the schedule." };
-
-  // `scheduled_at_iso` (the client's own zone conversion, as in
-  // tastings/new/actions.ts) wins; the raw datetime-local value is the
-  // legacy fallback, parsed in the server's zone as before.
-  const iso = String(formData.get("scheduled_at_iso") ?? "").trim();
-  const raw = String(formData.get("scheduled_at") ?? "").trim();
-  const parsed = raw ? new Date(raw) : null;
-  const scheduledAt = iso
-    ? iso
-    : parsed && !Number.isNaN(parsed.getTime())
-      ? parsed.toISOString()
-      : null;
-
-  const { error } = await supabase
-    .from("tastings")
-    .update({ scheduled_at: scheduledAt })
-    .eq("id", tastingId);
-  if (error) return { error: error.message };
-
-  revalidatePath(`/tastings/${tastingId}`);
-  return { success: "Schedule updated." };
-}
-
 // Host adds more participants after creation, while the tasting hasn't started
 // yet (status DRAFT). Same insert-or-invite-by-email path as create-tasting.
 export async function inviteToTasting(

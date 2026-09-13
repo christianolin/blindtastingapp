@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Calendar, ChevronDown, EyeOff, MapPin, ScanEye, Wine } from "lucide-react";
 import type {
   AsyncRevealPolicy,
+  TastingStatus,
   TimingMode,
   WineLeaderboardReveal,
   WineSourceMode,
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { MODE_STILL_CHANGEABLE } from "@/lib/lobby-copy";
 import {
   flowApplies,
   leaderboardApplies,
@@ -61,6 +63,8 @@ export function NewTastingForm({
   autoFocusName = false,
   regionSuggestion = null,
   wineCount = 0,
+  mode = "create",
+  status,
 }: {
   value: SetupValues;
   /** Always an updater (pass the sheet's setState) — see `set` below. */
@@ -79,8 +83,16 @@ export function NewTastingForm({
       back to step 1). Above 0, who brings the wines is locked — the server
       refuses the switch too (spec §D.1 #3). */
   wineCount?: number;
+  /** "create" (default): the /tastings/new sheet's step 1, unchanged.
+      "settings": TastingSettingsSheet (S4d, BT-L4) — adds the Description
+      field and, once `status` says the tasting has left DRAFT, renders mode,
+      timing, wine-source and the rules card read-only (spec §3.3 item 14). */
+  mode?: "create" | "settings";
+  /** Settings mode only — which fields are still changeable. */
+  status?: TastingStatus;
 }) {
   const nameId = useId();
+  const descriptionId = useId();
   const rulesId = useId();
   const photoLabelId = useId();
   const sourceHintId = useId();
@@ -99,6 +111,11 @@ export function NewTastingForm({
   const showLeaderboard = leaderboardApplies(value);
   const hint = rulesHint(value);
   const sourceLocked = wineCount > 0;
+  const settingsMode = mode === "settings";
+  // Mode, timing, rules and wine source lock once the tasting has left DRAFT
+  // (spec §3.3 item 14, SETTINGS_LOCKED_AFTER_START) — name, description,
+  // photo, time and place stay editable regardless.
+  const locked = settingsMode && status !== undefined && status !== "DRAFT";
   const suggestions = nameSuggestions({
     today: new Date(),
     scheduledLocal: value.scheduledLocal,
@@ -138,20 +155,43 @@ export function NewTastingForm({
           required
           className="w-full min-w-0 rounded-[10px] border border-border bg-white p-[13px] text-[15.5px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:text-[16px] md:focus:p-[12.5px_13.5px]"
         />
-        <div className="flex flex-wrap items-center gap-[7px] max-md:hidden">
-          <span className="text-[11.5px] text-muted-foreground">Suggestions:</span>
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => set("name", s)}
-              className="rounded-full border border-border bg-background px-[10px] py-[3px] text-[11.5px] text-foreground transition-colors hover:border-gold hover:bg-white"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {settingsMode ? null : (
+          <div className="flex flex-wrap items-center gap-[7px] max-md:hidden">
+            <span className="text-[11.5px] text-muted-foreground">Suggestions:</span>
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => set("name", s)}
+                className="rounded-full border border-border bg-background px-[10px] py-[3px] text-[11.5px] text-foreground transition-colors hover:border-gold hover:bg-white"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Description (settings mode only, S4d) — always editable, even once
+          the tasting has started. */}
+      {settingsMode ? (
+        <div className="flex flex-col gap-[7px] md:gap-2">
+          <span className="flex items-baseline gap-[7px]">
+            <Label htmlFor={descriptionId} className="text-[12px] font-semibold md:text-[12.5px]">
+              Description
+            </Label>
+            <span className="text-[11.5px] text-muted-foreground md:text-[12px]">optional</span>
+          </span>
+          <textarea
+            id={descriptionId}
+            name="description"
+            value={value.description}
+            onChange={(e) => set("description", e.target.value)}
+            rows={3}
+            className="w-full min-w-0 resize-y rounded-[10px] border border-border bg-white p-[13px] text-[14px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:focus:p-[12.5px_13.5px]"
+          />
+        </div>
+      ) : null}
 
       {/* 2 · How hidden are the wines? */}
       <div className="flex flex-col gap-2 md:gap-[9px]">
@@ -166,6 +206,7 @@ export function NewTastingForm({
           <ModeTile
             selected={value.revealMode === "BLIND"}
             onSelect={() => set("revealMode", "BLIND")}
+            disabled={locked}
             icon={<EyeOff className="size-[19px]" aria-hidden />}
             title="Blind"
             desktopCopy="Nothing known. Guess each glass from scratch, 30 pts a wine."
@@ -174,6 +215,7 @@ export function NewTastingForm({
           <ModeTile
             selected={value.revealMode === "SEMI_BLIND"}
             onSelect={() => set("revealMode", "SEMI_BLIND")}
+            disabled={locked}
             icon={<ScanEye className="size-[19px]" aria-hidden />}
             title="Semi-blind"
             desktopCopy="The list is shown. Match each glass to a wine on it."
@@ -202,10 +244,18 @@ export function NewTastingForm({
             </span>
           </div>
         </div>
-        <span className="text-[11.5px] text-muted-foreground max-md:hidden">
-          Switch between blind and semi-blind at any time before you start — the
-          wines you have added stay.
-        </span>
+        {settingsMode ? (
+          !locked ? (
+            <span className="text-[11.5px] text-muted-foreground max-md:hidden">
+              {MODE_STILL_CHANGEABLE}
+            </span>
+          ) : null
+        ) : (
+          <span className="text-[11.5px] text-muted-foreground max-md:hidden">
+            Switch between blind and semi-blind at any time before you start — the
+            wines you have added stay.
+          </span>
+        )}
       </div>
 
       {/* 3 · When, and who pours? */}
@@ -219,8 +269,18 @@ export function NewTastingForm({
             value={value.timingMode}
             onChange={(v) => set("timingMode", v)}
             options={[
-              { value: "LIVE", desktop: "Live, together", phone: "Live" },
-              { value: "ASYNC", desktop: "Self-paced", phone: "Self-paced" },
+              {
+                value: "LIVE",
+                desktop: "Live, together",
+                phone: "Live",
+                disabled: locked && value.timingMode !== "LIVE",
+              },
+              {
+                value: "ASYNC",
+                desktop: "Self-paced",
+                phone: "Self-paced",
+                disabled: locked && value.timingMode !== "ASYNC",
+              },
             ]}
           />
           <Segmented<WineSourceMode>
@@ -233,13 +293,14 @@ export function NewTastingForm({
                 value: "HOST_PROVIDES",
                 desktop: "I bring the wines",
                 phone: "I bring them",
-                disabled: sourceLocked && value.wineSource !== "HOST_PROVIDES",
+                disabled: (locked || sourceLocked) && value.wineSource !== "HOST_PROVIDES",
               },
               {
                 value: "PARTICIPANT_CONTRIBUTED",
                 desktop: "Everyone brings one",
                 phone: "Everyone brings",
-                disabled: sourceLocked && value.wineSource !== "PARTICIPANT_CONTRIBUTED",
+                disabled:
+                  (locked || sourceLocked) && value.wineSource !== "PARTICIPANT_CONTRIBUTED",
               },
             ]}
           />
@@ -303,7 +364,7 @@ export function NewTastingForm({
       >
         <span className="flex items-baseline gap-[7px]">
           <span id={photoLabelId} className="text-[12px] font-semibold md:text-[12.5px]">
-            Cover photo
+            {settingsMode ? "Change photo" : "Cover photo"}
           </span>
           <span className="text-[11.5px] text-muted-foreground md:text-[12px]">optional</span>
         </span>
@@ -333,26 +394,28 @@ export function NewTastingForm({
               {rulesSummary(value)}
             </span>
           </span>
-          <button
-            type="button"
-            aria-expanded={rulesOpen}
-            aria-controls={rulesId}
-            onClick={() => setRulesOpen((o) => !o)}
-            className="flex shrink-0 items-center gap-[5px] rounded-full text-[12px] font-semibold text-primary md:border md:border-border md:bg-card md:px-[11px] md:py-[5px] md:text-[11.5px] md:hover:border-gold md:hover:bg-white"
-          >
-            Change
-            <ChevronDown
-              className={cn("size-3.5 transition-transform", rulesOpen && "rotate-180")}
-              aria-hidden
-            />
-          </button>
+          {locked ? null : (
+            <button
+              type="button"
+              aria-expanded={rulesOpen}
+              aria-controls={rulesId}
+              onClick={() => setRulesOpen((o) => !o)}
+              className="flex shrink-0 items-center gap-[5px] rounded-full text-[12px] font-semibold text-primary md:border md:border-border md:bg-card md:px-[11px] md:py-[5px] md:text-[11.5px] md:hover:border-gold md:hover:bg-white"
+            >
+              Change
+              <ChevronDown
+                className={cn("size-3.5 transition-transform", rulesOpen && "rotate-180")}
+                aria-hidden
+              />
+            </button>
+          )}
         </div>
-        {hint && !rulesOpen ? (
+        {hint && !rulesOpen && !locked ? (
           <span className="text-[11.5px] leading-[1.5] text-muted-foreground max-md:hidden">
             {hint}
           </span>
         ) : null}
-        <div id={rulesId} hidden={!rulesOpen} className="flex flex-col gap-4 pt-1">
+        <div id={rulesId} hidden={locked || !rulesOpen} className="flex flex-col gap-4 pt-1">
           {showFlow ? (
             <div className="flex flex-col gap-2">
               <Label className="text-[12.5px]">Flow</Label>
@@ -441,6 +504,7 @@ function ModeTile({
   title,
   desktopCopy,
   phoneCopy,
+  disabled = false,
 }: {
   selected: boolean;
   onSelect: () => void;
@@ -448,18 +512,22 @@ function ModeTile({
   title: string;
   desktopCopy: string;
   phoneCopy: string;
+  /** Settings mode, once the tasting has left DRAFT (spec §3.3 item 14). */
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={selected}
+      disabled={disabled}
       onClick={onSelect}
       className={cn(
         "relative flex min-h-11 items-center gap-[11px] rounded-[11px] p-[13px] text-left transition-colors md:flex-col md:items-stretch md:gap-[5px]",
         selected
           ? "border-[1.5px] border-primary bg-card p-[12.5px] md:bg-background"
           : "border border-border bg-card hover:border-gold md:bg-white",
+        disabled && "cursor-not-allowed opacity-70 hover:border-border md:hover:border-border",
       )}
     >
       <span className={cn("shrink-0", selected ? "text-primary" : "text-muted-foreground")}>
