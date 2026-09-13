@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { endTastingConfirm, notRevealedEyebrow, startLandsOnConsole } from "./tasting-lifecycle-copy";
 
-describe("startLandsOnConsole (reveal-5)", () => {
+describe("startLandsOnConsole (B6: LIVE semi-blind host-provides too)", () => {
   it.each([
     [{ timingMode: "LIVE", revealMode: "BLIND", wineSource: "HOST_PROVIDES" }, true],
+    [{ timingMode: "LIVE", revealMode: "SEMI_BLIND", wineSource: "HOST_PROVIDES" }, true],
+    [{ timingMode: "LIVE", revealMode: "SEMI_BLIND", wineSource: "PARTICIPANT_CONTRIBUTED" }, false],
     [{ timingMode: "LIVE", revealMode: "BLIND", wineSource: "PARTICIPANT_CONTRIBUTED" }, false],
-    [{ timingMode: "LIVE", revealMode: "SEMI_BLIND", wineSource: "HOST_PROVIDES" }, false],
-    [{ timingMode: "ASYNC", revealMode: "BLIND", wineSource: "HOST_PROVIDES" }, false],
+    [{ timingMode: "ASYNC", revealMode: "SEMI_BLIND", wineSource: "HOST_PROVIDES" }, false],
+    [{ timingMode: "LIVE", revealMode: "OPEN", wineSource: "HOST_PROVIDES" }, false],
   ] as const)("%j → %s", (t, v) => expect(startLandsOnConsole(t)).toBe(v));
 });
 

@@ -3,13 +3,17 @@ import {
   buildSetupFormData,
   defaultSetup,
   flowApplies,
+  friendContextLine,
   leaderboardApplies,
   localToIso,
   nameSuggestions,
+  pickPouredRegion,
   readySummary,
   rulesHint,
   rulesSummary,
   rulesSummaryShort,
+  settingsChangeRefusal,
+  SETTINGS_LOCKED_AFTER_START,
   WINE_SOURCE_LOCKED,
   type SetupValues,
 } from "./setup-copy";
@@ -32,24 +36,10 @@ describe("rulesSummary", () => {
     ).toBe("Free · Danish Championship scoring");
   });
 
-  it("semi-blind: one point per glass", () => {
-    expect(rulesSummary({ ...base, revealMode: "SEMI_BLIND" })).toBe(
-      "Semi-blind · one point per glass",
-    );
-  });
-
   it("self-paced drops flow and standings, appends the results policy (create-1)", () => {
     expect(rulesSummary({ ...base, timingMode: "ASYNC" })).toBe(
       "Danish Championship scoring · results after everyone has guessed",
     );
-    expect(
-      rulesSummary({
-        ...base,
-        revealMode: "SEMI_BLIND",
-        timingMode: "ASYNC",
-        asyncRevealPolicy: "IMMEDIATE",
-      }),
-    ).toBe("Semi-blind · one point per glass · results as soon as you submit");
   });
 });
 
@@ -71,24 +61,10 @@ describe("rulesSummaryShort", () => {
     );
   });
 
-  it("semi-blind: one point per glass", () => {
-    expect(rulesSummaryShort({ ...base, revealMode: "SEMI_BLIND" })).toBe(
-      "Semi-blind · 1 pt per glass",
-    );
-  });
-
   it("self-paced keeps only the results policy (create-1)", () => {
     expect(rulesSummaryShort({ ...base, timingMode: "ASYNC" })).toBe(
       "results after all",
     );
-    expect(
-      rulesSummaryShort({
-        ...base,
-        revealMode: "SEMI_BLIND",
-        timingMode: "ASYNC",
-        asyncRevealPolicy: "IMMEDIATE",
-      }),
-    ).toBe("Semi-blind · 1 pt per glass · results at once");
   });
 });
 
@@ -161,11 +137,12 @@ describe("Guided pacing and the leaderboard only for Live + Guided (create-1, cr
 // The one condition each setting renders under, shared by the form and the
 // summaries (spec §D.1 #1 and #5).
 describe("flowApplies / leaderboardApplies", () => {
-  it("the Flow setting exists only for blind LIVE tastings", () => {
+  it("the Flow setting exists for any LIVE tasting except OPEN (B6)", () => {
     expect(flowApplies(base)).toBe(true);
     expect(flowApplies({ ...base, flow: "FREE" })).toBe(true);
     expect(flowApplies({ ...base, timingMode: "ASYNC" })).toBe(false);
-    expect(flowApplies({ ...base, revealMode: "SEMI_BLIND" })).toBe(false);
+    expect(flowApplies({ ...base, revealMode: "SEMI_BLIND" })).toBe(true);
+    expect(flowApplies({ ...base, revealMode: "OPEN" })).toBe(false);
   });
 
   it("the Leaderboard setting exists only for blind LIVE Guided tastings", () => {
@@ -173,6 +150,127 @@ describe("flowApplies / leaderboardApplies", () => {
     expect(leaderboardApplies({ ...base, flow: "FREE" })).toBe(false);
     expect(leaderboardApplies({ ...base, timingMode: "ASYNC" })).toBe(false);
     expect(leaderboardApplies({ ...base, revealMode: "SEMI_BLIND" })).toBe(false);
+  });
+});
+
+describe("guided pacing for LIVE semi-blind (B6 pour pointer)", () => {
+  const semi = { ...base, revealMode: "SEMI_BLIND" as const };
+  it("flow applies to any LIVE non-OPEN tasting; the leaderboard stays blind-only", () => {
+    expect(flowApplies(semi)).toBe(true);
+    expect(flowApplies({ ...semi, timingMode: "ASYNC" })).toBe(false);
+    expect(flowApplies({ ...base, revealMode: "OPEN" })).toBe(false);
+    expect(leaderboardApplies(semi)).toBe(false);
+    expect(leaderboardApplies(base)).toBe(true);
+  });
+  it("semi-blind rules summaries", () => {
+    expect(rulesSummary(semi)).toBe("Guided · one point for each glass you match");
+    expect(rulesSummary({ ...semi, flow: "FREE" })).toBe("Free · one point for each glass you match");
+    expect(rulesSummary({ ...semi, timingMode: "ASYNC" })).toBe(
+      "One point for each glass you match · results after everyone has guessed",
+    );
+    expect(rulesSummaryShort(semi)).toBe("Guided · 1 pt a match");
+    expect(rulesSummaryShort({ ...semi, flow: "FREE" })).toBe("Free · 1 pt a match");
+    expect(rulesSummaryShort({ ...semi, timingMode: "ASYNC", asyncRevealPolicy: "IMMEDIATE" })).toBe(
+      "1 pt a match · results at once",
+    );
+  });
+});
+
+describe("readySummary with a place and bring-your-own (B1 step 3)", () => {
+  it("restates every choice", () => {
+    expect(
+      readySummary({
+        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED" },
+        wineCount: 0,
+        invitedCount: 2,
+        dateText: "DATE",
+        place: "Nørrebro",
+      }),
+    ).toEqual([
+      "Blind",
+      "live",
+      "guided",
+      "everyone brings",
+      "0 wines so far",
+      "DATE",
+      "Nørrebro",
+      "2 invited",
+      "add more as you pour",
+    ]);
+    expect(
+      readySummary({ setup: base, wineCount: 1, invitedCount: 0, dateText: null, place: null }),
+    ).toEqual(["Blind", "live", "guided", "1 wine so far", "no date", "0 invited", "add more as you pour"]);
+    expect(
+      readySummary({ setup: base, wineCount: 3, invitedCount: 2, dateText: "DATE", phone: true }),
+    ).toEqual(["Blind", "live", "guided", "3 wines so far", "DATE", "2 invited"]);
+  });
+});
+
+describe("friendContextLine (CREATE-48)", () => {
+  it("tastings and average, or new to Blindr", () => {
+    expect(friendContextLine({ tastingsAttended: 9, winesGuessed: 40, averagePoints: 19.12 })).toBe(
+      "9 tastings · 19.1 avg",
+    );
+    expect(friendContextLine({ tastingsAttended: 1, winesGuessed: 6, averagePoints: 12 })).toBe(
+      "1 tasting · 12.0 avg",
+    );
+    expect(friendContextLine({ tastingsAttended: 0, winesGuessed: 0, averagePoints: 0 })).toBe(
+      "new to Blindr",
+    );
+    expect(friendContextLine(undefined)).toBe("new to Blindr");
+  });
+});
+
+describe("settingsChangeRefusal (S4d)", () => {
+  const locked = {
+    revealMode: "BLIND",
+    timingMode: "LIVE",
+    wineSource: "HOST_PROVIDES",
+    flow: "GUIDED",
+    leaderboardReveal: "PER_ATTRIBUTE",
+    asyncRevealPolicy: "AFTER_ALL",
+  } as const;
+  it("DRAFT: everything, except the wine source once wines exist", () => {
+    expect(
+      settingsChangeRefusal({
+        status: "DRAFT",
+        wineCount: 0,
+        before: locked,
+        after: { ...locked, revealMode: "SEMI_BLIND", wineSource: "PARTICIPANT_CONTRIBUTED" },
+      }),
+    ).toBeNull();
+    expect(
+      settingsChangeRefusal({
+        status: "DRAFT",
+        wineCount: 2,
+        before: locked,
+        after: { ...locked, wineSource: "PARTICIPANT_CONTRIBUTED" },
+      }),
+    ).toBe(WINE_SOURCE_LOCKED);
+  });
+  it("after Start: mode, timing, rules and wine source lock", () => {
+    for (const status of ["IN_PROGRESS", "CLOSED", "OPEN"] as const) {
+      expect(settingsChangeRefusal({ status, wineCount: 3, before: locked, after: locked })).toBeNull();
+      expect(
+        settingsChangeRefusal({
+          status,
+          wineCount: 3,
+          before: locked,
+          after: { ...locked, timingMode: "ASYNC" },
+        }),
+      ).toBe(SETTINGS_LOCKED_AFTER_START);
+      expect(
+        settingsChangeRefusal({
+          status,
+          wineCount: 3,
+          before: locked,
+          after: { ...locked, leaderboardReveal: "PER_WINE" },
+        }),
+      ).toBe(SETTINGS_LOCKED_AFTER_START);
+    }
+    expect(SETTINGS_LOCKED_AFTER_START).toBe(
+      "Mode, timing, rules and who brings the wines lock once the tasting has started.",
+    );
   });
 });
 
@@ -207,17 +305,69 @@ describe("WINE_SOURCE_LOCKED (create-4)", () => {
   });
 });
 
-describe("nameSuggestions", () => {
-  it("weekday blind, region #n, and the fixed third", () => {
-    const thursday = new Date(2026, 8, 10); // Thu 10 Sep 2026
-    expect(nameSuggestions(thursday, { region: "Piedmont", n: 5 })).toEqual([
-      "Thursday blind",
-      "Piedmont #5",
-      "Six glasses, no mercy",
-    ]);
+describe("nameSuggestions (B1)", () => {
+  const thursday = new Date(2026, 8, 10, 12); // Thursday 10 Sep 2026
+
+  it("the scheduled weekday, else today, and the mode word", () => {
+    expect(
+      nameSuggestions({
+        today: thursday,
+        scheduledLocal: "",
+        revealMode: "BLIND",
+        pouredRegion: { region: "Piedmont", n: 5 },
+      }),
+    ).toEqual(["Thursday blind", "Piedmont #5", "Six glasses, no mercy"]);
+    expect(
+      nameSuggestions({
+        today: thursday,
+        scheduledLocal: "2026-09-12T19:00",
+        revealMode: "SEMI_BLIND",
+        pouredRegion: null,
+      }),
+    ).toEqual(["Saturday semi-blind", "Six glasses, no mercy"]);
   });
-  it("falls back to Burgundy #1", () => {
-    expect(nameSuggestions(new Date(2026, 8, 12), null)[1]).toBe("Burgundy #1");
+
+  it("an unparsable date falls back to today", () => {
+    expect(
+      nameSuggestions({
+        today: thursday,
+        scheduledLocal: "nonsense",
+        revealMode: "BLIND",
+        pouredRegion: null,
+      })[0],
+    ).toBe("Thursday blind");
+  });
+});
+
+describe("pickPouredRegion", () => {
+  const names = new Map([
+    ["piemonte", "Piedmont"],
+    ["toscana", "Tuscany"],
+    ["a", "Alsace"],
+    ["b", "Bordeaux"],
+  ]);
+  it("the region poured most, numbered by the tastings that poured it", () => {
+    const rows = [
+      { tastingId: "t1", regionId: "piemonte" },
+      { tastingId: "t1", regionId: "piemonte" },
+      { tastingId: "t2", regionId: "piemonte" },
+      { tastingId: "t2", regionId: "toscana" },
+      { tastingId: "t3", regionId: "toscana" },
+    ];
+    expect(pickPouredRegion(rows, names)).toEqual({ region: "Piedmont", n: 3 });
+    expect(pickPouredRegion([], names)).toBeNull();
+    expect(pickPouredRegion([{ tastingId: "t1", regionId: "gone" }], names)).toBeNull();
+  });
+  it("ties go to the name first in the alphabet", () => {
+    expect(
+      pickPouredRegion(
+        [
+          { tastingId: "t1", regionId: "b" },
+          { tastingId: "t2", regionId: "a" },
+        ],
+        names,
+      ),
+    ).toEqual({ region: "Alsace", n: 2 });
   });
 });
 

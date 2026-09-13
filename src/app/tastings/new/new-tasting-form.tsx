@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Calendar, ChevronDown, EyeOff, ScanEye, Wine } from "lucide-react";
+import { Calendar, ChevronDown, EyeOff, MapPin, ScanEye, Wine } from "lucide-react";
 import type {
   AsyncRevealPolicy,
   TimingMode,
@@ -29,6 +29,7 @@ import {
   type FlowChoice,
   type SetupValues,
 } from "./setup-copy";
+import { PLACE_LABEL, PLACE_MAX, PLACE_PLACEHOLDER } from "./place";
 
 const FLOW_ITEMS = {
   GUIDED: "Guided",
@@ -83,6 +84,7 @@ export function NewTastingForm({
   const rulesId = useId();
   const photoLabelId = useId();
   const sourceHintId = useId();
+  const placeId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   // Functional updates: the cover photo's URL arrives from an async upload,
@@ -90,14 +92,19 @@ export function NewTastingForm({
   // anything typed or toggled while it uploaded.
   const set = <K extends keyof SetupValues>(key: K, v: SetupValues[K]) =>
     onChange((prev) => ({ ...prev, [key]: v }));
-  const blind = value.revealMode === "BLIND";
-  // Flow exists only for blind LIVE tastings, the Leaderboard only for blind
-  // LIVE Guided ones (spec §D.1 #1, #5) — the same rules the summaries use.
+  // Flow exists for any non-OPEN LIVE tasting (blind or semi-blind, B6), the
+  // Leaderboard only for blind LIVE Guided ones (spec §D.1 #1, #5) — the same
+  // rules the summaries use.
   const showFlow = flowApplies(value);
   const showLeaderboard = leaderboardApplies(value);
   const hint = rulesHint(value);
   const sourceLocked = wineCount > 0;
-  const suggestions = nameSuggestions(new Date(), regionSuggestion);
+  const suggestions = nameSuggestions({
+    today: new Date(),
+    scheduledLocal: value.scheduledLocal,
+    revealMode: value.revealMode,
+    pouredRegion: regionSuggestion,
+  });
 
   // Focus in an effect, not `autoFocus`: on the SSR'd /tastings/new page the
   // desktop media query hydrates false and only flips on the next render,
@@ -256,6 +263,32 @@ export function NewTastingForm({
             optional
           </span>
         </label>
+
+        {/* Where? (B12) — host, JOINED and INVITED only; never shown to a
+            stranger or in any preview (spec §13.3 items 4–5). */}
+        <label
+          htmlFor={placeId}
+          className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-border bg-white p-[11px_13px] md:gap-[10px]"
+        >
+          <MapPin className="size-4 shrink-0 text-muted-foreground max-md:hidden" aria-hidden />
+          <span className="shrink-0 text-[13px] text-foreground md:hidden">{PLACE_LABEL}</span>
+          <span className="hidden shrink-0 text-[13px] text-foreground md:inline">
+            {PLACE_LABEL} — {PLACE_PLACEHOLDER}
+          </span>
+          <input
+            id={placeId}
+            type="text"
+            name="place"
+            value={value.place}
+            onChange={(e) => set("place", e.target.value)}
+            maxLength={PLACE_MAX}
+            placeholder={PLACE_PLACEHOLDER}
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none md:text-[13.5px] md:placeholder:text-transparent"
+          />
+          <span className="shrink-0 text-[11.5px] text-muted-foreground md:text-[12px]">
+            optional
+          </span>
+        </label>
       </div>
 
       {/* 4 · Cover photo (optional). The lobby header and the Taste cards
@@ -392,11 +425,6 @@ export function NewTastingForm({
                 </SelectContent>
               </Select>
             </div>
-          ) : null}
-          {!blind && value.timingMode !== "ASYNC" ? (
-            <p className="text-xs text-muted-foreground">
-              Semi-blind scores one point per matched glass — nothing else to set.
-            </p>
           ) : null}
         </div>
       </div>

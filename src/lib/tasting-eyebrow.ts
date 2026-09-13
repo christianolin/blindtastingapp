@@ -68,7 +68,8 @@ export type FlowWord = "Guided" | "Self-paced" | "Free order";
 
 /**
  * The flow chip. Guided means one glass at a time with the host driving the
- * reveal, which only a live, blind tasting with sequential guessing does.
+ * reveal — any live, non-OPEN tasting (blind or semi-blind, B6: semi-blind's
+ * pour pointer needs the same word) with sequential guessing on.
  */
 export function flowWord(tasting: {
   revealMode: RevealMode;
@@ -76,7 +77,7 @@ export function flowWord(tasting: {
   sequentialGuessing: boolean;
 }): FlowWord {
   if (tasting.timingMode === "ASYNC") return "Self-paced";
-  if (tasting.revealMode === "BLIND" && tasting.sequentialGuessing) return "Guided";
+  if (tasting.revealMode !== "OPEN" && tasting.sequentialGuessing) return "Guided";
   return "Free order";
 }
 
