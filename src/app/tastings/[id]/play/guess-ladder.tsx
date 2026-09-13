@@ -4,14 +4,15 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
+import { LiveDot } from "@/components/overview/live-dot";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import type { ReferenceOption } from "@/components/reference-combobox";
 import type { TypeDesignationOption } from "@/components/type-designation-field";
+import { useMediaQuery } from "@/components/add-wine/use-camera";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
 import {
   LADDER_ORDER,
-  MAX_POINTS,
   OPTIONAL_FIELDS,
   fieldPoints,
   grapeSecondaryLine,
@@ -19,7 +20,6 @@ import {
   nextUnanswered,
   pointsAtStake,
 } from "@/lib/guess-ladder-math";
-import { ordinal } from "@/lib/stats-math";
 import { cn } from "@/lib/utils";
 import { lockGuess, saveGuessFields } from "./actions";
 import { FieldPicker } from "./field-picker";
@@ -38,7 +38,23 @@ import {
   type SaveQueueEvent,
   type SaveQueueState,
 } from "./guess-save-queue";
+import {
+  INTRO_SENTENCE,
+  VINTAGE_EMPTY,
+  VINTAGE_LABEL,
+  introHeading,
+  laptopEyebrow,
+  lockButtonText,
+  lockFooterText,
+  lockedCountShort,
+  phoneLadderTitle,
+  rankChipLabel,
+  shortlistHeading,
+  stakeLine,
+} from "./ladder-copy";
 import { LADDER_EXTRAS_NOTE, lockButtonLabel, lockConfirm, lockFooter } from "./lock-copy";
+import { LadderRail } from "./ladder-rail";
+import { oftenPicked } from "./pick-counts";
 import {
   VINTAGE_NV_ID,
   VINTAGE_TAWNY_OTHER_ID,
@@ -67,7 +83,7 @@ const FIELD_LABEL: Record<LadderField, string> = {
 const ROW_LABEL: Record<LadderField, string> = {
   ...FIELD_LABEL,
   primary_grape: "Grape · worth the most",
-  vintage: "Vintage · 1 pt if you are a year out",
+  vintage: VINTAGE_LABEL,
   secondary_grape: "Secondary grape · +2 if the wine has one",
   type_designation: "Type designation · +2 if the wine has one",
 };
@@ -78,12 +94,16 @@ const EMPTY_TEXT: Record<LadderField, string> = {
   appellation: "Skip, or name one",
   primary_grape: "Skip, or name one",
   producer: "Skip, or name one",
-  vintage: "Skip, or pick a year",
+  vintage: VINTAGE_EMPTY,
   secondary_grape: "Skip, or name one",
   type_designation: "Skip, or name one",
 };
 
 const JUST_SAVED_MS = 3000;
+
+/** Shared empty set so a field with no pick counts (vintage: never counted)
+ *  returns a stable reference instead of allocating a fresh empty Set. */
+const EMPTY_OFTEN_IDS: ReadonlySet<string> = new Set();
 
 const EMPTY_ROW: GuessRow = {
   country_id: null,
@@ -158,8 +178,8 @@ function groupDesignations(items: TypeDesignationOption[]): PickerGroup[] {
 }
 
 /**
- * The 6e guess ladder for one glass: six rows (plus two optional under
- * "More"), each opening the 6f picker and autosaving on pick — one
+ * The 6e guess ladder for one glass: an intro, six rows (plus two optional
+ * under "More"), each opening the 6f picker and autosaving on pick — one
  * `saveGuessFields` call per pick, writing only that field's group of
  * `guesses` columns (spec §8.3 item 5), so a failed save reverts just that
  * group instead of the whole row (critic on `XCUT-53`). Every value is React
@@ -179,6 +199,14 @@ function groupDesignations(items: TypeDesignationOption[]): PickerGroup[] {
  * the newest pending value for the group until nothing is left pending — the
  * same coalescing behaviour the old single whole-row pump had, just scoped
  * per group so an in-flight producer save never blocks a grape pick.
+ *
+ * Laptop (S8b, from `md`): two columns — the rows on the left, `LadderRail`
+ * sticky on the right carrying the stake card, the roster, the standings
+ * since the previous glass and the lock button itself (the phone footer
+ * below `md` carries that button instead). The same `md` boundary
+ * (`useMediaQuery`, the layout choice shared with add-wine's camera routing,
+ * not a device check) also switches the picker from a bottom sheet to a
+ * popover anchored to the open row.
  */
 export function GuessLadder({
   tastingId,
@@ -196,12 +224,19 @@ export function GuessLadder({
   typeDesignations,
   initialGuess,
   initialLabels,
-  frequentGrapeIds,
   shortlist: initialShortlist,
   timingMode,
   asyncRevealPolicy,
+  pickCounts,
+  referenceCounts,
+  hostName,
+  competitors,
+  roster,
+  standingsAfterPrevious,
   onLocked,
 }: GuessLadderProps) {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
   const stateRef = useRef<SaveQueueState>(initialSaveQueue(toRow(initialGuess)));
   const [, forceRender] = useState(0);
 
@@ -258,9 +293,11 @@ export function GuessLadder({
   const inputRef = useRef<HTMLInputElement>(null);
   const tawnyOtherInputRef = useRef<HTMLInputElement>(null);
   // The row buttons by field, so closing the picker can hand focus back to
-  // the row it was opened for (keyboard users otherwise land on <body>).
+  // the row it was opened for (keyboard users otherwise land on <body>), and
+  // so the popover (laptop) can anchor to whichever row is open.
   const rowRefs = useRef(new Map<LadderField, HTMLButtonElement>());
   const openFieldRef = useRef<LadderField>("country");
+  const pickerAnchorRef = useRef<HTMLElement | null>(null);
 
   const saveState = stateRef.current;
   const guess = visibleRow(saveState);
@@ -438,6 +475,7 @@ export function GuessLadder({
     if (locking) return;
     if (field === "vintage") setTawnyOtherOpen(false);
     openFieldRef.current = field;
+    pickerAnchorRef.current = rowRefs.current.get(field) ?? null;
     setPicker({ open: true, field });
     // Focus synchronously, in the same tap that opens the sheet — see the
     // combobox rule; the picker stays mounted so the input already exists.
@@ -522,27 +560,31 @@ export function GuessLadder({
     advanceFrom("vintage");
   }
 
-  // "Barolo, Barbaresco · you guess this often" — the shortlist rows carry
-  // the secondary line (from the shortlist's linked places + colour); the
-  // "Everything else" rows are plain, as drawn.
-  const frequent = (id: string) => frequentGrapeIds.includes(id);
-  const grapeSub = (id: string) =>
-    grapeSecondaryLine(shortlist?.details[id], frequent(id));
+  // Ids the viewer has picked often before, for whichever field the picker
+  // is open on (S9; spec §8.3 item 8) — a generic mechanism (pick-counts.ts,
+  // OFTEN_THRESHOLD = 3) that field-picker.tsx appends to every row's
+  // context line, grapes included; a field with no counts (vintage is never
+  // counted) reads as "nobody picked this often" rather than throwing.
+  function oftenIdsFor(field: LadderField): ReadonlySet<string> {
+    const counts = pickCounts[field];
+    if (!counts) return EMPTY_OFTEN_IDS;
+    const ids = new Set<string>();
+    for (const id of Object.keys(counts)) {
+      if (oftenPicked(counts, id)) ids.add(id);
+    }
+    return ids;
+  }
 
   function grapeGroups(): PickerGroup[] {
     const ids = shortlist?.grapeIds ?? [];
+    // The context line is the shortlist's own place/colour facts only — the
+    // generic oftenIdsFor suffix (below) is what adds " · you guess this
+    // often" now, for every field including grapes, so this never passes a
+    // frequent flag of its own (that would double the clause).
+    const grapeSub = (id: string) => grapeSecondaryLine(shortlist?.details[id], false);
     if (ids.length === 0) {
-      // No shortlist (region unmapped or not guessed yet): one flat list,
-      // keeping the frequent-guess clause as its only hint.
-      return [
-        {
-          options: grapes.map((g) => ({
-            id: g.id,
-            name: g.name,
-            sub: grapeSecondaryLine(undefined, frequent(g.id)),
-          })),
-        },
-      ];
+      // No shortlist (region unmapped or not guessed yet): one flat list.
+      return [{ options: grapes.map((g) => ({ id: g.id, name: g.name })) }];
     }
     const listed = new Set(ids);
     const short: PickerOption[] = ids
@@ -554,7 +596,8 @@ export function GuessLadder({
       .map((g) => ({ id: g.id, name: g.name }));
     return [
       {
-        heading: `Grown in ${shortlist?.placeName ?? regionName ?? "the region"}`,
+        // S9: "Common grapes in {place}" (shortlistHeading) is the current wording.
+        heading: shortlistHeading(shortlist?.placeName ?? regionName ?? "the region"),
         note: "from your region guess",
         options: short,
       },
@@ -650,26 +693,6 @@ export function GuessLadder({
     [regions, currentGuess],
   );
 
-  function searchPlaceholder(field: LadderField): string {
-    switch (field) {
-      case "country":
-        return `Search ${countries.length} countries`;
-      case "region":
-        return `Search ${regions.length} regions`;
-      case "appellation":
-        return appellations.length ? `Search ${appellations.length} appellations` : "Search appellations";
-      case "primary_grape":
-      case "secondary_grape":
-        return `Search ${grapes.length} grapes`;
-      case "producer":
-        return guess.region_id ? "Search all producers" : "Search producers";
-      case "type_designation":
-        return "Search designations";
-      case "vintage":
-        return "Search years";
-    }
-  }
-
   // A row tap saves and moves on, like Next and skip do — the next unanswered
   // field's picker opens, or the sheet closes once the pass is complete, so
   // a full guess is one pass ("one tap answers and closes"). "Next: {field}"
@@ -724,13 +747,11 @@ export function GuessLadder({
   }
 
   const stake = pointsAtStake(guess);
-  const chipIds = (shortlist?.grapeIds ?? []).slice(0, 3);
-  const chips = chipIds
-    .map((id) => grapes.find((g) => g.id === id))
-    .filter((g): g is ReferenceOption => Boolean(g));
   // ASYNC + IMMEDIATE: locking runs score_own_guess, so it is a final submit
   // that shows the answer — the button, footer and a confirm say so (play-4).
   // Null in every other mode, where locking stays a take-back-able signal.
+  // Only the phone footer reads it; the laptop rail's button keeps its plain
+  // "Lock in glass N" label (spec §8.3 item 7 names no laptop variant).
   const submitLabel = lockButtonLabel({
     timingMode,
     asyncRevealPolicy,
@@ -780,21 +801,20 @@ export function GuessLadder({
     const value = displayValue(field);
     const answered = isFieldAnswered(guess, field) && value !== null;
     const saved = justSaved === field && answered;
-    const isGrape = field === "primary_grape" && chips.length > 0;
-    // The chips already show a grape picked from among them (6e draws the
-    // grape row as label + chips, no value line); a grape picked from the
-    // full list keeps the value line so the answer is still visible.
-    const chipShowsValue = isGrape && chips.some((c) => c.id === guess.primary_grape_id);
+    // The row whose picker is open is bordeaux-bordered, same as a row that
+    // was just set (spec §8.3 item 4) — the picker stays open far longer
+    // than the 3s "just now" window, so this is tracked separately.
+    const isOpenRow = picker.open && picker.field === field;
     const rowClass = cn(
-      "flex flex-col gap-[6px] rounded-[11px] px-[13px] py-3 text-left transition-colors",
-      saved
-        ? "border-[1.5px] border-primary bg-white"
+      "flex min-h-[56px] w-full items-center gap-[11px] rounded-[11px] px-[13px] py-3 text-left transition-colors",
+      saved || isOpenRow
+        ? "border-[1.5px] border-primary bg-card"
         : answered
-          ? "border border-border bg-white md:hover:bg-background"
+          ? "border border-border bg-card md:hover:bg-background"
           : "border border-dashed border-border bg-card md:hover:bg-background",
     );
-    const inner = (
-      <>
+    const row = (
+      <button ref={rowRef(field)} type="button" onClick={() => openPicker(field)} className={rowClass}>
         <span
           className={cn(
             "w-[22px] shrink-0 text-center font-heading text-[15px] font-semibold lining-nums tabular-nums",
@@ -805,11 +825,11 @@ export function GuessLadder({
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-px">
           <span className="text-[11px] text-muted-foreground">{ROW_LABEL[field]}</span>
-          {answered && !chipShowsValue ? (
+          {answered ? (
             <span className={cn("truncate text-[15px] font-semibold", saved && "text-primary")}>
               {value}
             </span>
-          ) : isGrape ? null : (
+          ) : (
             <span className="text-[14px] text-muted-foreground">{EMPTY_TEXT[field]}</span>
           )}
         </span>
@@ -817,58 +837,10 @@ export function GuessLadder({
           <Eyebrow size="sm" className="shrink-0 text-primary">
             just now
           </Eyebrow>
-        ) : isGrape ? null : (
-          // 6e draws the grape row without a chevron — the chips are its
-          // affordance.
+        ) : (
           <ChevronRight className="size-4 shrink-0 text-placeholder" aria-hidden />
         )}
-      </>
-    );
-    const row = !isGrape ? (
-      <button
-        ref={rowRef(field)}
-        type="button"
-        onClick={() => openPicker(field)}
-        className={cn(rowClass, "min-h-[56px]")}
-      >
-        <span className="flex w-full items-center gap-[11px]">{inner}</span>
       </button>
-    ) : (
-      // The grape row: the shortlist chips are one-tap answers, so they sit
-      // beside (not inside) the button that opens the full picker.
-      <div className={rowClass}>
-        <button
-          ref={rowRef(field)}
-          type="button"
-          onClick={() => openPicker(field)}
-          className="flex min-h-11 w-full items-center gap-[11px] text-left"
-        >
-          {inner}
-        </button>
-        {/* Chips are ~26px tall; the pseudo hit area extends 9px each side
-            so the one-tap answer for the 8-point row meets the 44px target. */}
-        <span className="flex flex-wrap gap-x-[6px] gap-y-[8px] pl-[33px]">
-          {chips.map((g) => {
-            const on = guess.primary_grape_id === g.id;
-            return (
-              <button
-                key={g.id}
-                type="button"
-                aria-pressed={on}
-                onClick={() => pick("primary_grape", on ? null : g.id)}
-                className={cn(
-                  "relative rounded-full border px-[11px] py-1 text-[12.5px] transition-colors before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']",
-                  on
-                    ? "border-gold bg-gold/15 font-semibold text-primary"
-                    : "border-border text-muted-foreground hover:border-gold hover:bg-white",
-                )}
-              >
-                {g.name}
-              </button>
-            );
-          })}
-        </span>
-      </div>
     );
     const groupError = saveState.errors[groupForField(field)] ?? null;
     return (
@@ -889,7 +861,7 @@ export function GuessLadder({
           // display:none (or visibility:hidden) would block focus() too.
           <div
             className={cn(
-              "flex flex-col gap-2 rounded-[11px] border border-primary bg-white px-[13px] py-3 transition-[opacity,max-height]",
+              "flex flex-col gap-2 rounded-[11px] border border-primary bg-card px-[13px] py-3 transition-[opacity,max-height]",
               tawnyOtherOpen
                 ? "max-h-40 opacity-100"
                 : "pointer-events-none max-h-0 overflow-hidden border-0 px-0 py-0 opacity-0",
@@ -914,7 +886,7 @@ export function GuessLadder({
                 }}
                 placeholder="e.g. 25"
                 tabIndex={tawnyOtherOpen ? undefined : -1}
-                className="min-h-11 w-24 rounded-[10px] border border-border bg-white px-3 text-[15.5px] text-foreground"
+                className="min-h-11 w-24 rounded-[10px] border border-border bg-card px-3 text-[15.5px] text-foreground"
               />
               <button
                 type="button"
@@ -943,31 +915,46 @@ export function GuessLadder({
   return (
     <div className="flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center gap-[11px] border-b border-border px-4 pt-2 pb-[11px]">
-        <Link
-          href={`/tastings/${tastingId}`}
-          aria-label="Back to the tasting"
-          className="relative flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground before:absolute before:-inset-1.5 before:content-['']"
-        >
-          <ArrowLeft className="size-5" />
-        </Link>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <Eyebrow size="md" className="truncate">
-            {tastingName ? `${tastingName} · blind` : "Blind"}
-          </Eyebrow>
-          <span className="font-heading text-[19px] font-semibold lining-nums tabular-nums">
-            Glass {glassNumber} of {glassCount}
+      <div className="flex flex-col gap-[3px] border-b border-border px-4 pt-2 pb-[11px] md:px-6 md:pt-3">
+        <div className="flex items-center gap-[11px]">
+          <Link
+            href={`/tastings/${tastingId}`}
+            aria-label="Back to the tasting"
+            className="relative flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground before:absolute before:-inset-1.5 before:content-['']"
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="flex items-center gap-[7px]">
+              <LiveDot size={6} />
+              <Eyebrow size="md" className="truncate">
+                {/* This ladder only ever renders a BLIND glass (semi-blind
+                    uses the match ladder), so the mode word is fixed. */}
+                {phoneLadderTitle(tastingName ?? "", "BLIND")}
+              </Eyebrow>
+            </span>
+            <span className="font-heading text-[19px] font-semibold lining-nums tabular-nums">
+              Glass {glassNumber} of {glassCount}
+            </span>
           </span>
-        </span>
-        {rankChip ? (
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-[10px] py-[5px] text-[11px] font-semibold text-primary lining-nums tabular-nums">
-            {ordinal(rankChip.rank)} · {rankChip.points} pts
+          {rankChip ? (
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-[10px] py-[5px] text-[11px] font-semibold text-primary lining-nums tabular-nums">
+              {rankChipLabel(
+                { rank: rankChip.rank, tied: false, competitors, points: rankChip.points },
+                { phone: !isDesktop },
+              )}
+            </span>
+          ) : null}
+        </div>
+        {isDesktop ? (
+          <span className="pl-[43px] text-[11.5px] text-muted-foreground">
+            {laptopEyebrow(hostName)}
           </span>
         ) : null}
       </div>
 
       {/* Flight progress */}
-      <div className="flex items-center gap-1 px-4 py-[9px]">
+      <div className="flex items-center gap-1 px-4 py-[9px] md:px-6">
         {segments.map((s, i) => (
           <span
             key={i}
@@ -978,64 +965,86 @@ export function GuessLadder({
           />
         ))}
         <span className="ml-[5px] shrink-0 text-[10.5px] text-muted-foreground tabular-nums">
-          {lockedCount} of {eligibleCount} locked
+          {lockedCountShort(lockedCount, eligibleCount)}
         </span>
       </div>
 
-      {/* Rows — inert while locking (review round 1): pick()/openPicker()
-          already refuse, this just shows it so a tap does not look ignored. */}
+      {/* Intro */}
+      <div className="flex flex-col gap-[3px] px-4 pt-2 pb-1 md:px-6">
+        <h2 className="font-heading text-[19px] font-semibold">{introHeading(glassNumber)}</h2>
+        <p className="text-[12.5px] text-muted-foreground">{INTRO_SENTENCE}</p>
+      </div>
+
+      {/* Rows (left) + the laptop rail (right, from md) — inert while
+          locking (review round 1): pick()/openPicker() already refuse, this
+          just shows it so a tap does not look ignored. */}
       <div
         className={cn(
-          "flex flex-col gap-2 px-4 pt-1",
+          "flex flex-col gap-2 px-4 pt-1 md:flex-row md:items-start md:gap-6 md:px-6 md:pt-2",
           locking && "pointer-events-none opacity-60",
         )}
       >
-        <div className="flex items-center gap-[10px] rounded-[11px] border border-border bg-card p-[11px_13px]">
-          <span className="flex-1 text-[12.5px] text-muted-foreground">Your guess so far</span>
-          <span className="font-heading text-[20px] font-semibold text-primary lining-nums tabular-nums">
-            {stake}
-            <span className="text-[13px] text-muted-foreground"> / {MAX_POINTS} pts at stake</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {!isDesktop ? (
+            <div className="flex items-center gap-[10px] rounded-[11px] border border-border bg-card p-[11px_13px]">
+              <span className="flex-1 text-[12.5px] text-muted-foreground">Your guess so far</span>
+              <span className="font-heading text-[16px] font-semibold text-primary lining-nums tabular-nums">
+                {stakeLine(stake, { phone: true })}
+              </span>
+            </div>
+          ) : null}
+          {lockError ? <p className="px-1 text-[12.5px] text-rose">{lockError}</p> : null}
+
+          {LADDER_ORDER.map(renderRow)}
+
+          <p className="px-1 pt-0.5 text-[11px] text-muted-foreground">{LADDER_EXTRAS_NOTE}</p>
+
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            onClick={() => setMoreOpen((v) => !v)}
+            className="flex min-h-11 items-center gap-1 self-start px-1 text-[12.5px] font-semibold text-primary"
+          >
+            {moreOpen ? "Less" : "More"}
+            <ChevronDown className={cn("size-4 transition-transform", moreOpen && "rotate-180")} />
+          </button>
+          {moreOpen ? OPTIONAL_FIELDS.map(renderRow) : null}
+        </div>
+
+        {isDesktop ? (
+          <LadderRail
+            stake={stake}
+            roster={roster}
+            standings={standingsAfterPrevious}
+            glass={glassNumber}
+            onLock={onLock}
+            locking={locking}
+          />
+        ) : null}
+      </div>
+
+      {/* Footer — phones only; the laptop rail carries its own lock button. */}
+      {!isDesktop ? (
+        <div className="mt-3 flex flex-col gap-2 border-t border-border bg-card px-4 pt-[11px] pb-[max(22px,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={onLock}
+            disabled={locking}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-primary-hover disabled:opacity-60"
+          >
+            {locking ? (
+              <>
+                <WineGlassLoader size={18} /> Locking…
+              </>
+            ) : (
+              (submitLabel ?? lockButtonText(glassNumber))
+            )}
+          </button>
+          <span className="text-center text-[11.5px] text-muted-foreground">
+            {lockFooter({ timingMode, asyncRevealPolicy }) ?? lockFooterText({ phone: true })}
           </span>
         </div>
-        {lockError ? <p className="px-1 text-[12.5px] text-rose">{lockError}</p> : null}
-
-        {LADDER_ORDER.map(renderRow)}
-
-        <p className="px-1 pt-0.5 text-[11px] text-muted-foreground">{LADDER_EXTRAS_NOTE}</p>
-
-        <button
-          type="button"
-          aria-expanded={moreOpen}
-          onClick={() => setMoreOpen((v) => !v)}
-          className="flex min-h-11 items-center gap-1 self-start px-1 text-[12.5px] font-semibold text-primary"
-        >
-          {moreOpen ? "Less" : "More"}
-          <ChevronDown className={cn("size-4 transition-transform", moreOpen && "rotate-180")} />
-        </button>
-        {moreOpen ? OPTIONAL_FIELDS.map(renderRow) : null}
-      </div>
-
-      {/* Footer */}
-      <div className="mt-3 flex flex-col gap-2 border-t border-border bg-card px-4 pt-[11px] pb-[max(22px,env(safe-area-inset-bottom))] md:pb-4">
-        <button
-          type="button"
-          onClick={onLock}
-          disabled={locking}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] bg-primary p-[15px] text-[16px] font-semibold text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors hover:bg-[#4A1523] disabled:opacity-60"
-        >
-          {locking ? (
-            <>
-              <WineGlassLoader size={18} /> Locking…
-            </>
-          ) : (
-            (submitLabel ?? `Lock in glass ${glassNumber}`)
-          )}
-        </button>
-        <span className="text-center text-[11.5px] text-muted-foreground">
-          {lockFooter({ timingMode, asyncRevealPolicy }) ??
-            "Saved as you go. Locking stops edits and shows the others you are ready."}
-        </span>
-      </div>
+      ) : null}
 
       <FieldPicker
         open={picker.open}
@@ -1050,7 +1059,10 @@ export function GuessLadder({
         search={picker.field === "producer" ? producerSearch : "client"}
         onClose={closePicker}
         inputRef={inputRef}
-        searchPlaceholder={searchPlaceholder(picker.field)}
+        presentation={isDesktop ? "popover" : "sheet"}
+        anchorRef={pickerAnchorRef}
+        totalCount={referenceCounts[picker.field]}
+        oftenIds={oftenIdsFor(picker.field)}
       />
     </div>
   );

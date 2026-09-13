@@ -15,6 +15,8 @@ import { makeWineLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { eligibleForGlass } from "@/lib/glass-eligibility";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
+import { getReferenceCounts } from "@/lib/reference-counts";
+import { buildPickCounts, type PickCounts } from "./pick-counts";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
 import { currentGlass, type PointerGlass } from "@/lib/pour-pointer";
 import { rankLabel, rankRows } from "@/lib/stats-math";
@@ -182,7 +184,7 @@ export async function PlayExperience({
   const finished = tasting.status === "CLOSED";
   if (tasting.status === "DRAFT") return null;
 
-  const [wines, reference, { data: typeDesignations }] = await Promise.all([
+  const [wines, reference, { data: typeDesignations }, referenceCounts] = await Promise.all([
     getWineRows(tastingId),
     getReferenceOptions(),
     supabase
@@ -190,6 +192,7 @@ export async function PlayExperience({
       .select("id, name, category, country_id")
       .eq("is_active", true)
       .order("sort_order"),
+    getReferenceCounts(),
   ]);
   const { countries, regions, grapes } = reference;
 
@@ -326,6 +329,10 @@ export async function PlayExperience({
   );
   const isHostProvidesHostRow = (p: { user_id: string }) =>
     tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id;
+  // How many people compete on this tasting (JOINED, minus a HOST_PROVIDES
+  // host, who set the answers rather than guessing them) — the ladder
+  // header's rank chip "of {competitors}" on laptops.
+  const competitors = joinedParticipants.filter((p) => !isHostProvidesHostRow(p)).length;
   // Single source of truth (BT-P2) for who's expected to guess a glass, so
   // this never drifts from the console, the ASYNC auto-reveal or the result
   // and record loaders. joinedAt is unused by eligibleForGlass itself (only
@@ -586,6 +593,15 @@ export async function PlayExperience({
   const rankChip: RankChip | null = mine
     ? { rank: mine.rank, points: mine.row.total }
     : null;
+  // The laptop rail's "Standings after glass {N-1}" (S8b; spec §8.3 item 7):
+  // the current top three, hidden until any glass has been revealed. Same
+  // cumulative standings as the leaderboard above — not a per-glass replay.
+  const standingsAfterPrevious =
+    revealStarted
+      ? ranked
+          .slice(0, 3)
+          .map(({ row, rank, tied }) => ({ rank, tied, name: row.name, total: row.total }))
+      : null;
   const leaderboard = !embedded
     ? ranked.map(({ row, rank, tied }) => ({
         participantId: row.participantId,
@@ -619,9 +635,12 @@ export async function PlayExperience({
       (!sequential || w.id === currentWineId),
   );
 
-  // "you guess this often": grapes I have guessed at least twice across all
-  // my own guesses (my rows are always readable; nobody else's are touched).
-  let frequentGrapeIds: string[] = [];
+  // "you guess this often" (S9; spec §8.3 item 8): every id I have picked
+  // before, per field, from my own guesses across every tasting (my rows are
+  // always readable under RLS; nobody else's are touched). Threshold and
+  // suffix live in pick-counts.ts/ladder-copy.ts, shared by every field —
+  // this replaces the ladder's old grape-only, threshold-2 array.
+  let pickCounts: PickCounts = {};
   const shortlistByWineId = new Map<string, GrapeShortlist>();
   if (ladderWines.length > 0) {
     const { data: myParticipations } = await supabase
@@ -632,20 +651,16 @@ export async function PlayExperience({
     const [{ data: myAllGuesses }, ...shortlists] = await Promise.all([
       supabase
         .from("guesses")
-        .select("primary_grape_id, secondary_grape_id")
+        .select(
+          "country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, producer_id, type_designation_id",
+        )
         .in("participant_id", myParticipantIds.length > 0 ? myParticipantIds : [""]),
       ...ladderWines.map(async (w) => {
         const regionId = myGuessByWineId.get(w.id)?.region_id ?? null;
         return [w.id, regionId ? await shortlistGrapesForRegion(regionId) : null] as const;
       }),
     ]);
-    const counts = new Map<string, number>();
-    for (const g of myAllGuesses ?? []) {
-      for (const id of [g.primary_grape_id, g.secondary_grape_id]) {
-        if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-    }
-    frequentGrapeIds = [...counts.entries()].filter(([, n]) => n >= 2).map(([id]) => id);
+    pickCounts = buildPickCounts(myAllGuesses ?? []);
     for (const [wineId, shortlist] of shortlists) {
       if (shortlist) shortlistByWineId.set(wineId, shortlist);
     }
@@ -976,12 +991,21 @@ export async function PlayExperience({
                   ? nameById.get(guess.appellation_id)
                   : undefined,
               },
-              frequentGrapeIds,
               shortlist: shortlistByWineId.get(wine.id) ?? null,
               // ASYNC + IMMEDIATE gets its own lock label, footer and confirm
               // (play-4); every other mode keeps today's copy.
               timingMode: tasting.timing_mode,
               asyncRevealPolicy: tasting.async_reveal_policy,
+              pickCounts,
+              referenceCounts,
+              hostName,
+              competitors,
+              roster: peopleFor(eligible, (pid) => lockedFor(wine.id, pid)).map((p) => ({
+                name: p.name,
+                locked: p.state === "locked",
+                isMe: p.isMe,
+              })),
+              standingsAfterPrevious,
             }}
             lockedIn={{
               tastingId,

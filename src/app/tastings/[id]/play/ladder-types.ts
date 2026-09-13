@@ -8,6 +8,10 @@ import type {
   TimingMode,
   VintageKind,
 } from "@/lib/supabase/database.types";
+// Both are type-only (erased at build time), so the mutual import back from
+// pick-counts.ts and reference-counts.ts never becomes a runtime cycle.
+import type { PickCounts } from "./pick-counts";
+import type { ReferenceCounts } from "@/lib/reference-counts";
 
 /**
  * One participant's guess for one glass — the columns the ladder edits, plus
@@ -93,9 +97,6 @@ export type GuessLadderProps = {
   /** Display names for the two ids the reference lists do not carry
    *  (looked up via lookupAppellationAndProducerNames by the composition). */
   initialLabels: { producer?: string; appellation?: string };
-  /** Grape ids I have guessed at least twice before — drives the picker's
-   *  "you guess this often" secondary line. */
-  frequentGrapeIds: string[];
   /** Server-computed shortlist for initialGuess.region_id; the ladder
    *  re-fetches when the region changes. */
   shortlist?: GrapeShortlist | null;
@@ -105,6 +106,29 @@ export type GuessLadderProps = {
    *  lock copy. */
   timingMode?: TimingMode;
   asyncRevealPolicy?: AsyncRevealPolicy;
+  /** Ids I have picked before, per field, from my own guesses across every
+   *  tasting (S9; spec §8.3 item 8) — drives each picker's "you guess this
+   *  often" secondary line via pick-counts.ts's oftenPicked. Replaces the
+   *  ladder's old grape-only, threshold-2 array — the same mechanism now
+   *  covers every field. */
+  pickCounts: PickCounts;
+  /** Each field's full reference-table size, unfiltered — feeds the
+   *  picker's "Search {n} …" placeholder and "Everything else · all {n}"
+   *  heading (S9; spec §8.3 item 8). */
+  referenceCounts: ReferenceCounts;
+  /** The tasting's host, for the laptop header eyebrow ("Live · {host} is
+   *  hosting", PLAY-05) — laptop only, the phone header omits it. */
+  hostName: string;
+  /** How many people compete on this tasting (JOINED, minus a
+   *  HOST_PROVIDES host) — the rank chip's "of {competitors}" on laptops. */
+  competitors: number;
+  /** Who else can guess this glass and whether they have locked in yet
+   *  (from tasting_guess_status) — the laptop rail's roster (S8b) and the
+   *  phone header's "{k} of {n} locked" count the same set. */
+  roster: { name: string; locked: boolean; isMe: boolean }[];
+  /** The top three standings as of now, for the laptop rail's "Standings
+   *  after glass {N-1}" (S8b) — null before any glass has been revealed. */
+  standingsAfterPrevious: { rank: number; tied: boolean; name: string; total: number }[] | null;
   /** Fired after lockGuess succeeds (the composition swaps to Locked in). */
   onLocked: () => void;
 };
