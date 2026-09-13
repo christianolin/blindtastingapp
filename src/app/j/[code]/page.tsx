@@ -3,12 +3,19 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wordmark } from "@/components/wordmark";
 import { createClient } from "@/lib/supabase/server";
+import { getBulkProfileSummaries } from "@/lib/profile-stats";
+import { JoinPreview } from "./join-preview";
 
-// The share link from the create sheet's step 3: /j/<code>. Signed out →
-// the login page, which comes back here (`?next=`). Signed in → the
-// SECURITY DEFINER `join_tasting_by_code` self-joins (or accepts a pending
-// invite) and the tasting page opens. A refused code (finished, already
-// started, unknown) gets a small card, not an error page.
+// The share link from the create sheet's step 3: /j/<code> (BT-G3, spec
+// §4.3 item 4; ledger B3, B4; Q3). Every visitor first gets the anon-callable
+// `get_join_preview(code)` — no row means an unknown code, a CLOSED tasting
+// gets its own message, and a signed-in member (`viewer_tasting_id` set: the
+// host, a JOINED or an INVITED participant) is sent straight to the tasting,
+// where an INVITED viewer gets the full invitation. Anyone else — signed out,
+// or signed in and not a member (a DECLINED guest coming back included) —
+// gets `JoinPreview`, which reduces to name/time/mode/scoring when signed
+// out and adds the host record, joined names and "I am in" when signed in.
+// Opening the link no longer joins silently.
 export default async function JoinByCodePage({
   params,
 }: {
@@ -19,19 +26,43 @@ export default async function JoinByCodePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(`/login?next=${encodeURIComponent(`/j/${code}`)}`);
+
+  const { data: rows } = await supabase.rpc("get_join_preview", { p_code: code });
+  const preview = rows?.[0] ?? null;
+
+  if (!preview) {
+    return <MessageCard message="No tasting has that code — check the link with the host." />;
+  }
+  if (preview.status === "CLOSED") {
+    return <MessageCard message="That tasting has finished." />;
+  }
+  if (preview.viewer_tasting_id) {
+    redirect(`/tastings/${preview.viewer_tasting_id}`);
   }
 
-  const { data: tastingId, error } = await supabase.rpc("join_tasting_by_code", {
-    p_code: code,
-  });
-  if (!error && tastingId) {
-    redirect(`/tastings/${tastingId}`);
+  let hostRecord: { hostedCount: number; averagePoints: number | null } | null = null;
+  if (user && preview.host_id) {
+    const [{ data: hostedCount }, summaries] = await Promise.all([
+      supabase.rpc("host_tastings_count", { p_user_id: preview.host_id }),
+      getBulkProfileSummaries([preview.host_id]),
+    ]);
+    const summary = summaries.get(preview.host_id);
+    hostRecord = {
+      hostedCount: hostedCount ?? 0,
+      averagePoints: summary && summary.winesGuessed > 0 ? summary.averagePoints : null,
+    };
   }
 
-  const message = friendlyJoinError(error?.message ?? null);
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 p-4">
+      <Wordmark />
+      <JoinPreview code={code} preview={preview} signedIn={!!user} hostRecord={hostRecord} />
+    </div>
+  );
+}
 
+// The unknown-code and finished-tasting cards (existing copy, kept as-is).
+function MessageCard({ message }: { message: string }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center p-4">
       <Wordmark />
@@ -51,17 +82,4 @@ export default async function JoinByCodePage({
       </Card>
     </div>
   );
-}
-
-// The RPC raises short lower-case reasons; turn them into a sentence.
-function friendlyJoinError(raw: string | null): string {
-  if (!raw) return "The link didn't work. Ask the host for a fresh one.";
-  if (raw.includes("no tasting has that code")) {
-    return "No tasting has that code — check the link with the host.";
-  }
-  if (raw.includes("has finished")) return "That tasting has finished.";
-  if (raw.includes("already started")) {
-    return "That tasting has already started, so the table is closed.";
-  }
-  return raw.charAt(0).toUpperCase() + raw.slice(1) + (raw.endsWith(".") ? "" : ".");
 }

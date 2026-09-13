@@ -13,8 +13,14 @@ import {
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
+import { eligibleForGlass } from "@/lib/glass-eligibility";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
+import { getReferenceCounts } from "@/lib/reference-counts";
+import { canNoteHiddenGlass } from "@/lib/wset/hidden-note";
+import { assessedOf, summarizeNoteRow } from "@/lib/wset/note-summary";
+import { buildPickCounts, type PickCounts } from "./pick-counts";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
+import { currentGlass, type PointerGlass } from "@/lib/pour-pointer";
 import { rankLabel, rankRows } from "@/lib/stats-math";
 import {
   pendingAnswerNotice,
@@ -27,6 +33,8 @@ import { cn } from "@/lib/utils";
 import type { GrapeShortlist, GuessRow, RankChip } from "./ladder-types";
 import { GlassStage, type LockedInPerson } from "./locked-in";
 import { MatchLadder, type MatchCandidate, type MatchGlass } from "./match-ladder";
+import type { NoteThisGlassData } from "./note-this-glass";
+import { PausedBand } from "./paused-band";
 import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
 import { RevealView, type RevealStanding } from "./reveal-view";
@@ -179,7 +187,7 @@ export async function PlayExperience({
   const finished = tasting.status === "CLOSED";
   if (tasting.status === "DRAFT") return null;
 
-  const [wines, reference, { data: typeDesignations }] = await Promise.all([
+  const [wines, reference, { data: typeDesignations }, referenceCounts] = await Promise.all([
     getWineRows(tastingId),
     getReferenceOptions(),
     supabase
@@ -187,6 +195,7 @@ export async function PlayExperience({
       .select("id, name, category, country_id")
       .eq("is_active", true)
       .order("sort_order"),
+    getReferenceCounts(),
   ]);
   const { countries, regions, grapes } = reference;
 
@@ -283,6 +292,45 @@ export async function PlayExperience({
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
 
+  // BT-N2: the viewer's own identity-less ("hidden-glass") notes on this
+  // tasting's glasses, for "Note this glass"'s "Your note · {d} of {t}
+  // assessed" (it reopens the note instead of starting a blank one). The
+  // "wset notes read" policy grants a row with no identity to its author
+  // only, so no explicit author filter is needed here (spec §9.4).
+  const { data: myHiddenNotes } = await supabase
+    .from("wset_notes")
+    .select("*")
+    .in("tasting_wine_id", wineIds.length > 0 ? wineIds : [""])
+    .is("catalog_wine_id", null)
+    .is("unidentified_wine_id", null)
+    .order("updated_at", { ascending: false });
+  const hiddenNoteIds = (myHiddenNotes ?? []).map((n) => n.id);
+  const { data: hiddenNoteAromas } =
+    hiddenNoteIds.length > 0
+      ? await supabase
+          .from("wset_note_aromas")
+          .select("note_id, term_id, sensed_on_nose, sensed_on_palate")
+          .in("note_id", hiddenNoteIds)
+      : { data: [] };
+  const hiddenNoteAromasByNoteId = new Map<
+    string,
+    { term_id: string; sensed_on_nose: boolean; sensed_on_palate: boolean }[]
+  >();
+  for (const a of hiddenNoteAromas ?? []) {
+    const arr = hiddenNoteAromasByNoteId.get(a.note_id) ?? [];
+    arr.push(a);
+    hiddenNoteAromasByNoteId.set(a.note_id, arr);
+  }
+  // At most one note per glass in the ordinary flow; ordered by most
+  // recently updated first so a stray duplicate still resolves to the one
+  // the viewer actually worked on last.
+  const hiddenNoteByWineId = new Map<string, NonNullable<typeof myHiddenNotes>[number]>();
+  for (const n of myHiddenNotes ?? []) {
+    if (n.tasting_wine_id && !hiddenNoteByWineId.has(n.tasting_wine_id)) {
+      hiddenNoteByWineId.set(n.tasting_wine_id, n);
+    }
+  }
+
   const [{ data: participantRows }, { data: guessStatus }] = await Promise.all([
     supabase
       .from("tasting_participants")
@@ -304,6 +352,12 @@ export async function PlayExperience({
         "Someone",
     ]),
   );
+  // Q1: the host's name for the paused band (below). The host is always a
+  // JOINED participant, so their profile is already in the fetch above.
+  const hostName =
+    profileByUserId.get(tasting.host_id)?.display_name ??
+    profileByUserId.get(tasting.host_id)?.email ??
+    "Someone";
   // Per wine: who has a guess row, and whether it is locked. A row that
   // exists but is not locked is an autosaved draft — "in progress".
   const statusByWineId = new Map<string, Map<string, boolean>>();
@@ -317,9 +371,28 @@ export async function PlayExperience({
   );
   const isHostProvidesHostRow = (p: { user_id: string }) =>
     tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id;
-  const eligibleGuessers = (wine: { contributor_participant_id: string | null }) =>
-    joinedParticipants.filter(
-      (p) => p.id !== wine.contributor_participant_id && !isHostProvidesHostRow(p),
+  // How many people compete on this tasting (JOINED, minus a HOST_PROVIDES
+  // host, who set the answers rather than guessing them) — the ladder
+  // header's rank chip "of {competitors}" on laptops.
+  const competitors = joinedParticipants.filter((p) => !isHostProvidesHostRow(p)).length;
+  // Single source of truth (BT-P2) for who's expected to guess a glass, so
+  // this never drifts from the console, the ASYNC auto-reveal or the result
+  // and record loaders. joinedAt is unused by eligibleForGlass itself (only
+  // joinedAfterReveal reads it), so it's fine left null here.
+  const eligibleGuessers = (wine: {
+    contributor_participant_id: string | null;
+    is_revealed: boolean;
+  }) =>
+    (participantRows ?? []).filter((p) =>
+      eligibleForGlass(
+        { id: p.id, userId: p.user_id, status: p.status, joinedAt: null },
+        {
+          contributorParticipantId: wine.contributor_participant_id,
+          isRevealed: wine.is_revealed,
+          revealedAt: null,
+        },
+        { wineSource: tasting.wine_source, hostId: tasting.host_id },
+      ),
     );
   const lockedFor = (wineId: string, participantId: string) =>
     statusByWineId.get(wineId)?.get(participantId) === true;
@@ -401,8 +474,16 @@ export async function PlayExperience({
 
   // The pacing half of that same flag: one glass at a time, in order.
   const sequential = guidedLive;
+  // The pour pointer's glass (BT-P3), not a bare lowest-position check: a
+  // Skip moves tastings.current_wine_id, and a late joiner should open on
+  // whichever glass is actually pouring now, skips included.
+  const pointerGlasses: PointerGlass[] = (wines ?? []).map((w) => ({
+    id: w.id,
+    isRevealed: w.is_revealed,
+    revealStep: w.reveal_step ?? 0,
+  }));
   const currentWineId = sequential
-    ? ((wines ?? []).find((w) => !w.is_revealed)?.id ?? null)
+    ? (currentGlass(pointerGlasses, tasting.current_wine_id)?.id ?? null)
     : null;
 
   const revealedWineIds = (wines ?? [])
@@ -554,6 +635,15 @@ export async function PlayExperience({
   const rankChip: RankChip | null = mine
     ? { rank: mine.rank, points: mine.row.total }
     : null;
+  // The laptop rail's "Standings after glass {N-1}" (S8b; spec §8.3 item 7):
+  // the current top three, hidden until any glass has been revealed. Same
+  // cumulative standings as the leaderboard above — not a per-glass replay.
+  const standingsAfterPrevious =
+    revealStarted
+      ? ranked
+          .slice(0, 3)
+          .map(({ row, rank, tied }) => ({ rank, tied, name: row.name, total: row.total }))
+      : null;
   const leaderboard = !embedded
     ? ranked.map(({ row, rank, tied }) => ({
         participantId: row.participantId,
@@ -587,9 +677,12 @@ export async function PlayExperience({
       (!sequential || w.id === currentWineId),
   );
 
-  // "you guess this often": grapes I have guessed at least twice across all
-  // my own guesses (my rows are always readable; nobody else's are touched).
-  let frequentGrapeIds: string[] = [];
+  // "you guess this often" (S9; spec §8.3 item 8): every id I have picked
+  // before, per field, from my own guesses across every tasting (my rows are
+  // always readable under RLS; nobody else's are touched). Threshold and
+  // suffix live in pick-counts.ts/ladder-copy.ts, shared by every field —
+  // this replaces the ladder's old grape-only, threshold-2 array.
+  let pickCounts: PickCounts = {};
   const shortlistByWineId = new Map<string, GrapeShortlist>();
   if (ladderWines.length > 0) {
     const { data: myParticipations } = await supabase
@@ -600,20 +693,16 @@ export async function PlayExperience({
     const [{ data: myAllGuesses }, ...shortlists] = await Promise.all([
       supabase
         .from("guesses")
-        .select("primary_grape_id, secondary_grape_id")
+        .select(
+          "country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, producer_id, type_designation_id",
+        )
         .in("participant_id", myParticipantIds.length > 0 ? myParticipantIds : [""]),
       ...ladderWines.map(async (w) => {
         const regionId = myGuessByWineId.get(w.id)?.region_id ?? null;
         return [w.id, regionId ? await shortlistGrapesForRegion(regionId) : null] as const;
       }),
     ]);
-    const counts = new Map<string, number>();
-    for (const g of myAllGuesses ?? []) {
-      for (const id of [g.primary_grape_id, g.secondary_grape_id]) {
-        if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-    }
-    frequentGrapeIds = [...counts.entries()].filter(([, n]) => n >= 2).map(([id]) => id);
+    pickCounts = buildPickCounts(myAllGuesses ?? []);
     for (const [wineId, shortlist] of shortlists) {
       if (shortlist) shortlistByWineId.set(wineId, shortlist);
     }
@@ -727,6 +816,10 @@ export async function PlayExperience({
       ) : (
         <AutoRefresh />
       )}
+
+      {/* Q1: reveals and Skip wait while the host has paused; guessing and
+          locking still work, so nothing else on this page is gated by it. */}
+      {tasting.paused_at ? <PausedBand hostName={hostName} /> : null}
 
       {/* Always-visible progress so players know where they are in the flight.
           Suppressed when embedded — the tasting page shows it in the left rail. */}
@@ -916,6 +1009,39 @@ export async function PlayExperience({
         const showHeader = !fullBleed || hostControls || tasting.wine_source !== "HOST_PROVIDES";
 
         const ladderRow = guess ? toGuessRow(guess) : null;
+        // BT-N2: "Note this glass" is offered only to an eligible guesser
+        // (never the host-provides host or the bottle's own contributor —
+        // both already computed above as isMine/hostProvidesHost) on a
+        // glass that is not yet revealed, through the pure
+        // `canNoteHiddenGlass`. When the viewer already has a hidden note on
+        // this glass, `existing` carries its id and "{d} of {t} assessed"
+        // (summarizeNoteRow with a null style — the wine's colour/style is
+        // unknown before the reveal, same rule as the note sheet itself) so
+        // the entry point reopens it instead of starting a blank one.
+        const noteThisGlassData: NoteThisGlassData | null = canNoteHiddenGlass({
+          status: tasting.status,
+          isRevealed: wine.is_revealed,
+          eligible: !hostProvidesHost && !isMine,
+        })
+          ? (() => {
+              const note = hiddenNoteByWineId.get(wine.id);
+              return {
+                tastingWineId: wine.id,
+                tastingName: tasting.name,
+                glassLabel: glassLabel(wine, index),
+                existing: note
+                  ? {
+                      noteId: note.id,
+                      assessed: assessedOf(
+                        summarizeNoteRow(note, hiddenNoteAromasByNoteId.get(note.id) ?? [], null),
+                        "en",
+                        "long",
+                      ),
+                    }
+                  : null,
+              };
+            })()
+          : null;
         const stage = canGuessNow ? (
           <GlassStage
             initialLocked={locked}
@@ -940,12 +1066,22 @@ export async function PlayExperience({
                   ? nameById.get(guess.appellation_id)
                   : undefined,
               },
-              frequentGrapeIds,
               shortlist: shortlistByWineId.get(wine.id) ?? null,
               // ASYNC + IMMEDIATE gets its own lock label, footer and confirm
               // (play-4); every other mode keeps today's copy.
               timingMode: tasting.timing_mode,
               asyncRevealPolicy: tasting.async_reveal_policy,
+              pickCounts,
+              referenceCounts,
+              hostName,
+              competitors,
+              roster: peopleFor(eligible, (pid) => lockedFor(wine.id, pid)).map((p) => ({
+                name: p.name,
+                locked: p.state === "locked",
+                isMe: p.isMe,
+              })),
+              standingsAfterPrevious,
+              noteThisGlass: noteThisGlassData,
             }}
             lockedIn={{
               tastingId,
@@ -961,14 +1097,20 @@ export async function PlayExperience({
               standingsLabel:
                 glassNumber > 1 ? `Standings after glass ${glassNumber - 1}` : "See the standings",
               standingsHref,
-              // No `canChange` producer in this wave: the blind-tasting ledger
-              // drops the semi-blind freeze (amendment 3), which was its only
-              // one. "Change it" therefore matches the server — unlockGuess
-              // refuses a scored guess and allows a locked, unscored one (the
-              // deferred case), and a glass mid step-reveal shows the reveal
-              // view rather than this card at all.
+              // No explicit `canChange` producer in this wave: the
+              // blind-tasting ledger drops the semi-blind freeze (amendment
+              // 3), which was its only one. `LockedIn` still hides "Change
+              // it" once `revealStep` is above 0 (PLAY-37) — a glass mid
+              // step-reveal shows the reveal view rather than this card at
+              // all, so that gate mostly guards the moment reveal_step just
+              // flipped, before the next poll swaps the view.
               pendingNotice: pendingNoticeFor(wine.id),
               needsScoring: scoringDueFor(wine.id),
+              hostName,
+              revealStep: wine.reveal_step ?? 0,
+              timingMode: tasting.timing_mode,
+              asyncRevealPolicy: tasting.async_reveal_policy,
+              noteThisGlass: noteThisGlassData,
             }}
           />
         ) : null;
@@ -1318,6 +1460,13 @@ export async function PlayExperience({
                       pendingNotice:
                         glasses.map((g) => pendingNoticeFor(g.wineId)).find(Boolean) ?? null,
                       needsScoring: glasses.some((g) => scoringDueFor(g.wineId)),
+                      hostName,
+                      // Semi-blind has no per-attribute reveal (Q8) — this
+                      // combined card spans several glasses at once, so there
+                      // is no single reveal_step to gate "Change it" on.
+                      revealStep: 0,
+                      timingMode: tasting.timing_mode,
+                      asyncRevealPolicy: tasting.async_reveal_policy,
                     }}
                   />
                 </div>

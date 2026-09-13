@@ -504,11 +504,11 @@ describe("rowCopy — running", () => {
     expect(copy.href).toBe("/tastings/t1");
   });
 
-  it("a live semi-blind host also lands on the lobby (no glass-by-glass reveal to drive)", () => {
+  it("a live semi-blind host-provides host lands on the console too (B6)", () => {
     const copy = rowCopy(t, tasting({
       hosting: true, hostId: "me", status: "IN_PROGRESS", revealMode: "SEMI_BLIND",
     }));
-    expect(copy.href).toBe("/tastings/t1");
+    expect(copy.href).toBe("/tastings/t1/host");
   });
 
   it("a guest reads '{host} is hosting' and goes to the lobby", () => {

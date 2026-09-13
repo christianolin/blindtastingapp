@@ -193,7 +193,9 @@ export type NoteContextKind = "OPEN" | "BLIND" | "TRAINING";
 // the note into prose without loading the whole aroma vocabulary.
 export type NoteView = {
   id: string;
-  catalogWineId: string;
+  // Null before a hidden glass's reveal (blind-tasting B8) — the wine header
+  // then falls back to "Untitled wine" the same way a deleted wine would.
+  catalogWineId: string | null;
   title: string;
   subtitle: string | null;
   colour: WineColour | null;
@@ -216,15 +218,17 @@ export async function fetchNoteView(
     .maybeSingle();
   if (!note) return null;
   const [wineRes, aromaRes] = await Promise.all([
-    supabase
-      .from("catalog_wines")
-      .select(
-        "wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
-          "producer:producers(name), appellation:appellations(name), " +
-          "region:regions(name), country:countries(name)",
-      )
-      .eq("id", note.catalog_wine_id)
-      .maybeSingle(),
+    note.catalog_wine_id
+      ? supabase
+          .from("catalog_wines")
+          .select(
+            "wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
+              "producer:producers(name), appellation:appellations(name), " +
+              "region:regions(name), country:countries(name)",
+          )
+          .eq("id", note.catalog_wine_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase
       .from("wset_note_aromas")
       .select("term_id, sensed_on_nose, sensed_on_palate")
@@ -272,6 +276,39 @@ export async function fetchNoteView(
     tastedOn: note.tasted_on,
     state: noteStateFromRow(note, aromaRows),
     termLabels,
+  };
+}
+
+/**
+ * A hidden-glass note's saved state, for reopening it before the glass is
+ * revealed (blind-tasting B8) — plus whichever identity it has resolved to
+ * since it was last opened, if any. A note left open across a reveal (or one
+ * that raced it and attached on write, M5x2) is no longer identity-less by
+ * the time someone reopens it; the caller uses `catalogWineId`/
+ * `unidentifiedWineId` to open it as a resolved note instead of the
+ * still-hidden editor (BT-N1 hand-off, spec §9.4/§9.5) — a hidden editor's
+ * unknown-colour fallback only fits a note that is genuinely still hidden.
+ */
+export async function fetchHiddenNoteState(
+  supabase: SupabaseClient<Database>,
+  noteId: string,
+): Promise<{
+  state: WsetNoteState;
+  catalogWineId: string | null;
+  unidentifiedWineId: string | null;
+} | null> {
+  const [{ data: note }, { data: aromaRows }] = await Promise.all([
+    supabase.from("wset_notes").select("*").eq("id", noteId).maybeSingle(),
+    supabase
+      .from("wset_note_aromas")
+      .select("term_id, sensed_on_nose, sensed_on_palate")
+      .eq("note_id", noteId),
+  ]);
+  if (!note) return null;
+  return {
+    state: noteStateFromRow(note, aromaRows ?? []),
+    catalogWineId: note.catalog_wine_id,
+    unidentifiedWineId: note.unidentified_wine_id,
   };
 }
 

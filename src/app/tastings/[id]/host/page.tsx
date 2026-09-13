@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
+import { LiveShell } from "@/components/live-shell";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
@@ -16,37 +17,40 @@ import type { Database } from "@/lib/supabase/database.types";
 import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
 import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
+import { eligibleForGlass } from "@/lib/glass-eligibility";
+import { glassFacts } from "@/lib/host-facts";
+import { keyLabel, type RevealKey } from "@/lib/reveal-rows-math";
+import { NEXT_ATTRIBUTE, nextChipLabel, stepRevealApplies } from "@/lib/console-copy";
+import { currentGlass as pointerCurrentGlass, type PointerGlass } from "@/lib/pour-pointer";
+import { skipPlan } from "@/lib/pacing-guards";
 import {
   HostConsole,
   type ConsoleData,
   type ConsoleGlass,
   type ConsoleStep,
-  type StepKey,
 } from "./console";
 
 type WineAnswer = Database["public"]["Tables"]["wine_answers"]["Row"];
-type Guess = Database["public"]["Tables"]["guesses"]["Row"];
+type WineRow = Awaited<ReturnType<typeof getWineRows>>[number];
+type ParticipantRow = Awaited<ReturnType<typeof getParticipantRows>>[number];
 
-// Chip / button labels per in-play step. The order and the optional steps
-// mirror the in_play_steps SQL helper (country → region → appellation? →
-// grapes → producer → type_designation? → vintage): only the appellation and
-// the designation are ever optional. Producer and vintage are always steps,
-// and live `wine_answers.producer_id` and `vintage_kind` are NOT NULL (the
-// optional-producer migration never ran live — blind-tasting ledger amendment
-// 10), so a step with nothing on record is a defensive case; the note under
-// the reveal button then says the step scores nobody rather than promising a
-// value that is not there.
-const STEP_LABEL: Record<StepKey, string> = {
-  country: "Country",
-  region: "Region",
-  appellation: "Appellation",
-  grapes: "Grape",
-  producer: "Producer",
-  type_designation: "Designation",
-  vintage: "Vintage",
+// The spoiler-safe progressive read shape (get_wine_reveal, BT-SQL1/M1):
+// only categories <= reveal_step are ever present. Used exclusively for a
+// competing bring-your-own host's glass (spec §7.3 item 7) — this is the
+// ONLY answer-key-adjacent data such a host is ever handed for an unrevealed
+// glass; wine_answers is never queried for one (rule 1).
+type RpcReveal = {
+  revealed_keys: string[];
+  in_play_count: number | null;
+  correct: Record<string, string | number | null>;
+  guesses: {
+    participant_id: string;
+    values: Record<string, string | number | null>;
+    points: Record<string, number | null>;
+  }[];
 };
 
-function inPlaySteps(answer: WineAnswer): StepKey[] {
+function inPlaySteps(answer: WineAnswer): RevealKey[] {
   return [
     "country",
     "region",
@@ -77,7 +81,9 @@ function vintageLabel(a: {
  * glass's answer key, every guess on it) happen here under the host's own
  * RLS and are rendered only into this route; the participant play surface
  * never receives them. Product rule on top of RLS: a bring-your-own bottle's
- * identity stays hidden from the host until it is revealed.
+ * identity stays hidden from the host until it is revealed — for such a
+ * glass this page never queries wine_answers while it is unrevealed; the
+ * chips and facts come from get_wine_reveal instead (spec §7.3 item 7).
  */
 export default async function HostConsolePage({
   params,
@@ -137,58 +143,126 @@ export default async function HostConsolePage({
 
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
   const hostProvides = tasting.wine_source === "HOST_PROVIDES";
-  // Guided pacing is LIVE-only (spec §D.1 #1; create-1, play-1, reveal-2): a
-  // stored flag on a self-paced tasting is ignored on read, here as everywhere
-  // else, so there is no step reveal to drive.
-  const guidedLive =
-    tasting.timing_mode === "LIVE" && tasting.sequential_guessing && !isSemiBlind;
+  const paused = tasting.paused_at !== null;
+  // Q8 (REVEAL-02): the one predicate that gates step-by-step reveal, shared
+  // with the participant's RevealView — a free-order LIVE blind tasting (or
+  // any ASYNC/semi-blind one) reveals whole glasses instead.
+  const guidedLive = stepRevealApplies({
+    revealMode: tasting.reveal_mode,
+    timingMode: tasting.timing_mode,
+    sequentialGuessing: tasting.sequential_guessing,
+  });
   const finished = tasting.status === "CLOSED";
   const wineLabel = makeWineLabeler(wines, tasting.wine_source, nameByParticipantId);
 
-  // The current glass is derived, never chosen: the lowest-position wine not
-  // yet revealed. The previous glass is the one revealed just before it — the
-  // console dwells on it after a full reveal until the host moves on.
-  const currentIndex = wines.findIndex((w) => !w.is_revealed);
-  const currentWine = currentIndex >= 0 ? wines[currentIndex] : null;
+  // The pour pointer (BT-P3/BT-H1): the current glass is never just "the
+  // lowest unrevealed one" — a Skip may have moved it forward, and once that
+  // skipped glass comes back around the pointer reports `wrapped`. The dwell
+  // on the previously revealed glass is unchanged (client state in console.tsx).
+  const pointerGlasses: PointerGlass[] = wines.map((w) => ({
+    id: w.id,
+    isRevealed: w.is_revealed,
+    revealStep: w.reveal_step,
+  }));
+  const pointer = pointerCurrentGlass(pointerGlasses, tasting.current_wine_id);
+  const currentIndex = pointer ? pointer.index : -1;
+  const currentWine = pointer ? wines[pointer.index] : null;
+  const wrapped = pointer?.wrapped ?? false;
   const revealedBefore = wines
     .slice(0, currentIndex >= 0 ? currentIndex : wines.length)
     .filter((w) => w.is_revealed);
   const previousWine =
     revealedBefore.length > 0 ? revealedBefore[revealedBefore.length - 1] : null;
+
+  const hostParticipant = participants.find((p) => p.user_id === tasting.host_id);
+  // A competing bring-your-own host: not the tasting's answer-setter, not
+  // semi-blind (that branch is BT-S4/BT-S5's), and not their own bottle
+  // (they wrote that answer key themselves when they added it).
+  const hostGuessesFor = (wine: { contributor_participant_id: string | null }) =>
+    !hostProvides && !isSemiBlind && wine.contributor_participant_id !== hostParticipant?.id;
+  // Once a glass is fully revealed its answer key is public knowledge (the
+  // `wine_answers` RLS already opens on `is_revealed`), so only an
+  // UNREVEALED competing-host glass ever needs the RPC path.
+  const needsRpc = (wine: WineRow) => hostGuessesFor(wine) && !wine.is_revealed;
+
   const glassWines = [previousWine, currentWine].filter(
     (w): w is NonNullable<typeof w> => w !== null,
   );
   const glassWineIds = glassWines.map((w) => w.id);
+  const directWineIds = glassWines.filter((w) => !needsRpc(w)).map((w) => w.id);
+  const rpcWines = glassWines.filter((w) => needsRpc(w));
 
-  // Host-only reads for the two glasses on the console: the answer keys and
-  // every guess. RLS lets the host read both for their own tasting; nothing
-  // here leaves this route.
-  const [{ data: answers }, { data: guesses }, { data: designations }] =
+  // Host-only reads for the two glasses on the console. `wine_answers` and
+  // full guess content are read only for glasses the host is entitled to see
+  // in full (host-provides, their own bring-your-own bottle, or semi-blind —
+  // left for BT-S4/BT-S5); `guessMeta` is content-free (locked/scored
+  // bookkeeping only, never a guessed value) and is read for every glass so
+  // "N/M locked in" works regardless of branch.
+  const [{ data: answers }, { data: guessMeta }, { data: guessContent }, { data: designations }, revealRows] =
     await Promise.all([
-      glassWineIds.length > 0
-        ? supabase.from("wine_answers").select("*").in("wine_id", glassWineIds)
+      directWineIds.length > 0
+        ? supabase.from("wine_answers").select("*").in("wine_id", directWineIds)
         : Promise.resolve({ data: [] as WineAnswer[] }),
       glassWineIds.length > 0
-        ? supabase.from("guesses").select("*").in("wine_id", glassWineIds)
-        : Promise.resolve({ data: [] as Guess[] }),
+        ? supabase
+            .from("guesses")
+            .select("wine_id, participant_id, locked_at, scored_at")
+            .in("wine_id", glassWineIds)
+        : Promise.resolve({
+            data: [] as { wine_id: string; participant_id: string; locked_at: string | null; scored_at: string | null }[],
+          }),
+      directWineIds.length > 0
+        ? supabase.from("guesses").select("*").in("wine_id", directWineIds)
+        : Promise.resolve({
+            data: [] as Database["public"]["Tables"]["guesses"]["Row"][],
+          }),
       supabase.from("type_designations").select("id, name"),
+      Promise.all(
+        rpcWines.map(async (w) => {
+          const { data } = await supabase.rpc("get_wine_reveal", { p_wine_id: w.id });
+          return [w.id, data as RpcReveal | null] as const;
+        }),
+      ),
     ]);
+  const revealByWineId = new Map(revealRows);
   const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
-  const guessesByWineId = new Map<string, Guess[]>();
-  for (const g of guesses ?? []) {
-    const list = guessesByWineId.get(g.wine_id) ?? [];
+  const guessMetaByWineId = new Map<
+    string,
+    { participant_id: string; scored_at: string | null }[]
+  >();
+  for (const g of guessMeta ?? []) {
+    const list = guessMetaByWineId.get(g.wine_id) ?? [];
     list.push(g);
-    guessesByWineId.set(g.wine_id, list);
+    guessMetaByWineId.set(g.wine_id, list);
+  }
+  const guessContentByWineId = new Map<string, Database["public"]["Tables"]["guesses"]["Row"][]>();
+  for (const g of guessContent ?? []) {
+    const list = guessContentByWineId.get(g.wine_id) ?? [];
+    list.push(g);
+    guessContentByWineId.set(g.wine_id, list);
   }
 
   const nameById = new Map<string, string>();
   for (const list of [reference.countries, reference.regions, reference.grapes, designations ?? []]) {
     for (const row of list) nameById.set(row.id, row.name);
   }
+  // Every appellation/producer id this page will render: the direct-branch
+  // answers/guesses, plus every appellation id a competing-host RPC result
+  // named (the truth and every guess's pick) — names are never spoiler-
+  // sensitive on their own, only which id belongs to which unrevealed wine.
+  const rpcAppellationIds: (string | null | undefined)[] = [];
+  for (const rev of revealByWineId.values()) {
+    if (!rev) continue;
+    rpcAppellationIds.push(rev.correct.appellation as string | null | undefined);
+    for (const g of rev.guesses) {
+      rpcAppellationIds.push(g.values.appellation as string | null | undefined);
+    }
+  }
   const looked = await lookupAppellationAndProducerNames({
     appellationIds: [
       ...(answers ?? []).map((a) => a.appellation_id),
-      ...(guesses ?? []).map((g) => g.appellation_id),
+      ...(guessContent ?? []).map((g) => g.appellation_id),
+      ...rpcAppellationIds,
     ],
     producerIds: (answers ?? []).map((a) => a.producer_id),
   });
@@ -220,136 +294,195 @@ export default async function HostConsolePage({
     set.add(row.participant_id);
     lockedByWineId.set(row.wine_id, set);
   }
-  const joined = participants.filter((p) => p.status === "JOINED");
-  const hostParticipant = participants.find((p) => p.user_id === tasting.host_id);
-  // Who is expected to guess a glass: joined people minus whoever brought the
-  // bottle, minus the host when the host set every answer.
+  // Who is expected to guess a glass: JOINED, not whoever brought the
+  // bottle, and not the host when the host set every answer — the one
+  // shared rule (BT-P2), not an inline copy of it.
   const eligibleFor = (wine: { contributor_participant_id: string | null }) =>
-    joined.filter(
-      (p) =>
-        p.id !== wine.contributor_participant_id &&
-        !(hostProvides && p.user_id === tasting.host_id),
+    participants.filter((p: ParticipantRow) =>
+      eligibleForGlass(
+        { id: p.id, userId: p.user_id, status: p.status, joinedAt: null },
+        { contributorParticipantId: wine.contributor_participant_id, isRevealed: false, revealedAt: null },
+        { wineSource: tasting.wine_source, hostId: tasting.host_id },
+      ),
     );
 
-  function buildGlass(wine: (typeof wines)[number], index: number): ConsoleGlass {
-    const answer = answerByWineId.get(wine.id) ?? null;
-    // An incomplete glass has no answer key at all, so there is nothing to
-    // reveal: no chips, and the refusal sentence in their place (spec §C.8).
+  function buildGlass(wine: WineRow, index: number, isCurrent: boolean): ConsoleGlass {
     const refusal = revealRefusal(incompleteGlasses, wine.id);
-    const answerSteps: StepKey[] =
-      isSemiBlind || !answer || refusal ? [] : inPlaySteps(answer);
-    const revealStep = wine.is_revealed ? answerSteps.length : wine.reveal_step;
-    // reveal-1 (spec §D.3 #4): in bring-your-own the host guesses this glass
-    // too, and which optional steps a wine has is itself answer-key knowledge.
-    // Until the first step is revealed — which freezes every guess — such a
-    // host sees only the generic first step, never the answer-derived list.
-    // Never an empty list: that would drop "Reveal the country" for
-    // "Reveal the whole glass".
-    const hostGuesses =
-      !hostProvides &&
-      !isSemiBlind &&
-      wine.contributor_participant_id !== hostParticipant?.id;
-    const hideAnswerSteps =
-      hostGuesses && !refusal && !wine.is_revealed && revealStep === 0;
-    const stepKeys: StepKey[] = hideAnswerSteps ? ["country"] : answerSteps;
-    const revealedKeys = new Set(stepKeys.slice(0, revealStep));
-    const categoryVisible = (key: StepKey) =>
-      hostProvides || wine.is_revealed || revealedKeys.has(key);
-    const steps: ConsoleStep[] = stepKeys.map((key, i) => {
-      // "Nothing on record" is a fact about the answer key, so in bring-your-own
-      // it is only surfaced once the category is revealed — same gate as facts.
-      const missing = Boolean(
-        (key === "producer" && answer && !answer.producer_id) ||
-          (key === "vintage" && answer && !answer.vintage_kind),
-      );
-      return {
-        key,
-        label: STEP_LABEL[key],
-        missing: missing && categoryVisible(key),
-        state: i < revealStep ? "revealed" : i === revealStep ? "next" : "pending",
-      };
-    });
-    const nextStep = steps.find((s) => s.state === "next") ?? null;
-
-    // Identity: the host set a host-provided wine, so it is theirs to see;
-    // a bring-your-own bottle only once it is revealed.
-    const showIdentity = answer !== null && (hostProvides || wine.is_revealed);
-    const contributorLabel = wine.contributor_participant_id ? wineLabel(wine) : null;
-    let title = contributorLabel ?? `Glass ${index + 1}`;
-    let meta: string | null = null;
-    if (showIdentity && answer) {
-      const producer = name(answer.producer_id);
-      const wineName = answer.catalog_wine_id
-        ? (wineNameByCatalogId.get(answer.catalog_wine_id) ?? null)
-        : null;
-      const identity = [producer, wineName, vintageLabel(answer)]
-        .filter(Boolean)
-        .join(", ");
-      title = identity || title;
-      meta = [
-        name(answer.appellation_id),
-        name(answer.region_id),
-        name(answer.country_id),
-        [name(answer.primary_grape_id), name(answer.secondary_grape_id)]
-          .filter(Boolean)
-          .join(" / ") || null,
-        name(answer.type_designation_id),
-      ]
-        .filter(Boolean)
-        .join(" · ");
-    }
-
     const eligible = eligibleFor(wine);
     const eligibleIds = new Set(eligible.map((p) => p.id));
-    const lockedSet = lockedByWineId.get(wine.id) ?? new Set<string>();
-    // A scored row is frozen by the existing rule (reveal_next_category stamps
-    // scored_at at the first step), so it counts as locked even if the taster
-    // never pressed Lock in.
     const scoredIds = new Set(
-      (guessesByWineId.get(wine.id) ?? [])
+      (guessMetaByWineId.get(wine.id) ?? [])
         .filter((g) => g.scored_at !== null)
         .map((g) => g.participant_id),
     );
+    // A scored row is frozen by the existing rule (reveal_next_category stamps
+    // scored_at at the first step), so it counts as locked even if the taster
+    // never pressed Lock in.
+    const lockedSet = lockedByWineId.get(wine.id) ?? new Set<string>();
     const isLocked = (pid: string) => lockedSet.has(pid) || scoredIds.has(pid);
     const lockedCount = eligible.filter((p) => isLocked(p.id)).length;
     const notLockedNames = eligible
       .filter((p) => !isLocked(p.id))
       .map((p) => nameByParticipantId.get(p.id) ?? "Someone");
 
-    // "This glass" facts, from the host-readable guesses. In bring-your-own
-    // a category is only summarised once it has been revealed — the host is
-    // a guesser there too and must not learn the answer through a count.
-    const facts: ConsoleGlass["facts"] = [];
-    const glassGuesses = (guessesByWineId.get(wine.id) ?? []).filter((g) =>
-      eligibleIds.has(g.participant_id),
-    );
-    if (answer && isSemiBlind) {
-      if (categoryVisible("country")) {
+    let steps: ConsoleStep[] = [];
+    let nextStep: ConsoleStep | null = null;
+    let revealButtonLabel: string | null = null;
+    let showIdentity = false;
+    let identityTitle: string | null = null;
+    let meta: string | null = null;
+    let facts: { label: string; value: string }[] = [];
+    let revealStep = wine.reveal_step;
+
+    if (needsRpc(wine)) {
+      // reveal-1 / spec §7.3 item 7: the true category sequence is itself
+      // answer-key knowledge (whether an appellation or a designation is in
+      // play), so a competing host only ever sees the categories already
+      // revealed plus one dashed placeholder for whatever comes next.
+      const rev = revealByWineId.get(wine.id) ?? null;
+      const revealedKeys = (rev?.revealed_keys ?? []) as RevealKey[];
+      revealStep = revealedKeys.length;
+      steps = revealedKeys.map((key) => ({
+        key,
+        label: keyLabel(key),
+        known: true,
+        missing: false,
+        state: "revealed" as const,
+      }));
+      if (!refusal) {
+        const chip: ConsoleStep = {
+          key: "next",
+          label: nextChipLabel(rev?.in_play_count ?? null, revealStep),
+          known: false,
+          missing: false,
+          state: "next",
+        };
+        steps = [...steps, chip];
+        nextStep = chip;
+        revealButtonLabel = NEXT_ATTRIBUTE;
+      }
+      if (rev && revealedKeys.length > 0) {
+        const answerForFacts = {
+          primary_grape_id: (rev.correct.primary_grape as string | undefined) ?? "",
+          appellation_id: (rev.correct.appellation as string | null | undefined) ?? null,
+        };
+        const rows = rev.guesses.map((g) => ({
+          participant_id: g.participant_id,
+          primary_grape_id: (g.values.primary_grape as string | null | undefined) ?? null,
+          appellation_id: (g.values.appellation as string | null | undefined) ?? null,
+          // Every guess on a glass with at least one revealed category is
+          // already frozen by the existing scored_at-on-first-step rule
+          // (see above) — get_wine_reveal doesn't carry locked_at/scored_at
+          // itself, so a truthy placeholder here is exact, not a guess.
+          locked_at: null,
+          scored_at: "revealed",
+        }));
+        facts = glassFacts({
+          revealedKeys,
+          answer: answerForFacts,
+          rows,
+          eligibleIds,
+          nameOf: name,
+        });
+      }
+      // showIdentity stays false: needsRpc is only true while unrevealed.
+    } else if (isSemiBlind) {
+      // Left for BT-S4/BT-S5 (plan Does): the matching-board fact and the
+      // host-provides-early identity rule are unchanged from T9.
+      const answer = answerByWineId.get(wine.id) ?? null;
+      showIdentity = answer !== null && (hostProvides || wine.is_revealed);
+      if (showIdentity && answer) {
+        const producer = name(answer.producer_id);
+        const wineName = answer.catalog_wine_id
+          ? (wineNameByCatalogId.get(answer.catalog_wine_id) ?? null)
+          : null;
+        identityTitle = [producer, wineName, vintageLabel(answer)].filter(Boolean).join(", ") || null;
+        meta = [
+          name(answer.appellation_id),
+          name(answer.region_id),
+          name(answer.country_id),
+          [name(answer.primary_grape_id), name(answer.secondary_grape_id)]
+            .filter(Boolean)
+            .join(" / ") || null,
+          name(answer.type_designation_id),
+        ]
+          .filter(Boolean)
+          .join(" · ");
+      }
+      const categoryVisible = hostProvides || wine.is_revealed;
+      if (answer && categoryVisible) {
+        const glassGuesses = (guessContentByWineId.get(wine.id) ?? []).filter((g) =>
+          eligibleIds.has(g.participant_id),
+        );
         const matched = glassGuesses.filter((g) => g.guessed_wine_id === wine.id).length;
-        facts.push({ label: "Matched this glass", value: `${matched} of ${eligible.length}` });
+        facts = [{ label: "Matched this glass", value: `${matched} of ${eligible.length}` }];
       }
-    } else if (answer) {
-      if (categoryVisible("grapes")) {
-        const got = glassGuesses.filter(
-          (g) => g.primary_grape_id === answer.primary_grape_id,
-        ).length;
-        facts.push({ label: "Got the grape", value: `${got} of ${eligible.length}` });
+    } else {
+      const answer = answerByWineId.get(wine.id) ?? null;
+      const answerSteps: RevealKey[] = !answer || refusal ? [] : inPlaySteps(answer);
+      revealStep = wine.is_revealed ? answerSteps.length : wine.reveal_step;
+      // The answer is always known to the host in this branch (they set it,
+      // or it's their own bring-your-own bottle), so "missing" needs no
+      // extra visibility gate — only ever rendered for the active next step.
+      const missingOf = (key: RevealKey) =>
+        Boolean(
+          (key === "producer" && answer && !answer.producer_id) ||
+            (key === "vintage" && answer && !answer.vintage_kind),
+        );
+      steps = answerSteps.map((key, i) => ({
+        key,
+        label: keyLabel(key),
+        known: true,
+        missing: missingOf(key),
+        state: i < revealStep ? "revealed" : i === revealStep ? "next" : "pending",
+      }));
+      nextStep = steps.find((s) => s.state === "next") ?? null;
+      if (nextStep) revealButtonLabel = `Reveal the ${nextStep.label.toLowerCase()}`;
+
+      showIdentity = answer !== null && (hostProvides || wine.is_revealed);
+      if (showIdentity && answer) {
+        const producer = name(answer.producer_id);
+        const wineName = answer.catalog_wine_id
+          ? (wineNameByCatalogId.get(answer.catalog_wine_id) ?? null)
+          : null;
+        identityTitle = [producer, wineName, vintageLabel(answer)].filter(Boolean).join(", ") || null;
+        meta = [
+          name(answer.appellation_id),
+          name(answer.region_id),
+          name(answer.country_id),
+          [name(answer.primary_grape_id), name(answer.secondary_grape_id)]
+            .filter(Boolean)
+            .join(" / ") || null,
+          name(answer.type_designation_id),
+        ]
+          .filter(Boolean)
+          .join(" · ");
       }
-      if (answer.appellation_id && categoryVisible("appellation")) {
-        const got = glassGuesses.filter(
-          (g) => g.appellation_id === answer.appellation_id,
-        ).length;
-        facts.push({ label: "Got the appellation", value: `${got} of ${eligible.length}` });
-        const tally = new Map<string, number>();
-        for (const g of glassGuesses) {
-          if (g.appellation_id) tally.set(g.appellation_id, (tally.get(g.appellation_id) ?? 0) + 1);
-        }
-        let best: { id: string; n: number } | null = null;
-        for (const [id, n] of tally) if (!best || n > best.n) best = { id, n };
-        const mostSaid = best ? name(best.id) : null;
-        if (mostSaid) facts.push({ label: "Most said", value: mostSaid });
+
+      // "This glass" facts (spec §7.3 item 5; B0 reveal-8): counted only
+      // from categories already revealed to everyone — hostProvides no
+      // longer short-circuits this the way it does identity above.
+      if (answer) {
+        const revealedKeysList = answerSteps.slice(0, revealStep) as RevealKey[];
+        const rows = (guessContentByWineId.get(wine.id) ?? []).map((g) => ({
+          participant_id: g.participant_id,
+          primary_grape_id: g.primary_grape_id,
+          appellation_id: g.appellation_id,
+          locked_at: g.locked_at,
+          scored_at: g.scored_at,
+        }));
+        facts = glassFacts({
+          revealedKeys: revealedKeysList,
+          answer: { primary_grape_id: answer.primary_grape_id, appellation_id: answer.appellation_id },
+          rows,
+          eligibleIds,
+          nameOf: name,
+        });
       }
     }
+
+    const contributorLabel = wine.contributor_participant_id ? wineLabel(wine) : null;
+    const title = identityTitle ?? contributorLabel ?? `Glass ${index + 1}`;
 
     return {
       wineId: wine.id,
@@ -361,18 +494,43 @@ export default async function HostConsolePage({
       privateIdentity: showIdentity && !wine.is_revealed,
       steps,
       nextStep,
+      revealButtonLabel,
       locked: lockedCount,
       eligible: eligible.length,
       notLockedNames,
       facts,
       refusal,
+      wrapped: isCurrent && wrapped,
     };
   }
 
-  const current = currentWine ? buildGlass(currentWine, currentIndex) : null;
+  const current = currentWine ? buildGlass(currentWine, currentIndex, true) : null;
   const previous = previousWine
-    ? buildGlass(previousWine, wines.findIndex((w) => w.id === previousWine.id))
+    ? buildGlass(previousWine, wines.findIndex((w) => w.id === previousWine.id), false)
     : null;
+
+  // "Skip to glass {N} →" (BT-P3/BT-H1's skipPlan): the one rule for what
+  // Skip does and when it is offered at all — null hides the button, whether
+  // because there is nothing to skip to (refinement 23's no-wrap-past-the-
+  // pointer rule in SEMI_BLIND) or because a reveal, a pause or the tasting's
+  // own status already refuses it.
+  const skipPlanResult = current
+    ? skipPlan({
+        status: tasting.status,
+        paused,
+        glasses: pointerGlasses,
+        pointer: tasting.current_wine_id,
+        fromWineId: current.wineId,
+        revealMode: tasting.reveal_mode,
+      })
+    : null;
+  const skipTo =
+    skipPlanResult && !("error" in skipPlanResult)
+      ? {
+          wineId: skipPlanResult.targetId,
+          glass: wines.findIndex((w) => w.id === skipPlanResult.targetId) + 1,
+        }
+      : null;
 
   // Standings: joined competitors only (the host who set the answers is not
   // one), ranked by the leaderboard RPC's spoiler-safe totals.
@@ -402,7 +560,7 @@ export default async function HostConsolePage({
     tasting.leaderboard_reveal === "PER_WINE"
       ? glassesSoFar
       : lastRevealedStep
-        ? `after the ${STEP_LABEL[lastRevealedStep.key].toLowerCase()}`
+        ? `after the ${lastRevealedStep.label.toLowerCase()}`
         : glassesSoFar;
 
   // Glasses whose answers ending the tasting would leave hidden (reveal-4),
@@ -427,10 +585,12 @@ export default async function HostConsolePage({
     guidedLive,
     isSemiBlind,
     finished,
+    paused,
     wineCount: wines.length,
     revealedCount,
     current,
     previous,
+    skipTo,
     standings,
     standingsAfter,
     unrevealedGlasses,
@@ -442,13 +602,13 @@ export default async function HostConsolePage({
   );
 
   return (
-    <>
+    <LiveShell active={tasting.status === "IN_PROGRESS"}>
       {tasting.timing_mode === "LIVE" ? (
         <RevealSync tastingId={tastingId} watermark={watermark} />
       ) : (
         <AutoRefresh />
       )}
       <HostConsole data={data} />
-    </>
+    </LiveShell>
   );
 }

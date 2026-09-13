@@ -3742,7 +3742,7 @@ describe("escapeIlike (people search)", () => {
 BT-C1 covers `friendContextLine`; BT-V5 covers the UI.
 
 **Steps**
-- [ ] `people-search.ts`; the invite field; the step's rows; the sheet's context fetch; bare tsc; eslint.
+- [x] `people-search.ts`; the invite field; the step's rows; the sheet's context fetch; bare tsc; eslint.
 
 **Acceptance**
 - A bare `npx tsc --noEmit` prints nothing.

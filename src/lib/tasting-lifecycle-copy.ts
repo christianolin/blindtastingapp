@@ -13,10 +13,12 @@ import type {
 export type UnrevealedGlass = { glass: number; state: "hidden" | "half" };
 
 /**
- * Where Start lands the host (reveal-5): the dark host console only for a LIVE
- * blind tasting whose host provides the wines. A bring-your-own host competes
- * for the other glasses, and a semi-blind or self-paced tasting has no
- * glass-by-glass reveal to drive — every one of those lands on the lobby.
+ * Where Start lands the host (reveal-5; B6): the dark host console for a LIVE,
+ * host-provides tasting that is blind OR semi-blind — semi-blind's console
+ * drives the pour pointer the same way blind's drives the reveal. A
+ * bring-your-own host competes for the other glasses, and a self-paced or
+ * OPEN tasting has no glass-by-glass reveal to drive — every one of those
+ * lands on the lobby.
  */
 export function startLandsOnConsole(t: {
   timingMode: TimingMode;
@@ -25,8 +27,8 @@ export function startLandsOnConsole(t: {
 }): boolean {
   return (
     t.timingMode === "LIVE" &&
-    t.revealMode === "BLIND" &&
-    t.wineSource === "HOST_PROVIDES"
+    t.wineSource === "HOST_PROVIDES" &&
+    (t.revealMode === "BLIND" || t.revealMode === "SEMI_BLIND")
   );
 }
 

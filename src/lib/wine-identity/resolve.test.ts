@@ -788,3 +788,38 @@ describe("step 4: a curated appellation synonym (owner approval 4)", () => {
     expect(missingWineFields(d, { now: NOW })).toContain("appellation");
   });
 });
+
+describe("a prefix-named designation row never agrees until renamed to the suffix form (20260914114217, Sassicaia/Etna live-bug fix)", () => {
+  // Same failure class pinned live for Sassicaia in live-replay.test.ts (#16), here
+  // in isolation for Etna DOC (09a2296a-b7be-4d0b-b904-3e95a30e7295): it is not
+  // named by any live read fixture, so it never entered the committed reference
+  // snapshot, and is pinned here against a synthetic one instead. Before the
+  // migration this row was named "DOC Etna" — designation as a prefix.
+  // stripDesignationSuffix (fold.ts) strips only a TRAILING designation word, so
+  // "DOC Etna" folds to "docetna", never equal to a suffix-spelled read's base
+  // "etna" — even though search_appellations (step 4.2) still finds the row by
+  // substring, step 4.3's fold comparison rejects it. The migration renamed it to
+  // "Etna DOC" (suffix form, matching Sicilia's other Etna rows), so it now agrees.
+  const sicily = (name: string): ReferenceSnapshot => ({
+    countries: [{ id: "it", name: "Italy" }],
+    regions: [{ id: "sic", name: "Sicilia", country_id: "it" }],
+    appellations: [{ id: "09a2296a-b7be-4d0b-b904-3e95a30e7295", name, region_id: "sic" }],
+    none: [], producers: [], grapes: [], type_designations: [],
+  });
+  const read = {
+    noGeographicIndication: false, country: "Italy", region: "Sicilia", appellation: "Etna DOC",
+    producer: null, designation: null, grapes: [],
+  };
+
+  it("the old prefix-named row \"DOC Etna\" is found by search but never agrees with an \"Etna DOC\" read", async () => {
+    const d = await resolve("vin-de-france.json", read, sicily("DOC Etna"));
+    expect(d.appellationId).toBeNull();
+    expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+
+  it("renamed to the suffix form \"Etna DOC\", the same read resolves to it, and appellation is no longer missing", async () => {
+    const d = await resolve("vin-de-france.json", read, sicily("Etna DOC"));
+    expect(d.appellationId).toBe("09a2296a-b7be-4d0b-b904-3e95a30e7295");
+    expect(missingWineFields(d, { now: NOW })).not.toContain("appellation");
+  });
+});

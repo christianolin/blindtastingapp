@@ -31,6 +31,9 @@
   --color-live: var(--live);
   --color-border-light: var(--border-light);
   --color-border-strong: var(--border-strong);
+  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1). */
+  --color-surface-deep: var(--surface-deep);
+  --color-primary-hover: var(--primary-hover);
   --color-ink-photo: var(--ink-photo);
   --color-ink-caption: var(--ink-caption);
   --color-placeholder: var(--placeholder);
@@ -123,6 +126,11 @@
   --console: #1b1310;
   --console-card: #241b16;
   --console-ink: #b9a98c;
+  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the deepest live
+     surface (pinned bars, header strips) and the bordeaux hover step, each
+     defined for both the parchment and the dark surface below. */
+  --surface-deep: #ede4d1;
+  --primary-hover: #4a1523;
   --chart-1: #5c1a2b;
   --chart-2: #c3a25b;
   --chart-3: #3f5b42;
@@ -161,6 +169,17 @@
   --ring: #d4af6a;
   --gold: #d4af6a;
   --gold-deep: #c3a25b;
+  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the redesign and
+     flows tokens completed for the dark surface — a miss turns miss-red, a
+     hover lifts, gold-on-dark keeps reading gold. */
+  --surface-deep: #15100d;
+  --primary-hover: #b04961;
+  --gold-dark: #d4af6a;
+  --gold-light: #d4af6a;
+  --rose: #e08a76;
+  --miss: #e08a76;
+  --border-light: rgba(245, 239, 227, 0.08);
+  --border-strong: rgba(245, 239, 227, 0.22);
   --chart-1: #a8425a;
   --chart-2: #d4af6a;
   --chart-3: #6c8f70;

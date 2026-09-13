@@ -292,6 +292,29 @@ const CASES: Case[] = [
       vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "region", "appellation"],
     },
   },
+
+  // ── Sassicaia live-bug pin (2026-09-13): sassicaia-2022.json ────────────────────
+  // Not part of L1's 15-entry test set — pins the fix for the appellation-prefix-
+  // designation bug (migration 20260914114217_appellation_prefix_designations.sql).
+  // Before the migration, appellation a4522526 was named "DOC Bolgheri Sassicaia"
+  // (designation as a prefix): stripDesignationSuffix (fold.ts) only strips a
+  // trailing designation word, so it folded to "docbolgherisassicaia", never equal
+  // to the read's own base "bolgherisassicaia", and step 4.3 (resolve.ts) rejected
+  // the row outright — draft.appellationId stayed null and missingWineFields
+  // returned ["appellation"], even though search_appellations found the row and
+  // the read said "Bolgheri Sassicaia DOC" correctly. The migration renamed the row
+  // to "Bolgheri Sassicaia DOC" (suffix form), so it now folds to "bolgherisassicaia"
+  // and agrees.
+  {
+    entry: 16, file: "sassicaia-2022.json", labelReadId: "68585aa8-bd59-4521-bbc9-53a4baaddfcc",
+    why: "appellation: was null before 20260914114217 renamed a4522526 from the prefix form \"DOC Bolgheri Sassicaia\" to the suffix form \"Bolgheri Sassicaia DOC\", which now agrees with the read at resolve.ts step 4.3",
+    resolved: {
+      country: "Italy", region: "Toscana", appellation: "Bolgheri Sassicaia DOC",
+      producer: existing("f72e1db7-85c7-408f-99c9-87084768148a", "Tenuta San Guido"),
+      grapes: [["existing", "Cabernet Sauvignon", 85], ["existing", "Cabernet Franc", 15]],
+      vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: [],
+    },
+  },
 ];
 
 const isRound2 = (c: Case) => c.file.startsWith(`${ROUND2_DIR}/`);
@@ -308,8 +331,8 @@ describe("the live fixtures (plan L1)", () => {
     expect(new Set(CASES.map((c) => c.labelReadId)).size).toBe(CASES.length);
   });
 
-  it("round 1 covers the 15 test-set entries; round 2 re-reads exactly the approved #2, #4, #7, #12 and #15", () => {
-    expect(CASES.filter((c) => !isRound2(c)).map((c) => c.entry)).toEqual(Array.from({ length: 15 }, (_, i) => i + 1));
+  it("round 1 covers the 15 test-set entries plus the Sassicaia live-bug pin (#16); round 2 re-reads exactly the approved #2, #4, #7, #12 and #15", () => {
+    expect(CASES.filter((c) => !isRound2(c)).map((c) => c.entry)).toEqual([...Array.from({ length: 15 }, (_, i) => i + 1), 16]);
     expect(CASES.filter(isRound2).map((c) => c.entry)).toEqual([2, 4, 7, 12, 15]);
   });
 

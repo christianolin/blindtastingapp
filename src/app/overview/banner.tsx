@@ -179,6 +179,14 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
               <LocalDateTime iso={banner.scheduledAt} />
             </>
           ) : null}
+          {/* The place, right after the time (B12) — laptop only, the phone
+              meta line below says it as its own last part instead. */}
+          {banner.place ? (
+            <span className="max-md:hidden">
+              {" · "}
+              {banner.place}
+            </span>
+          ) : null}
           {/* The host clause leaves the eyebrow on phones (date + host overrun
               one eyebrow line at 390px) and moves to the meta line below. */}
           <span className="max-md:hidden">
@@ -196,6 +204,7 @@ function NextUpBannerView({ banner }: { banner: NextUpBanner }) {
             hosting: banner.hosting,
             hostName: banner.hostName,
             nextWinePosition: banner.nextWinePosition,
+            place: banner.place,
           })}
         </span>
       </div>

@@ -46,6 +46,10 @@ export type NextUpBanner = {
   hosting: boolean;
   hostName: string;
   scheduledAt: string | null;
+  /** From `getTastingPlace` under the viewer's RLS (host, JOINED or INVITED
+      only — Q2). Shown after the time in the laptop meta and as the last
+      part of the phone meta line (B12). */
+  place: string | null;
   /** The flight so far, never padded to a planned count (`nextUpFlight`,
       amendment 6): one filled line per real glass — "Wine N" with the muted
       `note` "set" for host-provides, the contributor label ("Gustav's wine")

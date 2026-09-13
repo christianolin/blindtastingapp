@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
+import { eligibleForGlass } from "@/lib/glass-eligibility";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 
 /**
@@ -58,10 +59,16 @@ export async function maybeAutoRevealWine(
   if (joinedError) return;
   const eligible = new Set(
     (joined ?? [])
-      .filter(
-        (p) =>
-          p.id !== wine.contributor_participant_id &&
-          !(tasting.wine_source === "HOST_PROVIDES" && p.user_id === tasting.host_id),
+      .filter((p) =>
+        eligibleForGlass(
+          { id: p.id, userId: p.user_id, status: "JOINED", joinedAt: null },
+          {
+            contributorParticipantId: wine.contributor_participant_id,
+            isRevealed: wine.is_revealed,
+            revealedAt: null,
+          },
+          { wineSource: tasting.wine_source, hostId: tasting.host_id },
+        ),
       )
       .map((p) => p.id),
   );

@@ -252,6 +252,10 @@ const UI_EN: UiDict = {
   taster: "Taster",
   // header
   tasting_note: "Tasting note",
+  // A note on a hidden glass (blind-tasting B8; plan refinement — spec §9.3
+  // item 2). Kept private to its author until the glass is revealed.
+  hidden_note_hint:
+    "Only you can read this until the glass is revealed. Then it attaches to the wine.",
   assessed_of: "{done} of {total} assessed",
   assessed_short: "{done} of {total}",
   // the desktop footer sets the count in Cormorant, then this tail
@@ -465,6 +469,8 @@ const UI_DA: UiDict = {
   conclusion_short: "Konklusion",
   taster: "Smager",
   tasting_note: "Smagsnote",
+  hidden_note_hint:
+    "Kun du kan læse den, indtil glasset afsløres. Så knyttes den til vinen.",
   assessed_of: "{done} af {total} vurderet",
   assessed_short: "{done} af {total}",
   of_total_assessed: "af {total} vurderet",

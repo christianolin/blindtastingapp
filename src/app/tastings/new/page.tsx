@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewTastingSheet } from "@/components/new-tasting-sheet";
-import { getNameSuggestionContext } from "./actions";
+import { getPouredRegionSuggestion } from "./actions";
 
 // The old full-page route, kept so existing links work: it renders the same
 // three-step sheet inline (no dialog chrome). `?mode=semi-blind` still sets
@@ -25,7 +25,7 @@ export default async function NewTastingPage({
   // open, so both entry points suggest the same "{Region} #{n}".
   const [{ data: friendRows }, regionSuggestion] = await Promise.all([
     supabase.from("friendships").select("friend_id").eq("user_id", user.id),
-    getNameSuggestionContext().catch(() => null),
+    getPouredRegionSuggestion().catch(() => null),
   ]);
   const friendIds = (friendRows ?? []).map((f) => f.friend_id);
   const { data: friends } = await supabase

@@ -1207,7 +1207,12 @@ export type Database = {
       wset_notes: {
         Row: {
           id: string;
-          catalog_wine_id: string;
+          // Both nullable live (BT-N1; blind-tasting B8): a note on a still-
+          // hidden tasting glass carries neither identity until the glass is
+          // revealed (M5's wset_notes_one_identity: exactly one of the two,
+          // or neither alongside a BLIND context_kind + tasting_wine_id).
+          catalog_wine_id: string | null;
+          unidentified_wine_id: string | null;
           context_kind: "OPEN" | "BLIND" | "TRAINING";
           tasting_wine_id: string | null;
           author_id: string;
@@ -1238,7 +1243,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          catalog_wine_id: string;
+          catalog_wine_id?: string | null;
+          unidentified_wine_id?: string | null;
           context_kind?: "OPEN" | "BLIND" | "TRAINING";
           tasting_wine_id?: string | null;
           author_id: string;

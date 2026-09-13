@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { AboutBand } from "@/components/overview/about-band";
+import { Eyebrow } from "@/components/overview/eyebrow";
 import { createClient } from "@/lib/supabase/server";
+import { getOverviewInvitation } from "@/lib/invitation-data";
+import { OVERVIEW_EYEBROW } from "@/lib/invitation-copy";
 import { getOverviewData } from "@/lib/overview-data";
 import { OverviewBanner } from "./banner";
+import { OverviewInvitationCard } from "./invitation-card";
 import { TastingsCard } from "./tastings-card";
 import { RatingsCard } from "./ratings-card";
 import { CellarCard } from "./cellar-card";
@@ -23,13 +27,17 @@ export default async function OverviewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, data] = await Promise.all([
+  const [{ data: profile }, data, invitation] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, avatar_url")
       .eq("id", user.id)
       .maybeSingle(),
     getOverviewData(user.id),
+    // The soonest pending invitation, for the laptop card above the banner
+    // (spec §4.3 item 3) — fetched here, never inside overview-data.ts
+    // (getOverviewData's own file), per this task's Does bullet.
+    getOverviewInvitation(),
   ]);
 
   return (
@@ -48,6 +56,16 @@ export default async function OverviewPage() {
         title="Overview"
       />
       <main className="flex flex-1 flex-col gap-[22px] p-[22px_26px_26px] max-md:gap-[11px] max-md:p-[11px_14px_14px]">
+        {/* The invitation card (S5b): laptop only — the Blind tastings card
+            below keeps its own invitation rows for phones and for any other
+            pending invitation this one doesn't cover (Does bullet, last
+            line). */}
+        {invitation ? (
+          <div className="hidden flex-col gap-2 md:flex">
+            <Eyebrow size="md">{OVERVIEW_EYEBROW}</Eyebrow>
+            <OverviewInvitationCard invitation={invitation} />
+          </div>
+        ) : null}
         <OverviewBanner banner={data.banner} />
         {/* The banner kind only decides whether the Taste-blind tile may be
             gold: with nothing scheduled the banner is already a gold "Start a
