@@ -245,6 +245,14 @@ The owner sent a second handoff, *the blind tasting, end to end*, while this pla
     - **Ids.** Every add or failure started from a bottle's confirm, lot step or chooser dispatches that bottle's id (S5a). An `itemAdded` with a null id while a read's confirm is on screen logs a development warning and does not navigate.
     - `itemRowCopy`'s added detail switches on the row's own `added.destination`, never the sheet's.
     - **Tests.** Each reviewer probe (P1–P5 and the D3 paths) becomes a failing test first. F12 also adds a seeded, model-based test over random action sequences asserting: no home view while `confirmQueue` is non-empty and `multi` is off; every read or failed bottle is on screen, waiting, in the Many stack, or was left by ←; no bottle is added twice; `confirmQueue` has no duplicates and holds only read or failed bottles.
+22. **S5a hand-offs and decisions (wave C2 review, 2026-09-13).** These supersede S5a's and S5b's task text where they differ.
+    - **A phone's single add closes the sheet only when nothing is left.** After `itemAdded` (and any `followUp`), `landed()` calls `requestClose()` only when the sheet is on its home view, `queue` and `confirmQueue` are empty, and no item is uploading, reading, read, pending or failed. Otherwise the sheet stays on whatever the reducer opened (amendment 20: landing home opens the next read; spec §C.4 rule 3: the drain continues).
+    - **A warning keeps the sheet open.** When an add returns a server warning ("Added — but …"), a phone does not auto-close; the notice stays until the user taps Done. (Main-session decision, reported to the owner.)
+    - **One tested path for the give-back.** `sheet-state.ts` exports a pure `reduceSheet(state, action)` that applies `sheetReducer` and then the adoption give-back (`leavesAdoption` → `adoptionLeft`). The hook's `send` and the tests both call it; this export is within S5a's OWNS. S5b dispatches every action through `adds.send`, never React's raw `dispatch`, and adopts a destination only through `adds.choose` and `adds.followUpCellar`.
+    - **A refused by-hand save with missing fields returns to the form**, still giving the pick back, so the user lands where the gap can be fixed. Without missing fields it stays on the chooser with the error.
+    - **Lot sources carry `catalogWineId`** (S5b): every lot source passed to `performAdd` takes it from the row or the CellarSheet lot, so a chooser's "Rate it now" and the note destination work.
+    - **Deletions inside the debt window stand:** S5a removed `identityFromPrefill`, `ratePickPlan` and `scanTitle` from `format.ts` as its task text says; S5b removes their imports from `add-wine-sheet.tsx`. `vintageLabel` stays until S5b drops its import; S5c deletes it if nothing imports it.
+    - **The chooser after a chooser failure** (S5b): when the `choose` view is on screen with `chooseFor: null`, render the Chooser for the bottle in hand (`addTargetId`).
 
 ## Working Rules
 
