@@ -1179,7 +1179,7 @@ S7 (console, laptop), S7b (console, phone).
    - `skipTarget`: the next unrevealed glass after `current`, wrapping; null when `current` is the only unrevealed glass.
    - `pouredThrough`: the largest index among revealed glasses, glasses with `revealStep > 0`, the pointer's glass and `currentGlass` (semi-blind dimming, §10).
    - **"Skip to glass {N} →"** calls `skipToGlass(tastingId, fromWineId)`, a new server action: host; IN_PROGRESS; not paused; `fromWineId` is `currentGlass` and has `reveal_step = 0` (Skip is offered only then). It writes `current_wine_id = skipTarget` as a compare-and-set against the pointer it read (`.eq("current_wine_id", prev)`, or `.is("current_wine_id", null)`), so a double tap skips one glass.
-   - A skipped glass stays unrevealed and keeps its guesses. When the pointer passes the end the console's eyebrow reads "Glass {n} was skipped · Pour it now" (`wrapped`).
+   - A skipped glass stays unrevealed and keeps its guesses. When the pointer passes the end the console's eyebrow reads "Glass {n} was skipped · Pour it now" (`wrapped`). In a semi-blind tasting a Skip never wraps: `skipPlan` returns null when its target would lie before the pointer, since every glass up to the pointer is already open for matching (plan refinement 23). The eyebrow is reveal-driven only; a blind Skip that itself wraps does not raise it.
    - **Pure guards.** Whether a step reveal of a glass is allowed now, and what a Skip writes, live in `src/lib/pacing-guards.ts`, so they are tested apart from the actions:
      ```ts
      export function revealStepRefusal(input: {
