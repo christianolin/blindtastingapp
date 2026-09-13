@@ -410,6 +410,30 @@ export type Database = {
         Relationships: [];
       };
 
+      // 20260914091500 (blind-tasting spec §13.4, B12): a tasting's private
+      // place, outside `tastings` because a tasting row goes public once a wine
+      // is revealed. Readable by the host and JOINED and INVITED participants
+      // only; written by the host only. `place` is 1–200 characters with no
+      // surrounding spaces; the BEFORE UPDATE trigger owns `updated_at`.
+      tasting_places: {
+        Row: {
+          tasting_id: string;
+          place: string;
+          updated_at: string;
+        };
+        Insert: {
+          tasting_id: string;
+          place: string;
+          updated_at?: string;
+        };
+        Update: {
+          tasting_id?: string;
+          place?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
       wines: {
         Row: {
           id: string;
@@ -1624,6 +1648,12 @@ export type Database = {
       import_cellar_lots: {
         Args: { rows: unknown };
         Returns: unknown;
+      };
+      // 20260914091500 (blind-tasting spec §13.4): the `tasting places read`
+      // helper — true for the host and JOINED or INVITED participants.
+      is_tasting_member: {
+        Args: { p_tasting_id: string };
+        Returns: boolean;
       };
     };
   };
