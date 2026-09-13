@@ -18,6 +18,7 @@ function blankRow(overrides: Partial<WsetNoteRow> = {}): WsetNoteRow {
   return {
     id: "note-1",
     catalog_wine_id: "wine-1",
+    unidentified_wine_id: null,
     context_kind: "OPEN",
     tasting_wine_id: null,
     author_id: "user-1",
