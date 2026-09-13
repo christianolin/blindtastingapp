@@ -7,7 +7,12 @@ import type {
   TastingStatus,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
-import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
+import {
+  glassEditRefusal,
+  NOT_ADDER,
+  semiBlindAddRefusal,
+  TASTING_CLOSED,
+} from "@/lib/flight-glass-rules";
 import { emptyDraft, missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
 import {
   draftFromAnswerKey,
@@ -70,11 +75,8 @@ type InsertedGlass = { wineId: string; position: number };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const TASTING_NOT_FOUND = "Tasting not found.";
-const TASTING_CLOSED = "This tasting is finished — reopen it to add wines.";
 const JOIN_TO_ADD = "Join the tasting to add a wine.";
 const HOST_ONLY = "Only the host can add wines to this tasting.";
-const NOT_ADDER = "Only the person who added this glass can edit it.";
-const ALREADY_REVEALED = "This wine has already been revealed.";
 const WINE_NOT_FOUND = "Wine not found.";
 const CATALOG_WINE_GONE = "That catalog wine no longer exists.";
 const LOT_NOT_YOURS = "That lot is not in your cellar.";
@@ -556,6 +558,7 @@ type GlassState = {
   isRevealed: boolean;
   revealStep: number;
   status: TastingStatus;
+  revealMode: RevealMode;
   /** null while the glass is incomplete (D7). */
   answer: WineAnswerRow | null;
 };
@@ -579,7 +582,7 @@ async function loadGlassState(supabase: Db, wineId: string): Promise<GlassState 
 
   const { data: tasting, error: tastingError } = await supabase
     .from("tastings")
-    .select("status")
+    .select("status, reveal_mode")
     .eq("id", wine.tasting_id)
     .maybeSingle();
   if (tastingError) return { error: tastingError.message };
@@ -598,20 +601,31 @@ async function loadGlassState(supabase: Db, wineId: string): Promise<GlassState 
     isRevealed: wine.is_revealed,
     revealStep: wine.reveal_step,
     status: tasting.status,
+    revealMode: tasting.reveal_mode,
     answer,
   };
 }
 
 /**
- * The edit guard (spec §C.8 as amended by plan amendment 7). Never on a CLOSED
- * tasting or a revealed glass. A complete glass stays editable, in DRAFT or while
- * running, until its first reveal step; an incomplete glass is never step-revealed.
+ * The edit guard (spec §C.8 as amended by plan amendment 7; BT-L1 delegates to
+ * flight-glass-rules.ts's shared rule). Never on a CLOSED tasting or a
+ * revealed glass. A complete glass stays editable, in DRAFT or while running,
+ * until its first reveal step (then GLASS_STEP_STARTED); an incomplete glass
+ * is never step-revealed. The caller has already confirmed the adder
+ * (`adderRefusal`, `is_wine_adder`) before this runs, so `viewerIsAdder` is
+ * always true here, and Remove's `laterGlassSeen`/host branches don't apply
+ * to Edit.
  */
 function editRefusal(state: GlassState): string | null {
-  if (state.status === "CLOSED") return TASTING_CLOSED;
-  if (state.isRevealed) return ALREADY_REVEALED;
-  if (state.answer !== null && state.revealStep !== 0) return ALREADY_REVEALED;
-  return null;
+  return glassEditRefusal({
+    tastingStatus: state.status,
+    revealMode: state.revealMode,
+    isRevealed: state.isRevealed,
+    revealStep: state.revealStep,
+    viewerIsAdder: true,
+    viewerIsHost: false,
+    laterGlassSeen: false,
+  });
 }
 
 /** numeric columns can arrive as strings through PostgREST. */

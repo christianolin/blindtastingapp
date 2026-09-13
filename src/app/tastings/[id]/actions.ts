@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { startWarning } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { INVITES_CLOSE_WHEN_ENDED } from "@/lib/lobby-copy";
+import { glassRemoveRefusal } from "@/lib/flight-glass-rules";
+import { moveFlightGlass } from "./flight-actions";
 
 // `warning` rides along with a success that still needs the host's attention:
 // Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
@@ -176,6 +178,7 @@ export async function deleteTasting(formData: FormData): Promise<void> {
 }
 
 // Host edits the scheduled date/time. Allowed any time (harmless).
+/** @deprecated removed in BT-L4 — the settings sheet's When row saves through updateTastingSetup. */
 export async function updateSchedule(
   _prev: LobbyActionState,
   formData: FormData,
@@ -295,12 +298,15 @@ export async function setSequentialGuessing(formData: FormData): Promise<void> {
 
 // Host switches when the leaderboard moves during a progressive reveal (after
 // each attribute vs after the full wine). Exposed only in the draft menu; the
-// value only changes how partial reveals are aggregated, never scoring itself.
+// value only changes how partial reveals are aggregated, never scoring
+// itself. DRAFT only (spec §3.3 item 14, "the rules lock") — once a tasting
+// has started, mode/timing/rules/wine-source all lock together, and this
+// setting rides along with them.
 export async function setLeaderboardReveal(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const tastingId = String(formData.get("tasting_id") ?? "");
   const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return;
+  if (!tasting || tasting.status !== "DRAFT") return;
   const value =
     String(formData.get("value") ?? "") === "PER_WINE"
       ? "PER_WINE"
@@ -312,9 +318,15 @@ export async function setLeaderboardReveal(formData: FormData): Promise<void> {
   revalidatePath(`/tastings/${tastingId}`);
 }
 
-// Host reorders a wine one step up/down the serving order by swapping its
-// position with the neighbour. The (tasting_id, position) unique constraint
-// means we can't set both at once, so bounce one through a temporary slot.
+// Host reorders a wine one step up/down the serving order (the ▲▼ fallback
+// next to the lobby's drag handles). A thin wrapper over `moveFlightGlass`
+// (spec §3.3 item 5): finds the glass's 0-based place in list order and
+// hands the RPC the 1-based target `moveFlightGlass`/`reorderIds` expect —
+// one place earlier for "up" (idx), one later for "down" (idx + 2). Out of
+// range (already first/last) or refused (a glass the table has seen) is a
+// silent no-op, as it always was; `moveFlightGlass` is now the one place that
+// writes `position`.
+/** @deprecated removed in BT-L2 (after BT-C2 drops the flight-step importer). */
 export async function moveWine(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   const tastingId = String(formData.get("tasting_id") ?? "");
@@ -325,61 +337,74 @@ export async function moveWine(formData: FormData): Promise<void> {
 
   const { data: wines } = await supabase
     .from("wines")
-    .select("id, position")
+    .select("id")
     .eq("tasting_id", tastingId)
     .order("position");
   const ordered = wines ?? [];
   const idx = ordered.findIndex((w) => w.id === wineId);
   if (idx === -1) return;
-  const targetIdx = direction === "up" ? idx - 1 : idx + 1;
-  if (targetIdx < 0 || targetIdx >= ordered.length) return;
+  const toIndex = direction === "up" ? idx : idx + 2;
+  if (toIndex < 1 || toIndex > ordered.length) return;
 
-  const a = ordered[idx];
-  const b = ordered[targetIdx];
-  // temp slot (negative never collides with real positions)
-  await supabase.from("wines").update({ position: -1 }).eq("id", a.id);
-  await supabase.from("wines").update({ position: a.position }).eq("id", b.id);
-  await supabase.from("wines").update({ position: b.position }).eq("id", a.id);
-
-  revalidatePath(`/tastings/${tastingId}`);
+  await moveFlightGlass(tastingId, wineId, toIndex);
 }
 
-// Host removes a wine from a draft flight (the create sheet's per-row ✕).
-// Deletes the `wines` row — wine_answers / guesses cascade — then closes the
-// gap in `position` so the next add (count + 1) can't collide with a
-// surviving row on the (tasting_id, position) unique constraint. Shifting
-// ascending is safe: each row moves into the slot the previous one just left.
+// Removes a wine from the flight (the lobby's Remove, and the create sheet's
+// per-row ✕) — spec §3.3 item 12. `glassRemoveRefusal` names the same rule
+// `remove_flight_glass` enforces, so the app fails fast with its own copy
+// before touching anything; the RPC (host or adder, DRAFT clean-up, never a
+// started semi-blind flight, never while a later glass has been seen) is
+// still the floor. It deletes and renumbers in one transaction whoever the
+// adder is.
 export async function removeWine(
   tastingId: string,
   wineId: string,
 ): Promise<{ ok: true } | { error: string }> {
   const { supabase, user } = await requireUser();
-  const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return { error: "Only the host can remove wines." };
-  if (tasting.status !== "DRAFT") {
-    return { error: "Wines can only be removed before the tasting starts." };
-  }
 
-  const { data: wines } = await supabase
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("id, host_id, status, reveal_mode")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) return { error: "Tasting not found." };
+
+  const { data: wine } = await supabase
     .from("wines")
-    .select("id, position")
+    .select("id, position, is_revealed, reveal_step")
+    .eq("id", wineId)
     .eq("tasting_id", tastingId)
-    .order("position");
-  const ordered = wines ?? [];
-  const removed = ordered.find((w) => w.id === wineId);
-  if (!removed) return { error: "That wine is no longer in the flight." };
+    .maybeSingle();
+  if (!wine) return { error: "That wine is no longer in the flight." };
 
-  const { error } = await supabase.from("wines").delete().eq("id", wineId);
+  const { data: laterWines } = await supabase
+    .from("wines")
+    .select("is_revealed, reveal_step")
+    .eq("tasting_id", tastingId)
+    .gt("position", wine.position);
+  const laterGlassSeen = (laterWines ?? []).some(
+    (w) => w.is_revealed || w.reveal_step > 0,
+  );
+
+  const { data: isAdder } = await supabase.rpc("is_wine_adder", {
+    p_wine_id: wineId,
+  });
+
+  const refusal = glassRemoveRefusal({
+    tastingStatus: tasting.status,
+    revealMode: tasting.reveal_mode,
+    isRevealed: wine.is_revealed,
+    revealStep: wine.reveal_step,
+    viewerIsAdder: isAdder === true,
+    viewerIsHost: tasting.host_id === user.id,
+    laterGlassSeen,
+  });
+  if (refusal) return { error: refusal };
+
+  const { error } = await supabase.rpc("remove_flight_glass", {
+    p_wine_id: wineId,
+  });
   if (error) return { error: error.message };
-
-  for (const w of ordered) {
-    if (w.position > removed.position) {
-      await supabase
-        .from("wines")
-        .update({ position: w.position - 1 })
-        .eq("id", w.id);
-    }
-  }
 
   revalidatePath(`/tastings/${tastingId}`);
   return { ok: true };
