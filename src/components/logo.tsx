@@ -10,10 +10,24 @@
  */
 import { type SVGProps } from "react";
 
+// The brand hexes, for the places that must be a FIXED colour whatever the
+// theme: the app-icon tile, and the figure drawn on it.
 const BORDEAUX = "#5C1A2B";
 const GOLD = "#C3A25B";
 const GOLD_DEEP = "#B78E42";
 const PARCHMENT = "#F5EFE3";
+
+// ...and the same colours as tokens, for the places drawn straight onto the
+// page, which have to follow the theme. In light these resolve to exactly the
+// hexes above; in dark --primary is the rose #a8425a and --gold the lighter
+// #d4af6a, both of which read on near-black.
+//
+// This is not cosmetic. The wordmark defaulted to the literal BORDEAUX and
+// rendered #5C1A2B on the #1B1310 dark ground -- about 1.5:1, invisible -- on
+// the login and signup pages, which is the first screen anyone sees.
+const INK = "var(--primary)";
+const ACCENT = "var(--gold)";
+const ACCENT_DEEP = "var(--gold-deep)";
 
 function MarkPaths({
   figure,
@@ -60,11 +74,14 @@ type MarkProps = {
 export function BlindrMark({
   size = 40,
   onDark = false,
-  accent = GOLD,
-  knot = GOLD_DEEP,
+  accent = ACCENT,
+  knot = ACCENT_DEEP,
   ...rest
 }: MarkProps) {
-  const figure = onDark ? PARCHMENT : BORDEAUX;
+  // `onDark` means "drawn on the Bordeaux bar", which is Bordeaux in BOTH
+  // themes, so it stays the literal parchment. The other branch is drawn on
+  // the page and follows it.
+  const figure = onDark ? PARCHMENT : INK;
   return (
     <svg
       width={size}
@@ -116,8 +133,8 @@ export function BlindrAppIcon({
 /** "Blindr." wordmark. Requires the Cormorant Garamond font. */
 export function BlindrWordmark({
   size = 32,
-  color = BORDEAUX,
-  dot = GOLD,
+  color = INK,
+  dot = ACCENT,
   className,
   style,
 }: {
@@ -165,7 +182,7 @@ export function BlindrLockup({
       style={{ display: "inline-flex", alignItems: "center", gap, ...style }}
     >
       <BlindrAppIcon size={size} radius={Math.round(size * 0.24)} />
-      <BlindrWordmark size={size * 0.8} color={onDark ? PARCHMENT : BORDEAUX} />
+      <BlindrWordmark size={size * 0.8} color={onDark ? PARCHMENT : INK} />
     </span>
   );
 }
