@@ -249,6 +249,9 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
           "producer:producers(name), appellation:appellations(name))",
       )
       .eq("author_id", userId)
+      // A hidden-glass note (blind-tasting B8) carries neither identity until
+      // its glass is revealed — it counts as a rating only once resolved.
+      .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null")
       .order("tasted_on", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(RATING_ROWS),
@@ -259,7 +262,8 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     supabase
       .from("wset_notes")
       .select("catalog_wine_id, quality_score")
-      .eq("author_id", userId),
+      .eq("author_id", userId)
+      .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null"),
     supabase
       .from("cellar_lots")
       .select(

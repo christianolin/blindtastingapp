@@ -105,7 +105,10 @@ export default async function CellarPage({
     .from("wset_notes")
     .select("id, catalog_wine_id, quality_score, tasted_on")
     .eq("author_id", user.id)
-    .not("quality_score", "is", null);
+    .not("quality_score", "is", null)
+    // A hidden-glass note (blind-tasting B8) carries neither identity until
+    // its glass is revealed — it counts as a rating only once resolved.
+    .or("catalog_wine_id.not.is.null,unidentified_wine_id.not.is.null");
   const bestNote = new Map<string, { id: string; score: number; on: string }>();
   for (const n of (scoreRows ?? []) as unknown as Array<{
     id: string;
