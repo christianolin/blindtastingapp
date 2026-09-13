@@ -1,134 +1,129 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { Camera, ChevronRight, Plus, Search } from "lucide-react";
+import { useId, useState } from "react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { actionButtonClass } from "@/components/overview/action-button";
 import { cn } from "@/lib/utils";
-import { searchAddWine } from "./actions";
 import { ConsumeCheckbox } from "./cellar-view";
-import { bottlesLabel, catalogMeta, searchCellarMeta, tastedMeta } from "./row-format";
-import { consumeLabel } from "./scan-copy";
-import type { AddSource, SearchGroups, SearchViewProps } from "./types";
+import {
+  catalogMeta,
+  pourableBottles,
+  searchCellarMeta,
+  searchListGroups,
+  tastedMeta,
+  type SearchListGroup,
+} from "./row-format";
+import type { SearchViewProps, SheetRowAction } from "./types";
 
-const DEBOUNCE_MS = 250;
-const EMPTY: SearchGroups = { cellar: [], catalog: [], tasted: [] };
 const EMPTY_HINT = "Search by producer, wine or appellation";
 
+const GROUP_TITLE: Record<SearchListGroup["kind"], string> = {
+  cellar: "In your cellar",
+  catalog: "In the catalog",
+  tasted: "You have tasted before",
+};
+
+type ListRow = {
+  key: string;
+  source: "lot" | "catalog" | "tasted";
+  catalogWineId: string;
+  lotId?: string;
+  title: string;
+  meta: string;
+  imageUrl: string | null;
+  inFlight: boolean;
+};
+
+/** A group's rows with their metas; every row carries its own `inFlight`
+    (tasted rows included, sources-8). */
+function rowsOf(group: SearchListGroup): ListRow[] {
+  switch (group.kind) {
+    case "cellar":
+      return group.rows.map((r): ListRow => ({
+        key: `lot:${r.lotId}`,
+        source: "lot",
+        catalogWineId: r.catalogWineId,
+        lotId: r.lotId,
+        title: r.title,
+        meta: searchCellarMeta(r),
+        imageUrl: r.imageUrl,
+        inFlight: r.inFlight,
+      }));
+    case "catalog":
+      return group.rows.map((r): ListRow => ({
+        key: `catalog:${r.catalogWineId}`,
+        source: "catalog",
+        catalogWineId: r.catalogWineId,
+        title: r.title,
+        meta: catalogMeta(r),
+        imageUrl: r.imageUrl,
+        inFlight: r.inFlight,
+      }));
+    case "tasted":
+      return group.rows.map((r): ListRow => ({
+        key: `tasted:${r.catalogWineId}`,
+        source: "tasted",
+        catalogWineId: r.catalogWineId,
+        title: r.title,
+        meta: tastedMeta(r),
+        imageUrl: r.imageUrl,
+        inFlight: r.inFlight,
+      }));
+  }
+}
+
 /**
- * 7e — search instead of scanning. One list, three groups in the handoff's
- * order (your cellar → the catalog → wines you have tasted), every row adds
- * on tap through `onAdd`. The shell draws the ✕ / title header above this
- * view; this file owns the search row, the grouped list and the "Add it by
- * hand" footer.
+ * A5 — search instead of scanning. One list, grouped in the matrix's order
+ * (your cellar → the catalog → wines you have tasted), a wine you own listed
+ * once as its lot rows. Every row's action and affordance come from
+ * `matrix.row`: the + disc adds on tap, the chevron opens the note or the
+ * catalog page, and a disabled row reads `matrix.inFlightMeta`. The footer
+ * strip carries the consume checkbox whenever lot rows are listed and the
+ * matrix words one, then "Nothing matches?" · "Add it by hand".
  *
- * The shell keeps this view mounted (parked with `hidden`) so the field
- * exists before "Or search by name" is tapped and can be focused inside that
- * tap — there is no autofocus here on purpose (CLAUDE.md's combobox rule).
+ * The shell draws the header (✕, the matrix's eyebrow and title, and the Scan
+ * pill when the device can scan), holds the query in sheet state, runs the
+ * search and keeps this view mounted while hidden — so `inputRef` exists
+ * before "Or search wine catalog" is tapped and is focused inside that tap
+ * (CLAUDE.md's combobox rule). There is no autofocus here on purpose.
  */
 export function SearchView({
-  ctx,
-  onAdd,
-  onScan,
-  onByHand,
-  busy,
+  matrix,
+  query,
+  onQuery,
   inputRef,
-  hidden = false,
+  groups,
+  loading,
+  consume,
+  onConsume,
+  onRow,
+  onByHand,
+  busy = false,
+  error = null,
 }: SearchViewProps) {
   const inputId = useId();
-  const [query, setQuery] = useState("");
-  // Results are stored WITH the query they answer, so "searching" is derived
-  // (results lag the query) rather than a flag that can go stale on a race.
-  const [results, setResults] = useState<{ query: string; groups: SearchGroups } | null>(null);
-  const [failed, setFailed] = useState(false);
-  // Drawn down by default — the same default as the 7f cellar view and the
-  // desktop rows, so a lot tapped from search behaves like one tapped anywhere.
-  const [consume, setConsume] = useState(true);
-  const [addingKey, setAddingKey] = useState<string | null>(null);
+  // The row whose add is running shows its loader until `busy` settles.
+  const [tappedKey, setTappedKey] = useState<string | null>(null);
 
   const q = query.trim();
-  const destKind = ctx.destination?.kind ?? null;
-  // Taste & rate: a tap picks the wine whose note opens — nothing is added.
-  const rate = destKind === "rate";
-  // "In flight" is judged against the flight destination — or, with no
-  // destination, tonight's tasting, which is where the shell drops a lot. A
-  // rate pick pours into nothing, so it checks no tasting at all.
-  const tastingId =
-    ctx.destination?.kind === "flight"
-      ? ctx.destination.tastingId
-      : rate
-        ? undefined
-        : ctx.flightHint?.tastingId;
-  // The view is long-lived, so a return to it (or an add made meanwhile)
-  // re-runs the search: the "in flight" flags are only as fresh as the fetch.
-  const addedCount = ctx.added.length;
+  const list = q && groups ? searchListGroups(groups, matrix.searchGroups) : [];
+  const count = list.reduce((n, group) => n + group.rows.length, 0);
+  const lotsListed = list.some((group) => group.kind === "cellar");
 
-  useEffect(() => {
-    if (!q || hidden) return;
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      searchAddWine(q, { tastingId })
-        .then((groups) => {
-          if (cancelled) return;
-          setFailed(false);
-          setResults({ query: q, groups });
-        })
-        .catch(() => {
-          if (cancelled) return;
-          setFailed(true);
-          setResults({ query: q, groups: EMPTY });
-        });
-    }, DEBOUNCE_MS);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [q, tastingId, hidden, addedCount]);
-
-  const groups = q && results?.query === q ? results.groups : null;
-  const searching = Boolean(q) && !groups;
-
-  // A cellar bottle is already in the cellar — the group is pointless there.
-  const showCellar = destKind !== "cellar";
-  const cellar = showCellar && groups ? groups.cellar : [];
-  const catalog = groups?.catalog ?? [];
-  const tasted = groups?.tasted ?? [];
-  const found = cellar.length + catalog.length + tasted.length;
-  // The tasted group carries no flight flag of its own; the catalog group
-  // lists every visible hit, so its flags cover the same wines.
-  const inFlightIds = new Set(catalog.filter((r) => r.inFlight).map((r) => r.catalogWineId));
-  const pourable = cellar.filter((r) => r.drinkNow).reduce((sum, r) => sum + r.quantity, 0);
-  const consumeApplies = showCellar && destKind !== "catalog";
-
-  // Scan controls are touch-only (the device rule in use-camera.ts): the
-  // shell sets `ctx.isDesktop` on a mouse / trackpad device, which never
-  // shows this view anyway. On touch, the shell's header carries the Scan
-  // pill whenever a camera exists (add-wine-sheet.tsx); this one fills the
-  // remaining case — a touch device with no getUserMedia, where the camera
-  // view still offers Library. If the shell's pill is ever removed, this
-  // becomes `!ctx.isDesktop`.
-  const showScan = !ctx.isDesktop && !ctx.hasCamera;
-
-  const add = async (key: string, source: AddSource) => {
-    if (busy || addingKey) return;
-    setAddingKey(key);
-    try {
-      await onAdd(source);
-    } finally {
-      setAddingKey(null);
-    }
+  const tap = (row: ListRow, action: SheetRowAction) => {
+    if (busy) return;
+    setTappedKey(row.key);
+    onRow(
+      row.lotId === undefined
+        ? { source: row.source, catalogWineId: row.catalogWineId }
+        : { source: row.source, catalogWineId: row.catalogWineId, lotId: row.lotId },
+      action,
+    );
   };
-
-  // The lot carries its catalog wine so a rate pick needs no lookup.
-  const cellarSource = (row: SearchGroups["cellar"][number]): AddSource =>
-    destKind === "catalog"
-      ? { kind: "catalog", catalogWineId: row.catalogWineId }
-      : { kind: "lot", lotId: row.lotId, consume, catalogWineId: row.catalogWineId };
-
-  const pending = busy || addingKey !== null;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -144,138 +139,101 @@ export function SearchView({
             id={inputId}
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={EMPTY_HINT}
+            onChange={(e) => onQuery(e.target.value)}
+            placeholder={matrix.searchPlaceholder}
             autoComplete="off"
             enterKeyHint="search"
             className="h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-[9px] text-base shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-[15px]"
           />
           {q ? (
             <span className="shrink-0 text-[11.5px] text-muted-foreground" aria-live="polite">
-              {searching ? "Searching…" : `${found} found`}
+              {loading || !groups ? "Searching…" : matrix.resultCount(count)}
             </span>
           ) : null}
         </div>
-        {showScan ? (
-          <button
-            type="button"
-            onClick={onScan}
-            className="flex min-h-11 shrink-0 items-center gap-[6px] rounded-[8px] border border-border bg-background px-[11px] text-[11.5px] font-semibold text-primary transition-colors md:hover:border-gold md:hover:bg-white"
-          >
-            <Camera className="size-[14px]" aria-hidden />
-            Scan
-          </button>
-        ) : null}
       </div>
 
       {/* The list */}
       {!q ? (
         <Centered>{EMPTY_HINT}</Centered>
-      ) : searching ? (
+      ) : !groups || (loading && count === 0) ? (
         <Centered>
           <WineGlassLoader className="text-primary" />
           <span>Searching…</span>
         </Centered>
-      ) : found === 0 ? (
-        <Centered>
-          <span>No matches</span>
-          {failed ? <span>Couldn&rsquo;t search right now — try again.</span> : null}
-        </Centered>
+      ) : count === 0 ? (
+        <Centered>No matches</Centered>
       ) : (
         <div className="flex flex-col">
-          {cellar.length > 0 ? (
-            <section>
-              <GroupHeader
-                title="In your cellar"
-                note={pourable > 0 ? `${bottlesLabel(pourable)} you can pour tonight` : undefined}
-              />
-              {consumeApplies ? (
-                <ConsumeCheckbox
-                  variant="inline"
-                  checked={consume}
-                  onChange={setConsume}
-                  disabled={pending}
-                  label={consumeLabel(ctx.destination)}
-                />
-              ) : null}
-              {cellar.map((row) => (
-                <ResultRow
-                  key={row.lotId}
-                  title={row.title}
-                  meta={searchCellarMeta(row)}
-                  imageUrl={row.imageUrl}
-                  pick={rate}
-                  inFlight={row.inFlight}
-                  pending={addingKey === `lot:${row.lotId}`}
-                  disabled={pending}
-                  onClick={() => void add(`lot:${row.lotId}`, cellarSource(row))}
-                />
-              ))}
-            </section>
-          ) : null}
-          {catalog.length > 0 ? (
-            <section>
-              <GroupHeader title="In the catalog" />
-              {catalog.map((row) => (
-                <ResultRow
-                  key={row.catalogWineId}
-                  title={row.title}
-                  meta={catalogMeta(row)}
-                  imageUrl={row.imageUrl}
-                  pick={rate}
-                  inFlight={row.inFlight}
-                  pending={addingKey === `catalog:${row.catalogWineId}`}
-                  disabled={pending}
-                  onClick={() =>
-                    void add(`catalog:${row.catalogWineId}`, {
-                      kind: "catalog",
-                      catalogWineId: row.catalogWineId,
-                    })
+          {list.map((group) => {
+            const pourable = group.kind === "cellar" ? pourableBottles(group.rows) : 0;
+            return (
+              <section key={group.kind}>
+                <GroupHeader
+                  title={GROUP_TITLE[group.kind]}
+                  note={
+                    group.kind === "cellar" && matrix.cellarGroupSubtitle && pourable > 0
+                      ? matrix.cellarGroupSubtitle(pourable)
+                      : undefined
                   }
                 />
-              ))}
-            </section>
-          ) : null}
-          {tasted.length > 0 ? (
-            <section>
-              <GroupHeader title="You have tasted before" />
-              {tasted.map((row) => (
-                <ResultRow
-                  key={row.catalogWineId}
-                  title={row.title}
-                  meta={tastedMeta(row)}
-                  imageUrl={row.imageUrl}
-                  pick={rate}
-                  inFlight={inFlightIds.has(row.catalogWineId)}
-                  pending={addingKey === `tasted:${row.catalogWineId}`}
-                  disabled={pending}
-                  onClick={() =>
-                    void add(`tasted:${row.catalogWineId}`, {
-                      kind: "catalog",
-                      catalogWineId: row.catalogWineId,
-                    })
-                  }
-                />
-              ))}
-            </section>
-          ) : null}
+                {rowsOf(group).map((row) => {
+                  const cell = matrix.row({
+                    source: row.source,
+                    inFlight: row.inFlight,
+                    owned: row.source === "lot",
+                  });
+                  return (
+                    <ResultRow
+                      key={row.key}
+                      title={row.title}
+                      meta={row.meta}
+                      imageUrl={row.imageUrl}
+                      label={cell.label}
+                      affordance={cell.affordance}
+                      disabled={cell.disabled}
+                      disabledMeta={matrix.inFlightMeta}
+                      pending={busy && tappedKey === row.key}
+                      locked={busy}
+                      onClick={() => tap(row, cell.action)}
+                    />
+                  );
+                })}
+              </section>
+            );
+          })}
         </div>
       )}
 
-      {/* Footer — pinned to the bottom of the sheet's scroll region. */}
-      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 items-center gap-[10px] border-t border-border bg-background p-[11px_16px] pb-[max(22px,env(safe-area-inset-bottom))] sm:pb-[11px] md:px-[22px]">
-        <span className="flex-1 text-[12.5px] text-muted-foreground">Nothing matches?</span>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onByHand}
-          className={actionButtonClass(
-            "outline",
-            "w-auto px-[18px] py-[12px] text-[14px] disabled:opacity-60 max-md:rounded-[10px] max-md:py-[12px]",
-          )}
-        >
-          Add it by hand
-        </button>
+      {/* Footer strip — pinned to the bottom of the sheet's scroll region. */}
+      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-[10px] border-t border-border bg-background p-[11px_16px] pb-[max(22px,env(safe-area-inset-bottom))] sm:pb-[11px] md:px-[22px]">
+        {lotsListed && matrix.consumeLabel ? (
+          <ConsumeCheckbox
+            checked={consume}
+            onChange={onConsume}
+            disabled={busy}
+            label={matrix.consumeLabel}
+          />
+        ) : null}
+        {error ? (
+          <p role="alert" className="text-[12.5px] text-rose">
+            {error}
+          </p>
+        ) : null}
+        <div className="flex items-center gap-[10px]">
+          <span className="flex-1 text-[12.5px] text-muted-foreground">Nothing matches?</span>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onByHand}
+            className={actionButtonClass(
+              "outline",
+              "w-auto px-[18px] py-[12px] text-[14px] disabled:opacity-60 max-md:rounded-[10px] max-md:py-[12px]",
+            )}
+          >
+            Add it by hand
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -291,40 +249,44 @@ function GroupHeader({ title, note }: { title: string; note?: string }) {
 }
 
 // One result: 28×38 thumb, title, meta, and the trailing disc — the same
-// gold-outlined "+" on every row, a chevron instead for a rate pick (which
-// adds nothing). Owner feedback 2026-09-12: the handoff's filled bordeaux
-// disc and gold tint on the first cellar row read as a different action, and
-// this view has no ↵ shortcut for a marked row to stand for. A wine already
-// in the flight is not tappable and reads "In flight".
+// gold-outlined disc on every row (owner feedback 2026-09-12), holding a "+"
+// for an add or a chevron for a pick or an open, as `matrix.row` says. A
+// disabled row (a wine already in the flight) is not tappable and reads the
+// matrix's "in flight" instead.
 function ResultRow({
   title,
   meta,
   imageUrl,
-  pick = false,
-  inFlight,
-  pending,
+  label,
+  affordance,
   disabled,
+  disabledMeta,
+  pending,
+  locked,
   onClick,
 }: {
   title: string;
   meta: string;
   imageUrl: string | null;
-  /** Rate destination: the tap picks the wine for its note. */
-  pick?: boolean;
-  inFlight: boolean;
-  pending: boolean;
+  /** What the tap does ("Add as glass 4", "+1 bottle", "Start the note"), for screen readers. */
+  label: string;
+  affordance: "plus" | "chevron";
   disabled: boolean;
+  disabledMeta: string;
+  pending: boolean;
+  /** Another add is running: nothing takes a tap. */
+  locked: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      disabled={inFlight || disabled}
+      disabled={disabled || locked}
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-[11px] border-b border-border-light p-[12px_16px] text-left transition-colors md:px-[22px]",
-        !inFlight && "md:hover:bg-background",
-        inFlight && "cursor-default",
+        "flex min-h-11 w-full items-center gap-[11px] border-b border-border-light p-[12px_16px] text-left transition-colors md:px-[22px]",
+        !disabled && "md:hover:bg-background",
+        disabled && "cursor-default",
       )}
     >
       <HatchThumb src={imageUrl} width={28} height={38} />
@@ -334,21 +296,24 @@ function ResultRow({
         </span>
         <span className="truncate text-[11.5px] text-muted-foreground">{meta}</span>
       </span>
-      {inFlight ? (
-        <span className="shrink-0 text-[11.5px] text-muted-foreground">In flight</span>
+      {disabled ? (
+        <span className="shrink-0 text-[11.5px] text-muted-foreground">{disabledMeta}</span>
       ) : (
-        <span
-          aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gold text-primary"
-        >
-          {pending ? (
-            <WineGlassLoader size={16} />
-          ) : pick ? (
-            <ChevronRight className="size-4" strokeWidth={2.5} />
-          ) : (
-            <Plus className="size-4" strokeWidth={2.5} />
-          )}
-        </span>
+        <>
+          <span
+            aria-hidden
+            className="flex size-7 shrink-0 items-center justify-center rounded-full border-[1.5px] border-gold text-primary"
+          >
+            {pending ? (
+              <WineGlassLoader size={16} />
+            ) : affordance === "chevron" ? (
+              <ChevronRight className="size-4" strokeWidth={2.5} />
+            ) : (
+              <Plus className="size-4" strokeWidth={2.5} />
+            )}
+          </span>
+          <span className="sr-only">{label}</span>
+        </>
       )}
     </button>
   );

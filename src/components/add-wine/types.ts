@@ -1,6 +1,8 @@
+import type { Ref } from "react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
+import type { CellarFilter, CellarSheet } from "./row-format";
 import type { ScanItem } from "./sheet-state";
 
 // ---------------------------------------------------------------------------
@@ -166,30 +168,68 @@ export type FollowUpViewProps = {
   onDone: () => void;
 };
 
+/** What a result row does on tap, per `matrix.row` (D9). */
+export type SheetRowAction = ReturnType<SheetMatrix["row"]>["action"];
+
+/** A5: search, one grouped list. The shell keeps this view mounted and hidden
+    (spec §C.4 rule 9), holds the query in sheet state and runs `searchAddWine`;
+    the field exists before "Or search wine catalog" is tapped, so the shell can
+    focus `inputRef` inside that tap. Every destination rule comes from `matrix`. */
 export type SearchViewProps = {
-  ctx: SheetContext;
-  onAdd: (source: AddSource) => Promise<void>;
-  onScan: () => void;
+  matrix: SheetMatrix; query: string; onQuery: (q: string) => void; inputRef: Ref<HTMLInputElement>;
+  groups: SearchGroups | null; loading: boolean; consume: boolean; onConsume: (v: boolean) => void;
+  onRow: (row: { source: "lot" | "catalog" | "tasted"; catalogWineId: string; lotId?: string }, action: SheetRowAction) => void;
   onByHand: () => void;
-  onBack: () => void;
-  busy: boolean;
-  /** The shell keeps this view mounted (display:none) while another view is
-      up, so the search field already exists when "Or search by name" is
-      tapped and can be focused synchronously inside that tap — the only way
-      a phone raises its keyboard (CLAUDE.md's combobox rule). `hidden` tells
-      the view it is parked so it does not fetch on a stale query. */
-  inputRef?: import("react").Ref<HTMLInputElement>;
-  hidden?: boolean;
+  /** An add is running (spec §C.4 rule 11): the tapped row shows its loader and
+      no row takes a second tap until it settles. */
+  busy?: boolean;
+  /** A failed add's message, shown in the footer strip. */
+  error?: string | null;
 };
 
+/** A6: the cellar as a source. The shell loads the sheet (`listCellarForSheet`),
+    keeps filter, selection and consume in sheet state, and renders the header:
+    the matrix title as eyebrow, "From my cellar", "{n} bottles". */
 export type CellarViewProps = {
-  ctx: SheetContext;
-  onAdd: (source: AddSource) => Promise<void>;
-  onBack: () => void;
-  busy: boolean;
-  /** The bottle total once the cellar has loaded — the shell shows it in
-      the header's trailing slot ("38 bottles", 7f). */
-  onLoaded?: (totalBottles: number) => void;
+  matrix: SheetMatrix; sheet: CellarSheet | null; filter: CellarFilter; onFilter: (f: CellarFilter) => void;
+  selectedLotId: string | null; onSelect: (lotId: string | null) => void; consume: boolean; onConsume: (v: boolean) => void;
+  onAdd: () => void;
+  /** The empty cellar's "Scan or search instead" (unchanged): back to the home
+      view. A failed load offers the same way out. */
+  onScanOrSearch: () => void;
+  /** `listCellarForSheet` failed while `sheet` is still null: the list area reads
+      "Couldn't load your cellar right now." in place of the spinner (round 1's
+      failed state). Ignored once a sheet is in hand. */
+  loadFailed?: boolean;
+  /** The add is running: the primary shows its loader and takes no second tap. */
+  busy?: boolean;
+  /** A failed add's message, shown above the primary. */
+  error?: string | null;
+};
+
+/** The lot step behind B1/B2 and D3's "Add it to my cellar": how many bottles,
+    the rack and an optional price, with the merge card when the wine is already
+    held. Its source is always a catalog wine (the adds hook writes an identity
+    to the catalog first), so the duplicate check always runs. The fields live
+    in `state.lot`; the step writes nothing itself. */
+export type CellarLotStepProps = {
+  matrix: SheetMatrix;
+  catalogWineId: string;
+  /** The wine's display label, set under "Into your cellar". */
+  title: string | null;
+  quantity: number; rack: string; price: string;
+  onField: (field: "quantity" | "rack" | "price", value: number | string) => void;
+  /** The price currency (the profile's preferred one). */
+  currency: string;
+  busy: boolean; error: string | null;
+  /** The primary ("Add to cellar") and the merge card's "Keep as a separate
+      lot": a new lot from `quantity`, `rack` and `price`. */
+  onAdd: () => void;
+  /** "Add N to the existing lot": N = `quantity` more bottles on a lot already held. */
+  onMerge: (target: { lotId: string; quantity: number }) => void;
+  /** Plan amendment 18 (D17), "Don't add it": nothing is written. The shell
+      dispatches `lotSkipped` with this lot, which "Open it" then links to. */
+  onSkip: (lotId: string) => void;
 };
 
 export type ByHandFormProps = {
