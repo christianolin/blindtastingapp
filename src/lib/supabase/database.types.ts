@@ -1706,6 +1706,26 @@ export type Database = {
           joined_names: string[] | null; // signed-in callers only
         }[];
       };
+      // 20260914094500 (blind-tasting spec §9.4, B8): may the caller attach a
+      // note to this tasting glass? True for its tasting's host and JOINED
+      // participants. Authenticated only.
+      can_note_tasting_wine: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914094500 (spec §9.4): whether a tasting glass is revealed (false
+      // for an unknown id). Authenticated only.
+      is_tasting_wine_revealed: {
+        Args: { p_wine_id: string };
+        Returns: boolean;
+      };
+      // 20260914094500 (spec §9.4): the hue-to-colour mapping
+      // wset_notes_check_hue enforces. A null hue or colour, and an ORANGE
+      // wine, fit anything.
+      wset_hue_fits_colour: {
+        Args: { p_hue: WsetColourHue | null; p_colour: WineColour | null };
+        Returns: boolean;
+      };
     };
   };
 };
