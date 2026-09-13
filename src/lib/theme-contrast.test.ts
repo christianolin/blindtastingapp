@@ -20,7 +20,13 @@ function block(selector: string): Record<string, string> {
 }
 
 const light = block(":root");
-const dark = block("\\.dark");
+const darkOnly = block("\\.dark");
+// The .dark block OVERRIDES :root, it does not replace it: a token dark leaves
+// alone still resolves to its light value at runtime. Merging the two is what
+// the browser actually computes, and so what these ratios must be measured on.
+// --on-accent is the case in point — declared once, deliberately the same ink
+// in both themes, and absent from .dark entirely.
+const dark = { ...light, ...darkOnly };
 
 /** Relative luminance, WCAG 2.x. Hex only -- the rgba() tokens are borders. */
 function luminance(hex: string): number {
@@ -61,8 +67,8 @@ describe.each([
   it("inline links clear AA on both grounds they appear on", () => {
     // The regression this file was written for. --primary was serving as link
     // ink and measured 2.89:1 on --card in dark.
-    expect(ratio(t, "--link", "--background")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(t, "--link", "--card")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--primary-ink", "--background")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--primary-ink", "--card")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("the filled primary button clears AA for its own label", () => {
@@ -70,6 +76,14 @@ describe.each([
     // would have dropped this pair to 3.53:1. Both assertions have to hold, and
     // that is why they are two tokens.
     expect(ratio(t, "--primary-foreground", "--primary")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("labels on the gold accent stay readable, in both themes", () => {
+    // Gold is a LIGHT surface whichever theme is on. Letting its label follow
+    // --foreground put parchment on gold in dark: 1.81:1, the worst contrast
+    // in the app. --on-accent is fixed dark ink for exactly this.
+    expect(ratio(t, "--on-accent", "--gold")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--on-accent", "--gold-deep")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("the destructive colour is readable as text on both grounds", () => {
@@ -133,10 +147,15 @@ describe("the dark palette's coverage of the light one", () => {
     // --miss is allowed but no longer absent: BT-D1 set it explicitly, to the
     // same value it already had in light. Kept in the list because it is still
     // legitimately either way.
+    //
+    // --on-accent is the same kind of exception from the other direction: it is
+    // ink for the GOLD surface, and gold is light in both themes, so the ink
+    // must NOT flip with the theme. That is the whole point of it.
     const allowed = new Set([
       "--radius", "--miss", "--console", "--console-card", "--console-ink",
+      "--on-accent",
     ]);
-    const missing = Object.keys(light).filter((k) => !(k in dark) && !allowed.has(k));
+    const missing = Object.keys(light).filter((k) => !(k in darkOnly) && !allowed.has(k));
     expect(missing).toEqual([]);
   });
 });
