@@ -31,6 +31,7 @@ import {
   skippedEyebrow,
   type TwoTapState,
 } from "@/lib/console-copy";
+import { HOW_THE_TABLE_SPLIT } from "@/lib/semi-blind-copy";
 import { setTastingPaused, skipToGlass } from "../pacing-actions";
 import { finishTasting, type LobbyActionState } from "../actions";
 import {
@@ -75,7 +76,9 @@ export type ConsoleGlass = {
   locked: number;
   eligible: number;
   notLockedNames: string[];
-  facts: { label: string; value: string }[];
+  /** `correct` marks the row gold — only ever set on a semi-blind "How the
+      table split" row, the candidate the glass turned out to be. */
+  facts: { label: string; value: string; correct?: boolean }[];
   /** Why this glass can't be revealed yet — its details are unfinished
       ("Finish glass 3's details before revealing"). Null when it can. */
   refusal: string | null;
@@ -273,6 +276,11 @@ export function HostConsole({ data }: { data: ConsoleData }) {
   const showRevealAll =
     canReveal && data.guidedLive && glass !== null && glass.revealStep < glass.steps.length;
   const canSkip = !dwelling && data.skipTo !== null;
+  // Semi-blind never step-reveals (guidedLive is BLIND-only), so the full
+  // reveal is its only button — spec §7.3 item 6's "one gold 'Reveal glass
+  // {N}'", replacing the blind flow's generic label.
+  const fullRevealLabel =
+    glass !== null && data.isSemiBlind ? `Reveal glass ${glass.number}` : "Reveal the whole glass";
 
   const eyebrowText = data.finished
     ? "Finished · you hosted"
@@ -565,8 +573,10 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                         // An unfinished glass has no answer key, so a full
                         // reveal is not a primary action — the control stays on
                         // screen, inert, with the reason under it (spec §C.8).
+                        // Blind keeps its existing blocked-state wording; only
+                        // semi-blind's label changes here (BT-S4).
                         <button type="submit" disabled className={cn(SECONDARY, "max-lg:w-full")}>
-                          Reveal everything
+                          {data.isSemiBlind ? fullRevealLabel : "Reveal everything"}
                         </button>
                       ) : (
                         <button
@@ -580,7 +590,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                               Revealing…
                             </>
                           ) : (
-                            "Reveal the whole glass"
+                            fullRevealLabel
                           )}
                         </button>
                       )}
@@ -719,9 +729,15 @@ export function HostConsole({ data }: { data: ConsoleData }) {
           {glass !== null ? (
             <div className="mt-auto flex flex-col gap-2 border-t border-background/12 pt-[14px]">
               <Eyebrow size="md" className="text-console-ink">
-                {/* S7b: "This glass, so far" on phones. */}
-                <span className="lg:hidden">This glass, so far</span>
-                <span className="hidden lg:inline">This glass</span>
+                {data.isSemiBlind ? (
+                  HOW_THE_TABLE_SPLIT
+                ) : (
+                  <>
+                    {/* S7b: "This glass, so far" on phones. */}
+                    <span className="lg:hidden">This glass, so far</span>
+                    <span className="hidden lg:inline">This glass</span>
+                  </>
+                )}
               </Eyebrow>
               {glass.facts.length === 0 ? (
                 <p className="text-[12.5px] text-console-ink">
@@ -732,8 +748,15 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               ) : (
                 glass.facts.map((fact) => (
                   <span key={fact.label} className="flex justify-between gap-3 text-[12.5px]">
-                    <span className="text-console-ink">{fact.label}</span>
-                    <span className="truncate tabular-nums">{fact.value}</span>
+                    <span className="min-w-0 truncate text-console-ink">{fact.label}</span>
+                    <span
+                      className={cn(
+                        "shrink-0 truncate tabular-nums",
+                        fact.correct && "font-bold text-gold-light",
+                      )}
+                    >
+                      {fact.value}
+                    </span>
                   </span>
                 ))
               )}

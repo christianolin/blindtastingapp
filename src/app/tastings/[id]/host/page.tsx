@@ -23,6 +23,9 @@ import { keyLabel, type RevealKey } from "@/lib/reveal-rows-math";
 import { NEXT_ATTRIBUTE, nextChipLabel, stepRevealApplies } from "@/lib/console-copy";
 import { currentGlass as pointerCurrentGlass, type PointerGlass } from "@/lib/pour-pointer";
 import { skipPlan } from "@/lib/pacing-guards";
+import { getSemiBlindBoard, getSemiBlindCandidates } from "@/lib/semi-blind-data";
+import type { BoardGlass } from "@/lib/semi-blind-board";
+import { candidateLabel } from "@/lib/semi-blind-copy";
 import {
   HostConsole,
   type ConsoleData,
@@ -306,6 +309,22 @@ export default async function HostConsolePage({
       ),
     );
 
+  // Semi-blind's "How the table split" and "Matched this glass" (spec §7.3
+  // item 6) read only get_semi_blind_board/get_semi_blind_candidates, never
+  // the guesses table's own picked-wine column — the RPCs speak in opaque
+  // candidate keys the same as the participant board (BT-S3), so a stray
+  // host-side read of that column can never reappear here.
+  const boardGlasses: BoardGlass[] = wines.map((w, i) => ({
+    wineId: w.id,
+    glass: i + 1,
+    isRevealed: w.is_revealed,
+    revealStep: w.reveal_step,
+    ownBottle: w.contributor_participant_id === hostParticipant?.id,
+  }));
+  const [semiBlindBoard, semiBlindCandidates] = isSemiBlind
+    ? await Promise.all([getSemiBlindBoard(tastingId, boardGlasses), getSemiBlindCandidates(tastingId)])
+    : [null, null];
+
   function buildGlass(wine: WineRow, index: number, isCurrent: boolean): ConsoleGlass {
     const refusal = revealRefusal(incompleteGlasses, wine.id);
     const eligible = eligibleFor(wine);
@@ -387,8 +406,11 @@ export default async function HostConsolePage({
       }
       // showIdentity stays false: needsRpc is only true while unrevealed.
     } else if (isSemiBlind) {
-      // Left for BT-S4/BT-S5 (plan Does): the matching-board fact and the
-      // host-provides-early identity rule are unchanged from T9.
+      // T9's host-provides-early identity rule is unchanged: the host sees
+      // their own answer key before the reveal (they wrote it). "How the
+      // table split" and the matched count are gated on the glass actually
+      // being revealed — spec §7.3 item 6, the same "nothing before, facts
+      // after" rule a normal blind glass's facts already follow.
       const answer = answerByWineId.get(wine.id) ?? null;
       showIdentity = answer !== null && (hostProvides || wine.is_revealed);
       if (showIdentity && answer) {
@@ -409,13 +431,21 @@ export default async function HostConsolePage({
           .filter(Boolean)
           .join(" · ");
       }
-      const categoryVisible = hostProvides || wine.is_revealed;
-      if (answer && categoryVisible) {
-        const glassGuesses = (guessContentByWineId.get(wine.id) ?? []).filter((g) =>
-          eligibleIds.has(g.participant_id),
-        );
-        const matched = glassGuesses.filter((g) => g.guessed_wine_id === wine.id).length;
-        facts = [{ label: "Matched this glass", value: `${matched} of ${eligible.length}` }];
+      if (wine.is_revealed && semiBlindBoard && semiBlindCandidates) {
+        const trueKey = semiBlindBoard.revealedKeyByGlass[wine.id] ?? null;
+        const cardByKey = new Map(semiBlindCandidates.cards.map((c) => [c.key, c]));
+        const splitRows = semiBlindBoard.splitByGlass[wine.id] ?? [];
+        const matched = splitRows.find((row) => row.key === trueKey)?.count ?? 0;
+        facts = [
+          ...splitRows.map((row) => ({
+            label: candidateLabel(
+              cardByKey.get(row.key) ?? { producer: null, wineName: null, vintageLabel: "" },
+            ),
+            value: String(row.count),
+            correct: row.key === trueKey,
+          })),
+          { label: "Matched this glass", value: `${matched} of ${eligible.length}` },
+        ];
       }
     } else {
       const answer = answerByWineId.get(wine.id) ?? null;
