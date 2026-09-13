@@ -1,41 +1,73 @@
 -- M8 guess_lock_pin: a locked guess keeps its answers until it is unlocked.
 --
--- Blind-tasting v3, plan task BT-SQL8: spec
+-- Blind-tasting v3, plan tasks BT-SQL8 and BT-SQL8x: spec
 -- docs/superpowers/specs/2026-09-12-blind-tasting-v3-design.md §8.4 (the
--- function and trigger below are that SQL, verbatim) and §15 M8; ledger B7
--- (locked rows keep their answers); map PLAY-17 (the server refusal).
--- Written against the LIVE state (read-only checks, 2026-09-13): guesses
--- carries exactly the non-internal triggers guesses_block_after_reveal,
--- guesses_pin_identity and guesses_set_updated_at; live tail 20260913180000.
+-- function and trigger below are that SQL plus the client-role scope of plan
+-- refinement 24) and §15 M8; ledger B7 (locked rows keep their answers); map
+-- PLAY-17 (the server refusal).
+-- Written against the LIVE state (read-only checks, 2026-09-13; live tail
+-- 20260914092500, M1–M3 applied):
+-- * guesses carries exactly the non-internal triggers guesses_block_after_reveal,
+--   guesses_pin_identity and guesses_set_updated_at;
+-- * UPDATE on guesses is granted to authenticated (14 columns), service_role and
+--   the owner postgres; the only members of anon, authenticated and service_role
+--   are postgres and the no-inherit authenticator;
+-- * the only functions that insert into or update guesses are reveal_wine,
+--   reveal_next_category, score_own_guess and reveal_own_next_category.
 -- This migration recreates no function and no policy.
 --
 -- What it does. A BEFORE UPDATE row trigger on public.guesses refuses, with
--- SQLSTATE 42501, any change to a locked row's answers (the ten guess fields
--- and guessed_wine_id) while the row stays locked (old.locked_at and
--- new.locked_at both set). It lets through:
--- * locking and unlocking (locked_at alone), and an unlock that edits in the
---   same statement (new.locked_at is null): "Change it" unlocks first;
--- * reveal_wine, reveal_next_category and score_own_guess, which write only the
---   *_points columns, total_points and scored_at (their live bodies are pinned
---   below, so a changed scorer fails this file instead of the trigger);
--- * the one change allowed on a locked row: guessed_wine_id becoming null while
---   every other answer stays, which is guesses_guessed_wine_id_fkey's
---   ON DELETE SET NULL when the picked glass is deleted, for example inside a
---   tasting delete that reaches the row before or after its own cascade;
--- * §10's pool release (M9b), which clears guessed_wine_id and locked_at
---   together.
+-- SQLSTATE 42501, a client's change to a locked row's answers (the ten guess
+-- fields and guessed_wine_id) while the row stays locked (old.locked_at and
+-- new.locked_at both set).
+-- * Who is bound: anon and authenticated, whether the statement runs as that
+--   role (current_user) or for a request whose JWT names it
+--   (request.jwt.claims; a SECURITY DEFINER function or a foreign-key action
+--   runs as the owner inside the same request). service_role, and the owner or
+--   a superuser outside any client request, pass: maintenance that repoints
+--   guesses foreign keys is never blocked by a locked row
+--   (scripts/dedupe-producer-orthographic-variants.mjs runs as service_role;
+--   scripts/fix-lwin-producer-titles.mjs and data migrations run as postgres).
+--   Nothing in src writes guesses with the service-role client; its only use
+--   there is inviteUserByEmail.
+-- * What a client may still do to a locked row:
+--   - lock and unlock (locked_at alone), and unlock while editing in the same
+--     statement (new.locked_at is null): "Change it" unlocks first;
+--   - run the functions that write guesses. They assign only reveal_step, the
+--     *_points columns, total_points and scored_at: reveal_wine,
+--     reveal_next_category and score_own_guess (EXECUTE: authenticated), and
+--     reveal_own_next_category (EXECUTE: service_role only; nothing in src calls
+--     it). Their bodies are pinned below. Any other function whose body inserts
+--     into or updates guesses fails this file, except M9a's
+--     assign_semi_blind_match and clear_semi_blind_match (spec §10.4 c), which
+--     refuse a locked row themselves before they write;
+--   - let guessed_wine_id become null while every other answer stays:
+--     guesses_guessed_wine_id_fkey's ON DELETE SET NULL when a client request
+--     deletes the picked glass (the host through RLS, or a SECURITY DEFINER
+--     function running for one, such as M6's remove_flight_glass);
+--   - §10's pool release (M9b), which clears guessed_wine_id and locked_at
+--     together.
 --
 -- Security. The function is SECURITY INVOKER with a pinned search_path and only
 -- refuses. There is no read path, so rule 1 is unaffected (spec §16 lists no M8
 -- row). RLS filters another taster's row before any BEFORE UPDATE trigger runs,
--- so the refusal is no oracle about anyone else's lock. The 093000 client-column
--- privileges, guesses_pin_identity and guesses_block_after_reveal stay as they
--- are, and a whole-tasting delete still passes guesses_block_after_reveal (one
--- statement deletes every glass before the FK actions on guesses run).
+-- so the refusal is no oracle about anyone else's lock. A client cannot lift the
+-- pin: its direct writes run as authenticated whatever its JWT claims; PostgREST
+-- sets request.jwt.claims from the verified token and exposes no set_config; the
+-- service-role key never leaves the server. The pre-state checks fail unless the
+-- UPDATE grantees, the role memberships and the writer functions are the ones
+-- above. The 093000 client-column privileges, guesses_pin_identity and
+-- guesses_block_after_reveal stay as they are, and a whole-tasting delete still
+-- passes guesses_block_after_reveal (one statement deletes every glass before
+-- the FK actions on guesses run).
 --
--- Deploy: after add-wine V2 (the deployed ladder can race a debounced save
--- against lockGuess, which this surfaces as an error). Applied live by the main
--- session in BT-M8, in version order after M7.
+-- Deploy gate (plan BT-SQL8 "Deploy gate"; applied in BT-M8). Two deployed paths
+-- rewrite locked rows and would surface this refusal raw: the ladder's full-row
+-- submitGuess (a save racing lockGuess, or a second tab) and the semi-blind batch
+-- submitAllMatchGuesses (it skips only scored rows). So this file applies only
+-- once a Ready production deployment contains BT-Y1, BT-S2 and BT-S3, which
+-- replace both: after M9a and before M9b, out of version order. A version below
+-- the live tail is fine while it is absent.
 --
 -- No begin/commit: the applier owns the transaction. Temp tables carry the
 -- pre-migration state into the post-state assertions and are dropped at the end.
@@ -60,7 +92,8 @@ from unnest(array[
   'public.set_updated_at()',
   'public.reveal_wine(uuid)',
   'public.reveal_next_category(uuid,smallint)',
-  'public.score_own_guess(uuid)'
+  'public.score_own_guess(uuid)',
+  'public.reveal_own_next_category(uuid,smallint)'
 ]) as s (sig)
 left join pg_proc p on p.oid = to_regprocedure(s.sig);
 
@@ -118,7 +151,8 @@ begin
     ('public.pin_guess_identity()', 'fd9130fc22af9fd6aaeb0b769c3a3c4d'),
     ('public.reveal_wine(uuid)', '13923813da0f470fe2d1ffd3ac445625'),
     ('public.reveal_next_category(uuid,smallint)', '6a08183662534db0d212b2412d729ac2'),
-    ('public.score_own_guess(uuid)', 'f7acab278d1a88558b1e35b4370e72e4')
+    ('public.score_own_guess(uuid)', 'f7acab278d1a88558b1e35b4370e72e4'),
+    ('public.reveal_own_next_category(uuid,smallint)', '7ed3b1d262563ee6e699ced8c2811f87')
   ) as e (sig, src_md5)
   left join guesses_101500_functions f on f.sig = e.sig
   where f.oid is null or f.src_md5 is distinct from e.src_md5;
@@ -127,6 +161,62 @@ begin
   end if;
   if (select oid from guesses_101500_functions where sig = 'public.set_updated_at()') is null then
     raise exception 'set_updated_at() missing pre-migration';
+  end if;
+
+  -- Every function that inserts into or updates guesses is a writer whose pass-through was
+  -- verified: the four pinned above, or M9a's two RPCs (they refuse a locked row before they
+  -- write). Any other writer has to be probed against the lock pin first.
+  select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text) into v_text
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname not in ('pg_catalog', 'information_schema')
+    and p.prosrc ~* '(insert\s+into|update)\s+(only\s+)?(public\.)?"?guesses"?\M'
+    and not exists (
+      select 1
+      from unnest(array[
+        to_regprocedure('public.reveal_wine(uuid)'),
+        to_regprocedure('public.reveal_next_category(uuid,smallint)'),
+        to_regprocedure('public.score_own_guess(uuid)'),
+        to_regprocedure('public.reveal_own_next_category(uuid,smallint)'),
+        to_regprocedure('public.assign_semi_blind_match(uuid,text)'),
+        to_regprocedure('public.clear_semi_blind_match(uuid)')
+      ]) as known (f)
+      where known.f::oid = p.oid
+    );
+  if v_text is not null then
+    raise exception 'functions outside the verified writer list insert into or update guesses (probe them against the lock pin first): %', v_text;
+  end if;
+
+  -- The role scope binds anon and authenticated, so every other role holding UPDATE on guesses
+  -- must be service_role or the owner (superusers need no grant) ...
+  select string_agg(distinct g.grantee, ', ') into v_text
+  from (
+    select case when x.grantee = 0 then 'PUBLIC' else pg_get_userbyid(x.grantee)::text end as grantee
+    from pg_class c, lateral aclexplode(c.relacl) x
+    where c.oid = 'public.guesses'::regclass and x.privilege_type = 'UPDATE'
+    union all
+    select case when x.grantee = 0 then 'PUBLIC' else pg_get_userbyid(x.grantee)::text end
+    from pg_attribute a, lateral aclexplode(a.attacl) x
+    where a.attrelid = 'public.guesses'::regclass and a.attnum > 0 and not a.attisdropped
+      and x.privilege_type = 'UPDATE'
+  ) as g
+  where g.grantee not in ('anon', 'authenticated', 'service_role',
+                          (select pg_get_userbyid(c.relowner)::text from pg_class c
+                           where c.oid = 'public.guesses'::regclass));
+  if v_text is not null then
+    raise exception 'UPDATE on guesses is held outside anon, authenticated, service_role and the owner: %', v_text;
+  end if;
+
+  -- ... and no other non-superuser role uses the anon or authenticated grants as itself (a member
+  -- without inheritance, like authenticator, must SET ROLE and is then bound as that role).
+  select string_agg(r.rolname::text, ', ' order by r.rolname) into v_text
+  from pg_roles r
+  where r.rolname not in ('anon', 'authenticated')
+    and not r.rolsuper
+    and r.oid <> (select c.relowner from pg_class c where c.oid = 'public.guesses'::regclass)
+    and (pg_has_role(r.oid, 'anon', 'USAGE') or pg_has_role(r.oid, 'authenticated', 'USAGE'));
+  if v_text is not null then
+    raise exception 'roles inherit the anon or authenticated privileges without being bound by the lock pin: %', v_text;
   end if;
 
   -- The columns the row comparison names, with their live types.
@@ -164,16 +254,30 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- Spec §8.4, verbatim.
+-- Spec §8.4, with the client-role scope of plan refinement 24 (BT-SQL8x).
 -- ---------------------------------------------------------------------------
 -- A locked guess keeps its answers until it is unlocked. Locking and unlocking
 -- (locked_at alone) and the scoring functions (score columns only) pass.
 create or replace function public.guesses_refuse_locked_edit()
 returns trigger language plpgsql set search_path = public as $$
+declare
+  -- The role the request's JWT names (the expression auth.role() uses).
+  v_request_role text := coalesce(
+    nullif(current_setting('request.jwt.claim.role', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role');
 begin
+  -- The pin binds the client roles, anon and authenticated: a statement run as
+  -- one of them, or run for a request whose JWT names one (a SECURITY DEFINER
+  -- function or a foreign-key action runs as the owner). service_role, and the
+  -- owner or a superuser outside a client request, pass: maintenance that
+  -- repoints the guesses foreign keys.
+  if current_user::text not in ('anon', 'authenticated')
+     and coalesce(v_request_role, '') not in ('anon', 'authenticated') then
+    return new;
+  end if;
   -- The one change allowed on a locked row: its candidate becoming null while
-  -- every other answer stays (guesses_guessed_wine_id_fkey's SET NULL when the
-  -- picked glass is deleted, for example inside a tasting delete).
+  -- every other answer stays (guesses_guessed_wine_id_fkey's SET NULL when a
+  -- client request deletes the picked glass).
   if old.locked_at is not null and new.locked_at is not null
      and old.guessed_wine_id is not null and new.guessed_wine_id is null
      and row(new.country_id, new.region_id, new.appellation_id, new.primary_grape_id,
@@ -210,8 +314,8 @@ create trigger guesses_refuse_locked_edit
 do $$
 declare
   c_guesses constant oid := 'public.guesses'::regclass::oid;
-  -- md5 of the verbatim body above (prosrc, CR-stripped, so a CRLF checkout compares equal).
-  c_body_md5 constant text := 'dfdb3bbb2ed512fa98b03b2ec088ab1c';
+  -- md5 of the reviewed body above (prosrc, CR-stripped, so a CRLF checkout compares equal).
+  c_body_md5 constant text := 'da49ce8d922eaa39c5c12367e5921494';
   v_fn oid := to_regprocedure('public.guesses_refuse_locked_edit()')::oid;
   v_text text;
 begin
@@ -228,6 +332,8 @@ begin
       and p.prorettype = 'trigger'::regtype
       and p.pronargs = 0
       and md5(replace(p.prosrc, chr(13), '')) = c_body_md5
+      and strpos(p.prosrc, 'current_user::text not in (''anon'', ''authenticated'')') > 0
+      and strpos(p.prosrc, 'coalesce(v_request_role, '''') not in (''anon'', ''authenticated'')') > 0
       and strpos(p.prosrc, 'old.guessed_wine_id is not null and new.guessed_wine_id is null') > 0
       and strpos(p.prosrc, 'using errcode = ''insufficient_privilege''') > 0
   ) then
