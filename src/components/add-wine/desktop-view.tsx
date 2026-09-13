@@ -1,231 +1,203 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-  type KeyboardEvent,
-} from "react";
+import Link from "next/link";
+import { useEffect, useId, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { Check, Search, Upload, X } from "lucide-react";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { cn } from "@/lib/utils";
-import { searchAddWine } from "./actions";
-import { getCellarSummary } from "./desktop-actions";
+import { SkippedLotNotice } from "./cellar-lot-step";
+import { ConsumeCheckbox } from "./cellar-view";
 import {
-  cellarTileSubtitle,
-  enterHint,
+  catalogRowMeta,
+  clampFocus,
+  effectiveFocus,
   flattenSearchGroups,
-  footerButtonLabel,
-  footerSentence,
+  focusAnchorAt,
+  lotPreviewChips,
   pickImageFiles,
-  rowActionLabel,
-  uploadZoneCopy,
-  uploadZoneLabels,
-  type CellarSummary,
-  type DesktopRow,
+  resolveFocusAnchor,
+  type FocusAnchor,
 } from "./desktop-format";
-import { scanTitle } from "./format";
-import { PendingFixStrip } from "./pending-fix";
-import { addedWhere, consumeLabel, pendingProblemLabel } from "./scan-copy";
-import type { AddSource, DesktopViewProps, PendingScan, SearchGroups } from "./types";
+import { itemRowCopy, type ItemRowCopy, type ScanItem } from "./sheet-state";
+import type { DesktopViewProps } from "./types";
 
-const DEBOUNCE_MS = 250;
-const SEARCH_FAILED = "Search failed — try again.";
+type ItemAction = ItemRowCopy["actions"][number];
+
+function catalogHref(catalogWineId: string): string {
+  return `/catalog/${encodeURIComponent(catalogWineId)}`;
+}
 
 /**
- * 7h: the sheet on a mouse / trackpad device, at any window width. The
- * device rule (use-camera.ts) routes by input type, so a PC never sees the
- * live camera and a narrow desktop window gets this view too: below `md` the
- * upload zone and the tiles stack, and below `sm` each result row moves its
- * actions to a second line. Search leads — a full-width field where ↵ adds
- * the first hit, and result rows that state their source with an inline
- * action. That action is the same button on every addable row (owner
- * feedback 2026-09-12, `RowActionButton`): one outline style and one label
- * naming the destination — "Add as glass N", "Add to cellar", "Add to the
- * catalog", "Rate this wine", plain "Add" with none — and "In flight",
- * disabled, on a wine already poured. The row ↵ adds is marked only by its
- * gold tint and left border plus the field's "↵ adds the first hit". Below it
- * the
- * dashed "Upload label photos" zone (drag-and-drop or a file picker, several
- * at once; each file goes through the shell's read-and-confirm path, one
- * FastCork credit per photo) beside the "From my cellar" and "Add it by hand"
- * tiles. The sheet stays open after every add; the footer says so and
- * carries the single Done.
+ * A8 · B1 · C1 · D1 — the sheet on a device that cannot scan (D5), at any
+ * window width: below `md` the upload zone and the tiles stack, and below `sm`
+ * a result row moves its button to a second line. Every destination rule and
+ * string comes from `matrix`; this view never tests the destination.
  *
- * Cellar rows add as `{ kind: "lot", consume: true }` — the bottle is drawn
- * down when poured — with a per-row "keep it in the cellar" toggle. They
- * are offered only when the bottle can go into a flight (the flight
- * destination, or none with tonight's tasting as the hint) or picked for a
- * note (rate).
+ * - Search leads: the matrix's lead line when it has one, a full-width field,
+ *   and one list whose rows state their source ("In your cellar · …",
+ *   "Catalog · …", "You rated it …", or D1's "Already in the catalog · …"
+ *   compared with the latest draft). Every row carries the same outlined
+ *   `RowActionButton`, labelled by `matrix.row`: "+1 bottle" or "Open" only
+ *   where the action itself changes (D9), "In flight" on a disabled row.
+ * - Keyboard: ↑/↓ move the focused row without wrapping; the focused row gets
+ *   the gold border and the ↵ mark, and Enter acts on it — by default the
+ *   first addable row. ↑/↓ and an add pin the focus to that row for the query,
+ *   by identity rather than index. The refetch after an add can reorder the
+ *   list or drop the row just added (a lot whose last bottle was poured), so
+ *   the focus follows the row, then its wine, and otherwise rests on no row
+ *   until ↑/↓. A row just added therefore keeps the focus once it reads
+ *   "In flight", and a second Enter does nothing (spec §C.4 rule 11); a new
+ *   query drops the pin. With no destination every row's action is the
+ *   chooser, so Enter never pours a lot (sources-2).
+ * - Below the results: the upload zone (`matrix.upload`; each photo is read
+ *   and matched as it is on the phone, one photo for a note) beside "From my
+ *   cellar", "Add it by hand" and, for the cellar, the lot step's preview.
+ * - Above the footer: this session's bottles as the light A4 rows
+ *   (`itemRowCopy`). The footer carries the consume checkbox whenever lot rows
+ *   are listed (D11), then the matrix's sentence and Done or Close. Adding
+ *   never closes the sheet.
  *
- * Taste & rate (the rate destination, owner feedback 2026-09-12) is this
- * same layout for ONE pick: every row's action reads "Rate this wine", ↵
- * picks the first hit, the upload zone takes a single photo, cellar rows
- * carry "Take a bottle out of the cellar when I save the note" (on by
- * default; nothing is drawn down until the note saves), and the footer
- * points at the note with Close instead of Done. The shell closes the sheet
- * on the pick.
+ * The shell holds the query, the focused row and consume in sheet state and
+ * runs the search, so leaving this view loses nothing (RC8). The pin is this
+ * view's own state, and the stored row follows it (-1 once its wine has left
+ * the list): leaving through a tile, a photo or a row's action stores the
+ * focused row first, and mounting on a query already typed pins the stored
+ * row in the groups at hand (no row while there are none). There is no
+ * autofocus here on purpose: the shell focuses `inputRef` inside the tap that
+ * lands here.
  */
 export function DesktopView({
-  ctx,
-  onAdd,
-  onFiles,
-  onCellar,
-  onByHand,
-  onDone,
-  onFixPending,
-  onRemovePending,
-  busy,
+  matrix,
+  destination,
+  query,
+  onQuery,
   inputRef,
+  groups,
+  loading,
+  focusedRow,
+  onFocusRow,
+  consume,
+  onConsume,
+  items,
+  draftForMeta,
+  cellarSummary,
+  lastRack,
+  addedCount,
+  onRow,
+  onFiles,
+  onCellarTile,
+  onByHand,
+  onNeither,
+  onItemAction,
+  onFooterButton,
+  busy = false,
+  error = null,
+  skippedLot = null,
+  onSkippedOpen,
 }: DesktopViewProps) {
-  const destination = ctx.destination;
-  const rate = destination?.kind === "rate";
-  const tastingId = destination?.kind === "flight" ? destination.tastingId : undefined;
-  const includeCellar =
-    destination?.kind === "flight" ||
-    rate ||
-    (destination === null && ctx.flightHint !== null);
-  const zone = uploadZoneLabels(destination);
-
-  const [query, setQuery] = useState("");
-  // null = nothing searched yet (the results box is hidden).
-  const [groups, setGroups] = useState<SearchGroups | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [keepInCellar, setKeepInCellar] = useState<Record<string, boolean>>({});
-  const [addingKey, setAddingKey] = useState<string | null>(null);
-  const [summary, setSummary] = useState<CellarSummary | null>(null);
+  const listId = useId();
+  // The row whose add is running shows its loader until `busy` settles.
+  const [tappedKey, setTappedKey] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [skippedNote, setSkippedNote] = useState<string | null>(null);
-
+  const [skippedFiles, setSkippedFiles] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<number | null>(null);
-  // What the field says right now — the post-add re-search must not use a
-  // handler's stale copy if the user kept typing while the add ran.
-  const queryRef = useRef("");
-  // Only the newest search may write its results (a slow earlier response
-  // must not overwrite a faster later one).
-  const nonceRef = useRef(0);
+  const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
 
-  const runSearch = useCallback(
-    async (raw: string) => {
-      const nonce = ++nonceRef.current;
-      const q = raw.trim();
-      if (!q) {
-        setGroups(null);
-        setSearching(false);
-        return;
-      }
-      setSearching(true);
-      try {
-        const r = await searchAddWine(q, { tastingId });
-        if (nonce !== nonceRef.current) return;
-        setGroups(r);
-        setSearchError(null);
-      } catch {
-        if (nonce !== nonceRef.current) return;
-        setGroups({ cellar: [], catalog: [], tasted: [] });
-        setSearchError(SEARCH_FAILED);
-      } finally {
-        if (nonce === nonceRef.current) setSearching(false);
-      }
-    },
-    [tastingId],
+  const q = query.trim();
+  const searching = loading || !groups;
+  const includeCellar = matrix.searchGroups.includes("cellar");
+  // B1: where a lot row adds a bottle to its own lot, it is a wine you already own.
+  const ownedLead = matrix.row({ source: "lot", inFlight: false, owned: true }).action === "plusOne";
+  const rows = useMemo(
+    () => (q && groups ? flattenSearchGroups(groups, { includeCellar, ownedLead }) : []),
+    [q, groups, includeCellar, ownedLead],
   );
+  // The focus pin: the row ↑/↓ or an add chose for this query, held by
+  // identity, never by index (resolveFocusAnchor). The refetch after an add can
+  // reorder the list or drop the row just poured, and an index would then hand
+  // Enter to another wine. Mounting on a query already typed (coming back to
+  // this view) pins the stored row in the rows at hand, or no row without any.
+  const [focusPin, setFocusPin] = useState<{ query: string; anchor: FocusAnchor | null } | null>(() =>
+    q ? { query, anchor: focusAnchorAt(rows, focusedRow) } : null,
+  );
+  const cells = rows.map((row) =>
+    matrix.row({ source: row.listedAs, inFlight: row.inFlight, owned: row.source.kind === "lot" }),
+  );
+  const pinned = focusPin?.query === query ? focusPin : null;
+  const focus = pinned ? resolveFocusAnchor(pinned.anchor, rows) : effectiveFocus(focusedRow, cells);
+  const lotsListed = rows.some((row) => row.source.kind === "lot");
+  const footerLine = matrix.footer.sentence(addedCount);
+  // C1 words its lead line and its footer alike: say it once, at the foot.
+  const leadLine = matrix.leadLine && matrix.leadLine !== footerLine ? matrix.leadLine : null;
 
-  const onQueryChange = (value: string) => {
-    setQuery(value);
-    queryRef.current = value;
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    if (!value.trim()) {
-      nonceRef.current += 1;
-      setGroups(null);
-      setSearching(false);
-      setSearchError(null);
+  // The shell's stored row follows the pinned row as the list changes, and is
+  // -1 once its wine has left, so a view mounted again pins that same row.
+  useEffect(() => {
+    if (pinned && focus !== focusedRow) onFocusRow(focus);
+  }, [pinned, focus, focusedRow, onFocusRow]);
+
+  // Pin the focus to the row at `index` for this query; no row, no pin.
+  const pin = (index: number) => {
+    const anchor = focusAnchorAt(rows, index);
+    if (!anchor) return;
+    setFocusPin({ query, anchor });
+    if (index !== focusedRow) onFocusRow(index);
+  };
+  // Before leaving for another view: coming back finds the same row focused.
+  const keepFocus = () => pin(focus);
+
+  const act = (index: number) => {
+    const row = rows[index];
+    const cell = cells[index];
+    if (!row || !cell || cell.disabled || busy) return;
+    // The row acted on keeps the focus once the add disables it, and after the
+    // refetch moves or drops it, so a second Enter does nothing (spec §C.4
+    // rule 11) instead of pouring the next hit.
+    pin(index);
+    if (cell.action === "open") {
+      // Enter follows the row's own Link, which reports the open as it navigates.
+      rowRefs.current[index]?.querySelector<HTMLAnchorElement>("a[href]")?.click();
       return;
     }
-    setSearching(true);
-    timerRef.current = window.setTimeout(() => void runSearch(value), DEBOUNCE_MS);
-  };
-
-  useEffect(
-    () => () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
-  // The cellar tile's counts — only when the tile is shown.
-  useEffect(() => {
-    if (!includeCellar) return;
-    let cancelled = false;
-    getCellarSummary()
-      .then((s) => {
-        if (!cancelled) setSummary(s);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [includeCellar]);
-
-  const rows = useMemo(
-    () => (groups ? flattenSearchGroups(groups, { includeCellar }) : []),
-    [groups, includeCellar],
-  );
-  const firstAddable = rows.find((r) => !r.inFlight) ?? null;
-  const locked = busy || addingKey !== null;
-
-  const addRow = async (row: DesktopRow) => {
-    if (locked || row.inFlight) return;
-    const source: AddSource =
-      row.source.kind === "lot"
-        ? {
-            kind: "lot",
-            lotId: row.source.lotId,
-            consume: !keepInCellar[row.source.lotId],
-            // Carried so a rate pick needs no lookup.
-            catalogWineId: row.catalogWineId,
-          }
-        : { kind: "catalog", catalogWineId: row.source.catalogWineId };
-    setAddingKey(row.key);
-    try {
-      await onAdd(source);
-    } finally {
-      setAddingKey(null);
-      // The results stay: re-read them so the wine just poured reads "in
-      // flight" and ↵ moves on to the next hit. A rate pick closes the sheet
-      // (or failed and changed nothing), so there is nothing to re-read.
-      const latest = queryRef.current;
-      if (!rate && latest.trim()) void runSearch(latest);
-    }
+    setTappedKey(row.key);
+    onRow(row, cell.action);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (rows.length === 0) return;
+      e.preventDefault();
+      const next = clampFocus(focus + (e.key === "ArrowDown" ? 1 : -1), rows.length);
+      pin(next);
+      rowRefs.current[next]?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (e.key !== "Enter") return;
     e.preventDefault();
-    if (firstAddable) void addRow(firstAddable);
+    // While a search runs the rows on screen may answer the previous query.
+    if (!loading) act(focus);
   };
 
-  // --- the drop zone --------------------------------------------------------
+  // --- the upload zone -------------------------------------------------------
 
   const takeFiles = (files: File[]) => {
-    if (locked) return;
-    // One photo for a rate pick (one wine, one FastCork credit).
+    if (busy) return;
     const { accepted, skipped } = pickImageFiles(files, {
-      max: zone.multiple ? undefined : 1,
+      max: matrix.upload.multiple ? undefined : 1,
     });
-    setSkippedNote(
+    setSkippedFiles(
       skipped.length
         ? `Skipped ${skipped.map((s) => `${s.name} (${s.reason})`).join(", ")}.`
         : null,
     );
-    if (accepted.length) onFiles(accepted);
+    if (accepted.length) {
+      keepFocus();
+      onFiles(accepted);
+    }
   };
   const onDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -243,57 +215,65 @@ export function DesktopView({
     takeFiles(Array.from(e.dataTransfer.files));
   };
 
-  const trimmed = query.trim();
-  const showResults = trimmed.length > 0;
-  const showCellarTile = includeCellar;
-
   return (
     <div className="flex min-h-full flex-col">
       <div className="flex flex-col gap-4 p-4 md:p-[18px_22px]">
         {/* Search leads. */}
-        <label className="flex items-center gap-[10px] rounded-[11px] border-[1.5px] border-primary bg-white p-[13px_14px] focus-within:ring-3 focus-within:ring-ring/40">
-          <Search className="size-[17px] shrink-0 text-primary" aria-hidden />
-          <Input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Search by producer, wine or appellation"
-            aria-label="Search for a wine"
-            autoComplete="off"
-            spellCheck={false}
-            className="h-auto flex-1 rounded-none border-0 bg-transparent p-0 text-[15.5px] shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-[15.5px]"
-          />
-          {/* In a narrow window the hint gives its room to the field. */}
-          <span className="ml-auto hidden shrink-0 font-mono text-[10.5px] text-muted-foreground sm:inline">
-            {enterHint(destination)}
-          </span>
-        </label>
+        <div className="flex flex-col gap-[6px]">
+          {leadLine ? <p className="text-[12px] font-semibold">{leadLine}</p> : null}
+          <label className="flex items-center gap-[10px] rounded-[11px] border-[1.5px] border-primary bg-white p-[13px_14px] focus-within:ring-3 focus-within:ring-ring/40">
+            <Search className="size-[17px] shrink-0 text-primary" aria-hidden />
+            <Input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => {
+                // A new query drops the pin and resets the stored row to 0:
+                // the default again.
+                setFocusPin(null);
+                onQuery(e.target.value);
+              }}
+              onKeyDown={onKeyDown}
+              placeholder={matrix.searchPlaceholder}
+              aria-label="Search for a wine"
+              aria-controls={q && rows.length > 0 ? listId : undefined}
+              autoComplete="off"
+              spellCheck={false}
+              className="h-auto flex-1 rounded-none border-0 bg-transparent p-0 text-[15.5px] shadow-none focus-visible:border-transparent focus-visible:ring-0 md:text-[15.5px]"
+            />
+            <span className="ml-auto flex shrink-0 items-center gap-[10px] font-mono text-[10.5px] text-muted-foreground">
+              {q ? (
+                <span aria-live="polite">{searching ? "Searching…" : matrix.resultCount(rows.length)}</span>
+              ) : null}
+              {/* In a narrow window the hint gives its room to the field. */}
+              <span className="hidden sm:inline">{matrix.enterHint}</span>
+            </span>
+          </label>
+        </div>
 
-        {showResults ? (
+        {q ? (
           <div className="overflow-hidden rounded-[12px] border border-border bg-white">
-            <p role="status" className="sr-only">
-              {searching ? "Searching" : `${rows.length} found`}
-            </p>
             {rows.length > 0 ? (
-              <ul>
+              <ul id={listId} aria-label="Search results">
                 {rows.map((row, i) => {
-                  // The row ↵ adds: marked by its tint and left border alone —
-                  // its button is the same as every other row's.
-                  const enterTarget = firstAddable?.key === row.key;
+                  const cell = cells[i];
+                  const focused = i === focus;
+                  const open = cell.action === "open";
                   return (
                     <li
                       key={row.key}
+                      ref={(el) => {
+                        rowRefs.current[i] = el;
+                      }}
+                      aria-current={focused ? "true" : undefined}
                       className={cn(
-                        // Below `sm` the actions wrap to a second line under
-                        // the title, so a cellar row's toggle and button
-                        // never crush it to nothing.
+                        // Below `sm` the button wraps to a second line under
+                        // the title, so a long title is never crushed.
                         "flex items-center gap-3 p-[11px_14px] transition-colors max-sm:flex-wrap max-sm:gap-y-2",
                         i > 0 && "border-t border-border-light",
-                        enterTarget
-                          ? "border-l-[3px] border-l-gold bg-gold/12"
-                          : "hover:bg-background",
-                        row.inFlight && "opacity-70",
+                        // Focus is a border and the ↵ mark, never a different
+                        // button (B3).
+                        focused ? "border-l-[3px] border-l-gold bg-gold/12 pl-[11px]" : "hover:bg-background",
+                        cell.disabled && "opacity-70",
                       )}
                     >
                       <HatchThumb src={row.imageUrl} width={30} height={40} />
@@ -302,45 +282,25 @@ export function DesktopView({
                           {row.title}
                         </span>
                         <span className="truncate text-[11.5px] text-muted-foreground">
-                          {row.meta}
+                          {open && row.identity ? catalogRowMeta(row.identity, draftForMeta) : row.meta}
                         </span>
                       </span>
                       {/* 42px = the thumb and its gap: the second line starts
                           under the title. */}
-                      <span className="flex shrink-0 items-center justify-end gap-3 max-sm:w-full max-sm:pl-[42px]">
-                        {row.source.kind === "lot" && !row.inFlight ? (
-                          rate ? (
-                            // Checked = draw a bottle down once the note
-                            // saves (the default); stored as its inverse.
-                            <LotToggle
-                              lotId={row.source.lotId}
-                              label={consumeLabel(destination)}
-                              checked={!keepInCellar[row.source.lotId]}
-                              disabled={locked}
-                              wrap
-                              onChange={(lotId, consume) =>
-                                setKeepInCellar((m) => ({ ...m, [lotId]: !consume }))
-                              }
-                            />
-                          ) : (
-                            <LotToggle
-                              lotId={row.source.lotId}
-                              label="keep it in the cellar"
-                              checked={Boolean(keepInCellar[row.source.lotId])}
-                              disabled={locked}
-                              onChange={(lotId, keep) =>
-                                setKeepInCellar((m) => ({ ...m, [lotId]: keep }))
-                              }
-                            />
-                          )
+                      <span className="flex shrink-0 items-center justify-end gap-[10px] max-sm:w-full max-sm:pl-[42px]">
+                        {focused ? (
+                          <span aria-hidden className="font-mono text-[10.5px] text-muted-foreground">
+                            ↵
+                          </span>
                         ) : null}
                         <RowActionButton
-                          label={rowActionLabel(destination, row)}
+                          label={cell.label}
                           wineTitle={row.title}
-                          inFlight={row.inFlight}
-                          pending={addingKey === row.key}
-                          disabled={locked}
-                          onClick={() => void addRow(row)}
+                          inFlight={cell.disabled}
+                          pending={busy && tappedKey === row.key}
+                          disabled={busy}
+                          href={open ? catalogHref(row.catalogWineId) : undefined}
+                          onClick={open ? () => onRow(row, "open") : () => act(i)}
                         />
                       </span>
                     </li>
@@ -351,44 +311,27 @@ export function DesktopView({
               <p className="p-[13px_14px] text-[12.5px] text-muted-foreground">
                 {searching
                   ? "Searching…"
-                  : (searchError ??
-                    `Nothing matches “${trimmed}” — upload a label photo or add it by hand.`)}
+                  : `Nothing matches “${q}” — upload a label photo or add it by hand.`}
               </p>
             )}
           </div>
         ) : null}
 
-        {/* What this sheet has added, and any photo still waiting for a fix. */}
-        {ctx.added.length > 0 || ctx.pending.length > 0 ? (
-          <ul className="flex flex-col gap-[6px]">
-            {ctx.added.map((a, i) => (
-              <li
-                key={a.wineId ?? a.lotId ?? `${a.catalogWineId}-${i}`}
-                className="flex items-center gap-[10px] rounded-[10px] border border-border-light bg-background p-[9px_12px]"
-              >
-                <span
-                  aria-hidden
-                  className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-gold text-foreground"
-                >
-                  <Check className="size-[11px]" strokeWidth={3} />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[13px]">{a.label}</span>
-                <span className="shrink-0 text-[11px] text-muted-foreground">{addedWhere(a)}</span>
-              </li>
-            ))}
-            {ctx.pending.map((p) => (
-              <DesktopPendingRow
-                key={p.id}
-                scan={p}
-                disabled={locked}
-                onFix={onFixPending}
-                onRemove={onRemovePending}
-              />
-            ))}
-          </ul>
+        {q && groups && matrix.neitherOfThese ? (
+          <Tile
+            title="Neither of these"
+            subtitle="Continue and create a new entry"
+            onClick={() => {
+              keepFocus();
+              onNeither();
+            }}
+            disabled={busy}
+          />
         ) : null}
 
-        {/* Upload zone beside the two tiles — stacked below `md`. */}
+        {skippedLot ? <SkippedLotNotice lotId={skippedLot.lotId} onOpen={onSkippedOpen} /> : null}
+
+        {/* The upload zone beside the tiles — stacked below `md`. */}
         <div className="flex flex-col gap-3 md:flex-row">
           <div
             onDragOver={onDragOver}
@@ -402,16 +345,14 @@ export function DesktopView({
           >
             <span className="flex items-center gap-2 text-[14px] font-semibold">
               <Upload className="size-[17px] text-primary" aria-hidden />
-              {zone.title}
+              {matrix.upload.title}
             </span>
-            <span className="text-[12px] leading-[1.5] text-ink-photo">
-              {uploadZoneCopy(destination)}
-            </span>
+            <span className="text-[12px] leading-[1.5] text-ink-photo">{matrix.upload.body}</span>
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
-              multiple={zone.multiple}
+              multiple={matrix.upload.multiple}
               className="hidden"
               onChange={(e) => {
                 const files = Array.from(e.target.files ?? []);
@@ -422,70 +363,116 @@ export function DesktopView({
             />
             <button
               type="button"
-              disabled={locked}
+              disabled={busy}
               onClick={() => fileRef.current?.click()}
               className="flex min-h-11 items-center gap-[11px] self-stretch rounded-[10px] border border-border bg-card p-[14px] text-left transition-colors hover:border-gold disabled:opacity-60"
             >
               <HatchThumb src={null} width={34} height={44} />
               <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                <span className="text-[12.5px] font-semibold">{zone.drop}</span>
-                <span className="text-[11.5px] text-muted-foreground">{zone.hint}</span>
+                <span className="text-[12.5px] font-semibold">{matrix.upload.drop}</span>
+                <span className="text-[11.5px] text-muted-foreground">{matrix.upload.choose}</span>
               </span>
             </button>
-            {skippedNote ? (
+            {skippedFiles ? (
               <span role="status" className="text-[11.5px] text-rose">
-                {skippedNote}
+                {skippedFiles}
               </span>
             ) : null}
           </div>
 
           <div className="flex flex-1 flex-col gap-[10px]">
-            {showCellarTile ? (
+            {matrix.cellarSource ? (
               <Tile
                 title="From my cellar"
-                subtitle={cellarTileSubtitle(summary)}
-                onClick={onCellar}
-                disabled={locked}
+                subtitle={matrix.cellarTileSubtitle?.(cellarSummary) ?? ""}
+                onClick={() => {
+                  keepFocus();
+                  onCellarTile();
+                }}
+                disabled={busy}
               />
             ) : null}
             <Tile
               title="Add it by hand"
-              subtitle="Producer, name, vintage, colour"
-              onClick={onByHand}
-              disabled={locked}
+              subtitle={matrix.byHandTileSubtitle}
+              onClick={() => {
+                keepFocus();
+                onByHand();
+              }}
+              disabled={busy}
             />
+            {matrix.lotPreviewTile ? <LotPreviewTile chips={lotPreviewChips(lastRack)} /> : null}
           </div>
         </div>
+
+        {/* This session's bottles (A4, light tone). */}
+        {items.length > 0 ? (
+          <ul className="flex flex-col gap-[6px]" aria-label="Wines in this sheet">
+            {items.map((item) => (
+              <ItemRow
+                key={item.id}
+                item={item}
+                copy={itemRowCopy(item, destination)}
+                disabled={busy}
+                onAction={(action) => {
+                  keepFocus();
+                  onItemAction(item.id, action);
+                }}
+              />
+            ))}
+          </ul>
+        ) : null}
       </div>
 
-      {/* Footer: the sheet does not close on add. Pinned to the bottom of the
-          sheet's scroll region, like the search and confirm footers, so Done
-          stays in reach under a long result list. */}
-      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 items-center gap-3 border-t border-border bg-background p-[14px_16px] pb-[max(14px,env(safe-area-inset-bottom))] md:px-[22px]">
-        <span className="min-w-0 text-[12.5px] text-muted-foreground">
-          {footerSentence(destination, ctx.added.length)}
-        </span>
-        <button
-          type="button"
-          onClick={onDone}
-          disabled={locked}
-          className="ml-auto min-h-11 shrink-0 rounded-[9px] border border-border bg-card px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors hover:border-gold hover:bg-white disabled:opacity-60"
-        >
-          {footerButtonLabel(destination)}
-        </button>
+      {/* Pinned to the bottom of the sheet's scroll region, so Done stays in
+          reach under a long result list. */}
+      <div className="sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-[10px] border-t border-border bg-background p-[14px_16px] pb-[max(14px,env(safe-area-inset-bottom))] md:px-[22px]">
+        {lotsListed && matrix.consumeLabel ? (
+          <ConsumeCheckbox
+            checked={consume}
+            onChange={onConsume}
+            disabled={busy}
+            label={matrix.consumeLabel}
+          />
+        ) : null}
+        {error ? (
+          <p role="alert" className="text-[12.5px] text-rose">
+            {error}
+          </p>
+        ) : null}
+        <div className="flex items-center gap-3">
+          <span className="min-w-0 text-[12.5px] leading-[1.5] text-muted-foreground">
+            {footerLine}
+          </span>
+          <button
+            type="button"
+            onClick={onFooterButton}
+            disabled={busy}
+            className="ml-auto min-h-11 shrink-0 rounded-[9px] border border-border bg-card px-[18px] py-[10px] text-[13.5px] font-semibold transition-colors hover:border-gold hover:bg-white disabled:opacity-60"
+          >
+            {matrix.footer.button}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
+// A white face, so the button reads the same on the focused row's tint as on a
+// plain or hovered one. Shared by the button and its link variant.
+const ROW_ACTION_CLASS =
+  "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-white px-[14px] py-2 text-[12.5px] font-semibold text-primary transition-colors hover:border-gold";
+
 /**
- * A result row's inline action — one button for every addable row of every
- * add-wine result list (owner feedback 2026-09-12): the outline style
- * (border, primary text, gold hover) with the destination's label from
- * `rowActionLabel`, and "In flight", disabled, on a wine already poured.
- * Nothing about it marks the row ↵ adds; that row's tint does. Exported so
- * the create sheet's flight step (6b) renders the very same button. With
- * every visible label alike, the accessible name adds the wine.
+ * A result row's inline action — one button for every row of every add-wine
+ * result list (owner feedback 2026-09-12): the outline style with the label
+ * the matrix gives the row, and "In flight", disabled, on a wine already
+ * poured. Nothing about it marks the focused row; that row's border does.
+ * Exported so the create sheet's flight step renders the very same button.
+ * With every visible label alike, the accessible name adds the wine.
+ *
+ * `href` (D1 "Open"): a Next `Link` with exactly the button's classes, so a
+ * catalog hit still carries the same button.
  */
 export function RowActionButton({
   label,
@@ -494,6 +481,7 @@ export function RowActionButton({
   pending,
   disabled,
   onClick,
+  href,
 }: {
   label: string;
   wineTitle: string;
@@ -501,17 +489,38 @@ export function RowActionButton({
   pending: boolean;
   disabled: boolean;
   onClick: () => void;
+  href?: string;
 }) {
+  const name = `${label}: ${wineTitle}`;
+  if (href !== undefined) {
+    return (
+      <Link
+        href={href}
+        aria-label={name}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : undefined}
+        onClick={(e) => {
+          if (disabled) {
+            e.preventDefault();
+            return;
+          }
+          onClick();
+        }}
+        className={cn(ROW_ACTION_CLASS, disabled && "pointer-events-none opacity-60")}
+      >
+        {label}
+      </Link>
+    );
+  }
   return (
     <button
       type="button"
       disabled={disabled || inFlight}
       onClick={onClick}
-      aria-label={`${label}: ${wineTitle}`}
+      aria-label={name}
       className={cn(
-        // A white face, so the button reads the same on the tinted ↵ row as
-        // on a plain or hovered one.
-        "flex min-h-[36px] shrink-0 items-center gap-[7px] rounded-[8px] border border-border bg-white px-[14px] py-2 text-[12.5px] font-semibold text-primary transition-colors hover:border-gold disabled:cursor-default disabled:hover:border-border",
+        ROW_ACTION_CLASS,
+        "disabled:cursor-default disabled:hover:border-border",
         inFlight ? "opacity-70" : "disabled:opacity-60",
       )}
     >
@@ -521,49 +530,7 @@ export function RowActionButton({
   );
 }
 
-// A cellar row's own toggle. Flight: "keep it in the cellar" — unchecked
-// means the bottle is drawn down when poured (the 7f default), checked
-// leaves the lot untouched. Rate: "Take a bottle out of the cellar when I
-// save the note", checked by default; that longer line wraps (`wrap`) rather
-// than crushing the title. On a row's wrapped second line (below `sm`) it
-// sits left, the button right.
-function LotToggle({
-  lotId,
-  label,
-  checked,
-  disabled,
-  wrap = false,
-  onChange,
-}: {
-  lotId: string;
-  label: string;
-  checked: boolean;
-  disabled: boolean;
-  wrap?: boolean;
-  onChange: (lotId: string, checked: boolean) => void;
-}) {
-  return (
-    <label
-      className={cn(
-        "flex shrink-0 items-center gap-[5px] text-[11px] text-muted-foreground max-sm:mr-auto",
-        wrap
-          ? "max-w-[190px] leading-[1.3] max-sm:max-w-none max-sm:min-w-0 max-sm:shrink"
-          : "whitespace-nowrap",
-      )}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(lotId, e.target.checked)}
-        className="size-[13px] shrink-0 accent-primary"
-      />
-      <span className="min-w-0">{label}</span>
-    </label>
-  );
-}
-
-// A bottle tile: title + caption, gold border and lift on hover.
+// A source tile: title + caption, gold border and lift on hover.
 function Tile({
   title,
   subtitle,
@@ -588,68 +555,180 @@ function Tile({
   );
 }
 
-/**
- * A photo whose read needs a fix, on the parchment surface: the same
- * year / NV strip as the camera view's 7d row (light tone), plus remove.
- * The shell's onFixPending completes the scan — or, when the read is missing
- * more than the vintage, hands the prefill to the by-hand form.
- */
-function DesktopPendingRow({
-  scan,
-  disabled,
-  onFix,
-  onRemove,
-}: {
-  scan: PendingScan;
-  disabled: boolean;
-  onFix: DesktopViewProps["onFixPending"];
-  onRemove: DesktopViewProps["onRemovePending"];
-}) {
-  const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const title = scanTitle(scan.prefill);
+// B1: what the lot step asks next, with its defaults as chips. Not a control.
+function LotPreviewTile({ chips }: { chips: string[] }) {
   return (
-    <li className="flex flex-col rounded-[10px] border border-rose/40 bg-rose/10 p-[9px_12px]">
-      <div className="flex items-center gap-[10px]">
+    <div className="flex flex-1 flex-col justify-center gap-[6px] rounded-[12px] border border-gold bg-background p-[14px]">
+      <span className="text-[14px] font-semibold">Then: quantity, rack, price</span>
+      <span className="flex flex-wrap gap-[6px]">
+        {chips.map((chip, i) => (
+          <span
+            key={chip}
+            className={cn(
+              "rounded-[7px] border border-border bg-card px-[10px] py-[5px] text-[11.5px]",
+              // The price is optional: its chip is the quiet one.
+              i === chips.length - 1 ? "text-muted-foreground" : "font-semibold",
+            )}
+          >
+            {chip}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * One A4 row in the light tone — the laptop twin of the multi stack's rows
+ * (multi-add-stack.tsx), from the same `itemRowCopy`:
+ * - added: a gold ✓, the label and where it went ("glass N");
+ * - incomplete or pending: "!", "{title} · {what did not read}" and a bordered
+ *   Fix; pending rows also get a remove ✕;
+ * - failed: "Couldn't read this photo" · Retry · Remove;
+ * - uploading or reading: the photo's thumbnail and "Reading the label…".
+ */
+function ItemRow({
+  item,
+  copy,
+  disabled,
+  onAction,
+}: {
+  item: ScanItem;
+  copy: ItemRowCopy;
+  disabled: boolean;
+  onAction: (action: ItemAction) => void;
+}) {
+  const row = "flex items-center gap-[10px] rounded-[10px] border p-[9px_12px]";
+
+  if (copy.tone === "added") {
+    return (
+      <li className={cn(row, "border-border-light bg-background")}>
         <span
           aria-hidden
-          className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-rose text-[10px] font-bold text-rose"
+          className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-gold text-foreground"
         >
-          !
+          <Check className="size-[11px]" strokeWidth={3} />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px]">
-          {title} <span className="text-rose">· {pendingProblemLabel(scan.problem)}</span>
+        <span className="min-w-0 flex-1 truncate text-[13px]">{copy.label}</span>
+        {copy.detail ? (
+          <span className="shrink-0 text-[11px] text-muted-foreground">{copy.detail}</span>
+        ) : null}
+      </li>
+    );
+  }
+
+  if (copy.tone === "reading") {
+    return (
+      <li role="status" className={cn(row, "border-border-light bg-background")}>
+        {/* A local blob URL — next/image cannot optimise it. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.photoUrl}
+          alt=""
+          className="h-8 w-6 shrink-0 rounded-[4px] border border-border object-cover"
+        />
+        <span className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">{copy.label}</span>
+      </li>
+    );
+  }
+
+  // incomplete, pending and failed: something still needs the user.
+  const { head, gap } = splitGap(copy.label);
+  return (
+    <li className={cn(row, "border-rose/40 bg-rose/10")}>
+      <span
+        aria-hidden
+        className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-rose text-[10px] font-bold text-rose"
+      >
+        !
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
+        <span className="line-clamp-2 text-[13px]">
+          {head}
+          {gap ? <span className="text-rose"> · {gap}</span> : null}
         </span>
-        <button
-          type="button"
-          aria-expanded={open}
+        {copy.detail ? (
+          <span role="alert" className="text-[11px] text-rose">
+            {copy.detail}
+          </span>
+        ) : null}
+      </span>
+      {copy.actions.map((action) => (
+        <ItemActionButton
+          key={action}
+          action={action}
+          textRemove={copy.tone === "failed"}
+          label={copy.label}
           disabled={disabled}
-          onClick={() => {
-            const next = !open;
-            setOpen(next);
-            if (next) inputRef.current?.focus({ preventScroll: true });
-          }}
-          className="shrink-0 text-[11.5px] font-semibold text-primary hover:text-gold-dark disabled:opacity-60"
-        >
-          {open ? "Close" : "Fix"}
-        </button>
-        <button
-          type="button"
-          aria-label={`Remove ${title}`}
-          disabled={disabled}
-          onClick={() => onRemove(scan.id)}
-          className="relative flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground disabled:opacity-60 after:absolute after:-inset-2 after:content-['']"
-        >
-          <X className="size-[13px]" />
-        </button>
-      </div>
-      <PendingFixStrip
-        open={open}
-        inputRef={inputRef}
-        tone="light"
-        disabled={disabled}
-        onFix={(fix) => onFix(scan.id, fix)}
-      />
+          onClick={() => onAction(action)}
+        />
+      ))}
     </li>
+  );
+}
+
+/** "Cigliuti, Barbaresco · no vintage read" → the title, and the part that is
+    tinted: only a trailing describeUnread phrase ("no … read"). */
+function splitGap(label: string): { head: string; gap: string | null } {
+  const at = label.lastIndexOf(" · ");
+  if (at < 0) return { head: label, gap: null };
+  const tail = label.slice(at + 3);
+  return /^no .+ read$/.test(tail) ? { head: label.slice(0, at), gap: tail } : { head: label, gap: null };
+}
+
+// Fix and Retry are bordered; a pending row's remove is a ✕, a failed row's a
+// word ("Retry" · "Remove"). Pseudo-elements pad each target to 44px tall
+// without growing the row — the laptop view also serves touch devices that
+// cannot scan.
+function ItemActionButton({
+  action,
+  textRemove,
+  label,
+  disabled,
+  onClick,
+}: {
+  action: ItemAction;
+  textRemove: boolean;
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  if (action === "remove" && !textRemove) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label={`Remove ${label}`}
+        disabled={disabled}
+        onClick={onClick}
+        className="relative size-6 shrink-0 rounded-full p-0 text-muted-foreground after:absolute after:-inset-x-[5px] after:-inset-y-[10px] after:content-[''] hover:bg-transparent hover:text-foreground"
+      >
+        <X aria-hidden className="size-[13px]" />
+      </Button>
+    );
+  }
+  if (action === "remove") {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={disabled}
+        onClick={onClick}
+        className="relative h-7 shrink-0 rounded-[7px] px-[6px] text-[11.5px] font-semibold text-muted-foreground after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:bg-transparent hover:text-foreground"
+      >
+        Remove
+      </Button>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      disabled={disabled}
+      onClick={onClick}
+      className="relative h-7 shrink-0 rounded-[7px] border-primary bg-transparent px-[11px] text-[11.5px] font-bold text-primary after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:bg-gold/15 hover:text-primary"
+    >
+      {action === "fix" ? "Fix" : "Retry"}
+    </Button>
   );
 }

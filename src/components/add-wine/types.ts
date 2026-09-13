@@ -3,6 +3,7 @@ import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
 import type { ByHandReferences } from "./by-hand-actions";
+import type { CellarSummary, DesktopRow } from "./desktop-format";
 import type { CellarFilter, CellarSheet } from "./row-format";
 import type { ByHandSession, ScanItem } from "./sheet-state";
 
@@ -247,22 +248,43 @@ export type ByHandFormProps = {
   fieldRefs: React.MutableRefObject<Partial<Record<WineFieldKey, HTMLElement | null>>>;  // registered even while hidden, so the shell can focus inside the tap
 };
 
+/** A8 / B1 / C1 / D1: the sheet on a device that cannot scan. The shell draws
+    the header, holds the query, the focused row and the consume choice in
+    sheet state (`state.desktop`), runs `searchAddWine` and loads the cellar
+    counts; every destination rule comes from `matrix`. The search field is the
+    laptop's search, so the shell can focus `inputRef` inside the tap that lands
+    here. Adding never closes the sheet. */
 export type DesktopViewProps = {
-  ctx: SheetContext;
-  onAdd: (source: AddSource) => Promise<void>;
-  /** Dropped / picked label photos; each goes through the read-and-confirm
-      path in turn (one label read per file). */
-  onFiles: (files: File[]) => void;
-  onCellar: () => void;
-  onByHand: () => void;
-  onDone: () => void;
-  /** The pending ("Fix") rows work as in the camera view (7d). */
-  onFixPending: (id: string, fix: PendingFix) => void;
-  onRemovePending: (id: string) => void;
-  busy: boolean;
-  /** The search field, so the shell can focus it when the confirm view's
-      "Search by name" lands here (a mouse device has no phone search view). */
-  inputRef?: import("react").Ref<HTMLInputElement>;
+  matrix: SheetMatrix; destination: AddWineDestination | null;
+  query: string; onQuery: (q: string) => void; inputRef: Ref<HTMLInputElement>;
+  groups: SearchGroups | null; loading: boolean;
+  /** `state.desktop.focusedRow`; 0 (where a new query puts it) means the first
+      addable row. ↑/↓ report the next row, never wrapping. Once ↑/↓ or an add
+      pins a row, the view keeps this in step with that row as a refetch moves
+      it, and reports -1 when the row's wine has left the list (no row focused:
+      Enter does nothing until ↑/↓). */
+  focusedRow: number; onFocusRow: (row: number) => void;
+  consume: boolean; onConsume: (v: boolean) => void;
+  items: ScanItem[]; draftForMeta: WineIdentityDraft | null;   // D1 metas compare against the latest read or by-hand draft
+  cellarSummary: CellarSummary | null; lastRack: string | null; addedCount: number;
+  /** A row's button, or Enter on the focused row. "open" is reported as the
+      row's Link navigates to `/catalog/{id}` (click or Enter), so the shell
+      only has to close the sheet; every other action is the shell's to run. */
+  onRow: (row: DesktopRow, action: SheetRowAction) => void;
+  onFiles: (files: File[]) => void; onCellarTile: () => void; onByHand: () => void; onNeither: () => void;
+  onItemAction: (itemId: string, action: "fix" | "remove" | "retry") => void;
+  onFooterButton: () => void;
+  /** An add is running (spec §C.4 rule 11): the tapped row's button shows its
+      loader and nothing takes a second tap or Enter until it settles. */
+  busy?: boolean;
+  /** A failed add's message, shown in the footer. */
+  error?: string | null;
+  /** Plan amendment 18 (D17): after "Don't add it" the laptop view shows "Not
+      added — it's already in your cellar" with "Open it" on this lot
+      (`state.skippedLot`). `onSkippedOpen` lets the shell close the sheet as
+      that link navigates. */
+  skippedLot?: { lotId: string } | null;
+  onSkippedOpen?: () => void;
 };
 
 /** A4 (dark): one row per scanned bottle, its copy from `itemRowCopy`. Fix,
