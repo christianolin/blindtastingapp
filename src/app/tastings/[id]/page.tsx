@@ -10,7 +10,6 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentUser,
   getParticipantRows,
-  getReferenceOptions,
   getTastingRow,
   getWineRows,
 } from "@/lib/tasting-request-cache";
@@ -18,17 +17,53 @@ import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { makeWineLabeler } from "@/lib/wine-label";
 import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
+import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
+import {
+  flightRowNeeds,
+  toIncompleteGlasses,
+} from "@/lib/wine-identity/incomplete";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
+import type { AddedVia } from "@/components/add-wine/types";
 import { cn } from "@/lib/utils";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { HostControls } from "./host-controls";
 import { HostControlsMenu } from "./host-controls-menu";
 import { StandingsPanel } from "./standings-panel";
-import { AddToFlightButton } from "./tasting-add-wine-button";
+import {
+  AddToFlightButton,
+  type FlightDestination,
+} from "./tasting-add-wine-button";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { PlayExperience } from "./play/play-experience";
 import { OpenBoard } from "./open-board";
-import { WineFlightList, type FlightWine } from "./wine-flight-list";
+import { SheetFromQuery } from "./sheet-from-query";
+import {
+  WineFlightList,
+  type FlightWine,
+  type FlightWineLines,
+  type WaitingContributor,
+} from "./wine-flight-list";
 import { respondToInvite } from "./actions";
+
+// How the adder's identity line ends: where the glass came from (spec §C.5 A1,
+// wines.added_via). A legacy glass with no added_via leaves it out.
+const ADDED_VIA_COPY: Record<AddedVia, string> = {
+  SCAN: "scanned",
+  CATALOG: "from the catalog",
+  CELLAR: "from my cellar",
+  BY_HAND: "by hand",
+};
+
+// An incomplete glass's title: "{producer name}, {wine name}", leaving out
+// empty parts (spec §C.5 A1). Null when the draft has neither.
+function draftTitle(draft: WineIdentityDraft | null): string | null {
+  if (!draft) return null;
+  return (
+    [draft.producer?.name.trim(), draft.wineName?.trim()]
+      .filter(Boolean)
+      .join(", ") || null
+  );
+}
 
 export default async function TastingPage({
   params,
@@ -136,10 +171,13 @@ export default async function TastingPage({
       )
     : [];
 
+  // Who may add (spec §C.5 A1; scan-7, sources-5, entry-2): nobody once the
+  // tasting is CLOSED; otherwise the host of a host-provides tasting, or a
+  // JOINED participant in bring-your-own. It gates every Add button and the
+  // registered header camera, as the server's resolveTastingAdder does.
   const canAddWine =
-    tasting.wine_source === "HOST_PROVIDES"
-      ? isHost
-      : Boolean(myParticipant) && myStatus === "JOINED";
+    tasting.status !== "CLOSED" &&
+    (tasting.wine_source === "HOST_PROVIDES" ? isHost : myStatus === "JOINED");
 
   // Friends for the host's "invite more people" picker (only fetched for the
   // host, and only needed while the tasting is still in draft).
@@ -162,128 +200,230 @@ export default async function TastingPage({
 
   const canGuess = myStatus === "JOINED" && hasStarted && wineCount > 0;
 
-  // HOST_PROVIDES only: the host set these answers, so showing a short identity
-  // per wine lets reordering be visible (hidden wines otherwise look
-  // identical) with no spoiler. NEVER in bring-your-own — there the host is a
-  // guesser too and didn't bring the others' bottles, so their identities must
-  // stay hidden until reveal (only the contributor's name shows).
-  const hostWineIdentity = new Map<string, string>();
-  if (isHost && !isByo && wineCount > 0) {
-    const wineIds = (wines ?? []).map((w) => w.id);
-    const [
-      { data: hc },
-      { data: hr },
-      { data: hg },
-      { data: ht },
-      { data: hAnswers },
-    ] = await Promise.all([
-      getReferenceOptions().then((r) => ({ data: r.countries })),
-      getReferenceOptions().then((r) => ({ data: r.regions })),
-      getReferenceOptions().then((r) => ({ data: r.grapes })),
-      supabase.from("type_designations").select("id, name"),
-      supabase.from("wine_answers").select("*").in("wine_id", wineIds),
-    ]);
-    const nm = new Map<string, string>();
-    for (const list of [hc, hr, hg, ht])
-      for (const r of list ?? []) nm.set(r.id, r.name);
-    const looked = await lookupAppellationAndProducerNames({
-      appellationIds: (hAnswers ?? []).map((a) => a.appellation_id),
-      producerIds: (hAnswers ?? []).map((a) => a.producer_id),
-    });
-    for (const [id2, n] of looked) nm.set(id2, n);
-    for (const a of hAnswers ?? []) {
-      const vintage =
-        a.vintage_kind === "YEAR"
-          ? String(a.vintage_year ?? "")
-          : a.vintage_kind === "NV"
-            ? "NV"
-            : a.vintage_kind === "TAWNY"
-              ? `${a.vintage_tawny_years ?? ""}yr tawny`
-              : "";
-      hostWineIdentity.set(
-        a.wine_id,
-        [
-          a.producer_id ? nm.get(a.producer_id) : null,
-          nm.get(a.region_id),
-          vintage,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      );
+  // The glasses the viewer added — is_wine_adder's rule: the host's for a glass
+  // with no contributor, otherwise the contributor's own bottle.
+  const isAdder = (w: { contributor_participant_id: string | null }) =>
+    w.contributor_participant_id
+      ? w.contributor_participant_id === myParticipant?.id
+      : isHost;
+  const myWineIds = (wines ?? []).filter(isAdder).map((w) => w.id);
+
+  // The adder's two lines on their own glasses (spec §C.5 A1; D10, §C.9). Only
+  // the viewer's own ids are read: wine_answers RLS hands a bring-your-own host
+  // every answer, and they guess the others' bottles too.
+  const linesByWineId = new Map<string, FlightWineLines>();
+  if (myWineIds.length > 0) {
+    const [{ data: answers, error: answersError }, { data: sources }] =
+      await Promise.all([
+        supabase
+          .from("wine_answers")
+          .select(
+            "wine_id, region_id, appellation_id, primary_grape_id, producer_id, vintage_kind, vintage_year, vintage_tawny_years, catalog_wine_id",
+          )
+          .in("wine_id", myWineIds),
+        supabase.from("wines").select("id, added_via").in("id", myWineIds),
+      ]);
+    // A failed read must never show a finished glass as unfinished, so it
+    // leaves every row without its lines.
+    if (!answersError) {
+      const list = answers ?? [];
+      const answered = new Set(list.map((a) => a.wine_id));
+      // A glass with no answer key is incomplete (D7).
+      const unfinishedIds = myWineIds.filter((wineId) => !answered.has(wineId));
+      const catalogIds = [
+        ...new Set(
+          list
+            .map((a) => a.catalog_wine_id)
+            .filter((wineId): wineId is string => Boolean(wineId)),
+        ),
+      ];
+      const regionIds = [...new Set(list.map((a) => a.region_id))];
+      const grapeIds = [...new Set(list.map((a) => a.primary_grape_id))];
+      const [
+        names,
+        { data: catalog },
+        { data: regions },
+        { data: grapes },
+        { data: drafts },
+      ] = await Promise.all([
+        lookupAppellationAndProducerNames({
+          appellationIds: list.map((a) => a.appellation_id),
+          producerIds: list.map((a) => a.producer_id),
+        }),
+        catalogIds.length > 0
+          ? supabase
+              .from("catalog_wines")
+              .select("id, wine_name")
+              .in("id", catalogIds)
+          : Promise.resolve({
+              data: [] as { id: string; wine_name: string | null }[],
+            }),
+        regionIds.length > 0
+          ? supabase.from("regions").select("id, name").in("id", regionIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        grapeIds.length > 0
+          ? supabase.from("grapes").select("id, name").in("id", grapeIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        // Drafts are owner-only (wine_identity_drafts RLS).
+        unfinishedIds.length > 0
+          ? supabase
+              .from("wine_identity_drafts")
+              .select("wine_id, draft, missing")
+              .in("wine_id", unfinishedIds)
+          : Promise.resolve({
+              data: [] as { wine_id: string; draft: unknown; missing: string[] }[],
+            }),
+      ]);
+      const wineName = new Map((catalog ?? []).map((c) => [c.id, c.wine_name]));
+      const regionName = new Map((regions ?? []).map((r) => [r.id, r.name]));
+      const grapeName = new Map((grapes ?? []).map((g) => [g.id, g.name]));
+      const addedVia = new Map((sources ?? []).map((s) => [s.id, s.added_via]));
+      for (const a of list) {
+        const vintage =
+          a.vintage_kind === "YEAR"
+            ? String(a.vintage_year ?? "")
+            : a.vintage_kind === "NV"
+              ? "NV"
+              : a.vintage_kind === "TAWNY"
+                ? `${a.vintage_tawny_years ?? ""}yr tawny`
+                : "";
+        const producer = a.producer_id
+          ? (names.get(a.producer_id) ?? null)
+          : null;
+        const cuvee = a.catalog_wine_id
+          ? (wineName.get(a.catalog_wine_id) ?? null)
+          : null;
+        const via = addedVia.get(a.wine_id);
+        linesByWineId.set(a.wine_id, {
+          // "Vietti, Barolo Castiglione 2017"
+          title:
+            [[producer, cuvee].filter(Boolean).join(", "), vintage]
+              .filter(Boolean)
+              .join(" ") || null,
+          // "{appellation} · {region} · {primary grape} · {source}"
+          meta:
+            [
+              a.appellation_id ? names.get(a.appellation_id) : null,
+              regionName.get(a.region_id),
+              grapeName.get(a.primary_grape_id),
+              via ? ADDED_VIA_COPY[via] : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || null,
+          incomplete: false,
+        });
+      }
+      // The draft row's keys in contract order, the same mapping as the
+      // tasting_incomplete_glasses rows. A glass with no draft row (a failed
+      // second write, spec §C.8) needs every field.
+      const draftByWineId = new Map((drafts ?? []).map((d) => [d.wine_id, d]));
+      const unfinished = new Set(unfinishedIds);
+      (wines ?? []).forEach((w, i) => {
+        if (!unfinished.has(w.id)) return;
+        const stored = draftByWineId.get(w.id);
+        const missing = toIncompleteGlasses([
+          { wine_id: w.id, glass: i + 1, missing: stored?.missing ?? [] },
+        ]).flatMap((glass) => glass.missing);
+        linesByWineId.set(w.id, {
+          title: draftTitle(stored ? parseStoredDraft(stored.draft) : null),
+          meta: flightRowNeeds(missing),
+          incomplete: true,
+        });
+      });
     }
   }
 
-  // Per-wine display state for the draft flight list, computed here (server) so
-  // the WineFlightList client component only owns the *order* — reordering is
+  // Per-wine display state for the flight list, computed here (server) so the
+  // WineFlightList client component only owns the *order* — reordering is
   // optimistic there, moveWine persists it. `contributorLabel` null => the row
   // is numbered positionally from its live index.
-  const flightWines: FlightWine[] = (wines ?? []).map((w) => ({
-    id: w.id,
-    contributorLabel: isByo ? wineLabel(w) : null,
-    isRevealed: w.is_revealed,
-    isByo,
-    identity: (isHost ? hostWineIdentity.get(w.id) : null) ?? null,
-    editable:
-      !hasStarted &&
-      (w.contributor_participant_id
-        ? w.contributor_participant_id === myParticipant?.id
-        : isHost),
-    canReorder: isHost && !w.is_revealed,
-    canReveal:
-      isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
+  const flightWines: FlightWine[] = (wines ?? []).map((w) => {
+    const lines = linesByWineId.get(w.id) ?? null;
+    return {
+      id: w.id,
+      contributorLabel: isByo ? wineLabel(w) : null,
+      isRevealed: w.is_revealed,
+      isByo,
+      lines,
+      // The server's edit guard (editRefusal in wines/new/tasting-wine-writes.ts,
+      // plan amendment 7), for the adder only: never on a CLOSED tasting or a
+      // revealed glass; a complete glass only until its first reveal step, an
+      // incomplete one while the tasting runs.
+      editable:
+        isAdder(w) &&
+        tasting.status !== "CLOSED" &&
+        !w.is_revealed &&
+        (lines?.incomplete === true || w.reveal_step === 0),
+      canReorder: isHost && !w.is_revealed,
+      canReveal:
+        isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
+    };
+  });
+  const editableWineIds = flightWines
+    .filter((w) => w.editable)
+    .map((w) => w.id);
+  // No bring-your-own slots: one waiting row per JOINED participant without a
+  // bottle, even while the flight is empty.
+  const waitingFor: WaitingContributor[] = participantsWithoutWine.map((p) => ({
+    participantId: p.id,
+    name: nameByParticipantId.get(p.id) ?? "Someone",
   }));
 
-  const addWineLabel =
-    tasting.wine_source === "HOST_PROVIDES" ? "Add wine" : "Add a wine";
   // The universal add-wine sheet's flight destination: the next glass number
   // is the live count + 1 (the page re-renders after every add).
+  const flightDestination: FlightDestination = {
+    kind: "flight",
+    tastingId: id,
+    tastingName: tasting.name,
+    revealMode: tasting.reveal_mode,
+    wineSource: tasting.wine_source,
+    position: wineCount + 1,
+  };
   const addWineButton = canAddWine ? (
-    <AddToFlightButton
-      tastingId={id}
-      label={addWineLabel}
-      tastingName={tasting.name}
-      revealMode={tasting.reveal_mode}
-      wineSource={tasting.wine_source}
-      position={wineCount + 1}
-    />
+    <AddToFlightButton destination={flightDestination} />
   ) : null;
 
-  // The wine list (serving order + reveal state). Shown to everyone: host gets
-  // the reveal / reorder / add / edit affordances, guessers see a read-only
-  // flight overview. Inline while setting up; while running it sits above the
-  // host's play cards so mid-tasting adds and reorders of unrevealed wines
-  // happen on the page, not only in the console.
+  // The wine list (serving order + reveal state). Shown to everyone while
+  // setting up: the host gets the reveal / reorder / add affordances, each adder
+  // their own glasses' lines and Edit, and guessers a read-only flight overview.
+  // While running it sits above the play cards for the host and for anyone who
+  // added a glass, so mid-tasting adds, edits and reorders of unrevealed wines
+  // happen on the page, not only in the console — its Edit is how a
+  // bring-your-own contributor finishes their own glass once the tasting runs.
+  const showWinesWhileRunning = isHost || myWineIds.length > 0;
   const winesPanel = (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-3">
+        <CardTitle className="flex flex-wrap items-center gap-x-3 gap-y-1">
           Wines
-          <span className="text-[12px] font-normal text-muted-foreground">
-            {wineCount} {wineCount === 1 ? "wine" : "wines"}
-            {isHost && !isByo ? " · only you can see them" : null}
-          </span>
+          {/* Only the host of a host-provides tasting gets a subtitle (spec
+              §2.1 row 15): in bring-your-own each contributor sees only their
+              own bottles. */}
+          {isHost && !isByo ? (
+            <span className="text-[12px] font-normal text-muted-foreground">
+              {wineCount} {wineCount === 1 ? "wine" : "wines"} · only you can
+              see them
+            </span>
+          ) : null}
           {addWineButton ? <span className="ml-auto">{addWineButton}</span> : null}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {wineCount === 0 ? (
+        {wineCount === 0 && waitingFor.length === 0 ? (
           <p className="text-sm text-muted-foreground">No wines added yet.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {isHost && !isByo ? (
+            {isHost && !isByo && wineCount > 0 ? (
               <p className="text-xs text-muted-foreground">
                 This is the serving order — use the arrows to reorder.
               </p>
             ) : null}
-            <WineFlightList tastingId={id} wines={flightWines} />
-            {isByo && participantsWithoutWine.length > 0 ? (
-              <p className="text-sm text-muted-foreground italic">
-                Yet to add a wine:{" "}
-                {participantsWithoutWine
-                  .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
-                  .join(", ")}
-              </p>
-            ) : null}
+            <WineFlightList
+              tastingId={id}
+              wines={flightWines}
+              waitingFor={waitingFor}
+              destination={flightDestination}
+            />
           </div>
         )}
       </CardContent>
@@ -449,7 +589,8 @@ export default async function TastingPage({
       {hasStarted ? <AutoRefresh /> : null}
       {/* Registered whenever the viewer may add — running or not: adding
           mid-tasting is normal, so the header camera keeps targeting this
-          flight. */}
+          flight. Never on a CLOSED tasting. The status and timing give the
+          flight hint its phase. */}
       {canAddWine ? (
         <TastingScanRegistrar
           tastingId={id}
@@ -457,8 +598,19 @@ export default async function TastingPage({
           revealMode={tasting.reveal_mode}
           wineSource={tasting.wine_source}
           position={wineCount + 1}
+          timingMode={tasting.timing_mode}
+          status={tasting.status}
         />
       ) : null}
+      {/* Where the legacy add and edit routes land: ?addWine=byhand and
+          ?editWine=<wineId> open the sheet once (spec §C.6). */}
+      <Suspense fallback={null}>
+        <SheetFromQuery
+          destination={flightDestination}
+          canAddWine={canAddWine}
+          editableWineIds={editableWineIds}
+        />
+      </Suspense>
       {/* Header: title + host settings, one prominent status, and secondary
           metadata as inline text rather than a row of equal-weight pills. The
           tasting photo rides alongside the title as a thumbnail — as a full
@@ -628,9 +780,9 @@ export default async function TastingPage({
             </div>
           ) : null}
 
-          {/* The host's Wines card (below) carries its own Add button; a
-              bring-your-own contributor who is not the host keeps this one. */}
-          {addWineButton && !isHost ? (
+          {/* The Wines card (below) carries its own Add button; a
+              bring-your-own contributor with no glass here yet keeps this one. */}
+          {addWineButton && !showWinesWhileRunning ? (
             <div className="flex justify-end">{addWineButton}</div>
           ) : null}
 
@@ -645,7 +797,7 @@ export default async function TastingPage({
           >
             <div className="flex min-w-0 flex-col gap-6">
               {hostConsoleCard}
-              {isHost ? winesPanel : null}
+              {showWinesWhileRunning ? winesPanel : null}
               {canGuess ? (
                 <PlayExperience tastingId={id} embedded />
               ) : (
