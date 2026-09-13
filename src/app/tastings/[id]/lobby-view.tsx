@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import { getCurrentUser, getTastingRow, getViewerParticipant, getWineRows } from "@/lib/tasting-request-cache";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { SheetFromQuery } from "./sheet-from-query";
 import { TastingPageHeader } from "./tasting-page-header";
 import { WinesCard, getEditableWineIds } from "./wines-card";
 import { ParticipantsCard } from "./participants-card";
 import { StartBar } from "./start-bar";
+import { SemiBlindList } from "./semi-blind-list";
 import type { FlightDestination } from "./tasting-add-wine-button";
 
 // The DRAFT lobby (BT-D2, moved without change from page.tsx): the host's
@@ -55,6 +57,21 @@ export async function LobbyView({
   };
   const editableWineIds = await getEditableWineIds(tastingId);
 
+  // SB1's list (BT-S1): SEMI_BLIND only, and only the host's own name is
+  // worth a query here — most lobbies are BLIND, so this stays behind the
+  // gate rather than joining `profiles` on every render.
+  const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
+  let semiBlindHostName = "";
+  if (isSemiBlind) {
+    const supabase = await createClient();
+    const { data: hostProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", tasting.host_id)
+      .maybeSingle();
+    semiBlindHostName = hostProfile?.display_name || "The host";
+  }
+
   return (
     <div
       className={cn(
@@ -92,6 +109,14 @@ export async function LobbyView({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)]">
         <div className="flex min-w-0 flex-col gap-6">
           <WinesCard tastingId={tastingId} />
+          {isSemiBlind ? (
+            <SemiBlindList
+              tastingId={tastingId}
+              hostName={semiBlindHostName}
+              started={tasting.status !== "DRAFT"}
+              viewerIsHost={isHost}
+            />
+          ) : null}
           {/* Start (spec §3.3 item 7): below the Wines card on laptops, a
               bottom-pinned bar on phones — self-fetches and gates on host,
               so it mounts unconditionally. */}

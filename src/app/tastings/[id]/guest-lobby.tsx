@@ -21,6 +21,7 @@ import {
 } from "@/lib/invitation-copy";
 import { WinesCard } from "./wines-card";
 import { LeaveTastingButton } from "./leave-tasting-button";
+import { SemiBlindList } from "./semi-blind-list";
 
 // The JOINED guest's DRAFT layout — S6 on phones, S6b on laptops (BT-G2;
 // ledger B3; spec §4.3 item 5). Replaces the BT-D2 stub that reused
@@ -246,6 +247,22 @@ export async function GuestLobby({
                 </p>
               ))}
             </div>
+          ) : null}
+
+          {/* SB1's list (BT-S1), below the Tonight card. Never the host here
+              (this view only ever renders for a JOINED non-host, per this
+              file's own routing guarantee — routeTastingView), so
+              viewerIsHost is always false; started is always false too
+              (guest-lobby only renders while status === "DRAFT"), kept
+              computed rather than hardcoded so the component's own "before
+              Start" branch stays correct if that ever changes. */}
+          {tasting.reveal_mode === "SEMI_BLIND" ? (
+            <SemiBlindList
+              tastingId={tastingId}
+              hostName={hostName}
+              started={tasting.status !== "DRAFT"}
+              viewerIsHost={false}
+            />
           ) : null}
 
           <div className="flex flex-col gap-3">
