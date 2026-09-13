@@ -203,6 +203,7 @@ test("attribution keys reject unknown namespaces", () => {
     "lwk-rlp": ATTRIBUTION.LWK_RLP_WEINLAGEN.text,
     "dgt-caop": ATTRIBUTION.CAOP_CONCELHOS.text,
     "hvbg-atkis": ATTRIBUTION.HESSEN_ATKIS_WEINBAU.text,
+    "de-spec-atkis": ATTRIBUTION.DE_SPEC_ATKIS_WEINBAU.text,
   });
 });
 
@@ -218,6 +219,10 @@ test("the German namespaces resolve to their own credits", () => {
   // use clipped to the Gemeinden the Weinbauamt names, so it gets its own
   // credit rather than sharing the Rheinland-Pfalz one.
   assert.equal(attributionKeyFor("HESSEN_ATKIS_WEINBAU"), "hvbg-atkis");
+  // Franken and the regions to follow are delimited by their EU product
+  // specification rather than a state Weinbergsrolle, so they carry their own
+  // credit naming both the survey authority and the register.
+  assert.equal(attributionKeyFor("DE_SPEC_ATKIS_WEINBAU"), "de-spec-atkis");
   assert.match(ATTRIBUTION.BKG_VG250.text, /BKG/);
   assert.match(ATTRIBUTION.LWK_RLP_WEINLAGEN.text, /Weinbergsrolle/);
 });

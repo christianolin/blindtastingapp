@@ -228,6 +228,17 @@ export const ATTRIBUTION = {
     text: "© HVBG — ATKIS Basis-DLM (§ 24 HVGG); Abgrenzung nach dem Verzeichnis des "
       + "Regierungspräsidiums Darmstadt, Dezernat Weinbau Eltville",
   },
+  // The German regions delimited by their EU product specification rather than
+  // by a state Weinbergsrolle. One namespace, not one per state, because the
+  // membership half is the same source for all of them and the geometry half is
+  // whichever state's ATKIS the region sits in -- currently Bavaria, with
+  // Baden-Württemberg and Saale-Unstrut to follow. Both contributing
+  // authorities are credited: neither result stands without the other.
+  DE_SPEC_ATKIS_WEINBAU: {
+    key: "de-spec-atkis",
+    text: "© Landesvermessung (ATKIS Basis-DLM), Bayern: Bayerische Vermessungsverwaltung "
+      + "(CC BY 4.0); Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia",
+  },
 };
 
 export function attributionKeyFor(namespace) {
