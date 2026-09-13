@@ -126,8 +126,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   table, never free text — matching is a plain FK id comparison. The host can
   add a new reference entry inline when entering a wine's answer key;
   participants guessing can only pick existing entries.
-- Both the answer-key form (`wines/new/wine-form.tsx`) and the guess form
-  (`play/guess-form.tsx`) cascade country→region→appellation: the region list
+- Both the answer-key forms (`add-wine/by-hand-form.tsx` and the legacy
+  `wine/wine-identity-fields.tsx`) and the guess ladder (`play/guess-ladder.tsx`
+  with `play/field-picker.tsx`) cascade country→region→appellation: the region list
   is filtered to the chosen country and the appellation search is scoped to
   the chosen region. Scoring is still independent per category (`reveal_wine`
   compares each FK separately) — the cascade only constrains the input.
@@ -158,18 +159,34 @@ a raw subquery, regardless of which two tables look involved at a glance.
   one), primary grape 8, secondary grape 2 (only if the wine has one),
   producer 6, type designation 2 (only if the wine has one), vintage 2/1/0
   as above.
-- Appellation is optional (`wine_answers.appellation_id` is nullable) —
-  plenty of real wines carry nothing more specific than the region itself
-  (a plain "Bourgogne rouge", "Alsace", generic "Rioja", "California", a
-  Mendoza varietal) or no formal appellation at all ("Vin de France"). Every
-  region got a self-named appellation added (migration
-  `20260713180000_optional_regional_appellation.sql`) so "just the region"
-  is always pickable — the original LWIN-import fallback only added one for
+- Appellation is NOT optional on a catalog wine any more:
+  `catalog_wines.region_id` and `catalog_wines.appellation_id` are NOT NULL
+  (`wine_answers.appellation_id` stays nullable — for legacy rows written
+  before add-wine v2, and for the current byhand-7 "I can't identify this
+  bottle" flight-glass path: `prepareUnidentifiedWine`
+  (`src/lib/wine-identity/server/write.ts`) resolves against
+  `UNIDENTIFIED_WINE_FIELDS` (`src/lib/wine-identity/complete.ts`), which does
+  NOT require appellation, so `ResolvedUnidentifiedWine.appellationId` can be
+  `null` and `answerIdentity()` writes that straight into `wine_answers`.
+  Every wine written through `prepareCompleteWine` (`COMPLETE_WINE_FIELDS`)
+  names one). Every region has a
+  self-named appellation (migration
+  `20260713180000_optional_regional_appellation.sql`, seeded so "just the
+  region" is always pickable — plenty of real wines carry nothing more
+  specific, a plain "Bourgogne rouge", generic "Rioja", "California", a
+  Mendoza varietal — the original LWIN-import fallback only added one for
   regions with *zero* appellation candidates, missing 181 of 378 regions
-  (including Bordeaux, Rhône, Alsace, Rioja, California, Mendoza) that had
-  specific sub-appellations but no option matching the region's own name.
-  The wine-form's appellation field is `allowClear`; leaving it blank is a
-  valid, real answer key, not a placeholder for "not entered yet."
+  including Bordeaux, Rhône, Alsace, Rioja, California, Mendoza), and the
+  by-hand form's appellation field offers it as an explicit "Just the region"
+  choice (`self-named-appellation.ts`) rather than leaving the field blank. A
+  wine with no formal appellation ("Vin de France", "Vino d'Italia",
+  "Deutscher Wein", a plain table wine) uses the country's national-tier
+  region + appellation where one exists (France: "Vin de France",
+  `20260829212000_vin_de_france_appellation.sql`) or otherwise the
+  per-country sentinel "None" region + appellation
+  (`20260829263700_none_region_appellation.sql`) — every wine still names a
+  region and an appellation row, so the value is explicit and no join needs a
+  null check.
 - Appellation names include their real geographic designation as a suffix
   where one applies — "Barolo DOCG", "Napa Valley AVA", "Toscana IGT",
   "Rioja DOCa", "Bordeaux AOP" — via `scripts/add-appellation-designations.mjs`.
@@ -224,7 +241,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   directory and profile stats have real content without needing real
   participants. Idempotent — re-running skips people/tastings that already
   exist by name+host. Not meant to be deleted; this is seed data, not
-  scratch/test output.
+  scratch/test output. Every reference is resolved by EXACT name inside its
+  parent — country; region within that country; appellation within that
+  region; producer by exact name, required to be linked to that region — so
+  the seed never guesses across `find_producer_by_folded_name`'s fuzzier
+  lookup. Each seed wine must be complete by
+  `src/lib/wine-identity/complete.ts`'s rule, then is written through the
+  same catalog-wine RPC the app's write path uses
+  (`find_or_create_catalog_wine`, called AS THE HOST) and every glass's
+  `wine_answers` is copied from that linked catalog wine with
+  `catalog_wine_id` set — an answer key is never hand-typed data disconnected
+  from the catalog. Tastings are inserted `IN_PROGRESS` (`reveal_wine`
+  refuses CLOSED tastings), locked guesses are written through the service
+  role, every glass is revealed by the HOST through `reveal_wine` while
+  signed in with a magic link + `verifyOtp` (never a password), then the
+  tasting is closed. If anything fails once a tasting row exists, only that
+  tasting (created in this run) is deleted before rethrowing, so a rerun
+  never skips a half-made one.
 - Friends (`friendships` table) are one-way, no accept/request flow — adding
   a friend is unilateral, like saving a contact (confirmed with the user).
   A user only ever sees/manages rows where they are `user_id`; there's no
@@ -258,10 +291,16 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasting's total wine count — this can differ between participants if one
   of them hasn't guessed an already-revealed wine, unlike a purely
   tasting-global "wines revealed" count) and "+N last round" (their points
-  on whichever wine has the most recent `scored_at` across the tasting —
-  `reveal_wine` scores every guess for a wine in one transaction, so the max
-  `scored_at` per `wine_id` groups cleanly into "rounds" without needing a
-  dedicated reveal-order column).
+  on the tasting's round wine). Since reveal-7
+  (`20260912106000_leaderboard_round_wine.sql`) the round wine for a LIVE
+  tasting is chosen ONCE for the whole table, not per participant: the
+  lowest-position wine with `reveal_step > 0` that isn't fully revealed,
+  else the wine with the newest `scored_at` among countable guesses —
+  because picking it per participant broke for anyone with no row on the
+  wine being revealed (a BYO contributor never guesses their own bottle),
+  who kept showing a stale previous glass as "last round". ASYNC tastings
+  still pick it per participant, since there participants advance
+  independently.
 - `appellations` and `producers` are populated from a real LWIN (Liv-ex Wine
   Identification Number) database via `scripts/import-lwin.mjs`, not just
   hand-seeded data — tens of thousands of rows. Because of that:
@@ -301,10 +340,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
     up — accent/punctuation-only folding, same non-destructive-elsewhere
     rename-in-place-or-reassign-FKs approach, still never stripping
     meaningful prefix words.
-- Semi-blind matching (`play/match-guess-form.tsx` +
-  `submitAllMatchGuesses` in `play/actions.ts`) is submitted as one combined
-  batch, not per-glass — every still-hidden glass must be matched to a
-  candidate before the submit button enables (client-side `allMatched` check)
+- Semi-blind matching (`play/match-ladder.tsx` + `submitAllMatchGuesses` and
+  `lockGuesses` in `play/actions.ts`) is submitted as one combined batch, not
+  per-glass — every still-hidden glass must be matched to a candidate before
+  "Lock in all glasses" enables (client-side `allMatched` check), which writes
+  the batch and then locks every glass,
   and the server independently re-validates the same completeness rule.
   Partial submission doesn't make sense here the way a partial blind guess
   does: blind guessing scores each category independently, so a half-filled
@@ -494,8 +534,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   while the tab is visible (mounted on the play page always, the lobby once
   started). `router.refresh()` preserves client state, so an open guess form
   isn't disrupted. If real push is ever wanted, that's the swap point.
-- "One wine at a time" pacing: `tastings.sequential_guessing` (blind only;
-  host toggles it in HostControls). When on, only the current wine — the
+- "One wine at a time" pacing: `tastings.sequential_guessing` (blind AND
+  LIVE tastings only — `f.revealMode === "BLIND" && f.timingMode === "LIVE"
+  && f.flow === "GUIDED"` at create, `src/app/tastings/new/actions.ts`; host
+  toggles it in HostControls). When on, only the current wine — the
   lowest-`position` not-yet-revealed one — is guessable; the play page locks
   the rest and `submitGuess` rejects out-of-order guesses server-side.
   Revealing the current wine advances everyone. The host sets the order with
@@ -516,7 +558,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
 - Bring-your-own (PARTICIPANT_CONTRIBUTED) wines are labelled by contributor
   ("Gustav's wine"), not "Wine N", on the play page (`wineTitle`). The lobby's
   Wines card, in BYO mode, lists every JOINED participant with "Added" or
-  "Still waiting for {name} to add their wine" so everyone sees who's brought a
+  "waiting for {name} to add it" so everyone sees who's brought a
   bottle — driven off `wines.contributor_participant_id`, no answer leaked.
 - `/rules` (`app/rules/page.tsx`) explains the VM/DM point system (and the
   semi-blind 1-point-per-match variant). Linked from the reveal-mode badge on
@@ -718,11 +760,14 @@ a raw subquery, regardless of which two tables look involved at a glance.
   a region returns nothing (type-to-search as before). `SearchableCombobox`
   supports this via an optional `group` label on results (no group → flat
   list, so the appellation field is untouched) and an `emptyQueryHint`
-  line. Both `wine-form.tsx` and `guess-form.tsx` wrap `searchProducers`
-  in a `searchProducersGrouped` helper mapping `in_region` → group labels;
-  the host's "add new producer" (`createProducer(regionId, name)` in
-  `wines/new/actions.ts`) requires a region be chosen first, same as
-  `createAppellation`. Producer name stays
+  line. The answer-key forms (`add-wine/by-hand-form.tsx`,
+  `wine/wine-identity-fields.tsx`) wrap `searchProducers` in a
+  `searchProducersGrouped` helper with those two labels; the guess ladder
+  (`play/guess-ladder.tsx`) builds its own region-scoped groups and labels the
+  rest "Everything else". A new producer is created through
+  `find_or_create_producer` (a name that folds equal to an existing producer,
+  or to a curated alternative name, reuses that row; the region is optional).
+  Producer name stays
   globally unique (no change to that constraint) — region_id is an additive
   scoping hint, not a re-keying of the dedup identity. After running the
   backfill, 32,088 of 33,741 producers ended up linked; the ~1,650 left NULL
@@ -752,19 +797,25 @@ a raw subquery, regardless of which two tables look involved at a glance.
   and users had to "type the vintage last" — now controlled like the rest.
   (The add-wine form's vintage input can stay uncontrolled; that route has
   no AutoRefresh.)
-- Wines are editable after being added, while the tasting is still DRAFT:
-  an Edit button on the lobby wine list links to
-  `/tastings/[id]/wines/[wineId]/edit`, which reuses `WineForm` in edit
-  mode (`wineId` + `initial` props → `updateWine` action instead of
-  `addWine`). Who can edit = whoever added the wine: the host for wines
-  with no contributor, the contributing participant for their own BYO
-  bottle (the host can NOT edit someone else's BYO wine — they can't see
-  its answer anyway). Gated three ways: the Edit button only renders
-  pre-start, the `updateWine` action re-checks DRAFT + not-revealed +
-  adder identity, and the `wine_answers` update RLS policy
-  (`20260722090000_wine_answers_contributor_update.sql`) extends the old
-  host-only update to contributors with a not-revealed guard as the
-  defense-in-depth floor.
+- Wines are editable after being added. The legacy `WineForm`/`wine-form.tsx`
+  page is gone (add-wine v2): the lobby's Edit button now opens the add-wine
+  sheet's by-hand form on that glass (`edit: { wineId }` →
+  `openAddWineSheet`, `wine-flight-list.tsx`), prefilled from its answer key
+  or its incomplete-glass draft; `/tastings/[id]/wines/[wineId]/edit`
+  (`wines/[wineId]/edit/page.tsx`) is now only a legacy redirect into
+  `?editWine=<id>`, which the sheet picks up. Who can edit = whoever added
+  the wine: the host for wines with no contributor, the contributing
+  participant for their own BYO bottle (`isAdder` in
+  `tastings/[id]/page.tsx`). The app-level guard is no longer "DRAFT only"
+  (plan amendment 7, superseding the earlier F10/S7 task text): a glass is
+  editable while the tasting is not CLOSED, the glass is not revealed, AND
+  either the glass is incomplete or its reveal hasn't started
+  (`reveal_step === 0`) — so a complete glass stops being editable at its
+  first reveal step rather than at Start, while an incomplete one stays
+  editable throughout. The DB-level `wine_answers` update RLS for this is
+  being reworked by the concurrent blind-tasting migration stream
+  (`is_wine_adder`, `can_edit_flight_glass`); check the current migrations
+  for the live policy rather than trusting a cited file here.
 - **Overview / About / Your numbers (2026-09 redesign).** `/overview` is the
   logged-in landing page (`/` redirects there): live/next-up banner, then
   three equal subject cards in a fixed order — Blind tastings → Your ratings
@@ -848,25 +899,85 @@ a raw subquery, regardless of which two tables look involved at a glance.
   and `docs/superpowers/plans/2026-09-12-add-wine-sheet-and-tasting-flow.md`;
   the Claude Design handoff (`design_handoff_blindr_flows/`, screens 6a–6i
   and 7a–7i) is the visual source of truth.
-  - **One add-wine sheet** (`src/components/add-wine/`) replaced the catalog,
+  - **One add-wine sheet** (`src/components/add-wine/`, rebuilt by the
+    add-wine v2 rewrite — spec
+    `docs/superpowers/specs/2026-09-12-add-wine-v2-scan-and-flow-fixes-design.md`,
+    plan `docs/superpowers/plans/2026-09-12-add-wine-v2-scan-and-flow-fixes.md`,
+    ledger `.superpowers/add-wine-v2/decisions.md`) replaced the catalog,
     cellar and tasting add-wine modals plus the scan and bulk-scan modals.
-    Open it with `useAddWine().openAddWineSheet(destination, { start,
-    onAdded })` — destination `flight` / `cellar` / `catalog` / `null`
-    (null = the header camera with no context: after the read it asks where
-    the bottle goes, offering "tonight's flight" when a live or next-up
-    tasting registered itself via `registerFlightHint`). Phones open on the
-    camera (`use-camera.ts`, `getUserMedia` with a file-input fallback);
-    `md` and up get the search-led desktop view (7h) with the upload zone,
-    which stays open after every add until Done. A scan uploads to Storage
-    `wine-images/catalog/staging/<userId>/` → `identifyWineFromLabel`
-    (FastCork — one credit per photo, NOT the Anthropic API) →
-    `resolveWinePrefill` → an explicit confirm; nothing is ever auto-added.
-    "Add it by hand" writes a catalog wine first and then adds it. Cellar
-    rows add as `{ kind: "lot", consume: true }` (the bottle is drawn down,
-    with a per-row "keep it in the cellar" toggle); the create sheet's
-    flight-step inline search adds catalog rows without consuming. A photo
-    whose vintage can't be read becomes a pending "Fix" row (year / NV
-    strip, `pending-fix.tsx`) on both the camera and desktop views.
+    Open it with
+    `useAddWine().openAddWineSheet(destination, { start, onAdded })` —
+    `AddWineDestination | null`: `{ kind: "flight" }` / `{ kind: "cellar" }` /
+    `{ kind: "catalog" }` / `{ kind: "note" }` (Taste & rate: one wine, then
+    its WSET note opens) / `null` (the header camera with no context: after
+    the read it asks where the bottle goes, offering "tonight's flight" when
+    a live or next-up tasting registered itself via `registerFlightHint` —
+    D12: never silently into a hinted flight). Every destination-dependent
+    string and rule — header, chips, search groups, row actions, upload
+    copy, footers, confirm and by-hand copy, partial-read and follow-up
+    behaviour — comes from one lookup, `sheetMatrix(destination, canScan)`
+    in `matrix.ts`; views read the matrix and never branch on the
+    destination themselves. `canScan` (`use-can-scan.ts`, `detectCanScan`)
+    is a coarse pointer AND a video input, never a user-agent sniff — not a
+    touch/width split; `NEXT_PUBLIC_FORCE_CAN_SCAN=1` forces it true outside
+    production, for the Browser pane's phone emulation (no real camera).
+    `canScan === true` opens on the live camera (`use-camera.ts`,
+    `getUserMedia` with a file-input fallback); otherwise the search-led
+    desktop view with the upload zone, which stays open after every add
+    until Done. "Add it by hand" writes a catalog wine first and then adds
+    it. Cellar rows add as `{ kind: "lot", consume: true }` (drawn down at
+    Start/add — D11 below); the create sheet's flight-step inline search
+    adds catalog rows without consuming. A photo whose vintage can't be
+    read becomes a pending "Fix" row that opens the by-hand form with that
+    field empty, focused and flagged "did not read — required" (the round-1
+    year/NV strip, `pending-fix.tsx`, is removed).
+  - **The label reader.** `readLabelPhoto` (`src/app/scan/actions.ts`) calls
+    `readLabel` (`src/lib/label-scan/extract.ts`) — FastCork is gone. One
+    photo is one Claude Sonnet 5 (`claude-sonnet-5`) request via the
+    official SDK's `messages.parse`, structured output, `effort: "low"`, no
+    tools, no web search, no batch, about $0.01/scan. Every billed call — a
+    good read, "not a label", or a billed failure (a refusal, a max_tokens
+    stop, an unparsed output) — is kept in `label_reads` (owner-only RLS;
+    only the staging image path, never the bytes; `outcome` is `ok` /
+    `not-a-label` / `not-read`). `LABEL_READ_FIXTURE` (dev only,
+    `src/lib/label-scan/fixture.ts`) replays a stored `LabelRead` JSON file
+    instead of calling the API, checked before the SDK client is
+    constructed. `resolveLabelRead` → `missingWineFields` →
+    `findConfidentMatch` → an explicit confirm screen; nothing is ever
+    auto-added.
+  - **The wine-identity module** (`src/lib/wine-identity/`) is the only
+    definition of a complete wine (D2): `COMPLETE_WINE_FIELDS` in
+    `complete.ts` — producer, vintage, colour, style, country, region,
+    appellation, primary grape — deliberately WITHOUT wine name (D3: optional
+    everywhere). No "is it complete" logic exists outside this module; every
+    server refusal is `"This wine " + describeMissing(missing) + "."`. One
+    server write path, `src/lib/wine-identity/server/write.ts`
+    (`prepareCompleteWine` / `prepareUnidentifiedWine` / `upsertCatalogWine`),
+    is the only place a draft becomes catalog rows — the flight, cellar,
+    catalog and note paths all go through it, so completeness and producer/
+    grape resolution can never drift between them.
+  - **D11: cellar draw-down at the pour.** The adder's intent to pour their
+    own cellar bottle lives in the owner-only `wine_pour_intents` table
+    (`wine_id` PK, `cellar_lot_id`, `consume_on_start`,
+    `cellar_consumption_id`) — deliberately never on `wines`, which every
+    host and participant can read; a lot id there would name a hidden glass
+    through a PUBLIC/FRIENDS cellar. A glass added to a DRAFT flight just
+    records the intent; Start draws every flagged lot down
+    (`draw_down_flight_cellar_lots`, DRANK, occasion = the tasting name); a
+    glass added to a RUNNING flight is poured at once
+    (`pour_cellar_lot_into_glass`). Both are idempotent and only ever pour
+    the adder's own lot.
+  - **D7: incomplete glasses.** "Save · glass N" needs a complete wine;
+    "Leave it for later" adds the glass anyway — a `wines` row plus an
+    owner-only `wine_identity_drafts` row (`wine_id` PK, `draft` jsonb,
+    `missing` text[]), no `wine_answers` until it is finished. The flight
+    list shows the adder "needs a vintage — tap Edit to finish" in dark
+    gold. Start does NOT refuse an incomplete flight — it warns
+    (`startWarning` in `src/lib/wine-identity/incomplete.ts`; "Glass 3 still
+    needs a vintage — finish it before you reveal it." under the Start
+    button, nothing blocks the tap). Revealing an incomplete glass IS still
+    refused (`revealRefusal`, same file).
+    `tasting_incomplete_glasses(tasting_id)` is the RPC both read from.
   - **Create-tasting sheet** (`src/components/new-tasting-sheet.tsx`,
     launched by `TasteLauncherProvider`; `/tastings/new` renders the same
     sheet): step 1 setup with the mode as a control (Blind / Semi-blind /
@@ -887,10 +998,14 @@ a raw subquery, regardless of which two tables look involved at a glance.
     through `/login?next=/j/<code>` (and `/signup?next=…`, whose
     confirmation link carries `next` into `/auth/callback`), validated by
     `safeNext` in `src/lib/safe-next.ts`.
-  - **Start lands on the host console** for LIVE + BLIND tastings
-    (`/tastings/[id]/host`, dark `--console` palette) — both from the
-    sheet's step 3 and from the lobby's HostControls; semi-blind and OPEN
-    tastings stay on the lobby. The console's reveal-in-order chips call
+  - **Start lands on the host console** for LIVE + BLIND + HOST_PROVIDES
+    tastings only (`startLandsOnConsole` in
+    `src/lib/tasting-lifecycle-copy.ts`; `/tastings/[id]/host`, dark
+    `--console` palette) — both from the sheet's step 3 and from the
+    lobby's HostControls; a bring-your-own
+    host competes for the other glasses and lands on the lobby instead
+    (reveal-5), and semi-blind and OPEN tastings stay on the lobby too. The
+    console's reveal-in-order chips call
     `reveal_next_category(p_wine_id, p_expected_step)` (compare-and-set, so
     two taps can't skip a step); "Reveal everything" is `reveal_wine`
     behind a `window.confirm`. Standings and the "this glass" facts come
@@ -928,34 +1043,148 @@ a raw subquery, regardless of which two tables look involved at a glance.
     candidate lists. Any future recreate of that policy must keep
     `is_tasting_host`, `has_scored_guess`, the revealed gate AND the
     semi-blind participant clause.
-  - **Known caveat, not changed:** `reveal_wine`'s non-host gate ("not
-    everyone has guessed yet") counts every guess row, drafts included, and
-    counts the HOST_PROVIDES host among the eligible guessers. With
-    autosaved drafts that gate can pass before anyone has locked, and ASYNC
-    + HOST_PROVIDES effectively relies on the manual host reveal. The right
-    fix is to count only `locked_at` rows and exclude that host — a future
-    migration.
+  - **Producer lookup order.** `find_producer_by_folded_name(p_name,
+    p_region_id)` (SECURITY INVOKER) orders candidates whose names fold
+    equal by: 1) the given region; 2) the exact spelling (case/whitespace
+    aside); 3) a producer that holds wines (a `catalog_wines` or
+    `wine_answers` row, read under the caller's RLS); 4) any region link; 5)
+    name, then id (`20260914112500_producer_lookup_exact_then_wines.sql`,
+    recreated from `20260912101530`'s ORDER BY with only the ranking
+    changed — under-labeling beats mislabeling, so the exact spelling beats
+    a copy that merely holds more wines). `producer_aliases`
+    (`20260914113500_producer_aliases.sql`) is the fallback, tried only when
+    no producer row folds equal to the read: a curated table of alternative
+    names → producer id (`alias_folded` unique, read-only RLS, written only
+    by migration) — e.g. "Borges Porto" → Sociedade dos Vinhos Borges. A
+    producer row always beats an alias, and region never orders the alias
+    half.
+  - **Resolver: region-conflict blank, curated appellation synonyms**
+    (`src/lib/wine-identity/resolve.ts`, owner approvals 3 and 4). A read
+    with no appellation text (not a no-geographic-indication read) takes its
+    region from the read's own region field alone; when the producer it
+    resolved to has a region link in ANOTHER region of the same country, the
+    region is left blank for the user (listed in `missing`) rather than
+    silently refilled from that link — a wrong-but-plausible answer is worse
+    than an honest gap. A curated appellation synonym
+    (`APPELLATION_SYNONYMS` / `curatedAppellationName` in
+    `src/lib/label-scan/region-canonical.ts`) is tried only when no
+    reference row agreed with the read's own appellation text, and only
+    inside the region the read itself named — e.g. three Ningxia spellings
+    map to the "Ningxia" appellation. It is a curated lookup table, never a
+    heuristic.
+  - **"Don't add it"** (plan amendment 18, D17): the cellar lot step's merge
+    card ("You already have this wine in your cellar.") gets a third,
+    quieter action beside "Add N to the existing lot" / "Keep as a separate
+    lot" — `onSkip` → the `lotSkipped` reducer action. It writes nothing (no
+    lot, no quantity change, no catalog write). A single add returns to
+    where the add started (the camera, the phone search view, or the
+    desktop view) with "Not added — it's already in your cellar" and an
+    "Open it" link (`SkippedLotNotice`, `state.skippedLot`); in a multi-add
+    that bottle's row just leaves the stack with the same line. Opened from
+    a cellar lot row's own "+1 bottle" (`initialLot`) the merge card never
+    shows, so nothing changes there.
+  - **Reducer rules that matter to future work** (`sheet-state.ts`, plan
+    amendments 20 and 23 — read before touching the reducer):
+    - **A finished read keeps its turn** (`confirmQueue`). With Many off, a
+      finished read (or a failed scan) opens its confirm only when a home
+      view or that bottle's own reading view is on screen; otherwise it
+      waits in `confirmQueue`, oldest first. A turn ends only when the user
+      acts on THAT bottle (its confirm, `lotSkipped`, or an `itemAdded` /
+      `itemAddFailed` naming its id) — opening by hand, the lot step or the
+      chooser from its confirm keeps the turn. Landing on a home view always
+      opens the oldest waiting read next.
+    - **A stale server reply never acts** (`flow`, `ReplyTicket`,
+      `replyIsCurrent`). Every action that waits on the server carries the
+      ticket it started with (`ticketFor`: the sheet's `flow` counter plus
+      the bottle in hand and the view); `flow` increments on every user step
+      that moves or closes the sheet, never on a background step. A reply
+      whose ticket no longer matches is still recorded (the row keeps its
+      "added" status or its error), but never navigates, closes the sheet,
+      or opens the note.
+    - **The close rule and warnings.** `shouldCloseAfterSingleAdd` only ever
+      auto-closes a PHONE (`canScan === true`), single-add (`!multi`), home
+      view, nothing-left session. A server warning ("Added — but …") always
+      keeps the sheet open regardless, until the user taps Done.
+    - **A note pick asks before dropping work** (`notePicked`, an accepted
+      deviation from the old flows spec's "the sheet closes and opens
+      NewNoteModal"). It closes and opens the note only when
+      `shouldCloseAfterSingleAdd` would allow it; otherwise it raises the
+      close-ask holding the pick (`closeAsk.note`) — Discard hands the pick
+      on to the note, "Keep going" (`cancelClose`) cancels it and nothing
+      opens.
+  - **Live reads.** Every billed read's `outcome` (`ok` / `not-a-label` /
+    `not-read`) and token usage lives in `label_reads`. The L1 harness
+    (`.superpowers/add-wine-v2/live-label-check.test.ts`, gated on
+    `LABEL_LIVE=1`) replays real Sonnet 5 calls against a fixed photo set
+    and stores each response as a replay fixture under
+    `src/lib/label-scan/__fixtures__/live/`, pinned by
+    `src/lib/wine-identity/live-replay.test.ts`. D1's cap is 30 live reads
+    total for this work; only the main session makes them, never a coding
+    agent (AGENTS.md's Claude API cost rules — every agent-side test uses
+    `LABEL_READ_FIXTURE` instead).
+  - **Lane N security notes** (blind-tasting ledger B13.x, applied ahead of
+    the redesign itself — see the migrations for the full holes each
+    closed; this replaces the earlier "Known caveat, not changed" note):
+    - **`has_scored_guess` narrowing**
+      (`20260912090000_has_scored_guess_step_gate.sql`). It now grants only
+      for the ASYNC-IMMEDIATE self-scored path: the caller's own JOINED
+      participant row, that tasting is `timing_mode = 'ASYNC'` and
+      `async_reveal_policy = 'IMMEDIATE'`, the guess is scored, and the
+      glass has no shared step-reveal in progress (`reveal_step = 0` or
+      fully revealed). Before this a guesser could read a whole answer key
+      by stamping their own `scored_at` once any category had been
+      step-revealed.
+    - **`reveal_wine` counts only locked eligible guesses, and refuses
+      CLOSED** (`20260912092000_reveal_wine_locked_gate.sql`). "Everyone
+      has guessed" now means every eligible JOINED participant (minus the
+      wine's contributor, minus the HOST_PROVIDES host) has a guess with
+      `locked_at` set — an autosaved draft no longer counts. A CLOSED
+      tasting refuses every caller, host included, and a caller with no
+      `auth.uid()` (the anon key with no session) is refused rather than
+      silently skipping the participant gate.
+    - **`guesses` client column grants**
+      (`20260912093000_guesses_client_columns.sql`). `authenticated` can
+      INSERT/UPDATE only the 14 client columns (`wine_id`, `participant_id`,
+      the ten guess fields, `guessed_wine_id`, `locked_at`); the
+      server-only columns (the points columns, `scored_at`, `reveal_step`,
+      …) get no client grant at all — only the SECURITY DEFINER scoring
+      functions write them. A BEFORE UPDATE trigger refuses moving a guess
+      onto another glass or participant. `anon`/`PUBLIC` lose EXECUTE on
+      every game RPC; `reveal_own_next_category` is revoked from clients
+      entirely.
+    - **Participant row pin**
+      (`20260912091000_participant_row_pin.sql`). A BEFORE UPDATE trigger
+      (`pin_tasting_participant_identity`) refuses any change to
+      `tasting_participants.tasting_id` or `.user_id`, for every role — the
+      RLS policy's own USING/WITH CHECK never looked at the OLD row's
+      tasting, so a participant could otherwise PATCH their own row into
+      any tasting with a public roster and set themselves JOINED there with
+      no invite.
   - **Owner feedback round 1 (2026-09-12, same day as the flows shipped).**
-    - The live camera is touch-only. The add-wine sheet routes by input type
-      with `(pointer: coarse)` (`useTouchPrimary`, `startViewFor`,
-      `homeViewFor`, `viewForDevice` in `add-wine/use-camera.ts`), never by
-      width: a mouse / trackpad device at any width gets the desktop view
-      (search, Upload label photos, From my cellar, Add it by hand) and can
-      never reach the camera; phones and tablets get the camera views. The
-      header button paints ImagePlus vs Camera with Tailwind's
-      `pointer-coarse:` variant, so SSR already shows the right glyph.
-    - Taste & rate is the sheet's `{ kind: "rate" }` destination —
-      `RateWineModal` and `cellar-lot-picker.tsx` are deleted. A rate pick is
-      single (no multi / Many / chooser), never writes to a flight or cellar,
-      and hands `{ catalogWineId, lotId, consume }` to the provider, which
-      opens `NewNoteModal`; a cellar bottle is drawn down only when the note
-      saves (`cellarConsume`). `ratePickPlan` in `format.ts` decides "pick" vs
-      "add to the catalog first" (by hand, unmatched scan).
+    - Taste & rate is the sheet's `{ kind: "note" }` destination (renamed
+      from the round-1 `{ kind: "rate" }`; `RateWineModal` and
+      `cellar-lot-picker.tsx` are deleted). A pick is single (no multi /
+      Many / chooser), never writes to a flight or cellar, and hands a
+      `NotePick` (`{ catalogWineId, lotId, consume }`) to `AddWineProvider`,
+      which closes the sheet and opens `NewNoteModal`; a cellar bottle is
+      drawn down only once the note saves (`cellarConsume`). After the
+      FIRST save of a new note, `NewNoteModal` reports it through
+      `NoteSavedStepContext`, and `shouldShowNoteSaved`
+      (`src/lib/wset/note-saved.ts`, Taste & Rate ledger R6) shows a
+      confirmation ("Note saved" · what was saved · See all notes / Done /
+      "Don't show this again") unless the visit or the device already
+      dismissed it — the dismissal flag is written through
+      `src/lib/safe-storage.ts`'s `readFlag`/`writeFlag` (the one try/catch
+      around browser storage, shared with the live theme's dismissal), so a
+      throwing or blocked store just means the confirmation shows again
+      next time, never a crash.
     - Every addable row in an add-wine result list carries the same
       `RowActionButton` (exported from `desktop-view.tsx`, also used by the
-      create sheet's flight step) labelled by `rowActionLabel`. The row Enter
-      adds is marked only by its tint and the "↵ adds the first hit" hint —
-      never by a different button (owner asked why two rows differed).
+      create sheet's flight step), labelled by the matrix's own `row()`
+      function (round 1's separate `rowActionLabel` helper is gone — folded
+      into `sheetMatrix`, spec §G.6). The row Enter adds is marked only by
+      its tint and the "↵ adds the first hit" hint — never by a different
+      button (owner asked why two rows differed).
     - The by-hand form never fills appellation or grape from the producer
       (owner: "nonsense" — a producer makes many wines). Only
       `producerHomeRegion` prefills country + region into an untouched origin

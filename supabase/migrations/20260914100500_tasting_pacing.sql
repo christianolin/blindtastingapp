@@ -176,7 +176,7 @@ begin
   if (select md5(replace(p.prosrc, chr(13), '')) from pg_proc p where p.oid = to_regprocedure('public.wines_full_reveal_step()'))
        is distinct from '5c8215b1df122773ec07058e31337c0e'
      or (select md5(replace(p.prosrc, chr(13), '')) from pg_proc p where p.oid = to_regprocedure('public.wines_pin_adder()'))
-       is distinct from '11cc3e61f6b0b3d3834ced2f57115696' then
+       is distinct from 'cdf869a9016452c49640bfba9fba2ff5' then
     raise exception 'wines_full_reveal_step or wines_pin_adder is not the dumped body';
   end if;
 

@@ -15,6 +15,7 @@ import {
 } from "@/lib/tasting-request-cache";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
+import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
 import { makeWineLabeler } from "@/lib/wine-label";
 import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
 import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
@@ -173,11 +174,18 @@ export default async function TastingPage({
 
   // Who may add (spec §C.5 A1; scan-7, sources-5, entry-2): nobody once the
   // tasting is CLOSED; otherwise the host of a host-provides tasting, or a
-  // JOINED participant in bring-your-own. It gates every Add button and the
-  // registered header camera, as the server's resolveTastingAdder does.
+  // JOINED participant in bring-your-own; and never once a semi-blind flight
+  // is fixed at Start (Q7, flight-glass-rules.ts's semiBlindAddRefusal) — a
+  // new glass would join the candidate list guests already see. It gates
+  // every Add button, the registered header camera and `?addWine=byhand`, as
+  // the server's resolveTastingAdder does.
   const canAddWine =
     tasting.status !== "CLOSED" &&
-    (tasting.wine_source === "HOST_PROVIDES" ? isHost : myStatus === "JOINED");
+    (tasting.wine_source === "HOST_PROVIDES" ? isHost : myStatus === "JOINED") &&
+    !semiBlindAddRefusal({
+      revealMode: tasting.reveal_mode,
+      tastingStatus: tasting.status,
+    });
 
   // Friends for the host's "invite more people" picker (only fetched for the
   // host, and only needed while the tasting is still in draft).
