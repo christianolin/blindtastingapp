@@ -2,7 +2,7 @@
 -- to that glass's wine at the reveal; no note can tie an unrevealed glass to a
 -- wine.
 --
--- Blind-tasting v3, M5 (BT-SQL5, hardened before its apply by BT-SQL5x): spec
+-- Blind-tasting v3, M5 (BT-SQL5, hardened before its apply by BT-SQL5x and M5x2): spec
 -- §9.4, §9.5, §11.3 item 16 (Save all's minimal notes), §15 M5, §16.1 rows 17,
 -- 18, 26 and 26b, §16.2 (a BLIND note carrying a catalog identity and an
 -- unrevealed glass's tasting_wine_id is public); ledger B8 (reverses "No WSET
@@ -63,7 +63,8 @@
 --      (BEFORE INSERT OR UPDATE OF tasting_wine_id, SECURITY DEFINER: an
 --      identity-less note written onto a revealed glass takes that glass's
 --      identity, reading the glass FOR SHARE so a save racing the reveal still
---      attaches);
+--      attaches, but only for a caller who may note that glass, so a write RLS
+--      refuses never holds up a reveal: M5x2);
 --    * EXECUTE on all four trigger functions revoked from PUBLIC, anon and
 --      authenticated (the triggers still fire).
 -- 2. save_wset_note recreated from pg_get_functiondef with exactly the two
@@ -110,6 +111,26 @@
 --   and save_wset_note keeps its identity. The interleavings, with real
 --   commits, are replayed on a disposable local cluster by
 --   .superpowers/blind-tasting/probes/20260914094500-hidden-notes-race.mjs.
+-- * A write RLS refuses never holds up a reveal (M5x2). The write resolve is a
+--   BEFORE trigger, so it runs before RLS judges the row, and BT-SQL5x's version
+--   took the glass FOR SHARE for every caller: anyone who knew a glass id (an
+--   outsider, an INVITED or DECLINED user, anon) could make that glass's reveal,
+--   reveal step or position change wait for as long as their refused write ran.
+--   It now first returns, with no lock and no identity copied, for a client who
+--   may not note the glass: a request whose JWT role is anon or authenticated
+--   (the expression auth.role() uses; inside this SECURITY DEFINER function
+--   current_user is its owner) from anyone who is neither the host nor JOINED in
+--   the glass's tasting (can_note_tasting_wine). The policies then refuse the
+--   write as before. service_role, and the owner outside a client request, are
+--   not clients: they still lock and attach, and the move guard still refuses
+--   their moves. Residual, stated: the gate reads membership with a fresh
+--   snapshot and the insert policy with the statement's, so the two disagree
+--   only when the writer's own membership is taken away while that write runs.
+--   Such a write passes RLS without the lock, and a reveal of that glass that
+--   runs before it commits can leave it identity-less on the revealed glass (its
+--   author's only, deleted with the glass). After Start M4's leave guard keeps a
+--   JOINED row JOINED, so this needs a guest leaving a DRAFT tasting while its
+--   host reveals the glass the guest's note is being saved on.
 -- * A resolved note cannot be hidden again. On a revealed glass the policies
 --   require exactly one identity, save_wset_note neither removes an identity
 --   a note already has nor swaps it for the payload's, and an identity-less
@@ -602,8 +623,15 @@ create trigger wset_notes_glass_move_guard
 -- and the reveal's own trigger resolves the note. It runs for an insert and for an
 -- update that moves the note to another glass. An edit that keeps its glass takes
 -- no lock: the reveal's trigger reaches that note through its row, and a lock here
--- could deadlock with it. Membership stays the policies' and the move guard's job;
--- by name this fires after the move guard and before the hue check.
+-- could deadlock with it. Nor does a client who may not note the glass: this runs
+-- before RLS judges the row, so a refused write would otherwise hold up that
+-- glass's reveal, reveal step or position change for as long as it ran. A client is
+-- a request whose JWT role is anon or authenticated (the expression auth.role()
+-- uses; current_user is this function's owner here). One who is neither the host
+-- nor JOINED in the glass's tasting gets no lock and no identity, and the policies
+-- refuse the write. service_role, and the owner outside a client request, still
+-- lock and attach. Membership stays the policies' and the move guard's job; by name
+-- this fires after the move guard and before the hue check.
 create or replace function public.wset_notes_glass_resolve_on_write()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
@@ -620,6 +648,13 @@ begin
     if new.tasting_wine_id is not distinct from old.tasting_wine_id then
       return new;
     end if;
+  end if;
+  -- A client who may not note this glass: no lock, no identity; RLS refuses it.
+  if coalesce(nullif(current_setting('request.jwt.claim.role', true), ''),
+              nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
+              '') in ('anon', 'authenticated')
+     and not public.can_note_tasting_wine(new.tasting_wine_id) then
+    return new;
   end if;
   select w.is_revealed into v_revealed
     from wines w
@@ -875,7 +910,7 @@ begin
       ('public.wset_notes_glass_move_guard()', false, '{search_path=public}', 'v', 'plpgsql', 'trigger',
        '', '172509fd276619b608499b9c5e80caf0', 'OWNER,service_role'),
       ('public.wset_notes_glass_resolve_on_write()', true, '{search_path=public}', 'v', 'plpgsql', 'trigger',
-       '', '62031fa9057120c76cc472f72fac3564', 'OWNER,service_role'),
+       '', '56a9ee62bbb11949f27debe1dda2e28d', 'OWNER,service_role'),
       ('public.save_wset_note(jsonb,jsonb)', false, '{search_path=public}', 'v', 'plpgsql', 'uuid',
        'p_note jsonb, p_aromas jsonb', '9ac29b18bbda5b08bcd9a12e19beb932', 'OWNER,PUBLIC,anon,authenticated,service_role'),
       ('public.resolve_unidentified_wine(uuid,uuid)', true, '{search_path=public}', 'v', 'plpgsql', 'void',
@@ -935,6 +970,18 @@ begin
   if (select p.proacl::text from pg_proc p where p.oid = to_regprocedure('public.resolve_unidentified_wine(uuid,uuid)'))
        is distinct from '{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}' then
     raise exception 'resolve_unidentified_wine grants changed post-migration';
+  end if;
+  --    wset_notes_glass_resolve_on_write (M5x2): a client who may not note the
+  --    glass returns before the FOR SHARE, so a write RLS refuses never locks it.
+  select replace(p.prosrc, chr(13), '') into v_text
+  from pg_proc p where p.oid = to_regprocedure('public.wset_notes_glass_resolve_on_write()');
+  if strpos(v_text, '              '''') in (''anon'', ''authenticated'')' || chr(10)
+                    || '     and not public.can_note_tasting_wine(new.tasting_wine_id) then' || chr(10)
+                    || '    return new;' || chr(10)) = 0
+     or strpos(v_text, '     for share;' || chr(10)) = 0
+     or strpos(v_text, '     and not public.can_note_tasting_wine(new.tasting_wine_id) then' || chr(10))
+          > strpos(v_text, '     for share;' || chr(10)) then
+    raise exception 'wset_notes_glass_resolve_on_write does not turn a client who may not note the glass away before it locks the glass';
   end if;
 
   -- 3. wset_notes_one_identity: exactly one identity, or none on a BLIND note
