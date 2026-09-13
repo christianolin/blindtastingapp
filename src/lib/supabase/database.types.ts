@@ -9,6 +9,16 @@
 // types require those exact keys to exist or its generic inference silently
 // collapses to `never`.
 
+// A jsonb value (the `supabase gen types` shape). jsonb RPC results are typed
+// Json and narrowed by a local type at the call site.
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
 export type TimingMode = "LIVE" | "ASYNC";
 export type WineSourceMode = "HOST_PROVIDES" | "PARTICIPANT_CONTRIBUTED";
 export type RevealMode = "BLIND" | "SEMI_BLIND" | "OPEN";
@@ -1787,6 +1797,57 @@ export type Database = {
       glass_removal_impact: {
         Args: { p_wine_id: string };
         Returns: { guesses: number; private_notes: number }[];
+      };
+      // 20260914102500 (blind-tasting spec §10.4 b, B9): may the caller see the
+      // semi-blind list — the host or a JOINED participant of a SEMI_BLIND
+      // tasting. Authenticated only. (semi_blind_candidate_keys and
+      // ensure_semi_blind_keys are not typed: no client can reach them.)
+      can_see_semi_blind_list: {
+        Args: { p_tasting_id: string };
+        Returns: boolean;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 19): { cards: [{ key, producer,
+      // wine_name, vintage_kind, vintage_year, vintage_tawny_years, appellation,
+      // grape, revealed_glass }], pending } ordered by the random key, or null.
+      // While DRAFT only the caller's own glasses' cards, and pending only to the
+      // host. Narrow at the call site.
+      get_semi_blind_candidates: {
+        Args: { p_tasting_id: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 20): { mine, revealed, split,
+      // own_bottles, known } in candidate keys, or null. Narrow at the call site.
+      get_semi_blind_board: {
+        Args: { p_tasting_id: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 b, §16.1 row 21): per revealed glass, who
+      // picked which key; pick_label only when the picked wine is revealed or the
+      // caller is the host or a JOINED participant.
+      get_semi_blind_revealed_picks: {
+        Args: { p_tasting_id: string };
+        Returns: {
+          glass_wine_id: string;
+          participant_id: string;
+          correct: boolean;
+          pick_key: string | null;
+          pick_label: string | null;
+        }[];
+      };
+      // 20260914102500 (spec §10.4 c, B9): assign a candidate to the caller's
+      // glass (swaps with an open holder) → { glass, swapped_with }. Refusals:
+      // "matching is closed", "you cannot match this glass", "that wine is not in
+      // your pool", "this glass is locked in", "glass locked" (detail = the
+      // holder's glass id).
+      assign_semi_blind_match: {
+        Args: { p_wine_id: string; p_candidate_key: string };
+        Returns: Json;
+      };
+      // 20260914102500 (spec §10.4 c): the caller's open row on this glass loses
+      // its candidate; refuses a locked row ("this glass is locked in").
+      clear_semi_blind_match: {
+        Args: { p_wine_id: string };
+        Returns: undefined;
       };
     };
   };
