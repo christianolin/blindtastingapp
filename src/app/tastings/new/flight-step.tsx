@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { Camera, ChevronDown, ChevronUp, Grape, Search, Upload, Wine, X } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
+import { Camera, ChevronDown, ChevronUp, Grape, GripVertical, Search, Upload, Wine, X } from "lucide-react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
@@ -18,9 +25,13 @@ import type {
   AddWineStart,
   SearchGroups,
 } from "@/components/add-wine/types";
-import { moveWine, removeWine } from "@/app/tastings/[id]/actions";
+import { removeWine } from "@/app/tastings/[id]/actions";
+import { moveFlightGlass } from "@/app/tastings/[id]/flight-actions";
+import { dropIndex, reorderIds } from "@/lib/flight-glass-rules";
 import { cn } from "@/lib/utils";
 import type { FlightRow, FlightSnapshot } from "./actions";
+import { PASTE_LIST_BUTTON } from "./paste-list";
+import { PasteListPanel } from "./paste-list-panel";
 
 /**
  * A search reply and what it answers: the text searched, and FlightStep's
@@ -112,6 +123,27 @@ export function FlightStep({
   // constraint via the shared temp slot, and a remove's ascending compaction
   // could land on a row parked at -1 mid-swap.
   const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // "Paste a list" (spec §2.3 item 7): a secondary text button opens the
+  // panel inline under the flight.
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const pasteOpenRef = useRef(false);
+  const setPasteOpenState = (open: boolean) => {
+    pasteOpenRef.current = open;
+    setPasteOpen(open);
+  };
+  // Drag handles (spec §2.3 item 6): every row's DOM node, kept for
+  // `getBoundingClientRect()` at pointerdown, and the in-flight drag.
+  const rowElsRef = useRef(new Map<string, HTMLLIElement>());
+  const draggingRef = useRef(false);
+  const dragRef = useRef<{
+    pointerId: number;
+    id: string;
+    startY: number;
+    rowIds: string[];
+    rowRects: { top: number; height: number }[];
+  } | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragDy, setDragDy] = useState(0);
 
   const isByo = wineSource === "PARTICIPANT_CONTRIBUTED";
   const nextPosition = rows.length + 1;
@@ -162,6 +194,22 @@ export function FlightStep({
     return () => clearTimeout(timer);
   }, [q, tastingId, isDesktop, flight]);
 
+  // Contributor rows arrive (spec §2.3 item 8; CREATE-38): in bring-your-own,
+  // step 2 re-reads the flight every 5 seconds while it is open (mounted) and
+  // the tab is visible, so the sheet's own `refreshFlight` picks up rows the
+  // others add. Never through a `listFlight` call of its own (BT-A0) — only
+  // the `onChanged` prop the sheet passed down. A read never interrupts a
+  // drag or the paste panel, and waits for the write queue to drain.
+  useEffect(() => {
+    if (!isByo) return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      if (draggingRef.current || pasteOpenRef.current) return;
+      void writeQueue.current.then(onChanged);
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [isByo, onChanged]);
+
   // Rows read before the flight last changed are never listed: their in-flight
   // flags may be out of date, and the server has no duplicate check (§C.9).
   const listed = q !== "" && found !== null && found.flight === flight ? found.groups : null;
@@ -209,22 +257,85 @@ export function FlightStep({
     }
   }
 
-  function move(id: string, direction: "up" | "down") {
-    setRows((prev) => {
-      const idx = prev.findIndex((w) => w.id === id);
-      const target = direction === "up" ? idx - 1 : idx + 1;
-      if (idx === -1 || target < 0 || target >= prev.length) return prev;
-      const next = prev.slice();
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
-    });
-    const fd = new FormData();
-    fd.set("tasting_id", tastingId);
-    fd.set("wine_id", id);
-    fd.set("direction", direction);
-    const run = writeQueue.current.then(() => moveWine(fd));
+  // Drag handles and the ▲▼ fallback both land here (spec §2.3 item 6): the
+  // list reorders optimistically with `reorderIds`, then `moveFlightGlass`
+  // through the step's write queue; a refusal reverts the optimistic order
+  // and shows the RPC's own sentence inline.
+  async function reorderTo(id: string, toIndex: number) {
+    const ids = rows.map((r) => r.id);
+    const next = reorderIds(ids, id, toIndex);
+    if (next === null || next.every((rid, i) => rid === ids[i])) return;
+    const prevRows = rows;
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    setRows(next.map((rid) => byId.get(rid)!));
+    setError(null);
+    const run = writeQueue.current.then(() => moveFlightGlass(tastingId, id, toIndex));
     writeQueue.current = run.catch(() => {});
-    void run.then(onChanged);
+    const r = await run;
+    if ("error" in r) {
+      setRows(prevRows);
+      setError(r.error);
+      return;
+    }
+    onChanged();
+  }
+
+  function moveByStep(id: string, direction: "up" | "down") {
+    const idx = rows.findIndex((w) => w.id === id);
+    if (idx === -1) return;
+    void reorderTo(id, direction === "up" ? idx : idx + 2);
+  }
+
+  // Pointer-drag reorder (spec §2.3 item 6): rects are measured once at
+  // pointerdown (`getBoundingClientRect()`, the pointer's coordinate space)
+  // and never re-measured mid-drag, per `dropIndex`'s own recipe — only the
+  // dragged row's own rect is swapped out (for `{ top: pointerY, height: 0 }`)
+  // at drop time. Other rows stay put visually; the dragged row follows the
+  // pointer through a translateY.
+  function endDrag() {
+    dragRef.current = null;
+    draggingRef.current = false;
+    setDragId(null);
+    setDragDy(0);
+  }
+
+  function onHandlePointerDown(e: ReactPointerEvent<HTMLButtonElement>, id: string) {
+    if (busy) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const rowIds = rows.map((r) => r.id);
+    const rowRects = rowIds.map((rid) => {
+      const rect = rowElsRef.current.get(rid)?.getBoundingClientRect();
+      return { top: rect?.top ?? 0, height: rect?.height ?? 0 };
+    });
+    dragRef.current = { pointerId: e.pointerId, id, startY: e.clientY, rowIds, rowRects };
+    draggingRef.current = true;
+    setDragId(id);
+    setDragDy(0);
+  }
+
+  function onHandlePointerMove(e: ReactPointerEvent<HTMLButtonElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    setDragDy(e.clientY - d.startY);
+  }
+
+  function onHandlePointerUp(e: ReactPointerEvent<HTMLButtonElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) {
+      endDrag();
+      return;
+    }
+    const idx = d.rowIds.indexOf(d.id);
+    endDrag();
+    if (idx === -1) return;
+    const rects = d.rowRects.map((r, i) => (i === idx ? { top: e.clientY, height: 0 } : r));
+    void reorderTo(d.id, dropIndex(rects, e.clientY));
+  }
+
+  function onHandlePointerCancel(e: ReactPointerEvent<HTMLButtonElement>) {
+    if (dragRef.current?.pointerId !== e.pointerId) return;
+    endDrag();
   }
 
   async function remove(row: FlightRow) {
@@ -409,8 +520,31 @@ export function FlightStep({
             {rows.map((w, i) => (
               <li
                 key={w.id}
-                className="flex items-center gap-[10px] rounded-[9px] border border-border bg-white p-[8px_10px] md:gap-3 md:p-[10px_13px]"
+                ref={(el) => {
+                  if (el) rowElsRef.current.set(w.id, el);
+                  else rowElsRef.current.delete(w.id);
+                }}
+                style={dragId === w.id ? { transform: `translateY(${dragDy}px)` } : undefined}
+                className={cn(
+                  "relative flex items-center gap-[10px] rounded-[9px] border border-border bg-white p-[8px_10px] md:gap-3 md:p-[10px_13px]",
+                  dragId === w.id && "z-10 border-gold shadow-lg",
+                )}
               >
+                {w.canReorder ? (
+                  <button
+                    type="button"
+                    aria-label={`Drag to reorder ${w.title}`}
+                    disabled={busy}
+                    onPointerDown={(e) => onHandlePointerDown(e, w.id)}
+                    onPointerMove={onHandlePointerMove}
+                    onPointerUp={onHandlePointerUp}
+                    onPointerCancel={onHandlePointerCancel}
+                    onLostPointerCapture={onHandlePointerCancel}
+                    className="flex size-11 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground active:cursor-grabbing md:size-8"
+                  >
+                    <GripVertical className="size-4" />
+                  </button>
+                ) : null}
                 <span className="w-[14px] shrink-0 font-heading text-[16px] font-semibold text-muted-foreground lining-nums tabular-nums">
                   {i + 1}
                 </span>
@@ -446,14 +580,14 @@ export function FlightStep({
                     <IconButton
                       label="Move up"
                       disabled={i === 0 || busy}
-                      onClick={() => move(w.id, "up")}
+                      onClick={() => moveByStep(w.id, "up")}
                     >
                       <ChevronUp className="size-4" />
                     </IconButton>
                     <IconButton
                       label="Move down"
                       disabled={i === rows.length - 1 || busy}
-                      onClick={() => move(w.id, "down")}
+                      onClick={() => moveByStep(w.id, "down")}
                     >
                       <ChevronDown className="size-4" />
                     </IconButton>
@@ -492,6 +626,21 @@ export function FlightStep({
             In everyone-brings mode the others add their own wines from the same
             sheet — their rows appear here as they do it.
           </p>
+        ) : null}
+      </div>
+
+      {/* Paste a list (spec §2.3 item 7): a secondary text button opens the
+          panel inline — not a nested dialog. */}
+      <div className="flex flex-col gap-[8px]">
+        <button
+          type="button"
+          onClick={() => setPasteOpenState(!pasteOpen)}
+          className="inline-flex min-h-11 items-center self-start text-[12.5px] font-semibold text-primary hover:underline md:min-h-0"
+        >
+          {PASTE_LIST_BUTTON}
+        </button>
+        {pasteOpen ? (
+          <PasteListPanel destination={destination} onAdded={sheetAdded} />
         ) : null}
       </div>
     </div>
