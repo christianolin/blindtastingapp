@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   createCountry as createCatalogCountry,
@@ -13,7 +12,6 @@ import {
 import {
   findOrCreate,
   findOrCreateProducer,
-  insertTastingWineFromLot,
   type ReferenceOption,
 } from "./tasting-wine-writes";
 
@@ -91,32 +89,4 @@ export async function createAppellation(regionId: string, name: string) {
         .select("id, name")
         .single(),
   );
-}
-
-/**
- * @deprecated removed in F13 — components/add-wine/actions.ts still imports it;
- * F13 dispatches a `lot` source to `insertTastingWineFromLot` directly.
- *
- * A glass from one of the caller's cellar lots (spec §C.7, D11): a DRAFT flight
- * records the pour intent and Start draws the bottle down; a running flight
- * pours it now. Returns (no redirect), so the sheet can show a warning.
- */
-export async function addTastingWineFromCellarLot(
-  tastingId: string,
-  lotId: string,
-  opts: { consume: boolean },
-): Promise<
-  | { error: string }
-  | { ok: true; warning?: string; wineId: string; position: number; catalogWineId: string }
-> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be signed in." };
-
-  const r = await insertTastingWineFromLot(supabase, user.id, tastingId, lotId, opts?.consume === true);
-  if ("error" in r) return { error: r.error };
-  revalidatePath(`/tastings/${tastingId}`);
-  return { ok: true, ...r };
 }

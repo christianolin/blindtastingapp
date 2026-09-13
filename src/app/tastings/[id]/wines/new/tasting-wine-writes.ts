@@ -137,67 +137,6 @@ export async function findOrCreateProducer(
   return data;
 }
 
-type BlendGrape = { grapeId: string; percentage: number | null };
-
-/**
- * @deprecated removed in F13 — `fillCatalogWine` (src/lib/wine-identity/server/write.ts)
- * is the one fill rule for every writer (spec §B.9). Only
- * components/add-wine/actions.ts still calls this.
- *
- * Persist the full blend on the catalog wine (its trigger recomputes the lead
- * grape as primary/secondary). Only a wine this user owns is touched, so a
- * deduped/existing wine keeps its own blend.
- */
-export async function syncCatalogWine(
-  supabase: Db,
-  catalogWineId: string,
-  userId: string,
-  blend: BlendGrape[],
-  imageUrl: string | null,
-  description: string | null,
-  alcoholPercent: number | null = null,
-) {
-  const { data: cw } = await supabase
-    .from("catalog_wines")
-    .select("created_by, image_url, description, alcohol_percent")
-    .eq("id", catalogWineId)
-    .maybeSingle();
-  // Only the wine's creator may edit it — a deduped/existing wine keeps its own
-  // blend + photo (we never overwrite someone else's catalog entry).
-  if (cw?.created_by !== userId) return;
-  if (imageUrl && !cw.image_url) {
-    await supabase
-      .from("catalog_wines")
-      .update({ image_url: imageUrl })
-      .eq("id", catalogWineId);
-  }
-  if (description && !cw.description) {
-    await supabase
-      .from("catalog_wines")
-      .update({ description })
-      .eq("id", catalogWineId);
-  }
-  if (alcoholPercent != null && cw.alcohol_percent == null) {
-    await supabase
-      .from("catalog_wines")
-      .update({ alcohol_percent: alcoholPercent })
-      .eq("id", catalogWineId);
-  }
-  if (blend.length === 0) return;
-  await supabase
-    .from("catalog_wine_grapes")
-    .delete()
-    .eq("catalog_wine_id", catalogWineId);
-  await supabase.from("catalog_wine_grapes").insert(
-    blend.map((g, i) => ({
-      catalog_wine_id: catalogWineId,
-      grape_id: g.grapeId,
-      percentage: g.percentage,
-      sort_order: i,
-    })),
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Who may add a glass
 // ---------------------------------------------------------------------------
