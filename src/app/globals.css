@@ -329,6 +329,42 @@
   color: var(--on-accent);
 }
 
+/* The live palette: where "dark means live" (BT-D1, blind-tasting v3 spec
+ * section 6.3) and the dark-mode toggle disagree.
+ *
+ * Both use the `.dark` class. The toggle puts it on <html>; LiveShell puts it
+ * on a running tasting's subtree, and the popover and the phone field picker
+ * add it to the popups they portal out of that subtree. Nothing else sets it.
+ * So under a LIGHT <html> every `.dark` element is a live surface, and this
+ * selector reaches those and nothing else.
+ *
+ * The one role they disagree on is --primary. Section 6.3 keeps it the
+ * bordeaux #a8425a on the live ground, because it is the open ladder row's
+ * border, the armed bottle's ring and the Lock-in fill, with a #b04961 hover.
+ * The toggle took the dark theme to indigo #2b2a4f, for the left rail and the
+ * banner, which are never inside LiveShell. As a BORDER on the live ground
+ * that indigo measures 1.35:1 on --background and 1.24:1 on --card, so the
+ * open row's outline stops reading. The bordeaux gives 3.13:1 and 2.89:1.
+ *
+ * So live screens keep section 6.3 whenever the app theme is light (the
+ * default), and everything outside a running tasting keeps the toggle's
+ * palette. Pinning the app to dark keeps indigo everywhere, live screens
+ * included. Both specs claim that case and no single value satisfies both, so
+ * it is left as the toggle has it, pending a decision.
+ *
+ * --primary-ink follows the fill's family, the same way #8a87c8 follows the
+ * indigo: #cc6b82 is the rose-family ink the toggle's first pass measured,
+ * 5.22:1 on --background and 4.82:1 on --card. Labels on the fills: 5.11:1 on
+ * #a8425a, 4.62:1 on #b04961 (section 6.6).
+ *
+ * Keep this AFTER the `.dark {` block. theme-contrast.test.ts reads the first
+ * `.dark {` in the file as the theme palette. */
+:root:not(.dark) .dark {
+  --primary: #a8425a;
+  --primary-hover: #b04961;
+  --primary-ink: #cc6b82;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

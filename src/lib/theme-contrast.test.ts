@@ -205,3 +205,27 @@ describe("the dark palette's coverage of the light one", () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe("the live palette under a light root (dark means live, spec section 6.3)", () => {
+  // Under a light <html> the only `.dark` elements are a running tasting's
+  // LiveShell and the popups it portals, and there --primary is the section
+  // 6.3 bordeaux rather than the dark theme's indigo. It sits ON TOP of the
+  // dark palette, so the pairs are measured on that merge, the same way `dark`
+  // above is measured on light + .dark.
+  const liveOnly = block(":root:not\\(\\.dark\\) \\.dark");
+  const live = { ...dark, ...liveOnly };
+
+  it("overrides only the primary trio, so it cannot grow into a second dark palette", () => {
+    expect(Object.keys(liveOnly).sort()).toEqual(["--primary", "--primary-hover", "--primary-ink"]);
+  });
+
+  it("the filled primary and its hover carry their label", () => {
+    expect(ratio(live, "--primary-foreground", "--primary")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(live, "--primary-foreground", "--primary-hover")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("primary as ink clears AA on the live page and cards", () => {
+    expect(ratio(live, "--primary-ink", "--background")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(live, "--primary-ink", "--card")).toBeGreaterThanOrEqual(4.5);
+  });
+});
