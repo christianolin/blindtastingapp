@@ -362,6 +362,14 @@ export type Database = {
           image_url: string | null;
           description: string | null;
           join_code: string | null;
+          // 20260914092500 (blind-tasting spec §11.4, §5.4): server-owned
+          // lifecycle stamps. A BEFORE INSERT OR UPDATE trigger replaces any
+          // client-sent value: `started_at` on an insert as IN_PROGRESS or OPEN
+          // or on the DRAFT → IN_PROGRESS flip (a restart keeps the first);
+          // `finished_at` on CLOSED, cleared on reopen. Null on tastings from
+          // before the migration (no backfill).
+          started_at: string | null;
+          finished_at: string | null;
         };
         Insert: {
           id?: string;
@@ -382,6 +390,8 @@ export type Database = {
           image_url?: string | null;
           description?: string | null;
           join_code?: string | null;
+          started_at?: string | null;
+          finished_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["tastings"]["Insert"]>;
         Relationships: [];
@@ -446,6 +456,13 @@ export type Database = {
           // 20260912102000 (spec §E.3): how a glass was added (D13). Null for
           // legacy rows. The pour intent is its own table, never a wines column.
           added_via: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
+          // 20260914092500 (blind-tasting spec §11.4, §5.4): when the glass was
+          // revealed. Server-owned: a BEFORE INSERT OR UPDATE trigger stamps it
+          // on the reveal flip (or an insert already revealed), clears it when
+          // is_revealed goes back to false, and replaces any client-sent value.
+          // Null on glasses revealed before the migration (no backfill), which
+          // are never "joined after" (glass-eligibility.ts).
+          revealed_at: string | null;
         };
         Insert: {
           id?: string;
@@ -456,6 +473,7 @@ export type Database = {
           reveal_step?: number;
           created_at?: string;
           added_via?: "SCAN" | "CATALOG" | "CELLAR" | "BY_HAND" | null;
+          revealed_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["wines"]["Insert"]>;
         Relationships: [];
