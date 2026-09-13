@@ -250,6 +250,28 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
       };
+      // 20260914113500: curated alternative producer names. alias_folded is
+      // GENERATED ALWAYS AS (f_search_norm(alias)) STORED — never writable.
+      producer_aliases: {
+        Row: {
+          id: string;
+          producer_id: string;
+          alias: string;
+          alias_folded: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          producer_id: string;
+          alias: string;
+          alias_folded?: never;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["producer_aliases"]["Insert"]
+        >;
+        Relationships: [];
+      };
       producers: {
         Row: { id: string; name: string; region_id: string | null };
         Insert: { id?: string; name: string; region_id?: string | null };
