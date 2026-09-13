@@ -1254,6 +1254,11 @@
    "region_id": "03e874e5-c5ea-4aec-b0c5-684f0558c560"
   },
   {
+   "id": "a4522526-62f1-4de4-b1ca-195f4b001e49",
+   "name": "Bolgheri Sassicaia DOC",
+   "region_id": "ffc67771-ce43-4472-93c8-14c521340743"
+  },
+  {
    "id": "b4474840-514f-4bb5-a482-36185928d399",
    "name": "Limoux AOC",
    "region_id": "bbe4c63f-b80e-4ac2-97d4-1fff9082386d"
@@ -1672,6 +1677,12 @@
    "id": "db803410-9cdd-4322-b53d-43b408a23b06",
    "name": "El Enemigo",
    "region_id": "4ea28dde-0c29-4b6b-80ad-8718d28754ff",
+   "has_wines": true
+  },
+  {
+   "id": "f72e1db7-85c7-408f-99c9-87084768148a",
+   "name": "Tenuta San Guido",
+   "region_id": "ffc67771-ce43-4472-93c8-14c521340743",
    "has_wines": true
   }
  ],
