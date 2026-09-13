@@ -506,3 +506,98 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     expect(d.blend).toEqual([{ grape: { kind: "pending", name: "Grenache" }, percentage: 100 }]);
   });
 });
+
+// Owner approval 1b (2026-09-13). Step 8 still tries folded equality first. Only
+// when that picks nothing does it try a reference designation's bracketed short
+// form ("LBV" → "Late Bottled Vintage (LBV)") or its name without the bracket
+// ("Grosses Gewächs" → "Grosses Gewächs (GG)"). The country rule is unchanged: a
+// candidate is a row in the draft's country or a row with no country. Two or more
+// candidates pick nothing (never a first hit).
+describe("step 8: a designation's bracketed short form, or its name without the bracket (owner approval 1b)", () => {
+  // Shaped like the live table (checked read-only 2026-09-13): names are UNIQUE,
+  // and exactly these four active rows carry a bracket.
+  const des = (): ReferenceSnapshot => ({
+    countries: [{ id: "pt", name: "Portugal" }, { id: "de", name: "Germany" }, { id: "at", name: "Austria" }, { id: "fr", name: "France" }],
+    regions: [], appellations: [], none: [], producers: [], grapes: [],
+    type_designations: [
+      { id: "vp", name: "Vintage Port", country_id: "pt" },
+      { id: "lbv", name: "Late Bottled Vintage (LBV)", country_id: "pt" },
+      { id: "gg", name: "Grosses Gewächs (GG)", country_id: "de" },
+      { id: "ba", name: "Beerenauslese (BA)", country_id: "de" },
+      { id: "tba", name: "Trockenbeerenauslese (TBA)", country_id: "de" },
+      { id: "brut", name: "Brut", country_id: null },
+    ],
+  });
+  const plain = { noGeographicIndication: false, appellation: null, region: null, producer: null, designation: null, grapes: [] };
+  const pick = async (country: string | null, designation: string, s: ReferenceSnapshot = des()) => {
+    const d = await resolve("vin-de-france.json", { ...plain, country, designation }, s);
+    return [d.typeDesignationId, d.provenance.typeDesignation ?? null];
+  };
+
+  it.each([
+    ["Portugal", "LBV", "lbv"],
+    ["Portugal", "lbv", "lbv"],
+    ["Portugal", "Late Bottled Vintage", "lbv"],
+    ["Germany", "GG", "gg"],
+    ["Germany", "Grosses Gewächs", "gg"],
+    ["Germany", "Großes Gewächs", "gg"],
+    ["Germany", "BA", "ba"],
+    ["Germany", "TBA", "tba"],
+    ["Germany", "Beerenauslese", "ba"],
+    ["Germany", "Trockenbeerenauslese", "tba"],
+  ] as const)("%s · %s resolves by the bracket and is read from the label", async (country, designation, id) =>
+    expect(await pick(country, designation)).toEqual([id, "label"]));
+
+  it("folded equality runs first, so a row literally named by the short form wins over the bracket", async () => {
+    expect(await pick("Portugal", "Late Bottled Vintage (LBV)")).toEqual(["lbv", "label"]);
+    const s = des();
+    s.type_designations.push({ id: "lbv-plain", name: "LBV", country_id: "pt" });
+    expect(await pick("Portugal", "LBV", s)).toEqual(["lbv-plain", "label"]);
+  });
+
+  it("'Vintage' alone stays unresolved: it is neither a short form nor a name without its bracket", async () => {
+    // #12's stored read says "Vintage"; the rows are "Vintage Port" and "Late Bottled Vintage (LBV)".
+    expect(await pick("Portugal", "Vintage")).toEqual([null, null]);
+    expect(await pick("Portugal", "Bottled Vintage")).toEqual([null, null]);
+    expect(await pick("Germany", "Gewächs")).toEqual([null, null]);
+    expect(await pick("Germany", "Auslese")).toEqual([null, null]);
+  });
+
+  it("a short form shared by two rows stays unresolved", async () => {
+    const s = des();
+    s.type_designations.push({ id: "gg2", name: "Gran Gusto (GG)", country_id: "de" });
+    expect(await pick("Germany", "GG", s)).toEqual([null, null]);
+    // A row with no country is a candidate in every country, so it collides too.
+    const t = des();
+    t.type_designations.push({ id: "gg-any", name: "Gold Grade (GG)", country_id: null });
+    expect(await pick("Germany", "GG", t)).toEqual([null, null]);
+  });
+
+  it("a name without its bracket shared by two rows stays unresolved", async () => {
+    const s = des();
+    s.type_designations.push({ id: "lbv-unf", name: "Late Bottled Vintage (Unfiltered)", country_id: "pt" });
+    expect(await pick("Portugal", "Late Bottled Vintage", s)).toEqual([null, null]);
+    expect(await pick("Portugal", "LBV", s)).toEqual(["lbv", "label"]);
+  });
+
+  it("the country rule still holds: another country's row is never a candidate", async () => {
+    expect(await pick("France", "LBV")).toEqual([null, null]);
+    expect(await pick(null, "GG")).toEqual([null, null]);
+    // So a short form another country's row shares does not block this country's row.
+    const s = des();
+    s.type_designations.push({ id: "ba-at", name: "Bergauslese (BA)", country_id: "at" });
+    expect(await pick("Austria", "BA", s)).toEqual(["ba-at", "label"]);
+    expect(await pick("Germany", "BA", s)).toEqual(["ba", "label"]);
+  });
+
+  it("a bracket must close the name: a bracket elsewhere, or two, is no short form", async () => {
+    const s = des();
+    s.type_designations.push(
+      { id: "mid", name: "Alpha (AL) Reserve", country_id: "pt" },
+      { id: "two", name: "Beta (BE) (BT)", country_id: "pt" },
+    );
+    for (const designation of ["AL", "Alpha Reserve", "BE", "BT", "Beta"]) {
+      expect([designation, ...(await pick("Portugal", designation, s))]).toEqual([designation, null, null]);
+    }
+  });
+});

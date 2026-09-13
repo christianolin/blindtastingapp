@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { foldName } from "../wine-identity/fold";
 import { LabelReadSchema, coerceLabelRead } from "./label-read-schema";
 
 const dir = path.join(process.cwd(), "src/lib/label-scan/__fixtures__");
@@ -12,6 +13,53 @@ it("commits the nine fixtures", () => expect(fixtures).toHaveLength(9));
 it.each(fixtures)("%s satisfies LabelReadSchema", (f) =>
   expect(LabelReadSchema.safeParse(JSON.parse(readFileSync(path.join(dir, f), "utf8"))).success).toBe(true));
 it("the SDK zod helper accepts the schema (no network)", () => expect(() => zodOutputFormat(LabelReadSchema)).not.toThrow());
+
+// Owner approval 1 (2026-09-13): the reader's instructions after L1's live reads
+// (#2, #4, #7, #12, #15 of the label test set). The schema's descriptions ARE the
+// prompt (spec §A.3), so the approved wording is pinned here: any change to it
+// needs the owner's yes and costs re-reads.
+describe("the reader's instructions (owner approval 1, 2026-09-13)", () => {
+  const described = (field: keyof typeof LabelReadSchema.shape) => LabelReadSchema.shape[field].description ?? "";
+
+  it("keeps the JSON shape: the same fields, in order, all required", () => {
+    const { schema } = zodOutputFormat(LabelReadSchema) as unknown as { schema: { properties: Record<string, unknown>; required: string[] } };
+    const fields = [
+      "isWineLabel", "producer", "wineName", "appellation", "noGeographicIndication", "region", "country", "designation",
+      "vintageKind", "vintageYear", "vintageTawnyYears", "vintageRead", "colour", "style", "grapes", "alcoholPercent",
+      "description", "confidence", "rawText",
+    ];
+    expect([Object.keys(schema.properties), schema.required]).toEqual([fields, fields]);
+  });
+
+  it("(a) no geographic indication: false for any place of origin below country level (#7)", () => {
+    const text = described("noGeographicIndication");
+    expect(text).toContain("True ONLY for the table-wine categories themselves");
+    expect(text).toContain('False whenever the label names a place of origin below country level (a region, province or state such as "Mendoza"), with or without a designation term.');
+  });
+
+  it("(b) every designation example is a reference name, and the missing ones are gone (#12)", () => {
+    const snapshot = JSON.parse(readFileSync(path.join(process.cwd(), "src/lib/wine-identity/__fixtures__/reference-snapshot.json"), "utf8")) as { type_designations: { name: string }[] };
+    const names = new Set(snapshot.type_designations.map((row) => foldName(row.name)));
+    const examples = [...described("designation").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    expect(examples).toEqual(expect.arrayContaining(["Vintage Port", "Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"]));
+    expect(examples.filter((example) => !names.has(foldName(example)))).toEqual([]);
+    for (const gone of ["Gran Selezione", "VORS", "Vintage", "LBV", "Grosses Gewächs"]) expect(examples).not.toContain(gone);
+  });
+
+  it("(c) the producer is the name the label presents as its brand, a bottler line only as a last resort (#2)", () => {
+    const text = described("producer");
+    expect(text).toContain('The producer name the label presents as its brand, as printed ("J.M. Boillot")');
+    expect(text).toContain('Use a bottler or company line ("Mis en bouteille par…", "Produced and bottled by…") only when no other name is printed.');
+  });
+
+  it("(d) an official regional origin printed without a designation term is the appellation (#4)", () =>
+    expect(described("appellation")).toContain(
+      'When the label prints an official regional origin without a designation term (a Chinese 产区 such as "Ningxia", an Argentine IG), return that origin\'s name.',
+    ));
+
+  it("(e) the region is null when only a brand and a grape are printed and the origin is uncertain (#15)", () =>
+    expect(described("region")).toContain("Null too when only a brand and a grape are printed and you are not certain of the origin."));
+});
 
 describe("coerceLabelRead (spec A.3 rules 1–8)", () => {
   it("1 trims, blanks become null, rawText ≤ 2000", () => {
