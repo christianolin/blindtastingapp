@@ -3,6 +3,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import type { WineColour, WineStyle, WsetNoteState } from "@/lib/wset/types";
 import type { VintageKind } from "@/lib/supabase/database.types";
 import { noteStateFromRow } from "@/lib/wset/note-state";
+import { catalogWineTitle } from "@/lib/wset/wine-title";
 import type { ArchetypeView } from "@/components/wset/archetype-sheet";
 
 export type CellarWine = {
@@ -97,32 +98,9 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
   };
 }
 
-// Builds a readable title, collapsing exact repeats — a wine whose name equals its
-// producer (e.g. "Château Lascombes") renders once, not twice.
-export function catalogWineTitle(wine: {
-  producerName: string | null;
-  wineName: string | null;
-  vintageKind: VintageKind;
-  vintageYear: number | null;
-  vintageTawnyYears: number | null;
-  appellationName: string | null;
-}): string {
-  const vintage =
-    wine.vintageKind === "YEAR" ? (wine.vintageYear ? String(wine.vintageYear) : null)
-    : wine.vintageKind === "TAWNY" ? (wine.vintageTawnyYears ? `${wine.vintageTawnyYears}yo` : "Tawny")
-    : "NV";
-  const parts = [wine.producerName, wine.wineName, wine.appellationName, vintage].filter(
-    Boolean,
-  ) as string[];
-  const seen = new Set<string>();
-  const deduped = parts.filter((p) => {
-    const key = p.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  return deduped.join(" ") || "Untitled wine";
-}
+// The title builder lives in the pure ./wine-title module so vitest can load it;
+// re-exported here so its many importers keep importing it from queries.
+export { catalogWineTitle };
 
 export type BlendGrape = { name: string; percentage: number | null };
 
