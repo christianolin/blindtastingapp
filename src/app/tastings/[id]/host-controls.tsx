@@ -81,7 +81,6 @@ export function HostControls({
   showSequentialToggle = false,
   leaderboardReveal = "PER_ATTRIBUTE",
   showLeaderboardToggle = false,
-  invitesStayOpen = false,
   timingMode,
   revealMode,
   wineSource,
@@ -97,8 +96,10 @@ export function HostControls({
   showSequentialToggle?: boolean;
   leaderboardReveal?: string;
   showLeaderboardToggle?: boolean;
-  /** OPEN tastings keep the invite field and the share link in the running
-      menu too (`join_tasting_by_code` still accepts them). */
+  /** @deprecated removed in BT-L2. B4/Q6: invites and the share link now
+      stay open in the running menu for every tasting that is not CLOSED, so
+      this no longer gates anything here — its last passer lives in the
+      header BT-L2 rewrites. */
   invitesStayOpen?: boolean;
   /** Only the "start" surface reads these three: where Start lands
       (`startLandsOnConsole`). A caller that leaves one out keeps the host on
@@ -321,13 +322,9 @@ export function HostControls({
           </form>
 
           {inviteForm}
-          {/* create-2: the share link beside "Invite more people". Only an
-              OPEN tasting's link keeps working once it has started. */}
-          <JoinLinkRow
-            tastingId={tastingId}
-            worksUntilStart={!invitesStayOpen}
-            active={shareLinkActive}
-          />
+          {/* create-2: the share link beside "Invite more people". B4/Q6:
+              it works until the tasting ends. */}
+          <JoinLinkRow tastingId={tastingId} active={shareLinkActive} />
 
           {showSequentialToggle ? (
             <form action={setSequentialGuessing} className="flex flex-col gap-2">
@@ -384,16 +381,10 @@ export function HostControls({
         </>
       ) : status === "IN_PROGRESS" ? (
         <>
-          {invitesStayOpen ? (
-            <>
-              {inviteForm}
-              <JoinLinkRow
-                tastingId={tastingId}
-                worksUntilStart={false}
-                active={shareLinkActive}
-              />
-            </>
-          ) : null}
+          {/* B4/Q6: invites and the share link stay open for every tasting
+              that is not CLOSED — a running tasting keeps both here too. */}
+          {inviteForm}
+          <JoinLinkRow tastingId={tastingId} active={shareLinkActive} />
           <form
             action={finishAction}
             className="flex flex-col gap-2"

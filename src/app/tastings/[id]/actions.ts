@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { startWarning } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
+import { INVITES_CLOSE_WHEN_ENDED } from "@/lib/lobby-copy";
 
 // `warning` rides along with a success that still needs the host's attention:
 // Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
@@ -216,11 +217,11 @@ export async function inviteToTasting(
   const tastingId = String(formData.get("tasting_id") ?? "");
   const tasting = await assertHost(supabase, tastingId, user.id);
   if (!tasting) return { error: "Only the host can invite people." };
-  // OPEN (group Taste & Rate) has nothing to protect, so people can be added
-  // on the go — even after it's started and wines exist. Blind/semi-blind
-  // still lock invites at start so late joiners can't game the guessing.
-  if (tasting.status !== "DRAFT" && tasting.reveal_mode !== "OPEN") {
-    return { error: "Invites close once the tasting has started." };
+  // B4/Q6: invites stay open until the tasting ends — a late joiner is
+  // eligible for every glass not yet revealed (glass-eligibility.ts covers
+  // the read side). The old OPEN-only exemption folds into this one check.
+  if (tasting.status === "CLOSED") {
+    return { error: INVITES_CLOSE_WHEN_ENDED };
   }
 
   const emails = [
