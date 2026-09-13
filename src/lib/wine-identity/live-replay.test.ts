@@ -8,12 +8,17 @@
 //   2026-09-13), named like round 1 from the read's own producer and vintage.
 // Each one resolves here against the committed reference snapshot at zero API
 // cost. The snapshot was re-exported after amendment 21's live catalog
-// corrections and producer merges, and carries `has_wines`. When the round-2 rows
-// were added, each round-2 replay equalled its live draft field for field, ids
-// included. A row that no longer equals its live draft names what moved it in its
-// `why` note: a live catalog change, or a later owner-approved resolver rule
-// (round-2 follow-ups, 2026-09-13: approval 3's region conflict, approval 4's
-// curated appellation synonym).
+// corrections and producer merges, and carries `has_wines`. It was re-exported
+// again once amendment 24's round-2 follow-ups were live (2026-09-13): the curated
+// alternative producer names of migration 20260914113500 ("Borges Porto",
+// "Tridente"), which it carries as `aliases`; the merge of the duplicate "Tridente"
+// (0d1d099c) into Bodegas Tridente; and the deletion of the orphaned "Vecchie Vigne
+// Paitin" and "Gasleni Alberti". When the round-2 rows were added, each round-2
+// replay equalled its live draft field for field, ids included. A row that no
+// longer equals its live draft names what moved it in its `why` note: a live
+// catalog change (an alternative producer name, a merge), or a later owner-approved
+// resolver rule (approval 3's region conflict, approval 4's curated appellation
+// synonym).
 //
 // A changed row below is a changed resolver outcome for a real label: change one
 // only on purpose, with the reason beside it. The `why` notes carry L1b's
@@ -226,12 +231,12 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "tridente-vintage-unread.json", labelReadId: "b0c61af8-724b-47a5-a7da-67a1bfff9946",
-    why: "appellation: write-time ('Just the region' at Fix). vintage: by-design (D7). region: model (reported) — amendment 21's live catalog fix (approval 2) placed the wine in Castilla y Leon under Bodegas Tridente; the read's Castilla-La Mancha still resolves as read. Owner approval 3 (region conflict) does not move it under this snapshot: the read's 'Tridente' finds the duplicate row 0d1d099c, whose region link is Castilla La Mancha, the read's own region. The round-2 follow-ups merge that row into Bodegas Tridente (Castilla y Leon) with a 'Tridente' alternative name; once that is live and the snapshot re-exported, the regions disagree and the region is left blank ('what the live misses turn on' shows it), so this row is re-pinned then",
+    why: "producer and region: re-pinned on purpose once amendment 24's approval 2 was live — its merge deleted the duplicate 'Tridente' row 0d1d099c (linked to Castilla La Mancha), so no producer row folds to 'tridente', and its curated alternative name 'Tridente' (migration 20260914113500) finds Bodegas Tridente (7f46bd24), linked to Castilla y Leon, where amendment 21's live catalog fix (approval 2) placed the wine. The read has no appellation text and names Castilla-La Mancha, another region of the same country, so owner approval 3 leaves the region blank and lists it missing, and step 7 does not refill it from the link. region: model (reported). appellation: write-time ('Just the region' at Fix, once a region is picked). vintage: by-design (D7)",
     resolved: {
-      country: "Spain", region: "Castilla La Mancha", appellation: null,
-      producer: existing("0d1d099c-3ee0-4601-99ee-d0d4f5ffd194", "Tridente"),
+      country: "Spain", region: null, appellation: null,
+      producer: existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"),
       grapes: [["existing", "Tempranillo", 100]],
-      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "appellation"],
+      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "region", "appellation"],
     },
   },
 
@@ -268,10 +273,10 @@ const CASES: Case[] = [
   },
   {
     entry: 12, file: "r2/borges-porto-2004.json", labelReadId: "8fb4d4d3-c2fd-4a24-9acf-ce46d0e48f2a",
-    why: "producer: the approved brand rule reads 'Borges Porto', which folds to no producer, so it stays pending — never Madeira's 'Borges' or Porto's 'Borges & Irmao', and not the catalog's 'Sociedade dos Vinhos Borges' (for the owner). designation: 'Vintage Port' now folds equal to its reference row",
+    why: "producer: re-pinned from pending on purpose once amendment 24's approval 1 was live — the approved brand rule reads 'Borges Porto', which still folds to no producer row, and the curated alternative name 'Borges Porto' (migration 20260914113500) finds the catalog's Sociedade dos Vinhos Borges (6aaef358), so the draft no longer equals its live draft (producer pending). Never Madeira's 'Borges' or Porto's 'Borges & Irmao': no alternative name leads to either. designation: unlike round 1's 'Vintage', 'Vintage Port' folds equal to its reference row",
     resolved: {
       country: "Portugal", region: "Porto", appellation: "Porto DOC",
-      producer: pending("Borges Porto"),
+      producer: existing("6aaef358-1645-4811-bd99-daa63c585391", "Sociedade dos Vinhos Borges"),
       // "Tinta Roriz" is Tempranillo's Portuguese synonym (grape-canonical.ts).
       grapes: [["existing", "Touriga Nacional", null], ["existing", "Touriga Franca", null], ["existing", "Tempranillo", null], ["existing", "Tinta Barroca", null]],
       vintage: year(2004), colour: "RED", style: "FORTIFIED", designation: "Vintage Port", missing: [],
@@ -279,12 +284,12 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "r2/tridente-vintage-unread.json", labelReadId: "06c355b5-2e23-43e1-8b81-c3a918000ff6",
-    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. Owner approval 3 does not blank it under this snapshot, for round 1's reason: 'Tridente' finds 0d1d099c, linked to the read's own Castilla La Mancha; re-pinned once the approved Tridente merge and alternative name are live and the snapshot is re-exported. Otherwise the same draft as round 1: appellation write-time, vintage by-design (D7)",
+    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. producer and region: re-pinned on purpose for round 1's reason — once amendment 24's approval 2 was live, its merge had deleted 0d1d099c and 'Tridente' finds Bodegas Tridente (7f46bd24) through its curated alternative name (migration 20260914113500); owner approval 3 then leaves the read's region blank, because that producer is linked to Castilla y Leon. So the draft no longer equals its live draft (producer 0d1d099c, region Castilla La Mancha). Otherwise the same draft as round 1: appellation write-time, vintage by-design (D7)",
     resolved: {
-      country: "Spain", region: "Castilla La Mancha", appellation: null,
-      producer: existing("0d1d099c-3ee0-4601-99ee-d0d4f5ffd194", "Tridente"),
+      country: "Spain", region: null, appellation: null,
+      producer: existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"),
       grapes: [["existing", "Tempranillo", 100]],
-      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "appellation"],
+      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "region", "appellation"],
     },
   },
 ];
@@ -324,17 +329,22 @@ describe("resolveLabelRead replays each live read against the snapshot (spec §G
 describe("what the live misses turn on", () => {
   const read = (file: string) => coerceLabelRead(rawFixture(file));
 
-  it("a read with no appellation text waits for 'Just the region' at Fix: the region has one, and the resolver never picks it (#4 round 1, #15 both rounds)", async () => {
+  it("a read with no appellation text waits for 'Just the region' at Fix, and the resolver never picks a self-named appellation (#4 round 1, #15 both rounds)", async () => {
     // Spec §B.5 step 5 and D8: a region-level read never becomes the region's
     // self-named appellation; the user picks it explicitly (§C.5 A7, plan F13).
-    for (const [file, self] of [
-      ["changyu-moser-xv-2022.json", "Ningxia"],
-      ["tridente-vintage-unread.json", "Castilla La Mancha"],
-      ["r2/tridente-vintage-unread.json", "Castilla La Mancha"],
-    ] as const) {
+    const ningxia = await replay(read("changyu-moser-xv-2022.json"));
+    expect([read("changyu-moser-xv-2022.json").appellation, ningxia.appellationId, ningxia.provenance.appellation, selfNamedIn(ningxia.regionId)])
+      .toEqual([null, null, undefined, ["Ningxia"]]);
+
+    // #15: owner approval 3 leaves the region blank too (see "#15 under owner approval 3"
+    // below), so Fix offers 'Just the region' once the user picks a region: the read's
+    // Castilla La Mancha and the producer's Castilla y Leon each have one.
+    const spain = snap.countries.find((c) => c.name === "Spain")!.id;
+    const regionIn = (name: string) => snap.regions.find((r) => r.country_id === spain && r.name === name)?.id ?? null;
+    for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
       const d = await replay(read(file));
-      expect([file, read(file).appellation, d.appellationId, d.provenance.appellation, selfNamedIn(d.regionId)])
-        .toEqual([file, null, null, undefined, [self]]);
+      expect([file, read(file).appellation, d.appellationId, d.provenance.appellation, d.regionId, selfNamedIn(regionIn("Castilla La Mancha")), selfNamedIn(regionIn("Castilla y Leon"))])
+        .toEqual([file, null, null, undefined, null, ["Castilla La Mancha"], ["Castilla y Leon"]]);
     }
   });
 
@@ -354,21 +364,28 @@ describe("what the live misses turn on", () => {
       .toEqual([null, "Ningxia", "producer-region"]);
   });
 
-  it("#15 under owner approval 3: when 'Tridente' reaches a producer linked to Castilla y Leon, the read's Castilla-La Mancha is left blank and never refilled from the link (both rounds)", async () => {
-    // A stand-in for the approved merge of 0d1d099c into Bodegas Tridente: the row the
-    // read finds today carries Bodegas Tridente's region link. Today's snapshot (the
-    // replay rows above) keeps the read's region, because the link agrees with it.
-    const tridente = "0d1d099c-3ee0-4601-99ee-d0d4f5ffd194";
-    const castillaYLeon = snap.regions.find((r) => r.name === "Castilla y Leon")!.id;
-    const merged: ReferenceSnapshot = {
-      ...snap,
-      producers: snap.producers.map((p) => (p.id === tridente ? { ...p, region_id: castillaYLeon } : p)),
-    };
+  it("#15 under owner approval 3: 'Tridente' reaches Bodegas Tridente, linked to Castilla y Leon, so the read's Castilla-La Mancha is left blank and never refilled from the link (both rounds)", async () => {
+    // The live rows since amendment 24's approval 2: its merge deleted the duplicate
+    // "Tridente" (0d1d099c, linked to the read's own Castilla La Mancha), so no producer
+    // row folds to "tridente", and its curated alternative name leads to Bodegas
+    // Tridente, linked to Castilla y Leon in the same country.
+    const bodegasTridente = "7f46bd24-f237-48e2-a151-ea52e66c2d09";
+    const spain = snap.countries.find((c) => c.name === "Spain")!.id;
+    const link = snap.regions.find((r) => r.id === snap.producers.find((p) => p.id === bodegasTridente)?.region_id);
+    expect([link?.name, link?.country_id]).toEqual(["Castilla y Leon", spain]);
+    expect([
+      snap.producers.filter((p) => foldName(p.name) === "tridente"),
+      (snap.aliases ?? []).filter((a) => foldName(a.alias) === "tridente").map((a) => a.producer_id),
+    ]).toEqual([[], [bodegasTridente]]);
+
     for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
-      const today = await replay(read(file));
-      const d = await resolveLabelRead(read(file), snapshotLookup(merged), { imageUrl: null });
-      expect([file, nameOf(snap.regions, today.regionId), d.producer, d.countryId, d.regionId, d.provenance.region, missingWineFields(d, { now: NOW })])
-        .toEqual([file, "Castilla La Mancha", existing(tridente, "Tridente"), today.countryId, null, undefined, ["vintage", "region", "appellation"]]);
+      // The read's region resolves on its own: with no producer to link, it stays.
+      const unlinked = await replay({ ...read(file), producer: null });
+      expect([file, nameOf(snap.regions, unlinked.regionId), unlinked.provenance.region]).toEqual([file, "Castilla La Mancha", "label"]);
+
+      const d = await replay(read(file));
+      expect([file, d.producer, d.countryId, d.regionId, d.provenance.region, missingWineFields(d, { now: NOW })])
+        .toEqual([file, existing(bodegasTridente, "Bodegas Tridente"), spain, null, undefined, ["vintage", "region", "appellation"]]);
     }
   });
 
@@ -391,7 +408,11 @@ describe("what the live misses turn on", () => {
 
   it("near-miss producers are in the snapshot, so each pending or existing outcome is the resolver's choice, not a missing row", async () => {
     const folded = (key: string) => snap.producers.filter((p) => foldName(p.name) === key).map((p) => p.name).sort();
-    // The export asks for every folded key below, and for has_wines on every producer row.
+    /** The producers the curated alternative names folding to `key` lead to (20260914113500). */
+    const aliased = (key: string) => (snap.aliases ?? []).filter((a) => foldName(a.alias) === key).map((a) => nameOf(snap.producers, a.producer_id)).sort();
+    /** The same read against the same rows with no alternative names: what the printed name reaches on its own. */
+    const withoutAliases = async (file: string) => (await resolveLabelRead(read(file), snapshotLookup({ ...snap, aliases: [] }), { imageUrl: null })).producer;
+    // The export asks for every folded key below, for has_wines on every producer row, and for every alternative name.
     expect(snap.producers.every((p) => typeof p.has_wines === "boolean")).toBe(true);
     // #2: since amendment 21's live merge (745fc108 and b50dfcdf into 266af94b) one row folds to "jmboillot".
     // Round 1's "Jean-Marc Boillot" stays pending: an initials rule would also turn a "Jean-Michel Boillot"
@@ -400,21 +421,32 @@ describe("what the live misses turn on", () => {
     expect((await replay(read("jean-marc-boillot-vintage-unread.json"))).producer).toEqual(pending("Jean-Marc Boillot"));
     expect((await replay(read("r2/j-m-boillot-vintage-unread.json"))).producer)
       .toEqual(existing("266af94b-186b-465c-bea3-f4e9c0215f0a", "J.M. Boillot"));
+    // #3 and #5: amendment 24's approval 6 deleted the orphaned misread producers amendment 21's catalog fix
+    // left without wines; both reads name the estates (the replay rows above).
+    expect([folded("vecchievignepaitin"), folded("gaslenialberti")]).toEqual([[], []]);
     // #12: the live rename left no row under the bundled name and one under the company name, which round 1's
-    // read now finds. No read becomes Madeira's "Borges" (H.M. Borges) or Porto's "Borges & Irmao" — stripping
-    // "Sociedade dos Vinhos" would land on the Madeira house — and round 2's brand "Borges Porto" folds to no row.
+    // read finds. No read becomes Madeira's "Borges" (H.M. Borges) or Porto's "Borges & Irmao" — stripping
+    // "Sociedade dos Vinhos" would land on the Madeira house. Round 2's brand "Borges Porto" still folds to no
+    // producer row: since amendment 24's approval 1 its curated alternative name leads to the company, no
+    // alternative name leads to either Borges house, and on its own the brand stays pending.
     expect([folded("borges"), folded("borgesirmao"), folded("borgessociedadedosvinhosborgessa"), folded("sociedadedosvinhosborges"), folded("borgesporto")])
       .toEqual([["Borges"], ["Borges & Irmao"], [], ["Sociedade dos Vinhos Borges"], []]);
-    expect((await replay(read("sociedade-dos-vinhos-borges-2004.json"))).producer)
-      .toEqual(existing("6aaef358-1645-4811-bd99-daa63c585391", "Sociedade dos Vinhos Borges"));
-    expect((await replay(read("r2/borges-porto-2004.json"))).producer).toEqual(pending("Borges Porto"));
+    expect([aliased("borgesporto"), (snap.aliases ?? []).filter((a) => ["Borges", "Borges & Irmao"].includes(nameOf(snap.producers, a.producer_id) ?? ""))])
+      .toEqual([["Sociedade dos Vinhos Borges"], []]);
+    for (const file of ["sociedade-dos-vinhos-borges-2004.json", "r2/borges-porto-2004.json"]) {
+      expect([file, (await replay(read(file))).producer]).toEqual([file, existing("6aaef358-1645-4811-bd99-daa63c585391", "Sociedade dos Vinhos Borges")]);
+    }
+    expect(await withoutAliases("r2/borges-porto-2004.json")).toEqual(pending("Borges Porto"));
     // #13: the live merge deleted the "Vidal Fleury" twin (9f9c976f); one row folds to "vidalfleury".
     expect(folded("vidalfleury")).toEqual(["Vidal-Fleury"]);
-    // #15: "Bodegas Tridente" (Castilla y Leon, the catalog's producer since the live fix) is never reached
-    // from "Tridente": title words are never stripped. Both rounds read "Tridente".
-    expect(folded("bodegastridente")).toEqual(["Bodegas Tridente"]);
+    // #15: both rounds read "Tridente". Since amendment 24's approval 2 merged the duplicate "Tridente" (0d1d099c)
+    // away, no producer row folds to "tridente", and its curated alternative name leads to "Bodegas Tridente"
+    // (Castilla y Leon, the catalog's producer since the live fix). Title words are still never stripped: on its
+    // own, "Tridente" stays pending.
+    expect([folded("tridente"), folded("bodegastridente"), aliased("tridente")]).toEqual([[], ["Bodegas Tridente"], ["Bodegas Tridente"]]);
     for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
-      expect((await replay(read(file))).producer).toEqual(existing("0d1d099c-3ee0-4601-99ee-d0d4f5ffd194", "Tridente"));
+      expect([file, (await replay(read(file))).producer, await withoutAliases(file)])
+        .toEqual([file, existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"), pending("Tridente")]);
     }
   });
 });
