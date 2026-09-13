@@ -16,6 +16,8 @@ import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { eligibleForGlass } from "@/lib/glass-eligibility";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
 import { getReferenceCounts } from "@/lib/reference-counts";
+import { canNoteHiddenGlass } from "@/lib/wset/hidden-note";
+import { assessedOf, summarizeNoteRow } from "@/lib/wset/note-summary";
 import { buildPickCounts, type PickCounts } from "./pick-counts";
 import { flightSegments, pointsAtStake } from "@/lib/guess-ladder-math";
 import { currentGlass, type PointerGlass } from "@/lib/pour-pointer";
@@ -31,6 +33,7 @@ import { cn } from "@/lib/utils";
 import type { GrapeShortlist, GuessRow, RankChip } from "./ladder-types";
 import { GlassStage, type LockedInPerson } from "./locked-in";
 import { MatchLadder, type MatchCandidate, type MatchGlass } from "./match-ladder";
+import type { NoteThisGlassData } from "./note-this-glass";
 import { PausedBand } from "./paused-band";
 import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
@@ -288,6 +291,45 @@ export async function PlayExperience({
     .eq("participant_id", myParticipant.id)
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
+
+  // BT-N2: the viewer's own identity-less ("hidden-glass") notes on this
+  // tasting's glasses, for "Note this glass"'s "Your note · {d} of {t}
+  // assessed" (it reopens the note instead of starting a blank one). The
+  // "wset notes read" policy grants a row with no identity to its author
+  // only, so no explicit author filter is needed here (spec §9.4).
+  const { data: myHiddenNotes } = await supabase
+    .from("wset_notes")
+    .select("*")
+    .in("tasting_wine_id", wineIds.length > 0 ? wineIds : [""])
+    .is("catalog_wine_id", null)
+    .is("unidentified_wine_id", null)
+    .order("updated_at", { ascending: false });
+  const hiddenNoteIds = (myHiddenNotes ?? []).map((n) => n.id);
+  const { data: hiddenNoteAromas } =
+    hiddenNoteIds.length > 0
+      ? await supabase
+          .from("wset_note_aromas")
+          .select("note_id, term_id, sensed_on_nose, sensed_on_palate")
+          .in("note_id", hiddenNoteIds)
+      : { data: [] };
+  const hiddenNoteAromasByNoteId = new Map<
+    string,
+    { term_id: string; sensed_on_nose: boolean; sensed_on_palate: boolean }[]
+  >();
+  for (const a of hiddenNoteAromas ?? []) {
+    const arr = hiddenNoteAromasByNoteId.get(a.note_id) ?? [];
+    arr.push(a);
+    hiddenNoteAromasByNoteId.set(a.note_id, arr);
+  }
+  // At most one note per glass in the ordinary flow; ordered by most
+  // recently updated first so a stray duplicate still resolves to the one
+  // the viewer actually worked on last.
+  const hiddenNoteByWineId = new Map<string, NonNullable<typeof myHiddenNotes>[number]>();
+  for (const n of myHiddenNotes ?? []) {
+    if (n.tasting_wine_id && !hiddenNoteByWineId.has(n.tasting_wine_id)) {
+      hiddenNoteByWineId.set(n.tasting_wine_id, n);
+    }
+  }
 
   const [{ data: participantRows }, { data: guessStatus }] = await Promise.all([
     supabase
@@ -967,6 +1009,39 @@ export async function PlayExperience({
         const showHeader = !fullBleed || hostControls || tasting.wine_source !== "HOST_PROVIDES";
 
         const ladderRow = guess ? toGuessRow(guess) : null;
+        // BT-N2: "Note this glass" is offered only to an eligible guesser
+        // (never the host-provides host or the bottle's own contributor —
+        // both already computed above as isMine/hostProvidesHost) on a
+        // glass that is not yet revealed, through the pure
+        // `canNoteHiddenGlass`. When the viewer already has a hidden note on
+        // this glass, `existing` carries its id and "{d} of {t} assessed"
+        // (summarizeNoteRow with a null style — the wine's colour/style is
+        // unknown before the reveal, same rule as the note sheet itself) so
+        // the entry point reopens it instead of starting a blank one.
+        const noteThisGlassData: NoteThisGlassData | null = canNoteHiddenGlass({
+          status: tasting.status,
+          isRevealed: wine.is_revealed,
+          eligible: !hostProvidesHost && !isMine,
+        })
+          ? (() => {
+              const note = hiddenNoteByWineId.get(wine.id);
+              return {
+                tastingWineId: wine.id,
+                tastingName: tasting.name,
+                glassLabel: glassLabel(wine, index),
+                existing: note
+                  ? {
+                      noteId: note.id,
+                      assessed: assessedOf(
+                        summarizeNoteRow(note, hiddenNoteAromasByNoteId.get(note.id) ?? [], null),
+                        "en",
+                        "long",
+                      ),
+                    }
+                  : null,
+              };
+            })()
+          : null;
         const stage = canGuessNow ? (
           <GlassStage
             initialLocked={locked}
@@ -1006,6 +1081,7 @@ export async function PlayExperience({
                 isMe: p.isMe,
               })),
               standingsAfterPrevious,
+              noteThisGlass: noteThisGlassData,
             }}
             lockedIn={{
               tastingId,
@@ -1034,6 +1110,7 @@ export async function PlayExperience({
               revealStep: wine.reveal_step ?? 0,
               timingMode: tasting.timing_mode,
               asyncRevealPolicy: tasting.async_reveal_policy,
+              noteThisGlass: noteThisGlassData,
             }}
           />
         ) : null;

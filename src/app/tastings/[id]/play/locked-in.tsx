@@ -13,6 +13,7 @@ import { scoreLockedGuess, unlockGuess } from "./actions";
 import { GuessLadder } from "./guess-ladder";
 import { lockedInRosterHeading, waitingTail } from "./ladder-copy";
 import type { GuessLadderProps, RankChip } from "./ladder-types";
+import { NoteThisGlass, type NoteThisGlassData } from "./note-this-glass";
 
 /** One person at the table, as the "N of M locked in" chips show them. */
 export type LockedInPerson = {
@@ -79,6 +80,14 @@ export type LockedInData = {
    *  sentence instead (PLAY-34). */
   timingMode: TimingMode;
   asyncRevealPolicy: AsyncRevealPolicy;
+  /** "Note this glass" (BT-N2; spec §9.3 item 1) — null (or omitted, which
+   *  the render treats the same) when the viewer may not note this glass
+   *  (`canNoteHiddenGlass`, computed by play-experience.tsx: never the
+   *  host-provides host or the bottle's own contributor, and only while the
+   *  glass is unrevealed). Optional so the semi-blind combined card (whose
+   *  own "Note this glass" mount is BT-S3's, matching several glasses at
+   *  once) keeps compiling untouched. */
+  noteThisGlass?: NoteThisGlassData | null;
 };
 
 const LOCKED_CARD =
@@ -322,6 +331,11 @@ export function LockedIn({
               {notices}
             </div>
 
+            {/* "Note this glass" (BT-N2; S10b left column, spec §8.3 item 10). */}
+            {data.noteThisGlass ? (
+              <NoteThisGlass {...data.noteThisGlass} layout="laptop" />
+            ) : null}
+
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
@@ -387,6 +401,10 @@ export function LockedIn({
             <Eyebrow size="md" className="text-console-ink">
               While you wait
             </Eyebrow>
+            {/* "Note this glass" (BT-N2; S10, spec §8.3 item 9). */}
+            {data.noteThisGlass ? (
+              <NoteThisGlass {...data.noteThisGlass} layout="phone" />
+            ) : null}
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
@@ -416,7 +434,10 @@ export function GlassStage({
   lockedIn,
   initialLocked,
 }: {
-  ladder: Omit<GuessLadderProps, "onLocked">;
+  // BT-N2's noteThisGlass isn't part of GuessLadderProps (ladder-types.ts
+  // belongs to another task's OWNS) — GuessLadder accepts it as an extra
+  // prop alongside that type, so this composed prop carries it too.
+  ladder: Omit<GuessLadderProps, "onLocked"> & { noteThisGlass: NoteThisGlassData | null };
   lockedIn: LockedInData;
   initialLocked: boolean;
 }) {

@@ -54,6 +54,7 @@ import {
 } from "./ladder-copy";
 import { LADDER_EXTRAS_NOTE, lockButtonLabel, lockConfirm, lockFooter } from "./lock-copy";
 import { LadderRail } from "./ladder-rail";
+import { NoteThisGlass, type NoteThisGlassData } from "./note-this-glass";
 import { oftenPicked } from "./pick-counts";
 import {
   VINTAGE_NV_ID,
@@ -234,7 +235,14 @@ export function GuessLadder({
   roster,
   standingsAfterPrevious,
   onLocked,
-}: GuessLadderProps) {
+  noteThisGlass,
+}: GuessLadderProps & {
+  // BT-N2: "Note this glass" — null when the viewer may not note this glass
+  // (canNoteHiddenGlass, computed by play-experience.tsx). Not part of
+  // GuessLadderProps (ladder-types.ts belongs to another task's OWNS) — the
+  // ladder simply accepts one extra prop alongside it.
+  noteThisGlass: NoteThisGlassData | null;
+}) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const stateRef = useRef<SaveQueueState>(initialSaveQueue(toRow(initialGuess)));
@@ -1012,14 +1020,19 @@ export function GuessLadder({
         </div>
 
         {isDesktop ? (
-          <LadderRail
-            stake={stake}
-            roster={roster}
-            standings={standingsAfterPrevious}
-            glass={glassNumber}
-            onLock={onLock}
-            locking={locking}
-          />
+          <div className="flex shrink-0 flex-col gap-3">
+            <LadderRail
+              stake={stake}
+              roster={roster}
+              standings={standingsAfterPrevious}
+              glass={glassNumber}
+              onLock={onLock}
+              locking={locking}
+            />
+            {/* "Note this glass" — a text link under the lock button, "locked
+                or not" (BT-N2; spec §8.3 item 9). */}
+            {noteThisGlass ? <NoteThisGlass {...noteThisGlass} layout="link" /> : null}
+          </div>
         ) : null}
       </div>
 
@@ -1043,6 +1056,9 @@ export function GuessLadder({
           <span className="text-center text-[11.5px] text-muted-foreground">
             {lockFooter({ timingMode, asyncRevealPolicy }) ?? lockFooterText({ phone: true })}
           </span>
+          {/* "Note this glass" — a text link under the lock button, "locked
+              or not" (BT-N2; spec §8.3 item 9). */}
+          {noteThisGlass ? <NoteThisGlass {...noteThisGlass} layout="link" /> : null}
         </div>
       ) : null}
 
