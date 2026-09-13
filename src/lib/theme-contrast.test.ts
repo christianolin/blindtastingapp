@@ -64,9 +64,16 @@ describe.each([
     expect(ratio(t, "--card-foreground", "--card")).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("muted text clears AA, since it is still body copy", () => {
-    expect(ratio(t, "--muted-foreground", "--background")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(t, "--muted-foreground", "--card")).toBeGreaterThanOrEqual(4.5);
+  it("muted text clears AA on every surface it is drawn on", () => {
+    // --background and --card alone are not enough, and that is exactly how
+    // #7a6a52 shipped: it passed both while failing --muted at 4.14:1 (the
+    // segmented-control chips), --accent at 4.07:1 and --secondary at 3.86:1.
+    // A token is only as good as the worst ground it lands on.
+    for (const ground of [
+      "--background", "--card", "--muted", "--accent", "--secondary", "--surface-raised",
+    ]) {
+      expect(ratio(t, "--muted-foreground", ground)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   it("inline links clear AA on both grounds they appear on", () => {
@@ -136,26 +143,30 @@ describe("the placeholder shades, which carry real text", () => {
     expect(luminance(dark["--placeholder-soft"])).toBeLessThan(luminance(dark["--placeholder"]));
   });
 
-  // The light pair sits very close to --muted-foreground, which is deliberate
-  // and worth stating so nobody "restores the hierarchy" by lightening them.
-  // On a #f5efe3 ground AA caps any ink at L <= 0.154, and --muted-foreground is
-  // already 0.151: there is no room below it. Dark has room and uses it.
-  it("light is compressed against --muted-foreground because AA leaves no room", () => {
-    // On a #f5efe3 ground AA caps any ink at L <= 0.154, and --muted-foreground
-    // is already 0.151. So in light the placeholder tier cannot sit below the
-    // secondary-text tier -- measured, the two are within 0.01 of each other and
-    // --placeholder is a hair the lighter. Dark has room and keeps a real gap.
-    //
-    // Bounds are the measured values, not round numbers: if someone lightens the
-    // light pair to "restore the hierarchy" they break AA, and this says why.
-    const lightGap = Math.abs(
-      luminance(light["--muted-foreground"]) - luminance(light["--placeholder"]),
-    );
-    expect(lightGap).toBeLessThan(0.01);
-    expect(luminance(light["--placeholder"])).toBeLessThanOrEqual(0.154);
+  // TIER ORDER, expressed as contrast on the page rather than raw luminance so
+  // it reads the same in both themes: secondary text must be STRONGER than a
+  // placeholder, never the other way round.
+  //
+  // In light this held only after --muted-foreground was darkened to clear the
+  // chips. Before that the two were within 0.003 of each other in luminance and
+  // --placeholder was fractionally the stronger of the pair, which is backwards.
+  it.each([["light", light], ["dark", dark]])(
+    "%s keeps secondary text stronger than placeholder text",
+    (_name, t) => {
+      expect(ratio(t, "--muted-foreground", "--background"))
+        .toBeGreaterThan(ratio(t, "--placeholder", "--background"));
+      expect(ratio(t, "--placeholder", "--background"))
+        .toBeGreaterThan(ratio(t, "--placeholder-soft", "--background"));
+    },
+  );
 
-    const darkGap = luminance(dark["--muted-foreground"]) - luminance(dark["--placeholder"]);
-    expect(darkGap).toBeGreaterThan(0.05);
+  // And the light placeholder is at its ceiling, which is why the gap above it
+  // is narrow. On a #f5efe3 ground AA caps any ink at L <= 0.154; --placeholder
+  // is 0.153. It cannot be made fainter without failing, so anyone wanting more
+  // separation has to move --muted-foreground, not this.
+  it("light --placeholder sits at the AA ceiling and cannot go lighter", () => {
+    expect(luminance(light["--placeholder"])).toBeLessThanOrEqual(0.154);
+    expect(luminance(light["--placeholder"])).toBeGreaterThan(0.145);
   });
 });
 
