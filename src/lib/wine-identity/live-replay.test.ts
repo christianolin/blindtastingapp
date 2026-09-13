@@ -10,8 +10,10 @@
 // cost. The snapshot was re-exported after amendment 21's live catalog
 // corrections and producer merges, and carries `has_wines`. When the round-2 rows
 // were added, each round-2 replay equalled its live draft field for field, ids
-// included; a round-1 row that no longer equals L1's live draft names the live
-// change that moved it in its `why` note.
+// included. A row that no longer equals its live draft names what moved it in its
+// `why` note: a live catalog change, or a later owner-approved resolver rule
+// (round-2 follow-ups, 2026-09-13: approval 3's region conflict, approval 4's
+// curated appellation synonym).
 //
 // A changed row below is a changed resolver outcome for a real label: change one
 // only on purpose, with the reason beside it. The `why` notes carry L1b's
@@ -117,7 +119,7 @@ const CASES: Case[] = [
   },
   {
     entry: 4, file: "changyu-moser-xv-2022.json", labelReadId: "c5a02c1d-6cd4-4651-8b00-2a0baa6e7657",
-    why: "appellation: write-time — a partial read; 'Just the region' (Ningxia) is picked at Fix, never defaulted here (spec §B.5 step 5)",
+    why: "appellation: write-time — a partial read with no appellation text; 'Just the region' (Ningxia) is picked at Fix, never defaulted here (spec §B.5 step 5). Neither round-2 follow-up moves it: approval 4's synonym needs appellation text, and approval 3 finds no conflict, since the producer's region link is Ningxia, the read's own region",
     resolved: {
       country: "China", region: "Ningxia", appellation: null,
       producer: existing("a87b88ca-70ea-4587-95f6-2ed116e958d4", "Changyu Moser XV"),
@@ -224,7 +226,7 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "tridente-vintage-unread.json", labelReadId: "b0c61af8-724b-47a5-a7da-67a1bfff9946",
-    why: "appellation: write-time ('Just the region' at Fix). vintage: by-design (D7). region: model (reported) — amendment 21's live catalog fix (approval 2) placed the wine in Castilla y Leon under Bodegas Tridente; the read's Castilla-La Mancha still resolves as read, and its 'Tridente' still finds the duplicate row 0d1d099c, which was not approved for deletion",
+    why: "appellation: write-time ('Just the region' at Fix). vintage: by-design (D7). region: model (reported) — amendment 21's live catalog fix (approval 2) placed the wine in Castilla y Leon under Bodegas Tridente; the read's Castilla-La Mancha still resolves as read. Owner approval 3 (region conflict) does not move it under this snapshot: the read's 'Tridente' finds the duplicate row 0d1d099c, whose region link is Castilla La Mancha, the read's own region. The round-2 follow-ups merge that row into Bodegas Tridente (Castilla y Leon) with a 'Tridente' alternative name; once that is live and the snapshot re-exported, the regions disagree and the region is left blank ('what the live misses turn on' shows it), so this row is re-pinned then",
     resolved: {
       country: "Spain", region: "Castilla La Mancha", appellation: null,
       producer: existing("0d1d099c-3ee0-4601-99ee-d0d4f5ffd194", "Tridente"),
@@ -246,12 +248,12 @@ const CASES: Case[] = [
   },
   {
     entry: 4, file: "r2/changyu-moser-xv-2022.json", labelReadId: "27655b40-e13c-4832-8055-37a3fdff627b",
-    why: "appellation: the read names the label's full origin, 'Ningxia Helan Mountain Eastern Foothills', not 'Ningxia'; no reference row agrees, so it still waits for 'Just the region' (Ningxia) at Fix (reported). The grape percentage is now unread (round 1: 100)",
+    why: "appellation: re-pinned from null on purpose — the read names the label's full origin, 'Ningxia Helan Mountain Eastern Foothills', which no reference row agrees with; owner approval 4's curated appellation synonym (region-canonical.ts), applied because the read's region resolved to Ningxia, reads it as the existing 'Ningxia' appellation (328c774b), so the draft is complete and no longer equals its live draft (appellation null). The grape percentage is unread (round 1: 100)",
     resolved: {
-      country: "China", region: "Ningxia", appellation: null,
+      country: "China", region: "Ningxia", appellation: "Ningxia",
       producer: existing("a87b88ca-70ea-4587-95f6-2ed116e958d4", "Changyu Moser XV"),
       grapes: [["existing", "Cabernet Sauvignon", null]],
-      vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: ["appellation"],
+      vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: [],
     },
   },
   {
@@ -277,7 +279,7 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "r2/tridente-vintage-unread.json", labelReadId: "06c355b5-2e23-43e1-8b81-c3a918000ff6",
-    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. Otherwise the same draft as round 1: appellation write-time, vintage by-design (D7)",
+    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. Owner approval 3 does not blank it under this snapshot, for round 1's reason: 'Tridente' finds 0d1d099c, linked to the read's own Castilla La Mancha; re-pinned once the approved Tridente merge and alternative name are live and the snapshot is re-exported. Otherwise the same draft as round 1: appellation write-time, vintage by-design (D7)",
     resolved: {
       country: "Spain", region: "Castilla La Mancha", appellation: null,
       producer: existing("0d1d099c-3ee0-4601-99ee-d0d4f5ffd194", "Tridente"),
@@ -322,18 +324,51 @@ describe("resolveLabelRead replays each live read against the snapshot (spec §G
 describe("what the live misses turn on", () => {
   const read = (file: string) => coerceLabelRead(rawFixture(file));
 
-  it("a partial read's appellation waits for 'Just the region' at Fix: the region has one, and the resolver never picks it (#4, #15, both rounds)", async () => {
+  it("a read with no appellation text waits for 'Just the region' at Fix: the region has one, and the resolver never picks it (#4 round 1, #15 both rounds)", async () => {
     // Spec §B.5 step 5 and D8: a region-level read never becomes the region's
     // self-named appellation; the user picks it explicitly (§C.5 A7, plan F13).
-    // Round 2's #4 names an appellation no reference row agrees with, which ends the same way.
     for (const [file, self] of [
       ["changyu-moser-xv-2022.json", "Ningxia"],
-      ["r2/changyu-moser-xv-2022.json", "Ningxia"],
       ["tridente-vintage-unread.json", "Castilla La Mancha"],
       ["r2/tridente-vintage-unread.json", "Castilla La Mancha"],
     ] as const) {
       const d = await replay(read(file));
-      expect([file, d.appellationId, d.provenance.appellation, selfNamedIn(d.regionId)]).toEqual([file, null, undefined, [self]]);
+      expect([file, read(file).appellation, d.appellationId, d.provenance.appellation, selfNamedIn(d.regionId)])
+        .toEqual([file, null, null, undefined, [self]]);
+    }
+  });
+
+  it("#4 round 2 names the label's full origin, which no reference row agrees with; only owner approval 4's curated synonym reads it as Ningxia's own appellation, inside region Ningxia", async () => {
+    const reread = read("r2/changyu-moser-xv-2022.json");
+    expect(reread.appellation).toBe("Ningxia Helan Mountain Eastern Foothills");
+    expect(snap.appellations.filter((a) => foldName(stripDesignationSuffix(a.name)) === foldName(reread.appellation!))).toEqual([]);
+
+    const d = await replay(reread);
+    expect([nameOf(snap.regions, d.regionId), selfNamedIn(d.regionId), d.appellationId, d.provenance.appellation])
+      .toEqual(["Ningxia", ["Ningxia"], "328c774b-dc53-4cfc-b95d-7003ea470b6b", "label"]);
+
+    // The synonym needs the read's own region. With none, step 7 still fills Ningxia
+    // from the producer's link, but the appellation is left for Fix.
+    const unplaced = await replay({ ...reread, region: null });
+    expect([unplaced.appellationId, nameOf(snap.regions, unplaced.regionId), unplaced.provenance.region])
+      .toEqual([null, "Ningxia", "producer-region"]);
+  });
+
+  it("#15 under owner approval 3: when 'Tridente' reaches a producer linked to Castilla y Leon, the read's Castilla-La Mancha is left blank and never refilled from the link (both rounds)", async () => {
+    // A stand-in for the approved merge of 0d1d099c into Bodegas Tridente: the row the
+    // read finds today carries Bodegas Tridente's region link. Today's snapshot (the
+    // replay rows above) keeps the read's region, because the link agrees with it.
+    const tridente = "0d1d099c-3ee0-4601-99ee-d0d4f5ffd194";
+    const castillaYLeon = snap.regions.find((r) => r.name === "Castilla y Leon")!.id;
+    const merged: ReferenceSnapshot = {
+      ...snap,
+      producers: snap.producers.map((p) => (p.id === tridente ? { ...p, region_id: castillaYLeon } : p)),
+    };
+    for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
+      const today = await replay(read(file));
+      const d = await resolveLabelRead(read(file), snapshotLookup(merged), { imageUrl: null });
+      expect([file, nameOf(snap.regions, today.regionId), d.producer, d.countryId, d.regionId, d.provenance.region, missingWineFields(d, { now: NOW })])
+        .toEqual([file, "Castilla La Mancha", existing(tridente, "Tridente"), today.countryId, null, undefined, ["vintage", "region", "appellation"]]);
     }
   });
 
