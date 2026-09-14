@@ -390,7 +390,7 @@ export function FieldPicker({
                 <h2 id={titleId} className="font-heading text-[19px] font-semibold">
                   {title}
                 </h2>
-                <span className="flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary lining-nums tabular-nums">
+                <span className="flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary dark:text-foreground lining-nums tabular-nums">
                   {points} {points === 1 ? "pt" : "pts"}
                 </span>
                 {skipLabel !== null ? (
@@ -449,7 +449,7 @@ export function FieldPicker({
             <h2 id={titleId} className="font-heading text-[22px] font-semibold">
               {title}
             </h2>
-            <span className="ml-auto flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary lining-nums tabular-nums">
+            <span className="ml-auto flex items-center gap-[5px] rounded-full border border-gold bg-gold/15 px-[9px] py-[3px] text-[11px] font-bold text-primary dark:text-foreground lining-nums tabular-nums">
               {points} {points === 1 ? "pt" : "pts"}
             </span>
           </div>

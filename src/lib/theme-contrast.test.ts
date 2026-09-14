@@ -17,7 +17,11 @@ import { describe, expect, it } from "vitest";
 const CSS = readFileSync("src/app/globals.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 function block(selector: string): Record<string, string> {
-  const m = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(CSS);
+  // `\n\s*\}` rather than `\n\}`: .dark is nested inside @media screen, so its
+  // closing brace is indented. The looser form stops at the block's OWN brace
+  // rather than running on to the media query's, which it did only harmlessly
+  // because nothing sits between the two.
+  const m = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`).exec(CSS);
   if (!m) throw new Error(`no ${selector} block in globals.css`);
   return Object.fromEntries(
     [...m[1].matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((d) => [d[1], d[2].trim()]),
