@@ -1883,6 +1883,18 @@ export type Database = {
         Args: { p_wine_id: string };
         Returns: undefined;
       };
+      // 20260914104500 (blind-tasting spec §12.4, B11, Q4): the host of a DRAFT
+      // tasting hands hosting to a JOINED participant; the former host stays
+      // JOINED. Authenticated only. Refusals (handHostingRefusal maps them):
+      // "only the host can hand hosting over", "hosting can only change before
+      // the tasting starts", "only someone who has joined can host", "remove the
+      // glasses you added first" (any added_by_host glass), "finish or remove
+      // your unfinished glasses and cellar bottles first" (a draft or pour
+      // intent the host owns in the tasting).
+      transfer_tasting_host: {
+        Args: { p_tasting_id: string; p_new_host_user_id: string };
+        Returns: undefined;
+      };
     };
   };
 };
