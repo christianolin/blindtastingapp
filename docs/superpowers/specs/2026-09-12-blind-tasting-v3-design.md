@@ -1366,6 +1366,7 @@ S7 (console, laptop), S7b (console, phone).
 8. **Incomplete glass.** Its reveal controls stay inert, with the refusal sentence and an "Edit" link beside it: `openAddWineSheet(flight, { start: "byhand", edit: { wineId } })` (B0).
 9. **Phone (S7b).** Chips wrap; the "{k}/{n} locked in" card carries the short not-locked line; the standings card (top two + "All {n} ›"); the facts card; a pinned bottom bar (safe-area inset) with the gold reveal button full width, then "Reveal everything" and "Skip to glass {N} →" as two equal buttons.
 10. **Which tastings reveal attribute by attribute** (`REVEAL-02`; Q8). One pure predicate in `src/lib/console-copy.ts`, `stepRevealApplies({ revealMode, timingMode, sequentialGuessing })` — LIVE + BLIND + guided pacing, the rule `leaderboardApplies` already uses — decides both the console's chips and the participants' `RevealView`. A LIVE blind tasting in free order reveals whole glasses ("Reveal the whole glass", as shipped), with standings after each glass. The two gates can no longer drift apart.
+11. **Route guard** (**owner decision OD-5 (a), 2026-09-14**). `host/page.tsx` redirects a signed-in host to the lobby, `/tastings/{id}`, when `timing_mode !== 'LIVE'` — alongside its existing non-host redirect (§7.2). Item 13 (§2) already means Start only ever lands a host here for a LIVE tasting, but the route itself stayed reachable by direct navigation for any timing mode; an ASYNC host who typed or bookmarked the URL saw a console with nothing driving its pacing. No leak either way — the console's own reads are already gated the same as the lobby's.
 
 ### 7.4 SQL (M7 `tasting_pacing`)
 
@@ -2054,7 +2055,7 @@ SB1 (the list), SB2 (matching, phone), SB3 (matching, laptop), SB4 (the reveal);
      - locked: the assignment with "locked" and "Change it" (**spec copy** for "locked");
      - LIVE guided, beyond `pouredThrough` (§7): dimmed "Not poured yet", no chevron;
      - ASYNC or free flow: every glass open;
-     - revealed: "Glass {n} was {producer} {vintage}" with ✓ or ✗ (**spec copy**);
+     - revealed: "Glass {n} was {producer} {vintage}" with ✓ or ✗ (**spec copy**) — except the glass currently shown as the SB4 hero below, which the board skips entirely rather than also rendering as a row, so it appears once, not twice (**owner decision OD-4 (a), 2026-09-14**; `match-board-visibility.ts`, pure and tested apart from the board itself); a glass revealed earlier still gets its row here once its hero has moved on;
      - bring-your-own, the viewer's own bottle: "Your bottle" (**spec copy**), not matchable.
    - **The pool:** phone "Still unassigned · {n} wines" (unassigned cards only); laptop "The bottles" with "{n} still unassigned" on its own line (every card; an assigned card dims to 0.65 and carries a gold "Glass {N}" pill; a card held by a locked glass shows "Glass {N} · locked").
    - **Phone helper:** when two or more pool cards share a grape, "Producer alone is not enough — {count word} of these are {grape}, so the wine and the vintage have to be on the label too." (**spec copy**: the handoff's sentence made data-driven), always followed by "Assigning one that sits on another glass swaps the two; revealed wines leave the list entirely."
@@ -2446,7 +2447,7 @@ S11 (reveal, phone), S11b (reveal, laptop), S12 and S12b (the finish), S13 and S
 9. **Data.** `src/lib/tasting-result.ts` (server-only):
    - the tasting (with `started_at`, `finished_at`); participants (with `joined_at`); the wines in list order (with `revealed_at`);
    - `wine_answers` for fully revealed glasses only (readable by everyone signed in); `guesses` on those glasses through `GUESS_READ_COLUMNS` (readable once revealed); `getTastingLeaderboard`; `get_semi_blind_revealed_picks` for semi-blind;
-   - eligibility per glass from `glass-eligibility.ts` (§5); competitors = JOINED minus the host-provides host, ranked by `rankRows` over the leaderboard totals;
+   - eligibility per glass from `glass-eligibility.ts` (§5); competitors = JOINED minus the host-provides host, ranked by `rankRows` over each competitor's own sum across fully revealed glasses only (`blindTotals` / `semiBlindTotals`, new in `result-math.ts`) — not `getTastingLeaderboard`'s running totals, which still count a half-revealed glass's step points. **Owner decision OD-3 (a), 2026-09-14:** a tasting ended mid-reveal ranks on the same fully-revealed-only basis as the `score` and `maximum` below it, so the placing, the table and the host's announced winner(s) never disagree with the number shown beside them; `getTastingLeaderboard` supplies names and ids only, not the ranking;
    - `blindResult` / `semiBlindResult` for the viewer.
    - **`result-math.ts` change:** `SemiBlindGuessRow` drops `guessed_wine_id` for `pick_key: string | null` (the opaque candidate key from `get_semi_blind_revealed_picks`); `SplitSentence.pickId` then carries that key, resolved to its label on the server.
 10. **Content.**
@@ -2917,6 +2918,7 @@ Rule 1: nobody sees an unrevealed wine they did not add — not in a lobby, a no
 - `wines read` lets INVITED and DECLINED participant rows read `wines` (id, position, contributor, `added_via`): counts and contributor labels, never an identity. It is also why the semi-blind list is a snapshot from Start (§10.4).
 - B13.4's leftovers: `score_own_guess` without a lock; `reveal_next_category` accepting the contributor in any timing mode.
 - `get_join_preview` is callable with the anon key and has no per-caller rate limit (a PostgREST RPC carries no caller address, and adding one is out of scope). New codes carry about 50 bits; the one existing 6-character code (about 30 bits) keeps working so its shared link does not break. A hit returns §4's reduced fields to anon, and the joined names to a signed-in guesser.
+- **Guided pacing is enforced by the app only, not the database.** `pouredThrough` (§7.3 item 3) gates what the UI offers — the matching board dims a glass beyond it as "Not poured yet" (§10.3 item 2), and `guessOrderAllows`/`sequentialOrderError` refuse a server action on it — but `assign_semi_blind_match` itself checks only `is_revealed`/`reveal_step > 0` (§10.4 (c)), and a direct `guesses` upsert is bound by the same lockdown as any other write to that table (lane N's client-column grants), neither of which reads the pointer. A participant who calls the RPC directly, or upserts `guesses` themselves, can therefore assign or answer a glass before the host has poured it. **Owner decision OD-2 (a), 2026-09-14:** known and accepted, not changed here — no identity leaks either way (rule 1's gates are unchanged), it only lets a determined guesser skip ahead of the pacing everyone else sees.
 
 ---
 

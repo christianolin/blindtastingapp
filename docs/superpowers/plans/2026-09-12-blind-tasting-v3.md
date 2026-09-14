@@ -4284,6 +4284,7 @@ BT-P2, BT-P3 and BT-P4 cover the other rules; BT-SQL7's probe covers the databas
 
 **Does** (spec §7.3 items 1, 2 (console), 4, 5, 7, 8, 9; B6; B0 reveal-8; refinement 7)
 - **`host/page.tsx`:**
+  - a non-LIVE tasting's host is redirected to `/tastings/{id}` alongside the existing non-host redirect (**owner decision OD-5 (a), 2026-09-14**: Start only ever lands a host here for a LIVE tasting, but the route itself stayed reachable by direct navigation for any timing mode; no leak, spec §7.3 item 11);
   - wrap the page in `<LiveShell active={status === "IN_PROGRESS"}>`;
   - current glass = `currentGlass(glasses, tasting.current_wine_id)` (the dwell on the previous glass stays); `wrapped` → `skippedEyebrow(n)` in place of the pouring eyebrow;
   - eligibility via `eligibleForGlass`; locked = a locked or scored row;
@@ -4732,7 +4733,7 @@ describe("hidden-glass notes (B8)", () => {
 
 **Does** (spec §10.3 item 2 (server); refinement 6)
 - `assignMatch(tastingId, glassWineId, candidateKey)`:
-  1. `resolveGuesser`; `sequentialOrderError` (semi-blind guided refuses a glass beyond `pouredThrough`);
+  1. `resolveGuesser`; `sequentialOrderError` (semi-blind guided refuses a glass beyond `pouredThrough` — an app-level check only: `assign_semi_blind_match` itself has no pointer guard, so a direct RPC call or a `guesses` upsert can still answer a not-yet-poured glass with no identity leak, known and accepted — **owner decision OD-2 (a), 2026-09-14**; spec §16.3);
   2. `rpc("assign_semi_blind_match", { p_wine_id: glassWineId, p_candidate_key: candidateKey })`;
   3. errors go through `matchRefusalSentence(error, { glassNumberOf, candidateKey, revealedKeys, lockedIn: LOCKED_EDIT_REFUSAL })` (BT-P6, tested there): "glass locked" (its `detail` is the holder's wine id) → `lockedHolderLabel(holderGlass)` with the glass number from the tasting's wines in list order; "that wine is not in your pool" → `REVEALED_WINE_REFUSAL` when that key is revealed, otherwise the RPC sentence capitalised; "this glass is locked in" → `LOCKED_EDIT_REFUSAL`; M8's "this guess is locked in — change it first" (BT-P6x) → `LOCKED_EDIT_REFUSAL` too — `matchRefusalSentence` maps both to `ctx.lockedIn`; anything else → the RPC sentence capitalised;
   4. no `revalidatePath`; returns `{ ok: true, swappedWith }`.
@@ -4777,7 +4778,7 @@ describe("hidden-glass notes (B8)", () => {
   - `open-assigned` → `candidateLabel(card)` with a chevron (phone) or ✕ (laptop);
   - `locked` → the assignment, "locked" and Change it (`unlockGuess`);
   - `not-poured` → `NOT_POURED`, dimmed, no chevron;
-  - `revealed` → `revealedRowText(...)` with ✓ or ✗;
+  - `revealed` → `revealedRowText(...)` with ✓ or ✗ — except the glass currently shown as the SB4 hero, which `visibleGlasses` (new `match-board-visibility.ts`, pure, tested) drops from the board's own glass list so it renders once, not twice (**owner decision OD-4 (a), 2026-09-14**); an earlier-revealed glass still gets this row once its hero has moved on;
   - `own-bottle` → `YOUR_BOTTLE`.
 - **The pool:** phone `unassignedHeading(n)` over `poolFor(cards, board)`; laptop `THE_BOTTLES` with `stillUnassigned(n)` on its own line, over every card (assigned cards at 0.65 with a gold "Glass {N}" pill; a card held by a locked glass shows `lockedHolderLabel(N)`).
 - **Phone helper:** `poolHelperLines(poolCards)`.
@@ -4977,7 +4978,7 @@ describe("makeGlassLabeler (MISSED-01)", () => {
   - the tasting (with `started_at`, `finished_at`), participants (with `joined_at`), wines in list order (with `revealed_at`);
   - `wine_answers` of fully revealed glasses; `guesses` on those glasses via `GUESS_READ_COLUMNS`; `getTastingLeaderboard`; `getSemiBlindRevealedPicks` for semi-blind (with each glass's `candidateKey` from the picks marked `correct`, or `getSemiBlindBoard`'s revealed keys);
   - eligibility per glass from `eligibleForGlass`; a glass the viewer `joinedAfterReveal` stays in their eligible set, so it counts 0 against their maximum;
-  - competitors = JOINED minus the host-provides host, ranked by `rankRows` over the leaderboard totals;
+  - competitors = JOINED minus the host-provides host, ranked by `rankRows` over `blindTotals`/`semiBlindTotals` (each competitor's own sum across fully revealed glasses only) — not the leaderboard's running totals, which still count a half-revealed glass's step points (**owner decision OD-3 (a), 2026-09-14**; spec §11.3 item 9); `getTastingLeaderboard` supplies names and ids only;
   - `blindResult` / `semiBlindResult` for the viewer; every label resolved on the server (`pickLabel`, grape names by id lookup, `shortWineName`, `glassTitle`).
 - **`ResultView`** (dark; client for Share), spec §11.3 item 10 with `result-copy.ts`: eyebrow; `YOU_FINISHED` + ordinal + line, or `hostedLines`; the table (phones: top four with the viewer highlighted, appended when outside; laptops: every place, under `FINAL_STANDINGS`); best glass; strongest attribute; the agreed-least line; `excludedLines`; "See every wine" (dismisses) and Share (`navigator.share({ url, text })`; when missing, or rejected with anything but `AbortError`, `navigator.clipboard.writeText(url)` and `LINK_COPIED` for 3 seconds). Laptop S12b layout.
 - **`ClosedSurface`** (client): `useSyncExternalStore` over `readDismissed`. The server snapshot is `null` (unknown) and renders only the page header, so a reload of a dismissed tasting never flashes the dark result; the client snapshot then picks the result or the record. "See every wine" calls `writeDismissed` (on failure the flag lives in component state for the visit); the result renders inside `LiveShell active`, the record (children) on parchment. localStorage stays the store (B5).
@@ -5539,7 +5540,7 @@ All 371 items in `map.json`, each exactly once. "Built" names the tasks that bui
 | GUEST-13 | partial | built | BT-P2, BT-G1 |
 | GUEST-14 | missing | built | BT-P2, BT-G1 (one sentence, spec §4.3 item 2) |
 | GUEST-15 | partial | built | BT-P2, BT-G1 |
-| GUEST-16 | partial | built | BT-G1 |
+| GUEST-16 | partial | built | BT-G1; the phone clause (the Overview invite row opens S5) lives outside BT-G1's OWNS, in `src/app/overview/invitation-row.tsx` — confirmed built, **owner decision OD-6 (a), 2026-09-14** |
 | GUEST-17 | shipped | kept (shipped) | BT-G1 (no calendar before accepting) |
 | GUEST-18 | partial | built | BT-D2 (routing), BT-G1 |
 | GUEST-19 | conflict | not adopted | the full invitation without an account (ledger Not adopted); the reduced preview is BT-SQL4, BT-G3 |
