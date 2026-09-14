@@ -1,0 +1,1203 @@
+{
+  "_provenance": {
+    "what": "Details-panel content for places that had none: wine styles, principal grapes, and articles for the German Bereiche. Consumed by scripts/wine-map-sources/gen-place-profiles-migration.mjs, which resolves grape names against the live catalog and refuses to emit a migration if any name or canonical_key does not resolve.",
+    "convention": "Region- and district-level rows follow the established shape (germany.mosel, italy.piemonte): role PRINCIPAL, permitted true. share_pct is the exception -- see below -- and where it is null the panel draws a plain row with no bar, which is the existing look everywhere except france.champagne.",
+    "grapes": "Names must match the grapes catalog exactly. German entries use the catalog's international name (Pinot Noir, not Spätburgunder) with the German synonym in local_note, because that is how the catalog is keyed and the map has its own Local/English toggle.",
+    "styles": "wine_style_kind: RED, WHITE, ROSE, SPARKLING, SWEET, FORTIFIED. sort_order is the array order. colour is left null except where a place genuinely splits a method by colour, which none of these do.",
+    "generated_at": "2026-09-15",
+    "share_pct": "Set only where the figure is published: the four German Anbaugebiete, from Deutsches Weininstitut 2025 (ha / region ha, rounded). Everything else is null — a bar drawn from a guess is worse than no bar."
+  },
+  "new_grapes": [
+    {
+      "name": "Bacchus",
+      "color": "WHITE",
+      "description": "An aromatic German crossing (Silvaner x Riesling, crossed again with Müller-Thurgau) that ripens early and reliably in cool sites. Grapey and elderflower-scented, low in acid, and a regional speciality of Franken.",
+      "skin_color": "green-yellow"
+    },
+    {
+      "name": "Petit Rouge",
+      "color": "RED",
+      "description": "Valle d'Aosta's principal indigenous red, grown in the central valley around Chambave and Torgnon. Light in body, floral and peppery, and the backbone of Enfer d'Arvier and Torrette.",
+      "skin_color": "blue-black"
+    }
+  ],
+  "places": {
+    "germany.franken": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Silvaner",
+          "note": "The region's signature and most planted variety",
+          "share_pct": 25
+        },
+        {
+          "name": "Müller-Thurgau",
+          "share_pct": 21
+        },
+        {
+          "name": "Bacchus",
+          "note": "A Franken speciality"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.saale-unstrut": {
+      "styles": [
+        "WHITE",
+        "SPARKLING",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Müller-Thurgau",
+          "share_pct": 14
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder",
+          "share_pct": 14
+        },
+        {
+          "name": "Riesling",
+          "share_pct": 9
+        },
+        {
+          "name": "Silvaner"
+        },
+        {
+          "name": "Dornfelder"
+        }
+      ]
+    },
+    "germany.hessische-bergstrasse": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling",
+          "note": "Over a third of the vineyard",
+          "share_pct": 37
+        },
+        {
+          "name": "Pinot Gris",
+          "note": "Grauburgunder",
+          "share_pct": 13
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        }
+      ]
+    },
+    "germany.rheingau": {
+      "styles": [
+        "WHITE",
+        "RED",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling",
+          "note": "About three-quarters of the vineyard",
+          "share_pct": 76
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder, concentrated at Assmannshausen",
+          "share_pct": 13
+        }
+      ]
+    },
+    "germany.ahr.walporzheim-ahrtal": {
+      "article": {
+        "description": "The Ahr's single Bereich, which covers effectively the whole region: a narrow slate gorge west of the Rhine where Germany makes some of its most serious Pinot Noir. Vineyards are terraced into dark slate and greywacke on slopes reaching sixty degrees, and it is the valley's heat-trapping walls that let red grapes ripen this far north at all.",
+        "climate": "Sheltered and surprisingly warm for 50°N. The narrow valley holds heat and the dark slate radiates it back at night, which is why red varieties dominate here while the rest of Germany plants white.",
+        "soils": "Devonian slate and greywacke, thin and stony, on terraces cut into very steep slopes.",
+        "key_facts": [
+          "Germany's red-wine valley — Spätburgunder above all",
+          "Slate terraces on slopes up to sixty degrees",
+          "Covers effectively the whole Ahr region",
+          "Rebuilt after the July 2021 flood"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        },
+        {
+          "name": "Frühburgunder",
+          "note": "An early-ripening Pinot mutation, an Ahr speciality"
+        },
+        {
+          "name": "Riesling"
+        }
+      ]
+    },
+    "germany.hessische-bergstrasse.starkenburg": {
+      "article": {
+        "description": "The main body of the Hessische Bergstraße, running from Darmstadt down through Bensheim and Heppenheim along the western edge of the Odenwald. Almost all of the region's vineyard is here, most of it Riesling on loess-covered slopes that catch the morning sun.",
+        "climate": "Mild and early, sheltered from the east by the Odenwald and open to the warm Rhine plain.",
+        "soils": "Loess and loam over the crystalline rock of the Odenwald — granite, gneiss and porphyry.",
+        "key_facts": [
+          "Holds almost all of the Bergstraße's vineyard",
+          "Bensheim and Heppenheim are its centres",
+          "Riesling on loess over crystalline rock"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Gris",
+          "note": "Grauburgunder"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        }
+      ]
+    },
+    "germany.hessische-bergstrasse.umstadt": {
+      "article": {
+        "description": "A detached pocket of vineyard around Groß-Umstadt, some thirty kilometres north-east of the main Bergstraße and separated from it by the Odenwald. Long known as the Odenwälder Weininsel — the Odenwald's wine island — it is small, warm, and almost entirely drunk within sight of where it grew.",
+        "climate": "More continental than the Bergstraße proper, sitting in a basin east of the Odenwald rather than on the Rhine plain.",
+        "soils": "Weathered granite and diorite of the Odenwald basement, capped in places by loess and loam.",
+        "key_facts": [
+          "A detached exclave, not joined to the Bergstraße",
+          "Known as the Odenwälder Weininsel",
+          "Centred on Groß-Umstadt"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Müller-Thurgau"
+        },
+        {
+          "name": "Pinot Gris",
+          "note": "Grauburgunder"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.mittelrhein.loreley": {
+      "article": {
+        "description": "The Mittelrhein's southern and far larger Bereich, following the Rhine gorge through the UNESCO-listed stretch past the Loreley rock. Riesling grows on terraces so steep and so narrow that much of the vineyard has been abandoned over the last century, leaving a small number of growers working some of the most dramatic sites in Germany.",
+        "climate": "Cool and windy in the gorge, with the river moderating the extremes. Ripening depends on slope and aspect more than on anything else.",
+        "soils": "Devonian slate and quartzite, thin over rock, on terraces held by dry-stone walls.",
+        "key_facts": [
+          "Follows the UNESCO-listed Rhine Gorge",
+          "Riesling on very steep slate terraces",
+          "Much of the historic vineyard has been abandoned"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.mosel.bernkastel": {
+      "article": {
+        "description": "The Middle Mosel, and the heart of the region's reputation: the loop of river from Trittenheim down through Piesport, Brauneberg, Bernkastel, Wehlen and Zeltingen. Blue Devonian slate, south-facing slopes of extraordinary steepness, and a roll-call of vineyard names — Doctor, Sonnenuhr, Juffer — that set the standard for Riesling everywhere.",
+        "climate": "Cool continental, rescued by the river's reflected light and by slopes angled to catch every available hour of sun.",
+        "soils": "Blue Devonian slate, weathering to a stony topsoil that holds the day's heat into the night.",
+        "key_facts": [
+          "The Middle Mosel — the region's greatest sites",
+          "Bernkasteler Doctor, Wehlener Sonnenuhr, Brauneberger Juffer",
+          "Blue Devonian slate",
+          "Riesling almost to the exclusion of everything else"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Müller-Thurgau"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.mosel.burg-cochem": {
+      "article": {
+        "description": "The Lower Mosel, from Zell down to Koblenz, and better known to growers as the Terrassenmosel. Here the valley narrows and the slate is worked in small walled terraces rather than open slope — including the Bremmer Calmont, among the steepest vineyards anywhere. Yields are tiny and the work is entirely by hand.",
+        "climate": "Cool, with the narrow valley and dark slate holding what warmth there is. Frost and erosion are constant concerns.",
+        "soils": "Devonian slate in thin terraced pockets, held by dry-stone walls that are themselves a large part of the cost of farming here.",
+        "key_facts": [
+          "The Terrassenmosel — dry-stone terraces, not open slope",
+          "Bremmer Calmont, among the world's steepest vineyards",
+          "Worked entirely by hand"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.mosel.obermosel": {
+      "article": {
+        "description": "The Upper Mosel, upstream of Trier along the Luxembourg border, and the one part of the region that is not slate at all. Vines grow on Muschelkalk shell-limestone, and the traditional grape is Elbling — ancient, neutral and sharply acidic — much of which becomes Sekt rather than still wine.",
+        "climate": "Cool and continental, marginally warmer than the slate Mosel downstream but without the heat-storing rock that makes those slopes work.",
+        "soils": "Muschelkalk shell-limestone, not slate. That single difference sets the whole Bereich apart from the rest of the Mosel.",
+        "key_facts": [
+          "Limestone, not slate",
+          "Elbling, an ancient and sharply acidic white",
+          "Much of the crop becomes Sekt",
+          "Faces Luxembourg across the river"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Elbling"
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        },
+        {
+          "name": "Müller-Thurgau"
+        }
+      ]
+    },
+    "germany.mosel.ruwer": {
+      "article": {
+        "description": "A small tributary valley east of Trier, cooler than the Mosel itself, making Riesling of unusual delicacy — low in alcohol, high in acid, and among the longest-lived wine in Germany. Two estates, Maximin Grünhaus and Karthäuserhof, carry most of its reputation.",
+        "climate": "Cool even by Mosel standards. The Ruwer is a small stream with none of the Mosel's heat-storing mass, so ripening is late and genuinely marginal.",
+        "soils": "Devonian slate, with some red sandstone and gravel in the valley floor.",
+        "key_facts": [
+          "Cooler than the Mosel proper",
+          "Riesling of great delicacy and longevity",
+          "Maximin Grünhaus and Karthäuserhof"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        }
+      ]
+    },
+    "germany.mosel.saar": {
+      "article": {
+        "description": "The Saar joins the Mosel south of Trier, and in a good year makes the most piercing Riesling in Germany — steely, taut and unmistakably cool-climate, with Scharzhofberg as its most famous site. In poor years the grapes barely ripen at all, which is why the Saar's reputation rests on its best vintages rather than its average one.",
+        "climate": "The coldest corner of the Mosel: exposed, late-ripening, and marginal in the literal sense.",
+        "soils": "Grey Devonian slate, often mixed with quartzite.",
+        "key_facts": [
+          "The coolest and steeliest corner of the Mosel",
+          "Scharzhofberg",
+          "Marginal ripening — vintage matters more here than anywhere"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "SWEET",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        }
+      ]
+    },
+    "germany.nahe.nahetal": {
+      "article": {
+        "description": "The Nahe's single Bereich, covering the whole region along the river between Bingen and Bad Kreuznach and up its side valleys. Its defining feature is geological variety — volcanic porphyry, slate, quartzite, sandstone and loam within a few kilometres — which is why Nahe Riesling is so often described as sitting between the Mosel's delicacy and the Rheingau's weight.",
+        "climate": "Sheltered by the Hunsrück to the north-west, and among the drier and sunnier parts of German wine country.",
+        "soils": "Unusually varied over a short distance: volcanic porphyry and melaphyre around Schlossböckelheim, slate and quartzite upstream, sandstone and loam downstream.",
+        "key_facts": [
+          "One Bereich covering the whole Nahe",
+          "Exceptionally varied geology over a few kilometres",
+          "Riesling between Mosel delicacy and Rheingau weight"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Müller-Thurgau"
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        },
+        {
+          "name": "Dornfelder"
+        }
+      ]
+    },
+    "germany.pfalz.mittelhaardt-dt-weinstrasse": {
+      "article": {
+        "description": "The northern half of the Pfalz and the source of most of its finest wine: a warm strip below the Haardt hills running through Kallstadt, Ungstein, Bad Dürkheim, Wachenheim, Forst, Deidesheim and Ruppertsberg. Forster Kirchenstück and Jesuitengarten and their neighbours give Riesling more weight and ripeness than anywhere further north.",
+        "climate": "One of Germany's warmest and driest stretches, sheltered by the Haardt. Figs and almonds grow along the Weinstraße.",
+        "soils": "Loam and sandstone with limestone, and at Forst the black basalt that was carted onto the vineyards to hold heat.",
+        "key_facts": [
+          "The Pfalz's finest strip — Forst, Deidesheim, Wachenheim",
+          "Riesling with unusual weight and ripeness",
+          "Basalt at Forst, carted in to hold heat"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        },
+        {
+          "name": "Dornfelder"
+        },
+        {
+          "name": "Pinot Gris",
+          "note": "Grauburgunder"
+        }
+      ]
+    },
+    "germany.pfalz.suedl-weinstrasse": {
+      "article": {
+        "description": "The southern Pfalz, from Neustadt down to the French border, where the Alsace climate begins to make itself felt. Long a source of bulk wine, it has been transformed over the last thirty years into Germany's most convincing home for Pinot — Weiss-, Grau- and Spätburgunder — alongside increasingly serious Riesling.",
+        "climate": "The warmest stretch of German vineyard, continuous with Alsace across the border.",
+        "soils": "Loess, loam, limestone and coloured sandstone.",
+        "key_facts": [
+          "Germany's warmest vineyards, continuous with Alsace",
+          "Transformed from bulk wine to serious Pinot",
+          "Weiss-, Grau- and Spätburgunder together"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        },
+        {
+          "name": "Pinot Gris",
+          "note": "Grauburgunder"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Dornfelder"
+        }
+      ]
+    },
+    "germany.rheingau.johannisberg": {
+      "article": {
+        "description": "The Rheingau's single Bereich, named after the hill at Schloss Johannisberg and covering the entire region — the south-facing bank from Hochheim west to Lorch, plus Assmannshausen around the bend where the river turns north again. One Bereich for one of the most tightly drawn wine regions in Germany.",
+        "climate": "Warm for its latitude, sheltered by the Taunus to the north, with the broad river storing heat and lengthening the autumn.",
+        "soils": "Quartzite and slate at the steep western end around Rüdesheim; loess, marl and sandy loam through the gentler middle.",
+        "key_facts": [
+          "One Bereich covering the whole Rheingau",
+          "Named for the hill at Schloss Johannisberg",
+          "Riesling on about three-quarters of the vineyard"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder, concentrated at Assmannshausen"
+        }
+      ]
+    },
+    "germany.rheinhessen.bingen": {
+      "article": {
+        "description": "Rheinhessen's north-western corner, facing the Nahe across the water at Bingen and the Rheingau across the Rhine to the north. Quartzite and slate on the Scharlachberg give a firmer, more mineral Riesling than most of the gentler country to the south.",
+        "climate": "Mild and dry, with the Nahe and the Rhine meeting here to moderate it.",
+        "soils": "Quartzite and slate on the Scharlachberg; loess and loam elsewhere.",
+        "key_facts": [
+          "Rheinhessen's north-west corner, at the Nahe's mouth",
+          "Quartzite and slate on the Scharlachberg",
+          "Faces the Rheingau across the river"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Silvaner"
+        },
+        {
+          "name": "Müller-Thurgau"
+        },
+        {
+          "name": "Dornfelder"
+        }
+      ]
+    },
+    "germany.rheinhessen.nierstein": {
+      "article": {
+        "description": "The Rheinterrasse — the short east-facing bank between Nackenheim and Oppenheim, and the best vineyard land in Rheinhessen. The Roter Hang, a band of iron-red Rotliegend slate found nowhere else in Germany, runs through Nackenheimer Rothenberg and Niersteiner Pettenthal and Hipping, and gives Riesling an unmistakable smoky depth.",
+        "climate": "Warm and sheltered, with the wide river reflecting light onto slopes that face due east and take the morning sun.",
+        "soils": "The Roter Hang's red Rotliegend slate and sandstone, unique in German wine, giving way to loess further inland.",
+        "key_facts": [
+          "The Rheinterrasse — Rheinhessen's finest bank",
+          "The Roter Hang's iron-red Rotliegend slate",
+          "Pettenthal, Hipping, Rothenberg"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Silvaner"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "germany.rheinhessen.wonnegau": {
+      "article": {
+        "description": "Southern Rheinhessen, between Alzey and Worms, whose name means roughly the delightful district. Anonymous for most of the last century, it is now the address of several of Germany's most talked-about growers, working Riesling on limestone and clay around Westhofen and Flörsheim-Dalsheim. Worms itself gave the world Liebfraumilch, named for the Liebfrauenstift vineyard beside the church.",
+        "climate": "Warm and dry, and a little more continental than the river terrace to the north-east.",
+        "soils": "Limestone, clay and marl, with loess over much of the gentler land.",
+        "key_facts": [
+          "Westhofen and Flörsheim-Dalsheim",
+          "Limestone and clay rather than river slate",
+          "Liebfraumilch takes its name from Worms' Liebfrauenstift"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Silvaner"
+        },
+        {
+          "name": "Pinot Blanc",
+          "note": "Weißburgunder"
+        },
+        {
+          "name": "Pinot Noir",
+          "note": "Spätburgunder"
+        }
+      ]
+    },
+    "italy.abruzzo": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Trebbiano"
+        },
+        {
+          "name": "Pecorino"
+        },
+        {
+          "name": "Passerina"
+        }
+      ]
+    },
+    "italy.basilicata": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Aglianico"
+        }
+      ]
+    },
+    "italy.calabria": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Gaglioppo"
+        },
+        {
+          "name": "Greco"
+        }
+      ]
+    },
+    "italy.campania": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Aglianico"
+        },
+        {
+          "name": "Fiano"
+        },
+        {
+          "name": "Greco"
+        },
+        {
+          "name": "Falanghina"
+        }
+      ]
+    },
+    "italy.emilia-romagna": {
+      "styles": [
+        "SPARKLING",
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Lambrusco di Sorbara"
+        },
+        {
+          "name": "Lambrusco Grasparossa"
+        },
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Albana"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.lazio": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Malvasia"
+        },
+        {
+          "name": "Trebbiano"
+        },
+        {
+          "name": "Cesanese"
+        }
+      ]
+    },
+    "italy.liguria": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Vermentino"
+        },
+        {
+          "name": "Pigato"
+        },
+        {
+          "name": "Rossese"
+        }
+      ]
+    },
+    "italy.marche": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Verdicchio"
+        },
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Sangiovese"
+        }
+      ]
+    },
+    "italy.molise": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Tintilia"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.puglia": {
+      "styles": [
+        "RED",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Primitivo"
+        },
+        {
+          "name": "Negroamaro"
+        },
+        {
+          "name": "Nero di Troia"
+        }
+      ]
+    },
+    "italy.sardegna": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "FORTIFIED"
+      ],
+      "grapes": [
+        {
+          "name": "Cannonau"
+        },
+        {
+          "name": "Vermentino"
+        },
+        {
+          "name": "Carignano"
+        },
+        {
+          "name": "Vernaccia di Oristano"
+        }
+      ]
+    },
+    "italy.umbria": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Sagrantino"
+        },
+        {
+          "name": "Grechetto"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.valle-d-aosta": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Petit Rouge"
+        },
+        {
+          "name": "Nebbiolo"
+        },
+        {
+          "name": "Prié Blanc"
+        }
+      ]
+    },
+    "italy.friuli": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ]
+    },
+    "italy.lombardia": {
+      "styles": [
+        "SPARKLING",
+        "RED",
+        "WHITE"
+      ]
+    },
+    "italy.piemonte": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ]
+    },
+    "italy.sicilia": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "FORTIFIED"
+      ]
+    },
+    "italy.toscana": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SWEET"
+      ]
+    },
+    "italy.trentino-alto-adige": {
+      "styles": [
+        "WHITE",
+        "RED",
+        "SPARKLING"
+      ]
+    },
+    "italy.veneto": {
+      "styles": [
+        "WHITE",
+        "RED",
+        "SPARKLING",
+        "SWEET"
+      ]
+    },
+    "italy.basilicata.vulture": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Aglianico"
+        }
+      ]
+    },
+    "italy.calabria.ionio-crotonese": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Gaglioppo"
+        },
+        {
+          "name": "Greco"
+        }
+      ]
+    },
+    "italy.calabria.locride": {
+      "styles": [
+        "SWEET",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Greco"
+        }
+      ]
+    },
+    "italy.campania.irpinia": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Aglianico"
+        },
+        {
+          "name": "Fiano"
+        },
+        {
+          "name": "Greco"
+        }
+      ]
+    },
+    "italy.campania.sannio": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Falanghina"
+        },
+        {
+          "name": "Aglianico"
+        }
+      ]
+    },
+    "italy.emilia-romagna.emilia": {
+      "styles": [
+        "SPARKLING",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Lambrusco di Sorbara"
+        },
+        {
+          "name": "Lambrusco Grasparossa"
+        }
+      ]
+    },
+    "italy.emilia-romagna.romagna": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Albana"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.lazio.alta-tuscia": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Trebbiano"
+        },
+        {
+          "name": "Malvasia"
+        }
+      ]
+    },
+    "italy.lazio.castelli-romani": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Malvasia"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.lazio.ciociaria": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cesanese"
+        }
+      ]
+    },
+    "italy.liguria.riviera-di-levante": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Vermentino"
+        },
+        {
+          "name": "Bosco"
+        },
+        {
+          "name": "Albarola"
+        }
+      ]
+    },
+    "italy.liguria.riviera-di-ponente": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pigato"
+        },
+        {
+          "name": "Vermentino"
+        },
+        {
+          "name": "Rossese"
+        }
+      ]
+    },
+    "italy.marche.castelli-di-jesi": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Verdicchio"
+        }
+      ]
+    },
+    "italy.marche.matelica": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Verdicchio"
+        }
+      ]
+    },
+    "italy.marche.piceno": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Pecorino"
+        }
+      ]
+    },
+    "italy.molise.basso-molise": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Trebbiano"
+        }
+      ]
+    },
+    "italy.puglia.central-puglia": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Nero di Troia"
+        },
+        {
+          "name": "Primitivo"
+        }
+      ]
+    },
+    "italy.puglia.salento": {
+      "styles": [
+        "RED",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Negroamaro"
+        },
+        {
+          "name": "Primitivo"
+        }
+      ]
+    },
+    "italy.sardegna.gallura": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Vermentino"
+        }
+      ]
+    },
+    "italy.sardegna.oristano": {
+      "styles": [
+        "FORTIFIED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Vernaccia di Oristano"
+        }
+      ]
+    },
+    "italy.sardegna.sulcis": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Carignano"
+        }
+      ]
+    },
+    "italy.valle-d-aosta.basse-vallee": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Nebbiolo"
+        },
+        {
+          "name": "Petit Rouge"
+        }
+      ]
+    },
+    "italy.valle-d-aosta.valdigne": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Prié Blanc"
+        }
+      ]
+    },
+    "italy.trentino-alto-adige.alto-adige": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ]
+    },
+    "italy.trentino-alto-adige.trentino": {
+      "styles": [
+        "WHITE",
+        "SPARKLING",
+        "RED"
+      ]
+    },
+    "italy.veneto.bardolino": {
+      "styles": [
+        "RED",
+        "ROSE"
+      ]
+    },
+    "italy.veneto.conegliano-valdobbiadene-prosecco": {
+      "styles": [
+        "SPARKLING"
+      ]
+    },
+    "italy.veneto.soave": {
+      "styles": [
+        "WHITE"
+      ]
+    },
+    "italy.veneto.valpolicella": {
+      "styles": [
+        "RED",
+        "SWEET"
+      ]
+    }
+  }
+}
