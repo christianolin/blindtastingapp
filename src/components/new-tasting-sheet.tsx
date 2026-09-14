@@ -30,6 +30,7 @@ import {
   type FlightSnapshot,
   type TastingSetupFields,
 } from "@/app/tastings/new/actions";
+import { getFriendContextLines } from "@/app/tastings/new/people-search";
 import {
   buildSetupFormData,
   defaultSetup,
@@ -110,6 +111,9 @@ export function NewTastingSheet({
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friend[] | "loading">(initialFriends ?? "loading");
+  // Step 3's per-friend context lines (spec §2.3 item 9, CREATE-48) — one
+  // batched call once the friends resolve, never a per-friend fetch.
+  const [friendContextLines, setFriendContextLines] = useState<Record<string, string>>({});
   const [snapshot, setSnapshot] = useState<FlightSnapshot | null>(null);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   // Addresses typed into step 3's InviteField, reported on every add and
@@ -168,6 +172,21 @@ export function NewTastingSheet({
       cancelled = true;
     };
   }, [supabase, userId, initialFriends]);
+
+  // Once the friends resolve (SSR or the lazy fetch above), one batched call
+  // for every context line (spec §2.3 item 9) — never a per-friend fetch.
+  useEffect(() => {
+    if (friends === "loading" || friends.length === 0) return;
+    let cancelled = false;
+    getFriendContextLines(friends.map((f) => f.id))
+      .then((lines) => {
+        if (!cancelled) setFriendContextLines(lines);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [friends]);
 
   // The host's own address: typing it is not an invite, so it never counts in
   // "N invited" (inviteToTasting drops it on the server as well).
@@ -419,6 +438,7 @@ export function NewTastingSheet({
         <InviteStep
           tastingId={tastingId}
           friends={friends}
+          friendContextLines={friendContextLines}
           selectedEmails={selectedEmails}
           onToggleFriend={(email) => {
             const e = email.toLowerCase();
@@ -435,6 +455,7 @@ export function NewTastingSheet({
           scheduledIso={localToIso(setup.scheduledLocal)}
           wineCount={wineCount}
           feedback={feedback}
+          isDesktop={isDesktop}
         />
       ) : null}
     </div>
