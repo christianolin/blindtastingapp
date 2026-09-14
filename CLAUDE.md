@@ -1106,9 +1106,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   explainer cards and mission copy moved to `/about`, which is information-
   only: the back link is its sole interactive element). `/profile/numbers`
   is the personal stats page and is deliberately NOT a nav pillar — it is
-  reached from the "Your numbers" pill in the top bar and from the sidebar's
-  footer profile block (which shows "Your numbers" / "Profile & settings"
-  sub-items whenever the path starts with `/profile`). Spec + plan:
+  reached from the sidebar's (and the phone drawer's) footer profile block,
+  which always lists "Your numbers" / "Profile & settings" under the profile
+  row (owner, 2026-09-14: the top bar's Your numbers pill was removed). Spec + plan:
   `docs/superpowers/specs/2026-09-11-overview-about-numbers-design.md`; the
   Claude Design handoff (README + `Blindr Front Page v3.dc.html`) is the
   visual source of truth.
@@ -1172,7 +1172,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
     `hideActionOnPhone`; `StatTrio` spreads into three equal columns on phones;
     the Next-up banner gains a phone meta line ("You're hosting · 3 glasses so
     far", `overview/next-up-meta.ts`) and its add button reads "Add a wine";
-    the header's Numbers pill is icon-only below `md`. Tablet and desktop are
+    the header's Numbers pill was icon-only below `md` (since removed from the
+    header everywhere). Tablet and desktop are
     unchanged.
 - **Add-wine sheet, create-tasting sheet, guess ladder, host console
   (2026-09 flows redesign).** Spec + plan:

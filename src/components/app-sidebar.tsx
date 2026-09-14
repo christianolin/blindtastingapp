@@ -164,7 +164,7 @@ function SidebarBody({
   onExpand?: () => void;
 }) {
   const pathname = usePathname();
-  const profileActive = pathname.startsWith("/profile");
+  const profileActive = pathname.startsWith("/profile") || pathname === `/u/${user.id}`;
   // Collapsible sub-nav: a pillar's children show when you're inside that
   // section; a chevron tap overrides either way. Keeps the sidebar one calm
   // line per pillar instead of every section's sub-pages all the time.
@@ -369,10 +369,11 @@ function SidebarBody({
         })}
       </nav>
 
-      {/* The signed-in person. Under /profile/* this block is the active item
-          and reveals its two sub-pages (Your numbers, Profile & settings) —
-          that, plus the top-bar pill, is how the stats page is reached; it is
-          deliberately not a nav pillar. */}
+      {/* The signed-in person, with its two sub-pages (Your numbers, Profile &
+          settings) always listed under it — the only way to the stats page
+          now that the top bar has no Your numbers pill; it is deliberately not
+          a nav pillar. On /profile/* and the viewer's own /u page the block is
+          the active item. */}
       <div className="shrink-0 border-t border-primary-foreground/15 p-3">
         <SidebarThemeSwitch variant="full" />
         <div className="mt-1 flex items-center gap-2">
@@ -404,8 +405,7 @@ function SidebarBody({
             </button>
           </form>
         </div>
-        {profileActive ? (
-          <div className="mt-0.5 mb-1 ml-6 flex flex-col border-l border-primary-foreground/[.18] pl-3">
+        <div className="mt-0.5 mb-1 ml-6 flex flex-col border-l border-primary-foreground/[.18] pl-3">
             {PROFILE_LINKS.map((l) => {
               const active =
                 pathname === l.href || pathname.startsWith(`${l.href}/`);
@@ -426,8 +426,7 @@ function SidebarBody({
                 </Link>
               );
             })}
-          </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );
