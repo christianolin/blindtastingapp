@@ -204,7 +204,11 @@ export function WsetSheet({
   embedded = false,
   ref,
 }: {
-  wine: { colour: WineColour; style: WineStyle };
+  /** Null colour/style is the hidden-glass case (blind-tasting B8): the
+      family is not known yet. WineColourControl and AromaPicker already
+      degrade to "every family" / "every group" on null; sectionProgress
+      below falls back to STILL, since it has no null branch of its own. */
+  wine: { colour: WineColour | null; style: WineStyle | null };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
@@ -259,7 +263,10 @@ export function WsetSheet({
     () => new Map(terms.map((tm) => [tm.id, translateTerm(tm.term, lang)])),
     [terms, lang],
   );
-  const prog = useMemo(() => sectionProgress(state, wine.style), [state, wine.style]);
+  const prog = useMemo(
+    () => sectionProgress(state, wine.style ?? "STILL"),
+    [state, wine.style],
+  );
 
   const noteSections = useMemo(() => {
     const composed = composeLiveNote(state, termLabels, L, {

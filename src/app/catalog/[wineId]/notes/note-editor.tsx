@@ -99,9 +99,10 @@ export function NoteEditor({
       });
       // A hidden-glass note's hue can stop fitting mid-edit: the glass is
       // revealed (or the resolve races this very save) while a hue picked
-      // under the still-hidden RED/STILL fallback no longer matches the wine
-      // actually poured. wset_notes_check_hue refuses the whole write rather
-      // than silently keeping a wrong colour (23514, the Postgres check-
+      // from an as-yet-unknown family (A-07: every family is offered until
+      // the reveal, not just RED) no longer matches the wine actually
+      // poured. wset_notes_check_hue refuses the whole write rather than
+      // silently keeping a wrong colour (23514, the Postgres check-
       // violation SQLSTATE). Retry once with no hue — the same clearing the
       // reveal's own trigger applies when a save doesn't race it — so the
       // rest of the note is never lost to a race the taster can't see
@@ -161,18 +162,10 @@ export function NoteEditor({
       }
     : undefined;
 
-  // WsetSheet (Taste & Rate lane) still wants concrete colour/style; a
-  // hidden-glass note's true "unknown" state degrades to the same RED/STILL
-  // default every catalog wine with no colour/style on file already falls
-  // back to elsewhere in this app. The hue and mousse rows are cosmetic here
-  // — the reveal clears any hue that does not fit the wine actually poured
-  // (M5's wset_notes_resolve_on_reveal), so a wrong default never sticks.
-  const sheetWine = { colour: wine.colour ?? "RED", style: wine.style ?? "STILL" };
-
   return (
     <WsetSheet
       ref={sheetRef}
-      wine={sheetWine}
+      wine={wine}
       title={title}
       terms={terms}
       initial={initial}
