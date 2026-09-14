@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { LocalDateTime } from "@/components/local-date-time";
 import { AutoRefresh } from "@/components/auto-refresh";
+import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
+import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, getTastingRow, getWineRows } from "@/lib/tasting-request-cache";
@@ -19,9 +22,11 @@ import {
   tonightLines,
   waitingLines,
 } from "@/lib/invitation-copy";
-import { WinesCard } from "./wines-card";
+import { WinesCard, getEditableWineIds } from "./wines-card";
 import { LeaveTastingButton } from "./leave-tasting-button";
 import { SemiBlindList } from "./semi-blind-list";
+import { SheetFromQuery } from "./sheet-from-query";
+import type { FlightDestination } from "./tasting-add-wine-button";
 
 // The JOINED guest's DRAFT layout — S6 on phones, S6b on laptops (BT-G2;
 // ledger B3; spec §4.3 item 5). Replaces the BT-D2 stub that reused
@@ -176,6 +181,30 @@ export async function GuestLobby({
   });
   const isByo = tasting.wine_source === "PARTICIPANT_CONTRIBUTED";
 
+  // Same formula as lobby-view.tsx (A-23): who may add. This view only ever
+  // renders for a JOINED non-host viewer of a DRAFT tasting (routeTastingView's
+  // guarantee, restated at the top of this file), so isHost is always false
+  // and myStatus is always "JOINED" — kept as real lookups rather than
+  // hardcoded so this stays correct if that guarantee ever changes.
+  const isHost = tasting.host_id === user.id;
+  const myStatus = rows.find((p) => p.user_id === user.id)?.status ?? null;
+  const canAddWine =
+    tasting.status !== "CLOSED" &&
+    (tasting.wine_source === "HOST_PROVIDES" ? isHost : myStatus === "JOINED") &&
+    !semiBlindAddRefusal({
+      revealMode: tasting.reveal_mode,
+      tastingStatus: tasting.status,
+    });
+  const flightDestination: FlightDestination = {
+    kind: "flight",
+    tastingId,
+    tastingName: tasting.name,
+    revealMode: tasting.reveal_mode,
+    wineSource: tasting.wine_source,
+    position: wines.length + 1,
+  };
+  const editableWineIds = await getEditableWineIds(tastingId);
+
   const atTableRow = (
     <AtTheTableCard
       label={atTheTableLabel(joinedRows.length, invitedRows.length, { phone: true })}
@@ -187,6 +216,31 @@ export async function GuestLobby({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <AutoRefresh />
+
+      {/* Registered whenever the guest may add: adding before Start is
+          normal, so the header camera keeps targeting this flight (A-23,
+          mirrors lobby-view.tsx). */}
+      {canAddWine ? (
+        <TastingScanRegistrar
+          tastingId={tastingId}
+          tastingName={tasting.name}
+          revealMode={tasting.reveal_mode}
+          wineSource={tasting.wine_source}
+          position={wines.length + 1}
+          timingMode={tasting.timing_mode}
+          status={tasting.status}
+        />
+      ) : null}
+      {/* Where the legacy add and edit routes land: ?addWine=byhand and
+          ?editWine=<wineId> open the sheet once (A-23, mirrors
+          lobby-view.tsx). */}
+      <Suspense fallback={null}>
+        <SheetFromQuery
+          destination={flightDestination}
+          canAddWine={canAddWine}
+          editableWineIds={editableWineIds}
+        />
+      </Suspense>
 
       <header className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
