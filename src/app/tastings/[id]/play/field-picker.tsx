@@ -20,7 +20,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Eyebrow } from "@/components/overview/eyebrow";
-import { useLiveTheme } from "@/components/live-shell";
 import { deaccent } from "@/lib/deaccent";
 import { cn } from "@/lib/utils";
 import {
@@ -53,12 +52,11 @@ import type { FieldPickerProps, PickerGroup, PickerOption } from "./ladder-types
  * search (debounced 250 ms, 0 for the empty query) whose results replace the
  * groups, bucketed by their `group` label.
  *
- * Dark (B5, XCUT-04): both presentations portal to `document.body`, breaking
- * out of the running view's `.dark`-classed LiveShell subtree, so each reads
- * `useLiveTheme()` itself and adds the `dark` class to its own root — the
- * same mechanism `components/ui/popover.tsx` uses for every other popover.
- * Every surface color below is a token (`bg-card`, `border-border`, …), so
- * that class is the only thing dark mode needs.
+ * Theme: both presentations portal to `document.body`, breaking out of the
+ * running view's DOM subtree — but every surface colour below is a token
+ * (`bg-card`, `border-border`, …), so the portal just follows the `dark`
+ * class already on `<html>` (or not) like anything else in the app; there is
+ * no local theme override to apply here.
  */
 export function FieldPicker({
   open,
@@ -88,7 +86,6 @@ export function FieldPicker({
   const requestIdRef = useRef(0);
   const serverSearch = typeof search === "function" ? search : null;
   const isPopover = presentation === "popover";
-  const dark = useLiveTheme() === "dark";
 
   // Portal only after hydration: the server renders nothing here, so the
   // first client render must match (server snapshot false, client true).
@@ -382,10 +379,7 @@ export function FieldPicker({
               // what returns focus to the row (rowRefs, guess-ladder.tsx).
               initialFocus={false}
               finalFocus={false}
-              className={cn(
-                "flex max-h-[75vh] w-[520px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0_12px_32px_rgba(42,33,30,.22)] ring-1 ring-foreground/10 outline-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-                dark && "dark",
-              )}
+              className="flex max-h-[75vh] w-[520px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0_12px_32px_rgba(42,33,30,.22)] ring-1 ring-foreground/10 outline-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
             >
               <div className="flex shrink-0 items-center gap-[9px] border-b border-border px-4 py-[13px]">
                 <h2 id={titleId} className="font-heading text-[19px] font-semibold">
@@ -417,7 +411,7 @@ export function FieldPicker({
 
   return createPortal(
     <div
-      className={cn("fixed inset-0 z-50", !open && "pointer-events-none", dark && "dark")}
+      className={cn("fixed inset-0 z-50", !open && "pointer-events-none")}
       aria-hidden={!open}
     >
       {open ? (

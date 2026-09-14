@@ -82,17 +82,17 @@ export function NoteThisGlass({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-console-foreground/14 bg-console-card p-[13px_14px] text-left text-[13.5px] transition-colors hover:border-gold-light/60"
+        className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-border-light bg-card p-[13px_14px] text-left text-[13.5px] transition-colors hover:border-gold/60"
       >
         <span className="flex min-w-0 flex-1 flex-col gap-px">
           <span>{title}</span>
           {existing ? null : (
-            <span className="text-[11.5px] text-console-ink">
+            <span className="text-[11.5px] text-muted-foreground">
               {layout === "phone" ? NOTE_THIS_GLASS_SUB : NOTE_THIS_GLASS_SUB_LAPTOP}
             </span>
           )}
         </span>
-        <ChevronRight className="size-4 shrink-0 text-gold-light" aria-hidden />
+        <ChevronRight className="size-4 shrink-0 text-gold-dark" aria-hidden />
       </button>
       {sheet}
     </>

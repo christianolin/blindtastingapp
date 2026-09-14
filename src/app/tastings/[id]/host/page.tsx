@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
-import { LiveShell } from "@/components/live-shell";
 import { createClient } from "@/lib/supabase/server";
 import { GUESS_READ_COLUMNS, type GuessReadColumn } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -83,9 +82,11 @@ function vintageLabel(a: {
 }
 
 /**
- * The host console (handoff 6i): a dark, one-button surface for the person
- * pouring. Host-only — everyone else is sent back to the tasting page — and
- * only once the tasting has started. All the host-only reads (the current
+ * The host console (handoff 6i): a one-button surface for the person
+ * pouring, themed like the rest of the app (light by default, dark only on
+ * the user's own toggle). Host-only — everyone else is sent back to the
+ * tasting page — and only once the tasting has started. All the host-only
+ * reads (the current
  * glass's answer key, every guess on it) happen here under the host's own
  * RLS and are rendered only into this route; the participant play surface
  * never receives them. Product rule on top of RLS: a bring-your-own bottle's
@@ -657,7 +658,7 @@ export default async function HostConsolePage({
   );
 
   return (
-    <LiveShell active={tasting.status === "IN_PROGRESS"}>
+    <>
       {tasting.timing_mode === "LIVE" ? (
         <RevealSync tastingId={tastingId} watermark={watermark} />
       ) : null}
@@ -667,6 +668,6 @@ export default async function HostConsolePage({
           second console until some reveal or guess happened to land. */}
       <AutoRefresh />
       <HostConsole data={data} />
-    </LiveShell>
+    </>
   );
 }

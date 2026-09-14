@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LiveShell } from "@/components/live-shell";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { cn } from "@/lib/utils";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
@@ -32,11 +31,11 @@ import { StartResultNotice } from "./host-controls";
 import { viewerCanSeeStandings } from "./view-route";
 
 // The IN_PROGRESS board (BT-D2, moved without change from page.tsx). Serves
-// two of view-route.ts's TastingView values: "running" (blind / semi-blind —
-// wrapped in LiveShell, B5) and "open-board" (reveal_mode OPEN — no shell,
-// spec §6.3 item 3), because both were already one shared conditional in the
-// pre-split page.tsx and an OPEN tasting can be reached by an INVITED viewer
-// too (the OPEN-started routing check runs before the INVITED check).
+// two of view-route.ts's TastingView values: "running" (blind / semi-blind)
+// and "open-board" (reveal_mode OPEN), because both were already one shared
+// conditional in the pre-split page.tsx and an OPEN tasting can be reached by
+// an INVITED viewer too (the OPEN-started routing check runs before the
+// INVITED check).
 export async function RunningView({
   tastingId,
 }: {
@@ -302,45 +301,43 @@ export async function RunningView({
   );
 
   return (
-    <LiveShell active={!isOpen}>
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
-        <AutoRefresh />
-        {/* Registered whenever the viewer may add — adding mid-tasting is
-            normal, so the header camera keeps targeting this flight. */}
-        {canAddWine ? (
-          <TastingScanRegistrar
-            tastingId={tastingId}
-            tastingName={tasting.name}
-            revealMode={tasting.reveal_mode}
-            wineSource={tasting.wine_source}
-            position={wineCount + 1}
-            timingMode={tasting.timing_mode}
-            status={tasting.status}
-          />
-        ) : null}
-        {/* Where the legacy add and edit routes land: ?addWine=byhand and
-            ?editWine=<wineId> open the sheet once (spec §C.6). */}
-        <Suspense fallback={null}>
-          <SheetFromQuery
-            destination={flightDestination}
-            canAddWine={canAddWine}
-            editableWineIds={editableWineIds}
-          />
-        </Suspense>
-        <TastingPageHeader tastingId={tastingId} />
-        {/* Always mounted for the host, so the notice survives AutoRefresh
-            once its cookie is cleared. */}
-        {isHost ? (
-          <StartResultNotice
-            tastingId={tastingId}
-            result={startResult}
-            cookieName={startResultCookieName(tastingId)}
-            cookiePath={startResultCookiePath(tastingId)}
-          />
-        ) : null}
-        {inviteCard}
-        {content}
-      </div>
-    </LiveShell>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      <AutoRefresh />
+      {/* Registered whenever the viewer may add — adding mid-tasting is
+          normal, so the header camera keeps targeting this flight. */}
+      {canAddWine ? (
+        <TastingScanRegistrar
+          tastingId={tastingId}
+          tastingName={tasting.name}
+          revealMode={tasting.reveal_mode}
+          wineSource={tasting.wine_source}
+          position={wineCount + 1}
+          timingMode={tasting.timing_mode}
+          status={tasting.status}
+        />
+      ) : null}
+      {/* Where the legacy add and edit routes land: ?addWine=byhand and
+          ?editWine=<wineId> open the sheet once (spec §C.6). */}
+      <Suspense fallback={null}>
+        <SheetFromQuery
+          destination={flightDestination}
+          canAddWine={canAddWine}
+          editableWineIds={editableWineIds}
+        />
+      </Suspense>
+      <TastingPageHeader tastingId={tastingId} />
+      {/* Always mounted for the host, so the notice survives AutoRefresh
+          once its cookie is cleared. */}
+      {isHost ? (
+        <StartResultNotice
+          tastingId={tastingId}
+          result={startResult}
+          cookieName={startResultCookieName(tastingId)}
+          cookiePath={startResultCookiePath(tastingId)}
+        />
+      ) : null}
+      {inviteCard}
+      {content}
+    </div>
   );
 }

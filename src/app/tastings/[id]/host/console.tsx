@@ -123,9 +123,11 @@ export type ConsoleData = {
   unrevealedGlasses: UnrevealedGlass[];
 };
 
-// The handoff's dark-room button pair: gold primary, outlined secondary.
+// The handoff's button pair: gold primary, outlined secondary — themed like
+// the rest of the app (light by default, dark only on the user's toggle),
+// not fixed dark the way the add-wine camera surfaces are.
 const SECONDARY =
-  "inline-flex min-h-11 items-center justify-center rounded-[10px] border border-console-foreground/25 p-[14px_20px] text-[14px] font-semibold text-console-foreground transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded-[10px] border border-border p-[14px_20px] text-[14px] font-semibold text-foreground transition-colors hover:border-gold hover:text-gold-dark disabled:opacity-50";
 const HEADER_BUTTON =
   "inline-flex min-h-11 items-center justify-center gap-[7px] rounded-[9px] border p-[9px_14px] text-[13px] font-semibold transition-colors md:min-h-0";
 
@@ -292,26 +294,26 @@ export function HostConsole({ data }: { data: ConsoleData }) {
   const liveDotNode = !data.finished && data.timingMode === "LIVE" ? (
     <LiveDot />
   ) : (
-    <span className="size-[7px] shrink-0 rounded-full bg-console-ink" aria-hidden />
+    <span className="size-[7px] shrink-0 rounded-full bg-muted-foreground" aria-hidden />
   );
   const backHref = `/tastings/${data.tastingId}`;
 
   return (
-    <div className="flex flex-1 flex-col bg-console text-console-foreground">
+    <div className="flex flex-1 flex-col bg-background text-foreground">
       {/* Header */}
-      <header className="flex flex-col gap-3 border-b border-console-foreground/12 px-4 py-4 md:px-[26px]">
+      <header className="flex flex-col gap-3 border-b border-border-light px-4 py-4 md:px-[26px]">
         {/* Phone (S7b): one line — back icon, eyebrow, Pause, + Wine; no name. */}
         <div className="flex w-full items-center gap-2 md:hidden">
           <Link
             href={backHref}
             aria-label={data.finished ? "Back to the tasting" : "Tasting page"}
-            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light"
+            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-border text-foreground hover:border-gold hover:text-gold-dark"
           >
             <ArrowLeft className="size-4" />
           </Link>
           <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
             {liveDotNode}
-            <Eyebrow size="lg" className="truncate tracking-[.15em] text-gold-light">
+            <Eyebrow size="lg" className="truncate tracking-[.15em] text-gold-dark">
               {eyebrowText}
             </Eyebrow>
           </span>
@@ -320,7 +322,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               type="button"
               onClick={togglePause}
               disabled={pacingPending}
-              className={cn(HEADER_BUTTON, "shrink-0 border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+              className={cn(HEADER_BUTTON, "shrink-0 border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
             >
               <PauseIcon className="size-4" strokeWidth={2.5} />
               {data.paused ? "Resume" : "Pause"}
@@ -330,7 +332,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
             <button
               type="button"
               onClick={openAddWine}
-              className={cn(HEADER_BUTTON, "shrink-0 border-gold-light text-gold-light hover:bg-gold-light/10")}
+              className={cn(HEADER_BUTTON, "shrink-0 border-gold text-gold-dark hover:bg-gold/10")}
             >
               <Plus className="size-4" strokeWidth={2.5} />
               Wine
@@ -342,7 +344,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
         <div className="hidden w-full flex-wrap items-center gap-x-[14px] gap-y-3 md:flex">
           <span className="flex items-center gap-2">
             {liveDotNode}
-            <Eyebrow size="lg" className="tracking-[.15em] text-gold-light">
+            <Eyebrow size="lg" className="tracking-[.15em] text-gold-dark">
               {eyebrowText}
             </Eyebrow>
           </span>
@@ -355,7 +357,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 type="button"
                 onClick={togglePause}
                 disabled={pacingPending}
-                className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                className={cn(HEADER_BUTTON, "border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
               >
                 <PauseIcon className="size-4" strokeWidth={2.5} />
                 {data.paused ? "Resume" : "Pause"}
@@ -365,7 +367,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               <button
                 type="button"
                 onClick={openAddWine}
-                className={cn(HEADER_BUTTON, "border-gold-light text-gold-light hover:bg-gold-light/10")}
+                className={cn(HEADER_BUTTON, "border-gold text-gold-dark hover:bg-gold/10")}
               >
                 <Plus className="size-4" strokeWidth={2.5} />
                 Add a wine
@@ -376,7 +378,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 would otherwise be stuck on it. */}
             <Link
               href={backHref}
-              className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light")}
+              className={cn(HEADER_BUTTON, "border-border text-foreground hover:border-gold hover:text-gold-dark")}
             >
               <ArrowLeft className="size-4" />
               {data.finished ? "Back to the tasting" : "Tasting page"}
@@ -396,7 +398,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 <button
                   type="submit"
                   disabled={finishPending}
-                  className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                  className={cn(HEADER_BUTTON, "border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
                 >
                   {finishPending ? "Ending…" : "End tasting"}
                 </button>
@@ -415,7 +417,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
           {data.paused ? (
             <div
               role="status"
-              className="flex flex-wrap items-center gap-3 rounded-[13px] border border-gold-light/50 bg-gold-light/12 px-4 py-3 text-[13.5px] font-medium text-gold-light"
+              className="flex flex-wrap items-center gap-3 rounded-[13px] border border-gold/50 bg-gold/12 px-4 py-3 text-[13.5px] font-medium text-gold-dark"
             >
               <PauseIcon className="size-4 shrink-0" aria-hidden />
               <span className="flex-1">{CONSOLE_PAUSED}</span>
@@ -423,7 +425,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 type="button"
                 onClick={togglePause}
                 disabled={pacingPending}
-                className="inline-flex min-h-9 items-center justify-center rounded-[9px] border border-gold-light p-[8px_14px] text-[12.5px] font-semibold text-gold-light transition-colors hover:bg-gold-light/10 disabled:opacity-50"
+                className="inline-flex min-h-9 items-center justify-center rounded-[9px] border border-gold p-[8px_14px] text-[12.5px] font-semibold text-gold-dark transition-colors hover:bg-gold/10 disabled:opacity-50"
               >
                 {pacingPending ? "Resuming…" : "Resume"}
               </button>
@@ -432,7 +434,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
 
           {glass === null ? (
             <div className="flex flex-col gap-[6px]">
-              <Eyebrow size="lg" className="tracking-[.15em] text-console-ink">
+              <Eyebrow size="lg" className="tracking-[.15em] text-muted-foreground">
                 Nothing poured yet
               </Eyebrow>
               <p className="font-heading text-[30px] font-semibold leading-[1.05] md:text-[38px]">
@@ -443,7 +445,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
             <>
               <div className="flex flex-wrap items-end gap-5">
                 <div className="flex min-w-0 flex-col gap-[6px]">
-                  <Eyebrow size="lg" className="tracking-[.15em] text-console-ink">
+                  <Eyebrow size="lg" className="tracking-[.15em] text-muted-foreground">
                     {/* reveal-4: a finished tasting never says "pouring now" —
                         a glass left hidden is named as such. */}
                     {data.finished && !glass.isRevealed
@@ -458,7 +460,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                     {glass.title}
                   </p>
                   {glass.meta || glass.privateIdentity ? (
-                    <p className="text-[13px] text-console-ink">
+                    <p className="text-[13px] text-muted-foreground">
                       {[glass.meta, glass.privateIdentity ? "only you can see this" : null]
                         .filter(Boolean)
                         .join(" · ")}
@@ -466,10 +468,10 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                   ) : null}
                 </div>
                 <div className="ml-auto flex flex-col items-end gap-[3px]">
-                  <span className="font-heading text-[34px] font-semibold leading-none text-gold-light lining-nums tabular-nums">
+                  <span className="font-heading text-[34px] font-semibold leading-none text-gold-dark lining-nums tabular-nums">
                     {glass.locked}/{glass.eligible}
                   </span>
-                  <span className="text-[11.5px] text-console-ink">locked in</span>
+                  <span className="text-[11.5px] text-muted-foreground">locked in</span>
                 </div>
               </div>
 
@@ -478,7 +480,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                   whole, so it gets no chips and no eyebrow of its own. */}
               {data.guidedLive && glass.steps.length > 0 ? (
                 <div className="flex flex-col gap-[11px]">
-                  <Eyebrow size="md" className="text-console-ink">
+                  <Eyebrow size="md" className="text-muted-foreground">
                     Reveal in order · tap to go one step further
                   </Eyebrow>
                   <div className="flex flex-wrap items-center gap-2">
@@ -487,9 +489,9 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                         return (
                           <span
                             key={step.key}
-                            className="flex items-center gap-2 rounded-[10px] border border-gold-light bg-gold-light/16 p-[11px_15px] text-[13.5px] font-semibold"
+                            className="flex items-center gap-2 rounded-[10px] border border-gold bg-gold/16 p-[11px_15px] text-[13.5px] font-semibold"
                           >
-                            <span className="flex size-[17px] items-center justify-center rounded-full bg-gold-light text-console">
+                            <span className="flex size-[17px] items-center justify-center rounded-full bg-gold text-on-accent">
                               <Check className="size-3" strokeWidth={3} />
                             </span>
                             {step.label}
@@ -503,7 +505,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                             type="submit"
                             form={nextFormId}
                             disabled={pending || data.paused}
-                            className="flex min-h-11 items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-gold-light p-[11px_15px] text-[13.5px] font-semibold text-gold-light transition-colors hover:bg-gold-light/10 disabled:opacity-50"
+                            className="flex min-h-11 items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-gold p-[11px_15px] text-[13.5px] font-semibold text-gold-dark transition-colors hover:bg-gold/10 disabled:opacity-50"
                           >
                             {step.known ? `${step.label} · next` : step.label}
                           </button>
@@ -512,7 +514,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       return (
                         <span
                           key={step.key}
-                          className="flex items-center gap-2 rounded-[10px] border border-dashed border-console-foreground/25 p-[11px_15px] text-[13.5px] text-console-ink"
+                          className="flex items-center gap-2 rounded-[10px] border border-dashed border-border p-[11px_15px] text-[13.5px] text-muted-foreground"
                         >
                           {step.label}
                         </span>
@@ -529,7 +531,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                     // S7b: pinned to the bottom of the phone viewport (safe-area
                     // inset), so the one obvious action stays reachable without
                     // scrolling; the laptop rail keeps it in normal flow.
-                    "max-lg:sticky max-lg:bottom-0 max-lg:z-30 max-lg:-mx-4 max-lg:border-t max-lg:border-console-foreground/12 max-lg:bg-console max-lg:px-4 max-lg:pb-[calc(12px+env(safe-area-inset-bottom))] max-lg:pt-3",
+                    "max-lg:sticky max-lg:bottom-0 max-lg:z-30 max-lg:-mx-4 max-lg:border-t max-lg:border-border-light max-lg:bg-background max-lg:px-4 max-lg:pb-[calc(12px+env(safe-area-inset-bottom))] max-lg:pt-3",
                   )}
                 >
                   {canReveal && data.guidedLive && glass.nextStep ? (
@@ -544,11 +546,11 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       <button
                         type="submit"
                         disabled={pending || revealBlocked || data.paused}
-                        className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold-light p-[15px_22px] text-[17px] font-bold text-console shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 max-lg:w-full max-lg:justify-center md:p-[17px_30px] md:text-[18px]"
+                        className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold p-[15px_22px] text-[17px] font-bold text-on-accent shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 max-lg:w-full max-lg:justify-center md:p-[17px_30px] md:text-[18px]"
                       >
                         {nextPending ? (
                           <>
-                            <WineGlassLoader size={22} wineColor="var(--console)" />
+                            <WineGlassLoader size={22} wineColor="var(--on-accent)" />
                             Revealing…
                           </>
                         ) : (
@@ -556,7 +558,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                         )}
                       </button>
                       {glass.nextStep.known && glass.nextStep.missing ? (
-                        <p className="max-w-[34ch] text-[12.5px] leading-[1.5] text-console-ink">
+                        <p className="max-w-[34ch] text-[12.5px] leading-[1.5] text-muted-foreground">
                           No {glass.nextStep.label.toLowerCase()} on record for this glass —
                           this step scores nobody.
                         </p>
@@ -585,11 +587,11 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                         <button
                           type="submit"
                           disabled={pending || data.paused}
-                          className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold-light p-[15px_22px] text-[17px] font-bold text-console shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 max-lg:w-full max-lg:justify-center md:p-[17px_30px] md:text-[18px]"
+                          className="inline-flex min-h-11 items-center gap-[10px] rounded-[11px] bg-gold p-[15px_22px] text-[17px] font-bold text-on-accent shadow-[0_2px_0_0_rgba(0,0,0,.25)] transition-colors hover:bg-gold-deep disabled:opacity-60 max-lg:w-full max-lg:justify-center md:p-[17px_30px] md:text-[18px]"
                         >
                           {fullPending ? (
                             <>
-                              <WineGlassLoader size={22} wineColor="var(--console)" />
+                              <WineGlassLoader size={22} wineColor="var(--on-accent)" />
                               Revealing…
                             </>
                           ) : (
@@ -599,13 +601,13 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       )}
                       {glass.refusal ? (
                         <div className="flex max-w-[34ch] flex-wrap items-center gap-x-2 gap-y-1">
-                          <p className="text-[12.5px] leading-[1.5] text-console-ink">
+                          <p className="text-[12.5px] leading-[1.5] text-muted-foreground">
                             {glass.refusal}
                           </p>
                           <button
                             type="button"
                             onClick={() => editGlass(glass.wineId)}
-                            className="flex min-h-11 items-center px-1 text-[12.5px] font-semibold text-gold-light hover:underline md:pointer-fine:min-h-0"
+                            className="flex min-h-11 items-center px-1 text-[12.5px] font-semibold text-gold-dark hover:underline md:pointer-fine:min-h-0"
                           >
                             Edit
                           </button>
@@ -659,7 +661,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 </div>
 
                 {canReveal && glass.notLockedNames.length > 0 ? (
-                  <p className="max-w-[30ch] text-[12.5px] leading-[1.5] text-console-ink">
+                  <p className="max-w-[30ch] text-[12.5px] leading-[1.5] text-muted-foreground">
                     {/* S7b's short form folds "has not locked in" and what a
                         reveal does to them into one clause. */}
                     <span className="lg:hidden">
@@ -672,31 +674,31 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 ) : null}
 
                 {allRevealed && glass.isRevealed ? (
-                  <p className="text-[13px] text-console-ink">
+                  <p className="text-[13px] text-muted-foreground">
                     All glasses revealed — end the tasting when you are done.
                   </p>
                 ) : null}
                 {data.finished ? (
-                  <p className="text-[13px] text-console-ink">
+                  <p className="text-[13px] text-muted-foreground">
                     This tasting is finished — reveals are closed.
                   </p>
                 ) : null}
-                {error ? <p className="text-[12.5px] text-miss">{error}</p> : null}
+                {error ? <p className="text-[12.5px] text-destructive">{error}</p> : null}
               </div>
             </>
           )}
         </div>
 
         {/* Right rail */}
-        <aside className="flex shrink-0 flex-col gap-[14px] border-t border-console-foreground/12 bg-console-card p-[22px_16px_26px] md:p-[24px_24px_28px] lg:w-[330px] lg:border-t-0 lg:border-l">
+        <aside className="flex shrink-0 flex-col gap-[14px] border-t border-border-light bg-card p-[22px_16px_26px] md:p-[24px_24px_28px] lg:w-[330px] lg:border-t-0 lg:border-l">
           <div className="flex items-baseline gap-[9px]">
-            <Eyebrow size="md" className="text-console-ink">
+            <Eyebrow size="md" className="text-muted-foreground">
               Standings
             </Eyebrow>
-            <span className="ml-auto text-[11.5px] text-console-ink">{data.standingsAfter}</span>
+            <span className="ml-auto text-[11.5px] text-muted-foreground">{data.standingsAfter}</span>
           </div>
           {data.standings.length === 0 ? (
-            <p className="text-[12.5px] text-console-ink">No competitors yet.</p>
+            <p className="text-[12.5px] text-muted-foreground">No competitors yet.</p>
           ) : (
             <>
               <div className="hidden lg:block">
@@ -710,7 +712,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       render={
                         <button
                           type="button"
-                          className="self-start text-[12px] font-semibold text-gold-light"
+                          className="self-start text-[12px] font-semibold text-gold-dark"
                         />
                       }
                     >
@@ -719,7 +721,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                     <PopoverContent
                       align="start"
                       side="top"
-                      className="w-72 border-console-foreground/20 bg-console-card p-3"
+                      className="w-72 border-border bg-card p-3"
                     >
                       <ConsoleStandings rows={data.standings} isSemiBlind={data.isSemiBlind} />
                     </PopoverContent>
@@ -730,8 +732,8 @@ export function HostConsole({ data }: { data: ConsoleData }) {
           )}
 
           {glass !== null ? (
-            <div className="mt-auto flex flex-col gap-2 border-t border-console-foreground/12 pt-[14px]">
-              <Eyebrow size="md" className="text-console-ink">
+            <div className="mt-auto flex flex-col gap-2 border-t border-border-light pt-[14px]">
+              <Eyebrow size="md" className="text-muted-foreground">
                 {data.isSemiBlind ? (
                   HOW_THE_TABLE_SPLIT
                 ) : (
@@ -743,7 +745,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 )}
               </Eyebrow>
               {glass.facts.length === 0 ? (
-                <p className="text-[12.5px] text-console-ink">
+                <p className="text-[12.5px] text-muted-foreground">
                   {glass.eligible === 0
                     ? "Nobody is guessing this glass."
                     : "Facts appear as the glass is revealed."}
@@ -751,11 +753,11 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               ) : (
                 glass.facts.map((fact) => (
                   <span key={fact.label} className="flex justify-between gap-3 text-[12.5px]">
-                    <span className="min-w-0 truncate text-console-ink">{fact.label}</span>
+                    <span className="min-w-0 truncate text-muted-foreground">{fact.label}</span>
                     <span
                       className={cn(
                         "shrink-0 truncate tabular-nums",
-                        fact.correct && "font-bold text-gold-light",
+                        fact.correct && "font-bold text-gold-dark",
                       )}
                     >
                       {fact.value}
@@ -784,7 +786,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               <button
                 type="submit"
                 disabled={finishPending}
-                className={cn(HEADER_BUTTON, "w-full border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                className={cn(HEADER_BUTTON, "w-full border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
               >
                 {finishPending ? "Ending…" : "End tasting"}
               </button>

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { LiveShell } from "@/components/live-shell";
 import { liveSurface, readDismissed, writeDismissed } from "@/lib/live-theme";
 
 const noopSubscribe = () => () => {};
@@ -9,14 +8,13 @@ const noopSubscribe = () => () => {};
 type DismissedFlag = "unknown" | "yes" | "no";
 
 /**
- * B5 "dark means live" for a CLOSED tasting (spec §6.3 item 3): the dark
- * result (S12) until the viewer dismisses it, then the parchment record
- * (S13, BT-R3's `children`).
+ * B5 for a CLOSED tasting: the result screen (S12) until the viewer
+ * dismisses it, then the record (S13, BT-R3's `children`).
  *
  * The server render always sees "unknown" and renders nothing here — the
  * page header a caller renders above this component is what a reload shows
  * first — so a reload of an already-dismissed tasting never flashes the
- * dark result; the client snapshot picks one the instant it hydrates.
+ * result screen; the client snapshot picks one the instant it hydrates.
  *
  * "See every wine" is wired onto `result` here, via `cloneElement`, rather
  * than threaded through `finished-view.tsx`'s props: `result` is built
@@ -54,12 +52,12 @@ export function ClosedSurface({
   if (surface === "record") return <>{children}</>;
 
   return (
-    <LiveShell active>
+    <>
       {React.isValidElement(result)
         ? React.cloneElement(result as React.ReactElement<{ onDismiss?: () => void }>, {
             onDismiss: handleDismiss,
           })
         : result}
-    </LiveShell>
+    </>
   );
 }

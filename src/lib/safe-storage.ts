@@ -4,7 +4,7 @@
 // "not saved", never as a crash. Callers pass a getter such as
 // `() => window.localStorage`, so the lookup itself runs inside the try, and
 // keep the flag in component state for the visit when a write returns false.
-// Shared by live-theme.ts (the result dismissal) and Taste & Rate's
+// Shared by live-theme.ts (the result-dismissed flag) and Taste & Rate's
 // "Don't show this again".
 // Pure: no imports and no browser globals at module level, so vitest loads it.
 

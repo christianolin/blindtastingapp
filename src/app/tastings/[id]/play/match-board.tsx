@@ -562,8 +562,8 @@ export function MatchBoard({
  * personally proven via ASYNC IMMEDIATE) — spec §10.3 item 2 ("revealed →
  * ... with ✓ or ✗"). `null` renders nothing (not applicable, or the viewer
  * has no row on this glass at all — e.g. its contributor, or the host under
- * HOST_PROVIDES). Same tokens the board's own error text (rose) and
- * locked-in.tsx (gold-light) already use on dark — never a plain
+ * HOST_PROVIDES). Theme-aware tokens — the app-wide hit-green (`--success`,
+ * used everywhere else a "you got this" mark shows) and rose — never a plain
  * green/red that has no dark-mode remap.
  */
 function resultMark(hit: boolean | null) {
@@ -571,7 +571,7 @@ function resultMark(hit: boolean | null) {
   return (
     <span
       aria-hidden
-      className={cn("shrink-0 text-[13px] font-semibold", hit ? "text-gold-light" : "text-rose")}
+      className={cn("shrink-0 text-[13px] font-semibold", hit ? "text-success" : "text-rose")}
     >
       {hit ? "✓" : "✗"}
     </span>

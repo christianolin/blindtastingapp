@@ -27,13 +27,13 @@ export function ConsoleStandings({
       {shown.map(({ row, rank, tied }) => (
         <li
           key={row.participantId}
-          className="flex items-baseline gap-[10px] border-b border-console-foreground/10 py-[9px] last:border-b-0"
+          className="flex items-baseline gap-[10px] border-b border-border-light py-[9px] last:border-b-0"
         >
           <span
             className={cn(
               "font-heading text-[16px] lining-nums tabular-nums",
               anyTied ? "w-6" : "w-4",
-              rank === 1 ? "text-gold-light" : "text-console-ink",
+              rank === 1 ? "text-gold-dark" : "text-muted-foreground",
             )}
           >
             {rankLabel({ rank, tied })}
@@ -47,7 +47,7 @@ export function ConsoleStandings({
             {row.name}
           </span>
           {row.lastRoundPoints !== null ? (
-            <span className="text-[11.5px] text-console-ink tabular-nums">
+            <span className="text-[11.5px] text-muted-foreground tabular-nums">
               {isSemiBlind
                 ? row.lastRoundPoints > 0
                   ? "✓"
@@ -57,7 +57,7 @@ export function ConsoleStandings({
           ) : null}
           <span
             className={cn(
-              "text-[14px] text-gold-light tabular-nums",
+              "text-[14px] text-gold-dark tabular-nums",
               rank === 1 ? "font-bold" : "font-semibold",
             )}
           >

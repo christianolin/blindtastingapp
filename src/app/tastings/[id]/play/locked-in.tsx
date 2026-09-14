@@ -91,7 +91,7 @@ export type LockedInData = {
 };
 
 const LOCKED_CARD =
-  "flex flex-col gap-[10px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[14px]";
+  "flex flex-col gap-[10px] rounded-[14px] border border-border-light bg-card p-[14px]";
 
 /** "Maja is still deciding." / "Maja and Gustav are still deciding." /
  *  "Maja, Gustav and 2 others are still deciding." */
@@ -125,7 +125,7 @@ function waitingSentence(
 }
 
 /**
- * The 6g waiting state, on the dark palette: who has locked in, what I
+ * The 6g waiting state, themed like the rest of the app: who has locked in, what I
  * said and the points it is worth, "Change it" (→ unlockGuess for every
  * glass in `wineIds`, then `onUnlocked` so the parent reopens the ladder),
  * and the standings link for the wait. A scored guess cannot be unlocked —
@@ -221,9 +221,9 @@ export function LockedIn({
           p.isMe ? (
             <span
               key={p.id}
-              className="flex items-center gap-[6px] rounded-full bg-gold-light/16 p-[5px_11px_5px_6px] text-[12.5px] font-semibold"
+              className="flex items-center gap-[6px] rounded-full bg-gold/16 p-[5px_11px_5px_6px] text-[12.5px] font-semibold"
             >
-              <span className="flex size-5 items-center justify-center rounded-full bg-gold-light text-console">
+              <span className="flex size-5 items-center justify-center rounded-full bg-gold text-on-accent">
                 <Check className="size-3" strokeWidth={3} aria-hidden />
               </span>
               You
@@ -231,14 +231,14 @@ export function LockedIn({
           ) : p.state === "locked" ? (
             <span
               key={p.id}
-              className="flex items-center gap-[6px] rounded-full bg-console-foreground/10 px-[11px] py-[5px] text-[12.5px]"
+              className="flex items-center gap-[6px] rounded-full bg-foreground/10 px-[11px] py-[5px] text-[12.5px]"
             >
               {p.name} ✓
             </span>
           ) : (
             <span
               key={p.id}
-              className="flex items-center gap-[6px] rounded-full border border-dashed border-console-foreground/30 px-[11px] py-[5px] text-[12.5px] text-console-ink"
+              className="flex items-center gap-[6px] rounded-full border border-dashed border-border px-[11px] py-[5px] text-[12.5px] text-muted-foreground"
             >
               {p.name}…
             </span>
@@ -258,7 +258,7 @@ export function LockedIn({
         onClick={change}
         disabled={busy}
         className={cn(
-          "flex min-h-11 items-center gap-2 rounded-[9px] border border-console-foreground/28 px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-60",
+          "flex min-h-11 items-center gap-2 rounded-[9px] border border-border px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold hover:text-gold-dark disabled:opacity-60",
           className,
         )}
       >
@@ -279,8 +279,8 @@ export function LockedIn({
         <span
           key={i}
           className={cn(
-            "max-w-full truncate rounded-full border border-console-foreground/20 px-[11px] py-[5px] text-[12.5px]",
-            chip.muted && "text-console-ink",
+            "max-w-full truncate rounded-full border border-border-light px-[11px] py-[5px] text-[12.5px]",
+            chip.muted && "text-muted-foreground",
           )}
         >
           {chip.text}
@@ -291,17 +291,17 @@ export function LockedIn({
 
   const notices = (
     <>
-      {data.pendingNotice ? <p className="text-[12.5px] text-gold-light">{data.pendingNotice}</p> : null}
-      {error ? <p className="text-[12.5px] text-miss">{error}</p> : null}
+      {data.pendingNotice ? <p className="text-[12.5px] text-gold-dark">{data.pendingNotice}</p> : null}
+      {error ? <p className="text-[12.5px] text-destructive">{error}</p> : null}
     </>
   );
 
   return (
-    <div className="flex flex-col bg-console text-console-foreground">
+    <div className="flex flex-col bg-background text-foreground">
       {/* Header */}
-      <div className="flex items-center gap-[11px] border-b border-console-foreground/12 px-4 pt-3 pb-[11px]">
+      <div className="flex items-center gap-[11px] border-b border-border-light px-4 pt-3 pb-[11px]">
         <span className="flex min-w-0 flex-1 flex-col">
-          <Eyebrow size="md" className="truncate text-console-ink">
+          <Eyebrow size="md" className="truncate text-muted-foreground">
             {data.eyebrow}
           </Eyebrow>
           <span className="font-heading text-[19px] font-semibold lining-nums tabular-nums">
@@ -309,7 +309,7 @@ export function LockedIn({
           </span>
         </span>
         {data.rankChip ? (
-          <span className="shrink-0 rounded-full border border-console-foreground/25 px-[10px] py-[5px] text-[11px] font-semibold text-gold-light lining-nums tabular-nums">
+          <span className="shrink-0 rounded-full border border-border px-[10px] py-[5px] text-[11px] font-semibold text-gold-dark lining-nums tabular-nums">
             {ordinal(data.rankChip.rank)} · {data.rankChip.points} pts
           </span>
         ) : null}
@@ -323,7 +323,7 @@ export function LockedIn({
         <div className="flex items-start gap-6 p-[18px_20px]">
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <div className={cn(LOCKED_CARD, "gap-[9px]")}>
-              <Eyebrow size="md" className="text-console-ink">
+              <Eyebrow size="md" className="text-muted-foreground">
                 What you said · {data.stakeLine}
               </Eyebrow>
               {chips}
@@ -339,21 +339,21 @@ export function LockedIn({
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
-              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-console-foreground/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
+              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-border-light bg-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold/60"
             >
               <span className="flex-1">Standings</span>
-              <ChevronRight className="size-4 text-gold-light" aria-hidden />
+              <ChevronRight className="size-4 text-gold-dark" aria-hidden />
             </a>
           </div>
 
           <div className="sticky top-4 flex w-[272px] shrink-0 flex-col gap-3">
             <div className={LOCKED_CARD}>
-              <Eyebrow size="md" className="text-console-ink">
+              <Eyebrow size="md" className="text-muted-foreground">
                 {lockedInRosterHeading(data.lockedCount, data.eligibleCount)}
               </Eyebrow>
               {roster()}
             </div>
-            <p className="text-[12.5px] leading-[1.5] text-console-ink">
+            <p className="text-[12.5px] leading-[1.5] text-muted-foreground">
               {waitingSentence(data.timingMode, data.asyncRevealPolicy, data.hostName)}
             </p>
           </div>
@@ -363,11 +363,11 @@ export function LockedIn({
         <div className="flex flex-col gap-4 p-[18px_16px]">
           {/* Waiting for the table */}
           <div className="flex flex-col items-center gap-[10px] pt-2 pb-0.5 text-center">
-            <Wine className="size-10 text-gold-light" strokeWidth={1.6} aria-hidden />
+            <Wine className="size-10 text-gold-dark" strokeWidth={1.6} aria-hidden />
             <span className="font-heading text-[26px] font-semibold leading-[1.1]">
               Waiting for the table
             </span>
-            <span className="max-w-[26ch] text-[13px] leading-[1.5] text-console-ink">
+            <span className="max-w-[26ch] text-[13px] leading-[1.5] text-muted-foreground">
               {decidingLine(deciding)}
               {deciding.length > 0
                 ? ` ${waitingSentence(data.timingMode, data.asyncRevealPolicy, null)}`
@@ -377,7 +377,7 @@ export function LockedIn({
 
           {/* Who is in */}
           <div className={LOCKED_CARD}>
-            <Eyebrow size="md" className="text-console-ink">
+            <Eyebrow size="md" className="text-muted-foreground">
               {lockedInRosterHeading(data.lockedCount, data.eligibleCount)}
             </Eyebrow>
             {roster()}
@@ -385,12 +385,12 @@ export function LockedIn({
 
           {/* What you said */}
           <div className={cn(LOCKED_CARD, "gap-[9px]")}>
-            <Eyebrow size="md" className="text-console-ink">
+            <Eyebrow size="md" className="text-muted-foreground">
               What you said
             </Eyebrow>
             {chips}
             <span className="mt-[3px] flex items-center gap-[9px]">
-              <span className="text-[13px] text-console-ink">{data.stakeLine}</span>
+              <span className="text-[13px] text-muted-foreground">{data.stakeLine}</span>
               {changeButton("ml-auto")}
             </span>
             {notices}
@@ -398,7 +398,7 @@ export function LockedIn({
 
           {/* While you wait */}
           <div className="flex flex-col gap-[9px]">
-            <Eyebrow size="md" className="text-console-ink">
+            <Eyebrow size="md" className="text-muted-foreground">
               While you wait
             </Eyebrow>
             {/* "Note this glass" (BT-N2; S10, spec §8.3 item 9). */}
@@ -408,10 +408,10 @@ export function LockedIn({
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
-              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-console-foreground/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
+              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-border-light bg-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold/60"
             >
               <span className="flex-1">{data.standingsLabel}</span>
-              <ChevronRight className="size-4 text-gold-light" aria-hidden />
+              <ChevronRight className="size-4 text-gold-dark" aria-hidden />
             </a>
           </div>
         </div>

@@ -385,19 +385,19 @@ export async function RevealView({
   const standingsLaptop = capStandings(5);
 
   return (
-    <div className="flex flex-col bg-console text-console-foreground">
+    <div className="flex flex-col bg-background text-foreground">
       {/* Header. Laptop: the attribute/host meta line and the rank-delta
           pill share the header row (spec §11.3 item 1); phones keep the bare
           attribute count here and the delta on the standings card below. */}
       <div className="flex items-center gap-[9px] px-4 pt-3 pb-[11px]">
         <span className="flex items-center gap-[7px]">
           <LiveDot size={6} />
-          <Eyebrow size="lg" className="tracking-[.15em] text-gold-light">
+          <Eyebrow size="lg" className="tracking-[.15em] text-gold-dark">
             {revealingGlass(glassNumber)}
           </Eyebrow>
         </span>
         <span className="ml-auto hidden items-center gap-[10px] md:flex">
-          <span className="text-[11.5px] text-console-ink tabular-nums">
+          <span className="text-[11.5px] text-muted-foreground tabular-nums">
             {revealHeaderMeta(rev.reveal_step, inPlayCount, hostName)}
           </span>
           {deltaLabel ? (
@@ -405,14 +405,14 @@ export async function RevealView({
               key={rev.reveal_step}
               className={cn(
                 "animate-rise-in text-[12px] font-bold tabular-nums",
-                deltaUp ? "text-gold-light" : "text-miss",
+                deltaUp ? "text-gold-dark" : "text-destructive",
               )}
             >
               {deltaLabel}
             </span>
           ) : null}
         </span>
-        <span className="ml-auto text-[11.5px] text-console-ink tabular-nums md:hidden">
+        <span className="ml-auto text-[11.5px] text-muted-foreground tabular-nums md:hidden">
           {rev.reveal_step} of {inPlayCount} attributes
         </span>
       </div>
@@ -428,13 +428,13 @@ export async function RevealView({
               key={rev.reveal_step}
               className="animate-rise-in flex flex-col items-center gap-[9px] pt-[10px] pb-1 text-center"
             >
-              <Eyebrow size="lg" className="text-console-ink">
+              <Eyebrow size="lg" className="text-muted-foreground">
                 {heroLabel(hero.key, hero.key === "grapes" && hasSecondary)}
               </Eyebrow>
               <span
                 className={cn(
                   "font-heading text-[46px] font-semibold leading-none lining-nums tabular-nums",
-                  hero.notRecorded ? "text-console-ink" : "text-gold-light",
+                  hero.notRecorded ? "text-muted-foreground" : "text-gold-dark",
                 )}
               >
                 {hero.truth}
@@ -444,16 +444,16 @@ export async function RevealView({
                   className={cn(
                     "flex items-center gap-[9px] rounded-full px-4 py-2",
                     verdict === "hit" &&
-                      "border border-gold-light bg-gold-light/16",
+                      "border border-gold bg-gold/16",
                     verdict === "miss" && "border border-rose/60 bg-rose/15",
                     verdict === "skipped" &&
-                      "border border-dashed border-console-foreground/30 text-console-ink",
+                      "border border-dashed border-border text-muted-foreground",
                     verdict === "unscored" &&
-                      "border border-console-foreground/30 text-console-ink",
+                      "border border-border text-muted-foreground",
                   )}
                 >
                   {verdict === "hit" ? (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-gold-light text-console">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-gold text-on-accent">
                       <Check className="size-3" strokeWidth={3} aria-hidden />
                     </span>
                   ) : null}
@@ -480,18 +480,18 @@ export async function RevealView({
                   className={cn(
                     "flex items-center gap-[11px] rounded-[11px] p-[11px_13px]",
                     r.hidden
-                      ? "border border-dashed border-console-foreground/20 opacity-55"
+                      ? "border border-dashed border-border-light opacity-55"
                       : hit
-                        ? "border-[1.5px] border-gold-light bg-gold-light/14"
+                        ? "border-[1.5px] border-gold bg-gold/14"
                         : miss
-                          ? "border border-rose/50 bg-console-card"
-                          : "border border-console-foreground/14 bg-console-card",
+                          ? "border border-rose/50 bg-card"
+                          : "border border-border-light bg-card",
                   )}
                 >
                   <span
                     className={cn(
                       "w-16 shrink-0 text-[11px]",
-                      hit ? "text-gold-light" : "text-console-ink",
+                      hit ? "text-gold-dark" : "text-muted-foreground",
                     )}
                   >
                     {r.label}
@@ -500,7 +500,7 @@ export async function RevealView({
                     className={cn(
                       "min-w-0 flex-1 truncate text-[13.5px]",
                       r.hidden || r.notRecorded
-                        ? "text-console-ink"
+                        ? "text-muted-foreground"
                         : isHero
                           ? "font-bold"
                           : "font-semibold",
@@ -513,10 +513,10 @@ export async function RevealView({
                       className={cn(
                         "max-w-[40%] truncate text-[12.5px]",
                         miss
-                          ? "text-miss"
+                          ? "text-destructive"
                           : hit
-                            ? "text-gold-light"
-                            : "text-console-ink",
+                            ? "text-gold-dark"
+                            : "text-muted-foreground",
                       )}
                     >
                       you: {r.mine ?? "—"}
@@ -528,12 +528,12 @@ export async function RevealView({
                       "shrink-0 tabular-nums",
                       isHero && "animate-rise-in",
                       r.hidden
-                        ? "text-[13px] text-console-ink"
+                        ? "text-[13px] text-muted-foreground"
                         : r.notRecorded
-                          ? "text-[12px] text-console-ink"
+                          ? "text-[12px] text-muted-foreground"
                           : hit
-                            ? "text-[13px] font-bold text-gold-light"
-                            : "text-[13px] font-bold text-console-ink",
+                            ? "text-[13px] font-bold text-gold-dark"
+                            : "text-[13px] font-bold text-muted-foreground",
                     )}
                   >
                     {r.hidden
@@ -552,7 +552,7 @@ export async function RevealView({
           </div>
 
           {lockedText ? (
-            <p className="text-[11.5px] text-console-ink">{lockedText}</p>
+            <p className="text-[11.5px] text-muted-foreground">{lockedText}</p>
           ) : null}
 
           {/* Phone: standings sit under the rows, capped to the top 3 with
@@ -575,7 +575,7 @@ export async function RevealView({
         <div className="hidden shrink-0 flex-col gap-[16px] md:flex md:w-[300px]">
           {facts.length > 0 ? (
             <div className="flex flex-col gap-[9px]">
-              <Eyebrow size="md" className="text-console-ink">
+              <Eyebrow size="md" className="text-muted-foreground">
                 This glass
               </Eyebrow>
               <div className="flex flex-col gap-[7px]">
@@ -584,7 +584,7 @@ export async function RevealView({
                     key={fact.label}
                     className="flex justify-between gap-3 text-[12.5px]"
                   >
-                    <span className="min-w-0 truncate text-console-ink">
+                    <span className="min-w-0 truncate text-muted-foreground">
                       {fact.label}
                     </span>
                     <span className="shrink-0 truncate font-semibold tabular-nums">
@@ -622,9 +622,9 @@ function StandingsCard({
 }) {
   if (rows.length === 0) return null;
   return (
-    <div className="flex flex-col gap-[9px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[13px_14px]">
+    <div className="flex flex-col gap-[9px] rounded-[14px] border border-border-light bg-card p-[13px_14px]">
       <div className="flex items-baseline gap-[9px]">
-        <Eyebrow size="md" className="text-console-ink">
+        <Eyebrow size="md" className="text-muted-foreground">
           Standings
         </Eyebrow>
         {deltaLabel ? (
@@ -632,7 +632,7 @@ function StandingsCard({
             key={revealStep}
             className={cn(
               "animate-rise-in ml-auto flex items-center gap-[6px] text-[12px] font-bold tabular-nums",
-              deltaUp ? "text-gold-light" : "text-miss",
+              deltaUp ? "text-gold-dark" : "text-destructive",
             )}
           >
             {deltaLabel}
@@ -644,14 +644,14 @@ function StandingsCard({
           key={s.participantId}
           className={cn(
             "flex items-baseline gap-[10px] py-1.5",
-            i < rows.length - 1 && "border-b border-console-foreground/12",
+            i < rows.length - 1 && "border-b border-border-light",
           )}
         >
           <span
             className={cn(
               "shrink-0 font-heading text-[15px] lining-nums tabular-nums",
               anyTied ? "w-6" : "w-[15px]",
-              rank === 1 ? "text-gold-light" : "text-console-ink",
+              rank === 1 ? "text-gold-dark" : "text-muted-foreground",
             )}
           >
             {rankLabel({ rank, tied })}
@@ -661,7 +661,7 @@ function StandingsCard({
           </span>
           <span
             className={cn(
-              "text-[13.5px] text-gold-light tabular-nums",
+              "text-[13.5px] text-gold-dark tabular-nums",
               s.isMe && "font-bold",
             )}
           >

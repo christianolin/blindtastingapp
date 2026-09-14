@@ -31,7 +31,7 @@
   --color-live: var(--live);
   --color-border-light: var(--border-light);
   --color-border-strong: var(--border-strong);
-  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1). */
+  /* Redesign palette, continued (BT-D1). */
   --color-surface-deep: var(--surface-deep);
   --color-surface-raised: var(--surface-raised);
   --color-primary-hover: var(--primary-hover);
@@ -43,7 +43,9 @@
   --color-primary-ink: var(--primary-ink);
   --color-primary-ink-hover: var(--primary-ink-hover);
   --color-on-accent: var(--on-accent);
-  /* Flows handoff (add-wine sheet / play / host console). */
+  /* Flows handoff (add-wine sheet / play). --console/-card/-ink/-foreground
+     are the add-wine camera surfaces' fixed-dark palette (see the .dark
+     block below) -- everything else here is theme-aware. */
   --color-miss: var(--miss);
   --color-success: var(--success);
   --color-console: var(--console);
@@ -178,18 +180,18 @@
   /* Ink for text sitting on the gold accent. Gold is a LIGHT surface in both
      themes, so its label cannot follow --foreground, which flips. */
   --on-accent: #2a211e;
-  /* Flows handoff: the miss-red used for a wrong answer on the dark reveal,
-     and the host console's dim-room palette (ground / card / muted ink). */
+  /* Flows handoff: the miss-red used for a wrong answer, and the add-wine
+     camera surfaces' dim-room palette (ground / card / muted ink) -- a
+     camera viewfinder is dark by design, in either app theme. */
   --miss: #e08a76;
   --console: #1b1310;
   --console-card: #241b16;
   --console-ink: #b9a98c;
   /* Parchment ON the dim room, and the fourth member of the console family that
-     was missing. These screens were written before dark mode and reached for
-     --background to mean "the light colour" -- true in light, and in dark it
-     becomes #1b1310, which is EXACTLY --console. Ink and ground identical:
-     1.00:1, the host console and the reveal render as blank slabs.
-     Fixed in both themes, like the three above it. */
+     was missing. These screens reached for --background to mean "the light
+     colour" -- true in light, and in dark it becomes #1b1310, which is
+     EXACTLY --console. Ink and ground identical: 1.00:1, the camera surfaces
+     rendered as blank slabs. Fixed in both themes, like the three above it. */
   --console-foreground: #f5efe3;
   /* The hit-green: a category you got, "+N" in the standings, the "locked in"
      and ready lines. It was a literal #3f5b42 at six call sites in the play,
@@ -198,9 +200,9 @@
      its own 12% chip. Light keeps that exact hex (7.05:1 on --card, 5.89:1 on
      the chip). */
   --success: #3f5b42;
-  /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the deepest live
-     surface (pinned bars, header strips) and the bordeaux hover step, each
-     defined for both the parchment and the dark surface below. */
+  /* BT-D1: the deepest surface step (pinned bars, header strips) and the
+     bordeaux hover step, each defined for both the parchment and the dark
+     surface below. */
   --surface-deep: #ede4d1;
   /* One step ABOVE --card: inputs, dropdown panels, the rows in the new-tasting
      flow. This was written as `bg-white` at 41 call sites, which is a colour
@@ -251,22 +253,14 @@
     --card-foreground: #f5efe3;
     --popover: #241b16;
     --popover-foreground: #f5efe3;
-    /* Indigo, not the rose the handoff started from. The rose read as hot pink
-       across the whole left rail (the sidebar is a plain bg-primary panel) and
-       every filled button. Indigo is calmer at that size, sits better beside the
-       gold accent, and measures better everywhere it is used:
-
-         label #f5efe3 on the fill   5.11 -> 11.86
-         gold  #d4af6a on the fill   2.82 ->  6.56   (fixes the "Live now" strip)
-
-       Deep on purpose. Contrast against the page runs the OTHER way as the fill
-       darkens -- 1.75 at #3b3a6b, 1.35 here, 1.15 by #262544 -- and somewhere
-       past this the banner stops reading as its own panel and merges into the
-       cards beside it. This is about as dark as it goes while the rail still
-       reads as a rail; the cool hue against the warm near-black ground carries
-       more of that separation than the luminance figure suggests.
-
-       Light keeps its Bordeaux: #5c1a2b was never the complaint. */
+    /* Bordeaux in dark too, the same #5c1a2b light uses -- it was never the
+       complaint. This went through a rose ("hot pink" across the whole left
+       rail, the sidebar being a plain bg-primary panel, and every filled
+       button) and then an indigo before landing here: the owner ruled out
+       blue in the dark palette outright (2026-09-14, "bordeaux instead of
+       indigo in dark mode") and asked for the same colour both themes
+       already agreed on in light. --primary-foreground on the fill is
+       asserted in theme-contrast.test.ts. */
     --primary: #5c1a2b;
     --primary-foreground: #f5efe3;
     --secondary: #3a2e24;
@@ -315,9 +309,8 @@
     --ring: #d4af6a;
     --gold: #d4af6a;
     --gold-deep: #c3a25b;
-    /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the redesign and
-       flows tokens completed for the dark surface — a miss turns miss-red, a
-       hover lifts, gold-on-dark keeps reading gold. */
+    /* BT-D1: the redesign and flows tokens completed for the dark surface —
+       a miss turns miss-red, a hover lifts, gold-on-dark keeps reading gold. */
     --surface-deep: #15100d;
     /* Warm, one step up from --card, NOT lighter-of-the-light. #2f251e is also
        the only candidate in that range that keeps --placeholder on it at AA
@@ -328,10 +321,10 @@
     --gold-light: #d4af6a;
     --rose: #e08a76;
     --miss: #e08a76;
-    /* The hit-green on the dark ground (live screens in either theme). One sage
-       step lighter than dark --chart-3 #6c8f70, which clears --card at 4.67:1 but
-       falls to 4.00:1 on the 12% "+N" chip. #84a888: 6.92:1 on --background,
-       6.38:1 on --card, 5.65:1 on --surface-raised, 5.25:1 on the chip. */
+    /* The hit-green on the dark ground. One sage step lighter than dark
+       --chart-3 #6c8f70, which clears --card at 4.67:1 but falls to 4.00:1
+       on the 12% "+N" chip. #84a888: 6.92:1 on --background, 6.38:1 on
+       --card, 5.65:1 on --surface-raised, 5.25:1 on the chip. */
     --success: #84a888;
     --border-light: rgba(245, 239, 227, 0.22);
     --border-strong: rgba(245, 239, 227, 0.52);
@@ -376,10 +369,12 @@
     --primary-ink: #cc6b82;
   --primary-ink-hover: #d98297;
     /* NOT overridden, deliberately: --console/--console-card/--console-ink are
-       the host console's dim-room palette, already dark-surface values, and the
-       reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
-       screen that was never light. (--miss was on this list until BT-D1 set it
-       explicitly above, to the same value it has in light.) */
+       the add-wine camera surfaces' dim-room palette (the camera viewfinder
+       and read-confirm screens, frozen by design), already dark-surface
+       values, and those surfaces are dark in BOTH app themes. Giving them
+       ".dark" variants would invert a screen that was never light. (--miss
+       was on this list until BT-D1 set it explicitly above, to the same
+       value it has in light.) */
     --chart-1: #c25a73;
     --chart-2: #d4af6a;
     --chart-3: #6c8f70;
@@ -466,54 +461,6 @@
   :where(.dark) .ring-primary:where(:not(.bg-primary)) {
     border-color: var(--primary-ink);
     --tw-ring-color: var(--primary-ink);
-  }
-}
-
-/* The live palette: where "dark means live" (BT-D1, blind-tasting v3 spec
- * section 6.3) and the dark-mode toggle disagree.
- *
- * Both use the `.dark` class. The toggle puts it on <html>; LiveShell puts it
- * on a running tasting's subtree, and the popover and the phone field picker
- * add it to the popups they portal out of that subtree. Nothing else sets it.
- * So under a LIGHT <html> every `.dark` element is a live surface, and this
- * selector reaches those and nothing else.
- *
- * The one role they disagree on is --primary. Section 6.3 keeps it the
- * bordeaux #a8425a on the live ground, because it is the open ladder row's
- * border, the armed bottle's ring and the Lock-in fill, with a #b04961 hover.
- * The toggle took the dark theme to indigo #2b2a4f, for the left rail and the
- * banner, which are never inside LiveShell. As a BORDER on the live ground
- * that indigo measures 1.35:1 on --background and 1.24:1 on --card, so the
- * open row's outline stops reading. The bordeaux gives 3.13:1 and 2.89:1.
- *
- * So live screens keep section 6.3 whenever the app theme is light (the
- * default), and everything outside a running tasting keeps the toggle's
- * palette. Pinning the app to dark keeps indigo everywhere, live screens
- * included. Both specs claim that case and no single value satisfies both, so
- * it is left as the toggle has it, pending a decision.
- *
- * --primary-ink follows the fill's family, the same way #8a87c8 follows the
- * indigo: #cc6b82 is the rose-family ink the toggle's first pass measured,
- * 5.22:1 on --background and 4.82:1 on --card. Labels on the fills: 5.11:1 on
- * #a8425a, 4.62:1 on #b04961 (section 6.6).
- *
- * Screen only, like the .dark palette it refines (see the @media print note
- * above). Print drops .dark from the cascade and falls back to :root's light
- * tokens; left unscoped, this would survive into print and lay the #cc6b82 ink
- * on parchment, 3.06:1 on --background and 3.28:1 on --card.
- *
- * Keep this AFTER the `.dark {` block. theme-contrast.test.ts reads the first
- * `.dark {` in the file as the theme palette. */
-@media screen {
-  :root:not(.dark) .dark {
-    --primary: #a8425a;
-    --primary-hover: #b04961;
-    --primary-ink: #cc6b82;
-    /* The ink's hover has to follow the ink's family, or a link on a live
-       screen goes rose -> indigo when you point at it. Lifts lighter, as the
-       hover does on every other dark ground: 6.66:1 on --card against the rest
-       state's 4.82. */
-    --primary-ink-hover: #d98da1;
   }
 }
 

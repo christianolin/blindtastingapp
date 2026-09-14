@@ -272,7 +272,7 @@ describe("the translucent border tokens, which used to be unmeasurable", () => {
   });
 });
 
-describe("the console palette, which is dark in BOTH themes", () => {
+describe("the console palette (the add-wine camera surfaces), which is dark in BOTH themes", () => {
   it("keeps its ink readable on its own ground", () => {
     // These three are deliberately not overridden in .dark. If someone ever
     // adds a .dark variant for them, this is what should still hold.
@@ -280,14 +280,14 @@ describe("the console palette, which is dark in BOTH themes", () => {
     expect(ratio(light, "--console-ink", "--console-card")).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("keeps the wrong-answer red distinguishable on the reveal", () => {
+  it("keeps the wrong-answer red distinguishable on the camera surfaces", () => {
     expect(ratio(light, "--miss", "--console")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("carries readable body ink, in BOTH themes", () => {
-    // The bug this token exists for: the console screens used text-background,
-    // which is parchment in light and #1b1310 in dark -- byte-identical to
-    // --console. 1.00:1. The host console and the reveal rendered as blank
+    // The bug this token exists for: the add-wine camera screens used
+    // text-background, which is parchment in light and #1b1310 in dark --
+    // byte-identical to --console. 1.00:1. Those screens rendered as blank
     // slabs. Asserted against BOTH theme objects because the console ground
     // does not flip, so neither may its ink.
     for (const t of [light, dark]) {
@@ -298,7 +298,8 @@ describe("the console palette, which is dark in BOTH themes", () => {
 
   it("never lets --background stand in for the console's ink again", () => {
     // In dark these are the same colour. Any future code that reaches for
-    // --background to mean "the light one" on a console surface is this bug.
+    // --background to mean "the light one" on a console (add-wine camera)
+    // surface is this bug.
     expect(dark["--background"]).toBe(dark["--console"] ?? light["--console"]);
   });
 });
@@ -306,9 +307,9 @@ describe("the console palette, which is dark in BOTH themes", () => {
 describe("the dark palette's coverage of the light one", () => {
   it("overrides every colour token except the console ones already dark", () => {
     // --radius is not a colour; the console three are dark-surface values the
-    // reveal screen uses in both themes. Anything ELSE missing here is a light
-    // value bleeding onto a near-black ground, which is how --border-light at
-    // #f0e6d1 nearly shipped.
+    // add-wine camera surfaces use in both themes. Anything ELSE missing here
+    // is a light value bleeding onto a near-black ground, which is how
+    // --border-light at #f0e6d1 nearly shipped.
     //
     // --miss is allowed but no longer absent: BT-D1 set it explicitly, to the
     // same value it already had in light. Kept in the list because it is still
@@ -323,43 +324,5 @@ describe("the dark palette's coverage of the light one", () => {
     ]);
     const missing = Object.keys(light).filter((k) => !(k in darkOnly) && !allowed.has(k));
     expect(missing).toEqual([]);
-  });
-});
-
-describe("the live palette under a light root (dark means live, spec section 6.3)", () => {
-  // Under a light <html> the only `.dark` elements are a running tasting's
-  // LiveShell and the popups it portals, and there --primary is the section
-  // 6.3 bordeaux rather than the dark theme's indigo. It sits ON TOP of the
-  // dark palette, so the pairs are measured on that merge, the same way `dark`
-  // above is measured on light + .dark.
-  const liveOnly = block(":root:not\\(\\.dark\\) \\.dark");
-  const live = { ...dark, ...liveOnly };
-
-  it("overrides only the primary family, so it cannot grow into a second dark palette", () => {
-    // An explicit allow-list, not a count. --primary-ink-hover joined when the
-    // translucent hover was replaced by a solid per-theme shade: leaving it out
-    // sent a link on a live screen from rose to indigo on pointer-over, because
-    // the ink was overridden here and its hover was not.
-    expect(Object.keys(liveOnly).sort()).toEqual([
-      "--primary", "--primary-hover", "--primary-ink", "--primary-ink-hover",
-    ]);
-  });
-
-  it("the ink's hover follows the ink, and lifts", () => {
-    // Same direction rule as the app palette: on a dark ground hover gets
-    // LIGHTER. 6.66:1 against the rest state's 4.82:1.
-    expect(ratio(live, "--primary-ink-hover", "--card")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(live, "--primary-ink-hover", "--background")).toBeGreaterThanOrEqual(4.5);
-    expect(luminance(live["--primary-ink-hover"])).toBeGreaterThan(luminance(live["--primary-ink"]));
-  });
-
-  it("the filled primary and its hover carry their label", () => {
-    expect(ratio(live, "--primary-foreground", "--primary")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(live, "--primary-foreground", "--primary-hover")).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("primary as ink clears AA on the live page and cards", () => {
-    expect(ratio(live, "--primary-ink", "--background")).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(live, "--primary-ink", "--card")).toBeGreaterThanOrEqual(4.5);
   });
 });
