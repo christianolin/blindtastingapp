@@ -22,7 +22,10 @@
 //   JOINED, minus the bottle's contributor, minus a HOST_PROVIDES host.
 // - ranking. Rows arrive in the caller's order (e.g. rankRows' standings).
 //   The only thing that order decides here is which of two equally common
-//   picks a sentence names.
+//   picks a sentence names. What the caller ranks by is decided here, though:
+//   `blindTotals` / `semiBlindTotals`, the same fully-revealed-only sums as
+//   each viewer's score (OD-3 (a), owner 2026-09-14), never the leaderboard's
+//   running totals, which still count a half-revealed glass's step points.
 //
 // Rule 1 (GUEST-12): an answer key is read only for a FULLY revealed glass.
 // A half-revealed or unrevealed glass adds nothing, not its maximum and not
@@ -112,10 +115,14 @@ export type BlindResultGlass = ResultGlass & {
 
 export type SemiBlindResultGlass = ResultGlass & {
   /**
-   * This glass's own opaque candidate key (`get_semi_blind_revealed_picks` /
-   * `get_semi_blind_board`'s `revealedKeyByGlass`), the key a correct pick
-   * carries. Null only when the caller could not resolve it — the loader
-   * excludes the glass rather than guess (Rule 1's fail-closed spirit).
+   * This glass's own opaque candidate key, the key a correct pick carries
+   * (the loaders read it off an eligible correct pick from
+   * `get_semi_blind_revealed_picks`). Null when no eligible pick matched the
+   * glass, which is also the only way a viewer outside the list lacks it.
+   * A fully revealed glass with a null key still counts (BT-V3 A-29): any
+   * correct pick would have supplied the key, so every eligible row on it
+   * scores its own 0. The key only names the right pick in the agreed-least
+   * sentence; Rule 1 is not at stake, since the glass is revealed.
    */
   candidateKey: string | null;
 };
@@ -155,8 +162,10 @@ export type RevealState = "revealed" | "half_revealed" | "unrevealed";
 export type ExcludedGlass = {
   wineId: string;
   /**
-   * `no_answer_key` is fail-closed: reveal_wine refuses a wine without an
-   * answer key, so it only means the caller could not read one.
+   * `no_answer_key` is blind only, and fail-closed: reveal_wine refuses a
+   * wine without an answer key, so it only means the caller could not read
+   * one. A semi-blind glass never takes it: a fully revealed glass with no
+   * resolvable candidate key still counts (BT-V3 A-29).
    */
   reason: "half_revealed" | "unrevealed" | "no_answer_key";
 };
@@ -379,11 +388,14 @@ function readBlind(glass: BlindResultGlass) {
 
 /**
  * A semi-blind glass's "answer key" is just its own candidate key — the one
- * a correct pick's `pick_key` equals. Excluded like a missing blind answer
- * key (Rule 1, fail-closed) when the loader could not resolve one.
+ * a correct pick's `pick_key` equals — and its maximum is always 1, key or
+ * not. A fully revealed glass whose key could not be resolved is one no
+ * eligible pick matched, so it counts with every eligible row scoring its own
+ * 0 (BT-V3 A-29); it is never excluded as `no_answer_key`, which would file a
+ * revealed glass under "never revealed".
  */
 function readSemiBlind(glass: SemiBlindResultGlass) {
-  return glass.candidateKey ? { answer: glass.candidateKey, max: 1 } : null;
+  return { answer: glass.candidateKey, max: 1 };
 }
 
 /**
@@ -463,6 +475,53 @@ export function semiBlindScore(
 ): ScoreSummary {
   const { counted, excluded } = partition(glasses, readSemiBlind);
   return summarise(counted, excluded, rows, viewerId);
+}
+
+/** Per id, the sum `summarise` gives that id as `score`: eligible rows on counted glasses, 0 without one. */
+function totals<A, R extends KeyedRow>(
+  counted: readonly CountedGlass<A>[],
+  rows: readonly R[],
+  participantIds: readonly string[],
+): Map<string, number> {
+  const byWine = indexRows(rows);
+  const ids = Array.from(new Set(participantIds));
+  const out = new Map<string, number>();
+  for (const id of ids) out.set(id, 0);
+  for (const glass of counted) {
+    const byParticipant = byWine.get(glass.wineId);
+    if (!byParticipant) continue;
+    for (const id of ids) {
+      if (!glass.eligible.has(id)) continue;
+      out.set(id, (out.get(id) ?? 0) + (byParticipant.get(id)?.total_points ?? 0));
+    }
+  }
+  return out;
+}
+
+/**
+ * Each participant's blind total over the fully revealed glasses they could
+ * guess: for every id, exactly the `score` of that participant's own
+ * `blindScore`. The final placing, the table and the host's winners rank by
+ * these (OD-3 (a), owner 2026-09-14), so a tasting ended with a half-revealed
+ * glass ranks on the same basis as every score and maximum: that glass's step
+ * points, still in the leaderboard's running totals, add nothing. An id with
+ * no eligible glass (a HOST_PROVIDES host, a non-JOINED row) totals 0.
+ */
+export function blindTotals(
+  glasses: readonly BlindResultGlass[],
+  rows: readonly BlindGuessRow[],
+  participantIds: readonly string[],
+): Map<string, number> {
+  return totals(partition(glasses, readBlind).counted, rows, participantIds);
+}
+
+/** Semi-blind: each participant's matches on fully revealed glasses, their own `semiBlindScore`'s `score`. */
+export function semiBlindTotals(
+  glasses: readonly SemiBlindResultGlass[],
+  rows: readonly SemiBlindGuessRow[],
+  participantIds: readonly string[],
+): Map<string, number> {
+  return totals(partition(glasses, readSemiBlind).counted, rows, participantIds);
 }
 
 /**
@@ -546,9 +605,11 @@ export function strongestAttribute(
 
 /**
  * The most common pick. On a tie a wrong pick beats the right one (it is what
- * split the table), then the first in the caller's row order.
+ * split the table), then the first in the caller's row order. A null `right`
+ * (a semi-blind glass with no resolvable key, which no eligible pick matched)
+ * makes every pick wrong, so the sentence is "said" or "none", never "got".
  */
-function splitSentence(picks: readonly (string | null)[], right: string): SplitSentence {
+function splitSentence(picks: readonly (string | null)[], right: string | null): SplitSentence {
   const outOf = picks.length;
   const counts = new Map<string, number>();
   for (const pick of picks) {
@@ -566,7 +627,7 @@ function splitSentence(picks: readonly (string | null)[], right: string): SplitS
     chosen ??= pick;
   }
   if (chosen === null) return { kind: "none", outOf };
-  if (chosen === right) return { kind: "got", pickId: right, hits: top, outOf };
+  if (chosen === right) return { kind: "got", pickId: chosen, hits: top, outOf };
   return { kind: "said", pickId: chosen, count: top, outOf };
 }
 
@@ -574,7 +635,7 @@ function agreedLeast<A, R extends KeyedRow>(
   counted: readonly CountedGlass<A>[],
   rows: readonly R[],
   pickOf: (row: R) => string | null,
-  rightPickOf: (glass: CountedGlass<A>) => string,
+  rightPickOf: (glass: CountedGlass<A>) => string | null,
 ): AgreedLeast | null {
   const byWine = indexRows(rows);
   let least: { glass: CountedGlass<A>; guessRows: R[]; points: number } | null = null;

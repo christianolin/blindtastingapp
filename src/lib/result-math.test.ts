@@ -5,6 +5,7 @@ import {
   blindAgreedLeast,
   blindResult,
   blindScore,
+  blindTotals,
   CATEGORY_ORDER,
   CATEGORY_POINTS,
   categoryMark,
@@ -16,6 +17,7 @@ import {
   semiBlindAgreedLeast,
   semiBlindResult,
   semiBlindScore,
+  semiBlindTotals,
   strongestAttribute,
   type AnswerFlags,
   type AttributeTally,
@@ -26,6 +28,7 @@ import {
   type SemiBlindResultGlass,
   type ViewerGlass,
 } from "./result-math";
+import { rankRows } from "./stats-math";
 
 // ---- Fixtures ----------------------------------------------------------
 
@@ -316,6 +319,71 @@ describe("blindScore", () => {
       excluded: [],
       flightMaximum: 0,
     });
+  });
+});
+
+// ---- Totals the final placing ranks by (OD-3 (a)) ---------------------
+
+describe("blindTotals", () => {
+  it("leaves a half-revealed glass's step points out, so the placing agrees with the score (V2-3-01)", () => {
+    // Glass 1 fully revealed; glass 2 revealed through the grapes step, then End tasting.
+    const glasses = [
+      glass("g1", BARBARESCO, { eligibleParticipantIds: ["a", "b"] }),
+      glass("g2", FULL, { isRevealed: false, revealStep: 4, eligibleParticipantIds: ["a", "b"] }),
+    ];
+    const rows = [
+      scored("g1", "a", 10),
+      scored("g1", "b", 20),
+      scored("g2", "a", 13), // step points so far: the leaderboard counts them (a 23, b 20)
+      scored("g2", "b", 0),
+    ];
+    const totals = blindTotals(glasses, rows, ["a", "b"]);
+    expect(totals).toEqual(new Map([["a", 10], ["b", 20]]));
+    for (const id of ["a", "b"]) expect(totals.get(id)).toBe(blindScore(glasses, rows, id).score);
+    // "1st of 2 · 20 of 26" for b and "2nd of 2 · 10 of 26" for a, never the other way round.
+    const ranked = rankRows(["a", "b"], (id) => totals.get(id) ?? 0);
+    expect(ranked.map(({ row, rank, tied }) => [row, rank, tied])).toEqual([
+      ["b", 1, false],
+      ["a", 2, false],
+    ]);
+  });
+
+  it("is each participant's own score: eligible rows only, 0 without one, every id asked for", () => {
+    const glasses = [
+      glass("g1", BARBARESCO, { eligibleParticipantIds: ["p1", "p3"] }), // p2 brought it
+      glass("g2", FULL),
+      hidden("g3"),
+    ];
+    const rows = [
+      scored("g1", "p1", 20),
+      scored("g1", "p2", 26), // p2's stray row on their own bottle
+      scored("g1", "host", 26), // a HOST_PROVIDES host's row
+      scored("g2", "p2", 18),
+      scored("g3", "p3", 30), // an ASYNC IMMEDIATE own score on a glass never revealed
+    ];
+    const ids = ["p1", "p2", "p3", "host"];
+    const totals = blindTotals(glasses, rows, ids);
+    expect(totals).toEqual(new Map([["p1", 20], ["p2", 18], ["p3", 0], ["host", 0]]));
+    for (const id of ids) expect(totals.get(id)).toBe(blindScore(glasses, rows, id).score);
+  });
+
+  it("never reads the answer key of a glass that is not fully revealed (Rule 1)", () => {
+    const trap: BlindResultGlass = {
+      wineId: "g2",
+      isRevealed: false,
+      revealStep: 5,
+      eligibleParticipantIds: GUESTS,
+      get answer(): AnswerFlags {
+        throw new Error("read a hidden answer key");
+      },
+    };
+    const rows = [scored("g1", "p1", 13), scored("g2", "p1", 20)];
+    expect(blindTotals([glass("g1", BARE), trap], rows, ["p1"])).toEqual(new Map([["p1", 13]]));
+  });
+
+  it("is empty for no participants, and 0 for everyone on an empty flight", () => {
+    expect(blindTotals([glass("g1", BARE)], [scored("g1", "p1", 13)], [])).toEqual(new Map());
+    expect(blindTotals([], [], ["p1"])).toEqual(new Map([["p1", 0]]));
   });
 });
 
@@ -835,6 +903,48 @@ describe("semi-blind", () => {
     expect(result).toMatchObject({ score: 2, maximum: 3, strongestAttribute: null });
     expect(result.bestGlass).toEqual({ wineId: "s2", points: 1, max: 1, hasRow: true });
     expect(result.agreedLeast?.wineId).toBe("s4");
+  });
+
+  it("counts a revealed glass whose key could not be resolved, never as never revealed (A-29)", () => {
+    // Outside the list the only key a loader gets is a correct pick's. Nobody
+    // eligible matched s2, so it has no key, and every eligible row on it
+    // scores its own 0 — it still counts, 1 to the maximum.
+    const glasses = [
+      sGlass("s1"),
+      sGlass("s2", { candidateKey: null }),
+      sGlass("s3", { isRevealed: false, candidateKey: null }),
+    ];
+    const table = [pick("s1", "p1", "s1"), pick("s2", "p1", "s1"), pick("s2", "p2", null)];
+    expect(semiBlindScore(glasses, table, "p1")).toEqual({
+      score: 1,
+      maximum: 2,
+      glasses: [
+        { wineId: "s1", points: 1, max: 1, hasRow: true },
+        { wineId: "s2", points: 0, max: 1, hasRow: true },
+      ],
+      notEligible: [],
+      excluded: [{ wineId: "s3", reason: "unrevealed" }],
+      flightMaximum: 2,
+    });
+    expect(semiBlindScore(glasses, table, "p3")).toMatchObject({ score: 0, maximum: 2, excluded: [{ wineId: "s3", reason: "unrevealed" }] });
+    expect(semiBlindAgreedLeast(glasses, table)).toEqual({
+      wineId: "s2",
+      guessers: 2,
+      points: 0,
+      max: 1,
+      sentence: { kind: "said", pickId: "k-s1", count: 1, outOf: 2 },
+    });
+    expect(
+      semiBlindAgreedLeast([sGlass("s2", { candidateKey: null })], [pick("s2", "p1", null)])?.sentence,
+    ).toEqual({ kind: "none", outOf: 1 });
+  });
+
+  it("totals each participant's matches on fully revealed glasses only (OD-3 (a))", () => {
+    const ids = ["p1", "p2", "p3", "host"];
+    const totals = semiBlindTotals(flight, rows, ids);
+    // p1's match on s3 (never revealed) and p3's stray row on their own s2 add nothing.
+    expect(totals).toEqual(new Map([["p1", 2], ["p2", 0], ["p3", 2], ["host", 0]]));
+    for (const id of ids) expect(totals.get(id)).toBe(semiBlindScore(flight, rows, id).score);
   });
 
   it("is empty for an empty flight", () => {

@@ -23,6 +23,7 @@ import { GLASS_BY_GLASS, legendLabels } from "@/lib/result-copy";
 import {
   attributeTally,
   blindResult,
+  blindTotals,
   CATEGORY_ORDER,
   glassMarks,
   MARK_CATEGORIES,
@@ -32,11 +33,11 @@ import {
   type Mark,
   type ResultCategory,
   semiBlindResult,
+  semiBlindTotals,
   type SemiBlindGuessRow,
   type SemiBlindResultGlass,
 } from "@/lib/result-math";
-import type { BoardGlass } from "@/lib/semi-blind-board";
-import { getSemiBlindBoard, getSemiBlindRevealedPicks } from "@/lib/semi-blind-data";
+import { getSemiBlindRevealedPicks } from "@/lib/semi-blind-data";
 import { ordinal, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { RecordActionsBar } from "./record-actions-bar";
@@ -297,6 +298,10 @@ export async function RecordView({
   let notEligibleWineIds = new Set<string>();
   let excludedWineIds = new Set<string>();
   let currentRates: CategoryRate[] = [];
+  // Every participant's sum over the fully revealed glasses they could guess
+  // (OD-3 (a)); the header's placing ranks by it (see the header below).
+  let finalTotals = new Map<string, number>();
+  const participantIds = participants.map((p) => p.id);
 
   if (mode === "BLIND") {
     const { data: guessRows } =
@@ -313,6 +318,7 @@ export async function RecordView({
       answer: toAnswerFlags(w.id),
     }));
     const result = blindResult(blindGlasses, blindGuessRows, viewerId);
+    finalTotals = blindTotals(blindGlasses, blindGuessRows, participantIds);
     score = result.score;
     maximum = result.maximum;
     for (const g of result.glasses) pointsByWineId.set(g.wineId, g.points);
@@ -344,25 +350,16 @@ export async function RecordView({
       (p) => eligibleSetByWineId.get(p.glassWineId)?.has(p.participantId) ?? false,
     );
 
+    // A glass's own key is the one an eligible correct pick carries. A
+    // revealed glass nobody eligible matched has none (the board would hand
+    // one only to a viewer on the list, and it would change nothing: no
+    // eligible pick equals it). It still counts, its eligible rows at their
+    // own 0, and its row shows the identity from `wine_answers`, never
+    // "never revealed" (BT-V3 A-29; `semiBlindResult`).
     const candidateKeyByWineId = new Map<string, string>();
     for (const pick of semiBlindPicks) {
       if (pick.correct && pick.pickKey && !candidateKeyByWineId.has(pick.glassWineId)) {
         candidateKeyByWineId.set(pick.glassWineId, pick.pickKey);
-      }
-    }
-    const missingKeyWineIds = revealedWineIds.filter((id) => !candidateKeyByWineId.has(id));
-    if (missingKeyWineIds.length > 0) {
-      const boardGlasses: BoardGlass[] = wines.map((w, i) => ({
-        wineId: w.id,
-        glass: i + 1,
-        isRevealed: w.is_revealed,
-        revealStep: w.reveal_step,
-        ownBottle: false,
-      }));
-      const board = await getSemiBlindBoard(tastingId, boardGlasses);
-      for (const id of missingKeyWineIds) {
-        const key = board.revealedKeyByGlass[id];
-        if (key) candidateKeyByWineId.set(id, key);
       }
     }
 
@@ -380,6 +377,7 @@ export async function RecordView({
       total_points: p.correct ? 1 : 0,
     }));
     const result = semiBlindResult(semiGlasses, semiRows, viewerId);
+    finalTotals = semiBlindTotals(semiGlasses, semiRows, participantIds);
     score = result.score;
     maximum = result.maximum;
     for (const g of result.glasses) pointsByWineId.set(g.wineId, g.points);
@@ -394,6 +392,10 @@ export async function RecordView({
 
   // ── Header: date, host line, "N tasters", placing ──────────────────────────
 
+  // The leaderboard supplies the competitors' ids only. Its running totals
+  // still count a half-revealed glass's step points, so the placing ranks by
+  // `finalTotals`, the same fully-revealed-only basis as "{score} of
+  // {maximum}" (OD-3 (a), owner 2026-09-14; `tasting-result.ts` does the same).
   const leaderboard = await getTastingLeaderboard(tastingId);
   const statusByParticipantId = new Map(participants.map((p) => [p.id, p.status]));
   const competitors = leaderboard.filter((r) => {
@@ -401,7 +403,7 @@ export async function RecordView({
     if (tasting.wine_source === "HOST_PROVIDES" && r.userId === tasting.host_id) return false;
     return true;
   });
-  const ranked = rankRows(competitors, (r) => r.total);
+  const ranked = rankRows(competitors, (r) => finalTotals.get(r.participantId) ?? 0);
   const mine = viewerId ? ranked.find(({ row }) => row.participantId === viewerId) : undefined;
 
   const hostDisplayName = displayNameByUserId.get(tasting.host_id) ?? "The host";
@@ -496,7 +498,7 @@ export async function RecordView({
             {isRecent ? (
               "Tonight"
             ) : (
-              <LocalDateTime iso={tasting.finished_at ?? tasting.started_at ?? ""} format="eyebrow" />
+              <LocalDateTime iso={tasting.finished_at ?? tasting.started_at ?? ""} format="day-month" />
             )}
             {" · "}
             {hostedBy}

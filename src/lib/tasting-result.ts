@@ -21,7 +21,9 @@ import {
 } from "@/lib/result-copy";
 import {
   blindResult,
+  blindTotals,
   semiBlindResult,
+  semiBlindTotals,
   type AnswerFlags,
   type BlindGuessRow,
   type BlindResultGlass,
@@ -29,9 +31,7 @@ import {
   type SemiBlindResultGlass,
   type TastingResult,
 } from "@/lib/result-math";
-import type { BoardGlass } from "@/lib/semi-blind-board";
 import {
-  getSemiBlindBoard,
   getSemiBlindRevealedPicks,
   type SemiBlindRevealedPick,
 } from "@/lib/semi-blind-data";
@@ -211,6 +211,10 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
 
   let result: TastingResult;
   let semiBlindPicks: SemiBlindRevealedPick[] = [];
+  // Every participant's sum over the fully revealed glasses they could guess
+  // (OD-3 (a)); the placing, the table and the host's winners rank by it.
+  let finalTotals: Map<string, number>;
+  const participantIds = participants.map((p) => p.id);
 
   if (mode === "SEMI_BLIND") {
     const picks = await getSemiBlindRevealedPicks(tastingId);
@@ -220,28 +224,15 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
     const eligibleSetByWineId = new Map(wines.map((w) => [w.id, new Set(eligibleIdsFor(w))]));
     semiBlindPicks = picks.filter((p) => eligibleSetByWineId.get(p.glassWineId)?.has(p.participantId) ?? false);
 
+    // A glass's own key is the one an eligible correct pick carries. A
+    // revealed glass nobody eligible matched has none (the board would hand
+    // one only to a viewer on the list, and it would change nothing: no
+    // eligible pick equals it). It still counts, its eligible rows at their
+    // own 0, and never reads "never revealed" (BT-V3 A-29; `semiBlindResult`).
     const candidateKeyByWineId = new Map<string, string>();
     for (const pick of semiBlindPicks) {
       if (pick.correct && pick.pickKey && !candidateKeyByWineId.has(pick.glassWineId)) {
         candidateKeyByWineId.set(pick.glassWineId, pick.pickKey);
-      }
-    }
-    // A glass nobody eligible matched correctly still has a public key —
-    // `get_semi_blind_board`'s `revealed` list — so fall back to that
-    // before giving up on it (readSemiBlind then excludes it, fail-closed).
-    const missingKeyWineIds = revealedWineIds.filter((id) => !candidateKeyByWineId.has(id));
-    if (missingKeyWineIds.length > 0) {
-      const boardGlasses: BoardGlass[] = wines.map((w, i) => ({
-        wineId: w.id,
-        glass: i + 1,
-        isRevealed: w.is_revealed,
-        revealStep: w.reveal_step,
-        ownBottle: false,
-      }));
-      const board = await getSemiBlindBoard(tastingId, boardGlasses);
-      for (const id of missingKeyWineIds) {
-        const key = board.revealedKeyByGlass[id];
-        if (key) candidateKeyByWineId.set(id, key);
       }
     }
 
@@ -259,6 +250,7 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
       total_points: p.correct ? 1 : 0,
     }));
     result = semiBlindResult(semiGlasses, semiRows, viewerId);
+    finalTotals = semiBlindTotals(semiGlasses, semiRows, participantIds);
   } else {
     const blindGlasses: BlindResultGlass[] = wines.map((w) => ({
       wineId: w.id,
@@ -269,24 +261,30 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
     }));
     const blindRows: BlindGuessRow[] = (guessRows ?? []).map(toBlindGuessRow);
     result = blindResult(blindGlasses, blindRows, viewerId);
+    finalTotals = blindTotals(blindGlasses, blindRows, participantIds);
   }
 
   // Competitors: JOINED, minus a HOST_PROVIDES host — the same rule
-  // `standings-panel.tsx` uses, ranked the same way (`rankRows`).
+  // `standings-panel.tsx` uses. The leaderboard supplies names and ids only.
+  // Its running totals still count a half-revealed glass's step points, so
+  // the ranking uses `finalTotals` instead: the same fully-revealed-only basis
+  // as `result.score` and `result.maximum` (OD-3 (a), owner 2026-09-14), and a
+  // tasting ended mid-reveal never places anyone on that glass.
   const statusByParticipantId = new Map(participants.map((p) => [p.id, p.status]));
   const competitors = leaderboard.filter((r) => {
     if (statusByParticipantId.get(r.participantId) !== "JOINED") return false;
     if (tasting.wine_source === "HOST_PROVIDES" && r.userId === tasting.host_id) return false;
     return true;
   });
-  const ranked = rankRows(competitors, (r) => r.total);
+  const finalTotal = (participantId: string): number => finalTotals.get(participantId) ?? 0;
+  const ranked = rankRows(competitors, (r) => finalTotal(r.participantId));
   const canSeeStandings = viewerCanSeeStandings({ isHost, viewer });
   const table: TastingResultView["table"] = canSeeStandings
     ? ranked.map(({ row, rank, tied }) => ({
         rank,
         tied,
         name: row.name,
-        total: row.total,
+        total: finalTotal(row.participantId),
         isViewer: viewer !== null && row.participantId === viewer.id,
       }))
     : [];
@@ -320,7 +318,7 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
     const winnerRows = ranked.filter(({ rank }) => rank === 1);
     hosted = hostedLines({
       winners: winnerRows.map(({ row }) => row.name),
-      points: winnerRows[0]?.row.total ?? 0,
+      points: winnerRows[0] ? finalTotal(winnerRows[0].row.participantId) : 0,
       mode,
     });
     share = { kind: "hosted", tasting: tasting.name, winners: winnerRows.map(({ row }) => row.name) };
