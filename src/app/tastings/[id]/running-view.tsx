@@ -15,9 +15,8 @@ import {
   getTastingRow,
   getViewerParticipant,
   getWineRows,
-  startResultCookieName,
-  startResultCookiePath,
 } from "@/lib/tasting-request-cache";
+import { startResultCookieName, startResultCookiePath } from "@/lib/start-result-cookie";
 import { invitedYouLine } from "@/lib/invitation-copy";
 import { makeGlassLabeler } from "@/lib/wine-label";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";

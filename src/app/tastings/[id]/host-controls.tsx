@@ -11,7 +11,7 @@ import type {
   TimingMode,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
-import type { StartResult } from "@/lib/tasting-request-cache";
+import type { StartResult } from "@/lib/start-result-cookie";
 import { startLandsOnConsole } from "@/lib/tasting-lifecycle-copy";
 import { startTasting, type LobbyActionState } from "./actions";
 

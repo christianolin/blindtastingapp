@@ -2251,6 +2251,9 @@ returns void language plpgsql security definer set search_path = public as $$ â€
   - It is an advisory lock, not a row lock on `tasting_participants`. Nothing else takes it, so it cannot deadlock with a writer that locks the participant's guesses and then the participant row (the order a tasting delete's cascades can take).
 - **A unique violation without DETAIL.** The three writes sit in a block that re-raises `unique_violation` (23505) with its message and constraint, but without DETAIL. The function runs as the owner, so Postgres's DETAIL would name the candidate's wine id, and PostgREST returns DETAIL to the caller. `assignMatch` retries a 23505 once.
 - **The candidate row is locked before it is tested** (BT-V3 A-11). After `v_candidate` resolves, and before the `guesses` locks, the candidate wine's row is read `for share`. `is_revealed` and the contributor are tested on that row, so a reveal of the candidate that commits meanwhile is seen.
+  - This lock order (`wines`, then `guesses`) is the one `reveal_next_category` takes, so the two never deadlock.
+  - `reveal_wine` takes the opposite order: it scores the glass's guesses, then flips `wines`. That leaves one rare deadlock (race row R11). When the caller's own row on the candidate's glass is the holder, or is the glass being matched, `reveal_wine` can lock that row after the match took the share lock and before the match reaches the row.
+  - Postgres aborts one side with 40P01, and either may be the victim. One retry of the victim restores the invariant: `assignMatch` retries 40P01 once, and the reveal paths do not retry.
 
 **(d) The permutation's invariant and the pool release**
 
@@ -2372,7 +2375,7 @@ create policy "wine_answers read" on public.wine_answers
 - **Honest permutation without touching scoring.** The pool release and the unique index keep one open glass per candidate; `reveal_wine` and `score_own_guess` are unchanged.
 - **Lane N.** 093000's client-column matrix narrows by one column (insert and update) and gains a select list; its policies, `guesses_pin_identity` and the JOINED-only `get_wine_reveal` stay.
 - **Assertions:** pre-assert the live `wine_answers read` text, 093000's column grants, the absence of duplicate open holdings, and M6's `wines.added_by_host`; post-assert the policy (no `SEMI_BLIND`; the host clause carries `added_by_host`), `wines_semi_blind_flight_locked` enabled, authenticated SELECT on exactly 27 `guesses` columns and INSERT/UPDATE on exactly 13, no client grants on `semi_blind_candidate_keys`, every new function SECURITY DEFINER with `search_path=public` (EXECUTE authenticated-only for the RPCs; `ensure_semi_blind_keys` owner-only; M9b's two trigger functions with no client EXECUTE at all), the index and both triggers. M9b also post-asserts:
-  - its recreated `assign_semi_blind_match` (the note after (c)): the body md5, the advisory lock before the first `guesses` read, the DETAIL-free unique-violation handler after it, and EXECUTE for `authenticated`, never `anon` or `PUBLIC`;
+  - its recreated `assign_semi_blind_match` (the note after (c)): the body md5, the advisory lock and then A-11's candidate `for share` read, both before the first `guesses` read, the DETAIL-free unique-violation handler after that read, and EXECUTE for `authenticated`, never `anon` or `PUBLIC`;
   - each trigger function's body md5, which carries A-10's `for share` tasting read (BT-V3 A-10, A-11, A-13).
 
 ### 10.5 Tests

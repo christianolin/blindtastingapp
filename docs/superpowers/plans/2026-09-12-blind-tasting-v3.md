@@ -1408,11 +1408,11 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - (review round 1; BT-V3 A-10, A-11, A-13) `assign_semi_blind_match` is recreated from live with three edits (spec §10.4 (c), the note after the block):
   - the per-participant advisory lock before the first `guesses` read;
   - a unique-violation handler that re-raises 23505 without DETAIL;
-  - the candidate wine's row read `for share` before it is tested (A-11).
+  - the candidate wine's row read `for share` before it is tested (A-11). It leaves one rare 40P01 with `reveal_wine`, which locks `guesses` before `wines` (race row R11): `assignMatch` retries 40P01 once, and the reveal paths do not retry.
 - `wines_semi_blind_flight_locked` reads the tasting row `for share` before its test (A-10). Neither trigger function gets client EXECUTE: they are not "authenticated-only", because a trigger fires without EXECUTE.
 - Post-assert: spec §10.4 "Assertions": the policy (no `SEMI_BLIND`; the host clause has `added_by_host`), SELECT on exactly 27 `guesses` columns and INSERT/UPDATE on exactly 13 for `authenticated`, no client grants on `semi_blind_candidate_keys`, the index, both triggers.
   - The two trigger functions' bodies (md5) and their EXECUTE matrix: no client role.
-  - The recreated assign body: its md5 (post-assert 2b), the lock before the first `guesses` read, and the handler after that read.
+  - The recreated assign body: its md5 (post-assert 2b), the advisory lock and then the candidate's `for share` read, both before the first `guesses` read, and the handler after that read.
 - After the types change a bare `npx tsc --noEmit` prints nothing (BT-S5 removed every reader).
 
 **Tests — behavioural probe** (spec §10.5, the M9b half)

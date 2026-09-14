@@ -14,7 +14,7 @@ import {
   encodeStartResult,
   startResultCookieName,
   startResultCookiePath,
-} from "@/lib/tasting-request-cache";
+} from "@/lib/start-result-cookie";
 
 // `warning` rides along with a success that still needs the host's attention:
 // Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
