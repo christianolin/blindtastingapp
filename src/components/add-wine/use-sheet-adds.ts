@@ -70,6 +70,7 @@ import {
   loadCatalogWineDraft,
   loadFlightGlassForEdit,
   saveFlightGlass,
+  swapFlightGlass,
 } from "./actions";
 import { notePickPlan } from "./format";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
@@ -356,8 +357,40 @@ export function useSheetAdds({
     }
   }
 
+  /** BT-L3 (S4c): the swap start view's add re-points the glass `swap` names
+      instead of adding a new one — `swapFlightGlass`, landed the way an
+      existing-glass save lands (`glassSaved`, closing the sheet like Edit's
+      own save), not through the row-adding `addLanded` path. */
+  async function writeSwap(ctx: AddContext, tastingId: string, wineId: string): Promise<void> {
+    const result = await call(() => swapFlightGlass(tastingId, wineId, ctx.source), SAVE_FAILED);
+    if (result === null) return;
+    if ("error" in result) {
+      fail(ctx, result);
+      return;
+    }
+    const wasClosing = stateRef.current.closing;
+    send({
+      type: "glassSaved",
+      added: result.added,
+      ticket: ctx.ticket,
+      draft: ctx.draft ?? undefined,
+      closeSheet: true,
+    });
+    options.onAdded?.(result.added);
+    if (result.warning) setNotice(result.warning);
+    if (!wasClosing && stateRef.current.closing) {
+      onClose();
+      refresh();
+    }
+  }
+
   async function write(ctx: AddContext, destination: AddWineDestination | null): Promise<void> {
     if (destination?.kind === "flight") {
+      const swap = stateRef.current.swap;
+      if (swap !== null) {
+        await writeSwap(ctx, destination.tastingId, swap.wineId);
+        return;
+      }
       await execute(ctx, () => addToFlight(destination, ctx.source));
     } else if (destination?.kind === "cellar") {
       // The lot step's add is lotAdd; a cellar write from here is +1 bottle.

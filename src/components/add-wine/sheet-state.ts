@@ -127,6 +127,12 @@ export type SheetState = {
       `ticket.form`), its glass is saved, its row is added or removed, or Discard
       closes the sheet. A form with nothing typed in it is not kept. */
   parkedByHand: ByHandSession[];
+  /** BT-L3 (S4c): Swap in progress on this glass — `swapStarted` parks the edit
+      form (as `openByHand`'s give-back does) and routes to the flight
+      destination's start view; `swapCancelled` reopens it. `glass` is the
+      glass's list-order number, known once the edit form has loaded it, or
+      null when `options.swap` opened straight into swap mode before it did. */
+  swap: { wineId: string; glass: number | null } | null;
 };
 
 /** Plan amendment 23: what an action that waits on the server started with —
@@ -257,7 +263,18 @@ export type SheetAction =
       adopted: AddWineDestination | null;
       scanNext: boolean;
       warning: string | null;
-    };
+    }
+  /** BT-L3 (S4c): the by-hand form's Swap row — stores `swap` and routes to the
+      flight destination's start view (the matrix's normal sources). Leaves the
+      state unchanged while `items` or `confirmQueue` is non-empty (a read
+      keeps its turn; the edit form never has one, so this only guards a stray
+      dispatch); forces `multi` off. `glass` is the edit form's own header
+      number, or null while it is still loading. */
+  | { type: "swapStarted"; wineId: string; glass: number | null }
+  /** BT-L3 (S4c): the swap start view's back/close — clears `swap` and returns
+      to the edit form it parked, or lands home by the landing rule (opening
+      the oldest waiting read, if there is one) when there is none. */
+  | { type: "swapCancelled" };
 
 // ---------------------------------------------------------------------------
 // Internals
@@ -585,8 +602,10 @@ export function initialSheetState(p: {
   initialLot?: AddSource | null;
 }): SheetState {
   // An edit opens on the by-hand form (spec §C.5 A1 "Edit"), never on the
-  // camera, not even while its glass loads.
-  const start: AddWineStart | undefined = p.options.edit ? "byhand" : p.options.start;
+  // camera, not even while its glass loads. BT-L3: `options.swap` opens
+  // straight into swap mode instead, on the ordinary start view (the matrix's
+  // normal sources) — never forced to "byhand", there is no edit form yet.
+  const start: AddWineStart | undefined = p.options.edit ? "byhand" : p.options.swap ? undefined : p.options.start;
   const lot = p.initialLot ? { source: p.initialLot, quantity: 1, rack: "", price: "" } : null;
   return {
     view: lot ? "lot" : p.canScan === null ? "resolving" : startViewFor(start, p.canScan),
@@ -617,6 +636,7 @@ export function initialSheetState(p: {
     confirmQueue: [],
     flow: 0,
     parkedByHand: [],
+    swap: p.options.swap ? { wineId: p.options.swap.wineId, glass: null } : null,
   };
 }
 
@@ -632,7 +652,7 @@ export function sheetReducer(s: SheetState, a: SheetAction): SheetState {
 /** Amendment 23: the user's steps that move or close the sheet whenever they change it. */
 const USER_MOVES: readonly SheetAction["type"][] = [
   "go", "back", "openByHand", "openLot", "choose", "byHandDiscard", "byHandLeftForLater", "lotSkipped", "followUpDone",
-  "requestClose", "cancelClose", "discardAndClose",
+  "requestClose", "cancelClose", "discardAndClose", "swapStarted", "swapCancelled",
 ];
 /** Amendment 23: user steps that count only when they take the screen — a photo, a Retry or a Rescan of the bottle on it. */
 const USER_MOVES_ON_SCREEN: readonly SheetAction["type"][] = ["enqueue", "itemRetry", "itemRemove"];
@@ -1188,6 +1208,36 @@ function step(s: SheetState, a: SheetAction): SheetState {
       }
       // Amendment 22: a phone's single add closes only when nothing is left.
       return shouldCloseAfterSingleAdd(next, { warning: a.warning }) ? sheetReducer(next, { type: "requestClose" }) : next;
+    }
+
+    case "swapStarted": {
+      // Amendment 20: a read keeps its turn; the edit form never has one, so
+      // this only guards a stray dispatch made while one is on screen.
+      if (s.items.length > 0 || s.confirmQueue.length > 0) return s;
+      // BT-A0: give the edit form back exactly as `openByHand`'s own give-back
+      // does (sheet-state.ts:880-901), so `swapCancelled` can reopen it through
+      // `sessionToReopen` — whether or not it holds unsaved typing, since the
+      // form itself (not just its typing) must come back on Cancel.
+      const parkedByHand = s.byHand !== null ? [...s.parkedByHand, s.byHand] : s.parkedByHand;
+      const canScan = s.canScan ?? true;
+      return goTo(
+        { ...s, byHand: null, parkedByHand, multi: false, swap: { wineId: a.wineId, glass: a.glass } },
+        homeViewFor(canScan),
+      );
+    }
+
+    case "swapCancelled": {
+      if (s.swap === null) return s;
+      const origin: ByHandSession["origin"] = { kind: "glass", wineId: s.swap.wineId, incomplete: false };
+      const session = s.byHand;
+      const kept = sessionToReopen(s, origin);
+      // Rule 1 (S5b review): a dirty form opened during the swap pick (e.g. a
+      // fresh "new" wine typed while searching) is given back, not dropped —
+      // the same rule `openByHand`'s own give-back applies.
+      const others = kept === null ? s.parkedByHand : s.parkedByHand.filter((form) => form !== kept);
+      const parkedByHand = session !== null && session !== kept && session.dirty ? [...others, session] : others;
+      if (kept === null) return goHome({ ...s, swap: null, byHand: null, parkedByHand });
+      return goTo({ ...s, swap: null, byHand: kept, parkedByHand }, "byhand");
     }
 
     default: {

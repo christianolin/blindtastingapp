@@ -36,6 +36,11 @@ export type AddWineOpenOptions = {
   onAdded?: (added: AddedWine) => void;
   /** flight only: open the by-hand form on an existing glass (Edit; finishing an incomplete glass) */
   edit?: { wineId: string };
+  /** flight only, BT-L3 (S4c): open straight into swap mode for an existing
+      glass — the flight destination's ordinary start view, with `swap` set
+      from the first paint (the glass number is resolved once the edit form,
+      opened separately, has loaded it). */
+  swap?: { wineId: string };
 };
 
 /** wines.added_via (E.3) */
@@ -224,6 +229,24 @@ export type ByHandFormProps = {
   onChange: (draft: WineIdentityDraft) => void; onUnidentified: (on: boolean) => void;
   onSave: () => void; onLeaveForLater: (() => void) | null; onSearchInstead: () => void;
   fieldRefs: React.MutableRefObject<Partial<Record<WineFieldKey, HTMLElement | null>>>;  // registered even while hidden, so the shell can focus inside the tap
+  /** BT-L3 (S4c): Swap and Remove, rendered at the bottom of the form only
+      while `session.origin.kind === "glass"` (never a `destination.kind`
+      test — the form checks its own session). Null outside that mode. */
+  editGlass: EditGlassActions | null;
+};
+
+/** BT-L3 (S4c): the edit form's Swap and Remove rows. `canSwap` and Remove's
+    own gate (`impact !== null`) mirror `glassSwapRefusal`/`glassRemoveRefusal`
+    being null — computed by the shell from the loaded glass's `canEdit` and
+    from `getGlassRemovalImpact`'s own "not yours to remove" null. */
+export type EditGlassActions = {
+  canSwap: boolean;
+  onSwap: () => void;
+  /** `getGlassRemovalImpact`'s result: null while loading, or not allowed. */
+  impact: { guesses: number; privateNotes: number } | null;
+  onRemove: () => void;
+  removing: boolean;
+  removeError: string | null;
 };
 
 /** A8 / B1 / C1 / D1: the sheet on a device that cannot scan. The shell draws

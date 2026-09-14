@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -51,6 +51,7 @@ import {
 } from "@/lib/reference-search";
 import { emptyDraft, missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
 import { describeMissing } from "@/lib/wine-identity/describe";
+import { removalImpactLine, swapCopy } from "@/lib/lobby-copy";
 import { foldName } from "@/lib/wine-identity/fold";
 import type { GrapeSuggestion } from "@/lib/wine-identity/grape-suggestion";
 import type {
@@ -309,6 +310,7 @@ export function ByHandForm({
   onLeaveForLater,
   onSearchInstead,
   fieldRefs,
+  editGlass,
 }: ByHandFormProps) {
   const inert = session === null;
   const draft = session?.draft ?? EMPTY_DRAFT;
@@ -900,6 +902,13 @@ export function ByHandForm({
   const header = byHandHeader({ matrix, finishing, gaps: gaps.length });
   const refusal = session?.attempted && gaps.length > 0 ? `This wine ${describeMissing(gaps)}.` : null;
 
+  // BT-L3 (S4c): Swap and Remove, only while the session edits a flight
+  // glass — `session.origin.kind === "glass"`, never a `destination.kind`
+  // test. `finishing.glass` (set once the glass has loaded) is the row's own
+  // number; swapCopy needs no other data.
+  const swapRowCopy =
+    session?.origin.kind === "glass" && finishing?.glass != null ? swapCopy(finishing.glass) : null;
+
   // Registered on every render, hidden or not: the shell focuses a missing field
   // inside the tap that opens the form (spec §C.4 rule 9).
   function registerTrigger(field: WineFieldKey) {
@@ -1357,6 +1366,49 @@ export function ByHandForm({
             </div>
           ) : null}
         </div>
+
+        {/* Swap and Remove (S4c, BT-L3): only while the session edits a flight glass. */}
+        {swapRowCopy && editGlass ? (
+          <div className="flex flex-col gap-[10px] border-t border-border pt-[14px]">
+            {editGlass.canSwap ? (
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={editGlass.onSwap}
+                className="flex min-h-11 items-center justify-between gap-[10px] rounded-[10px] border border-border bg-card px-[13px] py-[10px] text-left transition-colors hover:border-gold disabled:opacity-60"
+              >
+                <span className="flex flex-col gap-[2px]">
+                  <span className="text-[13px] font-semibold">{swapRowCopy.row}</span>
+                  <span className="text-[11px] text-muted-foreground">{swapRowCopy.rowSub}</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+            ) : null}
+            {editGlass.impact !== null ? (
+              <div className="flex flex-col gap-[6px]">
+                {removalImpactLine(editGlass.impact.guesses, editGlass.impact.privateNotes) ? (
+                  <FieldNote>
+                    {removalImpactLine(editGlass.impact.guesses, editGlass.impact.privateNotes)}
+                  </FieldNote>
+                ) : null}
+                {editGlass.removeError ? (
+                  <p role="alert" className="text-[12px] font-semibold text-rose">
+                    {editGlass.removeError}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={disabled || editGlass.removing}
+                  onClick={editGlass.onRemove}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-[9px] text-[13px] font-semibold text-rose transition-colors hover:text-rose/80 disabled:opacity-60"
+                >
+                  {editGlass.removing ? <WineGlassLoader /> : null}
+                  {swapRowCopy.remove}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* Footer: sticks to the bottom of the sheet's scroller, so the action stays in reach. */}

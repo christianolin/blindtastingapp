@@ -15,6 +15,7 @@ import {
 } from "@/app/tastings/[id]/wines/new/tasting-wine-writes";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
+import { glassSwapRefusal } from "@/lib/flight-glass-rules";
 import { readDisplay, vintageLabel } from "@/lib/wine-identity/describe";
 import { draftFromCatalogWine, parseStoredDraft } from "@/lib/wine-identity/from-sources";
 import {
@@ -69,6 +70,11 @@ const MALFORMED_DRAFT = "Couldn't read this wine's details. Please try again.";
 const CATALOG_WINE_GONE = "That catalog wine no longer exists.";
 const LOT_NOT_YOURS = "That lot is not in your cellar.";
 const QUANTITY_REQUIRED = "Enter how many bottles you have (at least 1).";
+const WINE_NOT_FOUND = "That wine is no longer in the flight.";
+const TASTING_NOT_FOUND = "Tasting not found.";
+const LOT_EMPTY = "That lot has no bottles left.";
+const INTENT_WARNING = "Added — but it won't come out of your cellar.";
+const POUR_WARNING = "Added — but the bottle couldn't be taken out of your cellar.";
 
 async function currentUser(supabase: Db) {
   const {
@@ -1051,4 +1057,148 @@ export async function saveFlightGlass(input: {
 
   revalidatePath(`/tastings/${wine.tasting_id}`);
   return { ok: true, added };
+}
+
+// ---------------------------------------------------------------------------
+// Swap a flight glass's answer key (spec §3.3 item 11, BT-L3): re-point an
+// existing glass at a new wine, through the by-hand sheet's normal sources.
+// Position and every `guesses` row stay; only the identity, `added_via` and
+// (for a cellar lot) the pour intent change.
+// ---------------------------------------------------------------------------
+
+/**
+ * Re-points `wineId`'s answer key at `source` (spec §3.3 item 11):
+ * 1. re-check `glassSwapRefusal` — the adder through `is_wine_adder`, a
+ *    semi-blind glass after Start refuses;
+ * 2. resolve `source` to a draft (`identity`/`unidentified` carry one
+ *    already; `catalog`/`lot` load the wine's own through
+ *    `loadCatalogWineDraft`);
+ * 3. `saveFlightGlassCore` on the existing wine id — the one write path
+ *    (`prepareCompleteWine` + `upsertCatalogWine`, or `prepareUnidentifiedWine`);
+ * 4. `set_flight_glass_added_via` — a contributor holds no UPDATE on `wines`;
+ * 5. delete the old `wine_pour_intents` row; for a lot source record a new
+ *    intent and, when the tasting is running, pour it at once, exactly as
+ *    F10's lot add does (D11).
+ */
+export async function swapFlightGlass(
+  tastingId: string,
+  wineId: string,
+  source: AddSource,
+): Promise<AddResult> {
+  if (!knownSource(source)) return { error: UNKNOWN_SOURCE };
+  if (source.kind === "plusOne" || source.kind === "incomplete") return { error: UNKNOWN_SOURCE };
+  const via = addedVia(source);
+  if (via === null) return { error: UNKNOWN_SOURCE };
+
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return { error: SIGNED_OUT };
+
+  const { data: wine } = await supabase
+    .from("wines")
+    .select("id, is_revealed, reveal_step")
+    .eq("id", wineId)
+    .eq("tasting_id", tastingId)
+    .maybeSingle();
+  if (!wine) return { error: WINE_NOT_FOUND };
+
+  const { data: tasting } = await supabase
+    .from("tastings")
+    .select("id, host_id, status, reveal_mode")
+    .eq("id", tastingId)
+    .maybeSingle();
+  if (!tasting) return { error: TASTING_NOT_FOUND };
+
+  const { data: isAdder } = await supabase.rpc("is_wine_adder", { p_wine_id: wineId });
+  const refused = glassSwapRefusal({
+    tastingStatus: tasting.status,
+    revealMode: tasting.reveal_mode,
+    isRevealed: wine.is_revealed,
+    revealStep: wine.reveal_step,
+    viewerIsAdder: isAdder === true,
+    viewerIsHost: tasting.host_id === user.id,
+    laterGlassSeen: false,
+  });
+  if (refused) return { error: refused };
+
+  let draft: WineIdentityDraft | null;
+  let unidentified = false;
+  let lotId: string | null = null;
+  let consume = false;
+
+  switch (source.kind) {
+    case "identity":
+      draft = clientDraft(source.draft);
+      if (!draft) return { error: MALFORMED_DRAFT };
+      break;
+    case "unidentified":
+      draft = clientDraft(source.draft);
+      if (!draft) return { error: MALFORMED_DRAFT };
+      unidentified = true;
+      break;
+    case "catalog":
+      if (!UUID.test(source.catalogWineId)) return { error: CATALOG_WINE_GONE };
+      draft = await loadCatalogWineDraft(source.catalogWineId);
+      if (!draft) return { error: CATALOG_WINE_GONE };
+      break;
+    case "lot": {
+      if (!UUID.test(source.lotId)) return { error: LOT_NOT_YOURS };
+      const { data: lot } = await supabase
+        .from("cellar_lots")
+        .select("id, owner_id, catalog_wine_id, quantity")
+        .eq("id", source.lotId)
+        .maybeSingle();
+      if (!lot || lot.owner_id !== user.id) return { error: LOT_NOT_YOURS };
+      if (lot.quantity < 1) return { error: LOT_EMPTY };
+      draft = await loadCatalogWineDraft(lot.catalog_wine_id);
+      if (!draft) return { error: CATALOG_WINE_GONE };
+      lotId = lot.id;
+      consume = source.consume === true;
+      break;
+    }
+    default:
+      return { error: UNKNOWN_SOURCE };
+  }
+
+  const saved = await saveFlightGlassCore(supabase, user.id, {
+    wineId,
+    draft,
+    unidentified,
+    leaveForLater: false,
+  });
+  if ("error" in saved) return refusal(saved);
+
+  const { error: viaError } = await supabase.rpc("set_flight_glass_added_via", {
+    p_wine_id: wineId,
+    p_added_via: via,
+  });
+  if (viaError) return { error: viaError.message };
+
+  await supabase.from("wine_pour_intents").delete().eq("wine_id", wineId);
+  let warning: string | undefined;
+  if (lotId !== null) {
+    const { error: intentError } = await supabase.from("wine_pour_intents").insert({
+      wine_id: wineId,
+      owner_id: user.id,
+      cellar_lot_id: lotId,
+      consume_on_start: tasting.status === "DRAFT" && consume,
+    });
+    if (intentError) {
+      console.error("wine_pour_intents insert failed", { wineId, message: intentError.message });
+      warning = consume ? INTENT_WARNING : undefined;
+    } else if (consume && (tasting.status === "IN_PROGRESS" || tasting.status === "OPEN")) {
+      const { error: pourError } = await supabase.rpc("pour_cellar_lot_into_glass", { p_wine_id: wineId });
+      if (pourError) {
+        console.error("pour_cellar_lot_into_glass failed", { wineId, message: pourError.message });
+        warning = POUR_WARNING;
+      }
+    }
+  }
+
+  const label = saved.catalogWineId
+    ? await labelFor(supabase, saved.catalogWineId)
+    : await draftLabel(supabase, draft);
+  revalidatePath(`/tastings/${tastingId}`);
+  const added: AddedWine = { label, destination: "flight", catalogWineId: saved.catalogWineId, wineId };
+  return warning ? { ok: true, added, warning } : { ok: true, added };
 }

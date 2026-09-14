@@ -49,7 +49,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { readLabelPhoto, type LabelPhotoRead } from "@/app/scan/actions";
+import { removeWine } from "@/app/tastings/[id]/actions";
+import { getGlassRemovalImpact } from "@/app/tastings/[id]/flight-actions";
 import { createClient } from "@/lib/supabase/client";
+import { swapCopy } from "@/lib/lobby-copy";
 import { cn } from "@/lib/utils";
 import { emptyDraft, missingWineFields } from "@/lib/wine-identity/complete";
 import { describeMissing, readDisplay } from "@/lib/wine-identity/describe";
@@ -198,6 +201,12 @@ export function AddWineSheet({
   const [focusRequest, setFocusRequest] = useState<{ field: WineFieldKey; seq: number } | null>(null);
   // An Edit open shows a loader on the form until its glass has loaded (or failed to).
   const [editLoaded, setEditLoaded] = useState(options.edit === undefined);
+  // BT-L3 (S4c): Remove's impact line, loaded once per glass session; its own
+  // Remove call's busy/error state.
+  const [removalImpact, setRemovalImpact] = useState<{ guesses: number; privateNotes: number } | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const impactLoadedFor = useRef<string | null>(null);
 
   const mounted = useRef(false);
   const photoUrls = useRef<Set<string>>(new Set());
@@ -258,6 +267,25 @@ export function AddWineSheet({
       : { owned: ownedFor === null ? null : (owned[ownedFor] ?? null), totalBottles: cellarSummary.bottles };
   const finishing = finishingFor(state, adds.editing);
   const editLoading = !editLoaded && view === "byhand";
+  // BT-L3 (S4c): the edit form's own session, whichever view is showing it
+  // (byhand) or holding it while the swap pick is in progress (`state.swap`).
+  const glassOrigin =
+    state.byHand?.origin.kind === "glass"
+      ? state.byHand.origin
+      : state.swap !== null
+        ? { wineId: state.swap.wineId }
+        : null;
+  const editGlass =
+    glassOrigin === null
+      ? null
+      : {
+          canSwap: adds.editing?.wineId === glassOrigin.wineId && adds.editing.canEdit === true,
+          onSwap: () => adds.send({ type: "swapStarted", wineId: glassOrigin.wineId, glass: finishing?.glass ?? null }),
+          impact: removalImpact,
+          onRemove: () => void removeGlass(glassOrigin.wineId),
+          removing,
+          removeError,
+        };
   const lot = state.lot;
   const lotSource = lot?.source.kind === "catalog" ? lot.source : null;
   const chooserItem = view === "choose" && state.chooseFor === null ? itemInHand(state) : null;
@@ -374,6 +402,44 @@ export function AddWineSheet({
       },
     );
   }, [ownedFor]);
+
+  // BT-L3 (S4c): Remove's impact line, loaded once per glass session (spec
+  // §3.3 item 12) — `getGlassRemovalImpact` itself decides who may remove
+  // (`can_remove_flight_glass`), so a null return just means "not yours",
+  // never an error.
+  useEffect(() => {
+    // A sheet opens on at most one glass for its whole life (Edit's wineId
+    // never changes under a swap), so there is nothing to reset back to null.
+    const wineId = glassOrigin?.wineId ?? null;
+    if (wineId === null || impactLoadedFor.current === wineId) return;
+    impactLoadedFor.current = wineId;
+    getGlassRemovalImpact(wineId).then(
+      (impact) => {
+        if (mounted.current && impactLoadedFor.current === wineId) setRemovalImpact(impact);
+      },
+      (error: unknown) => {
+        if (impactLoadedFor.current === wineId) impactLoadedFor.current = null;
+        console.error("add-wine sheet: the removal impact did not load", error);
+      },
+    );
+  }, [glassOrigin?.wineId]);
+
+  /** BT-L3 (S4c): Remove — no dialog; a refusal shows inline; success closes
+      the sheet (asking first while other rows are unfinished, rule 7). */
+  async function removeGlass(wineId: string): Promise<void> {
+    const dest = currentDestination(stateRef.current);
+    if (dest?.kind !== "flight") return;
+    setRemoving(true);
+    setRemoveError(null);
+    const result = await removeWine(dest.tastingId, wineId);
+    if (!mounted.current) return;
+    setRemoving(false);
+    if ("error" in result) {
+      setRemoveError(result.error);
+      return;
+    }
+    adds.requestClose();
+  }
 
   // A6: the cellar, loaded each time the view opens so its in-flight rows are current.
   const cellarOpen = view === "cellar";
@@ -664,7 +730,17 @@ export function AddWineSheet({
   // --- render -----------------------------------------------------------------------
 
   const dark = DARK_VIEWS.includes(view);
-  const header = headerFor(state, matrix, cellar.sheet);
+  // BT-L3 (S4c): the swap start view's own header, over whichever view the
+  // matrix would otherwise title.
+  const header: Header =
+    state.swap !== null
+      ? {
+          eyebrow: null,
+          title: state.swap.glass !== null ? swapCopy(state.swap.glass).header : "Swap this glass",
+          titleHidden: false,
+          bottles: null,
+        }
+      : headerFor(state, matrix, cellar.sheet);
   const addedCount = footerCount(state);
   const stripError = OWN_ERROR_VIEWS.includes(view) ? null : state.error;
   const strip = stripError ?? adds.notice;
@@ -695,7 +771,11 @@ export function AddWineSheet({
             !dark && "border-b border-border",
           )}
         >
-          {BACK_VIEWS.includes(view) ? (
+          {state.swap !== null ? (
+            <HeaderIconButton label="Back" dark={dark} onClick={() => adds.send({ type: "swapCancelled" })}>
+              <ArrowLeft className="size-5" />
+            </HeaderIconButton>
+          ) : BACK_VIEWS.includes(view) ? (
             <HeaderIconButton label="Back" dark={dark} onClick={() => adds.send({ type: "back" })}>
               <ArrowLeft className="size-5" />
             </HeaderIconButton>
@@ -812,6 +892,7 @@ export function AddWineSheet({
                   onLeaveForLater={offersLeaveForLater(state, finishing, matrix) ? () => adds.leaveForLater() : null}
                   onSearchInstead={() => openSearch()}
                   fieldRefs={fieldRefs}
+                  editGlass={editGlass}
                 />
               </div>
               {view === "byhand" && editLoading ? (
