@@ -3,6 +3,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
 import { LiveShell } from "@/components/live-shell";
 import { createClient } from "@/lib/supabase/server";
+import { GUESS_READ_COLUMNS, type GuessReadColumn } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import {
@@ -34,6 +35,10 @@ import {
 } from "./console";
 
 type WineAnswer = Database["public"]["Tables"]["wine_answers"]["Row"];
+// The explicit `guesses` read list (spec §10.4 (e); BT-S5) — never "*",
+// which would carry the semi-blind pick column back to a page that also
+// names bring-your-own contributors, turning a match into an answer leak.
+type GuessReadRow = Pick<Database["public"]["Tables"]["guesses"]["Row"], GuessReadColumn>;
 type WineRow = Awaited<ReturnType<typeof getWineRows>>[number];
 type ParticipantRow = Awaited<ReturnType<typeof getParticipantRows>>[number];
 
@@ -215,9 +220,9 @@ export default async function HostConsolePage({
             data: [] as { wine_id: string; participant_id: string; locked_at: string | null; scored_at: string | null }[],
           }),
       directWineIds.length > 0
-        ? supabase.from("guesses").select("*").in("wine_id", directWineIds)
+        ? supabase.from("guesses").select(GUESS_READ_COLUMNS).in("wine_id", directWineIds)
         : Promise.resolve({
-            data: [] as Database["public"]["Tables"]["guesses"]["Row"][],
+            data: [] as GuessReadRow[],
           }),
       supabase.from("type_designations").select("id, name"),
       Promise.all(
@@ -238,7 +243,7 @@ export default async function HostConsolePage({
     list.push(g);
     guessMetaByWineId.set(g.wine_id, list);
   }
-  const guessContentByWineId = new Map<string, Database["public"]["Tables"]["guesses"]["Row"][]>();
+  const guessContentByWineId = new Map<string, GuessReadRow[]>();
   for (const g of guessContent ?? []) {
     const list = guessContentByWineId.get(g.wine_id) ?? [];
     list.push(g);

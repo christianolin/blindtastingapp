@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
+import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
+import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
 
 const CATEGORY_LABELS: Record<string, string> = {
   country: "Country",
@@ -85,26 +87,33 @@ export default async function ProfileTastingHistoryPage({
   ]);
 
   const wineIds = (wines ?? []).map((w) => w.id);
+  // Explicit `guesses` column list (spec §10.4 (e); BT-S5) — never "*",
+  // which would carry the semi-blind pick column.
   const { data: guesses } = await supabase
     .from("guesses")
-    .select("*")
+    .select(GUESS_READ_COLUMNS)
     .eq("participant_id", participant.id)
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const guessByWineId = new Map((guesses ?? []).map((g) => [g.wine_id, g]));
 
-  // In semi-blind mode a guess points at a candidate wine (guessed_wine_id)
-  // that isn't necessarily one of this page's revealed wines, so pull in
-  // whichever candidate answers were actually guessed alongside the
-  // revealed wines' own answers.
-  const guessedWineIds = (guesses ?? [])
-    .map((g) => g.guessed_wine_id)
-    .filter((id): id is string => Boolean(id));
-  const answerLookupIds = [...new Set([...wineIds, ...guessedWineIds])];
   const { data: answers } = await supabase
     .from("wine_answers")
     .select("*")
-    .in("wine_id", answerLookupIds.length > 0 ? answerLookupIds : [""]);
+    .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
+
+  // Semi-blind picks come from `get_semi_blind_revealed_picks`, never from
+  // the guess row's own pick column or a candidate `wine_answers` lookup
+  // (spec §10.4 (e); BT-S5) — a wine id for an unrevealed candidate never
+  // crosses to this page at all (rule 1).
+  const picksByWineId = new Map<string, SemiBlindRevealedPick>();
+  if (isSemiBlind && wineIds.length > 0) {
+    const picks = await getSemiBlindRevealedPicks(tastingId);
+    for (const pick of picks) {
+      if (pick.participantId !== participant.id) continue;
+      picksByWineId.set(pick.glassWineId, pick);
+    }
+  }
 
   const nameById = new Map<string, string>();
   for (const list of [countries, regions, grapes, typeDesignations]) {
@@ -184,9 +193,7 @@ export default async function ProfileTastingHistoryPage({
         {(wines ?? []).map((wine) => {
           const answer = answerByWineId.get(wine.id);
           const guess = guessByWineId.get(wine.id);
-          const guessedCandidate = guess?.guessed_wine_id
-            ? answerByWineId.get(guess.guessed_wine_id)
-            : null;
+          const pick = picksByWineId.get(wine.id);
           return (
             <Card key={wine.id}>
               <CardHeader>
@@ -210,16 +217,15 @@ export default async function ProfileTastingHistoryPage({
                 {isSemiBlind ? (
                   <div>
                     <h3 className="mb-1 text-sm font-medium">
-                      {!guess
+                      {!pick
                         ? "No guess submitted"
-                        : guess.total_points
+                        : pick.correct
                           ? "✓ Correct match"
                           : "✗ Wrong match"}
                     </h3>
-                    {guessedCandidate ? (
+                    {pick?.pickLabel ? (
                       <p className="text-sm text-muted-foreground">
-                        Guessed: {describe(guessedCandidate)} —{" "}
-                        {vintageLabel(guessedCandidate)}
+                        Guessed: {pick.pickLabel}
                       </p>
                     ) : null}
                   </div>

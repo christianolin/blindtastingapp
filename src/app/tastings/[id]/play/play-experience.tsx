@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { createClient } from "@/lib/supabase/server";
+import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import {
   getCurrentUser,
   getReferenceOptions,
@@ -272,9 +273,12 @@ export async function PlayExperience({
   }
 
   const wineIds = (wines ?? []).map((w) => w.id);
+  // Explicit `guesses` column list (spec §10.4 (e); BT-S5) — never "*",
+  // which would carry the semi-blind pick column (it maps to a pour
+  // position, so reading it back here would leak an unrevealed answer).
   const { data: myGuesses } = await supabase
     .from("guesses")
-    .select("*")
+    .select(GUESS_READ_COLUMNS)
     .eq("participant_id", myParticipant.id)
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
@@ -552,10 +556,11 @@ export async function PlayExperience({
   );
 
   // Everyone's guesses on revealed wines (RLS opens them once revealed) — for
-  // the per-participant breakdown shown after reveal.
+  // the per-participant breakdown shown after reveal. Explicit column list
+  // (spec §10.4 (e); BT-S5), never "*".
   const { data: allRevealedGuesses } = await supabase
     .from("guesses")
-    .select("*")
+    .select(GUESS_READ_COLUMNS)
     .in("wine_id", revealedWineIds.length > 0 ? revealedWineIds : [""]);
   type Guess = NonNullable<typeof allRevealedGuesses>[number];
   const revealedGuessesByWineId = new Map<string, Guess[]>();
