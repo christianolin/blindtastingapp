@@ -13,7 +13,7 @@ import type {
 export type UnrevealedGlass = { glass: number; state: "hidden" | "half" };
 
 /**
- * Where Start lands the host (reveal-5; B6): the dark host console for a LIVE,
+ * Where Start lands the host (reveal-5; B6): the host console for a LIVE,
  * host-provides tasting that is blind OR semi-blind — semi-blind's console
  * drives the pour pointer the same way blind's drives the reveal. A
  * bring-your-own host competes for the other glasses, and a self-paced or

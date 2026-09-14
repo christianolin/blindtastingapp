@@ -480,7 +480,7 @@ export async function RevealView({
                   className={cn(
                     "flex items-center gap-[11px] rounded-[11px] p-[11px_13px]",
                     r.hidden
-                      ? "border border-dashed border-border-light opacity-55"
+                      ? "border border-dashed border-border-light"
                       : hit
                         ? "border-[1.5px] border-gold bg-gold/14"
                         : miss

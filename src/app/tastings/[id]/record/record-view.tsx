@@ -47,7 +47,7 @@ import { RecordActionsBar } from "./record-actions-bar";
 // `ClosedSurface`) and at `/tastings/[id]/results` for a CLOSED tasting
 // (`results/page.tsx`). Parchment, server: every string is resolved here so
 // nothing about scoring crosses to a client component (mirrors
-// `tasting-result.ts` / `ResultView`'s split for the dark result).
+// `tasting-result.ts` / `ResultView`'s split for the result screen).
 //
 // The chevron/row link goes to `/tastings/{id}/results/{n}` (S13c) on every
 // viewport for now — BT-R5 adds that route and the laptop in-place

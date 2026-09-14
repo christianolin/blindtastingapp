@@ -16,7 +16,7 @@ import {
 } from "@/lib/result-copy";
 import type { TastingResultView } from "@/lib/tasting-result";
 
-// S12 (phone) / S12b (laptop): the dark result a CLOSED tasting shows until
+// S12 (phone) / S12b (laptop): the result screen a CLOSED tasting shows until
 // dismissed (B5; spec §11.3 items 8-10). Purely presentational — every
 // string arrives already formatted from `getTastingResult`
 // (`result-copy.ts`, run on the server), so this component only lays them

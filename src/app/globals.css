@@ -234,7 +234,8 @@
  * print restores the parchment palette entirely.
  *
  * The console tokens stay dark in print, as they already do in light: the
- * reveal screen is dark in every theme and that is not a printing decision. */
+ * add-wine camera surfaces they paint are dark in every theme, and that is not
+ * a printing decision. */
 @media print {
   /* JS sets color-scheme as an INLINE style on <html>, which outranks any
      ordinary rule, so this one needs the flag to win. Without it the printed

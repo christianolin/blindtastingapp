@@ -14,7 +14,7 @@ import { respondToInvite } from "./actions";
 // must show it.
 //
 // BT-R2 wrapped the old running-page board (BT-D2, moved without change from
-// page.tsx) in `ClosedSurface`: the dark result (S12) until the viewer
+// page.tsx) in `ClosedSurface`: the result screen (S12) until the viewer
 // dismisses it, then that same board again. BT-R3 swaps that "then" for the
 // parchment record (S13) — `RecordView` is now the sole CLOSED board; the
 // old board's wine-chip navigator, `WinesCard` and `PlayExperience` are

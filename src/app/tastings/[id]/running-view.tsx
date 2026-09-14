@@ -177,7 +177,7 @@ export async function RunningView({
 
   const canGuess = myStatus === "JOINED" && wineCount > 0;
 
-  // The host's way into the dark console while a blind / semi-blind tasting
+  // The host's way into the console while a blind / semi-blind tasting
   // runs: reveal glass by glass and watch who has locked in.
   const hostConsoleCard =
     isHost && !isOpen && tasting.status !== "CLOSED" ? (
