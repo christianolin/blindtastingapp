@@ -117,6 +117,47 @@ export function setThemeChoice(choice: ThemeChoice): void {
 }
 
 /**
+ * The Appearance control's choices, in the order they are shown. Picking one
+ * stores that option's OWN value, "system" included, and never null: an empty
+ * key renders light, so a Match system that cleared it -- what it did before
+ * 2026-09-14 -- would quietly render light on a dark OS.
+ */
+export const THEME_OPTIONS = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "Match system" },
+] as const satisfies readonly { value: NonNullable<ThemeChoice>; label: string }[];
+
+export type ThemeOption = (typeof THEME_OPTIONS)[number]["value"];
+
+/**
+ * Everything the Appearance control shows and does, kept here rather than in
+ * theme-toggle.tsx so theme.test.ts can click every option without a DOM:
+ *
+ *   options  each choice, whether it shows as pressed, and what picking it does
+ *   note     the line beneath the buttons
+ *
+ * Pressed tracks the stored CHOICE, not the rendered theme, so Match system is
+ * never shown alongside the Light or Dark the OS happens to give. Nothing
+ * stored shows as Light, because light is what renders.
+ */
+export function themeControl(choice: ThemeChoice, theme: Theme) {
+  const selected: ThemeOption = choice ?? "light";
+  return {
+    options: THEME_OPTIONS.map(({ value, label }) => ({
+      value,
+      label,
+      pressed: selected === value,
+      onSelect: () => setThemeChoice(value),
+    })),
+    note:
+      selected === "system"
+        ? `Following your device setting, which is ${theme} right now.`
+        : "Applies in this browser.",
+  };
+}
+
+/**
  * The server, and the first client paint before hydration, both return "light"
  * and no choice. The server cannot know the stored choice or the OS preference.
  * The inline script in layout.tsx is what stops that default from ever being

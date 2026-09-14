@@ -3,12 +3,15 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import {
   THEME_KEY,
+  THEME_OPTIONS,
   applyTheme,
   readChoice,
   readTheme,
   setThemeChoice,
   subscribeToTheme,
+  themeControl,
   themeForChoice,
+  type ThemeChoice,
 } from "./theme";
 
 // vitest runs in the node environment by design (see vitest.config.mts), so
@@ -198,6 +201,77 @@ describe("setThemeChoice", () => {
     setThemeChoice("dark");
     // The click has to work even if it cannot be remembered.
     expect(classes.has("dark")).toBe(true);
+  });
+});
+
+describe("the Appearance control: Light, Dark, Match system", () => {
+  // The half of "light unless chosen" a user actually touches. Every test above
+  // stays green while a Match system button that clears the key -- what it did
+  // before 2026-09-14 -- quietly renders light on a dark OS, so the buttons are
+  // clicked here, through the real store.
+  it("offers exactly Light, Dark and Match system, in that order", () => {
+    expect(THEME_OPTIONS.map((o) => [o.value, o.label])).toEqual([
+      ["light", "Light"],
+      ["dark", "Dark"],
+      ["system", "Match system"],
+    ]);
+  });
+
+  it.each(THEME_OPTIONS.map((o) => [o.label, o.value] as const))(
+    "%s stores its own value when picked, from any starting point on either OS",
+    (_label, value) => {
+      for (const before of [undefined, "light", "dark", "system", "sepia"]) {
+        for (const osDark of [false, true]) {
+          const store = stubWindow({
+            stored: before === undefined ? {} : { [THEME_KEY]: before },
+            osDark,
+          });
+          const { classes, root } = stubDocument();
+          const option = themeControl(readChoice(), readTheme()).options.find((o) => o.value === value);
+          option?.onSelect();
+
+          const label = `from ${JSON.stringify(before)}, OS dark ${osDark}`;
+          // Stored, not cleared: an empty key renders light whatever the OS says.
+          expect(store[THEME_KEY], label).toBe(value);
+          expect(readChoice(), label).toBe(value);
+          const rendered = value === "dark" || (value === "system" && osDark) ? "dark" : "light";
+          expect(classes.has("dark"), label).toBe(rendered === "dark");
+          expect(root.style.colorScheme, label).toBe(rendered);
+        }
+      }
+    },
+  );
+
+  it("presses the stored choice, never the theme it renders, and Light when nothing is stored", () => {
+    const pressed = (choice: ThemeChoice, theme: "light" | "dark") =>
+      themeControl(choice, theme).options.filter((o) => o.pressed).map((o) => o.value);
+    expect(pressed(null, "light")).toEqual(["light"]);
+    expect(pressed("light", "light")).toEqual(["light"]);
+    expect(pressed("dark", "dark")).toEqual(["dark"]);
+    expect(pressed("system", "dark")).toEqual(["system"]);
+    expect(pressed("system", "light")).toEqual(["system"]);
+  });
+
+  it("names the device's current theme only under Match system", () => {
+    expect(themeControl("system", "dark").note).toBe("Following your device setting, which is dark right now.");
+    expect(themeControl("system", "light").note).toBe("Following your device setting, which is light right now.");
+    for (const choice of [null, "light", "dark"] as const) {
+      expect(themeControl(choice, "dark").note, String(choice)).toBe("Applies in this browser.");
+    }
+  });
+
+  it("is drawn by theme-toggle.tsx, which hands every click straight to its option", () => {
+    // The last hop cannot be clicked without a DOM, so it is pinned at the
+    // source: the buttons come from themeControl, every onClick is the option's
+    // own onSelect, and the component never writes a choice itself -- no
+    // setter, no storage, no null, no "system" of its own to special-case.
+    const code = readFileSync("src/components/theme-toggle.tsx", "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(code).toMatch(/\bthemeControl\(\s*choice\s*,\s*theme\s*\)/);
+    expect(code).toMatch(/\boptions\.map\(\s*\(\s*\{[^}]*\bonSelect\b[^}]*\}\s*\)/);
+    expect(code.match(/onClick=\{[^}]*\}/g)).toEqual(["onClick={onSelect}"]);
+    expect(code).not.toMatch(/\bset(?:Theme)?Choice\b|\blocalStorage\b|\bnull\b|["'`]system["'`]/);
   });
 });
 
