@@ -89,7 +89,7 @@ function AttributeSheet({
               className={cn(
                 "flex shrink-0 items-center gap-1 tabular-nums",
                 got
-                  ? "text-[#3f5b42]"
+                  ? "text-chart-3"
                   : missed
                     ? "text-destructive"
                     : "text-muted-foreground",
@@ -667,6 +667,10 @@ export async function PlayExperience({
         name: p.id === myParticipant.id ? "You" : (nameByParticipantId.get(p.id) ?? "Someone"),
         matches: matchesByParticipant.get(p.id) ?? 0,
       }));
+      // The viewer's own bottle was never theirs to match (spec §10.3), so it
+      // reads "Your bottle" — never "You did not match this glass".
+      const latestIsMine =
+        (wines ?? [])[glassIndex]?.contributor_participant_id === myParticipant.id;
       semiBlindReveal = {
         wineId: latestWineId,
         props: {
@@ -689,12 +693,15 @@ export async function PlayExperience({
               .filter(Boolean)
               .join(" · "),
           },
-          result: {
-            hit: myPick?.correct ?? false,
-            pickLabel: myPick?.pickLabel ?? null,
-            mine: eligiblePicks.filter((p) => p.participantId === myParticipant.id && p.correct)
-              .length,
-          },
+          result: latestIsMine
+            ? null
+            : {
+                hit: myPick?.correct ?? false,
+                pickLabel: myPick?.pickLabel ?? null,
+                mine: eligiblePicks.filter(
+                  (p) => p.participantId === myParticipant.id && p.correct,
+                ).length,
+              },
           split: splitRows,
           poolCards: semiBlindCandidates.cards.filter(
             (c) => !(c.key in semiBlindCandidates.revealedGlassByKey),
@@ -911,15 +918,22 @@ export async function PlayExperience({
   return (
     <div className="flex flex-col gap-6">
       {tasting.timing_mode === "LIVE" ? (
-        <RevealSync
-          tastingId={tastingId}
-          // Sum of every wine's reveal step: changes on each advance, so it
-          // marks the moment refreshed content actually committed.
-          watermark={(wines ?? []).reduce(
-            (n, w) => n + (w.reveal_step ?? 0) + (w.is_revealed ? 1000 : 0),
-            0,
-          )}
-        />
+        <>
+          <RevealSync
+            tastingId={tastingId}
+            // Sum of every wine's reveal step: changes on each advance, so it
+            // marks the moment refreshed content actually committed.
+            watermark={(wines ?? []).reduce(
+              (n, w) => n + (w.reveal_step ?? 0) + (w.is_revealed ? 1000 : 0),
+              0,
+            )}
+          />
+          {/* RevealSync hears only `wines` and `guesses` (the only tables in
+              supabase_realtime), so a Pause, Resume or Skip on the `tastings`
+              row would never reach the standalone /play route. The embedded
+              running page already mounts AutoRefresh itself. */}
+          {!embedded ? <AutoRefresh /> : null}
+        </>
       ) : (
         <AutoRefresh />
       )}
@@ -994,7 +1008,7 @@ export async function PlayExperience({
                   ) : null}
                 </span>
                 {row.delta > 0 ? (
-                  <span className="rounded-full bg-[#3f5b42]/12 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-[#3f5b42]">
+                  <span className="rounded-full bg-chart-3/12 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-chart-3">
                     +{row.delta}
                   </span>
                 ) : null}
@@ -1446,7 +1460,7 @@ export async function PlayExperience({
                           <p
                             className={cn(
                               "mb-1.5 text-xs font-medium",
-                              allReady ? "text-[#3f5b42]" : "text-muted-foreground",
+                              allReady ? "text-chart-3" : "text-muted-foreground",
                             )}
                           >
                             {allReady ? "✓ " : ""}
@@ -1459,7 +1473,7 @@ export async function PlayExperience({
                               return (
                                 <span
                                   key={p.id}
-                                  className={ready ? "text-[#3f5b42]" : ""}
+                                  className={ready ? "text-chart-3" : ""}
                                 >
                                   {ready ? "✓" : "○"} {nameByParticipantId.get(p.id)}
                                   {draft ? " · in progress" : ""}

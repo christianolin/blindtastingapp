@@ -5,6 +5,7 @@ import type { CandidateCard } from "@/lib/semi-blind-candidates";
 import {
   HOW_THE_TABLE_SPLIT,
   STANDINGS_ONE_POINT,
+  YOUR_BOTTLE,
   glassWas,
   poolNoteLines,
   revealResult,
@@ -23,8 +24,10 @@ export type SemiBlindRevealProps = {
   total: number;
   /** The wine is revealed, so its `wine_answers` row is readable. */
   identity: { producer: string; vintage: string; meta: string };
-  /** The viewer's own outcome on this glass, from `getSemiBlindRevealedPicks`. */
-  result: { hit: boolean; pickLabel: string | null; mine: number };
+  /** The viewer's own outcome on this glass, from `getSemiBlindRevealedPicks`.
+   *  Null when the glass is the viewer's own bottle: it was never theirs to
+   *  match (spec §10.3), so the row reads "Your bottle", never a miss. */
+  result: { hit: boolean; pickLabel: string | null; mine: number } | null;
   /** One row per candidate the table picked for this glass, from
    *  `get_semi_blind_board`'s `split` — the right one marked `correct`. */
   split: { label: string; count: number; correct: boolean }[];
@@ -56,12 +59,14 @@ export function SemiBlindReveal({
   poolCards,
   standings,
 }: SemiBlindRevealProps) {
-  const resultCopy = revealResult({
-    hit: result.hit,
-    pickLabel: result.pickLabel,
-    mine: result.mine,
-    revealed: revealedCount,
-  });
+  const resultCopy = result
+    ? revealResult({
+        hit: result.hit,
+        pickLabel: result.pickLabel,
+        mine: result.mine,
+        revealed: revealedCount,
+      })
+    : null;
   const maxSplit = split.reduce((n, s) => Math.max(n, s.count), 0);
   const poolLines = poolNoteLines(poolCards);
 
@@ -95,31 +100,39 @@ export function SemiBlindReveal({
             ) : null}
           </div>
 
-          <div
-            className={cn(
-              "flex items-center gap-[10px] rounded-[13px] p-[14px_16px]",
-              result.hit
-                ? "border-[1.5px] border-gold-light bg-gold-light/14"
-                : "border border-rose/50 bg-console-card",
-            )}
-          >
-            {result.hit ? (
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gold-light text-console">
-                <Check className="size-3.5" strokeWidth={3} aria-hidden />
+          {result && resultCopy ? (
+            <div
+              className={cn(
+                "flex items-center gap-[10px] rounded-[13px] p-[14px_16px]",
+                result.hit
+                  ? "border-[1.5px] border-gold-light bg-gold-light/14"
+                  : "border border-rose/50 bg-console-card",
+              )}
+            >
+              {result.hit ? (
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gold-light text-console">
+                  <Check className="size-3.5" strokeWidth={3} aria-hidden />
+                </span>
+              ) : null}
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-[14.5px] font-bold">{resultCopy.title}</span>
+                <span
+                  className={cn(
+                    "text-[12.5px] tabular-nums",
+                    result.hit ? "text-gold-light" : "text-console-ink",
+                  )}
+                >
+                  {resultCopy.detail}
+                </span>
               </span>
-            ) : null}
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-[14.5px] font-bold">{resultCopy.title}</span>
-              <span
-                className={cn(
-                  "text-[12.5px] tabular-nums",
-                  result.hit ? "text-gold-light" : "text-console-ink",
-                )}
-              >
-                {resultCopy.detail}
-              </span>
-            </span>
-          </div>
+            </div>
+          ) : (
+            // The viewer's own bottle: not matchable, so neither a hit nor a
+            // miss — the same "Your bottle" the board shows on its row.
+            <div className="flex items-center gap-[10px] rounded-[13px] border border-background/14 bg-console-card p-[14px_16px]">
+              <span className="truncate text-[14.5px] font-bold">{YOUR_BOTTLE}</span>
+            </div>
+          )}
         </div>
 
         {/* Right rail: how the table split, the pool note, standings */}

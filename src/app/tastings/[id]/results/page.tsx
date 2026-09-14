@@ -10,11 +10,12 @@ import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { RecordView } from "../record/record-view";
 import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
 import { rankLabel, rankRows } from "@/lib/stats-math";
-import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
-import { makeWineLabeler } from "@/lib/wine-label";
+import { getTastingLeaderboard, type LeaderboardRow } from "@/lib/tasting-leaderboard";
+import { makeGlassLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
 import { LocalDateTime } from "@/components/local-date-time";
+import { viewerCanSeeStandings } from "../view-route";
 
 const CATEGORY_MAX: Record<string, number> = {
   country: 2,
@@ -70,7 +71,6 @@ export default async function ResultsPage({
     { data: regions },
     { data: grapes },
     { data: typeDesignations },
-    leaderboard,
   ] = await Promise.all([
     supabase
       .from("tasting_participants")
@@ -85,7 +85,6 @@ export default async function ResultsPage({
     supabase.from("regions").select("id, name"),
     supabase.from("grapes").select("id, name"),
     supabase.from("type_designations").select("id, name"),
-    getTastingLeaderboard(tastingId),
   ]);
 
   const nameById = new Map<string, string>();
@@ -93,11 +92,24 @@ export default async function ResultsPage({
     for (const row of list ?? []) nameById.set(row.id, row.name);
   }
 
+  // Refinement 27: an outsider never gets a board, not even an empty one.
+  // get_tasting_leaderboard returns them no rows, and getTastingLeaderboard
+  // would then list every participant on 0 — so it is not even asked, and
+  // the standings card below does not render.
+  const isHost = tasting.host_id === user.id;
+  const viewer = (participants ?? []).find((p) => p.user_id === user.id) ?? null;
+  const canSeeStandings = viewerCanSeeStandings({ isHost, viewer });
+
   const userIds = (participants ?? []).map((p) => p.user_id);
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, display_name")
-    .in("id", userIds.length > 0 ? userIds : [""]);
+  const [{ data: profiles }, leaderboard] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds.length > 0 ? userIds : [""]),
+    canSeeStandings
+      ? getTastingLeaderboard(tastingId)
+      : Promise.resolve([] as LeaderboardRow[]),
+  ]);
   const displayNameByUserId = new Map(
     (profiles ?? []).map((p) => [p.id, p.display_name]),
   );
@@ -199,7 +211,10 @@ export default async function ResultsPage({
       displayNameByUserId.get(p.user_id) ?? "Unknown",
     ]),
   );
-  const wineLabel = makeWineLabeler(
+  // "Glass N" by list order, or the contributor label in bring-your-own
+  // (MISSED-01; spec §11.3 item 7) — guest-facing, so never the host lobby's
+  // "Wine N". The jump-nav chips and the glass cards both use it.
+  const glassLabel = makeGlassLabeler(
     (wines ?? []) as {
       id: string;
       position: number;
@@ -363,7 +378,7 @@ export default async function ResultsPage({
             />
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            {(wines ?? []).map((w, i) => (
+            {(wines ?? []).map((w) => (
               <a
                 key={w.id}
                 href={`#wine-${w.id}`}
@@ -380,63 +395,66 @@ export default async function ResultsPage({
                     w.is_revealed ? "bg-primary" : "bg-muted-foreground/40",
                   )}
                 />
-                Wine {i + 1}
+                {glassLabel(w)}
               </a>
             ))}
           </div>
         </div>
       ) : null}
 
-      <Card className="overflow-hidden py-0">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
-          <CardTitle className="font-heading text-xl">Standings so far</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3">
-          {!revealStarted ? (
-            <p className="p-3 text-sm text-muted-foreground">
-              No wines revealed yet.
-            </p>
-          ) : standings.length === 0 ? (
-            <p className="p-3 text-sm text-muted-foreground">
-              No competitors yet.
-            </p>
-          ) : (
-            <ol className="flex flex-col gap-1">
-              {standings.map(({ row, rank, tied }) => (
-                <li
-                  key={row.participantId}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2",
-                    rank === 1 && "bg-gold/10",
-                  )}
-                >
-                  <span className="flex w-6 justify-center">
-                    <span className="text-sm text-muted-foreground tabular-nums">
-                      {rankLabel({ rank, tied })}
-                    </span>
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{row.name}</span>
-                    {!isSemiBlind ? (
-                      <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
-                        <span
-                          className="block h-full rounded-full bg-gold-deep"
-                          style={{
-                            width: `${maxTotal > 0 ? (row.total / maxTotal) * 100 : 0}%`,
-                          }}
-                        />
+      {/* Refinement 27: no board for an outsider, not even an empty one. */}
+      {canSeeStandings ? (
+        <Card className="overflow-hidden py-0">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
+            <CardTitle className="font-heading text-xl">Standings so far</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            {!revealStarted ? (
+              <p className="p-3 text-sm text-muted-foreground">
+                No wines revealed yet.
+              </p>
+            ) : standings.length === 0 ? (
+              <p className="p-3 text-sm text-muted-foreground">
+                No competitors yet.
+              </p>
+            ) : (
+              <ol className="flex flex-col gap-1">
+                {standings.map(({ row, rank, tied }) => (
+                  <li
+                    key={row.participantId}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2",
+                      rank === 1 && "bg-gold/10",
+                    )}
+                  >
+                    <span className="flex w-6 justify-center">
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {rankLabel({ rank, tied })}
                       </span>
-                    ) : null}
-                  </span>
-                  <span className="font-heading text-lg font-semibold tabular-nums">
-                    {isSemiBlind ? `${row.total}/${row.totalWines}` : row.total}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </CardContent>
-      </Card>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{row.name}</span>
+                      {!isSemiBlind ? (
+                        <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
+                          <span
+                            className="block h-full rounded-full bg-gold-deep"
+                            style={{
+                              width: `${maxTotal > 0 ? (row.total / maxTotal) * 100 : 0}%`,
+                            }}
+                          />
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="font-heading text-lg font-semibold tabular-nums">
+                      {isSemiBlind ? `${row.total}/${row.totalWines}` : row.total}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {revealedWines.map((wine) => {
         const answer = answerByWineId.get(wine.id);
@@ -452,7 +470,7 @@ export default async function ResultsPage({
         return (
           <Card key={wine.id} id={`wine-${wine.id}`} className="scroll-mt-6">
             <CardHeader>
-              <CardTitle className="text-lg">{wineLabel(wine)} results</CardTitle>
+              <CardTitle className="text-lg">{glassLabel(wine)} results</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="flex items-start gap-3">
@@ -616,7 +634,7 @@ export default async function ResultsPage({
                                 className={cn(
                                   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs",
                                   c.points > 0
-                                    ? "bg-[#3f5b42]/12 text-[#3f5b42]"
+                                    ? "bg-chart-3/12 text-chart-3"
                                     : "bg-destructive/10 text-destructive",
                                 )}
                                 title={c.label}
