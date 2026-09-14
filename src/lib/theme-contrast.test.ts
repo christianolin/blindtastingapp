@@ -51,6 +51,18 @@ function contrast(a: string, b: string): number {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
+/** A translucent ink composited over its ground, the way the browser paints a
+ *  `bg-success/12` chip: straight alpha in sRGB. Hex in, hex out. */
+function over(ink: string, alpha: number, ground: string): string {
+  const rgb = (hex: string) =>
+    [0, 2, 4].map((i) => parseInt(hex.trim().replace("#", "").slice(i, i + 2), 16));
+  const [a, b] = [rgb(ink), rgb(ground)];
+  return (
+    "#" +
+    a.map((v, i) => Math.round(v * alpha + b[i] * (1 - alpha)).toString(16).padStart(2, "0")).join("")
+  );
+}
+
 /** Rounded the way a report would show it, so failures read in familiar units. */
 const ratio = (t: Record<string, string>, ink: string, ground: string) =>
   Number(contrast(t[ink], t[ground]).toFixed(2));
@@ -107,6 +119,17 @@ describe.each([
     // in the app. --on-accent is fixed dark ink for exactly this.
     expect(ratio(t, "--on-accent", "--gold")).toBeGreaterThanOrEqual(4.5);
     expect(ratio(t, "--on-accent", "--gold-deep")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("the success ink clears AA on every ground it is drawn on, its own chip included", () => {
+    // A category you got, "+N" in the standings, the "locked in" line. It was a
+    // literal #3f5b42 in the play, standings and results code, which cannot
+    // follow the theme: 2.24:1 on the dark card and 2.08:1 on its own 12% chip.
+    for (const ground of ["--background", "--card", "--surface-raised"]) {
+      expect(ratio(t, "--success", ground)).toBeGreaterThanOrEqual(4.5);
+    }
+    const chip = over(t["--success"], 0.12, t["--card"]);
+    expect(Number(contrast(t["--success"], chip).toFixed(2))).toBeGreaterThanOrEqual(4.5);
   });
 
   it("the destructive colour is readable as text on both grounds", () => {

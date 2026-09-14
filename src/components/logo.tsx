@@ -19,13 +19,20 @@ const PARCHMENT = "#F5EFE3";
 
 // ...and the same colours as tokens, for the places drawn straight onto the
 // page, which have to follow the theme. In light these resolve to exactly the
-// hexes above; in dark --primary is the rose #a8425a and --gold the lighter
-// #d4af6a, both of which read on near-black.
+// hexes above; in dark --primary-ink is the indigo-family #8a87c8 (5.56:1 on
+// the page) and --gold the lighter #d4af6a, both of which read on near-black.
+//
+// INK is --primary-ink, not --primary. In light the two are the same #5c1a2b.
+// In dark --primary is a SURFACE colour (the #2b2a4f rail and filled buttons)
+// and as ink on the #1b1310 ground it measures 1.35:1, which made the wordmark
+// vanish again on /login, /signup and /j/[code]. globals.css's
+// `.dark .text-primary` rule cannot rescue it: these are inline style and SVG
+// fill values, not classes.
 //
 // This is not cosmetic. The wordmark defaulted to the literal BORDEAUX and
 // rendered #5C1A2B on the #1B1310 dark ground -- about 1.5:1, invisible -- on
 // the login and signup pages, which is the first screen anyone sees.
-const INK = "var(--primary)";
+const INK = "var(--primary-ink)";
 const ACCENT = "var(--gold)";
 const ACCENT_DEEP = "var(--gold-deep)";
 

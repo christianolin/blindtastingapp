@@ -44,6 +44,7 @@
   --color-on-accent: var(--on-accent);
   /* Flows handoff (add-wine sheet / play / host console). */
   --color-miss: var(--miss);
+  --color-success: var(--success);
   --color-console: var(--console);
   --color-console-card: var(--console-card);
   --color-console-ink: var(--console-ink);
@@ -157,6 +158,13 @@
   --console: #1b1310;
   --console-card: #241b16;
   --console-ink: #b9a98c;
+  /* The hit-green: a category you got, "+N" in the standings, the "locked in"
+     and ready lines. It was a literal #3f5b42 at six call sites in the play,
+     standings and results code -- a colour, not a role, so it could not follow
+     the theme: on the dark ground it measured 2.24:1 on --card and 2.08:1 on
+     its own 12% chip. Light keeps that exact hex (7.05:1 on --card, 5.89:1 on
+     the chip). */
+  --success: #3f5b42;
   /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the deepest live
      surface (pinned bars, header strips) and the bordeaux hover step, each
      defined for both the parchment and the dark surface below. */
@@ -235,6 +243,11 @@
   --gold-light: #d4af6a;
   --rose: #e08a76;
   --miss: #e08a76;
+  /* The hit-green on the dark ground (live screens in either theme). One sage
+     step lighter than dark --chart-3 #6c8f70, which clears --card at 4.67:1 but
+     falls to 4.00:1 on the 12% "+N" chip. #84a888: 6.92:1 on --background,
+     6.38:1 on --card, 5.65:1 on --surface-raised, 5.25:1 on the chip. */
+  --success: #84a888;
   --border-light: rgba(245, 239, 227, 0.08);
   --border-strong: rgba(245, 239, 227, 0.22);
   /* The rest of :root, completed for the dark surface. BT-D1 and the dark-mode

@@ -87,7 +87,7 @@ function AttributeSheet({
               className={cn(
                 "flex shrink-0 items-center gap-1 tabular-nums",
                 got
-                  ? "text-[#3f5b42]"
+                  ? "text-success"
                   : missed
                     ? "text-destructive"
                     : "text-muted-foreground",
@@ -976,7 +976,7 @@ export async function PlayExperience({
                   ) : null}
                 </span>
                 {row.delta > 0 ? (
-                  <span className="rounded-full bg-[#3f5b42]/12 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-[#3f5b42]">
+                  <span className="rounded-full bg-success/12 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-success">
                     +{row.delta}
                   </span>
                 ) : null}
@@ -1400,7 +1400,7 @@ export async function PlayExperience({
                           <p
                             className={cn(
                               "mb-1.5 text-xs font-medium",
-                              allReady ? "text-[#3f5b42]" : "text-muted-foreground",
+                              allReady ? "text-success" : "text-muted-foreground",
                             )}
                           >
                             {allReady ? "✓ " : ""}
@@ -1413,7 +1413,7 @@ export async function PlayExperience({
                               return (
                                 <span
                                   key={p.id}
-                                  className={ready ? "text-[#3f5b42]" : ""}
+                                  className={ready ? "text-success" : ""}
                                 >
                                   {ready ? "✓" : "○"} {nameByParticipantId.get(p.id)}
                                   {draft ? " · in progress" : ""}

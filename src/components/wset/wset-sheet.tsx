@@ -104,7 +104,10 @@ export function Row({
             <span aria-hidden style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
               ·
             </span>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary)" }}>{value}</span>
+            {/* --primary-ink, not --primary: in dark --primary is the indigo
+                surface colour and reads 1.24:1 as text on the card. The
+                `.dark .text-primary` rule cannot reach an inline style. */}
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary-ink)" }}>{value}</span>
           </>
         ) : null}
       </div>
