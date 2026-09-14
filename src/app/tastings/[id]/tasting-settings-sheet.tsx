@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Flag, Play, Trash2, UserPlus, X } from "lucide-react";
+import { Check, ChevronLeft, Flag, Play, Trash2, UserPlus, Users, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
@@ -21,9 +21,12 @@ import {
   reopenTasting,
   setSequentialGuessing,
 } from "./actions";
+import { handHosting } from "./hosting-actions";
 import type { TastingSettings } from "./settings-actions";
 import {
   deleteTastingLabel,
+  HAND_HOSTING_ROW,
+  handHostingCopy,
   MANAGE_INVITATIONS,
   ONLY_ONCE_EXISTS,
   SETTINGS_FOOTER_DRAFT,
@@ -100,7 +103,7 @@ export function TastingSettingsSheet({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [innerView, setInnerView] = useState<"main" | "invitations">("main");
+  const [innerView, setInnerView] = useState<"main" | "invitations" | "hosting">("main");
 
   const notStarted = settings.status === "DRAFT";
 
@@ -176,18 +179,55 @@ export function TastingSettingsSheet({
   }, [deleteArmedAt]);
   const deleteTapState: TwoTapState = deleteArmedAt === null ? "idle" : "armed";
 
+  // Hand hosting (spec §12.3, ledger B11, plan task BT-K1): the inner view's
+  // own picker state — who is selected, and the RPC's refusal, if any.
+  const [hostingSelection, setHostingSelection] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
+  const [hostingError, setHostingError] = useState<string | null>(null);
+  const [hostingPending, startHostingTransition] = useTransition();
+
+  function openHosting() {
+    setHostingSelection(null);
+    setHostingError(null);
+    setInnerView("hosting");
+  }
+
+  function confirmHandHosting() {
+    if (!hostingSelection) return;
+    setHostingError(null);
+    startHostingTransition(async () => {
+      const r = await handHosting(tastingId, hostingSelection.userId);
+      if (r && "error" in r) {
+        setHostingError(r.error);
+        return;
+      }
+      // Success re-routes the page: the former host gets the guest lobby,
+      // the new host the host lobby (spec §12.3 item 3).
+      close();
+      router.refresh();
+    });
+  }
+
   function close() {
     onOpenChange(false);
     setInnerView("main");
+    setHostingSelection(null);
+    setHostingError(null);
   }
 
   const header = (
     <header className="flex shrink-0 items-center gap-3 border-b border-border p-[8px_16px_12px] md:gap-[14px] md:p-[20px_24px_16px]">
-      {innerView === "invitations" ? (
+      {innerView !== "main" ? (
         <button
           type="button"
           aria-label="Back"
-          onClick={() => setInnerView("main")}
+          onClick={() => {
+            setInnerView("main");
+            setHostingSelection(null);
+            setHostingError(null);
+          }}
           className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground md:size-9"
         >
           <ChevronLeft className="size-5" />
@@ -204,10 +244,14 @@ export function TastingSettingsSheet({
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <Eyebrow size="md" className="truncate">
-          {innerView === "invitations" ? SETTINGS_TITLE : settingsEyebrow(settings.status)}
+          {innerView === "main" ? settingsEyebrow(settings.status) : SETTINGS_TITLE}
         </Eyebrow>
         <DialogTitle className={TITLE_CLASS}>
-          {innerView === "invitations" ? MANAGE_INVITATIONS : SETTINGS_TITLE}
+          {innerView === "invitations"
+            ? MANAGE_INVITATIONS
+            : innerView === "hosting"
+              ? handHostingCopy("").title
+              : SETTINGS_TITLE}
         </DialogTitle>
       </div>
       {innerView === "main" ? (
@@ -284,6 +328,17 @@ export function TastingSettingsSheet({
             >
               <UserPlus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               {MANAGE_INVITATIONS}
+            </button>
+          ) : null}
+
+          {notStarted ? (
+            <button
+              type="button"
+              onClick={openHosting}
+              className="flex min-h-11 items-center gap-2 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left text-[13px] font-semibold text-foreground transition-colors hover:bg-surface-raised md:pointer-fine:min-h-0"
+            >
+              <Users className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              {HAND_HOSTING_ROW}
             </button>
           ) : null}
 
@@ -386,8 +441,86 @@ export function TastingSettingsSheet({
     </div>
   );
 
+  const hostingBody = (
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-[14px_16px] md:p-[18px_24px]">
+      {settings.joinedParticipants.length === 0 ? (
+        <p className="text-[12.5px] leading-[1.5] text-muted-foreground">
+          No one else has joined this tasting yet.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {settings.joinedParticipants.map((p) => {
+            const selected = hostingSelection?.userId === p.userId;
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setHostingSelection({ userId: p.userId, name: p.name });
+                    setHostingError(null);
+                  }}
+                  className={cn(
+                    "flex min-h-11 w-full items-center gap-3 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left transition-colors md:pointer-fine:min-h-0",
+                    selected ? "bg-surface-raised" : "hover:bg-surface-raised",
+                  )}
+                >
+                  {p.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.avatarUrl}
+                      alt=""
+                      className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+                    />
+                  ) : (
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-raised text-[13px] font-semibold text-foreground">
+                      {p.name.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-foreground">
+                    {p.name}
+                  </span>
+                  {selected ? (
+                    <Check className="size-4 shrink-0 text-foreground" aria-hidden />
+                  ) : null}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {hostingSelection ? (
+        <div className="mt-4 flex flex-col gap-2 rounded-[10px] border border-border bg-background p-[12px_13px] md:rounded-[11px] md:p-[13px_15px]">
+          <p className="text-[12.5px] leading-[1.5] text-foreground">
+            {handHostingCopy(hostingSelection.name).line}
+          </p>
+          <Button
+            type="button"
+            disabled={hostingPending}
+            onClick={confirmHandHosting}
+            className="min-h-11 w-fit md:pointer-fine:min-h-0"
+          >
+            {hostingPending ? (
+              <>
+                <WineGlassLoader /> {handHostingCopy(hostingSelection.name).button}
+              </>
+            ) : (
+              handHostingCopy(hostingSelection.name).button
+            )}
+          </Button>
+          {hostingError ? (
+            <p role="alert" className="text-[12.5px] text-destructive">
+              {hostingError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+
   const errorLine = error ? (
-    <p role="alert" className="shrink-0 px-4 pt-3 text-[12.5px] text-miss md:px-6">
+    <p role="alert" className="shrink-0 px-4 pt-3 text-[12.5px] text-destructive md:px-6">
       {error}
     </p>
   ) : null;
@@ -428,7 +561,7 @@ export function TastingSettingsSheet({
         )}
       >
         {header}
-        {innerView === "main" ? mainBody : invitationsBody}
+        {innerView === "main" ? mainBody : innerView === "invitations" ? invitationsBody : hostingBody}
         {innerView === "main" ? errorLine : null}
         {footer}
       </DialogContent>

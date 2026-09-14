@@ -26,6 +26,10 @@ export type TastingSettings = {
   /** Glasses whose answers ending the tasting would leave hidden, in list
       order — the End confirm names them (reveal-4). */
   unrevealedGlasses: UnrevealedGlass[];
+  /** JOINED participants other than the host, for Hand hosting's picker
+      (spec §12.3 item 1, ledger B11, plan task BT-K1). Name/avatar only —
+      `transfer_tasting_host` does its own eligibility checks. */
+  joinedParticipants: { id: string; userId: string; name: string; avatarUrl: string | null }[];
 };
 
 /** Host only. A non-host or a signed-out caller gets a refusal, never a
@@ -51,7 +55,7 @@ export async function getTastingSettings(
     return { error: "Only the host can view tasting settings." };
   }
 
-  const [{ data: wines }, place, { data: friendRows }] = await Promise.all([
+  const [{ data: wines }, place, { data: friendRows }, { data: joinedRows }] = await Promise.all([
     supabase
       .from("wines")
       .select("is_revealed, reveal_step")
@@ -59,6 +63,12 @@ export async function getTastingSettings(
       .order("position"),
     getTastingPlace(supabase, tastingId),
     supabase.from("friendships").select("friend_id").eq("user_id", user.id),
+    supabase
+      .from("tasting_participants")
+      .select("id, user_id")
+      .eq("tasting_id", tastingId)
+      .eq("status", "JOINED")
+      .neq("user_id", tasting.host_id),
   ]);
 
   const friendIds = (friendRows ?? []).map((f) => f.friend_id);
@@ -67,6 +77,24 @@ export async function getTastingSettings(
     .select("id, display_name, email")
     .in("id", friendIds.length > 0 ? friendIds : [""])
     .order("display_name");
+
+  const joinedUserIds = (joinedRows ?? []).map((r) => r.user_id);
+  const { data: joinedProfiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, email, avatar_url")
+    .in("id", joinedUserIds.length > 0 ? joinedUserIds : [""]);
+  const joinedProfileById = new Map((joinedProfiles ?? []).map((p) => [p.id, p]));
+  const joinedParticipants = (joinedRows ?? [])
+    .map((r) => {
+      const profile = joinedProfileById.get(r.user_id);
+      return {
+        id: r.id,
+        userId: r.user_id,
+        name: profile?.display_name ?? profile?.email ?? "Someone",
+        avatarUrl: profile?.avatar_url ?? null,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const rows = wines ?? [];
   // Numbered by list order, not the stored position, like every other glass
@@ -104,5 +132,6 @@ export async function getTastingSettings(
     sequentialGuessing: tasting.sequential_guessing,
     friends: friendProfiles ?? [],
     unrevealedGlasses,
+    joinedParticipants,
   };
 }
