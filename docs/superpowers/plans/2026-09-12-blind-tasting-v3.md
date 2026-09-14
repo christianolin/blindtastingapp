@@ -1447,7 +1447,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - A bring-your-own tasting whose contributor row was deleted (its glass now has a null contributor and `added_by_host = false`) → not refused as a host-added glass.
 
 **Steps**
-- [ ] Dump; write; probe; dry-run (concatenated); run; tsc check.
+- [x] Dump; write; probe; dry-run (concatenated); run; tsc check.
 
 **Acceptance:** `DRY-OK 20260914104500 transfer_tasting_host`; every row matches; the tsc check is clean.
 
