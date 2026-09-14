@@ -309,7 +309,7 @@ export async function RevealView({
     : null;
 
   return (
-    <div className="flex flex-col bg-console text-background">
+    <div className="flex flex-col bg-console text-console-foreground">
       {/* Header */}
       <div className="flex items-center gap-[9px] px-4 pt-3 pb-[11px]">
         <span className="flex items-center gap-[7px]">
@@ -346,9 +346,9 @@ export async function RevealView({
                     "border border-gold-light bg-gold-light/16",
                   verdict === "miss" && "border border-rose/60 bg-rose/15",
                   verdict === "skipped" &&
-                    "border border-dashed border-background/30 text-console-ink",
+                    "border border-dashed border-console-foreground/30 text-console-ink",
                   verdict === "unscored" &&
-                    "border border-background/30 text-console-ink",
+                    "border border-console-foreground/30 text-console-ink",
                 )}
               >
                 {verdict === "hit" ? (
@@ -379,12 +379,12 @@ export async function RevealView({
                 className={cn(
                   "flex items-center gap-[11px] rounded-[11px] p-[11px_13px]",
                   r.hidden
-                    ? "border border-dashed border-background/20 opacity-55"
+                    ? "border border-dashed border-console-foreground/20 opacity-55"
                     : hit
                       ? "border-[1.5px] border-gold-light bg-gold-light/14"
                       : miss
                         ? "border border-rose/50 bg-console-card"
-                        : "border border-background/14 bg-console-card",
+                        : "border border-console-foreground/14 bg-console-card",
                 )}
               >
                 <span
@@ -450,7 +450,7 @@ export async function RevealView({
 
         {/* Standings */}
         {ranked.length > 0 ? (
-          <div className="flex flex-col gap-[9px] rounded-[14px] border border-background/14 bg-console-card p-[13px_14px]">
+          <div className="flex flex-col gap-[9px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[13px_14px]">
             <div className="flex items-baseline gap-[9px]">
               <Eyebrow size="md" className="text-console-ink">
                 Standings
@@ -479,7 +479,7 @@ export async function RevealView({
                 key={s.participantId}
                 className={cn(
                   "flex items-baseline gap-[10px] py-1.5",
-                  i < ranked.length - 1 && "border-b border-background/12",
+                  i < ranked.length - 1 && "border-b border-console-foreground/12",
                 )}
               >
                 <span

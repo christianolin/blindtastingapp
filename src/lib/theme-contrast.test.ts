@@ -80,6 +80,14 @@ describe.each([
     }
   });
 
+  it("the hover ink lifts rather than sinking, and stays above AA", () => {
+    // hover:text-primary/80 composited toward the background, which DARKENS on
+    // a dark ground -- backwards for a lift, and 3.75:1. Solid shades instead,
+    // and the direction is asserted so nobody reintroduces the translucent form.
+    expect(ratio(t, "--primary-ink-hover", "--card")).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t, "--primary-ink-hover", "--background")).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("inline links clear AA on both grounds they appear on", () => {
     // The regression this file was written for. --primary was serving as link
     // ink and measured 2.89:1 on --card in dark.
@@ -185,6 +193,24 @@ describe("the console palette, which is dark in BOTH themes", () => {
   it("keeps the wrong-answer red distinguishable on the reveal", () => {
     expect(ratio(light, "--miss", "--console")).toBeGreaterThanOrEqual(4.5);
   });
+
+  it("carries readable body ink, in BOTH themes", () => {
+    // The bug this token exists for: the console screens used text-background,
+    // which is parchment in light and #1b1310 in dark -- byte-identical to
+    // --console. 1.00:1. The host console and the reveal rendered as blank
+    // slabs. Asserted against BOTH theme objects because the console ground
+    // does not flip, so neither may its ink.
+    for (const t of [light, dark]) {
+      expect(ratio(t, "--console-foreground", "--console")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t, "--console-foreground", "--console-card")).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("never lets --background stand in for the console's ink again", () => {
+    // In dark these are the same colour. Any future code that reaches for
+    // --background to mean "the light one" on a console surface is this bug.
+    expect(dark["--background"]).toBe(dark["--console"] ?? light["--console"]);
+  });
 });
 
 describe("the dark palette's coverage of the light one", () => {
@@ -203,7 +229,7 @@ describe("the dark palette's coverage of the light one", () => {
     // must NOT flip with the theme. That is the whole point of it.
     const allowed = new Set([
       "--radius", "--miss", "--console", "--console-card", "--console-ink",
-      "--on-accent",
+      "--console-foreground", "--on-accent",
     ]);
     const missing = Object.keys(light).filter((k) => !(k in darkOnly) && !allowed.has(k));
     expect(missing).toEqual([]);

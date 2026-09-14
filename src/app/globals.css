@@ -41,12 +41,14 @@
   --color-placeholder-soft: var(--placeholder-soft);
   --color-chart-oldest: var(--chart-oldest);
   --color-primary-ink: var(--primary-ink);
+  --color-primary-ink-hover: var(--primary-ink-hover);
   --color-on-accent: var(--on-accent);
   /* Flows handoff (add-wine sheet / play / host console). */
   --color-miss: var(--miss);
   --color-console: var(--console);
   --color-console-card: var(--console-card);
   --color-console-ink: var(--console-ink);
+  --color-console-foreground: var(--console-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -148,6 +150,7 @@
      --primary, so nothing changes; the token exists because in dark it cannot
      be. See the .dark note below. */
   --primary-ink: #5c1a2b;
+  --primary-ink-hover: #7a2739;
   /* Ink for text sitting on the gold accent. Gold is a LIGHT surface in both
      themes, so its label cannot follow --foreground, which flips. */
   --on-accent: #2a211e;
@@ -157,6 +160,13 @@
   --console: #1b1310;
   --console-card: #241b16;
   --console-ink: #b9a98c;
+  /* Parchment ON the dim room, and the fourth member of the console family that
+     was missing. These screens were written before dark mode and reached for
+     --background to mean "the light colour" -- true in light, and in dark it
+     becomes #1b1310, which is EXACTLY --console. Ink and ground identical:
+     1.00:1, the host console and the reveal render as blank slabs.
+     Fixed in both themes, like the three above it. */
+  --console-foreground: #f5efe3;
   /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the deepest live
      surface (pinned bars, header strips) and the bordeaux hover step, each
      defined for both the parchment and the dark surface below. */
@@ -294,6 +304,7 @@
        #8a87c8 measures 5.13:1 on --card and 5.56:1 on --background, and stays in
        the indigo family so ink and surface still read as the same accent. */
     --primary-ink: #8a87c8;
+  --primary-ink-hover: #9b98d4;
     /* NOT overridden, deliberately: --console/--console-card/--console-ink are
        the host console's dim-room palette, already dark-surface values, and the
        reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
@@ -323,29 +334,51 @@
  * silently. This holds for code that does not exist yet.
  *
  * NOT scoped to anchors. It was, and walking the signed-in app showed that was
- * too narrow: the scores ("92 points"), the quick-action buttons ("Rate a
- * wine", "Add a bottle") and the row affordances are spans and buttons, not
- * links, and every one of them sat at 2.89:1. There is no case where --primary
- * works as a foreground on a dark ground, so the rule covers all of them.
+ * too narrow: the scores, the quick-action buttons and the row affordances are
+ * spans and buttons, not links, and every one sat at 2.89:1.
+ *
+ * INSIDE @layer utilities, AND WRAPPED IN :where(). Both halves matter, and
+ * getting them wrong is how `dark:text-foreground` on the gold points pills
+ * shipped completely inert:
+ *
+ *   unlayered  beats EVERY layered rule regardless of specificity, so an
+ *              unlayered override silently kills any dark: utility a call site
+ *              writes to opt out of it. Measured: an element with both
+ *              `text-primary` and `dark:text-foreground` computed #8a87c8.
+ *   :where()   contributes zero specificity, so this reads as (0,1,0) -- the
+ *              same as the plain `.text-primary` utility it must beat (it wins
+ *              on source order, being later in the layer) and LESS than
+ *              `dark:text-foreground`, which is `.dark\:text-foreground:is(.dark *)`
+ *              at (0,2,0) and so can now override it.
+ *
+ * The rule is the default; an explicit dark: utility at a call site is an
+ * opt-out. That is the precedence a design system wants, and it is only true
+ * with both halves.
  *
  * The :hover rule has to be here too. Tailwind's hover:text-primary/80 would
- * otherwise take over on hover and send the text DARKER than its rest state,
- * which is the same bug with an extra step. Two classes plus :hover outweighs
- * the utility's one, so this wins without !important.
+ * otherwise take over on hover and send the text DARKER than its rest state.
+ * It uses a solid shade rather than color-mix(..., transparent): the
+ * transparent form composites against whatever is behind it and measured
+ * 3.75:1 on --card, under AA -- and worse, the transparent form makes hover
+ * DARKEN on a dark ground, which is backwards for a lift. The solid shades go
+ * the right way per theme: lighter in dark (#9b98d4, 6.30:1 on --card, up from
+ * the rest state's 5.13) and deeper in light (#7a2739, 9.03:1).
  *
  * Text on the GOLD accent is the mirror image. Gold is a light surface in both
  * themes, but text-foreground flips to parchment in dark, leaving 1.81:1 on
- * the "Back to the table" and "Taste blind" buttons -- the worst contrast in
- * the app. Those labels take a fixed dark ink instead. */
-.dark .text-primary {
-  color: var(--primary-ink);
-}
-.dark .text-primary:hover {
-  color: color-mix(in oklab, var(--primary-ink) 80%, transparent);
-}
-.dark .bg-gold.text-foreground,
-.dark .bg-gold .text-foreground {
-  color: var(--on-accent);
+ * the "Back to the table" and "Taste blind" buttons. Those labels take a fixed
+ * dark ink instead. */
+@layer utilities {
+  :where(.dark) .text-primary {
+    color: var(--primary-ink);
+  }
+  :where(.dark) .text-primary:hover {
+    color: var(--primary-ink-hover);
+  }
+  :where(.dark) .bg-gold.text-foreground,
+  :where(.dark) .bg-gold .text-foreground {
+    color: var(--on-accent);
+  }
 }
 
 @layer base {

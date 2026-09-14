@@ -120,7 +120,7 @@ export type ConsoleData = {
 
 // The handoff's dark-room button pair: gold primary, outlined secondary.
 const SECONDARY =
-  "inline-flex min-h-11 items-center justify-center rounded-[10px] border border-background/25 p-[14px_20px] text-[14px] font-semibold text-background transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded-[10px] border border-console-foreground/25 p-[14px_20px] text-[14px] font-semibold text-console-foreground transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-50";
 const HEADER_BUTTON =
   "inline-flex min-h-11 items-center justify-center gap-[7px] rounded-[9px] border p-[9px_14px] text-[13px] font-semibold transition-colors md:min-h-0";
 
@@ -287,15 +287,15 @@ export function HostConsole({ data }: { data: ConsoleData }) {
   const backHref = `/tastings/${data.tastingId}`;
 
   return (
-    <div className="flex flex-1 flex-col bg-console text-background">
+    <div className="flex flex-1 flex-col bg-console text-console-foreground">
       {/* Header */}
-      <header className="flex flex-col gap-3 border-b border-background/12 px-4 py-4 md:px-[26px]">
+      <header className="flex flex-col gap-3 border-b border-console-foreground/12 px-4 py-4 md:px-[26px]">
         {/* Phone (S7b): one line — back icon, eyebrow, Pause, + Wine; no name. */}
         <div className="flex w-full items-center gap-2 md:hidden">
           <Link
             href={backHref}
             aria-label={data.finished ? "Back to the tasting" : "Tasting page"}
-            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-background/25 text-background hover:border-gold-light hover:text-gold-light"
+            className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light"
           >
             <ArrowLeft className="size-4" />
           </Link>
@@ -310,7 +310,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               type="button"
               onClick={togglePause}
               disabled={pacingPending}
-              className={cn(HEADER_BUTTON, "shrink-0 border-background/25 text-background hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+              className={cn(HEADER_BUTTON, "shrink-0 border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
             >
               <PauseIcon className="size-4" strokeWidth={2.5} />
               {data.paused ? "Resume" : "Pause"}
@@ -345,7 +345,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 type="button"
                 onClick={togglePause}
                 disabled={pacingPending}
-                className={cn(HEADER_BUTTON, "border-background/25 text-background hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
               >
                 <PauseIcon className="size-4" strokeWidth={2.5} />
                 {data.paused ? "Resume" : "Pause"}
@@ -366,7 +366,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 would otherwise be stuck on it. */}
             <Link
               href={backHref}
-              className={cn(HEADER_BUTTON, "border-background/25 text-background hover:border-gold-light hover:text-gold-light")}
+              className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light")}
             >
               <ArrowLeft className="size-4" />
               {data.finished ? "Back to the tasting" : "Tasting page"}
@@ -386,7 +386,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 <button
                   type="submit"
                   disabled={finishPending}
-                  className={cn(HEADER_BUTTON, "border-background/25 text-background hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                  className={cn(HEADER_BUTTON, "border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
                 >
                   {finishPending ? "Ending…" : "End tasting"}
                 </button>
@@ -501,7 +501,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                       return (
                         <span
                           key={step.key}
-                          className="flex items-center gap-2 rounded-[10px] border border-dashed border-background/25 p-[11px_15px] text-[13.5px] text-console-ink"
+                          className="flex items-center gap-2 rounded-[10px] border border-dashed border-console-foreground/25 p-[11px_15px] text-[13.5px] text-console-ink"
                         >
                           {step.label}
                         </span>
@@ -518,7 +518,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                     // S7b: pinned to the bottom of the phone viewport (safe-area
                     // inset), so the one obvious action stays reachable without
                     // scrolling; the laptop rail keeps it in normal flow.
-                    "max-lg:sticky max-lg:bottom-0 max-lg:z-30 max-lg:-mx-4 max-lg:border-t max-lg:border-background/12 max-lg:bg-console max-lg:px-4 max-lg:pb-[calc(12px+env(safe-area-inset-bottom))] max-lg:pt-3",
+                    "max-lg:sticky max-lg:bottom-0 max-lg:z-30 max-lg:-mx-4 max-lg:border-t max-lg:border-console-foreground/12 max-lg:bg-console max-lg:px-4 max-lg:pb-[calc(12px+env(safe-area-inset-bottom))] max-lg:pt-3",
                   )}
                 >
                   {canReveal && data.guidedLive && glass.nextStep ? (
@@ -675,7 +675,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
         </div>
 
         {/* Right rail */}
-        <aside className="flex shrink-0 flex-col gap-[14px] border-t border-background/12 bg-console-card p-[22px_16px_26px] md:p-[24px_24px_28px] lg:w-[330px] lg:border-t-0 lg:border-l">
+        <aside className="flex shrink-0 flex-col gap-[14px] border-t border-console-foreground/12 bg-console-card p-[22px_16px_26px] md:p-[24px_24px_28px] lg:w-[330px] lg:border-t-0 lg:border-l">
           <div className="flex items-baseline gap-[9px]">
             <Eyebrow size="md" className="text-console-ink">
               Standings
@@ -706,7 +706,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                     <PopoverContent
                       align="start"
                       side="top"
-                      className="w-72 border-background/20 bg-console-card p-3"
+                      className="w-72 border-console-foreground/20 bg-console-card p-3"
                     >
                       <ConsoleStandings rows={data.standings} isSemiBlind={data.isSemiBlind} />
                     </PopoverContent>
@@ -717,7 +717,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
           )}
 
           {glass !== null ? (
-            <div className="mt-auto flex flex-col gap-2 border-t border-background/12 pt-[14px]">
+            <div className="mt-auto flex flex-col gap-2 border-t border-console-foreground/12 pt-[14px]">
               <Eyebrow size="md" className="text-console-ink">
                 {/* S7b: "This glass, so far" on phones. */}
                 <span className="lg:hidden">This glass, so far</span>
@@ -758,7 +758,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               <button
                 type="submit"
                 disabled={finishPending}
-                className={cn(HEADER_BUTTON, "w-full border-background/25 text-background hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
+                className={cn(HEADER_BUTTON, "w-full border-console-foreground/25 text-console-foreground hover:border-gold-light hover:text-gold-light disabled:opacity-50")}
               >
                 {finishPending ? "Ending…" : "End tasting"}
               </button>
