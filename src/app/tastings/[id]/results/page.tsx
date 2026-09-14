@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronDown, Crown, Medal, Wine } from "lucide-react";
+import { ChevronDown, Wine } from "lucide-react";
 import { AnswerFacts } from "../answer-facts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { eligibleForGlass, type EligibilityParticipant } from "@/lib/glass-eligibility";
+import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
+import { RecordView } from "../record/record-view";
+import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
 import { rankLabel, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
-import { Badge } from "@/components/ui/badge";
 import { LocalDateTime } from "@/components/local-date-time";
 
 const CATEGORY_MAX: Record<string, number> = {
@@ -25,11 +28,10 @@ const CATEGORY_MAX: Record<string, number> = {
 };
 
 /**
- * Standings plus a per-wine breakdown. The page is reachable while a tasting
- * is still running (locked-in's Standings link, semi-blind /play), so it only
- * speaks of a finished tasting — "Completed", "Final", the crown and the
- * medals — once the tasting is CLOSED; before that the heading reads
- * "Standings so far".
+ * IN_PROGRESS: "Standings so far" plus a per-wine breakdown, reachable while
+ * a tasting is still running (locked-in's Standings link, semi-blind /play).
+ * CLOSED redirects to the record (S13, BT-R3) instead — this component no
+ * longer speaks of a finished tasting at all.
  */
 export default async function ResultsPage({
   params,
@@ -52,6 +54,12 @@ export default async function ResultsPage({
     .maybeSingle();
   if (!tasting) {
     notFound();
+  }
+  // CLOSED → the record (S13, BT-R3): every wine, named, viewer-scoped. This
+  // page's own standings-plus-breakdown layout below stays only for an
+  // IN_PROGRESS tasting ("Standings so far", T7).
+  if (tasting.status === "CLOSED") {
+    return <RecordView tastingId={tastingId} />;
   }
   const isSemiBlind = tasting.reveal_mode === "SEMI_BLIND";
 
@@ -107,11 +115,48 @@ export default async function ResultsPage({
     revealedWineIds.length > 0
       ? await supabase.from("wine_answers").select("*").in("wine_id", revealedWineIds)
       : { data: [] };
-  const { data: guesses } =
-    revealedWineIds.length > 0
-      ? await supabase.from("guesses").select("*").in("wine_id", revealedWineIds)
-      : { data: [] };
   const answerByWineId = new Map((answers ?? []).map((a) => [a.wine_id, a]));
+
+  // Blind: the explicit `guesses` column list (spec §10.4 (e)), never "*" —
+  // the picked-wine column is not in it. Semi-blind:
+  // `get_semi_blind_revealed_picks` instead of reading `guesses` directly —
+  // it resolves each pick's label server-side, so a wine id never has to
+  // cross to this page at all (rule 1: a wine id maps to a pour position).
+  // Its rows carry no eligibility filter of their own (a host-provides
+  // host's blank row, a contributor's own, a non-JOINED row), so this
+  // filters with `eligibleForGlass`, the same rule the record loader
+  // applies (refinement 25).
+  const { data: guesses } =
+    !isSemiBlind && revealedWineIds.length > 0
+      ? await supabase.from("guesses").select(GUESS_READ_COLUMNS).in("wine_id", revealedWineIds)
+      : { data: [] };
+
+  const semiBlindPicksByWineId = new Map<string, SemiBlindRevealedPick[]>();
+  if (isSemiBlind && revealedWineIds.length > 0) {
+    const eligibilityParticipants: EligibilityParticipant[] = (participants ?? []).map((p) => ({
+      id: p.id,
+      userId: p.user_id,
+      status: p.status,
+      joinedAt: null,
+    }));
+    const contributorByWineId = new Map(
+      (wines ?? []).map((w) => [w.id, w.contributor_participant_id]),
+    );
+    const picks = await getSemiBlindRevealedPicks(tastingId);
+    for (const pick of picks) {
+      const eligible = eligibilityParticipants.some((p) =>
+        eligibleForGlass(
+          p,
+          { contributorParticipantId: contributorByWineId.get(pick.glassWineId) ?? null, isRevealed: true, revealedAt: null },
+          { wineSource: tasting.wine_source, hostId: tasting.host_id },
+        ) && p.id === pick.participantId,
+      );
+      if (!eligible) continue;
+      const list = semiBlindPicksByWineId.get(pick.glassWineId) ?? [];
+      list.push(pick);
+      semiBlindPicksByWineId.set(pick.glassWineId, list);
+    }
+  }
 
   // A wine picked from the catalog carries no photo on its own answer row, so
   // fall back to the linked catalog entry's label photo.
@@ -182,8 +227,11 @@ export default async function ResultsPage({
     }),
     (r) => r.total,
   );
-  // The finished-state wording only once the host has ended the tasting.
-  const completed = tasting.status === "CLOSED";
+  // This page only ever renders for a still-running tasting now (CLOSED
+  // returns the record above), so its "Completed"/"Final" wording — kept
+  // while this same component also covered a finished tasting, before
+  // BT-R3 split that off into the record — is gone below; only "Standings
+  // so far" remains.
   // Standings show as soon as any glass has started revealing — the
   // leaderboard counts partly revealed glasses, not just fully revealed ones.
   const revealStarted = (wines ?? []).some(
@@ -273,7 +321,6 @@ export default async function ResultsPage({
           <p className="mt-1.5 text-muted-foreground">{tasting.description}</p>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          {completed ? <Badge>Completed</Badge> : null}
           <span className="text-muted-foreground">
             {wineCount} {wineCount === 1 ? "wine" : "wines"} · {participantCount}{" "}
             {participantCount === 1 ? "participant" : "participants"}
@@ -305,20 +352,9 @@ export default async function ResultsPage({
       {revealedWines.length > 0 ? (
         <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3">
           <div className="flex items-baseline justify-between gap-2">
-            {completed ? (
-              <>
-                <span className="font-heading text-sm font-semibold">
-                  Completed
-                </span>
-                <span className="text-sm tabular-nums text-muted-foreground">
-                  {progressPct}%
-                </span>
-              </>
-            ) : (
-              <span className="font-heading text-sm font-semibold tabular-nums">
-                {progressPct}% revealed
-              </span>
-            )}
+            <span className="font-heading text-sm font-semibold tabular-nums">
+              {progressPct}% revealed
+            </span>
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
@@ -353,10 +389,7 @@ export default async function ResultsPage({
 
       <Card className="overflow-hidden py-0">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 bg-gradient-to-br from-primary/8 to-transparent py-4">
-          <CardTitle className="font-heading text-xl">
-            {completed ? "Standings" : "Standings so far"}
-          </CardTitle>
-          {completed ? <Badge variant="secondary">Final</Badge> : null}
+          <CardTitle className="font-heading text-xl">Standings so far</CardTitle>
         </CardHeader>
         <CardContent className="p-3">
           {!revealStarted ? (
@@ -378,23 +411,9 @@ export default async function ResultsPage({
                   )}
                 >
                   <span className="flex w-6 justify-center">
-                    {completed && rank <= 3 ? (
-                      <>
-                        {rank === 1 ? (
-                          <Crown className="size-4 text-gold-deep" aria-hidden />
-                        ) : (
-                          <Medal
-                            className="size-4 text-muted-foreground"
-                            aria-hidden
-                          />
-                        )}
-                        <span className="sr-only">{rankLabel({ rank, tied })}</span>
-                      </>
-                    ) : (
-                      <span className="text-sm text-muted-foreground tabular-nums">
-                        {rankLabel({ rank, tied })}
-                      </span>
-                    )}
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {rankLabel({ rank, tied })}
+                    </span>
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{row.name}</span>
@@ -426,6 +445,9 @@ export default async function ResultsPage({
           .sort(
             (a, b) => (b.total_points ?? 0) - (a.total_points ?? 0),
           );
+        const winePicks = (semiBlindPicksByWineId.get(wine.id) ?? [])
+          .slice()
+          .sort((a, b) => Number(b.correct) - Number(a.correct));
         if (!answer) return null;
         return (
           <Card key={wine.id} id={`wine-${wine.id}`} className="scroll-mt-6">
@@ -529,7 +551,36 @@ export default async function ResultsPage({
                 </Link>
               ) : null}
 
-              {wineGuesses.length === 0 ? (
+              {isSemiBlind ? (
+                winePicks.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No one matched this wine.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {winePicks.map((p) => (
+                      <div
+                        key={`${p.glassWineId}:${p.participantId}`}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border/70 p-3"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium">
+                            {displayNameByParticipantId.get(p.participantId) ?? "Unknown"}
+                          </span>
+                          {!p.correct && p.pickLabel ? (
+                            <span className="block truncate text-xs text-muted-foreground">
+                              Guessed: {p.pickLabel}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="font-heading text-base font-semibold tabular-nums">
+                          {p.correct ? "✓ correct" : "✗ wrong"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : wineGuesses.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No one guessed this wine.
                 </p>
@@ -552,36 +603,12 @@ export default async function ResultsPage({
                           </span>
                           <span className="flex items-center gap-2">
                             <span className="font-heading text-base font-semibold tabular-nums">
-                              {isSemiBlind
-                                ? g.total_points
-                                  ? "✓ correct"
-                                  : "✗ wrong"
-                                : `${g.total_points ?? 0} pts`}
+                              {g.total_points ?? 0} pts
                             </span>
                             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                           </span>
                         </summary>
                         <div className="px-3 pb-3">
-                        {isSemiBlind ? (
-                          <p className="text-sm text-muted-foreground">
-                            {g.guessed_wine_id
-                              ? `Guessed: ${
-                                  answerByWineId.get(g.guessed_wine_id)
-                                    ? [
-                                        name(
-                                          answerByWineId.get(g.guessed_wine_id)!
-                                            .country_id as string,
-                                        ),
-                                        name(
-                                          answerByWineId.get(g.guessed_wine_id)!
-                                            .producer_id as string,
-                                        ),
-                                      ].join(" · ")
-                                    : "another wine"
-                                }`
-                              : "No match submitted"}
-                          </p>
-                        ) : (
                           <div className="flex flex-wrap gap-1.5">
                             {breakdown(g).map((c) => (
                               <span
@@ -601,7 +628,6 @@ export default async function ResultsPage({
                               </span>
                             ))}
                           </div>
-                        )}
                         </div>
                       </details>
                     );
