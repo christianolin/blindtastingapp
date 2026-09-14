@@ -619,6 +619,19 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                   {showRevealAll || canSkip ? (
                     <div className="flex flex-wrap items-center gap-[10px] max-lg:grid max-lg:w-full max-lg:grid-cols-2">
                       {showRevealAll ? (
+                        <>
+                        {/* The full-reveal form above is not rendered while a
+                            guided glass still has steps, which is exactly when
+                            this button shows, so it had no form to submit and a
+                            tap did nothing. It gets its own hidden one. */}
+                        <form
+                          id={fullFormId}
+                          action={fullAction}
+                          onSubmit={() => setDwellOn(glass.wineId)}
+                          hidden
+                        >
+                          <input type="hidden" name="wine_id" value={glass.wineId} />
+                        </form>
                         <button
                           type="submit"
                           form={fullFormId}
@@ -638,6 +651,7 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                         >
                           {fullPending ? "Revealing…" : revealEverythingLabel(tapState)}
                         </button>
+                        </>
                       ) : null}
 
                       {canSkip && data.skipTo ? (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aromaVisibleFor } from "./vocab";
+import { aromaVisibleFor, colourFromHue } from "./vocab";
 
 // A-07 (v3-groups.json group 5): a hidden-glass note's colour is unknown
 // until the reveal. Before the fix, WsetSheet coerced `wine.colour` to "RED"
@@ -8,6 +8,24 @@ import { aromaVisibleFor } from "./vocab";
 // as red-only. `aromaVisibleFor` is the pure filter AromaPicker calls per
 // term — colour null/undefined (unknown family) must behave like ROSE/ORANGE
 // and show everything, the same as a known non-RED/WHITE colour already does.
+describe("colourFromHue: a hidden glass's picked hue sets the aroma colour", () => {
+  it("names the one colour row that holds the hue", () => {
+    expect(colourFromHue("GOLD")).toBe("WHITE");
+    expect(colourFromHue("LEMON_GREEN")).toBe("WHITE");
+    expect(colourFromHue("SALMON")).toBe("ROSE");
+    expect(colourFromHue("RUBY")).toBe("RED");
+  });
+  it("names none for brown, which sits in the white and the red row, or no pick", () => {
+    expect(colourFromHue("BROWN")).toBeNull();
+    expect(colourFromHue(null)).toBeNull();
+  });
+  it("then filters the aromas like a known colour", () => {
+    expect(aromaVisibleFor(colourFromHue("GOLD"), "Red fruit", "strawberry")).toBe(false);
+    expect(aromaVisibleFor(colourFromHue("RUBY"), "Citrus fruit", "lemon")).toBe(false);
+    expect(aromaVisibleFor(colourFromHue("RUBY"), "Red fruit", "strawberry")).toBe(true);
+  });
+});
+
 describe("aromaVisibleFor: hidden-glass (unknown colour) shows every group", () => {
   it("shows white-only clusters (green/citrus/stone/tropical fruit) when colour is unknown", () => {
     expect(aromaVisibleFor(null, "Green fruit", "green apple")).toBe(true);

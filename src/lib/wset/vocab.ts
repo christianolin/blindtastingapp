@@ -272,6 +272,16 @@ export function aromaVisibleFor(
   return a === "BOTH" || a === colour;
 }
 
+// The wine colour a picked appearance hue implies, for a note whose wine colour
+// is not known yet (a hidden glass): the one colour row among white, rosé and red
+// that holds the hue. BROWN sits in both the white and the red row, so it names
+// no colour and the aroma picker keeps showing everything.
+export function colourFromHue(hue: ColourHue | null | undefined): WineColour | null {
+  if (!hue) return null;
+  const rows = (["WHITE", "ROSE", "RED"] as const).filter((c) => HUES_BY_COLOUR[c].includes(hue));
+  return rows.length === 1 ? rows[0] : null;
+}
+
 // Per-section "N of M rated" progress, driving the handoff's done/total
 // counters. Required fields come from the spec's Validation section:
 // Appearance (3) = clarity + appearance intensity + colour hue; Nose (4) =

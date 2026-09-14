@@ -14,6 +14,7 @@ import {
   FORTIFIED_ALCOHOL_STOPS,
   BODY_STOPS,
   FINISH_STOPS,
+  colourFromHue,
   sectionProgress,
 } from "@/lib/wset/vocab";
 import {
@@ -624,7 +625,7 @@ export function WsetSheet({
               <SnapSlider stops={DEVELOPMENT_STOPS} labels={L} value={state.development} onChange={(v) => set("development", v)} />
             </Row>
             <Row wide label={t("aroma_characteristics")} sub={t("select_all")}>
-              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour} sheetTitle={t("aroma_characteristics")} lang={lang} />
+              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour ?? colourFromHue(state.colourHue)} sheetTitle={t("aroma_characteristics")} lang={lang} />
             </Row>
           </SectionCard>
           <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "palate" && "hidden")}>
@@ -677,7 +678,7 @@ export function WsetSheet({
                 selectedIds={state.palateTermIds}
                 onChange={(ids) => set("palateTermIds", ids)}
                 copyFrom={{ label: t("copy_from_nose"), ids: state.noseTermIds }}
-                colour={wine.colour}
+                colour={wine.colour ?? colourFromHue(state.colourHue)}
                 sheetTitle={t("flavour_characteristics")}
                 lang={lang}
               />
