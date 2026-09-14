@@ -27,7 +27,7 @@ export function ConsoleStandings({
       {shown.map(({ row, rank, tied }) => (
         <li
           key={row.participantId}
-          className="flex items-baseline gap-[10px] border-b border-background/10 py-[9px] last:border-b-0"
+          className="flex items-baseline gap-[10px] border-b border-console-foreground/10 py-[9px] last:border-b-0"
         >
           <span
             className={cn(

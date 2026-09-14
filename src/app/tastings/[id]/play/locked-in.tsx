@@ -91,7 +91,7 @@ export type LockedInData = {
 };
 
 const LOCKED_CARD =
-  "flex flex-col gap-[10px] rounded-[14px] border border-background/14 bg-console-card p-[14px]";
+  "flex flex-col gap-[10px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[14px]";
 
 /** "Maja is still deciding." / "Maja and Gustav are still deciding." /
  *  "Maja, Gustav and 2 others are still deciding." */
@@ -231,14 +231,14 @@ export function LockedIn({
           ) : p.state === "locked" ? (
             <span
               key={p.id}
-              className="flex items-center gap-[6px] rounded-full bg-background/10 px-[11px] py-[5px] text-[12.5px]"
+              className="flex items-center gap-[6px] rounded-full bg-console-foreground/10 px-[11px] py-[5px] text-[12.5px]"
             >
               {p.name} ✓
             </span>
           ) : (
             <span
               key={p.id}
-              className="flex items-center gap-[6px] rounded-full border border-dashed border-background/30 px-[11px] py-[5px] text-[12.5px] text-console-ink"
+              className="flex items-center gap-[6px] rounded-full border border-dashed border-console-foreground/30 px-[11px] py-[5px] text-[12.5px] text-console-ink"
             >
               {p.name}…
             </span>
@@ -258,7 +258,7 @@ export function LockedIn({
         onClick={change}
         disabled={busy}
         className={cn(
-          "flex min-h-11 items-center gap-2 rounded-[9px] border border-background/28 px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-60",
+          "flex min-h-11 items-center gap-2 rounded-[9px] border border-console-foreground/28 px-[14px] py-[9px] text-[13px] font-semibold transition-colors hover:border-gold-light hover:text-gold-light disabled:opacity-60",
           className,
         )}
       >
@@ -279,7 +279,7 @@ export function LockedIn({
         <span
           key={i}
           className={cn(
-            "max-w-full truncate rounded-full border border-background/20 px-[11px] py-[5px] text-[12.5px]",
+            "max-w-full truncate rounded-full border border-console-foreground/20 px-[11px] py-[5px] text-[12.5px]",
             chip.muted && "text-console-ink",
           )}
         >
@@ -297,9 +297,9 @@ export function LockedIn({
   );
 
   return (
-    <div className="flex flex-col bg-console text-background">
+    <div className="flex flex-col bg-console text-console-foreground">
       {/* Header */}
-      <div className="flex items-center gap-[11px] border-b border-background/12 px-4 pt-3 pb-[11px]">
+      <div className="flex items-center gap-[11px] border-b border-console-foreground/12 px-4 pt-3 pb-[11px]">
         <span className="flex min-w-0 flex-1 flex-col">
           <Eyebrow size="md" className="truncate text-console-ink">
             {data.eyebrow}
@@ -309,7 +309,7 @@ export function LockedIn({
           </span>
         </span>
         {data.rankChip ? (
-          <span className="shrink-0 rounded-full border border-background/25 px-[10px] py-[5px] text-[11px] font-semibold text-gold-light lining-nums tabular-nums">
+          <span className="shrink-0 rounded-full border border-console-foreground/25 px-[10px] py-[5px] text-[11px] font-semibold text-gold-light lining-nums tabular-nums">
             {ordinal(data.rankChip.rank)} · {data.rankChip.points} pts
           </span>
         ) : null}
@@ -339,7 +339,7 @@ export function LockedIn({
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
-              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-background/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
+              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-console-foreground/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
             >
               <span className="flex-1">Standings</span>
               <ChevronRight className="size-4 text-gold-light" aria-hidden />
@@ -408,7 +408,7 @@ export function LockedIn({
             <a
               href={data.standingsHref}
               onClick={onStandingsClick}
-              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-background/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
+              className="flex min-h-11 items-center gap-[10px] rounded-[12px] border border-console-foreground/14 bg-console-card p-[13px_14px] text-[13.5px] transition-colors hover:border-gold-light/60"
             >
               <span className="flex-1">{data.standingsLabel}</span>
               <ChevronRight className="size-4 text-gold-light" aria-hidden />
