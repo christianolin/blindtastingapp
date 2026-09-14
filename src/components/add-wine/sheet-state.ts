@@ -283,6 +283,9 @@ export type SheetAction =
 type ItemStatus = ScanItem["status"];
 
 const IN_PROGRESS: readonly ItemStatus[] = ["uploading", "reading"];
+
+/** The row label when the account has spent its label reads (scan/actions.ts's "too-many"). */
+const SCAN_QUOTA_LABEL = "No label scans left right now — add it by hand";
 /** Written to a flight, a cellar or the catalog: these rows stay listed. */
 const WRITTEN: readonly ItemStatus[] = ["added", "incomplete"];
 /** Rule 7: what closing would throw away. */
@@ -1513,6 +1516,12 @@ export function itemRowCopy(item: ScanItem, destination: AddWineDestination | nu
       // nothing is written, and it can be fixed or removed (rule 7).
       return { tone: "pending", label: gapsLabel(item, itemGaps(item)), detail: item.error, actions: ["fix", "remove"] };
     case "failed":
+      // "too-many" is the account's own quota, not a bad photo or a busy model:
+      // Retry cannot succeed until the window moves, so it is not offered and
+      // the copy says what will work instead (quota.ts).
+      if (item.error === "too-many") {
+        return { tone: "failed", label: SCAN_QUOTA_LABEL, detail: null, actions: ["remove"] };
+      }
       return { tone: "failed", label: "Couldn't read this photo", detail: null, actions: ["retry", "remove"] };
     case "uploading":
     case "reading":

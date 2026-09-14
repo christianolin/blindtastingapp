@@ -2598,3 +2598,26 @@ describe("preselect from the record (S13c, BT-R5)", () => {
     expect(run(s, { type: "back" }).view).toBe("desktop");
   });
 });
+
+// The quota refusal is the one failure Retry cannot fix: it is the account's
+// own spend, not a bad photo or a busy model (src/lib/label-scan/quota.ts).
+describe("itemRowCopy: a scan quota refusal", () => {
+  const item = (o: Partial<ScanItem>): ScanItem => ({
+    id: "i", photoUrl: "blob:x", blob: null, imagePath: null, status: "reading",
+    read: null, draft: null, added: null, error: null, ...o,
+  });
+
+  it("does not offer Retry, and says what does work", () => {
+    const row = itemRowCopy(item({ status: "failed", error: "too-many" }), null);
+    expect(row.actions).toEqual(["remove"]);
+    expect(row.label).toMatch(/by hand/);
+  });
+
+  it("leaves every other failure retryable", () => {
+    for (const error of ["busy", "network", "not-a-label", "service", null]) {
+      const row = itemRowCopy(item({ status: "failed", error }), null);
+      expect(row.actions, String(error)).toEqual(["retry", "remove"]);
+      expect(row.label, String(error)).toBe("Couldn't read this photo");
+    }
+  });
+});
