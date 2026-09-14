@@ -116,8 +116,31 @@
   --accent: #efe2c0;
   --accent-foreground: #2a211e;
   --destructive: #a8412c;
-  --border: #e0d2b4;
-  --input: #e0d2b4;
+  /* The light divider scale, raised to match what dark got. It measured
+     1.08 / 1.31 / 1.36 against the page -- flatter AND fainter than dark's, and
+     --border-strong sat six hundredths above --border, so the "strong" step was
+     not a step at all.
+
+       --border-light  #cbb992  1.68  the quiet rule between list rows.
+       --border        #a18342  3.14  the default edge: outline buttons, card
+                                      boundaries, and the hand-rolled fields in
+                                      the new-tasting flow, which use this and
+                                      not --input. Clears the 3:1 a control's
+                                      shape takes, measured on the page, the
+                                      darkest ground it lands on.
+       --border-strong #8d7a52  3.64  a real emphasis step now.
+
+     Same hue in every case -- only lightness moved, so the parchment character
+     is intact. */
+  --border: #a18342;
+  /* Darkened from #e0d2b4. The dark side went to 3.68:1 when --input was
+     raised there, and leaving light at 1.40:1 made the same field
+     unidentifiable in the other theme -- and it is worse in light, because the
+     white fill is only 1.07:1 from the page, so neither the fill nor the edge
+     says "there is a field here". 3.22:1 on --background, 3.45 on --card,
+     3.69 on --surface-raised. Only --input: the divider scale below is
+     untouched in light. */
+  --input: #9f8142;
   --ring: #c3a25b;
   --gold: #c3a25b;
   --gold-deep: #b78e42;
@@ -128,8 +151,8 @@
   --gold-light: #d4af6a;
   --gold-dark: #6e5416;
   --live: #c6543f;
-  --border-light: #f0e6d1;
-  --border-strong: #dcceb0;
+  --border-light: #cbb992;
+  --border-strong: #8d7a52;
   --ink-photo: #5a4b3c;
   --ink-caption: #6b5b45;
   /* Darkened from #a79574 / #c9b896, which were 2.55:1 and 1.70:1 on the
@@ -198,7 +221,7 @@
   --sidebar-primary-foreground: #f5efe3;
   --sidebar-accent: #efe2c0;
   --sidebar-accent-foreground: #2a211e;
-  --sidebar-border: #e0d2b4;
+  --sidebar-border: #a18342;
   --sidebar-ring: #c3a25b;
 }
 
@@ -258,7 +281,21 @@
      somebody has to read to know why the thing did not happen. #d9705c clears
      AA on all three dark grounds. Light's #a8412c is 5.68:1 and unchanged. */
   --destructive: #d9705c;
-    --border: rgba(245, 239, 227, 0.14);
+    /* The divider scale, raised. It read 1.24 / 1.49 / 1.95 against --card,
+     which is a hairline you cannot see: an outline button had no outline and a
+     card had no edge on a ground only 1.13:1 away from it.
+
+       --border-light  /22  1.89  decorative rules between list rows. Stays the
+                             quiet step; a separator is not a control and does
+                             not owe 3:1.
+       --border        /38  3.03  the default edge, and the one that draws
+                             outline buttons and card boundaries, so it takes
+                             the 3:1 WCAG 1.4.11 asks of a control's shape --
+                             measured on the worst of --card, --background,
+                             --surface-raised and the --primary rail.
+       --border-strong /52  4.35  the emphasis step, now clearly above the
+                             default rather than a third of a point away. */
+  --border: rgba(245, 239, 227, 0.38);
     /* Raised from 0.16. --input is the border of a text field, and a border is
      how you know a text field is there at all -- WCAG 1.4.11 asks 3:1 for the
      visual information that identifies a control. At 0.16 it composited to
@@ -291,8 +328,8 @@
        falls to 4.00:1 on the 12% "+N" chip. #84a888: 6.92:1 on --background,
        6.38:1 on --card, 5.65:1 on --surface-raised, 5.25:1 on the chip. */
     --success: #84a888;
-    --border-light: rgba(245, 239, 227, 0.08);
-    --border-strong: rgba(245, 239, 227, 0.22);
+    --border-light: rgba(245, 239, 227, 0.22);
+    --border-strong: rgba(245, 239, 227, 0.52);
     /* The rest of :root, completed for the dark surface. BT-D1 and the dark-mode
        toggle landed at the same time and covered overlapping ground: where both
        set a token BT-D1's value stands, because it is the handoff's and these
@@ -349,7 +386,7 @@
     --sidebar-primary-foreground: #f5efe3;
     --sidebar-accent: #3f3225;
     --sidebar-accent-foreground: #f5efe3;
-    --sidebar-border: rgba(245, 239, 227, 0.14);
+    --sidebar-border: rgba(245, 239, 227, 0.38);
     --sidebar-ring: #d4af6a;
   }
 }
