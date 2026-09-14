@@ -289,6 +289,16 @@
   animation: rise-in 0.25s 0.15s ease both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in {
+    animation: none;
+  }
+  .link-hint.is-pending {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* WSET tasting-sheet attribute rows: label above its control at every width —
    the old 150px desktop label column spent a third of the row on whitespace.
    Desktop density comes from .wset-pair putting two rows side by side. */
