@@ -84,10 +84,13 @@ export function AppSidebar({
   // Portaled to document.body for the same reason as MobileNav: an ancestor
   // with backdrop-blur (the header) becomes the containing block for `fixed`
   // descendants, so an inline `fixed inset-0` would not cover the page.
+  // The --ring pin sits on this overlay root rather than the panel, so the
+  // backdrop's "Close menu" button, which sits beside the panel, keeps the
+  // rail's focus gold in every theme as well.
   const drawer =
     drawerOpen && typeof document !== "undefined"
       ? createPortal(
-          <div className="fixed inset-0 z-50 xl:hidden">
+          <div className="fixed inset-0 z-50 xl:hidden [--ring:var(--rail-accent)]">
             <button
               type="button"
               aria-label="Close menu"
@@ -98,7 +101,7 @@ export function AppSidebar({
               role="dialog"
               aria-modal="true"
               aria-label="Menu"
-              className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-60 flex-col bg-rail text-rail-foreground shadow-xl duration-200 [--ring:var(--rail-accent)]"
+              className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-60 flex-col bg-rail text-rail-foreground shadow-xl duration-200"
             >
               <SidebarBody
                 variant="full"
@@ -120,7 +123,8 @@ export function AppSidebar({
           Painted with the --rail tokens, never --primary: the menu is the same
           colour in every theme (owner, 2026-09-14). Pinning --ring keeps the
           focus outline, which globals.css draws from --ring on every element,
-          off the theme's gold as well. The drawer above does the same. */}
+          off the theme's gold as well. The drawer above pins it on its whole
+          overlay, backdrop included. */}
       <aside className="hidden h-full shrink-0 flex-col bg-rail text-rail-foreground md:flex md:w-[60px] xl:w-60 [--ring:var(--rail-accent)]">
         <SidebarBody
           variant="full"

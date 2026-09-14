@@ -1,5 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { BlindrMark } from "../components/logo";
 
 // Contrast guards on the palette itself, because nothing else in the build has
 // an opinion about it. tsc, lint and the component tests were all green while
@@ -371,11 +373,119 @@ describe("the live palette on live surfaces, under a light AND a dark root (spec
   });
 });
 
+// The source guards below read the code the way TypeScript parses it, not as
+// text. A text scan cannot say WHICH element a class or attribute sits on, and
+// it is fooled by prose: the first menu guard matched `outline-ring/50` inside
+// a comment. Review round 2 of the owner's theme decisions showed what the text
+// scans let through: the logo's accent back on --gold, one drawer's ring pin
+// dropped, bg-chart-1 or a dark: variant on the rail, data-live moved to a
+// different element or given the opposite condition. Each now fails.
+
+type Tag = ts.JsxOpeningElement | ts.JsxSelfClosingElement;
+
+const parsedSources = new Map<string, ts.SourceFile>();
+
+function parseSource(file: string): ts.SourceFile {
+  let source = parsedSources.get(file);
+  if (!source) {
+    const kind = file.endsWith(".tsx")
+      ? ts.ScriptKind.TSX
+      : file.endsWith(".ts")
+        ? ts.ScriptKind.TS
+        : file.endsWith(".jsx")
+          ? ts.ScriptKind.JSX
+          : ts.ScriptKind.JS;
+    source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, kind);
+    parsedSources.set(file, source);
+  }
+  return source;
+}
+
+function descendants(node: ts.Node): ts.Node[] {
+  const found: ts.Node[] = [];
+  const visit = (n: ts.Node) => {
+    found.push(n);
+    n.forEachChild(visit);
+  };
+  visit(node);
+  return found;
+}
+
+/** The text of a string or of a template piece; null for any other node. */
+function literalText(node: ts.Node): string | null {
+  return ts.isStringLiteral(node) ||
+    ts.isNoSubstitutionTemplateLiteral(node) ||
+    ts.isTemplateHead(node) ||
+    ts.isTemplateMiddle(node) ||
+    ts.isTemplateTail(node)
+    ? node.text
+    : null;
+}
+
+const tokensOf = (text: string) => text.split(/\s+/).filter(Boolean);
+
+function tagOf(node: ts.Node): Tag | null {
+  if (ts.isJsxElement(node)) return node.openingElement;
+  return ts.isJsxSelfClosingElement(node) ? node : null;
+}
+
+function tagsIn(source: ts.SourceFile): Tag[] {
+  return descendants(source)
+    .map(tagOf)
+    .filter((tag): tag is Tag => tag !== null);
+}
+
+function attribute(tag: Tag, name: string): ts.JsxAttribute | undefined {
+  return tag.attributes.properties.find(
+    (p): p is ts.JsxAttribute => ts.isJsxAttribute(p) && p.name.getText() === name,
+  );
+}
+
+/** Every class token written into an element's className, however it is composed. */
+function classTokens(tag: Tag): string[] {
+  const value = attribute(tag, "className")?.initializer;
+  return value ? descendants(value).flatMap((n) => tokensOf(literalText(n) ?? "")) : [];
+}
+
+/** `file:line <Tag>`, so a failure names the element. */
+function where(tag: Tag): string {
+  const source = tag.getSourceFile();
+  const line = source.getLineAndCharacterOfPosition(tag.getStart()).line + 1;
+  return `${source.fileName}:${line} <${tag.tagName.getText()}>`;
+}
+
+/** A class token's variants (hover:, md:, dark:) and the utility after them. */
+function splitClass(token: string): { variants: string[]; utility: string } {
+  const variants: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of token) {
+    if (ch === "[" || ch === "(") depth++;
+    else if (ch === "]" || ch === ")") depth--;
+    if (ch === ":" && depth === 0) {
+      variants.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  return { variants, utility: current.replace(/^!|!$/g, "").replace(/^-/, "") };
+}
+
 describe("the menu rail, which never changes colour (owner, 2026-09-14)", () => {
   // "Why is the menu blue???? ... And the menu should never change." The rail
   // was a bg-primary panel, and the dark theme's --primary is indigo.
   const RAIL = ["--rail", "--rail-foreground", "--rail-accent", "--rail-accent-deep"];
-  const NAV = ["src/components/app-sidebar.tsx", "src/components/mobile-nav.tsx"];
+  // Each nav file, and how many rail panels it paints: the aside (which holds
+  // both the full and the 60px body) and the tablet drawer; the phone drawer.
+  const NAV_PANELS: Record<string, number> = {
+    "src/components/app-sidebar.tsx": 2,
+    "src/components/mobile-nav.tsx": 1,
+  };
+  const NAV = Object.keys(NAV_PANELS);
+  // outline-ring/50 sits on every element and reads --ring on the element
+  // itself, so pinning --ring keeps focus outlines on the rail's gold.
+  const RING_PIN = "[--ring:var(--rail-accent)]";
 
   it("resolves every rail token to the same value under :root and under .dark", () => {
     for (const token of RAIL) {
@@ -410,28 +520,114 @@ describe("the menu rail, which never changes colour (owner, 2026-09-14)", () => 
     },
   );
 
-  it("paints the rail and both drawers with rail tokens, never a theme token", () => {
-    // Theme-following utilities are exactly what repainted the menu. Its
-    // overlays (/70, /50, /15, /10), avatar chips and badges are all
-    // rail-foreground at an alpha, so none of them may name a theme token.
-    const themeUtility =
-      /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to)-(?:primary|secondary|foreground|background|card|popover|muted|accent|gold|border|input|ring|destructive|rose|live|surface|sidebar)\b/g;
+  it("names no colour on the rail or its drawers but rail tokens, black and transparent", () => {
+    // An allowlist, not a list of theme tokens to avoid: bg-chart-1,
+    // bg-[var(--primary)] and a dark: variant each repaint the menu, and none
+    // is a theme token by name. Every string in the file is read (className,
+    // cn() arguments, inline styles); a comment is not a string.
+    //
+    // A utility family that can take a colour, the values of those families
+    // that are not colours (text-sm, border-t, ring-1, shadow-xl, text-[10px]),
+    // and the only colours the menu may use, at any alpha.
+    const COLOUR_FAMILY =
+      /^(?:bg|text|border(?:-[xytrblse])?|divide(?:-[xy])?|ring(?:-offset)?|inset-ring|outline|shadow|inset-shadow|drop-shadow|fill|stroke|from|via|to|decoration|caret|accent|placeholder)-(.+)$/;
+    const NOT_A_COLOUR =
+      /^(?:\d+(?:\.\d+)?|[xytrblse]|\d?x[sl]|sm|base|md|lg|left|center|right|start|end|justify|wrap|nowrap|balance|pretty|ellipsis|clip|none|hidden|inner|inset|solid|dashed|dotted|double|offset-\d+|\[-?[\d.]+(?:px|rem|em|%)?\])$/;
+    const MENU_COLOUR = /^(?:rail|rail-foreground|black|transparent)(?:\/(?:\d+|\[[\d.]+%?\]))?$/;
     for (const file of NAV) {
-      const source = readFileSync(file, "utf8");
-      expect(source.match(themeUtility) ?? [], file).toEqual([]);
-      expect(source, file).toContain("bg-rail text-rail-foreground");
-      // outline-ring/50 sits on every element; pinning --ring keeps focus
-      // outlines on the rail's gold rather than the theme's.
-      expect(source, file).toContain("[--ring:var(--rail-accent)]");
-      expect(source, file).toMatch(/<BlindrMark[^>]*\bonDark\b/);
+      const problems: string[] = [];
+      for (const node of descendants(parseSource(file))) {
+        const text = literalText(node);
+        if (text === null || ts.isImportDeclaration(node.parent) || ts.isExportDeclaration(node.parent)) {
+          continue;
+        }
+        for (const [, name] of text.matchAll(/var\(\s*(--[\w-]+)/g)) {
+          if (!RAIL.includes(name)) problems.push(`var(${name})`);
+        }
+        for (const token of tokensOf(text)) {
+          const { variants, utility } = splitClass(token);
+          if (variants.some((variant) => variant.includes("dark"))) {
+            problems.push(token);
+          } else if (/^\[[\w-]+:.+\]$/.test(utility)) {
+            if (utility !== RING_PIN) problems.push(token);
+          } else {
+            const value = COLOUR_FAMILY.exec(utility)?.[1];
+            if (value !== undefined && !NOT_A_COLOUR.test(value) && !MENU_COLOUR.test(value)) {
+              problems.push(token);
+            }
+          }
+        }
+      }
+      expect(problems, file).toEqual([]);
     }
   });
 
-  it("draws the logo on the rail from rail tokens, so it matches in both themes", () => {
-    const logo = readFileSync("src/components/logo.tsx", "utf8");
-    for (const token of ["--rail-foreground", "--rail-accent", "--rail-accent-deep"]) {
-      expect(logo).toContain(`"var(${token})"`);
+  it("pins the ring on every rail panel, and on each drawer's whole overlay so its backdrop matches", () => {
+    // Per panel, not per file: a file whose other panel kept the pin passed
+    // with one drawer's pin gone. A drawer pins its portal root, because the
+    // backdrop's "Close menu" button sits beside the panel, not inside it.
+    for (const file of NAV) {
+      const source = parseSource(file);
+      const pinned = (tag: Tag) => classTokens(tag).includes(RING_PIN);
+      const panels = tagsIn(source).filter((tag) =>
+        classTokens(tag).some((token) => /^bg-rail(?:\/|$)/.test(splitClass(token).utility)),
+      );
+      expect(panels.map(where), file).toHaveLength(NAV_PANELS[file]);
+      for (const panel of panels) {
+        const selfAndAncestors: Tag[] = [];
+        for (let node: ts.Node | undefined = panel; node; node = node.parent) {
+          const tag = tagOf(node);
+          if (tag) selfAndAncestors.push(tag);
+        }
+        expect(selfAndAncestors.some(pinned), where(panel)).toBe(true);
+        expect(classTokens(panel), where(panel)).toContain("text-rail-foreground");
+      }
+      const portals = descendants(source).filter(
+        (node): node is ts.CallExpression =>
+          ts.isCallExpression(node) && /(?:^|\.)createPortal$/.test(node.expression.getText()),
+      );
+      expect(portals.length, file).toBeGreaterThan(0);
+      for (const portal of portals) {
+        let root: ts.Node = portal.arguments[0];
+        while (ts.isParenthesizedExpression(root)) root = root.expression;
+        const tag = tagOf(root);
+        expect(tag !== null && pinned(tag), `${file}: a portalled drawer's root`).toBe(true);
+      }
     }
+  });
+
+  it("draws every logo on the menu with onDark, and no colour of its own", () => {
+    for (const file of NAV) {
+      const marks = tagsIn(parseSource(file)).filter((tag) => tag.tagName.getText() === "BlindrMark");
+      expect(marks.length, file).toBeGreaterThan(0);
+      for (const mark of marks) {
+        const onDark = attribute(mark, "onDark");
+        const on = onDark !== undefined && (!onDark.initializer || onDark.initializer.getText() === "{true}");
+        expect(on, where(mark)).toBe(true);
+        expect(attribute(mark, "accent") ?? attribute(mark, "knot"), where(mark)).toBeUndefined();
+      }
+    }
+  });
+
+  it("paints the onDark mark in rail tokens only, and keeps them off the page mark", () => {
+    // Rendered, not grepped: the mark's function components are called
+    // directly, so this checks every fill and stroke it actually draws. A
+    // string check passed a partial revert that kept the RAIL_* constants in
+    // logo.tsx but took onDark's accent and knot from --gold again.
+    const paints = (node: unknown): string[] => {
+      if (Array.isArray(node)) return node.flatMap(paints);
+      if (node === null || typeof node !== "object" || !("props" in node)) return [];
+      const { type, props } = node as { type: unknown; props: Record<string, unknown> };
+      if (typeof type === "function") {
+        return paints((type as (p: Record<string, unknown>) => unknown)(props));
+      }
+      const own = [props.fill, props.stroke].filter((paint): paint is string => typeof paint === "string");
+      return [...own, ...paints(props.children)];
+    };
+    expect(new Set(paints(BlindrMark({ onDark: true })))).toEqual(
+      new Set(["var(--rail-foreground)", "var(--rail-accent)", "var(--rail-accent-deep)", "none"]),
+    );
+    expect(paints(BlindrMark({})).filter((paint) => paint.includes("--rail"))).toEqual([]);
   });
 });
 
@@ -448,22 +644,135 @@ describe("every element in src that carries the `dark` class", () => {
     "src/components/live-shell.tsx",
     "src/components/ui/popover.tsx",
   ];
-  const addsDark = /classList\.(?:add|toggle)\(\s*["']dark["']|className=["']dark[\s"']|&&\s*["']dark["']/;
-  const count = (source: string, re: RegExp) => (source.match(new RegExp(re.source, "g")) ?? []).length;
+  // The root setters use classList, in code or inside the anti-flash script's
+  // string, where no parse of the TSX can look.
+  const classListAddsDark = /classList\.(?:add|toggle|replace)\(\s*["'`]dark["'`]/;
+  const CLASS_HELPERS = new Set(["cn", "clsx", "classNames", "cva", "twMerge", "tv"]);
+  const normalise = (code: string) => code.replace(/\s+/g, " ").trim();
   const sources = readdirSync("src", { encoding: "utf8", recursive: true })
     .map((p) => `src/${p.replaceAll("\\", "/")}`)
     .filter((p) => /\.(?:tsx?|jsx?|mjs)$/.test(p) && !/\.test\.tsx?$/.test(p));
+  // A file can only add the class through a string holding `dark` as a whole
+  // token, so only such a file is worth parsing.
+  const mayHoldDarkToken = /(?:^|[\s"'`}])dark(?:$|[\s"'`$])/m;
 
-  it("is added only by the root theme and the live surfaces", () => {
-    const setters = sources.filter((p) => addsDark.test(readFileSync(p, "utf8")));
+  type DarkClass = { tag: Tag | null; condition: string; at: string };
+
+  /**
+   * Every `dark` class token that reaches a className -- written in directly,
+   * or through cn()/clsx(), a template, `cond && "dark"` or a ternary -- with
+   * the element it lands on and the condition it is added under ("" for
+   * always). A token built by a class helper that lands anywhere else (a
+   * variable, a props object) comes back with a null tag: nothing can pair it
+   * with data-live. `"dark"` as a value (a comparison, a tone prop, a type)
+   * never reaches a className and is not reported.
+   */
+  function darkClasses(source: ts.SourceFile): DarkClass[] {
+    const found: DarkClass[] = [];
+    for (const node of descendants(source)) {
+      const text = literalText(node);
+      if (text === null || !tokensOf(text).includes("dark")) continue;
+      const at = `${source.fileName}:${source.getLineAndCharacterOfPosition(node.getStart()).line + 1}`;
+      const conditions: string[] = [];
+      let viaHelper = false;
+      let child: ts.Node = node;
+      let parent: ts.Node | undefined = node.parent;
+      while (parent) {
+        const operator = ts.isBinaryExpression(parent) && parent.right === child ? parent.operatorToken.kind : null;
+        if (ts.isBinaryExpression(parent) && operator === ts.SyntaxKind.AmpersandAmpersandToken) {
+          conditions.unshift(normalise(parent.left.getText()));
+        } else if (
+          ts.isBinaryExpression(parent) &&
+          (operator === ts.SyntaxKind.BarBarToken || operator === ts.SyntaxKind.QuestionQuestionToken)
+        ) {
+          // Never equal to a data-live condition, so the pairing test fails
+          // and names it rather than guessing what it means.
+          conditions.unshift(`(unreadable: ${normalise(parent.getText())})`);
+        } else if (ts.isConditionalExpression(parent) && parent.condition !== child) {
+          const test = normalise(parent.condition.getText());
+          conditions.unshift(parent.whenTrue === child ? test : `!(${test})`);
+        } else if (
+          ts.isCallExpression(parent) &&
+          parent.arguments.some((arg) => arg === child) &&
+          CLASS_HELPERS.has(parent.expression.getText())
+        ) {
+          viaHelper = true;
+        } else if (
+          !(
+            ts.isParenthesizedExpression(parent) ||
+            ts.isTemplateSpan(parent) ||
+            ts.isTemplateExpression(parent) ||
+            ts.isArrayLiteralExpression(parent) ||
+            ts.isAsExpression(parent) ||
+            ts.isSatisfiesExpression(parent) ||
+            ts.isJsxExpression(parent)
+          )
+        ) {
+          if (ts.isJsxAttribute(parent) && parent.name.getText() === "className") {
+            found.push({ tag: parent.parent.parent, condition: conditions.join(" && "), at });
+          } else if (viaHelper || (ts.isPropertyAssignment(parent) && parent.name.getText() === "className")) {
+            found.push({ tag: null, condition: conditions.join(" && "), at });
+          }
+          break;
+        }
+        child = parent;
+        parent = parent.parent;
+      }
+    }
+    return found;
+  }
+
+  /** The condition data-live is written under: "" for always, null when it is absent or unreadable. */
+  function liveCondition(tag: Tag): string | null {
+    const live = attribute(tag, "data-live");
+    if (!live) return null;
+    const value = live.initializer;
+    if (!value) return "";
+    if (ts.isStringLiteral(value)) return value.text === "" ? "" : null;
+    const expression = ts.isJsxExpression(value) ? value.expression : undefined;
+    if (
+      expression &&
+      ts.isConditionalExpression(expression) &&
+      ts.isStringLiteral(expression.whenTrue) &&
+      expression.whenTrue.text === "" &&
+      expression.whenFalse.getText() === "undefined"
+    ) {
+      return normalise(expression.condition.getText());
+    }
+    return null;
+  }
+
+  it("is added only by the root theme and the live surfaces, in whatever form it is written", () => {
+    const setters = sources.filter((file) => {
+      const text = readFileSync(file, "utf8");
+      return classListAddsDark.test(text) || (mayHoldDarkToken.test(text) && darkClasses(parseSource(file)).length > 0);
+    });
     expect(setters.sort()).toEqual([...ROOT_SETTERS, ...LIVE_SETTERS].sort());
+    // The root setters touch <html> only, the live setters elements only.
+    for (const file of ROOT_SETTERS) expect(darkClasses(parseSource(file)), file).toEqual([]);
+    for (const file of LIVE_SETTERS) expect(classListAddsDark.test(readFileSync(file, "utf8")), file).toBe(false);
   });
 
-  it("marks every live surface with data-live, once for each place that adds the class", () => {
+  it("puts data-live on the very element that gets a live `dark` class, under the same condition", () => {
+    // Counting per file let data-live sit on a different element (the
+    // popover's Positioner rather than its Popup) and take the opposite
+    // condition, both with the counts still equal.
     for (const file of LIVE_SETTERS) {
-      const source = readFileSync(file, "utf8");
-      expect(count(source, addsDark), file).toBeGreaterThan(0);
-      expect(count(source, /\bdata-live=/), file).toBe(count(source, addsDark));
+      const source = parseSource(file);
+      const classes = darkClasses(source);
+      expect(classes.filter((c) => c.tag === null).map((c) => c.at), `${file}: dark classes on no element`).toEqual([]);
+      const conditions = new Map<Tag, Set<string>>();
+      for (const { tag, condition } of classes) {
+        if (tag) conditions.set(tag, (conditions.get(tag) ?? new Set<string>()).add(condition));
+      }
+      expect(conditions.size, file).toBeGreaterThan(0);
+      for (const [tag, added] of conditions) {
+        expect([...added], where(tag)).toHaveLength(1);
+        expect(liveCondition(tag), where(tag)).toBe([...added][0]);
+      }
+      // ...and data-live on nothing else: a marker the class never reaches.
+      const marked = tagsIn(source).filter((tag) => attribute(tag, "data-live") !== undefined);
+      expect(marked.map(where).sort(), file).toEqual([...conditions.keys()].map(where).sort());
     }
   });
 

@@ -40,7 +40,8 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
  * AppHeader is hidden below md). Dependency-free overlay + panel so it never
  * fights base-ui's Dialog positioning; closes on link tap, backdrop tap, or
  * the X. Styled to mirror the desktop AppSidebar (the bordeaux --rail panel,
- * the same in every theme, focus outline pinned to its gold; pillar icons;
+ * the same in every theme, focus outline pinned to its gold on the whole
+ * overlay, so the backdrop's Close menu button matches too; pillar icons;
  * profile + sign out pinned to the bottom). `notifications` is an optional slot
  * the header drops the invite bell into so pending invites are reachable on
  * mobile too.
@@ -78,13 +79,13 @@ export function MobileNav({
   const drawer =
     open && typeof document !== "undefined"
       ? createPortal(
-          <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0 z-50 [--ring:var(--rail-accent)]">
             <button
               aria-label="Close menu"
               className="animate-in fade-in absolute inset-0 bg-black/40 duration-150"
               onClick={close}
             />
-            <div className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-64 flex-col bg-rail text-rail-foreground shadow-xl duration-200 [--ring:var(--rail-accent)]">
+            <div className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-64 flex-col bg-rail text-rail-foreground shadow-xl duration-200">
               <div className="flex shrink-0 items-center justify-between px-5 pt-4 pb-2">
                 <Link
                   href="/overview"
