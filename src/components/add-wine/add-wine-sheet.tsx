@@ -58,7 +58,7 @@ import { emptyDraft, missingWineFields } from "@/lib/wine-identity/complete";
 import { describeMissing, readDisplay } from "@/lib/wine-identity/describe";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { searchAddWine } from "./actions";
-import { loadByHandReferences, type ByHandReferences } from "./by-hand-actions";
+import { loadByHandReferences, loadUnidentifiedWineDraft, type ByHandReferences } from "./by-hand-actions";
 import { ByHandForm } from "./by-hand-form";
 import { CameraView } from "./camera-view";
 import { listCellarForSheet, ownedBottlesFor } from "./cellar-actions";
@@ -214,7 +214,7 @@ export function AddWineSheet({
   const searchSeq = useRef(0);
   const cellarSeq = useRef(0);
   const focusSeq = useRef(0);
-  const started = useRef({ references: false, summary: false, edit: false, firstView: false });
+  const started = useRef({ references: false, summary: false, edit: false, firstView: false, unidentifiedPreselect: false });
   const ownedRequested = useRef<Set<string>>(new Set());
   const refusalFocused = useRef<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -333,6 +333,25 @@ export function AddWineSheet({
   });
   useEffect(() => {
     startEdit();
+  }, []);
+
+  // BT-R5 (S13c): the record glass's "Add to my cellar" on a wine with no
+  // catalog match (`options.preselect.unidentifiedWineId`) loads that wine's
+  // draft once, then opens the by-hand form on it — the form writes the
+  // catalog wine first (byhand-7's rule). Unlike Edit, the sheet's normal
+  // start view paints immediately (there is no glass to wait on); this only
+  // moves it to the form once the draft is in hand.
+  const startUnidentifiedPreselect = useEffectEvent(() => {
+    const unidentifiedWineId = options.preselect?.unidentifiedWineId;
+    if (unidentifiedWineId === undefined || started.current.unidentifiedPreselect) return;
+    started.current.unidentifiedPreselect = true;
+    void loadUnidentifiedWineDraft(unidentifiedWineId).then((draft) => {
+      if (!mounted.current || draft === null) return;
+      adds.send({ type: "openByHand", origin: { kind: "new" }, draft, focusField: null });
+    });
+  });
+  useEffect(() => {
+    startUnidentifiedPreselect();
   }, []);
 
   /** Rule 9, outside a tap: focus on a device that cannot scan; otherwise scroll the flagged field into view. */

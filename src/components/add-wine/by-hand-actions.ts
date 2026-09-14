@@ -1,6 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { normaliseDraft } from "@/lib/wine-identity/complete";
+import { draftFromAnswerKey } from "@/lib/wine-identity/from-sources";
+import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { ProducerSummary } from "./by-hand-logic";
 import { escapeLike, findSelfNamedAppellation } from "./self-named-appellation";
 
@@ -171,4 +174,81 @@ export async function regionSelfNamedAppellation(
     });
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// loadUnidentifiedWineDraft (BT-R5, S13c)
+// ---------------------------------------------------------------------------
+
+/**
+ * A flight's unidentified wine (byhand-7) as a draft, for the record glass's
+ * "Add to my cellar" on a revealed glass with no catalog match. Modeled on
+ * `draftFromStoredAnswer` (tasting-wine-writes.ts), but there is no
+ * `wines`/`wine_answers` row in play here — just the identity itself, read
+ * straight off `catalog_wines_unidentified`. The form that opens on this
+ * draft writes the catalog wine first (byhand-7's rule); this loader never
+ * writes anything. Null when the row is missing, or (should not happen: every
+ * stored row is complete by `UNIDENTIFIED_WINE_FIELDS`) is missing its
+ * country, region or primary grape.
+ */
+export async function loadUnidentifiedWineDraft(
+  unidentifiedWineId: string,
+): Promise<WineIdentityDraft | null> {
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("catalog_wines_unidentified")
+    .select(
+      "country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, producer_id, type_designation_id, vintage_kind, vintage_year, vintage_tawny_years, colour, style, wine_name",
+    )
+    .eq("id", unidentifiedWineId)
+    .maybeSingle();
+  if (!row || !row.country_id || !row.region_id || !row.primary_grape_id) return null;
+
+  const grapeIds = [row.primary_grape_id, row.secondary_grape_id].filter(
+    (id): id is string => id !== null,
+  );
+  const { data: grapes } = await supabase.from("grapes").select("id, name").in("id", grapeIds);
+  const grapeName = new Map((grapes ?? []).map((g) => [g.id, g.name]));
+  const named = (id: string) => ({ id, name: grapeName.get(id) ?? "" });
+
+  let producer: { id: string; name: string } | null = null;
+  if (row.producer_id) {
+    const { data } = await supabase
+      .from("producers")
+      .select("id, name")
+      .eq("id", row.producer_id)
+      .maybeSingle();
+    producer = data ?? { id: row.producer_id, name: "" };
+  }
+
+  const draft = draftFromAnswerKey({
+    countryId: row.country_id,
+    regionId: row.region_id,
+    appellationId: row.appellation_id,
+    producer,
+    typeDesignationId: row.type_designation_id,
+    vintageKind: row.vintage_kind,
+    vintageYear: row.vintage_year,
+    vintageTawnyYears: row.vintage_tawny_years,
+    imageUrl: null,
+    primaryGrape: named(row.primary_grape_id),
+    secondaryGrape: row.secondary_grape_id ? named(row.secondary_grape_id) : null,
+    catalog: null,
+  });
+  // `catalog_wines_unidentified` carries wine name/colour/style directly (no
+  // linked catalog wine to draw them from — this row IS the identity), each
+  // possibly null (only vintage/country/region/primary grape are guaranteed
+  // by UNIDENTIFIED_WINE_FIELDS). Same overlay `draftFromStoredAnswer`
+  // (tasting-wine-writes.ts) applies for its own unidentified branch.
+  const withDetails = normaliseDraft({
+    ...draft,
+    wineName: row.wine_name,
+    colour: row.colour,
+    style: row.style,
+  });
+  const provenance = { ...withDetails.provenance };
+  if (withDetails.wineName !== null) provenance.wineName = "manual";
+  if (withDetails.colour !== null) provenance.colour = "manual";
+  if (withDetails.style !== null) provenance.style = "manual";
+  return { ...withDetails, provenance };
 }

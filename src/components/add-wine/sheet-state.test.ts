@@ -2580,3 +2580,21 @@ describe("a form with typing in it is set aside, never dropped, when another for
     expect([stays.parkedByHand.map((x) => x.draft.wineName), unfinishedCount(stays)]).toEqual([["Rocche 2"], 1]);
   });
 });
+
+describe("preselect from the record (S13c, BT-R5)", () => {
+  it("a cellar preselect with its lot opens the lot step", () => {
+    const s = initialSheetState({
+      destination: { kind: "cellar" }, options: { preselect: { catalogWineId: "c7" } }, canScan: true,
+      initialLot: { kind: "catalog", catalogWineId: "c7", via: "search" },
+    });
+    expect(s.view).toBe("lot");
+  });
+  it("an unidentified preselect lands on by hand once its draft loads; back lands home", () => {
+    const s = run(
+      initialSheetState({ destination: { kind: "cellar" }, options: { preselect: { unidentifiedWineId: "u3" } }, canScan: false }),
+      { type: "openByHand", origin: { kind: "new" }, draft: emptyDraft(), focusField: null },
+    );
+    expect(s.view).toBe("byhand");
+    expect(run(s, { type: "back" }).view).toBe("desktop");
+  });
+});

@@ -75,6 +75,7 @@ export type NoteSaved = { savedId: string; summary: NoteSummary };
 // closes — on every path that opens it, after the first save of a new note.
 export function NewNoteModal({
   wineId,
+  unidentifiedWineId,
   target,
   onClose,
   cellarConsume = null,
@@ -85,11 +86,21 @@ export function NewNoteModal({
   /** @deprecated pass `target: { kind: "catalog", wineId, … }` instead — kept
       so every caller that predates the hidden-glass target still compiles. */
   wineId?: string;
+  /** BT-R5 (S13c): the record glass's "Rate it" on a wine with no catalog
+      match — the plain-prop alternative to `wineId`, for a caller that mounts
+      this modal directly instead of going through the add-wine provider's
+      note state (which only ever carries a `catalogWineId`). Ignored when
+      `target` or `wineId` is given. The save still writes `catalog_wine_id:
+      null` (like a hidden-glass note); `wset_notes_glass_resolve_on_write`
+      resolves `unidentified_wine_id` from this glass's own answer key at
+      write time, since a record glass is always fully revealed. */
+  unidentifiedWineId?: string;
   target?: NoteTarget;
   onClose: () => void;
   cellarConsume?: { lotId: string } | null;
-  /** Attaches the note to a tasting wine (group Taste & Rate scoring). Ignored
-      when `target` is given — the target carries its own tastingWineId. */
+  /** Attaches the note to a tasting wine (group Taste & Rate scoring, or
+      BT-R5's resolve-on-write). Ignored when `target` is given — the target
+      carries its own tastingWineId. */
   tastingWineId?: string | null;
   /** Ignored when `target` is given. */
   contextKind?: string | null;
@@ -109,7 +120,8 @@ export function NewNoteModal({
   // `resolvedTarget` object — a fresh literal every render (especially once
   // callers start passing `target={{ kind: "hidden-glass", … }}` inline)
   // would otherwise re-run the fetch on every render.
-  const targetKind: NoteTarget["kind"] | null = target?.kind ?? (wineId ? "catalog" : null);
+  const targetKind: NoteTarget["kind"] | "catalog-unidentified" | null =
+    target?.kind ?? (wineId ? "catalog" : unidentifiedWineId ? "catalog-unidentified" : null);
   const targetWineId = (target?.kind === "catalog" ? target.wineId : wineId) ?? null;
   const targetTastingWineId =
     (target ? target.tastingWineId : tastingWineId) ?? null;
@@ -216,6 +228,64 @@ export function NewNoteModal({
         return;
       }
 
+      if (targetKind === "catalog-unidentified") {
+        if (!unidentifiedWineId) {
+          setData(null);
+          return;
+        }
+        const { data: u } = await supabase
+          .from("catalog_wines_unidentified")
+          .select(
+            "wine_name, colour, style, vintage_kind, vintage_year, vintage_tawny_years, producer_id, appellation_id",
+          )
+          .eq("id", unidentifiedWineId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!u) {
+          setData(null);
+          return;
+        }
+        // Producer/appellation looked up only for this one wine's ids
+        // (CLAUDE.md: never preload those tables).
+        let producerName: string | null = null;
+        if (u.producer_id) {
+          const { data: p } = await supabase
+            .from("producers")
+            .select("name")
+            .eq("id", u.producer_id)
+            .maybeSingle();
+          producerName = p?.name ?? null;
+        }
+        let appellationName: string | null = null;
+        if (u.appellation_id) {
+          const { data: ap } = await supabase
+            .from("appellations")
+            .select("name")
+            .eq("id", u.appellation_id)
+            .maybeSingle();
+          appellationName = ap?.name ?? null;
+        }
+        if (cancelled) return;
+        setData({
+          wineId: null,
+          wine: { colour: u.colour ?? "RED", style: u.style ?? "STILL" },
+          title: catalogWineTitle({
+            producerName,
+            wineName: u.wine_name,
+            vintageKind: u.vintage_kind ?? "NV",
+            vintageYear: u.vintage_year,
+            vintageTawnyYears: u.vintage_tawny_years,
+            appellationName,
+          }),
+          hidden: false,
+          terms,
+          initial: emptyNoteState(),
+          contextKind: targetContextKind,
+          tastingWineId: targetTastingWineId,
+        });
+        return;
+      }
+
       if (!targetWineId) {
         setData(null);
         return;
@@ -246,6 +316,7 @@ export function NewNoteModal({
     supabase,
     targetKind,
     targetWineId,
+    unidentifiedWineId,
     targetTastingWineId,
     targetContextKind,
     targetTastingName,
@@ -322,20 +393,24 @@ export function NewNoteModal({
                 }
                 if (savedId) {
                   let catalogWineId = data.wineId;
-                  let unidentifiedWineId: string | null = null;
-                  if (data.hidden && !catalogWineId) {
-                    // A save can attach on write when it races the glass's own
-                    // reveal (M5x2's wset_notes_glass_resolve_on_write) — this
-                    // modal's own `data` never learns that mid-save, so read
-                    // the note back once and report what actually happened
-                    // instead of always guessing "pending-reveal".
+                  let resolvedUnidentifiedWineId: string | null = null;
+                  if (!catalogWineId) {
+                    // A save can attach on write: a genuinely hidden glass
+                    // races its own reveal (M5x2's
+                    // wset_notes_glass_resolve_on_write), and BT-R5's
+                    // "catalog-unidentified" target always writes with no
+                    // identity up front so that same trigger resolves it from
+                    // the (already revealed) glass's answer key. Either way
+                    // this modal's own `data` never learns the id mid-save, so
+                    // read the note back once and report what actually
+                    // happened instead of always guessing "pending-reveal".
                     const { data: resolved } = await supabase
                       .from("wset_notes")
                       .select("catalog_wine_id, unidentified_wine_id")
                       .eq("id", savedId)
                       .maybeSingle();
                     catalogWineId = resolved?.catalog_wine_id ?? null;
-                    unidentifiedWineId = resolved?.unidentified_wine_id ?? null;
+                    resolvedUnidentifiedWineId = resolved?.unidentified_wine_id ?? null;
                   }
                   const report = noteSavedReport({
                     savedId,
@@ -343,7 +418,7 @@ export function NewNoteModal({
                     style: data.wine.style,
                     title: data.title,
                     catalogWineId,
-                    unidentifiedWineId,
+                    unidentifiedWineId: resolvedUnidentifiedWineId,
                   });
                   onSaved?.({ savedId, summary: report.summary });
                   // The provider-level step: "Note saved" takes this modal's

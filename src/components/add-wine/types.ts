@@ -41,6 +41,13 @@ export type AddWineOpenOptions = {
       from the first paint (the glass number is resolved once the edit form,
       opened separately, has loaded it). */
   swap?: { wineId: string };
+  /** BT-R5 (S13c): the record glass's actions preselect an existing wine
+      instead of picking one. `note` destination + `catalogWineId` (+
+      `tastingWineId`) routes "Rate it" straight to its note, skipping the
+      pick; `cellar` destination + `unidentifiedWineId` routes "Add to my
+      cellar" straight to the by-hand form, prefilled from that glass's
+      identity. */
+  preselect?: { catalogWineId?: string; unidentifiedWineId?: string; tastingWineId?: string };
 };
 
 /** wines.added_via (E.3) */

@@ -41,6 +41,7 @@ import { getSemiBlindRevealedPicks } from "@/lib/semi-blind-data";
 import { ordinal, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { RecordActionsBar } from "./record-actions-bar";
+import { RecordGlass } from "./record-glass";
 
 // The record (S13, S13b; spec §11.3 items 11-16; ledger B10). Rendered on the
 // CLOSED running page once the result is dismissed (`finished-view.tsx`, via
@@ -49,10 +50,12 @@ import { RecordActionsBar } from "./record-actions-bar";
 // nothing about scoring crosses to a client component (mirrors
 // `tasting-result.ts` / `ResultView`'s split for the result screen).
 //
-// The chevron/row link goes to `/tastings/{id}/results/{n}` (S13c) on every
-// viewport for now — BT-R5 adds that route and the laptop in-place
-// expansion (RECORD-22, not this task's to close); until it lands the link
-// is inert on a laptop the same way any not-yet-built route would be.
+// The chevron/row link goes to `/tastings/{id}/results/{n}` (S13c). On a
+// phone that route renders `RecordGlass`'s own full page; on a laptop it
+// renders this same view again with `expandedGlass` set, which shows
+// `RecordGlass` inline under that one row (RECORD-22) — both are the route's
+// own CSS-breakpoint split (`results/[glass]/page.tsx`), not client state
+// here.
 //
 // Refinement 27 ("an outsider never gets a board, not even an empty one"):
 // this view never renders a leaderboard, only the viewer's OWN totals — and
@@ -113,8 +116,13 @@ function Unavailable(): React.JSX.Element {
 
 export async function RecordView({
   tastingId,
+  expandedGlass,
 }: {
   tastingId: string;
+  /** S13c: the laptop route's in-place expansion — that glass's row renders
+      `RecordGlass` inline right under it (RECORD-22). Undefined for every
+      other caller (the plain `/results` record, the CLOSED running page). */
+  expandedGlass?: number;
 }): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
@@ -549,13 +557,17 @@ export async function RecordView({
         </CardHeader>
         <CardContent className="flex flex-col divide-y divide-border/60 p-0">
           {rows.map((row) => (
-            <RecordGlassRow
-              key={row.glass}
-              row={row}
-              tastingId={tastingId}
-              legend={legendPhone}
-              imageUrl={imageByGlassNumber.get(row.glass) ?? null}
-            />
+            <div key={row.glass} className="flex flex-col">
+              <RecordGlassRow
+                row={row}
+                tastingId={tastingId}
+                legend={legendPhone}
+                imageUrl={imageByGlassNumber.get(row.glass) ?? null}
+              />
+              {expandedGlass === row.glass ? (
+                <RecordGlass tastingId={tastingId} glass={row.glass} layout="inline" />
+              ) : null}
+            </div>
           ))}
         </CardContent>
       </Card>

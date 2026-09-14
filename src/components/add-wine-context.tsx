@@ -105,8 +105,11 @@ type OpenSheet = {
   initialLot: InitialLot | null;
 };
 
-/** A note pick waiting on its WSET note. `seq` counts picks and keys the modal. */
-type OpenNote = { seq: number; pick: NotePick };
+/** A note pick waiting on its WSET note. `seq` counts picks and keys the
+    modal. `tastingWineId`/`contextKind` (BT-R5, S13c) are set only for a
+    record glass's "Rate it" preselect — every other opener leaves them null,
+    and NewNoteModal treats null the same as omitted. */
+type OpenNote = { seq: number; pick: NotePick; tastingWineId: string | null; contextKind: string | null };
 
 // Holds the single add-wine sheet for the whole authed app, so the sidebar,
 // the header camera and any page's button open the same dialog instead of
@@ -235,9 +238,25 @@ export function AddWineProvider({
     [ensureCurrency],
   );
 
+  // BT-R5 (S13c): the record glass's "Rate it" preselects an existing catalog
+  // wine and skips the pick — the sheet never opens; NewNoteModal opens
+  // directly on that wine, with the glass attached (tastingWineId,
+  // contextKind: "BLIND"), the same way a chooser pick would hand off.
   const openAddWineSheet = useCallback(
-    (destination: AddWineDestination | null, options: AddWineOpenOptions = {}) =>
-      openSheet(destination, options, null),
+    (destination: AddWineDestination | null, options: AddWineOpenOptions = {}) => {
+      const catalogWineId = options.preselect?.catalogWineId;
+      if (destination?.kind === "note" && catalogWineId) {
+        pickCount.current += 1;
+        setNote({
+          seq: pickCount.current,
+          pick: { catalogWineId },
+          tastingWineId: options.preselect?.tastingWineId ?? null,
+          contextKind: "BLIND",
+        });
+        return;
+      }
+      openSheet(destination, options, null);
+    },
     [openSheet],
   );
 
@@ -269,7 +288,7 @@ export function AddWineProvider({
   const pickNote = useCallback((seq: number, pick: NotePick) => {
     if (seq !== openCount.current) return;
     pickCount.current += 1;
-    setNote({ seq: pickCount.current, pick });
+    setNote({ seq: pickCount.current, pick, tastingWineId: null, contextKind: null });
   }, []);
 
   const registerFlightHint = useCallback((hint: FlightHint | null) => setOverviewHint(hint), []);
@@ -330,6 +349,8 @@ export function AddWineProvider({
             cellarConsume={
               note.pick.consume && note.pick.lotId ? { lotId: note.pick.lotId } : null
             }
+            tastingWineId={note.tastingWineId}
+            contextKind={note.contextKind}
             onClose={() => setNote(null)}
           />
         ) : null}
