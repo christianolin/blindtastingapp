@@ -262,6 +262,8 @@ Every task's requirements implicitly include this section.
     - **BT-N1 no longer waits for BT-L3.** That dependency only ordered their edits to `src/components/add-wine/actions.ts`. If tsc flags that file for the nullable `catalog_wine_id`, BT-N1 stops and reports it rather than editing it, and the change lands with BT-L3 after AW-V2. BT-R5 still waits for BT-L3.
     - **Applied live on 2026-09-13 at 19:08 (main session).** In version order, each after its rollback probe passed against live (18:58–19:05; the `095500` probe ran 380 checks with AW-F13 committed and deployed) and a dry run, with a `schema_migrations` read-back after each commit: BT-M4 `20260914093500`, BT-M5 `20260914094500`, BT-M6 `20260914095500`, BT-M7 `20260914100500`, BT-M9a `20260914102500`. BT-M8 (`20260914101500`) still waits for its deploy gate. BT-SQL10 (M9b) and BT-SQL11 (M10) are not written yet. The live tail stays `20260914113500`.
 
+27. **The standings gate survives the view rewrites (main session, 2026-09-13 night).** Upstream commit 1c6e738 ("Do not show a standings board to non-participants") is ported into the split views by 351d20c: `viewerCanSeeStandings({ isHost, viewer })` in `src/app/tastings/[id]/view-route.ts` (the host, or any participant row whatever its status), used by `running-view.tsx` and `finished-view.tsx`, which render the standings board only when it is true and drop the grid to one column otherwise. BT-R1 (the running view), BT-R2 (ClosedSurface) and BT-R3 (RecordView) keep that rule on every board or standings card they render: an outsider never gets a board, not even an empty one. Reviews check it as a binding rule.
+
 ---
 
 ## Working Rules

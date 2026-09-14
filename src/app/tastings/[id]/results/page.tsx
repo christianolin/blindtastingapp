@@ -589,7 +589,7 @@ export default async function ResultsPage({
                                 className={cn(
                                   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs",
                                   c.points > 0
-                                    ? "bg-[#3f5b42]/12 text-[#3f5b42]"
+                                    ? "bg-success/12 text-success"
                                     : "bg-destructive/10 text-destructive",
                                 )}
                                 title={c.label}

@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { guessBlockReason } from "@/lib/guess-guards";
 import { PAUSED_REFUSAL } from "@/lib/console-copy";
 import { createClient } from "@/lib/supabase/server";
 import { chooseFirst, matchRefusalSentence } from "@/lib/semi-blind-copy";
@@ -10,7 +9,7 @@ import type { SemiBlindBoardJson } from "@/lib/semi-blind-board";
 import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { maybeAutoRevealWine } from "./auto-reveal";
-import { guessableWineError, guessableWines, resolveGuesser, sequentialOrderError } from "./guesser";
+import { guessableWineError, resolveGuesser, sequentialOrderError } from "./guesser";
 import { LOCKED_EDIT_REFUSAL } from "./ladder-copy";
 import { groupPayload, type GuessFieldGroup } from "./guess-write";
 import type { GuessRow } from "./ladder-types";
@@ -116,8 +115,8 @@ async function matchErrorMessage(
 
 // lockGuess's app guard for a semi-blind glass (spec §10.3 item 2, "Lock per
 // glass"): chooseFirst(n) when the caller has not assigned this glass yet,
-// read through get_semi_blind_board — never guessed_wine_id (rule 1). Null
-// for a BLIND tasting (nothing to guard) and whenever a key is already
+// read through get_semi_blind_board — never the picked-wine column (rule 1).
+// Null for a BLIND tasting (nothing to guard) and whenever a key is already
 // assigned.
 async function semiBlindLockGuard(
   supabase: Client,
@@ -139,8 +138,6 @@ async function semiBlindLockGuard(
   const glassNumberOf = await glassNumberLookup(supabase, tastingId);
   return chooseFirst(glassNumberOf(wineId) ?? 0);
 }
-
-export type GuessFormState = { error: string } | { success: true } | null;
 
 const LOCKED_ERROR = "This guess is locked — it's already been scored.";
 
@@ -301,8 +298,8 @@ export async function lockGuess(
   return { ok: true };
 }
 
-// Deferred scoring for ASYNC + IMMEDIATE (spec §C.8). lockGuess and lockGuesses
-// skip score_own_guess while a glass is incomplete; once it is finished, the
+// Deferred scoring for ASYNC + IMMEDIATE (spec §C.8). lockGuess skips
+// score_own_guess while a glass is incomplete; once it is finished, the
 // locked-in state calls this once. Idempotent: it calls score_own_guess only for
 // the caller's own guess, only when that guess is locked and unscored and the
 // glass is complete, and otherwise returns ok without writing anything.
@@ -485,156 +482,6 @@ export async function clearMatch(
     return { error: await matchErrorMessage(supabase, tastingId, "", error) };
   }
   return { ok: true };
-}
-
-// Semi-blind "Lock in all glasses": locks every unscored row among the given
-// wines in one call (after submitAllMatchGuesses has written them), then
-// scores/auto-reveals each. Rows that are already scored are skipped
-// silently, matching submitAllMatchGuesses. Your own bottles are skipped too;
-// any other refused glass (play-8) refuses the whole call.
-/** @deprecated removed in BT-S3 — superseded by assignMatch/clearMatch's per-glass lockGuess. */
-export async function lockGuesses(
-  tastingId: string,
-  wineIds: string[],
-): Promise<LockResult> {
-  if (wineIds.length === 0) return { error: "No glasses to lock." };
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
-
-  const guesser = await resolveGuesser(supabase, tastingId, user.id);
-  if ("error" in guesser) return { error: guesser.error };
-
-  const guard = await guessableWines(supabase, tastingId, wineIds);
-  if ("error" in guard) return { error: guard.error };
-  const lockable: string[] = [];
-  for (const wineId of wineIds) {
-    const wine = guard.wines.get(wineId) ?? null;
-    // You never guess your own bottle, so there is nothing of yours to lock.
-    if (wine && wine.contributorParticipantId === guesser.participantId) continue;
-    const reason = guessBlockReason(wine, guesser.participantId);
-    if (reason) return { error: reason };
-    lockable.push(wineId);
-  }
-  if (lockable.length === 0) return { error: "No glasses to lock." };
-
-  const { data: rows } = await supabase
-    .from("guesses")
-    .select("id, wine_id, scored_at, locked_at")
-    .eq("participant_id", guesser.participantId)
-    .in("wine_id", lockable);
-  const toLock = (rows ?? []).filter((r) => !r.scored_at && !r.locked_at);
-  if (toLock.length > 0) {
-    const { error } = await supabase
-      .from("guesses")
-      .update({ locked_at: new Date().toISOString() })
-      .in(
-        "id",
-        toLock.map((r) => r.id),
-      );
-    if (error) return { error: error.message };
-  }
-
-  const unscored = (rows ?? []).filter((r) => !r.scored_at);
-  const scorable =
-    guesser.scoresOnLock && unscored.length > 0
-      ? await completeGlassIds(
-          supabase,
-          tastingId,
-          unscored.map((r) => r.wine_id),
-        )
-      : new Set<string>();
-  for (const row of unscored) {
-    if (scorable.has(row.wine_id)) {
-      await supabase.rpc("score_own_guess", { p_wine_id: row.wine_id });
-    }
-    await maybeAutoRevealWine(supabase, row.wine_id);
-  }
-
-  revalidatePath(`/tastings/${tastingId}`);
-  revalidatePath(`/tastings/${tastingId}/play`);
-  return { ok: true };
-}
-
-// Semi-blind matching is submitted as one batch (every still-hidden glass
-// paired to a candidate at once), not per-glass — see match-guess-form.tsx
-// for why partial submission doesn't make sense here. Like saveGuessFields,
-// this only writes: scoring/auto-reveal happen in lockGuesses.
-/** @deprecated removed in BT-S3 — superseded by assignMatch's per-glass autosave. */
-export async function submitAllMatchGuesses(
-  _prevState: GuessFormState,
-  formData: FormData,
-): Promise<GuessFormState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
-
-  const tastingId = String(formData.get("tasting_id") ?? "");
-  let guessesByWineId: Record<string, string>;
-  try {
-    guessesByWineId = JSON.parse(String(formData.get("guesses") ?? "{}"));
-  } catch {
-    return { error: "Malformed submission." };
-  }
-
-  const wineIds = Object.keys(guessesByWineId);
-  if (wineIds.length === 0) {
-    return { error: "No glasses to match." };
-  }
-  if (wineIds.some((id) => !guessesByWineId[id])) {
-    return { error: "Match every glass before submitting." };
-  }
-
-  const guesser = await resolveGuesser(supabase, tastingId, user.id);
-  if ("error" in guesser) return { error: guesser.error };
-  const participant = { id: guesser.participantId };
-
-  // play-8: one refused glass refuses the whole batch, before anything is written.
-  const guard = await guessableWines(supabase, tastingId, wineIds);
-  if ("error" in guard) return { error: guard.error };
-  for (const wineId of wineIds) {
-    const reason = guessBlockReason(guard.wines.get(wineId) ?? null, participant.id);
-    if (reason) return { error: reason };
-  }
-
-  const { data: existingGuesses } = await supabase
-    .from("guesses")
-    .select("id, wine_id, scored_at")
-    .eq("participant_id", participant.id)
-    .in("wine_id", wineIds);
-  const existingByWineId = new Map(
-    (existingGuesses ?? []).map((g) => [g.wine_id, g]),
-  );
-
-  for (const wineId of wineIds) {
-    const existing = existingByWineId.get(wineId);
-    // Skip glasses whose match is already locked in (scored).
-    if (existing?.scored_at) continue;
-    const payload = {
-      wine_id: wineId,
-      participant_id: participant.id,
-      guessed_wine_id: guessesByWineId[wineId],
-    };
-    const { error } = existing
-      ? await supabase.from("guesses").update(payload).eq("id", existing.id)
-      : await supabase.from("guesses").insert(payload);
-    if (error) {
-      return { error: error.message };
-    }
-  }
-
-  revalidatePath(`/tastings/${tastingId}`);
-  revalidatePath(`/tastings/${tastingId}/play`);
-  revalidatePath(`/tastings/${tastingId}/results`);
-  return { success: true };
 }
 
 export type RevealFormState = { error: string } | null;

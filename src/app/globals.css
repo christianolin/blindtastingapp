@@ -45,6 +45,7 @@
   --color-on-accent: var(--on-accent);
   /* Flows handoff (add-wine sheet / play / host console). */
   --color-miss: var(--miss);
+  --color-success: var(--success);
   --color-console: var(--console);
   --color-console-card: var(--console-card);
   --color-console-ink: var(--console-ink);
@@ -167,6 +168,13 @@
      1.00:1, the host console and the reveal render as blank slabs.
      Fixed in both themes, like the three above it. */
   --console-foreground: #f5efe3;
+  /* The hit-green: a category you got, "+N" in the standings, the "locked in"
+     and ready lines. It was a literal #3f5b42 at six call sites in the play,
+     standings and results code -- a colour, not a role, so it could not follow
+     the theme: on the dark ground it measured 2.24:1 on --card and 2.08:1 on
+     its own 12% chip. Light keeps that exact hex (7.05:1 on --card, 5.89:1 on
+     the chip). */
+  --success: #3f5b42;
   /* Dark-means-live handoff (BT-D1, spec §6.3 item 1): the deepest live
      surface (pinned bars, header strips) and the bordeaux hover step, each
      defined for both the parchment and the dark surface below. */
@@ -263,6 +271,11 @@
     --gold-light: #d4af6a;
     --rose: #e08a76;
     --miss: #e08a76;
+    /* The hit-green on the dark ground (live screens in either theme). One sage
+       step lighter than dark --chart-3 #6c8f70, which clears --card at 4.67:1 but
+       falls to 4.00:1 on the 12% "+N" chip. #84a888: 6.92:1 on --background,
+       6.38:1 on --card, 5.65:1 on --surface-raised, 5.25:1 on the chip. */
+    --success: #84a888;
     --border-light: rgba(245, 239, 227, 0.08);
     --border-strong: rgba(245, 239, 227, 0.22);
     /* The rest of :root, completed for the dark surface. BT-D1 and the dark-mode
@@ -378,6 +391,54 @@
   :where(.dark) .bg-gold.text-foreground,
   :where(.dark) .bg-gold .text-foreground {
     color: var(--on-accent);
+  }
+}
+
+/* The live palette: where "dark means live" (BT-D1, blind-tasting v3 spec
+ * section 6.3) and the dark-mode toggle disagree.
+ *
+ * Both use the `.dark` class. The toggle puts it on <html>; LiveShell puts it
+ * on a running tasting's subtree, and the popover and the phone field picker
+ * add it to the popups they portal out of that subtree. Nothing else sets it.
+ * So under a LIGHT <html> every `.dark` element is a live surface, and this
+ * selector reaches those and nothing else.
+ *
+ * The one role they disagree on is --primary. Section 6.3 keeps it the
+ * bordeaux #a8425a on the live ground, because it is the open ladder row's
+ * border, the armed bottle's ring and the Lock-in fill, with a #b04961 hover.
+ * The toggle took the dark theme to indigo #2b2a4f, for the left rail and the
+ * banner, which are never inside LiveShell. As a BORDER on the live ground
+ * that indigo measures 1.35:1 on --background and 1.24:1 on --card, so the
+ * open row's outline stops reading. The bordeaux gives 3.13:1 and 2.89:1.
+ *
+ * So live screens keep section 6.3 whenever the app theme is light (the
+ * default), and everything outside a running tasting keeps the toggle's
+ * palette. Pinning the app to dark keeps indigo everywhere, live screens
+ * included. Both specs claim that case and no single value satisfies both, so
+ * it is left as the toggle has it, pending a decision.
+ *
+ * --primary-ink follows the fill's family, the same way #8a87c8 follows the
+ * indigo: #cc6b82 is the rose-family ink the toggle's first pass measured,
+ * 5.22:1 on --background and 4.82:1 on --card. Labels on the fills: 5.11:1 on
+ * #a8425a, 4.62:1 on #b04961 (section 6.6).
+ *
+ * Screen only, like the .dark palette it refines (see the @media print note
+ * above). Print drops .dark from the cascade and falls back to :root's light
+ * tokens; left unscoped, this would survive into print and lay the #cc6b82 ink
+ * on parchment, 3.06:1 on --background and 3.28:1 on --card.
+ *
+ * Keep this AFTER the `.dark {` block. theme-contrast.test.ts reads the first
+ * `.dark {` in the file as the theme palette. */
+@media screen {
+  :root:not(.dark) .dark {
+    --primary: #a8425a;
+    --primary-hover: #b04961;
+    --primary-ink: #cc6b82;
+    /* The ink's hover has to follow the ink's family, or a link on a live
+       screen goes rose -> indigo when you point at it. Lifts lighter, as the
+       hover does on every other dark ground: 6.66:1 on --card against the rest
+       state's 4.82. */
+    --primary-ink-hover: #d98da1;
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LADDER_EXTRAS_NOTE, MATCH_FOOTER, lockButtonLabel, lockConfirm, lockFooter } from "./lock-copy";
+import { LADDER_EXTRAS_NOTE, lockButtonLabel, lockConfirm, lockFooter } from "./lock-copy";
 
 const immediate = { timingMode: "ASYNC", asyncRevealPolicy: "IMMEDIATE" } as const;
 describe("lock copy (play-4)", () => {
@@ -16,8 +16,7 @@ describe("lock copy (play-4)", () => {
     expect(lockConfirm({ glass: 3, blank: false })).toBe("Submit glass 3? You'll see the answer, and it can't be changed afterwards.");
     expect(lockConfirm({ glass: 3, blank: true })).toBe("You haven't answered anything — submit a blank guess for 0 points?");
   });
-  it("ladder and match copy (play-5, play-7)", () => {
+  it("ladder copy (play-5)", () => {
     expect(LADDER_EXTRAS_NOTE).toBe("Secondary grape and type designation only score if the wine has one (2 pts each). They're under More for every glass.");
-    expect(MATCH_FOOTER).toBe("Every glass needs a match — a wrong match just scores 0. Locking saves every match at once and shows the others you are ready.");
   });
 });

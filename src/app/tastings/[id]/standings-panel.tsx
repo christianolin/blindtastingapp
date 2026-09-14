@@ -165,7 +165,7 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                         className={cn(
                           "font-medium",
                           row.lastRoundPoints > 0
-                            ? "text-[#3f5b42]"
+                            ? "text-success"
                             : "text-muted-foreground",
                         )}
                       >
