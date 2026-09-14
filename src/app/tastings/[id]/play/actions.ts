@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { PAUSED_REFUSAL } from "@/lib/console-copy";
 import { createClient } from "@/lib/supabase/server";
 import { chooseFirst, matchRefusalSentence } from "@/lib/semi-blind-copy";
-import type { SemiBlindBoardJson } from "@/lib/semi-blind-board";
+import { getSemiBlindBoardJson } from "@/lib/semi-blind-data";
 import { revealRefusal, type IncompleteGlass } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { maybeAutoRevealWine } from "./auto-reveal";
@@ -80,12 +80,10 @@ async function glassNumberLookup(
 // The candidate keys of every currently revealed glass, from get_semi_blind_board
 // — never semi_blind_candidate_keys directly (RLS reserves that table for the
 // SECURITY DEFINER functions; rule 1: the board speaks in opaque keys only).
-async function revealedCandidateKeys(
-  supabase: Client,
-  tastingId: string,
-): Promise<ReadonlySet<string>> {
-  const { data } = await supabase.rpc("get_semi_blind_board", { p_tasting_id: tastingId });
-  const board = data as SemiBlindBoardJson | null;
+// Routed through semi-blind-data.ts's validated loader — it is that RPC's
+// only caller, so nothing here casts the raw payload itself.
+async function revealedCandidateKeys(tastingId: string): Promise<ReadonlySet<string>> {
+  const board = await getSemiBlindBoardJson(tastingId);
   return new Set((board?.revealed ?? []).map((row) => row.key));
 }
 
@@ -103,7 +101,7 @@ async function matchErrorMessage(
     message === "glass locked" ? await glassNumberLookup(supabase, tastingId) : () => null;
   const revealedKeys =
     message === "that wine is not in your pool"
-      ? await revealedCandidateKeys(supabase, tastingId)
+      ? await revealedCandidateKeys(tastingId)
       : new Set<string>();
   return matchRefusalSentence(error, {
     glassNumberOf,
@@ -130,8 +128,7 @@ async function semiBlindLockGuard(
     .maybeSingle();
   if (tasting?.reveal_mode !== "SEMI_BLIND") return null;
 
-  const { data } = await supabase.rpc("get_semi_blind_board", { p_tasting_id: tastingId });
-  const board = data as SemiBlindBoardJson | null;
+  const board = await getSemiBlindBoardJson(tastingId);
   const mine = board?.mine.find((row) => row.glass_wine_id === wineId);
   if (mine?.key != null) return null;
 

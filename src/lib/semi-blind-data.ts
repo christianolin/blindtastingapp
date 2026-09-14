@@ -158,31 +158,44 @@ function isSemiBlindBoardJson(value: unknown): value is SemiBlindBoardJson {
 }
 
 /**
- * The caller's own matching board (SB2, SB3): `boardFromRpc` over
- * `get_semi_blind_board`'s payload, mapped onto `glasses` (list order, from
- * the caller's own `wines` read — never re-derived here). A null RPC result,
- * an error or a malformed payload all read as `boardFromRpc(glasses, null)`
- * — an empty board over the same glasses, same as an INVITED/DECLINED
- * viewer's "may not see the list" case.
+ * The raw, validated `get_semi_blind_board` payload — for a caller that only
+ * needs one or two of its raw fields (e.g. which keys are already revealed,
+ * or the caller's own row on one glass) rather than the full `Board` shape
+ * `getSemiBlindBoard` below builds from it. This is the RPC's only caller
+ * (rule 1, module header) — nothing else in the app may cast this payload
+ * itself. Null for an RPC error, a malformed payload (both logged), or a
+ * legitimate empty result (INVITED/DECLINED viewer, BLIND tasting, etc — the
+ * RPC's own `can_see_semi_blind_list` check).
  */
-export async function getSemiBlindBoard(
-  tastingId: string,
-  glasses: readonly BoardGlass[],
-): Promise<Board> {
+export async function getSemiBlindBoardJson(tastingId: string): Promise<SemiBlindBoardJson | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_semi_blind_board", {
     p_tasting_id: tastingId,
   });
   if (error) {
     console.error("get_semi_blind_board RPC failed", { tastingId, error });
-    return boardFromRpc(glasses, null);
+    return null;
   }
-  if (data === null) return boardFromRpc(glasses, null);
+  if (data === null) return null;
   if (!isSemiBlindBoardJson(data)) {
     console.error("get_semi_blind_board: malformed payload", { tastingId, data });
-    return boardFromRpc(glasses, null);
+    return null;
   }
-  return boardFromRpc(glasses, data);
+  return data;
+}
+
+/**
+ * The caller's own matching board (SB2, SB3): `boardFromRpc` over
+ * `getSemiBlindBoardJson`'s payload, mapped onto `glasses` (list order, from
+ * the caller's own `wines` read — never re-derived here). A null payload —
+ * RPC error, malformed shape, or a legitimate empty result — reads as
+ * `boardFromRpc(glasses, null)`, an empty board over the same glasses.
+ */
+export async function getSemiBlindBoard(
+  tastingId: string,
+  glasses: readonly BoardGlass[],
+): Promise<Board> {
+  return boardFromRpc(glasses, await getSemiBlindBoardJson(tastingId));
 }
 
 // ── get_semi_blind_revealed_picks ────────────────────────────────────────────
