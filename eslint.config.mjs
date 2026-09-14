@@ -17,6 +17,10 @@ const eslintConfig = defineConfig([
     // throwaway code that is not in version control.
     ".superpowers/**",
     ".tiles-build/**",
+    // Worktrees are separate checkouts (often on other branches/states);
+    // linting them from the main tree's config is not meaningful and can
+    // fail on code that isn't even part of this branch.
+    ".claude/worktrees/**",
   ]),
 ]);
 
