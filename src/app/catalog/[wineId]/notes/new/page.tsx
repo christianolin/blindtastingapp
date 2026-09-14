@@ -20,6 +20,19 @@ export default async function NewNotePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // A blind_pending catalog wine is the identity of an unrevealed glass (A-02).
+  // "catalog read" (20260914126500) hides it from anyone who cannot read that
+  // glass's answer key, but its creator, the host and a curator still read it.
+  // A note on it would be public (`wset notes read`) and would name the hidden
+  // wine, so this route stays "not found" until the reveal clears the flag, as
+  // /catalog/[wineId] does. A failed read fails closed.
+  const { data: blindRow, error: blindError } = await supabase
+    .from("catalog_wines")
+    .select("blind_pending")
+    .eq("id", wineId)
+    .maybeSingle();
+  if (blindError || !blindRow || blindRow.blind_pending) notFound();
+
   const wine = await fetchCatalogWine(supabase, wineId);
   if (!wine) notFound();
 
