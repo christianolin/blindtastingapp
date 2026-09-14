@@ -28,6 +28,7 @@ import { useAddWine } from "@/components/add-wine-context";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
 import { signOut } from "@/app/actions";
 import { BlindrMark } from "@/components/logo";
+import { SidebarThemeSwitch } from "@/components/sidebar-theme-switch";
 import { PROFILE_LINKS } from "@/components/profile-links";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
@@ -226,7 +227,8 @@ function SidebarBody({
           })}
         </nav>
 
-        <div className="flex w-full shrink-0 justify-center border-t border-primary-foreground/15 py-2">
+        <div className="flex w-full shrink-0 flex-col items-center gap-1 border-t border-primary-foreground/15 py-2">
+          <SidebarThemeSwitch variant="rail" />
           <Link
             href={`/u/${user.id}`}
             aria-label={user.name}
@@ -372,7 +374,8 @@ function SidebarBody({
           that, plus the top-bar pill, is how the stats page is reached; it is
           deliberately not a nav pillar. */}
       <div className="shrink-0 border-t border-primary-foreground/15 p-3">
-        <div className="flex items-center gap-2">
+        <SidebarThemeSwitch variant="full" />
+        <div className="mt-1 flex items-center gap-2">
           <Link
             href={`/u/${user.id}`}
             onClick={onNavigate}
