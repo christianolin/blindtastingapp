@@ -139,6 +139,16 @@ try {
       hectares_planted: props.hectares,
       hectares_displayed: props.display_hectares,
       raw_parts: props.raw_parts,
+      // The pebble filter's record. Carried so a promotion migration can check
+      // the filter ran and at what threshold, rather than inferring it from a
+      // part count that a different close would also produce.
+      // `hectares_planted` above is the extent of the parts that SURVIVED it;
+      // `planted_before_filter` is the whole clip.
+      min_planted_ha: props.min_planted_ha,
+      closed_parts: props.closed_parts,
+      dropped_parts: props.dropped_parts,
+      dropped_hectares: props.dropped_hectares,
+      planted_before_filter: props.planted_before_filter,
       simplify_tolerance: SIMPLIFY_TOLERANCE,
       coordinate_precision: 6,
       note: source._provenance.method,

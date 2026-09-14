@@ -49,6 +49,28 @@ const write = process.argv.includes("--write");
 const CLOSE = 0.012;
 const CLOSE_BACK = 0.008;
 
+// Drop a closed part holding less than this much PLANTED vineyard.
+//
+// The close knits dense parcel fields into solids -- that is why Mosel is three
+// parts and Rheinhessen one. It cannot do the same for vineyards that are
+// genuinely far apart, and Franken's run from Aschaffenburg to Bamberg: it came
+// out as 87 parts and Saale-Unstrut as 43, rendering as a speckle field beside
+// neighbours drawn as solids. The exact thing this builder's close exists to
+// prevent, arriving by a route the close cannot reach.
+//
+// Raising CLOSE instead was measured and rejected. Saale-Unstrut already shows
+// 103 km² for 894 ha of vines; the close that got it to 17 parts showed 266 km²,
+// roughly thirty times its planted extent, and still left a speckle.
+//
+// The threshold is on planted hectares, NOT on the displayed part's area, which
+// is inflated by the close and inflated unevenly -- a part's display area says
+// more about how its parcels happen to cluster than about how much vineyard is
+// in it. Measured at 5 ha, this drops 46 of Franken's 87 parts for 0.8% of its
+// vineyard, and 24 of Saale-Unstrut's 43 for 4.4% of its own. What goes is
+// dust: single parcels of a hectare or two, tens of kilometres from the body of
+// the region, that carry a whole Anbaugebiet's colour on the map.
+const MIN_PLANTED_HA = 5;
+
 // Region -> where its extracted geometry landed, and how to read it.
 //
 // The two adapters do not share a file format, because the sources do not share
@@ -184,21 +206,48 @@ for (const [slug, src] of Object.entries(SOURCES)) {
     // and ST_Buffer's cost climbs with vertex count. Buffering the small
     // parcels individually is cheap, and the outward buffer makes neighbours
     // overlap so the union that follows has far less to keep apart.
+    // The close runs first and the pebble filter second, on its parts. Doing it
+    // the other way round -- dropping small PARCELS before the close -- was the
+    // obvious order and it is wrong: a dozen scattered half-hectare parcels
+    // three kilometres apart are dust, while a dozen of them adjacent are a
+    // vineyard that closes into a perfectly good part. Only the close knows
+    // which it is looking at.
+    //
+    // `kept` re-measures planted hectares over the surviving parts, so the
+    // number the promotion migration bands describes the geometry actually
+    // stored rather than vineyards this no longer draws.
     `with area as (select extensions.ST_Union(g) g from gem),
           clipped as (select v.g from vine v, area a where extensions.ST_Intersects(v.g, a.g)),
           raw as (select extensions.ST_Union(g) g, count(*) parcels from clipped),
           grown as (select extensions.ST_Union(
                             extensions.ST_Buffer(g, $1::float8, 'quad_segs=2')) g from clipped),
-          closed as (select extensions.ST_Buffer(g, -$2::float8, 'quad_segs=2') g from grown)
-     select extensions.ST_AsGeoJSON(extensions.ST_Multi(extensions.ST_CollectionExtract(
-              extensions.ST_MakeValid(closed.g), 3)), 6) gj,
+          closed as (select extensions.ST_Buffer(g, -$2::float8, 'quad_segs=2') g from grown),
+          parts as (select (extensions.ST_Dump(extensions.ST_CollectionExtract(
+                              extensions.ST_MakeValid(closed.g), 3))).geom p from closed),
+          scored as (
+            select p.p,
+                   coalesce(extensions.ST_Area(extensions.ST_Union(v.g)::extensions.geography), 0) / 10000 planted_ha
+              from parts p
+              left join clipped v on extensions.ST_Intersects(v.g, p.p)
+             group by p.p),
+          kept as (select * from scored where planted_ha >= $3::float8),
+          final as (select extensions.ST_Multi(extensions.ST_Union(p)) g,
+                           count(*)::int parts,
+                           sum(planted_ha) planted_ha
+                      from kept)
+     select extensions.ST_AsGeoJSON(final.g, 6) gj,
             raw.parcels,
-            round((extensions.ST_Area(raw.g::extensions.geography) / 10000)::numeric, 1) hectares,
-            round((extensions.ST_Area(closed.g::extensions.geography) / 10000)::numeric, 1) display_hectares,
+            round(final.planted_ha::numeric, 1) hectares,
+            round((extensions.ST_Area(final.g::extensions.geography) / 10000)::numeric, 1) display_hectares,
             extensions.ST_NumGeometries(extensions.ST_Multi(extensions.ST_CollectionExtract(
-              extensions.ST_MakeValid(raw.g), 3))) raw_parts
-       from raw, closed`,
-    [CLOSE, CLOSE_BACK],
+              extensions.ST_MakeValid(raw.g), 3))) raw_parts,
+            (select count(*)::int from scored) closed_parts,
+            (select count(*)::int from scored where planted_ha < $3::float8) dropped_parts,
+            round((select coalesce(sum(planted_ha), 0) from scored
+                    where planted_ha < $3::float8)::numeric, 1) dropped_hectares,
+            round((extensions.ST_Area(raw.g::extensions.geography) / 10000)::numeric, 1) planted_before_filter
+       from raw, final`,
+    [CLOSE, CLOSE_BACK, MIN_PLANTED_HA],
   );
   await client.query("rollback");
 
@@ -213,12 +262,24 @@ for (const [slug, src] of Object.entries(SOURCES)) {
       parcels: Number(r.parcels), hectares: Number(r.hectares),
       display_hectares: Number(r.display_hectares), raw_parts: Number(r.raw_parts),
       parts: geometry.coordinates.length,
+      // What the pebble filter did, so the promotion migration can check it ran
+      // and a reader can see its cost without rerunning the build.
+      min_planted_ha: MIN_PLANTED_HA,
+      closed_parts: Number(r.closed_parts),
+      dropped_parts: Number(r.dropped_parts),
+      dropped_hectares: Number(r.dropped_hectares),
+      planted_before_filter: Number(r.planted_before_filter),
       attribution: src.attribution, licence: src.licence,
     },
     geometry,
   });
-  console.log(`  ${namedUnits(region)} named units, ${r.parcels} parcels, ${r.hectares} ha planted, `
-    + `${r.raw_parts} -> ${geometry.coordinates.length} parts after close (${r.display_hectares} ha shown)`);
+  console.log(`  ${namedUnits(region)} named units, ${r.parcels} parcels, `
+    + `${r.raw_parts} -> ${r.closed_parts} parts after close`);
+  console.log(`  pebble filter (<${MIN_PLANTED_HA} ha planted): dropped ${r.dropped_parts} parts `
+    + `holding ${r.dropped_hectares} ha -> ${geometry.coordinates.length} parts, `
+    + `${r.hectares} of ${r.planted_before_filter} ha planted kept `
+    + `(${(Number(r.hectares) / Number(r.planted_before_filter) * 100).toFixed(1)}%), `
+    + `${r.display_hectares} ha shown`);
 }
 
 await client.end();
@@ -233,10 +294,15 @@ await writeFile(OUT, `${JSON.stringify({
       + "Weimar Ortsteile, which exist only in the cadastre)",
     method: "vineyard-clip+close: Rebfläche intersected with the areas the product "
       + "specification names, then closed morphologically (buffer +0.012°, then -0.008°) as "
-      + "build-germany-anbaugebiete.mjs closes the Rheinland-Pfalz regions. NOT a Weinbergsrolle: "
-      + "this is recorded land use, so an unregistered planted parcel is in and a registered Lage "
-      + "lying fallow is out. The close INFLATES the displayed area; 'hectares' is the planted "
-      + "extent measured before it, 'display_hectares' what the geometry covers.",
+      + "build-germany-anbaugebiete.mjs closes the Rheinland-Pfalz regions, then closed parts "
+      + `holding under ${MIN_PLANTED_HA} ha of planted vineyard dropped. The close cannot knit `
+      + "together vineyards that are genuinely far apart, so Franken and Saale-Unstrut came out "
+      + "as speckle fields; the filter removes isolated dust, and 'dropped_parts' / "
+      + "'dropped_hectares' record what it cost. NOT a Weinbergsrolle: this is recorded land use, "
+      + "so an unregistered planted parcel is in and a registered Lage lying fallow is out. The "
+      + "close INFLATES the displayed area; 'hectares' is the planted extent of the parts that "
+      + "survive the filter, 'planted_before_filter' the whole clip, 'display_hectares' what the "
+      + "geometry covers.",
     generated_at: new Date().toISOString().slice(0, 10),
   },
   features,
