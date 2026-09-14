@@ -104,7 +104,15 @@ export default async function HostConsolePage({
 
   const tasting = await getTastingRow(tastingId);
   if (!tasting) notFound();
-  if (tasting.host_id !== user.id || tasting.status === "DRAFT") {
+  // OD-5 (a): the console only ever makes sense for a LIVE tasting — Start
+  // lands a host here in the first place only when timingMode is LIVE (see
+  // startLandsOnConsole) — so an ASYNC tasting's host is sent to the lobby
+  // the same as a DRAFT one, alongside the existing non-host redirect.
+  if (
+    tasting.host_id !== user.id ||
+    tasting.status === "DRAFT" ||
+    tasting.timing_mode !== "LIVE"
+  ) {
     redirect(`/tastings/${tastingId}`);
   }
 
