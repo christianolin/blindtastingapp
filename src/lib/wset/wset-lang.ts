@@ -11,9 +11,16 @@
 // Once the user picks a language explicitly it is persisted and detection no
 // longer applies.
 import { useSyncExternalStore } from "react";
+import { readValue, writeValue } from "@/lib/safe-storage";
 import type { WsetLang } from "./i18n";
 
 const KEY = "wset-lang";
+
+// With site data blocked the bare accessor throws, and `read` runs on every
+// render through useSyncExternalStore — so an unguarded read took the whole
+// sheet down. When the write is refused too, the choice is held here for the
+// page view rather than silently snapping back to the detected language.
+let memory: WsetLang | null = null;
 
 /** English default; Danish only when the browser's language is Danish. */
 function detect(): WsetLang {
@@ -25,9 +32,9 @@ function detect(): WsetLang {
 /** The effective language: an explicit stored choice, else browser detection. */
 function read(): WsetLang {
   if (typeof window === "undefined") return "en";
-  const stored = window.localStorage.getItem(KEY);
+  const stored = readValue(() => window.localStorage, KEY);
   if (stored === "en" || stored === "da") return stored;
-  return detect();
+  return memory ?? detect();
 }
 
 const listeners = new Set<() => void>();
@@ -47,7 +54,8 @@ function subscribe(cb: () => void): () => void {
 
 /** Persist an explicit choice and notify every subscriber in this tab. */
 export function setWsetLang(lang: WsetLang): void {
-  window.localStorage.setItem(KEY, lang);
+  memory = lang;
+  writeValue(() => window.localStorage, KEY, lang);
   for (const cb of listeners) cb();
 }
 

@@ -285,8 +285,21 @@ export async function lockGuess(
     if (error) return { error: error.message };
   }
 
+  // The lock has already committed here, so this must NOT return an error: the
+  // ladder reads `{ error }` as "the lock did not happen", clears lockedRef and
+  // reopens over a row that is in fact locked. A failed scoring is recoverable
+  // instead — LockedIn re-runs the idempotent `scoreLockedGuess` once the glass
+  // is complete, and that one does surface its error. So it is logged, not
+  // discarded and not raised, the same way `keepRead` treats a lost read.
   if (guesser.scoresOnLock && (await completeGlassIds(supabase, tastingId, [wineId])).has(wineId)) {
-    await supabase.rpc("score_own_guess", { p_wine_id: wineId });
+    const { error } = await supabase.rpc("score_own_guess", { p_wine_id: wineId });
+    if (error) {
+      console.error("lockGuess: scoring the locked guess failed", {
+        wineId,
+        code: error.code,
+        message: error.message,
+      });
+    }
   }
   await maybeAutoRevealWine(supabase, wineId);
 

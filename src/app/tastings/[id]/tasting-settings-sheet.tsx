@@ -168,6 +168,7 @@ export function TastingSettingsSheet({
     reopenTasting,
     null,
   );
+  const [deleteState, deleteAction] = useActionState(deleteTasting, null);
 
   // The inline two-tap that replaces window.confirm for Delete (XCUT-37;
   // shared with the console's Reveal everything, BT-H2).
@@ -400,7 +401,7 @@ export function TastingSettingsSheet({
           ) : null}
 
           <form
-            action={deleteTasting}
+            action={deleteAction}
             onSubmit={(e) => {
               if (deleteTapState !== "armed") {
                 e.preventDefault();
@@ -414,6 +415,9 @@ export function TastingSettingsSheet({
             <Button type="submit" variant="destructive" className="w-full justify-start gap-1.5">
               <Trash2 className="size-4" /> {deleteTastingLabel(deleteTapState)}
             </Button>
+            {deleteState && "error" in deleteState ? (
+              <p className="mt-1 text-sm text-destructive">{deleteState.error}</p>
+            ) : null}
           </form>
         </div>
       </div>

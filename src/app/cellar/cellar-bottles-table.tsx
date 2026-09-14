@@ -20,6 +20,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readValue, writeValue } from "@/lib/safe-storage";
 import { Input } from "@/components/ui/input";
 import { CountryFlag } from "@/components/country-flag";
 import { AddWineButton } from "@/components/add-wine-button";
@@ -62,6 +63,7 @@ const fold = (s: string) =>
 const selectCls =
   "h-9 rounded-lg border border-input bg-background px-3 text-sm text-foreground";
 const ALL = "__all__";
+const CELLAR_VIEW_KEY = "cellar-view";
 
 function formatSize(ml: number): string {
   if (ml % 1000 === 0) return `${ml / 1000} L`;
@@ -148,15 +150,17 @@ export function CellarBottlesTable({
   // page size differ. The choice persists per browser so the cellar reopens
   // the way you like it. Read lazily once (SSR renders list, then the client's
   // saved choice applies on mount) rather than via a state-setting effect.
+  // The read runs inside the initializer, so with site data blocked the bare
+  // accessor's SecurityError would throw during render and take the whole
+  // cellar to the error boundary. Through safe-storage it degrades to "list".
   const [view, setView] = useState<"list" | "grid">(() => {
     if (typeof window === "undefined") return "list";
-    const saved = window.localStorage.getItem("cellar-view");
-    return saved === "grid" ? "grid" : "list";
+    return readValue(() => window.localStorage, CELLAR_VIEW_KEY) === "grid" ? "grid" : "list";
   });
   const chooseView = (v: "list" | "grid") => {
     setView(v);
     setPage(1);
-    window.localStorage.setItem("cellar-view", v);
+    writeValue(() => window.localStorage, CELLAR_VIEW_KEY, v);
   };
   const [page, setPage] = useState(1);
   const listTopRef = useRef<HTMLDivElement | null>(null);

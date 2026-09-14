@@ -382,7 +382,10 @@ export function NewNoteModal({
               onSaved={async (savedId, saved) => {
                 // A cellar bottle is drawn down only now that the note is saved.
                 if (cellarConsume && savedId) {
-                  await supabase.rpc("consume_cellar_lot", {
+                  // The note is already saved, so this cannot fail the save —
+                  // but an undrawn bottle used to leave no trace at all, and
+                  // the cellar count silently disagreed with the note.
+                  const { error } = await supabase.rpc("consume_cellar_lot", {
                     p: {
                       lot_id: cellarConsume.lotId,
                       quantity: 1,
@@ -390,6 +393,13 @@ export function NewNoteModal({
                       wset_note_id: savedId,
                     },
                   });
+                  if (error) {
+                    console.error("note saved, but the bottle was not drawn down", {
+                      lotId: cellarConsume.lotId,
+                      code: error.code,
+                      message: error.message,
+                    });
+                  }
                 }
                 if (savedId) {
                   let catalogWineId = data.wineId;

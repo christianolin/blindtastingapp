@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { DEFAULT_NEXT, safeNext } from "@/lib/safe-next";
 
 // Admin-generated links (invite, password recovery) redirect with tokens in
 // the URL fragment (#access_token=...&refresh_token=...), not a `?code=`
@@ -17,7 +18,10 @@ function ConfirmHash() {
 
   useEffect(() => {
     async function confirm() {
-      const next = searchParams.get("next") ?? "/taste";
+      // router.replace takes an absolute URL as one, so an unchecked `next`
+      // walks a just-signed-in user off the site. This is the page the invite
+      // emails link to, so the link shape is public.
+      const next = safeNext(searchParams.get("next")) ?? DEFAULT_NEXT;
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
