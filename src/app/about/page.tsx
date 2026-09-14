@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils";
 // Pixel stops, not percentages, so the headline always sits on opaque
 // parchment (a percentage veil drops it onto the label at narrow widths).
 const VEIL_WIDE =
-  "linear-gradient(to right, rgba(245,239,227,.97) 0, rgba(245,239,227,.94) min(600px, 62%), rgba(245,239,227,.3) 82%, rgba(245,239,227,.06) 100%)";
+  "linear-gradient(to right, color-mix(in oklab, var(--background) 97%, transparent) 0, color-mix(in oklab, var(--background) 94%, transparent) min(600px, 62%), color-mix(in oklab, var(--background) 30%, transparent) 82%, color-mix(in oklab, var(--background) 06%, transparent) 100%)";
 // Phones: the text block sits at the bottom of a 394px hero, so the veil
 // rises from opaque parchment to a light ink tint the top bar reads over.
 const VEIL_PHONE =
-  "linear-gradient(to top, #F5EFE3 3%, rgba(245,239,227,.9) 40%, rgba(42,33,30,.3) 100%)";
+  "linear-gradient(to top, var(--background) 3%, color-mix(in oklab, var(--background) 90%, transparent) 40%, rgba(42,33,30,.3) 100%)";
 
 type Mode = {
   icon: LucideIcon;

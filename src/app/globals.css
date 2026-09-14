@@ -252,9 +252,24 @@
     --muted-foreground: #b9a98c;
     --accent: #3f3225;
     --accent-foreground: #f5efe3;
-    --destructive: #c6543f;
+    /* Raised from #c6543f, which was 3.81:1 on --card and 3.38:1 on
+     --surface-raised. It is not a decoration: it draws the error line under
+     the lobby's Start button and the host's reveal refusal, which is text
+     somebody has to read to know why the thing did not happen. #d9705c clears
+     AA on all three dark grounds. Light's #a8412c is 5.68:1 and unchanged. */
+  --destructive: #d9705c;
     --border: rgba(245, 239, 227, 0.14);
-    --input: rgba(245, 239, 227, 0.16);
+    /* Raised from 0.16. --input is the border of a text field, and a border is
+     how you know a text field is there at all -- WCAG 1.4.11 asks 3:1 for the
+     visual information that identifies a control. At 0.16 it composited to
+     1.59:1 on --card and 1.60:1 on --surface-raised, which is a field with no
+     visible edge. 0.42 gives 3.68 and 3.54.
+
+     --border stays where it is on purpose: it draws dividers and card outlines
+     as well as control edges, and raising it lifts every hairline in the app.
+     Its measured values are recorded in theme-contrast.test.ts rather than
+     asserted, because moving it is a palette decision, not a bug fix. */
+  --input: rgba(245, 239, 227, 0.42);
     --ring: #d4af6a;
     --gold: #d4af6a;
     --gold-deep: #c3a25b;
@@ -391,6 +406,24 @@
   :where(.dark) .bg-gold.text-foreground,
   :where(.dark) .bg-gold .text-foreground {
     color: var(--on-accent);
+  }
+
+  /* --primary as a BOUNDARY has the same problem it has as ink, and the same
+     answer. On a dark ground the indigo surface measures 1.24:1 against --card
+     and 1.10:1 against --surface-raised, so the 1.5px rim that marks an armed
+     bottle, an open ladder row, a focused field or the active tab simply is not
+     there. WCAG 1.4.11 wants 3:1 for a control's own shape; --primary-ink gives
+     5.13:1 on --card, and in light it IS --primary, so nothing moves there.
+
+     :where(:not(.bg-primary)) excludes the filled chips, where the border is
+     the same colour as its own fill on purpose and is not doing boundary work.
+     Wrapped in :where() so the whole selector stays at (0,1,0) and an explicit
+     dark:border-* at a call site still wins -- the same precedence rule as the
+     ink above, for the same reason. */
+  :where(.dark) .border-primary:where(:not(.bg-primary)),
+  :where(.dark) .ring-primary:where(:not(.bg-primary)) {
+    border-color: var(--primary-ink);
+    --tw-ring-color: var(--primary-ink);
   }
 }
 
