@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
+import { eligibleForGlass, type EligibilityParticipant } from "@/lib/glass-eligibility";
 import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
@@ -49,7 +50,7 @@ export default async function ProfileTastingHistoryPage({
 
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, name, reveal_mode")
+    .select("id, name, reveal_mode, wine_source, host_id")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting) {
@@ -59,26 +60,35 @@ export default async function ProfileTastingHistoryPage({
 
   const { data: participant } = await supabase
     .from("tasting_participants")
-    .select("id")
+    .select("id, status, joined_at")
     .eq("tasting_id", tastingId)
     .eq("user_id", profile.id)
     .maybeSingle();
   if (!participant) {
     notFound();
   }
+  const eligibilityParticipant: EligibilityParticipant = {
+    id: participant.id,
+    userId: profile.id,
+    status: participant.status,
+    joinedAt: participant.joined_at,
+  };
 
   const [
-    { data: wines },
+    { data: allWines },
     { data: countries },
     { data: regions },
     { data: grapes },
     { data: typeDesignations },
   ] = await Promise.all([
+    // The whole flight (not just revealed glasses) — "Glass N" is numbered by
+    // list order over every glass in the tasting (A-27), so a glass revealed
+    // out of order still carries its real place in the flight rather than its
+    // rank among only the glasses revealed so far.
     supabase
       .from("wines")
-      .select("id, position")
+      .select("id, position, is_revealed, contributor_participant_id, revealed_at")
       .eq("tasting_id", tastingId)
-      .eq("is_revealed", true)
       .order("position"),
     supabase.from("countries").select("id, name"),
     supabase.from("regions").select("id, name"),
@@ -86,7 +96,13 @@ export default async function ProfileTastingHistoryPage({
     supabase.from("type_designations").select("id, name"),
   ]);
 
-  const wineIds = (wines ?? []).map((w) => w.id);
+  const numberByWineId = new Map<string, number>();
+  [...(allWines ?? [])]
+    .sort((a, b) => a.position - b.position)
+    .forEach((w, index) => numberByWineId.set(w.id, index + 1));
+
+  const wines = (allWines ?? []).filter((w) => w.is_revealed);
+  const wineIds = wines.map((w) => w.id);
   // Explicit `guesses` column list (spec §10.4 (e); BT-S5) — never "*",
   // which would carry the semi-blind pick column.
   const { data: guesses } = await supabase
@@ -105,12 +121,32 @@ export default async function ProfileTastingHistoryPage({
   // Semi-blind picks come from `get_semi_blind_revealed_picks`, never from
   // the guess row's own pick column or a candidate `wine_answers` lookup
   // (spec §10.4 (e); BT-S5) — a wine id for an unrevealed candidate never
-  // crosses to this page at all (rule 1).
+  // crosses to this page at all (rule 1). The RPC returns a row for every
+  // glass/participant pair the caller may read, including ineligible ones
+  // (this profile's own contributed bottle, or the host's blank row in a
+  // host-provides tasting) — filter with `eligibleForGlass`, the same rule
+  // every other picks reader applies (A-27).
+  const wineById = new Map(wines.map((w) => [w.id, w]));
   const picksByWineId = new Map<string, SemiBlindRevealedPick>();
   if (isSemiBlind && wineIds.length > 0) {
     const picks = await getSemiBlindRevealedPicks(tastingId);
     for (const pick of picks) {
       if (pick.participantId !== participant.id) continue;
+      const wine = wineById.get(pick.glassWineId);
+      if (!wine) continue;
+      if (
+        !eligibleForGlass(
+          eligibilityParticipant,
+          {
+            contributorParticipantId: wine.contributor_participant_id,
+            isRevealed: wine.is_revealed,
+            revealedAt: wine.revealed_at,
+          },
+          { wineSource: tasting.wine_source, hostId: tasting.host_id },
+        )
+      ) {
+        continue;
+      }
       picksByWineId.set(pick.glassWineId, pick);
     }
   }
@@ -186,18 +222,18 @@ export default async function ProfileTastingHistoryPage({
           {profile.display_name}&apos;s guesses
         </p>
 
-        {(wines ?? []).length === 0 ? (
+        {wines.length === 0 ? (
           <p className="text-sm text-muted-foreground">No revealed wines yet.</p>
         ) : null}
 
-        {(wines ?? []).map((wine) => {
+        {wines.map((wine) => {
           const answer = answerByWineId.get(wine.id);
           const guess = guessByWineId.get(wine.id);
           const pick = picksByWineId.get(wine.id);
           return (
             <Card key={wine.id}>
               <CardHeader>
-                <CardTitle>Wine {wine.position}</CardTitle>
+                <CardTitle>Glass {numberByWineId.get(wine.id) ?? wine.position}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <div>
@@ -217,7 +253,7 @@ export default async function ProfileTastingHistoryPage({
                 {isSemiBlind ? (
                   <div>
                     <h3 className="mb-1 text-sm font-medium">
-                      {!pick
+                      {!pick || pick.pickKey === null
                         ? "No guess submitted"
                         : pick.correct
                           ? "✓ Correct match"
