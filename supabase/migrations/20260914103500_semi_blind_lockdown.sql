@@ -41,6 +41,12 @@
 --     score_own_guess are not recreated. wines_semi_blind_flight_locked (BEFORE
 --     INSERT on wines): no glass is inserted into a semi-blind tasting that has
 --     left DRAFT, whatever the role (M6 already refuses removal and provenance).
+--     It reads the tasting row FOR SHARE, by id alone, and tests the row it locked
+--     (BT-V3 A-10): Start's UPDATE of tastings conflicts with that lock, so an insert
+--     racing Start waits for Start's commit and then reads the started status. A
+--     plain read would see the committed DRAFT row and let the glass in (the foreign
+--     key's KEY SHARE does not conflict with Start), and a status filter in the
+--     locking query would skip that DRAFT row without waiting.
 --     Both trigger functions get no client EXECUTE, as M4, M6 and M7 do for
 --     theirs (a trigger fires without it).
 -- (e) guessed_wine_id leaves the client roles: no INSERT or UPDATE of it, and
@@ -51,7 +57,7 @@
 --     the semi-blind participant clause is gone, and the host clause carries
 --     w.added_by_host.
 -- (review) assign_semi_blind_match (M9a) recreated from the live body with two
---     edits (BT-SQL10 review round 1; rule 1). The function runs as its owner,
+--     edits (BT-SQL10 review round 1; rule 1) and a third (BT-V3 A-11). The function runs as its owner,
 --     postgres, which owns guesses and bypasses RLS, so a unique violation raised
 --     inside it carries Postgres's DETAIL "Key (participant_id, guessed_wine_id)=
 --     (<participant>, <candidate wine id>) already exists.", and PostgREST returns
@@ -70,6 +76,23 @@
 --     2. The three writes sit in a block that re-raises a unique violation with its
 --        SQLSTATE (23505, which assignMatch retries once), message and constraint,
 --        and without its DETAIL, for any writer that does not take the lock.
+--     3. BT-V3 A-11: right after the candidate key resolves, and before any guesses
+--        lock, the candidate's glass is read FOR SHARE by id, and its is_revealed
+--        and contributor are tested on the row it locked. reveal_wine's UPDATE of
+--        is_revealed conflicts with that lock both ways: a match racing the reveal
+--        waits and then reads the glass revealed ("that wine is not in your pool"),
+--        and a reveal racing a match waits for the match's commit, so the pool
+--        release (a later statement) sees the new pick and clears it. Without the
+--        lock both orders leave an open pick on a revealed wine (race rows R9, R10).
+--        This order (wines, then guesses) is the one reveal_next_category takes, so
+--        the two never deadlock. reveal_wine takes the opposite order (it scores the
+--        glass's guesses, then flips wines), which leaves one rare deadlock: when the
+--        caller's own row on the candidate's glass is the holder (or is the glass
+--        being matched), reveal_wine can lock that row after the match took the share
+--        lock and before the match reaches the row. Postgres aborts one side with
+--        40P01; either may be the victim, and one retry of the victim restores the
+--        invariant (race row R11). assignMatch retries 40P01 once; the reveal paths
+--        do not retry.
 --
 -- The lock pin (M8). The pool release is a fifth writer of guesses: it runs as
 -- the owner inside the reveal's client request, so the pin binds it, and it
@@ -372,9 +395,18 @@ create trigger semi_blind_release_revealed_wine
 -- semi-blind tasting (§10.3 item 7). M6's helpers refuse removal and provenance.
 create or replace function public.wines_semi_blind_flight_locked()
 returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_mode reveal_mode_type;
+  v_status tasting_status;
 begin
-  if exists (select 1 from tastings t
-             where t.id = new.tasting_id and t.reveal_mode = 'SEMI_BLIND' and t.status <> 'DRAFT') then
+  -- Lock the tasting row by id, then test it (BT-V3 A-10): an insert racing Start
+  -- waits for Start's commit and reads the started status. A status filter in this
+  -- query would skip the committed DRAFT row without waiting.
+  select t.reveal_mode, t.status into v_mode, v_status
+    from tastings t
+   where t.id = new.tasting_id
+     for share;
+  if v_mode = 'SEMI_BLIND' and v_status <> 'DRAFT' then
     raise exception 'a semi-blind flight is fixed once the tasting starts'
       using errcode = 'insufficient_privilege';
   end if;
@@ -425,9 +457,9 @@ create policy "wine_answers read" on public.wine_answers
   );
 
 -- ===========================================================================
--- BT-SQL10 review round 1 (rule 1): assign_semi_blind_match recreated from live
--- (md5 a258a91136470a3656736032e61d3c75, 20260914103500-live-defs.sql) with the two
--- edits the header describes; the rest of the body is unchanged. create or replace
+-- BT-SQL10 review round 1 (rule 1) and BT-V3 A-11: assign_semi_blind_match recreated
+-- from live (md5 a258a91136470a3656736032e61d3c75, 20260914103500-live-defs.sql) with
+-- the three edits the header describes; the rest of the body is unchanged. create or replace
 -- keeps its owner and its EXECUTE grants (authenticated only).
 -- ===========================================================================
 create or replace function public.assign_semi_blind_match(p_wine_id uuid, p_candidate_key text)
@@ -437,6 +469,7 @@ declare
   v_tasting tastings%rowtype;
   v_pid uuid;
   v_candidate uuid;
+  v_cand wines%rowtype;
   v_mine guesses%rowtype;
   v_has_mine boolean;
   v_holder guesses%rowtype;
@@ -465,9 +498,14 @@ begin
 
   select wine_id into v_candidate from semi_blind_candidate_keys
    where tasting_id = v_tasting.id and candidate_key = p_candidate_key;
+  -- Lock the candidate's glass by id before any guesses lock, then test that row
+  -- (BT-V3 A-11): a match racing the glass's reveal waits here and reads it
+  -- revealed, and a reveal racing this match waits for its commit, so the pool
+  -- release sees the pick.
+  select * into v_cand from wines where id = v_candidate for share;
   if v_candidate is null
-     or exists (select 1 from wines where id = v_candidate
-                and (is_revealed or contributor_participant_id = v_pid))
+     or v_cand.is_revealed
+     or v_cand.contributor_participant_id = v_pid
      or public.has_scored_guess(v_candidate) then          -- ASYNC IMMEDIATE: already proven (lane N's gate)
     raise exception 'that wine is not in your pool';
   end if;
@@ -560,12 +598,13 @@ begin
   end if;
 
   -- 2. The two trigger functions: plpgsql, SECURITY DEFINER with search_path=public,
-  --    returning trigger, the spec's bodies (md5 of prosrc, CR-stripped), and no
-  --    EXECUTE for anon, authenticated or PUBLIC.
+  --    returning trigger, the bodies above (md5 of prosrc, CR-stripped: the spec's,
+  --    with BT-V3 A-10's row lock in the flight lock), and no EXECUTE for anon,
+  --    authenticated or PUBLIC.
   select string_agg(format('%s (md5 %s)', e.sig, coalesce(md5(replace(p.prosrc, chr(13), '')), 'missing')), '; ') into v_text
   from (values
     ('public.semi_blind_release_revealed_wine()', 'f2b99368997eaa08944e7d31943ed12a'),
-    ('public.wines_semi_blind_flight_locked()', 'ac783e858630c5febd18befa1617f5c9')
+    ('public.wines_semi_blind_flight_locked()', 'c9f1ab6235ebcc2300f1da58c2561681')
   ) as e (sig, src_md5)
   left join pg_proc p on p.oid = to_regprocedure(e.sig)
   left join pg_language l on l.oid = p.prolang
@@ -583,12 +622,14 @@ begin
     raise exception 'the trigger functions differ from the spec §10.4 (d) shape, body or EXECUTE matrix: %', v_text;
   end if;
 
-  -- 2b. assign_semi_blind_match (review round 1): the live body with the two edits (md5
-  --     of prosrc, CR-stripped); still plpgsql SECURITY DEFINER with search_path=public
-  --     returning jsonb, EXECUTE for authenticated and never for anon or PUBLIC; the
-  --     advisory lock before the first guesses read; the DETAIL-free unique violation.
-  select format('md5 %s, lock at %s, first guesses read at %s, handler at %s, secdef %s, config %s, auth %s, anon %s',
+  -- 2b. assign_semi_blind_match (review round 1, BT-V3 A-11): the live body with the three
+  --     edits (md5 of prosrc, CR-stripped); still plpgsql SECURITY DEFINER with
+  --     search_path=public returning jsonb, EXECUTE for authenticated and never for anon
+  --     or PUBLIC; the advisory lock, then the candidate's FOR SHARE read, both before the
+  --     first guesses read; the DETAIL-free unique violation.
+  select format('md5 %s, lock at %s, candidate lock at %s, first guesses read at %s, handler at %s, secdef %s, config %s, auth %s, anon %s',
                 md5(replace(p.prosrc, chr(13), '')), strpos(p.prosrc, 'perform pg_advisory_xact_lock(hashtext(''public.assign_semi_blind_match''), hashtext(v_pid::text));'),
+                strpos(p.prosrc, 'select * into v_cand from wines where id = v_candidate for share;'),
                 strpos(p.prosrc, 'from guesses'), strpos(p.prosrc, 'exception when unique_violation then'),
                 p.prosecdef, p.proconfig::text, has_function_privilege(c_authenticated, p.oid, 'EXECUTE'),
                 has_function_privilege(c_anon, p.oid, 'EXECUTE'))
@@ -598,15 +639,17 @@ begin
   where p.oid = v_assign
     and not (l.lanname = 'plpgsql' and p.prosecdef and p.proconfig::text = '{search_path=public}'
              and p.prorettype = 'jsonb'::regtype
-             and md5(replace(p.prosrc, chr(13), '')) = 'fad77a6a03175c8885ac9597d774fe51'
+             and md5(replace(p.prosrc, chr(13), '')) = '16728c8b25d8c3dee5e221cca26491ec'
              and strpos(p.prosrc, 'perform pg_advisory_xact_lock(hashtext(''public.assign_semi_blind_match''), hashtext(v_pid::text));') > 0
-             and strpos(p.prosrc, 'perform pg_advisory_xact_lock(hashtext(''public.assign_semi_blind_match''), hashtext(v_pid::text));') < strpos(p.prosrc, 'from guesses')
+             and strpos(p.prosrc, 'perform pg_advisory_xact_lock(hashtext(''public.assign_semi_blind_match''), hashtext(v_pid::text));')
+                 < strpos(p.prosrc, 'select * into v_cand from wines where id = v_candidate for share;')
+             and strpos(p.prosrc, 'select * into v_cand from wines where id = v_candidate for share;') < strpos(p.prosrc, 'from guesses')
              and strpos(p.prosrc, 'exception when unique_violation then') > strpos(p.prosrc, 'from guesses')
              and has_function_privilege(c_authenticated, p.oid, 'EXECUTE')
              and not has_function_privilege(c_anon, p.oid, 'EXECUTE')
              and not exists (select 1 from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) x where x.grantee = 0));
   if v_assign is null or v_text is not null then
-    raise exception 'assign_semi_blind_match is not the live body with the review round 1 lock and unique-violation handler: %',
+    raise exception 'assign_semi_blind_match is not the live body with the review round 1 lock and unique-violation handler and the BT-V3 A-11 candidate lock: %',
       coalesce(v_text, 'missing');
   end if;
 
