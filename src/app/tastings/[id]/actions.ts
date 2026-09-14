@@ -2,12 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { startWarning } from "@/lib/wine-identity/incomplete";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { INVITES_CLOSE_WHEN_ENDED } from "@/lib/lobby-copy";
 import { glassRemoveRefusal } from "@/lib/flight-glass-rules";
+import { startLandsOnConsole } from "@/lib/tasting-lifecycle-copy";
+import {
+  encodeStartResult,
+  startResultCookieName,
+  startResultCookiePath,
+} from "@/lib/tasting-request-cache";
 
 // `warning` rides along with a success that still needs the host's attention:
 // Start's incomplete glasses, and cellar bottles that couldn't be drawn down.
@@ -32,7 +39,7 @@ async function assertHost(
 ) {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status, reveal_mode, timing_mode")
+    .select("id, host_id, status, reveal_mode, timing_mode, wine_source")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== userId) return null;
@@ -86,7 +93,7 @@ export async function startTasting(
     { p_tasting_id: tastingId },
   );
   if (pourError) {
-    // The tasting has already started, so this is a warning, not the error.
+    // The tasting is running by now, so this is a warning, not the error.
     console.error(
       `draw_down_flight_cellar_lots failed for ${tastingId}:`,
       pourError.message,
@@ -105,9 +112,37 @@ export async function startTasting(
 
   revalidatePath(`/tastings/${tastingId}`);
   const success = "Tasting started — guessing is open.";
-  return warnings.length > 0
-    ? { success, warning: warnings.join(" ") }
-    : { success };
+  const warning = warnings.length > 0 ? warnings.join(" ") : undefined;
+
+  // Started from the lobby (HostControls sends carry_result): the status flip
+  // swaps LobbyView for RunningView in this same round trip, so the Start form
+  // and its action state unmount before this result arrives. It rides a
+  // one-shot cookie instead, which RunningView shows the host once (BT-V3
+  // A-08). A clean success that lands on the console needs none, because
+  // HostControls pushes there; the create sheet shows its own result and
+  // sends no flag.
+  if (formData.get("carry_result") === "1") {
+    const toConsole = startLandsOnConsole({
+      timingMode: tasting.timing_mode,
+      revealMode: tasting.reveal_mode,
+      wineSource: tasting.wine_source,
+    });
+    if (warning || !toConsole) {
+      (await cookies()).set(
+        startResultCookieName(tastingId),
+        encodeStartResult({ success, warning: warning ?? null, toConsole }),
+        {
+          path: startResultCookiePath(tastingId),
+          maxAge: 120,
+          sameSite: "lax",
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+        },
+      );
+    }
+  }
+
+  return warning ? { success, warning } : { success };
 }
 
 // Host presses "Finish" — moves IN_PROGRESS → CLOSED, one-way. Guessing and

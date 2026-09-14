@@ -4,6 +4,7 @@ import {
   GLASS_STEP_STARTED,
   LATER_GLASS_SEEN,
   NOT_ADDER,
+  SEEN_GLASS_REORDER_REFUSAL,
   SEMI_BLIND_FLIGHT_FIXED,
   TASTING_CLOSED,
   crossesSeenGlass,
@@ -11,8 +12,10 @@ import {
   glassEditRefusal,
   glassRemoveRefusal,
   glassSwapRefusal,
+  moveRefusalSentence,
   reorderIds,
   semiBlindAddRefusal,
+  semiBlindFlightFixed,
   type FlightGlassState,
 } from "./flight-glass-rules";
 
@@ -178,6 +181,79 @@ describe("reorderIds and crossesSeenGlass (mirror move_flight_glass)", () => {
   it("true only when a seen glass would change its number", () => {
     expect(crossesSeenGlass(["a", "b", "c"], ["b", "a", "c"], new Set(["a"]))).toBe(true);
     expect(crossesSeenGlass(["a", "b", "c"], ["a", "c", "b"], new Set(["a"]))).toBe(false);
+  });
+});
+
+// BT-V3 A-19: M6 decision 5 (move_flight_glass after Start), mirrored for the
+// optimistic list so a move the RPC refuses never swaps on screen first.
+describe("crossesSeenGlass after Start (M6 decision 5)", () => {
+  const ids = ["a", "b", "c", "d"];
+  const none = new Set<string>();
+  // d from place 4 to place 2: the range is places 2..4 (b, c, d), both ends included.
+  const dUp = reorderIds(ids, "d", 2)!;
+
+  it("a started semi-blind flight moves nothing", () => {
+    expect(crossesSeenGlass(ids, dUp, none, { started: true, semiBlindFlightFixed: true })).toBe(true);
+    expect(crossesSeenGlass(ids, ["b", "a", "c", "d"], none, { started: true, semiBlindFlightFixed: true })).toBe(true);
+  });
+
+  it("a guessed glass anywhere in the range refuses, both ends included", () => {
+    for (const g of ["b", "c", "d"]) {
+      expect(crossesSeenGlass(ids, dUp, none, { started: true, guessed: new Set([g]) }), g).toBe(true);
+    }
+  });
+
+  it("a guessed or seen glass outside the range does not", () => {
+    expect(crossesSeenGlass(ids, dUp, new Set(["a"]), { started: true, guessed: new Set(["a"]) })).toBe(false);
+    const aDown = reorderIds(ids, "a", 2)!; // range a, b
+    expect(crossesSeenGlass(ids, aDown, new Set(["d"]), { started: true, guessed: new Set(["c", "d"]) })).toBe(false);
+  });
+
+  it("the range includes the place the glass lands on", () => {
+    const aToThree = reorderIds(ids, "a", 3)!; // ["b", "c", "a", "d"]: range a, b, c
+    expect(crossesSeenGlass(ids, aToThree, none, { started: true, guessed: new Set(["c"]) })).toBe(true);
+    expect(crossesSeenGlass(ids, aToThree, none, { started: true, guessed: new Set(["d"]) })).toBe(false);
+  });
+
+  it("before Start a guess does not hold a glass's number; a seen glass always does", () => {
+    expect(crossesSeenGlass(ids, dUp, none, { started: false, guessed: new Set(["b"]) })).toBe(false);
+    expect(crossesSeenGlass(ids, dUp, new Set(["c"]), { started: false })).toBe(true);
+    expect(crossesSeenGlass(ids, dUp, new Set(["c"]))).toBe(true);
+  });
+
+  it("an unchanged order refuses nothing (the list never sends it)", () => {
+    expect(crossesSeenGlass(ids, [...ids], new Set(ids), { started: true, semiBlindFlightFixed: true, guessed: new Set(ids) })).toBe(false);
+  });
+});
+
+describe("semiBlindFlightFixed — every mode × status", () => {
+  for (const revealMode of ["BLIND", "SEMI_BLIND", "OPEN"] as const)
+    for (const tastingStatus of ["DRAFT", "IN_PROGRESS", "OPEN", "CLOSED"] as const) {
+      const t = { revealMode, tastingStatus };
+      it(`${JSON.stringify(t)} → ${semiBlindStarted(t)}`, () => expect(semiBlindFlightFixed(t)).toBe(semiBlindStarted(t)));
+    }
+});
+
+describe("moveRefusalSentence (M6's move_flight_glass sentences → lobby copy)", () => {
+  it("keeps the seen-glass sentence", () => {
+    expect(SEEN_GLASS_REORDER_REFUSAL).toBe("A glass the table has already seen cannot change its number.");
+  });
+  it("maps the started semi-blind refusal to the spec's fixed-flight copy", () => {
+    expect(moveRefusalSentence("a semi-blind flight is fixed once the tasting has started")).toBe(SEMI_BLIND_FLIGHT_FIXED);
+  });
+  it("maps both numbering refusals to the seen-glass sentence", () => {
+    expect(moveRefusalSentence("a glass the table has already seen cannot change its number")).toBe(SEEN_GLASS_REORDER_REFUSAL);
+    expect(
+      moveRefusalSentence("a glass that has been guessed or seen cannot change its number once the tasting has started"),
+    ).toBe(SEEN_GLASS_REORDER_REFUSAL);
+  });
+  it("tolerates case, surrounding space and a closing period", () => {
+    expect(moveRefusalSentence("  A semi-blind flight is fixed once the tasting has started. ")).toBe(SEMI_BLIND_FLIGHT_FIXED);
+  });
+  it("null for any other sentence, which the action shows as the RPC wrote it", () => {
+    expect(moveRefusalSentence("only the host can reorder the flight")).toBeNull();
+    expect(moveRefusalSentence("no such place in the flight")).toBeNull();
+    expect(moveRefusalSentence("")).toBeNull();
   });
 });
 

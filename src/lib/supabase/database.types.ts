@@ -601,7 +601,7 @@ export type Database = {
         // Clients may write only the guess fields and locked_at; the scoring
         // columns, reveal_step and the timestamps are server-written (migration
         // 20260912093000 revokes the column privileges). The table's
-        // guessed_wine_id column is in none of these types: migration
+        // picked-wine column is in none of these types: migration
         // 20260914103500 takes it out of the client roles (no SELECT, INSERT or
         // UPDATE), because a semi-blind pick is a wine id and wine ids map to pour
         // positions. Picks go through assign_semi_blind_match and

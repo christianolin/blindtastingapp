@@ -32,18 +32,24 @@
 -- closed without it: the wine_answers policies must be the set M9b leaves, whose
 -- "wine_answers read" host clause is ((t.host_id = auth.uid()) AND w.added_by_host).
 --
+-- Re-checked read-only for BT-V3 (2026-09-14): the live tail is 20260914122317 and
+-- M8 is now applied (BT-M8); M9b and this file are not. Every live object above is
+-- unchanged, and none of them depends on M8.
+--
 -- What it does. transfer_tasting_host(p_tasting_id, p_new_host_user_id), SECURITY
--- DEFINER with search_path=public, EXECUTE for authenticated and never for anon
--- or PUBLIC: the host of a DRAFT tasting hands hosting to a JOINED participant.
+-- DEFINER with search_path=public, EXECUTE for authenticated only (never anon,
+-- PUBLIC or service_role): the host of a DRAFT tasting hands hosting to a JOINED
+-- participant.
 -- It locks the tasting row first, so two hand-overs of one tasting run one after
--- the other. It refuses, in this order, with these messages (handHostingRefusal
+-- the other, then the target's participant row by key (FOR SHARE). It refuses, in
+-- this order, with these messages (handHostingRefusal
 -- in src/lib/lobby-copy.ts maps them to sentences):
 --   'only the host can hand hosting over'
 --       no such tasting, no auth.uid(), or the caller is not the host;
 --   'hosting can only change before the tasting starts'
 --       the status is not DRAFT;
 --   'only someone who has joined can host'
---       a null target, the host, or no JOINED participant row for the target;
+--       a null target, the host, or a target whose participant row is not JOINED;
 --   'remove the glasses you added first'
 --       any glass of the tasting has added_by_host;
 --   'finish or remove your unfinished glasses and cellar bottles first'
@@ -68,6 +74,19 @@
 --   host_id; this function is the only way hosting moves, and it runs as its owner.
 --   The post-state assertions pin that policy, and that nothing but the one
 --   function changed.
+-- * The target's participant row is locked by key before the JOINED test (BT-V3
+--   A-12, review V2-2-03). A target who leaves while the hand-over runs is either
+--   read as DECLINED (refused), or waits for this transaction and then meets M4's
+--   leave guard, "the host cannot leave their own tasting": hosting never lands on
+--   a participant row that is not JOINED (Q4; CLAUDE.md "the host row is always a
+--   JOINED participant"). The probe's race mode shows both orders on a disposable
+--   cluster.
+-- * EXECUTE is authenticated's alone (owner decision OD-1, 2026-09-14; review
+--   V2-2-07). Supabase's default privileges grant a new public function to anon,
+--   authenticated and service_role, so the revoke names service_role as well as
+--   PUBLIC and anon. service_role could not hand hosting over anyway (auth.uid() is
+--   null there, so the call is refused), but spec §12.4 is authenticated-only, and
+--   the post-state assertions pin an ACL of the owner and authenticated alone.
 --
 -- No begin/commit: the applier owns the transaction. Temp tables carry the
 -- pre-migration state into the post-state assertions and are dropped at the end.
@@ -218,6 +237,7 @@ create or replace function public.transfer_tasting_host(p_tasting_id uuid, p_new
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_tasting tastings%rowtype;
+  v_target_status participant_status;
 begin
   select * into v_tasting from tastings where id = p_tasting_id for update;
   if not found or auth.uid() is null or v_tasting.host_id is distinct from auth.uid() then
@@ -226,11 +246,14 @@ begin
   if v_tasting.status <> 'DRAFT' then
     raise exception 'hosting can only change before the tasting starts';
   end if;
+  -- The target's row, locked by key: a leave that commits first is read here, and
+  -- one that comes later waits, then meets M4's leave guard (they host by then).
+  select status into v_target_status from tasting_participants
+   where tasting_id = p_tasting_id and user_id = p_new_host_user_id
+   for share;
   if p_new_host_user_id is null
      or p_new_host_user_id = v_tasting.host_id
-     or not exists (select 1 from tasting_participants
-                    where tasting_id = p_tasting_id and user_id = p_new_host_user_id
-                      and status = 'JOINED') then
+     or v_target_status is distinct from 'JOINED' then
     raise exception 'only someone who has joined can host';
   end if;
   if exists (select 1 from wines
@@ -247,7 +270,7 @@ begin
   update tastings set host_id = p_new_host_user_id where id = p_tasting_id;
   -- The former host's participant row is untouched: they stay JOINED.
 end $$;
-revoke all on function public.transfer_tasting_host(uuid, uuid) from public, anon;
+revoke all on function public.transfer_tasting_host(uuid, uuid) from public, anon, service_role;
 grant execute on function public.transfer_tasting_host(uuid, uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -272,7 +295,7 @@ begin
   join pg_language l on l.oid = p.prolang
   where p.oid = v_fn;
   if v_fn is null
-     or v_text is distinct from 'plpgsql definer=true config={search_path=public} (p_tasting_id uuid, p_new_host_user_id uuid) returns void volatility=v md5=4c32379c31e4061c9ef658cef6dadd06' then
+     or v_text is distinct from 'plpgsql definer=true config={search_path=public} (p_tasting_id uuid, p_new_host_user_id uuid) returns void volatility=v md5=9b0a437bf1a2b6146a526dca69806af3' then
     raise exception 'transfer_tasting_host is not the spec §12.4 function: %', coalesce(v_text, 'missing');
   end if;
   if (select count(*) from pg_proc p
@@ -280,13 +303,15 @@ begin
     raise exception 'more than one public.transfer_tasting_host';
   end if;
 
-  -- 2. EXECUTE: authenticated, never anon or PUBLIC. Beyond authenticated only the owner
-  --    and service_role (Supabase's default privileges for new functions) hold it, and
-  --    nobody but the owner holds it with grant option.
+  -- 2. EXECUTE: authenticated only (spec §12.4; owner decision OD-1), never anon, PUBLIC
+  --    or service_role. The ACL names only the owner and authenticated, and nobody but
+  --    the owner holds it with grant option.
   if not has_function_privilege(c_authenticated, v_fn, 'EXECUTE')
-     or has_function_privilege(c_anon, v_fn, 'EXECUTE') then
-    raise exception 'transfer_tasting_host EXECUTE is not authenticated-only (authenticated %, anon %)',
-      has_function_privilege(c_authenticated, v_fn, 'EXECUTE'), has_function_privilege(c_anon, v_fn, 'EXECUTE');
+     or has_function_privilege(c_anon, v_fn, 'EXECUTE')
+     or has_function_privilege(c_service_role, v_fn, 'EXECUTE') then
+    raise exception 'transfer_tasting_host EXECUTE is not authenticated-only (authenticated %, anon %, service_role %)',
+      has_function_privilege(c_authenticated, v_fn, 'EXECUTE'), has_function_privilege(c_anon, v_fn, 'EXECUTE'),
+      has_function_privilege(c_service_role, v_fn, 'EXECUTE');
   end if;
   select string_agg(format('%s:%s:%s', case when x.grantee = 0 then 'PUBLIC' else pg_get_userbyid(x.grantee)::text end,
                            x.privilege_type, x.is_grantable), ', ')
@@ -295,7 +320,7 @@ begin
   cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) x
   where p.oid = v_fn
     and not (x.grantee = p.proowner
-             or (x.grantee in (c_authenticated, c_service_role) and not x.is_grantable));
+             or (x.grantee = c_authenticated and not x.is_grantable));
   if v_text is not null then
     raise exception 'unexpected EXECUTE grants on transfer_tasting_host: %', v_text;
   end if;

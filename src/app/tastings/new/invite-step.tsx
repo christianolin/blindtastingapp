@@ -99,7 +99,7 @@ export function InviteStep({
                     "flex min-h-11 items-center gap-2 rounded-full p-[7px_13px_7px_8px] text-[13px] transition-colors md:pointer-fine:min-h-0",
                     on
                       ? "bg-primary font-semibold text-primary-foreground hover:bg-primary-hover"
-                      : "border border-border bg-white text-foreground hover:border-gold",
+                      : "border border-border bg-card text-foreground hover:border-gold",
                   )}
                 >
                   <span
@@ -121,7 +121,7 @@ export function InviteStep({
             <button
               type="button"
               onClick={onShowEmailField}
-              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-white md:pointer-fine:min-h-0"
+              className="flex min-h-11 items-center gap-1 rounded-full border border-dashed border-gold px-[14px] py-[7px] text-[13px] font-semibold text-primary transition-colors hover:bg-card md:pointer-fine:min-h-0"
             >
               <Plus className="size-3.5" aria-hidden /> email or name
             </button>
@@ -143,7 +143,7 @@ export function InviteStep({
                   onClick={() => onToggleFriend(f.email)}
                   className={cn(
                     "flex min-h-11 items-center gap-3 rounded-[11px] border p-[9px_12px] text-left transition-colors",
-                    on ? "border-gold bg-background" : "border-border bg-white",
+                    on ? "border-gold bg-background" : "border-border bg-card",
                   )}
                 >
                   <Avatar name={f.display_name || f.email} size="md" />
@@ -161,7 +161,7 @@ export function InviteStep({
                       "flex size-[22px] shrink-0 items-center justify-center rounded-full border",
                       on
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-white",
+                        : "border-border bg-card",
                     )}
                   >
                     {on ? <Check className="size-3.5" /> : null}
@@ -195,7 +195,7 @@ export function InviteStep({
             "+ email or name" chip reveals it (spec §2.3 item 10). */}
         <div
           className={cn(
-            "flex rounded-[11px] border border-border bg-white p-[13px_15px]",
+            "flex rounded-[11px] border border-input bg-card p-[13px_15px]",
             !showEmailField && "md:hidden",
           )}
         >

@@ -355,7 +355,7 @@ export function FlightStep({
       <div className="relative flex flex-col">
         <div
           className={cn(
-            "flex flex-wrap items-center gap-[10px] border border-border bg-white p-[12px_14px] transition-colors focus-within:border-[1.5px] focus-within:border-primary focus-within:p-[11.5px_13.5px]",
+            "flex flex-wrap items-center gap-[10px] border border-input bg-card p-[12px_14px] transition-colors focus-within:border-[1.5px] focus-within:border-primary focus-within:p-[11.5px_13.5px]",
             showResults ? "rounded-t-[10px]" : "rounded-[10px]",
           )}
         >
@@ -424,7 +424,7 @@ export function FlightStep({
         </div>
 
         {showResults ? (
-          <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-gold bg-white">
+          <div className="overflow-hidden rounded-b-[10px] border border-t-0 border-gold bg-card">
             {results.length === 0 ? (
               <p className="p-[11px_14px] text-[12.5px] text-muted-foreground">
                 {stale ? "Searching…" : "Nothing matches — try By hand."}
@@ -526,7 +526,7 @@ export function FlightStep({
                 }}
                 style={dragId === w.id ? { transform: `translateY(${dragDy}px)` } : undefined}
                 className={cn(
-                  "relative flex items-center gap-[10px] rounded-[9px] border border-border bg-white p-[8px_10px] md:gap-3 md:p-[10px_13px]",
+                  "relative flex items-center gap-[10px] rounded-[9px] border border-border bg-card p-[8px_10px] md:gap-3 md:p-[10px_13px]",
                   dragId === w.id && "z-10 border-gold shadow-lg",
                 )}
               >
@@ -570,7 +570,7 @@ export function FlightStep({
                     type="button"
                     aria-label={`Edit ${w.title}`}
                     onClick={() => openEdit(w.id)}
-                    className="flex min-h-11 shrink-0 items-center rounded-[6px] border border-border bg-background px-3 text-[12px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white md:min-h-8 md:px-2.5"
+                    className="flex min-h-11 shrink-0 items-center rounded-[6px] border border-border bg-background px-3 text-[12px] font-semibold text-primary transition-colors hover:border-gold hover:bg-card md:min-h-8 md:px-2.5"
                   >
                     Edit
                   </button>
@@ -660,7 +660,7 @@ function ShortcutChip({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-[6px] border border-border bg-background px-2 text-[11.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-white md:min-h-0 md:flex-none md:px-2 md:py-[3px]"
+      className="flex min-h-11 flex-1 items-center justify-center gap-[5px] rounded-[6px] border border-border bg-background px-2 text-[11.5px] font-semibold text-primary transition-colors hover:border-gold hover:bg-card md:min-h-0 md:flex-none md:px-2 md:py-[3px]"
     >
       <span className="max-md:hidden">{icon}</span>
       {children}

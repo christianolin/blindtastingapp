@@ -460,7 +460,7 @@ export async function listFlight(
         .eq("tasting_id", tastingId),
       supabase
         .from("wines")
-        .select("id, position, is_revealed, reveal_step, contributor_participant_id")
+        .select("id, position, is_revealed, reveal_step, contributor_participant_id, added_by_host")
         .eq("tasting_id", tastingId)
         .order("position"),
     ]);
@@ -490,8 +490,9 @@ export async function listFlight(
   );
   const wineLabel = makeWineLabeler(rows, tasting.wine_source, nameByParticipantId);
 
-  // Who added each glass (is_wine_adder's rule: the host for a glass with no
-  // contributor, else the contributor) and which glasses the caller already
+  // Who added each glass (is_wine_adder's rule, M6: the host for a glass the
+  // host added — `added_by_host` — else the contributor, so a glass whose
+  // contributor row was deleted is nobody's) and which glasses the caller already
   // knows (spec §C.9). A contributor whose participant row this read cannot
   // see resolves to nobody, so both fail closed.
   type WineRow = (typeof rows)[number];
@@ -501,7 +502,7 @@ export async function listFlight(
       ? (userByParticipantId.get(w.contributor_participant_id) ?? null)
       : null;
   const isAdder = (w: WineRow): boolean =>
-    w.contributor_participant_id ? contributorUserId(w) === userId : isHost;
+    w.added_by_host ? isHost : contributorUserId(w) === userId;
   const known = rows.filter((w) =>
     callerKnowsWine(
       {
@@ -515,8 +516,9 @@ export async function listFlight(
   );
 
   // A known glass's answer key: a short identity per row keeps reordering
-  // legible. Never for anyone else's hidden glass: wine_answers RLS hands a
-  // bring-your-own host every answer, and they guess the others' bottles too.
+  // legible. Never for anyone else's hidden glass: nobody sees a hidden glass
+  // they did not add (rule 1), and a bring-your-own host guesses the others'
+  // bottles too.
   const identity = new Map<string, { title: string; meta: string | null; line: string }>();
   const answered = new Set<string>();
   if (known.length > 0) {

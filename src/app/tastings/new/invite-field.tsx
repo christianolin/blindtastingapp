@@ -175,7 +175,7 @@ export function InviteField({
                   <button
                     type="button"
                     onClick={() => pick(p)}
-                    className="flex min-h-11 w-full items-center gap-2.5 rounded-[9px] border border-border bg-white px-[10px] py-[7px] text-left transition-colors hover:border-gold md:min-h-0"
+                    className="flex min-h-11 w-full items-center gap-2.5 rounded-[9px] border border-border bg-card px-[10px] py-[7px] text-left transition-colors hover:border-gold md:min-h-0"
                   >
                     <Avatar src={p.avatar_url} name={p.display_name} size="sm" />
                     <span className="flex min-w-0 flex-col">

@@ -3,10 +3,10 @@ import type { Database } from "./supabase/database.types";
 // The explicit `guesses` read list (spec §10.4 (e)).
 //
 // M9b revokes table-wide SELECT on `guesses` from the client roles and grants
-// back exactly these 27 columns. The one column left out is
-// `guessed_wine_id`: a semi-blind pick is a wine id, and wine ids map to pour
-// positions, so reading it back would turn a guest's own matches into the
-// answer key. Every `from("guesses").select(...)` passes this list, or a
+// back exactly these 27 columns. The one column left out is the picked-wine
+// column: a semi-blind pick is a wine id, and wine ids map to pour positions,
+// so reading it back would turn a guest's own matches into the answer key.
+// Every `from("guesses").select(...)` passes this list, or a
 // narrower explicit one, and never "*" — once M9b is live a "*" select is
 // refused outright.
 //

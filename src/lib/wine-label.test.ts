@@ -30,7 +30,7 @@ describe("makeWineLabeler — host provides", () => {
       "Wine 1",
       "Wine 2",
     ]);
-    // moveWine parks a wine at a negative slot mid-swap.
+    // A reorder parks wines at negative slots mid-move (move_flight_glass).
     expect(labelsOf([wine("b", 2), wine("a", -1)], "HOST_PROVIDES")).toEqual([
       "Wine 2",
       "Wine 1",

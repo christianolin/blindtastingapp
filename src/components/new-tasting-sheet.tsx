@@ -654,7 +654,7 @@ function TextButton({ className, children, ...props }: ComponentProps<"button">)
       type="button"
       {...props}
       className={cn(
-        "flex min-h-11 items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:border md:border-border md:bg-card md:p-[11px_16px] md:text-[13.5px] md:text-foreground md:hover:border-gold md:hover:bg-white",
+        "flex min-h-11 items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground disabled:opacity-60 md:pointer-fine:min-h-0 md:rounded-[9px] md:border md:border-border md:bg-card md:p-[11px_16px] md:text-[13.5px] md:text-foreground md:hover:border-gold",
         className,
       )}
     >

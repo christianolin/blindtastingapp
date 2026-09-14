@@ -2,7 +2,7 @@
 // play, inferred without ever reading the answer key. No Next/Supabase
 // imports so vitest's node environment can test it directly.
 
-/** The reveal step keys, in the order `in_play_steps` emits them. */
+/** The reveal step keys, in the database's step order. */
 export type RevealKey =
   | "country"
   | "region"

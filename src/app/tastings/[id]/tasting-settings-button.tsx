@@ -10,7 +10,8 @@ type Loaded = TastingSettings | "loading" | { error: string } | null;
 
 /**
  * The header's settings entry (spec §3.3 item 13, S4d) — replaces the old
- * cogwheel's `HostControlsMenu`. From `md` a labelled button; on phones a
+ * header cogwheel and its popover (deleted in BT-L2). From `md` a labelled
+ * button; on phones a
  * 34px icon button. It fetches `getTastingSettings` on first open only, so a
  * page view that never opens it never spends the round trip.
  */
@@ -49,7 +50,7 @@ export function TastingSettingsButton({
         <button
           type="button"
           onClick={openSheet}
-          className="flex min-h-11 shrink-0 items-center gap-[7px] rounded-[9px] border-[1.5px] border-primary bg-card px-[13px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-white md:pointer-fine:min-h-0"
+          className="flex min-h-11 shrink-0 items-center gap-[7px] rounded-[9px] border-[1.5px] border-primary bg-card px-[13px] py-[9px] text-[12.5px] font-semibold text-primary transition-colors hover:bg-primary/5 md:pointer-fine:min-h-0"
         >
           <Settings className="size-4" aria-hidden />
           Tasting settings

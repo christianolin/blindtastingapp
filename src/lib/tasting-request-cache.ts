@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 // Per-request deduplication for the tasting page's shared reads.
@@ -63,12 +64,14 @@ export const getViewerParticipant = cache(async (tastingId: string) => {
   return rows.find((p) => p.user_id === user.id) ?? null;
 });
 
+// `added_by_host` is M6's pinned adder flag, so every view can follow
+// is_wine_adder's rule for "whose glass is this" (BT-V3 A-18).
 export const getWineRows = cache(async (tastingId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("wines")
     .select(
-      "id, position, is_revealed, reveal_step, contributor_participant_id, tasting_id",
+      "id, position, is_revealed, reveal_step, contributor_participant_id, added_by_host, tasting_id",
     )
     .eq("tasting_id", tastingId)
     .order("position");
@@ -102,4 +105,46 @@ export const getReferenceOptions = cache(async (): Promise<ReferenceOptions> => 
     regions: regions.data ?? [],
     grapes: grapes.data ?? [],
   };
+});
+
+/**
+ * Start's result, carried across the lobby → running view swap (BT-V3 A-08).
+ * A Start from the lobby flips the tasting out of DRAFT in the same round trip
+ * that would deliver its result, so `LobbyView` (and the Start form with its
+ * action state) unmounts and `RunningView` renders instead. `startTasting`
+ * therefore leaves the result in a short-lived cookie scoped to the tasting's
+ * path; `RunningView` reads it here for the host, and `StartResultNotice`
+ * clears it on mount. The value is base64url JSON, so no cookie delimiter can
+ * appear in it; anything malformed reads as no result.
+ */
+export type StartResult = { success: string; warning: string | null; toConsole: boolean };
+
+export function startResultCookieName(tastingId: string): string {
+  return `bt_start_result_${tastingId}`;
+}
+
+export function startResultCookiePath(tastingId: string): string {
+  return `/tastings/${tastingId}`;
+}
+
+export function encodeStartResult(result: StartResult): string {
+  return Buffer.from(JSON.stringify(result), "utf8").toString("base64url");
+}
+
+export const getStartResult = cache(async (tastingId: string): Promise<StartResult | null> => {
+  const raw = (await cookies()).get(startResultCookieName(tastingId))?.value;
+  if (!raw) return null;
+  try {
+    const value: unknown = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+    if (!value || typeof value !== "object") return null;
+    const { success, warning, toConsole } = value as Record<string, unknown>;
+    if (typeof success !== "string" || success.length === 0 || success.length > 200) return null;
+    if (typeof toConsole !== "boolean") return null;
+    let note: string | null = null;
+    if (typeof warning === "string" && warning.length <= 2000) note = warning;
+    else if (warning !== null) return null;
+    return { success, warning: note, toConsole };
+  } catch {
+    return null;
+  }
 });
