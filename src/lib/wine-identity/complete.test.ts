@@ -101,6 +101,24 @@ describe("toCompleteWine / toUnidentifiedWine", () => {
     expect(r.wine.secondaryGrape).toMatchObject({ id: "g-bar" });
   });
   it("returns the missing keys instead", () => expect(toCompleteWine({ ...full(), colour: null }, { now: NOW })).toEqual({ missing: ["colour"] }));
+  // This assertion is correct and has always passed -- and for a year the
+  // database disagreed with it. wine_answers.producer_id was NOT NULL live,
+  // because 20260807090000_optional_producer_vintage.sql never ran (its version
+  // collided with cote_de_nuits_villages and the applier records
+  // `on conflict do nothing`). So a producer-less unidentified glass passed
+  // here, passed prepareUnidentifiedWine, inserted into
+  // catalog_wines_unidentified -- and then died on a raw 23502 inserting the
+  // answer key. database.types.ts says `string | null`, so tsc could not see it.
+  //
+  // Fixed by 20260914140000_answer_key_optional_producer.sql. If this test is
+  // ever the thing that fails, the answer is NOT to start requiring a producer
+  // here: check that migration is applied (.tiles-build/drift-check.mjs).
   it("an unidentified glass needs no producer, colour, style or appellation", () =>
     expect("wine" in toUnidentifiedWine({ ...full(), producer: null, colour: null, style: null, appellationId: null }, { now: NOW })).toBe(true));
+
+  it("carries the null producer through rather than inventing one", () => {
+    const r = toUnidentifiedWine({ ...full(), producer: null }, { now: NOW });
+    if (!("wine" in r)) throw new Error("expected a wine");
+    expect(r.wine.producer).toBeNull();
+  });
 });
