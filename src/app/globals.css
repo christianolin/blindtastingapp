@@ -267,7 +267,7 @@
        more of that separation than the luminance figure suggests.
 
        Light keeps its Bordeaux: #5c1a2b was never the complaint. */
-    --primary: #2b2a4f;
+    --primary: #5c1a2b;
     --primary-foreground: #f5efe3;
     --secondary: #3a2e24;
     --secondary-foreground: #f5efe3;
@@ -318,7 +318,7 @@
        the only candidate in that range that keeps --placeholder on it at AA
        (4.55:1); #302620 and up drop the placeholder text below 4.5. */
     --surface-raised: #2f251e;
-    --primary-hover: #383663;
+    --primary-hover: #6e2335;
     --gold-dark: #d4af6a;
     --gold-light: #d4af6a;
     --rose: #e08a76;
@@ -368,21 +368,21 @@
 
        #8a87c8 measures 5.13:1 on --card and 5.56:1 on --background, and stays in
        the indigo family so ink and surface still read as the same accent. */
-    --primary-ink: #8a87c8;
-  --primary-ink-hover: #9b98d4;
+    --primary-ink: #cc6b82;
+  --primary-ink-hover: #d98297;
     /* NOT overridden, deliberately: --console/--console-card/--console-ink are
        the host console's dim-room palette, already dark-surface values, and the
        reveal is dark in BOTH themes. Giving them ".dark" variants would invert a
        screen that was never light. (--miss was on this list until BT-D1 set it
        explicitly above, to the same value it has in light.) */
-    --chart-1: #7d7ad0;
+    --chart-1: #c25a73;
     --chart-2: #d4af6a;
     --chart-3: #6c8f70;
     --chart-4: #b9a98c;
     --chart-5: #c6543f;
     --sidebar: #241b16;
     --sidebar-foreground: #f5efe3;
-    --sidebar-primary: #2b2a4f;
+    --sidebar-primary: #5c1a2b;
     --sidebar-primary-foreground: #f5efe3;
     --sidebar-accent: #3f3225;
     --sidebar-accent-foreground: #f5efe3;

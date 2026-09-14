@@ -38,7 +38,7 @@ export const viewport: Viewport = {
 // that rule; theme.ts is the source of truth, and the key must match THEME_KEY.
 const THEME_SCRIPT = `(function(){try{
 var c=localStorage.getItem("blindr-theme");
-var t=(c==="light"||c==="dark")?c:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+var t=c==="dark"?"dark":"light";
 document.documentElement.classList.toggle("dark",t==="dark");
 document.documentElement.style.colorScheme=t;
 }catch(e){}})()`;

@@ -24,7 +24,7 @@ export const THEME_KEY = "blindr-theme";
 const QUERY = "(prefers-color-scheme: dark)";
 
 /** What the OS asks for. Light when it has no opinion or cannot be asked. */
-function systemTheme(): Theme {
+export function systemTheme(): Theme {
   if (typeof window === "undefined" || !window.matchMedia) return "light";
   return window.matchMedia(QUERY).matches ? "dark" : "light";
 }
@@ -47,7 +47,7 @@ export function readChoice(): ThemeChoice {
 
 /** The theme that should actually render: an explicit choice, else the OS. */
 export function readTheme(): Theme {
-  return readChoice() ?? systemTheme();
+  return readChoice() ?? "light";
 }
 
 const listeners = new Set<() => void>();
@@ -90,7 +90,7 @@ export function setThemeChoice(choice: ThemeChoice): void {
     // Private mode or blocked storage: the theme still applies for this page,
     // it just will not survive a reload. Better than failing the click.
   }
-  applyTheme(choice ?? systemTheme());
+  applyTheme(choice ?? "light");
   notify();
 }
 
