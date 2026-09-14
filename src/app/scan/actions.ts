@@ -8,6 +8,7 @@
 // explicit add does that (D6).
 import { readLabel, type LabelReadOutcome } from "@/lib/label-scan/extract";
 import { isOwnStagingPath, labelReadRow } from "@/lib/label-scan/guards";
+import { DAY_MS, QUOTA_FETCH_LIMIT, quotaRefusal } from "@/lib/label-scan/quota";
 import { createClient } from "@/lib/supabase/server";
 import { missingWineFields } from "@/lib/wine-identity/complete";
 import { readDisplay, type DisplayNames } from "@/lib/wine-identity/describe";
@@ -18,7 +19,9 @@ import { findConfidentMatch } from "@/lib/wine-identity/server/match";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 
 export type LabelPhotoFailure =
-  | "signed-out" | "image" | "not-a-label" | "not-read" | "busy" | "network" | "rejected" | "service";
+  | "signed-out" | "image" | "not-a-label" | "not-read" | "busy" | "network" | "rejected" | "service"
+  // The caller's own reads, not the model's mood: retrying now cannot help.
+  | "too-many";
 
 export type LabelPhotoRead = {
   ok: true;
@@ -101,10 +104,33 @@ export async function readLabelPhoto(input: {
   const imagePath = typeof input?.imagePath === "string" ? input.imagePath : "";
   if (!isOwnStagingPath(imagePath, user.id)) return { ok: false, reason: "image" };
 
-  // 3. The staging object's public URL.
+  // 3. This account has reads left. Checked before the model is called, since
+  //    the whole point is not to spend the cent. A failed count refuses rather
+  //    than waving the read through: the alternative is that the one thing
+  //    standing between an open sign-up page and unbounded spend fails open.
+  const since = new Date(Date.now() - DAY_MS).toISOString();
+  const { data: recent, error: recentError } = await supabase
+    .from("label_reads")
+    .select("created_at")
+    .eq("user_id", user.id)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(QUOTA_FETCH_LIMIT);
+  if (recentError) {
+    console.error("label read quota not counted", {
+      code: recentError.code,
+      message: recentError.message,
+    });
+    return { ok: false, reason: "too-many" };
+  }
+  if (quotaRefusal(new Date(), (recent ?? []).map((r) => r.created_at)) !== null) {
+    return { ok: false, reason: "too-many" };
+  }
+
+  // 4. The staging object's public URL.
   const imageUrl = supabase.storage.from("wine-images").getPublicUrl(imagePath).data.publicUrl;
 
-  // 4. The read.
+  // 5. The read.
   let outcome: LabelReadOutcome;
   try {
     outcome = await readLabel(imageUrl);
@@ -113,13 +139,13 @@ export async function readLabelPhoto(input: {
     return { ok: false, reason: "service" };
   }
 
-  // 5. Every billed read is kept, the expensive failures included.
+  // 6. Every billed read is kept, the expensive failures included.
   const readId = await keepRead(supabase, user.id, imagePath, outcome);
 
-  // 6. A failed read.
+  // 7. A failed read.
   if (!outcome.ok) return { ok: false, reason: outcome.reason };
 
-  // 7. Resolve, name what is missing, match, describe.
+  // 8. Resolve, name what is missing, match, describe.
   try {
     const lookup = serverLookup(supabase);
     const draft = await resolveLabelRead(outcome.read, lookup, { imageUrl });
