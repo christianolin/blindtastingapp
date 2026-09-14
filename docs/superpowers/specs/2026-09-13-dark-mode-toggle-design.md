@@ -3,6 +3,17 @@
 **Date:** 2026-09-13
 **Status:** approved
 
+> **Owner note, 2026-09-14: the default is now light.** On production with a
+> dark OS the app had turned dark by itself and the menu indigo: "the colors
+> are weird now. Why is the menu blue???? ... No tasting is live. And the menu
+> should never change." The owner chose *Light unless chosen*: Blindr opens
+> light even when the OS is dark, dark applies only when a user picks Dark in
+> Profile & settings, and Match system stays as an explicit choice, stored as
+> `"system"` (an empty key now means light). Where this spec says `null` =
+> follow the OS, that is superseded. Same day: the menu rail got its own
+> `--rail` tokens, identical in every theme, and live screens keep the spec 6.3
+> bordeaux under both themes.
+
 ## What is already here
 
 `globals.css` has carried a complete dark palette since the brand handoff — a

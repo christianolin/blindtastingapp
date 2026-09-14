@@ -36,6 +36,13 @@ const INK = "var(--primary-ink)";
 const ACCENT = "var(--gold)";
 const ACCENT_DEEP = "var(--gold-deep)";
 
+// ...and the menu rail's own tokens, for the mark drawn ON the rail. The rail is
+// one colour in every theme (owner, 2026-09-14), so the mark on it must be too:
+// --gold, which the dark theme lightens, would shift its accents.
+const RAIL_FIGURE = "var(--rail-foreground)";
+const RAIL_ACCENT = "var(--rail-accent)";
+const RAIL_ACCENT_DEEP = "var(--rail-accent-deep)";
+
 function MarkPaths({
   figure,
   accent,
@@ -77,18 +84,21 @@ type MarkProps = {
   knot?: string;
 } & Omit<SVGProps<SVGSVGElement>, "viewBox" | "role" | "aria-label">;
 
-/** Bare mark on a transparent background. Pass `onDark` for the parchment figure. */
+/** Bare mark on a transparent background. Pass `onDark` when it sits on the menu rail. */
 export function BlindrMark({
   size = 40,
   onDark = false,
-  accent = ACCENT,
-  knot = ACCENT_DEEP,
+  accent,
+  knot,
   ...rest
 }: MarkProps) {
-  // `onDark` means "drawn on the Bordeaux bar", which is Bordeaux in BOTH
-  // themes, so it stays the literal parchment. The other branch is drawn on
-  // the page and follows it.
-  const figure = onDark ? PARCHMENT : INK;
+  // `onDark` means "drawn on the menu rail", which is the same Bordeaux in
+  // every theme, so the whole mark takes the rail's tokens: in light they are
+  // the parchment and gold it always had, and dark leaves them alone. The
+  // other branch is drawn on the page and follows the theme.
+  const figure = onDark ? RAIL_FIGURE : INK;
+  const accentFill = accent ?? (onDark ? RAIL_ACCENT : ACCENT);
+  const knotFill = knot ?? (onDark ? RAIL_ACCENT_DEEP : ACCENT_DEEP);
   return (
     <svg
       width={size}
@@ -98,7 +108,7 @@ export function BlindrMark({
       aria-label="Blindr"
       {...rest}
     >
-      <MarkPaths figure={figure} accent={accent} knot={knot} />
+      <MarkPaths figure={figure} accent={accentFill} knot={knotFill} />
     </svg>
   );
 }

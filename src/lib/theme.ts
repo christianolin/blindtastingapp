@@ -5,20 +5,34 @@
 // way: a tiny external store read through useSyncExternalStore, no provider,
 // because the control lives on one page and the theme applies to every page.
 //
+// LIGHT UNLESS CHOSEN (owner, 2026-09-14). Blindr opens light even when the OS
+// is dark. Following the OS by default turned the whole app dark for anyone
+// with a dark OS ("the colors are weird now ... No tasting is live"), so dark is
+// opt-in: it applies only when a user picks Dark in Profile & settings, and
+// following the OS is itself an explicit choice, "Match system".
+//
 // TWO pieces of state, and conflating them is the mistake to avoid:
 //
-//   stored     "light" | "dark" | null    null means "follow the OS"
-//   effective  "light" | "dark"           what actually renders
+//   stored     "light" | "dark" | "system" | null
+//   effective  "light" | "dark"                     what actually renders
 //
-// A first-time visitor stores nothing and follows prefers-color-scheme -- and
-// keeps following it, because subscribe() listens to the media query too. A
-// user whose OS switches at sunset switches with it. Clicking the toggle pins
-// the choice and the media query stops mattering; "Match system" clears it.
+//   null      nothing stored, or a value that is none of the three: light
+//   "light"   light
+//   "dark"    dark
+//   "system"  prefers-color-scheme, and it KEEPS following it: subscribe()
+//             listens to the media query, so a user whose OS switches at
+//             sunset switches with it.
+//
+// "system" is stored, not the absence of a value. An empty key means light now,
+// so a "Match system" that cleared the key would do the opposite of its label.
+//
+// The inline script in layout.tsx repeats this rule before the first paint;
+// theme.test.ts runs that script against this file for every stored value.
 import { useSyncExternalStore } from "react";
 
 export type Theme = "light" | "dark";
-/** null = no explicit choice, follow the OS. */
-export type ThemeChoice = Theme | null;
+/** What is stored. null = nothing (or nothing valid) stored, which renders light. */
+export type ThemeChoice = Theme | "system" | null;
 
 export const THEME_KEY = "blindr-theme";
 const QUERY = "(prefers-color-scheme: dark)";
@@ -30,24 +44,31 @@ function systemTheme(): Theme {
 }
 
 /**
- * The stored choice, or null. Anything that is not exactly "light" or "dark"
- * counts as absent: a corrupted or stale value degrades to following the OS
- * rather than throwing on every render. Private-mode localStorage access can
- * throw outright, which is the same outcome.
+ * The stored choice, or null. Anything that is not exactly "light", "dark" or
+ * "system" counts as absent: a corrupted or stale value degrades to the light
+ * default rather than throwing on every render. Private-mode localStorage
+ * access can throw outright, which is the same outcome.
  */
 export function readChoice(): ThemeChoice {
   if (typeof window === "undefined") return null;
   try {
     const stored = window.localStorage.getItem(THEME_KEY);
-    return stored === "light" || stored === "dark" ? stored : null;
+    return stored === "light" || stored === "dark" || stored === "system" ? stored : null;
   } catch {
     return null;
   }
 }
 
-/** The theme that should actually render: an explicit choice, else the OS. */
+/** The theme a choice renders: dark only when chosen, the OS only when asked. */
+export function themeForChoice(choice: ThemeChoice): Theme {
+  if (choice === "dark") return "dark";
+  if (choice === "system") return systemTheme();
+  return "light";
+}
+
+/** The theme that should actually render. */
 export function readTheme(): Theme {
-  return readChoice() ?? systemTheme();
+  return themeForChoice(readChoice());
 }
 
 const listeners = new Set<() => void>();
@@ -59,8 +80,9 @@ export function subscribeToTheme(cb: () => void): () => void {
   // Another tab changing the setting updates this one.
   const onStorage = (e: StorageEvent) => { if (e.key === THEME_KEY) cb(); };
   window.addEventListener("storage", onStorage);
-  // And the OS switching updates every tab that has not pinned a choice. Without
-  // this the "follow the OS" default would only be honoured at page load.
+  // And the OS switching updates every tab on "system". Without this, Match
+  // system would only be honoured at page load. For any other choice the
+  // snapshot does not change, so nothing re-renders.
   const mq = window.matchMedia?.(QUERY);
   mq?.addEventListener("change", cb);
   return () => {
@@ -81,7 +103,7 @@ export function applyTheme(theme: Theme): void {
   root.style.colorScheme = theme;
 }
 
-/** Pin a theme, or pass null to go back to following the OS. */
+/** Store a choice and apply it. null clears the key, which renders light. */
 export function setThemeChoice(choice: ThemeChoice): void {
   try {
     if (choice) window.localStorage.setItem(THEME_KEY, choice);
@@ -90,15 +112,16 @@ export function setThemeChoice(choice: ThemeChoice): void {
     // Private mode or blocked storage: the theme still applies for this page,
     // it just will not survive a reload. Better than failing the click.
   }
-  applyTheme(choice ?? systemTheme());
+  applyTheme(themeForChoice(choice));
   notify();
 }
 
 /**
- * The server, and the first client paint before hydration, both return "light".
- * The server cannot know the OS preference. The inline script in layout.tsx is
- * what stops that default from ever being SEEN -- it sets the class before the
- * first paint, so this snapshot only affects what React thinks, for one tick.
+ * The server, and the first client paint before hydration, both return "light"
+ * and no choice. The server cannot know the stored choice or the OS preference.
+ * The inline script in layout.tsx is what stops that default from ever being
+ * SEEN by someone on Dark -- it sets the class before the first paint, so this
+ * snapshot only affects what React thinks, for one tick.
  */
 export function useTheme(): {
   theme: Theme;

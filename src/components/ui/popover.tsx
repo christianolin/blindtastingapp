@@ -28,7 +28,9 @@ function PopoverContent({
   >) {
   // B5 "dark means live" (spec §6.3 item 2): a popover portals out of the
   // running page's DOM subtree, so it never inherits LiveShell's `.dark`
-  // class from an ancestor — it has to add the class itself.
+  // class from an ancestor — it has to add the class itself, and data-live
+  // with it, so the live bordeaux primary reaches it under a dark app theme
+  // as well as a light one.
   const liveTheme = useLiveTheme()
   return (
     // `keepMounted`: the popup (and its search input) stays in the DOM even
@@ -56,6 +58,7 @@ function PopoverContent({
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
+          data-live={liveTheme === "dark" ? "" : undefined}
           // Don't move focus into the popup on touch/pen. base-ui's default
           // focuses the popup itself on touch, and a just-opened popup (before
           // floating-ui has positioned it) grabbing focus is what yanked the

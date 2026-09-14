@@ -98,7 +98,7 @@ export function AppSidebar({
               role="dialog"
               aria-modal="true"
               aria-label="Menu"
-              className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-60 flex-col bg-primary text-primary-foreground shadow-xl duration-200"
+              className="animate-in slide-in-from-left absolute top-0 left-0 flex h-full w-60 flex-col bg-rail text-rail-foreground shadow-xl duration-200 [--ring:var(--rail-accent)]"
             >
               <SidebarBody
                 variant="full"
@@ -116,8 +116,12 @@ export function AppSidebar({
   return (
     <>
       {/* In flow, full height: the shell locks window scrolling and scrolls
-          the content column instead, so the aside cannot move on any device. */}
-      <aside className="hidden h-full shrink-0 flex-col bg-primary text-primary-foreground md:flex md:w-[60px] xl:w-60">
+          the content column instead, so the aside cannot move on any device.
+          Painted with the --rail tokens, never --primary: the menu is the same
+          colour in every theme (owner, 2026-09-14). Pinning --ring keeps the
+          focus outline, which globals.css draws from --ring on every element,
+          off the theme's gold as well. The drawer above does the same. */}
+      <aside className="hidden h-full shrink-0 flex-col bg-rail text-rail-foreground md:flex md:w-[60px] xl:w-60 [--ring:var(--rail-accent)]">
         <SidebarBody
           variant="full"
           links={links}
@@ -187,7 +191,7 @@ function SidebarBody({
             type="button"
             aria-label="Open menu"
             onClick={onExpand}
-            className="flex size-11 items-center justify-center rounded-lg text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            className="flex size-11 items-center justify-center rounded-lg text-rail-foreground/70 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground"
           >
             <PanelLeftOpen className="size-[18px]" />
           </button>
@@ -213,8 +217,8 @@ function SidebarBody({
                 className={cn(
                   "flex min-h-11 w-full flex-col items-center justify-center gap-1 rounded-lg px-0 py-1.5 transition-colors",
                   sectionActive
-                    ? "bg-primary-foreground/15 text-primary-foreground"
-                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                    ? "bg-rail-foreground/15 text-rail-foreground"
+                    : "text-rail-foreground/70 hover:bg-rail-foreground/10 hover:text-rail-foreground",
                 )}
               >
                 <Icon className="size-[18px] shrink-0" />
@@ -226,14 +230,14 @@ function SidebarBody({
           })}
         </nav>
 
-        <div className="flex w-full shrink-0 justify-center border-t border-primary-foreground/15 py-2">
+        <div className="flex w-full shrink-0 justify-center border-t border-rail-foreground/15 py-2">
           <Link
             href={`/u/${user.id}`}
             aria-label={user.name}
             title={user.name}
             className={cn(
-              "flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-primary-foreground/10",
-              profileActive && "bg-primary-foreground/15",
+              "flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-rail-foreground/10",
+              profileActive && "bg-rail-foreground/15",
             )}
           >
             <UserAvatar user={user} className="size-[30px]" />
@@ -260,7 +264,7 @@ function SidebarBody({
             aria-label="Close menu"
             autoFocus
             onClick={onClose}
-            className="-mr-2.5 flex size-11 items-center justify-center rounded-md text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            className="-mr-2.5 flex size-11 items-center justify-center rounded-md text-rail-foreground/70 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground"
           >
             <X className="size-5" />
           </button>
@@ -279,8 +283,8 @@ function SidebarBody({
                 className={cn(
                   "flex items-center rounded-lg transition-colors",
                   sectionActive
-                    ? "bg-primary-foreground/15 text-primary-foreground"
-                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                    ? "bg-rail-foreground/15 text-rail-foreground"
+                    : "text-rail-foreground/70 hover:bg-rail-foreground/10 hover:text-rail-foreground",
                 )}
               >
                 <Link
@@ -300,7 +304,7 @@ function SidebarBody({
                     onClick={() =>
                       setExpandOverrides((o) => ({ ...o, [link.key]: !open }))
                     }
-                    className="mr-1.5 rounded-md p-1.5 text-primary-foreground/50 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                    className="mr-1.5 rounded-md p-1.5 text-rail-foreground/50 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground"
                   >
                     <ChevronRight
                       className={cn(
@@ -312,16 +316,16 @@ function SidebarBody({
                 ) : null}
               </div>
               {link.children && open ? (
-                <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
+                <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-rail-foreground/15 pl-3">
                   {link.children.map((child) => {
                     if (child.soon) {
                       return (
                         <span
                           key={child.label}
-                          className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-primary-foreground/35"
+                          className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-rail-foreground/35"
                         >
                           {child.label}
-                          <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
+                          <span className="rounded-full bg-rail-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
                             Soon
                           </span>
                         </span>
@@ -336,8 +340,8 @@ function SidebarBody({
                     const childClass = cn(
                       "rounded-md px-2.5 py-1.5 text-left text-sm transition-colors",
                       childActive
-                        ? "font-medium text-primary-foreground"
-                        : "text-primary-foreground/55 hover:text-primary-foreground",
+                        ? "font-medium text-rail-foreground"
+                        : "text-rail-foreground/55 hover:text-rail-foreground",
                     );
                     return child.modal ? (
                       <button
@@ -371,14 +375,14 @@ function SidebarBody({
           and reveals its two sub-pages (Your numbers, Profile & settings) —
           that, plus the top-bar pill, is how the stats page is reached; it is
           deliberately not a nav pillar. */}
-      <div className="shrink-0 border-t border-primary-foreground/15 p-3">
+      <div className="shrink-0 border-t border-rail-foreground/15 p-3">
         <div className="flex items-center gap-2">
           <Link
             href={`/u/${user.id}`}
             onClick={onNavigate}
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-primary-foreground/10",
-              profileActive && "bg-primary-foreground/15",
+              "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-rail-foreground/10",
+              profileActive && "bg-rail-foreground/15",
             )}
           >
             <UserAvatar user={user} className="size-8" />
@@ -395,14 +399,14 @@ function SidebarBody({
             <button
               type="submit"
               aria-label="Sign out"
-              className="rounded-md p-2 text-primary-foreground/60 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="rounded-md p-2 text-rail-foreground/60 transition-colors hover:bg-rail-foreground/10 hover:text-rail-foreground"
             >
               <LogOut className="size-4" />
             </button>
           </form>
         </div>
         {profileActive ? (
-          <div className="mt-0.5 mb-1 ml-6 flex flex-col border-l border-primary-foreground/[.18] pl-3">
+          <div className="mt-0.5 mb-1 ml-6 flex flex-col border-l border-rail-foreground/[.18] pl-3">
             {PROFILE_LINKS.map((l) => {
               const active =
                 pathname === l.href || pathname.startsWith(`${l.href}/`);
@@ -415,8 +419,8 @@ function SidebarBody({
                   className={cn(
                     "rounded-md px-2.5 py-1.5 text-[12.5px] transition-colors",
                     active
-                      ? "font-semibold text-primary-foreground"
-                      : "text-primary-foreground/60 hover:text-primary-foreground",
+                      ? "font-semibold text-rail-foreground"
+                      : "text-rail-foreground/60 hover:text-rail-foreground",
                   )}
                 >
                   {l.label}
@@ -445,14 +449,14 @@ function UserAvatar({
       src={user.avatarUrl}
       alt=""
       className={cn(
-        "shrink-0 rounded-full object-cover ring-1 ring-primary-foreground/20",
+        "shrink-0 rounded-full object-cover ring-1 ring-rail-foreground/20",
         className,
       )}
     />
   ) : (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-xs font-medium",
+        "flex shrink-0 items-center justify-center rounded-full bg-rail-foreground/15 text-xs font-medium",
         className,
       )}
     >

@@ -48,6 +48,9 @@
   --color-console: var(--console);
   --color-console-card: var(--console-card);
   --color-console-ink: var(--console-ink);
+  /* The menu rail and drawers: one colour in every theme (see --rail). */
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -190,6 +193,18 @@
   --sidebar-accent-foreground: #2a211e;
   --sidebar-border: #e0d2b4;
   --sidebar-ring: #c3a25b;
+  /* The menu: the desktop rail, the tablet and phone drawers, and the logo
+     drawn on them. Owner, 2026-09-14: "the menu should never change." The rail
+     was a plain bg-primary panel, so the dark theme's indigo --primary
+     repainted it. These are the exact values it showed in light until then,
+     and each is declared ONCE, here: no .dark or live override, which
+     theme-contrast.test.ts enforces. Parchment on the rail is 11.20:1 and the
+     /70 idle label 6.20:1. The two accents are the logo's gold on the rail and
+     its focus outline: light's --gold and --gold-deep, which dark lightens. */
+  --rail: #5c1a2b;
+  --rail-foreground: #f5efe3;
+  --rail-accent: #c3a25b;
+  --rail-accent-deep: #b78e42;
 }
 
 /* The dark palette is a SCREEN concern. Scoped to @media screen so that
@@ -219,7 +234,8 @@
     --popover: #241b16;
     --popover-foreground: #f5efe3;
     /* Indigo, not the rose the handoff started from. The rose read as hot pink
-       across the whole left rail (the sidebar is a plain bg-primary panel) and
+       across the whole left rail (then a plain bg-primary panel; it takes --rail
+       since 2026-09-14 and no longer follows the theme) and
        every filled button. Indigo is calmer at that size, sits better beside the
        gold accent, and measures better everywhere it is used:
 
@@ -298,8 +314,8 @@
     /* --primary as INK, and the one token here that is NOT just a darker-ground
        restating of its light value.
 
-       --primary serves two roles. As a SURFACE it is the sidebar and the filled
-       buttons, where #f5efe3 on the indigo measures 9.15:1. As INK it is links,
+       --primary serves two roles. As a SURFACE it is the filled buttons and the
+       banner, where #f5efe3 on the indigo measures 9.15:1. As INK it is links,
        scores, small labels -- and a surface colour dark enough to carry parchment
        text is by definition too dark to BE text on a near-black ground. One token
        cannot do both jobs here.
@@ -362,27 +378,29 @@
 }
 
 /* The live palette: where "dark means live" (BT-D1, blind-tasting v3 spec
- * section 6.3) and the dark-mode toggle disagree.
+ * section 6.3) and the dark theme disagree.
  *
- * Both use the `.dark` class. The toggle puts it on <html>; LiveShell puts it
+ * Both use the `.dark` class. The theme puts it on <html>; LiveShell puts it
  * on a running tasting's subtree, and the popover and the phone field picker
- * add it to the popups they portal out of that subtree. Nothing else sets it.
- * So under a LIGHT <html> every `.dark` element is a live surface, and this
- * selector reaches those and nothing else.
+ * add it to the popups they portal out of that subtree. Those live surfaces,
+ * and only those, also carry a data-live attribute, which <html> never does.
+ * This rule keys off the pair, so it reaches every live surface whether the
+ * root is light or dark, and nothing outside a running tasting.
+ * theme-contrast.test.ts lists every element in src that takes the class and
+ * fails when a new one appears without saying which kind it is.
  *
  * The one role they disagree on is --primary. Section 6.3 keeps it the
  * bordeaux #a8425a on the live ground, because it is the open ladder row's
  * border, the armed bottle's ring and the Lock-in fill, with a #b04961 hover.
- * The toggle took the dark theme to indigo #2b2a4f, for the left rail and the
- * banner, which are never inside LiveShell. As a BORDER on the live ground
- * that indigo measures 1.35:1 on --background and 1.24:1 on --card, so the
- * open row's outline stops reading. The bordeaux gives 3.13:1 and 2.89:1.
+ * The dark theme's --primary is indigo #2b2a4f, for the filled buttons and the
+ * banner outside a tasting. As a BORDER on the live ground that indigo
+ * measures 1.35:1 on --background and 1.24:1 on --card, so the open row's
+ * outline stops reading. The bordeaux gives 3.13:1 and 2.89:1.
  *
- * So live screens keep section 6.3 whenever the app theme is light (the
- * default), and everything outside a running tasting keeps the toggle's
- * palette. Pinning the app to dark keeps indigo everywhere, live screens
- * included. Both specs claim that case and no single value satisfies both, so
- * it is left as the toggle has it, pending a decision.
+ * Owner, 2026-09-14: live screens keep the section 6.3 trio in BOTH app
+ * themes. Until then this rule was `:root:not(.dark) .dark`, light roots only,
+ * so pinning the app to dark turned the live screens indigo. Everything
+ * outside a running tasting keeps the theme's palette either way.
  *
  * --primary-ink follows the fill's family, the same way #8a87c8 follows the
  * indigo: #cc6b82 is the rose-family ink the toggle's first pass measured,
@@ -395,9 +413,10 @@
  * on parchment, 3.06:1 on --background and 3.28:1 on --card.
  *
  * Keep this AFTER the `.dark {` block. theme-contrast.test.ts reads the first
- * `.dark {` in the file as the theme palette. */
+ * `.dark {` in the file as the theme palette. On the element carrying both, it
+ * wins by specificity: a class and an attribute against the palette's class. */
 @media screen {
-  :root:not(.dark) .dark {
+  .dark[data-live] {
     --primary: #a8425a;
     --primary-hover: #b04961;
     --primary-ink: #cc6b82;
