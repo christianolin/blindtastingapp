@@ -285,17 +285,22 @@
      which is a hairline you cannot see: an outline button had no outline and a
      card had no edge on a ground only 1.13:1 away from it.
 
-       --border-light  /22  1.89  decorative rules between list rows. Stays the
+     Figures are the worst of --card, --background, --surface-raised and the
+     --primary rail, which is the worst ground for all three.
+
+       --border-light  /22  1.81  decorative rules between list rows. Stays the
                              quiet step; a separator is not a control and does
                              not owe 3:1.
-       --border        /38  3.03  the default edge, and the one that draws
+       --border        /42  3.14  the default edge, and the one that draws
                              outline buttons and card boundaries, so it takes
-                             the 3:1 WCAG 1.4.11 asks of a control's shape --
-                             measured on the worst of --card, --background,
-                             --surface-raised and the --primary rail.
-       --border-strong /52  4.35  the emphasis step, now clearly above the
+                             the 3:1 WCAG 1.4.11 asks of a control's shape.
+                             It was /38 until --primary went from indigo to
+                             the bordeaux #5c1a2b, a lighter fill that dropped
+                             this edge to 2.83 on the rail. /42 is the same
+                             edge --input draws.
+       --border-strong /52  4.09  the emphasis step, now clearly above the
                              default rather than a third of a point away. */
-  --border: rgba(245, 239, 227, 0.38);
+  --border: rgba(245, 239, 227, 0.42);
     /* Raised from 0.16. --input is the border of a text field, and a border is
      how you know a text field is there at all -- WCAG 1.4.11 asks 3:1 for the
      visual information that identifies a control. At 0.16 it composited to
@@ -386,7 +391,7 @@
     --sidebar-primary-foreground: #f5efe3;
     --sidebar-accent: #3f3225;
     --sidebar-accent-foreground: #f5efe3;
-    --sidebar-border: rgba(245, 239, 227, 0.38);
+    --sidebar-border: rgba(245, 239, 227, 0.42);
     --sidebar-ring: #d4af6a;
   }
 }

@@ -76,10 +76,12 @@ afterEach(() => {
 });
 
 describe("readTheme", () => {
-  it("follows the OS when nothing is stored", () => {
+  it("renders light when nothing is stored, even on a dark OS", () => {
+    // Light by default (owner hotfix, 2026-09-14): dark is only ever an
+    // explicit choice, so a dark OS on its own does not turn the app dark.
     stubWindow({ osDark: true });
     expect(readChoice()).toBeNull();
-    expect(readTheme()).toBe("dark");
+    expect(readTheme()).toBe("light");
   });
 
   it("follows the OS into light too", () => {
@@ -94,18 +96,19 @@ describe("readTheme", () => {
     expect(readTheme()).toBe("dark");
   });
 
-  it("treats a value that is neither theme as no choice at all", () => {
-    // A stale or corrupted key must degrade to following the OS. Trusting it
-    // would render an undefined theme, which is a blank-looking page.
+  it("treats a stored value that is neither theme as no choice, and renders light", () => {
+    // A stale or corrupted key must degrade to the light default, whatever the
+    // OS says. Trusting it would render an undefined theme, which is a
+    // blank-looking page.
     stubWindow({ stored: { [THEME_KEY]: "sepia" }, osDark: true });
     expect(readChoice()).toBeNull();
-    expect(readTheme()).toBe("dark");
+    expect(readTheme()).toBe("light");
   });
 
-  it("survives storage that throws, as private mode does", () => {
+  it("renders light when storage throws, as private mode does, even on a dark OS", () => {
     stubWindow({ throws: true, osDark: true });
     expect(readChoice()).toBeNull();
-    expect(readTheme()).toBe("dark");
+    expect(readTheme()).toBe("light");
   });
 
   it("has no opinion when there is no window to ask", () => {
@@ -124,14 +127,17 @@ describe("setThemeChoice", () => {
     expect(root.style.colorScheme).toBe("dark");
   });
 
-  it("clears the key and returns to the OS when passed null", () => {
-    const store = stubWindow({ stored: { [THEME_KEY]: "light" }, osDark: true });
-    const { classes } = stubDocument();
+  it("clears the key and renders light when passed null, even on a dark OS", () => {
+    const store = stubWindow({ stored: { [THEME_KEY]: "dark" }, osDark: true });
+    const { classes, root } = stubDocument();
+    // The page is showing the dark it was pinned to when the choice is cleared.
+    classes.add("dark");
     setThemeChoice(null);
     expect(THEME_KEY in store).toBe(false);
-    // Back to following the OS, which is dark here -- not back to the light it
-    // was pinned to.
-    expect(classes.has("dark")).toBe(true);
+    // Back to the light default -- not to the dark it was pinned to, and not to
+    // the OS, which is dark here.
+    expect(classes.has("dark")).toBe(false);
+    expect(root.style.colorScheme).toBe("light");
   });
 
   it("still applies the theme when storage is blocked", () => {
