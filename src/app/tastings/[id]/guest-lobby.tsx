@@ -1,7 +1,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  CalendarPlus,
+  ChevronRight,
+  Map as MapIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
+import { LinkLoadingHint } from "@/components/link-loading-hint";
 import { LocalDateTime } from "@/components/local-date-time";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
@@ -27,6 +35,15 @@ import { LeaveTastingButton } from "./leave-tasting-button";
 import { SemiBlindList } from "./semi-blind-list";
 import { SheetFromQuery } from "./sheet-from-query";
 import type { FlightDestination } from "./tasting-add-wine-button";
+
+// The "While you wait" tiles (calendar, the map, knowledge): an icon, the label,
+// and a wine-glass hint while a Learn page loads. Same press style as the
+// Overview's quick actions, so they read as buttons rather than boxed text.
+const WAIT_TILE =
+  "flex min-h-14 items-center gap-3 rounded-[11px] border border-border-strong bg-card px-3.5 py-3 text-left text-sm shadow-[0_2px_0_0_rgba(42,33,30,.12)] transition-[background-color,box-shadow,translate] hover:bg-background active:translate-y-px active:shadow-[0_1px_0_0_rgba(42,33,30,.12)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const WAIT_TILE_ICON =
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-primary [&_svg]:size-[18px]";
+const LEARN_ICON: Record<string, LucideIcon> = { "/knowledge/map": MapIcon, "/knowledge": BookOpen };
 
 // The JOINED guest's DRAFT layout — S6 on phones, S6b on laptops (BT-G2;
 // ledger B3; spec §4.3 item 5). Replaces the BT-D2 stub that reused
@@ -326,31 +343,39 @@ export async function GuestLobby({
             </h2>
             <div className="flex flex-col gap-2">
               {tasting.scheduled_at ? (
-                <a
-                  href={`/tastings/${tastingId}/calendar.ics`}
-                  className="flex min-h-11 flex-col justify-center rounded-[11px] border border-border bg-card p-3 text-sm transition-colors hover:border-gold-deep/60"
-                >
-                  <span className="font-medium text-foreground">{ADD_TO_CALENDAR}</span>
-                  <span className="text-xs text-muted-foreground">
-                    <LocalDateTime iso={tasting.scheduled_at} format="card" />
-                    {place ? ` · ${place}` : ""}
+                <a href={`/tastings/${tastingId}/calendar.ics`} className={WAIT_TILE}>
+                  <span className={WAIT_TILE_ICON}>
+                    <CalendarPlus aria-hidden />
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-semibold text-foreground">{ADD_TO_CALENDAR}</span>
+                    <span className="text-xs text-muted-foreground">
+                      <LocalDateTime iso={tasting.scheduled_at} format="card" />
+                      {place ? ` · ${place}` : ""}
+                    </span>
                   </span>
                 </a>
               ) : null}
               <div className="flex flex-col gap-2 lg:flex-row">
-                {LEARN_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex min-h-11 flex-1 flex-col justify-center rounded-[11px] border border-border bg-card p-3 text-sm transition-colors hover:border-gold-deep/60"
-                  >
-                    <span className="font-medium text-foreground">{link.title}</span>
-                    <span className="text-xs text-muted-foreground lg:hidden">{link.sub}</span>
-                    <span className="hidden text-xs text-muted-foreground lg:inline">
-                      {link.subLaptop}
-                    </span>
-                  </Link>
-                ))}
+                {LEARN_LINKS.map((link) => {
+                  const Icon = LEARN_ICON[link.href] ?? BookOpen;
+                  return (
+                    <Link key={link.href} href={link.href} className={cn(WAIT_TILE, "flex-1")}>
+                      <span className={WAIT_TILE_ICON}>
+                        <Icon aria-hidden />
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="font-semibold text-foreground">{link.title}</span>
+                        <span className="text-xs text-muted-foreground lg:hidden">{link.sub}</span>
+                        <span className="hidden text-xs text-muted-foreground lg:inline">
+                          {link.subLaptop}
+                        </span>
+                      </span>
+                      <LinkLoadingHint className="text-primary" />
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
