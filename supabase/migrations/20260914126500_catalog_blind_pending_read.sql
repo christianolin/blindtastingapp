@@ -50,9 +50,16 @@
 -- exists, and each miss inserts a catalog wine in that caller's name. This cannot be closed
 -- while the identity index is global.
 --
+-- Accepted residual: the creator clause (prescribed by the V2 judgement). A catalog wine's
+-- creator still reads it, blind_pending flag included, when someone else's unrevealed glass
+-- links it. A creator who did not add that glass learns only that a wine they created sits in
+-- some unrevealed flight. They already know its identity.
+--
 -- Degraded, by design: if a second adder's own cellar lot or note names a hidden wine, they
 -- see no wine details on it until a glass that links the wine is revealed or unlinked. At
--- that point the triggers clear blind_pending.
+-- that point the triggers clear blind_pending. The same applies to wset_notes_check_hue,
+-- which is SECURITY INVOKER: it cannot see a hidden wine's colour, so it skips the hue check
+-- on such a note. That is a data-quality gap, not a leak.
 --
 -- No begin/commit: the applier owns the transaction.
 
