@@ -110,6 +110,16 @@ export type BlindResultGlass = ResultGlass & {
   answer: AnswerFlags | null;
 };
 
+export type SemiBlindResultGlass = ResultGlass & {
+  /**
+   * This glass's own opaque candidate key (`get_semi_blind_revealed_picks` /
+   * `get_semi_blind_board`'s `revealedKeyByGlass`), the key a correct pick
+   * carries. Null only when the caller could not resolve it — the loader
+   * excludes the glass rather than guess (Rule 1's fail-closed spirit).
+   */
+  candidateKey: string | null;
+};
+
 /** A blind guess row's scored columns. A `guesses` row fits as is. */
 export type BlindGuessRow = {
   wine_id: string;
@@ -126,11 +136,16 @@ export type BlindGuessRow = {
   total_points: number | null;
 };
 
-/** A semi-blind guess row. A `guesses` row fits as is. */
+/**
+ * A semi-blind guess row. A `guesses` row does NOT fit as is: `pick_key` is
+ * the opaque candidate key from `get_semi_blind_revealed_picks`, not the
+ * picked-wine column M9b drops from every client role — a wine id maps to
+ * its pour position, B9.
+ */
 export type SemiBlindGuessRow = {
   wine_id: string;
   participant_id: string;
-  guessed_wine_id: string | null;
+  pick_key: string | null;
   total_points: number | null;
 };
 
@@ -190,8 +205,8 @@ export type StrongestAttribute = {
 
 /**
  * The parts of the agreed-least sentence. `pickId` is a grape id in blind, a
- * candidate wine id in semi-blind. `outOf` is the eligible guessers with a
- * row, including rows that picked nothing.
+ * candidate key in semi-blind. `outOf` is the eligible guessers with a row,
+ * including rows that picked nothing.
  *
  * Semi-blind: resolve `pickId` to the candidate's label on the server and
  * never send the id itself to the client. The most-picked candidate can be a
@@ -362,8 +377,13 @@ function readBlind(glass: BlindResultGlass) {
   return answer ? { answer, max: glassMaxPoints(answer) } : null;
 }
 
-function readSemiBlind() {
-  return { answer: null, max: 1 };
+/**
+ * A semi-blind glass's "answer key" is just its own candidate key — the one
+ * a correct pick's `pick_key` equals. Excluded like a missing blind answer
+ * key (Rule 1, fail-closed) when the loader could not resolve one.
+ */
+function readSemiBlind(glass: SemiBlindResultGlass) {
+  return glass.candidateKey ? { answer: glass.candidateKey, max: 1 } : null;
 }
 
 /**
@@ -437,7 +457,7 @@ export function blindScore(
 
 /** Semi-blind: one per fully revealed glass the viewer could match, and the score is the matches. */
 export function semiBlindScore(
-  glasses: readonly ResultGlass[],
+  glasses: readonly SemiBlindResultGlass[],
   rows: readonly SemiBlindGuessRow[],
   viewerId: string | null,
 ): ScoreSummary {
@@ -604,14 +624,14 @@ export function blindAgreedLeast(
 
 /** Semi-blind: the lowest match rate, and the candidate most often picked for that glass. */
 export function semiBlindAgreedLeast(
-  glasses: readonly ResultGlass[],
+  glasses: readonly SemiBlindResultGlass[],
   rows: readonly SemiBlindGuessRow[],
 ): AgreedLeast | null {
   return agreedLeast(
     partition(glasses, readSemiBlind).counted,
     rows,
-    (row) => row.guessed_wine_id,
-    (glass) => glass.wineId,
+    (row) => row.pick_key,
+    (glass) => glass.answer,
   );
 }
 
@@ -632,7 +652,7 @@ export function blindResult(
 
 /** Everything S12 needs for a semi-blind tasting. Matches carry no attributes. */
 export function semiBlindResult(
-  glasses: readonly ResultGlass[],
+  glasses: readonly SemiBlindResultGlass[],
   rows: readonly SemiBlindGuessRow[],
   viewerId: string | null,
 ): TastingResult {

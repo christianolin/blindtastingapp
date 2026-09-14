@@ -22,8 +22,8 @@ import {
   type BlindGuessRow,
   type BlindResultGlass,
   type ResultCategory,
-  type ResultGlass,
   type SemiBlindGuessRow,
+  type SemiBlindResultGlass,
   type ViewerGlass,
 } from "./result-math";
 
@@ -724,22 +724,39 @@ describe("blindResult", () => {
     });
     expect(result.agreedLeast?.wineId).toBe("g3");
   });
+
+  it("a glass revealed before a late joiner arrived counts 0 against their maximum (B4)", () => {
+    const answer = { primary_grape_id: "neb", appellation_id: "barolo", secondary_grape_id: null, producer_id: "p", type_designation_id: null, vintage_kind: "YEAR" };
+    const glass = (wineId: string): BlindResultGlass => ({ wineId, isRevealed: true, revealStep: 0, eligibleParticipantIds: ["late"], answer });
+    const scored: BlindGuessRow = {
+      wine_id: "b2", participant_id: "late", primary_grape_id: "neb",
+      country_points: 2, region_points: 3, appellation_points: 5, primary_grape_points: 8,
+      secondary_grape_points: null, producer_points: 0, type_designation_points: null, vintage_points: 0, total_points: 18,
+    };
+    const r = blindResult([glass("b1"), glass("b2")], [scored], "late");
+    expect(r.glasses.map((g) => [g.wineId, g.points, g.hasRow])).toEqual([["b1", 0, false], ["b2", 18, true]]);
+    expect(r.maximum).toBe(2 * glassMaxPoints(answer));
+  });
 });
 
 // ---- Semi-blind --------------------------------------------------------
 
 describe("semi-blind", () => {
-  const sGlass = (wineId: string, over: Partial<ResultGlass> = {}): ResultGlass => ({
+  const sGlass = (
+    wineId: string,
+    over: Partial<SemiBlindResultGlass> = {},
+  ): SemiBlindResultGlass => ({
     wineId,
     isRevealed: true,
     revealStep: 0,
     eligibleParticipantIds: GUESTS,
+    candidateKey: `k-${wineId}`,
     ...over,
   });
   const pick = (wine: string, participant: string, guessed: string | null): SemiBlindGuessRow => ({
     wine_id: wine,
     participant_id: participant,
-    guessed_wine_id: guessed,
+    pick_key: guessed === null ? null : `k-${guessed}`,
     total_points: guessed === wine ? 1 : 0,
   });
 
@@ -788,7 +805,7 @@ describe("semi-blind", () => {
       guessers: 3,
       points: 1,
       max: 1,
-      sentence: { kind: "said", pickId: "s1", count: 2, outOf: 3 },
+      sentence: { kind: "said", pickId: "k-s1", count: 2, outOf: 3 },
     });
   });
 
@@ -796,7 +813,7 @@ describe("semi-blind", () => {
     const table = [pick("s1", "p1", "s1"), pick("s1", "p2", "s1"), pick("s1", "p3", "s2")];
     expect(semiBlindAgreedLeast([sGlass("s1")], table)?.sentence).toEqual({
       kind: "got",
-      pickId: "s1",
+      pickId: "k-s1",
       hits: 2,
       outOf: 3,
     });

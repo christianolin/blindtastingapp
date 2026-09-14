@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getCurrentUser, getTastingRow, getViewerParticipant, getWineRows } from "@/lib/tasting-request-cache";
+import { getTastingResult } from "@/lib/tasting-result";
 import { TastingPageHeader } from "./tasting-page-header";
 import { WinesCard } from "./wines-card";
 import { PlayExperience } from "./play/play-experience";
 import { StandingsPanel } from "./standings-panel";
+import { ClosedSurface } from "./result/closed-surface";
+import { ResultView } from "./result/result-view";
 import { respondToInvite } from "./actions";
 import { viewerCanSeeStandings } from "./view-route";
 
@@ -16,8 +19,14 @@ import { viewerCanSeeStandings } from "./view-route";
 // "Completed". An INVITED viewer gets T4's "This tasting has finished" card
 // instead (entry-6) — CLOSED routes here ahead of the INVITED check in
 // view-route.ts, so this view (not invitation-view.tsx) is the one that
-// must show it. BT-R2/BT-R3 replace this with the dark result and its
-// parchment record.
+// must show it.
+//
+// BT-R2: the board below is wrapped in `ClosedSurface`, which shows the dark
+// result (S12) until the viewer dismisses it, then this same board again —
+// BT-R3 is the one that swaps that "then" for the parchment record. The
+// header renders outside `ClosedSurface` on purpose (spec §6.3 item 3): its
+// "unknown" (SSR) render shows nothing, so a static header above it is what
+// a reload shows first, never a flash of the dark result.
 export async function FinishedView({
   tastingId,
 }: {
@@ -67,11 +76,10 @@ export async function FinishedView({
   // Every glass is revealed by definition of CLOSED (reveal_wine refuses a
   // CLOSED tasting), so the navigator never shows an "active" chip here.
   const activeChipId: string | null = null;
+  const result = await getTastingResult(tastingId);
 
-  return (
+  const board = (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
-      <TastingPageHeader tastingId={tastingId} />
-
       {wineCount > 0 ? (
         <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3.5">
           <div className="flex flex-wrap gap-2">
@@ -149,6 +157,20 @@ export async function FinishedView({
           </aside>
         ) : null}
       </div>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full flex-1 flex-col">
+      <div className="mx-auto w-full max-w-5xl px-6 pt-6 sm:px-8 sm:pt-8">
+        <TastingPageHeader tastingId={tastingId} />
+      </div>
+      <ClosedSurface
+        tastingId={tastingId}
+        result={result ? <ResultView data={result} /> : null}
+      >
+        {board}
+      </ClosedSurface>
     </div>
   );
 }
