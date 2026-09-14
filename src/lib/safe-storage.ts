@@ -33,3 +33,31 @@ export function writeFlag(getStorage: () => StorageLike | null, key: string): bo
     return false;
   }
 }
+
+/** A stored choice, or null when there is none — or none that can be read. */
+export function readValue(
+  getStorage: () => StorageLike | null,
+  key: string,
+): string | null {
+  try {
+    return getStorage()?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Stores a choice. False when there is no storage or the write throws. */
+export function writeValue(
+  getStorage: () => StorageLike | null,
+  key: string,
+  value: string,
+): boolean {
+  try {
+    const storage = getStorage();
+    if (!storage) return false;
+    storage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}

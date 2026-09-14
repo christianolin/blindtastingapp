@@ -166,13 +166,21 @@ export async function reopenTasting(
 
 // Host deletes the whole tasting (cascades to wines/answers/guesses/
 // participants via FK on delete cascade). Redirects to the dashboard.
-export async function deleteTasting(formData: FormData): Promise<void> {
+//
+// The delete's error is checked and reported rather than discarded: this used
+// to redirect to /taste whatever happened, so a refused delete read to the host
+// as a successful one and the tasting was still there when they looked again.
+export async function deleteTasting(
+  _prev: LobbyActionState,
+  formData: FormData,
+): Promise<LobbyActionState> {
   const { supabase, user } = await requireUser();
   const tastingId = String(formData.get("tasting_id") ?? "");
   const tasting = await assertHost(supabase, tastingId, user.id);
-  if (!tasting) return;
+  if (!tasting) return { error: "Only the host can delete this tasting." };
 
-  await supabase.from("tastings").delete().eq("id", tastingId);
+  const { error } = await supabase.from("tastings").delete().eq("id", tastingId);
+  if (error) return { error: error.message };
   redirect("/taste");
 }
 

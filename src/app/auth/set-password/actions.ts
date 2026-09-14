@@ -27,11 +27,20 @@ export async function setPassword(
     return { error: error.message };
   }
 
+  // The password is already set by here, so a failed profile write must not
+  // send the user back to a form that would try to set it again — but it was
+  // dropping the name they just typed with no sign at all.
   if (displayName) {
-    await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
       .update({ display_name: displayName })
       .eq("id", userData.user.id);
+    if (profileError) {
+      console.error("set-password: the display name was not saved", {
+        code: profileError.code,
+        message: profileError.message,
+      });
+    }
   }
 
   redirect("/taste");

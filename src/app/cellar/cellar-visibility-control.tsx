@@ -22,11 +22,24 @@ export function CellarVisibilityControl({
   const supabase = createClient();
   const [value, setValue] = useState<CellarVisibility>(current);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
 
+  // The label must never claim a privacy setting the row does not hold: a
+  // failed write used to leave "Private" on screen over a still-public cellar.
+  // On failure the select snaps back to what is actually stored and says so.
   async function change(v: CellarVisibility) {
+    const previous = value;
     setValue(v);
     setSaving(true);
-    await supabase.from("profiles").update({ cellar_visibility: v }).eq("id", userId);
+    setFailed(false);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ cellar_visibility: v })
+      .eq("id", userId);
+    if (error) {
+      setValue(previous);
+      setFailed(true);
+    }
     setSaving(false);
   }
 
@@ -45,6 +58,11 @@ export function CellarVisibilityControl({
           </option>
         ))}
       </select>
+      {failed ? (
+        <span role="status" className="text-destructive">
+          Not saved — still {OPTIONS.find((o) => o.value === value)?.label.toLowerCase()}.
+        </span>
+      ) : null}
     </label>
   );
 }
