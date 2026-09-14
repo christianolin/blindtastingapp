@@ -83,7 +83,12 @@ function readiness(from: number | null, to: number | null) {
   if (to != null && THIS_YEAR > to)
     return { label: "Past peak", cls: "bg-destructive/10 text-destructive" };
   if (to != null && to - THIS_YEAR <= 1)
-    return { label: "Drink soon", cls: "bg-amber-100 text-amber-900" };
+    // The only chip here that was a raw Tailwind palette colour rather than a
+    // token, so it alone could not follow the theme: amber-100 stayed a cream
+    // block on the near-black page (16.44:1 against it -- it glowed). The gold
+    // family is this design's warning colour and matches the siblings' shape:
+    // 5.97:1 in light, 6.08:1 in dark.
+    return { label: "Drink soon", cls: "bg-gold/15 text-gold-dark" };
   return { label: "Ready now", cls: "bg-primary/10 text-primary" };
 }
 function ReadinessChip({ from, to }: { from: number | null; to: number | null }) {

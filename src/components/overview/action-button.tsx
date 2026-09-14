@@ -7,7 +7,7 @@ export type ActionVariant = "gold" | "primary" | "outline";
 const VARIANT: Record<ActionVariant, string> = {
   gold: "bg-gold font-bold text-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-gold-deep",
   primary:
-    "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-[#4A1523]",
+    "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-primary-hover",
   outline:
     "border-[1.5px] border-primary bg-surface-raised text-primary shadow-[0_2px_0_0_rgba(42,33,30,.12)] hover:bg-background",
 };

@@ -43,7 +43,11 @@ export function PyramidBands({
               minWidth: "fit-content",
               backgroundColor: b.color,
               color: b.textColor ?? "#ffffff",
-              outline: isActive ? "2px solid #2b0f18" : "2px solid transparent",
+              // The selected-tier cue, and the only one: it has to read against
+              // the PAGE, which it sits on via outlineOffset. #2b0f18 was fixed
+              // near-black -- 15.49:1 on parchment and 1.03:1 on the dark page,
+              // where it simply vanished and nothing showed which tier was open.
+              outline: isActive ? "2px solid var(--foreground)" : "2px solid transparent",
               outlineOffset: "2px",
             }}
             className="flex items-center justify-between gap-3 rounded-md px-4 py-3 font-heading whitespace-nowrap transition-transform hover:-translate-y-px"

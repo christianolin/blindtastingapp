@@ -37,7 +37,23 @@ const darkOnly = block("\\.dark");
 // in both themes, and absent from .dark entirely.
 const dark = { ...light, ...darkOnly };
 
-/** Relative luminance, WCAG 2.x. Hex only -- the rgba() tokens are borders. */
+/**
+ * Composite an rgba() TOKEN over the ground it is drawn on, so the translucent
+ * border tokens can be measured instead of skipped. They were skipped, and that
+ * hid all five of them sitting between 1.21:1 and 1.95:1 in dark.
+ */
+function composite(color: string, ground: string): string {
+  const m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)/.exec(color.trim());
+  if (!m) return color;
+  const a = m[4] === undefined ? 1 : Number(m[4]);
+  const g = ground.trim().replace("#", "");
+  const gc = [0, 2, 4].map((i) => parseInt(g.slice(i, i + 2), 16));
+  const fc = [1, 2, 3].map((i) => Number(m[i]));
+  const mix = fc.map((f, i) => Math.round(a * f + (1 - a) * gc[i]));
+  return `#${mix.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Relative luminance, WCAG 2.x. */
 function luminance(hex: string): number {
   const h = hex.trim().replace("#", "");
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
@@ -69,7 +85,7 @@ function over(ink: string, alpha: number, ground: string): string {
 
 /** Rounded the way a report would show it, so failures read in familiar units. */
 const ratio = (t: Record<string, string>, ink: string, ground: string) =>
-  Number(contrast(t[ink], t[ground]).toFixed(2));
+  Number(contrast(composite(t[ink], t[ground]), t[ground]).toFixed(2));
 
 describe.each([
   ["light", light],
@@ -144,9 +160,14 @@ describe.each([
     expect(Number(contrast(t["--success"], chip).toFixed(2))).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("the destructive colour is readable as text on both grounds", () => {
-    expect(ratio(t, "--destructive", "--background")).toBeGreaterThanOrEqual(3);
-    expect(ratio(t, "--destructive", "--card")).toBeGreaterThanOrEqual(3);
+  it("the destructive colour clears AA as text, on every ground it lands on", () => {
+    // 3:1 was too lenient and let it sit at 3.81 on --card and 3.38 on
+    // --surface-raised in dark. This is body text -- the error line under the
+    // lobby Start button, the host's reveal refusal -- not a decorative accent,
+    // so it takes the 4.5 that text takes.
+    for (const ground of ["--background", "--card", "--surface-raised"]) {
+      expect(ratio(t, "--destructive", ground)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 
@@ -202,6 +223,37 @@ describe("the placeholder shades, which carry real text", () => {
   it("light --placeholder sits at the AA ceiling and cannot go lighter", () => {
     expect(luminance(light["--placeholder"])).toBeLessThanOrEqual(0.154);
     expect(luminance(light["--placeholder"])).toBeGreaterThan(0.145);
+  });
+});
+
+describe("the translucent border tokens, which used to be unmeasurable", () => {
+  // luminance() refused rgba(), so ratio() silently skipped these five and the
+  // guard had nothing to say about any border in dark. They are composited now.
+  it("the input border identifies its field", () => {
+    // A text field's border is how you know the field is there: WCAG 1.4.11
+    // asks 3:1 for the visual information that identifies a control. Dark was
+    // 1.59:1 on --card until the alpha went from 0.16 to 0.42.
+    for (const ground of ["--background", "--card", "--surface-raised"]) {
+      expect(ratio(dark, "--input", ground)).toBeGreaterThanOrEqual(3);
+      expect(ratio(light, "--input", ground)).toBeGreaterThanOrEqual(1.2);
+    }
+  });
+
+  // RECORDED, NOT ASSERTED. --border and its two steps draw dividers and card
+  // outlines as well as control edges, so raising them lifts every hairline in
+  // the app -- a palette decision rather than a bug fix. Measured on --card in
+  // dark: --border 1.49, --border-light 1.24, --border-strong 1.95. This pins
+  // them so the numbers cannot drift further down unnoticed while the question
+  // is open.
+  it("the divider steps stay in their measured order and do not get fainter", () => {
+    const light_ = ratio(dark, "--border-light", "--card");
+    const base = ratio(dark, "--border", "--card");
+    const strong = ratio(dark, "--border-strong", "--card");
+    expect(light_).toBeLessThan(base);
+    expect(base).toBeLessThan(strong);
+    expect(light_).toBeGreaterThanOrEqual(1.24);
+    expect(base).toBeGreaterThanOrEqual(1.49);
+    expect(strong).toBeGreaterThanOrEqual(1.95);
   });
 });
 

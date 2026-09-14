@@ -77,7 +77,7 @@ export function InviteStep({
                   className={cn(
                     "flex min-h-11 items-center gap-2 rounded-full p-[7px_13px_7px_8px] text-[13px] transition-colors md:pointer-fine:min-h-0",
                     on
-                      ? "bg-primary font-semibold text-primary-foreground hover:bg-[#4A1523]"
+                      ? "bg-primary font-semibold text-primary-foreground hover:bg-primary-hover"
                       : "border border-border bg-surface-raised text-foreground hover:border-gold",
                   )}
                 >

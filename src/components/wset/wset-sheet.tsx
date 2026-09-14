@@ -64,7 +64,7 @@ const SECTION_SCROLL_MT = "scroll-mt-[190px] sm:scroll-mt-[160px]";
 // The bordeaux primary button, as on every other 2026-09 surface: radius 9–11,
 // the ink under-shadow, the one allowed hover literal.
 const PRIMARY_BUTTON =
-  "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-[#4A1523]";
+  "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-primary-hover";
 
 // The selected value's display label (in the active language), or nothing. An
 // empty control already says "not set" — spelling it out on every unrated row

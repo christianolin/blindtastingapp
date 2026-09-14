@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // screens. `min(620px, 62%)` keeps the opaque zone from swallowing the whole
 // photo on a tablet.
 const VEIL =
-  "linear-gradient(to right, rgba(245,239,227,.97) 0, rgba(245,239,227,.95) min(620px, 62%), rgba(245,239,227,.3) 84%, rgba(245,239,227,.08) 100%)";
+  "linear-gradient(to right, color-mix(in oklab, var(--background) 97%, transparent) 0, color-mix(in oklab, var(--background) 95%, transparent) min(620px, 62%), color-mix(in oklab, var(--background) 30%, transparent) 84%, color-mix(in oklab, var(--background) 08%, transparent) 100%)";
 
 /**
  * The "More than a score" photo band at the foot of the Overview and Your
