@@ -229,31 +229,46 @@ describe("the placeholder shades, which carry real text", () => {
 describe("the translucent border tokens, which used to be unmeasurable", () => {
   // luminance() refused rgba(), so ratio() silently skipped these five and the
   // guard had nothing to say about any border in dark. They are composited now.
-  it("the input border identifies its field", () => {
-    // A text field's border is how you know the field is there: WCAG 1.4.11
-    // asks 3:1 for the visual information that identifies a control. Dark was
-    // 1.59:1 on --card until the alpha went from 0.16 to 0.42.
-    for (const ground of ["--background", "--card", "--surface-raised"]) {
-      expect(ratio(dark, "--input", ground)).toBeGreaterThanOrEqual(3);
-      expect(ratio(light, "--input", ground)).toBeGreaterThanOrEqual(1.2);
+  it("the input border identifies its field, in BOTH themes", () => {
+    // A text field's border is how you know the field is there; WCAG 1.4.11
+    // asks 3:1 for what identifies a control. Dark was 1.59:1 and light 1.40:1
+    // -- and light was the worse of the two in practice, because the white fill
+    // is only 1.07:1 from the page, so neither the fill nor the edge said a
+    // field was there.
+    for (const t of [light, dark]) {
+      for (const ground of ["--background", "--card", "--surface-raised"]) {
+        expect(ratio(t, "--input", ground)).toBeGreaterThanOrEqual(3);
+      }
     }
   });
 
-  // RECORDED, NOT ASSERTED. --border and its two steps draw dividers and card
-  // outlines as well as control edges, so raising them lifts every hairline in
-  // the app -- a palette decision rather than a bug fix. Measured on --card in
-  // dark: --border 1.49, --border-light 1.24, --border-strong 1.95. This pins
-  // them so the numbers cannot drift further down unnoticed while the question
-  // is open.
-  it("the divider steps stay in their measured order and do not get fainter", () => {
-    const light_ = ratio(dark, "--border-light", "--card");
-    const base = ratio(dark, "--border", "--card");
-    const strong = ratio(dark, "--border-strong", "--card");
-    expect(light_).toBeLessThan(base);
-    expect(base).toBeLessThan(strong);
-    expect(light_).toBeGreaterThanOrEqual(1.24);
-    expect(base).toBeGreaterThanOrEqual(1.49);
-    expect(strong).toBeGreaterThanOrEqual(1.95);
+  it("the dark divider scale is a scale, and its default edge clears 3:1", () => {
+    // Was 1.24 / 1.49 / 1.95 on --card: a hairline you could not see, on a
+    // ground only 1.13:1 from the card itself. --border draws outline buttons
+    // and card edges, so it takes the 3:1 a control's shape takes, on the worst
+    // of the four grounds it lands on. --border-light stays the quiet step: a
+    // decorative rule between list rows is not a control and does not owe 3:1.
+    const worst = (token: string) =>
+      Math.min(...["--card", "--background", "--surface-raised", "--primary"]
+        .map((g) => ratio(dark, token, g)));
+    expect(worst("--border")).toBeGreaterThanOrEqual(3);
+    expect(worst("--sidebar-border")).toBeGreaterThanOrEqual(3);
+    expect(worst("--border-strong")).toBeGreaterThan(worst("--border"));
+    expect(worst("--border-light")).toBeLessThan(worst("--border"));
+    expect(worst("--border-light")).toBeGreaterThanOrEqual(1.8);
+  });
+
+  it("light's divider scale is a scale too, and clears 3:1 where dark does", () => {
+    // Light was flatter AND fainter than dark: 1.08 / 1.31 / 1.36 on the page,
+    // with --border-strong six hundredths above --border. Both themes now hold
+    // the same shape, so a border means the same thing whichever one you are in.
+    const worst = (token: string) =>
+      Math.min(...["--background", "--card", "--surface-raised"].map((g) => ratio(light, token, g)));
+    expect(worst("--border")).toBeGreaterThanOrEqual(3);
+    expect(worst("--sidebar-border")).toBeGreaterThanOrEqual(3);
+    expect(worst("--border-strong")).toBeGreaterThan(worst("--border"));
+    expect(worst("--border-light")).toBeLessThan(worst("--border"));
+    expect(worst("--border-light")).toBeGreaterThanOrEqual(1.6);
   });
 });
 
