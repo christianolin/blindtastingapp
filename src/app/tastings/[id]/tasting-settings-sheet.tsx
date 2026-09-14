@@ -58,8 +58,8 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
 
 /**
  * The Tasting settings sheet (spec §3.3 items 13–14, S4d; ledger B2, B4):
- * everything that used to live behind the header cogwheel's popover
- * (`HostControlsMenu`), plus the create sheet's step-1 fields reused in
+ * everything that used to live behind the header cogwheel's popover (deleted
+ * in BT-L2), plus the create sheet's step-1 fields reused in
  * place so editing a live tasting isn't a different form from creating one.
  * A full-screen Dialog below `sm`, centred above it — the same wrapper
  * `new-tasting-sheet.tsx` uses.
@@ -280,7 +280,7 @@ export function TastingSettingsSheet({
             <button
               type="button"
               onClick={() => setInnerView("invitations")}
-              className="flex min-h-11 items-center gap-2 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left text-[13px] font-semibold text-foreground transition-colors hover:border-gold hover:bg-surface-raised md:pointer-fine:min-h-0"
+              className="flex min-h-11 items-center gap-2 rounded-[9px] border border-border bg-card px-[13px] py-[10px] text-left text-[13px] font-semibold text-foreground transition-colors hover:border-gold md:pointer-fine:min-h-0"
             >
               <UserPlus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               {MANAGE_INVITATIONS}

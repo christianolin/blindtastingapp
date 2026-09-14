@@ -70,14 +70,14 @@ export function PasteListPanel({
         placeholder="One wine per line — a producer, wine or vintage is enough"
         rows={4}
         disabled={resolving}
-        className="min-h-[88px] resize-y rounded-[8px] border border-border bg-surface-raised p-[10px_12px] text-[13px] outline-none focus:border-primary disabled:opacity-70"
+        className="min-h-[88px] resize-y rounded-[8px] border border-input bg-card p-[10px_12px] text-[13px] outline-none focus:border-primary disabled:opacity-70"
       />
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => void addThese()}
           disabled={resolving || lines.length === 0}
-          className="flex min-h-11 items-center justify-center rounded-[8px] border border-border bg-surface-raised px-[14px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold disabled:opacity-50 md:min-h-9"
+          className="flex min-h-11 items-center justify-center rounded-[8px] border border-border bg-card px-[14px] text-[12.5px] font-semibold text-primary transition-colors hover:border-gold disabled:opacity-50 md:min-h-9"
         >
           {resolving && progress ? `Adding ${progress.done + 1} of ${progress.total}…` : ADD_THESE}
         </button>
@@ -102,7 +102,7 @@ export function PasteListPanel({
                 <button
                   type="button"
                   onClick={() => openAddWineSheet(destination, { start: "byhand", onAdded })}
-                  className="flex min-h-11 shrink-0 items-center rounded-[6px] border border-border bg-background px-3 text-[12px] font-semibold text-primary transition-colors hover:border-gold hover:bg-surface-raised md:min-h-8 md:px-2.5"
+                  className="flex min-h-11 shrink-0 items-center rounded-[6px] border border-border bg-background px-3 text-[12px] font-semibold text-primary transition-colors hover:border-gold hover:bg-card md:min-h-8 md:px-2.5"
                 >
                   By hand
                 </button>

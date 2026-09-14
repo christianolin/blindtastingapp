@@ -4,6 +4,8 @@ import { LiveDot } from "@/components/overview/live-dot";
 import { createClient } from "@/lib/supabase/server";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { rankDelta } from "@/lib/guess-ladder-math";
+import { glassFacts, type FactRow } from "@/lib/host-facts";
+import { lockedLine, rankDeltaPill, revealHeaderMeta, revealingGlass } from "@/lib/reveal-copy";
 import {
   heroLabel,
   inPlayKeys,
@@ -11,15 +13,17 @@ import {
   keyMaxPoints,
   type RevealKey,
 } from "@/lib/reveal-rows-math";
-import { ordinal, rankLabel, rankRows } from "@/lib/stats-math";
+import { rankLabel, rankRows } from "@/lib/stats-math";
 import { cn } from "@/lib/utils";
 import type { GuessRow } from "./ladder-types";
 
 // The spoiler-safe progressive read shape (get_wine_reveal). Only categories
 // <= reveal_step are present; unrevealed ones are omitted entirely.
+// `in_play_count` is null only at step 0 (M1) — never read here, since
+// RevealView returns before that point.
 type Rev = {
   reveal_step: number;
-  in_play_count: number;
+  in_play_count: number | null;
   is_fully_revealed: boolean;
   revealed_keys: string[];
   correct: Record<string, string | number | null>;
@@ -130,6 +134,8 @@ export async function RevealView({
   standings,
   spectator = false,
   leaderboardReveal = "PER_ATTRIBUTE",
+  hostName,
+  eligibleIds,
 }: {
   wineId: string;
   glassNumber: number;
@@ -150,11 +156,19 @@ export async function RevealView({
    *  PER_ATTRIBUTE, the column's default and this view's behaviour before the
    *  prop existed. */
   leaderboardReveal?: "PER_ATTRIBUTE" | "PER_WINE";
+  /** Whoever is driving the reveal — the laptop header's "{host} is driving". */
+  hostName: string;
+  /** Eligible guessers for this glass (`eligibleForGlass`), for "This glass"'s
+   *  "k of n" facts — never every participant. */
+  eligibleIds: string[];
 }) {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_wine_reveal", { p_wine_id: wineId });
   const rev = data as Rev | null;
   if (!rev || rev.reveal_step === 0) return null;
+  // Guaranteed non-null past step 0 (M1 nulls it only at step 0) — the
+  // fallback is for the type checker, not a real case.
+  const inPlayCount = rev.in_play_count ?? 0;
 
   const me =
     rev.guesses.find((g) => g.participant_id === myParticipantId) ?? null;
@@ -166,27 +180,68 @@ export async function RevealView({
     return typeof value === "number" ? value : null;
   };
 
-  // Only the truth's appellation/producer and my own can be missing from the
-  // upstream map — nobody else's answers are rendered here.
+  // The truth's appellation/producer, mine, and — for the "This glass" facts
+  // rail below, which polls every guess on the glass currently revealing —
+  // every OTHER guesser's appellation pick too (`rev.guesses[].values`, from
+  // the spoiler-safe RPC; nobody else's answers are rendered outside the
+  // facts rail, only tallied into "Most said {appellation}"). Mirrors the
+  // host console's identical `rpcAppellationIds` collection in
+  // host/page.tsx.
   const looked = await lookupAppellationAndProducerNames({
     appellationIds: [
       rev.correct.appellation as string | null,
       myValues.appellation as string | null,
+      ...rev.guesses.map((g) => g.values.appellation as string | null | undefined),
     ],
     producerIds: [
       rev.correct.producer as string | null,
       myValues.producer as string | null,
     ],
   });
+  // Strict: null when unresolved, so `glassFacts`/`mostSaidAppellation` can
+  // drop a fact whose name can't be looked up rather than showing a "—"
+  // placeholder as if it were a real answer.
+  const strictNameOf = (id: string | number | null | undefined): string | null => {
+    if (id == null) return null;
+    return names.get(String(id)) ?? looked.get(String(id)) ?? null;
+  };
+  // Display: same lookup, but a resolvable id that still comes up empty
+  // reads as the placeholder dash rather than vanishing — used for the
+  // truth/mine cells, never for `glassFacts`.
   const nameOf = (id: string | number | null | undefined): string | null => {
     if (id == null) return null;
-    return names.get(String(id)) ?? looked.get(String(id)) ?? "—";
+    return strictNameOf(id) ?? "—";
   };
 
   const revealedKeys = rev.revealed_keys as RevealKey[];
   const revealedSet = new Set<string>(revealedKeys);
-  const { keys } = inPlayKeys(revealedKeys, rev.in_play_count);
+  const { keys } = inPlayKeys(revealedKeys, inPlayCount);
   const hasSecondary = rev.correct.secondary_grape != null;
+
+  // "This glass" facts (spec §11.3 item 3; shared rule in host-facts.ts):
+  // counted from categories already revealed to everyone. From the first
+  // revealed category every guess on this glass is already frozen and scored
+  // (`reveal_next_category` stamps `scored_at` on every row) — get_wine_reveal
+  // doesn't carry `locked_at`/`scored_at` itself, so a truthy placeholder here
+  // marks every row "counted" without a second read (mirrors the host
+  // console's identical `glassFacts` call in host/page.tsx).
+  const factRows: FactRow[] = rev.guesses.map((g) => ({
+    participant_id: g.participant_id,
+    primary_grape_id: (g.values.primary_grape as string | null | undefined) ?? null,
+    appellation_id: (g.values.appellation as string | null | undefined) ?? null,
+    locked_at: null,
+    scored_at: "revealed",
+  }));
+  const facts = glassFacts({
+    revealedKeys,
+    answer: {
+      primary_grape_id: (rev.correct.primary_grape as string | undefined) ?? "",
+      appellation_id: (rev.correct.appellation as string | null | undefined) ?? null,
+    },
+    rows: factRows,
+    eligibleIds: new Set(eligibleIds),
+    nameOf: strictNameOf,
+  });
 
   // My saved answer for a still-hidden row, from my own row.
   const savedMine = (key: RevealKey): string | null => {
@@ -307,211 +362,313 @@ export async function RevealView({
         myParticipantId,
       )
     : null;
+  // Null both while the delta is withheld (PER_WINE, mid-glass) and once the
+  // rank genuinely did not move — the pill shows only a change (rankDeltaPill).
+  const deltaLabel = delta ? rankDeltaPill(delta) : null;
+  const deltaUp = delta !== null && delta.after < delta.before;
+
+  // The locked line under the rows (spec §11.3 item 2): every still-hidden
+  // row's label and what it is worth, summed.
+  const lockedText = lockedLine(
+    rows.filter((r) => r.hidden).map((r) => ({ label: r.label, points: r.max })),
+  );
+
+  // Standings cap (refinement 16, REVEAL-09): top 3 on phones, top 5 on
+  // laptops, the viewer's own row always included even outside the cap.
+  const capStandings = (limit: number) => {
+    const capped = ranked.slice(0, limit);
+    if (capped.some((r) => r.row.isMe)) return capped;
+    const mine = ranked.find((r) => r.row.isMe);
+    return mine ? [...capped, mine] : capped;
+  };
+  const standingsPhone = capStandings(3);
+  const standingsLaptop = capStandings(5);
 
   return (
     <div className="flex flex-col bg-console text-console-foreground">
-      {/* Header */}
+      {/* Header. Laptop: the attribute/host meta line and the rank-delta
+          pill share the header row (spec §11.3 item 1); phones keep the bare
+          attribute count here and the delta on the standings card below. */}
       <div className="flex items-center gap-[9px] px-4 pt-3 pb-[11px]">
         <span className="flex items-center gap-[7px]">
           <LiveDot size={6} />
           <Eyebrow size="lg" className="tracking-[.15em] text-gold-light">
-            Revealing glass {glassNumber}
+            {revealingGlass(glassNumber)}
           </Eyebrow>
         </span>
-        <span className="ml-auto text-[11.5px] text-console-ink tabular-nums">
-          {rev.reveal_step} of {rev.in_play_count} attributes
+        <span className="ml-auto hidden items-center gap-[10px] md:flex">
+          <span className="text-[11.5px] text-console-ink tabular-nums">
+            {revealHeaderMeta(rev.reveal_step, inPlayCount, hostName)}
+          </span>
+          {deltaLabel ? (
+            <span
+              key={rev.reveal_step}
+              className={cn(
+                "animate-rise-in text-[12px] font-bold tabular-nums",
+                deltaUp ? "text-gold-light" : "text-miss",
+              )}
+            >
+              {deltaLabel}
+            </span>
+          ) : null}
+        </span>
+        <span className="ml-auto text-[11.5px] text-console-ink tabular-nums md:hidden">
+          {rev.reveal_step} of {inPlayCount} attributes
         </span>
       </div>
 
-      <div className="flex flex-col gap-[14px] px-4 pb-4">
-        {/* Hero: the newest revealed category */}
-        {hero ? (
-          <div className="flex flex-col items-center gap-[9px] pt-[10px] pb-1 text-center">
-            <Eyebrow size="lg" className="text-console-ink">
-              {heroLabel(hero.key, hero.key === "grapes" && hasSecondary)}
-            </Eyebrow>
-            <span
-              className={cn(
-                "font-heading text-[46px] font-semibold leading-none lining-nums tabular-nums",
-                hero.notRecorded ? "text-console-ink" : "text-gold-light",
-              )}
+      <div className="flex flex-col gap-[14px] px-4 pb-4 md:flex-row md:items-start md:gap-6">
+        {/* Left: the hero, every in-play row, the locked line */}
+        <div className="flex min-w-0 flex-1 flex-col gap-[14px]">
+          {/* Hero: the newest revealed category. Keyed on reveal_step so it
+              (and its verdict pill) remount and animate in on every advance
+              (MISSED-03); nothing moves under prefers-reduced-motion. */}
+          {hero ? (
+            <div
+              key={rev.reveal_step}
+              className="animate-rise-in flex flex-col items-center gap-[9px] pt-[10px] pb-1 text-center"
             >
-              {hero.truth}
-            </span>
-            {spectator ? null : (
+              <Eyebrow size="lg" className="text-console-ink">
+                {heroLabel(hero.key, hero.key === "grapes" && hasSecondary)}
+              </Eyebrow>
               <span
                 className={cn(
-                  "flex items-center gap-[9px] rounded-full px-4 py-2",
-                  verdict === "hit" &&
-                    "border border-gold-light bg-gold-light/16",
-                  verdict === "miss" && "border border-rose/60 bg-rose/15",
-                  verdict === "skipped" &&
-                    "border border-dashed border-console-foreground/30 text-console-ink",
-                  verdict === "unscored" &&
-                    "border border-console-foreground/30 text-console-ink",
+                  "font-heading text-[46px] font-semibold leading-none lining-nums tabular-nums",
+                  hero.notRecorded ? "text-console-ink" : "text-gold-light",
                 )}
               >
-                {verdict === "hit" ? (
-                  <span className="flex size-5 items-center justify-center rounded-full bg-gold-light text-console">
-                    <Check className="size-3" strokeWidth={3} aria-hidden />
-                  </span>
-                ) : null}
-                <span className="text-[14.5px] font-bold">
-                  {verdictText(hero, verdict)}
-                </span>
+                {hero.truth}
               </span>
-            )}
-          </div>
-        ) : null}
+              {spectator ? null : (
+                <span
+                  className={cn(
+                    "flex items-center gap-[9px] rounded-full px-4 py-2",
+                    verdict === "hit" &&
+                      "border border-gold-light bg-gold-light/16",
+                    verdict === "miss" && "border border-rose/60 bg-rose/15",
+                    verdict === "skipped" &&
+                      "border border-dashed border-console-foreground/30 text-console-ink",
+                    verdict === "unscored" &&
+                      "border border-console-foreground/30 text-console-ink",
+                  )}
+                >
+                  {verdict === "hit" ? (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-gold-light text-console">
+                      <Check className="size-3" strokeWidth={3} aria-hidden />
+                    </span>
+                  ) : null}
+                  <span className="text-[14.5px] font-bold">
+                    {verdictText(hero, verdict)}
+                  </span>
+                </span>
+              )}
+            </div>
+          ) : null}
 
-        {/* Every in-play row */}
-        <div className="flex flex-col gap-[7px]">
-          {rows.map((r) => {
-            const isHero = hero?.key === r.key;
-            // Hit and miss both need a real score: a row with nothing on
-            // record, or null points on my guess, stays neutral.
-            const scored = !r.hidden && !r.notRecorded && r.points !== null;
-            const hit = scored && (r.points ?? 0) > 0;
-            const miss = scored && r.mine != null && r.points === 0;
-            return (
-              <div
-                key={r.key}
-                className={cn(
-                  "flex items-center gap-[11px] rounded-[11px] p-[11px_13px]",
-                  r.hidden
-                    ? "border border-dashed border-console-foreground/20 opacity-55"
-                    : hit
-                      ? "border-[1.5px] border-gold-light bg-gold-light/14"
-                      : miss
-                        ? "border border-rose/50 bg-console-card"
-                        : "border border-console-foreground/14 bg-console-card",
-                )}
-              >
-                <span
+          {/* Every in-play row */}
+          <div className="flex flex-col gap-[7px]">
+            {rows.map((r) => {
+              const isHero = hero?.key === r.key;
+              // Hit and miss both need a real score: a row with nothing on
+              // record, or null points on my guess, stays neutral.
+              const scored = !r.hidden && !r.notRecorded && r.points !== null;
+              const hit = scored && (r.points ?? 0) > 0;
+              const miss = scored && r.mine != null && r.points === 0;
+              return (
+                <div
+                  key={r.key}
                   className={cn(
-                    "w-16 shrink-0 text-[11px]",
-                    hit ? "text-gold-light" : "text-console-ink",
+                    "flex items-center gap-[11px] rounded-[11px] p-[11px_13px]",
+                    r.hidden
+                      ? "border border-dashed border-console-foreground/20 opacity-55"
+                      : hit
+                        ? "border-[1.5px] border-gold-light bg-gold-light/14"
+                        : miss
+                          ? "border border-rose/50 bg-console-card"
+                          : "border border-console-foreground/14 bg-console-card",
                   )}
                 >
-                  {r.label}
-                </span>
-                <span
-                  className={cn(
-                    "min-w-0 flex-1 truncate text-[13.5px]",
-                    r.hidden || r.notRecorded
-                      ? "text-console-ink"
-                      : isHero
-                        ? "font-bold"
-                        : "font-semibold",
-                  )}
-                >
-                  {r.hidden ? "still hidden" : r.truth}
-                </span>
-                {spectator ? null : (
                   <span
                     className={cn(
-                      "max-w-[40%] truncate text-[12.5px]",
-                      miss
-                        ? "text-miss"
-                        : hit
-                          ? "text-gold-light"
-                          : "text-console-ink",
+                      "w-16 shrink-0 text-[11px]",
+                      hit ? "text-gold-light" : "text-console-ink",
                     )}
                   >
-                    you: {r.mine ?? "—"}
+                    {r.label}
                   </span>
-                )}
-                <span
-                  className={cn(
-                    "shrink-0 tabular-nums",
-                    r.hidden
-                      ? "text-[13px] text-console-ink"
-                      : r.notRecorded
-                        ? "text-[12px] text-console-ink"
-                        : hit
-                          ? "text-[13px] font-bold text-gold-light"
-                          : "text-[13px] font-bold text-console-ink",
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate text-[13.5px]",
+                      r.hidden || r.notRecorded
+                        ? "text-console-ink"
+                        : isHero
+                          ? "font-bold"
+                          : "font-semibold",
+                    )}
+                  >
+                    {r.hidden ? "still hidden" : r.truth}
+                  </span>
+                  {spectator ? null : (
+                    <span
+                      className={cn(
+                        "max-w-[40%] truncate text-[12.5px]",
+                        miss
+                          ? "text-miss"
+                          : hit
+                            ? "text-gold-light"
+                            : "text-console-ink",
+                      )}
+                    >
+                      you: {r.mine ?? "—"}
+                    </span>
                   )}
-                >
-                  {r.hidden
-                    ? r.max
-                    : r.notRecorded
-                      ? NOT_SCORED
-                      : r.points === null
-                        ? "—"
-                        : r.points > 0
-                          ? `+${r.points}`
-                          : "0"}
-                </span>
-              </div>
-            );
-          })}
+                  <span
+                    key={isHero ? rev.reveal_step : undefined}
+                    className={cn(
+                      "shrink-0 tabular-nums",
+                      isHero && "animate-rise-in",
+                      r.hidden
+                        ? "text-[13px] text-console-ink"
+                        : r.notRecorded
+                          ? "text-[12px] text-console-ink"
+                          : hit
+                            ? "text-[13px] font-bold text-gold-light"
+                            : "text-[13px] font-bold text-console-ink",
+                    )}
+                  >
+                    {r.hidden
+                      ? r.max
+                      : r.notRecorded
+                        ? NOT_SCORED
+                        : r.points === null
+                          ? "—"
+                          : r.points > 0
+                            ? `+${r.points}`
+                            : "0"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {lockedText ? (
+            <p className="text-[11.5px] text-console-ink">{lockedText}</p>
+          ) : null}
+
+          {/* Phone: standings sit under the rows, capped to the top 3 with
+              the delta the header hides on this width. Laptop keeps its own
+              copy in the right rail below. */}
+          <div className="md:hidden">
+            <StandingsCard
+              rows={standingsPhone}
+              anyTied={anyTied}
+              deltaLabel={deltaLabel}
+              deltaUp={deltaUp}
+              revealStep={rev.reveal_step}
+            />
+          </div>
         </div>
 
-        {/* Standings */}
-        {ranked.length > 0 ? (
-          <div className="flex flex-col gap-[9px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[13px_14px]">
-            <div className="flex items-baseline gap-[9px]">
+        {/* Right rail (laptop only): "This glass" facts, then standings
+            capped to the top 5 — the delta already lives in the header up
+            there, so this copy never repeats it. */}
+        <div className="hidden shrink-0 flex-col gap-[16px] md:flex md:w-[300px]">
+          {facts.length > 0 ? (
+            <div className="flex flex-col gap-[9px]">
               <Eyebrow size="md" className="text-console-ink">
-                Standings
+                This glass
               </Eyebrow>
-              {delta ? (
-                <span
-                  className={cn(
-                    "ml-auto flex items-center gap-[6px] text-[12px] font-bold tabular-nums",
-                    delta.after < delta.before
-                      ? "text-gold-light"
-                      : delta.after > delta.before
-                        ? "text-miss"
-                        : "text-console-ink",
-                  )}
-                >
-                  {delta.after < delta.before
-                    ? `▲ ${ordinal(delta.before)} → ${ordinal(delta.after)}`
-                    : delta.after > delta.before
-                      ? `▼ ${ordinal(delta.before)} → ${ordinal(delta.after)}`
-                      : `= ${ordinal(delta.after)}`}
-                </span>
-              ) : null}
+              <div className="flex flex-col gap-[7px]">
+                {facts.map((fact) => (
+                  <span
+                    key={fact.label}
+                    className="flex justify-between gap-3 text-[12.5px]"
+                  >
+                    <span className="min-w-0 truncate text-console-ink">
+                      {fact.label}
+                    </span>
+                    <span className="shrink-0 truncate font-semibold tabular-nums">
+                      {fact.value}
+                    </span>
+                  </span>
+                ))}
+              </div>
             </div>
-            {ranked.map(({ row: s, rank, tied }, i) => (
-              <span
-                key={s.participantId}
-                className={cn(
-                  "flex items-baseline gap-[10px] py-1.5",
-                  i < ranked.length - 1 && "border-b border-console-foreground/12",
-                )}
-              >
-                <span
-                  className={cn(
-                    "shrink-0 font-heading text-[15px] lining-nums tabular-nums",
-                    anyTied ? "w-6" : "w-[15px]",
-                    rank === 1 ? "text-gold-light" : "text-console-ink",
-                  )}
-                >
-                  {rankLabel({ rank, tied })}
-                </span>
-                <span
-                  className={cn(
-                    "flex-1 truncate text-[13.5px]",
-                    s.isMe && "font-bold",
-                  )}
-                >
-                  {s.isMe ? "You" : s.name}
-                </span>
-                <span
-                  className={cn(
-                    "text-[13.5px] text-gold-light tabular-nums",
-                    s.isMe && "font-bold",
-                  )}
-                >
-                  {s.total}
-                </span>
-              </span>
-            ))}
-          </div>
+          ) : null}
+
+          <StandingsCard rows={standingsLaptop} anyTied={anyTied} deltaLabel={null} deltaUp={false} revealStep={rev.reveal_step} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** One standings card, shared by the phone (under the rows) and laptop (right
+ *  rail) placements above — only their row cap and whether they carry the
+ *  delta pill differ. `deltaLabel` null suppresses the pill outright, so the
+ *  laptop copy (whose delta already sits in the header) never repeats it. */
+function StandingsCard({
+  rows,
+  anyTied,
+  deltaLabel,
+  deltaUp,
+  revealStep,
+}: {
+  rows: { row: RevealStanding; rank: number; tied: boolean }[];
+  anyTied: boolean;
+  deltaLabel: string | null;
+  deltaUp: boolean;
+  revealStep: number;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-[9px] rounded-[14px] border border-console-foreground/14 bg-console-card p-[13px_14px]">
+      <div className="flex items-baseline gap-[9px]">
+        <Eyebrow size="md" className="text-console-ink">
+          Standings
+        </Eyebrow>
+        {deltaLabel ? (
+          <span
+            key={revealStep}
+            className={cn(
+              "animate-rise-in ml-auto flex items-center gap-[6px] text-[12px] font-bold tabular-nums",
+              deltaUp ? "text-gold-light" : "text-miss",
+            )}
+          >
+            {deltaLabel}
+          </span>
         ) : null}
       </div>
+      {rows.map(({ row: s, rank, tied }, i) => (
+        <span
+          key={s.participantId}
+          className={cn(
+            "flex items-baseline gap-[10px] py-1.5",
+            i < rows.length - 1 && "border-b border-console-foreground/12",
+          )}
+        >
+          <span
+            className={cn(
+              "shrink-0 font-heading text-[15px] lining-nums tabular-nums",
+              anyTied ? "w-6" : "w-[15px]",
+              rank === 1 ? "text-gold-light" : "text-console-ink",
+            )}
+          >
+            {rankLabel({ rank, tied })}
+          </span>
+          <span className={cn("flex-1 truncate text-[13.5px]", s.isMe && "font-bold")}>
+            {s.isMe ? "You" : s.name}
+          </span>
+          <span
+            className={cn(
+              "text-[13.5px] text-gold-light tabular-nums",
+              s.isMe && "font-bold",
+            )}
+          >
+            {s.total}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

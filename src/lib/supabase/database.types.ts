@@ -583,7 +583,6 @@ export type Database = {
           vintage_kind: VintageKind | null;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
-          guessed_wine_id: string | null;
           country_points: number | null;
           region_points: number | null;
           appellation_points: number | null;
@@ -601,7 +600,13 @@ export type Database = {
         };
         // Clients may write only the guess fields and locked_at; the scoring
         // columns, reveal_step and the timestamps are server-written (migration
-        // 20260912093000 revokes the column privileges).
+        // 20260912093000 revokes the column privileges). The table's
+        // picked-wine column is in none of these types: migration
+        // 20260914103500 takes it out of the client roles (no SELECT, INSERT or
+        // UPDATE), because a semi-blind pick is a wine id and wine ids map to pour
+        // positions. Picks go through assign_semi_blind_match and
+        // clear_semi_blind_match and read back as candidate keys
+        // (get_semi_blind_board, get_semi_blind_revealed_picks).
         Insert: {
           wine_id: string;
           participant_id: string;
@@ -616,7 +621,6 @@ export type Database = {
           vintage_kind?: VintageKind | null;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
-          guessed_wine_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["guesses"]["Insert"]>;
         Relationships: [];
@@ -1877,6 +1881,18 @@ export type Database = {
       // its candidate; refuses a locked row ("this glass is locked in").
       clear_semi_blind_match: {
         Args: { p_wine_id: string };
+        Returns: undefined;
+      };
+      // 20260914104500 (blind-tasting spec §12.4, B11, Q4): the host of a DRAFT
+      // tasting hands hosting to a JOINED participant; the former host stays
+      // JOINED. Authenticated only. Refusals (handHostingRefusal maps them):
+      // "only the host can hand hosting over", "hosting can only change before
+      // the tasting starts", "only someone who has joined can host", "remove the
+      // glasses you added first" (any added_by_host glass), "finish or remove
+      // your unfinished glasses and cellar bottles first" (a draft or pour
+      // intent the host owns in the tasting).
+      transfer_tasting_host: {
+        Args: { p_tasting_id: string; p_new_host_user_id: string };
         Returns: undefined;
       };
     };

@@ -7,7 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAddWine } from "@/components/add-wine-context";
 import { cn } from "@/lib/utils";
-import { crossesSeenGlass, dropIndex, reorderIds } from "@/lib/flight-glass-rules";
+import {
+  SEEN_GLASS_REORDER_REFUSAL,
+  SEMI_BLIND_FLIGHT_FIXED,
+  crossesSeenGlass,
+  dropIndex,
+  reorderIds,
+  type ReorderGuard,
+} from "@/lib/flight-glass-rules";
 import { RevealButton } from "./play/reveal-button";
 import type { FlightDestination } from "./tasting-add-wine-button";
 import { moveFlightGlass } from "./flight-actions";
@@ -55,6 +62,10 @@ export type FlightWine = {
       create sheet's step-2 snapshot never sets it (that flight is always
       DRAFT, so nothing is ever seen there). */
   seen?: boolean;
+  /** Someone has guessed this glass: after Start, `move_flight_glass` keeps
+      its number and refuses any move whose range, both ends included, holds
+      it (M6 decision 5). Only the host's lobby sets it. */
+  guessed?: boolean;
 };
 
 /** A JOINED bring-your-own participant who has not added a bottle yet. */
@@ -65,12 +76,6 @@ export type WaitingContributor = { participantId: string; name: string };
 const TOUCH_BUTTON = "min-h-11 md:pointer-fine:min-h-0";
 const TOUCH_ICON = "size-11 md:pointer-fine:size-7";
 
-// `move_flight_glass`'s own sentence for the check `crossesSeenGlass` mirrors
-// (M6, 20260914095500_flight_edits_until_first_step.sql): "a glass the table
-// has already seen cannot change its number", made presentable the same way
-// flight-actions.ts's `asSentence` would.
-const SEEN_GLASS_REORDER_REFUSAL =
-  "A glass the table has already seen cannot change its number.";
 
 type DragState = {
   pointerId: number;
@@ -96,6 +101,7 @@ export function WineFlightList({
   wines,
   waitingFor,
   destination,
+  reorderGuard,
 }: {
   tastingId: string;
   wines: FlightWine[];
@@ -103,6 +109,10 @@ export function WineFlightList({
   waitingFor: WaitingContributor[];
   /** This flight: Edit opens the sheet on it. */
   destination: FlightDestination;
+  /** What a reorder must also respect once the tasting has started (M6
+      decision 5): whether it has started, and whether its semi-blind flight
+      is fixed. */
+  reorderGuard?: Pick<ReorderGuard, "started" | "semiBlindFlightFixed">;
 }) {
   const { openAddWineSheet } = useAddWine();
   const [optimistic, setOptimistic] = useOptimistic(wines);
@@ -123,8 +133,9 @@ export function WineFlightList({
   // Both the drag drop and the ▲▼ fallback land here (spec §3.3 item 5): the
   // list reorders optimistically with `reorderIds`, refusing locally with
   // `crossesSeenGlass` before any round trip if the move would renumber a
-  // glass the table has already seen — the same rule `move_flight_glass`
-  // itself is the floor for.
+  // glass the table has already seen, move a started semi-blind flight, or
+  // (after Start) cross a guessed glass — the rules `move_flight_glass` itself
+  // is the floor for.
   function attemptMove(id: string, toIndex: number) {
     const ids = optimistic.map((w) => w.id);
     const after = reorderIds(ids, id, toIndex);
@@ -132,8 +143,11 @@ export function WineFlightList({
     const seen = new Set(
       optimistic.filter((w) => w.isRevealed || w.seen).map((w) => w.id),
     );
-    if (crossesSeenGlass(ids, after, seen)) {
-      setError(SEEN_GLASS_REORDER_REFUSAL);
+    const guessed = new Set(optimistic.filter((w) => w.guessed).map((w) => w.id));
+    if (crossesSeenGlass(ids, after, seen, { ...reorderGuard, guessed })) {
+      setError(
+        reorderGuard?.semiBlindFlightFixed ? SEMI_BLIND_FLIGHT_FIXED : SEEN_GLASS_REORDER_REFUSAL,
+      );
       return;
     }
     setError(null);

@@ -3,19 +3,21 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { moveRefusalSentence } from "@/lib/flight-glass-rules";
 
 // The lobby's flight-glass server actions the database gates end to end (spec
 // §3.3 items 5, 12; ledger B2 "Remove after Start, reorder"). Split out of
 // ./actions.ts (plan refinement 2) so tracks that only touch the flight don't
 // queue on the lifecycle file. Host-or-adder checks live in the database
 // (`move_flight_glass`, `glass_removal_impact`, both BT-SQL6) — these actions
-// only confirm a session and hand the RPC's own sentence back, never a
-// curated re-wording.
+// only confirm a session and hand the RPC's sentence back: `move_flight_glass`'s
+// own refusals in the lobby's copy (`moveRefusalSentence`, the sentences the
+// optimistic list shows; BT-V3 A-19), anything else as the RPC wrote it.
 
 /**
  * The RPC's own lower-case exception text, made presentable: first letter
  * upper-cased, a closing period added if it lacks one (spec §2.3 item 6,
- * "shows the RPC's sentence" — never re-worded here).
+ * "shows the RPC's sentence"), for a refusal the lobby has no copy for.
  */
 function asSentence(message: string): string {
   const trimmed = message.trim();
@@ -27,8 +29,10 @@ function asSentence(message: string): string {
 /**
  * Reorder a flight glass to the 1-based `toIndex` (drag, or the ▲▼ fallback) —
  * spec §3.3 item 5. `move_flight_glass` is the floor: host only, refused on a
- * CLOSED tasting, and refused whenever the move would change the number of a
- * glass the table has already seen. A refusal surfaces exactly that sentence.
+ * CLOSED tasting, refused whenever the move would change the number of a
+ * glass the table has already seen, and after Start refused for a semi-blind
+ * flight or a range holding a guessed glass (M6 decision 5). A refusal
+ * surfaces that sentence, in the lobby's copy where it has one.
  */
 export async function moveFlightGlass(
   tastingId: string,
@@ -45,7 +49,7 @@ export async function moveFlightGlass(
     p_wine_id: wineId,
     p_to_index: toIndex,
   });
-  if (error) return { error: asSentence(error.message) };
+  if (error) return { error: moveRefusalSentence(error.message) ?? asSentence(error.message) };
 
   revalidatePath(`/tastings/${tastingId}`);
   return { ok: true };

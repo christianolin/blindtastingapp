@@ -67,6 +67,8 @@ export type ConsoleGlass = {
   meta: string | null;
   /** True while the identity shown is still hidden from the table. */
   privateIdentity: boolean;
+  /** The reveal-in-order chips. Empty unless step-by-step reveal applies
+      (Q8, `stepRevealApplies`): a free-order glass is revealed whole. */
   steps: ConsoleStep[];
   nextStep: ConsoleStep | null;
   /** What the gold button reads, precomputed server-side so the client never
@@ -471,12 +473,13 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 </div>
               </div>
 
-              {glass.steps.length > 0 ? (
+              {/* Q8: the category chips exist only where step-by-step reveal
+                  applies (`stepRevealApplies`); a free-order glass is revealed
+                  whole, so it gets no chips and no eyebrow of its own. */}
+              {data.guidedLive && glass.steps.length > 0 ? (
                 <div className="flex flex-col gap-[11px]">
                   <Eyebrow size="md" className="text-console-ink">
-                    {data.guidedLive
-                      ? "Reveal in order · tap to go one step further"
-                      : "Revealed all at once"}
+                    Reveal in order · tap to go one step further
                   </Eyebrow>
                   <div className="flex flex-wrap items-center gap-2">
                     {glass.steps.map((step) => {

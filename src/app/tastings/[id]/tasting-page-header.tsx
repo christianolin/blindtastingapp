@@ -23,8 +23,12 @@ import { TastingSettingsButton } from "./tasting-settings-button";
 // round trip's worth of reads, not five.
 export async function TastingPageHeader({
   tastingId,
+  showPlace = true,
 }: {
   tastingId: string;
+  // The place line is never shown on the record (spec §13.3 item 5, Q2) —
+  // FinishedView passes false. Every other caller keeps the default.
+  showPlace?: boolean;
 }): Promise<React.JSX.Element | null> {
   const supabase = await createClient();
   const [user, tasting, participantRows, wines, place] = await Promise.all([
@@ -32,7 +36,7 @@ export async function TastingPageHeader({
     getTastingRow(tastingId),
     getParticipantRows(tastingId),
     getWineRows(tastingId),
-    getTastingPlace(supabase, tastingId),
+    showPlace ? getTastingPlace(supabase, tastingId) : Promise.resolve(null),
   ]);
   if (!user || !tasting) return null;
 

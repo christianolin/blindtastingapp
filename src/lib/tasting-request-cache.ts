@@ -1,5 +1,11 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import {
+  decodeStartResult,
+  startResultCookieName,
+  type StartResult,
+} from "@/lib/start-result-cookie";
 
 // Per-request deduplication for the tasting page's shared reads.
 //
@@ -63,12 +69,14 @@ export const getViewerParticipant = cache(async (tastingId: string) => {
   return rows.find((p) => p.user_id === user.id) ?? null;
 });
 
+// `added_by_host` is M6's pinned adder flag, so every view can follow
+// is_wine_adder's rule for "whose glass is this" (BT-V3 A-18).
 export const getWineRows = cache(async (tastingId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("wines")
     .select(
-      "id, position, is_revealed, reveal_step, contributor_participant_id, tasting_id",
+      "id, position, is_revealed, reveal_step, contributor_participant_id, added_by_host, tasting_id",
     )
     .eq("tasting_id", tastingId)
     .order("position");
@@ -103,3 +111,14 @@ export const getReferenceOptions = cache(async (): Promise<ReferenceOptions> => 
     grapes: grapes.data ?? [],
   };
 });
+
+/**
+ * Start's result for the host, from the one-shot cookie `startTasting` leaves
+ * when the host started from the lobby (BT-V3 A-08). The codec and its rules
+ * live in the pure start-result-cookie.ts; null when there is no cookie or it
+ * is malformed.
+ */
+export const getStartResult = cache(
+  async (tastingId: string): Promise<StartResult | null> =>
+    decodeStartResult((await cookies()).get(startResultCookieName(tastingId))?.value),
+);

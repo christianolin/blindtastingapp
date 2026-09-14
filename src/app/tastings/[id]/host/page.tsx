@@ -3,6 +3,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { RevealSync } from "@/components/reveal-sync";
 import { LiveShell } from "@/components/live-shell";
 import { createClient } from "@/lib/supabase/server";
+import { GUESS_READ_COLUMNS, type GuessReadColumn } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import {
@@ -34,6 +35,10 @@ import {
 } from "./console";
 
 type WineAnswer = Database["public"]["Tables"]["wine_answers"]["Row"];
+// The explicit `guesses` read list (spec §10.4 (e); BT-S5) — never "*",
+// which would carry the semi-blind pick column back to a page that also
+// names bring-your-own contributors, turning a match into an answer leak.
+type GuessReadRow = Pick<Database["public"]["Tables"]["guesses"]["Row"], GuessReadColumn>;
 type WineRow = Awaited<ReturnType<typeof getWineRows>>[number];
 type ParticipantRow = Awaited<ReturnType<typeof getParticipantRows>>[number];
 
@@ -99,7 +104,15 @@ export default async function HostConsolePage({
 
   const tasting = await getTastingRow(tastingId);
   if (!tasting) notFound();
-  if (tasting.host_id !== user.id || tasting.status === "DRAFT") {
+  // OD-5 (a): the console only ever makes sense for a LIVE tasting — Start
+  // lands a host here in the first place only when timingMode is LIVE (see
+  // startLandsOnConsole) — so an ASYNC tasting's host is sent to the lobby
+  // the same as a DRAFT one, alongside the existing non-host redirect.
+  if (
+    tasting.host_id !== user.id ||
+    tasting.status === "DRAFT" ||
+    tasting.timing_mode !== "LIVE"
+  ) {
     redirect(`/tastings/${tastingId}`);
   }
 
@@ -178,29 +191,32 @@ export default async function HostConsolePage({
     revealedBefore.length > 0 ? revealedBefore[revealedBefore.length - 1] : null;
 
   const hostParticipant = participants.find((p) => p.user_id === tasting.host_id);
-  // A competing bring-your-own host: not the tasting's answer-setter, not
-  // semi-blind (that branch is BT-S4/BT-S5's), and not their own bottle
-  // (they wrote that answer key themselves when they added it).
-  const hostGuessesFor = (wine: { contributor_participant_id: string | null }) =>
-    !hostProvides && !isSemiBlind && wine.contributor_participant_id !== hostParticipant?.id;
+  // Rule 1, in every branch (blind and semi-blind alike): a bring-your-own
+  // bottle stays hidden from the host until it is revealed, unless it is
+  // their own (they wrote that answer key themselves when they added it).
   // Once a glass is fully revealed its answer key is public knowledge (the
-  // `wine_answers` RLS already opens on `is_revealed`), so only an
-  // UNREVEALED competing-host glass ever needs the RPC path.
-  const needsRpc = (wine: WineRow) => hostGuessesFor(wine) && !wine.is_revealed;
+  // `wine_answers` RLS already opens on `is_revealed`).
+  const hiddenFromHost = (wine: WineRow) =>
+    !hostProvides && !wine.is_revealed && wine.contributor_participant_id !== hostParticipant?.id;
+  // A competing blind bring-your-own host follows such a glass through the
+  // spoiler-safe RPC instead. Semi-blind has no per-category reveal, so its
+  // hidden glasses get nothing at all until `reveal_wine` opens them.
+  const needsRpc = (wine: WineRow) => !isSemiBlind && hiddenFromHost(wine);
 
   const glassWines = [previousWine, currentWine].filter(
     (w): w is NonNullable<typeof w> => w !== null,
   );
   const glassWineIds = glassWines.map((w) => w.id);
-  const directWineIds = glassWines.filter((w) => !needsRpc(w)).map((w) => w.id);
+  const directWineIds = glassWines.filter((w) => !hiddenFromHost(w)).map((w) => w.id);
   const rpcWines = glassWines.filter((w) => needsRpc(w));
 
   // Host-only reads for the two glasses on the console. `wine_answers` and
   // full guess content are read only for glasses the host is entitled to see
-  // in full (host-provides, their own bring-your-own bottle, or semi-blind —
-  // left for BT-S4/BT-S5); `guessMeta` is content-free (locked/scored
-  // bookkeeping only, never a guessed value) and is read for every glass so
-  // "N/M locked in" works regardless of branch.
+  // in full (host-provides, their own bring-your-own bottle, or a revealed
+  // glass) — never for a hidden bring-your-own glass, semi-blind included;
+  // `guessMeta` is content-free (locked/scored bookkeeping only, never a
+  // guessed value) and is read for every glass so "N/M locked in" works
+  // regardless of branch.
   const [{ data: answers }, { data: guessMeta }, { data: guessContent }, { data: designations }, revealRows] =
     await Promise.all([
       directWineIds.length > 0
@@ -215,9 +231,9 @@ export default async function HostConsolePage({
             data: [] as { wine_id: string; participant_id: string; locked_at: string | null; scored_at: string | null }[],
           }),
       directWineIds.length > 0
-        ? supabase.from("guesses").select("*").in("wine_id", directWineIds)
+        ? supabase.from("guesses").select(GUESS_READ_COLUMNS).in("wine_id", directWineIds)
         : Promise.resolve({
-            data: [] as Database["public"]["Tables"]["guesses"]["Row"][],
+            data: [] as GuessReadRow[],
           }),
       supabase.from("type_designations").select("id, name"),
       Promise.all(
@@ -238,7 +254,7 @@ export default async function HostConsolePage({
     list.push(g);
     guessMetaByWineId.set(g.wine_id, list);
   }
-  const guessContentByWineId = new Map<string, Database["public"]["Tables"]["guesses"]["Row"][]>();
+  const guessContentByWineId = new Map<string, GuessReadRow[]>();
   for (const g of guessContent ?? []) {
     const list = guessContentByWineId.get(g.wine_id) ?? [];
     list.push(g);
@@ -361,24 +377,28 @@ export default async function HostConsolePage({
       const rev = revealByWineId.get(wine.id) ?? null;
       const revealedKeys = (rev?.revealed_keys ?? []) as RevealKey[];
       revealStep = revealedKeys.length;
-      steps = revealedKeys.map((key) => ({
-        key,
-        label: keyLabel(key),
-        known: true,
-        missing: false,
-        state: "revealed" as const,
-      }));
-      if (!refusal) {
-        const chip: ConsoleStep = {
-          key: "next",
-          label: nextChipLabel(rev?.in_play_count ?? null, revealStep),
-          known: false,
+      // Q8: chips only where step-by-step reveal applies; a free-order glass
+      // is revealed whole, through the console's full-reveal button.
+      if (guidedLive) {
+        steps = revealedKeys.map((key) => ({
+          key,
+          label: keyLabel(key),
+          known: true,
           missing: false,
-          state: "next",
-        };
-        steps = [...steps, chip];
-        nextStep = chip;
-        revealButtonLabel = NEXT_ATTRIBUTE;
+          state: "revealed" as const,
+        }));
+        if (!refusal) {
+          const chip: ConsoleStep = {
+            key: "next",
+            label: nextChipLabel(rev?.in_play_count ?? null, revealStep),
+            known: false,
+            missing: false,
+            state: "next",
+          };
+          steps = [...steps, chip];
+          nextStep = chip;
+          revealButtonLabel = NEXT_ATTRIBUTE;
+        }
       }
       if (rev && revealedKeys.length > 0) {
         const answerForFacts = {
@@ -459,13 +479,17 @@ export default async function HostConsolePage({
           (key === "producer" && answer && !answer.producer_id) ||
             (key === "vintage" && answer && !answer.vintage_kind),
         );
-      steps = answerSteps.map((key, i) => ({
-        key,
-        label: keyLabel(key),
-        known: true,
-        missing: missingOf(key),
-        state: i < revealStep ? "revealed" : i === revealStep ? "next" : "pending",
-      }));
+      // Q8: chips only where step-by-step reveal applies; a free-order glass
+      // is revealed whole, so it gets none (and no "next" step either).
+      steps = guidedLive
+        ? answerSteps.map((key, i) => ({
+            key,
+            label: keyLabel(key),
+            known: true,
+            missing: missingOf(key),
+            state: i < revealStep ? "revealed" : i === revealStep ? "next" : "pending",
+          }))
+        : [];
       nextStep = steps.find((s) => s.state === "next") ?? null;
       if (nextStep) revealButtonLabel = `Reveal the ${nextStep.label.toLowerCase()}`;
 
@@ -584,8 +608,9 @@ export default async function HostConsolePage({
   // reveal-7 (spec §D.3 #3): a per-wine leaderboard only moves when a whole
   // glass is revealed, so naming the last category would date the standings to
   // a reveal they have not caught up with yet.
+  // A free-order glass carries no steps (Q8), so there is no category to name.
   const lastRevealedStep =
-    current && current.revealStep > 0 ? current.steps[current.revealStep - 1] : null;
+    current && current.revealStep > 0 ? (current.steps[current.revealStep - 1] ?? null) : null;
   const standingsAfter =
     tasting.leaderboard_reveal === "PER_WINE"
       ? glassesSoFar
@@ -635,9 +660,12 @@ export default async function HostConsolePage({
     <LiveShell active={tasting.status === "IN_PROGRESS"}>
       {tasting.timing_mode === "LIVE" ? (
         <RevealSync tastingId={tastingId} watermark={watermark} />
-      ) : (
-        <AutoRefresh />
-      )}
+      ) : null}
+      {/* Every console polls too, LIVE included: RevealSync hears only `wines`
+          and `guesses` (the only tables in supabase_realtime), so a Pause,
+          Resume or Skip from another device would otherwise never reach a
+          second console until some reveal or guess happened to land. */}
+      <AutoRefresh />
       <HostConsole data={data} />
     </LiveShell>
   );

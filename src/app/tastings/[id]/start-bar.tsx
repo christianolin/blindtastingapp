@@ -12,8 +12,7 @@ import { HostControls } from "./host-controls";
 // HostControls' own submit Button is restyled through the wrapper
 // (`[&_button[type=submit]]`) rather than a fork of the shared control —
 // the same technique by-hand-form.tsx's `PICKER` const uses on a combobox
-// trigger — so host-controls.tsx needs no styling change here, only BT-L2's
-// one deletion of its now-dead running-menu prop.
+// trigger — so host-controls.tsx needs no styling change here.
 const GOLD_START = cn(
   "[&_button[type=submit]]:border-gold-deep [&_button[type=submit]]:bg-gold",
   "[&_button[type=submit]]:text-foreground [&_button[type=submit]]:shadow-[0_2px_0_0_rgba(42,33,30,.18)]",
@@ -39,7 +38,6 @@ export async function StartBar({
       timingMode={tasting.timing_mode}
       revealMode={tasting.reveal_mode}
       wineSource={tasting.wine_source}
-      surface="start"
     />
   );
 
@@ -54,8 +52,8 @@ export async function StartBar({
       </div>
 
       {/* Phone: pinned to the bottom, reachable one-handed (LOBBY-26). Only
-          while DRAFT — once started, HostControls itself renders nothing on
-          a fresh load, so an empty bar would otherwise linger. */}
+          while DRAFT — HostControls renders nothing once the tasting has
+          started, so an empty bar would otherwise linger. */}
       {tasting.status === "DRAFT" ? (
         <div
           className={cn(

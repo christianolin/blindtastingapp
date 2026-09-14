@@ -6,7 +6,8 @@
 // (`can_edit_flight_glass`, `can_remove_flight_glass`,
 // `set_flight_glass_added_via`, `move_flight_glass`) stay the floor. The
 // optimistic flight list reorders with `reorderIds` / `crossesSeenGlass`, which
-// rebuild the list exactly as `move_flight_glass` does.
+// rebuild the list and refuse a move exactly as `move_flight_glass` does, and
+// `moveRefusalSentence` turns that RPC's own refusals into the same copy.
 //
 // Pure: type imports only, so vitest loads it without the `@/` alias.
 
@@ -35,13 +36,19 @@ export const LATER_GLASS_SEEN = "A later glass has already been revealed — thi
 export const SEMI_BLIND_FLIGHT_FIXED =
   "A semi-blind flight is fixed once the tasting starts — the list of wines can't change.";
 
+// `move_flight_glass`'s numbering refusal (M6,
+// 20260914095500_flight_edits_until_first_step.sql), "a glass the table has
+// already seen cannot change its number", made presentable. Its after-Start
+// twin, which also names guessed glasses, shows the same sentence.
+export const SEEN_GLASS_REORDER_REFUSAL = "A glass the table has already seen cannot change its number.";
+
 /**
- * A semi-blind tasting's flight is fixed from Start: a new, swapped or removed
- * glass would change the guests' candidate list in the same refresh (rule 1).
- * Anything but DRAFT has started, legacy OPEN rows included — the database's
- * `status <> 'DRAFT'`.
+ * A semi-blind tasting's flight is fixed from Start: a new, swapped, removed or
+ * reordered glass would change the guests' candidate list in the same refresh
+ * (rule 1). Anything but DRAFT has started, legacy OPEN rows included — the
+ * database's `status <> 'DRAFT'`.
  */
-function semiBlindFlightFixed(t: { revealMode: RevealMode; tastingStatus: TastingStatus }): boolean {
+export function semiBlindFlightFixed(t: { revealMode: RevealMode; tastingStatus: TastingStatus }): boolean {
   return t.revealMode === "SEMI_BLIND" && t.tastingStatus !== "DRAFT";
 }
 
@@ -111,22 +118,65 @@ export function reorderIds(ids: readonly string[], wineId: string, toIndex: numb
   return [...rest.slice(0, toIndex - 1), wineId, ...rest.slice(toIndex - 1)];
 }
 
+/** What a reorder must also respect once the tasting has started (M6 decision 5). */
+export type ReorderGuard = {
+  /** The tasting has started: anything but DRAFT, or a stamped `started_at`. */
+  started?: boolean;
+  /** A started semi-blind flight (`semiBlindFlightFixed`): nothing moves. */
+  semiBlindFlightFixed?: boolean;
+  /** Glasses that have a guess row. After Start they keep their number too. */
+  guessed?: ReadonlySet<string>;
+};
+
 /**
- * Whether a reorder changes the number of a glass the table has seen (revealed,
- * or its reveal started) — what `move_flight_glass` refuses. Like the RPC's
- * `array_position(...) <> array_position(...)`, a seen id missing from either
- * list is not compared.
+ * Whether `move_flight_glass` refuses this reorder (M6 decision 5), so the
+ * optimistic list refuses it before any round trip:
+ * - a started semi-blind flight moves nothing;
+ * - a glass the table has seen (revealed, or its reveal started) never changes
+ *   its number, in DRAFT too. Like the RPC's `array_position(...) <>
+ *   array_position(...)`, a seen id missing from either list is not compared;
+ * - after Start, no glass from the moved glass's old place to its new one, both
+ *   ends included, may be seen or guessed.
+ * An unchanged order refuses nothing: the list never sends one.
  */
 export function crossesSeenGlass(
   before: readonly string[],
   after: readonly string[],
   seen: ReadonlySet<string>,
+  guard: ReorderGuard = {},
 ): boolean {
-  return before.some((id, from) => {
+  const first = before.findIndex((id, i) => after[i] !== id);
+  if (first === -1) return false;
+  if (guard.semiBlindFlightFixed) return true;
+  const renumbersSeen = before.some((id, from) => {
     if (!seen.has(id)) return false;
     const to = after.indexOf(id);
     return to !== -1 && to !== from;
   });
+  if (renumbersSeen) return true;
+  if (!guard.started) return false;
+  // One move shifts every glass between its two places, so the range is the
+  // run of places whose glass differs.
+  let last = before.length - 1;
+  while (last > first && after[last] === before[last]) last -= 1;
+  return before.slice(first, last + 1).some((id) => seen.has(id) || guard.guessed?.has(id) === true);
+}
+
+// `move_flight_glass`'s own sentences (M6) → the lobby's copy. Any other
+// refusal is shown as the RPC wrote it.
+const MOVE_REFUSAL_COPY: ReadonlyMap<string, string> = new Map([
+  ["a semi-blind flight is fixed once the tasting has started", SEMI_BLIND_FLIGHT_FIXED],
+  ["a glass the table has already seen cannot change its number", SEEN_GLASS_REORDER_REFUSAL],
+  [
+    "a glass that has been guessed or seen cannot change its number once the tasting has started",
+    SEEN_GLASS_REORDER_REFUSAL,
+  ],
+]);
+
+/** The lobby's sentence for a `move_flight_glass` refusal, or null for any other message. */
+export function moveRefusalSentence(message: string): string | null {
+  const key = message.trim().replace(/\.$/, "").toLowerCase();
+  return MOVE_REFUSAL_COPY.get(key) ?? null;
 }
 
 /**

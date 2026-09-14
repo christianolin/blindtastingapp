@@ -153,7 +153,7 @@ export function NewTastingForm({
           onChange={(e) => set("name", e.target.value)}
           autoComplete="off"
           required
-          className="w-full min-w-0 rounded-[10px] border border-border bg-surface-raised p-[13px] text-[15.5px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:text-[16px] md:focus:p-[12.5px_13.5px]"
+          className="w-full min-w-0 rounded-[10px] border border-input bg-card p-[13px] text-[15.5px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:text-[16px] md:focus:p-[12.5px_13.5px]"
         />
         {settingsMode ? null : (
           <div className="flex flex-wrap items-center gap-[7px] max-md:hidden">
@@ -163,7 +163,7 @@ export function NewTastingForm({
                 key={s}
                 type="button"
                 onClick={() => set("name", s)}
-                className="rounded-full border border-border bg-background px-[10px] py-[3px] text-[11.5px] text-foreground transition-colors hover:border-gold hover:bg-surface-raised"
+                className="rounded-full border border-border bg-background px-[10px] py-[3px] text-[11.5px] text-foreground transition-colors hover:border-gold hover:bg-card"
               >
                 {s}
               </button>
@@ -188,7 +188,7 @@ export function NewTastingForm({
             value={value.description}
             onChange={(e) => set("description", e.target.value)}
             rows={3}
-            className="w-full min-w-0 resize-y rounded-[10px] border border-border bg-surface-raised p-[13px] text-[14px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:focus:p-[12.5px_13.5px]"
+            className="w-full min-w-0 resize-y rounded-[10px] border border-input bg-card p-[13px] text-[14px] text-foreground outline-none transition-colors placeholder:text-placeholder focus:border-[1.5px] focus:border-primary focus:p-[12.5px] md:p-[13px_14px] md:focus:p-[12.5px_13.5px]"
           />
         </div>
       ) : null}
@@ -310,7 +310,7 @@ export function NewTastingForm({
             {WINE_SOURCE_LOCKED}
           </p>
         ) : null}
-        <label className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-border bg-surface-raised p-[11px_13px] md:gap-[10px]">
+        <label className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-input bg-card p-[11px_13px] md:gap-[10px]">
           <Calendar className="size-4 shrink-0 text-muted-foreground max-md:hidden" aria-hidden />
           <span className="sr-only">Date and time</span>
           <input
@@ -329,7 +329,7 @@ export function NewTastingForm({
             stranger or in any preview (spec §13.3 items 4–5). */}
         <label
           htmlFor={placeId}
-          className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-border bg-surface-raised p-[11px_13px] md:gap-[10px]"
+          className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-input bg-card p-[11px_13px] md:gap-[10px]"
         >
           <MapPin className="size-4 shrink-0 text-muted-foreground max-md:hidden" aria-hidden />
           <span className="shrink-0 text-[13px] text-foreground md:hidden">{PLACE_LABEL}</span>
@@ -400,7 +400,7 @@ export function NewTastingForm({
               aria-expanded={rulesOpen}
               aria-controls={rulesId}
               onClick={() => setRulesOpen((o) => !o)}
-              className="flex shrink-0 items-center gap-[5px] rounded-full text-[12px] font-semibold text-primary md:border md:border-border md:bg-card md:px-[11px] md:py-[5px] md:text-[11.5px] md:hover:border-gold md:hover:bg-surface-raised"
+              className="flex shrink-0 items-center gap-[5px] rounded-full text-[12px] font-semibold text-primary md:border md:border-border md:bg-card md:px-[11px] md:py-[5px] md:text-[11.5px] md:hover:border-gold"
             >
               Change
               <ChevronDown
@@ -526,7 +526,7 @@ function ModeTile({
         "relative flex min-h-11 items-center gap-[11px] rounded-[11px] p-[13px] text-left transition-colors md:flex-col md:items-stretch md:gap-[5px]",
         selected
           ? "border-[1.5px] border-primary bg-card p-[12.5px] md:bg-background"
-          : "border border-border bg-card hover:border-gold md:bg-surface-raised",
+          : "border border-border bg-card hover:border-gold",
         disabled && "cursor-not-allowed opacity-70 hover:border-border md:hover:border-border",
       )}
     >

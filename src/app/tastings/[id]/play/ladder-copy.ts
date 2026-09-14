@@ -132,8 +132,3 @@ export function waitingTail(host: string | null): string {
     ? `The reveal starts when everyone is in, or when ${host} moves on.`
     : "The reveal starts when everyone is in — or when the host moves on.";
 }
-
-export const NOTE_THIS_GLASS = "Note this glass";
-export const NOTE_THIS_GLASS_SUB =
-  "What you smell and taste, and what you would give it — it attaches to the wine at the reveal";
-export const NOTE_THIS_GLASS_SUB_LAPTOP = "Attaches to the wine at the reveal";

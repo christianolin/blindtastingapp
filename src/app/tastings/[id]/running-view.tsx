@@ -7,7 +7,18 @@ import { LiveShell } from "@/components/live-shell";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { cn } from "@/lib/utils";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
-import { getCurrentUser, getTastingRow, getViewerParticipant, getWineRows } from "@/lib/tasting-request-cache";
+import { createClient } from "@/lib/supabase/server";
+import {
+  getCurrentUser,
+  getParticipantRows,
+  getStartResult,
+  getTastingRow,
+  getViewerParticipant,
+  getWineRows,
+} from "@/lib/tasting-request-cache";
+import { startResultCookieName, startResultCookiePath } from "@/lib/start-result-cookie";
+import { invitedYouLine } from "@/lib/invitation-copy";
+import { makeGlassLabeler } from "@/lib/wine-label";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { SheetFromQuery } from "./sheet-from-query";
 import { TastingPageHeader } from "./tasting-page-header";
@@ -17,6 +28,7 @@ import { PlayExperience } from "./play/play-experience";
 import { OpenBoard } from "./open-board";
 import { StandingsPanel } from "./standings-panel";
 import { respondToInvite } from "./actions";
+import { StartResultNotice } from "./host-controls";
 import { viewerCanSeeStandings } from "./view-route";
 
 // The IN_PROGRESS board (BT-D2, moved without change from page.tsx). Serves
@@ -47,6 +59,32 @@ export async function RunningView({
   const wineCount = wines.length;
   const revealedCount = wines.filter((w) => w.is_revealed).length;
   const progressPct = wineCount > 0 ? Math.round((revealedCount / wineCount) * 100) : 0;
+
+  // "Glass N" by list order, or the contributor label in bring-your-own
+  // (MISSED-01, B10) — the navigator chips below use it, same as every other
+  // guest-facing surface on the running page. Skipped for OPEN (its own
+  // OpenBoard never uses it) and an empty flight, so this never runs a
+  // participant/profile query it does not need.
+  let glassLabel: (w: (typeof wines)[number]) => string = () => "";
+  if (!isOpen && wineCount > 0) {
+    const participantRows = await getParticipantRows(tastingId);
+    const userIds = participantRows.map((p) => p.user_id);
+    const supabase = await createClient();
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, email")
+      .in("id", userIds.length > 0 ? userIds : [""]);
+    const profileByUserId = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const nameByParticipantId = new Map(
+      participantRows.map((p) => [
+        p.id,
+        profileByUserId.get(p.user_id)?.display_name ??
+          profileByUserId.get(p.user_id)?.email ??
+          "Someone",
+      ]),
+    );
+    glassLabel = makeGlassLabeler(wines, tasting.wine_source, nameByParticipantId);
+  }
   const derivedStatus =
     tasting.status === "CLOSED"
       ? "Completed"
@@ -57,14 +95,16 @@ export async function RunningView({
   // filled "active" treatment in the navigator.
   const activeChipId = wines.find((w) => !w.is_revealed)?.id ?? null;
 
-  // is_wine_adder's rule: the host for a glass with no contributor,
-  // otherwise the contributor's own bottle — whether the Wines card (below)
-  // shows at all while running, and so whether the floating Add button
-  // above it is still needed (WinesCard carries its own once shown).
-  const isAdder = (w: { contributor_participant_id: string | null }) =>
-    w.contributor_participant_id
-      ? w.contributor_participant_id === viewer?.id
-      : isHost;
+  // is_wine_adder's rule (M6): the host for a glass the host added
+  // (`added_by_host`, pinned at insert), otherwise the contributor's own
+  // bottle; a glass whose contributor row was deleted is nobody's. It decides
+  // whether the Wines card (below) shows at all while running, and so whether
+  // the floating Add button above it is still needed (WinesCard carries its
+  // own once shown).
+  const isAdder = (w: { added_by_host: boolean; contributor_participant_id: string | null }) =>
+    w.added_by_host
+      ? isHost
+      : w.contributor_participant_id !== null && w.contributor_participant_id === viewer?.id;
   const myWineIds = wines.filter(isAdder).map((w) => w.id);
   const showWinesWhileRunning = isHost || myWineIds.length > 0;
 
@@ -87,10 +127,27 @@ export async function RunningView({
     <AddToFlightButton destination={flightDestination} />
   ) : null;
   const editableWineIds = await getEditableWineIds(tastingId);
+  // Start's result when the host started from the lobby (BT-V3 A-08): the
+  // lobby unmounted in the same round trip, so startTasting left it in a
+  // one-shot cookie, shown here once.
+  const startResult = isHost ? await getStartResult(tastingId) : null;
 
   // reveal_mode OPEN's own started-board routes here too (the OPEN-started
   // check runs before the INVITED check in view-route.ts), so an INVITED
-  // viewer needs the same Accept / Decline card the other views give them.
+  // viewer needs the same Accept / Decline card the other views give them,
+  // naming the host as the invitation does ("{host} invited you", spec §4.3,
+  // with invitation-data.ts's fallback). The OPEN branch skips the
+  // participants' profile read above, so the host's name is its own read.
+  let hostName = "Someone";
+  if (myStatus === "INVITED") {
+    const supabase = await createClient();
+    const { data: hostProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", tasting.host_id)
+      .maybeSingle();
+    hostName = hostProfile?.display_name ?? hostName;
+  }
   const inviteCard =
     myStatus === "INVITED" ? (
       <Card className="border-primary/40 bg-primary/5">
@@ -99,7 +156,7 @@ export async function RunningView({
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
-            The host invited you to this tasting. Accept to take part.
+            {invitedYouLine(hostName)} to this tasting. Accept to take part.
           </p>
           <div className="flex gap-2">
             <form action={respondToInvite}>
@@ -152,7 +209,7 @@ export async function RunningView({
       {wineCount > 0 ? (
         <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent px-4 py-3.5">
           <div className="flex flex-wrap gap-2">
-            {wines.map((w, i) => {
+            {wines.map((w) => {
               const active = derivedStatus !== "Completed" && w.id === activeChipId;
               return (
                 <a
@@ -177,7 +234,7 @@ export async function RunningView({
                           : "bg-muted-foreground/40",
                     )}
                   />
-                  Wine {i + 1}
+                  {glassLabel(w)}
                 </a>
               );
             })}
@@ -190,7 +247,7 @@ export async function RunningView({
               />
             </div>
             <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
-              {derivedStatus === "Completed" ? "Completed" : `${revealedCount} of ${wineCount} wines`}
+              {derivedStatus === "Completed" ? "Completed" : `${revealedCount} of ${wineCount} glasses`}
             </span>
           </div>
         </div>
@@ -271,6 +328,16 @@ export async function RunningView({
           />
         </Suspense>
         <TastingPageHeader tastingId={tastingId} />
+        {/* Always mounted for the host, so the notice survives AutoRefresh
+            once its cookie is cleared. */}
+        {isHost ? (
+          <StartResultNotice
+            tastingId={tastingId}
+            result={startResult}
+            cookieName={startResultCookieName(tastingId)}
+            cookiePath={startResultCookiePath(tastingId)}
+          />
+        ) : null}
         {inviteCard}
         {content}
       </div>

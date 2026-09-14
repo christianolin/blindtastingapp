@@ -1366,6 +1366,7 @@ S7 (console, laptop), S7b (console, phone).
 8. **Incomplete glass.** Its reveal controls stay inert, with the refusal sentence and an "Edit" link beside it: `openAddWineSheet(flight, { start: "byhand", edit: { wineId } })` (B0).
 9. **Phone (S7b).** Chips wrap; the "{k}/{n} locked in" card carries the short not-locked line; the standings card (top two + "All {n} ›"); the facts card; a pinned bottom bar (safe-area inset) with the gold reveal button full width, then "Reveal everything" and "Skip to glass {N} →" as two equal buttons.
 10. **Which tastings reveal attribute by attribute** (`REVEAL-02`; Q8). One pure predicate in `src/lib/console-copy.ts`, `stepRevealApplies({ revealMode, timingMode, sequentialGuessing })` — LIVE + BLIND + guided pacing, the rule `leaderboardApplies` already uses — decides both the console's chips and the participants' `RevealView`. A LIVE blind tasting in free order reveals whole glasses ("Reveal the whole glass", as shipped), with standings after each glass. The two gates can no longer drift apart.
+11. **Route guard** (**owner decision OD-5 (a), 2026-09-14**). `host/page.tsx` redirects a signed-in host to the lobby, `/tastings/{id}`, when `timing_mode !== 'LIVE'` — alongside its existing non-host redirect (§7.2). Item 13 (§2) already means Start only ever lands a host here for a LIVE tasting, but the route itself stayed reachable by direct navigation for any timing mode; an ASYNC host who typed or bookmarked the URL saw a console with nothing driving its pacing. No leak either way — the console's own reads are already gated the same as the lobby's.
 
 ### 7.4 SQL (M7 `tasting_pacing`)
 
@@ -2054,7 +2055,7 @@ SB1 (the list), SB2 (matching, phone), SB3 (matching, laptop), SB4 (the reveal);
      - locked: the assignment with "locked" and "Change it" (**spec copy** for "locked");
      - LIVE guided, beyond `pouredThrough` (§7): dimmed "Not poured yet", no chevron;
      - ASYNC or free flow: every glass open;
-     - revealed: "Glass {n} was {producer} {vintage}" with ✓ or ✗ (**spec copy**);
+     - revealed: "Glass {n} was {producer} {vintage}" with ✓ or ✗ (**spec copy**) — except the glass currently shown as the SB4 hero below, which the board skips entirely rather than also rendering as a row, so it appears once, not twice (**owner decision OD-4 (a), 2026-09-14**; `match-board-visibility.ts`, pure and tested apart from the board itself); a glass revealed earlier still gets its row here once its hero has moved on;
      - bring-your-own, the viewer's own bottle: "Your bottle" (**spec copy**), not matchable.
    - **The pool:** phone "Still unassigned · {n} wines" (unassigned cards only); laptop "The bottles" with "{n} still unassigned" on its own line (every card; an assigned card dims to 0.65 and carries a gold "Glass {N}" pill; a card held by a locked glass shows "Glass {N} · locked").
    - **Phone helper:** when two or more pool cards share a grape, "Producer alone is not enough — {count word} of these are {grape}, so the wine and the vintage have to be on the label too." (**spec copy**: the handoff's sentence made data-driven), always followed by "Assigning one that sits on another glass swaps the two; revealed wines leave the list entirely."
@@ -2242,6 +2243,18 @@ create or replace function public.clear_semi_blind_match(p_wine_id uuid)
 returns void language plpgsql security definer set search_path = public as $$ … $$;
 ```
 
+**M9b recreates `assign_semi_blind_match`** (BT-SQL10 review round 1; BT-V3 A-11 and A-13) from the live M9a body above, with three edits. M9b's post-assert 2b pins the result by md5.
+
+- **One participant at a time.** Right after the caller's JOINED participant row resolves, and before any `guesses` read, the function runs `perform pg_advisory_xact_lock(hashtext('public.assign_semi_blind_match'), hashtext(v_pid::text));`.
+  - An overlapping call by the same participant waits there, then reads the committed rows and swaps.
+  - The comment above, "the unique index never sees a duplicate", holds only under this lock. Without it, two overlapping calls can both read no holder.
+  - It is an advisory lock, not a row lock on `tasting_participants`. Nothing else takes it, so it cannot deadlock with a writer that locks the participant's guesses and then the participant row (the order a tasting delete's cascades can take).
+- **A unique violation without DETAIL.** The three writes sit in a block that re-raises `unique_violation` (23505) with its message and constraint, but without DETAIL. The function runs as the owner, so Postgres's DETAIL would name the candidate's wine id, and PostgREST returns DETAIL to the caller. `assignMatch` retries a 23505 once.
+- **The candidate row is locked before it is tested** (BT-V3 A-11). After `v_candidate` resolves, and before the `guesses` locks, the candidate wine's row is read `for share`. `is_revealed` and the contributor are tested on that row, so a reveal of the candidate that commits meanwhile is seen.
+  - This lock order (`wines`, then `guesses`) is the one `reveal_next_category` takes, so the two never deadlock.
+  - `reveal_wine` takes the opposite order: it scores the glass's guesses, then flips `wines`. That leaves one rare deadlock (race row R11). When the caller's own row on the candidate's glass is the holder, or is the glass being matched, `reveal_wine` can lock that row after the match took the share lock and before the match reaches the row.
+  - Postgres aborts one side with 40P01, and either may be the victim. One retry of the victim restores the invariant: `assignMatch` retries 40P01 once, and the reveal paths do not retry.
+
 **(d) The permutation's invariant and the pool release**
 
 ```sql
@@ -2293,6 +2306,13 @@ create trigger wines_semi_blind_flight_locked
   before insert on public.wines
   for each row execute function public.wines_semi_blind_flight_locked();
 ```
+
+M9b as written (BT-V3 A-10 and A-13):
+
+- **No client EXECUTE on the trigger functions.** Both get `revoke all on function public.semi_blind_release_revealed_wine(), public.wines_semi_blind_flight_locked() from public, anon, authenticated;`, as M4, M6 and M7 do for theirs. A trigger fires without EXECUTE, so these two are not "authenticated-only" like the RPCs.
+- **The tasting row is locked before the test.** `wines_semi_blind_flight_locked` reads the tasting row by id `for share` (`select reveal_mode, status into … from tastings where id = new.tasting_id for share`), then tests it.
+  - A Start that commits while a glass is being inserted is seen.
+  - An insert racing the Start waits for it. The foreign key's own `KEY SHARE` lock would not wait for the status update.
 
 **(e) `guesses.guessed_wine_id` leaves the client roles**
 
@@ -2354,7 +2374,9 @@ create policy "wine_answers read" on public.wine_answers
 - **Bring-your-own.** A contributor's own bottle is excluded from their pool and their glass row reads "Your bottle"; they know both anyway.
 - **Honest permutation without touching scoring.** The pool release and the unique index keep one open glass per candidate; `reveal_wine` and `score_own_guess` are unchanged.
 - **Lane N.** 093000's client-column matrix narrows by one column (insert and update) and gains a select list; its policies, `guesses_pin_identity` and the JOINED-only `get_wine_reveal` stay.
-- **Assertions:** pre-assert the live `wine_answers read` text, 093000's column grants, the absence of duplicate open holdings, and M6's `wines.added_by_host`; post-assert the policy (no `SEMI_BLIND`; the host clause carries `added_by_host`), `wines_semi_blind_flight_locked` enabled, authenticated SELECT on exactly 27 `guesses` columns and INSERT/UPDATE on exactly 13, no client grants on `semi_blind_candidate_keys`, every new function SECURITY DEFINER with `search_path=public` (EXECUTE authenticated-only; `ensure_semi_blind_keys` owner-only), the index and the trigger.
+- **Assertions:** pre-assert the live `wine_answers read` text, 093000's column grants, the absence of duplicate open holdings, and M6's `wines.added_by_host`; post-assert the policy (no `SEMI_BLIND`; the host clause carries `added_by_host`), `wines_semi_blind_flight_locked` enabled, authenticated SELECT on exactly 27 `guesses` columns and INSERT/UPDATE on exactly 13, no client grants on `semi_blind_candidate_keys`, every new function SECURITY DEFINER with `search_path=public` (EXECUTE authenticated-only for the RPCs; `ensure_semi_blind_keys` owner-only; M9b's two trigger functions with no client EXECUTE at all), the index and both triggers. M9b also post-asserts:
+  - its recreated `assign_semi_blind_match` (the note after (c)): the body md5, the advisory lock and then A-11's candidate `for share` read, both before the first `guesses` read, the DETAIL-free unique-violation handler after that read, and EXECUTE for `authenticated`, never `anon` or `PUBLIC`;
+  - each trigger function's body md5, which carries A-10's `for share` tasting read (BT-V3 A-10, A-11, A-13).
 
 ### 10.5 Tests
 
@@ -2428,7 +2450,7 @@ S11 (reveal, phone), S11b (reveal, laptop), S12 and S12b (the finish), S13 and S
 9. **Data.** `src/lib/tasting-result.ts` (server-only):
    - the tasting (with `started_at`, `finished_at`); participants (with `joined_at`); the wines in list order (with `revealed_at`);
    - `wine_answers` for fully revealed glasses only (readable by everyone signed in); `guesses` on those glasses through `GUESS_READ_COLUMNS` (readable once revealed); `getTastingLeaderboard`; `get_semi_blind_revealed_picks` for semi-blind;
-   - eligibility per glass from `glass-eligibility.ts` (§5); competitors = JOINED minus the host-provides host, ranked by `rankRows` over the leaderboard totals;
+   - eligibility per glass from `glass-eligibility.ts` (§5); competitors = JOINED minus the host-provides host, ranked by `rankRows` over each competitor's own sum across fully revealed glasses only (`blindTotals` / `semiBlindTotals`, new in `result-math.ts`) — not `getTastingLeaderboard`'s running totals, which still count a half-revealed glass's step points. **Owner decision OD-3 (a), 2026-09-14:** a tasting ended mid-reveal ranks on the same fully-revealed-only basis as the `score` and `maximum` below it, so the placing, the table and the host's announced winner(s) never disagree with the number shown beside them; `getTastingLeaderboard` supplies names and ids only, not the ranking;
    - `blindResult` / `semiBlindResult` for the viewer.
    - **`result-math.ts` change:** `SemiBlindGuessRow` drops `guessed_wine_id` for `pick_key: string | null` (the opaque candidate key from `get_semi_blind_revealed_picks`); `SplitSentence.pickId` then carries that key, resolved to its label on the server.
 10. **Content.**
@@ -2634,6 +2656,7 @@ create or replace function public.transfer_tasting_host(p_tasting_id uuid, p_new
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_tasting tastings%rowtype;
+  v_target_status participant_status;
 begin
   select * into v_tasting from tastings where id = p_tasting_id for update;
   if not found or auth.uid() is null or v_tasting.host_id is distinct from auth.uid() then
@@ -2642,11 +2665,14 @@ begin
   if v_tasting.status <> 'DRAFT' then
     raise exception 'hosting can only change before the tasting starts';
   end if;
+  -- The target's row, locked by key: a leave that commits first is read here, and
+  -- one that comes later waits, then meets M4's leave guard (they host by then).
+  select status into v_target_status from tasting_participants
+   where tasting_id = p_tasting_id and user_id = p_new_host_user_id
+   for share;
   if p_new_host_user_id is null
      or p_new_host_user_id = v_tasting.host_id
-     or not exists (select 1 from tasting_participants
-                    where tasting_id = p_tasting_id and user_id = p_new_host_user_id
-                      and status = 'JOINED') then
+     or v_target_status is distinct from 'JOINED' then
     raise exception 'only someone who has joined can host';
   end if;
   if exists (select 1 from wines
@@ -2663,18 +2689,18 @@ begin
   update tastings set host_id = p_new_host_user_id where id = p_tasting_id;
   -- The former host's participant row is untouched: they stay JOINED.
 end $$;
-revoke all on function public.transfer_tasting_host(uuid, uuid) from public, anon;
+revoke all on function public.transfer_tasting_host(uuid, uuid) from public, anon, service_role;
 grant execute on function public.transfer_tasting_host(uuid, uuid) to authenticated;
 ```
 
 **Security reasoning**
 
-- Only the current host may call it, only in DRAFT, and only to a JOINED participant.
+- Only the current host may call it, only in DRAFT, and only to a JOINED participant. It locks the tasting row, then the target's participant row by key (`for share`), so a target who leaves at the same moment is either read as gone (refused) or waits and then meets M4's leave guard, which refuses because they host by then: hosting never lands on a participant row that is not JOINED (BT-V3 A-12).
 - **Rule 1.** Refusing while any glass is host-added (`added_by_host`, pinned at insert by M6) means the new host inherits no answer key they did not add — a glass whose contributor row was deleted stays not host-added. In host-provides, hosting moves only with an empty flight. In bring-your-own there are no host-added glasses, and after M9 the host clause of `wine_answers read` covers host-added glasses only, so the new host reads no contributor's key. (Before M9 the live host clause would show them — hence M10 applies after M9.)
 - Drafts and pour intents stay with their owners. Refusing while any belongs to the host keeps `is_wine_adder` (host-added glasses) and `draw_down_flight_cellar_lots` from changing meaning under a new `host_id`.
 - The former host stays JOINED and becomes an eligible guesser of the others' bottles, which they never saw.
 - `tastings update host`'s CHECK still blocks any client-side change of `host_id`.
-- **Assertions:** SECURITY DEFINER, `search_path=public`, EXECUTE authenticated-only; the `tastings update host` policy text unchanged.
+- **Assertions:** SECURITY DEFINER, `search_path=public`, EXECUTE authenticated-only: never `anon`, `PUBLIC` or `service_role`, whose grant from Supabase's default privileges the revoke takes back (owner decision OD-1, 2026-09-14; the ACL names only the owner and `authenticated`); the `tastings update host` policy text unchanged.
 
 ### 12.5 Tests
 
@@ -2879,17 +2905,23 @@ Rule 1: nobody sees an unrevealed wine they did not add — not in a lobby, a no
 | `get_wine_reveal` returns `in_play_count` at step 0 | M1 |
 | A BLIND note carrying a catalog identity and an unrevealed glass's `tasting_wine_id` (for example through `?blindWine=`) is public | M5 |
 | A host flips a running tasting's `reveal_mode` (to reach a candidate list) or `wine_source` | M6 (the setup lock, which counts a stamped `started_at` as started and refuses a client's move back to DRAFT; tastings started before M3 are stamped) |
+| A `blind_pending` catalog wine (the identity of an unrevealed glass) is readable by every signed-in user. `catalog read` is `using (true)`, and so are `catalog edits read` (each audit row's before and after is the whole catalog row) and `cwg read` (the blend). The SECURITY INVOKER searches `search_catalog_wines` and `search_all` return the same rows | `20260914126500_catalog_blind_pending_read` (BT-V3 A-02). The three read policies admit a hidden row only to its creator, or through `can_read_blind_pending_catalog_wine`: a curator, or a caller whose own `wine_answers read` shows a `wine_answers` row linking the wine. `find_or_create_catalog_wine` looks up identities through the DEFINER `catalog_wine_identity_match`. `notes/new` returns `notFound()` for a `blind_pending` wine |
 
 ### 16.3 Known and accepted, not changed here
 
 - During a shared step reveal "{k} of {m} attributes" and the hidden rows' labels show whether an appellation or a designation is still to come. Every guess on the glass is frozen from step 1, and the handoff draws it.
 - `guesses read`'s host clause lets a competing bring-your-own host read other guessers' answers before a reveal. That is a fairness gap about guesses, not a wine identity; flagged for a later lane.
-- `wines update host` still lets a host update `position` and `added_via` directly; after M6 no client writes any other `wines` column. Those direct `position` writes (deployed `moveWine`, or an upsert that sets `position`) are not bound by `move_flight_glass`'s after-Start refusals, so a host can still reorder a started semi-blind flight or a range holding a guessed or revealed glass, and the running page's Wines card still shows ▲▼ after Start (M6 probe row Y10). No answer key is involved. It closes once BT-L1/BT-L2 route every reorder through `move_flight_glass` and retire `moveWine`: then either revoke that column grant (moving `removeWine`'s DRAFT renumber into `remove_flight_glass`) or refuse a client's `position` write after Start.
+- `wines update host` still lets a host update `position` and `added_via` directly; after M6 no client writes any other `wines` column. Those direct `position` writes (an upsert or a PATCH that sets `position`) are not bound by `move_flight_glass`'s after-Start refusals, so a host can still reorder a started semi-blind flight or a range holding a guessed or revealed glass (M6 probe row Y10). No answer key is involved. **It closes with `20260914125500_wines_client_update_lockdown` (BT-V3 A-05; BT-M11), applied after push A's production deployment, beside BT-M9b.**
+  - BT-L1 routed every reorder through `move_flight_glass` and retired `moveWine`; `removeWine` calls `remove_flight_glass`.
+  - The migration revokes `update (position, added_via)` on `wines` from `authenticated`. No client role then updates any `wines` column, and reorders, removals and Swap go only through `move_flight_glass`, `remove_flight_glass` and `set_flight_glass_added_via`.
+  - The Wines card no longer offers ▲▼ on a started semi-blind flight, and the list refuses a guessed or seen glass's move before the round trip (A-19).
+- `find_or_create_catalog_wine` answers an exact identity with the id of a hidden (`blind_pending`) row that the caller cannot read (BT-V3 A-02, `20260914126500`). A caller who guesses a hidden wine's whole identity (producer, name, appellation, colour, vintage) learns that such a row exists, and each miss inserts a catalog wine in that caller's name. This cannot close while the identity index is global.
 - In DRAFT a host can set a tasting to OPEN, add a glass (OPEN boards insert it revealed), switch back to BLIND and start: a revealed glass then sits in a running BLIND tasting (M6 probe row N9). It was public already, so nothing leaks, but as a seen glass it blocks Remove for every earlier glass. A later migration could refuse a `reveal_mode` change away from OPEN while a glass is revealed.
 - `profiles.email` is readable by every signed-in user (the open directory); §2's people search uses it exactly as the friend picker already does.
 - `wines read` lets INVITED and DECLINED participant rows read `wines` (id, position, contributor, `added_via`): counts and contributor labels, never an identity. It is also why the semi-blind list is a snapshot from Start (§10.4).
 - B13.4's leftovers: `score_own_guess` without a lock; `reveal_next_category` accepting the contributor in any timing mode.
 - `get_join_preview` is callable with the anon key and has no per-caller rate limit (a PostgREST RPC carries no caller address, and adding one is out of scope). New codes carry about 50 bits; the one existing 6-character code (about 30 bits) keeps working so its shared link does not break. A hit returns §4's reduced fields to anon, and the joined names to a signed-in guesser.
+- **Guided pacing is enforced by the app only, not the database.** `pouredThrough` (§7.3 item 3) gates what the UI offers — the matching board dims a glass beyond it as "Not poured yet" (§10.3 item 2), and `guessOrderAllows`/`sequentialOrderError` refuse a server action on it — but `assign_semi_blind_match` itself checks only `is_revealed`/`reveal_step > 0` (§10.4 (c)), and a direct `guesses` upsert is bound by the same lockdown as any other write to that table (lane N's client-column grants), neither of which reads the pointer. A participant who calls the RPC directly, or upserts `guesses` themselves, can therefore assign or answer a glass before the host has poured it. **Owner decision OD-2 (a), 2026-09-14:** known and accepted, not changed here — no identity leaks either way (rule 1's gates are unchanged), it only lets a determined guesser skip ahead of the pacing everyone else sees.
 
 ---
 

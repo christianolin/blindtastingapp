@@ -50,6 +50,7 @@ type WineRow = {
   is_revealed: boolean;
   reveal_step: number;
   contributor_participant_id: string | null;
+  added_by_host: boolean;
   tasting_id: string;
 };
 
@@ -76,15 +77,17 @@ async function loadViewerContext(tastingId: string): Promise<ViewerContext | nul
   };
 }
 
-// is_wine_adder's rule: the host for a glass with no contributor, otherwise
-// the contributor's own bottle.
+// is_wine_adder's rule (M6): the host for a glass the host added
+// (`added_by_host`, pinned at insert), otherwise the contributor's own bottle.
+// A glass whose contributor row was deleted keeps `added_by_host = false` and
+// is nobody's — never the host's, so the lobby shows no identity line and no
+// Edit the database would refuse.
 function isAdder(
   ctx: Pick<ViewerContext, "isHost" | "viewerParticipantId">,
-  w: { contributor_participant_id: string | null },
+  w: { added_by_host: boolean; contributor_participant_id: string | null },
 ): boolean {
-  return w.contributor_participant_id
-    ? w.contributor_participant_id === ctx.viewerParticipantId
-    : ctx.isHost;
+  if (w.added_by_host) return ctx.isHost;
+  return w.contributor_participant_id !== null && w.contributor_participant_id === ctx.viewerParticipantId;
 }
 
 /**
@@ -176,8 +179,8 @@ export async function WinesCard({
     });
 
   // The adder's two lines on their own glasses (spec §C.5 A1; D10, §C.9).
-  // Only the viewer's own ids are read: wine_answers RLS hands a
-  // bring-your-own host every answer, and they guess the others' bottles
+  // Only the viewer's own ids are read: nobody sees a hidden glass they did
+  // not add (rule 1), and a bring-your-own host guesses the others' bottles
   // too.
   const linesByWineId = new Map<string, FlightWineLines>();
   if (myWineIds.length > 0) {
@@ -295,6 +298,22 @@ export async function WinesCard({
     }
   }
 
+  // move_flight_glass after Start (M6 decision 5), mirrored by the list: a
+  // started semi-blind flight never moves, and a guessed glass keeps its
+  // number. Only the host reorders, so only the host's view reads who has
+  // guessed (tasting_guess_status: glass and participant ids, no content).
+  // The RPC's own tests: started is "not DRAFT, or a stamped started_at", and
+  // a started semi-blind flight never moves.
+  const started = hasStarted || tasting.started_at !== null;
+  const flightFixed = tasting.reveal_mode === "SEMI_BLIND" && started;
+  let guessedIds = new Set<string>();
+  if (isHost && started && !flightFixed && wines.some((w) => !w.is_revealed)) {
+    const { data: guessStatus } = await supabase.rpc("tasting_guess_status", {
+      p_tasting_id: tastingId,
+    });
+    guessedIds = new Set((guessStatus ?? []).map((g) => g.wine_id));
+  }
+
   // Per-wine display state for the flight list, computed here (server) so
   // the WineFlightList client component only owns the *order* — reordering
   // is optimistic there, moveFlightGlass persists it. `contributorLabel` null
@@ -321,11 +340,13 @@ export async function WinesCard({
           viewerIsHost: isHost,
           laterGlassSeen: false,
         }) === null,
-      canReorder: isHost && !w.is_revealed,
+      canReorder: isHost && !w.is_revealed && !flightFixed,
       canReveal: isHost && hasStarted && tasting.status !== "CLOSED" && !w.is_revealed,
-      // move_flight_glass's own "already seen" rule (M6): mirrored locally by
-      // crossesSeenGlass so a doomed drag or ▲▼ tap never round-trips.
+      // move_flight_glass's own "already seen" and, after Start, "guessed"
+      // rules (M6): mirrored locally by crossesSeenGlass so a doomed drag or
+      // ▲▼ tap never round-trips.
       seen: w.is_revealed || w.reveal_step > 0,
+      guessed: guessedIds.has(w.id),
     };
   });
   // No bring-your-own slots: one waiting row per JOINED participant without
@@ -379,6 +400,7 @@ export async function WinesCard({
             <WineFlightList
               tastingId={tastingId}
               wines={flightWines}
+              reorderGuard={{ started, semiBlindFlightFixed: flightFixed }}
               waitingFor={waitingFor}
               destination={flightDestination}
             />

@@ -179,8 +179,9 @@ export function FieldPicker({
           ? "No matches."
           : "Nothing to pick from yet.";
 
-  // The rest/catch-all group every caller (guess-ladder.tsx, match-ladder.tsx)
-  // literally heads "Everything else". Detected by that exact text rather
+  // The rest/catch-all group the guess ladder (guess-ladder.tsx) literally
+  // heads "Everything else" (match-board.tsx, the other caller, has none).
+  // Detected by that exact text rather
   // than a shared export: on the popover it renders two columns wide
   // (PLAY-31) and, once `totalCount` is given, its heading gains the count
   // (S9's "Everything else · all {n}").

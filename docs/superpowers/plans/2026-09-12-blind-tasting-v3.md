@@ -385,6 +385,8 @@ Every task's requirements implicitly include this section.
 | BT-M9a | Apply M9a | BT-SQL9, BT-M7 |
 | BT-M9b | Deploy gate, apply M9b, Realtime check | BT-V3 (push A deployed), BT-SQL10, BT-M9a, BT-M8 |
 | BT-M10 | Apply M10 | BT-SQL11, BT-M9b |
+| BT-M11 | Apply the `wines` client-update lockdown `20260914125500` (BT-V3 A-05) | BT-V3 fixes committed; push A's production deployment Ready (the deployment before it still writes `wines.position` directly) |
+| BT-M12 | Apply the catalog `blind_pending` read `20260914126500` (BT-V3 A-02) | BT-V3 fixes committed |
 | **Dark means live (B5)** | | |
 | BT-D1 | Tokens, `LiveShell`, the dark popover, `LocalDateTime` formats | BT-A0 |
 | BT-D2 | The running page split into views, inside the live shell | AW-S7, BT-A0, BT-D1, BT-P1, BT-P3 |
@@ -1403,7 +1405,14 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - (e) the `guesses` column privileges, verbatim (27-column SELECT grant).
 - (f) `wine_answers read`, verbatim from spec §10.4 (f): the live text with exactly two edits (no semi-blind participant clause; the host clause carries `w.added_by_host`, M6's pinned flag).
 - Pre-assert: the live `wine_answers read` text equals the dump; 093000's INSERT/UPDATE column grants (14 columns) are in place; zero duplicate open holdings; `guesses_refuse_locked_edit` exists (the release must pass it); `wines.added_by_host` exists (M6).
+- (review round 1; BT-V3 A-10, A-11, A-13) `assign_semi_blind_match` is recreated from live with three edits (spec §10.4 (c), the note after the block):
+  - the per-participant advisory lock before the first `guesses` read;
+  - a unique-violation handler that re-raises 23505 without DETAIL;
+  - the candidate wine's row read `for share` before it is tested (A-11). It leaves one rare 40P01 with `reveal_wine`, which locks `guesses` before `wines` (race row R11): `assignMatch` retries 40P01 once, and the reveal paths do not retry.
+- `wines_semi_blind_flight_locked` reads the tasting row `for share` before its test (A-10). Neither trigger function gets client EXECUTE: they are not "authenticated-only", because a trigger fires without EXECUTE.
 - Post-assert: spec §10.4 "Assertions": the policy (no `SEMI_BLIND`; the host clause has `added_by_host`), SELECT on exactly 27 `guesses` columns and INSERT/UPDATE on exactly 13 for `authenticated`, no client grants on `semi_blind_candidate_keys`, the index, both triggers.
+  - The two trigger functions' bodies (md5) and their EXECUTE matrix: no client role.
+  - The recreated assign body: its md5 (post-assert 2b), the advisory lock and then the candidate's `for share` read, both before the first `guesses` read, and the handler after that read.
 - After the types change a bare `npx tsc --noEmit` prints nothing (BT-S5 removed every reader).
 
 **Tests — behavioural probe** (spec §10.5, the M9b half)
@@ -1438,7 +1447,8 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 **Does** (spec §12.4, B11, Q4)
 - The SQL of spec §12.4, verbatim (the host-added refusal keys on M6's `added_by_host`).
 - Pre-assert: the `tastings update host` policy text equals the dump; `wine_identity_drafts.owner_id`, `wine_pour_intents.owner_id` and `wines.added_by_host` exist.
-- Post-assert: SECURITY DEFINER, `search_path=public`, EXECUTE authenticated-only; the `tastings update host` text unchanged.
+- Post-assert: SECURITY DEFINER, `search_path=public`, EXECUTE authenticated-only (never `anon`, `PUBLIC` or `service_role`: the revoke names `service_role` too, owner decision OD-1; the ACL is the owner and `authenticated` alone); the `tastings update host` text unchanged.
+- The JOINED test reads the target's participant row `for share` (BT-V3 A-12), so a target who leaves during the hand-over is refused or meets M4's leave guard; the probe's `--race` mode shows both orders on a disposable local cluster.
 
 **Tests — behavioural probe** (spec §12.5)
 - A non-host → refused; IN_PROGRESS → refused; an INVITED target → refused; a host-added glass → refused; a host draft or pour intent → refused.
@@ -1447,7 +1457,7 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 - A bring-your-own tasting whose contributor row was deleted (its glass now has a null contributor and `added_by_host = false`) → not refused as a host-added glass.
 
 **Steps**
-- [ ] Dump; write; probe; dry-run (concatenated); run; tsc check.
+- [x] Dump; write; probe; dry-run (concatenated); run; tsc check.
 
 **Acceptance:** `DRY-OK 20260914104500 transfer_tasting_host`; every row matches; the tsc check is clean.
 
@@ -1476,7 +1486,9 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
 | BT-M7 | `20260914100500_tasting_pacing.sql` | `select tgname from pg_trigger where tgname in ('tastings_pointer_in_tasting','tastings_pause_follows_status','wines_refuse_reveal_while_paused')` → 3 rows |
 | BT-M8 | `20260914101500_guess_lock_pin.sql` | `select tgname from pg_trigger where tgrelid = 'public.guesses'::regclass and not tgisinternal order by 1` → four names; `select md5(replace(prosrc, chr(13), '')) from pg_proc where oid = 'public.guesses_refuse_locked_edit()'::regprocedure` → the migration's `c_body_md5` |
 | BT-M9a | `20260914102500_semi_blind_rpcs.sql` | `select to_regprocedure('public.assign_semi_blind_match(uuid,text)') is not null, has_table_privilege('authenticated','public.semi_blind_candidate_keys','select')` → true, false |
-| BT-M10 | `20260914104500_transfer_tasting_host.sql` | `select prosecdef from pg_proc where proname = 'transfer_tasting_host'` → true |
+| BT-M10 | `20260914104500_transfer_tasting_host.sql` | `select prosecdef from pg_proc where proname = 'transfer_tasting_host'` → true; `select has_function_privilege('authenticated','public.transfer_tasting_host(uuid,uuid)','execute'), has_function_privilege('service_role','public.transfer_tasting_host(uuid,uuid)','execute'), has_function_privilege('anon','public.transfer_tasting_host(uuid,uuid)','execute')` → true, false, false (OD-1); `select md5(replace(prosrc, chr(13), '')) from pg_proc where oid = 'public.transfer_tasting_host(uuid,uuid)'::regprocedure` → the md5 in the migration's post-assert 1 |
+| BT-M11 (BT-V3 A-05) | `20260914125500_wines_client_update_lockdown.sql`, applied only once push A's production deployment is Ready, beside BT-M9b | `select has_column_privilege('authenticated','public.wines','position','update'), has_column_privilege('authenticated','public.wines','added_via','update'), has_column_privilege('service_role','public.wines','position','update')` → false, false, true |
+| BT-M12 (BT-V3 A-02) | `20260914126500_catalog_blind_pending_read.sql` | `select to_regprocedure('public.can_read_blind_pending_catalog_wine(uuid)') is not null, to_regprocedure('public.catalog_wine_identity_match(jsonb)') is not null` → true, true; `select qual from pg_policies where tablename = 'catalog_wines' and policyname = 'catalog read'` contains `blind_pending` |
 
 **Closes:** spec §15 (applied live), in order; supporting: LOBBY-48, XCUT-56.
 
@@ -1490,9 +1502,10 @@ Checks, run by the main session immediately before BT-M8's apply, after the BT-M
   3. The duplicate-holdings count (BT-SQL10's query, read-only) is still 0.
   4. BT-M8 is live: `select to_regprocedure('public.guesses_refuse_locked_edit()') is not null` → true (M9b's pre-assert needs it).
 - [ ] Apply with the procedure above.
-- [ ] Spot check: `select has_column_privilege('authenticated','public.guesses','guessed_wine_id','select')` → false; `select qual from pg_policies where tablename = 'wine_answers' and policyname = 'wine_answers read'` has no `SEMI_BLIND`; `select to_regclass('public.guesses_one_open_glass_per_candidate')` is not null.
-- [ ] **Realtime check** (spec §10.4 e). Two demo sessions on a running LIVE tasting (the production site or the integrate dev server against the live database). In tab B keep the play page open with DevTools → Network → WS. In tab A lock a guess.
-  - Tab B's `RevealSync` socket receives a `postgres_changes` frame for `guesses` within 10 seconds → done.
+- [ ] Spot check: `select has_column_privilege('authenticated','public.guesses','guessed_wine_id','select')` → false; `select qual from pg_policies where tablename = 'wine_answers' and policyname = 'wine_answers read'` has no `SEMI_BLIND`; `select to_regclass('public.guesses_one_open_glass_per_candidate')` is not null; `select md5(replace(prosrc, chr(13), '')) from pg_proc where oid = 'public.assign_semi_blind_match(uuid,text)'::regprocedure` → the md5 in the migration's post-assert 2b (the recreated assign; BT-V3 A-11, A-13); `select has_function_privilege('authenticated','public.wines_semi_blind_flight_locked()','execute'), has_function_privilege('authenticated','public.semi_blind_release_revealed_wine()','execute')` → false, false.
+- [ ] **Realtime check** (spec §10.4 e; BT-V3 A-04). Two demo sessions on a running LIVE semi-blind tasting (the production site or the integrate dev server against the live database): tab A a JOINED guest, tab B the host. In both tabs keep the play page open with DevTools → Network → WS. In tab A assign a card to a glass (`assignMatch`), then lock a guess.
+  - Tab B's `RevealSync` socket receives a `postgres_changes` frame for `guesses` within 10 seconds, and no `guesses` frame in either tab (from the assign or the lock) has a `guessed_wine_id` key in its `record` or `old_record` → done.
+  - Any `guesses` frame whose `record` or `old_record` carries a `guessed_wine_id` key → the check fails: run BT-S6 (or drop the `guesses` subscription from `RevealSync`) before spec §16.2 row 2 is called closed. Receiving a frame proves only delivery, not that the revoked column left it.
   - No `guesses` frame arrives while a reveal still delivers a `wines` frame → run BT-S6.
 - [ ] Record the outcome in `live-applies.log` and in the session log.
 
@@ -4271,6 +4284,7 @@ BT-P2, BT-P3 and BT-P4 cover the other rules; BT-SQL7's probe covers the databas
 
 **Does** (spec §7.3 items 1, 2 (console), 4, 5, 7, 8, 9; B6; B0 reveal-8; refinement 7)
 - **`host/page.tsx`:**
+  - a non-LIVE tasting's host is redirected to `/tastings/{id}` alongside the existing non-host redirect (**owner decision OD-5 (a), 2026-09-14**: Start only ever lands a host here for a LIVE tasting, but the route itself stayed reachable by direct navigation for any timing mode; no leak, spec §7.3 item 11);
   - wrap the page in `<LiveShell active={status === "IN_PROGRESS"}>`;
   - current glass = `currentGlass(glasses, tasting.current_wine_id)` (the dwell on the previous glass stays); `wrapped` → `skippedEyebrow(n)` in place of the pouring eyebrow;
   - eligibility via `eligibleForGlass`; locked = a locked or scored row;
@@ -4719,7 +4733,7 @@ describe("hidden-glass notes (B8)", () => {
 
 **Does** (spec §10.3 item 2 (server); refinement 6)
 - `assignMatch(tastingId, glassWineId, candidateKey)`:
-  1. `resolveGuesser`; `sequentialOrderError` (semi-blind guided refuses a glass beyond `pouredThrough`);
+  1. `resolveGuesser`; `sequentialOrderError` (semi-blind guided refuses a glass beyond `pouredThrough` — an app-level check only: `assign_semi_blind_match` itself has no pointer guard, so a direct RPC call or a `guesses` upsert can still answer a not-yet-poured glass with no identity leak, known and accepted — **owner decision OD-2 (a), 2026-09-14**; spec §16.3);
   2. `rpc("assign_semi_blind_match", { p_wine_id: glassWineId, p_candidate_key: candidateKey })`;
   3. errors go through `matchRefusalSentence(error, { glassNumberOf, candidateKey, revealedKeys, lockedIn: LOCKED_EDIT_REFUSAL })` (BT-P6, tested there): "glass locked" (its `detail` is the holder's wine id) → `lockedHolderLabel(holderGlass)` with the glass number from the tasting's wines in list order; "that wine is not in your pool" → `REVEALED_WINE_REFUSAL` when that key is revealed, otherwise the RPC sentence capitalised; "this glass is locked in" → `LOCKED_EDIT_REFUSAL`; M8's "this guess is locked in — change it first" (BT-P6x) → `LOCKED_EDIT_REFUSAL` too — `matchRefusalSentence` maps both to `ctx.lockedIn`; anything else → the RPC sentence capitalised;
   4. no `revalidatePath`; returns `{ ok: true, swappedWith }`.
@@ -4764,7 +4778,7 @@ describe("hidden-glass notes (B8)", () => {
   - `open-assigned` → `candidateLabel(card)` with a chevron (phone) or ✕ (laptop);
   - `locked` → the assignment, "locked" and Change it (`unlockGuess`);
   - `not-poured` → `NOT_POURED`, dimmed, no chevron;
-  - `revealed` → `revealedRowText(...)` with ✓ or ✗;
+  - `revealed` → `revealedRowText(...)` with ✓ or ✗ — except the glass currently shown as the SB4 hero, which `visibleGlasses` (new `match-board-visibility.ts`, pure, tested) drops from the board's own glass list so it renders once, not twice (**owner decision OD-4 (a), 2026-09-14**); an earlier-revealed glass still gets this row once its hero has moved on;
   - `own-bottle` → `YOUR_BOTTLE`.
 - **The pool:** phone `unassignedHeading(n)` over `poolFor(cards, board)`; laptop `THE_BOTTLES` with `stillUnassigned(n)` on its own line, over every card (assigned cards at 0.65 with a gold "Glass {N}" pill; a card held by a locked glass shows `lockedHolderLabel(N)`).
 - **Phone helper:** `poolHelperLines(poolCards)`.
@@ -4964,7 +4978,7 @@ describe("makeGlassLabeler (MISSED-01)", () => {
   - the tasting (with `started_at`, `finished_at`), participants (with `joined_at`), wines in list order (with `revealed_at`);
   - `wine_answers` of fully revealed glasses; `guesses` on those glasses via `GUESS_READ_COLUMNS`; `getTastingLeaderboard`; `getSemiBlindRevealedPicks` for semi-blind (with each glass's `candidateKey` from the picks marked `correct`, or `getSemiBlindBoard`'s revealed keys);
   - eligibility per glass from `eligibleForGlass`; a glass the viewer `joinedAfterReveal` stays in their eligible set, so it counts 0 against their maximum;
-  - competitors = JOINED minus the host-provides host, ranked by `rankRows` over the leaderboard totals;
+  - competitors = JOINED minus the host-provides host, ranked by `rankRows` over `blindTotals`/`semiBlindTotals` (each competitor's own sum across fully revealed glasses only) — not the leaderboard's running totals, which still count a half-revealed glass's step points (**owner decision OD-3 (a), 2026-09-14**; spec §11.3 item 9); `getTastingLeaderboard` supplies names and ids only;
   - `blindResult` / `semiBlindResult` for the viewer; every label resolved on the server (`pickLabel`, grape names by id lookup, `shortWineName`, `glassTitle`).
 - **`ResultView`** (dark; client for Share), spec §11.3 item 10 with `result-copy.ts`: eyebrow; `YOU_FINISHED` + ordinal + line, or `hostedLines`; the table (phones: top four with the viewer highlighted, appended when outside; laptops: every place, under `FINAL_STANDINGS`); best glass; strongest attribute; the agreed-least line; `excludedLines`; "See every wine" (dismisses) and Share (`navigator.share({ url, text })`; when missing, or rejected with anything but `AbortError`, `navigator.clipboard.writeText(url)` and `LINK_COPIED` for 3 seconds). Laptop S12b layout.
 - **`ClosedSurface`** (client): `useSyncExternalStore` over `readDismissed`. The server snapshot is `null` (unknown) and renders only the page header, so a reload of a dismissed tasting never flashes the dark result; the client snapshot then picks the result or the record. "See every wine" calls `writeDismissed` (on failure the flag lives in component state for the visit); the result renders inside `LiveShell active`, the record (children) on parchment. localStorage stays the store (B5).
@@ -5375,10 +5389,10 @@ it("ends with the place when one is set (B12)", () => {
   3. `rg -n "guessed_wine_id" src` (BT-SQL10 removed it from the types file too)
   4. `rg -n "bg-white|#4A1523" "src/app/tastings/[id]" src/app/tastings/new src/app/j src/app/overview/invitation-card.tsx src/components/live-shell.tsx src/components/tastings src/components/new-tasting-sheet.tsx src/components/add-wine/by-hand-form.tsx`
   5. `rg -n "#[0-9a-fA-F]{6}\b" "src/app/tastings/[id]" src/app/j src/app/overview/invitation-card.tsx` — the whole tasting page tree (views, cards, the start bar, the settings sheet, the semi-blind list, the result, the record); a hit in a file no BT task touched is listed, not failed
-  6. `rg -n "submitAllMatchGuesses|lockGuesses|OLDEST_YEAR|MATCH_FOOTER|submitGuess\b|getNameSuggestionContext|HostControlsMenu|updateSchedule|moveWine\b|invitesStayOpen|frequentGrapeIds|match-ladder|worksUntilStart" src`
+  6. `rg -n "submitAllMatchGuesses|lockGuesses|OLDEST_YEAR|MATCH_FOOTER|submitGuess\b|getNameSuggestionContext|HostControlsMenu|updateSchedule|\bmoveWine\b|invitesStayOpen|frequentGrapeIds|match-ladder|worksUntilStart" src`
   7. `rg -n '>Wine |"Wine \$\{|Wine \{|of \$\{[a-zA-Z.]+\} wines' "src/app/tastings/[id]/play" "src/app/tastings/[id]/results" "src/app/tastings/[id]/running-view.tsx" "src/app/tastings/[id]/result" "src/app/tastings/[id]/record"`
   8. `rg -n "in_play_steps" src`
-  9. `rg -n "Invites close once|Works until you start|already started|Burgundy #1|buzz|more certain|appear only if the wine has them" src`
+  9. `rg -n "Invites close once|Works until you start|already started|Burgundy #1|buzz|more certain|appear only if the wine has them" src | rg -v "This tasting has already started\."` — `startTasting`'s own race refusal "This tasting has already started." predates the retired `/j` copy and stays (BT-V3 A-32)
   10. Pure-module imports — every hit must be an `import type` line (inspect): `rg -n 'from "@/' src/lib/flight-glass-rules.ts src/lib/lobby-copy.ts src/lib/invitation-copy.ts src/lib/glass-eligibility.ts src/lib/live-theme.ts src/lib/pour-pointer.ts src/lib/console-copy.ts src/lib/host-facts.ts src/lib/count-words.ts src/lib/semi-blind-board.ts src/lib/semi-blind-copy.ts src/lib/guess-columns.ts src/lib/reveal-copy.ts src/lib/result-copy.ts src/lib/record-pattern.ts src/lib/csv.ts src/lib/flight-csv.ts src/lib/record-rows.ts src/lib/safe-storage.ts src/lib/pacing-guards.ts src/lib/ilike.ts src/lib/tasting-date-format.ts src/lib/wset/hidden-note.ts src/app/tastings/new/paste-list.ts src/app/tastings/new/place.ts "src/app/tastings/[id]/view-route.ts" "src/app/tastings/[id]/play/guess-write.ts" "src/app/tastings/[id]/play/guess-save-queue.ts" "src/app/tastings/[id]/play/ladder-copy.ts" "src/app/tastings/[id]/play/pick-counts.ts"`
   11. `rg -n "server-only" <the same files>`
   12. Bounded reference reads — inspect each hit; every new one is a head count, an id filter or a limit: `rg -n '\.from\("(appellations|producers)"\)' src --glob '!**/*.test.ts'`
@@ -5526,7 +5540,7 @@ All 371 items in `map.json`, each exactly once. "Built" names the tasks that bui
 | GUEST-13 | partial | built | BT-P2, BT-G1 |
 | GUEST-14 | missing | built | BT-P2, BT-G1 (one sentence, spec §4.3 item 2) |
 | GUEST-15 | partial | built | BT-P2, BT-G1 |
-| GUEST-16 | partial | built | BT-G1 |
+| GUEST-16 | partial | built | BT-G1; the phone clause (the Overview invite row opens S5) lives outside BT-G1's OWNS, in `src/app/overview/invitation-row.tsx` — confirmed built, **owner decision OD-6 (a), 2026-09-14** |
 | GUEST-17 | shipped | kept (shipped) | BT-G1 (no calendar before accepting) |
 | GUEST-18 | partial | built | BT-D2 (routing), BT-G1 |
 | GUEST-19 | conflict | not adopted | the full invitation without an account (ledger Not adopted); the reduced preview is BT-SQL4, BT-G3 |

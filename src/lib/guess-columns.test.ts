@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GUESS_READ_COLUMNS, GUESS_READ_COLUMN_LIST } from "./guess-columns";
 
 describe("GUESS_READ_COLUMNS (M9b's SELECT grant)", () => {
-  it("is exactly the 27 columns clients may select, never guessed_wine_id", () => {
+  it("is exactly the 27 columns clients may select, in grant order", () => {
     expect(GUESS_READ_COLUMNS.split(", ")).toEqual([
       "id", "wine_id", "participant_id",
       "country_id", "region_id", "appellation_id", "primary_grape_id", "secondary_grape_id",
@@ -12,6 +12,5 @@ describe("GUESS_READ_COLUMNS (M9b's SELECT grant)", () => {
       "total_points", "scored_at", "submitted_at", "updated_at", "reveal_step", "locked_at",
     ]);
     expect(GUESS_READ_COLUMN_LIST).toHaveLength(27);
-    expect(GUESS_READ_COLUMN_LIST).not.toContain("guessed_wine_id");
   });
 });

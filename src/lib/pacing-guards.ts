@@ -48,7 +48,7 @@ export function revealStepRefusal(input: {
  * - Refused outright: the tasting isn't IN_PROGRESS, it's paused, or
  *   `fromWineId` is no longer the current glass — either a stale read (a
  *   second console tab already skipped, or the reveal moved on) or a glass
- *   whose reveal has already started (`revealStep > 0`, so there's nothing
+ *   whose reveal is under way (`revealStep > 0`, so there's nothing
  *   left to skip away from). Both share one sentence: neither is a glass a
  *   Skip makes sense on any more.
  * - `null`: nothing to skip to. In BLIND that's only the current glass being
