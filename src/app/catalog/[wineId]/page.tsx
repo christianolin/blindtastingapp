@@ -181,9 +181,8 @@ export default async function CatalogWinePage({
                     : "—"}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground/70">
-                  A typical retail price when the wine was scanned, converted to
-                  DKK. Mostly available for recent vintages; blank when none was
-                  found.
+                  A typical Danish retail price found in shop listings, not
+                  from the label scan. Blank when none was found.
                   {isManager ? " Edit it via Manage wine." : " Contributors and admins can correct it."}
                 </p>
               </div>
