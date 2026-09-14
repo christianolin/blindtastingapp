@@ -87,6 +87,10 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
           : [];
       }),
 
+    // Step 7.5's self-named fallback (owner rule 2026-09-14): one region's rows.
+    appellationsInRegion: async (regionId) =>
+      snapshot.appellations.filter((a) => a.region_id === regionId).map(({ id, name }) => ({ id, name })),
+
     noGeographicIndication: async (countryId) => {
       for (const tier of NATIONAL_TIER_REGION_NAMES) {
         const region = snapshot.regions.find((r) => r.country_id === countryId && foldName(r.name) === foldName(tier));

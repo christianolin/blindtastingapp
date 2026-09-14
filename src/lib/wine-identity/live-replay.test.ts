@@ -18,7 +18,7 @@
 // longer equals its live draft names what moved it in its `why` note: a live
 // catalog change (an alternative producer name, a merge), or a later owner-approved
 // resolver rule (approval 3's region conflict, approval 4's curated appellation
-// synonym).
+// synonym, or the 2026-09-14 self-named-appellation rule, step 7.5).
 //
 // A changed row below is a changed resolver outcome for a real label: change one
 // only on purpose, with the reason beside it. The `why` notes carry L1b's
@@ -124,12 +124,12 @@ const CASES: Case[] = [
   },
   {
     entry: 4, file: "changyu-moser-xv-2022.json", labelReadId: "c5a02c1d-6cd4-4651-8b00-2a0baa6e7657",
-    why: "appellation: write-time — a partial read with no appellation text; 'Just the region' (Ningxia) is picked at Fix, never defaulted here (spec §B.5 step 5). Neither round-2 follow-up moves it: approval 4's synonym needs appellation text, and approval 3 finds no conflict, since the producer's region link is Ningxia, the read's own region",
+    why: "appellation: re-pinned from null on purpose (owner rule 2026-09-14, step 7.5) — a partial read with no appellation text, but its own rawText names 'NINGXIA' by name and Ningxia has exactly one appellation, the self-named row, so it no longer waits for 'Just the region' at Fix. Neither round-2 follow-up moved this before: approval 4's synonym needed appellation text, and approval 3 found no conflict, since the producer's region link is Ningxia, the read's own region",
     resolved: {
-      country: "China", region: "Ningxia", appellation: null,
+      country: "China", region: "Ningxia", appellation: "Ningxia",
       producer: existing("a87b88ca-70ea-4587-95f6-2ed116e958d4", "Changyu Moser XV"),
       grapes: [["existing", "Cabernet Sauvignon", 100]],
-      vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: ["appellation"],
+      vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: [],
     },
   },
   {
@@ -352,16 +352,21 @@ describe("resolveLabelRead replays each live read against the snapshot (spec §G
 describe("what the live misses turn on", () => {
   const read = (file: string) => coerceLabelRead(rawFixture(file));
 
-  it("a read with no appellation text waits for 'Just the region' at Fix, and the resolver never picks a self-named appellation (#4 round 1, #15 both rounds)", async () => {
-    // Spec §B.5 step 5 and D8: a region-level read never becomes the region's
-    // self-named appellation; the user picks it explicitly (§C.5 A7, plan F13).
+  it("#4 round 1's rawText names Ningxia, so step 7.5 now resolves its self-named appellation; #15 still waits for 'Just the region' at Fix, since owner approval 3 blanks the region first (both rounds)", async () => {
+    // Owner rule 2026-09-14 (step 7.5): a region-level read with no appellation
+    // text becomes the region's self-named appellation only when the label's own
+    // rawText names the region by name and names no OTHER appellation of it.
+    // Ningxia has exactly one appellation, the self-named row, and this read's
+    // rawText names "NINGXIA", so it no longer waits for 'Just the region' at Fix.
     const ningxia = await replay(read("changyu-moser-xv-2022.json"));
-    expect([read("changyu-moser-xv-2022.json").appellation, ningxia.appellationId, ningxia.provenance.appellation, selfNamedIn(ningxia.regionId)])
-      .toEqual([null, null, undefined, ["Ningxia"]]);
+    expect([read("changyu-moser-xv-2022.json").appellation, selfNamedIn(ningxia.regionId)]).toEqual([null, ["Ningxia"]]);
+    expect([nameOf(snap.appellations, ningxia.appellationId), ningxia.provenance.appellation]).toEqual(["Ningxia", "label"]);
 
-    // #15: owner approval 3 leaves the region blank too (see "#15 under owner approval 3"
-    // below), so Fix offers 'Just the region' once the user picks a region: the read's
-    // Castilla La Mancha and the producer's Castilla y Leon each have one.
+    // #15: owner approval 3 blanks the region before step 7.5 ever runs — the
+    // region is no longer "the one the read itself named" (provenance.region is
+    // cleared, not "label") — so it still waits for 'Just the region' once the
+    // user picks a region by hand: the read's Castilla La Mancha and the
+    // producer's Castilla y Leon each have one.
     const spain = snap.countries.find((c) => c.name === "Spain")!.id;
     const regionIn = (name: string) => snap.regions.find((r) => r.country_id === spain && r.name === name)?.id ?? null;
     for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
@@ -412,14 +417,17 @@ describe("what the live misses turn on", () => {
     }
   });
 
-  it("#7 turns on the model's no-GI flag: read as a GI, the same label resolves to Mendoza and waits for 'Just the region'; round 2's read names the appellation too", async () => {
+  it("#7 turns on the model's no-GI flag: read as a GI, the same label's rawText names Mendoza, so step 7.5 resolves its self-named appellation too, matching round 2's explicit read", async () => {
     const flagged = await replay(read("el-enemigo-2019.json"));
     const none = snap.none.find((n) => n.country_id === flagged.countryId)!;
     expect([flagged.regionId, flagged.appellationId, flagged.provenance.region]).toEqual([none.region_id, none.appellation_id, "label"]);
 
+    // Owner rule 2026-09-14 (step 7.5): the rawText ("Mendoza · Argentina") names
+    // the region, and Mendoza has exactly one appellation (the self-named row),
+    // so this no longer waits for 'Just the region' at Fix either.
     const asGi = await replay({ ...read("el-enemigo-2019.json"), noGeographicIndication: false });
-    expect([nameOf(snap.regions, asGi.regionId), asGi.provenance.region, asGi.appellationId, missingWineFields(asGi, { now: NOW })])
-      .toEqual(["Mendoza", "label", null, ["appellation"]]);
+    expect([nameOf(snap.regions, asGi.regionId), asGi.provenance.region, nameOf(snap.appellations, asGi.appellationId), asGi.provenance.appellation, missingWineFields(asGi, { now: NOW })])
+      .toEqual(["Mendoza", "label", "Mendoza", "label", []]);
     expect(selfNamedIn(asGi.regionId)).toEqual(["Mendoza"]);
 
     // Round 2, under the approved instructions: the flag is false and the appellation

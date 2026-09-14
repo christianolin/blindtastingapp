@@ -5,9 +5,16 @@
 // The rules it exists to hold (RC3, RC4, RC5, RC10, scan-3):
 // - nothing is ever guessed: a miss leaves the field null and the draft partial;
 // - an appellation is set only when exactly one reference row agrees — there is
-//   no first-hit fallback, and no falling back to a region's self-named row. The
-//   one other way in is a curated appellation synonym (owner approval 4), only for
-//   text no reference row agreed with, and only inside the read's own region;
+//   no first-hit fallback. Three narrower ways in beside that: a curated
+//   appellation synonym (owner approval 4), only for text no reference row
+//   agreed with, and only inside the read's own region; and, only when the read
+//   named no appellation text at all (never overriding a resolution attempt that
+//   found nothing), a region's own self-named appellation — but only when the
+//   region is still the one the read itself named (owner approval 3's blanking,
+//   below, was not triggered) and the label's own rawText names that region and
+//   names no OTHER appellation of it (owner rule 2026-09-14, step 7.5) — a label
+//   that only ever said "Baja California" resolves to that self-named row, but a
+//   Piemonte label whose "Barolo" the read missed stays blank, never "Piemonte";
 // - a producer link may fill the region, never the appellation and never a grape;
 //   and a region read with no appellation text that the producer's link places in
 //   another region of the same country is left empty (owner approval 3).
@@ -25,6 +32,13 @@ export interface RefLookup {
       ordered by name, limit 25. `words` is foldWords form; the adapter sends appellationSearchPattern(words). */
   searchAppellations(words: string, regionId?: string): Promise<{ id: string; name: string }[]>;
   appellationsByIds(ids: string[]): Promise<{ id: string; name: string; regionId: string; countryId: string }[]>;
+  /** Every appellation of one region, id+name only. Used only by step 7.5's
+      self-named fallback (owner rule 2026-09-14): to find the region's own
+      self-named row (the same match `justTheRegionOption`,
+      src/components/add-wine/self-named-appellation.ts, makes for "Just the
+      region") and to check the label's rawText names no OTHER appellation of
+      that region. One region's rows, never the whole table (CLAUDE.md, RC5). */
+  appellationsInRegion(regionId: string): Promise<{ id: string; name: string }[]>;
   /** the country's no-geographic-indication region and its same-named appellation: a national-tier region
       named in NATIONAL_TIER_REGION_NAMES when the country has one (France: "Vin de France", 20260829212000),
       otherwise the per-country "None" pair (20260829263700) */
@@ -226,6 +240,54 @@ async function resolveDesignation(
   return candidates.length === 1 ? candidates[0].id : null;
 }
 
+/** `foldWords(text)`, padded with a leading and trailing space so a whole-word
+    substring check can look for `" " + needle + " "` without a false match at
+    either end. */
+function wordBoundaryFold(text: string): string {
+  return ` ${foldWords(text)} `;
+}
+
+/** Whether `needleWords` (already in `foldWords` form — a plain space-joined
+    run, e.g. from `foldWords` or `stripDesignationSuffix`) occurs as a run of
+    whole words inside `haystack` (already `wordBoundaryFold`-padded). Empty
+    words never match. */
+function containsWholeWords(haystack: string, needleWords: string): boolean {
+  return needleWords !== "" && haystack.includes(` ${needleWords} `);
+}
+
+/**
+ * Step 7.5 (owner rule 2026-09-14): a region's own self-named appellation —
+ * the same row `justTheRegionOption` (self-named-appellation.ts) offers as
+ * "Just the region" — but reached automatically only when the label's own
+ * rawText names the region and names no OTHER appellation of it. Without the
+ * "no other appellation" check, a Barolo label whose "Barolo" the read missed
+ * (a scan miss, not a wine with no formal appellation) would silently resolve
+ * to "Piemonte" instead of staying blank for the user to fix (RC4: never
+ * guess). Null whenever the check fails for any reason, including a deleted
+ * region.
+ */
+async function resolveSelfNamedAppellation(
+  regionId: string,
+  rawText: string,
+  lookup: RefLookup,
+): Promise<{ id: string } | null> {
+  const region = await lookup.regionById(regionId);
+  if (region === null) return null;
+
+  const haystack = wordBoundaryFold(rawText);
+  if (!containsWholeWords(haystack, foldWords(region.name))) return null;
+
+  const rows = await lookup.appellationsInRegion(regionId);
+  const target = foldName(region.name);
+  const selfNamed = rows.find((row) => foldName(stripDesignationSuffix(row.name)) === target);
+  if (selfNamed === undefined) return null;
+
+  const namesAnotherAppellation = rows.some(
+    (row) => row.id !== selfNamed.id && containsWholeWords(haystack, stripDesignationSuffix(row.name)),
+  );
+  return namesAnotherAppellation ? null : { id: selfNamed.id };
+}
+
 /**
  * Resolve one label read into a draft. Every field the read could not anchor to
  * a reference row stays null, so `missingWineFields` can name it.
@@ -296,8 +358,10 @@ export async function resolveLabelRead(
       }
     }
 
-    // 5. Region from the read. A region-level read never becomes the region's
-    //    self-named appellation.
+    // 5. Region from the read. A region-level read does not become the region's
+    //    self-named appellation here — that only happens later, at step 7.5, and
+    //    only once owner approval 3's region-conflict blanking (step 7) has had
+    //    its say and the label's own rawText has confirmed the region by name.
     if (draft.regionId === null && regionCandidateId !== null) {
       draft.regionId = regionCandidateId;
       provenance.region = "label";
@@ -343,6 +407,29 @@ export async function resolveLabelRead(
         draft.countryId = linked.countryId;
         provenance.country = "producer-region";
       }
+    }
+  }
+
+  // 7.5 — Owner rule (2026-09-14): a label that named only its region (no
+  // appellation text at all — never overriding an appellation the resolver tried
+  // to place and could not) may still resolve to that region's own self-named
+  // appellation. Gated on `provenance.region === "label"` so this runs only when
+  // the region is still the one the read itself named in step 5 — step 7 above
+  // may have blanked it (owner approval 3) or refilled it from the producer's
+  // link (provenance "producer-region"), and neither of those counts. The
+  // self-named row itself is found, and confirmed against the label's own
+  // rawText, by `resolveSelfNamedAppellation` — see its comment for the "no
+  // other appellation of the region" guard.
+  if (
+    read.appellation === null &&
+    !read.noGeographicIndication &&
+    provenance.region === "label" &&
+    draft.regionId !== null
+  ) {
+    const selfNamed = await resolveSelfNamedAppellation(draft.regionId, read.rawText, lookup);
+    if (selfNamed !== null) {
+      draft.appellationId = selfNamed.id;
+      provenance.appellation = "label";
     }
   }
 

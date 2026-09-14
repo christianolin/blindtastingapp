@@ -654,6 +654,22 @@ describe("a read-only region that disagrees with the producer's region link is l
     });
   });
 
+  // Step 7.5 (owner rule 2026-09-14) is gated on `provenance.region === "label"`
+  // specifically so this blanking (above) keeps winning: the region here is no
+  // longer "the region the read itself named" once step 7 clears it, even though
+  // "Castilla La Mancha" both names a real region and has a self-named
+  // appellation (clm-a) that the label's own rawText names by mention alone.
+  it("the self-named fallback (step 7.5) does not refill the region owner approval 3 blanked, even when rawText names it", async () => {
+    expect(await placed({
+      producer: "Bodegas Norte",
+      rawText: "BODEGAS NORTE · CASTILLA-LA MANCHA · 100% TEMPRANILLO",
+    })).toEqual({
+      producer: { kind: "existing", id: "p-cyl", name: "Bodegas Norte" },
+      countryId: "es", regionId: null, appellationId: null, region: null,
+      missing: ["region", "appellation"],
+    });
+  });
+
   it.each([
     ["a producer linked to the read's own region", "Bodegas Sur", { kind: "existing", id: "p-clm", name: "Bodegas Sur" }],
     ["a pending producer", "Bodegas Desconocidas", { kind: "pending", name: "Bodegas Desconocidas" }],
@@ -786,6 +802,71 @@ describe("step 4: a curated appellation synonym (owner approval 4)", () => {
     );
     expect([d.appellationId, snap.regions.find((r) => r.id === d.regionId)?.name, searched]).toEqual([null, "Ningxia", []]);
     expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+});
+
+// Owner rule 2026-09-14 (step 7.5, added after step 7 so owner approval 3's
+// region-conflict blanking still wins — see the "does not refill" case above).
+// Real-world trigger: a scanned L.A. Cetto Brut read country Mexico, region Baja
+// California, appellation null, rawText "CETTO BRUT Sparkling Wine BAJA
+// CALIFORNIA PRODUCED AND BOTTLED BY... WINE FROM MEXICO" — the region resolved
+// but the appellation stayed empty, and the owner had to pick "Baja California"
+// (the region's self-named row) by hand. A read that names only its region (no
+// appellation text, not no-GI) may now resolve to that self-named row, but only
+// when the label's own rawText names the region by name and names no OTHER
+// appellation of it — never a guess from the region alone.
+describe("step 7.5: a self-named appellation confirmed by the label's own rawText (owner rule 2026-09-14)", () => {
+  const mx = (): ReferenceSnapshot => ({
+    countries: [{ id: "mx", name: "Mexico" }, { id: "it", name: "Italy" }],
+    regions: [
+      { id: "bc", name: "Baja California", country_id: "mx" },
+      { id: "mx-none", name: "None", country_id: "mx" },
+      { id: "pie", name: "Piemonte", country_id: "it" },
+    ],
+    appellations: [
+      { id: "bc-a", name: "Baja California", region_id: "bc" },
+      { id: "mx-none-a", name: "None", region_id: "mx-none" },
+      { id: "pie-a", name: "Piemonte", region_id: "pie" },
+      { id: "barolo", name: "Barolo DOCG", region_id: "pie" },
+    ],
+    none: [{ country_id: "mx", region_id: "mx-none", appellation_id: "mx-none-a" }],
+    producers: [], grapes: [], type_designations: [],
+  });
+  const plain = { noGeographicIndication: false, appellation: null, producer: null, designation: null, grapes: [] };
+
+  it("the Cetto case: a region-only read whose rawText names the region resolves to its self-named appellation", async () => {
+    const d = await resolve("vin-de-france.json", {
+      ...plain, country: "Mexico", region: "Baja California",
+      rawText: "CETTO BRUT Sparkling Wine BAJA CALIFORNIA PRODUCED AND BOTTLED BY... WINE FROM MEXICO",
+    }, mx());
+    expect([d.regionId, d.appellationId, d.provenance.appellation]).toEqual(["bc", "bc-a", "label"]);
+    expect(missingWineFields(d, { now: NOW })).not.toContain("appellation");
+  });
+
+  it("rawText naming another appellation of the same region leaves the appellation null (a missed Barolo stays blank, not Piemonte)", async () => {
+    const d = await resolve("vin-de-france.json", {
+      ...plain, country: "Italy", region: "Piedmont",
+      rawText: "AZIENDA AGRICOLA · BAROLO · PIEMONTE · ITALIA",
+    }, mx());
+    expect([d.regionId, d.appellationId]).toEqual(["pie", null]);
+    expect(missingWineFields(d, { now: NOW })).toContain("appellation");
+  });
+
+  it("rawText that never names the region at all leaves the appellation null", async () => {
+    const d = await resolve("vin-de-france.json", {
+      ...plain, country: "Mexico", region: "Baja California",
+      rawText: "CETTO BRUT · SPARKLING WINE",
+    }, mx());
+    expect([d.regionId, d.appellationId]).toEqual(["bc", null]);
+  });
+
+  it("a no-GI read is unchanged: it takes the country's None pair, never the region's self-named row, even when rawText names the region", async () => {
+    const d = await resolve("vin-de-france.json", {
+      noGeographicIndication: true, appellation: null, region: null, producer: null, designation: null, grapes: [],
+      country: "Mexico",
+      rawText: "CETTO BRUT Sparkling Wine BAJA CALIFORNIA PRODUCED AND BOTTLED BY... WINE FROM MEXICO",
+    }, mx());
+    expect([d.regionId, d.appellationId]).toEqual(["mx-none", "mx-none-a"]);
   });
 });
 

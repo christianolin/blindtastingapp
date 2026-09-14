@@ -101,6 +101,27 @@ export function serverLookup(supabase: SupabaseClient<Database>): RefLookup {
       });
     },
 
+    // Step 7.5's self-named fallback (owner rule 2026-09-14). One region's own
+    // rows, paged like `grapes()` below — a region can hold more than PAGE_SIZE
+    // appellations is not expected, but this must never silently truncate.
+    appellationsInRegion: (regionId) =>
+      memo(`appellationsInRegion:${regionId}`, async () => {
+        const all: { id: string; name: string }[] = [];
+        for (let from = 0; ; from += PAGE_SIZE) {
+          const { data, error } = await supabase
+            .from("appellations")
+            .select("id, name")
+            .eq("region_id", regionId)
+            .order("name")
+            .order("id")
+            .range(from, from + PAGE_SIZE - 1);
+          check(error, "appellationsInRegion");
+          const page = data ?? [];
+          all.push(...page);
+          if (page.length < PAGE_SIZE) return all;
+        }
+      }),
+
     // The country's national-tier region (France: "Vin de France", 20260829212000)
     // with its same-named appellation; the None pair only when there is none.
     noGeographicIndication: (countryId) =>
