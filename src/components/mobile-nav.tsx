@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/actions";
+import { SidebarThemeSwitch } from "@/components/sidebar-theme-switch";
 import { cn } from "@/lib/utils";
 import { BlindrMark } from "@/components/logo";
 import { type NavLink, type NavChild, isNavActive } from "@/components/nav-links";
@@ -182,6 +183,11 @@ export function MobileNav({
               </nav>
 
               <div className="shrink-0 border-t border-primary-foreground/15 p-3">
+                {/* The same light/dark switch the desktop sidebar has above its
+                    profile row; the drawer stays open when it flips. */}
+                <div className="mb-1">
+                  <SidebarThemeSwitch variant="full" />
+                </div>
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/u/${userId}`}
