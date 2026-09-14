@@ -1198,6 +1198,498 @@
         "RED",
         "SWEET"
       ]
+    },
+    "portugal.douro.baixo-corgo": {
+      "styles": [
+        "FORTIFIED",
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Touriga Franca"
+        },
+        {
+          "name": "Tinta Roriz"
+        },
+        {
+          "name": "Touriga Nacional"
+        },
+        {
+          "name": "Tinta Barroca"
+        }
+      ]
+    },
+    "portugal.douro.cima-corgo": {
+      "styles": [
+        "FORTIFIED",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Touriga Nacional"
+        },
+        {
+          "name": "Touriga Franca"
+        },
+        {
+          "name": "Tinta Roriz"
+        },
+        {
+          "name": "Tinta Barroca"
+        },
+        {
+          "name": "Tinto Cão"
+        }
+      ]
+    },
+    "portugal.douro.douro-superior": {
+      "styles": [
+        "FORTIFIED",
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Touriga Nacional"
+        },
+        {
+          "name": "Touriga Franca"
+        },
+        {
+          "name": "Tinta Roriz"
+        },
+        {
+          "name": "Sousão"
+        }
+      ]
+    },
+    "portugal.minho.moncao-e-melgaco": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Alvarinho",
+          "note": "The sub-region's signature"
+        }
+      ]
+    },
+    "portugal.minho.lima": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Loureiro",
+          "note": "The sub-region's signature"
+        },
+        {
+          "name": "Arinto"
+        },
+        {
+          "name": "Sousão",
+          "note": "Vinhão, for the dark local red"
+        }
+      ]
+    },
+    "portugal.minho.cavado": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Loureiro"
+        },
+        {
+          "name": "Arinto"
+        },
+        {
+          "name": "Trajadura"
+        }
+      ]
+    },
+    "portugal.minho.ave": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Loureiro"
+        },
+        {
+          "name": "Trajadura"
+        },
+        {
+          "name": "Arinto"
+        }
+      ]
+    },
+    "portugal.minho.basto": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Azal",
+          "note": "Inland and higher, where Azal ripens late"
+        },
+        {
+          "name": "Arinto"
+        },
+        {
+          "name": "Sousão",
+          "note": "Vinhão"
+        }
+      ]
+    },
+    "portugal.minho.sousa": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Azal"
+        },
+        {
+          "name": "Arinto"
+        },
+        {
+          "name": "Sousão",
+          "note": "Vinhão"
+        }
+      ]
+    },
+    "portugal.minho.amarante": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Azal"
+        },
+        {
+          "name": "Avesso"
+        },
+        {
+          "name": "Arinto"
+        },
+        {
+          "name": "Sousão",
+          "note": "Vinhão"
+        }
+      ]
+    },
+    "portugal.minho.baiao": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Avesso",
+          "note": "The sub-region's signature"
+        }
+      ]
+    },
+    "portugal.minho.paiva": {
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Avesso"
+        },
+        {
+          "name": "Azal"
+        },
+        {
+          "name": "Arinto"
+        }
+      ]
+    },
+    "portugal.alentejo.portalegre": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Alicante Bouschet"
+        },
+        {
+          "name": "Arinto"
+        }
+      ]
+    },
+    "portugal.alentejo.borba": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Síria",
+          "note": "Roupeiro"
+        }
+      ]
+    },
+    "portugal.alentejo.redondo": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Castelão"
+        },
+        {
+          "name": "Síria",
+          "note": "Roupeiro"
+        }
+      ]
+    },
+    "portugal.alentejo.reguengos": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Alicante Bouschet"
+        },
+        {
+          "name": "Antão Vaz"
+        }
+      ]
+    },
+    "portugal.alentejo.vidigueira": {
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Antão Vaz",
+          "note": "The sub-region is known for white"
+        },
+        {
+          "name": "Síria",
+          "note": "Roupeiro"
+        },
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        }
+      ]
+    },
+    "portugal.alentejo.evora": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Alicante Bouschet"
+        },
+        {
+          "name": "Antão Vaz"
+        }
+      ]
+    },
+    "portugal.alentejo.granja-amareleja": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Trincadeira"
+        },
+        {
+          "name": "Castelão"
+        }
+      ]
+    },
+    "portugal.alentejo.moura": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Alfrocheiro"
+        },
+        {
+          "name": "Tinta Roriz",
+          "note": "Aragonez in the Alentejo"
+        },
+        {
+          "name": "Antão Vaz"
+        }
+      ]
+    },
+    "spain.asturias": {
+      "article": {
+        "description": "Spain's damp Atlantic north-west is cider country, and wine is very much the exception — but one DOP survives inland at Cangas del Narcea, in the mountains of the south-west. Vines are worked on steep slate terraces above the Narcea and Ibias rivers, on a scale and a gradient that have far more in common with the Douro than with the rest of Asturias.",
+        "climate": "Atlantic and wet on the coast; the vineyards sit inland in sheltered river valleys where the rain eases and the summers are just warm enough to ripen.",
+        "soils": "Slate and schist, on terraces cut into very steep river slopes.",
+        "key_facts": [
+          "One DOP: Cangas, in the south-western mountains",
+          "Steep slate terraces above the Narcea",
+          "Cider country — wine is the exception",
+          "Albarín for white, Mencía for red"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Albarín",
+          "note": "Albarín Blanco, the local white"
+        },
+        {
+          "name": "Mencía"
+        }
+      ]
+    },
+    "spain.baleares": {
+      "article": {
+        "description": "Two DOs on Mallorca — Binissalem in the centre of the island and Pla i Llevant to the east — plus island-wide Vi de la Terra across the Balearics. The interest is almost entirely in the indigenous grapes: Manto Negro and Callet for red and Prensal for white, none of which are grown in quantity anywhere else, and most of the wine is drunk without ever leaving the islands.",
+        "climate": "Mediterranean and maritime — warm, dry summers with sea breezes taking the edge off the heat, and mild winters.",
+        "soils": "Clay and limestone over the islands' calcareous bedrock.",
+        "key_facts": [
+          "Binissalem and Pla i Llevant, both on Mallorca",
+          "Manto Negro and Callet, grown almost nowhere else",
+          "Prensal for white",
+          "Most of it drunk on the islands"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Manto Negro"
+        },
+        {
+          "name": "Callet"
+        },
+        {
+          "name": "Prensal",
+          "note": "Prensal Blanc, also called Moll"
+        }
+      ]
+    },
+    "spain.madrid": {
+      "article": {
+        "description": "DO Vinos de Madrid runs in four subzones around the capital, and spent most of its history supplying the city in bulk. It is now the setting for one of Spain's more striking revivals: old bush-vine Garnacha on granite in the Gredos foothills around San Martín de Valdeiglesias, making pale, perfumed, high-altitude reds that have little to do with the region's old reputation.",
+        "climate": "Continental and dry, with hot summers and cold winters. Altitude in the western subzone brings the cool nights the best reds depend on.",
+        "soils": "Granite and sand in the west around San Martín; clay and limestone in the subzones south and east of the city.",
+        "key_facts": [
+          "Four subzones: Arganda, Navalcarnero, San Martín and El Molar",
+          "Old-vine Garnacha on granite in the Gredos foothills",
+          "Albillo Real in San Martín, Malvar elsewhere",
+          "Long a bulk supplier to the capital"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Garnacha",
+          "note": "The main red in San Martín, Navalcarnero and El Molar"
+        },
+        {
+          "name": "Tempranillo",
+          "note": "Tinto Fino, the main red in Arganda"
+        },
+        {
+          "name": "Albillo Real",
+          "note": "The traditional white of San Martín"
+        },
+        {
+          "name": "Malvar",
+          "note": "The white of Arganda, Navalcarnero and El Molar"
+        }
+      ]
+    },
+    "spain.pais-vasco": {
+      "article": {
+        "description": "The Basque Country makes two quite unrelated wines. On the coast, three Txakoli DOs — Getaria, Bizkaia and Araba — produce sharp, low-alcohol, faintly spritzy white from Hondarrabi Zuri, poured from a height and drunk within the year. Inland and south, across the Sierra de Cantabria, Rioja Alavesa lies within the Basque Country too, and makes Tempranillo in a completely different register.",
+        "climate": "Wet and Atlantic on the coast, where vines are trained high on pergolas to catch wind and light; sheltered and markedly drier in Rioja Alavesa behind the mountains.",
+        "soils": "Marl and sandstone near the coast; calcareous clay over limestone in Rioja Alavesa.",
+        "key_facts": [
+          "Three Txakoli DOs: Getaria, Bizkaia and Araba",
+          "Hondarrabi Zuri — sharp, low in alcohol, faintly spritzy",
+          "Rioja Alavesa also lies in the Basque Country",
+          "Txakoli is poured from a height to open it up"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Hondarrabi Zuri",
+          "note": "The Txakoli white"
+        },
+        {
+          "name": "Hondarrabi Beltza",
+          "note": "The local red"
+        },
+        {
+          "name": "Tempranillo",
+          "note": "In Rioja Alavesa"
+        }
+      ]
     }
   }
 }

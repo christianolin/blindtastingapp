@@ -13,15 +13,26 @@
 //
 // Usage:
 //   node scripts/wine-map-sources/gen-place-profiles-migration.mjs           (check only)
-//   node scripts/wine-map-sources/gen-place-profiles-migration.mjs --write
+//   node scripts/wine-map-sources/gen-place-profiles-migration.mjs --write //        --version 20260915110000 --name place_profiles_iberia
+//
+// Re-runnable. Content already live is skipped, so the data file describes every
+// place this project has profiled and each run emits only what is still missing.
 import { readFile, writeFile } from "node:fs/promises";
 import pg from "pg";
 
 const REPO = "C:/Users/Birchenz/blindtastingapp";
 const SOURCE = "data/wine-map/place-profiles.json";
-const VERSION = "20260915100000";
-const NAME = "place_profiles_styles_grapes_articles";
 const WRITE = process.argv.includes("--write");
+// The data file is the source of truth for ALL place content, including the
+// part already applied. So a later run has to emit only what is not live yet,
+// or it would try to insert the lot a second time -- and the version/name move
+// with each batch. Both are arguments rather than constants for that reason.
+const arg = (flag, fallback) => {
+  const i = process.argv.indexOf(flag);
+  return i === -1 ? fallback : process.argv[i + 1];
+};
+const VERSION = arg("--version", "20260915110000");
+const NAME = arg("--name", "place_profiles_iberia");
 
 const STYLE_KINDS = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "SWEET", "FORTIFIED"]);
 const sq = (s) => (s === null || s === undefined ? "null" : `'${String(s).replace(/'/g, "''")}'`);
@@ -60,10 +71,12 @@ const adding = new Set(newGrapes.map((g) => g.name));
 for (const n of wanted) {
   if (!haveGrape.has(n) && !adding.has(n)) problems.push(`grape not in the catalog: ${n}`);
 }
-// A "new" grape that already exists would double it.
+// A variety an earlier batch already added is skipped, not an error: the data
+// file keeps describing it so the catalog addition stays documented in one place.
+const grapesToAdd = [];
 for (const g of newGrapes) {
   const { rows } = await client.query(`select 1 from grapes where name = $1`, [g.name]);
-  if (rows.length) problems.push(`new_grapes lists ${g.name}, which is already in the catalog`);
+  if (!rows.length) grapesToAdd.push(g);
 }
 
 // 3. Styles are valid enum members, and no place is listed with nothing to say.
@@ -96,11 +109,22 @@ const { rows: existing } = await client.query(
           (select count(*)::int from wine_place_styles s where s.wine_place_id = p.id) styles,
           (select count(*)::int from wine_place_articles a where a.wine_place_id = p.id) article
      from wine_places p where p.canonical_key = any($1::text[])`, [keys]);
+// Anything already live is dropped from this batch rather than treated as a
+// conflict. Re-inserting it would duplicate the rows, and refusing outright
+// would mean the data file could never describe more than one migration's
+// worth of content.
+// Each of the three parts is dropped on its own, so a place that is half done
+// -- styles live, grapes not -- still gets the missing half.
+const skipped = [];
 for (const r of existing) {
   const p = places[r.canonical_key];
-  if (p.grapes?.length && r.grapes > 0) problems.push(`${r.canonical_key}: already has ${r.grapes} grapes`);
-  if (p.styles?.length && r.styles > 0) problems.push(`${r.canonical_key}: already has ${r.styles} styles`);
-  if (p.article && r.article > 0) problems.push(`${r.canonical_key}: already has an article`);
+  if (r.styles > 0) delete p.styles;
+  if (r.grapes > 0) delete p.grapes;
+  if (r.article > 0) delete p.article;
+  if (!p.styles && !p.grapes && !p.article) {
+    skipped.push(r.canonical_key);
+    delete places[r.canonical_key];
+  }
 }
 
 await client.end();
@@ -114,13 +138,16 @@ if (problems.length) {
 const nStyles = Object.values(places).reduce((a, p) => a + (p.styles?.length ?? 0), 0);
 const nGrapes = Object.values(places).reduce((a, p) => a + (p.grapes?.length ?? 0), 0);
 const nArticles = Object.values(places).filter((p) => p.article).length;
+const remaining = Object.keys(places);
 const byCountry = {};
-for (const k of keys) {
+for (const k of remaining) {
   const c = k.split(".")[0];
   byCountry[c] = (byCountry[c] ?? 0) + 1;
 }
-console.log(`${keys.length} places (${Object.entries(byCountry).map(([c, n]) => `${c} ${n}`).join(", ")})`);
-console.log(`  ${nStyles} style rows, ${nGrapes} grape rows, ${nArticles} articles, ${newGrapes.length} new grapes`);
+if (skipped.length) console.log(`${skipped.length} places already live, skipped`);
+console.log(`${remaining.length} places to write (${Object.entries(byCountry).map(([c, n]) => `${c} ${n}`).join(", ")})`);
+if (!remaining.length && !grapesToAdd.length) { console.log("nothing left to do"); process.exit(0); }
+console.log(`  ${nStyles} style rows, ${nGrapes} grape rows, ${nArticles} articles, ${grapesToAdd.length} new grapes`);
 if (!WRITE) { console.log("\nnothing written (pass --write)"); process.exit(0); }
 
 const lines = [];
@@ -133,9 +160,9 @@ lines.push(`-- them does not resolve. That check is the point of it. A grape nam
 lines.push(`-- catalog does not carry does not raise on insert -- the join simply matches`);
 lines.push(`-- nothing and the row vanishes, leaving a place quietly short of a variety.`);
 lines.push(`--`);
-lines.push(`-- ${keys.length} places: ${Object.entries(byCountry).map(([c, n]) => `${c} ${n}`).join(", ")}.`);
+lines.push(`-- ${remaining.length} places: ${Object.entries(byCountry).map(([c, n]) => `${c} ${n}`).join(", ")}.`);
 lines.push(`-- ${nStyles} style rows, ${nGrapes} grape rows, ${nArticles} Bereich articles,`);
-lines.push(`-- ${newGrapes.length} varieties added to the grape catalog.`);
+lines.push(`-- ${grapesToAdd.length} varieties added to the grape catalog.`);
 lines.push(`--`);
 lines.push(`-- Convention follows the existing region rows (germany.mosel, italy.piemonte):`);
 lines.push(`-- role PRINCIPAL, permitted true, share_pct null. Planting percentages are not`);
@@ -148,9 +175,9 @@ lines.push(``);
 lines.push(`begin;`);
 lines.push(``);
 
-if (newGrapes.length) {
+if (grapesToAdd.length) {
   lines.push(`-- Varieties the content needs that the catalog did not carry.`);
-  for (const g of newGrapes) {
+  for (const g of grapesToAdd) {
     lines.push(`insert into public.grapes (name, color, description, skin_color)`);
     lines.push(`values (${sq(g.name)}, ${sq(g.color)}, ${sq(g.description)}, ${sq(g.skin_color)});`);
   }
@@ -217,17 +244,24 @@ lines.push(`      raise exception '%: no article', r.key;`);
 lines.push(`    end if;`);
 lines.push(`  end loop;`);
 lines.push(``);
-lines.push(`  -- No German or Italian region or subregion is left without styles.`);
+// Coverage is asserted over every country the data file profiles, not only the
+// ones in this batch. Each migration therefore re-checks the batches before it:
+// if an earlier one were ever rolled back or partly lost, the next apply says so.
+const countries = [...new Set(keys.map((k) => k.split(".")[0]))].sort();
+const likeAny = countries.map((c) => `p.canonical_key like '${c}.%'`).join(" or ");
+lines.push(`  -- No region or subregion in ${countries.join(", ")} is left without wine styles.`);
 lines.push(`  select count(*) into n from public.wine_places p`);
 lines.push(`   where p.kind in ('REGION','SUBREGION')`);
-lines.push(`     and (p.canonical_key like 'germany.%' or p.canonical_key like 'italy.%')`);
+lines.push(`     and (${likeAny})`);
 lines.push(`     and not exists (select 1 from public.wine_place_styles s where s.wine_place_id = p.id);`);
-lines.push(`  if n <> 0 then raise exception '% German/Italian places still have no wine styles', n; end if;`);
+lines.push(`  if n <> 0 then raise exception '% places still have no wine styles', n; end if;`);
 lines.push(``);
+lines.push(`  -- ...or without an article.`);
 lines.push(`  select count(*) into n from public.wine_places p`);
-lines.push(`   where p.kind in ('REGION','SUBREGION') and p.canonical_key like 'germany.%'`);
+lines.push(`   where p.kind in ('REGION','SUBREGION')`);
+lines.push(`     and (${likeAny})`);
 lines.push(`     and not exists (select 1 from public.wine_place_articles a where a.wine_place_id = p.id);`);
-lines.push(`  if n <> 0 then raise exception '% German places still have no article', n; end if;`);
+lines.push(`  if n <> 0 then raise exception '% places still have no article', n; end if;`);
 lines.push(`end $$;`);
 lines.push(``);
 lines.push(`commit;`);
