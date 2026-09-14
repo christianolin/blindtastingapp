@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { GripVertical, X } from "lucide-react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
@@ -46,6 +47,8 @@ import { assignMatch, clearMatch, lockGuess, unlockGuess } from "./actions";
 import { FieldPicker } from "./field-picker";
 import { LOCKED_EDIT_REFUSAL } from "./ladder-copy";
 import { lockButtonLabel, lockConfirm } from "./lock-copy";
+import { createSerialQueue, isTransientMatchError } from "./match-board-queue";
+import { visibleGlasses } from "./match-board-visibility";
 import type { PickerGroup } from "./ladder-types";
 
 /**
@@ -73,6 +76,7 @@ export function MatchBoard({
   timingMode,
   asyncRevealPolicy,
   pending,
+  heroWineId,
 }: {
   tastingId: string;
   tastingName: string;
@@ -90,8 +94,17 @@ export function MatchBoard({
   /** Glasses with no answer key yet (host, or anyone once nothing is
    *  pending — get_semi_blind_candidates's own rule). */
   pending: number;
+  /** `semiBlindReveal.wineId` (play-experience.tsx) — the glass the SB4
+   *  hero card is already showing full-bleed, or null when nothing is mid-
+   *  reveal. The board's own glass list skips this one row so it renders
+   *  only once (owner decision OD-4a). Everything else about the board —
+   *  the matched/total pill, the pool, `currentGlassId` — is unaffected:
+   *  this glass is always already `revealed` in `board`, so it was never
+   *  going to be "current" or placeable anyway. */
+  heroWineId: string | null;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const router = useRouter();
 
   const [board, setBoard] = useState(initialBoard);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -106,6 +119,15 @@ export function MatchBoard({
     setSeenBoard(initialBoard);
     if (!Object.values(busy).some(Boolean)) setBoard(initialBoard);
   }
+  // One FIFO queue for the whole board (BT-S3, review V2-6-07): the actual
+  // assignMatch/clearMatch network calls run strictly one at a time, in the
+  // order the participant made them — see match-board-queue.ts for why. The
+  // local pre-flight check, the optimistic apply and the busy flag are all
+  // set synchronously at call time, outside the queue (each is a fresh
+  // click's own event handler, so the `board` it reads is always this
+  // render's committed state), so the UI still reacts instantly; only the
+  // network call itself — and its own busy flag's clearing — waits its turn.
+  const [enqueueBoardOp] = useState(() => createSerialQueue());
 
   const [armedKey, setArmedKey] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -173,7 +195,13 @@ export function MatchBoard({
     setErrors((e) => ({ ...e, [glassId]: message }));
   }
 
-  async function doAssign(glassId: string, key: string) {
+  // assignMatch's actual network call is queued (see enqueueBoardOp above);
+  // the local pre-flight check and the optimistic apply happen synchronously
+  // here instead, so a second pick made before the first's reply lands still
+  // applies on top of the first's (this is a fresh click's own event
+  // handler, so `board` is always this render's committed state — see the
+  // comment on enqueueBoardOp above).
+  function doAssign(glassId: string, key: string) {
     const prev = board;
     const outcome = applyAssignment(prev, glassId, key);
     if (!outcome.ok) {
@@ -183,33 +211,40 @@ export function MatchBoard({
     setError(glassId, "");
     setBoard(outcome.board);
     setBusy((b) => ({ ...b, [glassId]: true }));
-    try {
-      const result = await assignMatch(tastingId, glassId, key);
-      if ("error" in result) {
-        setBoard(prev);
-        setError(glassId, result.error);
+    enqueueBoardOp(async () => {
+      try {
+        const result = await assignMatch(tastingId, glassId, key);
+        if ("error" in result) {
+          // The local snapshot this call started from may no longer be the
+          // truth (another call may have landed since) — ask the server
+          // instead of restoring it (review V2-6-07; plan refinement 25).
+          router.refresh();
+          if (!isTransientMatchError(result.error)) setError(glassId, result.error);
+        }
+      } finally {
+        setBusy((b) => ({ ...b, [glassId]: false }));
       }
-    } finally {
-      setBusy((b) => ({ ...b, [glassId]: false }));
-    }
+    });
   }
 
-  async function doClear(glassId: string) {
+  function doClear(glassId: string) {
     const prev = board;
     const next = clearAssignment(prev, glassId);
     if (next === prev) return;
     setError(glassId, "");
     setBoard(next);
     setBusy((b) => ({ ...b, [glassId]: true }));
-    try {
-      const result = await clearMatch(tastingId, glassId);
-      if ("error" in result) {
-        setBoard(prev);
-        setError(glassId, result.error);
+    enqueueBoardOp(async () => {
+      try {
+        const result = await clearMatch(tastingId, glassId);
+        if ("error" in result) {
+          router.refresh();
+          if (!isTransientMatchError(result.error)) setError(glassId, result.error);
+        }
+      } finally {
+        setBusy((b) => ({ ...b, [glassId]: false }));
       }
-    } finally {
-      setBusy((b) => ({ ...b, [glassId]: false }));
-    }
+    });
   }
 
   async function doLock(glassId: string) {
@@ -351,7 +386,7 @@ export function MatchBoard({
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           {isDesktop ? <Eyebrow size="sm">{THE_GLASSES}</Eyebrow> : null}
           <div className="flex flex-col gap-2">
-            {board.glasses.map((glass) => {
+            {visibleGlasses(board.glasses, heroWineId).map((glass) => {
               const state = glassRowState(board, glass.wineId, pouredThroughIndex);
               const mineRow = board.mine[glass.wineId];
               // ASYNC IMMEDIATE: the viewer's own lock has already scored this

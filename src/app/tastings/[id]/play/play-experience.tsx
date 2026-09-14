@@ -1510,6 +1510,10 @@ export async function PlayExperience({
               timingMode={tasting.timing_mode}
               asyncRevealPolicy={tasting.async_reveal_policy}
               pending={semiBlindCandidates?.pending ?? 0}
+              // OD-4a: the just-revealed glass already gets its own SB4
+              // hero card (above) — skip its row here so it isn't shown
+              // twice.
+              heroWineId={semiBlindReveal?.wineId ?? null}
             />
           </div>
         </Card>
