@@ -1029,7 +1029,7 @@ export function GuessLadder({
               onLock={onLock}
               locking={locking}
             />
-            {/* "Note this glass" — a text link under the lock button, "locked
+            {/* "Note this glass" — a button under the lock button, "locked
                 or not" (BT-N2; spec §8.3 item 9). */}
             {noteThisGlass ? <NoteThisGlass {...noteThisGlass} layout="link" /> : null}
           </div>
@@ -1056,7 +1056,7 @@ export function GuessLadder({
           <span className="text-center text-[11.5px] text-muted-foreground">
             {lockFooter({ timingMode, asyncRevealPolicy }) ?? lockFooterText({ phone: true })}
           </span>
-          {/* "Note this glass" — a text link under the lock button, "locked
+          {/* "Note this glass" — a button under the lock button, "locked
               or not" (BT-N2; spec §8.3 item 9). */}
           {noteThisGlass ? <NoteThisGlass {...noteThisGlass} layout="link" /> : null}
         </div>

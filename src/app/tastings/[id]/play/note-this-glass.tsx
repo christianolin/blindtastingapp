@@ -8,8 +8,9 @@
 //   - "phone"  — locked-in.tsx's S10 waiting card, under "While you wait",
 //     with the long sub-line.
 //   - "laptop" — locked-in.tsx's S10b left column, the short sub-line.
-//   - "link"   — guess-ladder.tsx's open ladder, a plain text link under the
-//     lock button on both widths ("locked or not").
+//   - "link"   — guess-ladder.tsx's open ladder, under the lock button on
+//     both widths ("locked or not"); same filled button as "laptop", short
+//     sub-line.
 // Eligibility (`canNoteHiddenGlass`) and the viewer's own already-started
 // note, if any, are computed once per glass by play-experience.tsx and
 // handed down as `NoteThisGlassData` — this component only renders and opens
@@ -63,23 +64,9 @@ export function NoteThisGlass({
     />
   ) : null;
 
-  if (layout === "link") {
-    return (
-      <>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="min-h-11 w-full text-center text-[12.5px] font-semibold text-primary underline-offset-2 hover:underline"
-        >
-          {title}
-        </button>
-        {sheet}
-      </>
-    );
-  }
-
   // The Overview's "Rate a wine" action: a filled bordeaux button with the wine
-  // glass icon, the sub-line under it.
+  // glass icon, the sub-line under it. Every layout (including "link", which
+  // used to be a plain text link) renders this same button.
   return (
     <>
       <div className="flex flex-col gap-1.5">

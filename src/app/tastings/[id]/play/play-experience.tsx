@@ -44,6 +44,7 @@ import { GlassStage, type LockedInPerson } from "./locked-in";
 import { MatchBoard } from "./match-board";
 import type { NoteThisGlassData } from "./note-this-glass";
 import { PausedBand } from "./paused-band";
+import { RateThisWine, type RateThisWineData } from "./rate-this-wine";
 import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
 import { RevealView, type RevealStanding } from "./reveal-view";
@@ -283,42 +284,43 @@ export async function PlayExperience({
     .in("wine_id", wineIds.length > 0 ? wineIds : [""]);
   const myGuessByWineId = new Map((myGuesses ?? []).map((g) => [g.wine_id, g]));
 
-  // BT-N2: the viewer's own identity-less ("hidden-glass") notes on this
-  // tasting's glasses, for "Note this glass"'s "Your note · {d} of {t}
-  // assessed" (it reopens the note instead of starting a blank one). The
-  // "wset notes read" policy grants a row with no identity to its author
-  // only, so no explicit author filter is needed here (spec §9.4).
-  const { data: myHiddenNotes } = await supabase
+  // BT-N2 / Rate-a-revealed-wine: the viewer's own notes on this tasting's
+  // glasses, still-hidden or resolved, for "Note this glass"'s and "Rate
+  // this wine"'s "Your note · {d} of {t} assessed" (it reopens the note
+  // instead of starting a blank one). A still-hidden note is only readable
+  // by its author under the "wset notes read" policy, but a RESOLVED note
+  // (identity set at the reveal) is readable by anyone once resolved — so an
+  // explicit author filter is required here to keep this "my own note only".
+  const { data: myGlassNotes } = await supabase
     .from("wset_notes")
     .select("*")
     .in("tasting_wine_id", wineIds.length > 0 ? wineIds : [""])
-    .is("catalog_wine_id", null)
-    .is("unidentified_wine_id", null)
+    .eq("author_id", user.id)
     .order("updated_at", { ascending: false });
-  const hiddenNoteIds = (myHiddenNotes ?? []).map((n) => n.id);
-  const { data: hiddenNoteAromas } =
-    hiddenNoteIds.length > 0
+  const glassNoteIds = (myGlassNotes ?? []).map((n) => n.id);
+  const { data: glassNoteAromas } =
+    glassNoteIds.length > 0
       ? await supabase
           .from("wset_note_aromas")
           .select("note_id, term_id, sensed_on_nose, sensed_on_palate")
-          .in("note_id", hiddenNoteIds)
+          .in("note_id", glassNoteIds)
       : { data: [] };
-  const hiddenNoteAromasByNoteId = new Map<
+  const glassNoteAromasByNoteId = new Map<
     string,
     { term_id: string; sensed_on_nose: boolean; sensed_on_palate: boolean }[]
   >();
-  for (const a of hiddenNoteAromas ?? []) {
-    const arr = hiddenNoteAromasByNoteId.get(a.note_id) ?? [];
+  for (const a of glassNoteAromas ?? []) {
+    const arr = glassNoteAromasByNoteId.get(a.note_id) ?? [];
     arr.push(a);
-    hiddenNoteAromasByNoteId.set(a.note_id, arr);
+    glassNoteAromasByNoteId.set(a.note_id, arr);
   }
   // At most one note per glass in the ordinary flow; ordered by most
   // recently updated first so a stray duplicate still resolves to the one
   // the viewer actually worked on last.
-  const hiddenNoteByWineId = new Map<string, NonNullable<typeof myHiddenNotes>[number]>();
-  for (const n of myHiddenNotes ?? []) {
-    if (n.tasting_wine_id && !hiddenNoteByWineId.has(n.tasting_wine_id)) {
-      hiddenNoteByWineId.set(n.tasting_wine_id, n);
+  const glassNoteByWineId = new Map<string, NonNullable<typeof myGlassNotes>[number]>();
+  for (const n of myGlassNotes ?? []) {
+    if (n.tasting_wine_id && !glassNoteByWineId.has(n.tasting_wine_id)) {
+      glassNoteByWineId.set(n.tasting_wine_id, n);
     }
   }
 
@@ -1129,7 +1131,7 @@ export async function PlayExperience({
           eligible: !hostProvidesHost && !isMine,
         })
           ? (() => {
-              const note = hiddenNoteByWineId.get(wine.id);
+              const note = glassNoteByWineId.get(wine.id);
               return {
                 tastingWineId: wine.id,
                 tastingName: tasting.name,
@@ -1138,7 +1140,7 @@ export async function PlayExperience({
                   ? {
                       noteId: note.id,
                       assessed: assessedOf(
-                        summarizeNoteRow(note, hiddenNoteAromasByNoteId.get(note.id) ?? [], null),
+                        summarizeNoteRow(note, glassNoteAromasByNoteId.get(note.id) ?? [], null),
                         "en",
                         "long",
                       ),
@@ -1147,6 +1149,34 @@ export async function PlayExperience({
               };
             })()
           : null;
+        // Rate-a-revealed-wine: offered to any viewer who reaches the Answer
+        // card (resolved && answer, below — every role, unlike
+        // noteThisGlassData above). Reuses the same `glassNoteByWineId`
+        // lookup: a hidden-glass note resolves to the wine at the reveal, so
+        // the viewer's pre-reveal note (if any) is "my note" here too.
+        const rateThisWineData: RateThisWineData | null =
+          resolved && answer
+            ? (() => {
+                const note = glassNoteByWineId.get(wine.id);
+                return {
+                  tastingWineId: wine.id,
+                  tastingName: tasting.name,
+                  glassLabel: glassLabel(wine),
+                  catalogWineId: answer.catalog_wine_id,
+                  unidentifiedWineId: answer.unidentified_wine_id,
+                  existing: note
+                    ? {
+                        noteId: note.id,
+                        assessed: assessedOf(
+                          summarizeNoteRow(note, glassNoteAromasByNoteId.get(note.id) ?? [], null),
+                          "en",
+                          "long",
+                        ),
+                      }
+                    : null,
+                };
+              })()
+            : null;
         const stage = canGuessNow ? (
           <GlassStage
             initialLocked={locked}
@@ -1336,6 +1366,11 @@ export async function PlayExperience({
                         </div>
                       </div>
                     </div>
+
+                    {/* Rate this wine: offered to any viewer who reaches this
+                        card, in blind and semi-blind tastings alike — reopens
+                        the viewer's own note if one exists. */}
+                    {rateThisWineData ? <RateThisWine {...rateThisWineData} /> : null}
 
                     {/* B4: I joined after this glass was revealed — say so
                         in place of the verdict my missing row would
