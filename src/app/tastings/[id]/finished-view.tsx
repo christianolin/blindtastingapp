@@ -37,7 +37,7 @@ export async function FinishedView({
   if (myStatus === "INVITED") {
     return (
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8">
-        <TastingPageHeader tastingId={tastingId} />
+        <TastingPageHeader tastingId={tastingId} showPlace={false} />
         <Card className="border-border bg-muted/40">
           <CardHeader>
             <CardTitle className="text-base">You&apos;re invited</CardTitle>
@@ -67,7 +67,9 @@ export async function FinishedView({
   return (
     <div className="flex w-full flex-1 flex-col">
       <div className="mx-auto w-full max-w-5xl px-6 pt-6 sm:px-8 sm:pt-8">
-        <TastingPageHeader tastingId={tastingId} />
+        {/* Never the place on the CLOSED page (spec §13.3 item 5): this
+            header sits above both the result and the record. */}
+        <TastingPageHeader tastingId={tastingId} showPlace={false} />
       </div>
       <ClosedSurface
         tastingId={tastingId}
