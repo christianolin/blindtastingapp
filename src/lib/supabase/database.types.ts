@@ -250,6 +250,25 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["grapes"]["Insert"]>;
         Relationships: [];
       };
+      // 20260914131500: curated fallback for the guess ladder's grape
+      // shortlist, for a scoring region the wine map catalog doesn't cover.
+      // Read-only from the client (see grapes/region_id below).
+      region_grapes: {
+        Row: {
+          region_id: string;
+          grape_id: string;
+          role: WineGrapeRole;
+        };
+        Insert: {
+          region_id: string;
+          grape_id: string;
+          role: WineGrapeRole;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["region_grapes"]["Insert"]
+        >;
+        Relationships: [];
+      };
       // 20260914113500: curated alternative producer names. alias_folded is
       // GENERATED ALWAYS AS (f_search_norm(alias)) STORED — never writable.
       producer_aliases: {

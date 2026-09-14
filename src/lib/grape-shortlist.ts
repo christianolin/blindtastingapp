@@ -7,17 +7,56 @@
 // name match (checked against the country so "Champagne" the Fleurie lieu-dit
 // never stands in for the region). The place's published grape links plus
 // those of every descendant (villages, crus) make the list, PRINCIPAL grapes
-// before ACCESSORY ones, most-linked first within each. Empty when the
-// region maps to nothing — unmapped regions are the common case outside the
-// countries the map covers, so callers must treat [] as "no chips", not an
-// error. Every read is RLS-legal for a signed-in user (verified places,
-// published links).
+// before ACCESSORY ones, most-linked first within each. When that yields no
+// grapes — the common case outside the handful of French places the map
+// covers — falls back to the curated `region_grapes` table (migration
+// 20260914131500) for that region directly, PRINCIPAL then ACCESSORY then
+// name; still empty when the region has no curated rows either, so callers
+// must always treat [] as "no chips", not an error. Every read is RLS-legal
+// for a signed-in user (verified places/published links, or the curated
+// table's own authenticated-read policy).
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { deaccent } from "@/lib/deaccent";
 import type { GrapeShortlist } from "@/app/tastings/[id]/play/ladder-types";
 
 const EMPTY: GrapeShortlist = { grapeIds: [], placeName: null, details: {} };
+
+// Curated fallback (public.region_grapes, migration 20260914131500) for a region the
+// wine map catalog doesn't cover — which is most regions outside France today. Ordered
+// PRINCIPAL before ACCESSORY, then name; placeName is the region's own name since there
+// is no map place to name here. Empty when the region has no curated rows either.
+async function fallbackFromRegionGrapes(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  regionId: string,
+  regionName: string,
+): Promise<GrapeShortlist> {
+  const { data: links } = await supabase
+    .from("region_grapes")
+    .select("grape_id, role")
+    .eq("region_id", regionId);
+  if (!links || links.length === 0) return EMPTY;
+
+  const roleById = new Map(links.map((l) => [l.grape_id, l.role]));
+  const { data: grapeRows } = await supabase
+    .from("grapes")
+    .select("id, name, color")
+    .in("id", [...roleById.keys()]);
+  const byId = new Map((grapeRows ?? []).map((g) => [g.id, g]));
+
+  const grapeIds = [...roleById.keys()].sort((a, b) => {
+    const roleA = roleById.get(a);
+    const roleB = roleById.get(b);
+    if (roleA !== roleB) return roleA === "PRINCIPAL" ? -1 : 1;
+    return (byId.get(a)?.name ?? "").localeCompare(byId.get(b)?.name ?? "");
+  });
+
+  const details: GrapeShortlist["details"] = {};
+  for (const id of grapeIds) {
+    details[id] = { places: [], color: byId.get(id)?.color ?? null };
+  }
+  return { grapeIds, placeName: regionName, details };
+}
 
 // How many linked places name a grape's secondary line ("Barolo, Barbaresco").
 const MAX_PLACES_PER_GRAPE = 3;
@@ -108,7 +147,7 @@ const compute = cache(async (regionId: string): Promise<GrapeShortlist> => {
         const c = countryNameOf(p, byId);
         return wantedCountry == null || c == null || fold(c) === wantedCountry;
       });
-    if (!match) return EMPTY;
+    if (!match) return fallbackFromRegionGrapes(supabase, regionId, region.name);
     placeId = match.id;
     placeName = match.name;
   }
@@ -161,7 +200,7 @@ const compute = cache(async (regionId: string): Promise<GrapeShortlist> => {
   for (const id of byCount(accessory)) {
     if (!grapeIds.includes(id)) grapeIds.push(id);
   }
-  if (grapeIds.length === 0) return { grapeIds, placeName, details: {} };
+  if (grapeIds.length === 0) return fallbackFromRegionGrapes(supabase, regionId, region.name);
 
   // Colour for "Gavi · white" — one small read over the shortlist only.
   const { data: grapeRows } = await supabase
