@@ -3,7 +3,7 @@ import { emptyDraft } from "../../lib/wine-identity/complete";
 import type { WineIdentityDraft } from "../../lib/wine-identity/types";
 import { sheetMatrix } from "./matrix";
 import {
-  NO_GI_HINT, applyProducerRegion, blendScoredLine, byHandHeader, fieldChip, grapeSuggestionNote, pickProducerAdoption, regionFirstLabel,
+  NO_GI_HINT, applyProducerRegion, blendScoredLine, byHandHeader, commonGrapesHeading, fieldChip, grapeSuggestionNote, pickProducerAdoption, regionFirstLabel, regionGrapeChipIds,
 } from "./by-hand-logic";
 
 const ctx = { attempted: false, focusField: null, readAttempted: false, producerRegionName: null } as const;
@@ -232,4 +232,25 @@ describe("blend line and header, edges", () => {
     expect(byHandHeader({ matrix: sheetMatrix({ kind: "catalog" }, false), finishing: { glass: null }, gaps: 0 })).toEqual({
       eyebrow: "Catalog · by hand", title: "Finish this wine", badge: null, intro: "Filled in from your scan. Correct anything the camera got wrong.",
     }));
+});
+
+describe("commonGrapesHeading and regionGrapeChipIds (owner report 2026-09-15, L.A. Cetto Brut)", () => {
+  it("heading names the region", () => expect(commonGrapesHeading("Baja California")).toBe("Common in Baja California"));
+
+  const ids = ["cs", "temp", "chard", "chenin", "sb"];
+  const colours: Record<string, "RED" | "WHITE" | null> = { cs: "RED", temp: "RED", chard: "WHITE", chenin: "WHITE", sb: "WHITE" };
+
+  it("no colour chosen yet keeps every grape", () => expect(regionGrapeChipIds(ids, colours, null, null)).toEqual(ids));
+  it("ROSE and ORANGE keep every grape", () => {
+    expect(regionGrapeChipIds(ids, colours, "ROSE", "STILL")).toEqual(ids);
+    expect(regionGrapeChipIds(ids, colours, "ORANGE", "STILL")).toEqual(ids);
+  });
+  it("RED keeps only red grapes", () => expect(regionGrapeChipIds(ids, colours, "RED", "STILL")).toEqual(["cs", "temp"]));
+  it("WHITE keeps only white grapes for a still wine", () => expect(regionGrapeChipIds(ids, colours, "WHITE", "STILL")).toEqual(["chard", "chenin", "sb"]));
+  it("a SPARKLING white keeps the reds too (blanc de noirs) — the Baja California case", () =>
+    expect(regionGrapeChipIds(ids, colours, "WHITE", "SPARKLING")).toEqual(ids));
+  it("a grape with no colour on file is never filtered out", () =>
+    expect(regionGrapeChipIds([...ids, "mystery"], { ...colours, mystery: null }, "WHITE", "STILL")).toEqual(["chard", "chenin", "sb", "mystery"]));
+  it("caps at five even when the shortlist is longer", () =>
+    expect(regionGrapeChipIds(["a", "b", "c", "d", "e", "f"], {}, null, null)).toEqual(["a", "b", "c", "d", "e"]));
 });

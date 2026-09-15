@@ -44,6 +44,8 @@ import {
   createTypeDesignation,
 } from "@/app/tastings/[id]/wines/new/actions";
 import { createClient } from "@/lib/supabase/client";
+import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
+import type { GrapeShortlist } from "@/app/tastings/[id]/play/ladder-types";
 import {
   listAppellationsForRegions,
   searchAppellations,
@@ -73,11 +75,13 @@ import {
   applyProducerRegion,
   blendScoredLine,
   byHandHeader,
+  commonGrapesHeading,
   fieldChip,
   grapeSuggestionNote,
   parseAlcohol,
   pickProducerAdoption,
   regionFirstLabel,
+  regionGrapeChipIds,
   type ChipField,
   type FieldChipContext,
 } from "./by-hand-logic";
@@ -828,6 +832,48 @@ export function ByHandForm({
   const showSuggestedChip =
     suggestion !== null && !(primaryGrape?.kind === "existing" && primaryGrape.id === suggestion.grape.id);
 
+  // Region-common grape chips (owner report 2026-09-15, L.A. Cetto Brut): while
+  // the primary grape is empty and a region is chosen, offer that region's
+  // common grapes — the same shortlist the guess ladder uses (wine map first,
+  // then the region_grapes fallback) — as tap-to-fill chips. Never applied on
+  // its own, and kept apart from the appellation's own "suggested" chip above.
+  const [regionGrapeHint, setRegionGrapeHint] = useState<{
+    regionId: string;
+    shortlist: GrapeShortlist;
+  } | null>(null);
+  const regionShortlist =
+    regionGrapeHint !== null && regionGrapeHint.regionId === regionId ? regionGrapeHint.shortlist : null;
+
+  useEffect(() => {
+    if (inert || regionId === null) return;
+    let current = true;
+    const id = regionId;
+    startTransition(async () => {
+      let found: GrapeShortlist | null = null;
+      try {
+        found = await shortlistGrapesForRegion(id);
+      } catch {
+        found = null;
+      }
+      if (current && found) setRegionGrapeHint({ regionId: id, shortlist: found });
+    });
+    return () => {
+      current = false;
+    };
+  }, [inert, regionId]);
+
+  const primaryGrapeEmpty =
+    primaryGrape === null || (primaryGrape.kind === "pending" && primaryGrape.name.trim() === "");
+  const regionGrapeColours: Record<string, "RED" | "WHITE" | null> = regionShortlist
+    ? Object.fromEntries(
+        regionShortlist.grapeIds.map((gid) => [gid, regionShortlist.details[gid]?.color ?? null]),
+      )
+    : {};
+  const commonGrapeIds =
+    primaryGrapeEmpty && regionShortlist !== null
+      ? regionGrapeChipIds(regionShortlist.grapeIds, regionGrapeColours, draft.colour, draft.style)
+      : [];
+
   // The blend editor's rows, one per draft blend row, in the draft's own order.
   const editorRows: EditorBlendRow[] = draft.blend.map((row) => ({
     grapeId: row.grape.kind === "existing" ? row.grape.id : "",
@@ -1259,6 +1305,33 @@ export function ByHandForm({
                 source: suggestion.source,
               })}
             </FieldNote>
+          ) : null}
+          {commonGrapeIds.length > 0 ? (
+            <div className="flex flex-col gap-[7px]">
+              <span className="text-[11px] font-semibold text-muted-foreground">
+                {commonGrapesHeading(regionLabel ?? "the region")}
+              </span>
+              <div className="flex flex-wrap gap-[8px]">
+                {commonGrapeIds.map((id) => {
+                  // Shortlisted ids are always existing grapes (region_grapes/
+                  // wine_place_grapes rows), so the preloaded list alone finds
+                  // them — grapeName() also checks the just-created-grape ref,
+                  // which react-hooks/refs refuses to read during render.
+                  const name = grapes.find((g) => g.id === id)?.name;
+                  return name ? (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => pickPrimaryGrape(id)}
+                      className="flex min-h-11 w-fit items-center rounded-[10px] border-[1.5px] border-border bg-card px-[13px] text-[14px] transition-colors hover:bg-muted disabled:opacity-60"
+                    >
+                      {name}
+                    </button>
+                  ) : null;
+                })}
+              </div>
+            </div>
           ) : null}
         </Field>
 
