@@ -102,7 +102,10 @@ export const LabelReadSchema = z.object({
         "never a local synonym, clone or translation, no parenthetical qualifiers " +
         '("Sangiovese" not "Brunello"/"Prugnolo Gentile"; "Grenache" not "Garnacha"/"Cannonau"; ' +
         '"Syrah" not "Shiraz"; "Pinot Noir" not "Pinot Nero"/"Spätburgunder"). ' +
-        "Percentages from the label; else the proportions well-known for this wine or appellation; else null.",
+        "Percentages from the label; else the proportions well-known for this wine or appellation; else null. " +
+        "When the label names no grape, still fill the list: the grapes this producer's wine is known to be made " +
+        "from, or if you do not know this exact wine, the grapes typical of this style from this place " +
+        "(a Champagne brut: Chardonnay, Pinot Noir, Pinot Meunier). Leave it empty only when neither is known.",
     ),
   // §2.1 row 10
   alcoholPercent: z.number().nullable().describe(
