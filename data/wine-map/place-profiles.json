@@ -5,7 +5,8 @@
     "grapes": "Names must match the grapes catalog exactly. German entries use the catalog's international name (Pinot Noir, not Spätburgunder) with the German synonym in local_note, because that is how the catalog is keyed and the map has its own Local/English toggle.",
     "styles": "wine_style_kind: RED, WHITE, ROSE, SPARKLING, SWEET, FORTIFIED. sort_order is the array order. colour is left null except where a place genuinely splits a method by colour, which none of these do.",
     "generated_at": "2026-09-15",
-    "share_pct": "Set only where the figure is published: the four German Anbaugebiete, from Deutsches Weininstitut 2025 (ha / region ha, rounded). Everything else is null — a bar drawn from a guess is worse than no bar."
+    "share_pct": "Set only where the figure is published: the four German Anbaugebiete, from Deutsches Weininstitut 2025 (ha / region ha, rounded). Everything else is null — a bar drawn from a guess is worse than no bar.",
+    "country_level": "germany and spain already carried country rows and france, italy and portugal did not. Levelled up rather than down: a country card with a few signature varieties reads better than an empty one. Same plain shape as the two that existed."
   },
   "new_grapes": [
     {
@@ -2156,6 +2157,85 @@
         },
         {
           "name": "Cabernet Franc"
+        }
+      ]
+    },
+    "france": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING",
+        "ROSE",
+        "SWEET",
+        "FORTIFIED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Syrah"
+        }
+      ]
+    },
+    "italy": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING",
+        "SWEET",
+        "FORTIFIED"
+      ],
+      "grapes": [
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Montepulciano"
+        },
+        {
+          "name": "Trebbiano"
+        },
+        {
+          "name": "Nebbiolo"
+        },
+        {
+          "name": "Glera"
+        }
+      ]
+    },
+    "portugal": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "FORTIFIED",
+        "ROSE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Touriga Nacional"
+        },
+        {
+          "name": "Touriga Franca"
+        },
+        {
+          "name": "Tinta Roriz"
+        },
+        {
+          "name": "Alvarinho"
+        },
+        {
+          "name": "Arinto"
         }
       ]
     }
