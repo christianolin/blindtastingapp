@@ -15,8 +15,10 @@ import type { GrapeSuggestion } from "../../lib/wine-identity/grape-suggestion";
 import type {
   FieldProvenance,
   RefChoice,
+  WineColour,
   WineFieldKey,
   WineIdentityDraft,
+  WineStyle,
 } from "../../lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
 
@@ -286,3 +288,42 @@ export type ProducerSummary = {
   countryName: string | null;
   wineCount: number;
 };
+
+// ---------------------------------------------------------------------------
+// Common-in-region grape chips (owner report 2026-09-15: a scanned L.A. Cetto
+// Brut came back with no grape, and fixing it by hand meant searching). While
+// the primary grape is empty and a region is chosen, the form offers that
+// region's common grapes (`shortlistGrapesForRegion`'s own PRINCIPAL-first
+// order — the wine map first, then the `region_grapes` fallback) as
+// tap-to-fill chips. Never applied on its own.
+
+const MAX_REGION_GRAPE_CHIPS = 5;
+
+/** "Common in Baja California" — the chip row's heading. */
+export function commonGrapesHeading(regionLabel: string): string {
+  return `Common in ${regionLabel}`;
+}
+
+/**
+ * The region's shortlisted grape ids, filtered to the wine's chosen colour and
+ * capped at five. WHITE keeps white grapes only, RED keeps red only — except a
+ * SPARKLING wine keeps red grapes too (blanc de noirs). ROSE, ORANGE, no colour
+ * chosen yet, and a grape with no colour on file are never filtered out —
+ * under-labeling beats mislabeling.
+ */
+export function regionGrapeChipIds(
+  grapeIds: readonly string[],
+  grapeColours: Readonly<Record<string, "RED" | "WHITE" | null>>,
+  colour: WineColour | null,
+  style: WineStyle | null,
+): string[] {
+  const filtered =
+    colour === "WHITE" || colour === "RED"
+      ? grapeIds.filter((id) => {
+          const grapeColour = grapeColours[id] ?? null;
+          if (grapeColour === null || grapeColour === colour) return true;
+          return colour === "WHITE" && grapeColour === "RED" && style === "SPARKLING";
+        })
+      : [...grapeIds];
+  return filtered.slice(0, MAX_REGION_GRAPE_CHIPS);
+}
