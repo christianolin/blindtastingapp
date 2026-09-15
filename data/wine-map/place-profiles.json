@@ -1690,6 +1690,474 @@
           "note": "In Rioja Alavesa"
         }
       ]
+    },
+    "france.bordeaux.blaye-bourg": {
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot",
+          "note": "Dominant on this bank"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        }
+      ]
+    },
+    "france.bordeaux.libournais": {
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot",
+          "note": "The right bank's grape"
+        },
+        {
+          "name": "Cabernet Franc",
+          "note": "Bouchet locally; at its best in Saint-Émilion"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        }
+      ]
+    },
+    "france.champagne.montagne-de-reims": {
+      "styles": [
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir",
+          "note": "The Montagne's grape, giving body and structure"
+        },
+        {
+          "name": "Pinot Meunier"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ]
+    },
+    "france.champagne.cote-des-blancs": {
+      "styles": [
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay",
+          "note": "Almost to the exclusion of everything else — the Blanc de Blancs heartland"
+        }
+      ]
+    },
+    "france.champagne.grande-vallee-de-la-marne": {
+      "styles": [
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Meunier",
+          "note": "The valley's workhorse, frost-tolerant and early-charming"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ]
+    },
+    "france.champagne.cote-de-sezanne": {
+      "styles": [
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay",
+          "note": "A southern echo of the Côte des Blancs, riper and rounder"
+        },
+        {
+          "name": "Pinot Noir"
+        }
+      ]
+    },
+    "france.champagne.cote-des-bar": {
+      "styles": [
+        "SPARKLING",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir",
+          "note": "The great majority of the plantings"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ]
+    },
+    "france.languedoc-roussillon.languedoc": {
+      "styles": [
+        "RED",
+        "ROSE",
+        "WHITE",
+        "SPARKLING",
+        "FORTIFIED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Grenache"
+        },
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Carignan"
+        },
+        {
+          "name": "Cinsault"
+        },
+        {
+          "name": "Picpoul",
+          "note": "Picpoul de Pinet, on the étang de Thau"
+        },
+        {
+          "name": "Muscat",
+          "note": "For the vins doux naturels of Frontignan, Lunel and Mireval"
+        }
+      ]
+    },
+    "france.languedoc-roussillon.roussillon": {
+      "styles": [
+        "RED",
+        "FORTIFIED",
+        "ROSE",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Grenache",
+          "note": "Noir, gris and blanc — the basis of Banyuls and Maury"
+        },
+        {
+          "name": "Carignan"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Macabeu"
+        },
+        {
+          "name": "Muscat",
+          "note": "Muscat de Rivesaltes"
+        }
+      ]
+    },
+    "france.loire.pays-nantais": {
+      "styles": [
+        "WHITE",
+        "RED",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Melon de Bourgogne",
+          "note": "Muscadet, and nothing else of consequence"
+        },
+        {
+          "name": "Folle Blanche",
+          "note": "Gros Plant du Pays Nantais"
+        },
+        {
+          "name": "Gamay",
+          "note": "Coteaux d'Ancenis and the Fiefs Vendéens"
+        }
+      ]
+    },
+    "france.loire.anjou-saumur": {
+      "styles": [
+        "WHITE",
+        "SWEET",
+        "RED",
+        "ROSE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Chenin Blanc",
+          "note": "Dry at Savennières, nobly sweet at Quarts de Chaume and Bonnezeaux"
+        },
+        {
+          "name": "Cabernet Franc",
+          "note": "Saumur-Champigny and Anjou Villages"
+        },
+        {
+          "name": "Grolleau",
+          "note": "The Rosé d'Anjou grape"
+        }
+      ]
+    },
+    "france.loire.touraine-region": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING",
+        "SWEET",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Chenin Blanc",
+          "note": "Vouvray and Montlouis, dry through to moelleux"
+        },
+        {
+          "name": "Cabernet Franc",
+          "note": "Chinon, Bourgueil and Saint-Nicolas-de-Bourgueil"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Malbec",
+          "note": "Côt, in the Touraine reds"
+        },
+        {
+          "name": "Romorantin",
+          "note": "Grown nowhere but Cour-Cheverny"
+        }
+      ]
+    },
+    "france.loire.centre-loire": {
+      "styles": [
+        "WHITE",
+        "RED",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Sauvignon Blanc",
+          "note": "Sancerre, Pouilly-Fumé, Menetou-Salon, Quincy and Reuilly"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Gamay",
+          "note": "Châteaumeillant"
+        },
+        {
+          "name": "Chasselas",
+          "note": "Pouilly-sur-Loire, beside the Fumé"
+        }
+      ]
+    },
+    "france.rhone.septentrional": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah",
+          "note": "The only red grape of the northern Rhône"
+        },
+        {
+          "name": "Viognier",
+          "note": "Condrieu and Château-Grillet"
+        },
+        {
+          "name": "Marsanne"
+        },
+        {
+          "name": "Roussanne"
+        }
+      ]
+    },
+    "france.rhone.meridional": {
+      "styles": [
+        "RED",
+        "ROSE",
+        "WHITE",
+        "FORTIFIED"
+      ],
+      "grapes": [
+        {
+          "name": "Grenache"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Cinsault"
+        },
+        {
+          "name": "Clairette"
+        },
+        {
+          "name": "Bourboulenc"
+        },
+        {
+          "name": "Muscat",
+          "note": "Muscat de Beaumes-de-Venise"
+        }
+      ]
+    },
+    "france.rhone.diois": {
+      "article": {
+        "description": "A high side-valley on the Drôme, east of the Rhône proper and shut off from it by the foothills of the Vercors, where the wine is sparkling and almost nothing else. Clairette de Die is made by the méthode ancestrale — a single fermentation slowed by cold and finished in the bottle — and tastes of Muscat grapes rather than of yeast, which sets it apart from every other sparkling wine in France.",
+        "climate": "Alpine rather than Mediterranean, and far cooler than the Rhône valley below, with wide day-to-night swings that hold on to the Muscat's aromatics.",
+        "soils": "Limestone scree and clay-limestone, on terraces below the Vercors escarpment.",
+        "key_facts": [
+          "Clairette de Die, by the méthode ancestrale",
+          "Muscat-scented rather than yeast-driven",
+          "Crémant de Die is the drier, Clairette-based counterpart",
+          "Alpine, and cut off from the Rhône by the Vercors"
+        ]
+      },
+      "styles": [
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Muscat",
+          "note": "Muscat Blanc à Petits Grains — the scent of Clairette de Die"
+        },
+        {
+          "name": "Clairette",
+          "note": "The grape the appellation is named for, and the base of the Crémant"
+        }
+      ]
+    },
+    "france.sud-ouest.bergeracois": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SWEET",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc"
+        },
+        {
+          "name": "Semillon",
+          "note": "Sémillon, and the basis of Monbazillac"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Muscadelle"
+        }
+      ]
+    },
+    "france.sud-ouest.garonne-tarn": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Malbec",
+          "note": "Côt or Auxerrois — Cahors is its home"
+        },
+        {
+          "name": "Négrette",
+          "note": "Fronton, and almost nowhere else"
+        },
+        {
+          "name": "Fer Servadou",
+          "note": "Braucol at Gaillac, Mansois at Marcillac"
+        },
+        {
+          "name": "Duras",
+          "note": "Gaillac"
+        },
+        {
+          "name": "Mauzac",
+          "note": "Gaillac, still and méthode ancestrale"
+        },
+        {
+          "name": "Len de l'El",
+          "note": "Gaillac"
+        }
+      ]
+    },
+    "france.sud-ouest.gascogne": {
+      "styles": [
+        "RED",
+        "WHITE",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Tannat",
+          "note": "Madiran — the most tannic red grape in France"
+        },
+        {
+          "name": "Gros Manseng"
+        },
+        {
+          "name": "Petit Manseng",
+          "note": "Pacherenc du Vic-Bilh, often moelleux"
+        },
+        {
+          "name": "Fer Servadou",
+          "note": "Pinenc here"
+        }
+      ]
+    },
+    "france.sud-ouest.pyrenees": {
+      "styles": [
+        "WHITE",
+        "SWEET",
+        "RED",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Petit Manseng",
+          "note": "Jurançon moelleux, picked late and shrivelled on the vine"
+        },
+        {
+          "name": "Gros Manseng",
+          "note": "Jurançon sec"
+        },
+        {
+          "name": "Tannat",
+          "note": "Irouléguy and Béarn"
+        },
+        {
+          "name": "Cabernet Franc"
+        }
+      ]
     }
   }
 }
