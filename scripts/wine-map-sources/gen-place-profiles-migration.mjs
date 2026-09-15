@@ -13,7 +13,8 @@
 //
 // Usage:
 //   node scripts/wine-map-sources/gen-place-profiles-migration.mjs           (check only)
-//   node scripts/wine-map-sources/gen-place-profiles-migration.mjs --write //        --version 20260915110000 --name place_profiles_iberia
+//   node scripts/wine-map-sources/gen-place-profiles-migration.mjs --write
+//        --version <YYYYMMDDHHMMSS> --name <migration_name>
 //
 // Re-runnable. Content already live is skipped, so the data file describes every
 // place this project has profiled and each run emits only what is still missing.
@@ -255,6 +256,13 @@ lines.push(`   where p.kind in ('REGION','SUBREGION')`);
 lines.push(`     and (${likeAny})`);
 lines.push(`     and not exists (select 1 from public.wine_place_styles s where s.wine_place_id = p.id);`);
 lines.push(`  if n <> 0 then raise exception '% places still have no wine styles', n; end if;`);
+lines.push(``);
+lines.push(`  -- Country level too: germany and spain always had rows and the other three`);
+lines.push(`  -- did not, which was an inconsistency with no reason behind it.`);
+lines.push(`  select count(*) into n from public.wine_places p`);
+lines.push(`   where p.kind = 'COUNTRY' and (${likeAny.replace(/\.%/g, "")})`);
+lines.push(`     and not exists (select 1 from public.wine_place_styles s where s.wine_place_id = p.id);`);
+lines.push(`  if n <> 0 then raise exception '% countries still have no wine styles', n; end if;`);
 lines.push(``);
 lines.push(`  -- ...or without an article.`);
 lines.push(`  select count(*) into n from public.wine_places p`);
