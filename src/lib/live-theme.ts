@@ -7,7 +7,7 @@
 // Pure: runtime imports by relative path only, so vitest loads it in node.
 
 import type { TastingStatus } from "@/lib/supabase/database.types";
-import { readFlag, writeFlag, type StorageLike } from "./safe-storage";
+import { clearFlag, readFlag, writeFlag, type StorageLike } from "./safe-storage";
 
 /** "lobby" = no shell; "live" = the running board; "result" = the result screen (S12); "record" = the record (S13). */
 export type LiveSurface = "lobby" | "live" | "result" | "record";
@@ -34,4 +34,15 @@ export function readDismissed(getStorage: () => StorageLike | null, tastingId: s
 
 export function writeDismissed(getStorage: () => StorageLike | null, tastingId: string): boolean {
   return writeFlag(getStorage, resultDismissKey(tastingId));
+}
+
+/**
+ * Puts the result screen back. The record is the CLOSED board for good once
+ * dismissed, so without this the scoreboard, the standings and the share link
+ * are gone for that viewer permanently — "Back to tasting overview" pointed at
+ * /tastings/[id], which IS the page the record is already on, so it did
+ * nothing at all.
+ */
+export function clearDismissed(getStorage: () => StorageLike | null, tastingId: string): boolean {
+  return clearFlag(getStorage, resultDismissKey(tastingId));
 }

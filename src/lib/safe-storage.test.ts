@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFlag, readValue, writeFlag, writeValue } from "./safe-storage";
+import { clearFlag, readFlag, readValue, writeFlag, writeValue } from "./safe-storage";
 
 describe("safe-storage", () => {
   it("reads and writes a flag, and survives a throwing or missing storage", () => {
@@ -78,5 +78,62 @@ describe("safe-storage values", () => {
       },
     };
     expect(writeValue(() => quota, "view", "grid")).toBe(false);
+  });
+});
+
+describe("safe-storage: clearing a flag", () => {
+  const withRemove = () => {
+    const store = new Map<string, string>();
+    return {
+      store,
+      storage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+      },
+    };
+  };
+
+  it("unsets a flag it set, and leaves no key behind", () => {
+    const { store, storage } = withRemove();
+    expect(writeFlag(() => storage, "k")).toBe(true);
+    expect(readFlag(() => storage, "k")).toBe(true);
+    expect(clearFlag(() => storage, "k")).toBe(true);
+    expect(readFlag(() => storage, "k")).toBe(false);
+    expect([...store.keys()]).toEqual([]);
+  });
+
+  it("clears only the key asked for", () => {
+    const { store, storage } = withRemove();
+    writeFlag(() => storage, "a");
+    writeFlag(() => storage, "b");
+    expect(clearFlag(() => storage, "a")).toBe(true);
+    expect(readFlag(() => storage, "a")).toBe(false);
+    expect(readFlag(() => storage, "b")).toBe(true);
+    expect([...store.keys()]).toEqual(["b"]);
+  });
+
+  // A storage without removeItem is overwritten instead. readFlag counts only
+  // an exact "1", so the flag is unset either way.
+  it("falls back to overwriting when the storage has no removeItem", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    };
+    writeFlag(() => storage, "k");
+    expect(clearFlag(() => storage, "k")).toBe(true);
+    expect(readFlag(() => storage, "k")).toBe(false);
+  });
+
+  it("is false, not a throw, when storage is missing or blocked", () => {
+    expect(clearFlag(() => null, "k")).toBe(false);
+    expect(clearFlag(() => { throw new Error("SecurityError"); }, "k")).toBe(false);
+    const hostile = {
+      getItem: () => null,
+      setItem: () => undefined,
+      removeItem: () => { throw new Error("SecurityError"); },
+    };
+    expect(clearFlag(() => hostile, "k")).toBe(false);
   });
 });
