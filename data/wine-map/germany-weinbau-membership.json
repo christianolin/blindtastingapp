@@ -5,7 +5,7 @@
     "why": "German wine law delegates delimitation to the Produktspezifikation (e.g. BayWeinRAV § 1), and the register is where that document lives. One source covers every German region; no state publishes an equivalent of the Hessen info sheet.",
     "important": "The specification names GEMEINDEN, not boundaries: the zone is their vineyard areas 'wenn ihre Eignung zur Erzeugung von Qualitätswein festgestellt wird'. A Gemeinde is the containment parent, never the zone. build-germany-weinbau.mjs clips these to the ATKIS vineyard class.",
     "not_included": "Mosel, Rheinhessen, Pfalz, Nahe, Ahr and Mittelrhein come from the Rheinland-Pfalz Weinbergsrolle (a legal boundary, better than a land-use clip); Rheingau and Hessische Bergstraße from the Weinbauamt Eltville info sheet.",
-    "retrieved": "2026-09-13"
+    "retrieved": "2026-09-15"
   },
   "anbaugebiete": {
     "franken": {
@@ -636,9 +636,9 @@
         "Schallstadt",
         "Schelingen",
         "Scherzingen",
-        "Schlatt (Gemarkungs-Nr.5523)",
-        "Schlatt (Gemarkungs- Nr.5561)",
-        "Schlatt (Gemarkungs-Nr.6583)",
+        "Schlatt (Gemarkungs-Nr. 5523)",
+        "Schlatt (Gemarkungs-Nr. 5561)",
+        "Schlatt (Gemarkungs-Nr. 6583)",
         "Schliengen",
         "Schmieheim",
         "Schriesheim",
@@ -685,7 +685,7 @@
         "Vogtsburg",
         "Wagenstadt",
         "Waldangelloch",
-        "TECHNISCHE UNTERLAGE 16 /21 Aktenzeichen: PDO-DE-A1264  Waldenhausen",
+        "Waldenhausen",
         "Waldkirch",
         "Waldulm",
         "Wallburg",
@@ -716,11 +716,7 @@
         "Zell-Weierbach",
         "Zeutern",
         "Zunsweier",
-        "Zunzingen. Die genaue Abgrenzung dieser Rebflächen ergibt sich aus dem von den Regierungspräsidien aufgestellten Rebenaufbauplan",
-        "der parzellenmäßigen Abgrenzung oder der Weinbergsrolle. Die Herstellung von Qualitätswein",
-        "Prädikatswein",
-        "Qualitätsperlwein b.A. oder Sekt b.A",
-        "Qualitätslikörwein und Federweißer mit der geschützten Ursprungsbezeichnung Baden hat i.S.d. Art. 6 Abs. 4 der VO (EG) Nr. 607/2009 im Bundesland Baden- Württemberg oder in einem benachbarten Bundesland zu erfolgen.  a. NUTS-Gebiet BADEN-WÜRTTEMBERG DEUTSCHLAND DE1 DE  b. Karten des abgegrenzten Gebiets Anzahl beigefügte Karten 0"
+        "Zunzingen"
       ],
       "buildable": true
     },
@@ -989,7 +985,7 @@
         "Spielberg",
         "Steinheim",
         "Steinreinach",
-        "TECHNISCHE UNTERLAGE 15 /23 Aktenzeichen: PDO-DE-A1276  Sternenfels",
+        "Sternenfels",
         "Stetten",
         "Stockheim",
         "Strümpfelbach",
@@ -1033,14 +1029,35 @@
         "Wurmlingen",
         "Wüstenhausen",
         "Zaberfeld",
-        "Zuffenhausen.  Die genaue Abgrenzung dieser Rebflächen ergibt sich aus dem von den Regierungspräsidien aufgestellten Rebenaufbauplan",
-        "der parzellenmäßigen Abgrenzung oder der Weinbergsrolle.  4.2. Im Bundesland Bayern: Die zulässigerweise mit Reben bepflanzten oder vorübergehend nicht bepflanzten Flächen sowie die sonstigen nicht mit Reben bepflanzten Flächen der nachfolgenden Gemeinden und Gemarkungen",
-        "wenn ihre Eignung zur Erzeugung von Qualitätswein festgestellt wird:  Die Gemarkungen Hoyren und Aeschach der Großen Kreisstadt Lindau",
-        "die Gemeinden Nonnenhorn und Wasserburg.  4.3 Die Herstellung von Qualitätswein",
-        "Prädikatswein",
-        "Qualitätsperlwein b.A. oder Sekt b.A. mit der geschützten Ursprungsbezeichnung Württemberg hat i.S.d. Art. 6 Abs. 4 der VO (EG) Nr. 607/2009 im Bundesland Baden-Württemberg",
-        "im Bundesland Bayern oder in einem benachbarten Bundesland zu erfolgen.  a. NUTS-Gebiet BAYERN BADEN-WÜRTTEMBERG DE2 DEUTSCHLAND DE1 DE  b. Karten des abgegrenzten Gebiets Anzahl beigefügte Karten 0"
+        "Zuffenhausen"
       ],
+      "annex": [
+        {
+          "name": "Hoyren",
+          "within": "Lindau",
+          "level": "gemarkung",
+          "state": "Bayern"
+        },
+        {
+          "name": "Aeschach",
+          "within": "Lindau",
+          "level": "gemarkung",
+          "state": "Bayern"
+        },
+        {
+          "name": "Nonnenhorn",
+          "within": null,
+          "level": "gemeinde",
+          "state": "Bayern"
+        },
+        {
+          "name": "Wasserburg",
+          "within": null,
+          "level": "gemeinde",
+          "state": "Bayern"
+        }
+      ],
+      "annexState": "Bayern",
       "buildable": true
     },
     "saale-unstrut": {
