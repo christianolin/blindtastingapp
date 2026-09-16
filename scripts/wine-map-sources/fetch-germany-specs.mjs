@@ -128,6 +128,36 @@ const FLAT_LEAD = /Rebflächen\s+folgender\s+Gemeinden\s+und\s+Gemarkungen\s*[.:
 const KREIS_ONLY_LEAD = /Rebflächen\s+in\s+den\s+Landkreisen/i;
 const NARRATIVE_HINT = /elbaufwärts|die\s+Straße\s+über|stadteinwärts|Hangkante/i;
 
+// The FLAT_LIST path joins the section's lines into one body before splitting on
+// commas, so the line-based FOOTER filter above never sees them. Two things
+// therefore have to be handled on the joined text.
+//
+// PAGE HEADER. "TECHNISCHE UNTERLAGE 16 /21 Aktenzeichen: PDO-DE-A1264" is
+// printed mid-list and carries no comma, so the split glued it to whatever name
+// followed: Baden lost "Waldenhausen" and Württemberg lost "Sternenfels" inside
+// a header string. Replacing it with a comma both removes it and frees the name.
+const PAGE_HEADER =
+  /TECHNISCHE\s+UNTERLAGE\s*\d+\s*\/\s*\d+\s*Aktenzeichen:\s*\S+/gi;
+
+// LIST END. The enumeration closes with "<letzter Ort>. Die genaue Abgrenzung
+// dieser Rebflächen ergibt sich aus ..." and the prose after it is full of
+// commas. Splitting through it produced sentence fragments as place names and,
+// because the last name shares its full stop with that closing sentence, ate
+// Baden's "Zunzingen" and Württemberg's "Zuffenhausen" with it.
+const LIST_END = /Die\s+genaue\s+Abgrenzung/i;
+
+// OTHER BUNDESLAND. Württemberg's §4.2 extends the Anbaugebiet into Bavaria:
+// "Die Gemarkungen Hoyren und Aeschach der Großen Kreisstadt Lindau, die
+// Gemeinden Nonnenhorn und Wasserburg." Baden has no equivalent. Left unparsed
+// this is not merely missing -- it is four places on the Bavarian Bodensee
+// shore absent from a region the register says includes them, and the state
+// list would read "BW" for a region that is not only in BW.
+const OTHER_STATE =
+  /Im\s+Bundesland\s+(Bayern|Rheinland-Pfalz|Hessen|Sachsen|Thüringen|Brandenburg|Sachsen-Anhalt|Saarland)\s*:/i;
+const ANNEX_GEMARKUNGEN =
+  /Die\s+Gemarkungen\s+([^.]+?)\s+der\s+(?:Großen\s+)?(?:Kreisstadt|Stadt|Gemeinde)\s+([-\wÄÖÜäöüß]+)/i;
+const ANNEX_GEMEINDEN = /die\s+Gemeinden\s+([^.]+?)\./i;
+
 function sectionLines(text) {
   const lines = text.split(/\r?\n/);
   const start = lines.findIndex((l) => SECTION_START.test(l));
@@ -198,7 +228,39 @@ function parseSection(text) {
 
   if (FLAT_LEAD.test(body)) {
     const after = body.slice(body.search(FLAT_LEAD)).replace(FLAT_LEAD, "");
-    return { shape: "FLAT_LIST", places: splitNames(after, null).map((g) => g.name), level: "gemeinde_or_gemarkung" };
+    // Header out first -- it frees the name it was glued to -- then cut at the
+    // sentence that closes the enumeration. Both before any comma split.
+    const cleaned = after.replace(PAGE_HEADER, ", ");
+    const endAt = cleaned.search(LIST_END);
+    const listPart = endAt < 0 ? cleaned : cleaned.slice(0, endAt);
+    const places = splitNames(listPart, null).map((g) => g.name);
+
+    // An annex, where the specification has one, sits in the prose AFTER the
+    // list and names places in another Bundesland.
+    const rest = endAt < 0 ? "" : cleaned.slice(endAt);
+    const annexState = rest.match(OTHER_STATE)?.[1] ?? null;
+    const annex = [];
+    if (annexState) {
+      const tail = rest.slice(rest.search(OTHER_STATE));
+      const gk = tail.match(ANNEX_GEMARKUNGEN);
+      if (gk) {
+        for (const n of splitNames(gk[1], null, true).map((g) => g.name)) {
+          annex.push({ name: n, within: gk[2], level: "gemarkung", state: annexState });
+        }
+      }
+      const gm = tail.match(ANNEX_GEMEINDEN);
+      if (gm) {
+        for (const n of splitNames(gm[1], null, true).map((g) => g.name)) {
+          annex.push({ name: n, within: null, level: "gemeinde", state: annexState });
+        }
+      }
+    }
+    return {
+      shape: "FLAT_LIST",
+      places,
+      level: "gemeinde_or_gemarkung",
+      ...(annex.length ? { annex, annexState } : {}),
+    };
   }
 
   // Kreis-grouped.
@@ -239,11 +301,18 @@ function parseSection(text) {
 // legitimately carry "und" ("Ober- und Unterbalbach"), so only the prose-shaped
 // Saale-Unstrut sentence, where "Jena und Erfurt" is two kreisfreie Stadte,
 // asks for it.
+// "Schlatt (Gemarkungs- Nr.5561)" and "Schlatt (Gemarkungs-Nr.5523)" are two
+// distinct Gemarkungen of the same name, told apart by cadastral number. The
+// spacing varies with wherever the PDF broke the line; the number does not.
+function normaliseGemarkungsNr(name) {
+  return name.replace(/\(\s*Gemarkungs-\s*Nr\.?\s*(\d+)\s*\)/i, "(Gemarkungs-Nr. $1)");
+}
+
 function splitNames(s, kreis, splitUnd = false) {
   return s.split(splitUnd ? /,|\bund\b/ : ",")
-    .map((n) => n.replace(/\.$/, "").trim())
+    .map((n) => n.trim().replace(/\.$/, ""))
     .filter((n) => n && n.length > 1 && !/^(und|sowie)$/i.test(n))
-    .map((name) => ({ name, kreis }));
+    .map((name) => ({ name: normaliseGemarkungsNr(name), kreis }));
 }
 
 const anbaugebiete = {};
@@ -268,6 +337,7 @@ for (const [protectedName, cfg] of Object.entries(WANTED)) {
     shape: parsed.shape,
     level: parsed.level ?? null,
     places: parsed.places ?? [],
+    ...(parsed.annex ? { annex: parsed.annex, annexState: parsed.annexState } : {}),
     ...(parsed.kreise ? { kreise: parsed.kreise } : {}),
     ...(parsed.in_kreis ? { in_kreis: parsed.in_kreis } : {}),
     ...(parsed.ortsteile?.length ? { ortsteile: parsed.ortsteile } : {}),
