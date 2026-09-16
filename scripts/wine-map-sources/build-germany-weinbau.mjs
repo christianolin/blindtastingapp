@@ -96,6 +96,26 @@ const SOURCES = {
     attribution: "Datenquelle: Bayerische Vermessungsverwaltung - www.geodaten.bayern.de",
     licence: "CC BY 4.0",
   },
+  baden: {
+    name: "Baden",
+    state: "Baden-Württemberg",
+    areas: ".tiles-build/sources/bw/baden-areas.tsv",
+    vineyards: ".tiles-build/sources/bw/rebflaeche.tsv",
+    format: "geojson",
+    attribution: "© GeoBasis-DE / LGL Baden-Württemberg — ATKIS Basis-DLM und ALKIS; "
+      + "Abgrenzung nach GBl. BW 1983 Nr. 23",
+    licence: "Datenlizenz Deutschland — Namensnennung 2.0 (dl-de/by-2-0)",
+  },
+  wuerttemberg: {
+    name: "Württemberg",
+    state: "Baden-Württemberg",
+    areas: ".tiles-build/sources/bw/wuerttemberg-areas.tsv",
+    vineyards: ".tiles-build/sources/bw/rebflaeche.tsv",
+    format: "geojson",
+    attribution: "© GeoBasis-DE / LGL Baden-Württemberg — ATKIS Basis-DLM und ALKIS; "
+      + "Abgrenzung nach GBl. BW 1983 Nr. 23",
+    licence: "Datenlizenz Deutschland — Namensnennung 2.0 (dl-de/by-2-0)",
+  },
   "saale-unstrut": {
     name: "Saale-Unstrut",
     state: "Sachsen-Anhalt / Thüringen / Brandenburg",
@@ -112,8 +132,15 @@ const SOURCES = {
 // that is its 138 Gemeinden; for Saale-Unstrut the Kreise plus the Ortsteile and
 // Gemarkungen, which the specification lists separately because they are
 // delimited at a different level.
+//
+// Baden and Württemberg count their RESOLVED Gemarkungen instead. Their names
+// cannot be counted the way the others' can: the two regions share a state and
+// twelve names appear in both specifications, so the lists are not disjoint and
+// a name does not stand for one area. What the areas file must match there is
+// the Gemarkung-level membership resolved from the 1983 Rechtsverordnungen.
 const namedUnits = (region) =>
-  region.places.length + (region.ortsteile?.length ?? 0) + (region.gemarkungen?.length ?? 0);
+  region.resolved_gemarkungen
+  ?? region.places.length + (region.ortsteile?.length ?? 0) + (region.gemarkungen?.length ?? 0);
 
 const env = Object.fromEntries(
   (await readFile(".env.local", "utf8")).split(/\r?\n/)
