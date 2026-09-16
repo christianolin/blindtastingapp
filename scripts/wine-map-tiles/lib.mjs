@@ -246,8 +246,9 @@ export const ATTRIBUTION = {
     key: "de-spec-atkis",
     text: "© Landesvermessung: Bayerische Vermessungsverwaltung (ATKIS Basis-DLM, CC BY 4.0); "
       + "GeoBasis-DE / LVermGeo Sachsen-Anhalt, GDI-Th / TLBG Thüringen, "
-      + "LGB Brandenburg (ATKIS Basis-DLM und ALKIS, dl-de/by-2-0); "
-      + "Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia",
+      + "LGB Brandenburg, LGL Baden-Württemberg (ATKIS Basis-DLM und ALKIS, dl-de/by-2-0); "
+      + "Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia, "
+      + "für Baden und Württemberg nach GBl. BW 1983 Nr. 23",
   },
 };
 

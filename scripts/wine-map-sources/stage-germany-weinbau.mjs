@@ -27,12 +27,14 @@ const JURISDICTION = "Germany";
 const SIMPLIFY_TOLERANCE = 0.0002;
 // Germany, padded. Deliberately the whole country: Saale-Unstrut alone reaches
 // from Thüringen to a Brandenburg exclave near Potsdam, and Baden and
-// Württemberg are still to come.
+// Württemberg add the Kaiserstuhl and the Bodensee shore.
 const WINDOW = { minLon: 5.5, minLat: 47.0, maxLon: 15.5, maxLat: 55.5 };
 const revision = releaseVersion();
 
 const TARGETS = {
   franken: "germany.franken",
+  baden: "germany.baden",
+  wuerttemberg: "germany.wuerttemberg",
   "saale-unstrut": "germany.saale-unstrut",
 };
 
