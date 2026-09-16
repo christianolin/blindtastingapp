@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackToResult } from "./back-to-result";
 import { ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
@@ -586,12 +587,7 @@ export async function RecordView({
       ) : null}
 
       <div className="pt-2 text-center">
-        <Link
-          href={`/tastings/${tastingId}`}
-          className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
-        >
-          ← Back to tasting overview
-        </Link>
+        <BackToResult tastingId={tastingId} />
       </div>
     </div>
   );

@@ -1,11 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { liveSurface, readDismissed, writeDismissed } from "@/lib/live-theme";
+import { clearDismissed, liveSurface, readDismissed, writeDismissed } from "@/lib/live-theme";
 
 const noopSubscribe = () => () => {};
 
 type DismissedFlag = "unknown" | "yes" | "no";
+
+/**
+ * Lets the record ask for the result screen back.
+ *
+ * `children` is `RecordView`, a SERVER component, so the button cannot be
+ * handed a callback as a prop the way `result` is handed `onDismiss` below.
+ * A client component nested anywhere inside those server children can read
+ * this context, which is what `back-to-result.tsx` does.
+ *
+ * null outside the provider, so the button can render nothing rather than
+ * throw if it is ever placed outside a CLOSED surface.
+ */
+export const ClosedSurfaceContext = React.createContext<{ showResult: () => void } | null>(null);
 
 /**
  * B5 for a CLOSED tasting: the result screen (S12) until the viewer
@@ -21,9 +34,18 @@ type DismissedFlag = "unknown" | "yes" | "no";
  * there before the dismissed flag is known (it renders during SSR too, on
  * the "unknown" branch's account of nothing), so the click handler has to
  * be attached lower, once this component actually decides to show it.
- * `writeDismissed` persists the flag; when the write fails (storage
- * blocked or full) `forcedDismissed` still flips the view for the rest of
- * this visit, per safe-storage.ts's contract.
+ *
+ * DISMISSAL GOES BOTH WAYS NOW. It used to be one-way: `writeDismissed` with
+ * nothing to undo it, and a `forcedDismissed` flag that could only ever be
+ * set. A viewer who pressed "See every wine" on a finished tasting lost the
+ * scoreboard, the standings and the share link for as long as that browser
+ * kept the key, because the record's "Back to tasting overview" link pointed
+ * at /tastings/[id] — the very page the record is rendered on.
+ *
+ * `override` replaces that one-way flag and carries the same contract in both
+ * directions: null means "believe storage", and a boolean is what this visit
+ * shows when the storage write did not stick (blocked or full), per
+ * safe-storage.ts.
  */
 export function ClosedSurface({
   tastingId,
@@ -39,17 +61,27 @@ export function ClosedSurface({
     () => (readDismissed(() => window.localStorage, tastingId) ? "yes" : "no"),
     () => "unknown",
   );
-  const [forcedDismissed, setForcedDismissed] = React.useState(false);
+  const [override, setOverride] = React.useState<boolean | null>(null);
 
   const handleDismiss = React.useCallback(() => {
-    writeDismissed(() => window.localStorage, tastingId);
-    setForcedDismissed(true);
+    const persisted = writeDismissed(() => window.localStorage, tastingId);
+    setOverride(persisted ? null : true);
   }, [tastingId]);
+
+  const showResult = React.useCallback(() => {
+    const persisted = clearDismissed(() => window.localStorage, tastingId);
+    setOverride(persisted ? null : false);
+  }, [tastingId]);
+
+  const ctx = React.useMemo(() => ({ showResult }), [showResult]);
 
   if (stored === "unknown") return <></>;
 
-  const surface = liveSurface({ status: "CLOSED", dismissed: stored === "yes" || forcedDismissed });
-  if (surface === "record") return <>{children}</>;
+  const dismissed = override ?? stored === "yes";
+  const surface = liveSurface({ status: "CLOSED", dismissed });
+  if (surface === "record") {
+    return <ClosedSurfaceContext.Provider value={ctx}>{children}</ClosedSurfaceContext.Provider>;
+  }
 
   return (
     <>

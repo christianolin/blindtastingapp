@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { liveSurface, readDismissed, resultDismissKey, writeDismissed } from "./live-theme";
+import { clearDismissed, liveSurface, readDismissed, resultDismissKey, writeDismissed } from "./live-theme";
 
 describe("liveSurface (B5)", () => {
   it.each([
@@ -37,5 +37,46 @@ describe("the dismissal flag, per tasting", () => {
   });
   it("a write with no storage returns false", () => {
     expect(writeDismissed(() => null, "t1")).toBe(false);
+  });
+});
+
+describe("undismissing a result", () => {
+  const make = () => {
+    const store = new Map<string, string>();
+    return {
+      store,
+      storage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+      },
+    };
+  };
+
+  // The bug this exists for: dismissing was one-way, so a viewer who pressed
+  // "See every wine" could never get the scoreboard back — the record's only
+  // way out linked to the page the record is rendered on.
+  it("puts the result surface back", () => {
+    const { storage } = make();
+    expect(liveSurface({ status: "CLOSED", dismissed: readDismissed(() => storage, "t1") })).toBe("result");
+    writeDismissed(() => storage, "t1");
+    expect(liveSurface({ status: "CLOSED", dismissed: readDismissed(() => storage, "t1") })).toBe("record");
+    expect(clearDismissed(() => storage, "t1")).toBe(true);
+    expect(liveSurface({ status: "CLOSED", dismissed: readDismissed(() => storage, "t1") })).toBe("result");
+  });
+
+  it("clears only that tasting", () => {
+    const { store, storage } = make();
+    writeDismissed(() => storage, "t1");
+    writeDismissed(() => storage, "t2");
+    clearDismissed(() => storage, "t1");
+    expect(readDismissed(() => storage, "t1")).toBe(false);
+    expect(readDismissed(() => storage, "t2")).toBe(true);
+    expect([...store.keys()]).toEqual(["blindr:result-dismissed:t2"]);
+  });
+
+  it("is false, not a throw, when storage is missing or blocked", () => {
+    expect(clearDismissed(() => null, "t1")).toBe(false);
+    expect(clearDismissed(() => { throw new Error("SecurityError"); }, "t1")).toBe(false);
   });
 });
