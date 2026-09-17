@@ -1,91 +1,17 @@
-import Link from "next/link";
+// Legacy drink route → the Bottles frame's `?lot=…&do=drink` sheet (CC-X2,
+// spec D6, §3). See `../page.tsx` for the redirect rationale; `actions.ts`
+// (`consumeLot`) is untouched — `DrinkSheet` (CC-U5) still imports it.
+
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
-import { catalogWineTitle } from "@/lib/wset/queries";
-import { DrinkForm } from "./drink-form";
 
-type Rel = { name: string } | { name: string }[] | null;
-function relName(rel: Rel): string | null {
-  if (!rel) return null;
-  const row = Array.isArray(rel) ? rel[0] : rel;
-  return row?.name ?? null;
-}
-function unwrap<T>(rel: T | T[] | null): T | null {
-  if (!rel) return null;
-  return Array.isArray(rel) ? rel[0] ?? null : rel;
-}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type LotRow = {
-  id: string;
-  quantity: number;
-  catalog_wine_id: string;
-  catalog_wines: {
-    wine_name: string | null;
-    vintage_kind: "YEAR" | "NV" | "TAWNY";
-    vintage_year: number | null;
-    vintage_tawny_years: number | null;
-    producer: Rel;
-    appellation: Rel;
-  } | null;
-};
-
-export default async function DrinkLotPage({
+export default async function DrinkLotRedirectPage({
   params,
 }: {
   params: Promise<{ lotId: string }>;
 }) {
   const { lotId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data } = await supabase
-    .from("cellar_lots")
-    .select(
-      "id, quantity, catalog_wine_id, catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, producer:producers(name), appellation:appellations(name))",
-    )
-    .eq("id", lotId)
-    .maybeSingle();
-
-  // RLS hides other users' lots; an emptied lot can't be drunk from.
-  const lot = data as unknown as LotRow | null;
-  if (!lot || lot.quantity <= 0) redirect("/cellar");
-
-  const c = unwrap(lot.catalog_wines);
-  const title = c
-    ? catalogWineTitle({
-        producerName: relName(c.producer),
-        wineName: c.wine_name,
-        vintageKind: c.vintage_kind,
-        vintageYear: c.vintage_year,
-        vintageTawnyYears: c.vintage_tawny_years,
-        appellationName: relName(c.appellation),
-      })
-    : "Untitled wine";
-
-  return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6">
-      <Link
-        href="/cellar"
-        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ← Back to cellar
-      </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>Drink {title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DrinkForm
-            lotId={lot.id}
-            available={lot.quantity}
-            wineId={lot.catalog_wine_id}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (!UUID.test(lotId)) redirect("/cellar");
+  redirect(`/cellar?lot=${lotId}&do=drink`);
 }

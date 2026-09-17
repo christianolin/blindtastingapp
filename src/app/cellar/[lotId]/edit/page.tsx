@@ -1,126 +1,19 @@
-import Link from "next/link";
+// Legacy edit route → the Bottles frame's `?lot=…&do=edit` sheet (CC-X2,
+// spec D6, §3). See `../page.tsx` for the redirect rationale. The old
+// `EditLotForm` and the curator retail-price editor (`WinePriceField`,
+// D13) are deleted with this route — `LotSheet`'s own edit mode (CC-U4)
+// replaces both.
+
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
-import { catalogWineTitle } from "@/lib/wset/queries";
-import { isContributor } from "@/lib/auth/roles";
-import { EditLotForm } from "./edit-lot-form";
-import { WinePriceField } from "./wine-price-field";
 
-type Rel = { name: string } | { name: string }[] | null;
-function relName(rel: Rel): string | null {
-  if (!rel) return null;
-  const row = Array.isArray(rel) ? rel[0] : rel;
-  return row?.name ?? null;
-}
-function unwrap<T>(rel: T | T[] | null): T | null {
-  if (!rel) return null;
-  return Array.isArray(rel) ? rel[0] ?? null : rel;
-}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type LotRow = {
-  id: string;
-  catalog_wine_id: string;
-  bottle_size_ml: number;
-  quantity: number;
-  price_per_bottle: number | null;
-  currency: string;
-  purchased_on: string | null;
-  purchase_source: string | null;
-  drink_from: number | null;
-  drink_to: number | null;
-  storage_location: string | null;
-  lot_note: string | null;
-  catalog_wines: {
-    wine_name: string | null;
-    vintage_kind: "YEAR" | "NV" | "TAWNY";
-    vintage_year: number | null;
-    vintage_tawny_years: number | null;
-    estimated_price: number | string | null;
-    producer: Rel;
-    appellation: Rel;
-  } | null;
-};
-
-export default async function EditLotPage({
+export default async function EditLotRedirectPage({
   params,
 }: {
   params: Promise<{ lotId: string }>;
 }) {
   const { lotId } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const [{ data }, canEditPrice] = await Promise.all([
-    supabase
-      .from("cellar_lots")
-      .select(
-        "id, catalog_wine_id, bottle_size_ml, quantity, price_per_bottle, currency, purchased_on, purchase_source, drink_from, drink_to, storage_location, lot_note, " +
-          "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, estimated_price, producer:producers(name), appellation:appellations(name))",
-      )
-      .eq("id", lotId)
-      .maybeSingle(),
-    isContributor(supabase, user.id),
-  ]);
-
-  // RLS returns nothing for a lot that isn't the caller's, so treat as absent.
-  const lot = data as unknown as LotRow | null;
-  if (!lot) redirect("/cellar");
-
-  const c = unwrap(lot.catalog_wines);
-  const title = c
-    ? catalogWineTitle({
-        producerName: relName(c.producer),
-        wineName: c.wine_name,
-        vintageKind: c.vintage_kind,
-        vintageYear: c.vintage_year,
-        vintageTawnyYears: c.vintage_tawny_years,
-        appellationName: relName(c.appellation),
-      })
-    : "Untitled wine";
-
-  return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-6">
-      <Link
-        href="/cellar"
-        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ← Back to cellar
-      </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EditLotForm
-            lotId={lot.id}
-            initial={{
-              quantity: lot.quantity,
-              bottleSizeMl: lot.bottle_size_ml,
-              pricePerBottle: lot.price_per_bottle,
-              currency: lot.currency,
-              purchasedOn: lot.purchased_on,
-              purchaseSource: lot.purchase_source,
-              drinkFrom: lot.drink_from,
-              drinkTo: lot.drink_to,
-              storageLocation: lot.storage_location,
-              lotNote: lot.lot_note,
-            }}
-          />
-          <div className="mt-6">
-            <WinePriceField
-              wineId={lot.catalog_wine_id}
-              initialPrice={
-                c?.estimated_price == null ? null : Number(c.estimated_price)
-              }
-              canEdit={canEditPrice}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  if (!UUID.test(lotId)) redirect("/cellar");
+  redirect(`/cellar?lot=${lotId}&do=edit`);
 }
