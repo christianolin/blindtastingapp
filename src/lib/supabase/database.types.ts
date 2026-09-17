@@ -1066,6 +1066,7 @@ export type Database = {
           created_by: string;
           created_at: string;
           blind_pending: boolean;
+          merged_into: string | null; // 20260829203000_catalog_curation.sql
         };
         Insert: {
           id?: string;
@@ -1098,6 +1099,7 @@ export type Database = {
           created_by: string;
           created_at?: string;
           blind_pending?: boolean;
+          merged_into?: string | null; // 20260829203000_catalog_curation.sql
         };
         Update: Partial<Database["public"]["Tables"]["catalog_wines"]["Insert"]>;
         Relationships: [];
