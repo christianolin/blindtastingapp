@@ -11547,6 +11547,15 @@
     "documented": true
   },
   {
+    "canonical_key": "germany.baden",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "baden",
+    "normalized_checksum_sha256": "5349DF1D05C82FA996C2846F91F4583348B0E3E334B4BC7295D8BE7261E4BD01",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
     "canonical_key": "germany.franken",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "franken",
@@ -26401,6 +26410,15 @@
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "saale-unstrut",
     "normalized_checksum_sha256": "9FBCA048663138052F31F005D065859672746ED52E5D60D8516A9A0710E8C256",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "germany.wuerttemberg",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "wuerttemberg",
+    "normalized_checksum_sha256": "5349DF1D05C82FA996C2846F91F4583348B0E3E334B4BC7295D8BE7261E4BD01",
     "raw_snapshot_uri": null,
     "raw_checksum_sha256": null,
     "documented": true
