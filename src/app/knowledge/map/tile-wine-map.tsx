@@ -13,6 +13,11 @@ import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
 import {
+  districtHash,
+  latchRampedRegions,
+  paletteArms,
+} from "@/lib/wine-map/fill-palette";
+import {
   englishName,
   englishTextFieldExpression,
 } from "@/lib/wine-map/localize-names";
@@ -252,14 +257,25 @@ const SHARD_MIN_ZOOM = 5;
 // MB of memory for not re-doing that work.
 const MAX_TILE_CACHE = 1500;
 
-// Soft cap on the area-colour lookup table fed to fillColorExpression, over the
-// 854 distinct areas in the catalogue. SOFT because areas currently on screen
-// are never evicted: a z8 frame over northern Italy genuinely carries ~120
-// distinct areas (Piemonte alone has ~55), and evicting a visible one drops its
-// arm from the generated `match` so it falls through to regionMatch — a
-// different palette entirely — and flickers as the query order changes between
-// gestures. The cap therefore only trims areas that have scrolled off.
-const MAX_PAINT_GROUPS = 96;
+// Trailing debounce for the world->shard handoff's "which shards have loaded"
+// reading. A zoom gesture fires a `sourcedata` event per tile per shard —
+// dozens in a burst — and each used to recompute and set state on its own.
+const READY_DEBOUNCE_MS = 100;
+
+// Default for the areaSlugs prop. A module constant, not a `= []` default:
+// a fresh array per render would re-key every memo below it on every render.
+const NO_SLUGS: string[] = [];
+
+// Multiplier for the world archive's region layers: 0 once the region's own
+// shard has loaded (feature-state `handed`, set by the effect on
+// handedOffShards), 1 otherwise. Applied to fill/line/text opacity in place of
+// a filter, so a handoff never rewrites a layer — see the world Source below.
+const WORLD_HANDED_FACTOR = [
+  "case",
+  ["boolean", ["feature-state", "handed"], false],
+  0,
+  1,
+];
 
 const regionMatch = [
   "match",
@@ -303,15 +319,15 @@ const LAYER_VISIBLE = { visibility: "visible" } as const;
 const LAYER_HIDDEN = { visibility: "none" } as const;
 
 // Curated palette for district colouring; slug-hashed so a group keeps its
-// colour across sessions and republish cycles.
+// colour across sessions and republish cycles. The hash itself lives in
+// lib/wine-map/fill-palette so the fill expression's palette arms and these
+// legend swatches cannot drift apart.
 const DISTRICT_PALETTE = [
   "#8C2D3C", "#3E6B54", "#4A5D8C", "#9A6A2F", "#5C7A3B", "#7A4E8C",
   "#2F7A78", "#A34D2B", "#5B4A8C", "#3B6E8C", "#8C6D3B", "#6B4430",
 ];
 export function districtColor(slug: string) {
-  let h = 0;
-  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
-  return DISTRICT_PALETTE[h % DISTRICT_PALETTE.length];
+  return DISTRICT_PALETTE[districtHash(slug) % DISTRICT_PALETTE.length];
 }
 
 // Classification reads as INTENSITY of the area hue (vineyard-atlas style):
@@ -370,64 +386,162 @@ const areaExpr = ["coalesce", ["get", "area_key"], ["get", "group"], ""];
 // (plus a slight opacity lift in fillPaint).
 const regionColor = regionMatch as unknown as string;
 
-// Camera ("zoom") expressions must sit at the top level of a paint property,
-// so the zoom step wraps the selection cases rather than the reverse.
-function fillColorExpression(areaSlugs: string[], rampEnabled: boolean) {
+// "Is this feature's region one where the classification ramp applies?" —
+// bound as the `ramp` variable of the fill-colour and fill-opacity `let`s.
+// The ramp is RELATIVE: it only applies where at least two classification
+// levels exist — an all-grand-cru region like Alsace has nothing to be darker
+// THAN, so its vineyards keep the plain area hue (owner: "darkest doesn't make
+// sense there"). Which regions qualify is discovered once per session by the
+// idle-time scan (latchRampedRegions), not re-decided per viewport.
+function rampExpression(rampedRegions: string[]) {
+  return rampedRegions.length
+    ? ["match", ["coalesce", ["get", "region"], ""], rampedRegions, true, false]
+    : false;
+}
+
+// The shade family of one palette colour, evaluated against the feature:
+// grand cru darkest, premier cru mid, everything else spread across the tint
+// ramp — but only where `ramp` holds; otherwise the tint ramp alone.
+function paletteShadeExpression(color: string) {
+  const shades = classificationShades(color);
+  // Within an area, sites that share a classification used to render in
+  // one identical colour — a whole Großlage of Einzellagen as a single
+  // brown mass, with no way to see where one ends and the next begins.
+  // Spread them across a lightness ramp of the area's own hue using the
+  // stable per-place `tint`, so neighbours separate while the area still
+  // reads as one group. This is the plain/village case only: the cru
+  // shades stay exact, because there intensity carries real meaning.
+  const tinted = [
+    "match",
+    ["to-number", ["coalesce", ["get", "tint"], 2]],
+    ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(shades.base, step)]),
+    shades.base,
+  ];
+  return [
+    "case",
+    ["var", "ramp"],
+    [
+      "match",
+      classificationExpr,
+      "grand_cru",
+      shades.grand_cru,
+      "premier_cru",
+      shades.premier_cru,
+      tinted,
+    ],
+    tinted,
+  ];
+}
+
+// Camera ("zoom") expressions must sit at the top level of a paint property
+// (a `let` around it is fine — MapLibre looks through `let` for the zoom
+// curve), so the zoom step wraps the selection cases rather than the reverse.
+//
+// `areaSlugs` is the WHOLE catalogue (every `area_key`/`group` value the tiles
+// can carry, derived from the place tree by areaSlugsFromTree), not the areas
+// scanned so far: the table is built once and the expression never changes
+// for the session except for a region joining the ramp. Two levels keep it
+// small — a `match` from slug to palette index with one arm per palette
+// colour (MapLibre lets an arm carry a list of labels), then a `match` from
+// index to that colour's shade family — instead of one arm per slug with its
+// own copy of the shade family, which is what made the old table's size a
+// problem (and forced a cap on it).
+function fillColorExpression(areaSlugs: string[], rampedRegions: string[]) {
   // From z8 every area (Burgundy village, Champagne sub-region, Bordeaux
   // district) gets its own hue, and WITHIN the hue classification reads as
   // intensity: grand cru darkest, premier cru mid, village land plain.
-  // Region hue covers areas not yet observed by the viewport scan.
-  // The intensity ramp is RELATIVE: it only applies when at least two
-  // classification levels are actually in view — an all-grand-cru region
-  // like Alsace has nothing to be darker THAN, so its vineyards keep the
-  // plain area hue (owner: "darkest doesn't make sense there").
-  const areaMatch = areaSlugs.length
+  // Region hue covers a slug the catalogue does not know (a tile release
+  // newer than the loaded tree) exactly as it covered unscanned areas before.
+  const arms = paletteArms(areaSlugs, DISTRICT_PALETTE.length);
+  const present = DISTRICT_PALETTE.map((_, i) => arms[i].length > 0);
+  const paletteIndex = present.some(Boolean)
     ? [
         "match",
         areaExpr,
-        ...areaSlugs.flatMap((slug) => {
-          const shades = classificationShades(districtColor(slug));
-          // Within an area, sites that share a classification used to render in
-          // one identical colour — a whole Großlage of Einzellagen as a single
-          // brown mass, with no way to see where one ends and the next begins.
-          // Spread them across a lightness ramp of the area's own hue using the
-          // stable per-place `tint`, so neighbours separate while the area still
-          // reads as one group. This is the plain/village case only: the cru
-          // shades stay exact, because there intensity carries real meaning.
-          const tinted = [
-            "match",
-            ["to-number", ["coalesce", ["get", "tint"], 2]],
-            ...SHADE_STEPS.flatMap((step, i) => [
-              i,
-              shiftLightness(shades.base, step),
-            ]),
-            shades.base,
-          ];
-          return [
-            slug,
-            rampEnabled
-              ? [
-                  "match",
-                  classificationExpr,
-                  "grand_cru",
-                  shades.grand_cru,
-                  "premier_cru",
-                  shades.premier_cru,
-                  tinted,
-                ]
-              : tinted,
-          ];
-        }),
+        ...arms.flatMap((slugs, i) => (slugs.length ? [slugs, i] : [])),
+        -1,
+      ]
+    : -1;
+  const areaMatch = present.some(Boolean)
+    ? [
+        "match",
+        ["var", "pi"],
+        ...DISTRICT_PALETTE.flatMap((color, i) =>
+          present[i] ? [i, paletteShadeExpression(color)] : [],
+        ),
         regionMatch,
       ]
     : regionMatch;
   return [
-    "step",
-    ["zoom"],
-    regionMatch,
-    AREA_PALETTE_ZOOM,
-    areaMatch,
+    "let",
+    "pi",
+    paletteIndex,
+    "ramp",
+    rampExpression(rampedRegions),
+    ["step", ["zoom"], regionMatch, AREA_PALETTE_ZOOM, areaMatch],
   ] as unknown as string;
+}
+
+// The fill paint every wine polygon layer shares. `hide` is the world archive's
+// handed-off multiplier (WORLD_HANDED_FACTOR) or null for a shard layer; it has
+// to be folded into each zoom stop's output, because the zoom interpolation
+// must stay the top-level expression.
+function buildFillPaint(
+  selectedKey: string | null,
+  selectedId: string | null,
+  areaColor: string,
+  rampedRegions: string[],
+  hide: unknown[] | null,
+) {
+  const sel = ["==", ["get", "key"], selectedKey ?? ""];
+  const child = ["==", ["get", "parent_id"], selectedId ?? "__none__"];
+  const hasSelection = selectedKey !== null;
+  // Focus wrapper per zoom stop: the selection pops, its direct children
+  // keep full presence (you drill into them), everything else fades to
+  // 45% of its normal opacity. The selected fill still relaxes at deep
+  // zoom so children render readably on top of it.
+  const focus = (selectedOpacity: number, base: unknown) => {
+    const focused = hasSelection
+      ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
+      : ["case", sel, selectedOpacity, base];
+    return hide ? ["*", focused, hide] : focused;
+  };
+  return {
+    // Every fill already has a dedicated `line` outline layer drawn over it,
+    // so MapLibre's built-in fill antialiasing is a redundant second edge
+    // pass per fill layer. Turning it off removes that pass outright; the
+    // outline layer keeps edges crisp, so it reads the same.
+    "fill-antialias": false,
+    "fill-color": areaColor,
+    "fill-opacity": [
+      "let",
+      "ramp",
+      rampExpression(rampedRegions),
+      [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        5,
+        focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
+        9,
+        // Classification intensity: grand cru plots read solid, premier cru
+        // firm, village land a light wash — the darkness ramp IS the
+        // classification signal (paired with the shaded fill hue). Where the
+        // region's ramp is off every level sits at one uniform mid opacity.
+        focus(0.3, [
+          "match",
+          classificationExpr,
+          "grand_cru",
+          ["case", ["var", "ramp"], 0.65, 0.4],
+          "premier_cru",
+          ["case", ["var", "ramp"], 0.45, 0.4],
+          "communal",
+          ["case", ["var", "ramp"], 0.18, 0.4],
+          ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
+        ]),
+      ],
+    ] as unknown as number,
+  };
 }
 
 // The selection ring: cream casing under a gold line, drawn only on the
@@ -533,6 +647,7 @@ export function TileWineMap({
   onToggleExpanded,
   visibleKeys = null,
   shardCountries = {},
+  areaSlugs = NO_SLUGS,
   english = false,
 }: {
   manifest: WineMapManifest;
@@ -553,6 +668,11 @@ export function TileWineMap({
       place tree. Lets the map show subregion-and-deeper detail for one country
       at a time; other countries stay at region level. Empty = no gating. */
   shardCountries?: Record<string, string>;
+  /** Every `area_key`/`group` value the tiles can carry, derived from the
+      place tree (areaSlugsFromTree). The fill palette's slug->colour table is
+      built from this whole list once, so it never changes with the viewport.
+      Empty until the tree loads: region hues only, as before the first scan. */
+  areaSlugs?: string[];
   /** English-names toggle: relabels the map, legend and tree from the curated
       local->English dictionary (Italia->Italy, Toscana->Tuscany). Client-side
       only — no tile rebuild. */
@@ -588,11 +708,12 @@ export function TileWineMap({
   // it is invisible by definition; what it saves is the per-frame bookkeeping,
   // symbol-collision and queryRenderedFeatures cost of its source + layers.
   //
-  // `worldFilter` is keyed on the shards that have actually LOADED, so a region
-  // whose shard is unmounted (below SHARD_MIN_ZOOM that is all of them) falls
-  // back to the world archive's world-region-* layers, which reuse the shards'
-  // own fillPaint/outlinePaint. Do NOT re-key this to every shard key: below
-  // SHARD_MIN_ZOOM nothing would draw a region at all.
+  // The world->shard handoff (feature-state `handed` on the world source, set
+  // by the effect on handedOffShards) is keyed on the shards that have actually
+  // LOADED, so a region whose shard is unmounted (below SHARD_MIN_ZOOM that is
+  // all of them) is drawn by the world archive's world-region-* layers, which
+  // reuse the shards' own fill/outline paint. Do NOT re-key this to every
+  // shard key: below SHARD_MIN_ZOOM nothing would draw a region at all.
   //
   // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
   // never thrashes sources.
@@ -735,12 +856,43 @@ export function TileWineMap({
       prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
     );
   }, [mountedShards]);
+  // A gesture's `sourcedata` burst — one event per tile per shard — used to
+  // run recomputeReady (a getSource/isSourceLoaded sweep plus a state update)
+  // for every event. Trailing-debounce it so a burst produces one update once
+  // the tiles have settled; moveend still forces an immediate one below. The
+  // ref keeps the timer's callback on the latest recomputeReady (it re-binds
+  // on mountedShards) without re-creating the scheduler.
+  const recomputeReadyRef = useRef(recomputeReady);
+  useEffect(() => {
+    recomputeReadyRef.current = recomputeReady;
+  }, [recomputeReady]);
+  const readyTimer = useRef<number | null>(null);
+  const scheduleReady = useCallback(() => {
+    if (readyTimer.current !== null) window.clearTimeout(readyTimer.current);
+    readyTimer.current = window.setTimeout(() => {
+      readyTimer.current = null;
+      recomputeReadyRef.current();
+    }, READY_DEBOUNCE_MS);
+  }, []);
+  const flushReady = useCallback(() => {
+    if (readyTimer.current !== null) {
+      window.clearTimeout(readyTimer.current);
+      readyTimer.current = null;
+    }
+    recomputeReadyRef.current();
+  }, []);
+  useEffect(
+    () => () => {
+      if (readyTimer.current !== null) window.clearTimeout(readyTimer.current);
+    },
+    [],
+  );
   const handleSourceData = useCallback(
     (e: { sourceId?: string }) => {
       if (!e.sourceId || !e.sourceId.startsWith("wine-shard-")) return;
-      recomputeReady();
+      scheduleReady();
     },
-    [recomputeReady],
+    [scheduleReady],
   );
   // Mounted AND actually loaded. Intersecting again is belt-and-braces:
   // recomputeReady already derives from mountedShards, but a shard can unmount
@@ -749,6 +901,51 @@ export function TileWineMap({
     const ready = new Set(readyShards);
     return mountedShards.filter((key) => ready.has(key));
   }, [mountedShards, readyShards]);
+
+  // The handoff itself. The world archive's region layers used to FILTER OUT
+  // handed-off regions, which meant every shard load or unmount rewrote three
+  // layer filters — and a filter change makes MapLibre reload the source's
+  // tiles, so the map re-decoded the world archive on every handoff. Now those
+  // filters are static and the region's world copy is hidden through
+  // feature-state instead: the world Source promotes the `region` property to
+  // the feature id (a region's polygon and each of its island labels share
+  // it — one id per region, which is exactly the grain a handoff has), and
+  // WORLD_HANDED_FACTOR zeroes the fill, line and text opacity of any feature
+  // whose state says `handed`. Feature-state is a per-source table keyed by
+  // id, applied to tiles as they load, so setting it here covers tiles that
+  // arrive later, and the id is derived from the shard key alone — no tile
+  // query. Only the difference against what was last applied is written.
+  // If the source is not there yet (or the style is still loading) nothing is
+  // recorded as applied, so the next change re-applies the whole set.
+  const appliedHandoffRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const next = new Set(handedOffShards);
+    const prev = appliedHandoffRef.current;
+    try {
+      if (!map.getSource("wine-world")) return;
+      for (const sourceLayer of ["places", "labels"]) {
+        for (const key of next) {
+          if (prev.has(key)) continue;
+          map.setFeatureState(
+            { source: "wine-world", sourceLayer, id: key },
+            { handed: true },
+          );
+        }
+        for (const key of prev) {
+          if (next.has(key)) continue;
+          map.removeFeatureState(
+            { source: "wine-world", sourceLayer, id: key },
+            "handed",
+          );
+        }
+      }
+      appliedHandoffRef.current = next;
+    } catch {
+      // Style not loaded yet: leave `prev` alone so the next change re-applies.
+    }
+  }, [handedOffShards]);
   const noFills = useMemo(() => fillsDisabled(), []);
   const debugClick = useMemo(() => clickDebugEnabled(), []);
 
@@ -765,9 +962,11 @@ export function TileWineMap({
     return viewportCountry;
   }, [selectedKey, viewportCountries, viewportCountry]);
 
-  // What's actually on screen — drives the dynamic legend (sections only
-  // where they apply) and the district colours. Scanned on map idle; the
-  // group set only accumulates so colours stay stable while panning.
+  // What's actually on screen — drives the dynamic LEGEND only (sections only
+  // where they apply). Scanned on map idle. It used to feed the fill palette's
+  // colour table too, which meant a paint rewrite whenever a new area scrolled
+  // into view; the table now comes from the whole catalogue (areaSlugs) and
+  // nothing below the legend depends on this state.
   const [viewInfo, setViewInfo] = useState<{
     scanned: boolean;
     zoom: number;
@@ -775,9 +974,10 @@ export function TileWineMap({
     groups: { slug: string; name: string }[];
     classifications: string[];
   }>({ scanned: false, zoom: 0, regions: [], groups: [], classifications: [] });
-  // globalThis: `Map` in this module is the react-map-gl component.
-  const allGroupsRef = useRef<globalThis.Map<string, string>>(new globalThis.Map());
-  const [paintGroups, setPaintGroups] = useState<string[]>([]);
+  // Regions where the classification ramp applies, discovered once and never
+  // revoked (see latchRampedRegions). The only scan-driven input the paint
+  // still has, and it changes at most once per region per session.
+  const [rampedRegions, setRampedRegions] = useState<string[]>([]);
   // The legend covers much of a phone screen (owner screenshots), so make it
   // collapsible: collapsed by default below lg, expanded from lg up. The map is
   // dynamic ssr:false, so `window` exists at first render (no hydration flash).
@@ -795,11 +995,17 @@ export function TileWineMap({
     //
     // Under ?debugFills=off the fill layers are visibility:none, and MapLibre
     // excludes hidden layers from queryRenderedFeatures — scanning them there
-    // returned nothing, so paintGroups stayed empty and every OUTLINE collapsed
-    // to the region hue. That made the diagnostic change outline colour and the
-    // legend as well as fills, which is not the clean isolation it claims. The
-    // outline layers carry the same features and properties, so scan those
-    // instead and the A/B differs in fills alone.
+    // returned nothing, so the legend went blank and (back when the scan fed
+    // the colour table) every OUTLINE collapsed to the region hue. That made
+    // the diagnostic change the legend and outlines as well as fills, which is
+    // not the clean isolation it claims. The outline layers carry the same
+    // features and properties, so scan those instead and the A/B differs in
+    // fills alone.
+    //
+    // A handed-off region is now present TWICE in these results — its shard
+    // copy and the world archive's hidden copy (opacity 0, not filtered out) —
+    // with identical properties. Everything below collects into sets and maps
+    // keyed by region/area/classification, so the duplicate collapses.
     const layers = (
       noFills
         ? [
@@ -815,8 +1021,11 @@ export function TileWineMap({
     ).filter((l) => map.getLayer(l));
     if (layers.length === 0) return;
     const regions = new Set<string>();
+    // globalThis: `Map` in this module is the react-map-gl component.
     const groups = new globalThis.Map<string, string>();
     const classifications = new Set<string>();
+    // Per-region classification levels, for the ramp latch.
+    const levelsByRegion = new globalThis.Map<string, Set<string>>();
     for (const feature of map.queryRenderedFeatures({ layers })) {
       const p = (feature.properties ?? {}) as Record<string, unknown>;
       const region = typeof p.region === "string" ? p.region : null;
@@ -832,6 +1041,11 @@ export function TileWineMap({
             : null;
       if (cls === "grand_cru" || cls === "premier_cru" || cls === "communal") {
         classifications.add(cls);
+        if (region) {
+          let levels = levelsByRegion.get(region);
+          if (!levels) levelsByRegion.set(region, (levels = new Set()));
+          levels.add(cls);
+        }
       }
       const areaKey =
         typeof p.area_key === "string" && p.area_key
@@ -849,40 +1063,9 @@ export function TileWineMap({
         groups.set(areaKey, areaName);
       }
     }
-    // Refresh recency for everything in view (delete+set moves the key to the
-    // end of a Map's insertion order), then evict the least-recently-seen.
-    //
-    // This set only exists to BUILD the colour lookup table in
-    // fillColorExpression — it is not what makes colours stable. districtColor()
-    // is a pure function of the slug, so an area renders the same hue whether
-    // the table holds 20 entries or all 854. Left unbounded it grew for the
-    // whole session into a ~21k-node `match` used as both fill-color and
-    // line-color on every shard layer, which MapLibre re-evaluates per feature
-    // on every tile load — i.e. continuously while panning and zooming, getting
-    // worse the longer the map was open. The cap is far above how many areas
-    // can be on screen at once, so nothing visible is ever evicted.
-    for (const [slug, name] of groups) {
-      allGroupsRef.current.delete(slug);
-      allGroupsRef.current.set(slug, name);
-    }
-    // Evict only what is NOT on screen. Insertion order puts the just-refreshed
-    // visible entries last, so walking from the front and skipping anything in
-    // `groups` trims exactly the stale ones; if everything is visible the table
-    // is allowed to exceed the cap rather than repaint a region in front of the
-    // user.
-    if (allGroupsRef.current.size > MAX_PAINT_GROUPS) {
-      for (const slug of [...allGroupsRef.current.keys()]) {
-        if (allGroupsRef.current.size <= MAX_PAINT_GROUPS) break;
-        if (groups.has(slug)) continue;
-        allGroupsRef.current.delete(slug);
-      }
-    }
-    const nextGroups = [...allGroupsRef.current.keys()].sort();
-    setPaintGroups((prev) =>
-      prev.length === nextGroups.length && prev.every((k, i) => k === nextGroups[i])
-        ? prev
-        : nextGroups,
-    );
+    // Latch, never revoke: returns the same array when nothing new was seen,
+    // so this is a no-op state update on every scan after discovery.
+    setRampedRegions((prev) => latchRampedRegions(prev, levelsByRegion));
     const next = {
       scanned: true,
       zoom: map.getZoom(),
@@ -996,15 +1179,12 @@ export function TileWineMap({
     applyCameraTarget(cameraTarget);
   }, [cameraTarget, applyCameraTarget]);
 
-  // Selection-aware paint. The zoom interpolation fades fills — the selected
-  // parent included — as children appear, while outlines and labels persist
-  // (spec: "the selected parent's fill fades while its outline and single
-  // label remain").
-  // The classification ramp is comparative by nature: with only one level in
-  // view (all-grand-cru Alsace) there is nothing to be darker than, so the
-  // ramp switches off and every plot keeps its plain area hue at a uniform
-  // mid opacity.
-  const rampEnabled = viewInfo.classifications.length >= 2;
+  // The legend's reading of the ramp: on when a region in view is a ramped
+  // one. Legend-only — the paint reads rampedRegions through the expression.
+  const rampEnabled = useMemo(
+    () => viewInfo.regions.some((region) => rampedRegions.includes(region)),
+    [viewInfo.regions, rampedRegions],
+  );
   // fillColorExpression only steps from regionMatch to the per-area/
   // classification palette at z8, so below that the legend's Areas and
   // Classification chips described colours that appeared nowhere on the map —
@@ -1012,49 +1192,35 @@ export function TileWineMap({
   // screen was still Bourgogne petrol. Same threshold as the step.
   const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
-  const fillPaint = useMemo(() => {
-    const sel = ["==", ["get", "key"], selectedKey ?? ""];
-    const child = ["==", ["get", "parent_id"], selectedId ?? "__none__"];
-    const hasSelection = selectedKey !== null;
-    // Focus wrapper per zoom stop: the selection pops, its direct children
-    // keep full presence (you drill into them), everything else fades to
-    // 45% of its normal opacity. The selected fill still relaxes at deep
-    // zoom so children render readably on top of it.
-    const focus = (selectedOpacity: number, base: unknown) =>
-      hasSelection
-        ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
-        : ["case", sel, selectedOpacity, base];
-    return {
-      // Every fill already has a dedicated `line` outline layer drawn over it,
-      // so MapLibre's built-in fill antialiasing is a redundant second edge
-      // pass per fill layer. Turning it off removes that pass outright; the
-      // outline layer keeps edges crisp, so it reads the same.
-      "fill-antialias": false,
-      "fill-color": fillColorExpression(paintGroups, rampEnabled),
-      "fill-opacity": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        5,
-        focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
-        9,
-        // Classification intensity: grand cru plots read solid, premier cru
-        // firm, village land a light wash — the darkness ramp IS the
-        // classification signal (paired with the shaded fill hue).
-        focus(0.3, [
-          "match",
-          classificationExpr,
-          "grand_cru",
-          rampEnabled ? 0.65 : 0.4,
-          "premier_cru",
-          rampEnabled ? 0.45 : 0.4,
-          "communal",
-          rampEnabled ? 0.18 : 0.4,
-          ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
-        ]),
-      ] as unknown as number,
-    };
-  }, [selectedKey, selectedId, paintGroups, rampEnabled]);
+  // The one colour expression every wine fill and outline layer uses. Keyed on
+  // the catalogue's slug list (changes once, when the tree loads) and the ramp
+  // latch (at most once per region per session) — never on the viewport.
+  const areaColor = useMemo(
+    () => fillColorExpression(areaSlugs, rampedRegions),
+    [areaSlugs, rampedRegions],
+  );
+
+  // Selection-aware paint. The zoom interpolation fades fills — the selected
+  // parent included — as children appear, while outlines and labels persist
+  // (spec: "the selected parent's fill fades while its outline and single
+  // label remain").
+  const fillPaint = useMemo(
+    () => buildFillPaint(selectedKey, selectedId, areaColor, rampedRegions, null),
+    [selectedKey, selectedId, areaColor, rampedRegions],
+  );
+  // The world archive's copy of the same paint, with the handed-off multiplier
+  // folded in (see the effect on handedOffShards).
+  const worldRegionFillPaint = useMemo(
+    () =>
+      buildFillPaint(
+        selectedKey,
+        selectedId,
+        areaColor,
+        rampedRegions,
+        WORLD_HANDED_FACTOR,
+      ),
+    [selectedKey, selectedId, areaColor, rampedRegions],
+  );
 
   // Shared by the shard outlines and the world archive's region outlines, so a
   // region drawn from either source is pixel-identical.
@@ -1062,33 +1228,44 @@ export function TileWineMap({
     () => ({
       // Outlines follow the fill palette (classification colours at village
       // zoom) so deep levels aren't ringed in region teal.
-      "line-color": fillColorExpression(paintGroups, rampEnabled),
+      "line-color": areaColor,
       "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
     }),
-    [paintGroups, rampEnabled],
+    [areaColor],
   );
+  const worldRegionOutlinePaint = useMemo(
+    () => ({
+      ...outlinePaint,
+      "line-opacity": WORLD_HANDED_FACTOR as unknown as number,
+    }),
+    [outlinePaint],
+  );
+  // World labels: the ordinary label paint with text-opacity multiplied by the
+  // handed-off factor, so a region's world label vanishes with its fill.
+  const worldLabelPaint = useMemo(() => {
+    const paint = labelPaint(selectedKey, selectedId, selectedParentId);
+    return {
+      ...paint,
+      "text-opacity": [
+        "*",
+        paint["text-opacity"],
+        WORLD_HANDED_FACTOR,
+      ] as unknown as number,
+    };
+  }, [selectedKey, selectedId, selectedParentId]);
 
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
     [manifest],
   );
 
-  // World layers show the country (tier 0) and any region NOT served by a
-  // mounted shard — with every shard mounted that means the shards own all
-  // region rendering and the world archive only contributes France itself.
-  // Keyed on the MOUNTED shards, not all of them: a region whose shard is not
-  // mounted is drawn from the world archive instead, by the region layers below
-  // which reuse the shard paint exactly. That is what lets the map open with
-  // zero shard archives (see SHARD_MIN_ZOOM) without changing a pixel.
-  const worldFilter = useMemo(
-    () =>
-      [
-        "any",
-        ["==", ["get", "tier"], 0],
-        ["!", ["in", ["get", "region"], ["literal", handedOffShards]]],
-      ] as unknown as boolean,
-    [handedOffShards],
-  );
+  // World layers carry the country (tier 0) and every region. A region whose
+  // shard has loaded is not filtered out any more — it is hidden through
+  // feature-state (see the effect on handedOffShards), so these filters are
+  // static and a handoff rewrites nothing. A region whose shard is not loaded
+  // is drawn from the world archive, by the region layers below which reuse
+  // the shard paint exactly. That is what lets the map open with zero shard
+  // archives (see SHARD_MIN_ZOOM) without changing a pixel.
 
   // Attribute filters (grape today, styles/designations later): when a
   // visible-key set is active, only those canonical keys render — fills,
@@ -1111,11 +1288,8 @@ export function TileWineMap({
           ] as unknown as boolean),
     [visibleKeys],
   );
-  const gatedWorldFilter = useMemo(
-    () =>
-      (keyGate ? ["all", worldFilter, keyGate] : worldFilter) as unknown as boolean,
-    [worldFilter, keyGate],
-  );
+  // Every world label; the grape gate is the only thing that ever narrows it.
+  const gatedWorldFilter = useMemo(() => keyGate ?? PASS_FILTER, [keyGate]);
   // Tier 0 only — the country wash, which has its own opacity ramp.
   const worldCountryFilter = useMemo(
     () =>
@@ -1124,16 +1298,14 @@ export function TileWineMap({
         : ["==", ["get", "tier"], 0]) as unknown as boolean,
     [keyGate],
   );
-  // Regions no mounted shard is covering. Painted with the shards' own fill and
-  // outline paint, so handing a region between archives is invisible.
+  // Every region (tier >= 1). Painted with the shards' own fill and outline
+  // paint, so handing a region between archives is invisible; the handed-off
+  // ones are zeroed by feature-state, not filtered, so this only changes on a
+  // grape-filter pick.
   const worldRegionFilter = useMemo(() => {
-    const base = [
-      "all",
-      [">=", ["get", "tier"], 1],
-      ["!", ["in", ["get", "region"], ["literal", handedOffShards]]],
-    ];
+    const base = [">=", ["get", "tier"], 1];
     return (keyGate ? ["all", base, keyGate] : base) as unknown as boolean;
-  }, [handedOffShards, keyGate]);
+  }, [keyGate]);
 
   // Subregion depth, one country at a time. A shard outside the focus country
   // renders only its regions (tier <= 1), so neighbours stay on the map as
@@ -1218,6 +1390,10 @@ export function TileWineMap({
         // nothing at all. They carry the same key/tier/area properties as the
         // polygons (labelFeatures reuses tileProperties), so the smallest-wins
         // resolver handles them unchanged.
+        // A handed-off region reaches the resolver twice — the shard's copy
+        // and the world archive's hidden one (opacity 0 is still rendered,
+        // so queryRenderedFeatures returns it) — with the same key, tier and
+        // area, so smallest-wins picks the same place either way.
         interactiveLayerIds={[
           ...(noFills
             ? [
@@ -1243,8 +1419,9 @@ export function TileWineMap({
         onMoveEnd={() => {
           syncMountedShards();
           // A shard whose region has just scrolled into view now genuinely
-          // needs tiles, so its vacuous "loaded" must be re-tested here.
-          recomputeReady();
+          // needs tiles, so its vacuous "loaded" must be re-tested here — at
+          // once, not after the debounce.
+          flushReady();
         }}
         onLoad={(e) => {
           // MapLibre's compact attribution control mounts expanded; collapse
@@ -1385,10 +1562,23 @@ export function TileWineMap({
             (visualizePitch shows the current tilt). Top-left keeps clear of
             the expand button (top-right) and the legend (bottom-left). */}
         <NavigationControl position="top-left" visualizePitch />
-        <Source id="wine-world" type="vector" url={`pmtiles://${manifest.world.url}`}>
+        {/* promoteId: the `region` property becomes the feature id, for the
+            handoff's feature-state (a region's polygon in `places` and each
+            of its island labels in `labels` all carry it; a country's tier-0
+            row carries its own key, which no shard key ever equals). */}
+        <Source
+          id="wine-world"
+          type="vector"
+          url={`pmtiles://${manifest.world.url}`}
+          promoteId="region"
+        >
           {/* The world archive carries the country plus every region, so
               selecting France shows all its regions. A region already served
-              by the mounted shard is filtered out to avoid double-drawing. */}
+              by a loaded shard is drawn at opacity 0 (feature-state `handed`)
+              rather than filtered out, so the handoff rewrites no layer. The
+              hidden copy still costs a draw — one full-tile fill pass per
+              handed-off region under the view — and still hit-tests and
+              scans; both resolve to the same key/tier as the shard's copy. */}
           <Layer
             id="world-fills"
             type="fill"
@@ -1430,7 +1620,7 @@ export function TileWineMap({
               "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
             }}
           />
-          {/* Regions no mounted shard is covering, drawn with the shards' own
+          {/* Regions no loaded shard is covering, drawn with the shards' own
               fill and outline paint. Below SHARD_MIN_ZOOM no shard is mounted at
               all, so these are what render the regions — identical pixels, but
               from one already-open archive instead of 54. */}
@@ -1439,7 +1629,7 @@ export function TileWineMap({
             type="fill"
             source-layer="places"
             filter={worldRegionFilter}
-            paint={fillPaint}
+            paint={worldRegionFillPaint}
             layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
           />
           <Layer
@@ -1447,7 +1637,7 @@ export function TileWineMap({
             type="line"
             source-layer="places"
             filter={worldRegionFilter}
-            paint={outlinePaint}
+            paint={worldRegionOutlinePaint}
           />
           <Layer
             id="world-selected-casing"
@@ -1463,13 +1653,23 @@ export function TileWineMap({
             filter={selectedGate}
             paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
           />
+          {/* A handed-off region's world label is invisible (text-opacity 0)
+              but still occupies its collision box, so it must LOSE that
+              collision to the shard's own label. MapLibre places symbol
+              layers from the TOP of the style down (PauseablePlacement starts
+              at order.length - 1), and the first placed wins — so the loser
+              has to sit BELOW the shard label layers. It does: the world
+              Source mounts first and every shard's layers are appended above
+              it when the shard mounts, so no beforeId is needed. Do not move
+              this layer above the shards' labels to "give it priority"; that
+              would let the invisible copy blank the visible one. */}
           <Layer
             id="world-labels"
             type="symbol"
             source-layer="labels"
             filter={gatedWorldFilter}
             layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
-            paint={labelPaint(selectedKey, selectedId, selectedParentId)}
+            paint={worldLabelPaint}
           />
         </Source>
         {shardEntries
