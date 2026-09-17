@@ -24,8 +24,6 @@ export type CellarWine = {
   primaryGrapeName: string | null;
   secondaryGrapeName: string | null;
   typeDesignationName: string | null;
-  /** Typical retail price per bottle in DKK; null when none was found. */
-  estimatedPrice: number | null;
   /** Structured wine profile, from an earlier label read or Manage wine. Each is
       null when that part wasn't reported. `description` above is the older
       free-text blurb, kept as a fallback for wines with no profile. */
@@ -41,7 +39,7 @@ export type CellarWine = {
 };
 
 const SELECT =
-  "id, appellation_id, colour, style, wine_name, description, image_url, estimated_price, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, appellation_id, colour, style, wine_name, description, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
   "winery_description, aroma, tasting_notes, food_pairing, serving_temp_min_c, serving_temp_max_c, decant_minutes, alcohol_percent, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
@@ -75,8 +73,6 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     primaryGrapeName: name(row.primary_grape),
     secondaryGrapeName: name(row.secondary_grape),
     typeDesignationName: name(row.type_designation),
-    estimatedPrice:
-      row.estimated_price == null ? null : Number(row.estimated_price),
     wineryDescription: (row.winery_description as string | null) ?? null,
     aroma: (row.aroma as string | null) ?? null,
     tastingNotes: (row.tasting_notes as string | null) ?? null,

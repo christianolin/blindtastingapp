@@ -16,9 +16,15 @@ import {
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
 import { CountryFlag } from "@/components/country-flag";
+import { Eyebrow } from "@/components/overview/eyebrow";
 import { MapPin } from "lucide-react";
 import { WineStructure } from "./wine-structure";
 import { WineAdminControls } from "./wine-admin-controls";
+import { CellarStrip } from "./cellar-strip";
+import { YourNotes } from "./your-notes";
+import { getOwnLotsForWine } from "@/lib/cellar/own-lots";
+import { fmtAvg, plural } from "@/lib/cellar/format";
+import { countWord } from "@/lib/count-words";
 
 const cap = (s: string) => s[0] + s.slice(1).toLowerCase();
 
@@ -54,19 +60,22 @@ export default async function CatalogWinePage({
     structure,
     { data: profile },
     { data: usageRows },
+    ownLots,
   ] = await Promise.all([
     supabase
       .from("wset_notes")
       .select("id, tasted_on, quality_score, context_kind")
       .eq("catalog_wine_id", wineId)
       .eq("author_id", user.id)
-      .order("tasted_on", { ascending: false }),
+      .order("tasted_on", { ascending: false })
+      .order("created_at", { ascending: false }),
     fetchWineDescriptors(supabase, wineId),
     fetchWineGuessStats(supabase, wineId),
     fetchWineBlend(supabase, wineId),
     fetchWineStructure(supabase, wineId),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
     supabase.rpc("catalog_wine_usage", { p_id: wineId }),
+    getOwnLotsForWine(supabase, user.id, wineId),
   ]);
 
   const title = catalogWineTitle(wine);
@@ -84,27 +93,43 @@ export default async function CatalogWinePage({
     ] as { title: string; body: string | null }[]
   ).filter((s): s is { title: string; body: string } => !!s.body?.trim());
 
-  const servingFacts = [
-    wine.servingTempC
-      ? {
-          label: "Serve at",
-          value: `${wine.servingTempC.min}–${wine.servingTempC.max} °C`,
-        }
-      : null,
-    // 0 minutes is a real answer ("no decanting needed"), not a missing value.
-    wine.decantMinutes != null
-      ? {
-          label: "Decant",
-          value:
-            wine.decantMinutes > 0 ? `${wine.decantMinutes} min` : "Not needed",
-        }
-      : null,
-    wine.alcoholPercent != null
-      ? { label: "Alcohol", value: `${wine.alcoholPercent}%` }
-      : null,
-  ].filter((f): f is { label: string; value: string } => f !== null);
+  const hasProfile = profileSections.length > 0;
 
-  const hasProfile = profileSections.length > 0 || servingFacts.length > 0;
+  // The identity facts grid (CC-C2, spec §6.2 item 1): grape blend, wine
+  // style, alcohol, serve-at and decant, each only when the wine has it — the
+  // serving facts folded up from their old trailing small-print line under
+  // the profile sections. No price shown here or anywhere else on this page
+  // (D4).
+  const facts: { label: string; node: React.ReactNode }[] = [];
+  if (grapes) facts.push({ label: "Grape blend", node: grapes });
+  if (wine.colour || wine.style) {
+    facts.push({
+      label: "Wine style",
+      node: (
+        <div className="flex flex-wrap gap-1.5">
+          {wine.colour ? <Badge variant="secondary">{cap(wine.colour)}</Badge> : null}
+          {wine.style ? <Badge variant="secondary">{cap(wine.style)}</Badge> : null}
+        </div>
+      ),
+    });
+  }
+  if (wine.alcoholPercent != null) {
+    facts.push({ label: "Alcohol", node: `${wine.alcoholPercent}%` });
+  }
+  if (wine.servingTempC) {
+    facts.push({
+      label: "Serve at",
+      node: `${wine.servingTempC.min}–${wine.servingTempC.max} °C`,
+    });
+  }
+  if (wine.decantMinutes != null) {
+    // 0 minutes is a real answer ("no decanting needed"), not a missing value.
+    facts.push({
+      label: "Decant",
+      node: wine.decantMinutes > 0 ? `${wine.decantMinutes} min` : "Not needed",
+    });
+  }
+
   const isManager =
     profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
   const usage = usageRows?.[0] ?? {
@@ -152,49 +177,29 @@ export default async function CatalogWinePage({
                 <Badge variant="secondary">{wine.regionName}</Badge>
               ) : null}
               {wine.appellationName ? (
-                <Badge variant="secondary">{wine.appellationName}</Badge>
+                wine.appellationPlaceKey ? (
+                  <Link
+                    href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
+                  >
+                    <Badge variant="secondary" className="gap-1">
+                      <MapPin className="size-3" />
+                      {wine.appellationName}
+                    </Badge>
+                  </Link>
+                ) : (
+                  <Badge variant="secondary">{wine.appellationName}</Badge>
+                )
               ) : null}
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Grape blend</p>
-                <p className="mt-0.5 text-sm">{grapes || "—"}</p>
+            {facts.length > 0 ? (
+              <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                {facts.map((f) => (
+                  <div key={f.label}>
+                    <Eyebrow>{f.label}</Eyebrow>
+                    <div className="mt-0.5 text-sm">{f.node}</div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Wine style</p>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {wine.colour ? (
-                    <Badge variant="secondary">{cap(wine.colour)}</Badge>
-                  ) : null}
-                  {wine.style ? (
-                    <Badge variant="secondary">{cap(wine.style)}</Badge>
-                  ) : null}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Average retail price
-                </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {wine.estimatedPrice != null
-                    ? `${Math.round(wine.estimatedPrice).toLocaleString("da-DK")} kr`
-                    : "—"}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground/70">
-                  A typical Danish retail price found in shop listings, not
-                  from the label scan. Blank when none was found.
-                  {isManager ? " Edit it via Manage wine." : " Contributors and admins can correct it."}
-                </p>
-              </div>
-            </div>
-            {wine.appellationPlaceKey && wine.appellationName ? (
-              <Link
-                href={`/knowledge/map?place=${encodeURIComponent(wine.appellationPlaceKey)}`}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-sm text-primary transition-colors hover:bg-muted"
-              >
-                <MapPin className="size-3.5" />
-                View {wine.appellationName} on the map
-              </Link>
             ) : null}
           </div>
         </div>
@@ -204,10 +209,10 @@ export default async function CatalogWinePage({
             {wine.avgScore != null ? (
               <div>
                 <p className="font-heading text-4xl font-semibold tabular-nums">
-                  {wine.avgScore.toFixed(1)}
+                  {fmtAvg(wine.avgScore)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {qualityBand(Math.round(wine.avgScore))} · avg community score
+                  {qualityBand(Math.round(wine.avgScore))} · community rating
                 </p>
               </div>
             ) : (
@@ -215,18 +220,30 @@ export default async function CatalogWinePage({
                 No ratings yet — be the first.
               </p>
             )}
-            <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
+            <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
               <div>
                 <p className="font-heading text-lg font-semibold tabular-nums">
                   {wine.noteCount}
                 </p>
-                <p className="text-xs text-muted-foreground">Tasting notes</p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="max-md:hidden">tasting notes</span>
+                  <span className="md:hidden">notes</span>
+                </p>
               </div>
               <div>
                 <p className="font-heading text-lg font-semibold tabular-nums">
                   {guessStats?.appearances ?? 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Blind tastings</p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="max-md:hidden">blind tastings</span>
+                  <span className="md:hidden">blind</span>
+                </p>
+              </div>
+              <div>
+                <p className="font-heading text-lg font-semibold tabular-nums">
+                  {usage.holders}
+                </p>
+                <p className="text-xs text-muted-foreground">cellars</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -238,7 +255,7 @@ export default async function CatalogWinePage({
               href={`/catalog/${wineId}/notes/new`}
               className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              New tasting note
+              Write a tasting note
             </Link>
             {isManager ? (
               <div className="border-t border-border pt-4">
@@ -253,30 +270,31 @@ export default async function CatalogWinePage({
         </Card>
       </div>
 
+      {/* The gold cellar strip (CC-C2, spec §6.2 item 3): only when the
+          viewer owns the wine — the join between the shared catalog record
+          and the viewer's own bottles of it. */}
+      {ownLots.length > 0 ? (
+        <CellarStrip
+          wineId={wineId}
+          title={title}
+          lots={ownLots}
+          community={{ avg: wine.avgScore, count: wine.noteCount }}
+        />
+      ) : null}
+
       {/* The wine's profile, one section per thing the label read reports, so
           every scanned wine shows the same shape. `description` is the older
           free-text blurb and is only shown when there's no profile at all. */}
       {hasProfile ? (
-        <div className="flex flex-col gap-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {profileSections.map((s) => (
-              <div key={s.title}>
-                <p className="mb-2 text-sm font-medium">{s.title}</p>
-                <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                  {s.body}
-                </p>
-              </div>
-            ))}
-          </div>
-          {servingFacts.length > 0 ? (
-            <div className="flex flex-wrap gap-x-6 gap-y-1">
-              {servingFacts.map((f) => (
-                <p key={f.label} className="text-xs text-muted-foreground">
-                  <span className="font-medium">{f.label}:</span> {f.value}
-                </p>
-              ))}
+        <div className="grid gap-6 md:grid-cols-2">
+          {profileSections.map((s) => (
+            <div key={s.title}>
+              <p className="mb-2 text-sm font-medium">{s.title}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                {s.body}
+              </p>
             </div>
-          ) : null}
+          ))}
         </div>
       ) : wine.description ? (
         <div>
@@ -287,39 +305,44 @@ export default async function CatalogWinePage({
         </div>
       ) : null}
 
-      {descriptors.length > 0 || structure.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          {descriptors.length > 0 ? (
-            <div>
-              <p className="mb-2 text-sm font-medium">What people find</p>
-              <div className="flex flex-wrap gap-1.5">
-                {descriptors.map((d) => (
-                  <span
-                    key={d.term}
-                    className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
-                  >
-                    {d.term}
-                    {d.mentions > 1 ? (
-                      <span className="text-muted-foreground">{d.mentions}</span>
-                    ) : null}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
+      {descriptors.length > 0 ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">What people find</p>
+          <div className="flex flex-wrap gap-1.5">
+            {descriptors.map((d) => (
+              <span
+                key={d.term}
+                className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-xs"
+              >
+                {d.term}
+                {d.mentions > 1 ? (
+                  <span className="text-muted-foreground">{d.mentions}</span>
+                ) : null}
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Counted across the {plural(wine.noteCount, "note", "notes")}. The
+            number is how many people said it.
+          </p>
+        </div>
+      ) : null}
+
+      {structure.length > 0 ? (
+        <div>
+          <p className="mb-2 text-sm font-medium">Structure, averaged</p>
           <WineStructure rows={structure} />
         </div>
       ) : null}
 
       {guessStats && guessStats.appearances > 0 ? (
         <div>
-          <p className="mb-2 text-sm font-medium">Blind-tasting track record</p>
+          <p className="mb-2 text-sm font-medium">Poured blind</p>
           <Card>
             <CardContent className="pt-6">
               <p className="mb-3 text-sm">
-                Poured blind in{" "}
                 <span className="font-medium">
-                  {guessStats.appearances}{" "}
+                  {countWord(guessStats.appearances, { capital: true })}{" "}
                   {guessStats.appearances === 1 ? "tasting" : "tastings"}
                 </span>
                 {guessStats.guessCount > 0
@@ -327,7 +350,7 @@ export default async function CatalogWinePage({
                       guessStats.guessCount === 1 ? "guess" : "guesses"
                     }`
                   : ""}
-                .
+                . How often people got each attribute:
               </p>
               {guessStats.guessCount > 0 ? (
                 <ul className="flex flex-col gap-1.5">
@@ -353,34 +376,15 @@ export default async function CatalogWinePage({
 
       <div>
         <p className="mb-2 text-sm font-medium">Your notes</p>
-        {myNotes && myNotes.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {myNotes.map((n) => (
-              <li key={n.id}>
-                <Link
-                  href={`/catalog/${wineId}/notes/${n.id}`}
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
-                >
-                  <span className="flex items-center gap-2">
-                    {n.tasted_on}
-                    {n.context_kind === "BLIND" ? (
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-primary uppercase">
-                        blind
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="font-medium">
-                    {n.quality_score != null ? `${n.quality_score} pts` : "unscored"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            You haven&apos;t tasted this wine yet.
-          </p>
-        )}
+        <YourNotes
+          wineId={wineId}
+          notes={(myNotes ?? []).map((n) => ({
+            id: n.id,
+            tastedOn: n.tasted_on,
+            score: n.quality_score,
+            contextKind: n.context_kind,
+          }))}
+        />
       </div>
     </div>
   );
