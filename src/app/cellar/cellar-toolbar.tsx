@@ -32,6 +32,7 @@ export type ToolbarProps = {
   options: FilterOptions;
   view: CellarView;
   onView: (v: CellarView) => void;
+  readOnly: boolean;
 };
 
 // The four filter fields the popover renders, in the order the mock draws
@@ -65,9 +66,16 @@ export function CellarToolbar({
   options,
   view,
   onView,
+  readOnly,
 }: ToolbarProps): React.JSX.Element {
   const activeFilterCount = filterCount(filters);
   const chips = filterChips(filters);
+  // §5.9: a read-only cellar shows nothing of the viewer's own score, so
+  // "Your score" is dropped from the sort options — and a sort that was
+  // already "yours" (e.g. via a stale URL) reads as "bottles" instead of
+  // pointing the select at a hidden option.
+  const sortOrder = readOnly ? SORT_ORDER.filter((s) => s !== "yours") : SORT_ORDER;
+  const sortValue = readOnly && sort === "yours" ? "bottles" : sort;
 
   function setFilterValue(key: keyof FilterState, raw: string) {
     const value = raw === "" ? null : raw;
@@ -115,11 +123,11 @@ export function CellarToolbar({
           <span className="text-sm text-muted-foreground max-md:hidden">Sort</span>
           <select
             aria-label="Sort"
-            value={sort}
+            value={sortValue}
             onChange={(e) => onSort(e.target.value as SortKey)}
             className={selectCls}
           >
-            {SORT_ORDER.map((s) => (
+            {sortOrder.map((s) => (
               <option key={s} value={s}>
                 {SORT_LABELS[s]}
               </option>

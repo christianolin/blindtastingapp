@@ -358,6 +358,7 @@ export function CellarBottles({
         options={options}
         view={view}
         onView={chooseView}
+        readOnly={readOnly}
       />
 
       {notice ? (

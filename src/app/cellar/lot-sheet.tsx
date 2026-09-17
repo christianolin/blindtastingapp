@@ -390,7 +390,7 @@ function LoadedLotSheet({
         <p className="mt-1 text-sm text-muted-foreground">{identityLine(wine)}</p>
         <Link
           href={`/catalog/${wine.catalogWineId}`}
-          className="mt-1 inline-block text-sm font-medium text-primary hover:underline"
+          className="relative mt-1 inline-block text-sm font-medium text-primary hover:underline max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-3 max-md:after:content-['']"
         >
           Catalog →
         </Link>
@@ -433,6 +433,7 @@ function LoadedLotSheet({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2 max-md:after:content-['']"
                   onClick={() => onOpenNote(yours.noteId, wine.catalogWineId)}
                 >
                   Open the note
@@ -464,7 +465,7 @@ function LoadedLotSheet({
           <p className="text-sm md:hidden">{spreadLine(community, { phone: true })}</p>
           <Link
             href={`/catalog/${wine.catalogWineId}`}
-            className="text-sm font-medium text-primary hover:underline"
+            className="relative text-sm font-medium text-primary hover:underline max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-3 max-md:after:content-['']"
           >
             Read them
           </Link>
@@ -579,7 +580,7 @@ function LoadedLotSheet({
                       {ACTION_WORDS.DRANK} {c.quantity} at{" "}
                       <Link
                         href={`/tastings/${c.tasting.id}`}
-                        className="font-medium text-primary hover:underline"
+                        className="relative font-medium text-primary hover:underline max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-3 max-md:after:content-['']"
                       >
                         {c.tasting.name}
                       </Link>
@@ -596,7 +597,7 @@ function LoadedLotSheet({
                   <button
                     type="button"
                     onClick={() => onOpenNote(note.id, wine.catalogWineId)}
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="relative font-medium text-primary underline-offset-2 hover:underline max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-3 max-md:after:content-['']"
                   >
                     {note.score != null ? `note ${note.score}` : "note"}
                   </button>
@@ -606,6 +607,7 @@ function LoadedLotSheet({
                     <Button
                       variant="ghost"
                       size="xs"
+                      className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2.5 max-md:after:content-['']"
                       onClick={() => onRate(wine.catalogWineId, c.id)}
                     >
                       + Note
@@ -622,7 +624,12 @@ function LoadedLotSheet({
       <div>
         <Eyebrow>Your note on this lot.</Eyebrow>
         <p className="mt-1 whitespace-pre-line text-sm">{lot.lotNote ?? "—"}</p>
-        <Button variant="ghost" size="sm" onClick={() => openEdit(null)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2 max-md:after:content-['']"
+          onClick={() => openEdit(null)}
+        >
           Edit
         </Button>
       </div>
@@ -631,7 +638,12 @@ function LoadedLotSheet({
         <Eyebrow>Drink window</Eyebrow>
         <span>{drinkWindowText(lot.drinkFrom, lot.drinkTo)}</span>
         <span className="text-muted-foreground">· yours, and shown only here</span>
-        <Button variant="ghost" size="sm" onClick={() => openEdit("drinkFrom")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2 max-md:after:content-['']"
+          onClick={() => openEdit("drinkFrom")}
+        >
           Edit
         </Button>
       </div>
@@ -684,7 +696,14 @@ function LoadedLotSheet({
           }}
         >
           <DropdownMenuTrigger
-            render={<Button variant="outline" size="icon-lg" aria-label="More" />}
+            render={
+              <Button
+                variant="outline"
+                size="icon-lg"
+                aria-label="More"
+                className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-1 max-md:after:content-['']"
+              />
+            }
           >
             <MoreHorizontal />
           </DropdownMenuTrigger>
