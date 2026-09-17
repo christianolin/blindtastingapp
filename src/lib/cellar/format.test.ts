@@ -143,6 +143,10 @@ describe("scores and plurals", () => {
   it("one decimal for an average, an integer for a score, a dash for nothing", () => {
     expect(fmtAvg(93.44)).toBe("93.4");
     expect(fmtAvg(93.45)).toBe("93.5");
+    // `(91.85).toFixed(1)` is "91.8" (binary rounding, not decimal half-up) —
+    // regression coverage for the exact midpoints toFixed gets wrong.
+    expect(fmtAvg(91.85)).toBe("91.9");
+    expect(fmtAvg(0.35)).toBe("0.4");
     expect(fmtAvg(null)).toBe("—");
     expect(fmtScore(92)).toBe("92");
     expect(fmtScore(null)).toBe("—");

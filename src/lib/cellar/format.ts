@@ -175,7 +175,14 @@ export function addedMonth(
 }
 
 export function fmtAvg(n: number | null): string {
-  return n == null ? "—" : n.toFixed(1);
+  if (n == null) return "—";
+  // `toFixed` rounds against the binary float representation of `n`, not
+  // decimal half-up — it silently rounds *down* at exact one-decimal
+  // midpoints (e.g. `(91.85).toFixed(1) === "91.8"`). Nudge by
+  // `Number.EPSILON` before rounding to the nearest tenth so a value that is
+  // truly a decimal `.x5` rounds half up, matching the documented rule.
+  const rounded = Math.round((n + Number.EPSILON) * 10) / 10;
+  return rounded.toFixed(1);
 }
 
 export function fmtScore(n: number | null): string {
