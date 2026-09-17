@@ -611,6 +611,8 @@ export function footerLine(opts: {
     "producer",
     "producers",
   )} and ${plural(stats.countries, "country", "countries")}`;
+  // (plan copy): the "{n} filter(s)" and "grouped by {dimension}" forms — the
+  // mock draws the unfiltered "nothing filtered, nothing grouped" line only.
   const filterWord =
     chips.length === 0
       ? "nothing filtered"
