@@ -74,25 +74,29 @@ export function DrinkSheet({
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState<{ id: string; name: string } | null>(null);
 
-  // Resets on every distinct lot the sheet is opened for (not on every
-  // re-render of the same lot, which would wipe what the taster is typing).
-  // The reset itself runs during render — React's "adjusting state when a
-  // prop changes" pattern — rather than as synchronous setState calls inside
-  // an effect body, which react-hooks/set-state-in-effect flags as a
-  // cascading-render risk.
+  // Resets on every open (not on every re-render of the same lot, which
+  // would wipe what the taster is typing). `resetFor` tracks `lotId`
+  // including the `null` a close sends, so it goes back to `null` when the
+  // sheet closes and the next open — even of the same lot — is a fresh
+  // "distinct" transition that resets again. The reset itself runs during
+  // render — React's "adjusting state when a prop changes" pattern — rather
+  // than as synchronous setState calls inside an effect body, which
+  // react-hooks/set-state-in-effect flags as a cascading-render risk.
   const lotId = lot?.lotId ?? null;
   const [resetFor, setResetFor] = useState<string | null>(null);
-  if (lotId !== null && lotId !== resetFor) {
+  if (lotId !== resetFor) {
     setResetFor(lotId);
-    setQty(1);
-    setReason("DRANK");
-    setWhen("today");
-    setPicked(isoDate(new Date()));
-    setOccasion("");
-    setAlsoNote(true);
-    setPending(false);
-    setError(null);
-    setLive(null);
+    if (lotId !== null) {
+      setQty(1);
+      setReason("DRANK");
+      setWhen("today");
+      setPicked(isoDate(new Date()));
+      setOccasion("");
+      setAlsoNote(true);
+      setPending(false);
+      setError(null);
+      setLive(null);
+    }
   }
 
   useEffect(() => {
