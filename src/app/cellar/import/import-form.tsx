@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,12 +67,12 @@ export function ImportForm() {
               ))}
             </ul>
           ) : null}
-          <a
+          <Link
             href="/cellar"
             className="mt-1 text-xs font-medium text-primary transition-colors hover:text-primary/80"
           >
             Go to your cellar
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="flex items-center gap-3">
