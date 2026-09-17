@@ -106,7 +106,7 @@ export function percent(part: number, whole: number): number {
 }
 
 /**
- * Dense ranking for a displayed standings list (reveal-6): highest score
+ * Dense ranking for a displayed standings list (reveal-6): the top score
  * first, ties share a rank, and the next distinct score takes the following
  * rank — the same rule as `competitorRank`, so a list, a rank chip and a delta
  * pill always agree. Stable among ties: tied rows keep the order they arrived

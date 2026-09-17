@@ -245,6 +245,7 @@ export function LotEditForm({
             void handleDelete();
           }}
         >
+          {/* (plan copy) */}
           {tapState === "armed" ? "Tap again to delete" : "Delete lot"}
         </Button>
       </div>

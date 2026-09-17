@@ -12,7 +12,7 @@
 // nothing here computes a value or a "ready to drink" flag.
 //
 // Takes the Supabase client as a parameter (the `place.ts` pattern): no `next`
-// import, no `server-only`, so a page or an action can call it.
+// import, not server-bound, so a page or an action can call it.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { LOT_SELECT, bottleRowFrom, type LotEmbedRow } from "./embed";

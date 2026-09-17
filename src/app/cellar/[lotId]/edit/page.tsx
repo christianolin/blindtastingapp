@@ -1,8 +1,7 @@
 // Legacy edit route → the Bottles frame's `?lot=…&do=edit` sheet (CC-X2,
 // spec D6, §3). See `../page.tsx` for the redirect rationale. The old
-// `EditLotForm` and the curator retail-price editor (`WinePriceField`,
-// D13) are deleted with this route — `LotSheet`'s own edit mode (CC-U4)
-// replaces both.
+// edit form and the curator retail-price editor (D13) are deleted with
+// this route — `LotSheet`'s own edit mode (CC-U4) replaces both.
 
 import { redirect } from "next/navigation";
 

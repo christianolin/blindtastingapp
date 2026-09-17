@@ -1,5 +1,5 @@
 // Display strings shared by every cellar and catalog surface (CC-P0). Pure:
-// no `server-only`, no Supabase client, no browser API. Dates are formatted
+// not server-bound, no Supabase client, no browser API. Dates are formatted
 // from raw strings with a fixed month table — never a locale-aware date
 // formatter, whose short-month spelling ("Sept" vs "Sep") differs by ICU
 // version.

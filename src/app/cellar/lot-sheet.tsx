@@ -83,6 +83,7 @@ function identityLine(w: BottleWine): string {
 }
 
 function drinkWindowText(from: number | null, to: number | null): string {
+  // (plan copy)
   if (from == null && to == null) return "No window yet";
   return `${from ?? "?"}–${to ?? "?"}`;
 }
@@ -264,6 +265,7 @@ export function LotSheet(props: LotSheetProps) {
         {!loaded ? (
           <>
             <DialogTitle className="sr-only">Lot</DialogTitle>
+            {/* (plan copy) */}
             <p className="py-10 text-center text-sm text-muted-foreground">
               {data === "loading" ? "Loading…" : "Couldn't load this lot right now."}
             </p>
@@ -515,6 +517,7 @@ function LoadedLotSheet({
           ref={addRowRef}
           className="flex flex-col gap-2 rounded-xl border border-border bg-background p-3"
         >
+          {/* (plan copy) */}
           <Eyebrow>How many to add</Eyebrow>
           <div className="flex items-center gap-3">
             <div
@@ -558,6 +561,7 @@ function LoadedLotSheet({
 
       <div>
         <Eyebrow>This lot so far</Eyebrow>
+        {/* (plan copy) */}
         {history.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">Nothing has left this lot yet.</p>
         ) : (
@@ -697,6 +701,7 @@ function LoadedLotSheet({
               closeOnClick={false}
               onClick={onArmOrDelete}
             >
+              {/* (plan copy) */}
               {tapState === "armed" ? "Tap again to delete" : "Delete lot"}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -721,6 +726,7 @@ function LoadedLotSheet({
 
   const editFooter = (
     <footer className="flex shrink-0 justify-end gap-2 border-t border-border bg-background p-[11px_16px] pb-[max(22px,env(safe-area-inset-bottom))] md:p-[16px_24px]">
+      {/* (plan copy) */}
       <Button type="button" variant="outline" onClick={onEditCancel}>
         Cancel
       </Button>

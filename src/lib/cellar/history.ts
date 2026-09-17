@@ -14,7 +14,7 @@
 // Nothing about money is selected or derived here (spec §5.7 "No money").
 //
 // Takes the Supabase client as a parameter (the `place.ts` pattern): no `next`
-// import, no `server-only`, so a page or an action can call it.
+// import, not server-bound, so a page or an action can call it.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { chunk } from "./bottles";

@@ -165,7 +165,7 @@ export type WineProfileInput = {
 export type CatalogWineInput = {
   draft: WineIdentityDraft;
   profile?: WineProfileInput | null;
-  /** Average retail price per bottle in DKK, as the form's text ("" = unknown). */
+  /** The catalog wine's retail price per bottle in DKK, as the form's text ("" = unknown). */
   estimatedPrice?: string | null;
 };
 

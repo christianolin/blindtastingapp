@@ -199,6 +199,7 @@ export function whereLine(row: HistoryRow, opts: { phone: boolean }): WhereLine 
   if (row.tasting) {
     return { kind: "tasting", tastingId: row.tasting.id, name: row.tasting.name };
   }
+  // (plan copy): the empty-occasion words "at home", "gifted", "lost", "taken out".
   switch (row.reason) {
     case "DRANK":
       return { kind: "text", text: row.occasion ? `at home · ${row.occasion}` : "at home" };
@@ -212,6 +213,7 @@ export function whereLine(row: HistoryRow, opts: { phone: boolean }): WhereLine 
   }
 }
 
+// (plan copy): "Lost {n}" / "Removed {n}" for LOST / OTHER.
 const ACTION_WORDS: Record<ConsumptionReason, string> = {
   DRANK: "Drank",
   GIFTED: "Gifted",

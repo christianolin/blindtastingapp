@@ -11,8 +11,8 @@
 // single place it renders). The catalog wine's typical-price column is never
 // selected here, and no valuation is ever derived.
 //
-// Pure: type-only `@/` imports plus the pure `wine-title` module, no
-// `server-only`, no `next` import.
+// Pure: type-only `@/` imports plus the pure `wine-title` module, not
+// server-bound, no `next` import.
 import { catalogWineTitle } from "@/lib/wset/wine-title";
 import type {
   BottleLot,

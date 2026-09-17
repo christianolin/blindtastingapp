@@ -18,7 +18,7 @@
 // through to the row untouched and compared with nothing.
 //
 // Takes the Supabase client as a parameter (the `place.ts` pattern): no
-// `next` import, no `server-only`, so a page or a server action can call it.
+// `next` import, not server-bound, so a page or a server action can call it.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import {

@@ -16,7 +16,7 @@
 // here selects a price (D4).
 //
 // Takes the Supabase client as a parameter (the `place.ts` pattern): no `next`
-// import, no `server-only`, so a page or an action can call it.
+// import, not server-bound, so a page or an action can call it.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { getCellarBottles } from "./bottles";

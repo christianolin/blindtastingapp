@@ -1,5 +1,5 @@
 // Cellar rows: dimensions, header stats, search, sort, filter, grouping,
-// paging and footer copy (CC-P1). Pure: no `server-only`, no Supabase
+// paging and footer copy (CC-P1). Pure: not server-bound, no Supabase
 // client, no React. Runtime imports come from ./format only — every type
 // comes from ./types as `import type`.
 import { bottleTitle, colourWord, plural, vintageLabel } from "./format";
@@ -103,6 +103,7 @@ export function headerSubtitle(
 ): string {
   const bottles = plural(s.bottles, "bottle", "bottles");
   const wines = plural(s.wines, "wine", "wines");
+  // (plan copy): the read-only line drops "you have tasted".
   if (opts.readOnly) return `${bottles} · ${wines}`;
   if (opts.phone) return `${bottles} · ${wines} · ${s.tasted} tasted`;
   return `${bottles} · ${wines} · you have tasted ${s.tasted} of them`;

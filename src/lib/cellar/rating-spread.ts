@@ -1,5 +1,5 @@
-// Community rating spread for the lot sheet (CC-P3, D7). Pure: no
-// `server-only`, no Supabase client. Computed over a wine's scored notes —
+// Community rating spread for the lot sheet (CC-P3, D7). Pure: not
+// server-bound, no Supabase client. Computed over a wine's scored notes —
 // an unscored note (`score: null`) never counts toward `avg`, the ends or
 // `byFriends`. The viewer is never in their own friend set, so their own
 // notes never count as "by friends" (that is the caller's job, not this

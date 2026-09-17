@@ -4,7 +4,7 @@
 // near-duplicates by folding, and drafts the merge notice offered above the grouped
 // list (screen C3).
 //
-// Pure: relative imports only, no server-only, no React, no Supabase client.
+// Pure: relative imports only, not server-bound, no React, no Supabase client.
 
 import { countWord } from "../count-words";
 
@@ -72,6 +72,7 @@ export function mergeNotice(
   if (groups.length === 0) return null;
 
   const totalSpellings = groups.reduce((n, g) => n + g.variants.length, 0);
+  // (plan copy): the "{n} places look like {m}." form beyond one pair.
   const title =
     groups.length === 1 && groups[0].variants.length === 2
       ? "Two places look like one."

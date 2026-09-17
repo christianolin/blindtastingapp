@@ -1,6 +1,6 @@
 // Copy and pure date/count helpers for the drink sheet (CC-U5, spec §5.6,
 // D2). Pure: the only runtime imports are the other pure modules
-// (`../../lib/cellar/format`, `../../lib/count-words`) — no `server-only`,
+// (`../../lib/cellar/format`, `../../lib/count-words`) — not server-bound,
 // no Supabase client, no browser API, no `@/` alias (vitest has no alias).
 import { fmtAvg, plural } from "../../lib/cellar/format";
 import { countWord } from "../../lib/count-words";
@@ -16,6 +16,7 @@ export const REASON_LABELS: Record<DrinkReason, string> = {
   OTHER: "Other",
 };
 
+// (plan copy) for every reason but Drank, the one the mock draws.
 // The verb `confirmLabel` uses for each reason ("Drink one bottle", "Gift
 // one bottle", "Write off one bottle", "Take out one bottle").
 const REASON_VERBS: Record<DrinkReason, string> = {

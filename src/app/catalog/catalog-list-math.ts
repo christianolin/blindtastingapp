@@ -157,6 +157,7 @@ export const CATALOG_SORT_OPTIONS: readonly {
   { value: "bottles:desc", label: "Bottles in cellars", sort: { key: "bottles", dir: "desc" } },
 ];
 
+// (plan copy): every "sorted by …" word but "community rating".
 export function sortedByWord(s: CatalogSort): string {
   switch (s.key) {
     case "avgScore":
