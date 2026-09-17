@@ -1,10 +1,20 @@
 import { AddWineButton } from "@/components/add-wine-button";
 import { redirect } from "next/navigation";
-import { Wine, FileText, Users, Globe, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { bottleTitle } from "@/lib/cellar/format";
+import type { BottleWine } from "@/lib/cellar/types";
 import { PageHeader } from "@/components/patterns/page-header";
-import { CatalogList, type CatalogRow } from "./catalog-list";
+import { CatalogList } from "./catalog-list";
+import {
+  bandAverage,
+  bandLinePhone,
+  bandParts,
+  yourLine,
+  type CatalogBand,
+  type CatalogRow,
+} from "./catalog-list-math";
 
 type Rel = { name: string } | { name: string }[] | null;
 type WineRow = {
@@ -20,13 +30,30 @@ type WineRow = {
   country: Rel;
   region: Rel;
   appellation: Rel;
+  type_designation: Rel;
   created_at: string;
 };
+
+// Kept identical for the primary (newest 500) read and every catch-up chunk
+// (refinement 15) so an owned/tasted wine outside the 500 renders the same
+// facts as one inside it.
+const CATALOG_SELECT =
+  "id, created_at, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name), " +
+  "type_designation:type_designations(name)";
+
+const CHUNK_SIZE = 200;
 
 function relName(rel: Rel): string | null {
   if (!rel) return null;
   const row = Array.isArray(rel) ? rel[0] : rel;
   return row?.name ?? null;
+}
+
+function chunk<T>(items: readonly T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
 }
 
 export default async function CatalogPage() {
@@ -36,32 +63,74 @@ export default async function CatalogPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: wines }, { data: ratings }, { count: totalWines }, { data: countryRows }] =
+  const [{ data: wines }, { data: lots }, { data: notes }, { data: ratings }, { count: totalWines }] =
     await Promise.all([
       supabase
         .from("catalog_wines")
-        .select(
-          "id, created_at, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
-            "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name)",
-        )
+        .select(CATALOG_SELECT)
         .is("merged_into", null)
         .eq("blind_pending", false)
         .order("created_at", { ascending: false })
         .limit(500),
+      supabase
+        .from("cellar_lots")
+        .select("catalog_wine_id, quantity")
+        .eq("owner_id", user.id)
+        .gt("quantity", 0),
+      supabase
+        .from("wset_notes")
+        .select("catalog_wine_id, quality_score, tasted_on, created_at")
+        .eq("author_id", user.id)
+        .not("quality_score", "is", null)
+        .not("catalog_wine_id", "is", null)
+        .order("tasted_on", { ascending: false })
+        .order("created_at", { ascending: false }),
       supabase.from("catalog_wine_ratings").select("catalog_wine_id, avg_score, note_count"),
       supabase
         .from("catalog_wines")
         .select("id", { count: "exact", head: true })
         .is("merged_into", null)
         .eq("blind_pending", false),
-      supabase.from("catalog_wines").select("country_id").is("merged_into", null),
     ]);
 
-  const totalCountries = new Set(
-    (countryRows ?? []).map((r) => r.country_id).filter(Boolean),
-  ).size;
+  const primaryList = (wines ?? []) as unknown as WineRow[];
+  const primaryIds = new Set(primaryList.map((w) => w.id));
 
-  const wineList = (wines ?? []) as unknown as WineRow[];
+  // D3: the viewer's most recent scored note per wine — the notes arrive
+  // newest first (tasted_on desc, created_at desc), so the first one seen
+  // per wine id is the one that counts.
+  const yoursByWine = new Map<string, number>();
+  for (const n of notes ?? []) {
+    if (n.catalog_wine_id == null || n.quality_score == null) continue;
+    if (!yoursByWine.has(n.catalog_wine_id)) {
+      yoursByWine.set(n.catalog_wine_id, Number(n.quality_score));
+    }
+  }
+  const ownedByWine = new Map<string, number>();
+  for (const l of lots ?? []) {
+    ownedByWine.set(l.catalog_wine_id, (ownedByWine.get(l.catalog_wine_id) ?? 0) + l.quantity);
+  }
+
+  // Refinement 15: the viewer's own owned/tasted wines render even past the
+  // newest-500 cut, so "In my cellar {o}"/"I have tasted {t}" actually
+  // filter down to their real counts instead of whatever subset landed in
+  // the newest 500.
+  const extraIds = [...new Set([...ownedByWine.keys(), ...yoursByWine.keys()])].filter(
+    (id) => !primaryIds.has(id),
+  );
+  const extraResults = await Promise.all(
+    chunk(extraIds, CHUNK_SIZE).map((ids) =>
+      supabase
+        .from("catalog_wines")
+        .select(CATALOG_SELECT)
+        .in("id", ids)
+        .is("merged_into", null)
+        .eq("blind_pending", false),
+    ),
+  );
+  const extraList = extraResults.flatMap((r) => r.data ?? []) as unknown as WineRow[];
+
+  const wineList = [...primaryList, ...extraList];
   const wineIds = wineList.map((w) => w.id);
 
   const [{ data: grapeRows }, { data: appearanceRows }, { data: holdingRows }] =
@@ -104,15 +173,12 @@ export default async function CatalogPage() {
   const ratingMap = new Map((ratings ?? []).map((r) => [r.catalog_wine_id, r]));
   const ratingRows = ratings ?? [];
   const totalNotes = ratingRows.reduce((s, r) => s + (r.note_count ?? 0), 0);
-  const avgScore =
-    totalNotes > 0
-      ? Math.round(
-          ratingRows.reduce(
-            (s, r) => s + (r.avg_score != null ? Number(r.avg_score) * (r.note_count ?? 0) : 0),
-            0,
-          ) / totalNotes,
-        )
-      : null;
+  const average = bandAverage(
+    ratingRows.map((r) => ({
+      avg: r.avg_score != null ? Number(r.avg_score) : null,
+      count: r.note_count ?? 0,
+    })),
+  );
 
   const rows: CatalogRow[] = wineList.map((w) => {
     const rating = ratingMap.get(w.id);
@@ -126,44 +192,71 @@ export default async function CatalogPage() {
             ? `${w.vintage_tawny_years}yo`
             : "Tawny"
           : "NV";
-    return {
-      id: w.id,
+    const producer = relName(w.producer);
+    const grapes = orderedGrapes(w.id);
+    const wine: BottleWine = {
+      catalogWineId: w.id,
       title: catalogWineTitle({
-        producerName: relName(w.producer),
+        producerName: producer,
         wineName: w.wine_name,
         vintageKind: w.vintage_kind,
         vintageYear: w.vintage_year,
         vintageTawnyYears: w.vintage_tawny_years,
         appellationName: relName(w.appellation),
       }),
+      producer,
+      wineName: w.wine_name,
+      vintageKind: w.vintage_kind,
+      vintageYear: w.vintage_year,
+      vintageTawnyYears: w.vintage_tawny_years,
+      primaryGrape: grapes[0] ?? null,
       colour: w.colour,
       style: w.style,
-      country: relName(w.country),
-      region: relName(w.region),
+      designation: relName(w.type_designation),
       appellation: relName(w.appellation),
-      grapes: orderedGrapes(w.id),
+      region: relName(w.region),
+      country: relName(w.country),
+      imageUrl: w.image_url,
+    };
+    return {
+      id: w.id,
+      producer,
+      name: bottleTitle(wine),
+      title: wine.title,
+      colour: w.colour,
+      style: w.style,
+      country: wine.country,
+      region: wine.region,
+      appellation: wine.appellation,
+      grapes,
+      designation: wine.designation,
       vintage,
       imageUrl: w.image_url,
       avgScore: rating ? Number(rating.avg_score) : null,
       noteCount: rating?.note_count ?? 0,
       appearances: appearancesByWine.get(w.id) ?? 0,
       cellarBottles: bottlesByWine.get(w.id) ?? 0,
+      yours: yoursByWine.get(w.id) ?? null,
+      owned: ownedByWine.get(w.id) ?? 0,
       addedAt: w.created_at,
     };
   });
 
-  const stats = [
-    { icon: Wine, value: (totalWines ?? 0).toLocaleString(), label: "wines", sub: "In catalog" },
-    { icon: FileText, value: totalNotes.toLocaleString(), label: "tasting notes", sub: "Shared by community" },
-    { icon: Users, value: avgScore != null ? String(avgScore) : "—", label: "avg community score", sub: null },
-    { icon: Globe, value: String(totalCountries ?? 0), label: "countries", sub: "Represented" },
-  ];
+  const band: CatalogBand = {
+    wines: totalWines ?? 0,
+    notes: totalNotes,
+    average,
+    yourNotes: yoursByWine.size,
+    owned: ownedByWine.size,
+  };
+  const parts = bandParts(band);
+  const your = yourLine(band);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 p-6">
       <PageHeader
         title="Catalog"
-        subtitle="Explore the shared wine database curated by the community."
+        subtitle="The shared wine database, built by everyone tasting"
         actions={
           <AddWineButton
             kind="catalog"
@@ -174,31 +267,29 @@ export default async function CatalogPage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-0 sm:overflow-hidden sm:rounded-xl sm:border sm:border-border sm:divide-x sm:divide-border">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="flex flex-1 items-center gap-2.5 rounded-xl border border-border p-2.5 sm:gap-3 sm:rounded-none sm:border-0 sm:p-4"
-          >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:size-9">
-              <s.icon className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <div className="font-heading text-base leading-none font-semibold tabular-nums sm:text-xl">
-                {s.value}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
-              {s.sub ? (
-                <div className="hidden text-[11px] text-muted-foreground/70 sm:block">
-                  {s.sub}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
+      <div className="hidden flex-wrap items-baseline gap-x-6 gap-y-2 md:flex">
+        <p className="flex items-baseline gap-1.5">
+          <span className="font-heading text-2xl font-semibold tabular-nums">{parts.wines}</span>
+          <span className="text-sm text-muted-foreground">wines</span>
+        </p>
+        <p className="flex items-baseline gap-1.5">
+          <span className="font-heading text-2xl font-semibold tabular-nums">{parts.notes}</span>
+          <span className="text-sm text-muted-foreground">tasting notes shared</span>
+        </p>
+        {parts.average != null ? (
+          <p className="flex items-baseline gap-1.5">
+            <span className="font-heading text-2xl font-semibold tabular-nums">{parts.average}</span>
+            <span className="text-sm text-muted-foreground">average across all of them</span>
+          </p>
+        ) : null}
+        <p className="ml-auto text-sm text-muted-foreground">
+          You have notes on <span className="font-semibold text-foreground">{your.notes}</span> · you
+          own <span className="font-semibold text-foreground">{your.owned}</span>
+        </p>
       </div>
+      <p className="text-sm text-muted-foreground md:hidden">{bandLinePhone(band)}</p>
 
-      <CatalogList rows={rows} />
+      <CatalogList rows={rows} band={band} />
     </div>
   );
 }
