@@ -6,7 +6,7 @@
 // `readOnly={true}` over the same rows shape. Every derivation below is a
 // pure CC-P1/CC-P2 helper over the `rows` prop — this file only wires state,
 // the sheets and the `?lot=`/`?do=` query contract (D6) to them.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { AddWineButton } from "@/components/add-wine-button";
@@ -58,6 +58,30 @@ import { LotSheet } from "./lot-sheet";
 
 const CELLAR_VIEW_KEY = "cellar-view";
 
+// The list/grid choice as an external store (see the useSyncExternalStore
+// note in CellarBottles). The in-memory value wins over storage so a blocked
+// localStorage still lets the switch work for the visit.
+const VIEW_LISTENERS = new Set<() => void>();
+let memoryView: CellarView | null = null;
+function subscribeView(listener: () => void): () => void {
+  VIEW_LISTENERS.add(listener);
+  return () => {
+    VIEW_LISTENERS.delete(listener);
+  };
+}
+function readStoredView(): CellarView {
+  if (memoryView) return memoryView;
+  return readValue(() => window.localStorage, CELLAR_VIEW_KEY) === "grid" ? "grid" : "list";
+}
+function serverView(): CellarView {
+  return "list";
+}
+function storeView(v: CellarView): void {
+  memoryView = v;
+  writeValue(() => window.localStorage, CELLAR_VIEW_KEY, v);
+  for (const listener of VIEW_LISTENERS) listener();
+}
+
 function drinkLotFrom(row: BottleRow): DrinkLot {
   return {
     lotId: row.lot.id,
@@ -88,12 +112,13 @@ export function CellarBottles({
   const [group, setGroup] = useState<GroupKey>("none");
   const [sort, setSort] = useState<SortKey>("bottles");
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
-  const [view, setView] = useState<CellarView>(() => {
-    if (typeof window === "undefined") return "list";
-    return readValue(() => window.localStorage, CELLAR_VIEW_KEY) === "grid"
-      ? "grid"
-      : "list";
-  });
+  // The persisted list/grid choice is read through useSyncExternalStore with
+  // a "list" server snapshot: reading localStorage in a useState initialiser
+  // made the server render the list and the client the grid, which React
+  // reports as a hydration mismatch and regenerates the whole tree (the same
+  // trap LocalDateTime documents). The client snapshot only applies after
+  // hydration, so a stored "grid" switches the view one paint later.
+  const view = useSyncExternalStore(subscribeView, readStoredView, serverView);
   const [page, setPage] = useState(1);
   const [gridRest, setGridRest] = useState(false);
   const [groupsExpanded, setGroupsExpanded] = useState(false);
@@ -195,8 +220,7 @@ export function CellarBottles({
     resetPaging();
   }
   function chooseView(v: CellarView) {
-    setView(v);
-    writeValue(() => window.localStorage, CELLAR_VIEW_KEY, v);
+    storeView(v);
   }
   function clearAll() {
     setQ("");
