@@ -63,7 +63,9 @@ export const NAV_LINKS: NavLink[] = [
     label: "Cellar",
     match: ["/cellar"],
     children: [
-      { href: "/cellar", label: "Cellar Inventory" },
+      { href: "/cellar", label: "Bottles" },
+      { href: "/cellar/history", label: "History" },
+      { href: "/cellar/collection", label: "The collection" },
       { href: "/cellar/new", label: "Add a bottle", modal: "cellar" },
     ],
   },
