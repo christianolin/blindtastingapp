@@ -21,6 +21,10 @@ const eslintConfig = defineConfig([
     // linting them from the main tree's config is not meaningful and can
     // fail on code that isn't even part of this branch.
     ".claude/worktrees/**",
+    // Design hand-offs are references from Claude Design (mock HTML + its helper
+    // script), not app code; support.js uses ReactDOM.render and other patterns
+    // the app never ships.
+    "design_handoff*/**",
   ]),
 ]);
 
