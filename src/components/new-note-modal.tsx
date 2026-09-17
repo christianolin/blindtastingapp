@@ -79,6 +79,7 @@ export function NewNoteModal({
   target,
   onClose,
   cellarConsume = null,
+  consumptionId = null,
   tastingWineId = null,
   contextKind = null,
   onSaved,
@@ -98,6 +99,9 @@ export function NewNoteModal({
   target?: NoteTarget;
   onClose: () => void;
   cellarConsume?: { lotId: string } | null;
+  /** A cellar drink this note is written for — `NoteEditor` back-links
+      `cellar_consumptions.wset_note_id` on save. */
+  consumptionId?: string | null;
   /** Attaches the note to a tasting wine (group Taste & Rate scoring, or
       BT-R5's resolve-on-write). Ignored when `target` is given — the target
       carries its own tastingWineId. */
@@ -376,6 +380,7 @@ export function NewNoteModal({
               initial={data.initial}
               contextKind={data.contextKind}
               tastingWineId={data.tastingWineId}
+              consumptionId={consumptionId}
               embedded
               sheetRef={sheetRef}
               onClose={onClose}
