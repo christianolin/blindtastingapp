@@ -44,6 +44,27 @@ const CATALOG_SELECT =
 
 const CHUNK_SIZE = 200;
 
+const PAGE = 1000;
+
+/** PostgREST's `max-rows` is 1000 on Supabase, so a plain `.select()` silently
+ *  truncates a cellar or a note history bigger than that (a CellarTracker
+ *  import reaches it easily) — and a truncated read here under-counts
+ *  `band.owned`/`band.yourNotes`, drops the "{n} owned" badge, hides wines
+ *  from "In my cellar", and keeps refinement 15's catch-up fetch from ever
+ *  asking for them. Same loop as `getCellarBottles` (src/lib/cellar/bottles.ts). */
+async function pageAll<T>(
+  run: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data } = await run(from, from + PAGE - 1);
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 function relName(rel: Rel): string | null {
   if (!rel) return null;
   const row = Array.isArray(rel) ? rel[0] : rel;
@@ -63,7 +84,7 @@ export default async function CatalogPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: wines }, { data: lots }, { data: notes }, { data: ratings }, { count: totalWines }] =
+  const [{ data: wines }, lots, notes, { data: ratings }, { count: totalWines }] =
     await Promise.all([
       supabase
         .from("catalog_wines")
@@ -72,19 +93,27 @@ export default async function CatalogPage() {
         .eq("blind_pending", false)
         .order("created_at", { ascending: false })
         .limit(500),
-      supabase
-        .from("cellar_lots")
-        .select("catalog_wine_id, quantity")
-        .eq("owner_id", user.id)
-        .gt("quantity", 0),
-      supabase
-        .from("wset_notes")
-        .select("catalog_wine_id, quality_score, tasted_on, created_at")
-        .eq("author_id", user.id)
-        .not("quality_score", "is", null)
-        .not("catalog_wine_id", "is", null)
-        .order("tasted_on", { ascending: false })
-        .order("created_at", { ascending: false }),
+      pageAll((from, to) =>
+        supabase
+          .from("cellar_lots")
+          .select("catalog_wine_id, quantity")
+          .eq("owner_id", user.id)
+          .gt("quantity", 0)
+          .order("id")
+          .range(from, to),
+      ),
+      pageAll((from, to) =>
+        supabase
+          .from("wset_notes")
+          .select("catalog_wine_id, quality_score, tasted_on, created_at")
+          .eq("author_id", user.id)
+          .not("quality_score", "is", null)
+          .not("catalog_wine_id", "is", null)
+          .order("tasted_on", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to),
+      ),
       supabase.from("catalog_wine_ratings").select("catalog_wine_id, avg_score, note_count"),
       supabase
         .from("catalog_wines")
@@ -100,14 +129,14 @@ export default async function CatalogPage() {
   // newest first (tasted_on desc, created_at desc), so the first one seen
   // per wine id is the one that counts.
   const yoursByWine = new Map<string, number>();
-  for (const n of notes ?? []) {
+  for (const n of notes) {
     if (n.catalog_wine_id == null || n.quality_score == null) continue;
     if (!yoursByWine.has(n.catalog_wine_id)) {
       yoursByWine.set(n.catalog_wine_id, Number(n.quality_score));
     }
   }
   const ownedByWine = new Map<string, number>();
-  for (const l of lots ?? []) {
+  for (const l of lots) {
     ownedByWine.set(l.catalog_wine_id, (ownedByWine.get(l.catalog_wine_id) ?? 0) + l.quantity);
   }
 
