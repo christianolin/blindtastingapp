@@ -50,8 +50,6 @@ export type WineFormInitial = {
   /** The wine's structured profile (producer background, nose, palate,
       pairing, serving), edited under "Wine profile". */
   profile?: WineProfileInput | null;
-  /** Estimated market price per bottle, DKK, as form text ("" = unknown). */
-  estimatedPrice: string;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
@@ -123,9 +121,6 @@ export function NewWineForm({
   );
   const [vintageYear, setVintageYear] = useState(initialWine?.vintageYear ?? "");
   const [tawnyYears, setTawnyYears] = useState(initialWine?.tawnyYears ?? "");
-  const [estimatedPrice, setEstimatedPrice] = useState(
-    initialWine?.estimatedPrice ?? "",
-  );
   // The structured profile. Editable here so a curator can correct a bad label
   // read — without this the fields would be write-only from the scanner.
   const p0 = initialWine?.profile;
@@ -193,7 +188,6 @@ export function NewWineForm({
     setPending(true);
     const input: CatalogWineInput = {
       draft,
-      estimatedPrice,
       profile: {
         wineryDescription: wineryDescription.trim() || null,
         aroma: aroma.trim() || null,
@@ -326,21 +320,6 @@ export function NewWineForm({
           </div>
         </div>
       </details>
-
-      {/* Wine-level, not lot-level: a typical retail price the cellar sums
-          (scan-suggested, always editable), not what someone paid. */}
-      <div className="flex max-w-56 flex-col gap-2">
-        <Label htmlFor="estimated-price">Average retail price (DKK)</Label>
-        <Input
-          id="estimated-price"
-          type="number"
-          min={0}
-          step="1"
-          value={estimatedPrice}
-          onChange={(e) => setEstimatedPrice(e.target.value)}
-          placeholder="e.g. 250"
-        />
-      </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" onClick={submit} disabled={pending}>
