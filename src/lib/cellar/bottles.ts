@@ -24,6 +24,13 @@ export type CellarBottlesOptions = { readOnly: boolean };
  *  keeps every one of them well under the URL length a proxy will accept. */
 const ID_CHUNK = 200;
 
+/** PostgREST's own `max-rows` is 1000 on Supabase, so a plain `.select()`
+ *  silently truncates a cellar bigger than that (a CellarTracker import
+ *  reaches it easily). Page the lots instead, with `id` as a deterministic
+ *  tiebreak so two lots sharing a `created_at` can't repeat or vanish
+ *  across a page boundary. */
+const LOT_PAGE = 1000;
+
 export function chunk<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
@@ -40,13 +47,20 @@ export async function getCellarBottles(
   viewerId: string,
   opts: CellarBottlesOptions,
 ): Promise<BottleRow[]> {
-  const { data: lotData } = await supabase
-    .from("cellar_lots")
-    .select(LOT_SELECT)
-    .eq("owner_id", ownerId)
-    .gt("quantity", 0)
-    .order("created_at", { ascending: false });
-  const lots = (lotData ?? []) as unknown as LotEmbedRow[];
+  const lots: LotEmbedRow[] = [];
+  for (let from = 0; ; from += LOT_PAGE) {
+    const { data: lotData } = await supabase
+      .from("cellar_lots")
+      .select(LOT_SELECT)
+      .eq("owner_id", ownerId)
+      .gt("quantity", 0)
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range(from, from + LOT_PAGE - 1);
+    const page = (lotData ?? []) as unknown as LotEmbedRow[];
+    lots.push(...page);
+    if (page.length < LOT_PAGE) break;
+  }
   if (lots.length === 0) return [];
 
   const wineIds = [...new Set(lots.map((l) => l.catalog_wine_id))];
