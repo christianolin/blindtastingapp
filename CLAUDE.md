@@ -331,6 +331,51 @@ a raw subquery, regardless of which two tables look involved at a glance.
   a friend is unilateral, like saving a contact (confirmed with the user).
   A user only ever sees/manages rows where they are `user_id`; there's no
   notion of the other side consenting or even being notified.
+- **Platform invites** (`/invite/<code>`, distinct from a tasting's own
+  `/j/[code]`) are a personal link any signed-in user can make from
+  `/community` or their own `/u/[id]` (`InvitePeopleButton` →
+  `InvitePeopleDialog`, `src/components/invite/`) that brings the invitee in
+  as the inviter's friend, both ways, on first sign-in. The code is the same
+  alphabet/length as `generate_join_code()` (10 characters of
+  `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`), minted by the `platform_invites.code`
+  column default so no client ever chooses one. `invitee_email` never
+  leaves `src/app/invite/actions.ts` — no RPC returns it, no component prop,
+  page, email body or log line carries it, and it is never read back after
+  insert (`sendPlatformInvite` mails the address typed at send time, not the
+  stored one). `invitee_name` is what feeds the email's salutation and, when
+  set, the invited account's `display_name`. Two RPCs do the
+  work: `get_platform_invite_preview(code)` (SECURITY DEFINER, EXECUTE for
+  `anon` and `authenticated` — inviter display name, avatar and a validity
+  state only) and `accept_platform_invite(code)` (SECURITY DEFINER, EXECUTE
+  for `authenticated` only, revoked from `anon`, `PUBLIC` and
+  `service_role` — writes the two `friendships` rows idempotently and counts
+  a use). A friendship is never written on a bare page load: opening
+  `/invite/<code>` only ever previews it; either the landing's own
+  "Add {inviter} as a friend" tap (a signed-in visitor) or the first-sign-in
+  route `/invite/<code>/accept` (a route handler, since it must read/delete
+  a cookie and redirect) calls `accept_platform_invite`, and the accept
+  route only does so when the httpOnly `blindr-invite-intent` cookie
+  (`src/lib/invites/links.ts`'s `INVITE_INTENT_COOKIE`, set by `beginJoin`
+  only after the preview came back `ok`) matches the code — a crafted accept
+  link opened by someone who never tapped "Join Blindr"/"Sign in" on the
+  landing page writes nothing. Admin-generated invite mail lands on
+  `/auth/confirm-hash?next=/invite/<code>/accept`, never `/auth/callback`
+  (same fragment-token reason as "Auth link handling" above); self-serve
+  signup still goes through `/auth/callback`. One email template,
+  `src/lib/email/platform-invite.ts`, backs three surfaces: the real send
+  (`sendPlatformInviteEmail` in `src/lib/email/sender.ts`, the one other
+  file besides `admin.ts` that imports `createAdminClient` for this
+  feature, gated by `PLATFORM_EMAIL_PROVIDER` — `"supabase"` today,
+  `"resend"` only a shaped stub), the `mailto:` "Open in my mail app"
+  fallback, and the Supabase dashboard's "Invite user" template (which also
+  serves tasting invites' generic `else` branch) — `docs/email/supabase-invite-template.md`
+  carries the exact text to paste and a vitest test
+  (`src/lib/email/supabase-template-doc.test.ts`) fails if that doc and the
+  module ever disagree. The Supabase branch cannot email an address that
+  already has an account (Auth has no plain-mail API); `sendPlatformInvite`
+  checks `profiles.email` first and returns an `existing-account` result
+  instead of calling it. Any provider error is shown to the inviter
+  verbatim, never a generic wrapper line.
 - The tasting-invite UI (`tastings/new/invite-field.tsx`) is NOT a
   comma/newline-separated textarea — participants are added one at a time
   (typed email + "Add", or picked from a friends combobox), rendered as
