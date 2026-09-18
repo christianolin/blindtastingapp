@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Tabs } from "@/components/ui/tabs";
+import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { PeopleList } from "./people-list";
 import { FriendsList } from "./friends-list";
@@ -43,14 +44,17 @@ export default async function PeoplePage({
           title="People & Friends"
           subtitle="Connect with fellow wine lovers and grow your community."
           actions={
-            <Tabs
-              variant="segmented"
-              activeKey={tab}
-              items={[
-                { key: "people", label: "People", href: "/community" },
-                { key: "friends", label: "Friends", href: "/community?tab=friends" },
-              ]}
-            />
+            <>
+              <InvitePeopleButton inviterName={me?.display_name ?? user.email ?? ""} />
+              <Tabs
+                variant="segmented"
+                activeKey={tab}
+                items={[
+                  { key: "people", label: "People", href: "/community" },
+                  { key: "friends", label: "Friends", href: "/community?tab=friends" },
+                ]}
+              />
+            </>
           }
         />
         {tab === "people" ? (

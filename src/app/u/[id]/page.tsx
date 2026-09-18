@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { FriendButton } from "@/components/friend-button";
+import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats, type CategoryKey } from "@/lib/profile-stats";
 import { FAVORITE_WINE_TYPE_ITEMS } from "@/lib/wine-types";
@@ -123,13 +124,16 @@ export default async function ProfilePage({
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2">
               {isOwnProfile ? (
-                <Button
-                  variant="outline"
-                  nativeButton={false}
-                  render={<Link href="/profile/edit" />}
-                >
-                  Edit profile
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={<Link href="/profile/edit" />}
+                  >
+                    Edit profile
+                  </Button>
+                  <InvitePeopleButton inviterName={me?.display_name ?? user.email ?? ""} />
+                </>
               ) : (
                 <FriendButton friendId={profile.id} isFriend={isFriend} />
               )}
