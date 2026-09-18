@@ -38,18 +38,24 @@ export type Section = {
 };
 
 // Row hover actions (laptop only — a phone tap opens the sheet instead).
-// `compact` swaps the label pair for the grid's shorter card real estate.
+// `compact` swaps the Drink label for the grid's shorter card real estate.
+// Rating/noting already has its own always-visible entry point (the card
+// foot's "Rate it"/score, the list's Ratings-column "Rate it"/score) so it
+// is not duplicated here as a hover button — it lives in the ⋯ menu instead,
+// labelled by whether the viewer already has a note on this wine.
 export function RowActions({
   lotId,
   wineId,
   readOnly,
   compact,
+  hasYours,
   cb,
 }: {
   lotId: string;
   wineId: string;
   readOnly: boolean;
   compact?: boolean;
+  hasYours: boolean;
   cb: RowCallbacks;
 }): React.JSX.Element | null {
   if (readOnly) return null;
@@ -57,9 +63,6 @@ export function RowActions({
     <div className="flex items-center gap-1.5 opacity-0 transition-opacity max-md:hidden group-hover:opacity-100 focus-within:opacity-100">
       <Button size="sm" onClick={() => cb.onDrink(lotId)}>
         {compact ? "Drink one" : "Drink"}
-      </Button>
-      <Button size="sm" variant="outline" onClick={() => cb.onRate(wineId)}>
-        {compact ? "Note" : "Rate"}
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -76,6 +79,9 @@ export function RowActions({
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => cb.onOpenLot(lotId, "edit")}>
             Edit lot
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => cb.onRate(wineId)}>
+            {hasYours ? "Write another note" : "Rate it"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

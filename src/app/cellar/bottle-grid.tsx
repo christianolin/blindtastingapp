@@ -224,6 +224,7 @@ function BottleCard({
           lotId={row.lot.id}
           wineId={row.wine.catalogWineId}
           readOnly={readOnly}
+          hasYours={row.yours != null}
           cb={cb}
         />
       </div>
