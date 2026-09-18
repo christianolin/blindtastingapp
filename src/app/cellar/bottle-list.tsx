@@ -72,12 +72,14 @@ function BottleThumb({ src, className }: { src: string | null; className: string
 
 function GroupHeaderLaptop({
   header,
+  cols,
 }: {
   header: NonNullable<Section["header"]>;
+  cols: number;
 }): React.JSX.Element {
   return (
     <tr className="bg-muted/40">
-      <td colSpan={4} className="px-4 py-2">
+      <td colSpan={cols} className="px-4 py-2">
         <p className="font-heading text-base font-semibold text-foreground">
           {header.label}
           {header.sublabel ? (
@@ -160,6 +162,7 @@ export function BottleList({
             <col className="w-[7rem]" />
             <col className="w-[11rem]" />
             <col className="w-[9rem]" />
+            {!readOnly ? <col className="w-[7.5rem]" /> : null}
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -176,13 +179,20 @@ export function BottleList({
                   </>
                 )}
               </th>
+              {!readOnly ? (
+                <th className="px-4 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {sections.map((section) =>
               section.rows.length === 0 ? null : (
                 <Fragment key={section.key}>
-                  {section.header ? <GroupHeaderLaptop header={section.header} /> : null}
+                  {section.header ? (
+                    <GroupHeaderLaptop header={section.header} cols={readOnly ? 4 : 5} />
+                  ) : null}
                   {section.rows.map((row) => {
                     const l = rowLines(row, group);
                     const second = bottleSecondLine(row);
@@ -246,7 +256,7 @@ export function BottleList({
                             {whereSecondLine(row)}
                           </span>
                         </td>
-                        <td className="relative px-4 py-3">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {!readOnly ? (
                               row.yours ? (
@@ -278,7 +288,9 @@ export function BottleList({
                               )}
                             </span>
                           </div>
-                          <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                        </td>
+                        {!readOnly ? (
+                          <td className="px-4 py-3">
                             <RowActions
                               lotId={row.lot.id}
                               wineId={row.wine.catalogWineId}
@@ -286,8 +298,8 @@ export function BottleList({
                               hasYours={row.yours != null}
                               cb={cb}
                             />
-                          </div>
-                        </td>
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })}
