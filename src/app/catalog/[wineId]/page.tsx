@@ -328,12 +328,7 @@ export default async function CatalogWinePage({
         </div>
       ) : null}
 
-      {structure.length > 0 ? (
-        <div>
-          <p className="mb-2 text-sm font-medium">Structure, averaged</p>
-          <WineStructure rows={structure} />
-        </div>
-      ) : null}
+      <WineStructure rows={structure} />
 
       {guessStats && guessStats.appearances > 0 ? (
         <div>

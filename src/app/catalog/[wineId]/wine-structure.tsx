@@ -33,7 +33,7 @@ export function WineStructure({ rows }: { rows: WineStructureDimension[] }) {
   if (rows.length === 0) return null;
   return (
     <div>
-      <p className="mb-2 text-sm font-medium">Nose &amp; palate structure</p>
+      <p className="mb-2 text-sm font-medium">Structure, averaged</p>
       <div className="flex flex-col gap-2.5 rounded-xl border border-border p-4">
         {rows.map((r) => {
           const pct = Math.round((r.avgIndex / r.maxIndex) * 100);
