@@ -78,6 +78,10 @@ export type WineMapReleaseStatus =
 export type WineColour = "WHITE" | "ROSE" | "RED" | "ORANGE";
 export type WineStyle = "STILL" | "SPARKLING" | "FORTIFIED" | "SWEET";
 export type UserRole = "ADMIN" | "CONTRIBUTOR" | "MEMBER";
+// 20260918130500 (platform-invites spec §4, D9): a platform invite link's
+// validity as get_platform_invite_preview reports it; "expired" wins when a
+// link is both past its expiry and used up. An unknown code returns no row.
+export type PlatformInviteState = "ok" | "expired" | "exhausted";
 export type WsetClarity = "CLEAR" | "HAZY";
 export type WsetCondition = "CLEAN" | "UNCLEAN";
 export type WsetAppearanceIntensity =
@@ -390,6 +394,42 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["friendships"]["Insert"]>;
+        Relationships: [];
+      };
+      // 20260918130500 (platform-invites spec §4, D4, D7, D8): a personal
+      // "join Blindr" link. The inviter reads and inserts their own rows (RLS
+      // by inviter_id = auth.uid()); no client UPDATE or DELETE, and the
+      // INSERT grant covers only inviter_id, invitee_email, invitee_name,
+      // max_uses and expires_at — the code is minted by the column default
+      // (generate_join_code()) and uses is written only by
+      // accept_platform_invite. invitee_email is selected only inside
+      // src/app/invite/actions.ts and never leaves the server (D9).
+      platform_invites: {
+        Row: {
+          id: string;
+          code: string;
+          inviter_id: string;
+          invitee_email: string | null;
+          invitee_name: string | null;
+          max_uses: number;
+          uses: number;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code?: string;
+          inviter_id: string;
+          invitee_email?: string | null;
+          invitee_name?: string | null;
+          max_uses?: number;
+          uses?: number;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["platform_invites"]["Insert"]
+        >;
         Relationships: [];
       };
 
@@ -1915,6 +1955,31 @@ export type Database = {
       transfer_tasting_host: {
         Args: { p_tasting_id: string; p_new_host_user_id: string };
         Returns: undefined;
+      };
+      // 20260918130500 (platform-invites spec §4, D9): the /invite/[code]
+      // landing preview, callable by anon. Only the validity state and the
+      // inviter's directory-public display name and avatar — never
+      // invitee_email or invitee_name; no row means an unknown code.
+      get_platform_invite_preview: {
+        Args: { p_code: string };
+        Returns: {
+          state: PlatformInviteState;
+          inviter_name: string;
+          inviter_avatar_url: string | null;
+          inviter_id: string | null; // signed-in callers only
+        }[];
+      };
+      // 20260918130500 (platform-invites spec §4, D10): the signed-in caller
+      // becomes the inviter's friend both ways (two friendships rows,
+      // idempotent), one use is counted per account, and the inviter id is
+      // returned. Authenticated only — EXECUTE revoked from PUBLIC, anon and
+      // service_role. Refusals (friendlyAcceptError maps them; plan copy):
+      // "not signed in", "no invite has that code", "that is your own invite
+      // link", "that invite link has expired", "that invite link has been
+      // used up".
+      accept_platform_invite: {
+        Args: { p_code: string };
+        Returns: string;
       };
     };
   };
