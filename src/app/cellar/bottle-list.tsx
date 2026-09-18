@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { CountryFlag } from "@/components/country-flag";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   addedMonth,
@@ -259,13 +260,13 @@ export function BottleList({
                                   {fmtScore(row.yours.score)}
                                 </button>
                               ) : (
-                                <button
-                                  type="button"
-                                  className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   onClick={() => cb.onRate(row.wine.catalogWineId)}
                                 >
                                   Rate it
-                                </button>
+                                </Button>
                               )
                             ) : null}
                             <span className="inline-flex items-center gap-1 font-semibold text-gold-dark tabular-nums">
