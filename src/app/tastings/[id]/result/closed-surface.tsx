@@ -1,9 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { clearDismissed, liveSurface, readDismissed, writeDismissed } from "@/lib/live-theme";
+import {
+  clearDismissed,
+  liveSurface,
+  readDismissed,
+  subscribeDismissed,
+  writeDismissed,
+} from "@/lib/live-theme";
 
-const noopSubscribe = () => () => {};
 
 type DismissedFlag = "unknown" | "yes" | "no";
 
@@ -57,20 +62,29 @@ export function ClosedSurface({
   children: React.ReactNode;
 }): React.JSX.Element {
   const stored = React.useSyncExternalStore<DismissedFlag>(
-    noopSubscribe,
-    () => (readDismissed(() => window.localStorage, tastingId) ? "yes" : "no"),
+    subscribeDismissed,
+    React.useCallback(
+      () => (readDismissed(() => window.localStorage, tastingId) ? "yes" : "no"),
+      [tastingId],
+    ),
     () => "unknown",
   );
   const [override, setOverride] = React.useState<boolean | null>(null);
 
+  // writeDismissed and clearDismissed notify the subscription themselves, so a
+  // successful flip re-renders through the store. `override` is now only the
+  // fallback for a storage that refused the write, which is the one case where
+  // the store has nothing new to report.
+  // Setting it back to null on success matters for the case where a storage
+  // refused one write and accepted the next: a stale override would otherwise
+  // outrank the store forever. It is safe to set null when it is already null,
+  // because the notify above re-renders regardless.
   const handleDismiss = React.useCallback(() => {
-    const persisted = writeDismissed(() => window.localStorage, tastingId);
-    setOverride(persisted ? null : true);
+    setOverride(writeDismissed(() => window.localStorage, tastingId) ? null : true);
   }, [tastingId]);
 
   const showResult = React.useCallback(() => {
-    const persisted = clearDismissed(() => window.localStorage, tastingId);
-    setOverride(persisted ? null : false);
+    setOverride(clearDismissed(() => window.localStorage, tastingId) ? null : false);
   }, [tastingId]);
 
   const ctx = React.useMemo(() => ({ showResult }), [showResult]);
