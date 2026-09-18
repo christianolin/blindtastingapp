@@ -20,7 +20,8 @@ function fencedBlock(doc: string, lang: "html" | "text"): string {
 }
 
 describe("supabase-invite-template.md pins platform-invite.ts (D17)", () => {
-  const doc = readFileSync(DOC_PATH, "utf8");
+  // Normalised so a CRLF checkout (Windows autocrlf) matches the same fences.
+  const doc = readFileSync(DOC_PATH, "utf8").replace(/\r\n/g, "\n");
 
   it("the fenced text block equals SUPABASE_INVITE_SUBJECT", () => {
     expect(fencedBlock(doc, "text")).toBe(SUPABASE_INVITE_SUBJECT);
