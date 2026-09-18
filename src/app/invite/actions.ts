@@ -16,8 +16,7 @@ import {
 } from "@/lib/invites/links";
 import { platformInviteEmail } from "@/lib/email/platform-invite";
 import { sendPlatformInviteEmail, type SendResult } from "@/lib/email/sender";
-
-export type { SendResult };
+import type { CreatedInvite } from "@/lib/invites/types";
 
 // Platform invites — the server writes (spec §2 D2, D7, D10–D15; §3; plan
 // refinements 3–7). `createPlatformInvite` and `sendPlatformInvite` sit
@@ -34,7 +33,6 @@ export type { SendResult };
 // `src/lib/invites/links.ts`; the service role is touched only inside
 // `src/lib/email/sender.ts`.
 
-export type CreatedInvite = { code: string; url: string; expiresAt: string; maxUses: number };
 
 const MAX_INVITEE_NAME_LENGTH = 80; // D8: platform_invites_invitee_name_len
 // A shape check only; the provider validates the address for real (D15).

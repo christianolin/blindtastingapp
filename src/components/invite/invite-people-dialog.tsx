@@ -10,12 +10,8 @@ import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { LocalDateTime } from "@/components/local-date-time";
 import { COPY_LINK, footerLine, OPEN_IN_MAIL_APP, SEND_BY_EMAIL, SHARE } from "@/lib/invites/copy";
 import { mailtoHref, platformInviteEmail, type PlatformInviteMessage } from "@/lib/email/platform-invite";
-import {
-  createPlatformInvite,
-  sendPlatformInvite,
-  type CreatedInvite,
-  type SendResult,
-} from "@/app/invite/actions";
+import { createPlatformInvite, sendPlatformInvite } from "@/app/invite/actions";
+import type { CreatedInvite, SendResult } from "@/lib/invites/types";
 
 // The inviter's screen (spec §6; D2, D8, D14, D15, D20; plan refinements 8,
 // 13). Step 1 makes the link (`createPlatformInvite`); step 2 shows it and
