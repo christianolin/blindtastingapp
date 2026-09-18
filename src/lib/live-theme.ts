@@ -28,12 +28,42 @@ export function resultDismissKey(tastingId: string): string {
   return "blindr:result-dismissed:" + tastingId;
 }
 
+// SOMETHING HAS TO TELL REACT THE FLAG MOVED.
+//
+// localStorage fires no event in the tab that wrote it, so a component reading
+// this flag through useSyncExternalStore needs a subscription of its own.
+// ClosedSurface had `noopSubscribe` and leaned on a useState call to force the
+// re-render -- but that state was already null on the path that mattered, and
+// setting a useState to the value it already holds is a no-op React bails out
+// of. The write reached localStorage and nothing re-read it, so "See every wine"
+// and "Back to tasting overview" both looked dead until the page was reloaded.
+// It was intermittent rather than dead because React sometimes renders a
+// component once before bailing out, and that stray render happened to pick up
+// the new snapshot.
+const listeners = new Set<() => void>();
+
+export function subscribeDismissed(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Copied first: a listener that unsubscribes while this runs must not skip another. */
+function notifyDismissed(): void {
+  for (const listener of [...listeners]) listener();
+}
+
 export function readDismissed(getStorage: () => StorageLike | null, tastingId: string): boolean {
   return readFlag(getStorage, resultDismissKey(tastingId));
 }
 
+// Both of these notify on success, rather than leaving it to the caller: the
+// bug this fixes was exactly a caller that did not.
 export function writeDismissed(getStorage: () => StorageLike | null, tastingId: string): boolean {
-  return writeFlag(getStorage, resultDismissKey(tastingId));
+  const ok = writeFlag(getStorage, resultDismissKey(tastingId));
+  if (ok) notifyDismissed();
+  return ok;
 }
 
 /**
@@ -44,5 +74,7 @@ export function writeDismissed(getStorage: () => StorageLike | null, tastingId: 
  * nothing at all.
  */
 export function clearDismissed(getStorage: () => StorageLike | null, tastingId: string): boolean {
-  return clearFlag(getStorage, resultDismissKey(tastingId));
+  const ok = clearFlag(getStorage, resultDismissKey(tastingId));
+  if (ok) notifyDismissed();
+  return ok;
 }

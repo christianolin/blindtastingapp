@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { clearDismissed, liveSurface, readDismissed, resultDismissKey, writeDismissed } from "./live-theme";
+import {
+  clearDismissed,
+  liveSurface,
+  readDismissed,
+  resultDismissKey,
+  subscribeDismissed,
+  writeDismissed,
+} from "./live-theme";
 
 describe("liveSurface (B5)", () => {
   it.each([
@@ -78,5 +85,69 @@ describe("undismissing a result", () => {
   it("is false, not a throw, when storage is missing or blocked", () => {
     expect(clearDismissed(() => null, "t1")).toBe(false);
     expect(clearDismissed(() => { throw new Error("SecurityError"); }, "t1")).toBe(false);
+  });
+});
+
+describe("the dismissal subscription", () => {
+  const make = () => {
+    const store = new Map<string, string>();
+    return {
+      storage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+      },
+    };
+  };
+
+  // The bug: ClosedSurface read the flag through useSyncExternalStore with a
+  // no-op subscribe, so nothing re-read it after a write. The flag reached
+  // localStorage and the surface did not move until the page was reloaded —
+  // "See every wine" and "Back to tasting overview" both looked dead.
+  it("fires on a successful dismiss and a successful clear", () => {
+    const { storage } = make();
+    let fired = 0;
+    const unsubscribe = subscribeDismissed(() => { fired += 1; });
+    writeDismissed(() => storage, "t1");
+    expect(fired).toBe(1);
+    clearDismissed(() => storage, "t1");
+    expect(fired).toBe(2);
+    unsubscribe();
+  });
+
+  it("does not fire when the write could not happen", () => {
+    let fired = 0;
+    const unsubscribe = subscribeDismissed(() => { fired += 1; });
+    expect(writeDismissed(() => null, "t1")).toBe(false);
+    expect(clearDismissed(() => null, "t1")).toBe(false);
+    expect(writeDismissed(() => { throw new Error("SecurityError"); }, "t1")).toBe(false);
+    expect(fired).toBe(0);
+    unsubscribe();
+  });
+
+  it("stops firing once unsubscribed, and reaches every listener", () => {
+    const { storage } = make();
+    let a = 0, b = 0;
+    const offA = subscribeDismissed(() => { a += 1; });
+    const offB = subscribeDismissed(() => { b += 1; });
+    writeDismissed(() => storage, "t1");
+    expect([a, b]).toEqual([1, 1]);
+    offA();
+    clearDismissed(() => storage, "t1");
+    expect([a, b]).toEqual([1, 2]);
+    offB();
+    writeDismissed(() => storage, "t1");
+    expect([a, b]).toEqual([1, 2]);
+  });
+
+  // A listener that unsubscribes itself must not make the loop skip the next.
+  it("survives a listener unsubscribing while being notified", () => {
+    const { storage } = make();
+    let second = 0;
+    const offFirst = subscribeDismissed(() => offFirst());
+    const offSecond = subscribeDismissed(() => { second += 1; });
+    writeDismissed(() => storage, "t1");
+    expect(second).toBe(1);
+    offSecond();
   });
 });
