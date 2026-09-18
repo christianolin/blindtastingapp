@@ -331,6 +331,13 @@ a raw subquery, regardless of which two tables look involved at a glance.
   a friend is unilateral, like saving a contact (confirmed with the user).
   A user only ever sees/manages rows where they are `user_id`; there's no
   notion of the other side consenting or even being notified.
+- **A `"use server"` file exports only async functions — not even a type re-export.**
+  `export type { SendResult }` in `src/app/invite/actions.ts` compiled (tsc, eslint
+  and `next build` all passed) but Next's server-actions loader re-exports every
+  export of such a module as an action, so the page failed at request time with
+  `SendResult is not defined`. Shared types live in a plain module
+  (`src/lib/invites/types.ts`), imported with `import type` on both sides.
+  (2026-09-18, platform invites.)
 - **Platform invites** (`/invite/<code>`, distinct from a tasting's own
   `/j/[code]`) are a personal link any signed-in user can make from
   `/community` or their own `/u/[id]` (`InvitePeopleButton` →
