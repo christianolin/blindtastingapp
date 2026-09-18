@@ -49,6 +49,26 @@ function whereSecondLine(row: BottleRow): string {
   return `added ${addedMonth(row.lot)}`;
 }
 
+// A small bottle thumbnail for the start of every list row — same rounded/
+// bordered box the grid's HatchThumb uses, sized down for a table row/card,
+// object-contain on a card ground so the label never crops, with the same
+// hatch fallback for a wine with no image.
+function BottleThumb({ src, className }: { src: string | null; className: string }): React.JSX.Element {
+  const box = cn(
+    "flex shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-border",
+    className,
+  );
+  if (!src) {
+    return <span className={cn(box, "hatch")} aria-hidden />;
+  }
+  return (
+    <span className={cn(box, "bg-card")}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" loading="lazy" className="h-full w-full object-contain" />
+    </span>
+  );
+}
+
 function GroupHeaderLaptop({
   header,
 }: {
@@ -173,38 +193,43 @@ export function BottleList({
                         className="group border-b border-border align-top hover:bg-muted/30"
                       >
                         <td className="px-4 py-3">
-                          {l.producer ? (
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {l.producer}
-                            </span>
-                          ) : null}
-                          <Link
-                            href={`/catalog/${row.wine.catalogWineId}`}
-                            className="block truncate font-medium text-foreground"
-                          >
-                            {l.title}
-                          </Link>
-                          {l.facts ? (
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {l.facts}
-                            </span>
-                          ) : null}
-                          {text ? (
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {showFlag ? (
-                                <CountryFlag
-                                  name={l.place.country ?? row.wine.country}
-                                  className="mr-1"
-                                />
+                          <div className="flex items-start gap-3">
+                            <BottleThumb src={row.wine.imageUrl} className="h-14 w-10" />
+                            <div className="min-w-0 flex-1">
+                              {l.producer ? (
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {l.producer}
+                                </span>
                               ) : null}
-                              {text}
-                            </span>
-                          ) : null}
-                          {row.inFlight > 0 ? (
-                            <span className="block text-xs font-medium text-gold-dark">
-                              {inFlightLine(row.inFlight)}
-                            </span>
-                          ) : null}
+                              <Link
+                                href={`/catalog/${row.wine.catalogWineId}`}
+                                className="block truncate font-medium text-foreground"
+                              >
+                                {l.title}
+                              </Link>
+                              {l.facts ? (
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {l.facts}
+                                </span>
+                              ) : null}
+                              {text ? (
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {showFlag ? (
+                                    <CountryFlag
+                                      name={l.place.country ?? row.wine.country}
+                                      className="mr-1"
+                                    />
+                                  ) : null}
+                                  {text}
+                                </span>
+                              ) : null}
+                              {row.inFlight > 0 ? (
+                                <span className="block text-xs font-medium text-gold-dark">
+                                  {inFlightLine(row.inFlight)}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 tabular-nums">
                           {countTimes(row.lot.quantity)}
@@ -290,6 +315,7 @@ export function BottleList({
                     wineId={row.wine.catalogWineId}
                     onOpen={() => cb.onOpenLot(row.lot.id)}
                   >
+                    <BottleThumb src={row.wine.imageUrl} className="h-12 w-9" />
                     {grouped ? (
                       <>
                         <span className="min-w-0 flex-1">
