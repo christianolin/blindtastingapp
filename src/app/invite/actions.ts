@@ -201,7 +201,7 @@ export async function beginJoin(code: string, target: "signup" | "login"): Promi
 
 // D11(b): the landing page's own tap, "Add {inviter} as a friend". The RPC
 // writes both friendship rows (idempotently, D10) and returns the inviter,
-// whose profile then shows "Remove friend" as the visible confirmation. A
+// whose profile then shows the "Friends" state as the visible confirmation. A
 // refusal comes back as `{ error }` for the button to show inline; the
 // success redirects from inside the action, like `/j`'s joinByCode.
 export async function acceptInvite(code: string): Promise<{ error: string }> {

@@ -9,22 +9,25 @@ import { TWO_TAP_WINDOW_MS } from "@/lib/console-copy";
 import { friendButtonLabel } from "@/lib/community/community-math";
 import { cn } from "@/lib/utils";
 
-// `variant="profile"` (the default) is the original single-tap button used on
-// `/u/[id]`. `variant="row"` is the community list's version (spec §2.6):
-// a quiet "Friends" state armed by a first tap into a two-tap remove (R2),
-// matching the app's other inline two-tap confirms (console-copy.ts's
-// twoTapState/TWO_TAP_WINDOW_MS). Both variants share the same addFriend/
-// removeFriend actions, so a refusal, "Adding…"/"Removing…" and the
-// revalidatePath refresh behave identically either way.
+// The two-tap "Friends" state (spec §2.6 / profile-view-redesign R1): a quiet
+// "Friends" state armed by a first tap into a two-tap remove, matching the
+// app's other inline two-tap confirms (console-copy.ts's
+// twoTapState/TWO_TAP_WINDOW_MS). `variant="row"` is the community list's
+// sizing; `variant="header"` (profile-view-redesign R1) is the same button
+// at the other header buttons' size, used on `/u/[id]`. Both share the same
+// addFriend/removeFriend actions, so a refusal, "Adding…"/"Removing…" and the
+// revalidatePath refresh behave identically either way. The original
+// single-tap default variant is retired — every mount now uses the two-tap
+// state.
 export function FriendButton({
   friendId,
   isFriend,
-  variant = "profile",
+  variant = "row",
   className,
 }: {
   friendId: string;
   isFriend: boolean;
-  variant?: "profile" | "row";
+  variant?: "row" | "header";
   className?: string;
 }) {
   const [pending, startTransition] = useTransition();
@@ -57,60 +60,43 @@ export function FriendButton({
     });
   }
 
-  if (variant === "row") {
-    const label = friendButtonLabel({ isFriend, pending, armed });
-    return (
-      <div className="flex flex-col items-end gap-1">
-        <Button
-          type="button"
-          size="sm"
-          variant={!isFriend ? "default" : armed ? "destructive" : "outline"}
-          disabled={pending}
-          className={cn("min-h-11 gap-1.5 md:pointer-fine:min-h-8", className)}
-          onClick={() => {
-            if (!isFriend) {
-              doAdd();
-              return;
-            }
-            // R2: the first tap only arms the button; the second tap, inside
-            // TWO_TAP_WINDOW_MS, removes.
-            if (!armed) {
-              setArmedAt(Date.now());
-              return;
-            }
-            setArmedAt(null);
-            doRemove();
-          }}
-        >
-          {pending ? (
-            <WineGlassLoader />
-          ) : isFriend && !armed ? (
-            <Check />
-          ) : null}
-          {label}
-        </Button>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      </div>
-    );
+  const label = friendButtonLabel({ isFriend, pending, armed });
+  function handleClick() {
+    if (!isFriend) {
+      doAdd();
+      return;
+    }
+    // R1: the first tap only arms the button; the second tap, inside
+    // TWO_TAP_WINDOW_MS, removes.
+    if (!armed) {
+      setArmedAt(Date.now());
+      return;
+    }
+    setArmedAt(null);
+    doRemove();
   }
 
+  const wrapperClass =
+    variant === "row" ? "flex flex-col items-end gap-1" : "flex flex-col items-start gap-1 md:items-end";
+  const buttonClass =
+    variant === "row" ? "min-h-11 gap-1.5 md:pointer-fine:min-h-8" : "min-h-11 gap-1.5 md:pointer-fine:min-h-9";
+
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div className={wrapperClass}>
       <Button
-        variant={isFriend ? "outline" : "default"}
-        size="sm"
+        type="button"
+        size={variant === "row" ? "sm" : "default"}
+        variant={!isFriend ? "default" : armed ? "destructive" : "outline"}
         disabled={pending}
-        onClick={() => (isFriend ? doRemove() : doAdd())}
+        className={cn(buttonClass, className)}
+        onClick={handleClick}
       >
         {pending ? (
-          <>
-            <WineGlassLoader /> {isFriend ? "Removing…" : "Adding…"}
-          </>
-        ) : isFriend ? (
-          "Remove friend"
-        ) : (
-          "Add friend"
-        )}
+          <WineGlassLoader />
+        ) : isFriend && !armed ? (
+          <Check />
+        ) : null}
+        {label}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>

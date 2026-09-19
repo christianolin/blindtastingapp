@@ -983,10 +983,31 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasted most" (`topCountries`/`topRegions`/`topGrapes`, top 5 each) — tallied
   from the actual `wine_answers` for every wine with a scored guess, NOT from
   the guess itself, since tasting the glass (not guessing it correctly) is
-  what counts as exposure to that origin. And `bestCategory` — the single
-  category with the highest accuracy, gated by a `MIN_SAMPLE = 3` threshold so
-  one lucky first guess doesn't read as a "strength". Both are shown on
-  `/u/[id]`.
+  what counts as exposure to that origin. It no longer returns a
+  `bestCategory`: the "Strongest" category shown on `/u/[id]` now comes from
+  `accuracyView` (`src/lib/profile/profile-view-math.ts`), computed over the
+  same rows the page displays (Your numbers' labels plus "Vintage ±1",
+  `MIN_SAMPLE = 3`) so the line can never disagree with a row.
+- **`/u/[id]` (2026-09-19 redesign)** reuses the Overview/Your numbers
+  primitives rather than its old ad-hoc card: `ProfileHeader` (avatar, serif
+  name, a meta line, bio, real-button actions), a `StatTrio`, three
+  `StatCard`s (`ProfileStatCards` — accuracy by category via `AccuracyRows`,
+  and two "tasted most" origin/grape cards), and `ProfileTastings` (a
+  catalog-style laptop table / phone cards, newest first by this person's
+  latest `scored_at`). Another person's Cellar button is gated by the
+  `can_view_cellar(p_owner)` RPC (the same gate `/u/{id}/cellar` itself
+  uses), not by `cellar_visibility` alone — the profile can't see a
+  friendship in the other direction, so that column alone would either show
+  a dead end or hide a real FRIENDS-visible cellar. The friend action is
+  `FriendButton variant="header"`, the same two-tap "Friends" state
+  Community's rows use, just sized for the header; the button's old
+  single-tap `variant="profile"` is retired. The tastings list never shows a
+  cover photo (join-preview parity — a non-member never sees one either) and
+  its dates are UTC server strings, not `LocalDateTime` (a past tasting has
+  no "Scheduled" placeholder to fall back through). "avg points" still
+  mixes blind 0–30 totals with semi-blind 0/1 match guesses, same as
+  Community, the Overview card and Your numbers — deliberately left alone so
+  a person's number agrees everywhere it's shown.
 - `getBulkProfileSummaries(profileIds)` (also in `profile-stats.ts`) is a
   separate, lighter batched query for the People directory — tastings
   attended / wines guessed / avg points for a whole list of profiles in a
