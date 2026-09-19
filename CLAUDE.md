@@ -508,9 +508,29 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the owner's go-ahead): no client role holds UPDATE or DELETE on any
   `wine-images` object any more ("wine image write update"/"delete" dropped;
   insert and public read unchanged). Nothing in the app overwrites, moves or
-  removes a wine photo; maintenance goes through the service key. Listing
-  the bucket is still open to everyone (a pending follow-up: staging scans of
-  an unrevealed flight can be listed).
+  removes a wine photo; maintenance goes through the service key.
+- **wine-images is not listable** (`20260919203000`, applied 2026-09-19 with
+  the owner's go-ahead). The old SELECT policy "wine image public read"
+  (PUBLIC, anon included) let anyone list the bucket, including every
+  host's label scans under `catalog/staging/<uploader id>/scan-*.jpg`, which
+  is tonight's flight before the reveal (rule 1). It is replaced by "wine
+  image own read": `authenticated` only, and only rows where
+  `coalesce(owner_id, owner::text) = auth.uid()::text`; anon gets nothing.
+  Public URLs (`/storage/v1/object/public/wine-images/...`, `getPublicUrl()`)
+  keep working because the bucket is public and storage-api looks the object
+  up as the super user, not through SELECT RLS. That covers the catalog
+  `image_url`, the scan-photos strip and the label reader, so the bucket must
+  stay public. Uploads need only the insert policy. A client's `list()`,
+  `info()`, `exists()` or `download()` of someone else's wine-images object
+  now sees nothing. Never re-add a PUBLIC/anon SELECT policy on wine-images,
+  and never add a SECURITY DEFINER function owned by a bypassrls role that
+  reads or lists storage.objects (by `storage.objects`, `"storage"."objects"`,
+  `storage.search`/`search_v2`/`list_objects_with_delimiter`, bare `objects`
+  under a search_path naming storage, or a SQL-standard body): it would list
+  every row whatever the policy says. The one that exists,
+  `attach_catalog_wine_photo`, only looks up the single object its caller
+  uploaded. avatars and tasting-images stay listable by design (no answer
+  keys; upload names carry ~52 random bits).
 - **Scan photos** (`catalog_wine_photos`, migration `20260919183100`; spec
   `docs/superpowers/specs/2026-09-19-scan-photos.md`). A label scan whose add
   lands in the catalog, a cellar or a note (never a flight —
