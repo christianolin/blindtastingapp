@@ -605,7 +605,7 @@ function LoadedLotSheet({
                   <span className="inline-flex items-center gap-1">
                     <span className="text-muted-foreground">no note</span>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="xs"
                       className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2.5 max-md:after:content-['']"
                       onClick={() => onRate(wine.catalogWineId, c.id)}
