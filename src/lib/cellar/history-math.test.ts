@@ -10,7 +10,7 @@ function row(over: Partial<HistoryRow> & { on: string }): HistoryRow {
   seq += 1;
   return {
     id: `c${seq}`, lotId: "lot1", catalogWineId: "w1", title: "Vietti, Barolo Castiglione 2017", reason: "DRANK", quantity: 1,
-    consumedOn: over.on, createdAt: `${over.on}T12:00:00Z`, occasion: null, note: null, tasting: null, ...over,
+    consumedOn: over.on, createdAt: `${over.on}T12:00:00Z`, occasion: null, note: null, tasting: null, imageUrl: null, ...over,
   };
 }
 const t = { id: "t1", name: "Nebbiolo vs Sangiovese" };
@@ -75,6 +75,16 @@ describe("months and rows", () => {
     expect(whereLine(rows[6], { phone: false })).toEqual({ kind: "text", text: "lost" });
     expect(whereLine(row({ on: "2026-01-01", reason: "OTHER" }), { phone: false })).toEqual({ kind: "text", text: "taken out" });
     expect(whereLine(row({ on: "2026-01-01", reason: "GIFTED" }), { phone: false })).toEqual({ kind: "text", text: "gifted" });
+  });
+  it("a row keeps its bottle photo through the filters and the months", () => {
+    const photo = "https://example.test/wine-images/w2.jpg";
+    const withPhoto = [
+      row({ on: "2026-09-20", imageUrl: photo, tasting: t }),
+      row({ on: "2026-09-19" }),
+    ];
+    const kept = monthBuckets(filterRows(withPhoto, "tasting"));
+    expect(kept[0].rows.map((r) => r.imageUrl)).toEqual([photo]);
+    expect(monthBuckets(withPhoto)[0].rows.map((r) => r.imageUrl)).toEqual([photo, null]);
   });
   it("action words", () => {
     expect(actionWord(rows[0])).toBe("Drank 1");

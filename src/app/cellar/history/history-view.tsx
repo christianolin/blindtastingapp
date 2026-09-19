@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BottleThumb } from "@/components/bottle-thumb";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -254,9 +255,11 @@ function NoteCell({
       </button>
     );
   }
+  // A real bordered button, not a text link (owner: "i dont like
+  // link-buttons"); 44 px tall on a phone, compact under a mouse.
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       className="min-h-11 md:pointer-fine:min-h-0"
       onClick={() => onRate({ wineId: row.catalogWineId, consumptionId: row.id })}
@@ -279,8 +282,9 @@ function HistoryRowCard({
 
   return (
     <div className="rounded-xl border border-border p-3">
-      {/* Laptop row */}
-      <div className="max-md:hidden grid grid-cols-[1fr_8rem_5rem_4rem] items-start gap-x-3 gap-y-1">
+      {/* Laptop row: the bottle photo leads, then the four columns as before. */}
+      <div className="max-md:hidden grid grid-cols-[auto_1fr_8rem_5rem_4rem] items-start gap-x-3 gap-y-1">
+        <BottleThumb src={row.imageUrl} className="h-12 w-9" />
         <Link href={`/catalog/${row.catalogWineId}`} className="font-medium">
           {row.title}
         </Link>
@@ -305,30 +309,37 @@ function HistoryRowCard({
         </div>
       </div>
 
-      {/* Phone row */}
-      <div className="md:hidden grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1">
-        <div className="flex flex-col gap-1">
+      {/* Phone row: the photo beside a text column. The title takes that
+          column's full width on its own line; the note cell sits beside the
+          two meta lines under it, so it never squeezes the title. */}
+      <div className="md:hidden flex items-start gap-3">
+        <BottleThumb src={row.imageUrl} className="h-12 w-9" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Link href={`/catalog/${row.catalogWineId}`} className="font-medium">
             {row.title}
           </Link>
-          <div className="text-sm tabular-nums text-muted-foreground">
-            {actionWord(row)} · {dayMonth(row.consumedOn)}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="text-sm tabular-nums text-muted-foreground">
+                {actionWord(row)} · {dayMonth(row.consumedOn)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {where.kind === "tasting" ? (
+                  <>
+                    at{" "}
+                    <Link href={`/tastings/${where.tastingId}`} className="text-primary">
+                      {where.name}
+                    </Link>
+                  </>
+                ) : (
+                  where.text
+                )}
+              </div>
+            </div>
+            <div className="shrink-0">
+              <NoteCell row={row} onOpenNote={onOpenNote} onRate={onRate} />
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {where.kind === "tasting" ? (
-              <>
-                at{" "}
-                <Link href={`/tastings/${where.tastingId}`} className="text-primary">
-                  {where.name}
-                </Link>
-              </>
-            ) : (
-              where.text
-            )}
-          </div>
-        </div>
-        <div className="justify-self-end">
-          <NoteCell row={row} onOpenNote={onOpenNote} onRate={onRate} />
         </div>
       </div>
     </div>
