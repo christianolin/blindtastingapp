@@ -9,3 +9,17 @@ export function LiveDot({ size = 7 }: { size?: number }) {
     </span>
   );
 }
+
+// A running tasting nobody is gathered around right now (self-paced, or a
+// paused LIVE one): LiveDot's size without the ping, in gold on the bordeaux
+// ground (entry-4). Shared by the Overview banner and the header's
+// active-tasting strip.
+export function StillDot({ size = 7 }: { size?: number }) {
+  return (
+    <span
+      className="inline-flex shrink-0 rounded-full bg-gold-light"
+      style={{ width: size, height: size }}
+      aria-hidden
+    />
+  );
+}
