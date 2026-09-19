@@ -3,7 +3,7 @@ import { Wine } from "lucide-react";
 import { LocalDateTime } from "@/components/local-date-time";
 import { ActionButton } from "@/components/overview/action-button";
 import { Eyebrow } from "@/components/overview/eyebrow";
-import { LiveDot } from "@/components/overview/live-dot";
+import { LiveDot, StillDot } from "@/components/overview/live-dot";
 import { bannerPhase, liveBannerCopy } from "@/lib/overview-math";
 import { ordinal } from "@/lib/stats-math";
 import { glassesSoFarPhrase, joinEyebrow } from "@/lib/tasting-eyebrow";
@@ -28,7 +28,19 @@ import { nextUpGlassCount, nextUpMeta } from "./next-up-meta";
 // which the banner data already knows, so a guest who cannot add is never
 // offered a flight row (D12). The hint carries the tasting's phase: "live",
 // "self-paced" (the sheet reads it "in progress") or "next".
-export function OverviewBanner({ banner }: { banner: BannerData }) {
+//
+// `viewHidden` (active-tasting banner D8): the header strip under the top bar
+// already names this same tasting with its own way back, so the live or
+// next-up view is not rendered — only the flight hint stays, so the header
+// camera still offers "Tonight's flight". The fragment draws no box, so the
+// page's flex gap leaves no hole. The "none" row is never hidden.
+export function OverviewBanner({
+  banner,
+  viewHidden = false,
+}: {
+  banner: BannerData;
+  viewHidden?: boolean;
+}) {
   if (banner.kind === "live") {
     return (
       <>
@@ -42,7 +54,7 @@ export function OverviewBanner({ banner }: { banner: BannerData }) {
             wineSource={banner.wineSource}
           />
         ) : null}
-        <LiveBannerView banner={banner} />
+        {viewHidden ? null : <LiveBannerView banner={banner} />}
       </>
     );
   }
@@ -59,7 +71,7 @@ export function OverviewBanner({ banner }: { banner: BannerData }) {
             wineSource={banner.wineSource}
           />
         ) : null}
-        <NextUpBannerView banner={banner} />
+        {viewHidden ? null : <NextUpBannerView banner={banner} />}
       </>
     );
   }
@@ -95,18 +107,6 @@ function liveMeta(b: LiveBanner): string {
   if (b.stage) parts.push(b.stage);
   if (b.standing) parts.push(standingText(b.standing));
   return parts.join(" · ");
-}
-
-// A self-paced tasting's dot: LiveDot's size without the ping, in gold on the
-// bordeaux ground — nobody is gathered at one table right now (entry-4).
-function StillDot({ size = 7 }: { size?: number }) {
-  return (
-    <span
-      className="inline-flex shrink-0 rounded-full bg-gold-light"
-      style={{ width: size, height: size }}
-      aria-hidden
-    />
-  );
 }
 
 function LiveBannerView({ banner }: { banner: LiveBanner }) {

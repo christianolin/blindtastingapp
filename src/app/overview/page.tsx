@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getOverviewInvitation } from "@/lib/invitation-data";
 import { OVERVIEW_EYEBROW } from "@/lib/invitation-copy";
 import { getOverviewData } from "@/lib/overview-data";
+import { readActiveTastings } from "@/lib/active-tasting/read";
+import { overviewSlot } from "@/lib/active-tasting/select";
 import { OverviewBanner } from "./banner";
 import { OverviewInvitationCard } from "./invitation-card";
 import { TastingsCard } from "./tastings-card";
@@ -27,7 +29,7 @@ export default async function OverviewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, data, invitation] = await Promise.all([
+  const [{ data: profile }, data, invitation, active] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, avatar_url")
@@ -38,7 +40,19 @@ export default async function OverviewPage() {
     // (spec §4.3 item 3) — fetched here, never inside overview-data.ts
     // (getOverviewData's own file), per this task's Does bullet.
     getOverviewInvitation(),
+    // The header strip's own read — a cache() hit with AppHeader's in this
+    // request, so both see the same snapshot (active-tasting banner §7).
+    readActiveTastings(user.id),
   ]);
+
+  // D8: when the strip under the top bar already names this banner's tasting
+  // (on /overview it always shows the first item), the Overview does not
+  // draw a second way back to it. A failed read gives [] → "banner", as
+  // before. bannerKind below is untouched, so the gold-tile rule holds.
+  const slot = overviewSlot(
+    data.banner.kind === "none" ? null : data.banner.tastingId,
+    active?.items ?? [],
+  );
 
   return (
     // The root fills the content column (which is the app's scroll container,
@@ -66,7 +80,10 @@ export default async function OverviewPage() {
             <OverviewInvitationCard invitation={invitation} />
           </div>
         ) : null}
-        <OverviewBanner banner={data.banner} />
+        <OverviewBanner
+          banner={data.banner}
+          viewHidden={slot === "registrar-only"}
+        />
         {/* The banner kind only decides whether the Taste-blind tile may be
             gold: with nothing scheduled the banner is already a gold "Start a
             tasting" opening the same sheet. */}

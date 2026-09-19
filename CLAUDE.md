@@ -543,6 +543,35 @@ a raw subquery, regardless of which two tables look involved at a glance.
   sheet. Both drawers are dependency-free overlay+panel client components,
   not base-ui Dialogs (avoids fighting Dialog positioning). AppHeader also
   renders `NotificationsBell` (pending-invite count + dropdown).
+- **Active-tasting banner** (2026-09-19, spec
+  `docs/superpowers/specs/2026-09-19-active-tasting-banner.md`). A strip
+  directly under the top bar (`ActiveTastingBanner`,
+  `src/components/active-tasting-banner.tsx`, mounted by `AppHeader` after its
+  `<header>`, so every page with the bar gets it; not sticky, no dismiss)
+  names the one tasting you are in right now with a real Button back to it
+  ("Back to the tasting", or "Back to the lobby" while DRAFT; the host of an
+  IN_PROGRESS tasting where `startLandsOnConsole` holds goes to
+  `/tastings/<id>/host`). Eligible: your own `tasting_participants` row is
+  `JOINED` (never INVITED/DECLINED; never CLOSED or legacy `OPEN` status) and
+  the tasting is inside its window — IN_PROGRESS LIVE while
+  `now − (started_at ?? scheduled_at ?? created_at) ≤ 24 h`; IN_PROGRESS
+  ASYNC always; DRAFT while `scheduled_at` is between 12 h ago and 6 h ahead,
+  or with no schedule for 12 h after `created_at`. Priority: LIVE running,
+  LIVE paused, ASYNC, then DRAFT by nearest schedule; the rest collapse into
+  a "+N more" button to `/taste`. All rules are pure in
+  `src/lib/active-tasting/select.ts` (vitest-covered); the one RLS-as-viewer
+  read (own participant rows + `tastings!inner`, `cache()`d per request) is
+  `read.ts`. Hidden on the shown tasting's own pages (`/tastings/<id>/**`,
+  `usePathname`) and never on `/login`, `/signup`, `/auth/*`, `/invite/*`.
+  The client re-checks through the `"use server"` `pollActiveTastings`
+  (`actions.ts`) every 20 s while visible, on focus and on returning to the
+  tab (paused on the shown tasting's pages); the newer server-clock
+  `checkedAt` of the render and the poll wins, and a failed read never
+  blanks it. On `/overview`, `overviewSlot` suppresses the Overview's own
+  live/next-up banner when the strip names the same tasting — only its
+  `FlightHintRegistrar` stays, and `QuickActions`' gold-tile rule is
+  unchanged. Rule 1: only `{ tastingId, name, state, href }` reaches the
+  client.
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in
