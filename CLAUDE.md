@@ -448,6 +448,38 @@ a raw subquery, regardless of which two tables look involved at a glance.
   checks `profiles.email` first and returns an `existing-account` result
   instead of calling it. Any provider error is shown to the inviter
   verbatim, never a generic wrapper line.
+- **Account deletion** (2026-09-19, `20260919101300_account_deletion.sql`, spec
+  `docs/superpowers/specs/2026-09-19-account-deletion-design.md`). One path for
+  every deletion: AFTER DELETE (and soft-delete UPDATE OF `deleted_at`) triggers
+  on `auth.users` call `scrub_deleted_account(uuid)` (SECURITY DEFINER, no client
+  EXECUTE). The self-service button on `/profile/edit` (type DELETE, re-checked
+  on the server) just deletes the auth user through the server-only admin
+  client, removes the avatar files, signs out and lands on `/login?deleted=1`;
+  a Supabase dashboard delete runs the same scrub. The profile row is KEPT and
+  scrubbed (display name "Deleted user", undeliverable email, personal columns
+  null, write-once `deleted_at`); there is deliberately no FK from profiles to
+  `auth.users` (the own-auth branch `auth-phase-1` needs profiles without a
+  login, live migration 20260829265003 dropped it). Deleted: notes, cellar lots
+  and consumptions, friendships both ways, platform invites, drafts, pour
+  intents, label reads, and places of tastings they hosted. Kept for others:
+  tastings they hosted or joined, guesses, answer keys, catalog wines they
+  created. A never-started DRAFT they host alone is deleted; any other
+  unfinished hosted tasting is CLOSED with nothing revealed; in someone else's
+  never-started tasting their seat and BYO glasses go, in a started one a
+  JOINED seat stays. `get_semi_blind_candidates` decides "started" as
+  `status <> 'DRAFT' and (started_at is not null or finished_at is null)`: a
+  tasting CLOSED without ever starting keeps DRAFT visibility. Never go back
+  to a bare `status <> 'DRAFT'` or `status = 'CLOSED'` test for "started" —
+  that hands every candidate card of never-revealed glasses to the JOINED
+  guests. Client UPDATE on `profiles` is a column grant on nine columns
+  (display_name, bio, avatar_url, location, phone, favorite_wine_type,
+  cellar_visibility, preferred_currency, last_seen_at); before it, any member
+  could set their own `role` to ADMIN. Roles change only through
+  `admin_set_user_role`. A link guard refuses new friendships or seats
+  pointing at a deleted profile. Every people listing filters
+  `.is("deleted_at", null)`. Never pass `shouldSoftDelete` to
+  `admin.deleteUser`: the hard delete is what frees the email for a new
+  signup. A dashboard delete leaves the avatar file behind (spec §7 R5).
 - The tasting-invite UI (`tastings/new/invite-field.tsx`) is NOT a
   comma/newline-separated textarea — participants are added one at a time
   (typed email + "Add", or picked from a friends combobox), rendered as

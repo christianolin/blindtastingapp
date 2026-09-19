@@ -163,6 +163,8 @@ export function NewTastingSheet({
         .from("profiles")
         .select("id, display_name, email")
         .in("id", ids.length > 0 ? ids : [""])
+        // Defensive: a deletion removes its friendships (account-deletion §5.5).
+        .is("deleted_at", null)
         .order("display_name");
       if (!cancelled) setFriends((data ?? []) as Friend[]);
     })().catch(() => {

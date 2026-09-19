@@ -61,10 +61,11 @@ export default async function CommunityPage({
     await Promise.all([
       supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
       supabase.from("friendships").select("friend_id").eq("user_id", user.id),
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("profiles").select("id", { count: "exact", head: true }).is("deleted_at", null),
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
+        .is("deleted_at", null)
         .gte("last_seen_at", activeSinceIso(now)),
     ]);
 
@@ -76,7 +77,10 @@ export default async function CommunityPage({
     .select(
       "id, display_name, bio, avatar_url, location, created_at, last_seen_at, cellar_visibility",
       { count: "exact" },
-    );
+    )
+    // A deleted account is scrubbed to "Deleted user" and stays for others'
+    // records, but never appears in the directory (account-deletion §5.6).
+    .is("deleted_at", null);
   if (params.view === "friends") {
     listQuery = listQuery.in("id", [...friendIds]);
   }

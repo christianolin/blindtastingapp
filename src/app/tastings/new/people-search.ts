@@ -38,6 +38,9 @@ export async function searchPeople(
     .select("id, display_name, avatar_url, email")
     .ilike("display_name", `%${escapeIlike(trimmed)}%`)
     .not("id", "in", `(${exclude.join(",")})`)
+    // A deleted account is never someone to invite; its "Deleted user" name
+    // would otherwise match "del" (account-deletion spec §5.5).
+    .is("deleted_at", null)
     .order("display_name")
     .limit(8);
   return data ?? [];

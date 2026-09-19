@@ -76,6 +76,8 @@ export async function getTastingSettings(
     .from("profiles")
     .select("id, display_name, email")
     .in("id", friendIds.length > 0 ? friendIds : [""])
+    // Defensive: a deletion removes its friendships (account-deletion §5.5).
+    .is("deleted_at", null)
     .order("display_name");
 
   const joinedUserIds = (joinedRows ?? []).map((r) => r.user_id);

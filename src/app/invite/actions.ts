@@ -149,6 +149,8 @@ export async function sendPlatformInvite(code: string, email: string): Promise<S
     .from("profiles")
     .select("id")
     .eq("email", to)
+    // A deleted account is not an existing one (account-deletion §5.5).
+    .is("deleted_at", null)
     .maybeSingle();
   if (existing) return { ok: false, reason: "existing-account", message: EXISTING_ACCOUNT_LINE };
 

@@ -256,6 +256,9 @@ export async function inviteToTasting(
       .from("profiles")
       .select("id")
       .eq("email", email)
+      // Never a deleted account (account-deletion §5.5); its email is scrubbed
+      // anyway, so this only guards the lookup.
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (existingProfile) {

@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "./avatar-uploader";
 import { EditProfileForm } from "./edit-profile-form";
+import { DeleteAccountSection } from "./delete-account-section";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function EditProfilePage() {
@@ -60,6 +61,10 @@ export default async function EditProfilePage() {
             <ThemeToggle />
           </CardContent>
         </Card>
+
+        {/* Last, and its own card: it acts on the whole account, not on a
+            field of the profile form (account-deletion spec §5.2). */}
+        <DeleteAccountSection />
       </div>
     </div>
   );

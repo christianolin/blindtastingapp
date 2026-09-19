@@ -344,6 +344,11 @@ export type Database = {
           cellar_visibility: CellarVisibility;
           last_seen_at: string | null;
           created_at: string;
+          // Account deletion (20260919101300): stamped once by
+          // scrub_deleted_account, never cleared. Row only on purpose (D18):
+          // no client writes it (column grant + profiles_deleted_guard), so a
+          // write from app code is a compile error too.
+          deleted_at: string | null;
         };
         Insert: {
           id: string;
