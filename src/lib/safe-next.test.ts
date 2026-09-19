@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { authRedirect, safeNext } from "./safe-next";
 
@@ -33,6 +34,40 @@ describe("safeNext", () => {
     expect(safeNext(null)).toBeNull();
     expect(safeNext(undefined)).toBeNull();
     expect(safeNext("   ")).toBeNull();
+  });
+});
+
+describe("safeNext control characters", () => {
+  // A URL parser drops tab, newline and carriage return inside a path, so
+  // "/<TAB>/evil.example" passed the "//" check here but resolved to
+  // https://evil.example/ in the browser. Every ASCII control character and
+  // every backslash is refused anywhere in the value, not only at the start.
+  const CONTROLS = [0x00, 0x01, 0x09, 0x0a, 0x0b, 0x0d, 0x1f, 0x7f];
+  it("refuses a control character anywhere in the path", () => {
+    for (const code of CONTROLS) {
+      const ch = String.fromCharCode(code);
+      expect(safeNext("/" + ch + "/evil.example"), "code " + code).toBeNull();
+      // A trailing whitespace control is trimmed away, which is safe; what must
+      // never happen is a control character surviving into the result.
+      const tail = safeNext("/taste" + ch);
+      expect(tail === null || [...tail].every((c) => c.charCodeAt(0) >= 32 && c.charCodeAt(0) !== 127), "code " + code).toBe(true);
+    }
+  });
+  it("refuses a backslash anywhere in the path", () => {
+    expect(safeNext("/a" + String.fromCharCode(92) + "b")).toBeNull();
+  });
+  it("still resolves the refused tab case off-site, which is why it is refused", () => {
+    const raw = "/" + String.fromCharCode(9) + "/evil.example";
+    expect(new URL(raw, ORIGIN).host).toBe("evil.example");
+  });
+  it("keeps ordinary paths with spaces, tildes and query strings", () => {
+    expect(safeNext("/a b")).toBe("/a b");
+    expect(safeNext("/a~b?x=1&y=2")).toBe("/a~b?x=1&y=2");
+  });
+  it("stays a text file with no raw control bytes in its own source", () => {
+    const src = fs.readFileSync("src/lib/safe-next.ts", "utf8");
+    const bad = [...src].map((c) => c.charCodeAt(0)).filter((c) => (c < 32 && c !== 9 && c !== 10 && c !== 13) || c === 127);
+    expect(bad).toEqual([]);
   });
 });
 
