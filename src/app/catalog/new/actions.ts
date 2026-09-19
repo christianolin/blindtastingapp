@@ -146,25 +146,14 @@ export async function createAppellation(regionId: string, name: string): Promise
   return data;
 }
 
-/** A catalog wine's structured profile, stored as distinct catalog columns and
-    edited in Manage wine. Every part is optional. */
-export type WineProfileInput = {
-  wineryDescription: string | null;
-  aroma: string | null;
-  tastingNotes: string | null;
-  foodPairing: string | null;
-  servingTempC: { min: number; max: number } | null;
-  decantMinutes: number | null;
-  /** The form's value only. The write stores the draft's `alcohol` instead,
-      which the wine-identity module keeps inside (0, 100). */
-  alcoholPercent: number | null;
-};
-
 /** What the catalog page's form sends. The identity is a draft; the one write
-    path checks it and resolves every pending name (D2). */
+    path checks it and resolves every pending name (D2). The draft also carries
+    the description ("About this wine") and the alcohol. The FastCork-era
+    profile columns (winery_description, aroma, tasting_notes, food_pairing,
+    serving_temp_min_c/max_c, decant_minutes) are retired: nothing here reads
+    or writes them. */
 export type CatalogWineInput = {
   draft: WineIdentityDraft;
-  profile?: WineProfileInput | null;
   /** The catalog wine's retail price per bottle in DKK, as the form's text ("" = unknown). */
   estimatedPrice?: string | null;
 };
@@ -180,10 +169,6 @@ function blankToNull(value: string | null | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-function isBlank(value: string | null): boolean {
-  return value === null || value.trim() === "";
-}
-
 /** "" and anything that is not a non-negative number mean "unknown". */
 function priceOrNull(value: string | null | undefined): number | null {
   const trimmed = blankToNull(value);
@@ -192,84 +177,40 @@ function priceOrNull(value: string | null | undefined): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-function numberOrNull(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-/** The profile columns, except `alcohol_percent`, which comes from the draft. */
-function profileColumns(p: WineProfileInput): CatalogWineUpdate {
-  const min = numberOrNull(p.servingTempC?.min);
-  const max = numberOrNull(p.servingTempC?.max);
-  const range = min !== null && max !== null;
-  return {
-    winery_description: blankToNull(p.wineryDescription),
-    aroma: blankToNull(p.aroma),
-    tasting_notes: blankToNull(p.tastingNotes),
-    food_pairing: blankToNull(p.foodPairing),
-    serving_temp_min_c: range ? min : null,
-    serving_temp_max_c: range ? max : null,
-    decant_minutes: numberOrNull(p.decantMinutes),
-  };
-}
-
 function logFailure(what: string, error: unknown): void {
   console.error(`${what} failed`, { message: error instanceof Error ? error.message : String(error) });
 }
 
 /**
- * The profile and price on a wine the caller just created or linked, only on a
- * row the caller created and only into empty columns, so a deduped hit on
- * someone else's wine, or a curated profile, is never overwritten. A failed fill
- * is logged and does not refuse the add: the identity is already linked.
+ * The price on a wine the caller just created or linked, only on a row the
+ * caller created and only while it has none, so a deduped hit on someone else's
+ * wine is never overwritten. The description and alcohol are filled by the one
+ * write path itself (`upsertCatalogWine`). A failed fill is logged and does not
+ * refuse the add: the identity is already linked.
  */
-async function fillProfileAndPrice(
+async function fillPrice(
   supabase: Db,
   userId: string,
   catalogWineId: string,
   input: CatalogWineInput,
 ): Promise<void> {
-  const profile = input.profile ? profileColumns(input.profile) : null;
   const price = priceOrNull(input.estimatedPrice);
-  if (!profile && price === null) return;
+  if (price === null) return;
 
   const { data: row, error } = await supabase
     .from("catalog_wines")
-    .select(
-      "created_by, winery_description, aroma, tasting_notes, food_pairing, serving_temp_min_c, serving_temp_max_c, decant_minutes, estimated_price",
-    )
+    .select("created_by, estimated_price")
     .eq("id", catalogWineId)
     .maybeSingle();
-  if (error) return logFailure("catalog profile read", error.message);
-  if (!row || row.created_by !== userId) return;
+  if (error) return logFailure("catalog price read", error.message);
+  if (!row || row.created_by !== userId || row.estimated_price !== null) return;
 
-  const patch: CatalogWineUpdate = {};
-  if (profile) {
-    if (profile.winery_description && isBlank(row.winery_description)) patch.winery_description = profile.winery_description;
-    if (profile.aroma && isBlank(row.aroma)) patch.aroma = profile.aroma;
-    if (profile.tasting_notes && isBlank(row.tasting_notes)) patch.tasting_notes = profile.tasting_notes;
-    if (profile.food_pairing && isBlank(row.food_pairing)) patch.food_pairing = profile.food_pairing;
-    if (
-      profile.serving_temp_min_c != null && profile.serving_temp_max_c != null
-      && row.serving_temp_min_c === null && row.serving_temp_max_c === null
-    ) {
-      patch.serving_temp_min_c = profile.serving_temp_min_c;
-      patch.serving_temp_max_c = profile.serving_temp_max_c;
-    }
-    if (profile.decant_minutes != null && row.decant_minutes === null) patch.decant_minutes = profile.decant_minutes;
-  }
-  if (price !== null && row.estimated_price === null) {
-    patch.estimated_price = price;
-    patch.estimated_price_currency = "DKK";
-  }
-  if (Object.keys(patch).length === 0) return;
-
-  // One statement, so the edit-audit trigger records one change.
   const { error: updateError } = await supabase
     .from("catalog_wines")
-    .update(patch)
+    .update({ estimated_price: price, estimated_price_currency: "DKK" })
     .eq("id", catalogWineId)
     .eq("created_by", userId);
-  if (updateError) logFailure("catalog profile fill", updateError.message);
+  if (updateError) logFailure("catalog price fill", updateError.message);
 }
 
 /**
@@ -294,9 +235,9 @@ export async function createCatalogWine(
     if ("error" in upserted) return upserted;
 
     try {
-      await fillProfileAndPrice(supabase, user.id, upserted.catalogWineId, input);
+      await fillPrice(supabase, user.id, upserted.catalogWineId, input);
     } catch (error) {
-      logFailure("catalog profile fill", error);
+      logFailure("catalog price fill", error);
     }
     return { catalogWineId: upserted.catalogWineId, written: upserted.written };
   } catch (error) {
@@ -332,8 +273,9 @@ async function replaceBlend(supabase: Db, catalogWineId: string, blend: Resolved
  * update") decides who may write, so an update that touches no row is refused
  * with "You can't edit this wine." The audit trigger records before and after.
  * Because cellars reference the wine by id, the edit updates everyone's cellar
- * view. The profile is written only when the caller sends one, so an edit that
- * omits it leaves the wine's tasting notes alone. Never throws.
+ * view. The description and alcohol come from the draft, like the rest of the
+ * identity the form edits, so the form must load both before it saves (Manage
+ * wine does). Never throws.
  */
 export async function updateCatalogWine(
   wineId: string,
@@ -362,6 +304,7 @@ export async function updateCatalogWine(
       style: wine.style,
       wine_name: wine.wineName,
       description: wine.description,
+      alcohol_percent: wine.alcohol,
       vintage_kind: wine.vintage.kind,
       vintage_year: wine.vintage.year,
       vintage_tawny_years: wine.vintage.tawnyYears,
@@ -369,7 +312,6 @@ export async function updateCatalogWine(
       ...(input.estimatedPrice !== undefined
         ? { estimated_price: priceOrNull(input.estimatedPrice), estimated_price_currency: "DKK" }
         : {}),
-      ...(input.profile ? { ...profileColumns(input.profile), alcohol_percent: wine.alcohol } : {}),
     };
     const { data: updated, error } = await supabase
       .from("catalog_wines")

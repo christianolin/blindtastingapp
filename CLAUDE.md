@@ -1344,6 +1344,18 @@ a raw subquery, regardless of which two tables look involved at a glance.
     constructed. `resolveLabelRead` → `missingWineFields` →
     `findConfidentMatch` → an explicit confirm screen; nothing is ever
     auto-added.
+  - **One catalog text: `description` ("About this wine")** (owner,
+    2026-09-19). The FastCork-era profile columns on `catalog_wines` —
+    `winery_description`, `aroma`, `tasting_notes`, `food_pairing`,
+    `serving_temp_min_c`/`_max_c`, `decant_minutes` — are retired from the
+    app: kept in the database (and `database.types.ts`) but nothing in `src/`
+    reads or writes them (`scripts/backfill-fastcork-profile.mjs` is
+    historical). The catalog page shows `description` under "About this wine"
+    for every wine that has one, edited as "About this wine" in Manage wine,
+    the cellar form and the add-wine sheet's by-hand form, and written by the label reader under its
+    `description` rules (`label-read-schema.ts`: 2-4 factual reference
+    sentences, no praise, no pairings, short when little is known).
+    `alcohol_percent` stays — the label reader reads it off the label.
   - **The wine-identity module** (`src/lib/wine-identity/`) is the only
     definition of a complete wine (D2): `COMPLETE_WINE_FIELDS` in
     `complete.ts` — producer, vintage, colour, style, country, region,

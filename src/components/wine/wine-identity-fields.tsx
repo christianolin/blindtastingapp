@@ -333,13 +333,13 @@ export function WineIdentityFields({
           </div>
           {setDescription ? (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="wine_description">Description (optional)</Label>
+              <Label htmlFor="wine_description">About this wine (optional)</Label>
               <textarea
                 id="wine_description"
                 name="description"
                 value={description ?? ""}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Background on the wine — style, vineyard, story…"
+                placeholder="A few factual sentences: terroir, winemaking, the estate…"
                 className="min-h-24 rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </div>
