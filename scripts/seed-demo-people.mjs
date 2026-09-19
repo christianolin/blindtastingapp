@@ -68,12 +68,10 @@ const admin = createClient(url, serviceRole, {
 // Seed list
 // ---------------------------------------------------------------------------
 
-/** profiles.favorite_wine_type stores a FAVORITE_WINE_TYPE_ITEMS key (src/lib/wine-types.ts). */
-const FAVORITE_WINE_TYPES = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "ORANGE", "FORTIFIED", "DESSERT"]);
 const WINE_COLOURS = new Set(["RED", "WHITE", "ROSE", "ORANGE"]);
 const WINE_STYLES = new Set(["STILL", "SPARKLING", "SWEET", "FORTIFIED"]);
 const DEMO_EMAIL = /^demo\.[a-z]+@blindr\.invalid$/;
-const PUBLIC_PROFILE_FIELDS = ["display_name", "bio", "location", "favorite_wine_type"];
+const PUBLIC_PROFILE_FIELDS = ["display_name", "bio", "location"];
 
 /** Public profile fields only. phone is private (CLAUDE.md) and never seeded. */
 const PEOPLE = [
@@ -83,7 +81,6 @@ const PEOPLE = [
     display_name: "Isabelle Moreau",
     bio: "Burgundy obsessive. Mediocre at guessing vintages.",
     location: "Beaune, France",
-    favorite_wine_type: "RED",
   },
   {
     key: "marcus",
@@ -91,7 +88,6 @@ const PEOPLE = [
     display_name: "Marcus Chen",
     bio: "New World enthusiast — can smell an oaked Chardonnay across the room.",
     location: "San Francisco, USA",
-    favorite_wine_type: "WHITE",
   },
   {
     key: "sofia",
@@ -99,7 +95,6 @@ const PEOPLE = [
     display_name: "Sofia Andersen",
     bio: "Here for the cheese, staying for the wine.",
     location: "Copenhagen, Denmark",
-    favorite_wine_type: "SPARKLING",
   },
   {
     key: "diego",
@@ -107,7 +102,6 @@ const PEOPLE = [
     display_name: "Diego Fernandez",
     bio: "Rioja or nothing.",
     location: "Logroño, Spain",
-    favorite_wine_type: "RED",
   },
   {
     key: "priya",
@@ -115,7 +109,6 @@ const PEOPLE = [
     display_name: "Priya Sharma",
     bio: "Still learning to spit instead of swallow.",
     location: "London, United Kingdom",
-    favorite_wine_type: "ROSE",
   },
 ];
 
@@ -684,9 +677,6 @@ async function resolvePeople() {
     const where = `person ${person.email}`;
     if (!DEMO_EMAIL.test(person.email)) problems.push(`${where}: not a demo.<name>@blindr.invalid address`);
     if (!person.display_name?.trim()) problems.push(`${where}: display_name is required`);
-    if (person.favorite_wine_type !== null && !FAVORITE_WINE_TYPES.has(person.favorite_wine_type)) {
-      problems.push(`${where}: favorite_wine_type "${person.favorite_wine_type}" is not a FAVORITE_WINE_TYPE_ITEMS key`);
-    }
     if ("phone" in person) problems.push(`${where}: phone is private and must not be seeded`);
 
     const user = users.get(person.email.toLowerCase()) ?? null;
@@ -694,7 +684,7 @@ async function resolvePeople() {
     if (user) {
       const { data, error } = await admin
         .from("profiles")
-        .select("id, email, display_name, bio, location, favorite_wine_type")
+        .select("id, email, display_name, bio, location")
         .eq("id", user.id)
         .maybeSingle();
       check(error, `${where} profile read`);

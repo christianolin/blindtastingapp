@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
+import { getProfileFavourites, loadFavouriteRegionOptions } from "@/lib/profile-favourites";
 import { AvatarUploader } from "./avatar-uploader";
 import { EditProfileForm } from "./edit-profile-form";
 import { DeleteAccountSection } from "./delete-account-section";
@@ -16,11 +17,15 @@ export default async function EditProfilePage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, bio, avatar_url, location, phone, favorite_wine_type")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, favourites, regionOptions] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, bio, avatar_url, location, phone")
+      .eq("id", user.id)
+      .single(),
+    getProfileFavourites(supabase, user.id),
+    loadFavouriteRegionOptions(supabase),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -44,7 +49,8 @@ export default async function EditProfilePage() {
               bio={profile?.bio ?? ""}
               location={profile?.location ?? ""}
               phone={profile?.phone ?? ""}
-              favoriteWineType={profile?.favorite_wine_type ?? ""}
+              favourites={favourites}
+              regionOptions={regionOptions}
             />
           </CardContent>
         </Card>

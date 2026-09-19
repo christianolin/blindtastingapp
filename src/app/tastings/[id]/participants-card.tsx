@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Wine } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +38,7 @@ function RowFrame({
 // Full participant roster with cross-tasting stats (spec §3.3 item 8; BT-D2
 // moved this without change, BT-L2 rebuilds it): each row links to the
 // person's profile and shows their avatar, a Host badge, their In/Invited
-// status, a location/favorite-wine info line, and a cross-tasting stats line
+// status, a location info line, and a cross-tasting stats line
 // fetched via getBulkProfileSummaries — the batched helper, per its own rule
 // about many-people stat surfaces. JOINED and INVITED are listed; DECLINED
 // collapses to one muted line and is not counted (LOBBY-17). Below `lg` the
@@ -63,7 +63,7 @@ export async function ParticipantsCard({
   const userIds = participantRows.map((p) => p.user_id);
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name, email, avatar_url, location, favorite_wine_type, deleted_at")
+    .select("id, display_name, email, avatar_url, location, deleted_at")
     .in("id", userIds.length > 0 ? userIds : [""]);
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
   // A deleted account (D16) keeps its seat and its name, "Deleted user", but
@@ -117,12 +117,6 @@ export async function ParticipantsCard({
                 <span key="loc" className="flex items-center gap-1">
                   <MapPin className="size-3" />
                   {profile.location}
-                </span>
-              ) : null,
-              !isDeleted && profile?.favorite_wine_type ? (
-                <span key="wine" className="flex items-center gap-1">
-                  <Wine className="size-3" />
-                  {profile.favorite_wine_type}
                 </span>
               ) : null,
               !isDeleted && stats && stats.winesGuessed > 0 ? (

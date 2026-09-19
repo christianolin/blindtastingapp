@@ -29,6 +29,7 @@ export function ReferenceCombobox({
   onCreate,
   disabled,
   allowClear,
+  triggerClassName,
 }: {
   formFieldName: string;
   options: ReferenceOption[];
@@ -43,6 +44,10 @@ export function ReferenceCombobox({
   onCreate?: (name: string) => Promise<ReferenceOption>;
   disabled?: boolean;
   allowClear?: boolean;
+  /** Merged into the trigger Button's className — e.g. the favourites
+   *  pickers' 44px phone target (profile-favourites spec §5.5). Defaults are
+   *  unchanged, so no existing caller changes. */
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -88,7 +93,7 @@ export function ReferenceCombobox({
           render={
             <Button
               variant="outline"
-              className="w-full justify-between font-normal"
+              className={cn("w-full justify-between font-normal", triggerClassName)}
             />
           }
         >
