@@ -401,6 +401,27 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["friendships"]["Insert"]>;
         Relationships: [];
       };
+      // 20260919141700 (profile-favourites spec §3, D2-D4): a person's
+      // favourite regions and producers, position 1..10 in the order they
+      // chose (at most 10 per table, enforced by the position range + a
+      // per-person unique, with a guard for the friendly message). Every
+      // signed-in viewer reads them; only the owner writes (RLS by
+      // profile_id = auth.uid()). The client INSERT grant covers profile_id,
+      // region_id|producer_id and position only (never created_at), and
+      // UPDATE covers position only. The app replaces a whole set through
+      // set_profile_favourites, below. A deleted profile has no rows.
+      profile_favourite_regions: {
+        Row: { profile_id: string; region_id: string; position: number; created_at: string };
+        Insert: { profile_id: string; region_id: string; position: number; created_at?: never };
+        Update: { position?: number };
+        Relationships: [];
+      };
+      profile_favourite_producers: {
+        Row: { profile_id: string; producer_id: string; position: number; created_at: string };
+        Insert: { profile_id: string; producer_id: string; position: number; created_at?: never };
+        Update: { position?: number };
+        Relationships: [];
+      };
       // 20260918130500 (platform-invites spec §4, D4, D7, D8): a personal
       // "join Blindr" link. The inviter reads and inserts their own rows (RLS
       // by inviter_id = auth.uid()); no client UPDATE or DELETE, and the
@@ -1985,6 +2006,19 @@ export type Database = {
       accept_platform_invite: {
         Args: { p_code: string };
         Returns: string;
+      };
+      // 20260919141700 (profile-favourites spec §3.5, D6): replaces the
+      // caller's favourite regions and producers in one go, position = list
+      // order; empty arrays clear a set. SECURITY INVOKER (RLS, the grants
+      // and the guards stay the floor); EXECUTE for authenticated only.
+      // Refusals come back verbatim: "not signed in", "favourites must be two
+      // lists of ids", "you can pick up to 10 favourite regions" /
+      // "producers", "each region can be picked once" / "each producer can
+      // be picked once", "that region cannot be a favourite", "this account
+      // has been deleted".
+      set_profile_favourites: {
+        Args: { p_region_ids: string[]; p_producer_ids: string[] };
+        Returns: void;
       };
     };
   };
