@@ -42,6 +42,9 @@ export function WineAdminControls({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // `appearance_count` counts revealed glasses only (rule 1). A wine linked only by an unrevealed
+  // glass can read as deletable here and still be refused by `delete_catalog_wine` (spec
+  // 2026-09-19-rule1-usage-and-main-photo R1).
   const deletable =
     usage.lot_count === 0 &&
     usage.note_count === 0 &&
