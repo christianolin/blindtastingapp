@@ -21,8 +21,8 @@ const CHIP_LABEL: Record<CameraViewProps["matrix"]["chips"][number], string> = {
  * A2 (B2, C2 and D2 use the same view): the sheet's opening view on a device
  * that can scan — a live camera on the dark ground. The shell draws the
  * header; this renders the search field, the viewfinder with its gold
- * brackets, the shutter row (Library · shutter · Many, or Library · shutter ·
- * By hand in Many) and the matrix's source chips (or, in Many, the stack above
+ * brackets, the shutter row (Library · shutter · Scan many, or Library ·
+ * shutter · By hand in Many) and the matrix's source chips (or, in Many, the stack above
  * the viewfinder and the gold Done footer). There is no Catalog chip: the
  * search field is the catalog (D4).
  *
@@ -192,11 +192,12 @@ export function CameraView({
             <span aria-hidden className="w-14 shrink-0" />
           )
         ) : matrix.showMany ? (
-          <TileSlot label="Many" onClick={onMany} icon={<Layers aria-hidden className="size-[17px]" />} />
+          // Owner, 2026-09-19: "Many" alone was easy to miss — "Scan many".
+          <TileSlot label="Scan many" onClick={onMany} icon={<Layers aria-hidden className="size-[17px]" />} />
         ) : (
           // A single-wine destination has no Many; the empty slot keeps the
           // shutter centred.
-          <span aria-hidden className="w-14 shrink-0" />
+          <span aria-hidden className="w-16 shrink-0" />
         )}
       </div>
 
@@ -242,7 +243,8 @@ function Brackets({ small }: { small: boolean }) {
   );
 }
 
-// A 44px tile with a caption (Library / Many on the opening screen).
+// A 44px tile with a caption (Library / Scan many on the opening screen). The
+// slot is 64px so "Scan many" fits on one line at 10.5px.
 function TileSlot({
   label,
   icon,
@@ -259,7 +261,7 @@ function TileSlot({
       type="button"
       variant="ghost"
       onClick={onClick}
-      className="h-auto w-14 shrink-0 flex-col gap-1 rounded-[10px] p-0 hover:bg-transparent"
+      className="h-auto w-16 shrink-0 flex-col gap-1 rounded-[10px] p-0 hover:bg-transparent"
     >
       <span
         className={cn(
