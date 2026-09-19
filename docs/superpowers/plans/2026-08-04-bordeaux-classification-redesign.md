@@ -12,7 +12,7 @@
 
 - Spec: `docs/superpowers/specs/2026-08-04-bordeaux-classification-redesign-design.md`.
 - Every TS/UI increment ends with `tsc --noEmit` clean — clear `.next` first: `Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; npx tsc --noEmit` (expect `EXIT=0`, no output).
-- Migrations: `node scripts/scratch-apply.mjs --file <path> --mode dry` then `--mode live`. Set `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'` in the shell first. Next free versions: `20260829263300`, `20260829263400` (highest existing = `...263200`).
+- Migrations: `node scripts/scratch-apply.mjs --file <path> --mode dry` then `--mode live`. Set `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'` in the shell first. Next free versions: `20260829263300`, `20260829263400` (highest existing = `...263200`).
 - DB tests: `node --test scripts/<name>.test.mjs` (also needs `$env:DB_PASSWORD`).
 - Commit per task. Push with `git push` from the repo root (stderr may print "RemoteException" but `EXIT=0` / a ref line = success).
 - Policy: canonical-only; link via `wine_places`, never the flat `appellations` table.
@@ -114,12 +114,12 @@ end $$;
 
 - [ ] **Step 2: Dry-run the migration**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263300_designation_member_appellation_link.sql --mode dry`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263300_designation_member_appellation_link.sql --mode dry`
 Expected: `DRY-OK 20260829263300 designation_member_appellation_link` (the self-assert passed inside the rolled-back transaction).
 
 - [ ] **Step 3: Live-apply the migration**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263300_designation_member_appellation_link.sql --mode live`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263300_designation_member_appellation_link.sql --mode live`
 Expected: `LIVE-APPLIED 20260829263300 designation_member_appellation_link`.
 
 - [ ] **Step 4: Write the DB test**
@@ -196,7 +196,7 @@ test("sub-commune mappings resolve (Barsac/Sauternes, Graves, Haut-Médoc)", asy
 
 - [ ] **Step 5: Run the test**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node --test scripts/bordeaux-appellation-link.test.mjs`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node --test scripts/bordeaux-appellation-link.test.mjs`
 Expected: `# pass 3`, `# fail 0`.
 
 - [ ] **Step 6: Commit**
@@ -885,12 +885,12 @@ with:
 
 - [ ] **Step 2: Dry-run**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263400_wine_place_context_classified_members.sql --mode dry`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263400_wine_place_context_classified_members.sql --mode dry`
 Expected: `DRY-OK 20260829263400 wine_place_context_classified_members`.
 
 - [ ] **Step 3: Live-apply**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263400_wine_place_context_classified_members.sql --mode live`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node scripts/scratch-apply.mjs --file supabase/migrations/20260829263400_wine_place_context_classified_members.sql --mode live`
 Expected: `LIVE-APPLIED 20260829263400 wine_place_context_classified_members`.
 
 - [ ] **Step 4: Write the RPC test**
@@ -936,7 +936,7 @@ test("a place with no classification returns an empty array", async () => {
 
 - [ ] **Step 5: Run the test**
 
-Run: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'; node --test scripts/wine-place-classified-members.test.mjs`
+Run: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'; node --test scripts/wine-place-classified-members.test.mjs`
 Expected: `# pass 2`, `# fail 0`.
 
 - [ ] **Step 6: Commit**

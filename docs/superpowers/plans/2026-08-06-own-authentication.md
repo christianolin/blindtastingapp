@@ -18,7 +18,7 @@
 - Migrations run via `node scripts/scratch-apply.mjs --file <path> --mode dry|live`. Always `dry` first, then `live`.
 - Highest applied migration is `20260829264200`. Use `20260829265000` and up.
 - Tests are `.mjs` files under `scripts/`, run with `node --test scripts/<name>.test.mjs`, using `node:test` + `pg`. They test behaviour against the live DB/HTTP API, never by importing app TypeScript. Follow `scripts/designation-members.test.mjs` for structure.
-- DB env for scripts: `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'`. Default host `aws-0-eu-central-1.pooler.supabase.com`, user `postgres.eqzwmkpeysqiihuojmuj`, db `postgres`, port 6543 (scratch-apply overrides to 5432).
+- DB env for scripts: `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'`. Default host `aws-0-eu-central-1.pooler.supabase.com`, user `postgres.eqzwmkpeysqiihuojmuj`, db `postgres`, port 6543 (scratch-apply overrides to 5432).
 - `SUPABASE_JWT_SECRET` must exist in `.env.local` before Task 1. Server-only — never prefix with `NEXT_PUBLIC_`.
 - Commit after every task. Push per increment.
 - Never log, print, or commit: password hashes, session tokens, email tokens, or the JWT secret.
@@ -185,7 +185,7 @@ test("a token signed with the wrong secret is rejected", async () => {
 - [ ] **Step 3: Run the test**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 Get-Content .env.local | ForEach-Object {
   if ($_ -match '^([A-Z_]+)=(.*)$') {
     [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2].Trim('"'))
@@ -311,7 +311,7 @@ $$;
 - [ ] **Step 2: Dry-run the migration**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265000_auth_tables.sql --mode dry
 ```
 
@@ -399,7 +399,7 @@ test("credential email is unique case-insensitively", async () => {
 - [ ] **Step 4: Apply live, then run the test**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265000_auth_tables.sql --mode live
 node --test scripts/auth-schema.test.mjs
 ```
@@ -717,7 +717,7 @@ test("sliding renews expiry and last_seen_at", async () => {
 - [ ] **Step 3: Run it — expect failure**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node --test scripts/auth-session.test.mjs
 ```
 
@@ -1211,7 +1211,7 @@ test("resets once the window has rolled", async () => {
 Run:
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node --test scripts/auth-rate-limit.test.mjs
 ```
 
@@ -1473,7 +1473,7 @@ test("an expired token does not consume", async () => {
 - [ ] **Step 3: Run it**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node --test scripts/auth-tokens.test.mjs
 ```
 
@@ -2275,7 +2275,7 @@ $$;
 - [ ] **Step 2: Dry-run, then apply live**
 
 ```powershell
-$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'
+$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265100_auth_backfill.sql --mode dry
 node scripts/scratch-apply.mjs --file supabase/migrations/20260829265100_auth_backfill.sql --mode live
 ```

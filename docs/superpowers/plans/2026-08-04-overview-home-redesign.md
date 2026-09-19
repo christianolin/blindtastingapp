@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Verify per task: `Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; npx tsc --noEmit` → EXIT=0 (run with `workdir` = repo root).
-- Migrations live in `supabase/migrations/`; next free number is `20260829263500`. Apply with `node scripts/scratch-apply.mjs --file <path> --mode dry` then `--mode live` (set `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'` first).
+- Migrations live in `supabase/migrations/`; next free number is `20260829263500`. Apply with `node scripts/scratch-apply.mjs --file <path> --mode dry` then `--mode live` (set `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'` first).
 - Commit + push per task (`git push origin master`; prints "RemoteException" on stderr but succeeds — confirm the `->` ref line + EXIT=0).
 - Keep `AppHeader`/nav, `TastingsTabs`, `TastingCard` unchanged. Copy is verbatim from the spec.
 - Icon vocabulary: Warehouse=cellar, NotebookPen=notes/rate, EyeOff=blind, BookOpen=learn, Wine=glass, Users=members.
@@ -66,7 +66,7 @@ grant execute on function public.get_app_stats() to authenticated;
 
 - [ ] **Step 2: Apply dry, then live**
 
-Run (workdir = repo, after `$env:DB_PASSWORD='ijiVw1HMM2ReKAY3'`):
+Run (workdir = repo, after `$env:DB_PASSWORD='<DB_PASSWORD from .env.local>'`):
 `node scripts/scratch-apply.mjs --file supabase/migrations/20260829263500_get_app_stats.sql --mode dry`
 then `--mode live`. Expected: no errors.
 
