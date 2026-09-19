@@ -1,27 +1,50 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  passwordCopy,
+  passwordMode,
+  passwordNext,
+  passwordUpdateData,
+} from "@/lib/auth/password-copy";
 
-export type SetPasswordFormState = { error: string } | null;
+// `done` carries the checked destination back to the form, which leaves with
+// a full browser navigation rather than a server-action redirect: `next` can
+// be the route handler /invite/<code>/accept, and an action redirect to it is
+// fetched server-side with the 307 followed and its Set-Cookie (the invite
+// intent cookie's delete) dropped, then rendered under the handler's own URL,
+// where the landing page's next action POSTs into a GET-only route (405).
+export type SetPasswordFormState = { error: string } | { done: string } | null;
+
+function field(formData: FormData, name: string): string {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
+}
 
 export async function setPassword(
   _prevState: SetPasswordFormState,
   formData: FormData,
 ): Promise<SetPasswordFormState> {
-  const password = String(formData.get("password") ?? "");
-  const displayName = String(formData.get("display_name") ?? "");
+  // `mode` and `next` come back from hidden fields the page rendered; both
+  // are re-read through the same rules here rather than trusted. `mode` only
+  // picks the copy and whether a name is written.
+  const mode = passwordMode(field(formData, "mode"));
+  const next = passwordNext(field(formData, "next"));
+  const password = field(formData, "password");
+  const displayName = mode === "setup" ? field(formData, "display_name") : "";
 
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) {
-    return { error: "Your invite link has expired. Please ask for a new one." };
+    return { error: passwordCopy(mode).expired };
   }
 
+  // The password_set flag rides in the same write as the password, so the
+  // middleware's password step ends exactly when a password exists.
   const { error } = await supabase.auth.updateUser({
     password,
-    data: { display_name: displayName },
+    data: passwordUpdateData(mode, displayName),
   });
   if (error) {
     return { error: error.message };
@@ -43,5 +66,5 @@ export async function setPassword(
     }
   }
 
-  redirect("/taste");
+  return { done: next };
 }

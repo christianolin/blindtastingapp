@@ -1,54 +1,113 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  passwordCopy,
+  passwordNext,
+  type PasswordMode,
+} from "@/lib/auth/password-copy";
 import { setPassword, type SetPasswordFormState } from "./actions";
 
+// 44px on a phone, the regular control height with a mouse or trackpad.
+const TAP = "min-h-11 md:pointer-fine:min-h-8";
+
 export function SetPasswordForm({
+  mode,
+  next,
+  email,
   suggestedName,
 }: {
+  mode: PasswordMode;
+  next: string;
+  email: string;
   suggestedName: string;
 }) {
+  const copy = passwordCopy(mode);
   const [state, formAction, pending] = useActionState<
     SetPasswordFormState,
     FormData
   >(setPassword, null);
+  const [name, setName] = useState(suggestedName);
+  const [password, setPasswordValue] = useState("");
+
+  const error = state && "error" in state ? state.error : null;
+  const done = state && "done" in state ? state.done : null;
+  // Saved: leave with a full browser navigation, not an in-app one. `next` can
+  // be a route handler (/invite/<code>/accept) that deletes a cookie and
+  // redirects; only the browser itself follows that 307 and applies its
+  // cookie (see SetPasswordFormState). `replace`, so Back does not return to
+  // a form that already did its job. The action already checked `done`; this
+  // runs it through the same rule again rather than trusting the response.
+  useEffect(() => {
+    if (done !== null) window.location.replace(passwordNext(done));
+  }, [done]);
+  const busy = pending || done !== null;
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="mode" value={mode} />
+      <input type="hidden" name="next" value={next} />
+      {/* Not submitted: tells a password manager which account the new
+          password belongs to, so it saves it against the right email. */}
+      <input
+        type="email"
+        autoComplete="username"
+        value={email}
+        readOnly
+        tabIndex={-1}
+        aria-hidden
+        className="hidden"
+      />
+      {copy.nameLabel ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="display_name">{copy.nameLabel}</Label>
+          <Input
+            id="display_name"
+            name="display_name"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            className={TAP}
+          />
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="display_name">Your name</Label>
-        <Input
-          id="display_name"
-          name="display_name"
-          defaultValue={suggestedName}
-          required
-          autoFocus
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Choose a password</Label>
+        <Label htmlFor="password">{copy.passwordLabel}</Label>
         <Input
           id="password"
           name="password"
           type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPasswordValue(e.target.value)}
           required
           minLength={6}
+          autoFocus={!copy.nameLabel}
+          aria-describedby="password-hint"
+          className={TAP}
         />
+        <p id="password-hint" className="text-xs text-muted-foreground">
+          {copy.hint}
+        </p>
       </div>
-      {state?.error ? (
-        <p className="text-sm text-destructive">{state.error}</p>
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
-        {pending ? (
+      <Button type="submit" disabled={busy} className={TAP}>
+        {busy ? (
           <>
-            <WineGlassLoader /> Saving…
+            <WineGlassLoader /> {copy.pending}
           </>
         ) : (
-          "Continue"
+          copy.submit
         )}
       </Button>
     </form>
