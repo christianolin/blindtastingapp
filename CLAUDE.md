@@ -504,6 +504,46 @@ a raw subquery, regardless of which two tables look involved at a glance.
   column on a row already gated by the existing "visible once revealed"
   policy, so the photo is automatically hidden until reveal along with the
   rest of the answer key.
+- **wine-images write lockdown** (`20260919162300`, applied 2026-09-19 with
+  the owner's go-ahead): no client role holds UPDATE or DELETE on any
+  `wine-images` object any more ("wine image write update"/"delete" dropped;
+  insert and public read unchanged). Nothing in the app overwrites, moves or
+  removes a wine photo; maintenance goes through the service key. Listing
+  the bucket is still open to everyone (a pending follow-up: staging scans of
+  an unrevealed flight can be listed).
+- **Scan photos** (`catalog_wine_photos`, migration `20260919183100`; spec
+  `docs/superpowers/specs/2026-09-19-scan-photos.md`). A label scan whose add
+  lands in the catalog, a cellar or a note (never a flight —
+  `scanPhotoTarget` in `src/components/add-wine/scan-photo.ts` is an
+  allow-list keyed on where the add landed) and every wine-page upload become
+  rows of the wine's "More photos" strip (`photo-strip.tsx`);
+  `catalog_wines.image_url` stays the one main photo and the strip leaves it
+  out. Rows are written only by the SECURITY DEFINER
+  `attach_catalog_wine_photo(wine, path, via)` (own staging scan with `via`
+  catalog/cellar/note, or own upload in `catalog/<wineId>/`, stored as
+  `via = 'upload'`; object must exist, ≤ 5 MB, wine not `blind_pending`/merged,
+  never a photo of the caller's own glass, 12 per person per wine,
+  idempotent). Rule 1: the RPC refuses only the ADDER of a still-unrevealed
+  glass of that wine, and reads never depend on glasses — hiding photos while
+  a wine is poured, or refusing everyone, was rejected as an oracle (spec
+  §3.1). The wine page makes an upload the main photo only when the attach
+  came back `attached`/`already-attached`/`limit` (`mayBecomeMainPhoto`,
+  `src/lib/catalog-photos/strip.ts`) — the statuses returned after that
+  unrevealed-glass check — since `setCatalogWineImage` has no rule-1 check of
+  its own. A `via = 'cellar'` photo is read only by its photographer and
+  whoever `can_view_cellar(added_by)` admits (the `cellar_lots` gate): a
+  public cellar photo let a guest name tonight's wine when the host scanned
+  it into a PRIVATE cellar and poured it from there (D11), since the lot keeps
+  the wine off `blind_pending`. Residual: a catalog or note scan of an
+  existing wine is a new public trace (spec §12 R6). The migration requires
+  the wine-images write lockdown `20260919162300` first (it refuses
+  otherwise). The photographer can unlink their own photo; the storage object
+  is never deleted. Account deletion drops the rows via
+  `profiles_drop_catalog_wine_photos`. All new uploads go through
+  `src/lib/images/` (1,568 px, JPEG 0.82, EXIF-aware); Sonnet 5 itself accepts
+  2,576 px, so 1,568 is a storage choice, not the reader's limit. Live-camera
+  scans stay at the browser's default capture size (owner, 2026-09-19: no
+  extra per-scan cost for sharper strip photos).
 - The leaderboard sidebar shows more than a bare score per participant: a
   "wine X/Y" progress readout (their own scored-guess count over the
   tasting's total wine count — this can differ between participants if one

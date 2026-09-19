@@ -1579,6 +1579,39 @@ export type Database = {
         >;
         Relationships: [];
       };
+      // 20260919183100 (scan-photos spec §6): a catalog wine's extra photos (the
+      // wine page's "More photos" strip); catalog_wines.image_url stays the main
+      // photo. image_path is the object name in wine-images, never a URL. via is
+      // 'upload' | 'catalog' | 'cellar' | 'note' (PhotoVia in
+      // src/lib/catalog-photos/types.ts); a 'cellar' row is read only by its
+      // photographer and whoever can see their cellar (can_view_cellar).
+      // rows are written only by attach_catalog_wine_photo; label_read_id is not
+      // client-readable (authenticated holds SELECT on the other six columns and
+      // DELETE of its own rows only).
+      catalog_wine_photos: {
+        Row: {
+          id: string;
+          catalog_wine_id: string;
+          image_path: string;
+          via: string;
+          added_by: string;
+          label_read_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          catalog_wine_id: string;
+          image_path: string;
+          via?: string;
+          added_by: string;
+          label_read_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["catalog_wine_photos"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: {
       catalog_wine_ratings: {
@@ -2019,6 +2052,19 @@ export type Database = {
       set_profile_favourites: {
         Args: { p_region_ids: string[]; p_producer_ids: string[] };
         Returns: void;
+      };
+      // 20260919183100 (scan-photos spec §6.3): attaches the caller's own object
+      // in wine-images (their catalog/staging/<uid>/scan-*.jpg, or an upload in
+      // catalog/<wineId>/) to a catalog wine. p_via is where a scan's add landed
+      // ('catalog' | 'cellar' | 'note', else bad-path); an upload is always
+      // stored as 'upload'. Authenticated only. Never raises for
+      // a refusal; returns one status word (AttachPhotoStatus in
+      // src/lib/catalog-photos/types.ts minus "error"): attached,
+      // already-attached, signed-out, deleted-account, bad-path, no-object,
+      // not-an-image, too-large, no-wine, flight-photo, unrevealed-glass, limit.
+      attach_catalog_wine_photo: {
+        Args: { p_catalog_wine_id: string; p_image_path: string; p_via: string };
+        Returns: string;
       };
     };
   };

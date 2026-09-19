@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { READ_MAX_SIDE } from "./downscale-image";
+// Relative, not `@/`: use-camera.test.ts imports this file and vitest has no alias.
+import { fitWithin, PHOTO_JPEG_QUALITY } from "../../lib/images/downscale-math";
 import type { AddWineStart } from "./types";
 
 export type CameraStatus = "idle" | "starting" | "live" | "unavailable" | "denied";
 
-// A capture is already sized for the label reader (spec §A.4).
-const MAX_SIDE = READ_MAX_SIDE;
 const noopSubscribe = () => () => {};
 
 /** True when this browser can even ask for a camera (SSR-safe). */
@@ -158,15 +157,17 @@ export function useCamera(enabled = true): {
     if (!video || status !== "live" || !video.videoWidth || !video.videoHeight) {
       return null;
     }
-    const scale = Math.min(1, MAX_SIDE / Math.max(video.videoWidth, video.videoHeight));
+    // A capture is already sized for the label reader and the wine page's
+    // photo strip (scan photos spec §4): the shared size rule, never upscaled.
+    const size = fitWithin({ width: video.videoWidth, height: video.videoHeight });
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(video.videoWidth * scale);
-    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.width = size.width;
+    canvas.height = size.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     return new Promise((resolve) =>
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.85),
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", PHOTO_JPEG_QUALITY),
     );
   }, [status]);
 
