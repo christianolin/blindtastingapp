@@ -1405,7 +1405,7 @@ export function ByHandForm({
                 />
               </Field>
               <Field>
-                <FieldHead label="Description" chip={null} htmlFor="byhand-description" />
+                <FieldHead label="About this wine" chip={null} htmlFor="byhand-description" />
                 <Textarea
                   id="byhand-description"
                   rows={3}
@@ -1415,7 +1415,7 @@ export function ByHandForm({
                       patchDraft(draftRef.current, { description: e.target.value }, { description: "manual" }),
                     )
                   }
-                  placeholder="Background on the wine — style, vineyard, story…"
+                  placeholder="A few factual sentences: terroir, winemaking, the estate…"
                   disabled={disabled}
                   className="rounded-[10px] border-border bg-card px-[13px] py-[10px] text-base md:text-[15px]"
                 />

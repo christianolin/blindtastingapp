@@ -24,15 +24,9 @@ export type CellarWine = {
   primaryGrapeName: string | null;
   secondaryGrapeName: string | null;
   typeDesignationName: string | null;
-  /** Structured wine profile, from an earlier label read or Manage wine. Each is
-      null when that part wasn't reported. `description` above is the older
-      free-text blurb, kept as a fallback for wines with no profile. */
-  wineryDescription: string | null;
-  aroma: string | null;
-  tastingNotes: string | null;
-  foodPairing: string | null;
-  servingTempC: { min: number; max: number } | null;
-  decantMinutes: number | null;
+  /** Alcohol by volume as printed on the label (the label reader or Manage
+      wine). `description` above is the wine's one catalog text ("About this
+      wine"); the FastCork-era profile columns are no longer read. */
   alcoholPercent: number | null;
   avgScore: number | null;
   noteCount: number;
@@ -40,7 +34,7 @@ export type CellarWine = {
 
 const SELECT =
   "id, appellation_id, colour, style, wine_name, description, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
-  "winery_description, aroma, tasting_notes, food_pairing, serving_temp_min_c, serving_temp_max_c, decant_minutes, alcohol_percent, " +
+  "alcohol_percent, " +
   "producer:producers(name), country:countries(name), region:regions(name), " +
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
@@ -73,20 +67,6 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     primaryGrapeName: name(row.primary_grape),
     secondaryGrapeName: name(row.secondary_grape),
     typeDesignationName: name(row.type_designation),
-    wineryDescription: (row.winery_description as string | null) ?? null,
-    aroma: (row.aroma as string | null) ?? null,
-    tastingNotes: (row.tasting_notes as string | null) ?? null,
-    foodPairing: (row.food_pairing as string | null) ?? null,
-    // Only a complete range is useful — a lone bound would render as "12–°C".
-    servingTempC:
-      row.serving_temp_min_c != null && row.serving_temp_max_c != null
-        ? {
-            min: Number(row.serving_temp_min_c),
-            max: Number(row.serving_temp_max_c),
-          }
-        : null,
-    decantMinutes:
-      row.decant_minutes == null ? null : Number(row.decant_minutes),
     alcoholPercent:
       row.alcohol_percent == null ? null : Number(row.alcohol_percent),
     avgScore,

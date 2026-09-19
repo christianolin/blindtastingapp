@@ -6,7 +6,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { type ReferenceOption } from "@/components/reference-combobox";
 import { type TypeDesignationOption } from "@/components/type-designation-field";
 import { draftFromIdentityInput } from "@/components/wine/identity-draft";
@@ -18,7 +17,6 @@ import {
   createCatalogWine,
   updateCatalogWine,
   type CatalogWineInput,
-  type WineProfileInput,
 } from "./actions";
 import { type BlendRow } from "./grape-blend-editor";
 
@@ -27,8 +25,8 @@ import { type BlendRow } from "./grape-blend-editor";
 type Colour = "WHITE" | "ORANGE" | "ROSE" | "RED";
 type Style = "STILL" | "SPARKLING" | "SWEET" | "FORTIFIED";
 
-// "" and a non-numeric entry both mean "not set"; 0 is a real value (decanting
-// time of zero = no decanting needed), so it must survive.
+// "" and a non-numeric entry both mean "not set". The wine-identity module keeps
+// the alcohol inside (0, 100) when it normalises the draft.
 const numOrNull = (s: string): number | null =>
   s.trim() && Number.isFinite(Number(s)) ? Number(s) : null;
 
@@ -46,10 +44,10 @@ export type WineFormInitial = {
   colour: Colour | null;
   style: Style | null;
   wineName: string;
+  /** "About this wine": the wine's one catalog text. */
   description: string | null;
-  /** The wine's structured profile (producer background, nose, palate,
-      pairing, serving), edited under "Wine profile". */
-  profile?: WineProfileInput | null;
+  /** Alcohol by volume, as printed on the label. */
+  alcoholPercent?: number | null;
   vintageKind: "YEAR" | "NV" | "TAWNY";
   vintageYear: string;
   tawnyYears: string;
@@ -121,26 +119,9 @@ export function NewWineForm({
   );
   const [vintageYear, setVintageYear] = useState(initialWine?.vintageYear ?? "");
   const [tawnyYears, setTawnyYears] = useState(initialWine?.tawnyYears ?? "");
-  // The structured profile. Editable here so a curator can correct a bad label
-  // read — without this the fields would be write-only from the scanner.
-  const p0 = initialWine?.profile;
-  const [wineryDescription, setWineryDescription] = useState(
-    p0?.wineryDescription ?? "",
-  );
-  const [aroma, setAroma] = useState(p0?.aroma ?? "");
-  const [tastingNotes, setTastingNotes] = useState(p0?.tastingNotes ?? "");
-  const [foodPairing, setFoodPairing] = useState(p0?.foodPairing ?? "");
-  const [tempMin, setTempMin] = useState(
-    p0?.servingTempC ? String(p0.servingTempC.min) : "",
-  );
-  const [tempMax, setTempMax] = useState(
-    p0?.servingTempC ? String(p0.servingTempC.max) : "",
-  );
-  const [decantMinutes, setDecantMinutes] = useState(
-    p0?.decantMinutes != null ? String(p0.decantMinutes) : "",
-  );
+  // Editable here so a curator can correct a bad label read.
   const [alcoholPercent, setAlcoholPercent] = useState(
-    p0?.alcoholPercent != null ? String(p0.alcoholPercent) : "",
+    initialWine?.alcoholPercent != null ? String(initialWine.alcoholPercent) : "",
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -186,23 +167,9 @@ export function NewWineForm({
       return;
     }
     setPending(true);
-    const input: CatalogWineInput = {
-      draft,
-      profile: {
-        wineryDescription: wineryDescription.trim() || null,
-        aroma: aroma.trim() || null,
-        tastingNotes: tastingNotes.trim() || null,
-        foodPairing: foodPairing.trim() || null,
-        // A range needs both ends to mean anything, so a half-filled pair is
-        // stored as no range rather than a bound the UI can't render.
-        servingTempC:
-          numOrNull(tempMin) != null && numOrNull(tempMax) != null
-            ? { min: numOrNull(tempMin)!, max: numOrNull(tempMax)! }
-            : null,
-        decantMinutes: numOrNull(decantMinutes),
-        alcoholPercent: numOrNull(alcoholPercent),
-      },
-    };
+    // The draft carries the description and the alcohol too, so the one write
+    // path stores them with the identity.
+    const input: CatalogWineInput = { draft };
     try {
       // Both actions return a refusal instead of throwing; its message already
       // names the missing fields ("This wine needs a vintage.").
@@ -270,56 +237,20 @@ export function NewWineForm({
         onImageChange={setImageUrl}
       />
 
-      {/* The structured profile. Filled by the label scan, editable here so a
-          bad read can be corrected — otherwise these fields would be
-          write-only. Every part is optional. */}
-      <details className="rounded-lg border border-border px-4 py-3">
-        <summary className="cursor-pointer text-sm font-medium">
-          Wine profile
-        </summary>
-        <div className="mt-4 flex flex-col gap-4">
-          {(
-            [
-              ["The producer", wineryDescription, setWineryDescription],
-              ["Aroma", aroma, setAroma],
-              ["Tasting notes", tastingNotes, setTastingNotes],
-              ["Food pairing", foodPairing, setFoodPairing],
-            ] as [string, string, (v: string) => void][]
-          ).map(([labelText, value, set]) => (
-            <div key={labelText} className="flex flex-col gap-2">
-              <Label htmlFor={`profile-${labelText}`}>{labelText}</Label>
-              <Textarea
-                id={`profile-${labelText}`}
-                rows={3}
-                value={value}
-                onChange={(e) => set(e.target.value)}
-              />
-            </div>
-          ))}
-          <div className="flex flex-wrap gap-4">
-            {(
-              [
-                ["Serve from (°C)", tempMin, setTempMin],
-                ["Serve to (°C)", tempMax, setTempMax],
-                ["Decant (min)", decantMinutes, setDecantMinutes],
-                ["Alcohol (%)", alcoholPercent, setAlcoholPercent],
-              ] as [string, string, (v: string) => void][]
-            ).map(([labelText, value, set]) => (
-              <div key={labelText} className="flex w-32 flex-col gap-2">
-                <Label htmlFor={`profile-${labelText}`}>{labelText}</Label>
-                <Input
-                  id={`profile-${labelText}`}
-                  type="number"
-                  step="0.1"
-                  value={value}
-                  onChange={(e) => set(e.target.value)}
-                  placeholder="—"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
+      {/* Alcohol, as printed on the label. Filled by the label reader and
+          editable here so a bad read can be corrected. */}
+      <div className="flex w-40 flex-col gap-2">
+        <Label htmlFor="wine_alcohol_percent">Alcohol % (optional)</Label>
+        <Input
+          id="wine_alcohol_percent"
+          type="number"
+          step="0.1"
+          inputMode="decimal"
+          value={alcoholPercent}
+          onChange={(e) => setAlcoholPercent(e.target.value)}
+          placeholder="e.g. 13.5"
+        />
+      </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" onClick={submit} disabled={pending}>
