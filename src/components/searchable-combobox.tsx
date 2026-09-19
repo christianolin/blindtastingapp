@@ -51,6 +51,7 @@ export function SearchableCombobox({
   disabled,
   allowClear,
   emptyQueryHint,
+  triggerClassName,
 }: {
   formFieldName: string;
   value: string;
@@ -64,6 +65,10 @@ export function SearchableCombobox({
   allowClear?: boolean;
   /** Shown under instant (empty-query) results, e.g. "Type to search all producers". */
   emptyQueryHint?: string;
+  /** Merged into the trigger Button's className — e.g. the favourites
+   *  pickers' 44px phone target (profile-favourites spec §5.5). Defaults are
+   *  unchanged, so no existing caller changes. */
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -145,7 +150,7 @@ export function SearchableCombobox({
           render={
             <Button
               variant="outline"
-              className="w-full justify-between font-normal"
+              className={cn("w-full justify-between font-normal", triggerClassName)}
             />
           }
         >
