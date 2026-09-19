@@ -289,7 +289,7 @@ export const SORT_LABELS: Record<SortKey, string> = {
   name: "Name",
   added: "Added",
   yours: "Your score",
-  community: "Community",
+  community: "Community rating",
 };
 
 /** `null`/unset always sorts after every real value, whichever side it is on. */

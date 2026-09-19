@@ -438,14 +438,14 @@ function LoadedLotSheet({
                 >
                   Open the note
                 </Button>
-                <span className="max-md:hidden text-sm text-muted-foreground">or</span>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="max-md:hidden"
                   onClick={() => onRate(wine.catalogWineId, null)}
-                  className="max-md:hidden text-sm text-primary underline-offset-2 hover:underline"
                 >
                   write another
-                </button>
+                </Button>
               </div>
             </>
           ) : (

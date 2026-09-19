@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { BottleThumb } from "@/components/bottle-thumb";
 import { CountryFlag } from "@/components/country-flag";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,26 +51,11 @@ function whereSecondLine(row: BottleRow): string {
   return `added ${addedMonth(row.lot)}`;
 }
 
-// A small bottle thumbnail for the start of every list row — same rounded/
-// bordered box the grid's HatchThumb uses, sized down for a table row/card,
-// object-contain on a card ground so the label never crops, with the same
-// hatch fallback for a wine with no image.
-function BottleThumb({ src, className }: { src: string | null; className: string }): React.JSX.Element {
-  const box = cn(
-    "flex shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-border",
-    className,
-  );
-  if (!src) {
-    return <span className={cn(box, "hatch")} aria-hidden />;
-  }
-  return (
-    <span className={cn(box, "bg-card")}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" loading="lazy" className="h-full w-full object-contain" />
-    </span>
-  );
-}
-
+// Group band, prominent and identical in feel across the laptop table, the
+// phone list (below) and the grid's SectionHeaderBlock: a bg-primary/10
+// tint, a primary left accent bar and a top border so a band clearly starts
+// a new group (owner feedback: "make the grouping bands more visually
+// prominent, easier to see" — bg-muted/40 read too quiet).
 function GroupHeaderLaptop({
   header,
   cols,
@@ -78,12 +64,12 @@ function GroupHeaderLaptop({
   cols: number;
 }): React.JSX.Element {
   return (
-    <tr className="bg-muted/40">
-      <td colSpan={cols} className="px-4 py-2">
-        <p className="font-heading text-base font-semibold text-foreground">
+    <tr className="border-t border-border bg-primary/10">
+      <td colSpan={cols} className="border-l-4 border-primary px-4 py-2.5">
+        <p className="font-heading text-lg font-semibold text-primary">
           {header.label}
           {header.sublabel ? (
-            <span className="ml-1 font-sans text-sm font-normal text-muted-foreground">
+            <span className="ml-1.5 font-sans text-sm font-normal text-muted-foreground">
               · {header.sublabel}
             </span>
           ) : null}
@@ -99,17 +85,22 @@ function GroupHeaderPhone({
 }: {
   header: NonNullable<Section["header"]>;
 }): React.JSX.Element {
+  // Sticky over scrolled rows needs a fully opaque base (bg-background) —
+  // the tint layers on top of it, in its own block, rather than on the
+  // sticky element itself, so the band never goes translucent while pinned.
   return (
-    <div className="sticky top-0 z-10 bg-background/95 py-2 backdrop-blur">
-      <p className="font-heading text-base font-semibold text-foreground">
-        {header.label}
-        {header.sublabel ? (
-          <span className="ml-1 font-sans text-sm font-normal text-muted-foreground">
-            · {header.sublabel}
-          </span>
-        ) : null}
-      </p>
-      <p className="text-xs text-muted-foreground">{header.line.phone}</p>
+    <div className="sticky top-0 z-10 border-t border-border bg-background">
+      <div className="border-l-4 border-primary bg-primary/10 px-3 py-2">
+        <p className="font-heading text-lg font-semibold text-primary">
+          {header.label}
+          {header.sublabel ? (
+            <span className="ml-1.5 font-sans text-sm font-normal text-muted-foreground">
+              · {header.sublabel}
+            </span>
+          ) : null}
+        </p>
+        <p className="text-xs text-muted-foreground">{header.line.phone}</p>
+      </div>
     </div>
   );
 }
@@ -171,7 +162,7 @@ export function BottleList({
               <th className="px-4 py-3 font-medium">Where</th>
               <th className="px-4 py-3 font-medium">
                 {readOnly ? (
-                  "Community"
+                  "Community rating"
                 ) : (
                   <>
                     <span className="text-primary">Yours</span> ·{" "}
