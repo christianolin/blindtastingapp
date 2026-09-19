@@ -29,13 +29,15 @@ const ID_CHUNK = 200;
 /** Refinement 19: one PostgREST page of consumptions, a stated cap. */
 const HISTORY_LIMIT = 1000;
 
-/** Only what a history row needs to name its wine: the title parts. The
- *  rest of a `BottleWine` is null (the row renders no origin line). */
+/** Only what a history row needs to name and show its wine: the title parts
+ *  and the bottle photo. The rest of a `BottleWine` is null (the row renders
+ *  no origin line). */
 type HistoryCatalogEmbed = {
   wine_name: string | null;
   vintage_kind: VintageKind;
   vintage_year: number | null;
   vintage_tawny_years: number | null;
+  image_url: string | null;
   producer: Rel;
   appellation: Rel;
 };
@@ -55,7 +57,7 @@ type ConsumptionEmbedRow = {
 
 const CONSUMPTION_SELECT =
   "id, lot_id, catalog_wine_id, quantity, reason, consumed_on, occasion, wset_note_id, created_at, " +
-  "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, " +
   "producer:producers(name), appellation:appellations(name))";
 
 /**
@@ -184,8 +186,8 @@ export async function getCellarHistory(
 
   return rows.map((r) => {
     const c = unwrapEmbed(r.catalog_wines);
-    // The history row only needs the title, so every field `lotTitle` does not
-    // read is null.
+    // The history row only needs the title and the photo, so every other
+    // field is null.
     const wine = wineFrom(
       r.catalog_wine_id,
       c && {
@@ -195,7 +197,7 @@ export async function getCellarHistory(
         vintage_tawny_years: c.vintage_tawny_years,
         colour: null,
         style: null,
-        image_url: null,
+        image_url: c.image_url,
         producer: c.producer,
         appellation: c.appellation,
         region: null,
@@ -218,6 +220,7 @@ export async function getCellarHistory(
         ? { id: r.wset_note_id, score: scores.get(r.wset_note_id) ?? null }
         : null,
       tasting: tastings.get(r.id) ?? null,
+      imageUrl: wine.imageUrl,
     };
   });
 }

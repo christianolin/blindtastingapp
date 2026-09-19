@@ -117,6 +117,7 @@ describe("sort", () => {
     expect(sortRows(cellar, "yours").map((r) => r.lot.id)).toEqual(["d", "a", "c", "b", "e", "f"]);
     expect(sortRows(cellar, "community").map((r) => r.lot.id)).toEqual(["d", "a", "b", "c", "e", "f"]);
     expect(SORT_LABELS.bottles).toBe("Most bottles");
+    expect(SORT_LABELS.community).toBe("Community rating");
   });
 });
 

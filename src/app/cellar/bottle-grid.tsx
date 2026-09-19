@@ -39,25 +39,34 @@ function laptopMeta(row: BottleRow, l: RowLines): string {
   return parts.length > 0 ? parts.join(" · ") : "—";
 }
 
+// Group band, prominent and identical in feel to bottle-list.tsx's
+// GroupHeaderLaptop/GroupHeaderPhone: a bg-primary/10 tint, a primary left
+// accent bar and a top border so a band clearly starts a new group (owner
+// feedback: "make the grouping bands more visually prominent, easier to
+// see" — bg-muted/40 read too quiet). Sticky over scrolled cards needs a
+// fully opaque base (bg-background) — the tint layers on top of it, in its
+// own block, rather than on the sticky element itself.
 function SectionHeaderBlock({
   header,
 }: {
   header: NonNullable<Section["header"]>;
 }): React.JSX.Element {
   return (
-    <div className="sticky top-0 z-10 bg-background/95 py-2 backdrop-blur">
-      <p className="font-heading text-base font-semibold text-foreground">
-        {header.label}
-        {header.sublabel ? (
-          <span className="ml-1 font-sans text-sm font-normal text-muted-foreground">
-            · {header.sublabel}
-          </span>
-        ) : null}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        <span className="md:hidden">{header.line.phone}</span>
-        <span className="hidden md:inline">{header.line.laptop}</span>
-      </p>
+    <div className="sticky top-0 z-10 border-t border-border bg-background">
+      <div className="border-l-4 border-primary bg-primary/10 px-3 py-2">
+        <p className="font-heading text-lg font-semibold text-primary">
+          {header.label}
+          {header.sublabel ? (
+            <span className="ml-1.5 font-sans text-sm font-normal text-muted-foreground">
+              · {header.sublabel}
+            </span>
+          ) : null}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          <span className="md:hidden">{header.line.phone}</span>
+          <span className="hidden md:inline">{header.line.laptop}</span>
+        </p>
+      </div>
     </div>
   );
 }

@@ -107,6 +107,8 @@ export type HistoryRow = {
   note: { id: string; score: number | null } | null;
   /** D8: from wine_pour_intents.cellar_consumption_id → wines.tasting_id */
   tasting: { id: string; name: string } | null;
+  /** catalog_wines.image_url — the bottle photo at the start of the row. */
+  imageUrl: string | null;
 };
 export type HistoryFilter = "all" | "drank" | "gifted" | "tasting" | "noNote";
 
