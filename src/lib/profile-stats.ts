@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { RevealMode } from "@/lib/supabase/database.types";
 
 export type CategoryKey =
   | "country"
@@ -23,13 +24,6 @@ const CATEGORY_MAX_POINTS: Record<CategoryKey, number> = {
 
 export type OriginStat = { id: string; name: string; count: number };
 
-export type CategoryStrength = {
-  key: CategoryKey;
-  correct: number;
-  applicable: number;
-  pct: number;
-};
-
 export type ProfileStatsSummary = {
   winesGuessed: number;
   tastingsAttended: number;
@@ -38,25 +32,32 @@ export type ProfileStatsSummary = {
   averagePoints: number;
   categoryAccuracy: Record<CategoryKey, { correct: number; applicable: number }>;
   vintagePartialCredit: number;
-  // What they've tasted most (from the actual wine, not the guess) and which
-  // category they're most accurate at guessing (min sample size applied so a
-  // single lucky guess doesn't read as a "strength").
+  // What they've tasted most (from the actual wine, not the guess). The
+  // "strongest category" line on `/u/[id]` is computed from the displayed
+  // accuracy rows instead (`accuracyView` in
+  // `src/lib/profile/profile-view-math.ts`, Your numbers' labels, "Vintage
+  // ±1", MIN_SAMPLE = 3) — this module no longer returns a strongest-category
+  // field of its own.
   topCountries: OriginStat[];
   topRegions: OriginStat[];
   topGrapes: OriginStat[];
-  bestCategory: CategoryStrength | null;
 };
 
 export type TastingHistoryEntry = {
   tastingId: string;
   tastingName: string;
+  hostId: string;
   hostName: string;
+  revealMode: RevealMode;
   winesRevealed: number;
   pointsEarned: number;
+  /** max(guesses.scored_at) over this person's counted guesses in the tasting. */
+  lastScoredAt: string;
 };
 
 type ScoredGuessRow = {
   wine_id: string;
+  scored_at: string | null;
   country_points: number | null;
   region_points: number | null;
   appellation_points: number | null;
@@ -177,7 +178,6 @@ export async function getProfileStats(profileId: string): Promise<{
     topCountries: [],
     topRegions: [],
     topGrapes: [],
-    bestCategory: null,
   };
 
   if (participantIds.length === 0) {
@@ -195,7 +195,7 @@ export async function getProfileStats(profileId: string): Promise<{
   const { data: guesses } = await supabase
     .from("guesses")
     .select(
-      "participant_id, wine_id, country_points, region_points, appellation_points, primary_grape_points, secondary_grape_points, producer_points, type_designation_points, vintage_points, total_points",
+      "participant_id, wine_id, scored_at, country_points, region_points, appellation_points, primary_grape_points, secondary_grape_points, producer_points, type_designation_points, vintage_points, total_points",
     )
     .in("participant_id", participantIds)
     .in("wine_id", revealedWineIds)
@@ -258,27 +258,18 @@ export async function getProfileStats(profileId: string): Promise<{
     summary.topGrapes = topN(grapeCounts, grapes);
   }
 
-  // Strongest category: highest accuracy among categories with enough sample
-  // size that one lucky guess doesn't read as a "strength".
-  const MIN_SAMPLE = 3;
-  let best: CategoryStrength | null = null;
-  for (const key of Object.keys(summary.categoryAccuracy) as CategoryKey[]) {
-    const { correct, applicable } = summary.categoryAccuracy[key];
-    if (applicable < MIN_SAMPLE) continue;
-    const pct = correct / applicable;
-    if (!best || pct > best.pct || (pct === best.pct && applicable > best.applicable)) {
-      best = { key, correct, applicable, pct };
-    }
-  }
-  summary.bestCategory = best;
-
   const pointsByTastingId = new Map<string, number>();
   const winesByTastingId = new Map<string, number>();
+  const lastScoredAtByTastingId = new Map<string, string>();
   for (const g of guesses ?? []) {
     const tastingId = tastingIdByParticipantId.get(g.participant_id);
     if (!tastingId) continue;
     pointsByTastingId.set(tastingId, (pointsByTastingId.get(tastingId) ?? 0) + (g.total_points ?? 0));
     winesByTastingId.set(tastingId, (winesByTastingId.get(tastingId) ?? 0) + 1);
+    if (g.scored_at) {
+      const prev = lastScoredAtByTastingId.get(tastingId);
+      if (!prev || g.scored_at > prev) lastScoredAtByTastingId.set(tastingId, g.scored_at);
+    }
   }
 
   const tastingIds = [...winesByTastingId.keys()];
@@ -289,7 +280,7 @@ export async function getProfileStats(profileId: string): Promise<{
 
   const { data: tastingRows } = await supabase
     .from("tastings")
-    .select("id, name, host_id")
+    .select("id, name, host_id, reveal_mode")
     .in("id", tastingIds);
 
   const hostIds = [...new Set((tastingRows ?? []).map((t) => t.host_id))];
@@ -299,15 +290,18 @@ export async function getProfileStats(profileId: string): Promise<{
     .in("id", hostIds.length > 0 ? hostIds : [""]);
   const hostNameById = new Map((hostProfiles ?? []).map((p) => [p.id, p.display_name]));
 
-  const tastings: TastingHistoryEntry[] = (tastingRows ?? [])
-    .map((t) => ({
-      tastingId: t.id,
-      tastingName: t.name,
-      hostName: hostNameById.get(t.host_id) ?? "Unknown",
-      winesRevealed: winesByTastingId.get(t.id) ?? 0,
-      pointsEarned: pointsByTastingId.get(t.id) ?? 0,
-    }))
-    .sort((a, b) => a.tastingName.localeCompare(b.tastingName));
+  // Order is the view's job (profileTastingRows sorts by lastScoredAt), not
+  // this module's.
+  const tastings: TastingHistoryEntry[] = (tastingRows ?? []).map((t) => ({
+    tastingId: t.id,
+    tastingName: t.name,
+    hostId: t.host_id,
+    hostName: hostNameById.get(t.host_id) ?? "Unknown",
+    revealMode: t.reveal_mode,
+    winesRevealed: winesByTastingId.get(t.id) ?? 0,
+    pointsEarned: pointsByTastingId.get(t.id) ?? 0,
+    lastScoredAt: lastScoredAtByTastingId.get(t.id) ?? "",
+  }));
 
   return { summary, tastings };
 }
