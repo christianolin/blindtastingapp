@@ -1829,14 +1829,58 @@ a raw subquery, regardless of which two tables look involved at a glance.
     by migration) — e.g. "Borges Porto" → Sociedade dos Vinhos Borges. A
     producer row always beats an alias, and region never orders the alias
     half.
-  - **Resolver: region-conflict blank, curated appellation synonyms**
-    (`src/lib/wine-identity/resolve.ts`, owner approvals 3 and 4). A read
-    with no appellation text (not a no-geographic-indication read) takes its
-    region from the read's own region field alone; when the producer it
-    resolved to has a region link in ANOTHER region of the same country, the
-    region is left blank for the user (listed in `missing`) rather than
-    silently refilled from that link — a wrong-but-plausible answer is worse
-    than an honest gap. A curated appellation synonym
+  - **Resolver: an unprinted region yields to the producer link; other
+    vintages, then one follow-up lookup, fill the appellation**
+    (`src/lib/wine-identity/resolve.ts`,
+    `src/lib/wine-identity/appellation-follow-up.ts`; owner fixes A/B/C
+    2026-09-19 after a Tridente scan — front label "TRIDENTE TEMPRANILLO",
+    model guessed Castilla-La Mancha — came back with no region or
+    appellation; owner: "9999/10000 bottles should scan perfectly"; spec
+    `docs/superpowers/specs/2026-09-19-scan-region-appellation.md`;
+    supersedes owner approval 3's blanking). **A.** A read with no
+    appellation text takes its region from its region field (step 5). That
+    region counts as *printed* only when the label's own rawText names it as
+    whole words (the read's text, the stored name, or a `REGION_SYNONYMS`
+    spelling — `regionNamedOnLabel`, `regionSynonymsOf`). When the resolved
+    producer links to another region of the same country, an unprinted
+    region is replaced by the link (`producer-region`); a printed one is
+    kept. An unprinted region the link agrees with keeps its value but is
+    marked `producer-region` too. Nothing is blanked any more. Step 7.5's
+    self-named appellation still needs `provenance.region === "label"` and
+    the stored region name in rawText. **B.** Step 7.6 runs only when the
+    appellation is still missing, the producer is an existing row, and the
+    read has a wine name and a colour. Appellation text the read carried but
+    step 4 could not place blocks it, unless that text names the siblings'
+    appellation as whole words (`appellationTextNames`). It reads the
+    producer's catalog wines through `catalogWinesOfProducer` (the caller's
+    RLS, never merged, never `blind_pending`, 200 at most; a capped or failed
+    read fills nothing); the wines with the same folded name, colour, style
+    (when read) and resolved primary grape (when read) must ALL name one
+    appellation, taken with its region and country as `catalog-sibling`
+    unless it contradicts a printed region or the draft's country. Never from
+    the producer alone. **C.** `readLabelPhoto` then makes at most ONE billed
+    text-only follow-up (`lookupAppellation`: claude-sonnet-5, effort low,
+    max_tokens 1024, 8 s timeout plus an AbortSignal, no retries, no tools;
+    ~$0.001–0.003, worst ~$0.015). It runs only when the appellation is still
+    missing, the read is not no-GI, the region is printed or from the
+    producer link or other vintages (never one the model only guessed), there
+    is a producer or a wine name, the region holds 1–300 appellations
+    (Bourgogne's 1,364 skip it), and the read was kept (`readId`). It must
+    pick one NAME from our own list for that region; an answer that folds to
+    no entry, or to more than one, is discarded. Provenance `lookup`: the
+    confirm screen adds a muted "Appellation looked up — it is not on the
+    label" line, READ OK becomes CHECK THE READ, and By hand shows "looked
+    up" / "from other vintages" chips. Any follow-up failure leaves the draft
+    as the resolver made it; the scan never fails because of it. Every billed
+    follow-up is kept in the owner-only, append-only `label_lookups`
+    (`20260919214700`, applied live 2026-09-19 before the app deploy — it must
+    always exist before any code that calls `keepLookup`, which only logs a
+    failed insert): one row per `label_reads` row, `ON DELETE CASCADE`, so the
+    account scrub removes it with no function change; the scan quota,
+    `attach_catalog_wine_photo` and the replay fixtures never see it.
+    `LABEL_LOOKUP_FIXTURE` (dev only) is checked before any SDK client exists;
+    with `LABEL_READ_FIXTURE` set and no lookup fixture, no follow-up is made
+    at all. A curated appellation synonym
     (`APPELLATION_SYNONYMS` / `curatedAppellationName` in
     `src/lib/label-scan/region-canonical.ts`) is tried only when no
     reference row agreed with the read's own appellation text, and only
