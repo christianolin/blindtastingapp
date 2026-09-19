@@ -87,6 +87,54 @@ server, `rm -rf .next`, start it again.
   `window.location.hash` and calls `supabase.auth.setSession(...)` before
   handing off to a server-rendered page. Point any future invite/recovery
   `redirectTo` at `/auth/confirm-hash?next=<destination>`, not `/auth/callback`.
+- **The password step.** An account created by an email invite (platform or
+  tasting) is signed in straight from the link and never chooses a
+  password — Supabase stamps `user.invited_at` on it, so on sign-out or
+  another device it's stuck. `src/lib/auth/password-gate.ts`'s pure
+  `needsPassword(user)` (`invited_at` set AND `user_metadata.password_set`
+  is not `=== true`, `src/lib/auth/paths.ts`'s `PASSWORD_SET_FLAG`) is
+  applied in `src/lib/supabase/middleware.ts`'s `updateSession`, right after
+  its existing `supabase.auth.getUser()` call, to every GET/HEAD page
+  request outside an allowlist (`/auth/*`, `/login*`, `/signup*`, `/api/*`,
+  any path whose last segment has a file extension, and any non-GET/HEAD
+  request — server actions POST). A gated request redirects to
+  `setPasswordHref(pathname + search)` (`/auth/set-password?next=<back-to>`),
+  copying every cookie the Supabase client set on the response onto the
+  redirect (required per Supabase SSR guidance, or the refreshed session is
+  dropped). `src/app/auth/set-password/actions.ts` is the only place
+  `PASSWORD_SET_FLAG` (`password_set`) is written — set `true` in the same
+  `updateUser({ password, data })` call that sets the password, so the gate
+  never fires again for that account.
+- **Forgot password.** `/login/forgot` → `requestPasswordReset`
+  (`src/app/login/actions.ts`) calls
+  `supabase.auth.resetPasswordForEmail`, and always answers the same way
+  whether or not the address has an account — it never reveals which.
+  `docs/email/supabase-reset-password-template.md` (derived from
+  `src/lib/email/password-reset.ts`) must be pasted into the Supabase
+  dashboard's Authentication → Emails → Reset Password template, the same
+  way `docs/email/supabase-invite-template.md` must be pasted into "Invite
+  user".
+- **`/auth/confirm` (token-hash route).** A password-reset link, like other
+  admin-generated links, may be opened on a different device/browser than
+  the one that requested it — the PKCE `?code=` flow (`/auth/callback`)
+  only resolves in the same browser that started it, and `/auth/confirm-hash`
+  needs a URL **fragment**, which an email link never carries either.
+  `src/app/auth/confirm/route.ts` instead reads `token_hash`/`type`/`next`
+  from the query string and calls `supabase.auth.verifyOtp({ type,
+  token_hash })` server-side, which needs no matching browser state and so
+  works from any device. The reset template's button points here
+  (`type=recovery`, `next` = `RESET_NEXT` =
+  `/auth/set-password?reason=reset`).
+- **`safeNext` alone is not enough for a bare-path redirect.** A URL parser
+  strips tab/CR/LF anywhere and reads `\` as `/`, so `"/\t/evil.example"`
+  passes `safeNext`'s prefix checks yet resolves to `//evil.example` —
+  another host — and Next resolves a server action's `redirect(next)` with
+  `new URL(location, base)` in the browser. Sign-in, the login page's `next`
+  relay, the set-password page and `/auth/confirm` therefore take `next`
+  through `src/lib/auth/login-copy.ts`'s `sameSiteNext` (safeNext plus
+  `/[\x00-\x1f\x7f\\]/`); sign-in's target is `signInNext`. The same check
+  still belongs in `src/lib/safe-next.ts` itself, for `/auth/confirm-hash`'s
+  `router.replace` and the signup/callback path.
 
 ## RLS recursion (important gotcha)
 
