@@ -625,8 +625,8 @@ function LoadedLotSheet({
         <Eyebrow>Your note on this lot.</Eyebrow>
         <p className="mt-1 whitespace-pre-line text-sm">{lot.lotNote ?? "—"}</p>
         <Button
-          variant="ghost"
-          size="sm"
+          variant="outline"
+          size="xs"
           className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2 max-md:after:content-['']"
           onClick={() => openEdit(null)}
         >
@@ -639,8 +639,8 @@ function LoadedLotSheet({
         <span>{drinkWindowText(lot.drinkFrom, lot.drinkTo)}</span>
         <span className="text-muted-foreground">· yours, and shown only here</span>
         <Button
-          variant="ghost"
-          size="sm"
+          variant="outline"
+          size="xs"
           className="relative max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2 max-md:after:content-['']"
           onClick={() => openEdit("drinkFrom")}
         >
