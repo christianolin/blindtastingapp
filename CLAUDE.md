@@ -549,8 +549,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   §3.1). The wine page makes an upload the main photo only when the attach
   came back `attached`/`already-attached`/`limit` (`mayBecomeMainPhoto`,
   `src/lib/catalog-photos/strip.ts`) — the statuses returned after that
-  unrevealed-glass check — since `setCatalogWineImage` has no rule-1 check of
-  its own. A `via = 'cellar'` photo is read only by its photographer and
+  unrevealed-glass check; the database refuses it too
+  (`catalog_wines_rule1_guard`, 20260919213300). A `via = 'cellar'` photo is read only by its photographer and
   whoever `can_view_cellar(added_by)` admits (the `cellar_lots` gate): a
   public cellar photo let a guest name tonight's wine when the host scanned
   it into a PRIVATE cellar and poured it from there (D11), since the lot keeps
@@ -564,6 +564,50 @@ a raw subquery, regardless of which two tables look involved at a glance.
   2,576 px, so 1,568 is a storage choice, not the reader's limit. Live-camera
   scans stay at the browser's default capture size (owner, 2026-09-19: no
   extra per-scan cost for sharper strip photos).
+- **Rule 1 on catalog counts and a poured wine's record** (migration
+  `20260919213300_rule1_usage_and_main_photo.sql`, applied 2026-09-19 with the
+  owner's go-ahead; spec `docs/superpowers/specs/2026-09-19-rule1-usage-and-main-photo.md`).
+  `catalog_wine_usage` and `catalog_wine_holdings` (EXECUTE `authenticated` +
+  `service_role` only; PUBLIC and `anon` revoked) return numbers no unrevealed
+  glass moves: `appearance_count` counts revealed glasses only, and a bottle
+  drawn from a cellar lot into a glass that is not revealed yet (D11's Start
+  draw-down or a running pour, found through
+  `wine_pour_intents.cellar_consumption_id` by the internal
+  `catalog_wine_masked_pours`) still counts as in its cellar, and not drunk,
+  until that reveal. Before this, the counts ticking up at Start named the
+  wine, even from a PRIVATE cellar. Any new shared count over `wine_answers`,
+  `cellar_lots` or `cellar_consumptions` must follow the same rule. The adder
+  of a still-unrevealed glass (host for `added_by_host`, contributor for BYO —
+  `attach_catalog_wine_photo`'s step 7, as
+  `catalog_wine_in_callers_unrevealed_glass`) cannot change that wine's public
+  record: `catalog_wines_rule1_guard` (BEFORE UPDATE) and
+  `catalog_wine_grapes_rule1_guard` refuse a signed-in client's own write
+  (trigger depth 1) on a wine not `blind_pending` before and after, with 42501
+  "This wine is in one of your flights that hasn't been revealed yet. Change
+  it after the reveal." (`src/lib/catalog/rule1-guard.ts`) — a main photo, a
+  description, a blend, even a no-op save (which still stamps `updated_at`
+  and an edit-audit row naming the editor). Nobody else is ever refused for
+  linkage. Writes by other triggers (the `blind_pending` mark/unmark, the
+  blend seed and recompute) and by `service_role` are not judged, so a new
+  trigger that writes `catalog_wines` for a client must apply rule 1 itself.
+  Accepted by the owner: the adder cannot edit that wine until the reveal, and
+  a glass left unrevealed in a CLOSED tasting keeps the wine locked for them.
+  The add-wine write path never fills a public wine from a flight: flight
+  adds, finishes, Edits and Swaps call `upsertCatalogWine(..., { fill: false })`,
+  then `fillFlightCatalogWine` after the answer key is written, filling
+  description, alcohol and blend only while the wine is `blind_pending` (or
+  the glass is itself revealed, on an OPEN board), and never `image_url` — a
+  flight scan stays on the glass's `wine_answers.image_url`
+  (`catalogFillPlan`, `src/lib/wine-identity/fill-rule.ts`). A hidden row is
+  readable by its creator, every curator and whoever can read an answer key
+  naming it, so a curator-adder can still edit a hidden wine someone else
+  created (spec R10). Pre-existing, still open (owner: fix next, 2026-09-19):
+  a catalog-only public wine vanishing when poured (F4), the new-wine window
+  (F5), client-writable `blind_pending` (F6), `merge_catalog_wines` (F7),
+  PUBLIC-cellar draw-downs (F8), new reference rows (F9), an unidentified
+  glass's identity in the all-readable `catalog_wines_unidentified` (F10), and
+  an Edit, Swap or Remove plus re-add un-hiding the abandoned brand-new wine
+  with its flight fill (F11).
 - The leaderboard sidebar shows more than a bare score per participant: a
   "wine X/Y" progress readout (their own scored-guess count over the
   tasting's total wine count — this can differ between participants if one
