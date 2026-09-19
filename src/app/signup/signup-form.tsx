@@ -25,9 +25,21 @@ export function SignUpForm({ next = null }: { next?: string | null }) {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="display_name">Name</Label>
-        <Input id="display_name" name="display_name" required autoFocus />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="first_name">First name</Label>
+          <Input
+            id="first_name"
+            name="first_name"
+            autoComplete="given-name"
+            required
+            autoFocus
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="last_name">Last name (optional)</Label>
+          <Input id="last_name" name="last_name" autoComplete="family-name" />
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>

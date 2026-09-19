@@ -44,6 +44,8 @@ export type PasswordCopy = {
   lead: string;
   /** null in reset mode: the name field is not shown. */
   nameLabel: string | null;
+  /** The optional last-name field beside it; null when there is no name step. */
+  lastNameLabel: string | null;
   passwordLabel: string;
   hint: string;
   submit: string;
@@ -59,7 +61,8 @@ const COPY: Record<PasswordMode, PasswordCopy> = {
   setup: {
     title: "Welcome to Blindr",
     lead: "Choose a password so you can sign in again on any device.",
-    nameLabel: "Your name",
+    nameLabel: "First name",
+    lastNameLabel: "Last name (optional)",
     passwordLabel: "Choose a password",
     hint: HINT,
     submit: "Save and continue",
@@ -70,6 +73,7 @@ const COPY: Record<PasswordMode, PasswordCopy> = {
     title: "Choose a new password",
     lead: "Pick a new password for your Blindr account.",
     nameLabel: null,
+    lastNameLabel: null,
     passwordLabel: "New password",
     hint: HINT,
     submit: "Save password",

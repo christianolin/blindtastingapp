@@ -82,7 +82,8 @@ describe("set-password copy (verbatim)", () => {
     expect(passwordCopy("setup")).toEqual({
       title: "Welcome to Blindr",
       lead: "Choose a password so you can sign in again on any device.",
-      nameLabel: "Your name",
+      nameLabel: "First name",
+      lastNameLabel: "Last name (optional)",
       passwordLabel: "Choose a password",
       hint: "At least 6 characters.",
       submit: "Save and continue",
@@ -96,6 +97,7 @@ describe("set-password copy (verbatim)", () => {
       title: "Choose a new password",
       lead: "Pick a new password for your Blindr account.",
       nameLabel: null,
+      lastNameLabel: null,
       passwordLabel: "New password",
       hint: "At least 6 characters.",
       submit: "Save password",

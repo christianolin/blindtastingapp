@@ -31,7 +31,10 @@ export function SetPasswordForm({
     SetPasswordFormState,
     FormData
   >(setPassword, null);
+  // The suggested name (from the invite, or the email's local part) prefills
+  // the first-name field; the last name starts empty and stays optional.
   const [name, setName] = useState(suggestedName);
+  const [lastName, setLastName] = useState("");
   const [password, setPasswordValue] = useState("");
 
   const error = state && "error" in state ? state.error : null;
@@ -63,18 +66,31 @@ export function SetPasswordForm({
         className="hidden"
       />
       {copy.nameLabel ? (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="display_name">{copy.nameLabel}</Label>
-          <Input
-            id="display_name"
-            name="display_name"
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            className={TAP}
-          />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="first_name">{copy.nameLabel}</Label>
+            <Input
+              id="first_name"
+              name="first_name"
+              autoComplete="given-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              className={TAP}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="last_name">{copy.lastNameLabel}</Label>
+            <Input
+              id="last_name"
+              name="last_name"
+              autoComplete="family-name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className={TAP}
+            />
+          </div>
         </div>
       ) : null}
       <div className="flex flex-col gap-2">

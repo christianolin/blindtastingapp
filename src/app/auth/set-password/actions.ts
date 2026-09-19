@@ -1,5 +1,6 @@
 "use server";
 
+import { fullName } from "@/lib/auth/full-name";
 import { createClient } from "@/lib/supabase/server";
 import {
   passwordCopy,
@@ -31,7 +32,10 @@ export async function setPassword(
   const mode = passwordMode(field(formData, "mode"));
   const next = passwordNext(field(formData, "next"));
   const password = field(formData, "password");
-  const displayName = mode === "setup" ? field(formData, "display_name") : "";
+  // Setup mode asks for a first name (required by the form) and an optional
+  // last name; together they become the one name shown everywhere.
+  const displayName =
+    mode === "setup" ? fullName(field(formData, "first_name"), field(formData, "last_name")) : "";
 
   const supabase = await createClient();
 
