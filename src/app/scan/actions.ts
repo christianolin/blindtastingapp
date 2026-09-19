@@ -2,14 +2,17 @@
 
 // The label scan's one server action (spec §A.5, D1). One round trip checks the
 // caller and the photo's path, reads the label, keeps every billed read in
-// `label_reads`, then resolves the read into a draft, names what is missing, finds
-// a confident catalog match and builds the confirm screen's title and meta. The
-// client never sends a URL, and nothing here writes a wine: the confirm screen's
-// explicit add does that (D6).
+// `label_reads`, then resolves the read into a draft, follows up a still-missing
+// appellation with at most one billed text-only lookup (owner fix C, 2026-09-19;
+// kept in `label_lookups`), names what is missing, finds a confident catalog match
+// and builds the confirm screen's title and meta. The client never sends a URL,
+// and nothing here writes a wine: the confirm screen's explicit add does that (D6).
+import { lookupAppellation } from "@/lib/label-scan/appellation-lookup";
 import { readLabel, type LabelReadOutcome } from "@/lib/label-scan/extract";
-import { isOwnStagingPath, labelReadRow } from "@/lib/label-scan/guards";
+import { isOwnStagingPath, labelReadRow, type LabelLookupRow } from "@/lib/label-scan/guards";
 import { DAY_MS, QUOTA_FETCH_LIMIT, quotaRefusal } from "@/lib/label-scan/quota";
 import { createClient } from "@/lib/supabase/server";
+import { followUpAppellation } from "@/lib/wine-identity/appellation-follow-up";
 import { missingWineFields } from "@/lib/wine-identity/complete";
 import { readDisplay, type DisplayNames } from "@/lib/wine-identity/describe";
 import type { CatalogMatch } from "@/lib/wine-identity/match";
@@ -64,6 +67,21 @@ async function keepRead(
     return null;
   }
   return data.id;
+}
+
+/** Stores a billed follow-up lookup in `label_lookups` (owner fix C; spec §6.6,
+    §7): one row per kept read, owner-only and append-only, never counted by the
+    scan quota. A failed insert is logged and never thrown: the scan carries on.
+    Because the call before it is already billed, 20260919214700 must be applied
+    before this code deploys (its header, spec §7.4): a missing table would turn
+    every follow-up into an unrecorded charge. */
+async function keepLookup(
+  supabase: ServerSupabase,
+  userId: string,
+  row: LabelLookupRow & { label_read_id: string },
+): Promise<void> {
+  const { error } = await supabase.from("label_lookups").insert({ user_id: userId, ...row });
+  if (error) console.error("label lookup not kept", { code: error.code, message: error.message });
 }
 
 /** The resolved names for the confirm screen, from the same lookup the resolver
@@ -145,10 +163,22 @@ export async function readLabelPhoto(input: {
   // 7. A failed read.
   if (!outcome.ok) return { ok: false, reason: outcome.reason };
 
-  // 8. Resolve, name what is missing, match, describe.
+  // 8. Resolve, follow up a missing appellation (owner fix C), name what is
+  //    missing, match, describe. The follow-up is bounded (one call, 8 s, no
+  //    retries) and never fails the scan: any failure leaves the resolver's draft.
   try {
     const lookup = serverLookup(supabase);
-    const draft = await resolveLabelRead(outcome.read, lookup, { imageUrl });
+    const resolved = await resolveLabelRead(outcome.read, lookup, { imageUrl });
+    const followUp = await followUpAppellation({
+      read: outcome.read,
+      draft: resolved,
+      lookup,
+      readId,
+      call: lookupAppellation,
+      keep: (row) => keepLookup(supabase, user.id, row),
+    });
+    if (followUp.failure) logFailure("label lookup failed", followUp.failure);
+    const draft = followUp.draft;
     const missing = missingWineFields(draft);
     const match = await findConfidentMatch(supabase, draft);
     const display = readDisplay(draft, await displayNames(draft, lookup));

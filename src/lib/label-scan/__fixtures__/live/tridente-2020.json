@@ -1,0 +1,26 @@
+{
+  "style": "STILL",
+  "colour": "RED",
+  "grapes": [
+    {
+      "name": "Tempranillo",
+      "percentage": 100
+    }
+  ],
+  "region": "Castilla-La Mancha",
+  "country": "Spain",
+  "rawText": "TRIDENTE 2020 TEMPRANILLO",
+  "producer": "Tridente",
+  "wineName": "Tridente",
+  "confidence": "medium",
+  "appellation": null,
+  "description": "Tempranillo is Spain's principal red variety, widely planted across the central plateau including Castilla-La Mancha, where it thrives in the region's continental climate and produces wines with moderate acidity and ripe dark fruit character. This bottling appears to be a varietal expression of the grape, typical of modern Spanish producers aiming for approachable, fruit-forward style.",
+  "designation": null,
+  "isWineLabel": true,
+  "vintageKind": "YEAR",
+  "vintageRead": true,
+  "vintageYear": 2020,
+  "alcoholPercent": null,
+  "vintageTawnyYears": null,
+  "noGeographicIndication": false
+}

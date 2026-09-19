@@ -27,4 +27,12 @@ describe("draft sources", () => {
     expect(parseStoredDraft({ ...emptyDraft(), colour: "PURPLE" })).toBeNull();
     expect(parseStoredDraft("nope")).toBeNull();
   });
+  it("parseStoredDraft accepts the scan fixes' provenance values, catalog-sibling and lookup (2026-09-19)", () => {
+    const stored = {
+      ...emptyDraft(), countryId: "es", regionId: "cyl", appellationId: "cyl-a",
+      provenance: { country: "label", region: "catalog-sibling", appellation: "lookup" },
+    };
+    expect(parseStoredDraft(JSON.parse(JSON.stringify(stored)))).toEqual(stored);
+    expect(parseStoredDraft({ ...stored, provenance: { appellation: "guessed" } })).toBeNull();
+  });
 });

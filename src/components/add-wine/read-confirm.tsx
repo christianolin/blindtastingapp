@@ -16,6 +16,7 @@ import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types"
 import { glassLabel } from "./format";
 import { flightHintSubtitle } from "./matrix";
 import { bottlesLabel } from "./row-format";
+import { appellationSourceNote, readOkChip } from "./scan-copy";
 import type { ChooserProps, ReadConfirmProps } from "./types";
 
 const READING = "Reading the label…";
@@ -73,6 +74,9 @@ export function ReadConfirm({
   const draft = item.draft ?? read.draft;
   const missing: readonly WineFieldKey[] = item.draft ? missingWineFields(item.draft) : read.missing;
   const match = read.match;
+  // Owner fixes B and C (2026-09-19): an appellation the label did not print says
+  // where it came from — other vintages, or the one follow-up lookup.
+  const sourceNote = appellationSourceNote(draft);
   // scan-3: an unknown producer is named, and created only on the explicit add.
   const newProducer =
     read.display.newProducer && read.draft.producer ? `${read.draft.producer.name} · new producer` : null;
@@ -119,6 +123,7 @@ export function ReadConfirm({
               <h3 className="font-heading text-[29px] font-semibold leading-[1.06]">{title}</h3>
             ) : null}
             {meta ? <p className="text-[12.5px] text-console-ink">{meta}</p> : null}
+            {sourceNote ? <p className="text-[12px] text-console-ink/80">{sourceNote}</p> : null}
             {!match && newProducer ? (
               <p className="text-[12.5px] font-semibold text-gold-light">{newProducer}</p>
             ) : null}
@@ -150,7 +155,7 @@ export function ReadConfirm({
     );
   }
 
-  const chip = missing.length > 0 ? null : readOkChip(read.confidence);
+  const chip = missing.length > 0 ? null : readOkChip(read.confidence, draft);
   return (
     <div className="flex min-h-full flex-col">
       <PhotoBand imageUrl={item.photoUrl} />
@@ -166,6 +171,7 @@ export function ReadConfirm({
               {read.display.meta ? (
                 <p className="text-[12px] text-muted-foreground">{read.display.meta}</p>
               ) : null}
+              {sourceNote ? <p className="text-[11.5px] text-muted-foreground">{sourceNote}</p> : null}
               {newProducer ? <p className="text-[12px] font-semibold text-gold-dark">{newProducer}</p> : null}
             </div>
             {chip ? <ReadChip label={chip.label} tone={chip.tone} /> : null}
@@ -323,14 +329,6 @@ function searchQueryFor(draft: WineIdentityDraft): string {
     .map((part) => part?.trim() ?? "")
     .filter(Boolean)
     .join(" ");
-}
-
-/** A complete read's chip: "READ OK", or "CHECK THE READ" when the model rated
-    its own read low (§2.1 row 9). A read with gaps names them instead. */
-function readOkChip(confidence: "high" | "medium" | "low"): { label: string; tone: "ok" | "check" } {
-  return confidence === "low"
-    ? { label: "CHECK THE READ", tone: "check" }
-    : { label: "READ OK", tone: "ok" };
 }
 
 /** E1 "My cellar": what you already hold, or what comes next. */

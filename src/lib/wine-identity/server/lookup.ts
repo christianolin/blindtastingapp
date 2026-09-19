@@ -3,7 +3,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
 
-import { NATIONAL_TIER_REGION_NAMES, appellationSearchPattern, type RefLookup } from "../resolve";
+import {
+  CATALOG_SIBLING_LIMIT, NATIONAL_TIER_REGION_NAMES, appellationSearchPattern, type RefLookup,
+} from "../resolve";
 
 // The read resolver's reference lookup, backed by the caller's Supabase client
 // (spec §B.5). One instance per request. Every method is memoised on that
@@ -204,6 +206,39 @@ export function serverLookup(supabase: SupabaseClient<Database>): RefLookup {
           .order("sort_order");
         check(error, "typeDesignations");
         return (data ?? []).map((row) => ({ id: row.id, name: row.name, countryId: row.country_id }));
+      }),
+
+    // Resolver step 7.6 (owner fix B, 2026-09-19): the producer's catalog wines as
+    // the caller may read them ("catalog read" RLS), and — stricter than RLS on
+    // purpose — never a blind_pending row, even one the caller could read, and never
+    // a row merged away: exactly findConfidentMatch's candidate set (server/match.ts),
+    // so no hidden glass's identity can ever reach a draft. The (producer_id, …)
+    // identity index serves the filter. One row past the limit tells a full list
+    // from a capped one. Unlike the rest of this adapter it never throws: a failed
+    // read is an incomplete list, and step 7.6 then fills nothing.
+    catalogWinesOfProducer: (producerId) =>
+      memo(`catalogWinesOfProducer:${producerId}`, async () => {
+        const { data, error } = await supabase
+          .from("catalog_wines")
+          .select("id, wine_name, colour, style, primary_grape_id, appellation_id")
+          .eq("producer_id", producerId)
+          .eq("blind_pending", false)
+          .is("merged_into", null)
+          .order("id")
+          .limit(CATALOG_SIBLING_LIMIT + 1);
+        if (error) {
+          console.error("catalog siblings not read", { code: error.code, message: error.message });
+          return { rows: [], complete: false };
+        }
+        const rows = (data ?? []).map((row) => ({
+          id: row.id,
+          wineName: row.wine_name,
+          colour: row.colour,
+          style: row.style,
+          primaryGrapeId: row.primary_grape_id,
+          appellationId: row.appellation_id,
+        }));
+        return { rows: rows.slice(0, CATALOG_SIBLING_LIMIT), complete: rows.length <= CATALOG_SIBLING_LIMIT };
       }),
   };
 }

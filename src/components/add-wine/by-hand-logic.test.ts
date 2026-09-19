@@ -120,6 +120,29 @@ describe("fieldChip, the rest of the B.4 table", () => {
     expect(fieldChip("appellation", d, afterRead).chip).toBe("you choose");
     expect(fieldChip("primaryGrape", d, afterRead).chip).toBe("you confirm");
   });
+  // Owner fixes B and C (2026-09-19, spec §8): the scan's two new sources.
+  it("an appellation from other vintages, or looked up, says so and never reads 'you choose'", () => {
+    const base: WineIdentityDraft = { ...emptyDraft(), countryId: "es", regionId: "cyl", appellationId: "cyl-a" };
+    const sibling = { ...base, provenance: { appellation: "catalog-sibling" } } as const;
+    const looked = { ...base, provenance: { appellation: "lookup" } } as const;
+    expect(fieldChip("appellation", sibling, afterRead)).toEqual({ chip: "from other vintages", note: null });
+    expect(fieldChip("appellation", looked, afterRead)).toEqual({
+      chip: "looked up", note: "Not on the label — looked up for this wine. Change it if the bottle says otherwise.",
+    });
+    for (const d of [sibling, looked]) expect(fieldChip("appellation", d, ctx).chip).not.toBe("you choose");
+  });
+  it("a region or country from other vintages says so; a producer-link one keeps its note", () => {
+    const d: WineIdentityDraft = {
+      ...emptyDraft(), producer: cigliuti, countryId: "es", regionId: "cyl",
+      provenance: { country: "catalog-sibling", region: "catalog-sibling" },
+    };
+    expect(fieldChip("region", d, afterRead)).toEqual({ chip: "from other vintages", note: null });
+    expect(fieldChip("country", d, afterRead)).toEqual({ chip: "from other vintages", note: null });
+    const linked: WineIdentityDraft = { ...d, provenance: { country: "label", region: "producer-region" } };
+    expect(fieldChip("region", linked, afterRead)).toEqual({
+      chip: null, note: "Filled from Cigliuti's region link. Change either if the bottle disagrees.",
+    });
+  });
   it("a producer with no region link reads matched", () =>
     expect(fieldChip("producer", { ...emptyDraft(), producer: cigliuti }, ctx)).toEqual({ chip: "matched", note: null }));
   it("a blank pending producer is still required", () =>

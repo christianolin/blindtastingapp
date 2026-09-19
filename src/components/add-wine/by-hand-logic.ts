@@ -51,6 +51,10 @@ const DID_NOT_READ_REQUIRED = "did not read — required";
 const YOU_CHOOSE = "you choose";
 const YOU_CONFIRM = "you confirm";
 const WINE_NAME_HINT = "Leave blank if the label has no cuvée name";
+// Owner fixes B and C (2026-09-19, spec §8): the scan's two sources beside the label.
+const FROM_OTHER_VINTAGES = "from other vintages";
+const LOOKED_UP = "looked up";
+const LOOKED_UP_NOTE = "Not on the label — looked up for this wine. Change it if the bottle says otherwise.";
 
 function chipOnly(chip: string | null): FieldChip {
   return { chip, note: null };
@@ -105,10 +109,17 @@ export function fieldChip(field: ChipField, draft: WineIdentityDraft, ctx: Field
       if (source === "producer-region" && (field === "country" || field === "region")) {
         return { chip: null, note: producerLinkNote(draft.producer) };
       }
+      if (source === "catalog-sibling" && (field === "country" || field === "region")) {
+        return chipOnly(FROM_OTHER_VINTAGES);
+      }
       return chipOnly(null);
     case "appellation":
       if (absent) return chipOnly(ctx.readAttempted ? DID_NOT_READ : YOU_CHOOSE);
       if (source === "label") return chipOnly(READ_FROM_LABEL);
+      // Resolver step 7.6: every other vintage of this wine in the catalog names it.
+      if (source === "catalog-sibling") return chipOnly(FROM_OTHER_VINTAGES);
+      // The scan's one follow-up lookup picked it from our list for the region.
+      if (source === "lookup") return { chip: LOOKED_UP, note: LOOKED_UP_NOTE };
       return chipOnly(source === "catalog-match" ? null : YOU_CHOOSE);
     case "primaryGrape": {
       // A read stamps its grapes on `blend` only (resolve.ts step 9); a pick or a

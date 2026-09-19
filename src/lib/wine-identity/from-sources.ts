@@ -119,6 +119,7 @@ const COLOURS: Record<WineColour, true> = { RED: true, WHITE: true, ROSE: true, 
 const STYLES: Record<WineStyle, true> = { STILL: true, SPARKLING: true, SWEET: true, FORTIFIED: true };
 const PROVENANCES: Record<FieldProvenance, true> = {
   label: true, "catalog-match": true, "producer-region": true, "appellation-suggestion": true, manual: true, none: true,
+  "catalog-sibling": true, lookup: true,
 };
 const PROVENANCE_KEYS: Record<ProvenanceKey, true> = {
   producer: true, vintage: true, colour: true, style: true, country: true, region: true, appellation: true,

@@ -1,6 +1,7 @@
 // The label reader's cost and security rules as pure, tested predicates (spec
 // §A.1). No `server-only` and no runtime imports (types only), so vitest loads it
 // directly.
+import type { AppellationLookupOutcome } from "./appellation-lookup-schema";
 import type { LabelReadOutcome, LabelReadUsage } from "./extract";
 import type { LabelRead } from "./label-read-schema";
 
@@ -57,6 +58,70 @@ export function labelReadRow(outcome: LabelReadOutcome): LabelReadRow | null {
   }
   if (outcome.reason === "not-read" && outcome.usage !== null) {
     return { outcome: "not-read", read: null, model: outcome.model, ...tokens(outcome.usage) };
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// The follow-up lookup (owner fix C, 2026-09-19; spec §6.5, §6.6)
+
+/** The `LABEL_LOOKUP_FIXTURE` switch: only outside production, and only when the
+    variable is set. Its own variable, so a replayed read never buys a real
+    follow-up by accident (appellation-lookup.ts skips the call instead). */
+export function lookupFixtureAllowed(env: { NODE_ENV?: string; LABEL_LOOKUP_FIXTURE?: string }): boolean {
+  return env.NODE_ENV !== "production" && Boolean(env.LABEL_LOOKUP_FIXTURE);
+}
+
+/** A `label_lookups` row without the caller's `user_id` and `label_read_id`. */
+export type LabelLookupRow = {
+  region_id: string;
+  candidates: number;
+  outcome: "answer" | "no-answer" | "discarded" | "not-read";
+  answer: string | null;
+  appellation_id: string | null;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+};
+
+/** label_lookups.answer's bound (char_length ≤ 200). */
+const LOOKUP_ANSWER_MAX = 200;
+
+function capAnswer(answer: string): string {
+  if (answer.length <= LOOKUP_ANSWER_MAX) return answer;
+  const cut = answer.slice(0, LOOKUP_ANSWER_MAX);
+  // Never end on half a surrogate pair (a lone surrogate is not valid UTF-8).
+  const last = cut.charCodeAt(cut.length - 1);
+  return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut;
+}
+
+/**
+ * What a follow-up outcome stores in `label_lookups`, or null when no response
+ * was billed. Like `labelReadRow`, every billed call is kept: an answer that
+ * picked one of our rows (`answer`, with that row's id), an answer outside the
+ * list (`discarded`), no answer (`no-answer`), and a billed `not-read`. A thrown
+ * failure (timeout, busy, network, rejected, service) carries no usage and a
+ * skipped lookup made no call: neither stores anything. A fixture replay is kept
+ * under model "fixture" with zero tokens.
+ */
+export function labelLookupRow(
+  outcome: AppellationLookupOutcome,
+  request: { regionId: string; rows: readonly unknown[] },
+  picked: { id: string } | null,
+): LabelLookupRow | null {
+  const where = { region_id: request.regionId, candidates: request.rows.length };
+  if (outcome.ok) {
+    const usage = { model: outcome.model, ...tokens(outcome.usage) };
+    if (outcome.answer === null) {
+      return { ...where, outcome: "no-answer", answer: null, appellation_id: null, ...usage };
+    }
+    const answer = capAnswer(outcome.answer);
+    return picked !== null
+      ? { ...where, outcome: "answer", answer, appellation_id: picked.id, ...usage }
+      : { ...where, outcome: "discarded", answer, appellation_id: null, ...usage };
+  }
+  if (outcome.reason === "not-read") {
+    return { ...where, outcome: "not-read", answer: null, appellation_id: null, model: outcome.model, ...tokens(outcome.usage) };
   }
   return null;
 }

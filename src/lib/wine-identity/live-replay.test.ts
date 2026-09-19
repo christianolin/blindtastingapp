@@ -18,7 +18,11 @@
 // longer equals its live draft names what moved it in its `why` note: a live
 // catalog change (an alternative producer name, a merge), or a later owner-approved
 // resolver rule (approval 3's region conflict, approval 4's curated appellation
-// synonym, or the 2026-09-14 self-named-appellation rule, step 7.5).
+// synonym, the 2026-09-14 self-named-appellation rule, step 7.5, or the 2026-09-19
+// owner fixes A/B: the region from the producer link when the label does not print
+// the read's region, and the appellation of other vintages of the same wine, step
+// 7.6). For fix B the snapshot carries `catalog_wines`: exactly the two live Bodegas
+// Tridente rows (2018 and 2020), and nothing else, so no other replay row moves.
 //
 // A changed row below is a changed resolver outcome for a real label: change one
 // only on purpose, with the reason beside it. The `why` notes carry L1b's
@@ -231,12 +235,12 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "tridente-vintage-unread.json", labelReadId: "b0c61af8-724b-47a5-a7da-67a1bfff9946",
-    why: "producer and region: re-pinned on purpose once amendment 24's approval 2 was live — its merge deleted the duplicate 'Tridente' row 0d1d099c (linked to Castilla La Mancha), so no producer row folds to 'tridente', and its curated alternative name 'Tridente' (migration 20260914113500) finds Bodegas Tridente (7f46bd24), linked to Castilla y Leon, where amendment 21's live catalog fix (approval 2) placed the wine. The read has no appellation text and names Castilla-La Mancha, another region of the same country, so owner approval 3 leaves the region blank and lists it missing, and step 7 does not refill it from the link. region: model (reported). appellation: write-time ('Just the region' at Fix, once a region is picked). vintage: by-design (D7)",
+    why: "producer: re-pinned on purpose once amendment 24's approval 2 was live — its merge deleted the duplicate 'Tridente' row 0d1d099c (linked to Castilla La Mancha), so no producer row folds to 'tridente', and its curated alternative name 'Tridente' (migration 20260914113500) finds Bodegas Tridente (7f46bd24), linked to Castilla y Leon, where amendment 21's live catalog fix (approval 2) placed the wine. region and appellation: re-pinned from null on purpose (owner fixes A and B, 2026-09-19) — the label ('TRIDENTE TEMPRANILLO') does not print the read's Castilla-La Mancha, so Bodegas Tridente's region link, Castilla y Leon, wins (fix A; approval 3 used to blank it); and the catalog's 2018 and 2020 Tridente rows (RED, STILL, Tempranillo) both name Castilla y Leon's self-named appellation, so step 7.6 takes it (fix B). region: model (still reported: the read names a region from memory). vintage: by-design (D7)",
     resolved: {
-      country: "Spain", region: null, appellation: null,
+      country: "Spain", region: "Castilla y Leon", appellation: "Castilla y Leon",
       producer: existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"),
       grapes: [["existing", "Tempranillo", 100]],
-      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "region", "appellation"],
+      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage"],
     },
   },
 
@@ -284,12 +288,12 @@ const CASES: Case[] = [
   },
   {
     entry: 15, file: "r2/tridente-vintage-unread.json", labelReadId: "06c355b5-2e23-43e1-8b81-c3a918000ff6",
-    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. producer and region: re-pinned on purpose for round 1's reason — once amendment 24's approval 2 was live, its merge had deleted 0d1d099c and 'Tridente' finds Bodegas Tridente (7f46bd24) through its curated alternative name (migration 20260914113500); owner approval 3 then leaves the read's region blank, because that producer is linked to Castilla y Leon. So the draft no longer equals its live draft (producer 0d1d099c, region Castilla La Mancha). Otherwise the same draft as round 1: appellation write-time, vintage by-design (D7)",
+    why: "region: model (reported) — the label prints only 'TRIDENTE / TEMPRANILLO', yet the read still names Castilla-La Mancha (confidence medium) despite the approved null-region instruction. producer: re-pinned on purpose for round 1's reason — once amendment 24's approval 2 was live, its merge had deleted 0d1d099c and 'Tridente' finds Bodegas Tridente (7f46bd24) through its curated alternative name (migration 20260914113500). region and appellation: re-pinned from null on purpose for round 1's reasons (owner fixes A and B, 2026-09-19) — the unprinted Castilla-La Mancha gives way to the producer's link, Castilla y Leon, and the catalog's other Tridente vintages name Castilla y Leon's self-named appellation. So the draft no longer equals its live draft (producer 0d1d099c, region Castilla La Mancha). vintage: by-design (D7)",
     resolved: {
-      country: "Spain", region: null, appellation: null,
+      country: "Spain", region: "Castilla y Leon", appellation: "Castilla y Leon",
       producer: existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"),
       grapes: [["existing", "Tempranillo", 100]],
-      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage", "region", "appellation"],
+      vintage: UNREAD, colour: "RED", style: "STILL", designation: null, missing: ["vintage"],
     },
   },
 
@@ -315,6 +319,22 @@ const CASES: Case[] = [
       vintage: year(2022), colour: "RED", style: "STILL", designation: null, missing: [],
     },
   },
+
+  // ── Tridente live-bug pin (2026-09-19): tridente-2020.json ──────────────────────
+  // The owner's report ("the scanner didnt find region and appellation"): a brand-only
+  // front label, "TRIDENTE 2020 TEMPRANILLO", read as Castilla-La Mancha from memory
+  // with no appellation. Live, owner approval 3 blanked the region and both fields had
+  // to be typed by hand. Owner fixes A and B (spec 2026-09-19-scan-region-appellation.md).
+  {
+    entry: 17, file: "tridente-2020.json", labelReadId: "a9e27e42-2557-486d-843f-e7c57e2e5484",
+    why: "region and appellation: the live draft had neither (owner approval 3 blanked the unprinted Castilla-La Mancha). Fix A: the label does not print the read's region, so Bodegas Tridente's region link, Castilla y Leon, wins. Fix B: the catalog's 2018 and 2020 Tridente rows (RED, STILL, Tempranillo) both name Castilla y Leon's self-named appellation, so step 7.6 takes it. region: model (still reported)",
+    resolved: {
+      country: "Spain", region: "Castilla y Leon", appellation: "Castilla y Leon",
+      producer: existing("7f46bd24-f237-48e2-a151-ea52e66c2d09", "Bodegas Tridente"),
+      grapes: [["existing", "Tempranillo", 100]],
+      vintage: year(2020), colour: "RED", style: "STILL", designation: null, missing: [],
+    },
+  },
 ];
 
 const isRound2 = (c: Case) => c.file.startsWith(`${ROUND2_DIR}/`);
@@ -331,8 +351,8 @@ describe("the live fixtures (plan L1)", () => {
     expect(new Set(CASES.map((c) => c.labelReadId)).size).toBe(CASES.length);
   });
 
-  it("round 1 covers the 15 test-set entries plus the Sassicaia live-bug pin (#16); round 2 re-reads exactly the approved #2, #4, #7, #12 and #15", () => {
-    expect(CASES.filter((c) => !isRound2(c)).map((c) => c.entry)).toEqual([...Array.from({ length: 15 }, (_, i) => i + 1), 16]);
+  it("round 1 covers the 15 test-set entries plus the live-bug pins #16 and #17; round 2 re-reads exactly the approved #2, #4, #7, #12 and #15", () => {
+    expect(CASES.filter((c) => !isRound2(c)).map((c) => c.entry)).toEqual([...Array.from({ length: 15 }, (_, i) => i + 1), 16, 17]);
     expect(CASES.filter(isRound2).map((c) => c.entry)).toEqual([2, 4, 7, 12, 15]);
   });
 
@@ -352,7 +372,7 @@ describe("resolveLabelRead replays each live read against the snapshot (spec §G
 describe("what the live misses turn on", () => {
   const read = (file: string) => coerceLabelRead(rawFixture(file));
 
-  it("#4 round 1's rawText names Ningxia, so step 7.5 now resolves its self-named appellation; #15 still waits for 'Just the region' at Fix, since owner approval 3 blanks the region first (both rounds)", async () => {
+  it("#4 round 1's rawText names Ningxia, so step 7.5 now resolves its self-named appellation; #15 takes the producer link's region (fix A) and its other vintages' appellation (fix B), never step 7.5 (both rounds)", async () => {
     // Owner rule 2026-09-14 (step 7.5): a region-level read with no appellation
     // text becomes the region's self-named appellation only when the label's own
     // rawText names the region by name and names no OTHER appellation of it.
@@ -362,17 +382,24 @@ describe("what the live misses turn on", () => {
     expect([read("changyu-moser-xv-2022.json").appellation, selfNamedIn(ningxia.regionId)]).toEqual([null, ["Ningxia"]]);
     expect([nameOf(snap.appellations, ningxia.appellationId), ningxia.provenance.appellation]).toEqual(["Ningxia", "label"]);
 
-    // #15: owner approval 3 blanks the region before step 7.5 ever runs — the
-    // region is no longer "the one the read itself named" (provenance.region is
-    // cleared, not "label") — so it still waits for 'Just the region' once the
-    // user picks a region by hand: the read's Castilla La Mancha and the
-    // producer's Castilla y Leon each have one.
+    // #15: fix A replaces the unprinted Castilla-La Mancha with the producer's link,
+    // Castilla y Leon (`producer-region`), so step 7.5, which needs a `label` region,
+    // never runs (D7). Fix B's step 7.6 then takes the appellation both catalog
+    // vintages name, Castilla y Leon's self-named row (`catalog-sibling`). Without
+    // those catalog rows the appellation stays missing, for Fix or the follow-up
+    // lookup (fix C) to fill.
     const spain = snap.countries.find((c) => c.name === "Spain")!.id;
     const regionIn = (name: string) => snap.regions.find((r) => r.country_id === spain && r.name === name)?.id ?? null;
+    const noCatalog = { ...snap, catalog_wines: [] };
     for (const file of ["tridente-vintage-unread.json", "r2/tridente-vintage-unread.json"]) {
       const d = await replay(read(file));
-      expect([file, read(file).appellation, d.appellationId, d.provenance.appellation, d.regionId, selfNamedIn(regionIn("Castilla La Mancha")), selfNamedIn(regionIn("Castilla y Leon"))])
-        .toEqual([file, null, null, undefined, null, ["Castilla La Mancha"], ["Castilla y Leon"]]);
+      expect([file, read(file).appellation, nameOf(snap.appellations, d.appellationId), d.provenance.appellation,
+        d.regionId, d.provenance.region, selfNamedIn(regionIn("Castilla y Leon"))])
+        .toEqual([file, null, "Castilla y Leon", "catalog-sibling", regionIn("Castilla y Leon"), "producer-region", ["Castilla y Leon"]]);
+
+      const alone = await resolveLabelRead(read(file), snapshotLookup(noCatalog), { imageUrl: null });
+      expect([file, alone.appellationId, alone.regionId, alone.provenance.region, missingWineFields(alone, { now: NOW })])
+        .toEqual([file, null, regionIn("Castilla y Leon"), "producer-region", ["vintage", "appellation"]]);
     }
   });
 
@@ -392,7 +419,7 @@ describe("what the live misses turn on", () => {
       .toEqual([null, "Ningxia", "producer-region"]);
   });
 
-  it("#15 under owner approval 3: 'Tridente' reaches Bodegas Tridente, linked to Castilla y Leon, so the read's Castilla-La Mancha is left blank and never refilled from the link (both rounds)", async () => {
+  it("#15 under fix A: 'Tridente' reaches Bodegas Tridente, linked to Castilla y Leon, so the read's unprinted Castilla-La Mancha gives way to the link; a printed one would stay (both rounds)", async () => {
     // The live rows since amendment 24's approval 2: its merge deleted the duplicate
     // "Tridente" (0d1d099c, linked to the read's own Castilla La Mancha), so no producer
     // row folds to "tridente", and its curated alternative name leads to Bodegas
@@ -412,8 +439,15 @@ describe("what the live misses turn on", () => {
       expect([file, nameOf(snap.regions, unlinked.regionId), unlinked.provenance.region]).toEqual([file, "Castilla La Mancha", "label"]);
 
       const d = await replay(read(file));
-      expect([file, d.producer, d.countryId, d.regionId, d.provenance.region, missingWineFields(d, { now: NOW })])
-        .toEqual([file, existing(bodegasTridente, "Bodegas Tridente"), spain, null, undefined, ["vintage", "region", "appellation"]]);
+      expect([file, d.producer, d.countryId, nameOf(snap.regions, d.regionId), d.provenance.region])
+        .toEqual([file, existing(bodegasTridente, "Bodegas Tridente"), spain, "Castilla y Leon", "producer-region"]);
+
+      // The control: a label that prints the region keeps it, and step 7.5 then
+      // takes that region's self-named appellation.
+      const printed = await replay({ ...read(file), rawText: "TRIDENTE · CASTILLA-LA MANCHA" });
+      expect([file, nameOf(snap.regions, printed.regionId), printed.provenance.region,
+        nameOf(snap.appellations, printed.appellationId), printed.provenance.appellation])
+        .toEqual([file, "Castilla La Mancha", "label", "Castilla La Mancha", "label"]);
     }
   });
 

@@ -1698,6 +1698,30 @@
    "alias": "Tridente"
   }
  ],
+ "catalog_wines": [
+  {
+   "id": "32809359-da38-4021-8a95-8e597a5b4c57",
+   "producer_id": "7f46bd24-f237-48e2-a151-ea52e66c2d09",
+   "wine_name": "Tridente",
+   "colour": "RED",
+   "style": "STILL",
+   "primary_grape_id": "673f5db6-fb6c-4888-adb5-a8ad0ec4dbe1",
+   "appellation_id": "5dd53734-87be-4998-8c19-46853f509fbb",
+   "blind_pending": false,
+   "merged_into": null
+  },
+  {
+   "id": "c4e1429e-06e2-45e6-a790-62a54b4cb426",
+   "producer_id": "7f46bd24-f237-48e2-a151-ea52e66c2d09",
+   "wine_name": "Tridente",
+   "colour": "RED",
+   "style": "STILL",
+   "primary_grape_id": "673f5db6-fb6c-4888-adb5-a8ad0ec4dbe1",
+   "appellation_id": "5dd53734-87be-4998-8c19-46853f509fbb",
+   "blind_pending": false,
+   "merged_into": null
+  }
+ ],
  "grapes": [
   {
    "id": "000addba-3075-417c-9353-515ba7360091",
