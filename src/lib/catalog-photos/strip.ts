@@ -72,7 +72,8 @@ export function photoCaption(p: { isOwn: boolean; name: string; isScan: boolean 
     statuses attach_catalog_wine_photo returns AFTER its step-7 unrevealed-glass
     check (already-attached, limit, attached) prove the caller has no unrevealed
     glass of this wine; every earlier refusal, and a failed call, never ran that
-    check, and setCatalogWineImage has none of its own — so it fails closed. */
+    check — so it fails closed, and the database refuses it too
+    (`catalog_wines_rule1_guard`, 20260919213300). */
 export function mayBecomeMainPhoto(status: AttachPhotoStatus): boolean {
   return status === "attached" || status === "already-attached" || status === "limit";
 }

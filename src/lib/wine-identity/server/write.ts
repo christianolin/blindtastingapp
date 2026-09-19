@@ -6,6 +6,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { blendNeedsReplace, storableBlend } from "../blend-sync";
 import { toCompleteWine, toUnidentifiedWine } from "../complete";
 import { describeMissing } from "../describe";
+import { catalogFillPlan, type CatalogFillContext } from "../fill-rule";
 import { foldName } from "../fold";
 import type {
   BlendRow, CompleteWine, RefChoice, UnidentifiedWine,
@@ -23,10 +24,11 @@ import type {
 // user id, so they must only be reached through an action that has already
 // authenticated the caller. `server-only` keeps them out of every client bundle.
 //
-// Error channel: `prepareCompleteWine`, `prepareUnidentifiedWine` and
-// `upsertCatalogWine` never throw. Every failure comes back as a `WriteRefusal`,
-// so no server action surfaces an unhandled throw. The building blocks
-// (`resolveProducer`, `findOrCreateGrapeFolded`, `fillCatalogWine`) throw.
+// Error channel: `prepareCompleteWine`, `prepareUnidentifiedWine`,
+// `upsertCatalogWine` and `fillFlightCatalogWine` never throw. Every failure
+// comes back as a `WriteRefusal` (or is logged, for a fill), so no server action
+// surfaces an unhandled throw. The building blocks (`resolveProducer`,
+// `findOrCreateGrapeFolded`, `fillCatalogWine`) throw.
 
 type Db = SupabaseClient<Database>;
 
@@ -77,10 +79,6 @@ function refusalFromError(error: unknown, what: string): WriteRefusal {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`${what} failed`, { message });
   return { error: message };
-}
-
-function isBlank(value: string | null): boolean {
-  return value === null || value.trim() === "";
 }
 
 /**
@@ -359,14 +357,20 @@ function catalogWinePayload(wine: ResolvedWine) {
  * 2. `find_or_create_catalog_wine` links to that row or inserts it. Two first adds
  *    of one identity at once make the later insert hit `catalog_wines_identity_key`
  *    (23505); that call is retried once, and it finds the other row;
- * 3. `fillCatalogWine`. A failed fill is logged and does not refuse the write: the
- *    identity is already linked, and the fill runs again on the next add.
+ * 3. `fillCatalogWine`, unless `options.fill === false`. A failed fill is logged
+ *    and does not refuse the write: the identity is already linked, and the fill
+ *    runs again on the next add.
+ * Flight callers (add, finish, Edit, Swap) pass `{ fill: false }` and call
+ * `fillFlightCatalogWine` after the answer key is written: the fill must never run
+ * before the glass exists, when a brand-new wine is still public (spec
+ * 2026-09-19-rule1-usage-and-main-photo D9).
  * Never throws.
  */
 export async function upsertCatalogWine(
   supabase: Db,
   userId: string,
   wine: ResolvedWine,
+  options: { fill?: boolean } = {},
 ): Promise<{ catalogWineId: string; written: boolean } | WriteRefusal> {
   try {
     const existed = await identityExists(supabase, wine);
@@ -384,13 +388,15 @@ export async function upsertCatalogWine(
       return { error: response.error?.message ?? "Could not add the wine to the catalog." };
     }
 
-    try {
-      await fillCatalogWine(supabase, userId, catalogWineId, wine);
-    } catch (error) {
-      console.error("fillCatalogWine failed", {
-        catalogWineId,
-        message: error instanceof Error ? error.message : String(error),
-      });
+    if (options.fill !== false) {
+      try {
+        await fillCatalogWine(supabase, userId, catalogWineId, wine);
+      } catch (error) {
+        console.error("fillCatalogWine failed", {
+          catalogWineId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
     return { catalogWineId, written };
   } catch (error) {
@@ -399,14 +405,24 @@ export async function upsertCatalogWine(
 }
 
 /**
- * The one fill rule for every writer (spec §B.9). It touches only a row whose
- * `created_by` is the caller; a deduped hit on someone else's wine is left alone.
+ * The one fill rule for every writer (spec §B.9; `catalogFillPlan` in
+ * ../fill-rule.ts). It touches only a row whose `created_by` is the caller; a
+ * deduped hit on someone else's wine is left alone.
  * - `image_url` and `description` are written only when empty, and
  *   `alcohol_percent` only when null.
+ * - Never from a flight onto a wine others can read, and never `image_url` from a
+ *   flight (spec 2026-09-19-rule1-usage-and-main-photo D9): with a `flight`
+ *   context it writes only while the wine is `blind_pending` (or the glass is
+ *   itself revealed, on an OPEN board), and a flight scan stays on the glass's
+ *   `wine_answers.image_url`.
  * - The blend is replaced only when the stored rows are still the insert trigger's
  *   seed and the incoming blend differs (`blendNeedsReplace`), so a curated blend
  *   is never overwritten. When it is replaced, the full blend is written with its
  *   percentages (byhand-4, byhand-6).
+ * The database backs this up: `catalog_wines_rule1_guard` and
+ * `catalog_wine_grapes_rule1_guard` (20260919213300) refuse the adder of a
+ * still-unrevealed glass of a public wine, so a catalog-context fill by that
+ * adder throws and is logged by the caller.
  * Throws on a database error.
  */
 export async function fillCatalogWine(
@@ -414,26 +430,40 @@ export async function fillCatalogWine(
   userId: string,
   catalogWineId: string,
   wine: ResolvedWine,
+  context: CatalogFillContext = { kind: "catalog" },
 ): Promise<void> {
   const { data: row, error } = await supabase
     .from("catalog_wines")
-    .select("created_by, image_url, description, alcohol_percent, primary_grape_id, secondary_grape_id")
+    .select("created_by, blind_pending, image_url, description, alcohol_percent, primary_grape_id, secondary_grape_id")
     .eq("id", catalogWineId)
     .maybeSingle();
   check(error, "catalog wine read");
-  if (!row || row.created_by !== userId) return;
+  if (!row) return;
 
-  const patch: Database["public"]["Tables"]["catalog_wines"]["Update"] = {};
-  if (wine.imageUrl && isBlank(row.image_url)) patch.image_url = wine.imageUrl;
-  if (wine.description && isBlank(row.description)) patch.description = wine.description;
-  if (wine.alcohol !== null && row.alcohol_percent === null) patch.alcohol_percent = wine.alcohol;
-  if (Object.keys(patch).length > 0) {
+  const plan = catalogFillPlan(
+    {
+      createdBy: row.created_by,
+      blindPending: row.blind_pending,
+      imageUrl: row.image_url,
+      description: row.description,
+      alcoholPercent: row.alcohol_percent,
+    },
+    { imageUrl: wine.imageUrl, description: wine.description, alcohol: wine.alcohol },
+    userId,
+    context,
+  );
+  if (!plan) return;
+
+  if (Object.keys(plan.patch).length > 0) {
     // One statement, so the edit-audit trigger records one change.
-    const { error: updateError } = await supabase
+    let update = supabase
       .from("catalog_wines")
-      .update(patch)
+      .update(plan.patch)
       .eq("id", catalogWineId)
       .eq("created_by", userId);
+    // A wine that turned public since the read is left alone.
+    if (plan.onlyWhileHidden) update = update.eq("blind_pending", true);
+    const { error: updateError } = await update;
     check(updateError, "catalog wine fill");
   }
 
@@ -471,4 +501,32 @@ export async function fillCatalogWine(
     .eq("catalog_wine_id", catalogWineId)
     .not("grape_id", "in", `(${incoming.map((grape) => grape.grapeId).join(",")})`);
   check(trimError, "catalog wine blend trim");
+}
+
+/**
+ * The flight's fill (spec 2026-09-19-rule1-usage-and-main-photo D9), called only
+ * after the glass's answer key is written, so a brand-new wine is `blind_pending`
+ * by then (catalog_wine_mark_blind): "catalog read" admits only its creator (the
+ * adder), a curator, and whoever can already read that answer key. That holds
+ * only while the glass links it: an Edit, Swap or Remove that re-points the glass
+ * un-hides the abandoned wine, fill included, while the tasting runs (spec F11,
+ * pre-existing). `fillCatalogWine` with a `flight` context: a public wine is
+ * never filled unless `glassRevealed` (an OPEN board), and `image_url` never is.
+ * Never throws: a failed fill is logged and never refuses the glass.
+ */
+export async function fillFlightCatalogWine(
+  supabase: Db,
+  userId: string,
+  catalogWineId: string,
+  wine: ResolvedWine,
+  glassRevealed: boolean,
+): Promise<void> {
+  try {
+    await fillCatalogWine(supabase, userId, catalogWineId, wine, { kind: "flight", glassRevealed });
+  } catch (error) {
+    console.error("fillFlightCatalogWine failed", {
+      catalogWineId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }

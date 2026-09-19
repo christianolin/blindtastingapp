@@ -20,6 +20,7 @@ import {
   type AnswerKeySource,
 } from "@/lib/wine-identity/from-sources";
 import {
+  fillFlightCatalogWine,
   prepareCompleteWine,
   prepareUnidentifiedWine,
   upsertCatalogWine,
@@ -379,8 +380,8 @@ export async function insertTastingWineFromCatalogRow(
 
 /**
  * A complete identity as a glass (spec §B.9 "Flight add from an identity"):
- * `prepareCompleteWine` → `upsertCatalogWine`, then the answer key with the
- * resolved ids. A refusal names the missing fields (D2).
+ * `prepareCompleteWine` → `upsertCatalogWine` (no fill), then the answer key with
+ * the resolved ids, then the flight fill. A refusal names the missing fields (D2).
  */
 export async function insertTastingWineFromIdentity(
   supabase: Db,
@@ -394,7 +395,7 @@ export async function insertTastingWineFromIdentity(
 
   const prepared = await prepareCompleteWine(supabase, draft);
   if ("error" in prepared) return prepared;
-  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine);
+  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, { fill: false });
   if ("error" in catalog) return catalog;
 
   const glass = await insertTastingWineCore(
@@ -405,6 +406,11 @@ export async function insertTastingWineFromIdentity(
     addedVia,
   );
   if ("error" in glass) return glass;
+  // After the answer key: a brand-new wine is blind_pending by now (catalog_wine_mark_blind), so its
+  // fill is read only by its creator (the caller), a curator and whoever can already read that answer
+  // key, for as long as the glass links it (spec 2026-09-19-rule1-usage-and-main-photo D9, F11); a
+  // public wine is never filled from a flight.
+  await fillFlightCatalogWine(supabase, userId, catalog.catalogWineId, prepared.wine, adder.tasting.revealMode === "OPEN");
   return { ...glass, catalogWineId: catalog.catalogWineId };
 }
 
@@ -897,7 +903,7 @@ export async function saveFlightGlassCore(
 
   const prepared = await prepareCompleteWine(supabase, draft);
   if ("error" in prepared) return prepared;
-  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine);
+  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, { fill: false });
   if ("error" in catalog) return catalog;
   const refusal = await writeAnswer(supabase, wineId, !wasIncomplete, {
     ...answerIdentity(prepared.wine),
@@ -905,5 +911,8 @@ export async function saveFlightGlassCore(
     unidentified_wine_id: null,
   });
   if (refusal) return refusal;
+  // After the answer key, as for a new glass (spec 2026-09-19-rule1-usage-and-main-photo D9). The
+  // edit guard refuses a revealed glass, so `isRevealed` is false in practice; it is passed as is.
+  await fillFlightCatalogWine(supabase, userId, catalog.catalogWineId, prepared.wine, state.isRevealed);
   return { ok: true, wineId, catalogWineId: catalog.catalogWineId, finishedIncomplete: wasIncomplete };
 }

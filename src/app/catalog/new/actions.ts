@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
+import { isUnrevealedGlassRefusal, UNREVEALED_GLASS_EDIT } from "@/lib/catalog/rule1-guard";
 import type { ReferenceOption } from "@/components/reference-combobox";
 import { emptyDraft } from "@/lib/wine-identity/complete";
 import { foldName, stripDesignationSuffix } from "@/lib/wine-identity/fold";
@@ -272,6 +273,9 @@ async function replaceBlend(supabase: Db, catalogWineId: string, blend: Resolved
  * A curator's or the creator's edit (spec §B.9 "Manage wine"). RLS ("catalog
  * update") decides who may write, so an update that touches no row is refused
  * with "You can't edit this wine." The audit trigger records before and after.
+ * Rule 1: the database refuses the adder of a still-unrevealed glass of a public
+ * wine (catalog_wines_rule1_guard, 20260919213300), which comes back as
+ * UNREVEALED_GLASS_EDIT; nobody else is refused for linkage.
  * Because cellars reference the wine by id, the edit updates everyone's cellar
  * view. The description and alcohol come from the draft, like the rest of the
  * identity the form edits, so the form must load both before it saves (Manage
@@ -319,6 +323,9 @@ export async function updateCatalogWine(
       .eq("id", wineId)
       .select("id");
     if (error) {
+      // An expected refusal, not a failure: the caller has this wine in a glass they added that
+      // is not revealed yet (spec 2026-09-19-rule1-usage-and-main-photo D10, D11).
+      if (isUnrevealedGlassRefusal(error)) return { error: UNREVEALED_GLASS_EDIT };
       logFailure("updateCatalogWine", error.message);
       return { error: error.message };
     }
