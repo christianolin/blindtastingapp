@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
+import { BASEMAP_ORIGIN } from "@/lib/wine-map/basemap";
 import { WINE_MAP_MANIFEST_URL } from "@/lib/wine-map/manifest";
 import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 
@@ -8,9 +9,9 @@ import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 // the bundle has parsed: the basemap style and the tile manifest. Warming the
 // connections here gets DNS + TLS out of the way in parallel with the JS, which
 // is pure latency saved on a cold visit. Derived from the manifest URL so it
-// cannot drift from wherever the tiles actually live.
+// cannot drift from wherever the tiles actually live; BASEMAP_ORIGIN is where
+// both basemap styles (light Positron, dark Dark Matter) are served from.
 const TILE_ORIGIN = new URL(WINE_MAP_MANIFEST_URL).origin;
-const BASEMAP_ORIGIN = "https://basemaps.cartocdn.com";
 
 export const metadata = {
   title: "Wine Map · Knowledge · Blindr",

@@ -11,9 +11,10 @@ import { ChevronUp, Maximize2, Minimize2 } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
+// Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
+import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
 import {
-  districtHash,
   latchRampedRegions,
   paletteArms,
 } from "@/lib/wine-map/fill-palette";
@@ -21,25 +22,30 @@ import {
   englishName,
   englishTextFieldExpression,
 } from "@/lib/wine-map/localize-names";
+import {
+  BASEMAP_STYLE_URL,
+  basemapTweaks,
+  SHARD_SOURCE_PREFIX,
+  shardSourceId,
+  tuneBasemapStyle,
+  withWineLayers,
+  WORLD_SOURCE_ID,
+} from "@/lib/wine-map/basemap";
+import {
+  classificationShades,
+  districtColor,
+  MAP_PALETTES,
+  SHADE_STEPS,
+  shiftLightness,
+  type MapPalette,
+} from "@/lib/wine-map/map-palette";
+import { useRenderedTheme } from "@/lib/rendered-theme";
+import type { Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-// Basemap source-layers removed at style load. Roads, place names, water and
-// boundaries all stay — this is only the clutter that carries no meaning on a
-// wine map: street numbers, points of interest, road-name labels, airport
-// runways and building footprints. Positron ships 93 style layers; these
-// account for roughly a third of them, including the symbol layers that are the
-// costliest kind (every symbol layer joins MapLibre's global collision pass).
-const PRUNED_BASEMAP_LAYERS = new Set([
-  "housenumber",
-  "poi",
-  "transportation_name",
-  "aeroway",
-  "building",
-]);
-
-// Free, un-keyed Carto vector basemap — same as the legacy map.
-const BASEMAP_STYLE =
-  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+// The basemap (Carto Positron in light, Dark Matter in dark) and its tweaks
+// live in lib/wine-map/basemap; every colour the map canvas draws lives in
+// lib/wine-map/map-palette, one fixed table per theme.
 
 // maplibre keeps protocols globally; registering twice throws in dev
 // (React strict mode double-mounts), so guard with a module flag.
@@ -62,86 +68,7 @@ export type CameraTarget = {
   source: "map" | "ui";
 };
 
-// Deterministic colour per region (canonical-key segment carried as the
-// `region` tile property). Every live region is named — the fallback used to
-// equal Bordeaux's claret, which painted Sud-Ouest/Beaujolais/Jura/etc. the
-// identical maroon (owner: "Sud-Ouest and Bordeaux are too similar").
-// Neighbouring regions get contrasting hue families: Bordeaux claret vs
-// Sud-Ouest amber, Rhône rust vs Provence olive-gold, Bourgogne petrol vs
-// Beaujolais plum.
-export const REGION_COLORS: Record<string, string> = {
-  france: "#6B6257",
-  alsace: "#44548C",
-  beaujolais: "#9A4E7A",
-  bordeaux: "#5C1A2B",
-  bourgogne: "#1F4E5F",
-  champagne: "#8A6D3B",
-  corse: "#A34D2B",
-  jura: "#7A4E8C",
-  "languedoc-roussillon": "#2F7A78",
-  loire: "#2F6B4F",
-  piemonte: "#7B2233",
-  provence: "#9A6A2F",
-  rhone: "#7A3B2E",
-  savoie: "#5C7A3B",
-  "sud-ouest": "#B0722C",
-  toscana: "#C0872E",
-  // Spain: the country outline is neutral context (like France's); each
-  // comunidad shard gets its own hue as its DO wave ships (the comunidad REGION
-  // node carries a region-overview boundary = union of its DOs' municipios).
-  spain: "#6B6257",
-  "castilla-y-leon": "#A8324A",
-  cataluna: "#B5642A",
-  aragon: "#6E7A34",
-  murcia: "#8C3E7A",
-  andalucia: "#C99A2E",
-  galicia: "#2E7A5C",
-  valencia: "#C0503A",
-  "castilla-la-mancha": "#A6842E",
-  navarra: "#9A4E3A",
-  extremadura: "#6E8C5A",
-  "la-rioja": "#8C2F39",
-  "pais-vasco": "#4E6E8C",
-  baleares: "#2E9AA6",
-  madrid: "#9A6A4E",
-  asturias: "#3E7A6E",
-  "trentino-alto-adige": "#3A6E8C",
-  veneto: "#4E8A5C",
-  sicilia: "#C25A2C",
-  lombardia: "#6E4E8C",
-  friuli: "#B0507A",
-  "emilia-romagna": "#8C2F5E",
-  campania: "#2E8C86",
-  puglia: "#A65A2E",
-  umbria: "#6E8C3A",
-  abruzzo: "#7A3B5C",
-  marche: "#B03A5E",
-  lazio: "#3E5EA0",
-  sardegna: "#1F8A8A",
-  liguria: "#3E8AA0",
-  calabria: "#A03A2E",
-  basilicata: "#6E5AA0",
-  "valle-d-aosta": "#8AA83E",
-  molise: "#A0633E",
-  // Germany — Anbaugebiete.
-  mosel: "#4E8C6E",
-  rheinhessen: "#9A5C2E",
-  pfalz: "#8C6E2E",
-  nahe: "#5C6E9A",
-  ahr: "#A83E4E",
-  mittelrhein: "#3E8C9A",
-  // Portugal. Neighbouring regions run down the country in order, so the hues
-  // alternate warm/cool: Minho green, Douro slate-blue, Bairrada and Dão
-  // (which touch) copper vs moss, Setúbal teal, Alentejo terracotta.
-  portugal: "#6B6257",
-  minho: "#3E8C5E",
-  douro: "#2E5C8C",
-  dao: "#6E8C3E",
-  bairrada: "#B06A2E",
-  "peninsula-de-setubal": "#2E8C9A",
-  alentejo: "#B04A2E",
-  madeira: "#8C3E7A",
-};
+// Display names for the legend, by region slug (the colours are in map-palette).
 const REGION_LABELS: Record<string, string> = {
   france: "France",
   spain: "Spain",
@@ -179,31 +106,6 @@ const REGION_LABELS: Record<string, string> = {
   alentejo: "Alentejo",
   madeira: "Madeira",
 };
-const FALLBACK_COLOR = "#6B6257";
-const SELECTED_COLOR = "#B78E42";
-
-// Shift a hex colour's lightness by `amount` (-1..1). Used to derive a small
-// family of shades from each region colour.
-function shiftLightness(hex: string, amount: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) =>
-    Math.round(amount >= 0 ? c + (255 - c) * amount : c * (1 + amount)),
-  );
-  return `#${ch.map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, "0")).join("")}`;
-}
-
-// One hue per region is right when you're looking at regions, but at vineyard
-// zoom it means a dozen neighbouring sites render as one indistinguishable
-// block of colour. Each place carries a stable `tint` (0..5, hashed from its
-// canonical key in the tile build), and we spread those across a lightness
-// ramp of the region's own colour — so adjacent shapes separate, while the
-// whole region still reads as one family. Stable hash => a place keeps its
-// shade across rebuilds.
-// Widened after seeing it rendered: at wash opacity the first pass was too
-// subtle to read as distinct shapes. Adjacent steps must be separable at ~40%
-// fill opacity, which needs a bigger spread than it does at full strength.
-const SHADE_STEPS = [-0.3, -0.16, -0.04, 0.12, 0.28, 0.44];
-
 // Diagnostic escape hatch: `?debugFills=off` on the map URL renders outlines
 // and labels but no polygon fills. Fills are the only thing that stacks —
 // a pixel deep in Burgundy sits under country + region + subregion +
@@ -277,26 +179,36 @@ const WORLD_HANDED_FACTOR = [
   1,
 ];
 
-const regionMatch = [
-  "match",
-  ["get", "region"],
-  ...Object.entries(REGION_COLORS).flatMap(([key, color]) => [
-    key,
-    [
-      "match",
-      ["to-number", ["coalesce", ["get", "tint"], 2]],
-      ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(color, step)]),
-      color,
-    ],
-  ]),
-  FALLBACK_COLOR,
-];
+// Region hue spread across the tint ramp. Built ONCE per palette at module
+// load, never per render: a theme flip swaps which table the paint reads, and
+// that is the only time the reference changes.
+function regionMatchExpression(palette: MapPalette) {
+  return [
+    "match",
+    ["get", "region"],
+    ...Object.entries(palette.regions).flatMap(([key, color]) => [
+      key,
+      [
+        "match",
+        ["to-number", ["coalesce", ["get", "tint"], 2]],
+        ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(color, step)]),
+        color,
+      ],
+    ]),
+    palette.fallback,
+  ];
+}
+const REGION_MATCH: Record<Theme, unknown[]> = {
+  light: regionMatchExpression(MAP_PALETTES.light),
+  dark: regionMatchExpression(MAP_PALETTES.dark),
+};
 
 // Classification source: the `classification` tile property (appellation
 // level, or Champagne's échelle village rating), falling back to `level`
 // for tiles from before the property existed. It drives the fill-intensity
-// ramp — darker, more saturated shades of the area hue for higher
-// classifications — leaving gold reserved for selection alone.
+// ramp — stronger, more saturated shades of the area hue for higher
+// classifications (darker in light, brighter in dark) — leaving gold reserved
+// for selection alone.
 const classificationExpr = [
   "coalesce",
   ["get", "classification"],
@@ -318,63 +230,10 @@ const PASS_FILTER = ["boolean", true] as unknown as boolean;
 const LAYER_VISIBLE = { visibility: "visible" } as const;
 const LAYER_HIDDEN = { visibility: "none" } as const;
 
-// Curated palette for district colouring; slug-hashed so a group keeps its
-// colour across sessions and republish cycles. The hash itself lives in
-// lib/wine-map/fill-palette so the fill expression's palette arms and these
-// legend swatches cannot drift apart.
-const DISTRICT_PALETTE = [
-  "#8C2D3C", "#3E6B54", "#4A5D8C", "#9A6A2F", "#5C7A3B", "#7A4E8C",
-  "#2F7A78", "#A34D2B", "#5B4A8C", "#3B6E8C", "#8C6D3B", "#6B4430",
-];
-export function districtColor(slug: string) {
-  return DISTRICT_PALETTE[districtHash(slug) % DISTRICT_PALETTE.length];
-}
-
-// Classification reads as INTENSITY of the area hue (vineyard-atlas style):
-// grand cru darkest and most saturated, premier cru a step lighter, village
-// land the plain hue. Shades are computed here in JS because MapLibre
-// expressions cannot manipulate colours.
-function shade(hex: string, lightness: number, saturation = 0) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = ((n >> 16) & 255) / 255;
-  const g = ((n >> 8) & 255) / 255;
-  const b = (n & 255) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  const l = (max + min) / 2;
-  const d = max - min;
-  let s = 0;
-  if (d !== 0) {
-    s = d / (1 - Math.abs(2 * l - 1));
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-    if (h < 0) h += 360;
-  }
-  const l2 = Math.max(0, Math.min(1, l * lightness));
-  const s2 = Math.max(0, Math.min(1, s + saturation));
-  const c = (1 - Math.abs(2 * l2 - 1)) * s2;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l2 - c / 2;
-  const [r2, g2, b2] =
-    h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
-    : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  const toHex = (v: number) =>
-    Math.round((v + m) * 255).toString(16).padStart(2, "0");
-  return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
-}
-export function classificationShades(hex: string) {
-  // Owner: the previous 0.52/0.74 steps read too alike at wash opacity —
-  // grand cru now drops to 45% lightness with a strong saturation push,
-  // premier cru sits clearly between it and the plain village hue.
-  return {
-    grand_cru: shade(hex, 0.45, 0.3),
-    premier_cru: shade(hex, 0.68, 0.14),
-    base: hex,
-  };
-}
+// District hues (districtColor), their classification shades and the tint ramp
+// live in lib/wine-map/map-palette, one fixed table per theme, keyed by the
+// same slug hash so the fill expression's palette arms and the legend swatches
+// cannot drift apart.
 
 // Hue-grouping unit: village-level in Burgundy, sub-region in Champagne
 // (the `area_key` tile property), falling back to the district group for
@@ -383,8 +242,8 @@ const areaExpr = ["coalesce", ["get", "area_key"], ["get", "group"], ""];
 
 // Selection no longer recolours the shape — places keep their true palette
 // colour and selection reads as a gold outline ring drawn above everything
-// (plus a slight opacity lift in fillPaint).
-const regionColor = regionMatch as unknown as string;
+// (plus a slight opacity lift in fillPaint). The world layers' region colour is
+// REGION_MATCH[paintTheme], read inside the component.
 
 // "Is this feature's region one where the classification ramp applies?" —
 // bound as the `ramp` variable of the fill-colour and fill-opacity `let`s.
@@ -400,10 +259,11 @@ function rampExpression(rampedRegions: string[]) {
 }
 
 // The shade family of one palette colour, evaluated against the feature:
-// grand cru darkest, premier cru mid, everything else spread across the tint
-// ramp — but only where `ramp` holds; otherwise the tint ramp alone.
-function paletteShadeExpression(color: string) {
-  const shades = classificationShades(color);
+// grand cru strongest (darkest in light, brightest in dark), premier cru mid,
+// everything else spread across the tint ramp — but only where `ramp` holds;
+// otherwise the tint ramp alone.
+function paletteShadeExpression(color: string, palette: MapPalette) {
+  const shades = classificationShades(color, palette);
   // Within an area, sites that share a classification used to render in
   // one identical colour — a whole Großlage of Einzellagen as a single
   // brown mass, with no way to see where one ends and the next begins.
@@ -446,14 +306,19 @@ function paletteShadeExpression(color: string) {
 // index to that colour's shade family — instead of one arm per slug with its
 // own copy of the shade family, which is what made the old table's size a
 // problem (and forced a cap on it).
-function fillColorExpression(areaSlugs: string[], rampedRegions: string[]) {
+// `theme` picks one of the two fixed tables — both keyed alike, so the arms
+// are the same and only the colours differ; a theme flip is the only other
+// thing that rebuilds this.
+function fillColorExpression(areaSlugs: string[], rampedRegions: string[], theme: Theme) {
   // From z8 every area (Burgundy village, Champagne sub-region, Bordeaux
   // district) gets its own hue, and WITHIN the hue classification reads as
-  // intensity: grand cru darkest, premier cru mid, village land plain.
+  // intensity: grand cru strongest, premier cru mid, village land plain.
   // Region hue covers a slug the catalogue does not know (a tile release
   // newer than the loaded tree) exactly as it covered unscanned areas before.
-  const arms = paletteArms(areaSlugs, DISTRICT_PALETTE.length);
-  const present = DISTRICT_PALETTE.map((_, i) => arms[i].length > 0);
+  const palette = MAP_PALETTES[theme];
+  const regionMatch = REGION_MATCH[theme];
+  const arms = paletteArms(areaSlugs, palette.districts.length);
+  const present = palette.districts.map((_, i) => arms[i].length > 0);
   const paletteIndex = present.some(Boolean)
     ? [
         "match",
@@ -466,8 +331,8 @@ function fillColorExpression(areaSlugs: string[], rampedRegions: string[]) {
     ? [
         "match",
         ["var", "pi"],
-        ...DISTRICT_PALETTE.flatMap((color, i) =>
-          present[i] ? [i, paletteShadeExpression(color)] : [],
+        ...palette.districts.flatMap((color, i) =>
+          present[i] ? [i, paletteShadeExpression(color, palette)] : [],
         ),
         regionMatch,
       ]
@@ -544,8 +409,9 @@ function buildFillPaint(
   };
 }
 
-// The selection ring: cream casing under a gold line, drawn only on the
-// selected feature and above the ordinary outlines.
+// The selection ring: a keyline casing (cream in light, near-black in dark)
+// under a gold line, drawn only on the selected feature and above the ordinary
+// outlines.
 function selectedFilter(selectedKey: string | null) {
   return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
 }
@@ -615,12 +481,14 @@ function labelPaint(
   selectedKey: string | null,
   selectedId: string | null,
   selectedParentId: string | null,
+  palette: MapPalette,
 ) {
+  const { label } = palette;
   if (!selectedKey) {
     return {
-      "text-color": "#2b0f18",
+      "text-color": label.text,
       "text-opacity": 1 as unknown as number,
-      "text-halo-color": "#FFFDF7",
+      "text-halo-color": label.halo,
       "text-halo-width": 1.7 as unknown as number,
     };
   }
@@ -628,10 +496,10 @@ function labelPaint(
   const related = relatedExpression(selectedId, selectedParentId);
   return {
     "text-color": [
-      "case", sel, "#1d0a11", related, "#3a2830", "#7a666f",
+      "case", sel, label.selected, related, label.related, label.distant,
     ] as unknown as string,
     "text-opacity": ["case", sel, 1, related, 0.95, 0.8] as unknown as number,
-    "text-halo-color": "#FFFDF7",
+    "text-halo-color": label.halo,
     "text-halo-width": ["case", sel, 2.2, related, 1.7, 1.3] as unknown as number,
   };
 }
@@ -680,6 +548,62 @@ export function TileWineMap({
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
+
+  // Dark mode. The map follows the theme <html> is rendering (its `dark`
+  // class), live: Carto Dark Matter + the dark palette in dark, Positron + the
+  // light palette in light, without a reload and without losing the camera,
+  // selection, filters or Local/English choice.
+  //
+  // The basemap is swapped by swapBasemap below, NOT through react-map-gl's
+  // mapStyle prop, which stays frozen at the theme the map was created with: a
+  // changing mapStyle makes react-map-gl call setStyle(url, { diff: true })
+  // with no transformStyle, and the diff against the bare Carto JSON removes
+  // every wine source and layer (tile caches and feature-state with them).
+  // swapBasemap's transformStyle carries them across unchanged instead, so the
+  // diff touches the basemap alone (lib/wine-map/basemap, withWineLayers).
+  //
+  // D8 in the spec: the wine layers and the legend paint `paintTheme`, which
+  // only moves once a swapped style has actually landed (`style.load`) — a
+  // failed style fetch leaves the map wholly on its old theme rather than dark
+  // wine colours on Positron. `styleEpoch` counts those landings so the handoff
+  // effect re-sends its feature-state after each one.
+  //
+  // This is the only theme subscription in the map tree: the explorer, which
+  // owns the manifest fetch, never re-renders on a theme flip.
+  const theme = useRenderedTheme();
+  const [initialTheme] = useState(theme);
+  const [paintTheme, setPaintTheme] = useState<Theme>(theme);
+  const [styleEpoch, setStyleEpoch] = useState(0);
+  const palette = MAP_PALETTES[paintTheme];
+  // The basemap last asked for, so a repeat request is a no-op; the one whose
+  // style transformStyle was last applied, for the style.load that follows.
+  const requestedBasemapRef = useRef<Theme>(theme);
+  const landingBasemapRef = useRef<Theme>(theme);
+  // The theme to catch up to if it changed before the map had loaded.
+  const latestThemeRef = useRef<Theme>(theme);
+  const mapReadyRef = useRef(false);
+  const swapBasemap = useCallback((next: Theme) => {
+    const map = mapRef.current?.getMap();
+    if (!map || !mapReadyRef.current || requestedBasemapRef.current === next) return;
+    requestedBasemapRef.current = next;
+    // One style fetch (HTTP-cached after the first flip) and a diff of
+    // basemap-only operations. A newer request aborts an older one's fetch; a
+    // flip back before the first lands diffs to nothing and never fires
+    // style.load. A failed fetch fires `error` and no style.load; since
+    // requestedBasemapRef already names the new theme, flipping away and back
+    // retries it.
+    map.setStyle(BASEMAP_STYLE_URL[next], {
+      diff: true,
+      transformStyle: (prev, incoming) => {
+        landingBasemapRef.current = next;
+        return withWineLayers(prev, tuneBasemapStyle(incoming));
+      },
+    });
+  }, []);
+  useEffect(() => {
+    latestThemeRef.current = theme;
+    swapBasemap(theme);
+  }, [theme, swapBasemap]);
   // On-demand shard loading: only the selected place's region shard is
   // mounted (plus the always-on world archive), so entering a region fetches
   // just that shard. Viewport-driven loading via each shard's bbox is a
@@ -845,7 +769,7 @@ export function TileWineMap({
     const map = mapRef.current?.getMap();
     if (!map) return;
     const next = mountedShards.filter((key) => {
-      const id = `wine-shard-${key}`;
+      const id = shardSourceId(key);
       try {
         return Boolean(map.getSource(id)) && map.isSourceLoaded(id);
       } catch {
@@ -889,7 +813,7 @@ export function TileWineMap({
   );
   const handleSourceData = useCallback(
     (e: { sourceId?: string }) => {
-      if (!e.sourceId || !e.sourceId.startsWith("wine-shard-")) return;
+      if (!e.sourceId || !e.sourceId.startsWith(SHARD_SOURCE_PREFIX)) return;
       scheduleReady();
     },
     [scheduleReady],
@@ -917,35 +841,46 @@ export function TileWineMap({
   // query. Only the difference against what was last applied is written.
   // If the source is not there yet (or the style is still loading) nothing is
   // recorded as applied, so the next change re-applies the whole set.
+  //
+  // After a basemap swap lands (styleEpoch moves) every handed key is sent
+  // again, not just the new ones. On the usual diff path the world source
+  // survives with its state, so that write is idempotent; on MapLibre's
+  // full-rebuild fallback the source is re-created and its state is gone, and
+  // this is what restores it. Keys that left the set are still cleared from
+  // `prev` as always, so a shard un-handed in the same render as the landing
+  // cannot keep its world copy hidden.
   const appliedHandoffRef = useRef<Set<string>>(new Set());
+  const appliedEpochRef = useRef(0);
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
     const next = new Set(handedOffShards);
     const prev = appliedHandoffRef.current;
+    const resend = appliedEpochRef.current !== styleEpoch;
     try {
-      if (!map.getSource("wine-world")) return;
+      if (!map.getSource(WORLD_SOURCE_ID)) return;
       for (const sourceLayer of ["places", "labels"]) {
         for (const key of next) {
-          if (prev.has(key)) continue;
+          if (prev.has(key) && !resend) continue;
           map.setFeatureState(
-            { source: "wine-world", sourceLayer, id: key },
+            { source: WORLD_SOURCE_ID, sourceLayer, id: key },
             { handed: true },
           );
         }
         for (const key of prev) {
           if (next.has(key)) continue;
           map.removeFeatureState(
-            { source: "wine-world", sourceLayer, id: key },
+            { source: WORLD_SOURCE_ID, sourceLayer, id: key },
             "handed",
           );
         }
       }
       appliedHandoffRef.current = next;
+      appliedEpochRef.current = styleEpoch;
     } catch {
       // Style not loaded yet: leave `prev` alone so the next change re-applies.
     }
-  }, [handedOffShards]);
+  }, [handedOffShards, styleEpoch]);
   const noFills = useMemo(() => fillsDisabled(), []);
   const debugClick = useMemo(() => clickDebugEnabled(), []);
 
@@ -1188,17 +1123,21 @@ export function TileWineMap({
   // fillColorExpression only steps from regionMatch to the per-area/
   // classification palette at z8, so below that the legend's Areas and
   // Classification chips described colours that appeared nowhere on the map —
-  // a Gevrey-Chambertin swatch in DISTRICT_PALETTE red while every polygon on
+  // a Gevrey-Chambertin swatch in district red while every polygon on
   // screen was still Bourgogne petrol. Same threshold as the step.
   const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
   // The one colour expression every wine fill and outline layer uses. Keyed on
-  // the catalogue's slug list (changes once, when the tree loads) and the ramp
-  // latch (at most once per region per session) — never on the viewport.
+  // the catalogue's slug list (changes once, when the tree loads), the ramp
+  // latch (at most once per region per session) and the landed theme (a rare,
+  // user-initiated flip) — never on the viewport.
   const areaColor = useMemo(
-    () => fillColorExpression(areaSlugs, rampedRegions),
-    [areaSlugs, rampedRegions],
+    () => fillColorExpression(areaSlugs, rampedRegions, paintTheme),
+    [areaSlugs, rampedRegions, paintTheme],
   );
+  // The world country and region layers' plain region hue; a module-level
+  // table per theme, so the reference only changes on a flip.
+  const regionColor = REGION_MATCH[paintTheme] as unknown as string;
 
   // Selection-aware paint. The zoom interpolation fades fills — the selected
   // parent included — as children appear, while outlines and labels persist
@@ -1240,19 +1179,33 @@ export function TileWineMap({
     }),
     [outlinePaint],
   );
+  // Shard labels share one paint object, re-keyed only by selection or theme.
+  const shardLabelPaint = useMemo(
+    () => labelPaint(selectedKey, selectedId, selectedParentId, palette),
+    [selectedKey, selectedId, selectedParentId, palette],
+  );
   // World labels: the ordinary label paint with text-opacity multiplied by the
   // handed-off factor, so a region's world label vanishes with its fill.
-  const worldLabelPaint = useMemo(() => {
-    const paint = labelPaint(selectedKey, selectedId, selectedParentId);
-    return {
-      ...paint,
+  const worldLabelPaint = useMemo(
+    () => ({
+      ...shardLabelPaint,
       "text-opacity": [
         "*",
-        paint["text-opacity"],
+        shardLabelPaint["text-opacity"],
         WORLD_HANDED_FACTOR,
       ] as unknown as number,
-    };
-  }, [selectedKey, selectedId, selectedParentId]);
+    }),
+    [shardLabelPaint],
+  );
+  // The selection ring and the keyline casing under it, world and shard alike.
+  const selectedCasingPaint = useMemo(
+    () => ({ "line-color": palette.selectedCasing, "line-width": 5, "line-opacity": 0.85 }),
+    [palette],
+  );
+  const selectedRingPaint = useMemo(
+    () => ({ "line-color": palette.selectedRing, "line-width": 2.5 }),
+    [palette],
+  );
 
   const attribution = useMemo(
     () => Object.values(manifest.attribution),
@@ -1350,10 +1303,10 @@ export function TileWineMap({
       return {
         key,
         label: english ? englishName(local) : local,
-        color: REGION_COLORS[key] ?? FALLBACK_COLOR,
+        color: palette.regions[key] ?? palette.fallback,
       };
     });
-  }, [manifest, viewInfo.scanned, viewInfo.regions, english]);
+  }, [manifest, viewInfo.scanned, viewInfo.regions, english, palette]);
 
   return (
     <div className="relative h-full overflow-hidden rounded-lg border">
@@ -1369,7 +1322,11 @@ export function TileWineMap({
       </button>
       <Map
         ref={mapRef}
-        mapStyle={BASEMAP_STYLE}
+        // Frozen at the theme the map was created with: later flips go
+        // through swapBasemap, never this prop (see the dark-mode note at the
+        // top of the component). A dark user's map is created on Dark Matter
+        // directly, never loading Positron first.
+        mapStyle={BASEMAP_STYLE_URL[initialTheme]}
         initialViewState={{ longitude: 2.4, latitude: 46.6, zoom: 4.4 }}
         // world-region-fills is load-bearing here, not decoration: since the
         // world archive took over regions whose shard is unmounted — which
@@ -1431,36 +1388,32 @@ export function TileWineMap({
             .querySelector("details.maplibregl-ctrl-attrib");
           details?.classList.remove("maplibregl-compact-show");
           details?.removeAttribute("open");
-          // Give the wine labels the low-zoom stage: MapLibre places lower
-          // (basemap) symbol layers first, so Positron's own "FRANCE" and
-          // city names were winning collisions against our region labels
-          // (BORDEAUX/BOURGOGNE/BEAUJOLAIS silently dropped). Push the
-          // basemap's place labels to z7+, where they return as useful
-          // village-zoom context (Épernay, Châlons…) and our tier-1 labels
-          // are no longer contending.
-          for (const layer of e.target.getStyle().layers ?? []) {
-            const sourceLayer =
-              "source-layer" in layer ? layer["source-layer"] : undefined;
-            // Basemap clutter that a wine map never uses. Measured: a z14 tile
-            // over the Cote de Nuits carries 341 basemap features and 11,049
-            // vertices against 66 features and 637 vertices of ours, across 93
-            // basemap style layers versus our ~16 — so the context map, not the
-            // wine data, is the bulk of what every frame draws. Dropping these
-            // removes symbol layers from the global label-collision pass and
-            // line/fill layers from the draw loop, and cannot affect wine
-            // fidelity because it never touches our own layers.
-            if (sourceLayer && PRUNED_BASEMAP_LAYERS.has(sourceLayer)) {
-              e.target.removeLayer(layer.id);
-              continue;
-            }
-            if (layer.type === "symbol" && sourceLayer === "place") {
-              e.target.setLayerZoomRange(
-                layer.id,
-                Math.max(7, layer.minzoom ?? 0),
-                layer.maxzoom ?? 24,
-              );
-            }
+          // Tune the basemap (lib/wine-map/basemap, basemapTweaks): push its
+          // place labels to z7+ so our region labels win the low-zoom
+          // collisions, and drop the clutter a wine map never uses. Measured:
+          // a z14 tile over the Cote de Nuits carries 341 basemap features and
+          // 11,049 vertices against 66 features and 637 vertices of ours,
+          // across 93 basemap style layers versus our ~16 — so the context
+          // map, not the wine data, is the bulk of what every frame draws.
+          // The same rule tunes every swapped-in basemap (tuneBasemapStyle),
+          // so a theme flip's diff never re-adds what this removes.
+          const tweaks = basemapTweaks(e.target.getStyle().layers ?? []);
+          for (const id of tweaks.remove) e.target.removeLayer(id);
+          for (const range of tweaks.zoomRanges) {
+            e.target.setLayerZoomRange(range.id, range.minzoom, range.maxzoom);
           }
+          // Theme flips from here on swap the basemap in place; a landed swap
+          // repaints the wine layers and legend (paintTheme) and has the
+          // handoff effect re-send its feature-state (styleEpoch). Fires only
+          // after a swap (or MapLibre's rare full-rebuild fallback), never on
+          // a gesture.
+          mapReadyRef.current = true;
+          e.target.on("style.load", () => {
+            setPaintTheme(landingBasemapRef.current);
+            setStyleEpoch((n) => n + 1);
+          });
+          // A flip that landed while the map was still loading.
+          swapBasemap(latestThemeRef.current);
           // First gating pass once the map has real bounds.
           syncMountedShards();
           if (debugClick) {
@@ -1567,7 +1520,7 @@ export function TileWineMap({
             of its island labels in `labels` all carry it; a country's tier-0
             row carries its own key, which no shard key ever equals). */}
         <Source
-          id="wine-world"
+          id={WORLD_SOURCE_ID}
           type="vector"
           url={`pmtiles://${manifest.world.url}`}
           promoteId="region"
@@ -1644,14 +1597,14 @@ export function TileWineMap({
             type="line"
             source-layer="places"
             filter={selectedGate}
-            paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
+            paint={selectedCasingPaint}
           />
           <Layer
             id="world-selected-ring"
             type="line"
             source-layer="places"
             filter={selectedGate}
-            paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
+            paint={selectedRingPaint}
           />
           {/* A handed-off region's world label is invisible (text-opacity 0)
               but still occupies its collision box, so it must LOSE that
@@ -1677,7 +1630,7 @@ export function TileWineMap({
           .map(([key, shard]) => (
           <Source
             key={key}
-            id={`wine-shard-${key}`}
+            id={shardSourceId(key)}
             type="vector"
             url={`pmtiles://${shard.url}`}
           >
@@ -1705,7 +1658,7 @@ export function TileWineMap({
                 type="line"
                 source-layer="places"
                 filter={selectedGate}
-                paint={{ "line-color": "#FFFDF7", "line-width": 5, "line-opacity": 0.85 }}
+                paint={selectedCasingPaint}
               />
             )}
             {key === selectedShard && (
@@ -1714,7 +1667,7 @@ export function TileWineMap({
                 type="line"
                 source-layer="places"
                 filter={selectedGate}
-                paint={{ "line-color": SELECTED_COLOR, "line-width": 2.5 }}
+                paint={selectedRingPaint}
               />
             )}
             <Layer
@@ -1723,7 +1676,7 @@ export function TileWineMap({
               source-layer="labels"
               filter={shardFilterFor(key)}
               layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
-              paint={labelPaint(selectedKey, selectedId, selectedParentId)}
+              paint={shardLabelPaint}
             />
           </Source>
         ))}
@@ -1763,7 +1716,7 @@ export function TileWineMap({
           <li className="flex items-center gap-1.5">
             <span
               className="inline-block size-2.5 rounded-sm border-2 bg-transparent"
-              style={{ borderColor: "#B78E42" }}
+              style={{ borderColor: palette.selectedRing }}
             />
             Selected (gold ring)
           </li>
@@ -1776,7 +1729,7 @@ export function TileWineMap({
                 <li key={group.slug} className="flex items-center gap-1.5">
                   <span
                     className="inline-block size-2.5 rounded-sm"
-                    style={{ backgroundColor: districtColor(group.slug) }}
+                    style={{ backgroundColor: districtColor(group.slug, palette) }}
                   />
                   {group.name}
                 </li>
@@ -1787,12 +1740,12 @@ export function TileWineMap({
         {areaPaletteLive && viewInfo.classifications.length > 0
           ? (() => {
               // Shade chips borrow the first visible area's hue so the
-              // legend ramp matches what's on screen: darker = higher
-              // classification.
+              // legend ramp matches what's on screen: the stronger shade
+              // (darker in light, brighter in dark) = higher classification.
               const sample = viewInfo.groups[0]
-                ? districtColor(viewInfo.groups[0].slug)
-                : FALLBACK_COLOR;
-              const shades = classificationShades(sample);
+                ? districtColor(viewInfo.groups[0].slug, palette)
+                : palette.fallback;
+              const shades = classificationShades(sample, palette);
               return (
                 <>
                   <p className="mb-1 mt-2 font-medium text-foreground">
@@ -1809,7 +1762,9 @@ export function TileWineMap({
                               : shades.base,
                           }}
                         />
-                        {rampEnabled ? "Grand cru (darkest)" : "Grand cru"}
+                        {rampEnabled
+                          ? `Grand cru (${palette.grandCruLegend})`
+                          : "Grand cru"}
                       </li>
                     ) : null}
                     {viewInfo.classifications.includes("premier_cru") ? (

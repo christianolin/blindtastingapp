@@ -11,10 +11,10 @@
 import type { WinePlaceTreeNode } from "./tree";
 
 /** The hash behind the map's district palette (`districtColor` in
-    tile-wine-map.tsx): a plain 31-multiplier string hash. It lives here so the
+    map-palette.ts): a plain 31-multiplier string hash. It lives here so the
     palette arms in the fill expression and the legend swatches agree byte for
-    byte — a slug's colour is `DISTRICT_PALETTE[districtHash(slug) % 12]`
-    wherever it is drawn. */
+    byte — a slug's colour is `palette.districts[districtHash(slug) % 12]`
+    wherever it is drawn, in the light and dark tables alike. */
 export function districtHash(slug: string): number {
   let h = 0;
   for (let i = 0; i < slug.length; i += 1) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
