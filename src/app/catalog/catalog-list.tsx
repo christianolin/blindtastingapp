@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search, Star, Wine } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BottleThumb } from "@/components/bottle-thumb";
 import { CountryFlag } from "@/components/country-flag";
 import { useAddWine } from "@/components/add-wine-context";
 import { NewNoteModal } from "@/components/new-note-modal";
@@ -140,18 +141,7 @@ export function CatalogList({ rows, band }: { rows: CatalogRow[]; band: CatalogB
             href={`/catalog/${r.id}`}
             className="flex min-h-11 items-start gap-3 rounded-xl border border-border p-3"
           >
-            {r.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={r.imageUrl}
-                alt=""
-                className="size-11 shrink-0 rounded-md border border-border object-cover"
-              />
-            ) : (
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
-                <Wine className="size-5" />
-              </span>
-            )}
+            <BottleThumb src={r.imageUrl} className="h-12 w-9" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs text-muted-foreground">{r.producer}</span>
               <span className="block truncate font-medium">{r.name}</span>
@@ -188,10 +178,11 @@ export function CatalogList({ rows, band }: { rows: CatalogRow[]; band: CatalogB
         <table className="w-full table-fixed text-sm">
           <colgroup>
             <col />
-            <col className="w-[13rem]" />
-            <col className="w-[6rem]" />
+            <col className="w-[10rem]" />
+            <col className="w-[5rem]" />
             <col className="w-[4.5rem]" />
-            <col className="w-[7rem]" />
+            <col className="w-[5rem]" />
+            <col className="w-[16rem]" />
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground">
@@ -200,22 +191,28 @@ export function CatalogList({ rows, band }: { rows: CatalogRow[]; band: CatalogB
               <th className="px-4 py-3 text-right font-medium">Notes</th>
               <th className="px-4 py-3 text-right font-medium">Blind</th>
               <th className="px-4 py-3 text-right font-medium">Yours</th>
+              <th className="px-4 py-3">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {pageRows.map((r) => (
               <tr key={r.id} className="group border-b border-border last:border-0 hover:bg-muted/30">
                 <td className="px-4 py-3">
-                  <Link href={`/catalog/${r.id}`} className="block min-w-0">
-                    <span className="block truncate text-xs text-muted-foreground">{r.producer}</span>
-                    <span className="line-clamp-2 font-medium text-foreground">{r.name}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {factsLine(r) ?? "—"}
-                    </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {r.appellation}
-                    </span>
-                  </Link>
+                  <div className="flex items-start gap-3">
+                    <BottleThumb src={r.imageUrl} className="h-14 w-10" />
+                    <Link href={`/catalog/${r.id}`} className="block min-w-0 flex-1">
+                      <span className="block truncate text-xs text-muted-foreground">{r.producer}</span>
+                      <span className="line-clamp-2 font-medium text-foreground">{r.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {factsLine(r) ?? "—"}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {r.appellation}
+                      </span>
+                    </Link>
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   <span className="block">{r.region ?? "—"}</span>
@@ -238,14 +235,16 @@ export function CatalogList({ rows, band }: { rows: CatalogRow[]; band: CatalogB
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                   {r.appearances}
                 </td>
-                <td className="relative px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right">
                   <span className="font-semibold text-primary tabular-nums">{fmtScore(r.yours)}</span>
                   {ownedBadge(r.owned) ? (
                     <span className="block">
                       <Badge className="bg-gold/15 text-gold-dark">{ownedBadge(r.owned)}</Badge>
                     </span>
                   ) : null}
-                  <div className="absolute top-1/2 right-2 flex -translate-y-1/2 gap-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                     <Button
                       size="sm"
                       variant="outline"
