@@ -15,6 +15,9 @@ import {
 } from "@/lib/wset/queries";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { WineImage } from "./wine-image";
+import { PhotoStrip } from "./photo-strip";
+import { fetchWinePhotos } from "@/lib/catalog-photos/queries";
+import { stripPhotos } from "@/lib/catalog-photos/strip";
 import { CountryFlag } from "@/components/country-flag";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { MapPin } from "lucide-react";
@@ -47,7 +50,7 @@ export default async function CatalogWinePage({
   // answer is hidden from the catalog until it's revealed in the tasting.
   const { data: blindRow } = await supabase
     .from("catalog_wines")
-    .select("blind_pending")
+    .select("blind_pending, created_by")
     .eq("id", wineId)
     .maybeSingle();
   if (blindRow?.blind_pending) notFound();
@@ -61,6 +64,7 @@ export default async function CatalogWinePage({
     { data: profile },
     { data: usageRows },
     ownLots,
+    photoRows,
   ] = await Promise.all([
     supabase
       .from("wset_notes")
@@ -73,9 +77,10 @@ export default async function CatalogWinePage({
     fetchWineGuessStats(supabase, wineId),
     fetchWineBlend(supabase, wineId),
     fetchWineStructure(supabase, wineId),
-    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("role, is_curator").eq("id", user.id).maybeSingle(),
     supabase.rpc("catalog_wine_usage", { p_id: wineId }),
     getOwnLotsForWine(supabase, user.id, wineId),
+    fetchWinePhotos(supabase, wineId, user.id),
   ]);
 
   const title = catalogWineTitle(wine);
@@ -104,6 +109,10 @@ export default async function CatalogWinePage({
 
   const isManager =
     profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
+  // Who may replace the main photo: mirrors the "catalog update" policy
+  // (the creator, or a curator). Everyone else's upload joins the strip.
+  const canSetMain = blindRow?.created_by === user.id || profile?.is_curator === true;
+  const strip = stripPhotos(photoRows, wine.imageUrl);
   const usage = usageRows?.[0] ?? {
     holders: 0,
     bottles: 0,
@@ -132,7 +141,13 @@ export default async function CatalogWinePage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-5 sm:flex-row lg:col-span-2">
           <div className="w-full sm:w-48 sm:shrink-0">
-            <WineImage wineId={wineId} initialUrl={wine.imageUrl} />
+            <WineImage wineId={wineId} initialUrl={wine.imageUrl} canSetMain={canSetMain} />
+            <PhotoStrip
+              wineTitle={title}
+              photos={strip.photos}
+              hasMain={!!wine.imageUrl}
+              viewerId={user.id}
+            />
           </div>
           <div className="min-w-0">
             <h1 className="font-heading text-3xl font-semibold tracking-tight">

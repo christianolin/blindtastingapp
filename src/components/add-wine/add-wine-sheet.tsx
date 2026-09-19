@@ -51,6 +51,7 @@ import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { readLabelPhoto, type LabelPhotoRead } from "@/app/scan/actions";
 import { removeWine } from "@/app/tastings/[id]/actions";
 import { getGlassRemovalImpact } from "@/app/tastings/[id]/flight-actions";
+import { ImageDecodeError, toScanJpeg } from "@/lib/images/downscale";
 import { createClient } from "@/lib/supabase/client";
 import { swapCopy } from "@/lib/lobby-copy";
 import { cn } from "@/lib/utils";
@@ -67,7 +68,6 @@ import { CellarView } from "./cellar-view";
 import { getCellarSummary } from "./desktop-actions";
 import type { CellarSummary, DesktopRow } from "./desktop-format";
 import { DesktopView } from "./desktop-view";
-import { downscaleForRead, ImageDecodeError } from "./downscale-image";
 import { FollowUpView } from "./follow-up-view";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
 import { Chooser, ReadConfirm, ReadingView } from "./read-confirm";
@@ -657,7 +657,7 @@ export function AddWineSheet({
     if (item.blob === null) return failed("image");
     let jpeg: Blob;
     try {
-      jpeg = await downscaleForRead(item.blob);
+      jpeg = await toScanJpeg(item.blob);
     } catch (error) {
       if (!(error instanceof ImageDecodeError)) console.error("add-wine sheet: a photo could not be prepared", error);
       return failed("image");

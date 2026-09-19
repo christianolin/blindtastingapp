@@ -57,7 +57,19 @@
 // calls `discardAndClose()`, which hands the note on; Keep going sends
 // `{ type: "cancelClose" }`, which keeps every bottle, and keeps the pick while
 // its confirm, chooser or form is on screen.
+//
+// Scan photos (scan photos spec §5, D3). A scanned bottle's photo joins its
+// catalog wine's "More photos" once its add has landed in the catalog, a
+// cellar or a note — never a flight. `scanPhotoTarget` is the allow-list,
+// keyed on where the add landed (`AddedWine.destination`, or a note pick),
+// never on the sheet's requested destination, so the header camera's chooser
+// behaves too. Where it landed travels as the photo's `via`: the database
+// shows a cellar scan only to whoever can see that cellar (spec §3.1). The
+// path is taken when the add starts (`AddContext.imagePath`).
+// The attach is fire-and-forget (`attachScan`): never through `call()`, so it
+// takes no `busy` and never blocks, undoes or reports on an add.
 import { useRef, useState, type Dispatch, type RefObject } from "react";
+import { attachCatalogWinePhoto } from "@/app/catalog/photo-actions";
 import { increaseCellarLotQuantity } from "@/app/cellar/new/actions";
 import type { LabelPhotoRead } from "@/app/scan/actions";
 import { emptyDraft, missingWineFields } from "@/lib/wine-identity/complete";
@@ -74,6 +86,7 @@ import {
 } from "./actions";
 import { notePickPlan } from "./format";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
+import { scanPhotoTarget, type ScanPhotoTarget } from "./scan-photo";
 import {
   addTargetId,
   currentDestination,
@@ -195,6 +208,10 @@ type AddContext = {
   draft: WineIdentityDraft | null;
   /** "Add and scan the next". */
   scanNext: boolean;
+  /** The bottle in hand's uploaded scan when the add started, or null. Taken
+      now because the reducer may drop or restate the row before the reply
+      lands (scan photos spec §5). */
+  imagePath: string | null;
 };
 
 type AddExtra = { title?: string; byHand?: boolean; scanNext?: boolean };
@@ -279,14 +296,16 @@ export function useSheetAdds({
 
   function contextFor(s: SheetState, source: AddSource, extra: AddExtra = {}): AddContext {
     const byHand = extra.byHand === true || continuesByHand(s);
+    const itemId = addTargetId(s);
     return {
       source,
-      itemId: addTargetId(s),
+      itemId,
       ticket: ticketFor(s),
       adopted: s.adopted,
       byHand,
       draft: byHand ? (s.byHand?.draft ?? null) : null,
       scanNext: extra.scanNext === true,
+      imagePath: itemId === null ? null : (s.items.find((i) => i.id === itemId)?.imagePath ?? null),
     };
   }
 
@@ -305,6 +324,9 @@ export function useSheetAdds({
       catalog sheet, or a phone's single add closing when nothing is left and
       no warning came back. */
   function landed(ctx: AddContext, result: AddedResult): void {
+    // The add happened, stale ticket or not: a catalog or cellar add keeps its
+    // scan (a flight add never does — `scanPhotoTarget`).
+    attachScan(scanPhotoTarget(result.added, ctx.imagePath));
     const wasClosing = stateRef.current.closing;
     const { added, warning } = result;
     send({
@@ -438,7 +460,10 @@ export function useSheetAdds({
       The pick's own bottle, and the by-hand form whose save made it, never count.
       A pick that waited on a catalog write carries that write's ticket, so a
       stale one does nothing. */
-  function handOff(pick: NotePick, from: Pick<AddContext, "itemId" | "byHand" | "ticket">): void {
+  function handOff(pick: NotePick, from: Pick<AddContext, "itemId" | "byHand" | "ticket" | "imagePath">): void {
+    // The photo is of the picked wine, even if the pick is then held in the
+    // close-ask and dropped with "Keep going".
+    attachScan(scanPhotoTarget({ destination: "note", catalogWineId: pick.catalogWineId }, from.imagePath));
     const wasClosing = stateRef.current.closing;
     send({ type: "notePicked", pick, itemId: from.itemId, fromForm: from.byHand, ticket: from.ticket });
     if (wasClosing || !stateRef.current.closing) return;
@@ -549,7 +574,8 @@ export function useSheetAdds({
   function followUpNote(): void {
     const s = stateRef.current;
     // D3's bottle is already added, so only what else the sheet holds can make it ask.
-    if (s.followUp !== null) handOff({ catalogWineId: s.followUp.catalogWineId }, { itemId: addTargetId(s), byHand: false, ticket: ticketFor(s) });
+    // Its catalog add already attached the scan, so the pick carries none.
+    if (s.followUp !== null) handOff({ catalogWineId: s.followUp.catalogWineId }, { itemId: addTargetId(s), byHand: false, ticket: ticketFor(s), imagePath: null });
   }
 
   function followUpDone(): void {
@@ -708,6 +734,23 @@ export function useSheetAdds({
     requestClose,
     discardAndClose,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Scan photos
+// ---------------------------------------------------------------------------
+
+/** Fire-and-forget (scan photos spec §5, D3): never takes `busy`, never blocks
+    or undoes the add, and a failure is only logged. */
+function attachScan(target: ScanPhotoTarget | null): void {
+  if (target === null) return;
+  void attachCatalogWinePhoto(target)
+    .then((r) => {
+      if (!r.ok) console.error("add-wine sheet: scan photo not attached", { status: r.status });
+    })
+    .catch((e: unknown) =>
+      console.error("add-wine sheet: scan photo not attached", e instanceof Error ? e.message : typeof e),
+    );
 }
 
 // ---------------------------------------------------------------------------
