@@ -4,7 +4,6 @@
 // own `@/` import is type-only, so it is erased before this ever runs there.
 import type { OriginStat, ProfileStatsSummary, TastingHistoryEntry } from "../profile-stats";
 import { joinedLabel } from "../community/community-math";
-import { FAVORITE_WINE_TYPE_ITEMS } from "../wine-types";
 import { percent } from "../stats-math";
 
 export const MIN_SAMPLE = 3;
@@ -13,23 +12,14 @@ export const MIN_SAMPLE_FOOTNOTE = "A category shows a rate once it covers 3 win
 export const SEMI_BLIND_ONLY =
   "Semi-blind glasses score a plain match, so there is no category breakdown yet.";
 
-/** A profile's `favorite_wine_type` code as the label shown on `/profile/edit`, falling back to the raw value. Null/empty stays null. */
-export function favoriteWineLabel(code: string | null): string | null {
-  if (!code) return null;
-  return FAVORITE_WINE_TYPE_ITEMS[code] ?? code;
-}
-
-/** The header meta line: "{location} · Favorite: {label} · Joined {Mon YYYY}", each part only when set. */
+/** The header meta line: "{location} · Joined {Mon YYYY}", the location only when set. (Favourite wine type is retired, owner 2026-09-19; favourite regions and producers show as chips instead.) */
 export function profileMeta(p: {
   location: string | null;
-  favoriteWineType: string | null;
   createdAt: string;
 }): string {
   const parts: string[] = [];
   const location = p.location?.trim();
   if (location) parts.push(location);
-  const favorite = favoriteWineLabel(p.favoriteWineType);
-  if (favorite) parts.push(`Favorite: ${favorite}`);
   parts.push(`Joined ${joinedLabel(p.createdAt)}`);
   return parts.join(" · ");
 }

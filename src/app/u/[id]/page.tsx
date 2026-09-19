@@ -45,7 +45,7 @@ export default async function ProfilePage({
     supabase
       .from("profiles")
       .select(
-        "id, display_name, bio, avatar_url, location, favorite_wine_type, created_at, deleted_at",
+        "id, display_name, bio, avatar_url, location, created_at, deleted_at",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -115,7 +115,6 @@ export default async function ProfilePage({
 
   const meta = profileMeta({
     location: profile.location,
-    favoriteWineType: profile.favorite_wine_type,
     createdAt: profile.created_at,
   });
   const trio = profileStatTrio(summary);

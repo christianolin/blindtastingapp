@@ -6,7 +6,6 @@ import {
   SEMI_BLIND_ONLY,
   accuracyView,
   emptyProfileCopy,
-  favoriteWineLabel,
   profileMeta,
   profileStatTrio,
   profileTastingRows,
@@ -23,45 +22,28 @@ describe("NOTHING_YET", () => {
   });
 });
 
-describe("favoriteWineLabel", () => {
-  it("maps a known code", () => {
-    expect(favoriteWineLabel("RED")).toBe("Red");
-    expect(favoriteWineLabel("DESSERT")).toBe("Dessert / sweet");
-  });
-
-  it("falls back to the raw value for an unknown code", () => {
-    expect(favoriteWineLabel("Natural")).toBe("Natural");
-  });
-
-  it("is null for null and empty string", () => {
-    expect(favoriteWineLabel(null)).toBeNull();
-    expect(favoriteWineLabel("")).toBeNull();
-  });
-});
-
 describe("profileMeta", () => {
-  it("joins location, favorite and joined month", () => {
+  it("joins location and joined month (favourite wine type is retired)", () => {
     expect(
       profileMeta({
         location: "Copenhagen",
-        favoriteWineType: "RED",
         createdAt: "2026-09-12T10:00:00Z",
       }),
-    ).toBe("Copenhagen · Favorite: Red · Joined Sep 2026");
+    ).toBe("Copenhagen · Joined Sep 2026");
   });
 
   it("drops missing parts and skips a blank location", () => {
     expect(
-      profileMeta({ location: null, favoriteWineType: null, createdAt: "2026-09-12T10:00:00Z" }),
+      profileMeta({ location: null, createdAt: "2026-09-12T10:00:00Z" }),
     ).toBe("Joined Sep 2026");
     expect(
-      profileMeta({ location: "   ", favoriteWineType: null, createdAt: "2026-09-12T10:00:00Z" }),
+      profileMeta({ location: "   ", createdAt: "2026-09-12T10:00:00Z" }),
     ).toBe("Joined Sep 2026");
   });
 
   it("formats the joined month in UTC, not local", () => {
     expect(
-      profileMeta({ location: null, favoriteWineType: null, createdAt: "2026-08-31T23:30:00Z" }),
+      profileMeta({ location: null, createdAt: "2026-08-31T23:30:00Z" }),
     ).toBe("Joined Aug 2026");
   });
 });
