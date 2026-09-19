@@ -7,7 +7,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { foldName } from "../fold";
-import { appellationSearchPattern, NATIONAL_TIER_REGION_NAMES, type RefLookup } from "../resolve";
+import {
+  appellationSearchPattern, CATALOG_SIBLING_LIMIT, NATIONAL_TIER_REGION_NAMES, type RefLookup,
+} from "../resolve";
+import type { WineColour, WineStyle } from "../types";
 
 export type ReferenceSnapshot = {
   countries: { id: string; name: string }[];
@@ -24,6 +27,13 @@ export type ReferenceSnapshot = {
   aliases?: { id: string; producer_id: string; alias: string }[];
   grapes: { id: string; name: string }[];
   type_designations: { id: string; name: string; country_id: string | null }[];
+  /** Resolver step 7.6's catalog wines (owner fix B, 2026-09-19): the committed
+      snapshot carries exactly the two live Bodegas Tridente rows. Absent means none,
+      so every synthetic snapshot and an export from before the field still load. */
+  catalog_wines?: {
+    id: string; producer_id: string; wine_name: string | null; colour: WineColour; style: WineStyle;
+    primary_grape_id: string; appellation_id: string; blind_pending: boolean; merged_into: string | null;
+  }[];
 };
 
 const SNAPSHOT_PATH = "src/lib/wine-identity/__fixtures__/reference-snapshot.json";
@@ -164,5 +174,21 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
 
     typeDesignations: async () =>
       snapshot.type_designations.map(({ id, name, country_id }) => ({ id, name, countryId: country_id })),
+
+    // server/lookup.ts's read: the producer's rows, never blind_pending, never
+    // merged away, ordered by id, at most CATALOG_SIBLING_LIMIT (one more read to
+    // tell a full list from a capped one).
+    catalogWinesOfProducer: async (producerId) => {
+      const rows = (snapshot.catalog_wines ?? [])
+        .filter((w) => w.producer_id === producerId && !w.blind_pending && w.merged_into === null)
+        .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      return {
+        rows: rows.slice(0, CATALOG_SIBLING_LIMIT).map((w) => ({
+          id: w.id, wineName: w.wine_name, colour: w.colour, style: w.style,
+          primaryGrapeId: w.primary_grape_id, appellationId: w.appellation_id,
+        })),
+        complete: rows.length <= CATALOG_SIBLING_LIMIT,
+      };
+    },
   };
 }

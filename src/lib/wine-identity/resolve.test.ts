@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { coerceLabelRead } from "../label-scan/label-read-schema";
-import { APPELLATION_SYNONYMS } from "../label-scan/region-canonical";
+import { APPELLATION_SYNONYMS, regionSynonymsOf } from "../label-scan/region-canonical";
 import { missingWineFields } from "./complete";
 import { foldName, stripDesignationSuffix } from "./fold";
-import { resolveLabelRead } from "./resolve";
+import { appellationTextNames, CATALOG_SIBLING_LIMIT, regionNamedOnLabel, resolveLabelRead } from "./resolve";
 import { loadReferenceSnapshot, snapshotLookup, type ReferenceSnapshot } from "./__fixtures__/snapshot-lookup";
 
 const NOW = new Date("2026-09-12T12:00:00Z");
@@ -374,8 +374,14 @@ describe("the country and region filters, the cru retry trigger and a foreign de
     const noGi = await resolve("vin-de-france.json");
     expect([noGi.provenance.region, noGi.provenance.appellation]).toEqual(["label", "label"]);
 
-    const regionOnly = await resolve("produttori-barbaresco-2018.json", { appellation: null, region: "Piedmont" });
+    // Step 5 marks a region-only read `label`. The rawText never prints Piedmont, so
+    // once Produttori del Barbaresco's link (Piemonte) agrees with it, step 7 marks
+    // it `producer-region` instead (fix A: our data vouches for an unprinted region).
+    const regionOnly = await resolve("produttori-barbaresco-2018.json", { appellation: null, region: "Piedmont", producer: null });
     expect([regionOnly.provenance.region, regionOnly.provenance.appellation]).toEqual(["label", undefined]);
+    const linkAgrees = await resolve("produttori-barbaresco-2018.json", { appellation: null, region: "Piedmont" });
+    expect([linkAgrees.regionId, linkAgrees.provenance.region, linkAgrees.provenance.appellation])
+      .toEqual([regionOnly.regionId, "producer-region", undefined]);
 
     expect((await resolve("domaine-leflaive-puligny.json")).provenance.producer).toBe("label");
 
@@ -604,12 +610,14 @@ describe("step 8: a designation's bracketed short form, or its name without the 
 });
 
 // Owner approval 3 (2026-09-13): "a blank is safer than a wrong answer that looks
-// right". A read with no appellation text places its region from its region field
-// alone (step 5). When the producer it found (step 6) is an existing row linked to
-// ANOTHER region of the SAME country, that region is left empty for the user — so
-// it is listed as missing — and step 7 does not refill it from the link. Every
-// other path keeps today's behaviour.
-describe("a read-only region that disagrees with the producer's region link is left blank (owner approval 3)", () => {
+// right" — narrowed by owner fix A (2026-09-19). A read with no appellation text
+// places its region from its region field alone (step 5). When the producer it
+// found (step 6) is an existing row linked to ANOTHER region of the SAME country,
+// that region is no longer left blank: a region the label does not print is the
+// model's memory and gives way to the producer's link (`producer-region`); a
+// region the label does print is kept (`label`), so step 7.5 may then take its
+// self-named row. Every other path keeps its behaviour.
+describe("owner approval 3, narrowed by fix A (2026-09-19): an unprinted region yields to the producer link, a printed one stays", () => {
   const es = (): ReferenceSnapshot => ({
     countries: [{ id: "es", name: "Spain" }, { id: "pt", name: "Portugal" }],
     regions: [
@@ -646,32 +654,45 @@ describe("a read-only region that disagrees with the producer's region link is l
     };
   };
 
-  it("the read's region is dropped and listed as missing, and step 7 does not refill it from the link", async () => {
+  // vin-de-france.json's rawText never names Castilla-La Mancha, and es() has no
+  // catalog_wines, so neither step 7.5 nor step 7.6 fills the appellation.
+  it("the read's unprinted region gives way to the producer's region link (fix A), and only the appellation is missing", async () => {
     expect(await placed({ producer: "Bodegas Norte" })).toEqual({
       producer: { kind: "existing", id: "p-cyl", name: "Bodegas Norte" },
-      countryId: "es", regionId: null, appellationId: null, region: null,
-      missing: ["region", "appellation"],
+      countryId: "es", regionId: "cyl", appellationId: null, region: "producer-region",
+      missing: ["appellation"],
     });
   });
 
-  // Step 7.5 (owner rule 2026-09-14) is gated on `provenance.region === "label"`
-  // specifically so this blanking (above) keeps winning: the region here is no
-  // longer "the region the read itself named" once step 7 clears it, even though
-  // "Castilla La Mancha" both names a real region and has a self-named
-  // appellation (clm-a) that the label's own rawText names by mention alone.
-  it("the self-named fallback (step 7.5) does not refill the region owner approval 3 blanked, even when rawText names it", async () => {
+  // Fix A keeps a region the label prints, whatever the producer's link says.
+  // Step 7.5 (owner rule 2026-09-14) is still gated on `provenance.region ===
+  // "label"`, which a printed region keeps, and the rawText names the stored
+  // region "Castilla La Mancha" and no other appellation of it.
+  it("a printed region beats the producer link, and step 7.5 then takes its self-named row", async () => {
     expect(await placed({
       producer: "Bodegas Norte",
       rawText: "BODEGAS NORTE · CASTILLA-LA MANCHA · 100% TEMPRANILLO",
     })).toEqual({
       producer: { kind: "existing", id: "p-cyl", name: "Bodegas Norte" },
-      countryId: "es", regionId: null, appellationId: null, region: null,
-      missing: ["region", "appellation"],
+      countryId: "es", regionId: "clm", appellationId: "clm-a", region: "label",
+      missing: [],
     });
   });
 
+  // The read's own region, unprinted, and the producer's link names that very
+  // region: the value stays, and our link now vouches for it (`producer-region`),
+  // exactly as when the link replaces a region it contradicts.
+  it("a producer linked to the read's own unprinted region keeps it, marked producer-region", async () => {
+    expect(await placed({ producer: "Bodegas Sur" })).toEqual({
+      producer: { kind: "existing", id: "p-clm", name: "Bodegas Sur" },
+      countryId: "es", regionId: "clm", appellationId: null, region: "producer-region", missing: ["appellation"],
+    });
+    // Printed, the same read keeps `label`, and step 7.5 takes the self-named row.
+    expect(await placed({ producer: "Bodegas Sur", rawText: "BODEGAS SUR · CASTILLA LA MANCHA" }))
+      .toMatchObject({ regionId: "clm", appellationId: "clm-a", region: "label", missing: [] });
+  });
+
   it.each([
-    ["a producer linked to the read's own region", "Bodegas Sur", { kind: "existing", id: "p-clm", name: "Bodegas Sur" }],
     ["a pending producer", "Bodegas Desconocidas", { kind: "pending", name: "Bodegas Desconocidas" }],
     ["a bare title word", "Bodegas", { kind: "pending", name: "Bodegas" }],
     ["a producer with no region link", "Bodegas Sin Enlace", { kind: "existing", id: "p-unlinked", name: "Bodegas Sin Enlace" }],
@@ -702,6 +723,296 @@ describe("a read-only region that disagrees with the producer's region link is l
         region, { regionId: "cyl", region: "producer-region", missing: ["appellation"] },
       ]);
     }
+  });
+});
+
+// Owner fixes A and B (2026-09-19, spec docs/superpowers/specs/2026-09-19-scan-region-appellation.md
+// §4, §5, §9.1). The Tridente case: a brand-only front label ("TRIDENTE TEMPRANILLO"),
+// a region the model named from memory (Castilla-La Mancha, wrong), and a producer
+// whose region link (Castilla y Leon) and whose other vintages in the catalog both
+// know better.
+describe("owner fixes A and B (2026-09-19)", () => {
+  const tri = (): ReferenceSnapshot => ({
+    countries: [{ id: "es", name: "Spain" }, { id: "pt", name: "Portugal" }],
+    regions: [
+      { id: "clm", name: "Castilla La Mancha", country_id: "es" }, { id: "cyl", name: "Castilla y Leon", country_id: "es" },
+      { id: "es-none", name: "None", country_id: "es" }, { id: "dou", name: "Douro", country_id: "pt" },
+    ],
+    appellations: [
+      { id: "clm-a", name: "Castilla La Mancha", region_id: "clm" }, { id: "cyl-a", name: "Castilla y Leon", region_id: "cyl" },
+      { id: "rib", name: "Ribera del Duero DO", region_id: "cyl" }, { id: "es-none-a", name: "None", region_id: "es-none" },
+    ],
+    none: [{ country_id: "es", region_id: "es-none", appellation_id: "es-none-a" }],
+    producers: [
+      { id: "p-tri", name: "Bodegas Tridente", region_id: "cyl" }, { id: "p-unlinked", name: "Bodegas Sin Enlace", region_id: null },
+      { id: "p-pt", name: "Quinta Lusa", region_id: "dou" },
+    ],
+    aliases: [{ id: "a-tri", producer_id: "p-tri", alias: "Tridente" }],
+    grapes: [{ id: "tem", name: "Tempranillo" }, { id: "gar", name: "Garnacha" }],
+    type_designations: [],
+    catalog_wines: [{ id: "cw-2018", producer_id: "p-tri", wine_name: "Tridente", colour: "RED", style: "STILL",
+      primary_grape_id: "tem", appellation_id: "cyl-a", blind_pending: false, merged_into: null }],
+  });
+  const TRIDENTE = {
+    noGeographicIndication: false, country: "Spain", region: "Castilla-La Mancha", appellation: null,
+    producer: "Tridente", wineName: "Tridente", colour: "RED", style: "STILL", designation: null,
+    grapes: [{ name: "Tempranillo", percentage: 100 }], rawText: "TRIDENTE TEMPRANILLO",
+    vintageKind: "NV", vintageRead: false, vintageYear: null,
+  };
+  const noSiblings = (): ReferenceSnapshot => ({ ...tri(), catalog_wines: [] });
+  /** The resolver's lookup over `s`, counting catalogWinesOfProducer calls. */
+  const watched = (s: ReferenceSnapshot) => {
+    const inner = snapshotLookup(s);
+    const siblingCalls: string[] = [];
+    return {
+      siblingCalls,
+      lookup: {
+        ...inner,
+        catalogWinesOfProducer: (producerId: string) => {
+          siblingCalls.push(producerId);
+          return inner.catalogWinesOfProducer(producerId);
+        },
+      },
+    };
+  };
+  const run = async (patch: Record<string, unknown> = {}, s: ReferenceSnapshot = tri()) => {
+    const w = watched(s);
+    const d = await resolveLabelRead(
+      coerceLabelRead({ ...fixture("vin-de-france.json"), ...TRIDENTE, ...patch }), w.lookup, { imageUrl: null },
+    );
+    return {
+      d, siblingCalls: w.siblingCalls,
+      placed: {
+        producer: d.producer, countryId: d.countryId, regionId: d.regionId, appellationId: d.appellationId,
+        country: d.provenance.country ?? null, region: d.provenance.region ?? null, appellation: d.provenance.appellation ?? null,
+        missing: missingWineFields(d, { now: NOW }),
+      },
+    };
+  };
+  const tridente = { kind: "existing", id: "p-tri", name: "Bodegas Tridente" } as const;
+
+  // ── Fix A ──────────────────────────────────────────────────────────────────
+  it("1. Tridente, a brand-only label and no siblings: the producer's link fills the region instead of a blank", async () => {
+    expect((await run({}, noSiblings())).placed).toEqual({
+      producer: tridente, countryId: "es", regionId: "cyl", appellationId: null,
+      country: "label", region: "producer-region", appellation: null,
+      missing: ["vintage", "appellation"],
+    });
+  });
+
+  it("2. a printed region still beats the producer, and step 7.5 takes its self-named row with no sibling read", async () => {
+    const r = await run({ rawText: "TRIDENTE · CASTILLA-LA MANCHA · TEMPRANILLO" });
+    expect(r.placed).toMatchObject({ regionId: "clm", region: "label", appellationId: "clm-a", appellation: "label", missing: ["vintage"] });
+    expect(r.siblingCalls).toEqual([]);
+  });
+
+  it("3. a printed curated synonym counts as printed; step 7.5 still needs the stored name, and a sibling elsewhere is refused", async () => {
+    const r = await run({ rawText: "TRIDENTE · CASTILE-LA MANCHA · TEMPRANILLO" });
+    // Printed: kept. 7.5: "Castilla La Mancha" itself is not in the text (D7).
+    // 7.6: cw-2018 sits in Castilla y Leon, which contradicts the printed region.
+    expect(r.placed).toMatchObject({ regionId: "clm", region: "label", appellationId: null, appellation: null });
+  });
+
+  it.each([
+    ["BOURGOGNE PINOT NOIR", "Burgundy", "Bourgogne", "France", true],
+    ["BURGUNDY PINOT NOIR", "Bourgogne", "Bourgogne", "France", true],
+    ["TRIDENTE TEMPRANILLO", "Castilla-La Mancha", "Castilla La Mancha", "Spain", false],
+    ["MARGAUX", "Bourgogne", "Bourgogne", "France", false],
+    ["TRIDENTE · CASTILLA LA MANCHAS", "Castilla-La Mancha", "Castilla La Mancha", "Spain", false],
+  ] as const)("regionNamedOnLabel(%j, %j, %j, %j) is %s", (rawText, readRegion, stored, countryName, printed) =>
+    expect(regionNamedOnLabel(rawText, readRegion, stored, countryName)).toBe(printed));
+
+  it("4. step 7.5 is not loosened: a producer-link region the rawText names still takes no self-named row", async () => {
+    const r = await run({ rawText: "TRIDENTE · CASTILLA Y LEON · TEMPRANILLO" }, noSiblings());
+    expect(r.placed).toMatchObject({ regionId: "cyl", region: "producer-region", appellationId: null, appellation: null });
+  });
+
+  it("5. the unchanged paths: another country's link, appellation text, no-GI, and an empty region", async () => {
+    const s = noSiblings();
+    // A link to another country never moves the region.
+    expect((await run({ producer: "Quinta Lusa" }, s)).placed).toMatchObject({ regionId: "clm", region: "label" });
+    // A read with appellation text keeps its region, even one no row agreed with.
+    expect((await run({ appellation: "Vino de la Tierra de Castilla" }, s)).placed)
+      .toMatchObject({ regionId: "clm", region: "label", appellationId: null });
+    // A no-GI read keeps its country's tier pair.
+    expect((await run({ noGeographicIndication: true }, s)).placed)
+      .toMatchObject({ regionId: "es-none", appellationId: "es-none-a", region: "label" });
+    // An empty region still takes the link.
+    for (const region of [null, "Atlantis"]) {
+      expect([region, (await run({ region }, s)).placed]).toMatchObject([region, { regionId: "cyl", region: "producer-region" }]);
+    }
+  });
+
+  // Review fix (2026-09-19): a guess our own link confirms must never count for less
+  // than one it contradicts. The model names Castilla y Leon from memory (right this
+  // time, still unprinted); Bodegas Tridente's link agrees, so the region is marked
+  // `producer-region` exactly as when the link replaces a wrong guess (test 1), and
+  // fix C's gate trusts it the same way.
+  it("5b. a correct but unprinted guess that the producer's link confirms is marked producer-region, like a wrong one", async () => {
+    const correct = await run({ region: "Castilla y Leon" }, noSiblings());
+    expect(correct.placed).toEqual({
+      producer: tridente, countryId: "es", regionId: "cyl", appellationId: null,
+      country: "label", region: "producer-region", appellation: null,
+      missing: ["vintage", "appellation"],
+    });
+    expect(correct.placed).toEqual((await run({}, noSiblings())).placed);
+    // With the 2018 sibling, step 7.6 fills the appellation just as for the wrong guess.
+    expect((await run({ region: "Castilla y Leon" })).placed).toMatchObject({
+      regionId: "cyl", region: "producer-region", appellationId: "cyl-a", appellation: "catalog-sibling", missing: ["vintage"],
+    });
+    // Printed, the same correct region stays `label` (step 7.5 may then take its self-named row).
+    expect((await run({ region: "Castilla y Leon", rawText: "TRIDENTE · CASTILLA Y LEON · TEMPRANILLO" }, noSiblings())).placed)
+      .toMatchObject({ regionId: "cyl", region: "label", appellationId: "cyl-a", appellation: "label" });
+  });
+
+  // ── Fix B ──────────────────────────────────────────────────────────────────
+  it("6. Tridente with its 2018 sibling: the link's region, and the other vintage's appellation", async () => {
+    expect((await run()).placed).toEqual({
+      producer: tridente, countryId: "es", regionId: "cyl", appellationId: "cyl-a",
+      country: "label", region: "producer-region", appellation: "catalog-sibling",
+      missing: ["vintage"],
+    });
+    const vintage = await run({ vintageKind: "YEAR", vintageYear: 2020, vintageRead: true, rawText: "TRIDENTE 2020 TEMPRANILLO" });
+    expect(vintage.placed).toMatchObject({ appellationId: "cyl-a", appellation: "catalog-sibling", missing: [] });
+  });
+
+  it("7. siblings that disagree fill nothing", async () => {
+    const s = tri();
+    s.catalog_wines!.push({ id: "cw-2019", producer_id: "p-tri", wine_name: "Tridente", colour: "RED", style: "STILL",
+      primary_grape_id: "tem", appellation_id: "rib", blind_pending: false, merged_into: null });
+    expect((await run({}, s)).placed).toMatchObject({ regionId: "cyl", region: "producer-region", appellationId: null, appellation: null });
+  });
+
+  it.each([
+    ["another folded name", { wine_name: "Tridente Reserva" }],
+    ["another colour", { colour: "WHITE" }],
+    ["another style", { style: "SPARKLING" }],
+    ["another primary grape", { primary_grape_id: "gar" }],
+  ] as const)("8. %s is not a sibling", async (_case, change) => {
+    const s = tri();
+    s.catalog_wines = [{ ...s.catalog_wines![0], ...change }];
+    expect((await run({}, s)).placed).toMatchObject({ appellationId: null, appellation: null });
+  });
+
+  it("8. an empty or pending read grape is not compared, so the sibling still fills", async () => {
+    for (const grapes of [[], [{ name: "Mystery Tinto", percentage: null }]]) {
+      expect([grapes, (await run({ grapes })).placed]).toMatchObject([grapes, { appellationId: "cyl-a", appellation: "catalog-sibling" }]);
+    }
+  });
+
+  it("9. an unnamed wine or a pending producer never reads the catalog", async () => {
+    const unnamed = await run({ wineName: null });
+    expect([unnamed.siblingCalls, unnamed.placed.appellationId]).toEqual([[], null]);
+    const pendingProducer = await run({ producer: "Bodegas Desconocidas" });
+    expect(pendingProducer.siblingCalls).toEqual([]);
+    expect(pendingProducer.placed).toMatchObject({
+      producer: { kind: "pending", name: "Bodegas Desconocidas" }, regionId: "clm", region: "label", appellationId: null,
+    });
+  });
+
+  it("10. an empty region yields to the sibling's; a sibling in another country fills nothing", async () => {
+    const s = tri();
+    s.catalog_wines = [{ ...s.catalog_wines![0], id: "cw-u", producer_id: "p-unlinked" }];
+    expect((await run({ producer: "Bodegas Sin Enlace", region: "Atlantis" }, s)).placed).toMatchObject({
+      countryId: "es", regionId: "cyl", appellationId: "cyl-a", country: "label", region: "catalog-sibling", appellation: "catalog-sibling",
+    });
+    expect((await run({ country: "Portugal", region: null })).placed).toMatchObject({
+      countryId: "pt", regionId: null, appellationId: null, appellation: null,
+    });
+  });
+
+  it("11. a no-GI read never reaches step 7.6", async () => {
+    const r = await run({ noGeographicIndication: true });
+    expect([r.siblingCalls, r.placed.regionId, r.placed.appellationId]).toEqual([[], "es-none", "es-none-a"]);
+  });
+
+  it("12. an appellation already placed skips step 7.6", async () => {
+    const r = await run({ appellation: "Ribera del Duero DO" });
+    expect([r.siblingCalls, r.placed.appellationId, r.placed.appellation]).toEqual([[], "rib", "label"]);
+  });
+
+  // Review fix (2026-09-19): appellation text the read carried but step 4 could not
+  // place is a resolution attempt, and step 7.6 never overrides it with a guess
+  // (RC4, as step 7.5 never does). Only text that itself names the siblings'
+  // appellation lets it through; everything else goes on to fix C or to Fix.
+  it("12b. appellation text step 4 could not place blocks the siblings, unless that text names their appellation", async () => {
+    // The label prints Toro (not in the snapshot): never the siblings' Castilla y Leon, nor its region.
+    expect((await run({ appellation: "Toro DO", rawText: "TRIDENTE · TORO DO · TEMPRANILLO" })).placed).toMatchObject({
+      regionId: "clm", region: "label", appellationId: null, appellation: null, missing: ["vintage", "appellation"],
+    });
+    // Castilla-La Mancha's own Vino de la Tierra is not Castilla y Leon's.
+    expect((await run({ appellation: "Vino de la Tierra de Castilla", rawText: "TRIDENTE · VINO DE LA TIERRA DE CASTILLA" })).placed)
+      .toMatchObject({ regionId: "clm", region: "label", appellationId: null, appellation: null });
+    // A leading "D.O." step 4 cannot fold, and no region read: the link's region, still no appellation.
+    expect((await run({ appellation: "D.O. Toro", region: null, rawText: "TRIDENTE · D.O. TORO" })).placed)
+      .toMatchObject({ regionId: "cyl", region: "producer-region", appellationId: null, appellation: null });
+
+    // The text names the siblings' appellation: taken, with its region over an unprinted guess.
+    expect((await run({
+      appellation: "Vino de la Tierra de Castilla y León",
+      rawText: "TRIDENTE · VINO DE LA TIERRA DE CASTILLA Y LEÓN · TEMPRANILLO",
+    })).placed).toMatchObject({
+      countryId: "es", regionId: "cyl", appellationId: "cyl-a", region: "catalog-sibling", appellation: "catalog-sibling",
+      missing: ["vintage"],
+    });
+    // "D.O. Toro" beside siblings that all name Toro DO.
+    const s = tri();
+    s.appellations.push({ id: "toro", name: "Toro DO", region_id: "cyl" });
+    s.catalog_wines = [{ ...s.catalog_wines![0], appellation_id: "toro" }];
+    expect((await run({ appellation: "D.O. Toro", region: null, rawText: "TRIDENTE · D.O. TORO" }, s)).placed)
+      .toMatchObject({ regionId: "cyl", region: "producer-region", appellationId: "toro", appellation: "catalog-sibling" });
+  });
+
+  it.each([
+    ["D.O. Toro", "Toro DO", true],
+    ["Toro", "Toro DO", true],
+    ["Vino de la Tierra de Castilla y León", "Castilla y Leon", true],
+    ["Puligny-Montrachet 1er Cru", "Puligny-Montrachet Premier Cru AOC", true],
+    ["Toro DO", "Castilla y Leon", false],
+    ["Vino de la Tierra de Castilla", "Castilla y Leon", false],
+    ["Torontel", "Toro DO", false],
+  ] as const)("appellationTextNames(%j, %j) is %s", (text, name, names) =>
+    expect(appellationTextNames(text, name)).toBe(names));
+
+  it("13. an incomplete sibling list fills nothing", async () => {
+    const inner = snapshotLookup(tri());
+    const d = await resolveLabelRead(
+      coerceLabelRead({ ...fixture("vin-de-france.json"), ...TRIDENTE }),
+      { ...inner, catalogWinesOfProducer: async () => ({ rows: (await inner.catalogWinesOfProducer("p-tri")).rows, complete: false }) },
+      { imageUrl: null },
+    );
+    expect([d.regionId, d.appellationId]).toEqual(["cyl", null]);
+  });
+
+  it("14. the snapshot twin mirrors the server read: no blind_pending, no merged row, at most 200", async () => {
+    const s = tri();
+    const row = s.catalog_wines![0];
+    s.catalog_wines = [
+      row,
+      { ...row, id: "cw-hidden", blind_pending: true },
+      { ...row, id: "cw-merged", merged_into: "cw-2018" },
+      { ...row, id: "cw-other", producer_id: "p-unlinked" },
+    ];
+    expect(await snapshotLookup(s).catalogWinesOfProducer("p-tri")).toEqual({
+      rows: [{ id: "cw-2018", wineName: "Tridente", colour: "RED", style: "STILL", primaryGrapeId: "tem", appellationId: "cyl-a" }],
+      complete: true,
+    });
+    s.catalog_wines = Array.from({ length: 201 }, (_, i) => ({ ...row, id: `cw-${String(i).padStart(3, "0")}` }));
+    const capped = await snapshotLookup(s).catalogWinesOfProducer("p-tri");
+    expect([capped.rows.length, capped.complete, CATALOG_SIBLING_LIMIT]).toEqual([200, false, 200]);
+    s.catalog_wines = s.catalog_wines.slice(0, 200);
+    expect((await snapshotLookup(s).catalogWinesOfProducer("p-tri")).complete).toBe(true);
+    expect(await snapshotLookup({ ...s, catalog_wines: undefined }).catalogWinesOfProducer("p-tri")).toEqual({ rows: [], complete: true });
+  });
+});
+
+describe("regionSynonymsOf (owner fix A)", () => {
+  it("names every curated spelling of a stored region, own keys only", () => {
+    expect(regionSynonymsOf("Bourgogne", "France")).toEqual(["burgundy"]);
+    expect(regionSynonymsOf("Castilla La Mancha", "Spain")).toEqual(["castile-la mancha", "castilla-la mancha"]);
+    expect(regionSynonymsOf("Bourgogne", "Atlantis")).toEqual([]);
+    expect(regionSynonymsOf("Atlantis", "France")).toEqual([]);
+    expect(regionSynonymsOf("Bourgogne", "constructor")).toEqual([]);
   });
 });
 

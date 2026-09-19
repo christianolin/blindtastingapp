@@ -230,8 +230,19 @@ function sessionKey(session: ByHandFormProps["session"]): string {
 
 /** "did not read — required" first, then "required", then any other chip. */
 function strongerChip(a: string | null, b: string | null): string | null {
+  // "from other vintages" (resolver step 7.6, owner fix B) outranks a plain
+  // "read from the label", so an origin row whose region came from the catalog
+  // never claims the label printed it.
   const rank = (chip: string | null) =>
-    chip === null ? 3 : chip.startsWith("did not read") ? 0 : chip === "required" ? 1 : 2;
+    chip === null
+      ? 4
+      : chip.startsWith("did not read")
+        ? 0
+        : chip === "required"
+          ? 1
+          : chip === "from other vintages"
+            ? 2
+            : 3;
   return rank(a) <= rank(b) ? a : b;
 }
 
@@ -941,6 +952,7 @@ export function ByHandForm({
   const regionChip = chip("region");
   const originChip = strongerChip(countryChip.chip, regionChip.chip);
   const originLinkNote = countryChip.note ?? regionChip.note;
+  const appellationChip = chip("appellation");
   const grapeChip = chip("primaryGrape");
   const wineNameChip = chip("wineName");
 
@@ -1240,7 +1252,7 @@ export function ByHandForm({
 
         {/* 6 · Appellation: chosen, never selected for you */}
         <Field>
-          <FieldHead label="Appellation" chip={chip("appellation").chip} />
+          <FieldHead label="Appellation" chip={appellationChip.chip} />
           <div ref={registerTrigger("appellation")} className={PICKER}>
             <SearchableCombobox
               formFieldName="appellation_id"
@@ -1261,6 +1273,8 @@ export function ByHandForm({
               disabled={disabled}
             />
           </div>
+          {/* Owner fix C: a looked-up appellation was not on the label — say so. */}
+          {appellationChip.note ? <FieldNote>{appellationChip.note}</FieldNote> : null}
           <FieldNote>
             {appellationHint(regionLabel, regionAppellations ? regionAppellations.selfNamed !== null : true)}
           </FieldNote>

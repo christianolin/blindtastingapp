@@ -1529,6 +1529,42 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["label_reads"]["Insert"]>;
         Relationships: [];
       };
+      // 20260919214700 (owner fix C, 2026-09-19): every billed follow-up lookup of a
+      // scan, owner-only and append-only (select + insert only), one per label_reads
+      // row (ON DELETE CASCADE). `answer` is present exactly for "answer" and
+      // "discarded"; `appellation_id` only for "answer". Never counted by the quota.
+      label_lookups: {
+        Row: {
+          id: string;
+          label_read_id: string;
+          user_id: string;
+          region_id: string | null;
+          candidates: number;
+          outcome: "answer" | "no-answer" | "discarded" | "not-read";
+          answer: string | null;
+          appellation_id: string | null;
+          model: string;
+          input_tokens: number;
+          output_tokens: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          label_read_id: string;
+          user_id: string;
+          region_id?: string | null;
+          candidates: number;
+          outcome: "answer" | "no-answer" | "discarded" | "not-read";
+          answer?: string | null;
+          appellation_id?: string | null;
+          model: string;
+          input_tokens?: number;
+          output_tokens?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["label_lookups"]["Insert"]>;
+        Relationships: [];
+      };
       // 20260912102000 (spec §E.3): an incomplete glass's owner-only draft. The
       // glass has no wine_answers row until it is complete; `missing` holds only
       // field keys from src/lib/wine-identity and is never empty.

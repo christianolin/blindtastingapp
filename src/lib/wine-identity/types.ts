@@ -3,8 +3,12 @@ export type WineFieldKey =
   | "producer" | "vintage" | "colour" | "style"
   | "country" | "region" | "appellation" | "primaryGrape";
 
+/** "catalog-sibling": the resolver's step 7.6 took it from the other vintages of
+    the same wine in the catalog (owner fix B, 2026-09-19). "lookup": the scan's
+    one billed follow-up picked it from our own list for the region (owner fix C). */
 export type FieldProvenance =
-  | "label" | "catalog-match" | "producer-region" | "appellation-suggestion" | "manual" | "none";
+  | "label" | "catalog-match" | "producer-region" | "appellation-suggestion" | "manual" | "none"
+  | "catalog-sibling" | "lookup";
 
 export type ProvenanceKey =
   | WineFieldKey | "wineName" | "blend" | "typeDesignation" | "alcohol" | "description" | "imageUrl";

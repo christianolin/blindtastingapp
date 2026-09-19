@@ -10,20 +10,46 @@
 //   agreed with, and only inside the read's own region; and, only when the read
 //   named no appellation text at all (never overriding a resolution attempt that
 //   found nothing), a region's own self-named appellation — but only when the
-//   region is still the one the read itself named (owner approval 3's blanking,
-//   below, was not triggered) and the label's own rawText names that region and
+//   region is still the one the read itself named (step 7 did not replace it with
+//   the producer's link) and the label's own rawText names that region and
 //   names no OTHER appellation of it (owner rule 2026-09-14, step 7.5) — a label
 //   that only ever said "Baja California" resolves to that self-named row, but a
 //   Piemonte label whose "Barolo" the read missed stays blank, never "Piemonte";
-// - a producer link may fill the region, never the appellation and never a grape;
-//   and a region read with no appellation text that the producer's link places in
-//   another region of the same country is left empty (owner approval 3).
+// - a producer link may fill the region, never the appellation and never a grape.
+//   A region read with no appellation text that the label does not print, and
+//   that the producer's link places in another region of the same country, is
+//   the model's memory: the link wins (owner fix A, 2026-09-19, superseding owner
+//   approval 3's blank for unprinted regions); a link that agrees with it marks it
+//   `producer-region` too. A printed region always stays;
+// - the appellation of the same wine's other vintages in the catalog fills a
+//   still-missing appellation, but only when every such vintage names the same
+//   one (owner fix B, 2026-09-19, step 7.6) — never from the producer alone, and
+//   never over appellation text the read carried unless that text itself names
+//   the siblings' appellation.
 import { canonicalGrapeName } from "../label-scan/grape-canonical";
 import type { LabelRead } from "../label-scan/label-read-schema";
-import { canonicalCountryName, canonicalRegionName, curatedAppellationName } from "../label-scan/region-canonical";
+import {
+  canonicalCountryName, canonicalRegionName, curatedAppellationName, regionSynonymsOf,
+} from "../label-scan/region-canonical";
 import { emptyDraft, normaliseDraft } from "./complete";
 import { DESIGNATION_SUFFIXES, foldName, foldWords, isTitleOnly, normaliseCru, stripDesignationSuffix } from "./fold";
-import type { BlendRow, FieldProvenance, ProvenanceKey, RefChoice, WineIdentityDraft } from "./types";
+import type {
+  BlendRow, FieldProvenance, ProvenanceKey, RefChoice, WineColour, WineIdentityDraft, WineStyle,
+} from "./types";
+
+/** Step 7.6's bound on one producer's catalog wines: the confident match's own
+    candidate limit (server/match.ts). */
+export const CATALOG_SIBLING_LIMIT = 200;
+
+/** One catalog wine of a producer, as step 7.6 compares it. */
+export type CatalogSiblingRow = {
+  id: string;
+  wineName: string | null;
+  colour: WineColour;
+  style: WineStyle;
+  primaryGrapeId: string;
+  appellationId: string;
+};
 
 export interface RefLookup {
   countries(): Promise<{ id: string; name: string }[]>;                                // small table
@@ -48,6 +74,12 @@ export interface RefLookup {
   regionById(id: string): Promise<{ id: string; name: string; countryId: string } | null>;
   grapes(): Promise<{ id: string; name: string }[]>;                                   // small table
   typeDesignations(): Promise<{ id: string; name: string; countryId: string | null }[]>; // ~50 rows, is_active
+  /** Step 7.6 (owner fix B, 2026-09-19): one existing producer's catalog wines as the
+      caller may read them — never merged away, never blind_pending — the candidate
+      set findConfidentMatch reads (server/match.ts). At most CATALOG_SIBLING_LIMIT
+      rows. `complete` is false when there were more, or when the read failed: this
+      method never throws, and step 7.6 then fills nothing. */
+  catalogWinesOfProducer(producerId: string): Promise<{ rows: CatalogSiblingRow[]; complete: boolean }>;
 }
 
 /** Regions that ARE a country's no-geographic-indication tier, and so are what
@@ -255,6 +287,61 @@ function containsWholeWords(haystack: string, needleWords: string): boolean {
   return needleWords !== "" && haystack.includes(` ${needleWords} `);
 }
 
+/** Owner fix A (2026-09-19): whether the label's own rawText names the region —
+    the read's region text, the stored region name, or a curated synonym of it —
+    as a run of whole words. "Bourgogne" printed counts for a read of "Burgundy",
+    and "BURGUNDY" printed counts for the stored "Bourgogne". */
+export function regionNamedOnLabel(
+  rawText: string,
+  readRegion: string | null,
+  storedRegion: string,
+  countryName: string,
+): boolean {
+  const haystack = wordBoundaryFold(rawText);
+  return [readRegion ?? "", storedRegion, ...regionSynonymsOf(storedRegion, countryName)]
+    .some((spelling) => containsWholeWords(haystack, foldWords(spelling)));
+}
+
+/** Step 7.6: whether appellation text the read carried names the stored
+    appellation `appellationName` — minus one designation suffix, with its cru
+    spelling normalised — as a run of whole words. "D.O. Toro" names "Toro DO";
+    "Vino de la Tierra de Castilla y León" names "Castilla y Leon"; "Toro DO" and
+    "Vino de la Tierra de Castilla" do not. */
+export function appellationTextNames(text: string, appellationName: string): boolean {
+  return containsWholeWords(` ${normaliseCru(text)} `, stripDesignationSuffix(normaliseCru(appellationName)));
+}
+
+/**
+ * Step 7.6 (owner fix B, 2026-09-19): the one appellation every other vintage of
+ * this wine in the catalog names, or null. A sibling is a catalog wine of the same
+ * existing producer with the same non-empty folded wine name and the same colour;
+ * the same style too when the read gives one; and, when the read's primary grape
+ * resolved to a grape row, the same primary grape. Any vintage counts. No siblings,
+ * siblings that disagree, or a capped or failed list: null. Never from the producer
+ * alone — an unnamed or uncoloured read never even asks.
+ */
+async function siblingAppellation(
+  read: LabelRead,
+  producerId: string,
+  blend: BlendRow[],
+  lookup: RefLookup,
+): Promise<{ id: string; name: string; regionId: string; countryId: string } | null> {
+  const name = foldName(read.wineName ?? "");
+  if (name === "" || read.colour === null) return null;
+  const { rows, complete } = await lookup.catalogWinesOfProducer(producerId);
+  if (!complete) return null;
+  const style = read.vintageKind === "TAWNY" ? "FORTIFIED" : read.style;
+  const primary = normaliseDraft({ ...emptyDraft(), blend }).blend[0]?.grape ?? null;
+  const siblings = rows.filter((row) =>
+    foldName(row.wineName ?? "") === name
+    && row.colour === read.colour
+    && (style === null || row.style === style)
+    && (primary?.kind !== "existing" || row.primaryGrapeId === primary.id));
+  const ids = new Set(siblings.map((row) => row.appellationId));
+  if (ids.size !== 1) return null;
+  return (await lookup.appellationsByIds([...ids]))[0] ?? null;
+}
+
 /**
  * Step 7.5 (owner rule 2026-09-14): a region's own self-named appellation —
  * the same row `justTheRegionOption` (self-named-appellation.ts) offers as
@@ -299,6 +386,9 @@ export async function resolveLabelRead(
 ): Promise<WineIdentityDraft> {
   const draft: WineIdentityDraft = emptyDraft();
   const provenance: Partial<Record<ProvenanceKey, FieldProvenance>> = {};
+  // Owner fix A: whether the region step 5 took from the read's region field is
+  // printed on the label (regionNamedOnLabel). Only step 5 sets it.
+  let regionOnLabel = false;
 
   // 1. Country — folded equality only. Never guessed.
   let country: { id: string; name: string } | null = null;
@@ -360,11 +450,15 @@ export async function resolveLabelRead(
 
     // 5. Region from the read. A region-level read does not become the region's
     //    self-named appellation here — that only happens later, at step 7.5, and
-    //    only once owner approval 3's region-conflict blanking (step 7) has had
-    //    its say and the label's own rawText has confirmed the region by name.
-    if (draft.regionId === null && regionCandidateId !== null) {
-      draft.regionId = regionCandidateId;
+    //    only once step 7's producer link (owner fix A) has had its say and the
+    //    label's own rawText has confirmed the region by name. This is the only
+    //    place a region comes from the read's region field, so it records whether
+    //    the label prints it.
+    if (draft.regionId === null && regionCandidate !== null) {
+      draft.regionId = regionCandidate.id;
       provenance.region = "label";
+      // regionCandidate implies a resolved country (step 3).
+      regionOnLabel = regionNamedOnLabel(read.rawText, read.region, regionCandidate.name, country!.name);
     }
   }
 
@@ -382,23 +476,35 @@ export async function resolveLabelRead(
     // 7. The producer's region link. Never the appellation, and never a grape
     //    (owner rule, RC10).
     //    - A region read with no appellation text (not the no-GI path) came from the
-    //      read's region field alone (step 5). When the link places the producer in
-    //      another region of the same country, that region is a wrong answer that
-    //      looks right, so it is left empty for the user and listed as missing
-    //      (owner approval 3, 2026-09-13) — and the link does not fill it either.
-    //      The draft has no field for the reason; the region simply carries no
-    //      provenance, like any field nothing filled.
+    //      read's region field alone (step 5). When the label does not print it and
+    //      the link places the producer in another region of the same country, that
+    //      region is the model's memory and the link is our data: the link wins
+    //      (owner fix A, 2026-09-19, superseding owner approval 3's blank for
+    //      guessed regions). A printed region never reaches here: the label wins
+    //      over the link, and step 7.5 may then take its self-named row.
+    //    - The same unprinted region when the link places the producer in that very
+    //      region: the value stays, but it is now our data that vouches for it, so
+    //      it is marked `producer-region` like the case above. Without this, a guess
+    //      our own link confirms would count for less than one it contradicts (fix
+    //      C's gate trusts a link region, never an unprinted label one). Step 7.5
+    //      loses nothing: the stored region name is not in rawText, or the region
+    //      would count as printed.
     //    - Otherwise the link fills the region only when it is still empty and the
     //      link's country is consistent.
     const regionReadAlone = !read.noGeographicIndication && read.appellation === null && draft.regionId !== null;
+    const guessedRegion = regionReadAlone && !regionOnLabel;
+    if (hit !== null && guessedRegion && hit.regionId !== null && hit.regionId === draft.regionId) {
+      provenance.region = "producer-region";
+    }
     const linked =
-      hit !== null && hit.regionId !== null && hit.regionId !== draft.regionId && (draft.regionId === null || regionReadAlone)
+      hit !== null && hit.regionId !== null && hit.regionId !== draft.regionId &&
+      (draft.regionId === null || guessedRegion)
         ? await lookup.regionById(hit.regionId)
         : null;
     if (linked !== null && draft.regionId !== null) {
       if (draft.countryId === linked.countryId) {
-        draft.regionId = null;
-        delete provenance.region;
+        draft.regionId = linked.id;
+        provenance.region = "producer-region";
       }
     } else if (linked !== null && (draft.countryId === null || draft.countryId === linked.countryId)) {
       draft.regionId = linked.id;
@@ -415,10 +521,11 @@ export async function resolveLabelRead(
   // to place and could not) may still resolve to that region's own self-named
   // appellation. Gated on `provenance.region === "label"` so this runs only when
   // the region is still the one the read itself named in step 5 — step 7 above
-  // may have blanked it (owner approval 3) or refilled it from the producer's
-  // link (provenance "producer-region"), and neither of those counts. The
-  // self-named row itself is found, and confirmed against the label's own
-  // rawText, by `resolveSelfNamedAppellation` — see its comment for the "no
+  // may have replaced it with, or filled it from, the producer's link
+  // (provenance "producer-region"), and that does not count (D7 of the
+  // 2026-09-19 fixes: unchanged). The self-named row itself is found, and
+  // confirmed against the label's own rawText (the STORED region name, not a
+  // synonym), by `resolveSelfNamedAppellation` — see its comment for the "no
   // other appellation of the region" guard.
   if (
     read.appellation === null &&
@@ -433,15 +540,51 @@ export async function resolveLabelRead(
     }
   }
 
-  // 8. Designation — the draft's country first, then a designation with no country.
+  // 9. Grapes — canonical name, then folded equality; percentages kept. Runs
+  //    before step 7.6, which compares the resolved primary grape; its only
+  //    inputs are the read and the grape table, so moving it changes nothing else.
+  draft.blend = await resolveBlend(read, lookup);
+  if (draft.blend.length > 0) provenance.blend = "label";
+
+  // 7.6 — Owner fix B (2026-09-19): reuse the appellation of the same wine's other
+  // vintages. Only while the appellation is still missing, never for a no-GI read,
+  // and only for an existing producer (a pending name has no catalog wines, and a
+  // producer alone never names an appellation). A read that carried appellation
+  // text step 4 could not place keeps that attempt (RC4, as step 7.5 does): the
+  // siblings' appellation is taken over it only when that text itself names it
+  // (`appellationTextNames` — "D.O. Toro" names "Toro DO", "Vino de la Tierra de
+  // Castilla y León" names "Castilla y Leon", "Toro DO" names no "Castilla y
+  // Leon"). The siblings' region must agree with a region the label prints; a
+  // region from the producer link, an unprinted guess or no region at all gives
+  // way to it. The country must agree or be empty.
+  if (!read.noGeographicIndication && draft.appellationId === null && draft.producer?.kind === "existing") {
+    const labelRegion = provenance.region === "label" && regionOnLabel;
+    const sibling = await siblingAppellation(read, draft.producer.id, draft.blend, lookup);
+    if (
+      sibling !== null &&
+      (read.appellation === null || appellationTextNames(read.appellation, sibling.name)) &&
+      (draft.countryId === null || draft.countryId === sibling.countryId) &&
+      (draft.regionId === null || draft.regionId === sibling.regionId || !labelRegion)
+    ) {
+      draft.appellationId = sibling.id;
+      provenance.appellation = "catalog-sibling";
+      if (draft.regionId !== sibling.regionId) {
+        draft.regionId = sibling.regionId;
+        provenance.region = "catalog-sibling";
+      }
+      if (draft.countryId === null) {
+        draft.countryId = sibling.countryId;
+        provenance.country = "catalog-sibling";
+      }
+    }
+  }
+
+  // 8. Designation — the draft's country first, then a designation with no
+  //    country. After step 7.6, so a country that step filled counts here too.
   if (read.designation !== null) {
     draft.typeDesignationId = await resolveDesignation(read.designation, lookup, draft.countryId);
     if (draft.typeDesignationId !== null) provenance.typeDesignation = "label";
   }
-
-  // 9. Grapes — canonical name, then folded equality; percentages kept.
-  draft.blend = await resolveBlend(read, lookup);
-  if (draft.blend.length > 0) provenance.blend = "label";
 
   // 10. Vintage — only a vintage actually read off the label counts.
   draft.vintage = read.vintageRead

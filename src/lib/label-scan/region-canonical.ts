@@ -84,6 +84,18 @@ export function canonicalCountryName(country: string): string {
   return COUNTRY_SYNONYMS[country.trim().toLowerCase()] ?? country.trim();
 }
 
+/** Every curated spelling (a REGION_SYNONYMS key of `country`) that maps to the
+    stored region name `storedRegion`, e.g. ("Bourgogne", "France") → ["burgundy"],
+    ("Castilla La Mancha", "Spain") → ["castile-la mancha", "castilla-la mancha"].
+    Own keys only; [] for an unknown country or region. Owner fix A (2026-09-19):
+    resolve.ts's `regionNamedOnLabel` counts any of these, printed on the label, as
+    the region itself. */
+export function regionSynonymsOf(storedRegion: string, country: string): string[] {
+  if (!Object.prototype.hasOwnProperty.call(REGION_SYNONYMS, country)) return [];
+  const map = REGION_SYNONYMS[country];
+  return Object.keys(map).filter((key) => map[key] === storedRegion);
+}
+
 // Map a scanned region name onto the catalog's canonical spelling. When the
 // country is known the lookup is scoped to it (the caller keeps the raw name as
 // a fallback); otherwise every country's map is searched.
