@@ -1,0 +1,69 @@
+/* The wine map's MapLibre controls in the dark theme: the zoom/compass group
+   and the compact attribution. maplibre-gl.css paints them white with dark
+   glyphs, which reads as a hole punched in a dark page. Imported by
+   tile-wine-map.tsx right after maplibre-gl.css, so it loads with the map
+   chunk only.
+
+   Rules of this file (map-chrome.test.ts):
+   - Everything sits in ONE `@media screen and (forced-colors: none)` block:
+     under forced colours MapLibre's own high-contrast icons must win, and
+     print keeps the light controls.
+   - Every selector starts with `.dark `, so light is untouched.
+   - No colour literals: theme tokens only, or a color-mix of one.
+   - Each selector is strictly more specific than the MapLibre rule it
+     overrides, rather than relying on stylesheet order. */
+@media screen and (forced-colors: none) {
+  /* Zoom +/- and compass. */
+  .dark .maplibregl-ctrl-group {
+    background: var(--card);
+  }
+  .dark .maplibregl-ctrl-group:not(:empty) {
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .dark .maplibregl-ctrl-group button + button {
+    border-top-color: var(--border-light);
+  }
+  /* The icons are #333 glyphs baked into data-URI SVGs; inverted they read as
+     #ccc on the card. The compass keeps north as its high-contrast half. */
+  .dark .maplibregl-ctrl button .maplibregl-ctrl-icon {
+    filter: invert(1);
+  }
+  .dark .maplibregl-ctrl button:not(:disabled):active {
+    background-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+  }
+  @media (hover: hover) {
+    .dark .maplibregl-ctrl button:not(:disabled):hover {
+      background-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+    }
+  }
+  /* The app's gold focus ring, not MapLibre's blue. */
+  .dark .maplibregl-ctrl-group button:focus:focus-visible {
+    box-shadow: 0 0 2px 2px var(--ring);
+  }
+
+  /* Compact attribution: the "i" pill, and its expanded text. */
+  .dark .maplibregl-ctrl.maplibregl-ctrl-attrib,
+  .dark .maplibregl-ctrl-attrib.maplibregl-compact {
+    background-color: var(--card);
+    color: var(--foreground);
+  }
+  .dark .maplibregl-ctrl-attrib a {
+    color: var(--muted-foreground);
+  }
+  .dark .maplibregl-ctrl-attrib a:hover {
+    color: var(--foreground);
+  }
+  /* The "i" is a black data-URI glyph on the button's own background. */
+  .dark .maplibregl-ctrl.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
+    background-color: transparent;
+    filter: invert(1);
+  }
+  /* The invert above would turn a ring drawn on the button itself blue, so the
+     button draws none and the pill around it carries the gold ring instead. */
+  .dark .maplibregl-ctrl.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button:focus {
+    box-shadow: none;
+  }
+  .dark .maplibregl-ctrl.maplibregl-ctrl-attrib:has(.maplibregl-ctrl-attrib-button:focus-visible) {
+    box-shadow: 0 0 2px 2px var(--ring);
+  }
+}

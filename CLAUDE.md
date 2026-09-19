@@ -1136,6 +1136,34 @@ a raw subquery, regardless of which two tables look involved at a glance.
   asserts; every VERIFIED place must carry an article and Burgundy places a
   grape link. Any live apply must be verified with same-transaction
   assertions — version rows have been observed recorded without their DDL.
+- **Wine Map dark mode** (2026-09-19, spec
+  `docs/superpowers/specs/2026-09-19-map-dark-mode.md`). The map follows the
+  theme `<html>` is rendering (its `.dark` class, via `useRenderedTheme` in
+  `src/lib/rendered-theme.ts`, a `MutationObserver` + `useSyncExternalStore`
+  used only inside `TileWineMap`), live and without a reload: Carto Dark
+  Matter + the dark palette in dark, Positron + the light palette in light.
+  Every canvas colour lives in `src/lib/wine-map/map-palette.ts`'s
+  `MAP_PALETTES` — two FIXED tables keyed exactly alike (region slug → hex,
+  `districtHash(slug) % 12` → hex), never computed per feature (Plan A's
+  zoom-lag rule). The light table is the old one moved verbatim; the dark one
+  was derived once, offline, from the spec's §7.1 rule and frozen as literal
+  hex. Change both tables together; `map-palette.test.ts` holds the contrast
+  floors against Dark Matter's land/water read from
+  `__fixtures__/carto-styles.json`. In dark the classification ramp inverts
+  (grand cru *brightest*, legend "Grand cru (brightest)"). The basemap swap is
+  `map.setStyle(url, { diff: true, transformStyle })` with
+  `withWineLayers(prev, tuneBasemapStyle(next))` (`src/lib/wine-map/basemap.ts`)
+  carrying every wine source and layer across unchanged, so MapLibre's diff
+  touches the basemap alone — `mapStyle` on `<Map>` is frozen at the theme the
+  map mounted with; **never pass a changing `mapStyle`** (react-map-gl would
+  `setStyle` with no `transformStyle` and drop every wine source, tile cache
+  and feature-state). The basemap tweaks (pruned source-layers, place labels
+  to z7+) live in one place, `basemapTweaks`, which both `onLoad` and
+  `tuneBasemapStyle` apply. Wine paint follows the basemap that actually
+  landed (`style.load` → `paintTheme`), not the class, so a failed style fetch
+  leaves the map wholly light. MapLibre's own controls are dressed for dark by
+  `src/app/knowledge/map/map-chrome.css` (tokens only, `.dark`-scoped, inside
+  `@media screen and (forced-colors: none)`).
 - Producers are scoped by region so the producer field narrows once a region
   is chosen, the same way appellation already does. Unlike `appellations`,
   `producers.region_id` is **nullable** — the original LWIN import deduped
