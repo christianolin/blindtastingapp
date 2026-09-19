@@ -341,6 +341,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `avatars/<user_id>/...` (RLS on `storage.objects` restricts writes to your
   own folder); uploaded directly from the browser client in
   `profile/edit/avatar-uploader.tsx`, not through a server action.
+- **Community redesign** (2026-09-19, `docs/superpowers/specs/2026-09-19-community-redesign.md`)
+  aligned `/community` (renamed from "People & Friends") to the same
+  toolbar/table/card pattern as Catalog and Cellar —
+  `src/app/community/community-list.tsx` plus the pure
+  `src/lib/community/community-math.ts`. The URL contract: `?tab=friends`
+  (still the only way to open Friends; `/friends` and `/people` still
+  redirect in), `?q`, `?sort` (`active`/`name`/`joined`, each view has its
+  own default when absent) and `?page`. A row action's steady state (the
+  friend chip's "Friends") stays visible at rest; only an action ("Add
+  friend", "Cellar") fades in on hover/focus, and only on a fine pointer, so
+  a touch device never has to hover an invisible button. Removing a friend
+  from a row is a two-tap confirm ("Friends" → "Tap again to remove" →
+  removed, `console-copy.ts`'s `twoTapState`/`TWO_TAP_WINDOW_MS`) —
+  `/u/[id]`'s own remove button stays one-tap. There is still no mutual-
+  friends count: `friendships` has exactly one SELECT policy (`user_id =
+  auth.uid()`), so a read of someone else's friendships always comes back
+  empty — a real count needs a SECURITY DEFINER RPC, out of scope here.
 - A profile page also shows that person's cross-tasting stats (wines
   guessed, avg points, per-category accuracy) and a list of tastings they've
   attended, each linking to `/u/[id]/tastings/[tastingId]` — a per-tasting
