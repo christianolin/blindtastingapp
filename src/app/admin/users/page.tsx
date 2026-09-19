@@ -9,6 +9,8 @@ export default async function AdminUsersPage() {
   const { data } = await supabase
     .from("profiles")
     .select("id, display_name, email, role")
+    // A deleted account has no role left to manage (account-deletion §5.5).
+    .is("deleted_at", null)
     .order("display_name");
   const users: UserRow[] = (data ?? []).map((u) => ({
     id: u.id,

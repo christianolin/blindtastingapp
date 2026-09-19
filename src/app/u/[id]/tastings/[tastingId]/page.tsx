@@ -7,6 +7,7 @@ import { eligibleForGlass, type EligibilityParticipant } from "@/lib/glass-eligi
 import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
+import { isDeletedProfile } from "@/lib/account/delete-account";
 
 const CATEGORY_LABELS: Record<string, string> = {
   country: "Country",
@@ -41,10 +42,12 @@ export default async function ProfileTastingHistoryPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name")
+    .select("id, display_name, deleted_at")
     .eq("id", id)
     .maybeSingle();
-  if (!profile) {
+  // A deleted account has no per-tasting page of its own (D16); the tasting's
+  // own record still shows it as "Deleted user".
+  if (!profile || isDeletedProfile(profile)) {
     notFound();
   }
 

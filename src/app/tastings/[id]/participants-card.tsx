@@ -12,6 +12,28 @@ import {
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { bringsWineLine, participantsSummary, PARTICIPANTS_FOOTER } from "@/lib/lobby-copy";
 import { cn } from "@/lib/utils";
+import { isDeletedProfile } from "@/lib/account/delete-account";
+
+// A roster row's frame: a link to the person's profile or, for a deleted
+// account, which has no profile to open (D16), the same layout in a plain
+// element, without the hover tint that promises a link.
+function RowFrame({
+  href,
+  className,
+  children,
+}: {
+  href: string | null;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return href ? (
+    <Link href={href} className={cn(className, "transition-colors hover:bg-muted/60")}>
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
 
 // Full participant roster with cross-tasting stats (spec §3.3 item 8; BT-D2
 // moved this without change, BT-L2 rebuilds it): each row links to the
@@ -41,10 +63,18 @@ export async function ParticipantsCard({
   const userIds = participantRows.map((p) => p.user_id);
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name, email, avatar_url, location, favorite_wine_type")
+    .select("id, display_name, email, avatar_url, location, favorite_wine_type, deleted_at")
     .in("id", userIds.length > 0 ? userIds : [""]);
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
-  const statsByUserId = await getBulkProfileSummaries(userIds);
+  // A deleted account (D16) keeps its seat and its name, "Deleted user", but
+  // no profile link and no cross-tasting stats line, so it is left out of the
+  // batched stats read altogether.
+  const deletedUserIds = new Set(
+    (profiles ?? []).filter((p) => isDeletedProfile(p)).map((p) => p.id),
+  );
+  const statsByUserId = await getBulkProfileSummaries(
+    userIds.filter((id) => !deletedUserIds.has(id)),
+  );
 
   // Each bring-your-own contributor's first glass, by list order (D10, the
   // same numbering `wineLabel` uses elsewhere) — "brings wine {N}", null
@@ -77,24 +107,25 @@ export async function ParticipantsCard({
             const name = profile?.display_name ?? profile?.email ?? "Someone";
             const isHostRow = p.user_id === tasting.host_id;
             const isViewerRow = viewerIsHost && isHostRow;
+            const isDeleted = deletedUserIds.has(p.user_id);
             const stats = statsByUserId.get(p.user_id);
             const brings = isByo
               ? bringsWineLine(firstGlassByParticipant.get(p.id) ?? null)
               : null;
             const infoBits = [
-              profile?.location ? (
+              !isDeleted && profile?.location ? (
                 <span key="loc" className="flex items-center gap-1">
                   <MapPin className="size-3" />
                   {profile.location}
                 </span>
               ) : null,
-              profile?.favorite_wine_type ? (
+              !isDeleted && profile?.favorite_wine_type ? (
                 <span key="wine" className="flex items-center gap-1">
                   <Wine className="size-3" />
                   {profile.favorite_wine_type}
                 </span>
               ) : null,
-              stats && stats.winesGuessed > 0 ? (
+              !isDeleted && stats && stats.winesGuessed > 0 ? (
                 <span key="stats">
                   {stats.tastingsAttended} tasting
                   {stats.tastingsAttended === 1 ? "" : "s"} ·{" "}
@@ -105,9 +136,9 @@ export async function ParticipantsCard({
             ].filter(Boolean);
             return (
               <li key={p.user_id}>
-                <Link
-                  href={`/u/${p.user_id}`}
-                  className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/60"
+                <RowFrame
+                  href={isDeleted ? null : `/u/${p.user_id}`}
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-1.5"
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     {profile?.avatar_url ? (
@@ -152,7 +183,7 @@ export async function ParticipantsCard({
                       {p.status === "JOINED" ? "In" : "Invited"}
                     </Badge>
                   )}
-                </Link>
+                </RowFrame>
               </li>
             );
           })}

@@ -10,6 +10,8 @@ import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats, type CategoryKey } from "@/lib/profile-stats";
 import { FAVORITE_WINE_TYPE_ITEMS } from "@/lib/wine-types";
+import { DELETED_DISPLAY_NAME, profilePageView } from "@/lib/account/delete-account";
+import { DELETED_PROFILE_LINE } from "@/lib/account/delete-copy";
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
   country: "Country",
@@ -45,7 +47,7 @@ export default async function ProfilePage({
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, bio, avatar_url, location, favorite_wine_type, created_at",
+      "id, display_name, bio, avatar_url, location, favorite_wine_type, created_at, deleted_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -53,7 +55,43 @@ export default async function ProfilePage({
     notFound();
   }
 
-  const isOwnProfile = profile.id === user.id;
+  const view = profilePageView({
+    viewerId: user.id,
+    profileId: profile.id,
+    deletedAt: profile.deleted_at,
+  });
+
+  // D16: a deleted account keeps its row (the tastings it hosted or joined
+  // point at it), but its page is the name and one line — no photo, stats,
+  // tastings list, joined date, friend button or cellar link.
+  if (view === "deleted") {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader
+          userId={user.id}
+          displayName={me?.display_name ?? user.email ?? ""}
+          avatarUrl={me?.avatar_url ?? null}
+        />
+        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 p-8">
+          <Card>
+            <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
+              <span aria-hidden className="size-24 rounded-full bg-secondary" />
+              <div>
+                <h1 className="font-heading text-2xl font-semibold">
+                  {DELETED_DISPLAY_NAME}
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {DELETED_PROFILE_LINE}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const isOwnProfile = view === "own";
 
   let isFriend = false;
   if (!isOwnProfile) {

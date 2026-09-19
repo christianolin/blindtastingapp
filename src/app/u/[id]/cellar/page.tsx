@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { getCellarBottles } from "@/lib/cellar/bottles";
 import { headerStats, headerSubtitle } from "@/lib/cellar/cellar-rows";
 import { CellarBottles } from "@/app/cellar/cellar-bottles";
+import { isDeletedProfile } from "@/lib/account/delete-account";
 
 // A friend's cellar rendered with the same Bottles frame as your own, but
 // `readOnly` (CC-U8, spec §5.9, D12): community ratings shown, the viewer's
@@ -28,10 +29,11 @@ export default async function UserCellarPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, deleted_at")
     .eq("id", id)
     .maybeSingle();
-  if (!profile) notFound();
+  // A deleted account's cellar is gone with it (D16).
+  if (!profile || isDeletedProfile(profile)) notFound();
   const displayName = profile.display_name ?? "This member";
 
   const { data: canView } = await supabase.rpc("can_view_cellar", { p_owner: id });
