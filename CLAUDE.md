@@ -968,17 +968,36 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the lobby and a "How scoring works" link atop the guess form. Vintage
   scoring (exact = 2, off-by-one year = 1, else 0; NV/tawny exact-only) is
   shown both there and inline in the guess form's Vintage field label.
-- Profiles carry optional `location`, `phone`, `favorite_wine_type` (plain
-  text columns, migration `20260718090000_profile_optional_fields.sql`) set
-  on `/profile/edit`. `favorite_wine_type` is a fixed set defined in
-  `src/lib/wine-types.ts` (`FAVORITE_WINE_TYPE_ITEMS`), not a reference table
-  — it's flavor text, nothing scores off it. `location` and
-  `favorite_wine_type` are shown on the public profile (`/u/[id]`) and People
-  directory, consistent with the app's open-directory philosophy; **phone is
-  deliberately kept private** — only ever queried/shown on the owner's own
-  `/profile/edit` page, never on `/u/[id]` or `/people`, since it's more
-  sensitive PII than the rest of what's public here. If phone is ever wanted
-  publicly, that's a conscious call to make separately, not a default.
+- Profiles carry optional `location` and `phone` (plain text columns,
+  migration `20260718090000_profile_optional_fields.sql`) set on
+  `/profile/edit`. `location` is shown on the public profile (`/u/[id]`) and
+  People directory, consistent with the app's open-directory philosophy;
+  **phone is deliberately kept private** — only ever queried/shown on the
+  owner's own `/profile/edit` page, never on `/u/[id]` or `/people`, since
+  it's more sensitive PII than the rest of what's public here. If phone is
+  ever wanted publicly, that's a conscious call to make separately, not a
+  default.
+- **Favourite regions and producers** (2026-09-19, owner: the favourite wine
+  type is gone; spec `docs/superpowers/specs/2026-09-19-profile-favourites.md`,
+  migration `20260919141700_profile_favourites.sql`). `favorite_wine_type`
+  is retired from the app — the column stays in the database, in
+  `database.types.ts`'s Row and in the nine-column `profiles` UPDATE grant,
+  but nothing in `src/` reads or writes it and `src/lib/wine-types.ts` is
+  deleted (`src/lib/favourite-wine-type-retired.test.ts` fails on any
+  reference coming back). In its place a person picks up to 10 favourite
+  regions and up to 10 favourite producers from dropdowns on `/profile/edit`
+  (`favourites-fields.tsx`), stored in `profile_favourite_regions` /
+  `profile_favourite_producers` (one row per favourite, `position` 1..10,
+  readable by every signed-in viewer like the rest of a profile, written
+  only as yourself). Saving replaces both sets at once through
+  `set_profile_favourites(p_region_ids, p_producer_ids)` (SECURITY INVOKER,
+  `authenticated` only); a BEFORE INSERT guard refuses a deleted profile, a
+  per-country "None" sentinel region and an 11th favourite, and
+  `profiles_deleted_drop_favourites` removes both sets when an account is
+  deleted. `src/lib/profile-favourites.ts` is the one read/write module
+  (`getProfileFavourites` returns null on any error so the profile page
+  never breaks); `FavouritesChips` (`src/components/profile/favourites-chips.tsx`)
+  renders them under the bio in `ProfileHeader`'s `favourites` slot.
 - `getProfileStats` (`src/lib/profile-stats.ts`) also computes "what have you
   tasted most" (`topCountries`/`topRegions`/`topGrapes`, top 5 each) — tallied
   from the actual `wine_answers` for every wine with a scored guess, NOT from
@@ -1231,7 +1250,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   referenced by an entered wine, so this wasn't worth chasing further.
 - The tasting page's Participants card is rich, not a bare name list: each
   row links to the person's profile and shows their avatar (initial-circle
-  fallback), a location/favorite-wine info line, and a cross-tasting stats
+  fallback), a location info line, and a cross-tasting stats
   line ("N tastings · X.X avg") fetched via `getBulkProfileSummaries` —
   the batched helper, per its own rule about many-people stat surfaces.
   **Reversed** (spec §1.4 row 20): every row no longer shows a uniform Host
