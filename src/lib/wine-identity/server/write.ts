@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
 import { blendNeedsReplace, storableBlend } from "../blend-sync";
+import { catalogWinePayload } from "../catalog-payload";
 import { toCompleteWine, toUnidentifiedWine } from "../complete";
 import { describeMissing } from "../describe";
 import { catalogFillPlan, type CatalogFillContext } from "../fill-rule";
@@ -331,26 +332,6 @@ async function identityExists(supabase: Db, wine: ResolvedWine): Promise<boolean
   return (data ?? []).some((row) => identityName(row.wine_name) === name);
 }
 
-/** The jsonb keys every `find_or_create_catalog_wine` caller sends. A blank wine
-    name is null (D3); the RPC stores `nullif(btrim(...), '')` either way. */
-function catalogWinePayload(wine: ResolvedWine) {
-  return {
-    country_id: wine.countryId,
-    region_id: wine.regionId,
-    appellation_id: wine.appellationId,
-    primary_grape_id: wine.primaryGrapeId,
-    secondary_grape_id: wine.secondaryGrapeId,
-    producer_id: wine.producerId,
-    type_designation_id: wine.typeDesignationId,
-    vintage_kind: wine.vintage.kind,
-    vintage_year: wine.vintage.year,
-    vintage_tawny_years: wine.vintage.tawnyYears,
-    wine_name: wine.wineName,
-    colour: wine.colour,
-    style: wine.style,
-  };
-}
-
 /**
  * The catalog wine for a resolved identity, found or created (spec §B.9):
  * 1. a lookup of the identity sets `written`, true only when no row existed;
@@ -362,19 +343,21 @@ function catalogWinePayload(wine: ResolvedWine) {
  *    runs again on the next add.
  * Flight callers (add, finish, Edit, Swap) pass `{ fill: false }` and call
  * `fillFlightCatalogWine` after the answer key is written: the fill must never run
- * before the glass exists, when a brand-new wine is still public (spec
- * 2026-09-19-rule1-usage-and-main-photo D9).
+ * before the glass exists (spec 2026-09-19-rule1-usage-and-main-photo D9).
+ * Flight callers also pass `hidden` (`flightWineBornHidden(revealMode)`): a wine it
+ * creates is born `blind_pending`, so no request ever shows it (spec
+ * 2026-09-19-rule1-older-leaks D1).
  * Never throws.
  */
 export async function upsertCatalogWine(
   supabase: Db,
   userId: string,
   wine: ResolvedWine,
-  options: { fill?: boolean } = {},
+  options: { fill?: boolean; hidden?: boolean } = {},
 ): Promise<{ catalogWineId: string; written: boolean } | WriteRefusal> {
   try {
     const existed = await identityExists(supabase, wine);
-    const payload = catalogWinePayload(wine);
+    const payload = catalogWinePayload(wine, { hidden: options.hidden === true });
 
     let written = !existed;
     let response = await supabase.rpc("find_or_create_catalog_wine", { p: payload });
@@ -505,13 +488,15 @@ export async function fillCatalogWine(
 
 /**
  * The flight's fill (spec 2026-09-19-rule1-usage-and-main-photo D9), called only
- * after the glass's answer key is written, so a brand-new wine is `blind_pending`
- * by then (catalog_wine_mark_blind): "catalog read" admits only its creator (the
- * adder), a curator, and whoever can already read that answer key. That holds
- * only while the glass links it: an Edit, Swap or Remove that re-points the glass
- * un-hides the abandoned wine, fill included, while the tasting runs (spec F11,
- * pre-existing). `fillCatalogWine` with a `flight` context: a public wine is
- * never filled unless `glassRevealed` (an OPEN board), and `image_url` never is.
+ * after the glass's answer key is written. A brand-new wine is `blind_pending`
+ * (born hidden, `upsertCatalogWine`'s `hidden`): "catalog read" admits only its
+ * creator (the adder), a curator, and whoever can already read that answer key.
+ * A wine born for a flight is hidden from its creation, and only a reveal
+ * publishes it: that glass's reveal (also after an Edit or Swap away from it), or
+ * the reveal of a later glass that pours it. A removed glass or a deleted tasting
+ * leaves it hidden (`flight_holds`, spec 2026-09-19-rule1-older-leaks D14-D16). `fillCatalogWine`
+ * with a `flight` context: a public wine is never filled unless `glassRevealed`
+ * (an OPEN board), and `image_url` never is.
  * Never throws: a failed fill is logged and never refuses the glass.
  */
 export async function fillFlightCatalogWine(
