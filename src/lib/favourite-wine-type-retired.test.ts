@@ -26,10 +26,9 @@ const DATABASE_TYPES_FILE = path.join(SRC_DIR, "lib", "supabase", "database.type
 
 /** Still pending the main session's merge edit to src/app/u/[id]/page.tsx
  *  (§5.8) — that page keeps importing src/lib/wine-types.ts until then. */
-const PENDING_MAIN_SESSION = [
-  path.join(SRC_DIR, "app", "u", "[id]", "page.tsx"),
-  path.join(SRC_DIR, "lib", "wine-types.ts"),
-];
+// Emptied at merge (2026-09-19): the redesigned profile page no longer names
+// the favourite wine type and src/lib/wine-types.ts is deleted.
+const PENDING_MAIN_SESSION: string[] = [];
 
 const FORBIDDEN = [/favorite_wine_type/, /favoriteWineType/, /FAVORITE_WINE_TYPE/, /@\/lib\/wine-types/];
 
@@ -51,6 +50,11 @@ describe("favourite wine type is retired from the app (D1)", () => {
   const allFiles = walk(SRC_DIR);
   const exempt = new Set([THIS_FILE, DATABASE_TYPES_FILE, ...PENDING_MAIN_SESSION]);
   const checked = allFiles.filter((f) => !exempt.has(f));
+
+  it("wine-types.ts is gone and nothing is exempt any more", () => {
+    expect(existsSync(path.join(SRC_DIR, "lib", "wine-types.ts"))).toBe(false);
+    expect(PENDING_MAIN_SESSION).toEqual([]);
+  });
 
   it("PENDING_MAIN_SESSION cannot go stale: every exempted file still exists and still contains a token", () => {
     for (const file of PENDING_MAIN_SESSION) {

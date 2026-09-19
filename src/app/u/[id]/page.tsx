@@ -9,6 +9,8 @@ import { FriendButton } from "@/components/friend-button";
 import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats } from "@/lib/profile-stats";
+import { getProfileFavourites } from "@/lib/profile-favourites";
+import { FavouritesChips } from "@/components/profile/favourites-chips";
 import { DELETED_DISPLAY_NAME, profilePageView } from "@/lib/account/delete-account";
 import { DELETED_PROFILE_LINE } from "@/lib/account/delete-copy";
 import {
@@ -95,8 +97,8 @@ export default async function ProfilePage({
   const inviterName = me?.display_name ?? user.email ?? "";
 
   // R2/§3 step 4: friendship and the cellar gate are only meaningful for
-  // someone else's profile; stats run either way. All three in parallel.
-  const [friendshipResult, cellarResult, stats] = await Promise.all([
+  // someone else's profile; stats and favourites run either way. All in parallel.
+  const [friendshipResult, cellarResult, stats, favourites] = await Promise.all([
     isOwnProfile
       ? Promise.resolve(null)
       : supabase
@@ -107,6 +109,8 @@ export default async function ProfilePage({
           .maybeSingle(),
     isOwnProfile ? Promise.resolve(null) : supabase.rpc("can_view_cellar", { p_owner: profile.id }),
     getProfileStats(profile.id),
+    // Null on a failed read: the chips then simply do not render (D11).
+    getProfileFavourites(supabase, profile.id),
   ]);
   const isFriend = Boolean(friendshipResult?.data);
   // An RPC error hides the button rather than throwing (R2).
@@ -168,6 +172,7 @@ export default async function ProfilePage({
           isOwn={isOwnProfile}
           meta={meta}
           bio={profile.bio}
+          favourites={<FavouritesChips favourites={favourites} className="mt-3" />}
           actions={actions}
         />
 

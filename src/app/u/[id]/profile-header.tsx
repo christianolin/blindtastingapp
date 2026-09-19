@@ -14,6 +14,7 @@ export function ProfileHeader({
   isOwn,
   meta,
   bio,
+  favourites,
   actions,
 }: {
   name: string;
@@ -21,6 +22,8 @@ export function ProfileHeader({
   isOwn: boolean;
   meta: string;
   bio: string | null;
+  /** Favourite regions and producers as chips (renders nothing when empty). */
+  favourites?: ReactNode;
   actions: ReactNode;
 }) {
   return (
@@ -40,6 +43,7 @@ export function ProfileHeader({
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{meta}</p>
         {bio ? <p className="mt-2 max-w-prose text-sm break-words">{bio}</p> : null}
+        {favourites}
       </div>
       <div className="flex flex-wrap items-start gap-2 max-md:w-full md:justify-end">
         {actions}
