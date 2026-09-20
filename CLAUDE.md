@@ -1425,10 +1425,31 @@ a raw subquery, regardless of which two tables look involved at a glance.
     (`document.visibilityState !== "visible"`), and a pane that flicks visible
     fires both wake handlers, so a naive request count reads as pairs every few
     seconds. Front the pane and watch the gaps, or trust the unit tests.
-  - **Still open**: `get_wine_place_context`'s `nearby_list` CTE is 75-98% of
-    that RPC (France 248 ms of 253 ms) because `ST_DWithin` plans as a join
-    filter over all 3,257 boundaries. It needs a migration, and it is why a
-    COUNTRY click still costs ~600 ms on a first visit.
+  - **Nearby places are precomputed** (`20260920090000_wine_place_neighbours.sql`,
+    applied live 2026-09-20 with the owner's go-ahead; spec
+    `docs/superpowers/specs/2026-09-20-wine-place-nearby.md`). `nearby_list`
+    was essentially the WHOLE cost of `get_wine_place_context` — replacing it
+    with `'[]'` makes every key 1.3-2.2 ms — because it ran exact PostGIS
+    distance over full multipolygon outlines on every request. It was NOT a
+    missing index: the GiST index already exists, and forcing the
+    boundaries-first plan is 3-10x SLOWER (France 260 -> 2,542 ms), so never
+    "fix" this by adding one. Three clauses shipped together: a deterministic
+    `order by dist, canonical_key`; an `ST_Intersects` short-circuit
+    (intersection implies distance 0, provably identical — 0 of 3,257 keys
+    differ); and the `wine_place_neighbours` cache with a freshness flag,
+    statement-level staleness triggers and a live fallback, filled by
+    `refresh_wine_place_neighbours()` (owner-only, refuses to publish a
+    partial fill). Live medians: france 253 -> 29 ms, spain 270 -> 27, italy
+    194 -> 26, the catalogue's worst key 558 -> under 2 ms. **Standing rule**:
+    any migration or pipeline step that writes `wine_places` or
+    `wine_place_boundaries` must end with
+    `select public.refresh_wine_place_neighbours();` in the same transaction
+    and treat a negative return as an error — otherwise the cache goes stale
+    and the map silently falls back to the slow live path. The tie-break also
+    fixed a real bug: the nearby order used to depend on which ROLE asked
+    (1,619 of 3,257 keys differed between `postgres` and `authenticated`),
+    because distance-0 ties had no tie-break; chips reordered once for those
+    keys the day it shipped, and nothing outside the `nearby` array moved.
   - **Rejected on evidence**: `useDeferredValue` on the tree search. A
     like-for-like A/B on one build showed no win (64/56 ms without it, 72/64 ms
     with it, plus a new long task), so it was not shipped. Measure any
