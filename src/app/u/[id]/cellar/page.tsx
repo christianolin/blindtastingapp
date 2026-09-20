@@ -11,7 +11,9 @@ import { isDeletedProfile } from "@/lib/account/delete-account";
 // `readOnly` (CC-U8, spec §5.9, D12): community ratings shown, the viewer's
 // own score and every action hidden, no lot sheet, no in-flight marker, no
 // sub-nav, no History or collection link, no value anywhere. Gated by
-// can_view_cellar (visibility PUBLIC/FRIENDS). Notes, consumptions and pour
+// can_view_cellar (visibility PUBLIC/FRIENDS); "cellar own select" admits the
+// owner alone, so `getCellarBottles` reads the lots through `shared_cellar_lots`
+// (masked pours, 20260919223100/20260919223200). Notes, consumptions and pour
 // intents stay private to the owner — `getCellarBottles`'s `readOnly: true`
 // skips those reads entirely, and nothing here reads them either.
 export default async function UserCellarPage({

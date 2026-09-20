@@ -332,8 +332,42 @@ test("wset_notes context defaults to OPEN and accepts BLIND + tasting_wine_id", 
 });
 
 // ---- Task 7: merge_catalog_wines ----
+// Since 20260919223200 (spec 2026-09-19-rule1-older-leaks D6-D8): EXECUTE for
+// authenticated and service_role only; only a revealed glass's answer key moves at
+// merge time, an unrevealed glass's moves to the winner at its own reveal; a
+// hidden wine is never a target. Passes only once 20260919223200 is live.
 
-test("merge repoints notes and answers, tombstones the loser, keeps the snapshot", async () => {
+// A glass of `host`'s tasting whose answer key links `catalogId`; the host holds
+// a JOINED seat, so they can reveal it.
+async function insertMergeGlass(ids, host, catalogId) {
+  const tasting = await client.query(
+    "insert into tastings (name, host_id, timing_mode, wine_source) values ('bb', $1, 'LIVE', 'HOST_PROVIDES') returning id",
+    [host],
+  );
+  await client.query(
+    "insert into tasting_participants (tasting_id, user_id, status) values ($1,$2,'JOINED')",
+    [tasting.rows[0].id, host],
+  );
+  const wine = await client.query(
+    "insert into wines (tasting_id, position) values ($1, 1) returning id",
+    [tasting.rows[0].id],
+  );
+  await client.query(
+    `insert into wine_answers
+       (wine_id, country_id, region_id, primary_grape_id, producer_id, vintage_kind, vintage_year, catalog_wine_id)
+     values ($1,$2,$3,$4,$5,'YEAR',2019,$6)`,
+    [wine.rows[0].id, ids.country, ids.region, ids.grape, ids.producer, catalogId],
+  );
+  return wine.rows[0].id;
+}
+
+async function answerOf(wineId) {
+  return (
+    await client.query("select catalog_wine_id, country_id, producer_id from wine_answers where wine_id=$1", [wineId])
+  ).rows[0];
+}
+
+test("merge repoints notes, tombstones the loser; an unrevealed answer moves at its own reveal", async () => {
   const ids = await referenceIds();
   const [me, host] = await profilePair();
   await withRollback(async () => {
@@ -343,20 +377,7 @@ test("merge repoints notes and answers, tombstones the loser, keeps the snapshot
       "insert into wset_notes (catalog_wine_id, author_id) values ($1,$2) returning id",
       [loser, me],
     );
-    const tasting = await client.query(
-      "insert into tastings (name, host_id, timing_mode, wine_source) values ('bb', $1, 'LIVE', 'HOST_PROVIDES') returning id",
-      [host],
-    );
-    const wine = await client.query(
-      "insert into wines (tasting_id, position) values ($1, 1) returning id",
-      [tasting.rows[0].id],
-    );
-    await client.query(
-      `insert into wine_answers
-         (wine_id, country_id, region_id, primary_grape_id, producer_id, vintage_kind, vintage_year, catalog_wine_id)
-       values ($1,$2,$3,$4,$5,'YEAR',2019,$6)`,
-      [wine.rows[0].id, ids.country, ids.region, ids.grape, ids.producer, loser],
-    );
+    const glass = await insertMergeGlass(ids, host, loser);
 
     await actAs(me);
     await client.query("select merge_catalog_wines($1,$2)", [loser, winner]);
@@ -364,15 +385,80 @@ test("merge repoints notes and answers, tombstones the loser, keeps the snapshot
 
     const n = await client.query("select catalog_wine_id from wset_notes where id=$1", [note.rows[0].id]);
     assert.equal(n.rows[0].catalog_wine_id, winner, "note repointed to winner");
-    const a = await client.query(
-      "select catalog_wine_id, country_id, producer_id from wine_answers where wine_id=$1",
-      [wine.rows[0].id],
-    );
-    assert.equal(a.rows[0].catalog_wine_id, winner, "answer link repointed");
-    assert.equal(a.rows[0].country_id, ids.country, "snapshot country untouched");
-    assert.equal(a.rows[0].producer_id, ids.producer, "snapshot producer untouched");
+    assert.equal((await answerOf(glass)).catalog_wine_id, loser, "an unrevealed glass keeps its answer key on the loser");
     const l = await client.query("select merged_into from catalog_wines where id=$1", [loser]);
     assert.equal(l.rows[0].merged_into, winner, "loser tombstoned");
+
+    await actAs(host);
+    await client.query("select reveal_wine($1)", [glass]);
+    await client.query("reset role");
+
+    const a = await answerOf(glass);
+    assert.equal(a.catalog_wine_id, winner, "the answer key moved to the winner at the reveal");
+    assert.equal(a.country_id, ids.country, "snapshot country untouched");
+    assert.equal(a.producer_id, ids.producer, "snapshot producer untouched");
+  });
+});
+
+test("merge moves a revealed glass's answer key at merge time", async () => {
+  const ids = await referenceIds();
+  const [me, host] = await profilePair();
+  await withRollback(async () => {
+    const loser = await insertCatalog(ids, me);
+    const winner = await insertCatalog(ids, me);
+    const glass = await insertMergeGlass(ids, host, loser);
+    await client.query("update wines set is_revealed=true where id=$1", [glass]);
+
+    await actAs(me);
+    await client.query("select merge_catalog_wines($1,$2)", [loser, winner]);
+    await client.query("reset role");
+
+    const a = await answerOf(glass);
+    assert.equal(a.catalog_wine_id, winner, "answer link repointed");
+    assert.equal(a.country_id, ids.country, "snapshot country untouched");
+    assert.equal(a.producer_id, ids.producer, "snapshot producer untouched");
+  });
+});
+
+test("anon cannot call merge_catalog_wines", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  await withRollback(async () => {
+    const loser = await insertCatalog(ids, me);
+    const winner = await insertCatalog(ids, me);
+    await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ role: "anon" })]);
+    await client.query("set local role anon");
+    await assert.rejects(
+      client.query("select merge_catalog_wines($1,$2)", [loser, winner]),
+      (e) => e.code === "42501" && /permission denied for function merge_catalog_wines/.test(e.message),
+    );
+  });
+});
+
+test("a hidden wine is not a merge target, in the same words as a missing one", async () => {
+  const ids = await referenceIds();
+  const [me] = await profilePair();
+  const refusal = async (loser, winner) => {
+    await client.query("savepoint merge_target");
+    try {
+      await actAs(me);
+      await client.query("select merge_catalog_wines($1,$2)", [loser, winner]);
+      return null;
+    } catch (e) {
+      return e.message;
+    } finally {
+      await client.query("rollback to savepoint merge_target");
+      await client.query("reset role");
+    }
+  };
+  await withRollback(async () => {
+    const loser = await insertCatalog(ids, me);
+    const hidden = await insertCatalog(ids, me);
+    await client.query("update catalog_wines set blind_pending=true where id=$1", [hidden]);
+    const toHidden = await refusal(loser, hidden);
+    const toMissing = await refusal(loser, "00000000-0000-4000-8000-000000000000");
+    assert.equal(toHidden, "winner catalog wine not found or already merged");
+    assert.equal(toMissing, toHidden);
   });
 });
 

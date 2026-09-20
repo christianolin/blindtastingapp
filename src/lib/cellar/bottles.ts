@@ -2,10 +2,11 @@
 //
 // One read path for both cellars: your own (`/cellar`) and someone else's
 // (`/u/[id]/cellar`, `readOnly`). Every query runs under the viewer's RLS with
-// the client the page passes in — `"cellar own select"` is
-// `owner_id = auth.uid() or can_view_cellar(owner_id)`, so a friend's or a
-// public cellar reads here too, and the owner-only reads (your notes, your
-// pour intents) are skipped entirely in `readOnly` (D12).
+// the client the page passes in — `"cellar own select"` admits the owner alone;
+// someone else's cellar reads through `shared_cellar_lots` (masked pours,
+// 20260919223100/20260919223200), gated like the old policy by
+// `can_view_cellar`, and the owner-only reads (your notes, your pour intents)
+// are skipped entirely in `readOnly` (D12).
 //
 // No money beyond the lot's own `price_per_bottle`, which only the owner's lot
 // sheet renders (D4); the catalog wine's typical price is never selected, and
@@ -48,11 +49,14 @@ export async function getCellarBottles(
   opts: CellarBottlesOptions,
 ): Promise<BottleRow[]> {
   const lots: LotEmbedRow[] = [];
+  const base = opts.readOnly
+    ? // Someone else's cellar (/u/[id]/cellar): only through shared_cellar_lots, where a bottle poured
+      // into a glass that is not revealed yet still counts in its lot (spec 2026-09-19-rule1-older-leaks
+      // D10, D11); "cellar own select" admits the owner alone.
+      () => supabase.rpc("shared_cellar_lots", { p_owner: ownerId }).select(LOT_SELECT)
+    : () => supabase.from("cellar_lots").select(LOT_SELECT).eq("owner_id", ownerId);
   for (let from = 0; ; from += LOT_PAGE) {
-    const { data: lotData } = await supabase
-      .from("cellar_lots")
-      .select(LOT_SELECT)
-      .eq("owner_id", ownerId)
+    const { data: lotData } = await base()
       .gt("quantity", 0)
       .order("created_at", { ascending: false })
       .order("id")

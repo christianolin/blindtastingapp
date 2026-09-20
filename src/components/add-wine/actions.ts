@@ -31,7 +31,7 @@ import {
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
 import { addedVia } from "./added-via";
-import { callerKnowsWine } from "./flight-knowledge";
+import { callerKnowsWine, searchShowsCatalogWine } from "./flight-knowledge";
 import { windowContains } from "./row-format";
 import type {
   AddResult,
@@ -192,7 +192,7 @@ function queryTokens(query: string): string[] {
 // The catalog wine columns the cellar / tasted rows embed — enough for the
 // title, the thumbnail, the blind-pending gate and the match text.
 const WINE_EMBED =
-  "id, wine_name, image_url, blind_pending, vintage_kind, vintage_year, vintage_tawny_years, " +
+  "id, wine_name, image_url, blind_pending, created_by, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name)";
 
 type EmbeddedWine = {
@@ -200,6 +200,7 @@ type EmbeddedWine = {
   wine_name: string | null;
   image_url: string | null;
   blind_pending: boolean;
+  created_by: string | null;
   vintage_kind: VintageKind;
   vintage_year: number | null;
   vintage_tawny_years: number | null;
@@ -252,11 +253,17 @@ function embeddedSearchText(w: EmbeddedWine): string {
   );
 }
 
-// Blind-pending rows are placeholders for a hidden tasting wine — never a
-// search result (they would leak "someone is pouring X tonight").
-function matchingWine(rel: unknown, tokens: string[]): EmbeddedWine | null {
+// Blind-pending rows are a flight's hidden wines — never a search result for
+// anyone but their creator (they would leak "someone is pouring X tonight"),
+// who reads the row already and may need to add it again
+// (searchShowsCatalogWine, spec 2026-09-19-rule1-older-leaks D16).
+function shownTo(w: { blind_pending: boolean; created_by: string | null }, userId: string): boolean {
+  return searchShowsCatalogWine({ blindPending: w.blind_pending, createdBy: w.created_by }, userId);
+}
+
+function matchingWine(rel: unknown, tokens: string[], userId: string): EmbeddedWine | null {
   const w = embeddedWine(rel);
-  if (!w || w.blind_pending) return null;
+  if (!w || !shownTo(w, userId)) return null;
   const text = embeddedSearchText(w);
   return tokens.every((t) => text.includes(t)) ? w : null;
 }
@@ -264,6 +271,7 @@ function matchingWine(rel: unknown, tokens: string[]): EmbeddedWine | null {
 type CatalogIdentityRow = {
   id: string;
   blind_pending: boolean;
+  created_by: string | null;
   image_url: string | null;
   primary_grape_id: string;
   producer_id: string;
@@ -283,7 +291,7 @@ async function catalogIdentities(supabase: Db, ids: readonly string[]): Promise<
     const { data, error } = await supabase
       .from("catalog_wines")
       .select(
-        "id, blind_pending, image_url, primary_grape_id, producer_id, wine_name, appellation_id, " +
+        "id, blind_pending, created_by, image_url, primary_grape_id, producer_id, wine_name, appellation_id, " +
           "vintage_kind, vintage_year, vintage_tawny_years",
       )
       .in("id", ids.slice(from, from + ID_CHUNK));
@@ -355,7 +363,7 @@ export async function searchAddWine(
   }>;
   const cellar: SearchGroups["cellar"] = lotRows
     .flatMap((l) => {
-      const w = matchingWine(l.catalog_wines, tokens);
+      const w = matchingWine(l.catalog_wines, tokens, user.id);
       if (!w) return [];
       return [
         {
@@ -387,7 +395,7 @@ export async function searchAddWine(
   const tastedHits: { catalogWineId: string; title: string; imageUrl: string | null; myScore: number | null; tastedOn: string }[] = [];
   for (const n of noteRows) {
     if (seen.has(n.catalog_wine_id)) continue;
-    const w = matchingWine(n.catalog_wines, tokens);
+    const w = matchingWine(n.catalog_wines, tokens, user.id);
     if (!w) continue;
     seen.add(n.catalog_wine_id);
     tastedHits.push({
@@ -418,15 +426,15 @@ export async function searchAddWine(
 
   const tasted: SearchGroups["tasted"] = tastedHits.flatMap((t) => {
     const w = identities.get(t.catalogWineId);
-    if (!w || w.blind_pending) return [];
+    if (!w || !shownTo(w, user.id)) return [];
     return [{ ...t, ...identityFields(w), inFlight: flightIds.has(t.catalogWineId) }];
   });
 
-  // --- catalog: the RPC's page, minus blind-pending placeholders ---
+  // --- catalog: the RPC's page, minus hidden wines the caller did not create ---
   const ratingById = new Map(ratings.map((r) => [r.catalog_wine_id ?? "", r]));
   const visibleHits = rows.filter((r) => {
     const w = identities.get(r.id);
-    return w !== undefined && !w.blind_pending;
+    return w !== undefined && shownTo(w, user.id);
   });
   const grapeName = await grapeNames(
     supabase,

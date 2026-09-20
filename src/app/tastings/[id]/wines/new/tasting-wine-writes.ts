@@ -13,6 +13,7 @@ import {
   semiBlindAddRefusal,
   TASTING_CLOSED,
 } from "@/lib/flight-glass-rules";
+import { flightWineBornHidden } from "@/lib/wine-identity/catalog-payload";
 import { emptyDraft, missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
 import {
   draftFromAnswerKey,
@@ -395,7 +396,10 @@ export async function insertTastingWineFromIdentity(
 
   const prepared = await prepareCompleteWine(supabase, draft);
   if ("error" in prepared) return prepared;
-  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, { fill: false });
+  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, {
+    fill: false,
+    hidden: flightWineBornHidden(adder.tasting.revealMode),
+  });
   if ("error" in catalog) return catalog;
 
   const glass = await insertTastingWineCore(
@@ -406,9 +410,10 @@ export async function insertTastingWineFromIdentity(
     addedVia,
   );
   if ("error" in glass) return glass;
-  // After the answer key: a brand-new wine is blind_pending by now (catalog_wine_mark_blind), so its
-  // fill is read only by its creator (the caller), a curator and whoever can already read that answer
-  // key, for as long as the glass links it (spec 2026-09-19-rule1-usage-and-main-photo D9, F11); a
+  // After the answer key: a brand-new wine was born hidden (find_or_create_catalog_wine's `hidden`), so
+  // its fill is read only by its creator (the caller), a curator and whoever can already read that
+  // answer key, until a glass that links it (or this one, after an Edit or Swap away) is revealed; a
+  // removed glass or a deleted tasting leaves it hidden (spec 2026-09-19-rule1-older-leaks D14-D16). A
   // public wine is never filled from a flight.
   await fillFlightCatalogWine(supabase, userId, catalog.catalogWineId, prepared.wine, adder.tasting.revealMode === "OPEN");
   return { ...glass, catalogWineId: catalog.catalogWineId };
@@ -903,7 +908,10 @@ export async function saveFlightGlassCore(
 
   const prepared = await prepareCompleteWine(supabase, draft);
   if ("error" in prepared) return prepared;
-  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, { fill: false });
+  const catalog = await upsertCatalogWine(supabase, userId, prepared.wine, {
+    fill: false,
+    hidden: flightWineBornHidden(state.revealMode),
+  });
   if ("error" in catalog) return catalog;
   const refusal = await writeAnswer(supabase, wineId, !wasIncomplete, {
     ...answerIdentity(prepared.wine),
@@ -911,8 +919,12 @@ export async function saveFlightGlassCore(
     unidentified_wine_id: null,
   });
   if (refusal) return refusal;
-  // After the answer key, as for a new glass (spec 2026-09-19-rule1-usage-and-main-photo D9). The
-  // edit guard refuses a revealed glass, so `isRevealed` is false in practice; it is passed as is.
+  // After the answer key: a brand-new wine was born hidden (find_or_create_catalog_wine's `hidden`), so
+  // its fill is read only by its creator (the caller), a curator and whoever can already read that
+  // answer key, until a glass that links it (or this one, after an Edit or Swap away) is revealed; a
+  // removed glass or a deleted tasting leaves it hidden (spec 2026-09-19-rule1-older-leaks D14-D16). A
+  // public wine is never filled from a flight. The edit guard refuses a revealed glass, so
+  // `isRevealed` is false in practice; it is passed as is.
   await fillFlightCatalogWine(supabase, userId, catalog.catalogWineId, prepared.wine, state.isRevealed);
   return { ok: true, wineId, catalogWineId: catalog.catalogWineId, finishedIncomplete: wasIncomplete };
 }

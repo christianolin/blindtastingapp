@@ -1,9 +1,10 @@
 // Everything the lot sheet renders about one lot (CC-D2, spec §4
 // "lot-sheet.ts", §5.5; D3, D7, D8, D9).
 //
-// Refinement 21: this is an OWNER-ONLY read. `"cellar own select"` is
-// `owner_id = auth.uid() or can_view_cellar(owner_id)`, so a friend's lot row
-// would come back under RLS — the sheet still refuses it, because everything
+// Refinement 21: this is an OWNER-ONLY read. `"cellar own select"` admits the
+// owner alone; someone else's cellar reads through `shared_cellar_lots` (masked
+// pours, 20260919223100/20260919223200), so a friend's lot row no longer comes
+// back under RLS here — the sheet refuses it anyway, because everything
 // below it (your note, the lot's history, its pour intents, its purchase
 // price) belongs to the owner alone. A lot that is not the viewer's returns
 // `null` exactly as a missing one does.

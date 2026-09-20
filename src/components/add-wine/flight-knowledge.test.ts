@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { callerKnowsWine } from "./flight-knowledge";
+import { callerKnowsWine, searchShowsCatalogWine } from "./flight-knowledge";
+
+describe("searchShowsCatalogWine (spec 2026-09-19-rule1-older-leaks D16)", () => {
+  it("a public wine is listed for everyone", () => {
+    expect(searchShowsCatalogWine({ blindPending: false, createdBy: "c" }, "x")).toBe(true);
+    expect(searchShowsCatalogWine({ blindPending: false, createdBy: null }, "x")).toBe(true);
+  });
+  it("a hidden wine is listed for its creator, who reads it already", () =>
+    expect(searchShowsCatalogWine({ blindPending: true, createdBy: "c" }, "c")).toBe(true));
+  it("a hidden wine is never listed for anyone else", () => {
+    expect(searchShowsCatalogWine({ blindPending: true, createdBy: "c" }, "x")).toBe(false);
+    expect(searchShowsCatalogWine({ blindPending: true, createdBy: null }, "x")).toBe(false);
+  });
+});
 
 const w = (o: Partial<Parameters<typeof callerKnowsWine>[0]> = {}) =>
   ({ hostId: "h", wineSource: "HOST_PROVIDES", isRevealed: false, contributorUserId: null, ...o }) as Parameters<typeof callerKnowsWine>[0];

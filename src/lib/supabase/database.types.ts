@@ -1877,6 +1877,17 @@ export type Database = {
         Args: { p_owner: string };
         Returns: boolean;
       };
+      // 20260919223100 (spec 2026-09-19-rule1-older-leaks D10): someone's cellar
+      // as another person may see it — the owner, or can_view_cellar. A bottle
+      // poured into a glass that is not revealed yet still counts in its lot, and
+      // updated_at reads as created_at. The one read of another person's lots
+      // ("cellar own select" admits the owner alone after 20260919223200).
+      // Returns cellar_lots rows, so `.select(...)` embeds the catalog wine.
+      shared_cellar_lots: {
+        Args: { p_owner: string };
+        Returns: Database["public"]["Tables"]["cellar_lots"]["Row"][];
+        SetofOptions: { from: "*"; to: "cellar_lots"; isOneToOne: false; isSetofReturn: true };
+      };
       import_cellar_lot: {
         Args: { p: unknown };
         Returns: string;
