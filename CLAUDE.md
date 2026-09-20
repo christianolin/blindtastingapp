@@ -1326,6 +1326,69 @@ a raw subquery, regardless of which two tables look involved at a glance.
   asserts; every VERIFIED place must carry an article and Burgundy places a
   grape link. Any live apply must be verified with same-transaction
   assertions — version rows have been observed recorded without their DDL.
+- **Wine map performance** (2026-09-20; specs
+  `docs/superpowers/specs/2026-09-20-wine-map-performance.md` and
+  `2026-09-20-wine-map-data-latency.md`; the measured profile behind them is
+  `.superpowers/map-perf/findings-2026-09-20.md`, gitignored). What was
+  measured on production BEFORE changing anything: camera work was already
+  fine (17 ms frames panning and zooming everywhere tried, ~350 ms
+  jumpTo->idle, no layer/source/heap accumulation over a 12-region tour, 0.8 ms
+  hit-testing) — do not re-optimise it. The costs were elsewhere, and each fix
+  below is verified live:
+  - **The page preloads the tile manifest and the light basemap style**
+    (`page.tsx`): preconnect only warms the socket, and both fetches sat on the
+    map's critical path behind the bundle parse. Live: style 1,645 -> 936 ms,
+    manifest 1,270 -> 936 ms, first tile byte 1,808 -> 1,527 ms, each still
+    fetched exactly once. Keep `as="fetch"` plus anonymous CORS or the browser
+    fetches twice.
+  - **The grape gate is an object lookup, not an array scan**
+    (`src/lib/wine-map/key-gate.ts`). MapLibre's `in` over a literal array is
+    an indexOf per feature per layer; 598 keys on 15 layers meant a linear scan
+    on every tile parse (20-30x slower than the object form over 360k measured
+    evaluations). The shape is
+    `["==", ["get", ["string", ["get","key"], ""], ["literal", keyMap]], true]`:
+    the `string` assertion prevents a per-feature throw on a missing or numeric
+    key, and `== true` (never `to-boolean`) keeps prototype names such as
+    `constructor` out of the gate. A no-filter state must remain an always-true
+    expression, never `undefined`. MapLibre deep-clones a filter per layer, so
+    the style's byte count is unchanged — the win is per-feature evaluation.
+  - **The basemap is trimmed to 68 of Carto's 93 layers**, and every road is
+    zoom-gated to `BASEMAP_ROAD_MIN_ZOOM` (z10) rather than deleted. A road's
+    surface, bridge and tunnel states are three layers with mutually exclusive
+    filters, so deleting the tunnel half leaves holes in motorways and
+    railways; gating saves the same parse work with no gaps, because MapLibre
+    skips a gated layer before filtering a single feature. Live: road features
+    4 -> 0 at z5, 23 -> 0 at z9, 129 -> 87 at z12, unchanged at z15.
+  - **A theme swap gets a pre-tuned, per-theme cached style OBJECT**
+    (`loadBasemapStyle` / `cachedBasemapStyle`) with `validate: false`, not a
+    URL. Live: blocked main thread per swap 350 ms across four long tasks ->
+    69-137 ms, and a repeat swap fetches nothing. The `setStyle` +
+    `transformStyle` + `withWineLayers` contract is unchanged, and `mapStyle`
+    must still never change.
+  - **Place data is fetched in parallel and cached per key**
+    (`src/lib/wine-map/place-cache.ts`, `keyed-cache.ts`,
+    `use-place-prefetch.ts`). Selecting a place cost 614 ms across four
+    requests, three chained (context -> a `wine_places` id lookup ->
+    placements -> archetypes, with styles starting 512 ms in). Now one embedded
+    archetype query, styles re-keyed to `canonical_key` so they start with the
+    context RPC, and a bounded per-key cache. Live: first visit 560 ms with 3
+    parallel requests; a revisit 115 ms with ZERO requests; a ~120 ms hover
+    dwell prefetches (passing over four rows costs one place's requests, and
+    clicking a hovered row costs none). Caching is safe because every policy
+    behind this data is content-level rather than per-user and
+    `get_wine_place_context` is SECURITY INVOKER — a future per-user policy
+    would have to clear the caches.
+  - **The active-tasting poll backs off** from 20 s to 120 s when nothing is
+    running (`pollIntervalMs` in `src/lib/active-tasting/select.ts`); it was
+    ~788 ms of server work every 20 s on every page.
+  - **Still open**: `get_wine_place_context`'s `nearby_list` CTE is 75-98% of
+    that RPC (France 248 ms of 253 ms) because `ST_DWithin` plans as a join
+    filter over all 3,257 boundaries. It needs a migration, and it is why a
+    COUNTRY click still costs ~600 ms on a first visit.
+  - **Rejected on evidence**: `useDeferredValue` on the tree search. A
+    like-for-like A/B on one build showed no win (64/56 ms without it, 72/64 ms
+    with it, plus a new long task), so it was not shipped. Measure any
+    debounce/defer attempt the same way before believing it.
 - **Wine Map dark mode** (2026-09-19, spec
   `docs/superpowers/specs/2026-09-19-map-dark-mode.md`). The map follows the
   theme `<html>` is rendering (its `.dark` class, via `useRenderedTheme` in
