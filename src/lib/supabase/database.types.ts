@@ -1067,6 +1067,42 @@ export type Database = {
         >;
         Relationships: [];
       };
+      // The map's precomputed "nearby" chips (migration 20260920090000).
+      // get_wine_place_context reads these server-side; no client selects them
+      // today, but they are typed here so the first one that does gets a real
+      // row type instead of postgrest-js collapsing to never.
+      wine_place_neighbours: {
+        Row: {
+          wine_place_id: string;
+          position: number;
+          neighbour_place_id: string;
+        };
+        Insert: {
+          wine_place_id: string;
+          position: number;
+          neighbour_place_id: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_neighbours"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      wine_place_neighbours_state: {
+        Row: {
+          only_row: boolean;
+          fresh: boolean;
+          built_at: string | null;
+        };
+        Insert: {
+          only_row?: boolean;
+          fresh?: boolean;
+          built_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_place_neighbours_state"]["Insert"]
+        >;
+        Relationships: [];
+      };
       wine_map_releases: {
         Row: {
           id: string;

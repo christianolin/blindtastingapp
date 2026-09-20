@@ -16,6 +16,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { pgConfig, releaseVersion, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const arg = (n, d = null) => {
   const i = process.argv.indexOf(`--${n}`);
@@ -305,6 +306,7 @@ try {
   );
   assert.equal(result.rows.length, 1, "expected one staged boundary row");
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log(`BOUNDARY-STAGED champagne DRAFT boundary=${result.rows[0].id}`);
 } catch (e) {
   await client.query("rollback").catch(() => {});

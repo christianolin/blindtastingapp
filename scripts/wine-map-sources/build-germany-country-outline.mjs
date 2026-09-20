@@ -23,6 +23,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadLaenderCache, DATASET_URL, LICENCE } from "./fetch-germany-laender.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const NAMESPACE = "BKG_VG250";
 // Germany spans roughly lon 5.87..15.04, lat 47.27..55.06; the window is a
@@ -177,6 +178,7 @@ async function main() {
     );
     assert.equal(chk.rows[0].n, 1, "expected exactly 1 current-validated germany boundary");
     await client.query("commit");
+    await warnIfNeighbourCacheStale(client);
     console.log(`COMMITTED Germany outline: ${r.npoints} vertices, ${r.nparts} part(s), boundary ${res.rows[0].id}`);
   } catch (e) {
     await client.query("rollback").catch(() => {});

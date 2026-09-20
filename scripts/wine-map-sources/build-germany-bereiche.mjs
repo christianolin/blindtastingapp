@@ -17,6 +17,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
@@ -165,6 +166,7 @@ async function buildOne(client, { key, rawName, parentKey, geoms }) {
     assert.equal(res.rows.length, 1, `${key}: boundary insert failed`);
     await client.query("update wine_places set publication_status = 'VERIFIED' where id = $1 and publication_status = 'DRAFT'", [placeId]);
     await client.query("commit");
+    await warnIfNeighbourCacheStale(client);
     console.log(`   PROMOTED ${key}`);
   } catch (e) {
     await client.query("rollback").catch(() => {});

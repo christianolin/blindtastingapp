@@ -38,6 +38,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { matchComune } from "./istat-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const hasFlag = (n) => process.argv.includes(`--${n}`);
 const STAGE = hasFlag("stage");
@@ -510,6 +511,7 @@ try {
     console.log(`BOUNDARY-STAGED ${boundary.key} DRAFT boundary=${result.rows[0].id}`);
   }
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log("STAGE MODE COMPLETE: 3 DRAFT boundaries committed.");
 } catch (e) {
   await client.query("rollback").catch(() => {});

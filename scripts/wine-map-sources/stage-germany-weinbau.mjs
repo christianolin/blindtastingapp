@@ -19,6 +19,7 @@ import { readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion, attributionKeyFor } from "../wine-map-tiles/lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const STAGE = process.argv.includes("--stage");
 const SOURCE_FILE = "data/wine-map/germany-weinbau-dissolved.geojson";
@@ -185,5 +186,6 @@ try {
     console.log(`BOUNDARY-STAGED ${slug} DRAFT boundary=${result.rows[0].id}`);
   }
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log(`STAGE MODE COMPLETE: ${Object.keys(reports).length} DRAFT boundaries committed.`);
 } catch (e) { await client.query("rollback").catch(() => {}); throw e; } finally { await client.end(); }

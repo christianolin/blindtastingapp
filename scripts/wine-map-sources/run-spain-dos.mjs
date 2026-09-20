@@ -29,6 +29,7 @@ import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadMunicipioCache } from "./fetch-spain-municipios.mjs";
 import { buildMunicipioIndex, resolveMembership } from "./spain-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const MEMBERSHIP_FILE = "data/wine-map/spain-do-membership.json";
 const NAMESPACE = "IGN_CNIG_SPAIN";
@@ -368,6 +369,7 @@ async function main() {
         assert.equal(check.rows[0]?.publication_status, "VERIFIED", `${label}: place not VERIFIED post-flip`);
         assert.equal(Number(check.rows[0]?.curval), 1, `${label}: expected exactly 1 current-validated boundary`);
         await client.query("commit");
+        await warnIfNeighbourCacheStale(client);
         promotedCount += 1;
         console.log(`PROMOTED ${label}: ${records.length} municipios, boundary=${res.rows[0].id}${flip.rows.length ? "" : " (place already VERIFIED)"}`);
       } catch (error) {

@@ -17,6 +17,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
@@ -111,6 +112,7 @@ try {
          revision]);
       await client.query("update wine_places set publication_status='VERIFIED' where id=$1 and publication_status='DRAFT'", [id]);
       await client.query("commit");
+      await warnIfNeighbourCacheStale(client);
       ok += 1;
       if (ok % 200 === 0) console.log(`   ${ok}/${targets.length}…`);
     } catch (e) {

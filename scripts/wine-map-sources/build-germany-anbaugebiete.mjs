@@ -26,6 +26,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 // Not DATASET_URL: unlike the other country builders, which record the
 // human-readable dataset page, this one records SOURCE_URL — the exact WFS
 // GetFeature request the geometry came from. That is the more precise
@@ -234,6 +235,7 @@ async function buildOne(client, gebiet, geoms) {
     assert.equal(chk.rows[0].b, 1, `${key}: expected exactly 1 current-validated boundary`);
     assert.equal(chk.rows[0].s, "VERIFIED", `${key}: not promoted`);
     await client.query("commit");
+    await warnIfNeighbourCacheStale(client);
     console.log(`   PROMOTED ${key}: boundary ${res.rows[0].id}`);
   } catch (e) {
     await client.query("rollback").catch(() => {});

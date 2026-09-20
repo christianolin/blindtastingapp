@@ -1284,7 +1284,42 @@ a raw subquery, regardless of which two tables look involved at a glance.
   key>`. `wine_map_nodes` is retired and dropped — the canonical
   `wine_places` catalog is the single map source. New places appear on the
   map by verifying them in the catalog and publishing a release through the
-  Wine Map Tiles workflow; no UI change is needed for new coverage.
+  Wine Map Tiles workflow; no UI change is needed for new coverage — but see
+  the neighbour-cache rule below, which every catalogue write does have to
+  honour.
+- **A catalogue write must be followed by a neighbour-cache refresh** (once
+  `20260920090000_wine_place_neighbours.sql` is live; spec
+  `docs/superpowers/specs/2026-09-20-wine-place-nearby.md`). The details
+  panel's "nearby" chips used to be the whole cost of
+  `get_wine_place_context` — it measured PostGIS distance over every
+  candidate's full outline on every click (a country ~250 ms). They now come
+  from `wine_place_neighbours`, a precomputed list of place ids, with
+  `wine_place_neighbours_state.fresh` saying whether it still matches the
+  catalogue. **Any** insert, update or delete on `wine_places` or
+  `wine_place_boundaries` clears that flag through a statement-level trigger,
+  and while it is false the function silently falls back to the live
+  computation: **forgetting is slow, never wrong**, so nothing breaks — the
+  map just goes back to costing what it cost before. Repair:
+  - a MIGRATION that writes either table ends with
+    `select public.refresh_wine_place_neighbours();` IN THE SAME TRANSACTION;
+  - a PIPELINE RUN (the ~28 scripts under `scripts/wine-map-sources/` that
+    commit against live — they cannot use the same-transaction form,
+    `build-germany-einzellagen.mjs` commits once per place and the rebuild
+    costs ~65 s) does ONE refresh as the LAST step of the batch:
+    `node --env-file=.env.local scripts/wine-map-sources/refresh-neighbour-cache.mjs`.
+    It is a no-op while the cache is already fresh, so it is safe to end any
+    run with. `run-targets.mjs` already does it.
+  Three things stop this being a rule you have to remember: every committing
+  script prints a banner after its commit (`warnIfNeighbourCacheStale`,
+  `scripts/wine-map-sources/neighbour-cache.mjs`), the trigger raises a NOTICE
+  on the fresh→stale transition, and `scripts/wine-place-context.test.mjs`
+  fails when the cache is stale. `refresh_wine_place_neighbours()` and the
+  trigger function are EXECUTE-able by the owner alone — not `authenticated`,
+  not `anon`, and not `service_role` either (Supabase's default privileges
+  would otherwise hand it to `service_role`, the same trap
+  `transfer_tasting_host` documents). The refresh refuses to publish (returns
+  -1, leaves the cache stale) if any stored neighbour is one an ordinary
+  reader's policies would filter.
 - World Wine Map Phase 3A adds the four-axis place model and the France region
   import machinery. Classification facts live as flat columns on `wine_places`
   (`is_appellation`, `appellation_system`, `appellation_level`), legal
