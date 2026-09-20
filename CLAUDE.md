@@ -601,13 +601,59 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (`catalogFillPlan`, `src/lib/wine-identity/fill-rule.ts`). A hidden row is
   readable by its creator, every curator and whoever can read an answer key
   naming it, so a curator-adder can still edit a hidden wine someone else
-  created (spec R10). Pre-existing, still open (owner: fix next, 2026-09-19):
-  a catalog-only public wine vanishing when poured (F4), the new-wine window
-  (F5), client-writable `blind_pending` (F6), `merge_catalog_wines` (F7),
-  PUBLIC-cellar draw-downs (F8), new reference rows (F9), an unidentified
-  glass's identity in the all-readable `catalog_wines_unidentified` (F10), and
-  an Edit, Swap or Remove plus re-add un-hiding the abandoned brand-new wine
-  with its flight fill (F11).
+  created (spec R10). F4-F8, F10 and F11 are closed by "Rule 1: born-hidden
+  flight wines and holds" below; F9 (new reference rows) is an accepted owner
+  decision.
+- **Rule 1: born-hidden flight wines and holds** (migrations
+  `20260919223100_rule1_born_hidden_and_shared_cellar.sql` and
+  `20260919223200_rule1_older_leaks.sql`, applied live 2026-09-19/20 with the
+  owner's go-ahead; spec
+  `docs/superpowers/specs/2026-09-19-rule1-older-leaks.md`; order: 223100,
+  then the app, then 223200). A catalog wine is hidden (`blind_pending`) only
+  when it is born for a flight: the flight path (add, finish, Edit, Swap;
+  never an OPEN board) sends `"hidden": true` to
+  `find_or_create_catalog_wine` (`catalogWinePayload`/`flightWineBornHidden`,
+  `src/lib/wine-identity/catalog-payload.ts`), which creates it hidden and
+  returns an existing row unchanged. `catalog_wine_mark_blind` is gone:
+  pouring, a Swap onto an existing wine, a merge or
+  `resolve_unidentified_wine` never hides a public wine. `flight_holds`
+  (internal, no client access) holds a hidden wine an unrevealed glass links,
+  and a cellar bottle poured into one, to that glass. A held wine stays hidden
+  after an Edit, Swap or Remove (`catalog_wine_unhide_if_free` is the only
+  un-hide besides a reveal), and a held pour stays masked in
+  `catalog_wine_masked_pours` (so in usage, holdings and shared cellars). Only
+  a reveal releases a hold: that glass's, or, for a wine, the reveal of any
+  glass that links it. A close or a delete releases nothing
+  (`flight_holds.tasting_id`/`wine_id` are `on delete set null`; review round
+  1: releasing at a close or a delete published a wine no glass ever revealed,
+  which stayed public when the host poured it again). So a brand-new wine
+  whose glass is removed, or whose tasting is deleted, before its reveal stays
+  hidden (its creator and curators read it, and `searchAddWine` still lists it
+  for its creator, `searchShowsCatalogWine`) until a glass that pours it is
+  revealed; its pour stays masked for good (everyone but the owner counts that
+  bottle as unopened; owner decision OD4). Never add a trigger on `tastings`
+  that releases a hold. `catalog_wines`: `authenticated` INSERTs only the
+  identity columns, `created_by` and `blind_pending`, and UPDATEs only the
+  columns Manage wine, the fill, the price fill and the main photo write;
+  `blind_pending`, `merged_into`, `created_by` and `id` are written only by
+  the database, and `anon` writes nothing. `merge_catalog_wines` is
+  `authenticated` + `service_role` only: it moves only revealed glasses'
+  answer keys, an unrevealed glass's key moves to `catalog_wine_merge_target`
+  at its own reveal (before notes resolve), a hidden wine is never a target
+  (same words as a missing one), and the adder of an unrevealed glass of a
+  public loser is refused by `catalog_wines_rule1_guard`. Someone else's
+  cellar is read only through `shared_cellar_lots(owner)` (`getCellarBottles`'
+  `readOnly` path): masked pours still in their lot, `updated_at` =
+  `created_at`; "cellar own select" is the owner alone, so a new surface that
+  shows another person's lots must use the function.
+  `catalog_wines_unidentified` is read by its creator, by whoever can read an
+  answer key naming it (`can_read_unidentified_wine`, SECURITY INVOKER over
+  "wine_answers read"), and by the author of a note naming it; curators no
+  longer read an unrevealed one, so `/catalog/unidentified` lists revealed
+  glasses' rows. Still open: F8b (`wines.added_via = 'CELLAR'` readable by
+  participants), F9 (new reference rows are public at once; guessing needs
+  them), and F12 (`catalog_wine_identity_match`/`find_or_create_catalog_wine`
+  confirm an exact guessed identity of someone's hidden wine).
 - The leaderboard sidebar shows more than a bare score per participant: a
   "wine X/Y" progress readout (their own scored-guess count over the
   tasting's total wine count — this can differ between participants if one
@@ -2019,10 +2065,14 @@ a raw subquery, regardless of which two tables look involved at a glance.
       (`authenticated`/`service_role` EXECUTE only), so a second adder of an
       identity that already exists as a hidden row still links to it
       instead of colliding on `catalog_wines_identity_key`. Accepted
-      residual, by design: that second adder learns such a row exists (and
-      cannot read it) without learning its details; a caller's own cellar
-      lot or note naming a hidden catalog wine shows no details on it until
-      a glass that links the wine is revealed or unlinked.
+      residual, understated before (spec `2026-09-19-rule1-older-leaks`
+      F12): the helper tells any caller whether a row with an exact identity
+      exists, hidden or not, and a second adder who links it reads it,
+      `created_by` included; a caller's own cellar lot or note naming a
+      hidden catalog wine shows no details on it until a glass that links
+      the wine is revealed (no longer "or unlinked": since 20260919223200 a
+      wine abandoned before any reveal stays hidden until a glass that pours
+      it is revealed; its creator still reads it).
   - **Owner feedback round 1 (2026-09-12, same day as the flows shipped).**
     - Taste & rate is the sheet's `{ kind: "note" }` destination (renamed
       from the round-1 `{ kind: "rate" }`; `RateWineModal` and
