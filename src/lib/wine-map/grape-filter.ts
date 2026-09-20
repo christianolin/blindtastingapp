@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { WinePlaceTreeNode } from "./tree";
+import { GRAPE_LINK_PAGE_SIZE, pageRanges, roundIsLast } from "./page-plan";
 
 export type GrapeOption = { id: string; name: string };
 
@@ -24,31 +25,43 @@ export async function fetchGrapeOptions(
   return data ?? [];
 }
 
-// PostgREST caps a single select at 1000 rows; page until a short page.
+// PostgREST caps a single select at 1000 rows, so this table takes several
+// pages. They go out a ROUND AT A TIME rather than one after another: rows are
+// a contiguous range, so nothing can follow a short page, and asking for a few
+// pages at once costs at most one empty request while saving a full network
+// round trip per page. Three serial requests on every map load became one
+// round. The rule itself is in ./page-plan, where it is unit-tested.
 export async function fetchPlaceGrapeLinks(
   supabase: SupabaseClient<Database>,
 ): Promise<Map<string, Set<string>>> {
   const byPlace = new Map<string, Set<string>>();
-  const pageSize = 1000;
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from("wine_place_grapes")
-      .select("wine_place_id, grape_id")
-      .range(from, from + pageSize - 1);
-    if (error) {
-      throw new Error(`Place grape links request failed: ${error.message}`);
-    }
-    for (const row of data ?? []) {
-      let set = byPlace.get(row.wine_place_id);
-      if (!set) {
-        set = new Set();
-        byPlace.set(row.wine_place_id, set);
+  for (let round = 0; ; round += 1) {
+    const pages = await Promise.all(
+      pageRanges(round).map(async ([from, to]) => {
+        const { data, error } = await supabase
+          .from("wine_place_grapes")
+          .select("wine_place_id, grape_id")
+          .range(from, to);
+        if (error) {
+          throw new Error(`Place grape links request failed: ${error.message}`);
+        }
+        return data ?? [];
+      }),
+    );
+    for (const page of pages) {
+      for (const row of page) {
+        let set = byPlace.get(row.wine_place_id);
+        if (!set) {
+          set = new Set();
+          byPlace.set(row.wine_place_id, set);
+        }
+        set.add(row.grape_id);
       }
-      set.add(row.grape_id);
     }
-    if (!data || data.length < pageSize) break;
+    if (roundIsLast(pages.map((page) => page.length), GRAPE_LINK_PAGE_SIZE)) {
+      return byPlace;
+    }
   }
-  return byPlace;
 }
 
 export function grapeVisibleKeys(

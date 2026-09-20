@@ -16,6 +16,8 @@ import type {
   WinePlaceContext,
   WinePlaceGrape,
 } from "@/lib/wine-map/context";
+import type { StyleRow } from "@/lib/wine-map/place-styles";
+import type { PlacePrefetchHandlers } from "@/lib/wine-map/use-place-prefetch";
 
 const STYLE_LABELS: Record<string, string> = {
   RED: "Red",
@@ -83,7 +85,6 @@ const COLOUR_HEX: Record<string, string> = {
   ROSE: "#D98A9E",
   ORANGE: "#C0692E",
 };
-type StyleRow = { style: string; colour: string | null; note: string | null };
 
 function styleLabel(style: string, colour: string | null): string {
   const base = STYLE_LABELS[style] ?? style;
@@ -245,11 +246,21 @@ function GrapeModal({
 export function KnowledgeSections({
   context,
   onSelect,
+  styleRows,
+  onPrefetch,
 }: {
   context: WinePlaceContext;
   onSelect: (key: string) => void;
+  /** A place's styles WITH their colour dimension, which the context RPC does
+      not carry (its style_list is {style, note} only) — so it stays its own
+      request. The explorer owns it now and fires it in parallel with the
+      context RPC, instead of this component starting it ~400 ms later. */
+  styleRows: StyleRow[];
+  /** Desktop hover prefetch for the one-click jumps below (Labelling, Nearby).
+      Optional and additive: without it these buttons behave exactly as before,
+      and on a touch device the rule refuses every call anyway. */
+  onPrefetch?: PlacePrefetchHandlers;
 }) {
-  const supabase = useMemo(() => createClient(), []);
   const [openGrape, setOpenGrape] = useState<WinePlaceGrape | null>(null);
   const {
     grapes,
@@ -259,31 +270,17 @@ export function KnowledgeSections({
     classified_members: classifiedMembers,
   } = context;
 
-  // Wine styles are refetched with their colour dimension (the context RPC
-  // predates it) so a place can show "White sparkling" and "Rosé sparkling".
-  const placeId = context.place.id;
-  const [styleRows, setStyleRows] = useState<StyleRow[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from("wine_place_styles")
-      .select("style, colour, note, sort_order")
-      .eq("wine_place_id", placeId)
-      .order("sort_order")
-      .then(({ data }) => {
-        if (cancelled) return;
-        setStyleRows(
-          (data ?? []).map((r) => ({
-            style: r.style as string,
-            colour: (r.colour as string | null) ?? null,
-            note: (r.note as string | null) ?? null,
-          })),
-        );
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, placeId]);
+  // Hover/focus handlers for a place-jumping button, or nothing when the
+  // explorer passed no prefetcher.
+  const prefetchProps = (key: string) =>
+    onPrefetch
+      ? {
+          onMouseEnter: () => onPrefetch.onEnter(key),
+          onFocus: () => onPrefetch.onEnter(key),
+          onMouseLeave: onPrefetch.onLeave,
+          onBlur: onPrefetch.onLeave,
+        }
+      : {};
 
   const chipButton =
     "transition-colors hover:text-foreground";
@@ -408,6 +405,7 @@ export function KnowledgeSections({
                       type="button"
                       className={chipButton}
                       onClick={() => onSelect(d.key)}
+                      {...prefetchProps(d.key)}
                     >
                       {d.name}
                     </button>
@@ -419,6 +417,7 @@ export function KnowledgeSections({
                       type="button"
                       className={chipButton}
                       onClick={() => onSelect(d.key)}
+                      {...prefetchProps(d.key)}
                     >
                       {d.name}
                     </button>{" "}
@@ -439,6 +438,7 @@ export function KnowledgeSections({
                 key={n.key}
                 type="button"
                 onClick={() => onSelect(n.key)}
+                {...prefetchProps(n.key)}
                 className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
               >
                 {n.name}
