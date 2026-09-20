@@ -28,14 +28,23 @@ import {
   fetchWineMapManifest,
   type WineMapManifest,
 } from "@/lib/wine-map/manifest";
+import type { WinePlaceContext } from "@/lib/wine-map/context";
+import type { StyleRow } from "@/lib/wine-map/place-styles";
 import {
-  fetchWinePlaceContext,
-  type WinePlaceContext,
-} from "@/lib/wine-map/context";
-import {
-  fetchWinePlaceTree,
-  type WinePlaceTreeNode,
-} from "@/lib/wine-map/tree";
+  clearWinePlaceCaches,
+  loadArchetypesForPlace,
+  loadGrapeOptions,
+  loadPlaceGrapeLinks,
+  loadPlaceStyles,
+  loadWinePlaceContext,
+  loadWinePlaceTree,
+  peekArchetypesForPlace,
+  peekPlaceStyles,
+  peekWinePlaceContext,
+  warmWinePlace,
+} from "@/lib/wine-map/place-cache";
+import { useWinePlacePrefetch } from "@/lib/wine-map/use-place-prefetch";
+import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
 import { areaSlugsFromTree } from "@/lib/wine-map/fill-palette";
@@ -43,16 +52,11 @@ import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
 import {
-  fetchGrapeOptions,
-  fetchPlaceGrapeLinks,
   grapeVisibleKeys,
   type GrapeOption,
 } from "@/lib/wine-map/grape-filter";
 import type { CameraTarget } from "./tile-wine-map";
-import {
-  fetchArchetypesForPlace,
-  type ArchetypeListItem,
-} from "@/lib/wset/queries";
+import type { ArchetypeListItem } from "@/lib/wset/queries";
 import { ArchetypeModal } from "@/components/wset/archetype-modal";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
@@ -153,7 +157,7 @@ export function TileWineMapExplorer({
 
   useEffect(() => {
     let cancelled = false;
-    fetchWinePlaceTree(supabase)
+    loadWinePlaceTree(supabase)
       .then((roots) => {
         if (!cancelled) setTree(roots);
       })
@@ -176,7 +180,7 @@ export function TileWineMapExplorer({
   const [grapeFilterId, setGrapeFilterId] = useState("");
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchGrapeOptions(supabase), fetchPlaceGrapeLinks(supabase)])
+    Promise.all([loadGrapeOptions(supabase), loadPlaceGrapeLinks(supabase)])
       .then(([options, links]) => {
         if (cancelled) return;
         setGrapeOptions(options);
@@ -256,10 +260,15 @@ export function TileWineMapExplorer({
     setManifestAttempt((attempt) => attempt + 1);
   }, []);
 
+  // The three selection requests all go through the per-key cache
+  // (@/lib/wine-map/place-cache), so clicking back to a place already visited
+  // makes NO request at all. Each effect keeps its own `cancelled` guard
+  // exactly as before: the cache only changes whether a request goes out, never
+  // which response is allowed to win.
   useEffect(() => {
     if (!selectedKey) return;
     let cancelled = false;
-    fetchWinePlaceContext(supabase, selectedKey)
+    loadWinePlaceContext(supabase, selectedKey)
       .then((ctx) => {
         if (cancelled) return;
         setContext(ctx);
@@ -286,7 +295,7 @@ export function TileWineMapExplorer({
   useEffect(() => {
     if (!selectedKey) return;
     let cancelled = false;
-    fetchArchetypesForPlace(supabase, selectedKey)
+    loadArchetypesForPlace(supabase, selectedKey)
       .then((rows) => {
         if (!cancelled) setArchetypeData({ key: selectedKey, rows });
       })
@@ -299,6 +308,77 @@ export function TileWineMapExplorer({
   }, [supabase, selectedKey]);
   const archetypes =
     archetypeData && archetypeData.key === selectedKey ? archetypeData.rows : [];
+
+  // Wine styles carry a colour dimension the context RPC does not return
+  // ("White sparkling" / "Rosé sparkling"), so they stay their own request —
+  // but keyed by the canonical key, it can start WITH the context RPC instead
+  // of ~400 ms behind it, which is where it used to sit when KnowledgeSections
+  // owned the fetch. Key-tagged for the same reason the archetypes are.
+  const [styleData, setStyleData] = useState<{
+    key: string;
+    rows: StyleRow[];
+  } | null>(null);
+  useEffect(() => {
+    if (!selectedKey) return;
+    let cancelled = false;
+    loadPlaceStyles(supabase, selectedKey)
+      .then((rows) => {
+        if (!cancelled) setStyleData({ key: selectedKey, rows });
+      })
+      .catch(() => {
+        if (!cancelled) setStyleData({ key: selectedKey, rows: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, selectedKey]);
+  const styleRows =
+    styleData && styleData.key === selectedKey ? styleData.rows : [];
+
+  // A cache hit applied SYNCHRONOUSLY with the selection. Without this a
+  // revisit still commits one "Loading…" frame, because a resolved promise
+  // lands in a microtask after the commit. The cached values are the same
+  // object references the effects will resolve to, so React bails out of the
+  // second pass rather than rendering twice.
+  const applyCachedSelection = useCallback((key: string) => {
+    const cachedContext = peekWinePlaceContext(key);
+    if (cachedContext) {
+      setContext(cachedContext);
+      setContextState("ready");
+    } else {
+      setContextState("loading");
+    }
+    const cachedArchetypes = peekArchetypesForPlace(key);
+    if (cachedArchetypes) setArchetypeData({ key, rows: cachedArchetypes });
+    const cachedStyles = peekPlaceStyles(key);
+    if (cachedStyles) setStyleData({ key, rows: cachedStyles });
+  }, []);
+
+  // Nothing cached here is per-user — every policy behind the place catalogue
+  // is content-level and get_wine_place_context is SECURITY INVOKER over the
+  // same tables, so two signed-in viewers get identical payloads. This is the
+  // guard against a future policy that IS per-user: swapping accounts empties
+  // the maps rather than serving the previous account's reads.
+  useEffect(() => {
+    let currentUserId: string | null | undefined;
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUserId = session?.user.id ?? null;
+      if (currentUserId === undefined) {
+        currentUserId = nextUserId;
+        return;
+      }
+      if (nextUserId !== currentUserId) {
+        currentUserId = nextUserId;
+        clearWinePlaceCaches();
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, [supabase]);
+
+  // Hovering or focusing a place row for a moment warms its details, so the
+  // click that follows renders from cache. Desktop only — the rule refuses
+  // every call on a coarse/hoverless pointer.
+  const prefetch = useWinePlacePrefetch(supabase, selectedKey);
 
   // Selection updates the URL in place (shareable deep links) while
   // preserving any other params — including ?map=tiles during the opt-in
@@ -316,13 +396,18 @@ export function TileWineMapExplorer({
       // commit able to recover it.
       if (key === selectedKey) return;
       selectSourceRef.current = source;
-      setContextState("loading");
+      applyCachedSelection(key);
+      // Start the three requests here rather than leaving them to the effects
+      // below, which React only flushes after this commit has painted the map
+      // as well as the panel. The effects then join the in-flight request
+      // instead of making a second one.
+      warmWinePlace(supabase, key);
       setSelectedKey(key);
       const params = new URLSearchParams(window.location.search);
       params.set("place", key);
       window.history.replaceState(null, "", `?${params.toString()}`);
     },
-    [selectedKey],
+    [applyCachedSelection, selectedKey, supabase],
   );
 
   // Respond to a new ?place from a SAME-route navigation (e.g. the global search
@@ -364,7 +449,7 @@ export function TileWineMapExplorer({
       // Navigation-driven selection flies the camera, exactly as select() does
       // for tree/search clicks; only map taps hold it still.
       selectSourceRef.current = "ui";
-      setContextState("loading");
+      applyCachedSelection(deepLink.select);
       setSelectedKey(deepLink.select);
     }
   }
@@ -458,6 +543,7 @@ export function TileWineMapExplorer({
                     onSelect={select}
                     filterKeys={visibleKeys}
                     english={english}
+                    onPrefetch={prefetch}
                   />
                 )}
               </div>
@@ -776,7 +862,12 @@ export function TileWineMapExplorer({
                     Profile being curated — check back soon.
                   </p>
                 )}
-                <KnowledgeSections context={context} onSelect={select} />
+                <KnowledgeSections
+                  context={context}
+                  onSelect={select}
+                  styleRows={styleRows}
+                  onPrefetch={prefetch}
+                />
               </>
             )}
             </div>

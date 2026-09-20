@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
+import type { PlacePrefetchHandlers } from "@/lib/wine-map/use-place-prefetch";
 
 // Folder-style hierarchy of every verified place. The selected path is
 // auto-expanded and highlighted; searching filters to matches plus their
@@ -20,6 +21,7 @@ export function WineMapTree({
   onSelect,
   filterKeys = null,
   english = false,
+  onPrefetch,
 }: {
   roots: WinePlaceTreeNode[];
   selectedKey: string | null;
@@ -30,6 +32,11 @@ export function WineMapTree({
   /** English-names toggle: show each node's English exonym (Toscana -> Tuscany)
       where one exists, matching the map. Search still matches either form. */
   english?: boolean;
+  /** Desktop hover/focus prefetch: resting on a row for a moment warms that
+      place's details so the click renders from cache. Optional and additive —
+      without it the rows behave exactly as before, and the rule itself refuses
+      every call on a touch device. */
+  onPrefetch?: PlacePrefetchHandlers;
 }) {
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -243,6 +250,10 @@ export function WineMapTree({
           <button
             type="button"
             onClick={() => onSelect(node.key)}
+            onMouseEnter={onPrefetch ? () => onPrefetch.onEnter(node.key) : undefined}
+            onFocus={onPrefetch ? () => onPrefetch.onEnter(node.key) : undefined}
+            onMouseLeave={onPrefetch?.onLeave}
+            onBlur={onPrefetch?.onLeave}
             className="truncate text-left"
             title={label(node)}
           >
