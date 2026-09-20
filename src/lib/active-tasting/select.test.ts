@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_SNAPSHOT,
+  POLL_ACTIVE_MS,
+  POLL_IDLE_MS,
   activeHref,
   activeState,
   bannerView,
@@ -9,6 +11,7 @@ import {
   isOnTastingPath,
   newerSnapshot,
   overviewSlot,
+  pollIntervalMs,
   selectActiveTastings,
   shouldPoll,
   type ActiveTastingCandidate,
@@ -315,6 +318,19 @@ describe("paths and the banner view (D6, D11, D12)", () => {
     expect(shouldPoll([], "/tastings/t1")).toBe(true);
     expect(shouldPoll(two, "/tastings/t2")).toBe(true);
     expect(shouldPoll(two, "/overview")).toBe(true);
+  });
+});
+
+describe("pollIntervalMs (D12b)", () => {
+  it("25b. stays live with a tasting to return to, backs off with none", () => {
+    // pollActiveTastings costs ~788 ms of server time per call; paying that
+    // every 20 s on a page left open with nothing active was 32 POSTs in one
+    // measured session. Nothing about the live cadence changes.
+    expect(pollIntervalMs([])).toBe(POLL_IDLE_MS);
+    expect(pollIntervalMs([item("t1")])).toBe(POLL_ACTIVE_MS);
+    expect(pollIntervalMs([item("t1"), item("t2"), item("t3")])).toBe(POLL_ACTIVE_MS);
+    expect(POLL_ACTIVE_MS).toBe(20_000);
+    expect(POLL_IDLE_MS).toBeGreaterThan(POLL_ACTIVE_MS);
   });
 });
 

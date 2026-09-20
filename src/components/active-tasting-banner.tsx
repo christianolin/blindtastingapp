@@ -17,12 +17,11 @@ import {
 import {
   bannerView,
   newerSnapshot,
+  pollIntervalMs,
   shouldPoll,
   type ActiveTastingSnapshot,
 } from "@/lib/active-tasting/select";
 import { cn } from "@/lib/utils";
-
-const POLL_MS = 20_000;
 
 // 44px tap targets on phones, the desktop button height from md up.
 const BUTTON_SIZE = "max-md:min-h-11 md:h-9 px-3.5 text-[13px] font-semibold";
@@ -59,12 +58,17 @@ const TONE = {
  *
  * Freshness (D7, D12, D14): `initial` is the server render's snapshot — a
  * navigation or router.refresh() re-renders it — and the component polls
- * pollActiveTastings every 20 s while the tab is visible, plus on focus and on
- * returning to the tab. Whichever snapshot has the newer server-clock
- * `checkedAt` wins; there is no props-to-state effect and no client clock.
- * Polling pauses on the shown tasting's own pages (the strip is hidden there)
- * and checks once at once on leaving them. A failed poll keeps what is shown
- * (D13). Not sticky, no dismiss (D9, D15).
+ * pollActiveTastings on `pollIntervalMs`'s cadence while the tab is visible,
+ * plus on focus and on returning to the tab. Whichever snapshot has the newer
+ * server-clock `checkedAt` wins; there is no props-to-state effect and no
+ * client clock. Polling pauses on the shown tasting's own pages (the strip is
+ * hidden there) and checks once at once on leaving them. A failed poll keeps
+ * what is shown (D13). Not sticky, no dismiss (D9, D15).
+ *
+ * The cadence itself is a rule in select.ts (D12b), not a constant here: 20 s
+ * while there is a tasting to return to, 120 s when the last read found none.
+ * Reading it from `snapshot.items` means the interval re-arms the moment a
+ * poll turns an empty snapshot into a live one, or back.
  */
 export function ActiveTastingBanner({ initial }: { initial: ActiveTastingSnapshot }) {
   const pathname = usePathname();
@@ -72,6 +76,7 @@ export function ActiveTastingBanner({ initial }: { initial: ActiveTastingSnapsho
   const snapshot = newerSnapshot(initial, polled);
   const view = bannerView(snapshot.items, pathname);
   const polling = shouldPoll(snapshot.items, pathname);
+  const intervalMs = pollIntervalMs(snapshot.items);
 
   const inFlight = useRef(false);
   // Set while polling is paused, so resuming checks at once. Never set on
@@ -105,7 +110,7 @@ export function ActiveTastingBanner({ initial }: { initial: ActiveTastingSnapsho
     const onVisibility = () => {
       if (document.visibilityState === "visible") check();
     };
-    const id = window.setInterval(check, POLL_MS);
+    const id = window.setInterval(check, intervalMs);
     window.addEventListener("focus", check);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
@@ -113,7 +118,7 @@ export function ActiveTastingBanner({ initial }: { initial: ActiveTastingSnapsho
       window.removeEventListener("focus", check);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [polling]);
+  }, [polling, intervalMs]);
 
   if (!view) return null;
   const { item, more } = view;

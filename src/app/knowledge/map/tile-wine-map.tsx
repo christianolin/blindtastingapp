@@ -8,7 +8,7 @@ import Map, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import { ChevronUp, Maximize2, Minimize2 } from "lucide-react";
-import maplibregl from "maplibre-gl";
+import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
@@ -25,12 +25,15 @@ import {
 import {
   BASEMAP_STYLE_URL,
   basemapTweaks,
+  cachedBasemapStyle,
+  loadBasemapStyle,
   SHARD_SOURCE_PREFIX,
   shardSourceId,
   tuneBasemapStyle,
   withWineLayers,
   WORLD_SOURCE_ID,
 } from "@/lib/wine-map/basemap";
+import { keyGateExpression } from "@/lib/wine-map/key-gate";
 import {
   classificationShades,
   districtColor,
@@ -586,18 +589,53 @@ export function TileWineMap({
     const map = mapRef.current?.getMap();
     if (!map || !mapReadyRef.current || requestedBasemapRef.current === next) return;
     requestedBasemapRef.current = next;
-    // One style fetch (HTTP-cached after the first flip) and a diff of
-    // basemap-only operations. A newer request aborts an older one's fetch; a
-    // flip back before the first lands diffs to nothing and never fires
-    // style.load. A failed fetch fires `error` and no style.load; since
-    // requestedBasemapRef already names the new theme, flipping away and back
-    // retries it.
-    map.setStyle(BASEMAP_STYLE_URL[next], {
-      diff: true,
-      transformStyle: (prev, incoming) => {
-        landingBasemapRef.current = next;
-        return withWineLayers(prev, tuneBasemapStyle(incoming));
-      },
+    // A diff of basemap-only operations. A flip back before this lands diffs
+    // to nothing and never fires style.load. A failure fires `error` and no
+    // style.load; since requestedBasemapRef already names the new theme,
+    // flipping away and back retries it.
+    //
+    // setStyle is handed the STYLE OBJECT, already tuned and cached in module
+    // memory (lib/wine-map/basemap), not the URL: given a URL MapLibre fetches
+    // and parses the style on every flip, and its diff then walks the untuned
+    // layers we are about to drop. Cached, the second and later flips do no
+    // network work at all. `transformStyle` is unchanged and still the one
+    // contract — withWineLayers(prev, tuneBasemapStyle(incoming)) — and
+    // tuneBasemapStyle is idempotent, so tuning an already-tuned style is a
+    // no-op. `mapStyle` on <Map> stays frozen; never route a swap through it.
+    //
+    // `validate: false` skips MapLibre re-validating the whole next style on
+    // every flip. What a swap produces is validated at build time instead:
+    // basemap.test.ts runs validateStyleMin over exactly this style, against
+    // the real Carto fixtures. If a style were ever invalid anyway, setState
+    // throws and MapLibre falls back to a full rebuild, which still runs
+    // transformStyle and so still carries the wine layers across.
+    const apply = (style: StyleSpecification | string) => {
+      // A newer flip while we were fetching wins; this reply is stale. So does
+      // an unmount — the ref is cleared, and setStyle on a removed map throws.
+      if (requestedBasemapRef.current !== next || mapRef.current?.getMap() !== map) return;
+      map.setStyle(style, {
+        diff: true,
+        validate: false,
+        transformStyle: (prev, incoming) => {
+          landingBasemapRef.current = next;
+          return withWineLayers(prev, tuneBasemapStyle(incoming));
+        },
+      });
+    };
+    const cached = cachedBasemapStyle(next);
+    if (cached) {
+      apply(cached);
+      return;
+    }
+    // Two arguments, not .then().catch(): the fallback must cover the FETCH
+    // failing, never a throw from apply itself, or one bad setStyle would
+    // immediately run a second one.
+    loadBasemapStyle(next).then(apply, () => {
+      // Our own fetch failed: hand MapLibre the URL so the failure behaves
+      // exactly as it did before — an `error` event, no style.load, the map
+      // left wholly on its old theme, and a retry on the next flip back
+      // (nothing was cached, so that retry really does re-fetch).
+      apply(BASEMAP_STYLE_URL[next]);
     });
   }, []);
   useEffect(() => {
@@ -1229,16 +1267,21 @@ export function TileWineMap({
   // react-map-gl feeds the filter prop straight into addLayer, and MapLibre's
   // style validation rejects undefined — the layer then silently never
   // mounts, which blanked the whole map until a filter change forced a
-  // re-add (the "only France until I toggle the grape filter" bug).
+  // re-add (the "only France until I toggle the grape filter" bug). That is
+  // what `keyGate === null` means here: the composed filters below fall back
+  // to PASS_FILTER; the gate is never passed through as undefined.
+  //
+  // The gate's SHAPE lives in lib/wine-map/key-gate, with its equivalence
+  // pinned against MapLibre's own expression engine. Membership is an O(1)
+  // object lookup rather than a scan of the key array, which MapLibre would
+  // otherwise re-run per feature, per layer, on every tile parse (measured
+  // 20-30x). It is built once per key set here and shared by all five
+  // composed filters below, rather than rebuilt for each of them per render.
+  // That sharing does not shrink the live style — MapLibre's setFilter
+  // deep-clones the filter per layer, so the key map still lands once per
+  // layer, as the array did; the win is per-feature evaluation cost.
   const keyGate = useMemo(
-    () =>
-      visibleKeys == null
-        ? null
-        : ([
-            "any",
-            ["==", ["get", "tier"], 0],
-            ["in", ["get", "key"], ["literal", visibleKeys]],
-          ] as unknown as boolean),
+    () => keyGateExpression(visibleKeys) as unknown as boolean | null,
     [visibleKeys],
   );
   // Every world label; the grape gate is the only thing that ever narrows it.
@@ -1390,13 +1433,21 @@ export function TileWineMap({
           details?.removeAttribute("open");
           // Tune the basemap (lib/wine-map/basemap, basemapTweaks): push its
           // place labels to z7+ so our region labels win the low-zoom
-          // collisions, and drop the clutter a wine map never uses. Measured:
+          // collisions, gate its roads to z10+, and drop the clutter a wine
+          // map never uses — 25 of Carto's 93 layers, leaving 68. Measured:
           // a z14 tile over the Cote de Nuits carries 341 basemap features and
-          // 11,049 vertices against 66 features and 637 vertices of ours,
-          // across 93 basemap style layers versus our ~16 — so the context
-          // map, not the wine data, is the bulk of what every frame draws.
+          // 11,049 vertices against 66 features and 637 vertices of ours, and
+          // a z12 frame there rendered 186 basemap features of which 129 were
+          // roads — so the context map, not the wine data, is the bulk of what
+          // every frame draws, and every style layer naming a source-layer
+          // also costs a filter pass over it in every tile the worker parses.
           // The same rule tunes every swapped-in basemap (tuneBasemapStyle),
           // so a theme flip's diff never re-adds what this removes.
+          //
+          // basemapTweaks lists only the 11 zoom ranges that actually move a
+          // layer, never a no-op: setLayerZoomRange always calls _update(true),
+          // and for a layer carrying no maxzoom it also pauses the basemap's
+          // tile manager and queues a reload — during the first paint.
           const tweaks = basemapTweaks(e.target.getStyle().layers ?? []);
           for (const id of tweaks.remove) e.target.removeLayer(id);
           for (const range of tweaks.zoomRanges) {

@@ -227,6 +227,28 @@ export function shouldPoll(items: ActiveTastingItem[], pathname: string): boolea
   return !(first && isOnTastingPath(pathname, first.tastingId));
 }
 
+/** The cadence while there is a tasting to return to: the strip's name, state
+    and "+N more" can all move, so it stays live. */
+export const POLL_ACTIVE_MS = 20_000;
+/** The cadence when the last read found nothing. */
+export const POLL_IDLE_MS = 120_000;
+
+/**
+ * D12b (2026-09-20 performance round): how often to re-read. `pollActiveTastings`
+ * is a server action costing a measured ~788 ms of server time, and the banner
+ * was spending it every 20 s on every page a viewer leaves open — 32 POSTs in
+ * one session on /knowledge/map, for a viewer with nothing active at all.
+ *
+ * With no items the strip's whole job is to show nothing, and the only thing a
+ * poll can discover is a tasting that has just started or been scheduled —
+ * which also arrives with any page render, on focus, and on returning to the
+ * tab, all of which still check at once. So back off there, and leave the live
+ * cadence exactly as it was for a viewer who has one.
+ */
+export function pollIntervalMs(items: ActiveTastingItem[]): number {
+  return items.length > 0 ? POLL_ACTIVE_MS : POLL_IDLE_MS;
+}
+
 /** D14: the newer of the server render and the last poll, by server clock; a tie goes to the render. */
 export function newerSnapshot(
   server: ActiveTastingSnapshot,
