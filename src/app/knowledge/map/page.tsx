@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
-import { BASEMAP_ORIGIN } from "@/lib/wine-map/basemap";
+import { BASEMAP_ORIGIN, BASEMAP_STYLE_URL } from "@/lib/wine-map/basemap";
 import { WINE_MAP_MANIFEST_URL } from "@/lib/wine-map/manifest";
 import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 
@@ -40,6 +40,17 @@ export default async function WineMapPage({
       <link rel="preconnect" href={TILE_ORIGIN} crossOrigin="anonymous" />
       <link rel="preconnect" href={BASEMAP_ORIGIN} crossOrigin="anonymous" />
       <link rel="dns-prefetch" href={TILE_ORIGIN} />
+      {/* Preconnect only warms the socket. These two JSON fetches are the
+          map's critical path and cannot start until the bundle has parsed:
+          measured on production with a warm cache, FCP 1236ms, manifest
+          1270ms, basemap style 1645ms, first tile byte 1808ms. Preloading
+          lets the browser fetch both alongside the JS, so MapLibre finds
+          them cached the moment it asks. as="fetch" + anonymous CORS is
+          what both requests actually use; a mismatch would fetch twice.
+          Light is the default theme — dark is only reached by an explicit
+          pick, which fetches (and caches) it then. */}
+      <link rel="preload" as="fetch" href={WINE_MAP_MANIFEST_URL} crossOrigin="anonymous" />
+      <link rel="preload" as="fetch" href={BASEMAP_STYLE_URL.light} crossOrigin="anonymous" />
       <AppHeader />
       <div className="flex w-full flex-1 flex-col gap-6 p-6 sm:p-8">
         <div>
