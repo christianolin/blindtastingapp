@@ -18,6 +18,7 @@ import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadMunicipioCache } from "./fetch-spain-municipios.mjs";
 import { buildMunicipioIndex } from "./spain-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const MEMBERSHIP_FILE = "data/wine-map/spain-do-membership.json";
 const NAMESPACE = "IGN_CNIG_SPAIN";
@@ -174,6 +175,7 @@ async function main() {
         const check = await client.query("select count(*)::int n from wine_place_boundaries where wine_place_id = $1 and is_current and quality_status = 'VALIDATED'", [place.rows[0].id]);
         assert.equal(check.rows[0].n, 1, `${comKey}: expected exactly 1 current-validated boundary`);
         await client.query("commit");
+        await warnIfNeighbourCacheStale(client);
         done += 1;
         console.log(`BUILT ${comKey}: ${g.dos} DOs / ${g.codes.size} municipios -> boundary ${res.rows[0].id}`);
       } catch (error) {

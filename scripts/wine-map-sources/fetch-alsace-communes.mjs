@@ -29,6 +29,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { pgConfig, releaseVersion, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const arg = (n, d = null) => {
   const i = process.argv.indexOf(`--${n}`);
@@ -379,6 +380,7 @@ try {
   }
   assert.equal(staged, communes.length, "staged count mismatch");
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log(`BOUNDARY-STAGED ${staged} alsace commune DRAFT boundaries`);
 } catch (e) {
   await client.query("rollback").catch(() => {});

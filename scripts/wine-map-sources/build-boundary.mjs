@@ -12,6 +12,7 @@ import pg from "pg";
 import { pgConfig, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { rawObjectPath, uploadRawObject, SOURCE_NAMESPACE, WFS_LICENCE } from "./inao-lib.mjs";
 import { buildConcaveGeometry } from "./concave-engine.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -329,6 +330,7 @@ try {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${((maxX - minX) * scale).toFixed(0)} ${((maxY - minY) * scale).toFixed(0)}"><path d="${paths}" fill="#5C1A2B" fill-opacity="0.35" stroke="#5C1A2B"/></svg>\n`,
   );
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log(
     `BOUNDARY-STAGED ${slug} -> ${targetKey} boundary=${result.rows[0].id} vertices=${all.length} components=${geometry.coordinates.length}`,
   );

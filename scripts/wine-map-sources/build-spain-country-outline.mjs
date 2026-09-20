@@ -14,6 +14,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadMunicipioCache } from "./fetch-spain-municipios.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const NAMESPACE = "IGN_CNIG_SPAIN";
 const DATASET_URL = "https://public.opendatasoft.com/explore/dataset/georef-spain-municipio/";
@@ -122,6 +123,7 @@ async function main() {
     const chk = await client.query("select count(*)::int n from wine_place_boundaries where wine_place_id = $1 and is_current and quality_status = 'VALIDATED'", [place.rows[0].id]);
     assert.equal(chk.rows[0].n, 1, "expected exactly 1 current-validated spain boundary");
     await client.query("commit");
+    await warnIfNeighbourCacheStale(client);
     console.log(`COMMITTED precise Spain outline: ${r.npoints} vertices, ${r.nparts} part(s), boundary ${res.rows[0].id}`);
   } catch (e) { await client.query("rollback").catch(() => {}); throw e; } finally { await client.end(); }
 }

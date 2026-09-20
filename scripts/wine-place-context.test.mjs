@@ -277,3 +277,42 @@ test("context v2 carries knowledge keys and dual-label edges", async () => {
     ),
   );
 });
+
+// The one standing signal that the nearby cache (migration 20260920090000) is
+// still doing its job. A stale cache is CORRECT — get_wine_place_context falls
+// back to measuring polygons — so nothing else in the app or the suite would
+// ever go red over it; the only symptom is the quarter-second-per-click the
+// cache exists to remove. Any catalogue write leaves it stale, and the pipeline
+// scripts under scripts/wine-map-sources/ write live outside migrations, so
+// "someone forgot to refresh" is a thing that will happen. Repair:
+//   node --env-file=.env.local scripts/wine-map-sources/refresh-neighbour-cache.mjs
+//
+// Skipped on a database where the migration is not applied yet, so this file
+// keeps passing against live until it is.
+test("the nearby cache is fresh", async (t) => {
+  const present = await client.query(
+    "select to_regclass('public.wine_place_neighbours_state') is not null ok",
+  );
+  if (!present.rows[0].ok) {
+    t.skip("20260920090000 (wine_place_neighbours) is not applied on this database");
+    return;
+  }
+  const state = await client.query(
+    "select fresh, built_at from public.wine_place_neighbours_state where only_row",
+  );
+  assert.equal(state.rowCount, 1, "wine_place_neighbours_state should hold exactly one row");
+  assert.equal(
+    state.rows[0].fresh,
+    true,
+    "the nearby cache is stale: a catalogue write was not followed by a refresh. Run: " +
+      "node --env-file=.env.local scripts/wine-map-sources/refresh-neighbour-cache.mjs",
+  );
+  assert.ok(state.rows[0].built_at, "a fresh cache should carry the time it was built");
+
+  // Fresh AND actually populated: a published but empty cache would render
+  // every place's chips as [] instead of falling back to the live branch.
+  const filled = await client.query(
+    "select count(distinct wine_place_id)::int n from public.wine_place_neighbours",
+  );
+  assert.ok(filled.rows[0].n > 1000, `the nearby cache covers only ${filled.rows[0].n} places`);
+});

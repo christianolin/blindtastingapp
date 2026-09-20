@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
 import { pgConfig } from "../wine-map-tiles/lib.mjs";
+import { refreshNeighbourCache, REFRESH_COMMAND } from "./neighbour-cache.mjs";
 
 const workDir = path.resolve(".tiles-build", "sources");
 const args = process.argv.slice(2);
@@ -76,3 +77,28 @@ for (const t of targets) {
   done += 1;
 }
 console.log(`TARGETS DONE (${done} built this run)`);
+
+// The last step of a batch: rebuild the map's nearby-chip cache, which every
+// build-boundary.mjs commit above left stale. A no-op when nothing was written
+// (it returns early while the cache is already fresh), ~65 s when there is
+// something to rebuild. See neighbour-cache.mjs for why this belongs at the end
+// of the batch and not inside each script.
+{
+  const refreshClient = new pg.Client(pgConfig());
+  await refreshClient.connect();
+  try {
+    const result = await refreshNeighbourCache(refreshClient);
+    console.log(
+      result.refreshed
+        ? `NEIGHBOUR CACHE REFRESHED (${result.rows} rows)`
+        : `NEIGHBOUR CACHE untouched (${result.reason})`,
+    );
+  } catch (error) {
+    // The targets really were built; do not throw that away over a cache
+    // rebuild. Say it loudly instead — stale is slow, not wrong.
+    console.error(`NEIGHBOUR CACHE REFRESH FAILED: ${error.message}`);
+    console.error(`Run it yourself: ${REFRESH_COMMAND}`);
+  } finally {
+    await refreshClient.end();
+  }
+}

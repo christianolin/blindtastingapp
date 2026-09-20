@@ -11,6 +11,7 @@
 import assert from "node:assert/strict";
 import pg from "pg";
 import { pgConfig } from "../wine-map-tiles/lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const villages = process.argv.slice(2);
 assert.ok(villages.length > 0, "pass at least one village canonical key");
@@ -126,6 +127,7 @@ try {
   }
 
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
   console.log(`STAGED_TOTAL ${stagedTotal}`);
 } catch (error) {
   await client.query("rollback").catch(() => undefined);

@@ -12,6 +12,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const CLOSE = 0.0006, CLOSE_BACK = 0.00045, SIMPLIFY = 0.0002;
@@ -95,6 +96,7 @@ async function buildOne(client, t) {
     assert.equal(res.rows.length, 1, `${t.key}: insert failed`);
     await client.query("update wine_places set publication_status='VERIFIED' where id=$1 and publication_status='DRAFT'", [id]);
     await client.query("commit");
+    await warnIfNeighbourCacheStale(client);
     console.log(`   OK ${t.key}: ${r.npoints}p/${r.nparts}x ${Number(r.area).toFixed(5)}`);
   } catch (e) { await client.query("rollback").catch(() => {}); throw e; }
 }

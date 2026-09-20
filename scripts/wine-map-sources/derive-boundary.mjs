@@ -10,6 +10,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { pgConfig, releaseVersion, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { rawObjectPath, uploadRawObject, SOURCE_NAMESPACE, WFS_LICENCE } from "./inao-lib.mjs";
+import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -170,6 +171,7 @@ try {
   );
   assert.equal(result.rows.length, 1, "expected one staged boundary row");
   await client.query("commit");
+  await warnIfNeighbourCacheStale(client);
 
   const geometry = JSON.parse(geojson);
   const vertices = geometry.coordinates.flat(2).length;
