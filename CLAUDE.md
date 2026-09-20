@@ -1378,9 +1378,18 @@ a raw subquery, regardless of which two tables look involved at a glance.
     behind this data is content-level rather than per-user and
     `get_wine_place_context` is SECURITY INVOKER — a future per-user policy
     would have to clear the caches.
-  - **The active-tasting poll backs off** from 20 s to 120 s when nothing is
-    running (`pollIntervalMs` in `src/lib/active-tasting/select.ts`); it was
-    ~788 ms of server work every 20 s on every page.
+  - **Both header pollers back off when there is nothing to report.** The
+    active-tasting banner goes 20 s -> 120 s (`pollIntervalMs`,
+    `src/lib/active-tasting/select.ts`) and the notifications bell 15 s -> 90 s
+    (`invitePollIntervalMs`, `src/lib/notifications-poll.ts`), both re-checking
+    on focus/visibilitychange so returning to the tab is still immediate, and
+    both holding one request at a time. Measured on production: these two
+    server actions were the app's biggest background cost on EVERY page — the
+    bell alone fired every 15 s at 575-2,773 ms each. Note when measuring this
+    in the Browser pane: neither poller ticks while the pane is hidden
+    (`document.visibilityState !== "visible"`), and a pane that flicks visible
+    fires both wake handlers, so a naive request count reads as pairs every few
+    seconds. Front the pane and watch the gaps, or trust the unit tests.
   - **Still open**: `get_wine_place_context`'s `nearby_list` CTE is 75-98% of
     that RPC (France 248 ms of 253 ms) because `ST_DWithin` plans as a join
     filter over all 3,257 boundaries. It needs a migration, and it is why a

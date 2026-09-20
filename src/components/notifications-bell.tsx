@@ -1,24 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getPendingInvites, type InviteNotification } from "@/lib/notifications";
+import { invitePollIntervalMs } from "@/lib/notifications-poll";
 
 export type { InviteNotification };
 
-const POLL_MS = 15000;
-
 /**
  * Bell in the app header showing pending tasting invitations. Polls
- * getPendingInvites directly (not router.refresh()) every 15s while the tab
- * is visible, so a new invite shows up on its own instead of only after a
- * manual page reload — and without re-rendering the whole page the way a
- * full refresh would. The count badge is always rendered (fixed size) so it
- * never shifts layout; the dropdown lists each invite with a link into the
- * tasting lobby where you accept or decline.
+ * getPendingInvites directly (not router.refresh()) while the tab is visible,
+ * so a new invite shows up on its own instead of only after a manual page
+ * reload — and without re-rendering the whole page the way a full refresh
+ * would. The count badge is always rendered (fixed size) so it never shifts
+ * layout; the dropdown lists each invite with a link into the tasting lobby
+ * where you accept or decline.
+ *
+ * Cadence comes from invitePollIntervalMs: 15s while something is pending,
+ * 90s when nothing is. Measured on production 2026-09-20, the old flat 15s
+ * tick was the app's biggest background cost — one 575-2,773ms server action
+ * every 15s on EVERY page, almost always to be told there is nothing. The
+ * slow tick is safe because focus and visibilitychange re-check immediately,
+ * which is when an invitation received elsewhere actually has to appear. One
+ * request at a time, so a slow response never stacks on the next tick.
  */
 export function NotificationsBell({
   invites: initialInvites,
@@ -30,17 +37,32 @@ export function NotificationsBell({
   const [open, setOpen] = useState(false);
   const [invites, setInvites] = useState(initialInvites);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState !== "visible") return;
-      getPendingInvites()
-        .then(setInvites)
-        .catch(() => {
-          // A transient failure just means the bell doesn't update this tick.
-        });
-    }, POLL_MS);
-    return () => clearInterval(id);
+  const inFlight = useRef(false);
+  const check = useCallback(() => {
+    if (inFlight.current || document.visibilityState !== "visible") return;
+    inFlight.current = true;
+    getPendingInvites()
+      .then(setInvites)
+      .catch(() => {
+        // A transient failure just means the bell doesn't update this tick.
+      })
+      .finally(() => {
+        inFlight.current = false;
+      });
   }, []);
+
+  const intervalMs = invitePollIntervalMs(invites);
+  useEffect(() => {
+    const id = setInterval(check, intervalMs);
+    const onWake = () => check();
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
+    };
+  }, [check, intervalMs]);
 
   const count = invites.length;
 
