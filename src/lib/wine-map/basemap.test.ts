@@ -758,6 +758,23 @@ describe("the style diff a swap produces", () => {
     expect(validateStyleMin(next)).toEqual([]);
   });
 
+  it("never carries a state block, so a flip leaves the map's global state alone", () => {
+    // The wine map keeps its grape filter, language, focus depth and selection
+    // in MapLibre global state (map-state.ts), set at runtime by MapStateSync.
+    // Style.serialize() omits `state`, so as long as nothing here adds one the
+    // diff emits no setGlobalState and the live values survive a flip. A
+    // `state` block would reset every one of them on each flip, and make
+    // setGlobalStateProperty(name, null) fall back to its stale default.
+    let style = liveStyle(positron);
+    for (const incoming of [darkMatter, positron]) {
+      const next = withWineLayers(style, tuneBasemapStyle(incoming));
+      expect("state" in next).toBe(false);
+      const names = diff(style, next).map((c) => c.command as string);
+      expect(names).not.toContain("setGlobalState");
+      style = next;
+    }
+  });
+
   it("a swapped-in basemap is trimmed and gated exactly as the first one was", () => {
     // The whole point of basemapTweaks being one rule: a flip must not bring
     // back a layer onLoad removed, or reset a zoom range it set. Three flips,
