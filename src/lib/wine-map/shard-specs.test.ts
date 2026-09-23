@@ -458,3 +458,83 @@ describe("shard colour expression size", () => {
     }
   });
 });
+
+describe("shardColorsFor — the map's per-shard colour table", () => {
+  it("builds each shard from its own slugs, and a shard with none from its region hue", () => {
+    const palette = MAP_PALETTES.light;
+    const table = specs.shardColorsFor({
+      keys: ["bourgogne", "baden", "loire"],
+      slugsByShard: BY_SHARD,
+      ramp: false,
+      palette,
+    });
+    expect(Object.keys(table)).toEqual(["bourgogne", "baden", "loire"]);
+    expect(table.bourgogne).toEqual(
+      specs.shardColorExpression({
+        region: "bourgogne",
+        areaSlugs: BY_SHARD.bourgogne,
+        ramp: false,
+        palette,
+      }),
+    );
+    // Not in the tree fixture: no areas, region hue at every zoom.
+    expect(table.loire).toEqual(specs.regionHue("loire", palette));
+    expect(table.baden).toBe(palette.fallback);
+  });
+
+  it("applies the ramp to every key it is given", () => {
+    const palette = MAP_PALETTES.dark;
+    const ramped = specs.shardColorsFor({
+      keys: ["bourgogne"],
+      slugsByShard: BY_SHARD,
+      ramp: true,
+      palette,
+    });
+    const plain = specs.shardColorsFor({
+      keys: ["bourgogne"],
+      slugsByShard: BY_SHARD,
+      ramp: false,
+      palette,
+    });
+    expect(JSON.stringify(ramped.bourgogne)).toContain('"grand_cru"');
+    expect(JSON.stringify(plain.bourgogne)).not.toContain('"grand_cru"');
+  });
+
+  it("keeps odd keys as own entries and never reads a slug list off the prototype", () => {
+    const table = specs.shardColorsFor({
+      keys: ["constructor"],
+      slugsByShard: BY_SHARD,
+      ramp: true,
+      palette: MAP_PALETTES.light,
+    });
+    expect(Object.prototype.hasOwnProperty.call(table, "constructor")).toBe(true);
+    expect(table.constructor).toBe(MAP_PALETTES.light.fallback);
+  });
+
+  it("keeps the world→shard handoff invisible: a region paints the same from either archive", () => {
+    // The world region layers now read worldRegionColor while each shard reads
+    // its own expression. A region polygon (tier 1, no area) must come out the
+    // same colour from both, at every zoom and tint, or the region would
+    // change colour the moment its shard loads.
+    const mismatches: string[] = [];
+    for (const theme of THEMES) {
+      const palette = MAP_PALETTES[theme];
+      const world = compile(specs.worldRegionColor(palette));
+      for (const ramp of [false, true]) {
+        const table = specs.shardColorsFor({ keys: REGIONS, slugsByShard: BY_SHARD, ramp, palette });
+        for (const region of REGIONS) {
+          const shard = compile(table[region]);
+          for (const tint of TINTS) {
+            const properties = { region, tier: 1, ...(tint === undefined ? {} : { tint }) };
+            for (const zoom of ZOOMS) {
+              if (colorAt(world, zoom, properties) !== colorAt(shard, zoom, properties)) {
+                mismatches.push(`${theme} ramp=${ramp} z${zoom} ${JSON.stringify(properties)}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+});

@@ -205,3 +205,32 @@ export function areaSlugsByShard(
     [...buckets.entries()].map(([shard, slugs]) => [shard, [...slugs].sort()]),
   );
 }
+
+/** Each named shard's colour expression, keyed by shard. `slugsByShard` is
+    areaSlugsByShard's output — a shard it does not name has no areas (yet),
+    and paints its region hue. `ramp` applies to every key given: the map calls
+    this once for the plain shards and once for the ramped ones, so a region
+    joining the ramp latch rebuilds only its own entry and every other shard
+    keeps the very same expression object. */
+export function shardColorsFor(input: {
+  keys: readonly string[];
+  slugsByShard: Readonly<Record<string, readonly string[]>>;
+  ramp: boolean;
+  palette: MapPalette;
+}): Record<string, ColorExpression> {
+  const { keys, slugsByShard, ramp, palette } = input;
+  return Object.fromEntries(
+    keys.map((key) => [
+      key,
+      shardColorExpression({
+        region: key,
+        // Own properties only, as in regionHue.
+        areaSlugs: Object.prototype.hasOwnProperty.call(slugsByShard, key)
+          ? slugsByShard[key]
+          : [],
+        ramp,
+        palette,
+      }),
+    ]),
+  );
+}

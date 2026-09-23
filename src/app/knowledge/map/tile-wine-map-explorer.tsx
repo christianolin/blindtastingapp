@@ -47,7 +47,7 @@ import { useWinePlacePrefetch } from "@/lib/wine-map/use-place-prefetch";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
-import { areaSlugsFromTree } from "@/lib/wine-map/fill-palette";
+import { areaSlugsByShard } from "@/lib/wine-map/shard-specs";
 import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
@@ -217,11 +217,11 @@ export function TileWineMapExplorer({
     return byShard;
   }, [tree]);
 
-  // The whole catalogue's area slugs, for the map's fixed fill palette — built
+  // Each shard's own area slugs, for that shard's fixed fill palette — built
   // once from the same tree, so the colour table never depends on what the
-  // viewport has happened to scan. Empty until the tree lands (region hues
-  // only, as before).
-  const areaSlugs = useMemo(() => areaSlugsFromTree(tree ?? []), [tree]);
+  // viewport has happened to scan, and a shard's colour expression carries only
+  // its own areas. Empty until the tree lands (region hues only, as before).
+  const slugsByShard = useMemo(() => areaSlugsByShard(tree ?? []), [tree]);
 
   // Expanded ("full view") keeps the tree and details visible but
   // collapsible; Escape exits.
@@ -655,7 +655,7 @@ export function TileWineMapExplorer({
                 onSelect={select}
                 visibleKeys={visibleKeys}
                 shardCountries={shardCountries}
-                areaSlugs={areaSlugs}
+                areaSlugsByShard={slugsByShard}
                 expanded={expanded}
                 onToggleExpanded={() => setExpanded((value) => !value)}
                 english={english}

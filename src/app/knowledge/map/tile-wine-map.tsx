@@ -14,10 +14,14 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
+import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
-  latchRampedRegions,
-  paletteArms,
-} from "@/lib/wine-map/fill-palette";
+  AREA_PALETTE_ZOOM,
+  classificationExpr,
+  shardColorsFor,
+  worldRegionColor,
+  type ColorExpression,
+} from "@/lib/wine-map/shard-specs";
 import {
   englishName,
   englishTextFieldExpression,
@@ -38,8 +42,6 @@ import {
   classificationShades,
   districtColor,
   MAP_PALETTES,
-  SHADE_STEPS,
-  shiftLightness,
   type MapPalette,
 } from "@/lib/wine-map/map-palette";
 import { useRenderedTheme } from "@/lib/rendered-theme";
@@ -145,11 +147,6 @@ const COUNTRY_RELEASE_SHARE = 0.45;
 // viewport is far finer than the bboxes it is measuring.
 const FOCUS_GRID = 48;
 
-// Zoom at which fillColorExpression steps from the region hue to the per-area /
-// classification palette. The legend keys off the same number so it never
-// advertises colours the map is not painting yet.
-const AREA_PALETTE_ZOOM = 8;
-
 // Below this zoom no region shard is mounted. Verified against the catalogue:
 // every shard-only place has min_zoom >= 5, so beneath it a shard can only
 // contribute its region outline/fill — which the world archive also carries.
@@ -167,9 +164,10 @@ const MAX_TILE_CACHE = 1500;
 // dozens in a burst — and each used to recompute and set state on its own.
 const READY_DEBOUNCE_MS = 100;
 
-// Default for the areaSlugs prop. A module constant, not a `= []` default:
-// a fresh array per render would re-key every memo below it on every render.
-const NO_SLUGS: string[] = [];
+// Default for the areaSlugsByShard prop. A module constant, not a `= {}`
+// default: a fresh object per render would re-key every memo below it on
+// every render.
+const NO_SLUGS_BY_SHARD: Record<string, string[]> = {};
 
 // Multiplier for the world archive's region layers: 0 once the region's own
 // shard has loaded (feature-state `handed`, set by the effect on
@@ -180,43 +178,6 @@ const WORLD_HANDED_FACTOR = [
   ["boolean", ["feature-state", "handed"], false],
   0,
   1,
-];
-
-// Region hue spread across the tint ramp. Built ONCE per palette at module
-// load, never per render: a theme flip swaps which table the paint reads, and
-// that is the only time the reference changes.
-function regionMatchExpression(palette: MapPalette) {
-  return [
-    "match",
-    ["get", "region"],
-    ...Object.entries(palette.regions).flatMap(([key, color]) => [
-      key,
-      [
-        "match",
-        ["to-number", ["coalesce", ["get", "tint"], 2]],
-        ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(color, step)]),
-        color,
-      ],
-    ]),
-    palette.fallback,
-  ];
-}
-const REGION_MATCH: Record<Theme, unknown[]> = {
-  light: regionMatchExpression(MAP_PALETTES.light),
-  dark: regionMatchExpression(MAP_PALETTES.dark),
-};
-
-// Classification source: the `classification` tile property (appellation
-// level, or Champagne's échelle village rating), falling back to `level`
-// for tiles from before the property existed. It drives the fill-intensity
-// ramp — stronger, more saturated shades of the area hue for higher
-// classifications (darker in light, brighter in dark) — leaving gold reserved
-// for selection alone.
-const classificationExpr = [
-  "coalesce",
-  ["get", "classification"],
-  ["get", "level"],
-  "",
 ];
 
 // The no-filter state for layers whose filter is sometimes absent. MapLibre
@@ -233,132 +194,48 @@ const PASS_FILTER = ["boolean", true] as unknown as boolean;
 const LAYER_VISIBLE = { visibility: "visible" } as const;
 const LAYER_HIDDEN = { visibility: "none" } as const;
 
-// District hues (districtColor), their classification shades and the tint ramp
-// live in lib/wine-map/map-palette, one fixed table per theme, keyed by the
-// same slug hash so the fill expression's palette arms and the legend swatches
-// cannot drift apart.
-
-// Hue-grouping unit: village-level in Burgundy, sub-region in Champagne
-// (the `area_key` tile property), falling back to the district group for
-// tiles from before the property existed.
-const areaExpr = ["coalesce", ["get", "area_key"], ["get", "group"], ""];
-
-// Selection no longer recolours the shape — places keep their true palette
-// colour and selection reads as a gold outline ring drawn above everything
-// (plus a slight opacity lift in fillPaint). The world layers' region colour is
-// REGION_MATCH[paintTheme], read inside the component.
-
-// "Is this feature's region one where the classification ramp applies?" —
-// bound as the `ramp` variable of the fill-colour and fill-opacity `let`s.
+// Every colour a wine polygon paints comes from lib/wine-map/shard-specs:
+// shardColorExpression per region shard (that shard's own region hue and area
+// slugs, with the classification ramp as a per-shard constant) and
+// worldRegionColor for the world archive. District hues, their classification
+// shades and the tint ramp live in lib/wine-map/map-palette, one fixed table
+// per theme, keyed by the same slug hash so the fill expression's palette arms
+// and the legend swatches cannot drift apart.
+//
+// Selection does not recolour a shape — places keep their true palette colour
+// and selection reads as a gold outline ring drawn above everything (plus a
+// slight opacity lift in the fill paint).
+//
 // The ramp is RELATIVE: it only applies where at least two classification
 // levels exist — an all-grand-cru region like Alsace has nothing to be darker
 // THAN, so its vineyards keep the plain area hue (owner: "darkest doesn't make
 // sense there"). Which regions qualify is discovered once per session by the
 // idle-time scan (latchRampedRegions), not re-decided per viewport.
-function rampExpression(rampedRegions: string[]) {
-  return rampedRegions.length
-    ? ["match", ["coalesce", ["get", "region"], ""], rampedRegions, true, false]
-    : false;
+
+// Shared by the shard outlines and the world archive's region outlines, so a
+// region drawn from either source is pixel-identical. Outlines follow the fill
+// palette (classification colours at village zoom) so deep levels aren't ringed
+// in the region hue.
+function buildOutlinePaint(color: ColorExpression) {
+  return {
+    "line-color": color as unknown as string,
+    "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
+  };
 }
 
-// The shade family of one palette colour, evaluated against the feature:
-// grand cru strongest (darkest in light, brightest in dark), premier cru mid,
-// everything else spread across the tint ramp — but only where `ramp` holds;
-// otherwise the tint ramp alone.
-function paletteShadeExpression(color: string, palette: MapPalette) {
-  const shades = classificationShades(color, palette);
-  // Within an area, sites that share a classification used to render in
-  // one identical colour — a whole Großlage of Einzellagen as a single
-  // brown mass, with no way to see where one ends and the next begins.
-  // Spread them across a lightness ramp of the area's own hue using the
-  // stable per-place `tint`, so neighbours separate while the area still
-  // reads as one group. This is the plain/village case only: the cru
-  // shades stay exact, because there intensity carries real meaning.
-  const tinted = [
-    "match",
-    ["to-number", ["coalesce", ["get", "tint"], 2]],
-    ...SHADE_STEPS.flatMap((step, i) => [i, shiftLightness(shades.base, step)]),
-    shades.base,
-  ];
-  return [
-    "case",
-    ["var", "ramp"],
-    [
-      "match",
-      classificationExpr,
-      "grand_cru",
-      shades.grand_cru,
-      "premier_cru",
-      shades.premier_cru,
-      tinted,
-    ],
-    tinted,
-  ];
-}
-
-// Camera ("zoom") expressions must sit at the top level of a paint property
-// (a `let` around it is fine — MapLibre looks through `let` for the zoom
-// curve), so the zoom step wraps the selection cases rather than the reverse.
-//
-// `areaSlugs` is the WHOLE catalogue (every `area_key`/`group` value the tiles
-// can carry, derived from the place tree by areaSlugsFromTree), not the areas
-// scanned so far: the table is built once and the expression never changes
-// for the session except for a region joining the ramp. Two levels keep it
-// small — a `match` from slug to palette index with one arm per palette
-// colour (MapLibre lets an arm carry a list of labels), then a `match` from
-// index to that colour's shade family — instead of one arm per slug with its
-// own copy of the shade family, which is what made the old table's size a
-// problem (and forced a cap on it).
-// `theme` picks one of the two fixed tables — both keyed alike, so the arms
-// are the same and only the colours differ; a theme flip is the only other
-// thing that rebuilds this.
-function fillColorExpression(areaSlugs: string[], rampedRegions: string[], theme: Theme) {
-  // From z8 every area (Burgundy village, Champagne sub-region, Bordeaux
-  // district) gets its own hue, and WITHIN the hue classification reads as
-  // intensity: grand cru strongest, premier cru mid, village land plain.
-  // Region hue covers a slug the catalogue does not know (a tile release
-  // newer than the loaded tree) exactly as it covered unscanned areas before.
-  const palette = MAP_PALETTES[theme];
-  const regionMatch = REGION_MATCH[theme];
-  const arms = paletteArms(areaSlugs, palette.districts.length);
-  const present = palette.districts.map((_, i) => arms[i].length > 0);
-  const paletteIndex = present.some(Boolean)
-    ? [
-        "match",
-        areaExpr,
-        ...arms.flatMap((slugs, i) => (slugs.length ? [slugs, i] : [])),
-        -1,
-      ]
-    : -1;
-  const areaMatch = present.some(Boolean)
-    ? [
-        "match",
-        ["var", "pi"],
-        ...palette.districts.flatMap((color, i) =>
-          present[i] ? [i, paletteShadeExpression(color, palette)] : [],
-        ),
-        regionMatch,
-      ]
-    : regionMatch;
-  return [
-    "let",
-    "pi",
-    paletteIndex,
-    "ramp",
-    rampExpression(rampedRegions),
-    ["step", ["zoom"], regionMatch, AREA_PALETTE_ZOOM, areaMatch],
-  ] as unknown as string;
-}
-
-// The fill paint every wine polygon layer shares. `hide` is the world archive's
-// handed-off multiplier (WORLD_HANDED_FACTOR) or null for a shard layer; it has
-// to be folded into each zoom stop's output, because the zoom interpolation
-// must stay the top-level expression.
+// The fill paint every wine polygon layer shares. `color` is that layer's
+// colour (one shard's own expression, or the world archive's region colour);
+// `ramp` is whether its region is on the classification ramp — a constant per
+// layer, since a shard holds one region (the world archive passes false: its
+// regions carry no classification the ramp reads). `hide` is the world
+// archive's handed-off multiplier (WORLD_HANDED_FACTOR) or null for a shard
+// layer; it has to be folded into each zoom stop's output, because the zoom
+// interpolation must stay the top-level expression.
 function buildFillPaint(
   selectedKey: string | null,
   selectedId: string | null,
-  areaColor: string,
-  rampedRegions: string[],
+  color: ColorExpression,
+  ramp: boolean,
   hide: unknown[] | null,
 ) {
   const sel = ["==", ["get", "key"], selectedKey ?? ""];
@@ -380,11 +257,11 @@ function buildFillPaint(
     // pass per fill layer. Turning it off removes that pass outright; the
     // outline layer keeps edges crisp, so it reads the same.
     "fill-antialias": false,
-    "fill-color": areaColor,
+    "fill-color": color as unknown as string,
     "fill-opacity": [
       "let",
       "ramp",
-      rampExpression(rampedRegions),
+      ramp,
       [
         "interpolate",
         ["linear"],
@@ -518,7 +395,7 @@ export function TileWineMap({
   onToggleExpanded,
   visibleKeys = null,
   shardCountries = {},
-  areaSlugs = NO_SLUGS,
+  areaSlugsByShard = NO_SLUGS_BY_SHARD,
   english = false,
 }: {
   manifest: WineMapManifest;
@@ -539,11 +416,12 @@ export function TileWineMap({
       place tree. Lets the map show subregion-and-deeper detail for one country
       at a time; other countries stay at region level. Empty = no gating. */
   shardCountries?: Record<string, string>;
-  /** Every `area_key`/`group` value the tiles can carry, derived from the
-      place tree (areaSlugsFromTree). The fill palette's slug->colour table is
-      built from this whole list once, so it never changes with the viewport.
-      Empty until the tree loads: region hues only, as before the first scan. */
-  areaSlugs?: string[];
+  /** shard key -> every `area_key`/`group` value that shard's tiles can
+      carry, derived from the place tree (areaSlugsByShard). Each shard's fill
+      palette is built from its own list once, so it never changes with the
+      viewport. Empty until the tree loads: region hues only, as before the
+      first scan. */
+  areaSlugsByShard?: Record<string, string[]>;
   /** English-names toggle: relabels the map, legend and tree from the curated
       local->English dictionary (Italia->Italy, Toscana->Tuscany). Client-side
       only — no tile rebuild. */
@@ -1158,64 +1036,92 @@ export function TileWineMap({
     () => viewInfo.regions.some((region) => rampedRegions.includes(region)),
     [viewInfo.regions, rampedRegions],
   );
-  // fillColorExpression only steps from regionMatch to the per-area/
+  // The fill colour only steps from the region hue to the per-area/
   // classification palette at z8, so below that the legend's Areas and
   // Classification chips described colours that appeared nowhere on the map —
   // a Gevrey-Chambertin swatch in district red while every polygon on
   // screen was still Bourgogne petrol. Same threshold as the step.
   const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
-  // The one colour expression every wine fill and outline layer uses. Keyed on
-  // the catalogue's slug list (changes once, when the tree loads), the ramp
-  // latch (at most once per region per session) and the landed theme (a rare,
-  // user-initiated flip) — never on the viewport.
-  const areaColor = useMemo(
-    () => fillColorExpression(areaSlugs, rampedRegions, paintTheme),
-    [areaSlugs, rampedRegions, paintTheme],
+  // One colour expression per shard, from that shard's own region and area
+  // slugs (lib/wine-map/shard-specs) — ~2 KB each instead of one ~38 KB
+  // catalogue-wide expression on every layer, which MapLibre re-serialized
+  // with the whole style on every addLayer (the first-zoom freeze). Keyed on
+  // the tree's slug lists (change once, when the tree loads), the ramp latch
+  // (at most once per region per session) and the landed theme (a rare,
+  // user-initiated flip) — never on the viewport. Split by ramp so a region
+  // joining the latch rebuilds only its own expression; every other shard
+  // keeps the same object, which react-map-gl's paint diff skips on identity.
+  const plainShardColors = useMemo(
+    () =>
+      shardColorsFor({
+        keys: shardEntries.map(([key]) => key),
+        slugsByShard: areaSlugsByShard,
+        ramp: false,
+        palette,
+      }),
+    [shardEntries, areaSlugsByShard, palette],
   );
-  // The world country and region layers' plain region hue; a module-level
-  // table per theme, so the reference only changes on a flip.
-  const regionColor = REGION_MATCH[paintTheme] as unknown as string;
+  const rampedShardColors = useMemo(
+    () =>
+      shardColorsFor({
+        keys: rampedRegions,
+        slugsByShard: areaSlugsByShard,
+        ramp: true,
+        palette,
+      }),
+    [rampedRegions, areaSlugsByShard, palette],
+  );
+  const rampedSet = useMemo(() => new Set(rampedRegions), [rampedRegions]);
 
-  // Selection-aware paint. The zoom interpolation fades fills — the selected
-  // parent included — as children appear, while outlines and labels persist
-  // (spec: "the selected parent's fill fades while its outline and single
-  // label remain").
-  const fillPaint = useMemo(
-    () => buildFillPaint(selectedKey, selectedId, areaColor, rampedRegions, null),
-    [selectedKey, selectedId, areaColor, rampedRegions],
+  // Selection-aware paint, per shard. The zoom interpolation fades fills — the
+  // selected parent included — as children appear, while outlines and labels
+  // persist (spec: "the selected parent's fill fades while its outline and
+  // single label remain"). Built once per input change, never per render: every
+  // Layer re-renders on each `styledata`, and a fresh object would send
+  // react-map-gl into a deep compare of each expression every time.
+  const shardFillPaints = useMemo(
+    () =>
+      Object.fromEntries(
+        shardEntries.map(([key]) => {
+          const ramp = rampedSet.has(key);
+          const color = ramp ? rampedShardColors[key] : plainShardColors[key];
+          return [key, buildFillPaint(selectedKey, selectedId, color, ramp, null)];
+        }),
+      ),
+    [shardEntries, rampedSet, rampedShardColors, plainShardColors, selectedKey, selectedId],
   );
-  // The world archive's copy of the same paint, with the handed-off multiplier
+  const shardOutlinePaints = useMemo(
+    () =>
+      Object.fromEntries(
+        shardEntries.map(([key]) => [
+          key,
+          buildOutlinePaint(
+            rampedSet.has(key) ? rampedShardColors[key] : plainShardColors[key],
+          ),
+        ]),
+      ),
+    [shardEntries, rampedSet, rampedShardColors, plainShardColors],
+  );
+
+  // The world archive's country and region colour: every region's hue, one
+  // cached expression per theme, so the reference only changes on a flip.
+  // World features carry no area slugs, so this paints them exactly as the
+  // shard expressions paint the same region (shard-specs.test.ts).
+  const regionColor = worldRegionColor(palette) as unknown as string;
+  // The world archive's copy of the fill paint, with the handed-off multiplier
   // folded in (see the effect on handedOffShards).
   const worldRegionFillPaint = useMemo(
     () =>
-      buildFillPaint(
-        selectedKey,
-        selectedId,
-        areaColor,
-        rampedRegions,
-        WORLD_HANDED_FACTOR,
-      ),
-    [selectedKey, selectedId, areaColor, rampedRegions],
-  );
-
-  // Shared by the shard outlines and the world archive's region outlines, so a
-  // region drawn from either source is pixel-identical.
-  const outlinePaint = useMemo(
-    () => ({
-      // Outlines follow the fill palette (classification colours at village
-      // zoom) so deep levels aren't ringed in region teal.
-      "line-color": areaColor,
-      "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
-    }),
-    [areaColor],
+      buildFillPaint(selectedKey, selectedId, regionColor, false, WORLD_HANDED_FACTOR),
+    [selectedKey, selectedId, regionColor],
   );
   const worldRegionOutlinePaint = useMemo(
     () => ({
-      ...outlinePaint,
+      ...buildOutlinePaint(regionColor),
       "line-opacity": WORLD_HANDED_FACTOR as unknown as number,
     }),
-    [outlinePaint],
+    [regionColor],
   );
   // Shard labels share one paint object, re-keyed only by selection or theme.
   const shardLabelPaint = useMemo(
@@ -1690,7 +1596,7 @@ export function TileWineMap({
               type="fill"
               source-layer="places"
               filter={shardFilterFor(key)}
-              paint={fillPaint}
+              paint={shardFillPaints[key]}
               layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
             />
             <Layer
@@ -1698,7 +1604,7 @@ export function TileWineMap({
               type="line"
               source-layer="places"
               filter={shardFilterFor(key)}
-              paint={outlinePaint}
+              paint={shardOutlinePaints[key]}
             />
             {/* Only the owning shard can match selectedKey — on every other
                 shard this pair is filtered to nothing, so mounting them here
