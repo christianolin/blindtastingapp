@@ -25,9 +25,9 @@ function lastSegment(key: string): string {
   return key.split(".").at(-1) ?? key;
 }
 
-/** Every value the `area_key` and `group` tile properties can take, derived
-    from the place tree exactly the way scripts/wine-map-tiles/export.mjs
-    derives them for the tiles:
+/** Walks the place tree and hands `visit` each node's OWN contribution to the
+    `area_key` and `group` tile properties, derived exactly the way
+    scripts/wine-map-tiles/export.mjs derives them for the tiles:
     - `group` is the third canonical-key segment (a region's top areas — medoc,
       graves, cote-de-nuits), present on every key of three or more segments.
     - `area_key` is the last segment of the place's AREA: for a tier >= 2 place,
@@ -36,11 +36,13 @@ function lastSegment(key: string): string {
       or a Champagne sub-region, whose villages hang off the region by key but
       parent onto the sub-region — hence the walk is by parent, never by key
       segment); a place with neither falls back to its `group`.
-    Both are collected, since the map's area expression coalesces `area_key`
-    then `group` (tiles from before `area_key` existed carry only the latter).
-    Sorted and de-duplicated, so an unchanged tree yields an equal list. */
-export function areaSlugsFromTree(roots: WinePlaceTreeNode[]): string[] {
-  const slugs = new Set<string>();
+    Per node rather than one flat list so a caller can bucket the slugs by the
+    shard that carries the node (shard-specs' areaSlugsByShard). A node with
+    neither value (a country, a region) is visited with an empty list. */
+export function visitAreaSlugs(
+  roots: readonly WinePlaceTreeNode[],
+  visit: (node: WinePlaceTreeNode, slugs: readonly string[]) => void,
+): void {
   // Explicit stack (node + its ancestor chain, nearest first) rather than
   // recursion: the tree has a few thousand nodes and the chain is what the
   // area walk reads.
@@ -64,11 +66,25 @@ export function areaSlugsFromTree(roots: WinePlaceTreeNode[]): string[] {
       area ??= tier2;
     }
     const areaKey = area ? lastSegment(area.key) : group;
-    if (areaKey) slugs.add(areaKey);
-    if (group) slugs.add(group);
+    const own: string[] = [];
+    if (areaKey) own.push(areaKey);
+    if (group && group !== areaKey) own.push(group);
+    visit(node, own);
     const childLineage = [node, ...lineage];
     for (const child of node.children) stack.push({ node: child, lineage: childLineage });
   }
+}
+
+/** Every value the `area_key` and `group` tile properties can take (see
+    visitAreaSlugs for how each is derived). Both are collected, since the
+    map's area expression coalesces `area_key` then `group` (tiles from before
+    `area_key` existed carry only the latter). Sorted and de-duplicated, so an
+    unchanged tree yields an equal list. */
+export function areaSlugsFromTree(roots: readonly WinePlaceTreeNode[]): string[] {
+  const slugs = new Set<string>();
+  visitAreaSlugs(roots, (_node, own) => {
+    for (const slug of own) slugs.add(slug);
+  });
   return [...slugs].sort();
 }
 
