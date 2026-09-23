@@ -71,15 +71,21 @@ export function longTaskEntryType(
 }
 
 export type GestureMetrics = FrameStats & {
-  /** Long tasks that started inside the gesture; null where the browser has
-      no long-task API. */
+  /** Long tasks that overlapped the gesture; null where the browser has no
+      long-task API. */
   longTasks: number | null;
   worstTask: number | null;
-  /** From the gesture's start to the map's `idle`. */
+  /** From the gesture's start to the `idle` that settled it
+      (waitForSettled). */
   toIdle: number;
   reloads: number;
 };
 
+/** A long task counts toward a gesture when it OVERLAPS (from, to], not only
+    when it starts inside: a Long Animation Frame's startTime is the start of
+    the first task in that frame, which for a selection is the very task that
+    sampled `from` and then ran React's render and the setPaintProperty
+    calls. A task that ends exactly at `from` does not count. */
 export function gestureMetrics(input: {
   frames: readonly FrameSample[];
   tasks: readonly TaskSample[] | null;
@@ -88,7 +94,9 @@ export function gestureMetrics(input: {
   reloads: number;
 }): GestureMetrics {
   const { frames, tasks, from, to, reloads } = input;
-  const inside = tasks ? tasks.filter((t) => t.at >= from && t.at <= to) : null;
+  const inside = tasks
+    ? tasks.filter((t) => t.at + t.duration > from && t.at <= to)
+    : null;
   return {
     ...frameStats(deltasBetween(frames, from, to)),
     longTasks: inside ? inside.length : null,
@@ -132,9 +140,91 @@ export const PROBE_SCRIPT: readonly ProbeStep[] = [
   { name: "Zoom out to z4.4", kind: "ease", center: FRANCE, zoom: 4.4, durationMs: 1500 },
 ];
 
-/** A gesture that has not reached `idle` by then is recorded as timed out
-    rather than hanging the run (a tile that never loads, a hidden tab). */
+/** A gesture that has not settled by then is recorded as timed out rather
+    than hanging the run (a tile that never loads, a hidden tab, a place
+    context that never arrives). One budget per gesture, across every idle
+    wait waitForSettled makes. */
 export const PROBE_IDLE_TIMEOUT_MS = 20_000;
+
+/** How long the map must stay quiet after an `idle` before a gesture's row
+    closes. It also gives the long-task observer, which delivers entries
+    asynchronously, time to report the gesture's last frames. */
+export const PROBE_SETTLE_MS = 250;
+
+/** What the probe knows about the explorer's selection at the last commit:
+    the selected key, and the key of the place whose context has arrived
+    (that context supplies selectedId / selectedParentId, which the paint
+    and label rules read). */
+export type ProbeSelection = { selectedKey: string | null; contextKey: string | null };
+
+/** Selecting the key that is already selected is a no-op in the explorer
+    (its select() returns early), so that row would measure nothing — and
+    with zero reloads it would pass A2 without measuring anything. The probe
+    marks such a row instead of playing it. With the probe reading the
+    current select() and selection at each step, it only happens when the
+    selection is already on that key as the step starts: a page opened with
+    `?place=` on Vosne-Romanée (step 5), or an earlier run that stopped
+    right after step 5. */
+export function selectIsNoop(selection: ProbeSelection, key: string): boolean {
+  return selection.selectedKey === key;
+}
+
+/** A selection has fully landed once the selected place's OWN context is
+    in. Until then selectedId / selectedParentId still describe the previous
+    place (or nothing), and their arrival — after a network round trip —
+    changes the paint a second time and reloads again. A place whose context
+    never arrives (missing, or the request failed) therefore times out, shown
+    with "+", rather than closing its row early. */
+export function selectionLanded(selection: ProbeSelection, key: string): boolean {
+  return selection.selectedKey === key && selection.contextKey === key;
+}
+
+/** The map, the clock and the gesture as waitForSettled needs them. */
+export type SettleProbe = {
+  /** Resolves at the map's next idle, or after `timeoutMs` (waitForIdle). */
+  waitIdle(timeoutMs: number): Promise<{ timedOut: boolean }>;
+  /** Whether the gesture's own effect is fully in. Always true for a camera
+      step; selectionLanded for a selection. */
+  landed(): boolean;
+  /** A count that goes up on every map render and every source reload. */
+  activity(): number;
+  /** Nothing is loading: MapLibre's map.loaded(). */
+  quiet(): boolean;
+  pause(ms: number): Promise<void>;
+  now(): number;
+};
+
+/**
+ * Waits until a gesture has really finished, not just reached its first
+ * `idle`. A row closes at an idle after which, for a whole `settleMs` window,
+ * the gesture had landed (at the idle and still at the end), nothing rendered
+ * or reloaded, and nothing was loading. Otherwise it waits for the next idle
+ * and checks again — this is what catches a selection's second reload wave,
+ * which starts only when its place context arrives from the network. All
+ * waits share one `timeoutMs` budget. `to` is the time of the idle that
+ * closed the row (or of giving up); `idles` how many idles it took.
+ */
+export async function waitForSettled(
+  probe: SettleProbe,
+  opts: { timeoutMs: number; settleMs: number },
+): Promise<{ timedOut: boolean; to: number; idles: number }> {
+  const deadline = probe.now() + opts.timeoutMs;
+  let idles = 0;
+  for (;;) {
+    const left = deadline - probe.now();
+    if (left <= 0) return { timedOut: true, to: probe.now(), idles };
+    const { timedOut } = await probe.waitIdle(left);
+    const to = probe.now();
+    if (timedOut) return { timedOut: true, to, idles };
+    idles += 1;
+    const landedAtIdle = probe.landed();
+    const mark = probe.activity();
+    await probe.pause(opts.settleMs);
+    if (landedAtIdle && probe.landed() && probe.activity() === mark && probe.quiet()) {
+      return { timedOut: false, to, idles };
+    }
+  }
+}
 
 /** The map as the reload counter needs it: its current style object, and the
     `style.load` event that replaces that object on a full rebuild. */

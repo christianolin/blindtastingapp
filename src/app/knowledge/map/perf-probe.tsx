@@ -8,8 +8,9 @@
 // and tabulates each gesture; **Copy results** puts the run on the clipboard as
 // JSON with the device facts that make two runs comparable.
 //
-// TileWineMap renders this only when the query parameter is present, so
-// nothing here runs — no rAF loop, no observer, no wrapper — for anyone else.
+// TileWineMap loads this (next/dynamic, its own chunk) and renders it only
+// when the query parameter is present, so nothing here is downloaded or runs
+// — no rAF loop, no observer, no wrapper — for anyone else.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import {
@@ -20,11 +21,16 @@ import {
   longTaskEntryType,
   PROBE_IDLE_TIMEOUT_MS,
   PROBE_SCRIPT,
+  PROBE_SETTLE_MS,
+  selectionLanded,
+  selectIsNoop,
   sourcesReloaded,
   trimToWindow,
   waitForIdle,
+  waitForSettled,
   type FrameSample,
   type GestureMetrics,
+  type ProbeSelection,
   type ProbeStep,
   type TaskSample,
 } from "@/lib/wine-map/perf-stats";
@@ -34,15 +40,18 @@ import {
 const LIVE_WINDOW_MS = 10_000;
 const KEEP_MS = PROBE_IDLE_TIMEOUT_MS + LIVE_WINDOW_MS;
 const READOUT_EVERY_MS = 500;
-// Long-task entries are delivered asynchronously; give the observer this long
-// after `idle` to report the gesture's last frames before reading them.
-const OBSERVER_SETTLE_MS = 250;
 
-// `reloadsCounted` false: the reload counter could not hook this MapLibre, so
-// `reloads` is not a measurement (shown as "n/a", never as 0).
+// `reloadsCounted` false: `reloads` is not a measurement of this gesture —
+// the reload counter could not hook this MapLibre, or the step was a
+// selection of the key already selected (`alreadySelected`: not played, the
+// explorer would have ignored it). Shown as "n/a" / "no-op", never as 0.
+// `idleWaits`: how many map idles the row waited through before it settled
+// (a selection whose place context arrives after the first idle takes two).
 type Row = GestureMetrics & {
   name: string;
   timedOut: boolean;
+  alreadySelected: boolean;
+  idleWaits: number;
   reloadsCounted: boolean;
   reloadedSources: string[];
 };
@@ -92,14 +101,48 @@ const ms = (value: number | null) => (value === null ? "n/a" : String(Math.round
 export function PerfProbe({
   getMap,
   onSelect,
+  selectedKey,
+  contextKey,
 }: {
   /** The live MapLibre instance (react-map-gl's MapRef.getMap()), or null
       before the map exists. */
   getMap: () => MapLibreMap | null;
   onSelect: (key: string, source?: "map" | "ui") => void;
+  /** The explorer's selected key. */
+  selectedKey: string | null;
+  /** The key of the place whose context (selectedId / selectedParentId) has
+      arrived; lags selectedKey while a new selection's context loads. */
+  contextKey: string | null;
 }) {
   const framesRef = useRef<FrameSample[]>([]);
   const tasksRef = useRef<TaskSample[]>([]);
+  // The latest props, refreshed after every commit. A run is one long async
+  // loop, so it reads onSelect and the selection through this ref at the
+  // moment it needs them: the onSelect it started with is the explorer's
+  // select() closed over the selection BEFORE step 5, and calling that for
+  // step 6 would hit its same-key early return and measure nothing.
+  const latestRef = useRef<{ onSelect: typeof onSelect; selection: ProbeSelection }>({
+    onSelect,
+    selection: { selectedKey, contextKey },
+  });
+  useEffect(() => {
+    latestRef.current = { onSelect, selection: { selectedKey, contextKey } };
+  });
+  // Whether the probe is still mounted, and how to stop the run in progress:
+  // an unmount (leaving the page, the map's error boundary remounting it)
+  // stops the run between steps and puts the reload counter back at once.
+  const lifeRef = useRef<{ alive: boolean; stop: (() => void) | null }>({
+    alive: true,
+    stop: null,
+  });
+  useEffect(() => {
+    const life = lifeRef.current;
+    life.alive = true;
+    return () => {
+      life.alive = false;
+      life.stop?.();
+    };
+  }, []);
   // Read once: the entry types never change within a page load.
   const [taskApi] = useState(() =>
     longTaskEntryType(
@@ -165,6 +208,7 @@ export function PerfProbe({
   }, [taskApi]);
 
   const run = useCallback(async () => {
+    const life = lifeRef.current;
     const map = getMap();
     if (!map) {
       setNote("The map is not ready yet.");
@@ -175,34 +219,90 @@ export function PerfProbe({
     setReport(null);
     setShowReport(false);
     setNote(null);
+    const notes: string[] = [];
+    const addNote = (text: string) => {
+      notes.push(text);
+      setNote(notes.join(" "));
+    };
+
     const reloads = installReloadCounter(map);
+    // Every frame the map draws — with the reload count, the "something is
+    // still happening" signal that keeps a row open (waitForSettled).
+    let renders = 0;
+    const onRender = () => {
+      renders += 1;
+    };
+    map.on("render", onRender);
+    // Resolves an idle wait in progress at once when the run stops, so an
+    // unmount does not leave the loop waiting out the 20 s timeout first.
+    let abortWait: () => void = () => {};
+    const aborted = new Promise<{ timedOut: boolean }>((resolve) => {
+      abortWait = () => resolve({ timedOut: true });
+    });
+    let stopped = false;
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      abortWait();
+      map.off("render", onRender);
+      reloads.restore();
+    };
+    life.stop = stop;
+
     if (!reloads.hooked()) {
-      setNote("No reload counts: this MapLibre has no Style#_reloadSource.");
+      addNote("No reload counts: this MapLibre has no Style#_reloadSource.");
     }
     const done: Row[] = [];
     try {
       for (const step of PROBE_SCRIPT) {
+        if (!life.alive) return;
+        const alreadySelected =
+          step.kind === "select" && selectIsNoop(latestRef.current.selection, step.key);
+        if (alreadySelected) {
+          addNote(`${step.name}: already selected, so that row measures nothing.`);
+        }
         const reloadsBefore = reloads.count();
         const sourcesBefore = reloads.bySource();
         const from = performance.now();
-        playStep(map, step, onSelect);
+        if (!alreadySelected) playStep(map, step, latestRef.current.onSelect);
         // Two frames so the camera is moving (or React has committed the
         // selection) before listening for idle — otherwise the idle of the
         // frame before the gesture could end it at once.
         await frames(2);
-        const { timedOut } = await waitForIdle(map, PROBE_IDLE_TIMEOUT_MS);
-        const to = performance.now();
-        await pause(OBSERVER_SETTLE_MS);
+        if (!life.alive) return;
+        const settled = await waitForSettled(
+          {
+            waitIdle: (timeoutMs) => Promise.race([waitForIdle(map, timeoutMs), aborted]),
+            // A selection is only done once its own place context is in:
+            // that context moves selectedId / selectedParentId, and so the
+            // paint, a second time — after a network round trip.
+            landed: () =>
+              step.kind !== "select" ||
+              alreadySelected ||
+              selectionLanded(latestRef.current.selection, step.key),
+            activity: () => renders + reloads.count(),
+            quiet: () => map.loaded(),
+            pause,
+            now: () => performance.now(),
+          },
+          { timeoutMs: PROBE_IDLE_TIMEOUT_MS, settleMs: PROBE_SETTLE_MS },
+        );
+        if (!life.alive) return;
+        // A settled row already waited PROBE_SETTLE_MS after its idle, which
+        // gave the long-task observer time to deliver; a timed-out one not.
+        if (settled.timedOut) await pause(PROBE_SETTLE_MS);
         done.push({
           name: step.name,
-          timedOut,
-          reloadsCounted: reloads.hooked(),
+          timedOut: settled.timedOut,
+          alreadySelected,
+          idleWaits: settled.idles,
+          reloadsCounted: !alreadySelected && reloads.hooked(),
           reloadedSources: sourcesReloaded(sourcesBefore, reloads.bySource()),
           ...gestureMetrics({
             frames: framesRef.current,
             tasks: taskApi ? tasksRef.current : null,
             from,
-            to,
+            to: settled.to,
             reloads: reloads.count() - reloadsBefore,
           }),
         });
@@ -224,11 +324,17 @@ export function PerfProbe({
           2,
         ),
       );
+    } catch (error) {
+      // The phone has no console: a failure has to show up on the overlay.
+      if (life.alive) {
+        addNote(`Run failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
     } finally {
-      reloads.restore();
-      setRunning(false);
+      stop();
+      if (life.stop === stop) life.stop = null;
+      if (life.alive) setRunning(false);
     }
-  }, [getMap, onSelect, taskApi]);
+  }, [getMap, taskApi]);
 
   const copy = useCallback(async () => {
     if (!report) return;
@@ -301,7 +407,9 @@ export function PerfProbe({
                   {ms(row.toIdle)}
                   {row.timedOut ? "+" : ""}
                 </td>
-                <td className="text-right">{row.reloadsCounted ? row.reloads : "n/a"}</td>
+                <td className="text-right">
+                  {row.alreadySelected ? "no-op" : row.reloadsCounted ? row.reloads : "n/a"}
+                </td>
               </tr>
             ))}
           </tbody>

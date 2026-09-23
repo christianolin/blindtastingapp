@@ -1,7 +1,8 @@
 // The probe's arithmetic and its two map hooks, with fakes: frame statistics,
 // windowing, which long-task API to trust, per-gesture metrics, the reload
-// counter (including a full style rebuild) and the idle wait (including the
-// timeout). The overlay itself (perf-probe.tsx) is checked in the browser.
+// counter (including a full style rebuild), the idle wait (including the
+// timeout), when a gesture's row may close, and when a selection step is real.
+// The overlay itself (perf-probe.tsx) is checked in the browser.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   deltasBetween,
@@ -10,10 +11,14 @@ import {
   installReloadCounter,
   longTaskEntryType,
   PROBE_SCRIPT,
+  selectionLanded,
+  selectIsNoop,
   sourcesReloaded,
   trimToWindow,
   waitForIdle,
+  waitForSettled,
   type FrameSample,
+  type SettleProbe,
 } from "./perf-stats";
 import { shardKeyFor } from "./shard";
 
@@ -85,9 +90,16 @@ describe("gestureMetrics", () => {
       gestureMetrics({
         frames,
         tasks: [
+          // Over before the gesture started: not counted.
+          { at: 10, duration: 60 },
+          // Ends exactly as the gesture starts: not counted.
+          { at: 40, duration: 60 },
+          // Started before the gesture and ran into it: counted, whole.
           { at: 50, duration: 300 },
           { at: 120, duration: 134 },
           { at: 400, duration: 60 },
+          // Starts after the gesture reached idle: not counted.
+          { at: 501, duration: 80 },
         ],
         from: 100,
         to: 500,
@@ -99,11 +111,27 @@ describe("gestureMetrics", () => {
       over50: 1,
       over100: 1,
       p95: 134,
-      longTasks: 2,
-      worstTask: 134,
+      longTasks: 3,
+      worstTask: 300,
       toIdle: 400,
       reloads: 3,
     });
+  });
+
+  it("counts a long animation frame that began in the task where the gesture started", () => {
+    // A LoAF's startTime is the start of the first task in that frame — the
+    // very task that sampled `from` and then did the select's render and
+    // setPaintProperty work. Counting only entries starting at or after
+    // `from` dropped exactly that frame.
+    const metrics = gestureMetrics({
+      frames,
+      tasks: [{ at: 99.5, duration: 180 }],
+      from: 100,
+      to: 500,
+      reloads: 0,
+    });
+    expect(metrics.longTasks).toBe(1);
+    expect(metrics.worstTask).toBe(180);
   });
 
   it("reports long tasks as n/a (null) where the browser has no API", () => {
@@ -291,5 +319,121 @@ describe("waitForIdle", () => {
     vi.advanceTimersByTime(20_000);
     await expect(idle).resolves.toEqual({ timedOut: true });
     expect(map.listenerCount("idle")).toBe(0);
+  });
+});
+
+/** A settle probe on a fake clock: every idle wait takes `idleAfter` ms, every
+    pause takes exactly its length, and landed / activity / quiet are
+    functions of the clock. */
+function fakeSettle(opts: {
+  idleAfter?: number;
+  landedFrom?: number;
+  activityAt?: number[];
+  busyUntil?: number;
+  neverIdle?: boolean;
+}) {
+  let t = 0;
+  const waits: number[] = [];
+  const probe: SettleProbe = {
+    now: () => t,
+    async waitIdle(timeoutMs) {
+      waits.push(timeoutMs);
+      if (opts.neverIdle) {
+        t += timeoutMs;
+        return { timedOut: true };
+      }
+      t += opts.idleAfter ?? 10;
+      return { timedOut: false };
+    },
+    landed: () => t >= (opts.landedFrom ?? 0),
+    activity: () => (opts.activityAt ?? []).filter((at) => at <= t).length,
+    quiet: () => t >= (opts.busyUntil ?? 0),
+    async pause(ms) {
+      t += ms;
+    },
+  };
+  return { probe, waits };
+}
+
+describe("waitForSettled", () => {
+  const opts = { timeoutMs: 20_000, settleMs: 250 };
+
+  it("closes at the first idle when the gesture has landed and the map stays quiet", async () => {
+    const { probe, waits } = fakeSettle({});
+    await expect(waitForSettled(probe, opts)).resolves.toEqual({
+      timedOut: false,
+      to: 10,
+      idles: 1,
+    });
+    expect(waits).toEqual([20_000]);
+  });
+
+  it("waits for another idle when the selection's context lands after the first one", async () => {
+    // Idle at 10 with the old context still in place; the new one lands at
+    // 100, inside the quiet window, and repaints once more.
+    const { probe } = fakeSettle({ landedFrom: 100 });
+    await expect(waitForSettled(probe, opts)).resolves.toEqual({
+      timedOut: false,
+      to: 270,
+      idles: 2,
+    });
+  });
+
+  it("waits for another idle when a reload or render happens after the idle", async () => {
+    const { probe } = fakeSettle({ activityAt: [100] });
+    await expect(waitForSettled(probe, opts)).resolves.toEqual({
+      timedOut: false,
+      to: 270,
+      idles: 2,
+    });
+  });
+
+  it("waits for another idle while tiles are still loading", async () => {
+    const { probe } = fakeSettle({ busyUntil: 300 });
+    await expect(waitForSettled(probe, opts)).resolves.toEqual({
+      timedOut: false,
+      to: 270,
+      idles: 2,
+    });
+  });
+
+  it("times out on one deadline, not one per wait, when the selection never lands", async () => {
+    const { probe, waits } = fakeSettle({ landedFrom: Infinity });
+    const result = await waitForSettled(probe, { timeoutMs: 1000, settleMs: 250 });
+    expect(result).toEqual({ timedOut: true, to: 1040, idles: 4 });
+    // Each idle wait only gets what is left of the one budget.
+    expect(waits).toEqual([1000, 740, 480, 220]);
+  });
+
+  it("times out when the map never reaches idle", async () => {
+    const { probe } = fakeSettle({ neverIdle: true });
+    await expect(waitForSettled(probe, opts)).resolves.toEqual({
+      timedOut: true,
+      to: 20_000,
+      idles: 0,
+    });
+  });
+});
+
+describe("selectIsNoop / selectionLanded", () => {
+  const vosne = "france.bourgogne.cote-de-nuits.vosne-romanee";
+  const gevrey = "france.bourgogne.cote-de-nuits.gevrey-chambertin";
+
+  it("calls a selection of the key already selected a no-op", () => {
+    // The explorer's select() returns early on the same key, so that row
+    // would measure nothing (and pass A2 vacuously).
+    expect(selectIsNoop({ selectedKey: gevrey, contextKey: gevrey }, gevrey)).toBe(true);
+    expect(selectIsNoop({ selectedKey: vosne, contextKey: vosne }, gevrey)).toBe(false);
+    expect(selectIsNoop({ selectedKey: null, contextKey: null }, gevrey)).toBe(false);
+  });
+
+  it("has landed only once the selected place's own context is in", () => {
+    // Selected, but the context (selectedId / selectedParentId) is still the
+    // previous place's: the second paint change has not happened yet.
+    expect(selectionLanded({ selectedKey: gevrey, contextKey: vosne }, gevrey)).toBe(false);
+    expect(selectionLanded({ selectedKey: gevrey, contextKey: null }, gevrey)).toBe(false);
+    expect(selectionLanded({ selectedKey: gevrey, contextKey: gevrey }, gevrey)).toBe(true);
+    // Another selection overtook this one.
+    expect(selectionLanded({ selectedKey: vosne, contextKey: vosne }, gevrey)).toBe(false);
   });
 });

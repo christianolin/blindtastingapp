@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Map, {
   Layer,
   NavigationControl,
@@ -48,7 +49,6 @@ import {
 import { useRenderedTheme } from "@/lib/rendered-theme";
 import type { Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
-import { PerfProbe } from "./perf-probe";
 
 // The basemap (Carto Positron in light, Dark Matter in dark) and its tweaks
 // live in lib/wine-map/basemap; every colour the map canvas draws lives in
@@ -141,6 +141,12 @@ function perfProbeEnabled() {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("debugPerf") === "1";
 }
+
+// Its own chunk, client only: a visitor without the parameter never downloads
+// the probe, only this loader.
+const PerfProbe = dynamic(() => import("./perf-probe").then((m) => m.PerfProbe), {
+  ssr: false,
+});
 
 // Share of the on-screen wine country a single country must account for before
 // the map treats you as "viewing" it and reveals its subregions. Below this the
@@ -415,6 +421,7 @@ export function TileWineMap({
   shardCountries = {},
   areaSlugsByShard = NO_SLUGS_BY_SHARD,
   english = false,
+  selectedContextKey = null,
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
@@ -422,6 +429,11 @@ export function TileWineMap({
   selectedId: string | null;
   /** The selected place's parent id — keeps sibling labels visible. */
   selectedParentId: string | null;
+  /** The key of the place whose context selectedId / selectedParentId came
+      from. It lags selectedKey while a new selection's context is loading.
+      Read only by the `?debugPerf=1` probe, to know when a selection has
+      fully landed (its second paint change included). */
+  selectedContextKey?: string | null;
   cameraTarget: CameraTarget | null;
   onSelect: (key: string, source?: "map" | "ui") => void;
   expanded: boolean;
@@ -1702,7 +1714,14 @@ export function TileWineMap({
           </Source>
         ))}
       </Map>
-      {perfProbe ? <PerfProbe getMap={getProbeMap} onSelect={onSelect} /> : null}
+      {perfProbe ? (
+        <PerfProbe
+          getMap={getProbeMap}
+          onSelect={onSelect}
+          selectedKey={selectedKey}
+          contextKey={selectedContextKey}
+        />
+      ) : null}
       <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
         <button
           type="button"

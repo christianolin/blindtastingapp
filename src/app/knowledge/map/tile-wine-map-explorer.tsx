@@ -702,6 +702,7 @@ export function TileWineMapExplorer({
                   selectedKey={selectedKey}
                   selectedId={context?.place.id ?? null}
                   selectedParentId={context?.ancestors.at(-1)?.id ?? null}
+                  selectedContextKey={context?.place.key ?? null}
                   cameraTarget={cameraTarget}
                   onSelect={select}
                   visibleKeys={visibleKeys}
