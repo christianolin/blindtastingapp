@@ -48,6 +48,7 @@ import {
 import { useRenderedTheme } from "@/lib/rendered-theme";
 import type { Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { PerfProbe } from "./perf-probe";
 
 // The basemap (Carto Positron in light, Dark Matter in dark) and its tweaks
 // live in lib/wine-map/basemap; every colour the map canvas draws lives in
@@ -131,6 +132,14 @@ function fillsDisabled() {
 function clickDebugEnabled() {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("debugClick") === "1";
+}
+
+// `?debugPerf=1` shows the perf probe (perf-probe.tsx): a live worst-frame and
+// long-task readout plus a scripted gesture run whose numbers can be copied off
+// a phone. Off by default; nothing records or renders without the param.
+function perfProbeEnabled() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("debugPerf") === "1";
 }
 
 // Share of the on-screen wine country a single country must account for before
@@ -850,6 +859,10 @@ export function TileWineMap({
   }, [handedOffShards, styleEpoch]);
   const noFills = useMemo(() => fillsDisabled(), []);
   const debugClick = useMemo(() => clickDebugEnabled(), []);
+  const perfProbe = useMemo(() => perfProbeEnabled(), []);
+  // The probe's handle on the live MapLibre instance; read when a run starts,
+  // so it always drives the map that exists then.
+  const getProbeMap = useCallback(() => mapRef.current?.getMap() ?? null, []);
 
   // A selection pins the focus country, but ONLY while that country is still on
   // screen. selectedKey is never cleared by the explorer, so keying focus on it
@@ -1689,6 +1702,7 @@ export function TileWineMap({
           </Source>
         ))}
       </Map>
+      {perfProbe ? <PerfProbe getMap={getProbeMap} onSelect={onSelect} /> : null}
       <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
         <button
           type="button"
