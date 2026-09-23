@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   useSyncExternalStore,
@@ -48,6 +49,12 @@ import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
 import { areaSlugsByShard } from "@/lib/wine-map/shard-specs";
+import {
+  INITIAL_TREE_LOAD,
+  treeFetchDelay,
+  treeLoadReducer,
+} from "@/lib/wine-map/tree-load";
+import { MapErrorBoundary, MapUnavailableCard } from "./map-error-boundary";
 import { WineMapTree } from "./wine-map-tree";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
@@ -143,6 +150,11 @@ export function TileWineMapExplorer({
     "loading" | "ready" | "missing" | "error"
   >("loading");
   const [tree, setTree] = useState<WinePlaceTreeNode[] | null>(null);
+  // Loading, ready or failed, kept apart from `tree` itself (null both while
+  // loading and after a failure). A failure used to set tree=[], which the
+  // tree card and every map prop derived from the tree could not tell from
+  // "still loading", and nothing on screen said anything had gone wrong.
+  const [treeLoad, dispatchTree] = useReducer(treeLoadReducer, INITIAL_TREE_LOAD);
   // Label language for the map + tree: English exonyms (Italia->Italy,
   // Toscana->Tuscany) from the curated dictionary by default, or native local
   // names when the viewer has explicitly chosen "local". Persisted per browser.
@@ -155,20 +167,37 @@ export function TileWineMapExplorer({
   const english = useSyncExternalStore(subscribeLang, readEnglish, () => true);
   const chooseLang = (value: boolean) => writeEnglish(value);
 
+  // One request per attempt: the first at once, the single automatic retry
+  // after TREE_AUTO_RETRY_MS, a manual Retry at once. The place cache never
+  // keeps a rejected tree (mount-cache.test.ts pins that), so every attempt
+  // really goes back to the server.
+  const treeLoading = treeLoad.state === "loading";
+  const treeAttempt = treeLoad.attempt;
   useEffect(() => {
+    if (!treeLoading) return;
     let cancelled = false;
-    loadWinePlaceTree(supabase)
-      .then((roots) => {
-        if (!cancelled) setTree(roots);
-      })
-      .catch(() => {
-        // The map and details still work without the sidebar.
-        if (!cancelled) setTree([]);
-      });
+    const start = () => {
+      loadWinePlaceTree(supabase).then(
+        (roots) => {
+          if (cancelled) return;
+          setTree(roots);
+          dispatchTree({ type: "resolved" });
+        },
+        () => {
+          // The map and details still work without the tree; the tree card
+          // says so, with a Retry, once the automatic retry has failed too.
+          if (!cancelled) dispatchTree({ type: "rejected" });
+        },
+      );
+    };
+    const delay = treeFetchDelay(treeAttempt);
+    const timer = delay > 0 ? window.setTimeout(start, delay) : null;
+    if (timer === null) start();
     return () => {
       cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
     };
-  }, [supabase]);
+  }, [supabase, treeLoading, treeAttempt]);
 
   // Map filters (grape today; styles/designations will share the plumbing):
   // one selected grape becomes a visible-key set via wine_place_grapes +
@@ -259,6 +288,10 @@ export function TileWineMapExplorer({
     setManifestError(null);
     setManifestAttempt((attempt) => attempt + 1);
   }, []);
+  // Bumped by the error boundary's Retry: a new key remounts TileWineMap from
+  // scratch (a fresh MapLibre instance) and clears the boundary's error.
+  const [mapKey, setMapKey] = useState(0);
+  const remountMap = useCallback(() => setMapKey((key) => key + 1), []);
 
   // The three selection requests all go through the per-key cache
   // (@/lib/wine-map/place-cache), so clicking back to a place already visited
@@ -534,7 +567,20 @@ export function TileWineMapExplorer({
                 </button>
               </div>
               <div className="min-h-0 flex-1">
-                {tree === null ? (
+                {treeLoad.state === "failed" ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Couldn&apos;t load the place list.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => dispatchTree({ type: "retry" })}
+                      className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : tree === null ? (
                   <div className="h-full animate-pulse rounded-md bg-muted" />
                 ) : (
                   <WineMapTree
@@ -646,34 +692,28 @@ export function TileWineMapExplorer({
               }
             >
             {manifest ? (
-              <TileWineMap
-                manifest={manifest}
-                selectedKey={selectedKey}
-                selectedId={context?.place.id ?? null}
-                selectedParentId={context?.ancestors.at(-1)?.id ?? null}
-                cameraTarget={cameraTarget}
-                onSelect={select}
-                visibleKeys={visibleKeys}
-                shardCountries={shardCountries}
-                areaSlugsByShard={slugsByShard}
-                expanded={expanded}
-                onToggleExpanded={() => setExpanded((value) => !value)}
-                english={english}
-              />
+              // Any render or effect error inside the map (or a failed
+              // next/dynamic chunk after a deploy) lands here instead of
+              // replacing the whole page.
+              <MapErrorBoundary resetKey={mapKey} onRetry={remountMap}>
+                <TileWineMap
+                  key={mapKey}
+                  manifest={manifest}
+                  selectedKey={selectedKey}
+                  selectedId={context?.place.id ?? null}
+                  selectedParentId={context?.ancestors.at(-1)?.id ?? null}
+                  cameraTarget={cameraTarget}
+                  onSelect={select}
+                  visibleKeys={visibleKeys}
+                  shardCountries={shardCountries}
+                  areaSlugsByShard={slugsByShard}
+                  expanded={expanded}
+                  onToggleExpanded={() => setExpanded((value) => !value)}
+                  english={english}
+                />
+              </MapErrorBoundary>
             ) : manifestError ? (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border text-center">
-                <p className="text-sm text-muted-foreground">
-                  The map tiles are unavailable right now — navigation below
-                  still works.
-                </p>
-                <button
-                  type="button"
-                  onClick={retryManifest}
-                  className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Retry map
-                </button>
-              </div>
+              <MapUnavailableCard onRetry={retryManifest} />
             ) : (
               <div className="h-full animate-pulse rounded-lg border bg-muted" />
             )}
