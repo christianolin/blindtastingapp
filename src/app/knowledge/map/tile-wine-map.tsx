@@ -38,6 +38,7 @@ import {
   WORLD_SOURCE_ID,
 } from "@/lib/wine-map/basemap";
 import { keyGateExpression } from "@/lib/wine-map/key-gate";
+import { nextMountStep } from "@/lib/wine-map/mount-policy";
 import {
   classificationShades,
   districtColor,
@@ -153,6 +154,14 @@ const FOCUS_GRID = 48;
 // The map therefore opens (initialViewState is z4.4) without reading a single
 // shard's pmtiles header, instead of opening all 54.
 const SHARD_MIN_ZOOM = 5;
+
+// How many shards may START mounting in one animation frame. Each mount is a
+// <Source> plus its layers, and every MapLibre addLayer validates by
+// serializing the whole style, so the first zoom past z5 — 36-67 shards in one
+// commit — was a single 1.2-1.5 s frozen task. Three per frame keeps each
+// frame's batch short (worst measured 16 ms with per-shard colours) while the
+// full set still lands within a fraction of a second.
+const MOUNTS_PER_FRAME = 3;
 
 // MapLibre keeps 500 tiles by default across ALL sources; panning back over
 // ground you just left re-fetches and re-decodes it. Raising this trades a few
@@ -557,7 +566,49 @@ export function TileWineMap({
   //
   // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
   // never thrashes sources.
+  //
+  // Staggered: syncMountedShards decides the TARGET set in one go, and the
+  // rendered set, mountedShards, walks toward it — removals at once, at most
+  // MOUNTS_PER_FRAME new shards per animation frame, the selected shard first
+  // (nextMountStep). The first step runs synchronously, so a small change
+  // (a selection, a pan that adds one or two shards) lands exactly as before.
   const [mountedShards, setMountedShards] = useState<string[]>([]);
+  // The last target, and the shard to mount ahead of the rest.
+  const mountTargetRef = useRef<string[]>([]);
+  const mountFirstRef = useRef<string | null>(null);
+  // Mirror of the last mountedShards this component set. Each step is computed
+  // from it rather than inside a setState updater, whose result a frame
+  // callback cannot read back to decide whether another frame is needed.
+  const renderedShardsRef = useRef<string[]>([]);
+  const mountFrameRef = useRef<number | null>(null);
+  const advanceMounts = useCallback(() => {
+    if (mountFrameRef.current !== null) {
+      window.cancelAnimationFrame(mountFrameRef.current);
+      mountFrameRef.current = null;
+    }
+    const step = () => {
+      mountFrameRef.current = null;
+      const next = nextMountStep(renderedShardsRef.current, mountTargetRef.current, {
+        maxAdds: MOUNTS_PER_FRAME,
+        first: mountFirstRef.current,
+      });
+      if (next !== renderedShardsRef.current) {
+        renderedShardsRef.current = next;
+        setMountedShards(next);
+      }
+      // Every step keeps only target shards, so equal length means arrived.
+      if (next.length < mountTargetRef.current.length) {
+        mountFrameRef.current = window.requestAnimationFrame(step);
+      }
+    };
+    step();
+  }, []);
+  useEffect(
+    () => () => {
+      if (mountFrameRef.current !== null) window.cancelAnimationFrame(mountFrameRef.current);
+    },
+    [],
+  );
   // Which country owns the view: the one whose shards cover most of the
   // viewport. Only consulted when nothing is selected — a selection always wins.
   const [viewportCountry, setViewportCountry] = useState<string | null>(null);
@@ -635,22 +686,22 @@ export function TileWineMap({
     // world-region-* layers now paint identically. Mounting none of them means
     // the map opens without reading 54 pmtiles headers.
     const zoom = map.getZoom();
-    setMountedShards((prev) => {
-      const prevSet = new Set(prev);
-      const next = shardEntries
-        .filter(
-          ([key, shard]) =>
-            key === selectedShard ||
-            (zoom >= SHARD_MIN_ZOOM &&
-              (hit(shard.bbox, 0.5) ||
-                (prevSet.has(key) && hit(shard.bbox, 1.5)))),
-        )
-        .map(([key]) => key);
-      return next.length === prev.length && next.every((k, i) => k === prev[i])
-        ? prev
-        : next;
-    });
-  }, [shardEntries, selectedShard, shardCountries]);
+    // Hysteresis reads the previous TARGET, not what has rendered so far: a
+    // shard still queued for a later frame already won its place at the 50%
+    // pad, and keeps it until past 150% exactly as a mounted one would.
+    const prevSet = new Set(mountTargetRef.current);
+    mountTargetRef.current = shardEntries
+      .filter(
+        ([key, shard]) =>
+          key === selectedShard ||
+          (zoom >= SHARD_MIN_ZOOM &&
+            (hit(shard.bbox, 0.5) ||
+              (prevSet.has(key) && hit(shard.bbox, 1.5)))),
+      )
+      .map(([key]) => key);
+    mountFirstRef.current = selectedShard;
+    advanceMounts();
+  }, [shardEntries, selectedShard, shardCountries, advanceMounts]);
   // Re-evaluates on selection too, so a shard selected from the tree is mounted
   // even if the camera never moves.
   useEffect(() => {
