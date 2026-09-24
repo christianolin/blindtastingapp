@@ -22,6 +22,19 @@
 // - Map#_updateDiff, whose catch falls back to the full style rebuild
 //   (_updateStyle, a new Style with empty global state and no feature-state)
 //   that MapStateSync re-sends everything after.
+// - Style#_loaded, the "Style is not done loading." message and the order
+//   inside Style.addLayer (a duplicate id or a missing `before` fires an
+//   ErrorEvent and adds nothing; a layer whose source is missing enters the
+//   order BEFORE _updateLayer throws) — shard-controller.ts's readiness
+//   check, its not-loaded test and its transactional rollback.
+// - Style's {validate:false} skip in _validate, and Map#setGlobalStateProperty
+//   calling _update(true) unconditionally — the controller's add path and its
+//   one wm_tick dirty mark per batch.
+// - @vis.gl/react-maplibre 8.1: <Layer> guards on style._loaded, and hover
+//   queries run only while a hover prop is set (why TileWineMap sets the
+//   cursor from hover-cursor.ts instead of an onMouseMove prop).
+// These three are checked in the packages' src/ (shipped with them): an
+// order inside a method cannot be read off the minified bundle.
 // Later phases add their own lines here as they start relying on one.
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -112,6 +125,76 @@ describe("MapLibre internals the wine map relies on", () => {
   it("Map#_updateDiff still falls back to a full style rebuild", () => {
     expect(bundle, "Map#_updateDiff").toMatch(
       /[;}]_updateDiff\(([\w$]+),([\w$]+)\)\{try\{this\.style\.setState\(\1,\2\)&&this\._update\(!0\);?\}catch\([\w$]+\)\{[\s\S]{0,160}?Rebuilding the style from scratch\.`\),this\._updateStyle\(\1,\2\);?\}\}/,
+    );
+  });
+});
+
+// Phase 1c: ShardController and the hover cursor.
+const MODULES = path.join(process.cwd(), "node_modules");
+const readModule = (file: string) => readFileSync(path.join(MODULES, file), "utf8");
+
+/** The text of one method: from its signature up to the next one's. */
+function between(source: string, from: string, to: string): string {
+  const start = source.indexOf(from);
+  expect(start, from).toBeGreaterThan(-1);
+  const end = source.indexOf(to, start + from.length);
+  expect(end, to).toBeGreaterThan(start);
+  return source.slice(start, end);
+}
+
+describe("MapLibre internals the shard controller relies on", () => {
+  it("react-maplibre is the minor version they were verified against", () => {
+    const { version } = JSON.parse(readModule("@vis.gl/react-maplibre/package.json")) as {
+      version: string;
+    };
+    expect(version, "re-verify the list at the top of this file, then move the pin").toMatch(/^8\.1\./);
+  });
+
+  it("Style keeps its loaded flag, its not-loaded message and the validate:false skip", () => {
+    const style = readModule("maplibre-gl/src/style/style.ts");
+    // The controller reads style._loaded directly (react-maplibre's own guard)
+    // and tells a not-loaded throw from a real failure by its message.
+    expect(style).toContain("_loaded: boolean;");
+    expect(style).toContain("throw new Error('Style is not done loading.');");
+    // {validate:false} skips _validate, whose serialize() of the whole style
+    // was the first-zoom freeze.
+    expect(style).toContain("if (options?.validate === false) {");
+  });
+
+  it("Style.addLayer refuses by event, and inserts a layer before it can throw", () => {
+    const addLayer = between(
+      readModule("maplibre-gl/src/style/style.ts"),
+      "addLayer(layerObject: AddLayerObject",
+      "moveLayer(id: string",
+    );
+    // A duplicate id or a missing `before` fires an ErrorEvent and adds
+    // nothing, so the controller checks getLayer after every add.
+    expect(addLayer).toContain("already exists on this map.");
+    expect(addLayer).toContain("before non-existing layer");
+    // The id enters the order BEFORE _updateLayer, which throws on a missing
+    // source, so a rollback has to remove every id of the shard that exists.
+    const inserted = addLayer.indexOf("this._order.splice(index, 0, id);");
+    expect(inserted).toBeGreaterThan(-1);
+    expect(inserted).toBeLessThan(addLayer.indexOf("this._updateLayer(layer);"));
+  });
+
+  it("Map.setGlobalStateProperty still repaints unconditionally", () => {
+    // The controller's one wm_tick write per batch is its dirty mark:
+    // Style.* writes do not schedule a render themselves.
+    const body = between(
+      readModule("maplibre-gl/src/ui/map.ts"),
+      "setGlobalStateProperty(propertyName: string, value: any) {",
+      "getGlobalState()",
+    );
+    expect(body).toContain("return this._update(true);");
+  });
+
+  it("react-maplibre guards on style._loaded and hover-queries only for hover props", () => {
+    expect(readModule("@vis.gl/react-maplibre/src/components/layer.ts")).toContain("map.style._loaded");
+    // Why TileWineMap has no onMouseMove prop: with one, every mousemove
+    // queries every interactive layer.
+    expect(readModule("@vis.gl/react-maplibre/src/maplibre/maplibre.ts")).toContain(
+      "props.interactiveLayerIds && (props.onMouseMove || props.onMouseEnter || props.onMouseLeave)",
     );
   });
 });
