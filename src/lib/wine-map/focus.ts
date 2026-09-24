@@ -86,6 +86,54 @@ export function centreCountryFrom(
   return null;
 }
 
+/** Ring radii, in CSS pixels, sampled around the centre when the centre
+    itself is not on wine ground (a gap between region footprints). */
+export const CENTRE_PROBE_RADII_PX: readonly number[] = [16, 32, 64, 128];
+
+/** The eight unit directions sampled on each ring, E first, clockwise in
+    screen space (y grows downwards). */
+export const CENTRE_PROBE_DIRECTIONS: readonly (readonly [number, number])[] = [
+  [1, 0], [Math.SQRT1_2, Math.SQRT1_2], [0, 1], [-Math.SQRT1_2, Math.SQRT1_2],
+  [-1, 0], [-Math.SQRT1_2, -Math.SQRT1_2], [0, -1], [Math.SQRT1_2, -Math.SQRT1_2],
+];
+
+/** The radii to probe on a canvas of this size: every CENTRE_PROBE_RADII_PX
+    entry no larger than a third of the canvas's shorter side, so a phone
+    never reaches for a region most of the way to the edge. */
+export function centreProbeRadii(width: number, height: number): number[] {
+  const limit = Math.min(width, height) / 3;
+  return CENTRE_PROBE_RADII_PX.filter((r) => r <= limit);
+}
+
+/**
+ * The wine region NEAREST the centre, as a country. `rings[0]` is the centre
+ * point's hits (one entry: that point's properties list); `rings[i]` for i >= 1
+ * holds one properties list per sampled point on ring i. The first ring in
+ * which any point resolves (via centreCountryFrom on that point's list) to a
+ * known country decides. In that ring each point votes for its country; the
+ * most votes win; a tie goes to `prev` if `prev` is among the tied, else to
+ * the alphabetically first tied country. No ring resolves -> null.
+ */
+export function nearestCentreCountry(
+  rings: readonly (readonly (readonly (Readonly<Record<string, unknown>> | null | undefined)[])[])[],
+  shardCountries: Readonly<Record<string, string>>,
+  prev: string | null,
+): string | null {
+  for (const ring of rings) {
+    const votes = new Map<string, number>();
+    for (const point of ring) {
+      const country = centreCountryFrom(point, shardCountries);
+      if (country) votes.set(country, (votes.get(country) ?? 0) + 1);
+    }
+    if (votes.size === 0) continue;
+    const most = Math.max(...votes.values());
+    const tied = [...votes.keys()].filter((country) => votes.get(country) === most);
+    if (prev !== null && tied.includes(prev)) return prev;
+    return tied.sort()[0];
+  }
+  return null;
+}
+
 /**
  * The focus country, in order:
  * 1. a tapped chip, once its country is on screen (before that its flight is
@@ -95,9 +143,11 @@ export function centreCountryFrom(
  *    first selection of the session (or arriving via ?place=) held depth to
  *    that country forever, and panning to Tuscany never showed a Tuscan
  *    subzone;
- * 3. the country of the wine region under the map centre, which is what you
- *    are looking at (bbox shares called Colmar "Germany" through Baden's
- *    bbox);
+ * 3. the country of the wine region nearest the map centre (the centre
+ *    itself, else the closest ring of sampled points around it), which is
+ *    what you are looking at (bbox shares called Colmar "Germany" through
+ *    Baden's bbox, and the Colmar centre pixel itself sits in a gap east of
+ *    the Alsace footprint);
  * 4. the share rule: a leader at COUNTRY_FOCUS_SHARE takes focus, and the
  *    previous focus keeps it until it falls under COUNTRY_RELEASE_SHARE.
  * Null means no country: everything stays at region level.

@@ -18,9 +18,12 @@ import type { WineMapManifest } from "@/lib/wine-map/manifest";
 import { countryOfShard, keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
 import { allModeHealthy } from "@/lib/wine-map/detail-mode";
 import {
+  CENTRE_PROBE_DIRECTIONS,
   centreCountryFrom,
+  centreProbeRadii,
   countryShares,
   deepCountriesFor,
+  nearestCentreCountry,
   nextFocusCountry,
   scanPastDepthZoom,
   type DetailReport,
@@ -469,6 +472,10 @@ export function TileWineMap({
   // The previous focus for the share rule's hysteresis. It is read and written
   // only inside syncMountedShards, so it never lags a render.
   const focusRef = useRef<string | null>(null);
+  // Whether the last sync's centre query found no wine ground near the centre.
+  // handleIdle re-syncs once when it did: at moveend the new view's world
+  // tiles may not have loaded yet.
+  const centreMissRef = useRef(false);
   // Countries on screen as of the last sync. A chip's camera request reads it
   // at apply time.
   const countriesInViewRef = useRef<string[]>([]);
@@ -487,26 +494,49 @@ export function TileWineMap({
     const view: Bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
     const zoom = map.getZoom();
     const { shares, present } = countryShares({ shards: shardEntries, shardCountries, view });
-    // The wine region under the map centre. world-region-fills alone is
-    // enough. The world archive carries every region at every zoom. A region
-    // handed to its shard is only painted at opacity 0, and feature-state
-    // never removes a feature from the query index. The layer is hidden under
-    // ?debugFills=off (queries skip hidden layers), and that case falls back
-    // to the share rule. The call is guarded because the style can be
-    // mid-rebuild, or null after a lost WebGL context.
+    // The wine region NEAREST the map centre: the centre point itself, else
+    // the closest ring of points sampled around it (centreProbeRadii,
+    // CENTRE_PROBE_DIRECTIONS), stopping at the first ring that finds wine
+    // ground; nearestCentreCountry turns that ring's hits into a country. The
+    // centre pixel alone is not enough: at Colmar z8 it sits in the gap just
+    // east of the Alsace footprint, found nothing, and the share rule then
+    // gave focus to Germany through Baden's big bbox while Alsace was 16 px
+    // away. world-region-fills alone is enough. The world archive carries
+    // every region at every zoom. A region handed to its shard is only painted
+    // at opacity 0, and feature-state never removes a feature from the query
+    // index. The layer is hidden under ?debugFills=off (queries skip hidden
+    // layers), and that case falls back to the share rule. The calls are
+    // guarded because the style can be mid-rebuild, or null after a lost
+    // WebGL context. A miss is recorded for handleIdle to re-check once.
     let centreCountry: string | null = null;
     try {
       if (map.getLayer("world-region-fills")) {
-        const hits = map.queryRenderedFeatures(map.project(map.getCenter()), {
-          layers: ["world-region-fills"],
-        });
-        centreCountry = centreCountryFrom(
-          hits.map((feature) => feature.properties),
-          shardCountries,
-        );
+        type Hits = Readonly<Record<string, unknown>>[];
+        const query = (pt: { x: number; y: number }): Hits =>
+          map
+            .queryRenderedFeatures([pt.x, pt.y], { layers: ["world-region-fills"] })
+            .map((feature) => feature.properties);
+        const resolves = (ring: readonly Hits[]) =>
+          ring.some((point) => centreCountryFrom(point, shardCountries) !== null);
+        const canvas = map.getCanvas();
+        const c = map.project(map.getCenter());
+        const rings: Hits[][] = [[query(c)]];
+        if (!resolves(rings[0])) {
+          for (const r of centreProbeRadii(canvas.clientWidth, canvas.clientHeight)) {
+            const ring = CENTRE_PROBE_DIRECTIONS.map(([dx, dy]) =>
+              query({ x: c.x + dx * r, y: c.y + dy * r }),
+            );
+            rings.push(ring);
+            if (resolves(ring)) break;
+          }
+        }
+        centreCountry = nearestCentreCountry(rings, shardCountries, focusRef.current);
       }
+      centreMissRef.current = centreCountry === null;
     } catch {
       centreCountry = null;
+      // A throwing style is not a reason to re-sync.
+      centreMissRef.current = false;
     }
     const country = nextFocusCountry({
       chipCountry,
@@ -962,6 +992,16 @@ export function TileWineMap({
   // Every gesture ends in idle, which triggers the legend scan and, once, the
   // All countries all-clear (allModeHealthy says when All has really drawn).
   const handleIdle = useCallback(() => {
+    // A centre query at moveend can run before the new view's world tiles
+    // exist (jumpTo, a chip flight's landing, a deep link) and find nothing
+    // for that reason alone. Re-decide focus once, now that they have
+    // loaded. A second miss is genuine (no wine ground near the centre):
+    // the re-sync then changes nothing, renders nothing, and so triggers no
+    // further idle.
+    if (centreMissRef.current) {
+      centreMissRef.current = false;
+      syncMountedShards();
+    }
     scheduleScan();
     if (
       !allModeHealthy({
@@ -974,7 +1014,7 @@ export function TileWineMap({
     }
     healthPendingRef.current = false;
     onHealthyRef.current?.();
-  }, [scheduleScan, mountedShards]);
+  }, [scheduleScan, mountedShards, syncMountedShards]);
 
   // Report what the map is showing to the explorer, which owns the status
   // line and the chips. Focus and depth are replaced only on a real change,

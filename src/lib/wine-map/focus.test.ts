@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { featureFilter } from "@maplibre/maplibre-gl-style-spec";
 import {
   centreCountryFrom,
+  centreProbeRadii,
   chipAfterReport,
   chipOnTap,
   COUNTRY_FOCUS_SHARE,
@@ -13,6 +14,7 @@ import {
   countryShares,
   deepCountriesFor,
   FOCUS_GRID,
+  nearestCentreCountry,
   nextFocusCountry,
   scanPastDepthZoom,
 } from "./focus";
@@ -85,6 +87,79 @@ describe("centreCountryFrom", () => {
 
   it("is null with no hits", () => {
     expect(centreCountryFrom([], COUNTRIES)).toBeNull();
+  });
+});
+
+describe("nearestCentreCountry", () => {
+  const COUNTRIES = { alsace: "france", baden: "germany", mosel: "germany" };
+  // One ring of eight sampled points, E first, clockwise (the order of
+  // CENTRE_PROBE_DIRECTIONS): index -> the region hit at that point.
+  const ring = (hits: Readonly<Record<number, string>> = {}) =>
+    Array.from({ length: 8 }, (_, i) => (hits[i] ? [{ region: hits[i] }] : []));
+  const E = 0;
+  const SE = 1;
+  const SW = 3;
+  const W = 4;
+  const NW = 5;
+
+  it("takes the centre hit, even when an outer ring disagrees", () => {
+    expect(
+      nearestCentreCountry(
+        [[[{ region: "baden" }]], [[{ region: "alsace" }], [], [], [], [], [], [], []]],
+        COUNTRIES,
+        null,
+      ),
+    ).toBe("germany");
+  });
+
+  it("Colmar: the centre is in a gap, the 16 px ring finds Alsace, Baden at 128 px never counts", () => {
+    // Measured at Colmar [7.36, 48.08] z8, 1400x850.
+    const rings = [
+      [[]],
+      ring({ [W]: "alsace" }),
+      ring({ [SW]: "alsace", [W]: "alsace", [NW]: "alsace" }),
+      ring({ [W]: "alsace" }),
+      ring({ [E]: "baden" }),
+    ];
+    expect(nearestCentreCountry(rings, COUNTRIES, null)).toBe("france");
+    expect(nearestCentreCountry(rings, COUNTRIES, "germany")).toBe("france");
+  });
+
+  it("counts votes in the deciding ring", () => {
+    expect(
+      nearestCentreCountry(
+        [[[]], ring({ [E]: "baden", [SE]: "baden", [SW]: "mosel", [W]: "alsace" })],
+        COUNTRIES,
+        "france",
+      ),
+    ).toBe("germany");
+  });
+
+  it("breaks a tie for the previous focus when it is tied, else alphabetically", () => {
+    const rings = [[[]], ring({ [E]: "alsace", [W]: "baden" })];
+    expect(nearestCentreCountry(rings, COUNTRIES, "germany")).toBe("germany");
+    expect(nearestCentreCountry(rings, COUNTRIES, "france")).toBe("france");
+    expect(nearestCentreCountry(rings, COUNTRIES, null)).toBe("france");
+    expect(nearestCentreCountry(rings, COUNTRIES, "italy")).toBe("france");
+  });
+
+  it("is null with no known wine ground anywhere", () => {
+    expect(nearestCentreCountry([[[]], ring(), ring(), ring(), ring()], COUNTRIES, null)).toBeNull();
+    expect(
+      nearestCentreCountry(
+        [[[{ region: "atlantis" }]], ring({ [E]: "constructor", [W]: "atlantis" })],
+        COUNTRIES,
+        "france",
+      ),
+    ).toBeNull();
+    expect(nearestCentreCountry([], COUNTRIES, null)).toBeNull();
+  });
+
+  it("probes only radii within a third of the canvas's shorter side", () => {
+    // A third of 373 is 124.3: a phone never reaches 128 px.
+    expect(centreProbeRadii(373, 438)).toEqual([16, 32, 64]);
+    expect(centreProbeRadii(702, 644)).toEqual([16, 32, 64, 128]);
+    expect(centreProbeRadii(40, 40)).toEqual([]);
   });
 });
 
