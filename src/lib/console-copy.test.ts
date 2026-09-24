@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  CONSOLE_PAUSED,
   CURRENT_GLASS_ONLY,
   NEXT_ATTRIBUTE,
   PAUSED_REFUSAL,
+  consoleEyebrow,
   nextChipLabel,
   notLockedLine,
   pausedBand,
@@ -36,7 +36,6 @@ describe("notLockedLine (S7, S7b)", () => {
 describe("pause, skip and the pointer (B6)", () => {
   it("copy", () => {
     expect(pausedBand("Christian")).toBe("Paused · Christian has paused the tasting. You can still change and lock your guess.");
-    expect(CONSOLE_PAUSED).toBe("Paused — reveals and Skip wait until you resume.");
     expect(PAUSED_REFUSAL).toBe("The tasting is paused — resume to reveal.");
     expect(CURRENT_GLASS_ONLY).toBe("Reveal the glass that is pouring now.");
     expect(NEXT_ATTRIBUTE).toBe("Reveal the next attribute");
@@ -45,6 +44,26 @@ describe("pause, skip and the pointer (B6)", () => {
     expect(skipLabel(4)).toBe("Skip to glass 4 →");
     expect(nextChipLabel(6, 2)).toBe("4 to go");
     expect(nextChipLabel(null, 0)).toBe("Next");
+  });
+});
+
+describe("consoleEyebrow (owner, 2026-09-24)", () => {
+  it("finished, paused, live and self-paced", () => {
+    expect(consoleEyebrow({ finished: true, timingMode: "LIVE", paused: false })).toBe(
+      "Finished · you hosted",
+    );
+    expect(consoleEyebrow({ finished: true, timingMode: "LIVE", paused: true })).toBe(
+      "Finished · you hosted",
+    );
+    expect(consoleEyebrow({ finished: false, timingMode: "LIVE", paused: true })).toBe(
+      "Paused · you are hosting",
+    );
+    expect(consoleEyebrow({ finished: false, timingMode: "LIVE", paused: false })).toBe(
+      "Live · you are hosting",
+    );
+    expect(consoleEyebrow({ finished: false, timingMode: "ASYNC", paused: false })).toBe(
+      "Self-paced · you are hosting",
+    );
   });
 });
 

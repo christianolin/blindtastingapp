@@ -2072,7 +2072,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
     `currentGlass` (see "One wine at a time" pacing, above) — reveals never
     rewrite it directly; only Skip does. `get_tasting_leaderboard` (same
     migration) tries the pointer's glass for "+N last round" ahead of its
-    other picks — see the leaderboard sidebar bullet, above.
+    other picks — see the leaderboard sidebar bullet, above. While paused the
+    console's own eyebrow reads "Paused · you are hosting" with a static
+    pause glyph in place of the live dot (`consoleEyebrow`,
+    `src/lib/console-copy.ts`) — there is no separate paused pill any more
+    (owner, 2026-09-24; it used to be a gold band with its own Resume button
+    atop the main column). The participants' `PausedBand` is unchanged.
   - **Guess ladder** (`play/guess-ladder.tsx`, `field-picker.tsx`,
     `guess-ladder-math.ts`, `grape-shortlist.ts`, `play/guesser.ts`): one row
     per field with its points. **Reversed** (spec §1.4 row 10): each pick no

@@ -45,8 +45,22 @@ export function pausedBand(host: string): string {
   return `Paused · ${host} has paused the tasting. You can still change and lock your guess.`;
 }
 
-/** The console's own band while paused, beside "Resume". */
-export const CONSOLE_PAUSED = "Paused — reveals and Skip wait until you resume.";
+/**
+ * The console header's eyebrow (owner, 2026-09-24: while paused the eyebrow
+ * itself should say so, replacing the separate paused pill that used to sit
+ * atop the main column). Finished wins over paused; LIVE-paused beats plain
+ * LIVE; ASYNC (self-paced) never pauses.
+ */
+export function consoleEyebrow(t: {
+  finished: boolean;
+  timingMode: TimingMode;
+  paused: boolean;
+}): string {
+  if (t.finished) return "Finished · you hosted";
+  if (t.timingMode === "LIVE" && t.paused) return "Paused · you are hosting";
+  if (t.timingMode === "LIVE") return "Live · you are hosting";
+  return "Self-paced · you are hosting";
+}
 
 /** What every reveal action and Skip refuse with while the tasting is paused. */
 export const PAUSED_REFUSAL = "The tasting is paused — resume to reveal.";

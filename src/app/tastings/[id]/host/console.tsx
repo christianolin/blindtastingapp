@@ -22,8 +22,8 @@ import {
   type UnrevealedGlass,
 } from "@/lib/tasting-lifecycle-copy";
 import {
-  CONSOLE_PAUSED,
   TWO_TAP_WINDOW_MS,
+  consoleEyebrow,
   notLockedLine,
   pouringNowEyebrow,
   revealEverythingLabel,
@@ -286,16 +286,19 @@ export function HostConsole({ data }: { data: ConsoleData }) {
   const fullRevealLabel =
     glass !== null && data.isSemiBlind ? `Reveal glass ${glass.number}` : "Reveal the whole glass";
 
-  const eyebrowText = data.finished
-    ? "Finished · you hosted"
-    : data.timingMode === "LIVE"
-      ? "Live · you are hosting"
-      : "Self-paced · you are hosting";
-  const liveDotNode = !data.finished && data.timingMode === "LIVE" ? (
-    <LiveDot />
-  ) : (
-    <span className="size-[7px] shrink-0 rounded-full bg-muted-foreground" aria-hidden />
-  );
+  const eyebrowText = consoleEyebrow({
+    finished: data.finished,
+    timingMode: data.timingMode,
+    paused: data.paused,
+  });
+  const liveDotNode =
+    !data.finished && data.timingMode === "LIVE" && data.paused ? (
+      <PauseIcon className="size-3 shrink-0 text-gold-dark" aria-hidden />
+    ) : !data.finished && data.timingMode === "LIVE" ? (
+      <LiveDot />
+    ) : (
+      <span className="size-[7px] shrink-0 rounded-full bg-muted-foreground" aria-hidden />
+    );
   const backHref = `/tastings/${data.tastingId}`;
 
   return (
@@ -414,24 +417,6 @@ export function HostConsole({ data }: { data: ConsoleData }) {
           ref={mainRef}
           className="flex min-w-0 flex-1 scroll-mt-4 flex-col gap-5 p-[22px_16px_28px] md:p-[26px_26px_30px]"
         >
-          {data.paused ? (
-            <div
-              role="status"
-              className="flex flex-wrap items-center gap-3 rounded-[13px] border border-gold/50 bg-gold/12 px-4 py-3 text-[13.5px] font-medium text-gold-dark"
-            >
-              <PauseIcon className="size-4 shrink-0" aria-hidden />
-              <span className="flex-1">{CONSOLE_PAUSED}</span>
-              <button
-                type="button"
-                onClick={togglePause}
-                disabled={pacingPending}
-                className="inline-flex min-h-9 items-center justify-center rounded-[9px] border border-gold p-[8px_14px] text-[12.5px] font-semibold text-gold-dark transition-colors hover:bg-gold/10 disabled:opacity-50"
-              >
-                {pacingPending ? "Resuming…" : "Resume"}
-              </button>
-            </div>
-          ) : null}
-
           {glass === null ? (
             <div className="flex flex-col gap-[6px]">
               <Eyebrow size="lg" className="tracking-[.15em] text-muted-foreground">
