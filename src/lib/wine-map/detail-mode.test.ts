@@ -236,22 +236,34 @@ describe("createDetailModeStore", () => {
 });
 
 describe("allModeHealthy", () => {
-  it("gives All its all-clear at the first idle at shard zoom with shards mounted", () => {
-    expect(allModeHealthy({ pending: true, mountedCount: 12, zoom: SHARD_MIN_ZOOM })).toBe(true);
-    expect(allModeHealthy({ pending: true, mountedCount: 1, zoom: 9.5 })).toBe(true);
+  // All's own target for the view, every shard of it added (or given up).
+  const settled = (count: number) => ({ allTargetCount: count, allTargetSettled: true });
+
+  it("gives All its all-clear at the first idle at shard zoom with All's own set in", () => {
+    expect(allModeHealthy({ pending: true, ...settled(12), zoom: SHARD_MIN_ZOOM })).toBe(true);
+    expect(allModeHealthy({ pending: true, ...settled(1), zoom: 9.5 })).toBe(true);
   });
 
   it("does not clear the sentinel before All has really drawn", () => {
-    // The idle right after load at the opening z4.4: nothing is mounted.
-    expect(allModeHealthy({ pending: true, mountedCount: 0, zoom: 4.4 })).toBe(false);
+    // The idle right after load at the opening z4.4: All wants nothing there.
+    expect(allModeHealthy({ pending: true, ...settled(0), zoom: 4.4 })).toBe(false);
     // A ?place= deep link mounts its own shard below z5. That is one shard,
     // not the 40+ the first zoom in All loads.
-    expect(allModeHealthy({ pending: true, mountedCount: 1, zoom: 4.99 })).toBe(false);
-    // Shard zoom, but the mount has not landed yet.
-    expect(allModeHealthy({ pending: true, mountedCount: 0, zoom: 6 })).toBe(false);
+    expect(allModeHealthy({ pending: true, ...settled(1), zoom: 4.99 })).toBe(false);
+    // Shard zoom, but All wants no shard for this view.
+    expect(allModeHealthy({ pending: true, ...settled(0), zoom: 6 })).toBe(false);
+  });
+
+  it("pending, z6, All's target not yet settled -> false", () => {
+    // A switch to All at z6 where One already had its country's shards in: the
+    // first idle comes before the controller has added a single All-only
+    // shard. The heaviest moment must stay guarded.
+    expect(
+      allModeHealthy({ pending: true, allTargetCount: 40, allTargetSettled: false, zoom: 6 }),
+    ).toBe(false);
   });
 
   it("fires once per switch to All: never after the all-clear, never in One country", () => {
-    expect(allModeHealthy({ pending: false, mountedCount: 40, zoom: 6 })).toBe(false);
+    expect(allModeHealthy({ pending: false, ...settled(40), zoom: 6 })).toBe(false);
   });
 });

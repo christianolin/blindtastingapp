@@ -109,18 +109,28 @@ export function createDetailModeStore(
 }
 
 /** Whether a map idle is All countries' all-clear. "All has drawn" means an
-    idle at shard zoom with shards mounted. The idle right after load at the
-    opening z4.4 mounts nothing, and a ?place= deep link mounts only its own
-    shard below z5. Clearing the sentinel at either would leave the zoom that
-    really loads 40+ shards unguarded. The map keeps `pending` true only while
-    All has not yet proved itself on this page, so this fires once per switch
-    to All. */
+    idle at shard zoom at which every shard All itself wants for this view
+    (`allTargetCount` of them, All's own mount target) has been added, or given
+    up for this visit (`allTargetSettled`) — not merely "some shards mounted".
+    Switching to All at z >= 5 used to clear at the first idle, which comes
+    before a single All-only shard has been added, so the heaviest moment went
+    unguarded. The idle right after load at the opening z4.4 wants nothing, and
+    a ?place= deep link mounts only its own shard below z5. Clearing the
+    sentinel at either would leave the zoom that really loads 40+ shards
+    unguarded. The map keeps `pending` true only while All has not yet proved
+    itself on this page, so this fires once per switch to All. */
 export function allModeHealthy(input: {
   pending: boolean;
-  mountedCount: number;
+  allTargetCount: number;
+  allTargetSettled: boolean;
   zoom: number;
 }): boolean {
-  return input.pending && input.mountedCount > 0 && input.zoom >= SHARD_MIN_ZOOM;
+  return (
+    input.pending &&
+    input.allTargetCount > 0 &&
+    input.allTargetSettled &&
+    input.zoom >= SHARD_MIN_ZOOM
+  );
 }
 
 // The page's one store. The getter runs inside readFlag/writeFlag's

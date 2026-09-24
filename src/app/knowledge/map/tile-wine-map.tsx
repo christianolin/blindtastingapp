@@ -487,9 +487,12 @@ export function TileWineMap({
     () => (selectedKey ? (selectedKey.split(".")[0] ?? null) : null),
     [selectedKey],
   );
-  const syncMountedShards = useCallback(() => {
+  // Returns whether the focus country it decided differs from the one before
+  // it ran. Only handleIdle reads that; every other caller ignores it.
+  const syncMountedShards = useCallback((): boolean => {
     const map = mapRef.current?.getMap();
-    if (!map) return;
+    if (!map) return false;
+    const focusBefore = focusRef.current;
     const b = map.getBounds();
     const view: Bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
     const zoom = map.getZoom();
@@ -508,9 +511,19 @@ export function TileWineMap({
     // layers), and that case falls back to the share rule. The calls are
     // guarded because the style can be mid-rebuild, or null after a lost
     // WebGL context. A miss is recorded for handleIdle to re-check once.
+    //
+    // The probe (up to 33 queries) runs only when it can decide anything: in
+    // One country, and only when neither a chip on screen nor the selection on
+    // screen already decides focus (nextFocusCountry's steps 1 and 2). In All
+    // countries focus drives neither mounting, depth nor the status line.
+    // Skipped, it counts as no miss, so no idle re-sync is armed.
     let centreCountry: string | null = null;
+    const probeDecides =
+      detail === "one" &&
+      !(chipCountry && present.includes(chipCountry)) &&
+      !(selectedCountry && present.includes(selectedCountry));
     try {
-      if (map.getLayer("world-region-fills")) {
+      if (probeDecides && map.getLayer("world-region-fills")) {
         type Hits = Readonly<Record<string, unknown>>[];
         const query = (pt: { x: number; y: number }): Hits =>
           map
@@ -532,7 +545,7 @@ export function TileWineMap({
         }
         centreCountry = nearestCentreCountry(rings, shardCountries, focusRef.current);
       }
-      centreMissRef.current = centreCountry === null;
+      centreMissRef.current = probeDecides && centreCountry === null;
     } catch {
       centreCountry = null;
       // A throwing style is not a reason to re-sync.
@@ -574,6 +587,7 @@ export function TileWineMap({
         ? prev
         : next;
     });
+    return country !== focusBefore;
   }, [shardEntries, shardCountries, selectedShard, selectedCountry, chipCountry, detail]);
   // Re-evaluates on selection too, so a shard selected from the tree is mounted
   // even if the camera never moves.
@@ -1002,23 +1016,67 @@ export function TileWineMap({
     // loaded. A second miss is genuine (no wine ground near the centre):
     // the re-sync then changes nothing, renders nothing, and so triggers no
     // further idle.
+    let refocused = false;
     if (centreMissRef.current) {
       centreMissRef.current = false;
-      syncMountedShards();
+      refocused = syncMountedShards();
     }
-    scheduleScan();
+    if (refocused) {
+      // The re-sync moved focus, which flips the deep flags and starts the
+      // new focus country's shard reload. A scan now would read its old
+      // region-level tiles and could say "No subregions mapped here" for it.
+      // Skip it and ask for a frame instead, so a later idle (after that
+      // reload) scans.
+      try {
+        mapRef.current?.getMap()?.triggerRepaint();
+      } catch {
+        // A lost WebGL context: the restore repaints anyway.
+      }
+    } else {
+      scheduleScan();
+    }
+    if (!healthPendingRef.current) return;
+    // All's own mount set for this view, from the same pure rule
+    // syncMountedShards uses (no 150% keep: the 50% pad alone is a subset of
+    // whatever All ends up holding). The all-clear waits until every one of
+    // them is added, or given up for this visit. Guarded: after a lost
+    // context the style is null, and an idle handler must not throw.
+    let allTargetCount = 0;
+    let allTargetSettled = false;
+    let zoom = 0;
+    try {
+      const map = mapRef.current?.getMap();
+      if (!map) return;
+      const b = map.getBounds();
+      zoom = map.getZoom();
+      const target = mountTarget({
+        shards: shardEntries,
+        view: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+        zoom,
+        selectedShard,
+        prev: new Set(),
+        detail: "all",
+        focusCountry: focusRef.current,
+        shardCountries,
+      });
+      allTargetCount = target.length;
+      allTargetSettled = target.every((k) => controllerRef.current?.isSettled(k) ?? false);
+    } catch {
+      return;
+    }
     if (
       !allModeHealthy({
         pending: healthPendingRef.current,
-        mountedCount: mountedShards.length,
-        zoom: mapRef.current?.getZoom() ?? 0,
+        allTargetCount,
+        allTargetSettled,
+        zoom,
       })
     ) {
       return;
     }
     healthPendingRef.current = false;
     onHealthyRef.current?.();
-  }, [scheduleScan, mountedShards, syncMountedShards]);
+  }, [scheduleScan, syncMountedShards, shardEntries, selectedShard, shardCountries]);
 
   // Report what the map is showing to the explorer, which owns the status
   // line and the chips. Focus and depth are replaced only on a real change,

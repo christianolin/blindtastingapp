@@ -783,4 +783,26 @@ describe("ShardController", () => {
       expect(error, mode).toHaveBeenCalledTimes(1);
     }
   });
+
+  it("26. isSettled: added, or failed for this visit — nothing more will be loaded for it", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { map, frames, controller } = setup();
+    map.throwOnAddLayer = "shard-outlines-alsace";
+    controller.setDesired(desired({ keys: ["alsace", "bourgogne"] }));
+
+    // Nothing has run yet: neither shard is in, neither is settled.
+    expect(controller.isSettled("bourgogne")).toBe(false);
+    expect(controller.isSettled("alsace")).toBe(false);
+    frames.drain();
+
+    // Failed: settled, and not added.
+    expect(controller.isAdded("alsace")).toBe(false);
+    expect(controller.isSettled("alsace")).toBe(true);
+    // Added: both.
+    expect(controller.isAdded("bourgogne")).toBe(true);
+    expect(controller.isSettled("bourgogne")).toBe(true);
+    // Absent (never a target): neither.
+    expect(controller.isAdded("mosel")).toBe(false);
+    expect(controller.isSettled("mosel")).toBe(false);
+  });
 });

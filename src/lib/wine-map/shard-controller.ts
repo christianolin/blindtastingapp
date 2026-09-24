@@ -196,6 +196,13 @@ export class ShardController {
     }
   }
 
+  /** Nothing more will be loaded for this shard: it is added (isAdded), or it
+      failed for this visit and will not be retried. What All countries'
+      all-clear asks of every shard All itself wants for the view. */
+  isSettled(key: string): boolean {
+    return this.isAdded(key) || this.failed.has(key);
+  }
+
   /** From the style.load listener: the landed style is the ready one again.
       After a full rebuild (a new Style object) every shard's paint and
       filters are rewritten once; on the usual diff path (same object, shard
