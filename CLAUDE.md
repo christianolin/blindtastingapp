@@ -801,8 +801,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   IN_PROGRESS tasting where `startLandsOnConsole` holds goes to
   `/tastings/<id>/host`). Eligible: your own `tasting_participants` row is
   `JOINED` (never INVITED/DECLINED; never CLOSED or legacy `OPEN` status) and
-  the tasting is inside its window — IN_PROGRESS LIVE while
-  `now − (started_at ?? scheduled_at ?? created_at) ≤ 24 h`; IN_PROGRESS
+  the tasting is inside its window — IN_PROGRESS LIVE always (running or
+  paused; owner decision 2026-09-24, it used to hide after 24 h); IN_PROGRESS
   ASYNC always; DRAFT while `scheduled_at` is between 12 h ago and 6 h ahead,
   or with no schedule for 12 h after `created_at`. Priority: LIVE running,
   LIVE paused, ASYNC, then DRAFT by nearest schedule; the rest collapse into

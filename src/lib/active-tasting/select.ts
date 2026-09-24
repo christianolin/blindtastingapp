@@ -46,7 +46,6 @@ export type ActiveTastingSnapshot = { items: ActiveTastingItem[]; checkedAt: str
 
 export type BannerView = { item: ActiveTastingItem; more: number };
 
-export const LIVE_WINDOW_MS = 24 * 3_600_000;
 export const DRAFT_AHEAD_MS = 6 * 3_600_000;
 export const DRAFT_BEHIND_MS = 12 * 3_600_000;
 
@@ -68,7 +67,10 @@ function timestampsParse(c: ActiveTastingCandidate): boolean {
   );
 }
 
-/** A LIVE tasting's anchor: when it started, or for a legacy row its schedule, or its creation. */
+/** A LIVE tasting's anchor: when it started, or for a legacy row its schedule, or its
+    creation. No longer a window bound (owner decision 2026-09-24: a running LIVE
+    tasting shows however long ago it started) — only the live/paused sort order
+    still reads it. */
 function liveAnchor(c: ActiveTastingCandidate): number {
   return (ms(c.startedAt) ?? ms(c.scheduledAt) ?? ms(c.createdAt)) as number;
 }
@@ -76,7 +78,8 @@ function liveAnchor(c: ActiveTastingCandidate): number {
 /**
  * D1 + D2: the banner state for one of the viewer's tastings, or null when it
  * is not eligible. Only the viewer's own row counts — JOINED (the host's row
- * always is) — and only a DRAFT or IN_PROGRESS tasting inside its window.
+ * always is). A running IN_PROGRESS tasting always counts; a DRAFT one only
+ * inside its window.
  */
 export function activeState(
   c: ActiveTastingCandidate,
@@ -89,8 +92,9 @@ export function activeState(
   if (c.status === "IN_PROGRESS") {
     if (c.timingMode === "ASYNC") return "in-progress";
     if (c.timingMode !== "LIVE") return null;
-    // A future anchor (a legacy early start) counts too: no lower bound.
-    if (t - liveAnchor(c) > LIVE_WINDOW_MS) return null;
+    // No time limit (owner decision 2026-09-24): a forgotten tasting is the
+    // host's to end, and guests must always find their way back. Paused
+    // shows too, however long ago it started.
     return c.pausedAt ? "paused" : "live";
   }
 

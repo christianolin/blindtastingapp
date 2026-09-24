@@ -66,23 +66,26 @@ describe("activeState windows (D1, D2)", () => {
     expect(state({ pausedAt: h(-0.5) })).toBe("paused");
   });
 
-  it("2. LIVE shows through exactly 24 h after its start, not a minute more", () => {
+  it("2. LIVE shows however long ago it started", () => {
     expect(state({ startedAt: h(-24) })).toBe("live");
-    expect(state({ startedAt: hm(-24, -1) })).toBeNull();
+    expect(state({ startedAt: hm(-24, -1) })).toBe("live");
+    expect(state({ startedAt: h(-24 * 30) })).toBe("live");
+    // A paused tasting shows too, however long ago it started.
+    expect(state({ startedAt: h(-24 * 5), pausedAt: h(-1) })).toBe("paused");
   });
 
   it("3. a LIVE legacy row with no started_at falls back to scheduled_at, then created_at", () => {
     expect(state({ startedAt: null, scheduledAt: h(-2) })).toBe("live");
-    expect(state({ startedAt: null, scheduledAt: h(-25) })).toBeNull();
+    expect(state({ startedAt: null, scheduledAt: h(-25) })).toBe("live");
     expect(state({ startedAt: null, scheduledAt: null, createdAt: h(-3) })).toBe("live");
-    expect(state({ startedAt: null, scheduledAt: null, createdAt: h(-30) })).toBeNull();
+    expect(state({ startedAt: null, scheduledAt: null, createdAt: h(-30) })).toBe("live");
     // A legacy early start: the schedule is still ahead.
     expect(state({ startedAt: null, scheduledAt: h(3) })).toBe("live");
   });
 
   it("4. started_at wins over the fallbacks", () => {
     expect(state({ startedAt: h(-1), scheduledAt: h(-72) })).toBe("live");
-    expect(state({ startedAt: h(-30), scheduledAt: h(-1) })).toBeNull();
+    expect(state({ startedAt: h(-30), scheduledAt: h(-1) })).toBe("live");
   });
 
   it("5. ASYNC is always in progress, and ignores paused_at", () => {

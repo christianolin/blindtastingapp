@@ -14,7 +14,7 @@ Announced to the owner:
 
 - **D1 Eligible rows.** Only tastings where the viewer's own `tasting_participants` row is `JOINED` (the host's row is always `JOINED`). Never `INVITED` or `DECLINED`. Never a `CLOSED` tasting. Never a legacy `OPEN`-status tasting. Being the host does not count on its own; only the row's status does.
 - **D2 Windows.**
-  - `IN_PROGRESS` + `LIVE`: shown while `now − anchor ≤ 24 h`, where `anchor = started_at ?? scheduled_at ?? created_at`. The fallback is for legacy rows with a null `started_at`. An anchor in the future also counts, for a legacy early start.
+  - `IN_PROGRESS` + `LIVE`: shown while `IN_PROGRESS`, however long ago it started (owner decision 2026-09-24: a forgotten tasting is the host's to end, and guests must always find their way back); paused shows too. No time limit any more — it used to hide once `now − anchor > 24 h`, where `anchor = started_at ?? scheduled_at ?? created_at` (the fallback for legacy rows with a null `started_at`).
   - `IN_PROGRESS` + `ASYNC`: always shown.
   - `DRAFT` with `scheduled_at` set: shown while `now − 12 h ≤ scheduled_at ≤ now + 6 h`.
   - `DRAFT` with no `scheduled_at`: shown while `now − created_at ≤ 12 h`.
@@ -38,7 +38,7 @@ Defaults chosen here:
 - **D12 Polling pauses on the first item's own pages.** On those pages the banner is hidden and `AutoRefresh`/`RevealSync` re-render the layout's `AppHeader` anyway. When the path leaves them, the client checks once at once, then resumes the 20 s cadence. It also re-checks on `visibilitychange` to visible, because a phone returning to the tab does not always fire `focus`.
 - **D13 A failed read never blanks the banner.** The server read returns `null` on a query error. `AppHeader` then renders an empty snapshot stamped at the epoch, so any later poll replaces it. The client keeps its current state when a poll returns `null` or throws, as the bell does. Signed out returns an empty snapshot stamped now, a real "nothing", and the banner goes.
 - **D14 Snapshots are ordered by `checkedAt`, a server clock ISO string.** The client shows whichever is newer: the server-rendered `initial` prop (a `router.refresh()` or a navigation re-renders it) or its own last poll. There is no props-to-state effect and no client clock.
-- **D15 No dismiss, no dates.** The D2 windows are the only expiry, so there is no storage and no dismiss control. The banner shows no time, so `LocalDateTime` is not needed.
+- **D15 No dismiss, no dates.** The D2 windows are the only expiry (LIVE has none any more — it only ends when the host ends it), so there is no storage and no dismiss control. The banner shows no time, so `LocalDateTime` is not needed.
 - **D16 Pages without the top bar get no banner:** `/about` (its own "Back to Overview" strip), `/knowledge/archetypes/[id]` (a "← Map" back link) and `/j/[code]` (a member is redirected into the tasting there anyway). Giving the archetype page `AppHeader` is a separate one-line change if the owner wants it (§10).
 
 ## 3. Selection rules — `src/lib/active-tasting/select.ts` (pure)
@@ -57,7 +57,6 @@ export type ActiveTastingItem = { tastingId: string; name: string; state: Active
 export type ActiveTastingSnapshot = { items: ActiveTastingItem[]; checkedAt: string };
 export type BannerView = { item: ActiveTastingItem; more: number };
 
-export const LIVE_WINDOW_MS = 24 * 3_600_000;
 export const DRAFT_AHEAD_MS = 6 * 3_600_000;
 export const DRAFT_BEHIND_MS = 12 * 3_600_000;
 export const EMPTY_SNAPSHOT: ActiveTastingSnapshot = { items: [], checkedAt: "1970-01-01T00:00:00.000Z" };
@@ -84,14 +83,16 @@ These are vitest files in node, with no DOM. Use a fixed `NOW = new Date("2026-0
 
 - **`activeState` windows**
   1. LIVE started 1 h ago → `"live"`. With `pausedAt` set → `"paused"`.
-  2. LIVE started exactly 24 h ago → `"live"`. 24 h 1 min ago → `null`.
+  2. LIVE shows however long ago it started (owner decision 2026-09-24, no
+     time limit) — 24 h ago, 24 h 1 min ago, and 30 days ago all → `"live"`;
+     paused 5 days in → `"paused"`.
   3. LIVE with null `startedAt`:
-     - `scheduledAt` 2 h ago → live; 25 h ago → `null`.
-     - Both null, `createdAt` 3 h ago → live; 30 h ago → `null`.
+     - `scheduledAt` 2 h ago → live; 25 h ago → live.
+     - Both null, `createdAt` 3 h ago → live; 30 h ago → live.
      - `scheduledAt` 3 h ahead (legacy early start) → live.
   4. `startedAt` wins over the fallbacks:
      - Started 1 h ago, scheduled 3 days ago → live.
-     - Started 30 h ago, scheduled 1 h ago → `null`.
+     - Started 30 h ago, scheduled 1 h ago → live.
   5. ASYNC started 30 days ago → `"in-progress"`. ASYNC with `pausedAt` set → `"in-progress"`.
   6. DRAFT scheduled 5 h ahead → `"waiting"`. Exactly 6 h ahead → waiting. 6 h 1 min ahead → `null`.
   7. DRAFT scheduled 11 h ago → waiting. Exactly 12 h ago → waiting. 12 h 1 min ago → `null`.
