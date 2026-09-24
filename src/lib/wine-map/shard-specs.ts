@@ -24,6 +24,7 @@ import {
   shiftLightness,
   type MapPalette,
 } from "./map-palette";
+import { depthTerm, grapeGateExpression, GS, labelTextField } from "./map-state";
 import { shardKeyFor } from "./shard";
 
 /** [west, south, east, north], as the manifest and the place context carry it. */
@@ -233,4 +234,205 @@ export function shardColorsFor(input: {
       }),
     ]),
   );
+}
+
+// Static layer specs (Phase 1b; spec §5.2). Nothing below changes with the
+// selection, the grape filter, Local/English or the focus country: those are
+// read from global state (map-state.ts) and feature-state (selection-state.ts).
+// A selection used to rewrite the paint and layout of every mounted layer —
+// each call validated, each one reloading its source; now it is a few
+// feature-state writes plus one wm_sel_key write that only the world source's
+// and the selected shard's overlay layers read.
+
+/** The world archive's handed-off multiplier: 0 once the region's own shard
+    has loaded (feature-state `handed`, set by TileWineMap's handoff effect),
+    1 otherwise. Folded into fill, line and text opacity instead of a filter,
+    so a handoff rewrites no layer. */
+export const WORLD_HANDED_FACTOR = [
+  "case",
+  ["boolean", ["feature-state", "handed"], false],
+  0,
+  1,
+];
+
+const IS_SELECTED = ["boolean", ["feature-state", "sel"], false];
+const IS_CHILD = ["boolean", ["feature-state", "child"], false];
+const IS_RELATED = ["boolean", ["feature-state", "rel"], false];
+// Something is selected: everything unrelated fades. On from the first
+// selection of the session, since the explorer never clears one.
+const HAS_SELECTION = ["==", ["global-state", GS.hasSel], true];
+
+/** The fill paint every wine polygon layer shares. `ramp` is the shard's
+    classification-ramp constant (the world archive passes false: its features
+    carry no cru levels); `worldHandoff` folds WORLD_HANDED_FACTOR into each
+    zoom stop, since the zoom interpolation must stay the top-level
+    expression. */
+export function staticFillPaint(input: {
+  color: ColorExpression;
+  ramp: boolean;
+  worldHandoff: boolean;
+}): Record<string, unknown> {
+  const { color, ramp, worldHandoff } = input;
+  // The selection pops, its direct children keep full presence (you drill
+  // into them), everything else fades to 45% once something is selected. The
+  // selected fill still relaxes at deep zoom so children read on top of it.
+  const focus = (selectedOpacity: number, base: unknown) => {
+    const focused = [
+      "case",
+      IS_SELECTED,
+      selectedOpacity,
+      IS_CHILD,
+      base,
+      HAS_SELECTION,
+      ["*", base, 0.45],
+      base,
+    ];
+    return worldHandoff ? ["*", focused, WORLD_HANDED_FACTOR] : focused;
+  };
+  return {
+    // Every fill has its own outline layer, so the built-in antialias pass is
+    // a redundant second edge.
+    "fill-antialias": false,
+    "fill-color": color,
+    "fill-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5,
+      focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
+      9,
+      // Classification intensity where the region ramps (grand cru solid,
+      // premier cru firm, village land a light wash); one uniform mid opacity
+      // where it does not.
+      focus(0.3, [
+        "match",
+        classificationExpr,
+        "grand_cru",
+        ramp ? 0.65 : 0.4,
+        "premier_cru",
+        ramp ? 0.45 : 0.4,
+        "communal",
+        ramp ? 0.18 : 0.4,
+        ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
+      ]),
+    ],
+  };
+}
+
+/** Outlines follow the fill palette, so deep levels are not ringed in the
+    region hue. Shared by the shard outlines and the world region outlines, so
+    a region drawn from either archive is pixel-identical. */
+export function staticOutlinePaint(input: {
+  color: ColorExpression;
+  worldHandoff: boolean;
+}): Record<string, unknown> {
+  return {
+    "line-color": input.color,
+    "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]],
+    ...(input.worldHandoff ? { "line-opacity": WORLD_HANDED_FACTOR } : {}),
+  };
+}
+
+// Typography hierarchy: regions largest (uppercase, spaced), then steadily
+// smaller through subregions, appellations and crus.
+const LABEL_TIER_SIZE = ["match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10];
+
+function labelLayoutBase(): Record<string, unknown> {
+  return {
+    "text-field": labelTextField(),
+    "text-transform": ["match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none"],
+    "text-letter-spacing": ["match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02],
+  };
+}
+
+/** Every ordinary label layer. Size and collision priority no longer move
+    with the selection (owner decision D4): feature-state cannot reach layout,
+    and a global-state layout read would reload every label source on every
+    selection. The selected place's own label is drawn by the
+    selectedLabelLayout layer, and this copy of it loses to that one by
+    collision. */
+export function staticLabelLayout(): Record<string, unknown> {
+  return {
+    ...labelLayoutBase(),
+    "text-size": LABEL_TIER_SIZE,
+    "symbol-sort-key": ["-", 10, ["get", "tier"]],
+  };
+}
+
+/** The selected place's label, one layer on its own source: 2.5 larger than
+    its tier and first in collision order — what the selected label always
+    got. */
+export function selectedLabelLayout(): Record<string, unknown> {
+  return {
+    ...labelLayoutBase(),
+    "text-size": ["+", LABEL_TIER_SIZE, 2.5],
+    "symbol-sort-key": -2,
+  };
+}
+
+/** Labels are never hidden by selection; it drives three weights instead:
+    selected loudest, related (children, siblings, the parent) full presence,
+    distant places lighter — and every label plain while nothing is selected. */
+export function staticLabelPaint(input: {
+  palette: MapPalette;
+  worldHandoff: boolean;
+}): Record<string, unknown> {
+  const { label } = input.palette;
+  const weigh = (selected: unknown, related: unknown, distant: unknown, plain: unknown) => [
+    "case",
+    IS_SELECTED,
+    selected,
+    IS_RELATED,
+    related,
+    HAS_SELECTION,
+    distant,
+    plain,
+  ];
+  const opacity = weigh(1, 0.95, 0.8, 1);
+  return {
+    "text-color": weigh(label.selected, label.related, label.distant, label.text),
+    "text-opacity": input.worldHandoff ? ["*", opacity, WORLD_HANDED_FACTOR] : opacity,
+    "text-halo-color": label.halo,
+    "text-halo-width": weigh(2.2, 1.7, 1.3, 1.7),
+  };
+}
+
+/** The selected label's paint: the "selected" weight, constant. The world
+    copy still hides once its region is handed off, so it never draws beside
+    the shard's own. */
+export function selectedLabelPaint(input: {
+  palette: MapPalette;
+  worldHandoff: boolean;
+}): Record<string, unknown> {
+  const { label } = input.palette;
+  return {
+    "text-color": label.selected,
+    "text-opacity": input.worldHandoff ? WORLD_HANDED_FACTOR : 1,
+    "text-halo-color": label.halo,
+    "text-halo-width": 2.2,
+  };
+}
+
+/** A shard's fills, outlines and labels: the grape gate, plus region-level
+    depth unless its country's wm_deep_ flag is on. A shard whose country is
+    unknown (tree not loaded, or a shard newer than it) stays at full depth,
+    as it always has. Never undefined: MapLibre silently drops a layer whose
+    filter is. */
+export function shardFilter(country: string | null): unknown[] {
+  return country
+    ? ["all", grapeGateExpression(), depthTerm(country)]
+    : ["all", grapeGateExpression()];
+}
+
+/** The selection ring, its casing and the selected label: the selected key
+    only, still subject to the grape gate. The feature's key is asserted to a
+    string with an "" fallback, so a keyless feature can never equal a null
+    wm_sel_key. Only these overlay layers read wm_sel_key, which is what keeps
+    a selection's reloads to the world source and the selected place's shard. */
+export function selectedPlaceFilter(): unknown[] {
+  return [
+    "all",
+    grapeGateExpression(),
+    ["==", ["string", ["get", "key"], ""], ["global-state", GS.selKey]],
+  ];
 }
