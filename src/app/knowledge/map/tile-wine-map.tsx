@@ -21,14 +21,14 @@ import {
   selectedLabelLayout,
   selectedLabelPaint,
   selectedPlaceFilter,
-  shardColorsFor,
-  shardFilter,
+  selectionCasingPaint,
+  selectionRingPaint,
   staticFillPaint,
   staticLabelLayout,
   staticLabelPaint,
   staticOutlinePaint,
   worldRegionColor,
-  type ColorExpression,
+  type ShardSpecInputs,
 } from "@/lib/wine-map/shard-specs";
 import { englishName } from "@/lib/wine-map/localize-names";
 import {
@@ -47,7 +47,8 @@ import { MapStateSync } from "@/lib/wine-map/map-state-sync";
 import { bboxInView, latchReady } from "@/lib/wine-map/handoff";
 import { selectionFeatureStates } from "@/lib/wine-map/selection-state";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
-import { nextMountStep } from "@/lib/wine-map/mount-policy";
+import { installHoverCursor } from "@/lib/wine-map/hover-cursor";
+import { ShardController, type ShardDesired } from "@/lib/wine-map/shard-controller";
 import {
   classificationShades,
   districtColor,
@@ -177,14 +178,6 @@ const FOCUS_GRID = 48;
 // shard's pmtiles header, instead of opening all 54.
 const SHARD_MIN_ZOOM = 5;
 
-// How many shards may START mounting in one animation frame. Each mount is a
-// <Source> plus its layers, and every MapLibre addLayer validates by
-// serializing the whole style, so the first zoom past z5 — 36-67 shards in one
-// commit — was a single 1.2-1.5 s frozen task. Three per frame keeps each
-// frame's batch short (worst measured 16 ms with per-shard colours) while the
-// full set still lands within a fraction of a second.
-const MOUNTS_PER_FRAME = 3;
-
 // MapLibre keeps 500 tiles by default across ALL sources; panning back over
 // ground you just left re-fetches and re-decodes it. Raising this trades a few
 // MB of memory for not re-doing that work.
@@ -238,27 +231,10 @@ const SELECTED_PLACE_FILTER = selectedPlaceFilter() as unknown as boolean;
 const LABEL_LAYOUT = staticLabelLayout() as SymbolLayout;
 const SELECTED_LABEL_LAYOUT = selectedLabelLayout() as SymbolLayout;
 
-// One static fill/outline pair per shard, from a shardColorsFor table (whose
-// `ramp` it shares). Object.fromEntries, not assignment: a shard key is an own
-// entry here whatever it is called.
-function shardPaintTable(
-  colors: Readonly<Record<string, ColorExpression>>,
-  ramp: boolean,
-): Record<string, { fill: FillPaint; outline: LinePaint }> {
-  return Object.fromEntries(
-    Object.entries(colors).map(([key, color]) => [
-      key,
-      {
-        fill: staticFillPaint({ color, ramp, worldHandoff: false }) as FillPaint,
-        outline: staticOutlinePaint({ color, worldHandoff: false }) as LinePaint,
-      },
-    ]),
-  );
-}
-
-// Every colour a wine polygon paints comes from lib/wine-map/shard-specs:
-// shardColorsFor, one per region shard (that shard's own region hue and area
-// slugs, with the classification ramp as a per-shard constant) and
+// Every colour a wine polygon paints comes from lib/wine-map/shard-specs: one
+// colour expression per region shard (that shard's own region hue and area
+// slugs, with the classification ramp as a per-shard constant; built by
+// shardLayerSpecs when ShardController mounts the shard) and
 // worldRegionColor for the world archive. District hues, their classification
 // shades and the tint ramp live in lib/wine-map/map-palette, one fixed table
 // per theme, keyed by the same slug hash so the fill expression's palette arms
@@ -327,6 +303,12 @@ export function TileWineMap({
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
+  // Mounts and unmounts the region shards (Phase 1c). Created in onLoad for
+  // that map instance (recreated by an effect after a Fast Refresh), disposed
+  // on unmount.
+  const controllerRef = useRef<ShardController | null>(null);
+  // Removes the hover cursor's mousemove listener; installed alongside.
+  const disposeHoverRef = useRef<(() => void) | null>(null);
 
   // Dark mode. The map follows the theme <html> is rendering (its `dark`
   // class), live: Carto Dark Matter + the dark palette in dark, Positron + the
@@ -456,48 +438,10 @@ export function TileWineMap({
   // Hysteresis: mount at 50% padding, unmount only once past 150%, so panning
   // never thrashes sources.
   //
-  // Staggered: syncMountedShards decides the TARGET set in one go, and the
-  // rendered set, mountedShards, walks toward it — removals at once, at most
-  // MOUNTS_PER_FRAME new shards per animation frame, the selected shard first
-  // (nextMountStep). The first step runs synchronously, so a small change
-  // (a selection, a pan that adds one or two shards) lands exactly as before.
+  // This is the mount TARGET, set in one go. ShardController
+  // (lib/wine-map/shard-controller) adds the shards themselves, a few per
+  // animation frame within its 8 ms budget, so nothing here staggers.
   const [mountedShards, setMountedShards] = useState<string[]>([]);
-  // The last target, and the shard to mount ahead of the rest.
-  const mountTargetRef = useRef<string[]>([]);
-  const mountFirstRef = useRef<string | null>(null);
-  // Mirror of the last mountedShards this component set. Each step is computed
-  // from it rather than inside a setState updater, whose result a frame
-  // callback cannot read back to decide whether another frame is needed.
-  const renderedShardsRef = useRef<string[]>([]);
-  const mountFrameRef = useRef<number | null>(null);
-  const advanceMounts = useCallback(() => {
-    if (mountFrameRef.current !== null) {
-      window.cancelAnimationFrame(mountFrameRef.current);
-      mountFrameRef.current = null;
-    }
-    const step = () => {
-      mountFrameRef.current = null;
-      const next = nextMountStep(renderedShardsRef.current, mountTargetRef.current, {
-        maxAdds: MOUNTS_PER_FRAME,
-        first: mountFirstRef.current,
-      });
-      if (next !== renderedShardsRef.current) {
-        renderedShardsRef.current = next;
-        setMountedShards(next);
-      }
-      // Every step keeps only target shards, so equal length means arrived.
-      if (next.length < mountTargetRef.current.length) {
-        mountFrameRef.current = window.requestAnimationFrame(step);
-      }
-    };
-    step();
-  }, []);
-  useEffect(
-    () => () => {
-      if (mountFrameRef.current !== null) window.cancelAnimationFrame(mountFrameRef.current);
-    },
-    [],
-  );
   // Which country owns the view: the one whose shards cover most of the
   // viewport. Only consulted when nothing is selected — a selection always wins.
   const [viewportCountry, setViewportCountry] = useState<string | null>(null);
@@ -575,28 +519,27 @@ export function TileWineMap({
     // world-region-* layers now paint identically. Mounting none of them means
     // the map opens without reading 54 pmtiles headers.
     const zoom = map.getZoom();
-    // Hysteresis reads the previous TARGET, not what has rendered so far: a
-    // shard still queued for a later frame already won its place at the 50%
-    // pad, and keeps it until past 150% exactly as a mounted one would.
-    const prevSet = new Set(mountTargetRef.current);
-    mountTargetRef.current = shardEntries
-      .filter(
-        ([key, shard]) =>
-          key === selectedShard ||
-          (zoom >= SHARD_MIN_ZOOM &&
-            (hit(shard.bbox, 0.5) ||
-              (prevSet.has(key) && hit(shard.bbox, 1.5)))),
-      )
-      .map(([key]) => key);
-    mountFirstRef.current = selectedShard;
-    advanceMounts();
-  }, [shardEntries, selectedShard, shardCountries, advanceMounts]);
+    setMountedShards((prev) => {
+      const prevSet = new Set(prev);
+      const next = shardEntries
+        .filter(
+          ([key, shard]) =>
+            key === selectedShard ||
+            (zoom >= SHARD_MIN_ZOOM &&
+              (hit(shard.bbox, 0.5) ||
+                (prevSet.has(key) && hit(shard.bbox, 1.5)))),
+        )
+        .map(([key]) => key);
+      return next.length === prev.length && next.every((k, i) => k === prev[i])
+        ? prev
+        : next;
+    });
+  }, [shardEntries, selectedShard, shardCountries]);
   // Re-evaluates on selection too, so a shard selected from the tree is mounted
   // even if the camera never moves.
   useEffect(() => {
     syncMountedShards();
   }, [syncMountedShards]);
-  const mountedSet = useMemo(() => new Set(mountedShards), [mountedShards]);
 
   // Mounting a shard <Source> only STARTS its cold pmtiles header fetch. Keying
   // the world->shard handoff on `mountedShards` therefore told the world archive
@@ -640,7 +583,10 @@ export function TileWineMap({
         let added = false;
         let loaded = false;
         try {
-          added = Boolean(map.getSource(id));
+          // Added means the controller added the source AND all three layers:
+          // a shard still queued behind the frame budget, or one that failed
+          // and was rolled back, is never ready, so its world copy keeps drawing.
+          added = controllerRef.current?.isAdded(key) ?? false;
           loaded = added && map.isSourceLoaded(id);
         } catch {
           // Style mid-rebuild: neither added nor loaded this time round.
@@ -816,11 +762,6 @@ export function TileWineMap({
     desiredStateRef.current = { global: desiredGlobal, selection: selectionStates };
     stateSyncRef.current?.setDesired(desiredStateRef.current);
   }, [desiredGlobal, selectionStates]);
-  // A shard that just mounted has no selection flags yet (its source did not
-  // exist at the last apply); a no-op when nothing is missing.
-  useEffect(() => {
-    stateSyncRef.current?.apply();
-  }, [mountedShards]);
   useEffect(() => {
     // Normally onLoad creates the sync. But Fast Refresh (dev) cleans up and
     // re-runs every effect while the MapLibre instance survives, and onLoad
@@ -1068,67 +1009,12 @@ export function TileWineMap({
   // screen was still Bourgogne petrol. Same threshold as the step.
   const areaPaletteLive = viewInfo.zoom >= AREA_PALETTE_ZOOM;
 
-  // One colour expression per shard, from that shard's own region and area
-  // slugs (lib/wine-map/shard-specs) — ~2 KB each instead of one ~38 KB
-  // catalogue-wide expression on every layer, which MapLibre re-serialized
-  // with the whole style on every addLayer (the first-zoom freeze). Keyed on
-  // the tree's slug lists (change once, when the tree loads), the ramp latch
-  // (at most once per region per session) and the landed theme (a rare,
-  // user-initiated flip) — never on the viewport. Split by ramp so a region
-  // joining the latch rebuilds only its own expression; every other shard
-  // keeps the same object, which react-map-gl's paint diff skips on identity.
-  const plainShardColors = useMemo(
-    () =>
-      shardColorsFor({
-        keys: shardEntries.map(([key]) => key),
-        slugsByShard: areaSlugsByShard,
-        ramp: false,
-        palette,
-      }),
-    [shardEntries, areaSlugsByShard, palette],
-  );
-  const rampedShardColors = useMemo(
-    () =>
-      shardColorsFor({
-        keys: rampedRegions,
-        slugsByShard: areaSlugsByShard,
-        ramp: true,
-        palette,
-      }),
-    [rampedRegions, areaSlugsByShard, palette],
-  );
-  const rampedSet = useMemo(() => new Set(rampedRegions), [rampedRegions]);
-
   // Static paint (lib/wine-map/shard-specs). Nothing here moves with the
   // selection any more: the selected place, its children and its relatives are
   // feature-state, and "something is selected" is the wm_has_sel global — all
-  // written by MapStateSync. So these re-key only on what shapes a colour: the
-  // landed theme, the catalogue's area slugs (once, when the tree lands) and
-  // the ramp latch (at most once per region per session).
-  //
-  // One fill/outline pair per shard, from the two colour tables above. The
-  // plain table rebuilds only when the tree lands or the theme flips; a region
-  // joining the ramp latch rebuilds only the ramped one, so every other shard
-  // keeps the very same paint objects and react-map-gl's paint diff skips them
-  // on identity.
-  const plainShardPaints = useMemo(
-    () => shardPaintTable(plainShardColors, false),
-    [plainShardColors],
-  );
-  const rampedShardPaints = useMemo(
-    () => shardPaintTable(rampedShardColors, true),
-    [rampedShardColors],
-  );
-  const shardPaints = useMemo(
-    () =>
-      Object.fromEntries(
-        shardEntries.map(([key]) => [
-          key,
-          rampedSet.has(key) ? rampedShardPaints[key] : plainShardPaints[key],
-        ]),
-      ),
-    [shardEntries, rampedSet, rampedShardPaints, plainShardPaints],
-  );
+  // written by MapStateSync. The world layers' paint below re-keys only on the
+  // landed theme. The region shards' paint (their area slugs, the ramp latch)
+  // is built by ShardController from the same builders; see shardDesired.
   // The world archive's country and region colour: every region's hue, one
   // cached expression per theme, so the reference only changes on a flip.
   // World features carry no area slugs, so this paints them exactly as the
@@ -1177,70 +1063,129 @@ export function TileWineMap({
   // Label paint: the selected / related / distant weights come from
   // feature-state, so there is one object per theme. World labels also vanish
   // with their handed-off region.
-  const shardLabelPaint = useMemo(
-    () => staticLabelPaint({ palette, worldHandoff: false }) as SymbolPaint,
-    [palette],
-  );
   const worldLabelPaint = useMemo(
     () => staticLabelPaint({ palette, worldHandoff: true }) as SymbolPaint,
-    [palette],
-  );
-  const shardSelectedLabelPaint = useMemo(
-    () => selectedLabelPaint({ palette, worldHandoff: false }) as SymbolPaint,
     [palette],
   );
   const worldSelectedLabelPaint = useMemo(
     () => selectedLabelPaint({ palette, worldHandoff: true }) as SymbolPaint,
     [palette],
   );
-  // The selection ring and the keyline casing under it, world and shard alike.
-  const selectedCasingPaint = useMemo(
-    () => ({ "line-color": palette.selectedCasing, "line-width": 5, "line-opacity": 0.85 }),
-    [palette],
-  );
-  const selectedRingPaint = useMemo(
-    () => ({ "line-color": palette.selectedRing, "line-width": 2.5 }),
-    [palette],
-  );
+  // The world ring and keyline casing; the shard overlays are built from the
+  // same two builders (shardOverlaySpecs), so both archives ring alike.
+  const selectedCasingPaint = useMemo(() => selectionCasingPaint(palette), [palette]);
+  const selectedRingPaint = useMemo(() => selectionRingPaint(palette), [palette]);
 
-  const attribution = useMemo(
-    () => Object.values(manifest.attribution),
-    [manifest],
-  );
-
-  // World layers carry the country (tier 0) and every region. A region whose
-  // shard has loaded is hidden through feature-state (see the effect on
-  // handedOffShards), and the grape gate, the focus country's depth and the
-  // selection are global state (lib/wine-map/map-state), so every world filter
-  // is a module constant. A region whose shard is not loaded is drawn from the
-  // world archive by the region layers, which reuse the shard paint exactly —
-  // which is what lets the map open with zero shard archives (see
-  // SHARD_MIN_ZOOM) without changing a pixel.
+  // Phase 1c: the region shards are mounted by ShardController with
+  // {validate:false} instead of <Source>/<Layer> JSX, whose map.addSource/
+  // addLayer serialize the whole style on every call (the first-zoom freeze).
+  // React only describes what should be mounted and from which inputs; the
+  // controller diffs that against the map on the next frame and rewrites
+  // paint or filters only for shards whose inputs changed — a landed theme,
+  // a ramp latch, the tree arriving with countries and area slugs.
   //
   // Subregion depth, one country at a time: a shard outside the focus country
   // renders only its regions (tier <= 1), so neighbours stay on the map as
   // context instead of every country exploding into subregions at once. The
   // rule is that country's wm_deep_<country> flag, read by each of its shards'
-  // filters; a shard whose country the tree does not name is left at full
-  // depth rather than blanked. So these filters change only when the tree
-  // lands, and a focus change is one global-state write that reloads just the
-  // two countries' shards — it used to setFilter three layers on every mounted
-  // shard.
-  const shardFilters = useMemo(
-    () =>
-      Object.fromEntries(
-        shardEntries.map(([key]) => [
-          key,
-          // Own properties only: a shard key never reads a country off the
-          // object prototype.
-          shardFilter(
-            Object.prototype.hasOwnProperty.call(shardCountries, key)
-              ? shardCountries[key]
-              : null,
-          ) as unknown as boolean,
-        ]),
-      ),
-    [shardEntries, shardCountries],
+  // filters (shardFilter, from `country` below); a shard whose country the
+  // tree does not name is left at full depth rather than blanked. So a
+  // shard's filters change only when the tree lands, and a focus change is
+  // one global-state write that reloads just the two countries' shards.
+  const shardUrls = useMemo(
+    () => Object.fromEntries(shardEntries.map(([key, shard]) => [key, shard.url])),
+    [shardEntries],
+  );
+  const shardDesired = useMemo<ShardDesired>(
+    () => ({
+      keys: mountedShards,
+      urls: shardUrls,
+      selectedShard,
+      palette,
+      inputs: (key: string): ShardSpecInputs => ({
+        // Own properties only: a shard key never reads a country or a slug
+        // list off the object prototype.
+        country: Object.prototype.hasOwnProperty.call(shardCountries, key)
+          ? shardCountries[key]
+          : null,
+        areaSlugs: Object.prototype.hasOwnProperty.call(areaSlugsByShard, key)
+          ? areaSlugsByShard[key]
+          : [],
+        ramp: rampedRegions.includes(key),
+        palette,
+        fillsVisible: !noFills,
+      }),
+    }),
+    [mountedShards, shardUrls, selectedShard, palette, shardCountries, areaSlugsByShard, rampedRegions, noFills],
+  );
+  // onLoad reads this: the effect below may run before the map exists.
+  const shardDesiredRef = useRef(shardDesired);
+  useEffect(() => {
+    shardDesiredRef.current = shardDesired;
+    controllerRef.current?.setDesired(shardDesired);
+  }, [shardDesired]);
+
+  // Clicks (react-map-gl's interactiveLayerIds) and the hover cursor query the
+  // same layers: this is the list Task 11 left on the prop, moved here so the
+  // cursor can read it too. Ids of shards the controller has not added yet
+  // are harmless: both filter the list through map.getLayer first.
+  const interactiveLayerIds = useMemo(
+    () => [
+      ...(noFills
+        ? [
+            "world-outlines",
+            "world-region-outlines",
+            ...mountedShards.map((key) => `shard-outlines-${key}`),
+          ]
+        : [
+            "world-fills",
+            "world-region-fills",
+            ...mountedShards.map((key) => `shard-fills-${key}`),
+          ]),
+      "world-labels",
+      ...mountedShards.map((key) => `shard-labels-${key}`),
+      // The selected place's own label: its ordinary copy loses to it by
+      // collision, so this is what a click on that name lands on.
+      "world-selected-label",
+      ...(selectedShard ? [`shard-selected-label-${selectedShard}`] : []),
+    ],
+    [mountedShards, noFills, selectedShard],
+  );
+  const interactiveLayerIdsRef = useRef(interactiveLayerIds);
+  useEffect(() => {
+    interactiveLayerIdsRef.current = interactiveLayerIds;
+  }, [interactiveLayerIds]);
+  useEffect(() => {
+    // onLoad creates the controller and the hover listener. But Fast Refresh
+    // (dev) cleans up and re-runs every effect while the MapLibre instance
+    // survives, and onLoad never fires again, so without this the shards
+    // would stop following the view and the cursor would freeze until a
+    // reload — the same reason the state sync above is recreated. A new
+    // controller adopts the shards already on the map: it reads what is
+    // mounted from the map, never from its own bookkeeping.
+    const map = mapRef.current?.getMap();
+    if (map && mapReadyRef.current) {
+      if (!controllerRef.current) {
+        controllerRef.current = new ShardController(map);
+        controllerRef.current.setDesired(shardDesiredRef.current);
+      }
+      if (!disposeHoverRef.current) {
+        disposeHoverRef.current = installHoverCursor(map, {
+          layers: () => interactiveLayerIdsRef.current,
+        });
+      }
+    }
+    return () => {
+      controllerRef.current?.dispose();
+      controllerRef.current = null;
+      disposeHoverRef.current?.();
+      disposeHoverRef.current = null;
+    };
+  }, []);
+
+  const attribution = useMemo(
+    () => Object.values(manifest.attribution),
+    [manifest],
   );
 
   // Legend regions follow the viewport once the first scan lands; the
@@ -1305,25 +1250,7 @@ export function TileWineMap({
         // and the world archive's hidden one (opacity 0 is still rendered,
         // so queryRenderedFeatures returns it) — with the same key, tier and
         // area, so smallest-wins picks the same place either way.
-        interactiveLayerIds={[
-          ...(noFills
-            ? [
-                "world-outlines",
-                "world-region-outlines",
-                ...mountedShards.map((key) => `shard-outlines-${key}`),
-              ]
-            : [
-                "world-fills",
-                "world-region-fills",
-                ...mountedShards.map((key) => `shard-fills-${key}`),
-              ]),
-          "world-labels",
-          ...mountedShards.map((key) => `shard-labels-${key}`),
-          // The selected place's own label: its ordinary copy loses to it by
-          // collision, so this is what a click on that name lands on.
-          "world-selected-label",
-          ...(selectedShard ? [`shard-selected-label-${selectedShard}`] : []),
-        ]}
+        interactiveLayerIds={interactiveLayerIds}
         // Tiles and labels cross-fade in by default, which keeps compositing
         // extra passes alive for 300ms after every tile lands — constant while
         // panning or zooming. They pop in instead; on a GPU-bound map that is a
@@ -1380,7 +1307,31 @@ export function TileWineMap({
           stateSyncRef.current?.dispose();
           stateSyncRef.current = new MapStateSync(e.target);
           stateSyncRef.current.setDesired(desiredStateRef.current);
+          // Region shards (Phase 1c). One controller per map instance; it waits
+          // for react-map-gl's world layers itself, and starts from the latest
+          // desired state (the effect that feeds it may already have run).
+          controllerRef.current?.dispose();
+          controllerRef.current = new ShardController(e.target);
+          controllerRef.current.setDesired(shardDesiredRef.current);
+          // Hover cursor: at most one query per frame, none mid-gesture.
+          disposeHoverRef.current?.();
+          disposeHoverRef.current = installHoverCursor(e.target, {
+            layers: () => interactiveLayerIdsRef.current,
+          });
           e.target.on("style.load", () => {
+            // The controller records the landed style and schedules its
+            // re-add (and, after a full rebuild, its repaint) for the next
+            // frame. MapStateSync's own style.load listener was registered
+            // earlier in this onLoad, so it fires first: the landed global
+            // state and selection flags are already applied when those shards
+            // go in. onStyleRebuilt never throws; the try is this listener's
+            // rule regardless — a throw in a style.load listener turns a good
+            // theme diff into MapLibre's full rebuild.
+            try {
+              controllerRef.current?.onStyleRebuilt();
+            } catch {
+              // Nothing to recover: the next setDesired runs the controller again.
+            }
             setPaintTheme(landingBasemapRef.current);
             setStyleEpoch((n) => n + 1);
           });
@@ -1467,18 +1418,6 @@ export function TileWineMap({
           onSelect(best.key, "map");
         }}
         onIdle={scheduleScan}
-        onMouseMove={(e) => {
-          const map = mapRef.current;
-          if (!map) return;
-          // Mirror onClick's tier-0 guard. Without it the country fill made
-          // most of France's surface advertise a pointer at z5-8 for a click
-          // that is then deliberately discarded.
-          const zoom = map.getZoom();
-          const clickable = (e.features ?? []).some(
-            (f) => ((f.properties as { tier?: number } | null)?.tier ?? 0) > 0 || zoom <= 5,
-          );
-          map.getCanvas().style.cursor = clickable ? "pointer" : "";
-        }}
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
       >
@@ -1569,11 +1508,13 @@ export function TileWineMap({
               collision to the shard's own label. MapLibre places symbol
               layers from the TOP of the style down (PauseablePlacement starts
               at order.length - 1), and the first placed wins — so the loser
-              has to sit BELOW the shard label layers. It does: the world
-              Source mounts first and every shard's layers are appended above
-              it when the shard mounts, so no beforeId is needed. Do not move
-              this layer above the shards' labels to "give it priority"; that
-              would let the invisible copy blank the visible one. */}
+              has to sit BELOW the shard label layers. It does:
+              ShardController adds shards only once world-labels exists,
+              always above the world layers, and moves any world layer
+              react-map-gl re-creates on top back below them, in this order.
+              Do not move this layer above the shards' labels to "give it
+              priority"; that would let the invisible copy blank the visible
+              one. */}
           <Layer
             id="world-labels"
             type="symbol"
@@ -1598,82 +1539,6 @@ export function TileWineMap({
             paint={worldSelectedLabelPaint}
           />
         </Source>
-        {shardEntries
-          .filter(([key]) => mountedSet.has(key))
-          .map(([key, shard]) => (
-          // promoteId="key": a shard feature's id is its canonical key, which
-          // is what the selection's feature-state names.
-          <Source
-            key={key}
-            id={shardSourceId(key)}
-            type="vector"
-            url={`pmtiles://${shard.url}`}
-            promoteId="key"
-          >
-            <Layer
-              id={`shard-fills-${key}`}
-              type="fill"
-              source-layer="places"
-              filter={shardFilters[key]}
-              paint={shardPaints[key].fill}
-              layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
-            />
-            <Layer
-              id={`shard-outlines-${key}`}
-              type="line"
-              source-layer="places"
-              filter={shardFilters[key]}
-              paint={shardPaints[key].outline}
-            />
-            {/* Only the owning shard can match the selected key — on every
-                other shard these overlays are filtered to nothing, so
-                mounting them here alone is pixel-identical and drops ~160
-                layers. They are the only shard layers that read wm_sel_key,
-                so a selection reloads this shard and no other. */}
-            {key === selectedShard && (
-              <Layer
-                id={`shard-selected-casing-${key}`}
-                type="line"
-                source-layer="places"
-                filter={SELECTED_PLACE_FILTER}
-                paint={selectedCasingPaint}
-              />
-            )}
-            {key === selectedShard && (
-              <Layer
-                id={`shard-selected-ring-${key}`}
-                type="line"
-                source-layer="places"
-                filter={SELECTED_PLACE_FILTER}
-                paint={selectedRingPaint}
-              />
-            )}
-            <Layer
-              id={`shard-labels-${key}`}
-              type="symbol"
-              source-layer="labels"
-              filter={shardFilters[key]}
-              layout={LABEL_LAYOUT}
-              paint={shardLabelPaint}
-            />
-            {/* The selected place's label: larger, darkest, and above this
-                shard's own labels so it is placed first and its ordinary copy
-                loses by collision. Added after the shard's other layers, so a
-                selection in an already-mounted shard puts it at the top of the
-                style. (A shard mounted later stacks above it, as the ring
-                always has; Phase 1c's controller keeps overlays on top.) */}
-            {key === selectedShard && (
-              <Layer
-                id={`shard-selected-label-${key}`}
-                type="symbol"
-                source-layer="labels"
-                filter={SELECTED_PLACE_FILTER}
-                layout={SELECTED_LABEL_LAYOUT}
-                paint={shardSelectedLabelPaint}
-              />
-            )}
-          </Source>
-        ))}
       </Map>
       {perfProbe ? (
         <PerfProbe
