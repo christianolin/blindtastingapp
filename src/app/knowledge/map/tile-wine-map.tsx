@@ -15,6 +15,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
+import { mountTarget } from "@/lib/wine-map/mount-policy";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
   AREA_PALETTE_ZOOM,
@@ -170,13 +171,6 @@ const COUNTRY_RELEASE_SHARE = 0.45;
 // wine ground by UNION rather than by summing overlapping bboxes. 48x48 over a
 // viewport is far finer than the bboxes it is measuring.
 const FOCUS_GRID = 48;
-
-// Below this zoom no region shard is mounted. Verified against the catalogue:
-// every shard-only place has min_zoom >= 5, so beneath it a shard can only
-// contribute its region outline/fill — which the world archive also carries.
-// The map therefore opens (initialViewState is z4.4) without reading a single
-// shard's pmtiles header, instead of opening all 54.
-const SHARD_MIN_ZOOM = 5;
 
 // MapLibre keeps 500 tiles by default across ALL sources; panning back over
 // ground you just left re-fetches and re-decodes it. Raising this trades a few
@@ -504,32 +498,21 @@ export function TileWineMap({
       if (prev && covered[prev] && covered[prev].size / total >= COUNTRY_RELEASE_SHARE) return prev;
       return prev === null ? prev : null;
     });
-    const hit = (bbox: [number, number, number, number] | undefined, pad: number) => {
-      // No bbox (transitional v1 manifest) => never hide it.
-      if (!bbox) return true;
-      const [minX, minY, maxX, maxY] = bbox;
-      return (
-        maxX >= w - dx * pad && minX <= e + dx * pad &&
-        maxY >= s - dy * pad && minY <= n + dy * pad
-      );
-    };
-    // Below SHARD_MIN_ZOOM a shard has nothing the world archive lacks: every
-    // shard-only feature has min_zoom >= 5, so all a shard contributes down
-    // there is its region — which the world archive also carries, and which the
-    // world-region-* layers now paint identically. Mounting none of them means
-    // the map opens without reading 54 pmtiles headers.
     const zoom = map.getZoom();
+    // The rule lives in lib/wine-map/mount-policy (mountTarget). "all" is
+    // today's rule: every shard in view at z >= SHARD_MIN_ZOOM, 50% pad, kept
+    // to 150%, plus the selected shard at any zoom.
     setMountedShards((prev) => {
-      const prevSet = new Set(prev);
-      const next = shardEntries
-        .filter(
-          ([key, shard]) =>
-            key === selectedShard ||
-            (zoom >= SHARD_MIN_ZOOM &&
-              (hit(shard.bbox, 0.5) ||
-                (prevSet.has(key) && hit(shard.bbox, 1.5)))),
-        )
-        .map(([key]) => key);
+      const next = mountTarget({
+        shards: shardEntries,
+        view: [w, s, e, n],
+        zoom,
+        selectedShard,
+        prev: new Set(prev),
+        detail: "all",
+        focusCountry: null,
+        shardCountries,
+      });
       return next.length === prev.length && next.every((k, i) => k === prev[i])
         ? prev
         : next;
