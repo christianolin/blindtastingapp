@@ -1603,8 +1603,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
       first idle at z ≥ 5 at which every shard All itself wants for the view
       (`mountTarget` with `detail: "all"`) has been added or given up
       (`allModeHealthy`, `ShardController.isSettled`), on `pagehide`, or
-      when the map unmounts in All (an in-app link away,
-      `useDetailMode`'s effect cleanup).
+      when the explorer unmounts in All (an in-app link away,
+      `useDetailMode`'s effect cleanup; the map alone falling back to its
+      "Retry map" card does not clear it).
 
     A load that finds the sentinel still set starts in One country and says
     "Switched to One country after a problem last time." The saved All stays
