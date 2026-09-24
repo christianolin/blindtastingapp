@@ -43,7 +43,9 @@ export function initialDetailMode(read: (key: string) => boolean): DetailSnapsho
 export type DetailModeStore = {
   getSnapshot(): DetailSnapshot;
   subscribe(listener: () => void): () => void;
-  /** The viewer's choice: persisted, and it clears any fallback. */
+  /** The viewer's choice: persisted, and it clears any fallback. A call that
+      names the mode already shown, with no fallback notice up, is a no-op —
+      it writes no storage and notifies nobody. */
   setMode(mode: DetailMode): void;
   /** A lost WebGL context in All: One for this page only, with the reason
       shown. The saved choice is untouched. A no-op outside All. */
@@ -82,6 +84,7 @@ export function createDetailModeStore(
       };
     },
     setMode(mode) {
+      if (current().mode === mode && !current().fellBack) return;
       if (mode === "all") {
         writeFlag(getStorage, DETAIL_ALL_KEY);
         writeFlag(getStorage, DETAIL_PENDING_KEY);

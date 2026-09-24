@@ -184,6 +184,30 @@ describe("createDetailModeStore", () => {
     expect(() => store.setMode("all")).not.toThrow();
     expect(store.getSnapshot()).toEqual({ mode: "all", fellBack: false });
   });
+
+  it("re-choosing All after the all-clear leaves the sentinel cleared", () => {
+    const { data, getStorage } = memoryStorage();
+    const store = createDetailModeStore(getStorage);
+    store.setMode("all");
+    store.confirmHealthy();
+    const before = store.getSnapshot();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.setMode("all");
+    expect(data.has(DETAIL_PENDING_KEY)).toBe(false);
+    expect(listener).not.toHaveBeenCalled();
+    expect(store.getSnapshot()).toBe(before);
+  });
+
+  it("re-choosing One in One country writes nothing", () => {
+    const { data, getStorage } = memoryStorage({ unrelated: "1" });
+    const store = createDetailModeStore(getStorage);
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.setMode("one");
+    expect(Object.fromEntries(data)).toEqual({ unrelated: "1" });
+    expect(listener).not.toHaveBeenCalled();
+  });
 });
 
 describe("allModeHealthy", () => {

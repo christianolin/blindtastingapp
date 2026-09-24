@@ -59,11 +59,12 @@ export function MapDetailControls({
               aria-checked={checked}
               tabIndex={checked ? 0 : -1}
               aria-describedby={option.value === "all" ? warningId : undefined}
-              title={option.value === "all" ? DETAIL_WARNING : undefined}
-              onClick={() => onModeChange(option.value)}
+              onClick={() => {
+                if (!checked) onModeChange(option.value);
+              }}
               onKeyDown={(event) => onKeyDown(event, index)}
               className={cn(
-                "min-h-11 rounded px-2 py-1 transition-colors md:min-h-0",
+                "min-h-11 rounded px-2 py-1 outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:min-h-0",
                 // Shape as well as colour. Bordeaux on the dark card is only
                 // 1.3:1, so in dark mode the ring (foreground, ~14.7:1 in both
                 // themes) and the weight mark the choice.

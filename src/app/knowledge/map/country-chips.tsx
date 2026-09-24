@@ -106,11 +106,11 @@ export function CountryChips({
                 onClick={() => onChoose(chip.key)}
                 onKeyDown={(event) => onKeyDown(event, index)}
                 className={cn(
-                  "flex h-9 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors md:h-7",
+                  "flex h-9 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs outline-none transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:h-7",
                   marked
                     ? "border-foreground font-semibold text-foreground ring-1 ring-foreground"
                     : "border-border font-medium text-muted-foreground hover:text-foreground",
-                  chip.count === 0 ? "opacity-50" : "",
+                  chip.count === 0 ? "border-dashed opacity-70" : "",
                 )}
               >
                 {marked ? <Layers className="size-3.5" aria-hidden /> : null}
