@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Map, {
   Layer,
@@ -9,7 +9,7 @@ import Map, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import { ChevronUp, Maximize2, Minimize2 } from "lucide-react";
-import maplibregl, { type StyleSpecification } from "maplibre-gl";
+import maplibregl, { type LayerSpecification, type StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
@@ -18,15 +18,19 @@ import type { WineMapManifest } from "@/lib/wine-map/manifest";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
   AREA_PALETTE_ZOOM,
-  classificationExpr,
+  selectedLabelLayout,
+  selectedLabelPaint,
+  selectedPlaceFilter,
   shardColorsFor,
+  shardFilter,
+  staticFillPaint,
+  staticLabelLayout,
+  staticLabelPaint,
+  staticOutlinePaint,
   worldRegionColor,
   type ColorExpression,
 } from "@/lib/wine-map/shard-specs";
-import {
-  englishName,
-  englishTextFieldExpression,
-} from "@/lib/wine-map/localize-names";
+import { englishName } from "@/lib/wine-map/localize-names";
 import {
   BASEMAP_STYLE_URL,
   basemapTweaks,
@@ -38,13 +42,15 @@ import {
   withWineLayers,
   WORLD_SOURCE_ID,
 } from "@/lib/wine-map/basemap";
-import { keyGateExpression } from "@/lib/wine-map/key-gate";
+import { desiredGlobalState, grapeGateExpression } from "@/lib/wine-map/map-state";
+import { MapStateSync } from "@/lib/wine-map/map-state-sync";
+import { selectionFeatureStates } from "@/lib/wine-map/selection-state";
+import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { nextMountStep } from "@/lib/wine-map/mount-policy";
 import {
   classificationShades,
   districtColor,
   MAP_PALETTES,
-  type MapPalette,
 } from "@/lib/wine-map/map-palette";
 import { useRenderedTheme } from "@/lib/rendered-theme";
 import type { Theme } from "@/lib/theme";
@@ -193,23 +199,9 @@ const READY_DEBOUNCE_MS = 100;
 // every render.
 const NO_SLUGS_BY_SHARD: Record<string, string[]> = {};
 
-// Multiplier for the world archive's region layers: 0 once the region's own
-// shard has loaded (feature-state `handed`, set by the effect on
-// handedOffShards), 1 otherwise. Applied to fill/line/text opacity in place of
-// a filter, so a handoff never rewrites a layer — see the world Source below.
-const WORLD_HANDED_FACTOR = [
-  "case",
-  ["boolean", ["feature-state", "handed"], false],
-  0,
-  1,
-];
-
-// The no-filter state for layers whose filter is sometimes absent. MapLibre
-// rejects `undefined` in addLayer (the layer then never mounts), so "no
-// filter" must be an always-true expression instead.
-const PASS_FILTER = ["boolean", true] as unknown as boolean;
-
-// Same trap as PASS_FILTER, one property over: react-map-gl feeds `layout`
+// MapLibre rejects an `undefined` filter in addLayer (the layer then never
+// mounts), which is why every wine filter below carries at least the grape
+// gate. The same trap, one property over: react-map-gl feeds `layout`
 // straight into addLayer, and MapLibre rejects `undefined` there — the layer is
 // silently dropped, with no error and no console warning. Passing
 // `layout={cond ? {...} : undefined}` therefore removed EVERY fill layer from
@@ -218,8 +210,53 @@ const PASS_FILTER = ["boolean", true] as unknown as boolean;
 const LAYER_VISIBLE = { visibility: "visible" } as const;
 const LAYER_HIDDEN = { visibility: "none" } as const;
 
+// Every wine layer's filter, layout and paint is static for the session
+// (lib/wine-map/shard-specs). The grape filter, Local/English, the focus
+// country's depth and the selection are MapLibre global state and
+// feature-state, written by one MapStateSync (lib/wine-map/map-state-sync).
+// Built once here; react-map-gl compares props by identity and then deep
+// equality, so after a layer mounts none of these is ever re-sent.
+type FillPaint = NonNullable<Extract<LayerSpecification, { type: "fill" }>["paint"]>;
+type LinePaint = NonNullable<Extract<LayerSpecification, { type: "line" }>["paint"]>;
+type SymbolPaint = NonNullable<Extract<LayerSpecification, { type: "symbol" }>["paint"]>;
+type SymbolLayout = NonNullable<Extract<LayerSpecification, { type: "symbol" }>["layout"]>;
+// Every world label; the grape gate is the only thing that ever narrows it.
+const GRAPE_GATE = grapeGateExpression() as unknown as boolean;
+// Tier 0 only — the country wash. It used to carry the grape gate too, which
+// passes tier 0 unconditionally, so the gate never changed what it drew.
+const WORLD_COUNTRY_FILTER = ["==", ["get", "tier"], 0] as unknown as boolean;
+// Every region (tier >= 1), grape-gated. A handed-off region is zeroed by
+// feature-state, not filtered.
+const WORLD_REGION_FILTER = [
+  "all",
+  [">=", ["get", "tier"], 1],
+  grapeGateExpression(),
+] as unknown as boolean;
+// The selected place only: its ring, its casing and its label.
+const SELECTED_PLACE_FILTER = selectedPlaceFilter() as unknown as boolean;
+const LABEL_LAYOUT = staticLabelLayout() as SymbolLayout;
+const SELECTED_LABEL_LAYOUT = selectedLabelLayout() as SymbolLayout;
+
+// One static fill/outline pair per shard, from a shardColorsFor table (whose
+// `ramp` it shares). Object.fromEntries, not assignment: a shard key is an own
+// entry here whatever it is called.
+function shardPaintTable(
+  colors: Readonly<Record<string, ColorExpression>>,
+  ramp: boolean,
+): Record<string, { fill: FillPaint; outline: LinePaint }> {
+  return Object.fromEntries(
+    Object.entries(colors).map(([key, color]) => [
+      key,
+      {
+        fill: staticFillPaint({ color, ramp, worldHandoff: false }) as FillPaint,
+        outline: staticOutlinePaint({ color, worldHandoff: false }) as LinePaint,
+      },
+    ]),
+  );
+}
+
 // Every colour a wine polygon paints comes from lib/wine-map/shard-specs:
-// shardColorExpression per region shard (that shard's own region hue and area
+// shardColorsFor, one per region shard (that shard's own region hue and area
 // slugs, with the classification ramp as a per-shard constant) and
 // worldRegionColor for the world archive. District hues, their classification
 // shades and the tint ramp live in lib/wine-map/map-palette, one fixed table
@@ -236,183 +273,9 @@ const LAYER_HIDDEN = { visibility: "none" } as const;
 // sense there"). Which regions qualify is discovered once per session by the
 // idle-time scan (latchRampedRegions), not re-decided per viewport.
 
-// Shared by the shard outlines and the world archive's region outlines, so a
-// region drawn from either source is pixel-identical. Outlines follow the fill
-// palette (classification colours at village zoom) so deep levels aren't ringed
-// in the region hue.
-function buildOutlinePaint(color: ColorExpression) {
-  return {
-    "line-color": color as unknown as string,
-    "line-width": ["min", 2, ["+", 0.5, ["*", 0.4, ["get", "tier"]]]] as unknown as number,
-  };
-}
-
-// The fill paint every wine polygon layer shares. `color` is that layer's
-// colour (one shard's own expression, or the world archive's region colour);
-// `ramp` is whether its region is on the classification ramp — a constant per
-// layer, since a shard holds one region (the world archive passes false: its
-// regions carry no classification the ramp reads). `hide` is the world
-// archive's handed-off multiplier (WORLD_HANDED_FACTOR) or null for a shard
-// layer; it has to be folded into each zoom stop's output, because the zoom
-// interpolation must stay the top-level expression.
-function buildFillPaint(
-  selectedKey: string | null,
-  selectedId: string | null,
-  color: ColorExpression,
-  ramp: boolean,
-  hide: unknown[] | null,
-) {
-  const sel = ["==", ["get", "key"], selectedKey ?? ""];
-  const child = ["==", ["get", "parent_id"], selectedId ?? "__none__"];
-  const hasSelection = selectedKey !== null;
-  // Focus wrapper per zoom stop: the selection pops, its direct children
-  // keep full presence (you drill into them), everything else fades to
-  // 45% of its normal opacity. The selected fill still relaxes at deep
-  // zoom so children render readably on top of it.
-  const focus = (selectedOpacity: number, base: unknown) => {
-    const focused = hasSelection
-      ? ["case", sel, selectedOpacity, child, base, ["*", base, 0.45]]
-      : ["case", sel, selectedOpacity, base];
-    return hide ? ["*", focused, hide] : focused;
-  };
-  return {
-    // Every fill already has a dedicated `line` outline layer drawn over it,
-    // so MapLibre's built-in fill antialiasing is a redundant second edge
-    // pass per fill layer. Turning it off removes that pass outright; the
-    // outline layer keeps edges crisp, so it reads the same.
-    "fill-antialias": false,
-    "fill-color": color as unknown as string,
-    "fill-opacity": [
-      "let",
-      "ramp",
-      ramp,
-      [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        5,
-        focus(0.6, ["min", 0.5, ["*", 0.16, ["get", "tier"]]]),
-        9,
-        // Classification intensity: grand cru plots read solid, premier cru
-        // firm, village land a light wash — the darkness ramp IS the
-        // classification signal (paired with the shaded fill hue). Where the
-        // region's ramp is off every level sits at one uniform mid opacity.
-        focus(0.3, [
-          "match",
-          classificationExpr,
-          "grand_cru",
-          ["case", ["var", "ramp"], 0.65, 0.4],
-          "premier_cru",
-          ["case", ["var", "ramp"], 0.45, 0.4],
-          "communal",
-          ["case", ["var", "ramp"], 0.18, 0.4],
-          ["min", 0.5, ["*", 0.08, ["get", "tier"]]],
-        ]),
-      ],
-    ] as unknown as number,
-  };
-}
-
-// The selection ring: a keyline casing (cream in light, near-black in dark)
-// under a gold line, drawn only on the selected feature and above the ordinary
-// outlines.
-function selectedFilter(selectedKey: string | null) {
-  return ["==", ["get", "key"], selectedKey ?? ""] as unknown as boolean;
-}
-
-// Labels are never hidden by selection (owner: dropping progressive
-// hiding) — everything renders and the collision engine trims only where
-// labels would overlap. Selection instead drives a three-tier weight
-// system: selected loudest, related places (children, siblings, the
-// parent) full presence, distant places lighter and last in collision.
-function relatedExpression(
-  selectedId: string | null,
-  selectedParentId: string | null,
-) {
-  return [
-    "any",
-    ["==", ["get", "parent_id"], selectedId ?? "__none__"],
-    ["==", ["get", "parent_id"], selectedParentId ?? "__none__"],
-    ["==", ["get", "id"], selectedParentId ?? "__none__"],
-  ];
-}
-
-// Typography hierarchy: regions largest (uppercase, spaced), then steadily
-// smaller through subregions, appellations and crus — the map itself
-// communicates depth. The selected place gets the highest visual priority
-// (owner brief): larger, darkest, strongest halo, first in collision;
-// neighbours stay readable a clear step lighter.
-const LABEL_TIER_SIZE = [
-  "match", ["get", "tier"], 0, 16, 1, 15, 2, 13.5, 3, 12, 4, 11, 10,
-];
-function labelLayout(
-  selectedKey: string | null,
-  selectedId: string | null,
-  selectedParentId: string | null,
-  english: boolean,
-) {
-  const base = {
-    "text-field": (english
-      ? englishTextFieldExpression()
-      : ["get", "name"]) as unknown as string,
-    "text-transform": [
-      "match", ["get", "tier"], 0, "uppercase", 1, "uppercase", "none",
-    ] as unknown as "none",
-    "text-letter-spacing": [
-      "match", ["get", "tier"], 0, 0.1, 1, 0.08, 0.02,
-    ] as unknown as number,
-  };
-  if (!selectedKey) {
-    return {
-      ...base,
-      "text-size": LABEL_TIER_SIZE as unknown as number,
-      "symbol-sort-key": ["-", 10, ["get", "tier"]] as unknown as number,
-    };
-  }
-  const sel = ["==", ["get", "key"], selectedKey];
-  const related = relatedExpression(selectedId, selectedParentId);
-  return {
-    ...base,
-    "text-size": [
-      "+", LABEL_TIER_SIZE, ["case", sel, 2.5, related, 0, -0.5],
-    ] as unknown as number,
-    "symbol-sort-key": [
-      "case", sel, -2, related, -1, ["-", 10, ["get", "tier"]],
-    ] as unknown as number,
-  };
-}
-function labelPaint(
-  selectedKey: string | null,
-  selectedId: string | null,
-  selectedParentId: string | null,
-  palette: MapPalette,
-) {
-  const { label } = palette;
-  if (!selectedKey) {
-    return {
-      "text-color": label.text,
-      "text-opacity": 1 as unknown as number,
-      "text-halo-color": label.halo,
-      "text-halo-width": 1.7 as unknown as number,
-    };
-  }
-  const sel = ["==", ["get", "key"], selectedKey];
-  const related = relatedExpression(selectedId, selectedParentId);
-  return {
-    "text-color": [
-      "case", sel, label.selected, related, label.related, label.distant,
-    ] as unknown as string,
-    "text-opacity": ["case", sel, 1, related, 0.95, 0.8] as unknown as number,
-    "text-halo-color": label.halo,
-    "text-halo-width": ["case", sel, 2.2, related, 1.7, 1.3] as unknown as number,
-  };
-}
-
 export function TileWineMap({
   manifest,
   selectedKey,
-  selectedId,
-  selectedParentId,
   cameraTarget,
   onSelect,
   expanded,
@@ -422,17 +285,15 @@ export function TileWineMap({
   areaSlugsByShard = NO_SLUGS_BY_SHARD,
   english = false,
   selectedContextKey = null,
+  tree = null,
+  selectionFallback = null,
 }: {
   manifest: WineMapManifest;
   selectedKey: string | null;
-  /** The selected place's id — lets label/fade rules target its children. */
-  selectedId: string | null;
-  /** The selected place's parent id — keeps sibling labels visible. */
-  selectedParentId: string | null;
-  /** The key of the place whose context selectedId / selectedParentId came
-      from. It lags selectedKey while a new selection's context is loading.
-      Read only by the `?debugPerf=1` probe, to know when a selection has
-      fully landed (its second paint change included). */
+  /** The key of the place whose context the explorer has loaded. It lags
+      selectedKey while a new selection's context is loading. Read only by the
+      `?debugPerf=1` probe, to know when a selection has fully landed (the
+      context can still move the emphasis, through selectionFallback). */
   selectedContextKey?: string | null;
   cameraTarget: CameraTarget | null;
   onSelect: (key: string, source?: "map" | "ui") => void;
@@ -456,6 +317,12 @@ export function TileWineMap({
       local->English dictionary (Italia->Italy, Toscana->Tuscany). Client-side
       only — no tile rebuild. */
   english?: boolean;
+  /** The verified place tree, when it has loaded: the selection's children,
+      siblings and parent for the map's emphasis (lib/wine-map/selection-state). */
+  tree?: readonly WinePlaceTreeNode[] | null;
+  /** The place context's children and parent, for the emphasis while the tree
+      is missing; null when there is none for the current selection. */
+  selectionFallback?: { childKeys: string[]; parentKey: string | null } | null;
 }) {
   ensurePmtilesProtocol();
   const mapRef = useRef<MapRef>(null);
@@ -889,6 +756,64 @@ export function TileWineMap({
     return viewportCountry;
   }, [selectedKey, viewportCountries, viewportCountry]);
 
+  // The one writer of every global-state value and of the selection's
+  // feature-state (lib/wine-map/map-state-sync), created in onLoad. React only
+  // ever changes the desired snapshot: a value computed before the map existed
+  // (a ?place= deep link, the stored language) is applied at load, a style
+  // rebuild re-sends all of it, and no write can throw into React.
+  const stateSyncRef = useRef<MapStateSync | null>(null);
+  const knownCountries = useMemo(
+    () => [...new Set(Object.values(shardCountries))].sort(),
+    [shardCountries],
+  );
+  const desiredGlobal = useMemo(
+    () =>
+      desiredGlobalState({
+        visibleKeys,
+        english,
+        selectedKey,
+        deepCountries: focusCountry ? [focusCountry] : [],
+        knownCountries,
+      }),
+    [visibleKeys, english, selectedKey, focusCountry, knownCountries],
+  );
+  const selectionStates = useMemo(
+    () => selectionFeatureStates({ roots: tree, selectedKey, fallback: selectionFallback }),
+    [tree, selectedKey, selectionFallback],
+  );
+  const desiredStateRef = useRef({ global: desiredGlobal, selection: selectionStates });
+  // A layout effect, not a passive one: react-map-gl applies filter and layer
+  // changes during render, and MapLibre sends them to the worker on its next
+  // frame. Writing the global state before that frame means those parses
+  // already see it — the tree landing (new depth terms), or a selection's new
+  // ring and label layers, parse once with the right values instead of once
+  // with stale ones and again after a passive effect caught up.
+  useLayoutEffect(() => {
+    desiredStateRef.current = { global: desiredGlobal, selection: selectionStates };
+    stateSyncRef.current?.setDesired(desiredStateRef.current);
+  }, [desiredGlobal, selectionStates]);
+  // A shard that just mounted has no selection flags yet (its source did not
+  // exist at the last apply); a no-op when nothing is missing.
+  useEffect(() => {
+    stateSyncRef.current?.apply();
+  }, [mountedShards]);
+  useEffect(() => {
+    // Normally onLoad creates the sync. But Fast Refresh (dev) cleans up and
+    // re-runs every effect while the MapLibre instance survives, and onLoad
+    // never fires again — without this the sync would stay disposed and the
+    // map would stop following the selection, grape and language until a
+    // reload.
+    const map = mapRef.current?.getMap();
+    if (map && mapReadyRef.current && !stateSyncRef.current) {
+      stateSyncRef.current = new MapStateSync(map);
+      stateSyncRef.current.setDesired(desiredStateRef.current);
+    }
+    return () => {
+      stateSyncRef.current?.dispose();
+      stateSyncRef.current = null;
+    };
+  }, []);
+
   // What's actually on screen — drives the dynamic LEGEND only (sections only
   // where they apply). Scanned on map idle. It used to feed the fill palette's
   // colour table too, which meant a paint rewrite whenever a new area scrolled
@@ -1150,72 +1075,99 @@ export function TileWineMap({
   );
   const rampedSet = useMemo(() => new Set(rampedRegions), [rampedRegions]);
 
-  // Selection-aware paint, per shard. The zoom interpolation fades fills — the
-  // selected parent included — as children appear, while outlines and labels
-  // persist (spec: "the selected parent's fill fades while its outline and
-  // single label remain"). Built once per input change, never per render: every
-  // Layer re-renders on each `styledata`, and a fresh object would send
-  // react-map-gl into a deep compare of each expression every time.
-  const shardFillPaints = useMemo(
-    () =>
-      Object.fromEntries(
-        shardEntries.map(([key]) => {
-          const ramp = rampedSet.has(key);
-          const color = ramp ? rampedShardColors[key] : plainShardColors[key];
-          return [key, buildFillPaint(selectedKey, selectedId, color, ramp, null)];
-        }),
-      ),
-    [shardEntries, rampedSet, rampedShardColors, plainShardColors, selectedKey, selectedId],
+  // Static paint (lib/wine-map/shard-specs). Nothing here moves with the
+  // selection any more: the selected place, its children and its relatives are
+  // feature-state, and "something is selected" is the wm_has_sel global — all
+  // written by MapStateSync. So these re-key only on what shapes a colour: the
+  // landed theme, the catalogue's area slugs (once, when the tree lands) and
+  // the ramp latch (at most once per region per session).
+  //
+  // One fill/outline pair per shard, from the two colour tables above. The
+  // plain table rebuilds only when the tree lands or the theme flips; a region
+  // joining the ramp latch rebuilds only the ramped one, so every other shard
+  // keeps the very same paint objects and react-map-gl's paint diff skips them
+  // on identity.
+  const plainShardPaints = useMemo(
+    () => shardPaintTable(plainShardColors, false),
+    [plainShardColors],
   );
-  const shardOutlinePaints = useMemo(
+  const rampedShardPaints = useMemo(
+    () => shardPaintTable(rampedShardColors, true),
+    [rampedShardColors],
+  );
+  const shardPaints = useMemo(
     () =>
       Object.fromEntries(
         shardEntries.map(([key]) => [
           key,
-          buildOutlinePaint(
-            rampedSet.has(key) ? rampedShardColors[key] : plainShardColors[key],
-          ),
+          rampedSet.has(key) ? rampedShardPaints[key] : plainShardPaints[key],
         ]),
       ),
-    [shardEntries, rampedSet, rampedShardColors, plainShardColors],
+    [shardEntries, rampedSet, rampedShardPaints, plainShardPaints],
   );
-
   // The world archive's country and region colour: every region's hue, one
   // cached expression per theme, so the reference only changes on a flip.
   // World features carry no area slugs, so this paints them exactly as the
   // shard expressions paint the same region (shard-specs.test.ts).
   const regionColor = worldRegionColor(palette) as unknown as string;
-  // The world archive's copy of the fill paint, with the handed-off multiplier
-  // folded in (see the effect on handedOffShards).
-  const worldRegionFillPaint = useMemo(
-    () =>
-      buildFillPaint(selectedKey, selectedId, regionColor, false, WORLD_HANDED_FACTOR),
-    [selectedKey, selectedId, regionColor],
-  );
-  const worldRegionOutlinePaint = useMemo(
+  // The country wash and its outline (world-fills, world-outlines). Memoized
+  // like every other paint here, so a re-render (every `styledata`) hands
+  // react-map-gl the same object.
+  const worldCountryFillPaint = useMemo(
     () => ({
-      ...buildOutlinePaint(regionColor),
-      "line-opacity": WORLD_HANDED_FACTOR as unknown as number,
+      // See staticFillPaint: the outline layer supplies the edge, so the
+      // built-in fill antialias pass is redundant work.
+      "fill-antialias": false,
+      "fill-color": regionColor,
+      "fill-opacity": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        2,
+        ["case", ["==", ["get", "tier"], 0], 0.1, 0.35],
+        6,
+        ["case", ["==", ["get", "tier"], 0], 0.04, 0.28],
+        9,
+        ["case", ["==", ["get", "tier"], 0], 0.02, 0.12],
+      ] as unknown as number,
     }),
     [regionColor],
   );
-  // Shard labels share one paint object, re-keyed only by selection or theme.
-  const shardLabelPaint = useMemo(
-    () => labelPaint(selectedKey, selectedId, selectedParentId, palette),
-    [selectedKey, selectedId, selectedParentId, palette],
-  );
-  // World labels: the ordinary label paint with text-opacity multiplied by the
-  // handed-off factor, so a region's world label vanishes with its fill.
-  const worldLabelPaint = useMemo(
+  const worldCountryOutlinePaint = useMemo(
     () => ({
-      ...shardLabelPaint,
-      "text-opacity": [
-        "*",
-        shardLabelPaint["text-opacity"],
-        WORLD_HANDED_FACTOR,
-      ] as unknown as number,
+      "line-color": regionColor,
+      "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
     }),
-    [shardLabelPaint],
+    [regionColor],
+  );
+  // The world archive's copy of the shard paint, with the handed-off
+  // multiplier folded in (see the effect on handedOffShards).
+  const worldRegionFillPaint = useMemo(
+    () => staticFillPaint({ color: regionColor, ramp: false, worldHandoff: true }) as FillPaint,
+    [regionColor],
+  );
+  const worldRegionOutlinePaint = useMemo(
+    () => staticOutlinePaint({ color: regionColor, worldHandoff: true }) as LinePaint,
+    [regionColor],
+  );
+  // Label paint: the selected / related / distant weights come from
+  // feature-state, so there is one object per theme. World labels also vanish
+  // with their handed-off region.
+  const shardLabelPaint = useMemo(
+    () => staticLabelPaint({ palette, worldHandoff: false }) as SymbolPaint,
+    [palette],
+  );
+  const worldLabelPaint = useMemo(
+    () => staticLabelPaint({ palette, worldHandoff: true }) as SymbolPaint,
+    [palette],
+  );
+  const shardSelectedLabelPaint = useMemo(
+    () => selectedLabelPaint({ palette, worldHandoff: false }) as SymbolPaint,
+    [palette],
+  );
+  const worldSelectedLabelPaint = useMemo(
+    () => selectedLabelPaint({ palette, worldHandoff: true }) as SymbolPaint,
+    [palette],
   );
   // The selection ring and the keyline casing under it, world and shard alike.
   const selectedCasingPaint = useMemo(
@@ -1233,86 +1185,39 @@ export function TileWineMap({
   );
 
   // World layers carry the country (tier 0) and every region. A region whose
-  // shard has loaded is not filtered out any more — it is hidden through
-  // feature-state (see the effect on handedOffShards), so these filters are
-  // static and a handoff rewrites nothing. A region whose shard is not loaded
-  // is drawn from the world archive, by the region layers below which reuse
-  // the shard paint exactly. That is what lets the map open with zero shard
-  // archives (see SHARD_MIN_ZOOM) without changing a pixel.
-
-  // Attribute filters (grape today, styles/designations later): when a
-  // visible-key set is active, only those canonical keys render — fills,
-  // outlines and labels alike — while the country outline (tier 0) stays as
-  // geographic context. null = no filtering.
+  // shard has loaded is hidden through feature-state (see the effect on
+  // handedOffShards), and the grape gate, the focus country's depth and the
+  // selection are global state (lib/wine-map/map-state), so every world filter
+  // is a module constant. A region whose shard is not loaded is drawn from the
+  // world archive by the region layers, which reuse the shard paint exactly —
+  // which is what lets the map open with zero shard archives (see
+  // SHARD_MIN_ZOOM) without changing a pixel.
   //
-  // No-filter must be an ALWAYS-TRUE expression, never `undefined`:
-  // react-map-gl feeds the filter prop straight into addLayer, and MapLibre's
-  // style validation rejects undefined — the layer then silently never
-  // mounts, which blanked the whole map until a filter change forced a
-  // re-add (the "only France until I toggle the grape filter" bug). That is
-  // what `keyGate === null` means here: the composed filters below fall back
-  // to PASS_FILTER; the gate is never passed through as undefined.
-  //
-  // The gate's SHAPE lives in lib/wine-map/key-gate, with its equivalence
-  // pinned against MapLibre's own expression engine. Membership is an O(1)
-  // object lookup rather than a scan of the key array, which MapLibre would
-  // otherwise re-run per feature, per layer, on every tile parse (measured
-  // 20-30x). It is built once per key set here and shared by all five
-  // composed filters below, rather than rebuilt for each of them per render.
-  // That sharing does not shrink the live style — MapLibre's setFilter
-  // deep-clones the filter per layer, so the key map still lands once per
-  // layer, as the array did; the win is per-feature evaluation cost.
-  const keyGate = useMemo(
-    () => keyGateExpression(visibleKeys) as unknown as boolean | null,
-    [visibleKeys],
-  );
-  // Every world label; the grape gate is the only thing that ever narrows it.
-  const gatedWorldFilter = useMemo(() => keyGate ?? PASS_FILTER, [keyGate]);
-  // Tier 0 only — the country wash, which has its own opacity ramp.
-  const worldCountryFilter = useMemo(
-    () =>
-      (keyGate
-        ? ["all", ["==", ["get", "tier"], 0], keyGate]
-        : ["==", ["get", "tier"], 0]) as unknown as boolean,
-    [keyGate],
-  );
-  // Every region (tier >= 1). Painted with the shards' own fill and outline
-  // paint, so handing a region between archives is invisible; the handed-off
-  // ones are zeroed by feature-state, not filtered, so this only changes on a
-  // grape-filter pick.
-  const worldRegionFilter = useMemo(() => {
-    const base = [">=", ["get", "tier"], 1];
-    return (keyGate ? ["all", base, keyGate] : base) as unknown as boolean;
-  }, [keyGate]);
-
-  // Subregion depth, one country at a time. A shard outside the focus country
+  // Subregion depth, one country at a time: a shard outside the focus country
   // renders only its regions (tier <= 1), so neighbours stay on the map as
-  // geographic context instead of every country exploding into subregions and
-  // appellations at once. Regions are never hidden, and tier 2+ only reveals
-  // from z5 anyway, so this is inert at country/region zoom.
-  const shardFilterFor = useCallback(
-    (shardKey: string) => {
-      const base = keyGate ?? PASS_FILTER;
-      const country = shardCountries[shardKey];
-      // Full depth only for the country you are actually viewing. With no focus
-      // country (a frame spanning several) nothing goes below region level, so
-      // a wide view is countries + regions rather than every country at once
-      // stacking subregions, appellations and sites into the same pixels.
-      // Unknown shard (tree not loaded yet) is left alone rather than blanked.
-      if (!country) return base;
-      if (focusCountry && country === focusCountry) return base;
-      return ["all", base, ["<=", ["get", "tier"], 1]] as unknown as boolean;
-    },
-    [keyGate, focusCountry, shardCountries],
-  );
-  const selectedGate = useMemo(
+  // context instead of every country exploding into subregions at once. The
+  // rule is that country's wm_deep_<country> flag, read by each of its shards'
+  // filters; a shard whose country the tree does not name is left at full
+  // depth rather than blanked. So these filters change only when the tree
+  // lands, and a focus change is one global-state write that reloads just the
+  // two countries' shards — it used to setFilter three layers on every mounted
+  // shard.
+  const shardFilters = useMemo(
     () =>
-      (keyGate
-        ? ["all", selectedFilter(selectedKey), keyGate]
-        : selectedFilter(selectedKey)) as unknown as boolean,
-    [selectedKey, keyGate],
+      Object.fromEntries(
+        shardEntries.map(([key]) => [
+          key,
+          // Own properties only: a shard key never reads a country off the
+          // object prototype.
+          shardFilter(
+            Object.prototype.hasOwnProperty.call(shardCountries, key)
+              ? shardCountries[key]
+              : null,
+          ) as unknown as boolean,
+        ]),
+      ),
+    [shardEntries, shardCountries],
   );
-
 
   // Legend regions follow the viewport once the first scan lands; the
   // manifest's shard list covers the initial paint only. An empty result from a
@@ -1390,6 +1295,10 @@ export function TileWineMap({
               ]),
           "world-labels",
           ...mountedShards.map((key) => `shard-labels-${key}`),
+          // The selected place's own label: its ordinary copy loses to it by
+          // collision, so this is what a click on that name lands on.
+          "world-selected-label",
+          ...(selectedShard ? [`shard-selected-label-${selectedShard}`] : []),
         ]}
         // Tiles and labels cross-fade in by default, which keeps compositing
         // extra passes alive for 300ms after every tile lands — constant while
@@ -1441,6 +1350,12 @@ export function TileWineMap({
           // after a swap (or MapLibre's rare full-rebuild fallback), never on
           // a gesture.
           mapReadyRef.current = true;
+          // The one global-state and feature-state writer. It applies what
+          // React has already computed (a deep link's selection, the stored
+          // language) at once, and again after every style.load.
+          stateSyncRef.current?.dispose();
+          stateSyncRef.current = new MapStateSync(e.target);
+          stateSyncRef.current.setDesired(desiredStateRef.current);
           e.target.on("style.load", () => {
             setPaintTheme(landingBasemapRef.current);
             setStyleEpoch((n) => n + 1);
@@ -1551,7 +1466,10 @@ export function TileWineMap({
         {/* promoteId: the `region` property becomes the feature id, for the
             handoff's feature-state (a region's polygon in `places` and each
             of its island labels in `labels` all carry it; a country's tier-0
-            row carries its own key, which no shard key ever equals). */}
+            row carries its own key, which no shard key ever equals). The
+            selection's sel/child/rel flags (lib/wine-map/selection-state)
+            ride on the same ids next to `handed`; MapStateSync and the
+            handoff effect each remove only their own flags, by name. */}
         <Source
           id={WORLD_SOURCE_ID}
           type="vector"
@@ -1564,7 +1482,9 @@ export function TileWineMap({
               rather than filtered out, so the handoff rewrites no layer. The
               hidden copy still costs a draw — one full-tile fill pass per
               handed-off region under the view — and still hit-tests and
-              scans; both resolve to the same key/tier as the shard's copy. */}
+              scans; both resolve to the same key/tier as the shard's copy.
+              Every filter, layout and paint below is static for the session
+              (module constants and palette-keyed memos). */}
           <Layer
             id="world-fills"
             type="fill"
@@ -1576,35 +1496,16 @@ export function TileWineMap({
             // regions are drawn by their shard (which viewport gating
             // guarantees is mounted whenever one is on screen).
             maxzoom={8}
-            filter={worldCountryFilter}
+            filter={WORLD_COUNTRY_FILTER}
             layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
-            paint={{
-              // See fillPaint: the outline layer supplies the edge, so the
-              // built-in fill antialias pass is redundant work.
-              "fill-antialias": false,
-              "fill-color": regionColor,
-              "fill-opacity": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                2,
-                ["case", ["==", ["get", "tier"], 0], 0.1, 0.35],
-                6,
-                ["case", ["==", ["get", "tier"], 0], 0.04, 0.28],
-                9,
-                ["case", ["==", ["get", "tier"], 0], 0.02, 0.12],
-              ] as unknown as number,
-            }}
+            paint={worldCountryFillPaint}
           />
           <Layer
             id="world-outlines"
             type="line"
             source-layer="places"
-            filter={worldCountryFilter}
-            paint={{
-              "line-color": regionColor,
-              "line-width": ["case", ["==", ["get", "tier"], 0], 1, 1.5] as unknown as number,
-            }}
+            filter={WORLD_COUNTRY_FILTER}
+            paint={worldCountryOutlinePaint}
           />
           {/* Regions no loaded shard is covering, drawn with the shards' own
               fill and outline paint. Below SHARD_MIN_ZOOM no shard is mounted at
@@ -1614,7 +1515,7 @@ export function TileWineMap({
             id="world-region-fills"
             type="fill"
             source-layer="places"
-            filter={worldRegionFilter}
+            filter={WORLD_REGION_FILTER}
             paint={worldRegionFillPaint}
             layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
           />
@@ -1622,21 +1523,21 @@ export function TileWineMap({
             id="world-region-outlines"
             type="line"
             source-layer="places"
-            filter={worldRegionFilter}
+            filter={WORLD_REGION_FILTER}
             paint={worldRegionOutlinePaint}
           />
           <Layer
             id="world-selected-casing"
             type="line"
             source-layer="places"
-            filter={selectedGate}
+            filter={SELECTED_PLACE_FILTER}
             paint={selectedCasingPaint}
           />
           <Layer
             id="world-selected-ring"
             type="line"
             source-layer="places"
-            filter={selectedGate}
+            filter={SELECTED_PLACE_FILTER}
             paint={selectedRingPaint}
           />
           {/* A handed-off region's world label is invisible (text-opacity 0)
@@ -1653,44 +1554,64 @@ export function TileWineMap({
             id="world-labels"
             type="symbol"
             source-layer="labels"
-            filter={gatedWorldFilter}
-            layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
+            filter={GRAPE_GATE}
+            layout={LABEL_LAYOUT}
             paint={worldLabelPaint}
+          />
+          {/* A selected country or region's own label, larger and first in
+              collision (D4: the ordinary label layers no longer change size
+              or order with the selection). Directly above world-labels, so
+              it beats the ordinary copy of itself, and still below every
+              shard layer, so while its region is handed off its invisible
+              copy loses to the shard's selected label exactly as world-labels
+              loses to shard-labels. */}
+          <Layer
+            id="world-selected-label"
+            type="symbol"
+            source-layer="labels"
+            filter={SELECTED_PLACE_FILTER}
+            layout={SELECTED_LABEL_LAYOUT}
+            paint={worldSelectedLabelPaint}
           />
         </Source>
         {shardEntries
           .filter(([key]) => mountedSet.has(key))
           .map(([key, shard]) => (
+          // promoteId="key": a shard feature's id is its canonical key, which
+          // is what the selection's feature-state names.
           <Source
             key={key}
             id={shardSourceId(key)}
             type="vector"
             url={`pmtiles://${shard.url}`}
+            promoteId="key"
           >
             <Layer
               id={`shard-fills-${key}`}
               type="fill"
               source-layer="places"
-              filter={shardFilterFor(key)}
-              paint={shardFillPaints[key]}
+              filter={shardFilters[key]}
+              paint={shardPaints[key].fill}
               layout={noFills ? LAYER_HIDDEN : LAYER_VISIBLE}
             />
             <Layer
               id={`shard-outlines-${key}`}
               type="line"
               source-layer="places"
-              filter={shardFilterFor(key)}
-              paint={shardOutlinePaints[key]}
+              filter={shardFilters[key]}
+              paint={shardPaints[key].outline}
             />
-            {/* Only the owning shard can match selectedKey — on every other
-                shard this pair is filtered to nothing, so mounting them here
-                alone is pixel-identical and drops ~106 layers. */}
+            {/* Only the owning shard can match the selected key — on every
+                other shard these overlays are filtered to nothing, so
+                mounting them here alone is pixel-identical and drops ~160
+                layers. They are the only shard layers that read wm_sel_key,
+                so a selection reloads this shard and no other. */}
             {key === selectedShard && (
               <Layer
                 id={`shard-selected-casing-${key}`}
                 type="line"
                 source-layer="places"
-                filter={selectedGate}
+                filter={SELECTED_PLACE_FILTER}
                 paint={selectedCasingPaint}
               />
             )}
@@ -1699,7 +1620,7 @@ export function TileWineMap({
                 id={`shard-selected-ring-${key}`}
                 type="line"
                 source-layer="places"
-                filter={selectedGate}
+                filter={SELECTED_PLACE_FILTER}
                 paint={selectedRingPaint}
               />
             )}
@@ -1707,10 +1628,26 @@ export function TileWineMap({
               id={`shard-labels-${key}`}
               type="symbol"
               source-layer="labels"
-              filter={shardFilterFor(key)}
-              layout={labelLayout(selectedKey, selectedId, selectedParentId, english)}
+              filter={shardFilters[key]}
+              layout={LABEL_LAYOUT}
               paint={shardLabelPaint}
             />
+            {/* The selected place's label: larger, darkest, and above this
+                shard's own labels so it is placed first and its ordinary copy
+                loses by collision. Added after the shard's other layers, so a
+                selection in an already-mounted shard puts it at the top of the
+                style. (A shard mounted later stacks above it, as the ring
+                always has; Phase 1c's controller keeps overlays on top.) */}
+            {key === selectedShard && (
+              <Layer
+                id={`shard-selected-label-${key}`}
+                type="symbol"
+                source-layer="labels"
+                filter={SELECTED_PLACE_FILTER}
+                layout={SELECTED_LABEL_LAYOUT}
+                paint={shardSelectedLabelPaint}
+              />
+            )}
           </Source>
         ))}
       </Map>

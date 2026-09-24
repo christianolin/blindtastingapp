@@ -100,3 +100,22 @@ export function selectionFeatureStates(input: {
   }
   return states;
 }
+
+/** The place context's stand-in for the tree — for the selection it belongs
+    to only. The explorer keeps showing the previous place's context while the
+    next one loads, and that place's children must not light up under the new
+    selection. */
+export function fallbackFromContext(
+  context: {
+    place: { key: string };
+    children: readonly { key: string }[];
+    ancestors: readonly { key: string }[];
+  } | null,
+  selectedKey: string | null,
+): { childKeys: string[]; parentKey: string | null } | null {
+  if (!context || !selectedKey || context.place.key !== selectedKey) return null;
+  return {
+    childKeys: context.children.map((child) => child.key),
+    parentKey: context.ancestors.at(-1)?.key ?? null,
+  };
+}

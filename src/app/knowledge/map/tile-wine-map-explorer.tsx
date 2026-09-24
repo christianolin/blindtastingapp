@@ -48,6 +48,7 @@ import { useWinePlacePrefetch } from "@/lib/wine-map/use-place-prefetch";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
+import { fallbackFromContext } from "@/lib/wine-map/selection-state";
 import { areaSlugsByShard } from "@/lib/wine-map/shard-specs";
 import {
   INITIAL_TREE_LOAD,
@@ -517,6 +518,14 @@ export function TileWineMapExplorer({
     };
   }, [context]);
 
+  // The map's selection emphasis while the tree is missing (loading, failed,
+  // or older than the tiles): the context's children and parent — and only
+  // once the context describes the current selection, not the previous one.
+  const selectionFallback = useMemo(
+    () => fallbackFromContext(context, selectedKey),
+    [context, selectedKey],
+  );
+
   const article =
     context?.article && context.article.editorial_status !== "PLACEHOLDER"
       ? context.article
@@ -700,8 +709,8 @@ export function TileWineMapExplorer({
                   key={mapKey}
                   manifest={manifest}
                   selectedKey={selectedKey}
-                  selectedId={context?.place.id ?? null}
-                  selectedParentId={context?.ancestors.at(-1)?.id ?? null}
+                  tree={tree}
+                  selectionFallback={selectionFallback}
                   selectedContextKey={context?.place.key ?? null}
                   cameraTarget={cameraTarget}
                   onSelect={select}
