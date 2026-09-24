@@ -251,6 +251,7 @@ export function TileWineMap({
   chipCountry = null,
   onContextLost,
   onHealthy,
+  onUserMoveStart,
   cameraRequest = null,
   onDetailReport,
   manifest,
@@ -281,6 +282,10 @@ export function TileWineMap({
   /** All countries has drawn at shard zoom and gone idle on this device. This
       is the crash-loop sentinel's all-clear (spec §7.5). */
   onHealthy?: () => void;
+  /** The viewer started moving the camera themselves (a drag, wheel, pinch or
+      keyboard), never a flight or ease the app started. The explorer drops a
+      chip whose flight never arrived (lib/wine-map/focus, chipAfterUserMove). */
+  onUserMoveStart?: () => void;
   /** A country chip's camera move (lib/wine-map/camera-fit). Each new nonce
       is applied once. */
   cameraRequest?: CameraRequest | null;
@@ -1007,10 +1012,12 @@ export function TileWineMap({
   // Latest callbacks, for listeners registered once in onLoad.
   const onContextLostRef = useRef(onContextLost);
   const onHealthyRef = useRef(onHealthy);
+  const onUserMoveStartRef = useRef(onUserMoveStart);
   useEffect(() => {
     onContextLostRef.current = onContextLost;
     onHealthyRef.current = onHealthy;
-  }, [onContextLost, onHealthy]);
+    onUserMoveStartRef.current = onUserMoveStart;
+  }, [onContextLost, onHealthy, onUserMoveStart]);
   // True while All countries has not yet proved itself on this device. It is
   // re-armed by each switch to All.
   const healthPendingRef = useRef(detail === "all");
@@ -1593,6 +1600,13 @@ export function TileWineMap({
           // countries. MapLibre sets map.style to null until the context is
           // restored, so every imperative map call on the way stays guarded.
           e.target.on("webglcontextlost", () => onContextLostRef.current?.());
+          // A camera move the viewer started (a drag, wheel, pinch or
+          // keyboard) carries the DOM event that started it; a flyTo or
+          // easeTo the app started (a chip's flight, a tree selection's
+          // reframe) carries none. Only the first kind is reported.
+          e.target.on("movestart", (ev) => {
+            if (ev.originalEvent) onUserMoveStartRef.current?.();
+          });
           // First gating pass once the map has real bounds.
           syncMountedShards();
           if (debugClick) {

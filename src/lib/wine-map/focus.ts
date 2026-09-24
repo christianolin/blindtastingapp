@@ -208,6 +208,16 @@ export function chipAfterReport(
   return prev.seen ? null : prev;
 }
 
+/** The chip state after a user-initiated camera move (a drag, wheel, pinch or
+    keyboard — never a flight the app started). An unseen chip is dropped: its
+    flight was interrupted, or never started (a tap while the map chunk was
+    still loading), and left pending it would grab focus whenever its country
+    next edged into view, hours later. A seen chip is kept (same object);
+    chipAfterReport clears it once its country leaves the view. */
+export function chipAfterUserMove(prev: ChipFocus | null): ChipFocus | null {
+  return prev && !prev.seen ? null : prev;
+}
+
 /** Countries whose `wm_deep_<country>` flag is on: every known one in All
     countries, the focus country alone (or none) in One country. */
 export function deepCountriesFor(

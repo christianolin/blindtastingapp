@@ -70,6 +70,7 @@ import {
 } from "@/lib/wine-map/camera-fit";
 import {
   chipAfterReport,
+  chipAfterUserMove,
   chipOnTap,
   type ChipFocus,
   type DetailReport,
@@ -205,12 +206,18 @@ export function TileWineMapExplorer({
   }));
   // A tapped country chip: focus without selection. The next real selection
   // clears it, and so does its country leaving the view after being on it.
+  // A chip whose country never came on screen (its flight was interrupted, or
+  // never started) is dropped at the viewer's next own camera move.
   const [chipFocus, setChipFocus] = useState<ChipFocus | null>(null);
   // A chip's camera move. The nonce lets the same chip fly again.
   const [cameraRequest, setCameraRequest] = useState<CameraRequest | null>(null);
   const handleDetailReport = useCallback((next: DetailReport) => {
     setReport(next);
     setChipFocus((prev) => chipAfterReport(prev, next.countriesInView));
+  }, []);
+  // Stable, so passing it never re-renders the map.
+  const handleUserMoveStart = useCallback(() => {
+    setChipFocus((prev) => chipAfterUserMove(prev));
   }, []);
 
   // One request per attempt: the first at once, the single automatic retry
@@ -846,6 +853,7 @@ export function TileWineMapExplorer({
                   chipCountry={chipFocus?.country ?? null}
                   cameraRequest={cameraRequest}
                   onDetailReport={handleDetailReport}
+                  onUserMoveStart={handleUserMoveStart}
                   onContextLost={dropToOne}
                   onHealthy={confirmHealthy}
                   english={english}

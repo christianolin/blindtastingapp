@@ -8,6 +8,7 @@ import {
   centreCountryFrom,
   centreProbeRadii,
   chipAfterReport,
+  chipAfterUserMove,
   chipOnTap,
   COUNTRY_FOCUS_SHARE,
   COUNTRY_RELEASE_SHARE,
@@ -258,6 +259,17 @@ describe("chip lifecycle", () => {
     expect(chipAfterReport(landed, ["italy", "france"])).toBe(landed);
     expect(chipAfterReport(landed, ["france"])).toBeNull();
     expect(chipAfterReport(null, ["italy"])).toBeNull();
+  });
+
+  it("chipAfterUserMove drops a chip whose flight never arrived, and keeps a seen one", () => {
+    // A drag interrupted the flight, or the tap came while the map chunk was
+    // still loading: the viewer has moved on, so an unseen chip must not grab
+    // focus later when its country edges into view.
+    expect(chipAfterUserMove({ country: "italy", seen: false })).toBeNull();
+    // A chip already on screen keeps its object, so the state update bails out.
+    const seen = { country: "italy", seen: true };
+    expect(chipAfterUserMove(seen)).toBe(seen);
+    expect(chipAfterUserMove(null)).toBeNull();
   });
 });
 
