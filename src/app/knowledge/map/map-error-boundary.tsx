@@ -16,7 +16,10 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 /** The map area's "no map" card: a failed manifest, or a crashed map. */
 export function MapUnavailableCard({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border text-center">
+    <div
+      role="alert"
+      className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border text-center"
+    >
       <p className="text-sm text-muted-foreground">
         The map tiles are unavailable right now — navigation below still works.
       </p>

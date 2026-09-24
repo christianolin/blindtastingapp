@@ -110,8 +110,9 @@ export function PerfProbe({
   onSelect: (key: string, source?: "map" | "ui") => void;
   /** The explorer's selected key. */
   selectedKey: string | null;
-  /** The key of the place whose context (selectedId / selectedParentId) has
-      arrived; lags selectedKey while a new selection's context loads. */
+  /** The key of the place whose context (the selection fallback: its
+      children and parent) has arrived; lags selectedKey while a new
+      selection's context loads. */
   contextKey: string | null;
 }) {
   const framesRef = useRef<FrameSample[]>([]);
@@ -274,8 +275,9 @@ export function PerfProbe({
           {
             waitIdle: (timeoutMs) => Promise.race([waitForIdle(map, timeoutMs), aborted]),
             // A selection is only done once its own place context is in:
-            // that context moves selectedId / selectedParentId, and so the
-            // paint, a second time — after a network round trip.
+            // that context supplies the selection fallback (its children and
+            // parent), which can move the emphasis a second time — after a
+            // network round trip.
             landed: () =>
               step.kind !== "select" ||
               alreadySelected ||

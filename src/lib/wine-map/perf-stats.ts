@@ -153,8 +153,9 @@ export const PROBE_SETTLE_MS = 250;
 
 /** What the probe knows about the explorer's selection at the last commit:
     the selected key, and the key of the place whose context has arrived
-    (that context supplies selectedId / selectedParentId, which the paint
-    and label rules read). */
+    (that context supplies the selection fallback — the place's children
+    and parent — which the selection's feature-state emphasis reads while
+    the tree is missing). */
 export type ProbeSelection = { selectedKey: string | null; contextKey: string | null };
 
 /** Selecting the key that is already selected is a no-op in the explorer
@@ -170,10 +171,10 @@ export function selectIsNoop(selection: ProbeSelection, key: string): boolean {
 }
 
 /** A selection has fully landed once the selected place's OWN context is
-    in. Until then selectedId / selectedParentId still describe the previous
-    place (or nothing), and their arrival — after a network round trip —
-    changes the paint a second time and reloads again. A place whose context
-    never arrives (missing, or the request failed) therefore times out, shown
+    in. Until then there is no selection fallback for it (the previous
+    place's context is ignored), and its arrival — after a network round
+    trip — can move the emphasis a second time. A place whose context never
+    arrives (missing, or the request failed) therefore times out, shown
     with "+", rather than closing its row early. */
 export function selectionLanded(selection: ProbeSelection, key: string): boolean {
   return selection.selectedKey === key && selection.contextKey === key;

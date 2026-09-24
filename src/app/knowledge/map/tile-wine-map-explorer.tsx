@@ -679,7 +679,10 @@ export function TileWineMapExplorer({
               </div>
               <div className="min-h-0 flex-1">
                 {treeLoad.state === "failed" ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border text-center">
+                  <div
+                    role="alert"
+                    className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border text-center"
+                  >
                     <p className="text-sm text-muted-foreground">
                       Couldn&apos;t load the place list.
                     </p>

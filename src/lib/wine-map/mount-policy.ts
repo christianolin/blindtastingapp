@@ -1,52 +1,12 @@
-// Which region shards the tile map mounts, and how fast it gets there.
+// Which region shards the tile map mounts (spec 2026-09-23 §7.4): the
+// mount target for a view (mountTarget), the zoom thresholds it keys on
+// (SHARD_MIN_ZOOM, NEIGHBOUR_MIN_ZOOM), a shard's country (countryOfShard) and
+// what the 150% keep may hold across a sync (keepAcrossSync). How fast the
+// target is reached is ShardController's frame budget, not this file's.
 //
 // Pure: no DOM, no maplibre value import, so vitest covers the rules.
 
 import type { Bbox } from "./shard-specs";
-
-// Shard order everywhere on the map: the manifest's keys sorted with
-// localeCompare, exactly as TileWineMap's `shardEntries` sorts them, so a
-// step's result lines up with the target it walks toward.
-const byKey = (a: string, b: string) => a.localeCompare(b);
-
-/**
- * One step of the rendered shard set toward the target set.
- *
- * Mounting a shard is a <Source> plus its layers, and every MapLibre addLayer
- * validates by serializing the whole style — so the first zoom past z5, which
- * used to mount 36-67 shards in one commit, was one long frozen task. The
- * target is still decided in one go; the rendered set now walks toward it:
- * - removals apply at once (an unmounted shard is off screen by definition, so
- *   dropping it early is invisible and frees work);
- * - at most `maxAdds` new shards join per step, `first` (the selected shard)
- *   ahead of the rest, the rest in shard order;
- * - the result is in shard order, and is `current` itself when the step
- *   changes nothing, so a setState with it bails out.
- */
-export function nextMountStep(
-  current: readonly string[],
-  target: readonly string[],
-  opts: { maxAdds: number; first: string | null },
-): string[] {
-  const wanted = new Set(target);
-  const kept = current.filter((key) => wanted.has(key));
-  const have = new Set(kept);
-  const pending = [...new Set(target)].filter((key) => !have.has(key)).sort(byKey);
-  const firstAt = opts.first === null ? -1 : pending.indexOf(opts.first);
-  if (firstAt > 0) {
-    pending.splice(firstAt, 1);
-    pending.unshift(opts.first as string);
-  }
-  const next = [...kept, ...pending.slice(0, Math.max(0, opts.maxAdds))].sort(byKey);
-  const unchanged =
-    next.length === current.length && next.every((key, i) => key === current[i]);
-  // Same reference on a no-op step: callers compare by identity.
-  return unchanged ? (current as string[]) : next;
-}
-
-// ---------------------------------------------------------------------------
-// Which region shards to mount (spec 2026-09-23 §7.4)
-// ---------------------------------------------------------------------------
 
 /** Below this zoom no region shard is mounted. Verified against the
     catalogue: every shard-only place has min_zoom >= 5, so beneath it a shard

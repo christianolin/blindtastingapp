@@ -185,6 +185,9 @@ const READY_DEBOUNCE_MS = 100;
 // default: a fresh object per render would re-key every memo below it on
 // every render.
 const NO_SLUGS_BY_SHARD: Record<string, string[]> = {};
+// Default for the shardCountries prop, for the same reason: it keys
+// syncMountedShards, countryShares and every memo downstream.
+const NO_SHARD_COUNTRIES: Readonly<Record<string, string>> = {};
 
 // MapLibre rejects an `undefined` filter in addLayer (the layer then never
 // mounts), which is why every wine filter below carries at least the grape
@@ -257,7 +260,7 @@ export function TileWineMap({
   expanded,
   onToggleExpanded,
   visibleKeys = null,
-  shardCountries = {},
+  shardCountries = NO_SHARD_COUNTRIES,
   areaSlugsByShard = NO_SLUGS_BY_SHARD,
   english = false,
   selectedContextKey = null,
@@ -419,16 +422,14 @@ export function TileWineMap({
     latestThemeRef.current = theme;
     swapBasemap(theme);
   }, [theme, swapBasemap]);
-  // On-demand shard loading: only the selected place's region shard is
-  // mounted (plus the always-on world archive), so entering a region fetches
-  // just that shard. Viewport-driven loading via each shard's bbox is a
-  // documented follow-up.
-  // Every region shard is mounted permanently: pmtiles is range-requested,
-  // so a shard whose bbox is off-screen fetches nothing, and per-feature
-  // reveal zooms baked into the tiles progressively expose districts,
-  // villages and crus as the user zooms — no selection required (the old
-  // selection-gated mounting meant zoom alone never revealed a region's
-  // interior, which read as a bug on touch devices).
+  // The manifest's region shards, in shard order. Which of them are mounted is
+  // viewport-gated (mountTarget, below): the selected place's shard at any
+  // zoom, and from SHARD_MIN_ZOOM the shards whose bbox meets the padded view
+  // (in One country, other countries' only from NEIGHBOUR_MIN_ZOOM), next to
+  // the always-on world archive. Per-feature reveal zooms baked into the tiles
+  // then expose districts, villages and crus as the user zooms — no selection
+  // required (the old selection-gated mounting meant zoom alone never
+  // revealed a region's interior, which read as a bug on touch devices).
   const shardEntries = useMemo(
     () => Object.entries(manifest.shards).sort(([a], [b]) => a.localeCompare(b)),
     [manifest],
@@ -595,11 +596,11 @@ export function TileWineMap({
     syncMountedShards();
   }, [syncMountedShards]);
 
-  // Mounting a shard <Source> only STARTS its cold pmtiles header fetch. Keying
-  // the world->shard handoff on `mountedShards` therefore told the world archive
-  // to drop a region the instant the shard appeared, leaving it with no fill, no
-  // outline and no label — a hole with the country wash showing through — until
-  // the round trip finished. Worse on a tree selection, which force-mounts the
+  // ShardController adding a shard's source only STARTS its cold pmtiles
+  // header fetch. Keying the world->shard handoff on `mountedShards` therefore
+  // told the world archive to drop a region the instant the shard appeared,
+  // leaving it with no fill, no outline and no label — a hole with the country
+  // wash showing through — until the round trip finished. Worse on a tree selection, which force-mounts the
   // shard and drew a gold ring around an empty hole. Track what has actually
   // loaded and hand over only then; the brief overlap where both draw is a
   // moment of doubled opacity, which reads far better than a gap.
@@ -610,15 +611,23 @@ export function TileWineMap({
   // which goes false on every reload — and a grape pick, a Local/English
   // toggle, a focus change and the first selection all reload sources — so
   // each of them briefly un-handed its regions and drew them twice (double
-  // opacity, a doubled outline, a second label). The two ways a latch could
-  // lie are both closed:
-  //   - Re-mount. Unmounting a Source removes its tiles. An unmounted shard
+  // opacity, a doubled outline, a second label). The ways a latch could lie
+  // are all closed:
+  //   - Re-mount. The controller removing a shard's source (once the shard
+  //     leaves the mount set) removes its tiles. An unmounted shard
   //     drops out of the latch, and the effect after flushReady reads every
   //     committed mount list, so a remount must load in view all over again.
   //   - Vacuous load. A shard mounted by the 50% pad while its region is still
   //     off screen needs no tiles, so MapLibre reports it loaded at once;
   //     loaded only counts while its bbox intersects the view.
+  //   - Rebuild. A full style rebuild re-creates every shard source; the
+  //     style.load listener drops the whole latch then (landedStyleRef).
   const [readyShards, setReadyShards] = useState<string[]>([]);
+  // The Style object the last style.load landed (seeded in onLoad). A
+  // different one at the next landing means a full rebuild — a restored WebGL
+  // context, or MapLibre's fallback when a theme diff fails — which re-creates
+  // every shard source, so the latch is dropped there (see onLoad).
+  const landedStyleRef = useRef<unknown>(null);
   const recomputeReady = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -829,8 +838,9 @@ export function TileWineMap({
   // What's actually on screen — drives the dynamic LEGEND only (sections only
   // where they apply). Scanned on map idle. It used to feed the fill palette's
   // colour table too, which meant a paint rewrite whenever a new area scrolled
-  // into view; the table now comes from the whole catalogue (areaSlugs) and
-  // nothing below the legend depends on this state.
+  // into view; each shard's table now comes from that shard's own area slugs
+  // (areaSlugsByShard), fixed per shard, and no paint depends on this state
+  // (besides the legend, only the status line's pastDepthZoom reads its zoom).
   const [viewInfo, setViewInfo] = useState<{
     scanned: boolean;
     zoom: number;
@@ -1221,7 +1231,9 @@ export function TileWineMap({
   }, [cameraRequest, applyCameraRequest]);
 
   // The legend's reading of the ramp: on when a region in view is a ramped
-  // one. Legend-only — the paint reads rampedRegions through the expression.
+  // one. Legend-only — the paint's ramp is a per-shard input (ShardSpecInputs'
+  // `ramp`, from rampedRegions) that ShardController writes into that shard's
+  // paint.
   const rampEnabled = useMemo(
     () => viewInfo.regions.some((region) => rampedRegions.includes(region)),
     [viewInfo.regions, rampedRegions],
@@ -1542,6 +1554,7 @@ export function TileWineMap({
           disposeHoverRef.current = installHoverCursor(e.target, {
             layers: () => interactiveLayerIdsRef.current,
           });
+          landedStyleRef.current = e.target.style;
           e.target.on("style.load", () => {
             // The controller records the landed style and schedules its
             // re-add (and, after a full rebuild, its repaint) for the next
@@ -1555,6 +1568,20 @@ export function TileWineMap({
               controllerRef.current?.onStyleRebuilt();
             } catch {
               // Nothing to recover: the next setDesired runs the controller again.
+            }
+            // A full rebuild (a new Style object) re-created every shard
+            // source, so the readiness latch no longer holds: drop it and the
+            // handoff shows the world copies until the new shard sources have
+            // loaded again. The diff path keeps the same Style object and its
+            // loaded sources, and resets nothing.
+            try {
+              const landed = e.target.style;
+              if (landed !== landedStyleRef.current) {
+                landedStyleRef.current = landed;
+                setReadyShards([]);
+              }
+            } catch {
+              // Never throw from style.load (see above).
             }
             setPaintTheme(landingBasemapRef.current);
             setStyleEpoch((n) => n + 1);

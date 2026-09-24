@@ -2,7 +2,9 @@
 // matters: global-state and feature-state writes throw until the style has
 // loaded; a full rebuild replaces map.style with a new object whose global
 // state is empty and whose sources are new objects with no feature-state; a
-// diff swap keeps all three. Every case is one a live visitor can reach — a
+// diff swap keeps all three; removing a key from a feature with no state
+// record is MapLibre's coalesceChanges trap, so the fake throws there. Every
+// case is one a live visitor can reach — a
 // cold deep link before Carto's style lands, a theme flip that falls back to a
 // rebuild, a shard mounting after the selection, a fast run of selections.
 import type { Map as MapLibreMap } from "maplibre-gl";
@@ -24,6 +26,11 @@ class FakeMap implements SyncMap {
   style: object | undefined = { generation: 0 };
   loaded = true;
   calls: Call[] = [];
+  /** Key removals from a feature with no state record. MapLibre accepts the
+      call and throws from its next render (coalesceChanges), outside
+      MapStateSync's try, so a throw alone would be swallowed here: the fake
+      throws AND records it, and tests assert this stays empty. */
+  violations: { target: Target; key: string }[] = [];
   private globalState: Record<string, unknown> = {};
   private readonly sources = new Map<string, object>();
   private readonly featureStates = new Map<string, Record<string, unknown>>();
@@ -57,9 +64,17 @@ class FakeMap implements SyncMap {
   removeFeatureState(target: Target, key?: string) {
     this.checkLoaded();
     this.calls.push({ op: "remove", target, key });
+    // A source that is not there: MapLibre fires an error event, no throw.
+    if (!this.sources.has(target.source)) return;
     const id = `${target.source}|${target.sourceLayer}|${target.id}`;
     const state = this.featureStates.get(id);
-    if (!state) return;
+    if (!state) {
+      if (key === undefined) return;
+      // coalesceChanges runs `delete state[sourceLayer][feature][key]` on a
+      // missing record: a TypeError out of every frame.
+      this.violations.push({ target, key });
+      throw new TypeError(`Cannot convert undefined or null to object (${id}, ${key})`);
+    }
     if (key === undefined) this.featureStates.delete(id);
     else delete state[key];
   }
@@ -298,6 +313,23 @@ describe("MapStateSync", () => {
       if (call.op !== "remove") continue;
       expect(["sel", "child", "rel"]).toContain(call.key);
     }
+  });
+
+  it("never removes a key from a feature with no state: a re-created source, then a rebuilt style", () => {
+    const map = new FakeMap([WORLD, BOURGOGNE, BORDEAUX]);
+    const sync = new MapStateSync(map);
+    sync.setDesired(snapshot(VOSNE));
+    // Unmount + remount: the new Bourgogne source has no feature-state, and
+    // the selection then moves within Bourgogne.
+    map.recreateSource(BOURGOGNE);
+    expect(() => sync.setDesired(snapshot("france.bourgogne.cote-de-beaune.meursault"))).not.toThrow();
+    // A full rebuild: every source new, every record gone; then it moves again.
+    map.startRebuild();
+    map.land();
+    const last = snapshot("france.bordeaux.medoc");
+    expect(() => sync.setDesired(last)).not.toThrow();
+    expect(map.violations).toEqual([]);
+    expect(map.selectionFlags()).toEqual(expectedFlags(map, last.selection));
   });
 
   it("a shard that mounts after the selection gets its flags when its metadata lands", () => {

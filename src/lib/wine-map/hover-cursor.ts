@@ -5,7 +5,9 @@
 // mounted shard plus the world ones) on EVERY mousemove, mid-pan included,
 // just to decide between two cursors. Here: at most one query per animation
 // frame, none while the map is moving (a drag or an ease owns the cursor
-// then), and only over the interactive layers that exist.
+// then), and only over the interactive layers that exist. At moveend the
+// resting pointer is re-checked once, since the map moved under it and no
+// mousemove may follow.
 // Pure: no imports; TileWineMap passes the MapLibre map.
 
 export type HoverPoint = { x: number; y: number };
@@ -15,7 +17,9 @@ type HoverFeature = { properties?: Record<string, unknown> | null };
 /** The slice of a MapLibre map the cursor needs. */
 export type HoverMap = {
   on(type: "mousemove", fn: (e: { point: HoverPoint }) => void): unknown;
+  on(type: "moveend", fn: () => void): unknown;
   off(type: "mousemove", fn: (e: { point: HoverPoint }) => void): unknown;
+  off(type: "moveend", fn: () => void): unknown;
   isMoving(): boolean;
   getZoom(): number;
   getLayer(id: string): unknown;
@@ -64,10 +68,17 @@ export function installHoverCursor(
     point = e.point;
     if (frame === null) frame = raf(update);
   };
+  // The map settled under a resting pointer (a drag, a wheel zoom, an ease):
+  // what is under it may have changed, so re-check once.
+  const onMoveEnd = () => {
+    if (point && frame === null) frame = raf(update);
+  };
   map.on("mousemove", onMove);
+  map.on("moveend", onMoveEnd);
   return () => {
     if (frame !== null) cancelRaf(frame);
     frame = null;
     map.off("mousemove", onMove);
+    map.off("moveend", onMoveEnd);
   };
 }
