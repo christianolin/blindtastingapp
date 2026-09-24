@@ -59,7 +59,7 @@ import {
 } from "@/lib/wine-map/basemap";
 import { desiredGlobalState, grapeGateExpression } from "@/lib/wine-map/map-state";
 import { MapStateSync } from "@/lib/wine-map/map-state-sync";
-import { bboxInView, latchReady } from "@/lib/wine-map/handoff";
+import { bboxInView, handoffWrites, latchReady } from "@/lib/wine-map/handoff";
 import { selectionFeatureStates } from "@/lib/wine-map/selection-state";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { installHoverCursor } from "@/lib/wine-map/hover-cursor";
@@ -707,40 +707,44 @@ export function TileWineMap({
   // If the source is not there yet (or the style is still loading) nothing is
   // recorded as applied, so the next change re-applies the whole set.
   //
-  // After a basemap swap lands (styleEpoch moves) every handed key is sent
-  // again, not just the new ones. On the usual diff path the world source
-  // survives with its state, so that write is idempotent; on MapLibre's
-  // full-rebuild fallback the source is re-created and its state is gone, and
-  // this is what restores it. Keys that left the set are still cleared from
-  // `prev` as always, so a shard un-handed in the same render as the landing
-  // cannot keep its world copy hidden.
-  const appliedHandoffRef = useRef<Set<string>>(new Set());
+  // After a basemap swap lands (styleEpoch moves), or the world source is
+  // re-created outright — a restored WebGL context, or MapLibre's
+  // full-rebuild fallback when a theme diff fails — every handed key has to
+  // be sent again, but what happens to a key that left the set differs: on
+  // the usual basemap-swap path the same source object survives with its
+  // feature-state, so resending is idempotent and a departed key is still
+  // cleared from it; on a re-created source there is no feature-state left
+  // to clear, and MapLibre throws inside its next render if a key is removed
+  // from a feature with none — so nothing is ever removed from a source that
+  // was not the one last written to. handoffWrites (lib/wine-map/handoff)
+  // tells the two cases apart by comparing the source object itself, not
+  // just an epoch counter.
+  const appliedHandoffRef = useRef<{ source: unknown; keys: Set<string> } | null>(null);
   const appliedEpochRef = useRef(0);
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
     const next = new Set(handedOffShards);
-    const prev = appliedHandoffRef.current;
     const resend = appliedEpochRef.current !== styleEpoch;
     try {
-      if (!map.getSource(WORLD_SOURCE_ID)) return;
+      const source = map.getSource(WORLD_SOURCE_ID);
+      if (!source) return;
+      const { set, remove } = handoffWrites(appliedHandoffRef.current, source, next, resend);
       for (const sourceLayer of ["places", "labels"]) {
-        for (const key of next) {
-          if (prev.has(key) && !resend) continue;
+        for (const key of set) {
           map.setFeatureState(
             { source: WORLD_SOURCE_ID, sourceLayer, id: key },
             { handed: true },
           );
         }
-        for (const key of prev) {
-          if (next.has(key)) continue;
+        for (const key of remove) {
           map.removeFeatureState(
             { source: WORLD_SOURCE_ID, sourceLayer, id: key },
             "handed",
           );
         }
       }
-      appliedHandoffRef.current = next;
+      appliedHandoffRef.current = { source, keys: next };
       appliedEpochRef.current = styleEpoch;
     } catch {
       // Style not loaded yet: leave `prev` alone so the next change re-applies.

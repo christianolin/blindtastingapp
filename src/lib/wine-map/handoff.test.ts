@@ -2,7 +2,7 @@
 // by its own shard. Wrong one way it leaves a hole (the world copy hidden over
 // a shard with no tiles yet); wrong the other it draws the region twice.
 import { describe, expect, it } from "vitest";
-import { bboxInView, latchReady, type ShardProbe } from "./handoff";
+import { bboxInView, handoffWrites, latchReady, type ShardProbe } from "./handoff";
 
 const probes = (table: Record<string, Partial<ShardProbe>>) => (key: string): ShardProbe => ({
   added: true,
@@ -85,5 +85,49 @@ describe("bboxInView", () => {
 
   it("a shard with no bbox counts as in view", () => {
     expect(bboxInView(undefined, view)).toBe(true);
+  });
+});
+
+describe("handoffWrites", () => {
+  const s1 = { id: "s1" };
+  const s2 = { id: "s2" };
+
+  it("first write: nothing applied yet, so set is all of next and remove is empty", () => {
+    expect(handoffWrites(null, s1, new Set(["a", "b"]), false)).toEqual({
+      set: ["a", "b"],
+      remove: [],
+    });
+  });
+
+  it("same source, no resend: only the delta between prev and next is written", () => {
+    const applied = { source: s1, keys: new Set(["a", "b"]) };
+    expect(handoffWrites(applied, s1, new Set(["b", "c"]), false)).toEqual({
+      set: ["c"],
+      remove: ["a"],
+    });
+  });
+
+  it("same source, resend: every key of next is set again, but remove is still only the delta", () => {
+    const applied = { source: s1, keys: new Set(["a", "b"]) };
+    expect(handoffWrites(applied, s1, new Set(["b", "c"]), true)).toEqual({
+      set: ["b", "c"],
+      remove: ["a"],
+    });
+  });
+
+  it("a NEW source object never has anything removed from it, even a key that left the set", () => {
+    const applied = { source: s1, keys: new Set(["a", "b"]) };
+    expect(handoffWrites(applied, s2, new Set(["b"]), false)).toEqual({
+      set: ["b"],
+      remove: [],
+    });
+  });
+
+  it("new source, next empty: nothing to set, nothing to remove", () => {
+    const applied = { source: s1, keys: new Set(["a", "b"]) };
+    expect(handoffWrites(applied, s2, new Set(), false)).toEqual({
+      set: [],
+      remove: [],
+    });
   });
 });

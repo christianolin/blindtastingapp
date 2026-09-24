@@ -45,3 +45,29 @@ export function bboxInView(bbox: Bbox | undefined, view: Bbox): boolean {
   const [west, south, east, north] = view;
   return maxX >= west && minX <= east && maxY >= south && minY <= north;
 }
+
+/** What the world→shard handoff must write to reach `next`. `applied` is what
+    was last written and to WHICH world source object: a re-created source
+    (MapLibre's full style rebuild — a restored WebGL context, a failed theme
+    diff) starts with no feature-state, so nothing is removed from it (MapLibre
+    throws inside its next render when a key is removed from a feature that
+    has no state) and every key is set again. `resend` (a basemap swap landed)
+    sets every key again even on the same source. */
+export function handoffWrites(
+  applied: { source: unknown; keys: ReadonlySet<string> } | null,
+  source: unknown,
+  next: ReadonlySet<string>,
+  resend: boolean,
+): { set: string[]; remove: string[] } {
+  const sameSource = applied !== null && applied.source === source;
+  const prev = sameSource ? applied.keys : new Set<string>();
+  const set: string[] = [];
+  for (const key of next) {
+    if (resend || !sameSource || !prev.has(key)) set.push(key);
+  }
+  const remove: string[] = [];
+  for (const key of prev) {
+    if (!next.has(key)) remove.push(key);
+  }
+  return { set, remove };
+}
