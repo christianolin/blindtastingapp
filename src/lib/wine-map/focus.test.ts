@@ -14,9 +14,10 @@ import {
   deepCountriesFor,
   FOCUS_GRID,
   nextFocusCountry,
+  scanPastDepthZoom,
 } from "./focus";
 import { desiredGlobalState } from "./map-state";
-import type { MountInput } from "./mount-policy";
+import { NEIGHBOUR_MIN_ZOOM, type MountInput } from "./mount-policy";
 import { shardFilter, type Bbox } from "./shard-specs";
 
 describe("countryShares", () => {
@@ -222,5 +223,39 @@ describe("deepCountriesFor through the real depth filter", () => {
       expect(passes(country, deep, 2)).toBe(false);
       expect(passes(country, deep, 1)).toBe(true);
     }
+  });
+});
+
+// Controller ruling R3: past NEIGHBOUR_MIN_ZOOM an undrawn focus country reads
+// "No subregions mapped here", which is honest only when the idle scan that
+// saw no depth looked at that same country.
+describe("scanPastDepthZoom", () => {
+  it("is true once the scan of the current focus was taken at or past NEIGHBOUR_MIN_ZOOM", () => {
+    expect(NEIGHBOUR_MIN_ZOOM).toBe(8);
+    expect(
+      scanPastDepthZoom({ scanZoom: 8, scanFocus: "germany", focusCountry: "germany" }),
+    ).toBe(true);
+    expect(
+      scanPastDepthZoom({ scanZoom: 12, scanFocus: "germany", focusCountry: "germany" }),
+    ).toBe(true);
+  });
+
+  it("is false below NEIGHBOUR_MIN_ZOOM, where more zoom may yet draw subregions", () => {
+    expect(
+      scanPastDepthZoom({ scanZoom: 7.99, scanFocus: "germany", focusCountry: "germany" }),
+    ).toBe(false);
+  });
+
+  it("is false for a scan from before a focus change: France never borrows Germany's scan", () => {
+    expect(
+      scanPastDepthZoom({ scanZoom: 9, scanFocus: "germany", focusCountry: "france" }),
+    ).toBe(false);
+    expect(scanPastDepthZoom({ scanZoom: 9, scanFocus: null, focusCountry: "france" })).toBe(
+      false,
+    );
+  });
+
+  it("is false with no focus country", () => {
+    expect(scanPastDepthZoom({ scanZoom: 9, scanFocus: null, focusCountry: null })).toBe(false);
   });
 });

@@ -3,7 +3,7 @@
 // map feeds in measurements (bboxes, the feature under the centre, the chip
 // state), so every precedence step and the hysteresis are tested without a map.
 import type { Bbox } from "./shard-specs";
-import { countryOfShard, type MountInput } from "./mount-policy";
+import { countryOfShard, NEIGHBOUR_MIN_ZOOM, type MountInput } from "./mount-policy";
 
 /** Share of the on-screen wine ground one country must cover before the share
     rule gives it focus. Below it the frame spans several countries, and no
@@ -169,12 +169,32 @@ export function deepCountriesFor(
   return focusCountry ? [focusCountry] : [];
 }
 
+/** Whether the map is past the zoom where more zoom could still draw the focus
+    country's subregions (NEIGHBOUR_MIN_ZOOM, controller ruling R3), so the
+    status line may say none are mapped here. It is judged from the idle scan
+    that measured depth, and only when that scan was taken with the current
+    focus country: focus moves at moveend, the scan lands a beat after idle,
+    and in between a pan from Würzburg to Colmar must not tell the viewer that
+    France has nothing mapped there on the strength of Germany's scan. */
+export function scanPastDepthZoom(input: {
+  scanZoom: number;
+  scanFocus: string | null;
+  focusCountry: string | null;
+}): boolean {
+  return (
+    input.focusCountry !== null &&
+    input.scanFocus === input.focusCountry &&
+    input.scanZoom >= NEIGHBOUR_MIN_ZOOM
+  );
+}
+
 /** What TileWineMap tells the explorer. It reports whenever a value changes,
     and the status line and the chips are built from it. `depthCountries` are
     the countries whose tier >= 2 features the idle scan actually saw on
-    screen. */
+    screen. `pastDepthZoom` is scanPastDepthZoom for the current focus. */
 export type DetailReport = {
   focusCountry: string | null;
   depthCountries: string[];
   countriesInView: string[];
+  pastDepthZoom: boolean;
 };
