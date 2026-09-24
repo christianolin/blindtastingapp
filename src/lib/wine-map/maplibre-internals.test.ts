@@ -22,18 +22,26 @@
 // - Map#_updateDiff, whose catch falls back to the full style rebuild
 //   (_updateStyle, a new Style with empty global state and no feature-state)
 //   that MapStateSync re-sends everything after.
-// - Style#_loaded, the "Style is not done loading." message and the order
-//   inside Style.addLayer (a duplicate id or a missing `before` fires an
-//   ErrorEvent and adds nothing; a layer whose source is missing enters the
-//   order BEFORE _updateLayer throws) — shard-controller.ts's readiness
-//   check, its not-loaded test and its transactional rollback.
+// - The "Style is not done loading." message and the order inside
+//   Style.addLayer (a duplicate id or a missing `before` fires an ErrorEvent
+//   and adds nothing; a layer whose source is missing enters the order
+//   BEFORE _updateLayer throws) — shard-controller.ts's not-loaded test and
+//   its transactional rollback.
 // - Style's {validate:false} skip in _validate, and Map#setGlobalStateProperty
 //   calling _update(true) unconditionally — the controller's add path and its
 //   one wm_tick dirty mark per batch.
+// - How an unreadable archive surfaces: VectorTileSource#load's catch sets
+//   _loaded = true and THEN fires an ErrorEvent with no `tile`; TileManager
+//   flags that source _sourceErrored and its loaded() returns true for it;
+//   a single tile's failure (TileManager#_loadTile) fires an ErrorEvent WITH
+//   {tile}; Style#addSource tags every source event with its sourceId —
+//   shard-controller.ts's unreadable-archive rule, which drops a shard on a
+//   tile-less error naming its source (else the readiness latch hands its
+//   region to a shard with nothing to draw).
 // - @vis.gl/react-maplibre 8.1: <Layer> guards on style._loaded, and hover
 //   queries run only while a hover prop is set (why TileWineMap sets the
 //   cursor from hover-cursor.ts instead of an onMouseMove prop).
-// These three are checked in the packages' src/ (shipped with them): an
+// These four are checked in the packages' src/ (shipped with them): an
 // order inside a method cannot be read off the minified bundle.
 // Later phases add their own lines here as they start relying on one.
 import { readFileSync } from "node:fs";
@@ -187,6 +195,53 @@ describe("MapLibre internals the shard controller relies on", () => {
       "getGlobalState()",
     );
     expect(body).toContain("return this._update(true);");
+  });
+
+  it("an unreadable archive fires an error with no tile, and its source then reads as loaded", () => {
+    // VectorTileSource#load: a header that cannot be fetched is "pretended"
+    // loaded FIRST, then reported by an ErrorEvent with no second argument —
+    // no `tile`, which is how the controller tells it from one tile's error.
+    const load = between(
+      readModule("maplibre-gl/src/source/vector_tile_source.ts"),
+      "async load(",
+      "loaded(): boolean {",
+    );
+    const caught = load.slice(load.indexOf("} catch (err) {"));
+    const pretended = caught.indexOf("this._loaded = true;");
+    const reported = caught.indexOf("this.fire(new ErrorEvent(ensureError(err)));");
+    expect(load.indexOf("} catch (err) {"), "load() has no catch").toBeGreaterThan(-1);
+    expect(pretended, "the catch no longer sets _loaded = true").toBeGreaterThan(-1);
+    expect(reported, "the catch's ErrorEvent changed shape (a `tile`?)").toBeGreaterThan(-1);
+    expect(pretended, "_loaded must be set before the error fires").toBeLessThan(reported);
+
+    // TileManager: the error flags the source errored (because the source
+    // already reads loaded), and an errored source is LOADED — which is why
+    // isSourceLoaded cannot be trusted for it.
+    const tileManager = readModule("maplibre-gl/src/tile/tile_manager.ts");
+    expect(tileManager).toContain("this._sourceErrored = this._source.loaded();");
+    expect(between(tileManager, "loaded(): boolean {", "getSource(): Source {")).toContain(
+      "if (this._sourceErrored) { return true; }",
+    );
+  });
+
+  it("a single tile's error carries its tile, and every source event its sourceId", () => {
+    // TileManager#_loadTile reports one failed tile WITH {tile}; the
+    // controller leaves those to MapLibre.
+    const loadTile = between(
+      readModule("maplibre-gl/src/tile/tile_manager.ts"),
+      "async _loadTile(tile: Tile",
+      "_unloadTile(tile: Tile)",
+    );
+    expect(loadTile).toContain("this._source.fire(new ErrorEvent(ensureError(err), {tile}));");
+    // Style#addSource: the map sees every source event with `sourceId`, the
+    // field the controller reads to find the shard.
+    const addSource = between(
+      readModule("maplibre-gl/src/style/style.ts"),
+      "addSource(id: string, source: SourceSpecification",
+      "tileManager.onAdd(this.map);",
+    );
+    expect(addSource).toContain("tileManager.setEventedParent(this, () => ({");
+    expect(addSource).toContain("sourceId: id");
   });
 
   it("react-maplibre guards on style._loaded and hover-queries only for hover props", () => {

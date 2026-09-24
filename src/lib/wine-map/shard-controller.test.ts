@@ -733,4 +733,54 @@ describe("ShardController", () => {
     expect(controller.isAdded("bourgogne")).toBe(true);
     expect(error).toHaveBeenCalledTimes(1);
   });
+
+  it("25. rolls back a selection overlay that fails, keeps its shard, and never retries the overlay", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    // A throw before insertion, a throw after it, and a refusal by event —
+    // each one after the casing is already in, so a partial set would show.
+    const failures = [
+      { mode: "throwOnAddLayer", id: "shard-selected-ring-bourgogne" },
+      { mode: "throwAfterInsert", id: "shard-selected-ring-bourgogne" },
+      { mode: "refuseLayer", id: "shard-selected-label-bourgogne" },
+    ] as const;
+    const overlayAdds = (map: FakeMap, key: string) =>
+      map.calls.filter(([n, id]) => n === "addLayer" && overlays(key).includes(String(id)));
+    for (const { mode, id } of failures) {
+      error.mockClear();
+      const { map, frames, controller } = setup();
+      map[mode] = id;
+      controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "bourgogne" }));
+      frames.drain();
+      // No partial overlay (a casing without its ring): every overlay id is gone.
+      expect(map.getLayersOrder().filter((layer) => layer.startsWith("shard-selected-")), mode).toEqual([]);
+      // The shard itself stays mounted and ready; so does the other one.
+      expect(controller.isAdded("bourgogne"), mode).toBe(true);
+      for (const layer of base("bourgogne")) expect(map.getLayer(layer), `${mode}: ${layer}`).toBeDefined();
+      expect(controller.isAdded("alsace"), mode).toBe(true);
+      expect(error, mode).toHaveBeenCalledTimes(1);
+      expect(String(error.mock.calls[0][0]), mode).toContain('"bourgogne"');
+
+      // Never retried this visit, whatever triggers a run.
+      map[mode] = null;
+      map.calls = [];
+      controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "bourgogne" }));
+      map.emit("styledata");
+      controller.reapplyPaint();
+      frames.drain();
+      expect(overlayAdds(map, "bourgogne"), mode).toEqual([]);
+
+      // The failure is that shard's alone: another shard's selection rings.
+      controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "alsace" }));
+      frames.drain();
+      expect(map.getLayersOrder().slice(-3), mode).toEqual(overlays("alsace"));
+
+      // Back on the failed shard: no overlays, still no retry.
+      controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "bourgogne" }));
+      frames.drain();
+      expect(map.getLayersOrder().filter((layer) => layer.startsWith("shard-selected-")), mode).toEqual([]);
+      expect(overlayAdds(map, "bourgogne"), mode).toEqual([]);
+      expect(controller.isAdded("bourgogne"), mode).toBe(true);
+      expect(error, mode).toHaveBeenCalledTimes(1);
+    }
+  });
 });
