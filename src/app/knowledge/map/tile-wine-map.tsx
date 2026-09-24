@@ -44,6 +44,7 @@ import {
 } from "@/lib/wine-map/basemap";
 import { desiredGlobalState, grapeGateExpression } from "@/lib/wine-map/map-state";
 import { MapStateSync } from "@/lib/wine-map/map-state-sync";
+import { bboxInView, latchReady } from "@/lib/wine-map/handoff";
 import { selectionFeatureStates } from "@/lib/wine-map/selection-state";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { nextMountStep } from "@/lib/wine-map/mount-policy";
@@ -606,35 +607,53 @@ export function TileWineMap({
   // loaded and hand over only then; the brief overlap where both draw is a
   // moment of doubled opacity, which reads far better than a gap.
   //
-  // This must be a LIVE reading, not a latch. Two ways a latched "ready" lies:
-  //   - Re-mount. Unmounting a Source removes its tiles, so a shard that was
-  //     ready, unmounted (zooming under SHARD_MIN_ZOOM, or panning past the
-  //     150% pad) and re-mounted would be treated as handed off in the very
-  //     commit that re-creates it — empty — bringing the hole straight back on
-  //     every crossing after the first.
+  // Readiness is a LATCH per mount (lib/wine-map/handoff, latchReady): a shard
+  // is ready once it has loaded while its bbox touches the view, and stays
+  // ready until it is unmounted. It used to be a live isSourceLoaded reading,
+  // which goes false on every reload — and a grape pick, a Local/English
+  // toggle, a focus change and the first selection all reload sources — so
+  // each of them briefly un-handed its regions and drew them twice (double
+  // opacity, a doubled outline, a second label). The two ways a latch could
+  // lie are both closed:
+  //   - Re-mount. Unmounting a Source removes its tiles. An unmounted shard
+  //     drops out of the latch, and the effect after flushReady reads every
+  //     committed mount list, so a remount must load in view all over again.
   //   - Vacuous load. A shard mounted by the 50% pad while its region is still
-  //     off screen needs no tiles, so MapLibre reports isSourceLoaded true
-  //     immediately; pan until the region is actually visible and the handoff
-  //     has already happened against a source with nothing in it.
-  // Re-reading isSourceLoaded per mounted shard handles both: it goes false
-  // again while a re-created or newly-in-view source fetches, the world resumes
-  // drawing that region, and the hand-off waits for real tiles.
+  //     off screen needs no tiles, so MapLibre reports it loaded at once;
+  //     loaded only counts while its bbox intersects the view.
   const [readyShards, setReadyShards] = useState<string[]>([]);
   const recomputeReady = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const next = mountedShards.filter((key) => {
-      const id = shardSourceId(key);
-      try {
-        return Boolean(map.getSource(id)) && map.isSourceLoaded(id);
-      } catch {
-        return false;
-      }
-    });
-    setReadyShards((prev) =>
-      prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
+    const bounds = map.getBounds();
+    const view: [number, number, number, number] = [
+      bounds.getWest(),
+      bounds.getSouth(),
+      bounds.getEast(),
+      bounds.getNorth(),
+    ];
+    // Probed here rather than inside the state updater, so the updater stays
+    // pure. globalThis: `Map` in this module is the react-map-gl component.
+    const probes = new globalThis.Map(
+      mountedShards.map((key) => {
+        const id = shardSourceId(key);
+        let added = false;
+        let loaded = false;
+        try {
+          added = Boolean(map.getSource(id));
+          loaded = added && map.isSourceLoaded(id);
+        } catch {
+          // Style mid-rebuild: neither added nor loaded this time round.
+        }
+        const inView = bboxInView(manifest.shards[key]?.bbox, view);
+        return [key, { added, loaded, inView }] as const;
+      }),
     );
-  }, [mountedShards]);
+    setReadyShards((prev) => {
+      const next = latchReady(new Set(prev), mountedShards, (key) => probes.get(key)!);
+      return prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next;
+    });
+  }, [mountedShards, manifest]);
   // A gesture's `sourcedata` burst — one event per tile per shard — used to
   // run recomputeReady (a getSource/isSourceLoaded sweep plus a state update)
   // for every event. Trailing-debounce it so a burst produces one update once
@@ -660,6 +679,11 @@ export function TileWineMap({
     }
     recomputeReadyRef.current();
   }, []);
+  // Every committed mount list is read once, straight away: an unmount and a
+  // remount can then never both slip between two readings of the latch.
+  useEffect(() => {
+    flushReady();
+  }, [mountedShards, flushReady]);
   useEffect(
     () => () => {
       if (readyTimer.current !== null) window.clearTimeout(readyTimer.current);
