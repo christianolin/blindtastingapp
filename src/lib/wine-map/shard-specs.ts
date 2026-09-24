@@ -16,7 +16,16 @@
 //
 // Pure: no maplibre value import (type-only at most), so vitest evaluates these
 // expressions through @maplibre/maplibre-gl-style-spec directly.
+import type {
+  FillLayerSpecification,
+  FilterSpecification,
+  LayerSpecification,
+  LineLayerSpecification,
+  SymbolLayerSpecification,
+  VectorSourceSpecification,
+} from "maplibre-gl";
 import type { WinePlaceTreeNode } from "./tree";
+import { shardSourceId } from "./basemap";
 import { paletteArms, visitAreaSlugs } from "./fill-palette";
 import {
   classificationShades,
@@ -435,4 +444,150 @@ export function selectedPlaceFilter(): unknown[] {
     grapeGateExpression(),
     ["==", ["string", ["get", "key"], ""], ["global-state", GS.selKey]],
   ];
+}
+
+// Phase 1c: the specs ShardController hands to map.style.addSource/addLayer
+// with {validate:false}. MapLibre no longer checks them at runtime, so
+// shard-layer-specs.test.ts runs validateStyleMin over every one of them
+// instead, the way basemap.test.ts does for a swapped basemap.
+
+/** Everything a shard's layers are built from. `country` null means the tree
+    has not placed this shard (still loading, failed, or a newer release):
+    no depth term, full depth, as before the tree. `areaSlugs` empty means
+    region hue only. `fillsVisible` is read at add time only (?debugFills is
+    fixed for the visit). */
+export type ShardSpecInputs = {
+  country: string | null;
+  areaSlugs: readonly string[];
+  ramp: boolean;
+  palette: MapPalette;
+  fillsVisible: boolean;
+};
+
+export type ShardLayerSpecs = {
+  sourceId: string;
+  source: VectorSourceSpecification;
+  /** fills, outlines, labels — the order they are added in. */
+  layers: LayerSpecification[];
+};
+
+/** A shard's base layer ids, exactly the ids the JSX mounted before 1c:
+    scanView, interactiveLayerIds and ?debugClick all name them. */
+export function shardLayerIds(key: string) {
+  return {
+    fills: `shard-fills-${key}`,
+    outlines: `shard-outlines-${key}`,
+    labels: `shard-labels-${key}`,
+  };
+}
+
+/** The selected place's overlay layer ids on its own shard, bottom to top. */
+export function shardOverlayIds(key: string) {
+  return {
+    casing: `shard-selected-casing-${key}`,
+    ring: `shard-selected-ring-${key}`,
+    label: `shard-selected-label-${key}`,
+  };
+}
+
+/** The keyline under the gold ring (cream in light, near-black in dark).
+    Shared by the world ring and every shard ring, so a selection looks the
+    same whichever archive draws it. */
+export function selectionCasingPaint(palette: MapPalette): LineLayerSpecification["paint"] {
+  return { "line-color": palette.selectedCasing, "line-width": 5, "line-opacity": 0.85 };
+}
+
+/** The gold selection ring itself. */
+export function selectionRingPaint(palette: MapPalette): LineLayerSpecification["paint"] {
+  return { "line-color": palette.selectedRing, "line-width": 2.5 };
+}
+
+/** One shard's source and its fill, outline and label layers. `url` is the
+    manifest's archive URL; the pmtiles protocol prefix is added here.
+
+    Every call returns a new, fully independent object tree. MapLibre keeps
+    the paint, layout and filter values addLayer is handed by reference (only
+    setFilter clones), and the static builders may share constant
+    sub-expressions between calls; one structuredClone per shard means nothing
+    handed to the map is ever shared with anything else. */
+export function shardLayerSpecs(key: string, url: string, inputs: ShardSpecInputs): ShardLayerSpecs {
+  const sourceId = shardSourceId(key);
+  const ids = shardLayerIds(key);
+  const color = shardColorExpression({
+    region: key,
+    areaSlugs: inputs.areaSlugs,
+    ramp: inputs.ramp,
+    palette: inputs.palette,
+  });
+  const filter = shardFilter(inputs.country) as FilterSpecification;
+  const layers: LayerSpecification[] = [
+    {
+      id: ids.fills,
+      type: "fill",
+      source: sourceId,
+      "source-layer": "places",
+      filter,
+      layout: { visibility: inputs.fillsVisible ? "visible" : "none" },
+      paint: staticFillPaint({ color, ramp: inputs.ramp, worldHandoff: false }) as FillLayerSpecification["paint"],
+    },
+    {
+      id: ids.outlines,
+      type: "line",
+      source: sourceId,
+      "source-layer": "places",
+      filter,
+      paint: staticOutlinePaint({ color, worldHandoff: false }) as LineLayerSpecification["paint"],
+    },
+    {
+      id: ids.labels,
+      type: "symbol",
+      source: sourceId,
+      "source-layer": "labels",
+      filter,
+      layout: staticLabelLayout() as SymbolLayerSpecification["layout"],
+      paint: staticLabelPaint({ palette: inputs.palette, worldHandoff: false }) as SymbolLayerSpecification["paint"],
+    },
+  ];
+  return structuredClone({
+    sourceId,
+    source: { type: "vector", url: `pmtiles://${url}`, promoteId: "key" },
+    layers,
+  });
+}
+
+/** The selected place's casing, ring and bigger label, on its own shard's
+    source. ShardController keeps them at the very top of the style: the ring
+    above every fill and outline, and the label placed first, so it wins every
+    collision (D4). Fresh objects per call, as shardLayerSpecs. */
+export function shardOverlaySpecs(key: string, palette: MapPalette): LayerSpecification[] {
+  const source = shardSourceId(key);
+  const ids = shardOverlayIds(key);
+  const filter = selectedPlaceFilter() as FilterSpecification;
+  return structuredClone<LayerSpecification[]>([
+    {
+      id: ids.casing,
+      type: "line",
+      source,
+      "source-layer": "places",
+      filter,
+      paint: selectionCasingPaint(palette),
+    },
+    {
+      id: ids.ring,
+      type: "line",
+      source,
+      "source-layer": "places",
+      filter,
+      paint: selectionRingPaint(palette),
+    },
+    {
+      id: ids.label,
+      type: "symbol",
+      source,
+      "source-layer": "labels",
+      filter,
+      layout: selectedLabelLayout() as SymbolLayerSpecification["layout"],
+      paint: selectedLabelPaint({ palette, worldHandoff: false }) as SymbolLayerSpecification["paint"],
+    },
+  ]);
 }
