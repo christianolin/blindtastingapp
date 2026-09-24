@@ -9,8 +9,9 @@
 // graphics memory in All kills the tab, and a remembered All would reopen
 // straight into the same crash on every visit. So DETAIL_PENDING_KEY is set
 // before All draws. It is cleared once All has drawn and gone idle (the map
-// reports that through onHealthy) or the page is left normally (pagehide, which
-// a killed tab never fires). A load that finds the sentinel still set starts
+// reports that through onHealthy) or the map is left normally (pagehide, which
+// a killed tab never fires, or an in-app link that unmounts it). A load that
+// finds the sentinel still set starts
 // in One country and says why. The saved choice stays All until the viewer
 // changes it.
 //
@@ -143,7 +144,12 @@ export function useDetailMode(): {
   // Arm the sentinel whenever All is live on this page, which covers a page
   // load that starts in All as well as a tap. The map chunk loads after
   // hydration, so this always runs before All draws a single shard. A normal
-  // exit clears it, and a page restored from the back-forward cache re-arms.
+  // exit clears it: pagehide (leaving the page) and this effect's cleanup on
+  // unmount (an in-app link away from the map). The cleanup's clear is a
+  // no-op unless the store is still in All: after setMode("one") both keys
+  // are already gone, and after dropToOne a lost context's evidence is kept.
+  // StrictMode's mount, cleanup, mount arms, clears and re-arms. A page
+  // restored from the back-forward cache re-arms.
   useEffect(() => {
     if (snapshot.mode !== "all") return;
     detailStore.armSentinel();
@@ -156,6 +162,7 @@ export function useDetailMode(): {
     return () => {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
+      detailStore.confirmHealthy();
     };
   }, [snapshot.mode]);
   return {

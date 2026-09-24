@@ -199,6 +199,31 @@ describe("createDetailModeStore", () => {
     expect(store.getSnapshot()).toBe(before);
   });
 
+  it("unmount in All clears the sentinel; unmount after dropToOne does not", () => {
+    // useDetailMode's effect cleanup calls confirmHealthy(): an in-app link
+    // away from the map is a normal exit, like pagehide.
+    const left = memoryStorage();
+    const leftStore = createDetailModeStore(left.getStorage);
+    leftStore.setMode("all");
+    expect(left.data.get(DETAIL_PENDING_KEY)).toBe("1");
+    leftStore.confirmHealthy(); // the cleanup, on unmount while in All
+    expect(left.data.has(DETAIL_PENDING_KEY)).toBe(false);
+    expect(left.data.get(DETAIL_ALL_KEY)).toBe("1");
+
+    // A lost context dropped this page to One first: the cleanup then runs
+    // with the snapshot already "one", so the evidence is kept.
+    const lost = memoryStorage();
+    const lostStore = createDetailModeStore(lost.getStorage);
+    lostStore.setMode("all");
+    lostStore.dropToOne();
+    lostStore.confirmHealthy(); // the cleanup, after dropToOne
+    expect(lost.data.get(DETAIL_PENDING_KEY)).toBe("1");
+    expect(createDetailModeStore(lost.getStorage).getSnapshot()).toEqual({
+      mode: "one",
+      fellBack: true,
+    });
+  });
+
   it("re-choosing One in One country writes nothing", () => {
     const { data, getStorage } = memoryStorage({ unrelated: "1" });
     const store = createDetailModeStore(getStorage);
