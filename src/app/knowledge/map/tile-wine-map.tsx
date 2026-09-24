@@ -16,6 +16,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
 import { keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
+import { allModeHealthy } from "@/lib/wine-map/detail-mode";
 import {
   centreCountryFrom,
   countryShares,
@@ -238,6 +239,8 @@ const SELECTED_LABEL_LAYOUT = selectedLabelLayout() as SymbolLayout;
 export function TileWineMap({
   detail = "one",
   chipCountry = null,
+  onContextLost,
+  onHealthy,
   manifest,
   selectedKey,
   cameraTarget,
@@ -259,6 +262,13 @@ export function TileWineMap({
   /** A tapped country chip: focus goes to it once it is on screen, ahead of
       the selection and the map centre (lib/wine-map/focus). */
   chipCountry?: string | null;
+  /** The WebGL context was lost. This is usually a phone out of graphics
+      memory in All countries, and the explorer drops to One country for the
+      session. */
+  onContextLost?: () => void;
+  /** All countries has drawn at shard zoom and gone idle on this device. This
+      is the crash-loop sentinel's all-clear (spec §7.5). */
+  onHealthy?: () => void;
   manifest: WineMapManifest;
   selectedKey: string | null;
   /** The key of the place whose context the explorer has loaded. It lags
@@ -896,6 +906,36 @@ export function TileWineMap({
     [],
   );
 
+  // Latest callbacks, for listeners registered once in onLoad.
+  const onContextLostRef = useRef(onContextLost);
+  const onHealthyRef = useRef(onHealthy);
+  useEffect(() => {
+    onContextLostRef.current = onContextLost;
+    onHealthyRef.current = onHealthy;
+  }, [onContextLost, onHealthy]);
+  // True while All countries has not yet proved itself on this device. It is
+  // re-armed by each switch to All.
+  const healthPendingRef = useRef(detail === "all");
+  useEffect(() => {
+    healthPendingRef.current = detail === "all";
+  }, [detail]);
+  // Every gesture ends in idle, which triggers the legend scan and, once, the
+  // All countries all-clear (allModeHealthy says when All has really drawn).
+  const handleIdle = useCallback(() => {
+    scheduleScan();
+    if (
+      !allModeHealthy({
+        pending: healthPendingRef.current,
+        mountedCount: mountedShards.length,
+        zoom: mapRef.current?.getZoom() ?? 0,
+      })
+    ) {
+      return;
+    }
+    healthPendingRef.current = false;
+    onHealthyRef.current?.();
+  }, [scheduleScan, mountedShards]);
+
   // A cameraTarget that arrives BEFORE the map instance exists used to be
   // dropped: @vis.gl/react-maplibre creates the map inside an async import, so
   // mapRef.current is still null on TileWineMap's first commit, and on a cold
@@ -1312,6 +1352,11 @@ export function TileWineMap({
           });
           // A flip that landed while the map was still loading.
           swapBasemap(latestThemeRef.current);
+          // A lost WebGL context drops the page to One country for the session
+          // (spec §7.5). This is usually a phone out of graphics memory in All
+          // countries. MapLibre sets map.style to null until the context is
+          // restored, so every imperative map call on the way stays guarded.
+          e.target.on("webglcontextlost", () => onContextLostRef.current?.());
           // First gating pass once the map has real bounds.
           syncMountedShards();
           if (debugClick) {
@@ -1392,7 +1437,7 @@ export function TileWineMap({
           if (best.tier === 0 && (mapRef.current?.getZoom() ?? 0) > 5) return;
           onSelect(best.key, "map");
         }}
-        onIdle={scheduleScan}
+        onIdle={handleIdle}
         attributionControl={{ compact: true, customAttribution: attribution }}
         style={{ width: "100%", height: "100%" }}
       >
