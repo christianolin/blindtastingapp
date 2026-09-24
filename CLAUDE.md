@@ -8,7 +8,8 @@ A web app for running blind wine tastings using VM/DM scoring rules.
 
 - Next.js (TypeScript, App Router), Tailwind CSS, shadcn/ui components.
 - Supabase: Postgres, Auth (email + password/magic link), Realtime.
-- Deployed to Vercel (not yet wired up).
+- Deployed on Vercel (blindrapp.vercel.app) and live with daily users: a push
+  to `master` is a production deploy.
 
 ## Brand assets
 
@@ -1454,6 +1455,180 @@ a raw subquery, regardless of which two tables look involved at a glance.
     like-for-like A/B on one build showed no win (64/56 ms without it, 72/64 ms
     with it, plus a new long task), so it was not shipped. Measure any
     debounce/defer attempt the same way before believing it.
+- **Wine map engine and One country | All countries** (2026-09-23; spec
+  `docs/superpowers/specs/2026-09-23-wine-map-one-country-all-countries-design.md`,
+  plan `docs/superpowers/plans/2026-09-23-wine-map-one-country-all-countries.md`;
+  shipped as four production deploys, 1a/1b/1c/2). The first zoom past z5 froze
+  the page for 1.2-1.5 s. The cause, verified in MapLibre 5.24's source:
+  `map.addLayer`/`map.addSource` (and so react-map-gl's `<Source>`/`<Layer>`)
+  ALWAYS run `Style._validate`, which serializes the WHOLE style. So adding a
+  layer costs more the bigger the style already is, and neither the
+  `validateStyle` map option nor a `setStyle` diff avoids it. Every shard layer
+  also carried a ~38 KB catalogue-wide colour expression. A replay of all 67
+  shards took 3,101 ms through the public API and 13 ms with `validate: false`
+  plus per-shard colours. The rules that keep it that way:
+  - **Colours are per shard** (`src/lib/wine-map/shard-specs.ts`).
+    `shardColorExpression` builds a shard's colour from its own region
+    (`regionHue`) and its own area slugs (`areaSlugsByShard`): ~2 KB, not 38.
+    World layers use `worldRegionColor`. The colours are byte-identical to the
+    old ones, pinned by a sweep through MapLibre's own expression engine. Never
+    put one catalogue-wide colour expression back on shard layers.
+  - **Wine layer specs are static.** No React prop change rewrites a wine
+    layer's filter, paint or layout. Dynamic inputs come in two kinds:
+    - MapLibre global state (`src/lib/wine-map/map-state.ts`). The names are
+      exactly `wm_keys` (grape gate), `wm_local` (Local/English),
+      `wm_deep_<country>` (subregion depth), `wm_has_sel`, `wm_sel_key` and
+      `wm_tick`.
+    - Feature-state. `sel`/`child`/`rel` carry selection emphasis on shard
+      sources with `promoteId: "key"`. `handed` sits on the world source,
+      which keeps `promoteId: "region"`.
+
+    A filter or layout that reads global state only reloads its source.
+    Data-driven PAINT that reads it is recompiled, validated, and its source
+    reloaded (`StyleLayer.setPaintProperty` asks for a relayout, and
+    `Style._updateLayer` marks the source for reload). So the first selection
+    of a session, which flips `wm_has_sel`, reloads every mounted source once;
+    A2 ("a selection reloads only the world and the two selected shards") is
+    measured on later selections. Everything else about a selection is
+    feature-state, which reloads nothing. The grape gate's object map
+    (`keyLookupMap`, still `== true`) now lives in `wm_keys` instead of a
+    per-layer literal. Use null-safe shapes only: the gate starts with
+    `["!", ["to-boolean", ["global-state","wm_keys"]]]`. Never use `has`, a
+    `coalesce` to `{}`, or `["==", gs, null]`: each one hides every place
+    while no grape is picked (the old "only France" bug). Global-state truth
+    tables run through both the standalone style-spec and maplibre-gl's
+    bundled engine (`src/lib/testing/bundled-style-engine.ts`), because they
+    disagree on never-set names.
+    Depth is one name PER COUNTRY. A focus flip then reloads two countries'
+    shards, and All never reloads on a pan. The selected place's label is its
+    own layer (`world-selected-label`, `shard-selected-label-<key>`). Other
+    labels keep their size and collision priority on selection (owner, D4).
+  - **`MapStateSync`** (`src/lib/wine-map/map-state-sync.ts`) is the only
+    writer of global state and selection feature-state. It holds the desired
+    state in a ref and runs one idempotent `apply()`: on load, synchronously
+    inside `style.load`, and after React changes. The `style.load` call sits in
+    try/catch, because a throw there turns a theme diff into MapLibre's full
+    rebuild. It keeps its own readiness flag: `styledataloading` clears it and
+    `load`/`style.load` set it. Never gate on `isStyleLoaded()`, which is false
+    while tiles load. The full-rebuild fallback wipes global state and
+    feature-state, so `apply()` keys what it has sent on the `map.style` object
+    and re-sends everything after a rebuild. Never put a `state` block in a
+    style handed to `setStyle`: every theme flip would reset all global state.
+  - **`ShardController`** (`src/lib/wine-map/shard-controller.ts`) adds shard
+    sources and layers with `map.style.addSource/addLayer(..., { validate: false })`.
+    That is the one way here to add layers without the whole-style serialize.
+    Runtime validation is therefore off, and every
+    `shardLayerSpecs`/`shardOverlaySpecs` output is checked by
+    `validateStyleMin` in vitest instead; add a case there for any new spec
+    shape. How it works:
+    - Adds run in batches of 8 ms per frame, the selected shard first, and only
+      after the world layers exist.
+    - Each shard is transactional: a throw rolls it back and skips it for the
+      session.
+    - The selected casing, ring and label overlays stay on top.
+    - Removal calls `removeLayer`/`removeSource` directly. react-maplibre's
+      unmount cloned the style with `getStyle()` once per source, ~110 ms.
+    - Specs are built fresh at add time from the LANDED theme and never mutated
+      after the add.
+    - The ids are unchanged (`wine-shard-<key>`, `shard-fills-<key>`,
+      `shard-outlines-<key>`, `shard-labels-<key>`), so `withWineLayers` still
+      carries them across a theme swap.
+
+    The engine leans on MapLibre 5.24 internals: `map.style.addLayer`'s
+    `{ validate: false }` option and how it orders add and throw,
+    `style._loaded`, `Style#_reloadSource` (the probe's reload counter) and
+    the dev bundle's chunk markers (`bundled-style-engine.ts`). Any
+    maplibre-gl bump, even a minor one, re-runs the engine tests and the
+    `?debugPerf=1` protocol before it ships.
+  - **One country | All countries** (owner, 2026-09-23). Nothing new sits on
+    the map canvas. Two toolbar rows sit under the filter bar:
+    - A `role="radiogroup"` "Map detail" (`map-detail-controls.tsx`) with a
+      `role="status"` line. The status copy lives only in
+      `src/lib/wine-map/detail-status.ts` and is pinned word for word by its
+      test.
+    - Country chips (`country-chips.tsx`): tree roots of kind COUNTRY, collated
+      in the label language, with roving tabindex and per-country counts under
+      a grape filter. They scroll with the scroller's own `scrollTo`, never
+      `scrollIntoView`, because the page column is itself a scroll container.
+
+    One country (the default) gives subregion depth to one focus country. It
+    mounts other countries' shards only from z8 (`mountTarget`,
+    `mount-policy.ts`); below that the world archive draws their regions
+    identically. A mode change drops the 150% keep (`keepAcrossSync`), so
+    switching to One unmounts the neighbours at once. All countries gives
+    every country depth, and the status line always says "Uses more
+    resources and can cause lag." while it is on.
+
+    Focus (`nextFocusCountry`, `focus.ts`) goes, in order, to:
+    1. a tapped chip whose country is on screen;
+    2. the selected place's country while it is on screen;
+    3. the country of the wine region NEAREST the map centre: the centre
+       point, else rings of 8 points at 16/32/64/128 px (capped at a third of
+       the canvas's shorter side), the first ring that hits deciding by vote,
+       a tie going to the previous focus, then alphabetically
+       (`nearestCentreCountry`, `queryRenderedFeatures` on
+       `world-region-fills`). The centre alone was not enough: Colmar's centre
+       pixel sits in a gap east of the Alsace footprint, and Baden's huge bbox
+       then called it "Germany". A centre query that finds nothing at moveend
+       (a jumpTo, a chip landing or a deep link can run it before the new
+       view's tiles exist) is re-decided once at the next idle;
+    4. the 0.6/0.45 share rule.
+
+    A chip focuses WITHOUT selecting: the details panel and `?place=` stay. In
+    One country it flies only when its country is off screen or the map is
+    below z5. The flight is a `CameraRequest` with a nonce, lands at z5.5 or
+    deeper, and drops outliers such as Madeira (`countryCameraBox`). In All
+    countries a chip always flies. The chip marker and "Subregions: {country}."
+    appear only once the idle scan has seen tier ≥ 2 features of that country
+    on screen. The tree has no `min_zoom` (spec §7.3 assumed one), so "not
+    drawn yet" and "none here" look the same. Below z8 an undrawn focus country reads "Zoom
+    in to see {F}'s subregions."; from z8 (`NEIGHBOUR_MIN_ZOOM`, judged from
+    the same idle scan, `scanPastDepthZoom`) a focus country with no tier ≥ 2
+    places on screen (baden, franken, navarra, saale-unstrut, wuerttemberg)
+    reads "No subregions mapped here for {F} yet." That sentence is a
+    controller ruling made while the owner was away; the owner may reword it
+    (the copy lives only in `detail-status.ts`, pinned by its test).
+  - **Persistence and the crash-loop guard** (`src/lib/wine-map/detail-mode.ts`).
+    The mode is stored in `safe-storage` flags only, never in the URL: a shared
+    link must not put a phone into All. The flags:
+    - `wine-map-all-countries` set = All.
+    - `wine-map-all-pending` is set before All draws. It is cleared at the
+      first idle at z ≥ 5 with shards mounted (`allModeHealthy`), or on
+      `pagehide`.
+
+    A load that finds the sentinel still set starts in One country and says
+    "Switched to One country after a problem last time." The saved All stays
+    until the viewer changes it. `webglcontextlost` drops the page to One for
+    the session. A lost context also leaves `map.style` null until MapLibre
+    restores it, so every imperative map call stays inside try/catch. The
+    restore itself is a FULL style rebuild (`_contextRestored` runs
+    `setStyle(lostStyle, { diff: false })`), so every source comes back as a
+    new object with empty feature-state. Anything that writes feature-state
+    keys what it wrote on the source OBJECT and never removes a key from a
+    source that never had it: MapLibre's `SourceFeatureState.coalesceChanges`
+    throws inside render on that (`delete` on a feature with no state).
+    `MapStateSync` and the world→shard handoff (`handoffWrites`,
+    `src/lib/wine-map/handoff.ts`) both follow this; any new feature-state
+    writer must too.
+  - **Safety net and probe.**
+    - `MapErrorBoundary` wraps the dynamic map. Any leftover throw, or a
+      `ChunkLoadError` after a deploy, becomes the "Retry map" card.
+    - The place tree retries once after 2 s. A failed tree never blanks the
+      map: shards of an unknown country render full depth in region colours,
+      and the status line offers Retry.
+    - `?debugPerf=1` adds `perf-probe.tsx`. It shows the live worst frame and
+      long tasks, runs a scripted **Run test**, and offers **Copy results**
+      JSON. Safari/WebKit has no long-task API, so the probe falls back to rAF
+      frame deltas there. It is how the iPhone numbers are taken.
+  - **Measured** (production build, 2026-09-24). Probe script, 3 cold runs
+    per row, One and All, at 455x628 and 1400x850 full view: 0 long tasks on
+    every row, worst frame ≤ 34 ms (baseline before this work: one 1,475 ms
+    task on the first zoom at 455x628, 2,985 ms in full view). One ↔ All,
+    chip taps and flights: 0 long tasks. Two pre-existing costs remain, the
+    same on the Phase 1c build: a flip from dark to light has one 56-72 ms
+    task (MapLibre's basemap diff re-adds ~43 Carto layers, each serializing
+    the style, plus the wine paint writes), and a grape pick sometimes has one
+    ~60 ms `Worker.onmessage` task (a tile result decoded on the main thread).
 - **Wine Map dark mode** (2026-09-19, spec
   `docs/superpowers/specs/2026-09-19-map-dark-mode.md`). The map follows the
   theme `<html>` is rendering (its `.dark` class, via `useRenderedTheme` in
