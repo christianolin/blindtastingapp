@@ -57,6 +57,23 @@ import {
 } from "@/lib/wine-map/tree-load";
 import { MapErrorBoundary, MapUnavailableCard } from "./map-error-boundary";
 import { WineMapTree } from "./wine-map-tree";
+import { MapDetailControls } from "./map-detail-controls";
+import { CountryChips } from "./country-chips";
+import { useDetailMode } from "@/lib/wine-map/detail-mode";
+import { detailStatus } from "@/lib/wine-map/detail-status";
+import { countryChips } from "@/lib/wine-map/country-chips";
+import {
+  bboxesForCountry,
+  CHIP_MIN_ZOOM,
+  countryCameraBox,
+  type CameraRequest,
+} from "@/lib/wine-map/camera-fit";
+import {
+  chipAfterReport,
+  chipOnTap,
+  type ChipFocus,
+  type DetailReport,
+} from "@/lib/wine-map/focus";
 import { KnowledgeSections } from "./knowledge-sections";
 import { ReferenceCombobox } from "@/components/reference-combobox";
 import {
@@ -167,6 +184,34 @@ export function TileWineMapExplorer({
   // blocked the bare getter throws SecurityError and took the explorer down.
   const english = useSyncExternalStore(subscribeLang, readEnglish, () => true);
   const chooseLang = (value: boolean) => writeEnglish(value);
+
+  // Map detail (spec 2026-09-23 §7). One country by default and All countries
+  // one tap away, remembered per browser. It is never in the URL, so a shared
+  // ?place= link cannot put a phone into All. `fellBack` means this page was
+  // put back in One country after All went wrong (lib/wine-map/detail-mode).
+  const {
+    mode: detail,
+    fellBack,
+    setMode: setDetail,
+    dropToOne,
+    confirmHealthy,
+  } = useDetailMode();
+  // What the map says it is showing, reported on change.
+  const [report, setReport] = useState<DetailReport>(() => ({
+    focusCountry: null,
+    depthCountries: [],
+    countriesInView: [],
+    pastDepthZoom: false,
+  }));
+  // A tapped country chip: focus without selection. The next real selection
+  // clears it, and so does its country leaving the view after being on it.
+  const [chipFocus, setChipFocus] = useState<ChipFocus | null>(null);
+  // A chip's camera move. The nonce lets the same chip fly again.
+  const [cameraRequest, setCameraRequest] = useState<CameraRequest | null>(null);
+  const handleDetailReport = useCallback((next: DetailReport) => {
+    setReport(next);
+    setChipFocus((prev) => chipAfterReport(prev, next.countriesInView));
+  }, []);
 
   // One request per attempt: the first at once, the single automatic retry
   // after TREE_AUTO_RETRY_MS, a manual Retry at once. The place cache never
@@ -430,6 +475,7 @@ export function TileWineMapExplorer({
       // commit able to recover it.
       if (key === selectedKey) return;
       selectSourceRef.current = source;
+      setChipFocus(null);
       applyCachedSelection(key);
       // Start the three requests here rather than leaving them to the effects
       // below, which React only flushes after this commit has painted the map
@@ -485,6 +531,7 @@ export function TileWineMapExplorer({
       selectSourceRef.current = "ui";
       applyCachedSelection(deepLink.select);
       setSelectedKey(deepLink.select);
+      setChipFocus(null);
     }
   }
 
@@ -525,6 +572,61 @@ export function TileWineMapExplorer({
     () => fallbackFromContext(context, selectedKey),
     [context, selectedKey],
   );
+
+  // The tree's countries, in the label language's order, with per-country
+  // counts while a grape filter is on.
+  const chips = useMemo(
+    () => countryChips(tree ?? [], { english, visibleKeys }),
+    [tree, english, visibleKeys],
+  );
+  // One country: focus the country (no selection), and fly only if it is off
+  // screen or the map is below shard zoom. TileWineMap judges that at apply
+  // time from its live zoom. All countries: every country already has
+  // subregions, so a chip is a plain jump and always flies.
+  const chooseChip = useCallback(
+    (country: string) => {
+      if (detail === "one") {
+        setChipFocus((prev) => chipOnTap(prev, country, report.countriesInView));
+      }
+      const bbox = manifest
+        ? countryCameraBox(bboxesForCountry(manifest.shards, shardCountries, country))
+        : null;
+      if (!bbox) return;
+      setCameraRequest((prev) => ({
+        bbox,
+        minZoom: CHIP_MIN_ZOOM,
+        nonce: (prev?.nonce ?? 0) + 1,
+        stayIfVisible: detail === "one" ? country : null,
+      }));
+    },
+    [detail, manifest, report.countriesInView, shardCountries],
+  );
+  const focusName = useMemo(() => {
+    const root = report.focusCountry
+      ? (tree ?? []).find((node) => node.key === report.focusCountry)
+      : undefined;
+    if (!root) return null;
+    return english ? englishName(root.name) : root.name;
+  }, [report.focusCountry, tree, english]);
+  // "Subregions shown" is claimed only once they are drawn, meaning the map's
+  // scan saw tier >= 2 features of the focus country on screen.
+  const depthShown =
+    report.focusCountry !== null && report.depthCountries.includes(report.focusCountry);
+  const detailLine = detailStatus({
+    tree: treeLoad.state,
+    detail,
+    fellBack,
+    focusName,
+    depthVisible: depthShown,
+    otherCountriesInView: report.countriesInView.some(
+      (country) => country !== report.focusCountry,
+    ),
+    // Past NEIGHBOUR_MIN_ZOOM with nothing drawn, "zoom in" is no longer
+    // honest advice (controller ruling R3); the map judges it from the same
+    // idle scan that measured depth.
+    pastDepthZoom: report.pastDepthZoom,
+  });
+  const markedChip = detail === "one" && depthShown ? report.focusCountry : null;
 
   const article =
     context?.article && context.article.editorial_status !== "PLACEHOLDER"
@@ -634,7 +736,7 @@ export function TileWineMapExplorer({
             {/* Map filters: pick a grape and only places using it stay on
                 the map (France's outline remains as context). More filter
                 kinds will join this bar. */}
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">
                 Filter
               </span>
@@ -689,6 +791,24 @@ export function TileWineMapExplorer({
                 </button>
               </div>
             </div>
+            {/* Map detail (spec 2026-09-23 §7.1): the One | All switch with its
+                status line, then the country chips. Both rows hold a fixed
+                height from first paint, so the map below never moves when the
+                status text or the chip list changes. */}
+            <div className="mb-3 flex shrink-0 flex-col gap-2">
+              <MapDetailControls
+                mode={detail}
+                onModeChange={setDetail}
+                status={detailLine}
+                onRetry={() => dispatchTree({ type: "retry" })}
+              />
+              <CountryChips
+                chips={chips}
+                markedKey={markedChip}
+                loading={treeLoad.state === "loading"}
+                onChoose={chooseChip}
+              />
+            </div>
             {/* Expanded on mobile needs a definite height: the lg full-view
                 relies on a flex-1/min-h-0 chain that only exists in the
                 xl:flex-row layout — in the phone column the hierarchy card's
@@ -696,7 +816,7 @@ export function TileWineMapExplorer({
             <div
               className={
                 expanded
-                  ? "h-[calc(100dvh-7rem)] xl:h-auto xl:min-h-0 xl:flex-1"
+                  ? "h-[calc(100dvh-12rem)] xl:h-auto xl:min-h-0 xl:flex-1"
                   : "h-[70vh] min-h-[420px]"
               }
             >
@@ -719,6 +839,12 @@ export function TileWineMapExplorer({
                   areaSlugsByShard={slugsByShard}
                   expanded={expanded}
                   onToggleExpanded={() => setExpanded((value) => !value)}
+                  detail={detail}
+                  chipCountry={chipFocus?.country ?? null}
+                  cameraRequest={cameraRequest}
+                  onDetailReport={handleDetailReport}
+                  onContextLost={dropToOne}
+                  onHealthy={confirmHealthy}
                   english={english}
                 />
               </MapErrorBoundary>

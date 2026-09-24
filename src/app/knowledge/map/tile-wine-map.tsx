@@ -15,13 +15,17 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
-import { keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
+import { countryOfShard, keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
 import { allModeHealthy } from "@/lib/wine-map/detail-mode";
 import {
   centreCountryFrom,
   countryShares,
+  deepCountriesFor,
   nextFocusCountry,
+  scanPastDepthZoom,
+  type DetailReport,
 } from "@/lib/wine-map/focus";
+import { chipFlightNeeded, type CameraRequest } from "@/lib/wine-map/camera-fit";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
   AREA_PALETTE_ZOOM,
@@ -241,6 +245,8 @@ export function TileWineMap({
   chipCountry = null,
   onContextLost,
   onHealthy,
+  cameraRequest = null,
+  onDetailReport,
   manifest,
   selectedKey,
   cameraTarget,
@@ -269,6 +275,12 @@ export function TileWineMap({
   /** All countries has drawn at shard zoom and gone idle on this device. This
       is the crash-loop sentinel's all-clear (spec §7.5). */
   onHealthy?: () => void;
+  /** A country chip's camera move (lib/wine-map/camera-fit). Each new nonce
+      is applied once. */
+  cameraRequest?: CameraRequest | null;
+  /** Focus, depth and countries on screen, reported whenever one of them
+      changes. The explorer's status line and chips read it. */
+  onDetailReport?: (report: DetailReport) => void;
   manifest: WineMapManifest;
   selectedKey: string | null;
   /** The key of the place whose context the explorer has loaded. It lags
@@ -727,10 +739,12 @@ export function TileWineMap({
         visibleKeys,
         english,
         selectedKey,
-        deepCountries: focusCountry ? [focusCountry] : [],
+        // All countries: every known country deep, so a pan never reloads a
+        // shard. One country: the focus country alone.
+        deepCountries: deepCountriesFor(detail, focusCountry, knownCountries),
         knownCountries,
       }),
-    [visibleKeys, english, selectedKey, focusCountry, knownCountries],
+    [visibleKeys, english, selectedKey, focusCountry, knownCountries, detail],
   );
   const selectionStates = useMemo(
     () => selectionFeatureStates({ roots: tree, selectedKey, fallback: selectionFallback }),
@@ -780,6 +794,15 @@ export function TileWineMap({
   // revoked (see latchRampedRegions). The only scan-driven input the paint
   // still has, and it changes at most once per region per session.
   const [rampedRegions, setRampedRegions] = useState<string[]>([]);
+  // Countries whose tier >= 2 features the last scan saw on screen. "Subregions
+  // shown" (the status line, the chip marker) is claimed only from this, never
+  // from focus alone. Focus exists at every zoom, depth only once drawn.
+  const [depthCountries, setDepthCountries] = useState<string[]>([]);
+  // The focus country that scan was taken with. With the scan's zoom
+  // (viewInfo.zoom) it decides whether "no subregions mapped here" may be said
+  // (scanPastDepthZoom, controller ruling R3); a scan from before a focus
+  // change never speaks for the new focus.
+  const [scanFocus, setScanFocus] = useState<string | null>(null);
   // The legend covers much of a phone screen (owner screenshots), so make it
   // collapsible: collapsed by default below lg, expanded from lg up. The map is
   // dynamic ssr:false, so `window` exists at first render (no hydration flash).
@@ -791,6 +814,8 @@ export function TileWineMap({
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
+    // A lost WebGL context nulls map.style until MapLibre restores it.
+    if (!map.style) return;
     // Same reason as interactiveLayerIds: regions live on world-region-fills
     // whenever their shard is unmounted, so omitting it left the legend blind
     // to every region at the opening zoom.
@@ -828,10 +853,16 @@ export function TileWineMap({
     const classifications = new Set<string>();
     // Per-region classification levels, for the ramp latch.
     const levelsByRegion = new globalThis.Map<string, Set<string>>();
+    // Countries with subregion depth drawn in this frame.
+    const depth = new Set<string>();
     for (const feature of map.queryRenderedFeatures({ layers })) {
       const p = (feature.properties ?? {}) as Record<string, unknown>;
       const region = typeof p.region === "string" ? p.region : null;
       if (region) regions.add(region);
+      if (region && typeof p.tier === "number" && p.tier >= 2) {
+        const country = countryOfShard(shardCountries, region);
+        if (country) depth.add(country);
+      }
       // Legend rows appear only for classes actually in view: Burgundy shows
       // village/premier/grand, Champagne its rated villages, Alsace its
       // grand-cru vineyards.
@@ -868,6 +899,15 @@ export function TileWineMap({
     // Latch, never revoke: returns the same array when nothing new was seen,
     // so this is a no-op state update on every scan after discovery.
     setRampedRegions((prev) => latchRampedRegions(prev, levelsByRegion));
+    const depthList = [...depth].sort();
+    setDepthCountries((prev) =>
+      prev.length === depthList.length && prev.every((c, i) => c === depthList[i])
+        ? prev
+        : depthList,
+    );
+    // Read from the ref, not state: syncMountedShards writes it at moveend,
+    // before the idle that scheduled this scan.
+    setScanFocus(focusRef.current);
     const next = {
       scanned: true,
       zoom: map.getZoom(),
@@ -885,7 +925,7 @@ export function TileWineMap({
     // world-fills and the legend would never see a shard layer. It tracks the
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
-  }, [mountedShards, noFills]);
+  }, [mountedShards, noFills, shardCountries]);
 
   // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
   // at the end of each gesture — so a burst of small pans/zooms ran a full
@@ -935,6 +975,28 @@ export function TileWineMap({
     healthPendingRef.current = false;
     onHealthyRef.current?.();
   }, [scheduleScan, mountedShards]);
+
+  // Report what the map is showing to the explorer, which owns the status
+  // line and the chips. Focus and depth are replaced only on a real change,
+  // and pastDepthZoom is a boolean, so this fires only then, and a pan inside
+  // one country re-renders nothing above the map.
+  const pastDepthZoom = scanPastDepthZoom({
+    scanZoom: viewInfo.zoom,
+    scanFocus,
+    focusCountry: focus.country,
+  });
+  const onDetailReportRef = useRef(onDetailReport);
+  useEffect(() => {
+    onDetailReportRef.current = onDetailReport;
+  }, [onDetailReport]);
+  useEffect(() => {
+    onDetailReportRef.current?.({
+      focusCountry: focus.country,
+      depthCountries,
+      countriesInView: focus.inView,
+      pastDepthZoom,
+    });
+  }, [focus, depthCountries, pastDepthZoom]);
 
   // A cameraTarget that arrives BEFORE the map instance exists used to be
   // dropped: @vis.gl/react-maplibre creates the map inside an async import, so
@@ -1010,6 +1072,51 @@ export function TileWineMap({
     }
     applyCameraTarget(cameraTarget);
   }, [cameraTarget, applyCameraTarget]);
+
+  // A country chip's camera move, kept apart from cameraTarget. It carries a
+  // nonce, so a second tap on the same chip flies again (cameraTarget is
+  // memoised on the selection's context and cannot repeat), and it never
+  // selects anything. The nonce present at mount counts as already applied, so
+  // a remount (the error boundary's Retry) does not replay an old flight.
+  const appliedRequestRef = useRef(cameraRequest?.nonce ?? 0);
+  const pendingRequestRef = useRef<CameraRequest | null>(null);
+  const applyCameraRequest = useCallback((request: CameraRequest) => {
+    const map = mapRef.current?.getMap();
+    if (!map || !mapReadyRef.current) {
+      pendingRequestRef.current = request;
+      return;
+    }
+    if (
+      !chipFlightNeeded({
+        zoom: map.getZoom(),
+        countriesInView: countriesInViewRef.current,
+        stayIfVisible: request.stayIfVisible,
+      })
+    ) {
+      return;
+    }
+    const [minX, minY, maxX, maxY] = request.bbox;
+    const cam = map.cameraForBounds(
+      [
+        [minX, minY],
+        [maxX, maxY],
+      ],
+      { padding: 48 },
+    );
+    if (!cam) return;
+    // No `essential: true`. Under prefers-reduced-motion MapLibre turns this
+    // into a jump, which is what a chip tap should do there.
+    map.easeTo({
+      center: cam.center,
+      zoom: Math.max(cam.zoom ?? 0, request.minZoom),
+      duration: 900,
+    });
+  }, []);
+  useEffect(() => {
+    if (!cameraRequest || cameraRequest.nonce <= appliedRequestRef.current) return;
+    appliedRequestRef.current = cameraRequest.nonce;
+    applyCameraRequest(cameraRequest);
+  }, [cameraRequest, applyCameraRequest]);
 
   // The legend's reading of the ramp: on when a region in view is a ramped
   // one. Legend-only — the paint reads rampedRegions through the expression.
@@ -1368,6 +1475,12 @@ export function TileWineMap({
           if (pending) {
             pendingCameraRef.current = null;
             applyCameraTarget(pending);
+          }
+          // Same for a chip's camera request.
+          const pendingRequest = pendingRequestRef.current;
+          if (pendingRequest) {
+            pendingRequestRef.current = null;
+            applyCameraRequest(pendingRequest);
           }
         }}
         onClick={(e) => {
