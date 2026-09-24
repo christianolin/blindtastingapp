@@ -15,7 +15,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
-import { mountTarget } from "@/lib/wine-map/mount-policy";
+import { keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
+import {
+  centreCountryFrom,
+  countryShares,
+  nextFocusCountry,
+} from "@/lib/wine-map/focus";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
   AREA_PALETTE_ZOOM,
@@ -29,6 +34,7 @@ import {
   staticLabelPaint,
   staticOutlinePaint,
   worldRegionColor,
+  type Bbox,
   type ShardSpecInputs,
 } from "@/lib/wine-map/shard-specs";
 import { englishName } from "@/lib/wine-map/localize-names";
@@ -157,21 +163,6 @@ const PerfProbe = dynamic(() => import("./perf-probe").then((m) => m.PerfProbe),
   ssr: false,
 });
 
-// Share of the on-screen wine country a single country must account for before
-// the map treats you as "viewing" it and reveals its subregions. Below this the
-// frame spans several countries, so everything stays at region level.
-const COUNTRY_FOCUS_SHARE = 0.6;
-
-// Release threshold for that focus. Taking focus at 0.6 and dropping it at 0.6
-// made a frame sitting near the boundary flip on every small drag, blinking
-// every appellation in view. Keep focus until the leader falls well clear.
-const COUNTRY_RELEASE_SHARE = 0.45;
-
-// Resolution of the grid used to measure each country's share of the visible
-// wine ground by UNION rather than by summing overlapping bboxes. 48x48 over a
-// viewport is far finer than the bboxes it is measuring.
-const FOCUS_GRID = 48;
-
 // MapLibre keeps 500 tiles by default across ALL sources; panning back over
 // ground you just left re-fetches and re-decodes it. Raising this trades a few
 // MB of memory for not re-doing that work.
@@ -245,6 +236,8 @@ const SELECTED_LABEL_LAYOUT = selectedLabelLayout() as SymbolLayout;
 // idle-time scan (latchRampedRegions), not re-decided per viewport.
 
 export function TileWineMap({
+  detail = "one",
+  chipCountry = null,
   manifest,
   selectedKey,
   cameraTarget,
@@ -259,6 +252,13 @@ export function TileWineMap({
   tree = null,
   selectionFallback = null,
 }: {
+  /** One country (default): subregion depth for the focus country alone, and
+      other countries' shards mounted only from z8. All countries: depth for
+      every country at once (spec 2026-09-23 §7). */
+  detail?: "one" | "all";
+  /** A tapped country chip: focus goes to it once it is on screen, ahead of
+      the selection and the map centre (lib/wine-map/focus). */
+  chipCountry?: string | null;
   manifest: WineMapManifest;
   selectedKey: string | null;
   /** The key of the place whose context the explorer has loaded. It lags
@@ -436,88 +436,93 @@ export function TileWineMap({
   // (lib/wine-map/shard-controller) adds the shards themselves, a few per
   // animation frame within its 8 ms budget, so nothing here staggers.
   const [mountedShards, setMountedShards] = useState<string[]>([]);
-  // Which country owns the view: the one whose shards cover most of the
-  // viewport. Only consulted when nothing is selected — a selection always wins.
-  const [viewportCountry, setViewportCountry] = useState<string | null>(null);
-  // Every country with ANY presence on screen. A selection only pins focus
-  // while its country is one of these — see focusCountry.
-  const [viewportCountries, setViewportCountries] = useState<string[]>([]);
+  // The focus country (One country mode's subregion depth) and every country
+  // with wine ground on screen, both decided on each sync by nextFocusCountry
+  // (lib/wine-map/focus). One state object, replaced only on a real change,
+  // so a pan inside one country re-renders nothing.
+  const [focus, setFocus] = useState<{ country: string | null; inView: string[] }>(
+    () => ({ country: null, inView: [] }),
+  );
+  const focusCountry = focus.country;
+  // The previous focus for the share rule's hysteresis. It is read and written
+  // only inside syncMountedShards, so it never lags a render.
+  const focusRef = useRef<string | null>(null);
+  // Countries on screen as of the last sync. A chip's camera request reads it
+  // at apply time.
+  const countriesInViewRef = useRef<string[]>([]);
+  // The mode the last sync mounted for. A mode change drops the 150% keep
+  // (keepAcrossSync), so switching to One country unmounts the other
+  // countries' shards at once.
+  const syncedDetailRef = useRef(detail);
+  const selectedCountry = useMemo(
+    () => (selectedKey ? (selectedKey.split(".")[0] ?? null) : null),
+    [selectedKey],
+  );
   const syncMountedShards = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
     const b = map.getBounds();
-    const [w, s, e, n] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
-    const [dx, dy] = [e - w, n - s];
-
-    // Union, not sum. Region bboxes overlap heavily (Italy has 20 of them), so
-    // adding per-shard intersections double-counts and systematically favours
-    // whichever country is split into the most overlapping pieces — it once
-    // ranked Spain over Italy on a frame Italy dominated. Rasterising the
-    // viewport into a coarse grid and marking covered cells gives the real
-    // "share of on-screen wine ground" the threshold is supposed to mean.
-    const covered: Record<string, Set<number>> = {};
-    const anyCovered = new Set<number>();
-    for (const [key, shard] of shardEntries) {
-      const country = shardCountries[key];
-      if (!country || !shard.bbox) continue;
-      const [minX, minY, maxX, maxY] = shard.bbox;
-      const cx0 = Math.max(0, Math.floor(((minX - w) / dx) * FOCUS_GRID));
-      const cx1 = Math.min(FOCUS_GRID - 1, Math.ceil(((maxX - w) / dx) * FOCUS_GRID) - 1);
-      const cy0 = Math.max(0, Math.floor(((minY - s) / dy) * FOCUS_GRID));
-      const cy1 = Math.min(FOCUS_GRID - 1, Math.ceil(((maxY - s) / dy) * FOCUS_GRID) - 1);
-      if (cx1 < cx0 || cy1 < cy0) continue;
-      const cells = (covered[country] ??= new Set<number>());
-      for (let gx = cx0; gx <= cx1; gx += 1) {
-        for (let gy = cy0; gy <= cy1; gy += 1) {
-          const cell = gy * FOCUS_GRID + gx;
-          cells.add(cell);
-          anyCovered.add(cell);
-        }
-      }
-    }
-    // "Viewing a country" means one country actually dominates the view — not
-    // merely that it happens to be the largest sliver of a continent-wide
-    // frame. Below the threshold there is no focus country at all, and nothing
-    // renders deeper than region level anywhere.
-    const ranked = Object.entries(covered).sort((a, b) => b[1].size - a[1].size);
-    const total = anyCovered.size;
-    const present = ranked.map(([country]) => country).sort();
-    setViewportCountries((prev) =>
-      prev.length === present.length && prev.every((c, i) => c === present[i]) ? prev : present,
-    );
-    setViewportCountry((prev) => {
-      if (!ranked.length || total === 0) return prev === null ? prev : null;
-      const [leader, cells] = ranked[0];
-      const share = cells.size / total;
-      // Hysteresis, matching the mount set right below: take focus at
-      // COUNTRY_FOCUS_SHARE, but keep it until share drops under
-      // COUNTRY_RELEASE_SHARE. A single hard threshold made a ~20px drag along
-      // the Rhone/Provence border flip focus on and off, blinking every
-      // appellation in three regions in and out on alternate gestures.
-      if (share >= COUNTRY_FOCUS_SHARE) return prev === leader ? prev : leader;
-      if (prev && covered[prev] && covered[prev].size / total >= COUNTRY_RELEASE_SHARE) return prev;
-      return prev === null ? prev : null;
-    });
+    const view: Bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
     const zoom = map.getZoom();
-    // The rule lives in lib/wine-map/mount-policy (mountTarget). "all" is
-    // today's rule: every shard in view at z >= SHARD_MIN_ZOOM, 50% pad, kept
-    // to 150%, plus the selected shard at any zoom.
+    const { shares, present } = countryShares({ shards: shardEntries, shardCountries, view });
+    // The wine region under the map centre. world-region-fills alone is
+    // enough. The world archive carries every region at every zoom. A region
+    // handed to its shard is only painted at opacity 0, and feature-state
+    // never removes a feature from the query index. The layer is hidden under
+    // ?debugFills=off (queries skip hidden layers), and that case falls back
+    // to the share rule. The call is guarded because the style can be
+    // mid-rebuild, or null after a lost WebGL context.
+    let centreCountry: string | null = null;
+    try {
+      if (map.getLayer("world-region-fills")) {
+        const hits = map.queryRenderedFeatures(map.project(map.getCenter()), {
+          layers: ["world-region-fills"],
+        });
+        centreCountry = centreCountryFrom(
+          hits.map((feature) => feature.properties),
+          shardCountries,
+        );
+      }
+    } catch {
+      centreCountry = null;
+    }
+    const country = nextFocusCountry({
+      chipCountry,
+      selectedCountry,
+      countriesInView: present,
+      centreCountry,
+      shares,
+      prev: focusRef.current,
+    });
+    focusRef.current = country;
+    countriesInViewRef.current = present;
+    setFocus((prev) =>
+      prev.country === country &&
+      prev.inView.length === present.length &&
+      prev.inView.every((c, i) => c === present[i])
+        ? prev
+        : { country, inView: present },
+    );
+    // Read before the write: the updater below may run later (or twice under
+    // StrictMode), and must see the mode this sync started from.
+    const syncedDetail = syncedDetailRef.current;
+    syncedDetailRef.current = detail;
     setMountedShards((prev) => {
       const next = mountTarget({
         shards: shardEntries,
-        view: [w, s, e, n],
+        view,
         zoom,
         selectedShard,
-        prev: new Set(prev),
-        detail: "all",
-        focusCountry: null,
+        prev: keepAcrossSync(prev, syncedDetail, detail),
+        detail,
+        focusCountry: country,
         shardCountries,
       });
       return next.length === prev.length && next.every((k, i) => k === prev[i])
         ? prev
         : next;
     });
-  }, [shardEntries, selectedShard, shardCountries]);
+  }, [shardEntries, shardCountries, selectedShard, selectedCountry, chipCountry, detail]);
   // Re-evaluates on selection too, so a shard selected from the tree is mounted
   // even if the camera never moves.
   useEffect(() => {
@@ -695,19 +700,6 @@ export function TileWineMap({
   // The probe's handle on the live MapLibre instance; read when a run starts,
   // so it always drives the map that exists then.
   const getProbeMap = useCallback(() => mapRef.current?.getMap() ?? null, []);
-
-  // A selection pins the focus country, but ONLY while that country is still on
-  // screen. selectedKey is never cleared by the explorer, so keying focus on it
-  // unconditionally meant the first selection of the session — a tree click, or
-  // just arriving via ?place=... — pinned depth to that country permanently:
-  // pan to Tuscany afterwards and its shard mounts but stays clamped to
-  // tier <= 1, so Chianti and every Tuscan subzone could never appear at any
-  // zoom. Once the selection is off screen, focus follows the viewport again.
-  const focusCountry = useMemo(() => {
-    const selectedCountry = selectedKey ? (selectedKey.split(".")[0] ?? null) : null;
-    if (selectedCountry && viewportCountries.includes(selectedCountry)) return selectedCountry;
-    return viewportCountry;
-  }, [selectedKey, viewportCountries, viewportCountry]);
 
   // The one writer of every global-state value and of the selection's
   // feature-state (lib/wine-map/map-state-sync), created in onLoad. React only
