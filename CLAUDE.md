@@ -1571,14 +1571,21 @@ a raw subquery, regardless of which two tables look involved at a glance.
        pixel sits in a gap east of the Alsace footprint, and Baden's huge bbox
        then called it "Germany". A centre query that finds nothing at moveend
        (a jumpTo, a chip landing or a deep link can run it before the new
-       view's tiles exist) is re-decided once at the next idle;
+       view's tiles exist) is re-decided once at the next idle, and when that
+       moves focus, that idle skips its scan (the new focus's shards are
+       still reloading) and asks for a repaint so a later idle scans. The
+       probe runs only in One country and only when steps 1 and 2 do not
+       decide;
     4. the 0.6/0.45 share rule.
 
     A chip focuses WITHOUT selecting: the details panel and `?place=` stay. In
     One country it flies only when its country is off screen or the map is
     below z5. The flight is a `CameraRequest` with a nonce, lands at z5.5 or
     deeper, and drops outliers such as Madeira (`countryCameraBox`). In All
-    countries a chip always flies. The chip marker and "Subregions: {country}."
+    countries a chip always flies. A chip whose country never came on screen
+    (its flight interrupted, or never started) is dropped at the viewer's
+    next own camera move: a `movestart` carrying an `originalEvent`
+    (`onUserMoveStart`, `chipAfterUserMove`). The chip marker and "Subregions: {country}."
     appear only once the idle scan has seen tier ≥ 2 features of that country
     on screen. The tree has no `min_zoom` (spec §7.3 assumed one), so "not
     drawn yet" and "none here" look the same. Below z8 an undrawn focus country reads "Zoom
@@ -1593,8 +1600,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
     link must not put a phone into All. The flags:
     - `wine-map-all-countries` set = All.
     - `wine-map-all-pending` is set before All draws. It is cleared at the
-      first idle at z ≥ 5 with shards mounted (`allModeHealthy`), or on
-      `pagehide`.
+      first idle at z ≥ 5 at which every shard All itself wants for the view
+      (`mountTarget` with `detail: "all"`) has been added or given up
+      (`allModeHealthy`, `ShardController.isSettled`), on `pagehide`, or
+      when the map unmounts in All (an in-app link away,
+      `useDetailMode`'s effect cleanup).
 
     A load that finds the sentinel still set starts in One country and says
     "Switched to One country after a problem last time." The saved All stays
