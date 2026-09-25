@@ -331,26 +331,22 @@ export function capReasonLine(
   return ctx.candidateStyle === "FORTIFIED" ? TRAINING_COPY.capNotFortified : TRAINING_COPY.capFortified;
 }
 
-const CAP_WORDS: Record<CapReason, string> = {
-  colour: "colour",
-  bubbles: "bubbles",
-  fortified: "fortification",
-};
-
 /**
  * The result's style verdict (spec §3.5, D17). `v` is the real wine's style
  * looked up in the frozen snapshot (null: not in the pool). A capped style
- * names its reason through capReasonLine when `ctx` is given, else one word.
+ * always names its reason through capReasonLine, so the bracket holds one of
+ * §9's cap reasons and never a bare word — `ctx` is the real wine's
+ * archetype (its colour and style) beside the note's own colour, and is
+ * required even when `v` is null or uncapped, where it is not read.
  * A style with no percentage drops "at {pct} %".
  */
 export function styleVerdictLine(
   v: { rank: number; n: number; pct: number | null; capped: CapReason | null } | null,
-  ctx?: { noteColour: WineColour | null; candidateColour: WineColour; candidateStyle?: WineStyle },
+  ctx: { noteColour: WineColour | null; candidateColour: WineColour; candidateStyle?: WineStyle },
 ): string {
   if (v === null) return TRAINING_COPY.notInPool;
   if (v.capped !== null) {
-    const reason = ctx ? capReasonLine(v.capped, ctx) : CAP_WORDS[v.capped];
-    return `You had ruled its style out (${reason})`;
+    return `You had ruled its style out (${capReasonLine(v.capped, ctx)})`;
   }
   const at = v.pct === null ? "" : ` at ${v.pct} %`;
   return `Its style was your #${v.rank} of ${v.n}${at}`;

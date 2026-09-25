@@ -281,23 +281,40 @@ describe("cap reasons", () => {
 });
 
 describe("styleVerdictLine", () => {
+  // The real wine's archetype beside the note's colour; only a capped verdict reads it.
+  const CTX: Parameters<typeof styleVerdictLine>[1] = {
+    noteColour: "RED",
+    candidateColour: "RED",
+    candidateStyle: "STILL",
+  };
   it("rank of n at pct", () => {
-    expect(styleVerdictLine({ rank: 2, n: 17, pct: 92, capped: null })).toBe("Its style was your #2 of 17 at 92 %");
-    expect(styleVerdictLine({ rank: 9, n: 17, pct: null, capped: null })).toBe("Its style was your #9 of 17");
+    expect(styleVerdictLine({ rank: 2, n: 17, pct: 92, capped: null }, CTX)).toBe(
+      "Its style was your #2 of 17 at 92 %",
+    );
+    expect(styleVerdictLine({ rank: 9, n: 17, pct: null, capped: null }, CTX)).toBe("Its style was your #9 of 17");
   });
-  it("ruled out, with the reason", () => {
+  it("ruled out, with a §9 cap reason — never a bare word", () => {
     expect(
       styleVerdictLine(
         { rank: 16, n: 17, pct: 15, capped: "colour" },
         { noteColour: "RED", candidateColour: "WHITE", candidateStyle: "STILL" },
       ),
     ).toBe("You had ruled its style out (Looks like a red wine, not a white)");
-    expect(styleVerdictLine({ rank: 16, n: 17, pct: 15, capped: "bubbles" })).toBe(
-      "You had ruled its style out (bubbles)",
-    );
+    expect(
+      styleVerdictLine(
+        { rank: 16, n: 17, pct: 15, capped: "bubbles" },
+        { noteColour: null, candidateColour: "WHITE", candidateStyle: "SPARKLING" },
+      ),
+    ).toBe("You had ruled its style out (No bubbles noted)");
+    expect(
+      styleVerdictLine(
+        { rank: 17, n: 17, pct: 15, capped: "fortified" },
+        { noteColour: null, candidateColour: "RED", candidateStyle: "FORTIFIED" },
+      ),
+    ).toBe("You had ruled its style out (Not fortified)");
   });
   it("not in the pool", () => {
-    expect(styleVerdictLine(null)).toBe("This style isn't in the pool yet");
+    expect(styleVerdictLine(null, CTX)).toBe("This style isn't in the pool yet");
   });
 });
 
