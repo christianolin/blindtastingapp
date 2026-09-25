@@ -92,7 +92,7 @@ export function MapDetailControls({
             type="button"
             onClick={onRetry}
             aria-label="Retry subregion detail"
-            className="shrink-0 rounded-full border border-border px-2.5 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="shrink-0 rounded-full border border-border px-2.5 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground max-md:min-h-11"
           >
             Retry
           </button>
