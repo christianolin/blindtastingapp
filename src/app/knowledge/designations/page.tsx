@@ -54,7 +54,10 @@ export default async function LibraryPage({
   }
 
   const archRows = archRes.data ?? [];
-  const archPlaceIds = [...new Set(archRows.map((a) => a.wine_place_id))];
+  // wine_place_id is nullable since 20260925120000 (training-room D9).
+  const archPlaceIds = [
+    ...new Set(archRows.map((a) => a.wine_place_id).filter((id): id is string => id !== null)),
+  ];
   const archPlaceName = new Map<string, string>();
   if (archPlaceIds.length > 0) {
     const { data: aps } = await supabase
@@ -68,7 +71,7 @@ export default async function LibraryPage({
     name: a.name,
     colour: a.colour,
     style: a.style,
-    placeName: archPlaceName.get(a.wine_place_id) ?? "",
+    placeName: (a.wine_place_id ? archPlaceName.get(a.wine_place_id) : undefined) ?? "",
   }));
 
   return (

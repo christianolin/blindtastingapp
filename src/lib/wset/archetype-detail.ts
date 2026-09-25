@@ -43,7 +43,11 @@ export async function fetchArchetype(
     (v): v is string => Boolean(v),
   );
   const [placeRes, grapesRes, linkRes] = await Promise.all([
-    supabase.from("wine_places").select("name").eq("id", row.wine_place_id).maybeSingle(),
+    // wine_place_id is nullable since 20260925120000 (training-room D9): no
+    // place, no lookup, and the sheet shows an empty place name.
+    row.wine_place_id
+      ? supabase.from("wine_places").select("name").eq("id", row.wine_place_id).maybeSingle()
+      : Promise.resolve({ data: null as { name: string } | null }),
     grapeIds.length
       ? supabase.from("grapes").select("id, name").in("id", grapeIds)
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),

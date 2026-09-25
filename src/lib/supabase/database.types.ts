@@ -1288,31 +1288,47 @@ export type Database = {
       wine_archetypes: {
         Row: {
           id: string;
-          wine_place_id: string;
+          // Nullable since 20260925120000 (training-room spec D9): an
+          // archetype may have no map place. No live row is null before
+          // batch 1 (20260925130000); every reader guards it.
+          wine_place_id: string | null;
           name: string;
           colour: WineColour;
           style: WineStyle;
-          primary_grape_id: string | null;
+          // 20260925120000 (spec D8, §4.1): the scoring identity, resolved by
+          // exact live name when a batch is written, never at runtime.
+          country_id: string;
+          region_id: string;
+          appellation_id: string;
+          primary_grape_id: string;
           secondary_grape_id: string | null;
           description: string | null;
           sat: { [key: string]: [string, string] };
           quality_low: number | null;
           quality_high: number | null;
+          // Years from vintage at which the style is usually met (spec D10).
+          typical_age_low: number | null;
+          typical_age_high: number | null;
           sort_order: number;
           created_at: string;
         };
         Insert: {
           id?: string;
-          wine_place_id: string;
+          wine_place_id?: string | null;
           name: string;
           colour: WineColour;
           style?: WineStyle;
-          primary_grape_id?: string | null;
+          country_id: string;
+          region_id: string;
+          appellation_id: string;
+          primary_grape_id: string;
           secondary_grape_id?: string | null;
           description?: string | null;
           sat?: { [key: string]: [string, string] };
           quality_low?: number | null;
           quality_high?: number | null;
+          typical_age_low?: number | null;
+          typical_age_high?: number | null;
           sort_order?: number;
           created_at?: string;
         };
@@ -1325,14 +1341,99 @@ export type Database = {
           archetype_id: string;
           term_id: string;
           kind: "NOSE" | "PALATE";
+          // 20260925120000 (spec D5): picking this exact term earns the bonus.
+          signature: boolean;
         };
         Insert: {
           archetype_id: string;
           term_id: string;
           kind?: "NOSE" | "PALATE";
+          signature?: boolean;
         };
         Update: Partial<
           Database["public"]["Tables"]["wine_archetype_aromas"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+      // 20260925120000 (training-room spec §4.3): 0..n type designations per
+      // archetype. Read: authenticated; write: curators (as the aroma links).
+      wine_archetype_designations: {
+        Row: {
+          archetype_id: string;
+          type_designation_id: string;
+        };
+        Insert: {
+          archetype_id: string;
+          type_designation_id: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["wine_archetype_designations"]["Insert"]
+        >;
+        Relationships: [];
+      };
+
+      // 20260925120000 (training-room spec §6.1): one row per training
+      // session. SELECT own for authenticated; no client INSERT, UPDATE or
+      // DELETE grant: only record_training_attempt writes it. Every *_points
+      // column is null when that category did not apply or nothing was
+      // revealed; scored_at is set exactly when actual_catalog_wine_id is.
+      training_attempts: {
+        Row: {
+          id: string;
+          author_id: string;
+          session_key: string;
+          note_id: string;
+          picked_archetype_id: string | null;
+          guessed_vintage_kind: VintageKind | null;
+          guessed_vintage_year: number | null;
+          guessed_vintage_tawny_years: number | null;
+          actual_catalog_wine_id: string | null;
+          actual_archetype_id: string | null;
+          note_colour_hue: WsetColourHue | null;
+          hue_cleared: boolean;
+          // The full ranking frozen at the reveal (RankingSnapshot, spec §5.8).
+          candidates_snapshot: Json;
+          country_points: number | null;
+          region_points: number | null;
+          appellation_points: number | null;
+          primary_grape_points: number | null;
+          secondary_grape_points: number | null;
+          type_designation_points: number | null;
+          vintage_points: number | null;
+          total_points: number | null;
+          possible_points: number | null;
+          scored_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          session_key: string;
+          note_id: string;
+          picked_archetype_id?: string | null;
+          guessed_vintage_kind?: VintageKind | null;
+          guessed_vintage_year?: number | null;
+          guessed_vintage_tawny_years?: number | null;
+          actual_catalog_wine_id?: string | null;
+          actual_archetype_id?: string | null;
+          note_colour_hue?: WsetColourHue | null;
+          hue_cleared?: boolean;
+          candidates_snapshot?: Json;
+          country_points?: number | null;
+          region_points?: number | null;
+          appellation_points?: number | null;
+          primary_grape_points?: number | null;
+          secondary_grape_points?: number | null;
+          type_designation_points?: number | null;
+          vintage_points?: number | null;
+          total_points?: number | null;
+          possible_points?: number | null;
+          scored_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["training_attempts"]["Insert"]
         >;
         Relationships: [];
       };
@@ -1364,7 +1465,9 @@ export type Database = {
           // Both nullable live (BT-N1; blind-tasting B8): a note on a still-
           // hidden tasting glass carries neither identity until the glass is
           // revealed (M5's wset_notes_one_identity: exactly one of the two,
-          // or neither alongside a BLIND context_kind + tasting_wine_id).
+          // or neither alongside a BLIND context_kind + tasting_wine_id, or
+          // neither on a TRAINING note with no glass until the training
+          // room's reveal, 20260925120000).
           catalog_wine_id: string | null;
           unidentified_wine_id: string | null;
           context_kind: "OPEN" | "BLIND" | "TRAINING";
@@ -2205,6 +2308,24 @@ export type Database = {
       attach_catalog_wine_photo: {
         Args: { p_catalog_wine_id: string; p_image_path: string; p_via: string };
         Returns: string;
+      };
+      // 20260925120000 (training-room spec §6.2): saves a training session's
+      // TRAINING note and its training_attempts row, scoring the pick against
+      // the revealed catalog wine in SQL. SECURITY DEFINER; EXECUTE for
+      // authenticated only. p_attempt: { attempt_id?, session_key, started_at,
+      // picked_archetype_id?, guessed_vintage_kind?, guessed_vintage_year?,
+      // guessed_vintage_tawny_years?, actual_catalog_wine_id?,
+      // candidates_snapshot }. Returns { attempt_id, note_id, points: {
+      // country, region, appellation, primary_grape, secondary_grape,
+      // type_designation, vintage }, total, possible, actual_archetype_id,
+      // hue_cleared }. Refusals, verbatim: "not signed in" (42501), "a new
+      // session takes no note id" (42501), "that session is not yours"
+      // (42501), "already revealed" (P0001); "no such wine", "no such typical
+      // wine", "a session key is required", "name the wine to reveal" and a
+      // malformed argument (22023).
+      record_training_attempt: {
+        Args: { p_note: Json; p_aromas: Json; p_attempt: Json };
+        Returns: Json;
       };
     };
   };
