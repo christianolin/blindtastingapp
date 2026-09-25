@@ -33,6 +33,7 @@ import type {
   FlightHint,
   NotePick,
 } from "@/components/add-wine/types";
+import { routeNotePick } from "@/components/add-wine/note-pick";
 
 // The device's localStorage for R6's "Don't show this again". safe-storage calls
 // this getter inside its try, because a blocked store throws on the accessor.
@@ -79,7 +80,9 @@ type Ctx = {
   openAddWine: (kind: AddWineKind, opts?: AddWineOpts) => void;
   activeTasting: ActiveTasting | null;
   setActiveTasting: (t: ActiveTastingInput | null) => void;
-  /** Any destination. `{ kind: "note" }` is Taste & rate: pick one wine, then its WSET note opens. */
+  /** Any destination. `{ kind: "note" }` is Taste & rate: pick one wine, then its WSET note opens.
+      `{ kind: "note", reveal: true }` with `onNotePick` is the training room's
+      reveal: the pick comes back to the caller and no note opens. */
   openAddWineSheet: (
     destination: AddWineDestination | null,
     options?: AddWineOpenOptions,
@@ -129,6 +132,9 @@ export function AddWineProvider({
   const supabase = useMemo(() => createClient(), []);
   const openCount = useRef(0);
   const pickCount = useRef(0);
+  // The open `openCount` names, so a note pick reaches THAT open's
+  // `onNotePick` (the training room's reveal) and never an earlier one's.
+  const currentOpen = useRef<OpenSheet | null>(null);
 
   // R6 "Note saved": every NewNoteModal reports its saves through
   // NoteSavedStepContext, and the confirmation shows after the first save of a
@@ -233,7 +239,9 @@ export function AddWineProvider({
     ) => {
       ensureCurrency(destination);
       openCount.current += 1;
-      setSheet({ seq: openCount.current, destination, options, initialLot });
+      const open: OpenSheet = { seq: openCount.current, destination, options, initialLot };
+      currentOpen.current = open;
+      setSheet(open);
     },
     [ensureCurrency],
   );
@@ -246,6 +254,12 @@ export function AddWineProvider({
     (destination: AddWineDestination | null, options: AddWineOpenOptions = {}) => {
       const catalogWineId = options.preselect?.catalogWineId;
       if (destination?.kind === "note" && catalogWineId) {
+        // Training room: a preselected pick goes straight back too, and never
+        // opens a note or consumes.
+        if (options.onNotePick) {
+          options.onNotePick({ catalogWineId, consume: false });
+          return;
+        }
         pickCount.current += 1;
         setNote({
           seq: pickCount.current,
@@ -286,9 +300,23 @@ export function AddWineProvider({
     setSheet((open) => (open?.seq === seq ? null : open));
   }, []);
   const pickNote = useCallback((seq: number, pick: NotePick) => {
-    if (seq !== openCount.current) return;
+    // Training room (spec §3.4): the open that passed `onNotePick` gets its
+    // pick back (never consuming) and no NewNoteModal opens; a pick from a
+    // replaced open is dropped either way.
+    const open = currentOpen.current;
+    const route = routeNotePick({
+      seq,
+      currentSeq: openCount.current,
+      pick,
+      handBack: open?.options.onNotePick !== undefined,
+    });
+    if (route.kind === "ignore") return;
+    if (route.kind === "hand-back") {
+      open?.options.onNotePick?.(route.pick);
+      return;
+    }
     pickCount.current += 1;
-    setNote({ seq: pickCount.current, pick, tastingWineId: null, contextKind: null });
+    setNote({ seq: pickCount.current, pick: route.pick, tastingWineId: null, contextKind: null });
   }, []);
 
   const registerFlightHint = useCallback((hint: FlightHint | null) => setOverviewHint(hint), []);

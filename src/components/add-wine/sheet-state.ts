@@ -25,6 +25,7 @@ import type { CellarFilter } from "./row-format";
 import type {
   AddSource, AddWineDestination, AddWineOpenOptions, AddWineStart, AddedWine, NotePick, SearchGroups,
 } from "./types";
+import { isRevealDestination } from "./note-pick";
 import { homeViewFor, startViewFor } from "./use-camera";
 
 // ---------------------------------------------------------------------------
@@ -624,8 +625,10 @@ export function initialSheetState(p: {
     queue: [],
     byHand: null,
     search: { query: "" },
-    desktop: { query: "", focusedRow: 0, consume: true },
-    cellar: { filter: null, selectedLotId: null, consume: true },
+    // The training room's reveal never draws a bottle down (spec §3.4); its
+    // matrix hides the toggle, so the default is all that could say otherwise.
+    desktop: { query: "", focusedRow: 0, consume: !isRevealDestination(p.destination) },
+    cellar: { filter: null, selectedLotId: null, consume: !isRevealDestination(p.destination) },
     lot,
     chooseFor: null,
     followUp: null,

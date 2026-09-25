@@ -85,6 +85,7 @@ import {
   swapFlightGlass,
 } from "./actions";
 import { notePickPlan } from "./format";
+import { revealSafePick } from "./note-pick";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
 import { scanPhotoTarget, type ScanPhotoTarget } from "./scan-photo";
 import {
@@ -460,7 +461,11 @@ export function useSheetAdds({
       The pick's own bottle, and the by-hand form whose save made it, never count.
       A pick that waited on a catalog write carries that write's ticket, so a
       stale one does nothing. */
-  function handOff(pick: NotePick, from: Pick<AddContext, "itemId" | "byHand" | "ticket" | "imagePath">): void {
+  function handOff(picked: NotePick, from: Pick<AddContext, "itemId" | "byHand" | "ticket" | "imagePath">): void {
+    // Training room (spec §3.4): a reveal pick never draws a bottle down,
+    // whatever the (hidden) consume state says. Stored the same way in a
+    // close-ask, so Discard hands on the safe pick too.
+    const pick = revealSafePick(picked, currentDestination(stateRef.current));
     // The photo is of the picked wine, even if the pick is then held in the
     // close-ask and dropped with "Keep going".
     attachScan(scanPhotoTarget({ destination: "note", catalogWineId: pick.catalogWineId }, from.imagePath));

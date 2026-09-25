@@ -109,7 +109,7 @@ export function sheetMatrix(destination: AddWineDestination | null, canScan: boo
     case "cellar":
       return cellarMatrix(canScan);
     case "note":
-      return noteMatrix(canScan);
+      return noteMatrix(canScan, destination.reveal === true);
     case "catalog":
       return catalogMatrix(canScan);
     default: {
@@ -285,8 +285,12 @@ function cellarMatrix(canScan: boolean): SheetMatrix {
   };
 }
 
-function noteMatrix(canScan: boolean): SheetMatrix {
-  return {
+// Training room (spec §3.4, §9): the note flow, naming the bottle poured blind.
+const THIS_IS_IT = "This is it";
+const REVEAL_EYEBROW = "Reveal the bottle";
+
+function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
+  const note: SheetMatrix = {
     kind: "note",
     ...shared(canScan),
     eyebrow: "Taste & rate",
@@ -330,6 +334,21 @@ function noteMatrix(canScan: boolean): SheetMatrix {
     // D7: a partial read opens A7 directly, skipping the confirm screen.
     partialRead: { single: "by-hand", stacked: "by-hand", skipConfirm: true },
     followUps: TERMINAL,
+  };
+  if (!reveal) return note;
+  return {
+    ...note,
+    eyebrow: REVEAL_EYEBROW,
+    title: () => "Which bottle was it?",
+    enterHint: "↵ reveals the first hit",
+    row: () => ({ label: THIS_IS_IT, action: "pick", disabled: false, affordance: "chevron" }),
+    // A bottle poured blind was opened by someone else: never drawn down.
+    consumeLabel: null,
+    upload: { ...note.upload, body: "Read and matched exactly as it is on the phone, then your result shows." },
+    cellarTileSubtitle: cellarTile(() => "if the bottle came from your cellar"),
+    footer: { ...note.footer, primary: THIS_IS_IT },
+    confirm: { ...note.confirm, primaryMatch: THIS_IS_IT, primaryNoMatch: THIS_IS_IT },
+    byHand: { ...note.byHand, eyebrow: `${REVEAL_EYEBROW} · by hand`, primary: () => THIS_IS_IT },
   };
 }
 

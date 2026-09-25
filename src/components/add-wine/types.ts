@@ -25,8 +25,10 @@ export type AddWineDestination =
     }
   | { kind: "cellar" }
   | { kind: "catalog" }
-  /** Taste & rate: one wine, then its WSET note opens (D4; was "rate"). */
-  | { kind: "note" };
+  /** Taste & rate: one wine, then its WSET note opens (D4; was "rate").
+      `reveal` (training room, spec §3.4): the reveal wording, no cellar
+      draw-down, and the pick goes back to the opener's `onNotePick`. */
+  | { kind: "note"; reveal?: true };
 
 export type AddWineStart = "camera" | "search" | "cellar" | "byhand";
 
@@ -48,6 +50,11 @@ export type AddWineOpenOptions = {
       cellar" straight to the by-hand form, prefilled from that glass's
       identity. */
   preselect?: { catalogWineId?: string; unidentifiedWineId?: string; tastingWineId?: string };
+  /** note only (training room, spec §3.4): the pick is handed back here
+      instead of opening NewNoteModal — only for the open that passed it; a
+      pick from an earlier, replaced open is dropped. A handed-back pick never
+      consumes a cellar lot. */
+  onNotePick?: (pick: NotePick) => void;
 };
 
 /** wines.added_via (E.3) */

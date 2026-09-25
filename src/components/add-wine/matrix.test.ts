@@ -291,3 +291,40 @@ describe("a flight's cells follow its destination: position, reveal mode, who br
     }
   });
 });
+
+describe("the training room's reveal (a note destination with reveal, spec §3.4 and §9)", () => {
+  const reveal: AddWineDestination = { kind: "note", reveal: true };
+  it.each([true, false])("canScan=%s: the reveal wording, no consume toggle, still a single pick", (canScan) => {
+    const x = sheetMatrix(reveal, canScan);
+    const plain = sheetMatrix({ kind: "note" }, canScan);
+    expect(x.kind).toBe("note");
+    expect([x.eyebrow, x.title("home"), x.title("read"), x.enterHint]).toEqual([
+      "Reveal the bottle",
+      "Which bottle was it?",
+      "Which bottle was it?",
+      "↵ reveals the first hit",
+    ]);
+    expect((["lot", "catalog", "tasted"] as const).map((source) => x.row({ source, inFlight: false, owned: false }))).toEqual(
+      Array(3).fill({ label: "This is it", action: "pick", disabled: false, affordance: "chevron" }),
+    );
+    expect(x.consumeLabel).toBeNull();
+    expect([x.footer.primary, x.confirm.primaryMatch, x.confirm.primaryNoMatch, x.byHand.primary(false), x.byHand.primary(true)]).toEqual(
+      Array(5).fill("This is it"),
+    );
+    expect(x.byHand.eyebrow).toBe("Reveal the bottle · by hand");
+    expect(x.upload).toEqual({ ...plain.upload, body: "Read and matched exactly as it is on the phone, then your result shows." });
+    expect(x.cellarTileSubtitle?.({ bottles: 38, readyToDrink: 6 })).toBe("38 bottles · if the bottle came from your cellar");
+    // Everything else is Taste & rate's own.
+    expect([
+      x.home, x.searchPlaceholder, x.showMany, x.multiTitle, x.chips, x.searchGroups, x.cellarSource,
+      x.partialRead, x.followUps, x.leadLine, x.footer.button, x.confirm.eyebrowMatch, x.byHand.footerNote,
+    ]).toEqual([
+      plain.home, plain.searchPlaceholder, plain.showMany, plain.multiTitle, plain.chips, plain.searchGroups, plain.cellarSource,
+      plain.partialRead, plain.followUps, plain.leadLine, plain.footer.button, plain.confirm.eyebrowMatch, plain.byHand.footerNote,
+    ]);
+  });
+  it("a plain note keeps Taste & rate's wording and its consume toggle", () => {
+    expect(sheetMatrix({ kind: "note" }, true).eyebrow).toBe("Taste & rate");
+    expect(sheetMatrix({ kind: "note" }, false).consumeLabel).toBe("Take a bottle out of the cellar when I save the note");
+  });
+});
