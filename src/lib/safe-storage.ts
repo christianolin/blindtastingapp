@@ -88,3 +88,21 @@ export function writeValue(
     return false;
   }
 }
+
+/**
+ * Removes a stored value. False when there is no storage or the removal
+ * throws. Overwrites with "" when the storage has no `removeItem`; a caller
+ * that parses the value (the training room's draft) treats "" as nothing
+ * stored, the same as null.
+ */
+export function clearValue(getStorage: () => StorageLike | null, key: string): boolean {
+  try {
+    const storage = getStorage();
+    if (!storage) return false;
+    if (storage.removeItem) storage.removeItem(key);
+    else storage.setItem(key, "");
+    return true;
+  } catch {
+    return false;
+  }
+}

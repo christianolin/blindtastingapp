@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clearFlag, readFlag, readValue, writeFlag, writeValue } from "./safe-storage";
+import { clearFlag, clearValue, readFlag, readValue, writeFlag, writeValue } from "./safe-storage";
 
 describe("safe-storage", () => {
   it("reads and writes a flag, and survives a throwing or missing storage", () => {
@@ -135,5 +135,46 @@ describe("safe-storage: clearing a flag", () => {
       removeItem: () => { throw new Error("SecurityError"); },
     };
     expect(clearFlag(() => hostile, "k")).toBe(false);
+  });
+});
+
+// clearValue exists for the training room's device draft (spec
+// 2026-09-25-training-room-design.md D13): Discard and a finished session
+// remove the stored JSON rather than leave a stale value behind.
+describe("safe-storage: clearing a value", () => {
+  it("removes a value it wrote, and only that key", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    };
+    writeValue(() => storage, "a", "{\"x\":1}");
+    writeValue(() => storage, "b", "keep");
+    expect(clearValue(() => storage, "a")).toBe(true);
+    expect(readValue(() => storage, "a")).toBeNull();
+    expect([...store.keys()]).toEqual(["b"]);
+  });
+
+  it("overwrites with an empty string when the storage has no removeItem", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    };
+    writeValue(() => storage, "a", "{\"x\":1}");
+    expect(clearValue(() => storage, "a")).toBe(true);
+    expect(readValue(() => storage, "a")).toBe("");
+  });
+
+  it("is false, not a throw, when storage is missing or blocked", () => {
+    expect(clearValue(() => null, "a")).toBe(false);
+    expect(clearValue(() => { throw new Error("SecurityError"); }, "a")).toBe(false);
+    const hostile = {
+      getItem: () => null,
+      setItem: () => undefined,
+      removeItem: () => { throw new Error("SecurityError"); },
+    };
+    expect(clearValue(() => hostile, "a")).toBe(false);
   });
 });
