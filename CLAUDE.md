@@ -1606,7 +1606,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
     maplibre-gl bump, even a minor one, re-runs the engine tests and the
     `?debugPerf=1` protocol before it ships.
   - **One country | All countries** (owner, 2026-09-23). Nothing new sits on
-    the map canvas. Two toolbar rows sit under the filter bar:
+    the map canvas. From md, two toolbar rows sit under the filter bar (phones
+    reach the switch through the Map options sheet instead and get no chips;
+    see "Wine map on the phone" below):
     - A `role="radiogroup"` "Map detail" (`map-detail-controls.tsx`) with a
       `role="status"` line. The status copy lives only in
       `src/lib/wine-map/detail-status.ts` and is pinned word for word by its
@@ -1614,7 +1616,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
     - Country chips (`country-chips.tsx`): tree roots of kind COUNTRY, collated
       in the label language, with roving tabindex and per-country counts under
       a grape filter. They scroll with the scroller's own `scrollTo`, never
-      `scrollIntoView`, because the page column is itself a scroll container.
+      `scrollIntoView`, because the page column is itself a scroll container
+      (md and up; phones render no chips).
 
     One country (the default) gives subregion depth to one focus country. It
     mounts other countries' shards only from z8 (`mountTarget`,
@@ -1705,6 +1708,106 @@ a raw subquery, regardless of which two tables look involved at a glance.
     task (MapLibre's basemap diff re-adds ~43 Carto layers, each serializing
     the style, plus the wine paint writes), and a grape pick sometimes has one
     ~60 ms `Worker.onmessage` task (a tile result decoded on the main thread).
+- **Wine map on the phone** (2026-09-25; spec
+  `docs/superpowers/specs/2026-09-25-phone-map-layout-design.md`, plan
+  `docs/superpowers/plans/2026-09-25-phone-map-layout.md`). Owner: on the
+  phone you want to pinch the map, not scroll the page. Below md
+  (`(width < 48rem)`, exactly what `max-md:` compiles to) `/knowledge/map` is
+  one fixed screen: the header (titled "Wine map"; the page heading is
+  `hidden md:block`), the active-tasting strip when there is one, one toolbar
+  row (grape Filter, Local|English, a "Map options" button), the map filling
+  the rest, and a bottom sheet over the map's bottom edge. The page never
+  scrolls; only the sheet's panels do. Tablets (md–xl) and desktop are
+  unchanged.
+  - **The height is a flex chain from AppShell's `h-dvh` column, never a
+    calc.** The page root and the `data-map-page` wrapper are flex-1
+    `max-md:min-h-0 max-md:overflow-hidden` columns; the explorer column, its
+    row, the map Card and its CardContent are each `max-md:min-h-0
+    max-md:flex-1`; the map wrapper is `max-md:min-h-0 max-md:flex-1` and
+    TileWineMap stays `h-full`. Every level has a definite size, which is
+    what the two earlier "map collapsed to zero" bugs lacked. A
+    `calc(100dvh - header)` would overflow by the strip whenever the strip
+    shows (it can appear on a poll); the flex chain gives the strip its
+    share. AppShell's "the content column is the scroll container" rule is
+    untouched: on phones this page just never overflows that column.
+  - **CSS shapes it, `useIsPhone()` decides what exists**
+    (`src/lib/use-is-phone.ts`: `useSyncExternalStore`, server snapshot
+    false). In the explorer an existing class string only gains `max-md:`
+    utilities; an element phones must not have is `null` IN PLACE when
+    `isPhone` (its slot kept, so the map's React parent chain is the same at
+    every width and crossing md, e.g. a rotated phone, never remounts
+    MapLibre) and also carries `max-md:hidden`, so the server-rendered first
+    paint never shows it; a phone-only element renders only when `isPhone`.
+    The tree body and the details body are built once (`renderTree`,
+    `detailsBody`) and rendered in exactly one place. Keep all four rules for
+    any new explorer element.
+  - **The sheet** (`map-bottom-sheet.tsx`; its state is the pure
+    `sheetReducer` in `src/lib/wine-map/sheet-state.ts`). Closed: a 56 px bar
+    (drag handle, Explore | Details tabs, the place name or "Explore the
+    map", a chevron). Half: `50dvh`, the map interactive above. Full: up to
+    the header. Not modal. A tab opens half on it, and the shown tab again
+    closes. A map tap (TileWineMap's source "map", which the `?debugPerf=1`
+    probe's scripted selects also use), a tree pick and a `?place=` link open
+    Details at half; a load with `?place=` starts there. Nearby and Labelling
+    chips swap Details in place, and Details scrolls back to its top on a new
+    place. The chevron, Escape or a swipe down closes; Escape counts only
+    while focus is inside the sheet, so a portaled GrapeModal's Escape stays
+    its own. A swipe up goes full. A swipe is ≥ 32 px between pointerdown
+    and a window-level pointerup, and the click it would end in is swallowed
+    (a keyboard click, `detail === 0`, never is). Nothing is persisted or put
+    in the URL. Both panels stay mounted while hidden, so the tree's search
+    and expansion survive tab switches.
+  - **Scroll containers in the sheet.** Explore: the tree's own `<ul>` (the
+    panel gives `WineMapTree` a definite height, so the search box stays
+    pinned); its nearest-scrollable-ancestor walk finds that list, never the
+    page. Details: the panel itself. `WineMapTree`'s phone-only props are
+    `active` (false while its tab is hidden; turning true re-reveals the
+    selected row, which a hidden list cannot scroll to) and `rootsCollapsed`
+    (the phone list opens as the list of countries, like a menu). Below md
+    its rows, search box and level buttons are 44 px, and its search field is
+    16 px (iOS zooms the whole page into a smaller focused field).
+  - **Map options** (`map-options-sheet.tsx`): a phone bottom Dialog holding
+    `MapDetailControls` unchanged. Phones render neither the toolbar's
+    switch and status row nor the chips, so the `role="status"` region
+    exists only inside this sheet while it is open: one region, never two.
+  - **Canvas offsets** (`tile-wine-map.tsx`). The Legend is
+    `max-md:bottom-16`, and MapLibre's bottom-right corner (the compact
+    attribution) is lifted by
+    `max-md:[&_.maplibregl-ctrl-bottom-right]:bottom-[54px]!`. The `!` is
+    required: maplibre-gl.css is unlayered, and an unlayered rule beats every
+    layered Tailwind utility whatever its specificity.
+  - **The camera under the half sheet** (controller ruling R1, 2026-09-25;
+    supersedes the spec's "camera padding is a follow-up"). A tree pick or a
+    `?place=` link opens Details at half AND flies the camera, so the fit
+    lands the place in the half the sheet leaves visible. The explorer's
+    `CameraTarget` carries an optional `padding: SheetPadding` (`{ bottom }`
+    in CSS px, `src/lib/wine-map/camera-fit.ts`), set by `sheetCameraPadding`
+    only when the sheet will be at `half` on a phone (`PHONE_QUERY` matched
+    imperatively inside the target's memo, never one of its deps — the target
+    is built once per selection; `pickFromTree` and the deep link set
+    `selectSnapRef` to "half" before that render). Its value is
+    `halfSnapHeightPx(window.innerHeight)` (`sheet-state.ts`,
+    `HALF_SNAP_SHARE` = 0.5) — computed, not measured off the sheet's element,
+    because the pick snaps the sheet in the same render that builds the
+    target, while the element is still a 200 ms height transition away from
+    that size; it and the sheet's `h-[50dvh]` change together. TileWineMap's
+    `selectionFit(padding)` (pinned by `camera-fit.test.ts`) turns it into
+    the 48 px frame plus the sheet's height at the bottom and an `offset` of
+    half that height, which `easeTo` applies in pixels at the FINAL zoom on
+    the bbox's mercator midpoint (`mercatorMidpoint`) — a centre pre-shifted
+    by `cameraForBounds` at the fitted zoom would over-shift whenever the
+    reveal floor raises the zoom — and its "already well framed, leave the
+    view" test judges `boundsAboveSheet`, not `getBounds()`, so a place
+    framed under the sheet is brought out. A map tap (source "map") still
+    never moves the camera; a closed or full sheet, and every md+ render,
+    pass no padding, so the desktop and tablet fit is exactly today's. Chip
+    flights (`CameraRequest`, padding 48) are a separate path and unchanged.
+  - **Known.** On a hard load the server renders the md+ elements (hidden
+    below md by `max-md:hidden`), and a phone swaps in its toolbar button and
+    sheet right after hydration; an in-app link mounts straight into the
+    phone layout. In the Browser pane, resize and then reload: `useIsPhone`
+    follows a live resize, but the legend's open state is decided once at
+    mount.
 - **Wine Map dark mode** (2026-09-19, spec
   `docs/superpowers/specs/2026-09-19-map-dark-mode.md`). The map follows the
   theme `<html>` is rendering (its `.dark` class, via `useRenderedTheme` in
