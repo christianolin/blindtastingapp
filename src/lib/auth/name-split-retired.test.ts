@@ -11,15 +11,9 @@ import { describe, expect, it } from "vitest";
 const SRC_DIR = path.join(process.cwd(), "src");
 const THIS_FILE = path.join(SRC_DIR, "lib", "auth", "name-split-retired.test.ts");
 
-/** Files the welcome-step task (plan Task 3) converts; it empties this list. */
-const STILL_SPLIT: string[] = [
-  path.join(SRC_DIR, "app", "auth", "set-password", "actions.ts"),
-  path.join(SRC_DIR, "app", "auth", "set-password", "set-password-form.tsx"),
-  path.join(SRC_DIR, "lib", "auth", "full-name.ts"),
-  path.join(SRC_DIR, "lib", "auth", "full-name.test.ts"),
-  path.join(SRC_DIR, "lib", "auth", "password-copy.ts"),
-  path.join(SRC_DIR, "lib", "auth", "password-copy.test.ts"),
-];
+/** Files still allowed a token. Emptied by the welcome-step task (plan
+ *  Task 3); an entry here must be a deliberate, commented decision. */
+const STILL_SPLIT: string[] = [];
 
 const FORBIDDEN = [
   /first_name/,
@@ -54,6 +48,12 @@ function mentionsSplit(file: string): boolean {
 
 describe("the name is one field: no first/last split under src/", () => {
   const exempt = new Set([THIS_FILE, ...STILL_SPLIT]);
+
+  it("the old joiner module is gone and nothing is exempt any more", () => {
+    expect(existsSync(path.join(SRC_DIR, "lib", "auth", "full-name.ts"))).toBe(false);
+    expect(existsSync(path.join(SRC_DIR, "lib", "auth", "full-name.test.ts"))).toBe(false);
+    expect(STILL_SPLIT).toEqual([]);
+  });
 
   it("every file still exempted exists and still holds a token (the list cannot go stale)", () => {
     for (const file of STILL_SPLIT) {

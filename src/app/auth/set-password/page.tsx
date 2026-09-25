@@ -11,6 +11,7 @@ import {
   passwordCopy,
   passwordMode,
   passwordNext,
+  setupNameSuggestion,
   signedOutRedirect,
 } from "@/lib/auth/password-copy";
 import { createClient } from "@/lib/supabase/server";
@@ -40,10 +41,9 @@ export default async function SetPasswordPage({
     redirect(signedOutRedirect(mode));
   }
 
-  const suggestedName =
-    (user.user_metadata?.display_name as string | undefined) ??
-    user.email?.split("@")[0] ??
-    "";
+  // Setup mode's pre-fill (spec D3): the name the inviter typed, else a
+  // readable version of the email's local part. Only a suggestion.
+  const suggestedName = setupNameSuggestion(user.user_metadata?.display_name, user.email);
   const copy = passwordCopy(mode);
 
   return (

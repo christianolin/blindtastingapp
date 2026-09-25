@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NAME_MAX } from "@/lib/auth/name";
 import {
   passwordCopy,
   passwordNext,
@@ -31,10 +32,10 @@ export function SetPasswordForm({
     SetPasswordFormState,
     FormData
   >(setPassword, null);
-  // The suggested name (from the invite, or the email's local part) prefills
-  // the first-name field; the last name starts empty and stays optional.
+  // One name field, pre-filled with setupNameSuggestion's suggestion (the
+  // name the inviter typed, else a readable version of the email's local
+  // part). The person edits it freely; nothing is saved until they submit.
   const [name, setName] = useState(suggestedName);
-  const [lastName, setLastName] = useState("");
   const [password, setPasswordValue] = useState("");
 
   const error = state && "error" in state ? state.error : null;
@@ -66,31 +67,23 @@ export function SetPasswordForm({
         className="hidden"
       />
       {copy.nameLabel ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="first_name">{copy.nameLabel}</Label>
-            <Input
-              id="first_name"
-              name="first_name"
-              autoComplete="given-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoFocus
-              className={TAP}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="last_name">{copy.lastNameLabel}</Label>
-            <Input
-              id="last_name"
-              name="last_name"
-              autoComplete="family-name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className={TAP}
-            />
-          </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="name">{copy.nameLabel}</Label>
+          <Input
+            id="name"
+            name="name"
+            autoComplete="name"
+            maxLength={NAME_MAX}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            aria-describedby="name-hint"
+            className={TAP}
+          />
+          <p id="name-hint" className="text-xs text-muted-foreground">
+            {copy.nameHint}
+          </p>
         </div>
       ) : null}
       <div className="flex flex-col gap-2">

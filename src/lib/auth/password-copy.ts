@@ -7,6 +7,7 @@
 // reset — the "Forgot password?" email's link, which lands here with
 //         `?reason=reset` (RESET_NEXT) once /auth/confirm has made a session.
 import { sameSiteNext } from "./login-copy";
+import { NAME_HINT, NAME_LABEL, checkName, normalizeName, suggestNameFromEmail } from "./name";
 import { PASSWORD_SET_FLAG, SET_PASSWORD_PATH } from "./paths";
 
 export type PasswordMode = "setup" | "reset";
@@ -44,8 +45,8 @@ export type PasswordCopy = {
   lead: string;
   /** null in reset mode: the name field is not shown. */
   nameLabel: string | null;
-  /** The optional last-name field beside it; null when there is no name step. */
-  lastNameLabel: string | null;
+  /** The helper line under the name field; null when there is no name field. */
+  nameHint: string | null;
   passwordLabel: string;
   hint: string;
   submit: string;
@@ -61,8 +62,8 @@ const COPY: Record<PasswordMode, PasswordCopy> = {
   setup: {
     title: "Welcome to Blindr",
     lead: "Choose a password so you can sign in again on any device.",
-    nameLabel: "First name",
-    lastNameLabel: "Last name (optional)",
+    nameLabel: NAME_LABEL,
+    nameHint: NAME_HINT,
     passwordLabel: "Choose a password",
     hint: HINT,
     submit: "Save and continue",
@@ -73,7 +74,7 @@ const COPY: Record<PasswordMode, PasswordCopy> = {
     title: "Choose a new password",
     lead: "Pick a new password for your Blindr account.",
     nameLabel: null,
-    lastNameLabel: null,
+    nameHint: null,
     passwordLabel: "New password",
     hint: HINT,
     submit: "Save password",
@@ -108,4 +109,37 @@ export function passwordUpdateData(
   const data: Record<string, unknown> = { [PASSWORD_SET_FLAG]: true };
   if (mode === "setup" && displayName.trim()) data.display_name = displayName;
   return data;
+}
+
+/**
+ * Setup mode's pre-fill (spec D3): the name the inviter typed
+ * (`user_metadata.display_name`, normalised) when it holds one, else a
+ * readable version of the email's local part (suggestNameFromEmail). Only a
+ * suggestion: the person edits it freely and nothing is saved until "Save
+ * and continue". Never shortened: a name over NAME_MAX is refused by the
+ * save, not cut.
+ */
+export function setupNameSuggestion(
+  metadataName: unknown,
+  email: string | null | undefined,
+): string {
+  if (typeof metadataName === "string") {
+    const name = normalizeName(metadataName);
+    if (name) return name;
+  }
+  return suggestNameFromEmail(email ?? "");
+}
+
+/**
+ * The action's read of the name field. Setup mode runs checkName: the name is
+ * normalised, and refused when empty (a missing field reads as empty) or over
+ * NAME_MAX. Reset mode has no name field and never writes one, whatever the
+ * form sent.
+ */
+export function passwordFormName(
+  mode: PasswordMode,
+  raw: string,
+): { name: string } | { error: string } {
+  if (mode === "reset") return { name: "" };
+  return checkName(raw);
 }

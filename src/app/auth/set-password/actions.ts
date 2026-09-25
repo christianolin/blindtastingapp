@@ -1,9 +1,9 @@
 "use server";
 
-import { fullName } from "@/lib/auth/full-name";
 import { createClient } from "@/lib/supabase/server";
 import {
   passwordCopy,
+  passwordFormName,
   passwordMode,
   passwordNext,
   passwordUpdateData,
@@ -32,10 +32,14 @@ export async function setPassword(
   const mode = passwordMode(field(formData, "mode"));
   const next = passwordNext(field(formData, "next"));
   const password = field(formData, "password");
-  // Setup mode asks for a first name (required by the form) and an optional
-  // last name; together they become the one name shown everywhere.
-  const displayName =
-    mode === "setup" ? fullName(field(formData, "first_name"), field(formData, "last_name")) : "";
+  // Setup mode asks for one name, "Your name" (src/lib/auth/name.ts): it is
+  // normalised, and refused when empty (a missing field reads as empty) or
+  // over NAME_MAX, before anything is written, so a refused name never
+  // leaves a password saved without it. Reset mode has no name field and
+  // never writes one, whatever the form sent.
+  const named = passwordFormName(mode, field(formData, "name"));
+  if ("error" in named) return { error: named.error };
+  const displayName = named.name;
 
   const supabase = await createClient();
 

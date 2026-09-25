@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   PASSWORD_DEFAULT_NEXT,
   passwordCopy,
+  passwordFormName,
   passwordMode,
   passwordNext,
   passwordUpdateData,
+  setupNameSuggestion,
   signedOutRedirect,
 } from "./password-copy";
 import { RESET_NEXT, setPasswordHref } from "./paths";
@@ -82,8 +84,8 @@ describe("set-password copy (verbatim)", () => {
     expect(passwordCopy("setup")).toEqual({
       title: "Welcome to Blindr",
       lead: "Choose a password so you can sign in again on any device.",
-      nameLabel: "First name",
-      lastNameLabel: "Last name (optional)",
+      nameLabel: "Your name",
+      nameHint: "How you'll appear to other tasters.",
       passwordLabel: "Choose a password",
       hint: "At least 6 characters.",
       submit: "Save and continue",
@@ -97,7 +99,7 @@ describe("set-password copy (verbatim)", () => {
       title: "Choose a new password",
       lead: "Pick a new password for your Blindr account.",
       nameLabel: null,
-      lastNameLabel: null,
+      nameHint: null,
       passwordLabel: "New password",
       hint: "At least 6 characters.",
       submit: "Save password",
@@ -126,5 +128,74 @@ describe("set-password metadata write", () => {
   it("never blanks a name with an empty one", () => {
     expect(passwordUpdateData("setup", "")).toEqual({ password_set: true });
     expect(passwordUpdateData("setup", "   ")).toEqual({ password_set: true });
+  });
+});
+
+describe("setup name pre-fill (spec D3)", () => {
+  it("uses the name the inviter typed, normalised", () => {
+    expect(setupNameSuggestion("Carsten", "carsten.olin@example.com")).toBe("Carsten");
+    expect(setupNameSuggestion("  Carsten   Olin ", "x@example.com")).toBe("Carsten Olin");
+  });
+
+  it("pre-fills a full name as itself, with nothing added", () => {
+    // 2026-09-19: a whole name pre-filled into the first of two boxes, plus a
+    // surname in the second, was saved as "Carsten Olin Olin".
+    expect(setupNameSuggestion("Carsten Olin", "carsten.olin@example.com")).toBe("Carsten Olin");
+  });
+
+  it("falls back to a readable email local part when no name was typed", () => {
+    expect(setupNameSuggestion(undefined, "carsten.olin@example.com")).toBe("Carsten Olin");
+    expect(setupNameSuggestion(undefined, "jens_h2@example.com")).toBe("Jens H");
+  });
+
+  it("treats a blank or non-string metadata name as no name", () => {
+    for (const unusable of ["", "   ", null, 42, {}, ["Carsten"]]) {
+      expect(setupNameSuggestion(unusable, "cdo@example.com")).toBe("Cdo");
+    }
+  });
+
+  it("is empty only with neither a name nor an email", () => {
+    expect(setupNameSuggestion(undefined, undefined)).toBe("");
+    expect(setupNameSuggestion(undefined, null)).toBe("");
+  });
+
+  it("never shortens a suggestion over the limit; the save refuses it instead", () => {
+    const long = "a".repeat(81);
+    expect(setupNameSuggestion(long, "x@example.com")).toBe(long);
+    expect(passwordFormName("setup", long)).toEqual({
+      error: "Please use a shorter name (80 characters at most).",
+    });
+  });
+});
+
+describe("set-password name field (the action's rule)", () => {
+  it("setup mode saves the normalised name", () => {
+    expect(passwordFormName("setup", "  Carsten   Olin ")).toEqual({ name: "Carsten Olin" });
+  });
+
+  it("setup mode refuses a blank name, and a form that sent no name field at all", () => {
+    // The action reads a missing field as "": a form rendered by the previous
+    // deploy posts its two old fields and none called "name".
+    expect(passwordFormName("setup", "")).toEqual({ error: "Please enter your name." });
+    expect(passwordFormName("setup", "   ")).toEqual({ error: "Please enter your name." });
+  });
+
+  it("reset mode never has a name, whatever the form sent", () => {
+    expect(passwordFormName("reset", "")).toEqual({ name: "" });
+    expect(passwordFormName("reset", "Mallory")).toEqual({ name: "" });
+  });
+
+  it("a pre-filled full name saved unchanged is written once, with the flag, in one data object", () => {
+    const named = passwordFormName(
+      "setup",
+      setupNameSuggestion("Carsten Olin", "carsten.olin@example.com"),
+    );
+    expect(named).toEqual({ name: "Carsten Olin" });
+    if ("name" in named) {
+      expect(passwordUpdateData("setup", named.name)).toEqual({
+        password_set: true,
+        display_name: "Carsten Olin",
+      });
+    }
   });
 });
