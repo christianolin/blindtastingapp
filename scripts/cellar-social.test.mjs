@@ -118,7 +118,12 @@ test("FRIENDS cellar visible to a friend, hidden from a stranger", async () => {
     assert.equal(await sharedCount(a, lot), 0);
     assert.equal(await directCount(lot), 0);
     await client.query("reset role");
-    await client.query("insert into friendships (user_id, friend_id) values ($1,$2)", [a, b]);
+    // Friendships come in pairs (friend requests, 20260925004000): a pending
+    // request opens nothing — scripts/friend-requests.test.mjs pins that.
+    await client.query(
+      "insert into friendships (user_id, friend_id) values ($1,$2), ($2,$1) on conflict (user_id, friend_id) do nothing",
+      [a, b],
+    );
     await asUser(b);
     assert.equal(await sharedCount(a, lot), 1);
     assert.equal(await directCount(lot), 0, "a friend reads the lot only through the shared view");
