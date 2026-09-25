@@ -13,14 +13,17 @@ import dynamic from "next/dynamic";
 import {
   ChevronUp,
   Layers,
+  ListFilter,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
+  SlidersHorizontal,
   Sparkles,
   Thermometer,
   Wine,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +70,7 @@ import {
   CHIP_MIN_ZOOM,
   countryCameraBox,
   type CameraRequest,
+  type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
 import {
   chipAfterReport,
@@ -84,6 +88,15 @@ import {
 import type { CameraTarget } from "./tile-wine-map";
 import type { ArchetypeListItem } from "@/lib/wset/queries";
 import { ArchetypeModal } from "@/components/wset/archetype-modal";
+import { PHONE_QUERY, useIsPhone } from "@/lib/use-is-phone";
+import {
+  halfSnapHeightPx,
+  initialSheet,
+  sheetReducer,
+  type SheetSnap,
+} from "@/lib/wine-map/sheet-state";
+import { MapBottomSheet } from "./map-bottom-sheet";
+import { MapOptionsSheet } from "./map-options-sheet";
 
 // maplibre-gl touches `window` on import — must never be server-rendered.
 const TileWineMap = dynamic(
@@ -91,7 +104,7 @@ const TileWineMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted" />
+      <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted max-md:h-full max-md:min-h-0" />
     ),
   },
 );
@@ -150,6 +163,21 @@ function writeEnglish(value: boolean) {
     // Preference just will not persist beyond this page view.
   }
   for (const listener of langListeners) listener();
+}
+
+// Ruling R1 (the 2026-09-25 phone plan): what a selection's camera leaves
+// free at the bottom of the canvas. On a phone whose bottom sheet shows the
+// selection at half, the sheet's height, so the fit lands the place in the
+// part of the map the sheet leaves visible; otherwise nothing (a closed bar
+// covers 56 px of map edge, a full sheet covers all of it, and a fit into
+// nothing is no fit). Phone-ness is read imperatively, from the same query
+// useIsPhone renders with, because this runs inside the camera target's memo
+// and must not be one of its deps: the target is built once per selection.
+function sheetCameraPadding(snap: SheetSnap): SheetPadding | undefined {
+  if (snap !== "half" || typeof window === "undefined") return undefined;
+  if (typeof window.matchMedia !== "function") return undefined;
+  if (!window.matchMedia(PHONE_QUERY).matches) return undefined;
+  return { bottom: halfSnapHeightPx(window.innerHeight) };
 }
 
 export function TileWineMapExplorer({
@@ -320,6 +348,38 @@ export function TileWineMapExplorer({
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded]);
 
+  // Phones (below md; spec 2026-09-25) get one fixed screen: a toolbar row,
+  // the map filling the rest, and a bottom sheet holding the hierarchy and the
+  // details. `max-md:` classes shape it; `isPhone` only decides which elements
+  // exist. An element phones must not have is replaced by null IN PLACE, so
+  // the map's parent chain is the same at every width and crossing md (a
+  // rotated phone) never remounts MapLibre; it also carries `max-md:hidden`,
+  // because the server snapshot is false and SSR renders the md+ elements. The
+  // tree and the details each render in exactly one place.
+  const isPhone = useIsPhone();
+  // The sheet's snap and tab (lib/wine-map/sheet-state). Never persisted and
+  // never in the URL: a load with ?place= starts on Details at half.
+  const [sheet, dispatchSheet] = useReducer(
+    sheetReducer,
+    initialPlaceKey,
+    initialSheet,
+  );
+  // Ruling R1: the snap the sheet shows the current selection at, written with
+  // the selection (as selectSourceRef is) and read once, when that selection's
+  // camera target is built: half for a tree pick or a deep link, which open
+  // Details at half, otherwise the snap at the time (a Nearby chip inside
+  // Details swaps the content in place). Never a render value, so a sheet
+  // moved or a viewport rotated afterwards never rebuilds the target and
+  // re-flies the camera. It starts where the sheet starts.
+  const selectSnapRef = useRef<SheetSnap>(sheet.snap);
+  // The phone's Map options sheet: the One|All switch and its status line.
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  // Full view is lg-only and Map options phone-only. A viewport that crosses
+  // md leaves whichever it can no longer show (Full view below md would have
+  // no way out). Adjusted during render, like the deep link below.
+  if (isPhone && expanded) setExpanded(false);
+  if (!isPhone && optionsOpen) setOptionsOpen(false);
+
   // Manifest loading is retriggered by bumping manifestAttempt from event
   // handlers; the effect body only starts async work so no setState runs
   // synchronously inside it (react-hooks/set-state-in-effect).
@@ -482,6 +542,9 @@ export function TileWineMapExplorer({
       // commit able to recover it.
       if (key === selectedKey) return;
       selectSourceRef.current = source;
+      // The sheet as it is now; pickFromTree and the deep link, which open
+      // Details at half, overwrite this after calling here (ruling R1).
+      selectSnapRef.current = sheet.snap;
       setChipFocus(null);
       applyCachedSelection(key);
       // Start the three requests here rather than leaving them to the effects
@@ -494,7 +557,30 @@ export function TileWineMapExplorer({
       params.set("place", key);
       window.history.replaceState(null, "", `?${params.toString()}`);
     },
-    [applyCachedSelection, selectedKey, supabase],
+    [applyCachedSelection, selectedKey, sheet.snap, supabase],
+  );
+
+  // Phones (spec D4): a tap on the map that selects a place, and a pick in the
+  // Explore tree, open Details at half. The sheet opens even when select()
+  // returns early (the place was already selected): the tap asked to read it.
+  // Nearby and Labelling chips inside Details call plain select() and swap the
+  // content in place. The ?debugPerf=1 probe's scripted selections use the
+  // "map" source too, so a probe run on a phone opens Details like a real tap.
+  const selectFromMap = useCallback(
+    (key: string, source: "map" | "ui" = "ui") => {
+      select(key, source);
+      if (source === "map") dispatchSheet({ type: "mapTap" });
+    },
+    [select],
+  );
+  const pickFromTree = useCallback(
+    (key: string) => {
+      select(key);
+      // This pick's camera fits the place above the half sheet (ruling R1).
+      selectSnapRef.current = "half";
+      dispatchSheet({ type: "treePick" });
+    },
+    [select],
   );
 
   // Respond to a new ?place from a SAME-route navigation (e.g. the global search
@@ -536,9 +622,15 @@ export function TileWineMapExplorer({
       // Navigation-driven selection flies the camera, exactly as select() does
       // for tree/search clicks; only map taps hold it still.
       selectSourceRef.current = "ui";
+      // Phones: the sheet opens Details at half for it (below), so its camera
+      // fits the place above the half sheet (ruling R1).
+      selectSnapRef.current = "half";
       applyCachedSelection(deepLink.select);
       setSelectedKey(deepLink.select);
       setChipFocus(null);
+      // Phones: a link to a place opens its details (spec D4). The camera
+      // flies as before; the sheet lies over the map and never resizes it.
+      dispatchSheet({ type: "deepLink" });
     }
   }
 
@@ -569,6 +661,9 @@ export function TileWineMapExplorer({
       minZoom,
       maxZoom,
       source: selectSourceRef.current,
+      // Phones with the sheet at half (ruling R1): the fit leaves the sheet's
+      // height free at the bottom, so the place lands in the visible half.
+      padding: sheetCameraPadding(selectSnapRef.current),
     };
   }, [context]);
 
@@ -640,25 +735,206 @@ export function TileWineMapExplorer({
       ? context.article
       : null;
 
+  // The phone sheet bar's label: the place whose details are showing.
+  const sheetTitle =
+    context && context.place.key === selectedKey
+      ? english
+        ? englishName(context.place.name)
+        : context.place.name
+      : selectedKey && contextState === "loading"
+        ? "Loading…"
+        : "Explore the map";
+
+  // The hierarchy's body. The md+ tree card and the phone sheet's Explore tab
+  // both render it, and only one of them exists at a time. `phone` carries the
+  // phone tree's options: countries start collapsed like a menu, and the
+  // selected row is revealed each time the tab is shown.
+  const renderTree = (
+    onPick: (key: string) => void,
+    phone?: { active: boolean },
+  ) =>
+    treeLoad.state === "failed" ? (
+      <div
+        role="alert"
+        className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border text-center"
+      >
+        <p className="text-sm text-muted-foreground">
+          Couldn&apos;t load the place list.
+        </p>
+        <button
+          type="button"
+          onClick={() => dispatchTree({ type: "retry" })}
+          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Retry
+        </button>
+      </div>
+    ) : tree === null ? (
+      <div className="h-full animate-pulse rounded-md bg-muted" />
+    ) : (
+      <WineMapTree
+        roots={tree}
+        selectedKey={selectedKey}
+        onSelect={onPick}
+        filterKeys={visibleKeys}
+        english={english}
+        onPrefetch={prefetch}
+        active={phone?.active}
+        rootsCollapsed={phone !== undefined}
+      />
+    );
+
+  // The place details. The md+ details card and the phone sheet's Details tab
+  // both render this same body, and only one of them exists at a time.
+  const detailsBody = !selectedKey ? (
+    <p className="text-sm text-muted-foreground">
+      Pick a region on the map or in the hierarchy to explore it.
+    </p>
+  ) : contextState === "loading" ? (
+    <p className="text-sm text-muted-foreground">Loading…</p>
+  ) : contextState === "error" ? (
+    <p className="text-sm text-muted-foreground">
+      Details are unavailable right now. Try another place or reload.
+    </p>
+  ) : contextState === "missing" || !context ? (
+    <p className="text-sm text-muted-foreground">
+      That place isn&apos;t on the map yet.
+    </p>
+  ) : (
+    <>
+      <div>
+        <Badge variant="secondary" className="mb-1.5">
+          {KIND_LABELS[context.place.kind] ?? context.place.kind}
+        </Badge>
+        <h2 className="font-heading text-xl font-semibold">
+          {english ? englishName(context.place.name) : context.place.name}
+        </h2>
+      </div>
+      {archetypes.length > 0 ? (
+        <div>
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Wine className="size-3.5" />
+            Typical wine
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {archetypes.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setOpenArchetype(a)}
+                className="flex items-center justify-between gap-2 rounded-lg border border-border/70 px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/60"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Wine
+                    className="size-4 shrink-0"
+                    style={{ color: WINE_COLOUR_HEX[a.colour] ?? "#8A8A85" }}
+                  />
+                  <span className="truncate">{a.name}</span>
+                </span>
+                <span className="text-muted-foreground">→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {article ? (
+        <>
+          {article.description ? (
+            <p className="text-sm text-muted-foreground">
+              {article.description}
+            </p>
+          ) : null}
+          <dl className="flex flex-col gap-2 text-sm">
+            {article.climate ? (
+              <div className="flex gap-2">
+                <Thermometer className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Climate
+                  </dt>
+                  <dd>{article.climate}</dd>
+                </div>
+              </div>
+            ) : null}
+            {article.soils ? (
+              <div className="flex gap-2">
+                <Layers className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Soils
+                  </dt>
+                  <dd>{article.soils}</dd>
+                </div>
+              </div>
+            ) : null}
+            {article.grape_varieties && context.grapes.length === 0 ? (
+              <div>
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Main grape varieties
+                </dt>
+                <dd>{article.grape_varieties}</dd>
+              </div>
+            ) : null}
+            {article.wine_styles && context.styles.length === 0 ? (
+              <div>
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Wine styles
+                </dt>
+                <dd>{article.wine_styles}</dd>
+              </div>
+            ) : null}
+          </dl>
+          {article.key_facts.length > 0 ? (
+            <div>
+              <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <Sparkles className="size-3.5" />
+                Key facts
+              </p>
+              <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
+                {article.key_facts.map((fact, i) => (
+                  <li key={i}>{fact}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Profile being curated — check back soon.
+        </p>
+      )}
+      <KnowledgeSections
+        context={context}
+        onSelect={select}
+        styleRows={styleRows}
+        onPrefetch={prefetch}
+      />
+    </>
+  );
+
   return (
     <div
       className={
         expanded
           ? "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4"
-          : "flex flex-col gap-4"
+          : // Phones: the screen under the header. Relative, so the bottom
+            // sheet sits inside it; flex-1 min-h-0 carries the page's definite
+            // height on down to the map (the height chain, spec D3).
+            "flex flex-col gap-4 max-md:relative max-md:min-h-0 max-md:flex-1 max-md:gap-0 max-md:overflow-hidden"
       }
     >
       <div
-        className={`flex flex-col gap-4 xl:flex-row xl:items-stretch ${
+        className={`flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 xl:flex-row xl:items-stretch ${
           // Height-lock the row on desktop only. On mobile the expanded view
           // is a normal scrolling column (map first, near-fullscreen), so the
           // flex algorithm can never crush the map card to zero height.
           expanded ? "xl:min-h-0 xl:flex-1" : ""
         }`}
       >
-        {treeOpen ? (
+        {/* Phones: the tree lives in the bottom sheet's Explore tab. */}
+        {isPhone ? null : treeOpen ? (
           <Card
-            className={`order-3 xl:order-1 xl:w-[280px] xl:shrink-0 ${
+            className={`order-3 max-md:hidden xl:order-1 xl:w-[280px] xl:shrink-0 ${
               expanded ? "" : "xl:sticky xl:top-6 xl:self-start"
             }`}
           >
@@ -685,34 +961,7 @@ export function TileWineMapExplorer({
                 </button>
               </div>
               <div className="min-h-0 flex-1">
-                {treeLoad.state === "failed" ? (
-                  <div
-                    role="alert"
-                    className="flex h-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-border text-center"
-                  >
-                    <p className="text-sm text-muted-foreground">
-                      Couldn&apos;t load the place list.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => dispatchTree({ type: "retry" })}
-                      className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                ) : tree === null ? (
-                  <div className="h-full animate-pulse rounded-md bg-muted" />
-                ) : (
-                  <WineMapTree
-                    roots={tree}
-                    selectedKey={selectedKey}
-                    onSelect={select}
-                    filterKeys={visibleKeys}
-                    english={english}
-                    onPrefetch={prefetch}
-                  />
-                )}
+                {renderTree(select)}
               </div>
             </CardContent>
           </Card>
@@ -735,22 +984,29 @@ export function TileWineMapExplorer({
             // the mobile expanded column flex-1 would let it be crushed to
             // nothing (the "map disappears" bug): full view opts out of
             // shrinking below lg and sizes from the map's fixed height.
+            // Phones: no card chrome, and flex-1 min-h-0 so the map fills the
+            // screen under the toolbar (the height chain, spec D3).
             expanded
               ? "order-1 min-w-0 shrink-0 overflow-hidden xl:order-2 xl:flex-1 xl:shrink"
-              : "order-1 min-w-0 flex-1 overflow-hidden xl:order-2"
+              : "order-1 min-w-0 flex-1 overflow-hidden max-md:min-h-0 max-md:gap-0 max-md:rounded-none max-md:bg-transparent max-md:py-0 max-md:ring-0 xl:order-2"
           }
         >
           <CardContent
-            className={`pt-4 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
+            className={`pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:px-0 max-md:pt-0 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
           >
             {/* Map filters: pick a grape and only places using it stay on
                 the map (France's outline remains as context). More filter
                 kinds will join this bar. */}
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+            {/* Phones: this row is the whole toolbar (spec D2): one line of
+                44 px targets, the grape Filter, Local|English, Map options. */}
+            <div className="mb-2 flex flex-wrap items-center gap-2 max-md:mb-0 max-md:shrink-0 max-md:flex-nowrap max-md:px-3 max-md:py-1.5">
+              {isPhone ? (
+                <ListFilter aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+              ) : null}
+              <span className="text-xs font-medium text-muted-foreground max-md:sr-only">
                 Filter
               </span>
-              <div className="w-64 max-w-full">
+              <div className="w-64 max-w-full max-md:w-auto max-md:min-w-0 max-md:flex-1">
                 <ReferenceCombobox
                   formFieldName="map_grape_filter"
                   options={grapeOptions}
@@ -759,26 +1015,31 @@ export function TileWineMapExplorer({
                   placeholder={
                     grapeOptions.length === 0
                       ? "Loading grapes…"
-                      : "Grape — only places using it"
+                      : isPhone
+                        ? "Grape"
+                        : "Grape — only places using it"
                   }
                   disabled={grapeOptions.length === 0}
                   allowClear
+                  triggerClassName={isPhone ? "h-11" : undefined}
                 />
               </div>
-              {visibleKeys ? (
+              {/* Phones keep the toolbar to one line; the map itself shows
+                  what the filter keeps. */}
+              {visibleKeys && !isPhone ? (
                 <Badge variant="secondary">
                   {visibleKeys.length} place{visibleKeys.length === 1 ? "" : "s"}
                 </Badge>
               ) : null}
               {/* Label language: native local names vs English exonyms
                   (Italia->Italy, Toscana->Tuscany), across the map + tree. */}
-              <div className="ml-auto flex items-center rounded-md border border-border p-0.5 text-xs">
+              <div className="ml-auto flex items-center rounded-md border border-border p-0.5 text-xs max-md:shrink-0">
                 <button
                   type="button"
                   onClick={() => chooseLang(false)}
                   aria-pressed={!english}
                   className={cn(
-                    "rounded px-2 py-1 font-medium transition-colors",
+                    "rounded px-2 py-1 font-medium transition-colors max-md:min-h-11",
                     !english
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -791,7 +1052,7 @@ export function TileWineMapExplorer({
                   onClick={() => chooseLang(true)}
                   aria-pressed={english}
                   className={cn(
-                    "rounded px-2 py-1 font-medium transition-colors",
+                    "rounded px-2 py-1 font-medium transition-colors max-md:min-h-11",
                     english
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -800,25 +1061,43 @@ export function TileWineMapExplorer({
                   English
                 </button>
               </div>
+              {isPhone ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-lg"
+                  aria-label="Map options"
+                  aria-haspopup="dialog"
+                  aria-expanded={optionsOpen}
+                  onClick={() => setOptionsOpen(true)}
+                  className="size-11 shrink-0"
+                >
+                  <SlidersHorizontal />
+                </Button>
+              ) : null}
             </div>
             {/* Map detail (spec 2026-09-23 §7.1): the One | All switch with its
                 status line, then the country chips. Both rows hold a fixed
                 height from first paint, so the map below never moves when the
                 status text or the chip list changes. */}
-            <div className="mb-3 flex shrink-0 flex-col gap-2">
-              <MapDetailControls
-                mode={detail}
-                onModeChange={setDetail}
-                status={detailLine}
-                onRetry={() => dispatchTree({ type: "retry" })}
-              />
-              <CountryChips
-                chips={chips}
-                markedKey={markedChip}
-                loading={treeLoad.state === "loading"}
-                onChoose={chooseChip}
-              />
-            </div>
+            {/* Phones: no chips, and the switch with its status line lives in
+                the Map options sheet (one role="status" region, never two). */}
+            {isPhone ? null : (
+              <div className="mb-3 flex shrink-0 flex-col gap-2 max-md:hidden">
+                <MapDetailControls
+                  mode={detail}
+                  onModeChange={setDetail}
+                  status={detailLine}
+                  onRetry={() => dispatchTree({ type: "retry" })}
+                />
+                <CountryChips
+                  chips={chips}
+                  markedKey={markedChip}
+                  loading={treeLoad.state === "loading"}
+                  onChoose={chooseChip}
+                />
+              </div>
+            )}
             {/* Expanded on mobile needs a definite height: the lg full-view
                 relies on a flex-1/min-h-0 chain that only exists in the
                 xl:flex-row layout — in the phone column the hierarchy card's
@@ -827,7 +1106,10 @@ export function TileWineMapExplorer({
               className={
                 expanded
                   ? "h-[calc(100dvh-12rem)] xl:h-auto xl:min-h-0 xl:flex-1"
-                  : "h-[70vh] min-h-[420px]"
+                  : // Phones: the rest of the screen. A definite height from
+                    // the page's flex chain, never a percentage of an
+                    // indefinite parent (the "map collapsed to zero" trap).
+                    "h-[70vh] min-h-[420px] max-md:h-auto max-md:min-h-0 max-md:flex-1"
               }
             >
             {manifest ? (
@@ -843,7 +1125,7 @@ export function TileWineMapExplorer({
                   selectionFallback={selectionFallback}
                   selectedContextKey={context?.place.key ?? null}
                   cameraTarget={cameraTarget}
-                  onSelect={select}
+                  onSelect={isPhone ? selectFromMap : select}
                   visibleKeys={visibleKeys}
                   shardCountries={shardCountries}
                   areaSlugsByShard={slugsByShard}
@@ -868,10 +1150,11 @@ export function TileWineMapExplorer({
           </CardContent>
         </Card>
 
-        {detailsOpen ? (
+        {/* Phones: the details live in the bottom sheet's Details tab. */}
+        {detailsOpen && !isPhone ? (
         <Card
           className={cn(
-            "xl:order-3 xl:w-[320px] xl:shrink-0",
+            "max-md:hidden xl:order-3 xl:w-[320px] xl:shrink-0",
             // On phones this panel detaches into a frozen sheet pinned to the
             // bottom of the screen; tapping its bar folds it open into a
             // near-fullscreen scrollable profile and back down again.
@@ -932,131 +1215,7 @@ export function TileWineMapExplorer({
                   : "max-xl:hidden",
               )}
             >
-            {!selectedKey ? (
-              <p className="text-sm text-muted-foreground">
-                Pick a region on the map or in the hierarchy to explore it.
-              </p>
-            ) : contextState === "loading" ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
-            ) : contextState === "error" ? (
-              <p className="text-sm text-muted-foreground">
-                Details are unavailable right now. Try another place or reload.
-              </p>
-            ) : contextState === "missing" || !context ? (
-              <p className="text-sm text-muted-foreground">
-                That place isn&apos;t on the map yet.
-              </p>
-            ) : (
-              <>
-                <div>
-                  <Badge variant="secondary" className="mb-1.5">
-                    {KIND_LABELS[context.place.kind] ?? context.place.kind}
-                  </Badge>
-                  <h2 className="font-heading text-xl font-semibold">
-                    {english ? englishName(context.place.name) : context.place.name}
-                  </h2>
-                </div>
-                {archetypes.length > 0 ? (
-                  <div>
-                    <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                      <Wine className="size-3.5" />
-                      Typical wine
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                      {archetypes.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => setOpenArchetype(a)}
-                          className="flex items-center justify-between gap-2 rounded-lg border border-border/70 px-2.5 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/60"
-                        >
-                          <span className="flex min-w-0 items-center gap-2">
-                            <Wine
-                              className="size-4 shrink-0"
-                              style={{ color: WINE_COLOUR_HEX[a.colour] ?? "#8A8A85" }}
-                            />
-                            <span className="truncate">{a.name}</span>
-                          </span>
-                          <span className="text-muted-foreground">→</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {article ? (
-                  <>
-                    {article.description ? (
-                      <p className="text-sm text-muted-foreground">
-                        {article.description}
-                      </p>
-                    ) : null}
-                    <dl className="flex flex-col gap-2 text-sm">
-                      {article.climate ? (
-                        <div className="flex gap-2">
-                          <Thermometer className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                          <div>
-                            <dt className="text-xs font-medium text-muted-foreground">
-                              Climate
-                            </dt>
-                            <dd>{article.climate}</dd>
-                          </div>
-                        </div>
-                      ) : null}
-                      {article.soils ? (
-                        <div className="flex gap-2">
-                          <Layers className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                          <div>
-                            <dt className="text-xs font-medium text-muted-foreground">
-                              Soils
-                            </dt>
-                            <dd>{article.soils}</dd>
-                          </div>
-                        </div>
-                      ) : null}
-                      {article.grape_varieties && context.grapes.length === 0 ? (
-                        <div>
-                          <dt className="text-xs font-medium text-muted-foreground">
-                            Main grape varieties
-                          </dt>
-                          <dd>{article.grape_varieties}</dd>
-                        </div>
-                      ) : null}
-                      {article.wine_styles && context.styles.length === 0 ? (
-                        <div>
-                          <dt className="text-xs font-medium text-muted-foreground">
-                            Wine styles
-                          </dt>
-                          <dd>{article.wine_styles}</dd>
-                        </div>
-                      ) : null}
-                    </dl>
-                    {article.key_facts.length > 0 ? (
-                      <div>
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                          <Sparkles className="size-3.5" />
-                          Key facts
-                        </p>
-                        <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
-                          {article.key_facts.map((fact, i) => (
-                            <li key={i}>{fact}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Profile being curated — check back soon.
-                  </p>
-                )}
-                <KnowledgeSections
-                  context={context}
-                  onSelect={select}
-                  styleRows={styleRows}
-                  onPrefetch={prefetch}
-                />
-              </>
-            )}
+            {detailsBody}
             </div>
           </CardContent>
         </Card>
@@ -1073,8 +1232,35 @@ export function TileWineMapExplorer({
         ) : null}
       </div>
       {/* Reserve room so the frozen mobile sheet's bar never hides the last
-          of the page content beneath it. */}
-      <div aria-hidden className="h-20 xl:hidden" />
+          of the page content beneath it. Tablets only: a phone has no page to
+          scroll, and its sheet bar lies over the map. */}
+      {isPhone ? null : <div aria-hidden className="h-20 max-md:hidden xl:hidden" />}
+      {isPhone ? (
+        <MapBottomSheet
+          sheet={sheet}
+          onEvent={dispatchSheet}
+          title={sheetTitle}
+          detailsKey={selectedKey}
+          explore={
+            <div className="h-full">
+              {renderTree(pickFromTree, {
+                active: sheet.snap !== "closed" && sheet.tab === "explore",
+              })}
+            </div>
+          }
+          details={detailsBody}
+        />
+      ) : null}
+      {isPhone ? (
+        <MapOptionsSheet
+          open={optionsOpen}
+          onOpenChange={setOptionsOpen}
+          mode={detail}
+          onModeChange={setDetail}
+          status={detailLine}
+          onRetry={() => dispatchTree({ type: "retry" })}
+        />
+      ) : null}
       {openArchetype ? (
         <ArchetypeModal
           id={openArchetype.id}

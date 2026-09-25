@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   CLOSED_SHEET,
   DETAILS_HALF,
+  HALF_SNAP_SHARE,
   SHEET_DRAG_THRESHOLD,
+  halfSnapHeightPx,
   initialSheet,
   isSheetDrag,
   sheetReducer,
@@ -24,6 +26,14 @@ describe("initialSheet", () => {
   it("starts on Details at half for a ?place= load", () => {
     expect(initialSheet("france.bourgogne")).toEqual(at("half", "details"));
     expect(DETAILS_HALF).toEqual(at("half", "details"));
+  });
+});
+
+describe("halfSnapHeightPx", () => {
+  it("is half the layout viewport, as the half snap's h-[50dvh] renders", () => {
+    expect(HALF_SNAP_SHARE).toBe(0.5);
+    expect(halfSnapHeightPx(812)).toBe(406);
+    expect(halfSnapHeightPx(667)).toBe(334);
   });
 });
 

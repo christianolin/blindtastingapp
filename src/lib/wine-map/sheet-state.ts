@@ -41,6 +41,22 @@ export function initialSheet(initialPlaceKey: string | null): SheetState {
   return initialPlaceKey ? DETAILS_HALF : CLOSED_SHEET;
 }
 
+/** The half snap's share of the layout viewport. map-bottom-sheet.tsx draws it
+    as `h-[50dvh]` (SNAP_HEIGHT.half), and dvh is the layout viewport's height,
+    so the two must change together. */
+export const HALF_SNAP_SHARE = 0.5;
+
+/** The half snap's height in CSS px on a layout viewport `viewportHeight` px
+    tall (`window.innerHeight`). The explorer pads the selection camera by it
+    (the 2026-09-25 phone plan, ruling R1), so a picked place lands in the part
+    of the map the sheet leaves visible. Computed, not measured off the sheet's
+    element: a pick in the tree snaps the sheet to half in the same render that
+    builds the camera target, while the element is still a 200 ms height
+    transition away from that size. */
+export function halfSnapHeightPx(viewportHeight: number): number {
+  return Math.round(viewportHeight * HALF_SNAP_SHARE);
+}
+
 /** Whether a bar gesture that travelled `dy` px counts as a drag. */
 export function isSheetDrag(dy: number): boolean {
   return Math.abs(dy) >= SHEET_DRAG_THRESHOLD;

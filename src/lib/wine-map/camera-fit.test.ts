@@ -8,6 +8,8 @@ import {
   CHIP_MIN_ZOOM,
   chipFlightNeeded,
   countryCameraBox,
+  FIT_PADDING_PX,
+  selectionFit,
 } from "./camera-fit";
 import type { Bbox } from "./shard-specs";
 
@@ -98,5 +100,27 @@ describe("chipFlightNeeded", () => {
     expect(chipFlightNeeded({ zoom: 4.4, countriesInView: ["france"], stayIfVisible: "france" })).toBe(true);
     expect(chipFlightNeeded({ zoom: 9, countriesInView: ["france"], stayIfVisible: "italy" })).toBe(true);
     expect(chipFlightNeeded({ zoom: 9, countriesInView: ["france"], stayIfVisible: null })).toBe(true);
+  });
+});
+
+// A selection's fit on a phone whose bottom sheet is open at half (the
+// 2026-09-25 phone plan, ruling R1): the sheet's height is left free at the
+// bottom, and the place is eased to the centre of what the sheet leaves.
+describe("selectionFit", () => {
+  it("without a sheet is the 48 px frame all round and no offset", () => {
+    expect(FIT_PADDING_PX).toBe(48);
+    expect(selectionFit(undefined)).toEqual({ padding: 48, offset: [0, 0] });
+  });
+
+  it("with a sheet adds its height at the bottom and offsets the centre by half of it", () => {
+    expect(selectionFit({ bottom: 406 })).toEqual({
+      padding: { top: 48, right: 48, bottom: 454, left: 48 },
+      offset: [0, -203],
+    });
+  });
+
+  it("treats a sheet of no height, or a negative one, as no sheet", () => {
+    expect(selectionFit({ bottom: 0 })).toEqual({ padding: 48, offset: [0, 0] });
+    expect(selectionFit({ bottom: -10 })).toEqual({ padding: 48, offset: [0, 0] });
   });
 });

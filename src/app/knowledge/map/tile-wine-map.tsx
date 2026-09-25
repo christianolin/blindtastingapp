@@ -28,7 +28,12 @@ import {
   scanPastDepthZoom,
   type DetailReport,
 } from "@/lib/wine-map/focus";
-import { chipFlightNeeded, type CameraRequest } from "@/lib/wine-map/camera-fit";
+import {
+  chipFlightNeeded,
+  selectionFit,
+  type CameraRequest,
+  type SheetPadding,
+} from "@/lib/wine-map/camera-fit";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
 import {
   AREA_PALETTE_ZOOM,
@@ -96,7 +101,37 @@ export type CameraTarget = {
       recenter-and-zoom-out on tap was "quite annoying"); only tree/search/
       details navigation may fly. */
   source: "map" | "ui";
+  /** Phones (the 2026-09-25 phone plan, ruling R1): the bottom sheet's height
+      while it shows this selection at half. The fit leaves that much of the
+      canvas free at the bottom, so the place lands in the part the sheet does
+      not cover. Absent (desktop, tablets, a closed or full sheet): today's
+      fit of the whole canvas. */
+  padding?: SheetPadding;
 };
+
+// The mercator midpoint of a bbox: the point cameraForBounds centres on when
+// no padding shifts it, so the padded (phone) fit eases to the same point the
+// plain fit does and lets `offset` place it.
+function mercatorMidpoint(
+  bounds: [[number, number], [number, number]],
+): maplibregl.LngLat {
+  const a = maplibregl.MercatorCoordinate.fromLngLat(bounds[0]);
+  const b = maplibregl.MercatorCoordinate.fromLngLat(bounds[1]);
+  return new maplibregl.MercatorCoordinate((a.x + b.x) / 2, (a.y + b.y) / 2).toLngLat();
+}
+
+// The geographic bounds of the canvas above a sheet `bottom` CSS px tall: the
+// four corners of that part, the way getBounds() takes the whole canvas's.
+function boundsAboveSheet(map: maplibregl.Map, bottom: number): maplibregl.LngLatBounds {
+  const canvas = map.getCanvas();
+  const w = canvas.clientWidth;
+  const h = Math.max(1, canvas.clientHeight - bottom);
+  const bounds = new maplibregl.LngLatBounds();
+  for (const corner of [[0, 0], [w, 0], [w, h], [0, h]] as [number, number][]) {
+    bounds.extend(map.unproject(corner));
+  }
+  return bounds;
+}
 
 // Display names for the legend, by region slug (the colours are in map-palette).
 const REGION_LABELS: Record<string, string> = {
@@ -1136,23 +1171,41 @@ export function TileWineMap({
       [maxX, maxY],
     ];
     const inner = map?.getMap();
+    // The frame round the place: 48 px, plus on a phone with the sheet at
+    // half the sheet's height at the bottom (ruling R1), so the place fits the
+    // part of the canvas the sheet leaves visible.
+    const fit = selectionFit(cameraTarget.padding);
     // Fit the footprint, but never end below the selection's reveal zoom: a
     // bbox fit alone can land under a small feature's min_zoom, so it (and its
     // gold ring) wouldn't render until the user zoomed in by hand.
     const apply = () => {
       const cam = inner?.cameraForBounds(bounds, {
-        padding: 48,
+        padding: fit.padding,
         maxZoom: cameraTarget.maxZoom,
       });
       if (inner && cam) {
-        inner.easeTo({
-          center: cam.center,
-          zoom: Math.max(cam.zoom ?? 0, cameraTarget.minZoom),
-          duration: 900,
-        });
+        const zoom = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
+        if (cameraTarget.padding) {
+          // The place's own centre, eased to the visible part's centre by
+          // `offset`, which easeTo applies in pixels at the final zoom.
+          // cam.center is already shifted for cam.zoom and would over-shift
+          // whenever the reveal floor raises the zoom above it.
+          inner.easeTo({
+            center: mercatorMidpoint(bounds),
+            zoom,
+            offset: fit.offset,
+            duration: 900,
+          });
+        } else {
+          inner.easeTo({
+            center: cam.center,
+            zoom,
+            duration: 900,
+          });
+        }
       } else {
         map?.fitBounds(bounds, {
-          padding: 48,
+          padding: fit.padding,
           duration: 900,
           maxZoom: cameraTarget.maxZoom,
         });
@@ -1166,7 +1219,11 @@ export function TileWineMap({
     // AND already past its reveal zoom (otherwise the feature/ring isn't on
     // screen yet); reframe when it's off-screen, too small/large, or too far
     // out — so tree navigation to a distant or deep place still flies there.
-    const b = inner.getBounds();
+    // "On screen" is the whole canvas, or on a phone with the sheet at half
+    // the part above the sheet: a place framed under the sheet is brought out.
+    const b = cameraTarget.padding
+      ? boundsAboveSheet(inner, cameraTarget.padding.bottom)
+      : inner.getBounds();
     const viewW = b.getEast() - b.getWest();
     const viewH = b.getNorth() - b.getSouth();
     const cx = (minX + maxX) / 2;

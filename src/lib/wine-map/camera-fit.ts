@@ -2,6 +2,9 @@
 // focus-and-camera action with its own request, not a selection. A country
 // selection caps the camera at z4.5 (its children are regions, min_zoom 4),
 // below the z5 shard floor, so it could never show a subregion.
+//
+// Also the frame a selection's fit leaves round its place (`selectionFit`),
+// which on a phone makes room for the bottom sheet.
 import type { Bbox } from "./shard-specs";
 import { countryOfShard, SHARD_MIN_ZOOM } from "./mount-policy";
 
@@ -9,6 +12,38 @@ import { countryOfShard, SHARD_MIN_ZOOM } from "./mount-policy";
     shards are mounted and its regions load, and Italy's and Portugal's first
     subregions (min_zoom 5) are already drawn. */
 export const CHIP_MIN_ZOOM = 5.5;
+
+/** The frame a fit leaves round its place, in CSS px on every side. */
+export const FIT_PADDING_PX = 48;
+
+/** A phone's bottom sheet open at half over the canvas's lower edge (the
+    2026-09-25 phone plan, ruling R1): its height in CSS px. */
+export type SheetPadding = { bottom: number };
+
+/** How a selection's camera fits its place. Without a sheet: FIT_PADDING_PX
+    all round and no offset, as ever. With one, the frame also leaves the
+    sheet's height free at the bottom, so the place fits the part of the canvas
+    the sheet leaves visible, and `offset` puts the place's centre at that
+    part's centre, half the sheet's height above the canvas centre. The offset
+    is in pixels at the FINAL zoom (easeTo applies it there), so raising the
+    fitted zoom to the place's reveal floor never over-shifts the place, which
+    a centre pre-shifted by cameraForBounds at the fitted zoom would. */
+export function selectionFit(sheet: SheetPadding | undefined): {
+  padding: number | { top: number; right: number; bottom: number; left: number };
+  offset: [number, number];
+} {
+  // A sheet of no height (or a nonsense one) covers nothing: the plain fit.
+  if (!sheet || !(sheet.bottom > 0)) return { padding: FIT_PADDING_PX, offset: [0, 0] };
+  return {
+    padding: {
+      top: FIT_PADDING_PX,
+      right: FIT_PADDING_PX,
+      bottom: FIT_PADDING_PX + sheet.bottom,
+      left: FIT_PADDING_PX,
+    },
+    offset: [0, -sheet.bottom / 2],
+  };
+}
 
 /** A camera move a chip asks for. `nonce` makes a repeat tap fly again (the
     selection camera is memoised on context and cannot repeat). A non-null
