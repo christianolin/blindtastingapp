@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { FriendButton } from "@/components/friend-button";
 import { InvitePeopleButton } from "@/components/invite/invite-people-button";
+import type { Relationship } from "@/lib/friends/relationship";
 import { cn } from "@/lib/utils";
 import {
   COMMUNITY_PAGE,
@@ -40,7 +41,8 @@ export type CommunityRow = {
   bio: string | null;
   location: string | null;
   isMe: boolean;
-  isFriend: boolean;
+  /** The viewer's relationship to this person ("none" on the viewer's own row). */
+  relationship: Relationship;
   showCellar: boolean;
   lastActive: { column: string; phrase: string; fresh: boolean } | null;
   joined: string;
@@ -54,8 +56,9 @@ const selectCls =
 
 // R3: fades a row action in on hover/focus, only on a fine pointer, so a
 // touch device at xl width (a tablet in landscape) always sees it. Applied
-// to "Add friend" and "Cellar"; "Friends" is a state, not an action, and R1
-// keeps it visible at rest.
+// to "Add friend" and "Cellar"; "Friends" and "Requested" are states, not
+// actions, and the Accept / Decline pair is waiting on the viewer, so R1 and
+// friend-requests §3.3 keep all three visible at rest.
 const REVEAL =
   "pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100";
 
@@ -314,7 +317,7 @@ export function CommunityList({
                         Cellar
                       </Button>
                     ) : null}
-                    <FriendButton friendId={r.id} isFriend={r.isFriend} variant="row" />
+                    <FriendButton personId={r.id} relationship={r.relationship} variant="row" />
                   </div>
                 ) : null}
               </div>
@@ -406,10 +409,10 @@ export function CommunityList({
                             </Button>
                           ) : null}
                           <FriendButton
-                            friendId={r.id}
-                            isFriend={r.isFriend}
+                            personId={r.id}
+                            relationship={r.relationship}
                             variant="row"
-                            className={r.isFriend ? undefined : REVEAL}
+                            className={r.relationship === "none" ? REVEAL : undefined}
                           />
                         </div>
                       )}

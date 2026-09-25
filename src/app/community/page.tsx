@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
+import { relationship } from "@/lib/friends/relationship";
 import {
   COMMUNITY_PAGE,
   activeSinceIso,
@@ -57,20 +58,41 @@ export default async function CommunityPage({
   const now = nowMs();
   const sort = effectiveSort(params.view, params.sort);
 
-  const [{ data: meRow }, { data: friendRows }, { count: peopleCount }, { count: activeCount }] =
-    await Promise.all([
-      supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
-      supabase.from("friendships").select("friend_id").eq("user_id", user.id),
-      supabase.from("profiles").select("id", { count: "exact", head: true }).is("deleted_at", null),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null)
-        .gte("last_seen_at", activeSinceIso(now)),
-    ]);
+  // Friend-requests §3.4: accepted friends (own friendships rows), the
+  // requests the viewer sent and the ones waiting on them — one query each,
+  // all readable as the viewer ("friend_requests read own"). A failed request
+  // read just shows no pending state.
+  const [
+    { data: meRow },
+    { data: friendRows },
+    { data: outgoingRows },
+    { data: incomingRows },
+    { count: peopleCount },
+    { count: activeCount },
+  ] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    supabase.from("friendships").select("friend_id").eq("user_id", user.id),
+    supabase.from("friend_requests").select("recipient_id").eq("requester_id", user.id),
+    supabase
+      .from("friend_requests")
+      .select("requester_id")
+      .eq("recipient_id", user.id)
+      .order("created_at", { ascending: false })
+      .order("requester_id", { ascending: true }),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .gte("last_seen_at", activeSinceIso(now)),
+  ]);
 
   const inviterName = meRow?.display_name ?? user.email ?? "";
   const friendIds = new Set((friendRows ?? []).map((f) => f.friend_id));
+  const outgoingIds = new Set((outgoingRows ?? []).map((r) => r.recipient_id));
+  // Newest request first: the Requests view's order.
+  const requestOrder = (incomingRows ?? []).map((r) => r.requester_id);
+  const incomingIds = new Set(requestOrder);
 
   let listQuery = supabase
     .from("profiles")
@@ -143,7 +165,13 @@ export default async function CommunityPage({
       bio: p.bio,
       location: p.location,
       isMe,
-      isFriend: friendIds.has(p.id),
+      relationship: isMe
+        ? "none"
+        : relationship({
+            friend: friendIds.has(p.id),
+            outgoing: outgoingIds.has(p.id),
+            incoming: incomingIds.has(p.id),
+          }),
       showCellar: cellarLinkShown(p.cellar_visibility, isMe),
       lastActive: lastActive(p.last_seen_at, now),
       joined: joinedLabel(p.created_at),

@@ -10,6 +10,7 @@ import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileStats } from "@/lib/profile-stats";
 import { getProfileFavourites } from "@/lib/profile-favourites";
+import { relationship } from "@/lib/friends/relationship";
 import { FavouritesChips } from "@/components/profile/favourites-chips";
 import { DELETED_DISPLAY_NAME, profilePageView } from "@/lib/account/delete-account";
 import { DELETED_PROFILE_LINE } from "@/lib/account/delete-copy";
@@ -96,23 +97,46 @@ export default async function ProfilePage({
   const isOwnProfile = view === "own";
   const inviterName = me?.display_name ?? user.email ?? "";
 
-  // R2/§3 step 4: friendship and the cellar gate are only meaningful for
-  // someone else's profile; stats and favourites run either way. All in parallel.
-  const [friendshipResult, cellarResult, stats, favourites] = await Promise.all([
-    isOwnProfile
-      ? Promise.resolve(null)
-      : supabase
-          .from("friendships")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("friend_id", profile.id)
-          .maybeSingle(),
-    isOwnProfile ? Promise.resolve(null) : supabase.rpc("can_view_cellar", { p_owner: profile.id }),
-    getProfileStats(profile.id),
-    // Null on a failed read: the chips then simply do not render (D11).
-    getProfileFavourites(supabase, profile.id),
-  ]);
-  const isFriend = Boolean(friendshipResult?.data);
+  // R2/§3 step 4: the relationship (friend-requests §3.5: the friendship, the
+  // request the viewer sent, the request waiting on the viewer) and the
+  // cellar gate are only meaningful for someone else's profile; stats and
+  // favourites run either way. All in parallel.
+  const [friendshipResult, outgoingResult, incomingResult, cellarResult, stats, favourites] =
+    await Promise.all([
+      isOwnProfile
+        ? Promise.resolve(null)
+        : supabase
+            .from("friendships")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("friend_id", profile.id)
+            .maybeSingle(),
+      isOwnProfile
+        ? Promise.resolve(null)
+        : supabase
+            .from("friend_requests")
+            .select("id")
+            .eq("requester_id", user.id)
+            .eq("recipient_id", profile.id)
+            .maybeSingle(),
+      isOwnProfile
+        ? Promise.resolve(null)
+        : supabase
+            .from("friend_requests")
+            .select("id")
+            .eq("requester_id", profile.id)
+            .eq("recipient_id", user.id)
+            .maybeSingle(),
+      isOwnProfile ? Promise.resolve(null) : supabase.rpc("can_view_cellar", { p_owner: profile.id }),
+      getProfileStats(profile.id),
+      // Null on a failed read: the chips then simply do not render (D11).
+      getProfileFavourites(supabase, profile.id),
+    ]);
+  const friendState = relationship({
+    friend: Boolean(friendshipResult?.data),
+    outgoing: Boolean(outgoingResult?.data),
+    incoming: Boolean(incomingResult?.data),
+  });
   // An RPC error hides the button rather than throwing (R2).
   const canViewCellar = cellarResult?.data === true;
   const { summary, tastings } = stats;
@@ -154,7 +178,7 @@ export default async function ProfilePage({
           Cellar
         </Button>
       ) : null}
-      <FriendButton friendId={profile.id} isFriend={isFriend} variant="header" />
+      <FriendButton personId={profile.id} relationship={friendState} variant="header" />
     </>
   );
 
