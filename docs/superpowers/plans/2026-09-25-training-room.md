@@ -6682,6 +6682,12 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/wset/sheet-
 
 ### Task 6: ArchetypeSheet answers, idPrefix and lineage; fetchArchetype and the Library cards tolerate a null place; candidateToArchetypeView
 
+> **Controller note (ruling R1):** Task 1 already null-guards the two existing readers
+> (`src/app/knowledge/designations/page.tsx`, `src/lib/wset/archetype-detail.ts`). Where a
+> step below quotes the OLD text of those files (the pre-Task-1 `archPlaceIds` / `.in(...)`
+> lines), apply the step's REPLACEMENT block against the version Task 1 left; the intended
+> end state (lineage for a place-less archetype) is unchanged.
+
 **Files:**
 - Create: `src/lib/wset/archetype-scale.ts`
 - Test: `src/lib/wset/archetype-scale.test.ts`
@@ -8414,7 +8420,7 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/components/add-
 - Modify: `src/app/about/page.tsx` (lines 23–29, 44–50, 276–291)
 
 **Interfaces:**
-- Consumes: nothing from other tasks. The `/taste/training` route itself is Task 10's; until it lands the links 404, which is why this task is committed after Task 10 is reachable in the same deploy (all tasks ship together, spec §11 step 2).
+- Consumes: nothing from other tasks. The `/taste/training` route itself is Task 10's; until it lands the links 404, which is why this task ships in the same deploy as Task 10 (tasks run 1 → 14; the link 404s only between the two commits, never in production) in the same deploy (all tasks ship together, spec §11 step 2).
 - Produces: `NavChild.preview?: boolean`; `navChildState(child: NavChild): "link" | "soon" | "preview"`; `NAV_CHILD_PILL: { soon: "Soon"; preview: "Preview" }`; the WSET i18n key `preview`.
 
 - [ ] **Step 1: Write the failing test** — create `src/components/nav-links.test.ts`:
@@ -10590,6 +10596,18 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/training/ac
 
 ### Task 10: The room
 
+> **Controller seam fixes (binding, from the cross-task review of a21a505):** every copy
+> name in this task now uses Task 2's names — `TRAINING_COPY.unlikelyGroup`,
+> `sheetTitle(time)`, `clockTime` (use it instead of a local `clock()`), and Task 2's
+> `RESULT_ROW_LABELS` / `RESULT_ROW_ORDER` / `resultMark`. **Step 1 is superseded:** add
+> ONLY `percentLabel(n: number | null): string` (`"91 %"`, or `""` for null — spec §9's
+> strip/row percentage) to `src/lib/training/copy.ts` with a test; do not grep-add any other
+> key, and never create a second helper for a string Task 2 already has (ruling R4). Where
+> this task's code still shows an import of a name Task 2 does not export, import the Task 2
+> equivalent named above instead. Any `RESULT_ROW_LABELS` / `resultMark` / `RESULT_ROW_ORDER`
+> use needs the matching import from `@/lib/training/copy` (top-level exports, not
+> `TRAINING_COPY` members).
+
 **Files:**
 - Modify: `src/lib/training/copy.ts` and `src/lib/training/copy.test.ts` (only the names
   Task 2 did not already define — Step 1)
@@ -10624,7 +10642,7 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/training/ac
 
 - [ ] **Step 1: Make sure copy.ts has every name the room reads**
 
-Run: `cd /c/Users/Public/repos/blindtastingapp-training && for n in TRAINING_COPY continueLine sheetTitleLine showAllLine itWasLine vintageGuessLabel youSaidLine percentLabel shortName coverageLine stripLine lineageLine tallyLine resultTotalLine attemptRowLine hueClearedLine styleVerdictLine; do grep -q "export \(const\|function\) $n\b" src/lib/training/copy.ts && echo "ok $n" || echo "MISSING $n"; done; for k in eyebrow title promise start discard discardArmed footerAction candidatesHeading beforeAnswers unlikely yourCall whichWine somethingElse notInList vintageOptional revealBottle cantFindOut youDidntPick wherePointed notRevealed anotherGlass seeNote done rowLabels markRight markWrong markNone yourSessions showMore noSessions revealNow badge notRevealedRow unreadableWine; do grep -q "^  $k:" src/lib/training/copy.ts && echo "ok key $k" || echo "MISSING key $k"; done`
+Run: `cd /c/Users/Public/repos/blindtastingapp-training && for n in TRAINING_COPY continueLine sheetTitle showAllLine itWasLine vintageGuessLabel youSaidLine percentLabel shortName coverageLine stripLine lineageLine tallyLine resultTotalLine attemptRowLine hueClearedLine styleVerdictLine; do grep -q "export \(const\|function\) $n\b" src/lib/training/copy.ts && echo "ok $n" || echo "MISSING $n"; done; for k in eyebrow title promise start discard discardArmed footerAction candidatesHeading beforeAnswers unlikely yourCall whichWine somethingElse notInList vintageOptional revealBottle cantFindOut youDidntPick wherePointed notRevealed anotherGlass seeNote done rowLabels markRight markWrong markNone yourSessions showMore noSessions revealNow badge notRevealedRow unreadableWine; do grep -q "^  $k:" src/lib/training/copy.ts && echo "ok key $k" || echo "MISSING key $k"; done`
 Expected: every line starts `ok`. For each `MISSING` line, add exactly the matching
 definition below to `src/lib/training/copy.ts` (a missing `TRAINING_COPY` key goes inside
 the existing `TRAINING_COPY` object with the value shown; if `TRAINING_COPY` itself is
@@ -10684,7 +10702,7 @@ export function continueLine(time: string): string {
 }
 
 /** "Unknown wine · started 20:14" — the WSET sheet's title in the room. */
-export function sheetTitleLine(time: string): string {
+export function sheetTitle(time: string): string {
   return `Unknown wine · started ${time}`;
 }
 
@@ -10730,18 +10748,18 @@ describe("room copy read by the room components (plan Task 10)", () => {
     expect(TRAINING_COPY.discardArmed).toBe("Tap again to discard");
     expect(TRAINING_COPY.footerAction).toBe("Your call →");
     expect(TRAINING_COPY.candidatesHeading).toBe("What it could be");
-    expect(TRAINING_COPY.unlikely).toBe("Unlikely from what you've said");
+    expect(TRAINING_COPY.unlikelyGroup).toBe("Unlikely from what you've said");
     expect(TRAINING_COPY.notInList).toBe("It's not in the list");
     expect(TRAINING_COPY.notRevealed).toBe("Not revealed — your note is kept. Reveal now from Your sessions.");
-    expect(TRAINING_COPY.rowLabels.secondaryGrape).toBe("Second grape");
-    expect([TRAINING_COPY.markRight, TRAINING_COPY.markWrong, TRAINING_COPY.markNone]).toEqual(["✓", "✗", "—"]);
-    expect(TRAINING_COPY.notRevealedRow).toBe("Training room · not revealed");
+    expect(RESULT_ROW_LABELS.secondaryGrape).toBe("Second grape");
+    expect([TRAINING_COPY.markHit, TRAINING_COPY.markMiss, TRAINING_COPY.markNotApplicable]).toEqual(["✓", "✗", "—"]);
+    expect(TRAINING_COPY.unrevealedBadge).toBe("Training room · not revealed");
     expect(TRAINING_COPY.unreadableWine).toBe("a wine you can't see yet");
   });
 
   it("fills the room's templates", () => {
     expect(continueLine("20:14")).toBe("Continue your session · started 20:14");
-    expect(sheetTitleLine("20:14")).toBe("Unknown wine · started 20:14");
+    expect(sheetTitle("20:14")).toBe("Unknown wine · started 20:14");
     expect(showAllLine(42)).toBe("Show all 42");
     expect(itWasLine("Château Léoville Barton 2016")).toBe("It was Château Léoville Barton 2016");
     expect(youSaidLine("A typical Pauillac", null)).toBe("You said Pauillac");
@@ -10854,7 +10872,7 @@ describe("panelView", () => {
     expect(view.before).toBe(false);
     expect(view.groups.map((g) => [g.heading, ids(g.rows)])).toEqual([
       [null, ["1", "2", "3"]],
-      [TRAINING_COPY.unlikely, ["4", "5"]],
+      [TRAINING_COPY.unlikelyGroup, ["4", "5"]],
     ]);
     expect(view.hidden).toBe(1);
   });
@@ -10963,7 +10981,7 @@ export function panelView(
   const groups: PanelGroup[] = [];
   for (const r of rows) {
     const key = before ? `country:${r.candidate.country.name}` : r.capped ? "unlikely" : "likely";
-    const heading = before ? r.candidate.country.name : r.capped ? TRAINING_COPY.unlikely : null;
+    const heading = before ? r.candidate.country.name : r.capped ? TRAINING_COPY.unlikelyGroup : null;
     const last = groups[groups.length - 1];
     if (last && last.key === key) last.rows.push(r);
     else groups.push({ key, heading, rows: [r] });
@@ -11699,7 +11717,7 @@ import { WsetSheet } from "@/components/wset/wset-sheet";
 import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
 import type { HistoryPage, TrainingTally } from "@/lib/training/action-types";
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
-import { TRAINING_COPY, continueLine, sheetTitleLine, tallyLine } from "@/lib/training/copy";
+import { TRAINING_COPY, continueLine, sheetTitle, tallyLine } from "@/lib/training/copy";
 import { clearDraft, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
 import { rankCandidates, snapshotRanking } from "@/lib/training/match";
 import type {
@@ -11926,7 +11944,7 @@ export function TrainingRoom({
             <WsetSheet
               key={session.sessionKey}
               wine={UNKNOWN_WINE}
-              title={sheetTitleLine(clock(session.startedAt))}
+              title={sheetTitle(clock(session.startedAt))}
               terms={terms}
               initial={session.note}
               onChange={(next: WsetNoteState) => patchSession({ note: next })}
@@ -12080,6 +12098,14 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/training/co
 
 ### Task 11: Result, history and the notes surfaces
 
+> **Controller seam fixes (binding):** use Task 2's names — `RESULT_ROW_LABELS[c]`,
+> `RESULT_ROW_ORDER` (not a local `POINT_ORDER`), `mark: resultMark(p)` (not
+> markNone/markRight/markWrong), `TRAINING_COPY.noPick`, `TRAINING_COPY.trainingBadge`,
+> `TRAINING_COPY.unrevealedBadge`; pass the raw `row.noteColourHue` to `hueClearedLine`
+> (it looks the label up itself). Imports follow: `RESULT_ROW_LABELS`, `RESULT_ROW_ORDER`
+> and `resultMark` are top-level exports of `@/lib/training/copy`. Ruling R4 applies:
+> never add a duplicate helper.
+
 **Files:**
 - Create: `src/lib/training/result-math.ts`
 - Test: `src/lib/training/result-math.test.ts`
@@ -12100,7 +12126,7 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/training/co
   Task 9 — `revealTrainingAttempt`, `loadMoreTrainingHistory`, `loadTrainingAttempt`,
   `SAVE_REFUSED`, `HistoryPage`, `TrainingAttemptDetail`. Task 10 — `TrainingRoom`'s
   anchors.
-- Produces: `result-math.ts` exports `POINT_ORDER`, `VerdictRow`, `verdictRows`,
+- Produces: `result-math.ts` exports `RESULT_ROW_ORDER`, `VerdictRow`, `verdictRows`,
   `POINTED_LIMIT`, `pointedTopFive`, `StyleVerdict`, `styleVerdictInput`,
   `mergeHistoryRows`; `ResultView({ detail, onAnotherGlass, onDone })`;
   `HistoryList({ initial, onRevealed })`; `NoteArchiveRow.contextKind`,
@@ -12110,7 +12136,7 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/lib/training/co
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { POINT_ORDER, mergeHistoryRows, pointedTopFive, styleVerdictInput, verdictRows } from "./result-math";
+import { RESULT_ROW_ORDER, mergeHistoryRows, pointedTopFive, styleVerdictInput, verdictRows } from "./result-math";
 import type { AttemptRow, RankingSnapshot } from "./types";
 
 const SNAPSHOT: RankingSnapshot = [
@@ -12158,7 +12184,7 @@ describe("verdictRows", () => {
       typeDesignation: 0,
       vintage: null,
     });
-    expect(rows.map((r) => r.category)).toEqual([...POINT_ORDER]);
+    expect(rows.map((r) => r.category)).toEqual([...RESULT_ROW_ORDER]);
     expect(rows.map((r) => [r.label, r.mark, r.points])).toEqual([
       ["Country", "✓", 2],
       ["Region", "✓", 3],
@@ -12214,7 +12240,7 @@ import { TRAINING_COPY } from "./copy";
 import type { AttemptRow, CapReason, PointCategory, RankingSnapshot } from "./types";
 
 /** The verdict table's rows, always all seven (spec §3.5). */
-export const POINT_ORDER: readonly PointCategory[] = [
+export const RESULT_ROW_ORDER: readonly PointCategory[] = [
   "country",
   "region",
   "appellation",
@@ -12228,12 +12254,12 @@ export type VerdictRow = { category: PointCategory; label: string; mark: string;
 
 /** ✓ for points, ✗ for zero, — when the category did not apply (null). */
 export function verdictRows(points: Record<PointCategory, number | null>): VerdictRow[] {
-  return POINT_ORDER.map((category) => {
+  return RESULT_ROW_ORDER.map((category) => {
     const p = points[category];
     return {
       category,
-      label: TRAINING_COPY.rowLabels[category],
-      mark: p === null ? TRAINING_COPY.markNone : p > 0 ? TRAINING_COPY.markRight : TRAINING_COPY.markWrong,
+      label: RESULT_ROW_LABELS[category],
+      mark: p === null ? TRAINING_COPY.markNotApplicable : p > 0 ? TRAINING_COPY.markHit : TRAINING_COPY.markMiss,
       points: p,
     };
   });
@@ -12316,7 +12342,7 @@ export function ResultView({
 }) {
   const { row, noteId, wineColour } = detail;
   const [noteOpen, setNoteOpen] = useState(false);
-  const said = row.picked ? youSaidLine(row.picked.name, row.vintage) : TRAINING_COPY.youDidntPick;
+  const said = row.picked ? youSaidLine(row.picked.name, row.vintage) : TRAINING_COPY.noPick;
 
   if (row.actual === null) {
     return (
@@ -12699,7 +12725,7 @@ with
                 ) : null}
                 {n.contextKind === "TRAINING" ? (
                   <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
-                    {TRAINING_COPY.badge}
+                    {TRAINING_COPY.trainingBadge}
                   </Badge>
                 ) : null}
 ```
@@ -12789,7 +12815,7 @@ export function archiveRowTitle(
   },
   t: NotesT,
 ): string {
-  if (input.unrevealedTraining) return TRAINING_COPY.notRevealedRow;
+  if (input.unrevealedTraining) return TRAINING_COPY.unrevealedBadge;
   if (input.wineTitle) return input.wineTitle;
 ```
 
@@ -12891,7 +12917,7 @@ with
           <span className="shrink-0">{dayLabel(row.tastedOn, NOTES_LANG)}</span>
           {row.contextKind === "TRAINING" ? (
             <span className="shrink-0 rounded-full border border-border bg-background px-2 py-px text-[10.5px]">
-              {TRAINING_COPY.badge}
+              {TRAINING_COPY.trainingBadge}
             </span>
           ) : null}
 ```
@@ -12964,7 +12990,7 @@ with
         // A training note carries its badge in the sheet's title (D16).
         title:
           noteRes.data.context_kind === "TRAINING"
-            ? `${catalogWineTitle(wine)} · ${TRAINING_COPY.badge}`
+            ? `${catalogWineTitle(wine)} · ${TRAINING_COPY.trainingBadge}`
             : catalogWineTitle(wine),
 ```
 
@@ -14321,6 +14347,13 @@ cd /c/Users/Public/repos/blindtastingapp-training && git add src/app/admin/arche
 ---
 
 ### Task 13: Content pipeline: the batch validator, the generator and the batch-1 migration
+
+> **Controller note (ruling R1):** Task 1 already made `wine_archetypes.wine_place_id`
+> `string | null` in `src/lib/supabase/database.types.ts` (Row, Insert and Update). The
+> step below that flips that type is now a CHECK: `grep -n "wine_place_id: string | null"
+> src/lib/supabase/database.types.ts` must match inside `wine_archetypes`; if the old
+> `wine_place_id: string;` text is not there, there is nothing to replace — do not fail the
+> task on it.
 
 **Files:**
 - Create: `scripts/training/archetype-ladders.mjs`
