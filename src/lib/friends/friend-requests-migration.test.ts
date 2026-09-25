@@ -118,3 +118,34 @@ describe("20260925003000_friend_requests.sql", () => {
     }
   });
 });
+
+const M2 = "supabase/migrations/20260925004000_friend_requests_lockdown.sql";
+
+describe("20260925004000_friend_requests_lockdown.sql", () => {
+  const m1 = read(M1);
+  const sql = read(M2);
+
+  it("pre-asserts the bodies 20260925003000 installs", () => {
+    for (const name of [...FIVE, "accept_platform_invite", "scrub_deleted_account"]) {
+      expect(sql).toMatch(new RegExp(`'public\\.${name}\\([a-z]*\\)', +'${md5(body(m1, name))}'`));
+    }
+  });
+
+  it("names the app deploy it must follow", () => {
+    expect(sql).toContain('"feat(friends): every friend button goes through the request RPCs"');
+  });
+
+  it("locks, moves the one-way rows, then drops the client writes", () => {
+    const lock = sql.indexOf("lock table public.friend_requests, public.friendships in share row exclusive mode;");
+    const move = sql.indexOf("create temporary table friendships_one_way on commit drop as");
+    const gone = sql.indexOf("delete from friendships f using friendships_one_way o where f.id = o.id;");
+    const drop = sql.indexOf('drop policy "friendships insert own" on public.friendships;');
+    expect(lock).toBeGreaterThan(0);
+    expect(move).toBeGreaterThan(lock);
+    expect(gone).toBeGreaterThan(move);
+    expect(drop).toBeGreaterThan(gone);
+    expect(sql).toContain('drop policy "friendships delete own" on public.friendships;');
+    expect(sql).toContain("revoke insert, update, delete on table public.friendships from anon, authenticated;");
+    expect(sql).not.toContain('drop policy "friendships read own"');
+  });
+});
