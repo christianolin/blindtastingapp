@@ -9,6 +9,7 @@ import {
   chipFlightNeeded,
   countryCameraBox,
   FIT_PADDING_PX,
+  MIN_FIT_BAND_PX,
   selectionFit,
 } from "./camera-fit";
 import type { Bbox } from "./shard-specs";
@@ -105,22 +106,65 @@ describe("chipFlightNeeded", () => {
 
 // A selection's fit on a phone whose bottom sheet is open at half (the
 // 2026-09-25 phone plan, ruling R1): the sheet's height is left free at the
-// bottom, and the place is eased to the centre of what the sheet leaves.
+// bottom, and the place is eased to the centre of what the sheet leaves, as
+// long as that leaves a band of at least MIN_FIT_BAND_PX to fit into.
 describe("selectionFit", () => {
+  const PLAIN = { padding: 48, offset: [0, 0] };
+
   it("without a sheet is the 48 px frame all round and no offset", () => {
     expect(FIT_PADDING_PX).toBe(48);
-    expect(selectionFit(undefined)).toEqual({ padding: 48, offset: [0, 0] });
+    expect(selectionFit(undefined, 800)).toEqual(PLAIN);
+    expect(selectionFit(undefined, 800).sheet).toBeUndefined();
+    // Whatever the canvas: the desktop path never looks at its height.
+    expect(selectionFit(undefined, 0)).toEqual(PLAIN);
   });
 
-  it("with a sheet adds its height at the bottom and offsets the centre by half of it", () => {
-    expect(selectionFit({ bottom: 406 })).toEqual({
+  it("on a tall canvas adds the sheet's height at the bottom and offsets the centre by half of it", () => {
+    // 844 - 406 - 96 = 342 px of band.
+    expect(selectionFit({ bottom: 406 }, 844)).toEqual({
       padding: { top: 48, right: 48, bottom: 454, left: 48 },
       offset: [0, -203],
+      sheet: { bottom: 406 },
     });
   });
 
   it("treats a sheet of no height, or a negative one, as no sheet", () => {
-    expect(selectionFit({ bottom: 0 })).toEqual({ padding: 48, offset: [0, 0] });
-    expect(selectionFit({ bottom: -10 })).toEqual({ padding: 48, offset: [0, 0] });
+    expect(selectionFit({ bottom: 0 }, 844)).toEqual(PLAIN);
+    expect(selectionFit({ bottom: -10 }, 844)).toEqual(PLAIN);
+  });
+
+  it("keeps a floor of 120 px of visible map", () => {
+    expect(MIN_FIT_BAND_PX).toBe(120);
+  });
+
+  it("drops the sheet on a landscape phone, where the band above it is negative", () => {
+    // 260 - 235 - 96 = -71: MapLibre would refuse the padded fit outright.
+    const fit = selectionFit({ bottom: 235 }, 260);
+    expect(fit).toEqual(PLAIN);
+    expect(fit.sheet).toBeUndefined();
+  });
+
+  it("drops the sheet when the band is thin but positive (a portrait phone under the tasting strip)", () => {
+    // 572 - 449 - 96 = 27 px: a region would fit at an absurdly low zoom.
+    expect(selectionFit({ bottom: 449 }, 572)).toEqual(PLAIN);
+  });
+
+  it("keeps the sheet on a 667 px canvas under a 380 px sheet (191 px of band)", () => {
+    expect(selectionFit({ bottom: 380 }, 667)).toEqual({
+      padding: { top: 48, right: 48, bottom: 428, left: 48 },
+      offset: [0, -190],
+      sheet: { bottom: 380 },
+    });
+  });
+
+  it("keeps the sheet exactly at the floor, and drops it one pixel under", () => {
+    // 596 - 380 - 96 = 120.
+    expect(selectionFit({ bottom: 380 }, 596).sheet).toEqual({ bottom: 380 });
+    expect(selectionFit({ bottom: 380 }, 595)).toEqual(PLAIN);
+  });
+
+  it("drops the sheet for a canvas with no measurable height", () => {
+    expect(selectionFit({ bottom: 380 }, 0)).toEqual(PLAIN);
+    expect(selectionFit({ bottom: 380 }, Number.NaN)).toEqual(PLAIN);
   });
 });

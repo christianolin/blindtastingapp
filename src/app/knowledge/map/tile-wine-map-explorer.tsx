@@ -735,14 +735,18 @@ export function TileWineMapExplorer({
       ? context.article
       : null;
 
-  // The phone sheet bar's label: the place whose details are showing.
+  // The phone sheet bar's label: the place whose details are showing. A
+  // selection whose details failed or are missing is labelled "Details", the
+  // tab that says so, never "Explore the map" as if nothing were selected.
   const sheetTitle =
     context && context.place.key === selectedKey
       ? english
         ? englishName(context.place.name)
         : context.place.name
-      : selectedKey && contextState === "loading"
-        ? "Loading…"
+      : selectedKey
+        ? contextState === "loading"
+          ? "Loading…"
+          : "Details"
         : "Explore the map";
 
   // The hierarchy's body. The md+ tree card and the phone sheet's Explore tab
@@ -764,7 +768,7 @@ export function TileWineMapExplorer({
         <button
           type="button"
           onClick={() => dispatchTree({ type: "retry" })}
-          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground max-md:min-h-11"
         >
           Retry
         </button>

@@ -105,7 +105,8 @@ export type CameraTarget = {
       while it shows this selection at half. The fit leaves that much of the
       canvas free at the bottom, so the place lands in the part the sheet does
       not cover. Absent (desktop, tablets, a closed or full sheet): today's
-      fit of the whole canvas. */
+      fit of the whole canvas — and so is a sheet on a canvas too short to
+      leave MIN_FIT_BAND_PX of map above it (selectionFit drops it). */
   padding?: SheetPadding;
 };
 
@@ -1173,8 +1174,13 @@ export function TileWineMap({
     const inner = map?.getMap();
     // The frame round the place: 48 px, plus on a phone with the sheet at
     // half the sheet's height at the bottom (ruling R1), so the place fits the
-    // part of the canvas the sheet leaves visible.
-    const fit = selectionFit(cameraTarget.padding);
+    // part of the canvas the sheet leaves visible. On a canvas too short for
+    // that (a landscape phone), selectionFit drops the sheet and `fit.sheet`
+    // is undefined: the plain fit, since MapLibre refuses a fit into no room.
+    const fit = selectionFit(
+      cameraTarget.padding,
+      inner?.getCanvas().clientHeight ?? 0,
+    );
     // Fit the footprint, but never end below the selection's reveal zoom: a
     // bbox fit alone can land under a small feature's min_zoom, so it (and its
     // gold ring) wouldn't render until the user zoomed in by hand.
@@ -1185,7 +1191,7 @@ export function TileWineMap({
       });
       if (inner && cam) {
         const zoom = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
-        if (cameraTarget.padding) {
+        if (fit.sheet) {
           // The place's own centre, eased to the visible part's centre by
           // `offset`, which easeTo applies in pixels at the final zoom.
           // cam.center is already shifted for cam.zoom and would over-shift
@@ -1221,8 +1227,8 @@ export function TileWineMap({
     // out — so tree navigation to a distant or deep place still flies there.
     // "On screen" is the whole canvas, or on a phone with the sheet at half
     // the part above the sheet: a place framed under the sheet is brought out.
-    const b = cameraTarget.padding
-      ? boundsAboveSheet(inner, cameraTarget.padding.bottom)
+    const b = fit.sheet
+      ? boundsAboveSheet(inner, fit.sheet.bottom)
       : inner.getBounds();
     const viewW = b.getEast() - b.getWest();
     const viewH = b.getNorth() - b.getSouth();

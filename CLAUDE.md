@@ -1791,14 +1791,19 @@ a raw subquery, regardless of which two tables look involved at a glance.
     because the pick snaps the sheet in the same render that builds the
     target, while the element is still a 200 ms height transition away from
     that size; it and the sheet's `h-[50dvh]` change together. TileWineMap's
-    `selectionFit(padding)` (pinned by `camera-fit.test.ts`) turns it into
+    `selectionFit(padding, canvasHeight)` (pinned by `camera-fit.test.ts`) turns it into
     the 48 px frame plus the sheet's height at the bottom and an `offset` of
     half that height, which `easeTo` applies in pixels at the FINAL zoom on
     the bbox's mercator midpoint (`mercatorMidpoint`) — a centre pre-shifted
     by `cameraForBounds` at the fitted zoom would over-shift whenever the
     reveal floor raises the zoom — and its "already well framed, leave the
     view" test judges `boundsAboveSheet`, not `getBounds()`, so a place
-    framed under the sheet is brought out. A map tap (source "map") still
+    framed under the sheet is brought out. A canvas too short to leave
+    `MIN_FIT_BAND_PX` (120) of map between the sheet and the frame (a
+    landscape phone: ~260 px under a ~235 px sheet) gets the plain whole-canvas
+    fit instead — `selectionFit(padding, canvas.clientHeight)` returns no
+    `sheet` then — because MapLibre refuses a padded fit into no room and a
+    tree pick or `?place=` link would not fly at all. A map tap (source "map") still
     never moves the camera; a closed or full sheet, and every md+ render,
     pass no padding, so the desktop and tablet fit is exactly today's. Chip
     flights (`CameraRequest`, padding 48) are a separate path and unchanged.

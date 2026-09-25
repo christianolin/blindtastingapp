@@ -20,20 +20,46 @@ export const FIT_PADDING_PX = 48;
     2026-09-25 phone plan, ruling R1): its height in CSS px. */
 export type SheetPadding = { bottom: number };
 
-/** How a selection's camera fits its place. Without a sheet: FIT_PADDING_PX
-    all round and no offset, as ever. With one, the frame also leaves the
-    sheet's height free at the bottom, so the place fits the part of the canvas
-    the sheet leaves visible, and `offset` puts the place's centre at that
-    part's centre, half the sheet's height above the canvas centre. The offset
-    is in pixels at the FINAL zoom (easeTo applies it there), so raising the
-    fitted zoom to the place's reveal floor never over-shifts the place, which
-    a centre pre-shifted by cameraForBounds at the fitted zoom would. */
-export function selectionFit(sheet: SheetPadding | undefined): {
+/** The least height, in CSS px, a sheet-padded fit must leave the place: the
+    canvas minus the sheet minus the frame above and below it. A landscape
+    phone (a ~260 px canvas under a ~235 px sheet) leaves less than nothing,
+    and MapLibre then refuses the fit outright (cameraForBounds returns
+    undefined, and fitBounds with the same padding does nothing), so a tree
+    pick or a ?place= link would not fly at all; a portrait phone under the
+    active-tasting strip leaves ~27 px, which fits a region at an absurdly low
+    zoom. Below this floor the fit ignores the sheet and frames the whole
+    canvas, as on a larger screen. */
+export const MIN_FIT_BAND_PX = 120;
+
+/** How a selection's camera fits its place on a canvas `canvasHeight` CSS px
+    tall. Without a sheet: FIT_PADDING_PX all round and no offset, as ever,
+    whatever the canvas. With one, the frame also leaves the sheet's height
+    free at the bottom, so the place fits the part of the canvas the sheet
+    leaves visible, and `offset` puts the place's centre at that part's
+    centre, half the sheet's height above the canvas centre. The offset is in
+    pixels at the FINAL zoom (easeTo applies it there), so raising the fitted
+    zoom to the place's reveal floor never over-shifts the place, which a
+    centre pre-shifted by cameraForBounds at the fitted zoom would.
+
+    `sheet` is the sheet the fit actually leaves room for: the one asked for,
+    or undefined when there is none or when the band it leaves (the canvas
+    minus the sheet minus the frame above and below) is under MIN_FIT_BAND_PX,
+    in which case the fit is the plain one of the whole canvas. A place partly
+    under the sheet beats a flight MapLibre refuses. */
+export function selectionFit(
+  sheet: SheetPadding | undefined,
+  canvasHeight: number,
+): {
   padding: number | { top: number; right: number; bottom: number; left: number };
   offset: [number, number];
+  sheet?: SheetPadding;
 } {
   // A sheet of no height (or a nonsense one) covers nothing: the plain fit.
   if (!sheet || !(sheet.bottom > 0)) return { padding: FIT_PADDING_PX, offset: [0, 0] };
+  // Too little canvas above the sheet to fit into (or a canvas not measured
+  // yet): the plain fit. Written as a negated >= so a NaN height drops too.
+  const band = canvasHeight - sheet.bottom - 2 * FIT_PADDING_PX;
+  if (!(band >= MIN_FIT_BAND_PX)) return { padding: FIT_PADDING_PX, offset: [0, 0] };
   return {
     padding: {
       top: FIT_PADDING_PX,
@@ -42,6 +68,7 @@ export function selectionFit(sheet: SheetPadding | undefined): {
       left: FIT_PADDING_PX,
     },
     offset: [0, -sheet.bottom / 2],
+    sheet,
   };
 }
 
