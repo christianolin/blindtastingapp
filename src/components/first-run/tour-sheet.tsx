@@ -132,7 +132,7 @@ export function TourSheet({
               ))}
             </div>
             <span className="sr-only" aria-live="polite">
-              {tourStepLabel(at + 1, steps.length)}
+              {tourStepLabel(at + 1, steps.length)}: {step.title}
             </span>
             {footer.skip ? (
               <button

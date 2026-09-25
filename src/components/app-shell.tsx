@@ -15,11 +15,17 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   } = await supabase.auth.getUser();
   if (!user) return <>{children}</>;
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("display_name, avatar_url, role, location, tour_seen_at")
     .eq("id", user.id)
     .maybeSingle();
+  // A failed read blanks the sidebar and hides the tour; say so in the server
+  // log (code and message only) so a schema mismatch after a deploy — e.g. the
+  // tour_seen_at migration not yet applied — is diagnosable from Vercel's logs.
+  if (profileError) {
+    console.error("[app-shell] profile read failed", profileError.code, profileError.message);
+  }
   const isManager = profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
   // First-run tour (spec 2026-09-25 D1, D5, D6): the flag rides on this one
   // profile read — no extra request. A failed read counts as seen, so an
