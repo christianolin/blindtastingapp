@@ -343,6 +343,10 @@ export type Database = {
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
           last_seen_at: string | null;
+          // First-run tour (20260925010000, spec 2026-09-25 D1): null = show
+          // the tour. Stamped by markTourSeen, cleared by resetTour
+          // (src/lib/first-run/actions.ts); in the client UPDATE grant.
+          tour_seen_at: string | null;
           created_at: string;
           // Account deletion (20260919101300): stamped once by
           // scrub_deleted_account, never cleared. Row only on purpose (D18):
@@ -364,6 +368,7 @@ export type Database = {
           preferred_currency?: string;
           cellar_visibility?: CellarVisibility;
           last_seen_at?: string | null;
+          tour_seen_at?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -380,6 +385,7 @@ export type Database = {
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
           last_seen_at: string | null;
+          tour_seen_at: string | null;
           created_at: string;
         }>;
         Relationships: [];
