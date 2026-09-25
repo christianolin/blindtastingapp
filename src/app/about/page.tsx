@@ -25,7 +25,8 @@ type Mode = {
   title: string;
   body: string;
   border: string;
-  soon?: boolean;
+  /** Live, but still in preview (training-room D12). */
+  preview?: boolean;
 };
 
 const MODES: Mode[] = [
@@ -44,9 +45,9 @@ const MODES: Mode[] = [
   {
     icon: Target,
     title: "Training Room",
-    body: "Drill regions, grapes and appellations on your own, between tastings. In development.",
+    body: "Drill regions, grapes and appellations on your own, between tastings. Preview.",
     border: "border border-dashed border-border",
-    soon: true,
+    preview: true,
   },
 ];
 
@@ -275,17 +276,12 @@ function ModeBlock({ mode }: { mode: Mode }) {
         mode.border,
       )}
     >
-      <Icon
-        size={22}
-        strokeWidth={1.75}
-        className={mode.soon ? "text-muted-foreground" : "text-primary"}
-        aria-hidden
-      />
+      <Icon size={22} strokeWidth={1.75} className="text-primary" aria-hidden />
       <h3 className="flex items-center gap-2 font-heading text-[22px] leading-[1.1] font-semibold max-md:text-[20px]">
         {mode.title}
-        {mode.soon ? (
+        {mode.preview ? (
           <span className="rounded-full border border-gold px-[7px] py-[2px] font-mono text-[10px] tracking-[.1em] text-gold-dark">
-            SOON
+            PREVIEW
           </span>
         ) : null}
       </h3>

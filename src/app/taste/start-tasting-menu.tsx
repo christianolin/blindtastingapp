@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronDown, EyeOff, NotebookPen, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,10 +40,11 @@ export function StartTastingMenu() {
         <DropdownMenuItem onClick={() => openTaste("rate")}>
           <NotebookPen /> {t("taste_and_rate")}
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>
+        {/* Training room (spec §3.1): a real link with the Preview pill. */}
+        <DropdownMenuItem render={<Link href="/taste/training" />}>
           <Target /> {t("training_room")}
           <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
-            {t("soon")}
+            {t("preview")}
           </span>
         </DropdownMenuItem>
       </DropdownMenuContent>

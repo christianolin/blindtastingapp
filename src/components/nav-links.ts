@@ -10,6 +10,25 @@ export type NavChild = {
   modal?: "catalog" | "cellar" | "taste-blind" | "taste-rate";
   // A teaser sub-item: rendered greyed-out with a "Soon" tag, not clickable.
   soon?: boolean;
+  // A live sub-item still in preview (training-room D12): a real link with a
+  // "Preview" tag.
+  preview?: boolean;
+};
+
+export type NavChildState = "link" | "soon" | "preview";
+
+/** How the sidebar and the phone drawer draw a sub-item. `soon` wins, so a
+    teaser can never turn into a link by accident. */
+export function navChildState(child: NavChild): NavChildState {
+  if (child.soon) return "soon";
+  if (child.preview) return "preview";
+  return "link";
+}
+
+/** The pill beside a teaser or a preview item (same shape and tokens). */
+export const NAV_CHILD_PILL: Record<Exclude<NavChildState, "link">, string> = {
+  soon: "Soon",
+  preview: "Preview",
 };
 export type NavLink = {
   key: string;
@@ -44,7 +63,7 @@ export const NAV_LINKS: NavLink[] = [
       { href: "/tastings/new", label: "Taste Blind", modal: "taste-blind" },
       { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
       { href: "/taste/notes", label: "Tasting notes" },
-      { href: "/taste", label: "Training Room", soon: true },
+      { href: "/taste/training", label: "Training Room", preview: true },
     ],
   },
   {

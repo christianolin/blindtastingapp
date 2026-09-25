@@ -21,7 +21,13 @@ import { signOut } from "@/app/actions";
 import { SidebarThemeSwitch } from "@/components/sidebar-theme-switch";
 import { cn } from "@/lib/utils";
 import { BlindrMark } from "@/components/logo";
-import { type NavLink, type NavChild, isNavActive } from "@/components/nav-links";
+import {
+  NAV_CHILD_PILL,
+  navChildState,
+  type NavLink,
+  type NavChild,
+  isNavActive,
+} from "@/components/nav-links";
 import { PROFILE_LINKS } from "@/components/profile-links";
 import { useAddWine } from "@/components/add-wine-context";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
@@ -129,7 +135,8 @@ export function MobileNav({
                       {link.children ? (
                         <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
                           {link.children.map((child) => {
-                            if (child.soon) {
+                            const childState = navChildState(child);
+                            if (childState === "soon") {
                               return (
                                 <span
                                   key={child.label}
@@ -137,7 +144,7 @@ export function MobileNav({
                                 >
                                   {child.label}
                                   <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
-                                    Soon
+                                    {NAV_CHILD_PILL.soon}
                                   </span>
                                 </span>
                               );
@@ -169,9 +176,14 @@ export function MobileNav({
                                 href={child.href}
                                 onClick={close}
                                 aria-current={childActive ? "page" : undefined}
-                                className={childClass}
+                                className={cn(childClass, childState === "preview" && "flex items-center gap-2")}
                               >
                                 {child.label}
+                                {childState === "preview" ? (
+                                  <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
+                                    {NAV_CHILD_PILL.preview}
+                                  </span>
+                                ) : null}
                               </Link>
                             );
                           })}

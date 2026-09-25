@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  NAV_CHILD_PILL,
+  navChildState,
   navWithAdmin,
   isNavActive,
   type NavChild,
@@ -316,7 +318,8 @@ function SidebarBody({
               {link.children && open ? (
                 <div className="mt-0.5 mb-1 ml-[1.35rem] flex flex-col border-l border-primary-foreground/15 pl-3">
                   {link.children.map((child) => {
-                    if (child.soon) {
+                    const childState = navChildState(child);
+                    if (childState === "soon") {
                       return (
                         <span
                           key={child.label}
@@ -324,7 +327,7 @@ function SidebarBody({
                         >
                           {child.label}
                           <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
-                            Soon
+                            {NAV_CHILD_PILL.soon}
                           </span>
                         </span>
                       );
@@ -356,9 +359,14 @@ function SidebarBody({
                         href={child.href}
                         onClick={onNavigate}
                         aria-current={childActive ? "page" : undefined}
-                        className={childClass}
+                        className={cn(childClass, childState === "preview" && "flex items-center gap-2")}
                       >
                         {child.label}
+                        {childState === "preview" ? (
+                          <span className="rounded-full bg-primary-foreground/10 px-1.5 py-0.5 text-[0.6rem] font-medium tracking-wide uppercase">
+                            {NAV_CHILD_PILL.preview}
+                          </span>
+                        ) : null}
                       </Link>
                     );
                   })}

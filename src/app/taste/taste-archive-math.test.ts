@@ -64,7 +64,7 @@ function tasting(over: Partial<ArchiveTasting> = {}): ArchiveTasting {
 // Every key the All tastings page reads from makeT's dictionaries.
 const ARCHIVE_KEYS = [
   "all_tastings", "start_a_tasting", "start", "taste_blind", "taste_and_rate", "training_room",
-  "soon", "loading_tastings", "tastings_one", "tastings_many", "finished_count",
+  "soon", "preview", "loading_tastings", "tastings_one", "tastings_many", "finished_count",
   "glasses_guessed_one", "glasses_guessed_many", "waiting_on_you_one", "waiting_on_you_many",
   "waiting_on_you_short", "invitations_close", "accept", "decline", "date_to_be_set",
   "filter_all", "filter_hosting", "filter_attending", "filter_finished", "newest_first",

@@ -380,6 +380,7 @@ const UI_EN: UiDict = {
   taste_and_rate: "Taste & Rate",
   training_room: "Training Room",
   soon: "Soon",
+  preview: "Preview",
   loading_tastings: "Pouring your tastings…",
   tastings_one: "1 tasting",
   tastings_many: "{n} tastings",
@@ -591,6 +592,8 @@ const UI_DA: UiDict = {
   taste_and_rate: "Smag og bedøm",
   training_room: "Træningsrum",
   soon: "Snart",
+  // English on purpose: the training room is English-only in its preview (D20).
+  preview: "Preview",
   loading_tastings: "Skænker op til dine smagninger…",
   tastings_one: "1 smagning",
   tastings_many: "{n} smagninger",
