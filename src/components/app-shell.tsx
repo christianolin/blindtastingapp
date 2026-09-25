@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AddWineProvider } from "@/components/add-wine-context";
 import { TasteLauncherProvider } from "@/components/taste-launcher-context";
+import { TourProvider } from "@/components/first-run/tour-provider";
+import { isProfileBare, tourSeenFromProfile } from "@/lib/first-run/tour";
 
 // The authenticated app shell: a persistent left sidebar + the page as the main
 // column. Rendered once at the root so every signed-in page gets the nav and
@@ -15,31 +17,43 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, role")
+    .select("display_name, avatar_url, role, location, tour_seen_at")
     .eq("id", user.id)
     .maybeSingle();
   const isManager = profile?.role === "ADMIN" || profile?.role === "CONTRIBUTOR";
+  // First-run tour (spec 2026-09-25 D1, D5, D6): the flag rides on this one
+  // profile read — no extra request. A failed read counts as seen, so an
+  // error never shows the tour again to someone who dismissed it.
+  const tourSeen = tourSeenFromProfile(profile);
+  const profileBare = isProfileBare({
+    avatarUrl: profile?.avatar_url ?? null,
+    location: profile?.location ?? null,
+  });
 
   return (
     <AddWineProvider userId={user.id}>
       <TasteLauncherProvider userId={user.id}>
-        {/* The window never scrolls: the content column is the scroll
-            container. That's the only arrangement iPad Safari can't defeat —
-            both sticky and fixed sidebars drifted with its collapsing
-            browser chrome. */}
-        <div className="flex h-dvh overflow-hidden">
-          <AppSidebar
-            isManager={isManager}
-            user={{
-              id: user.id,
-              name: profile?.display_name ?? user.email ?? "",
-              avatarUrl: profile?.avatar_url ?? null,
-            }}
-          />
-          <div className="flex h-full min-w-0 flex-1 flex-col overflow-y-auto">
-            {children}
+        {/* Around the whole shell: /profile/edit's "Show the tour again"
+            reaches it through useTourReplay(). */}
+        <TourProvider tourSeen={tourSeen} profileBare={profileBare}>
+          {/* The window never scrolls: the content column is the scroll
+              container. That's the only arrangement iPad Safari can't defeat —
+              both sticky and fixed sidebars drifted with its collapsing
+              browser chrome. */}
+          <div className="flex h-dvh overflow-hidden">
+            <AppSidebar
+              isManager={isManager}
+              user={{
+                id: user.id,
+                name: profile?.display_name ?? user.email ?? "",
+                avatarUrl: profile?.avatar_url ?? null,
+              }}
+            />
+            <div className="flex h-full min-w-0 flex-1 flex-col overflow-y-auto">
+              {children}
+            </div>
           </div>
-        </div>
+        </TourProvider>
       </TasteLauncherProvider>
     </AddWineProvider>
   );
