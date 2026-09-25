@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NAME_HINT, NAME_LABEL, NAME_MAX } from "@/lib/auth/name";
 import { signUp, type SignUpFormState } from "./actions";
 
 export function SignUpForm({ next = null }: { next?: string | null }) {
@@ -25,21 +26,20 @@ export function SignUpForm({ next = null }: { next?: string | null }) {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="first_name">First name</Label>
-          <Input
-            id="first_name"
-            name="first_name"
-            autoComplete="given-name"
-            required
-            autoFocus
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="last_name">Last name (optional)</Label>
-          <Input id="last_name" name="last_name" autoComplete="family-name" />
-        </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="name">{NAME_LABEL}</Label>
+        <Input
+          id="name"
+          name="name"
+          autoComplete="name"
+          maxLength={NAME_MAX}
+          required
+          autoFocus
+          aria-describedby="name-hint"
+        />
+        <p id="name-hint" className="text-xs text-muted-foreground">
+          {NAME_HINT}
+        </p>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
