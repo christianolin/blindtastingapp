@@ -330,7 +330,12 @@ export function CommunityList({
                         Cellar
                       </Button>
                     ) : null}
-                    <FriendButton personId={r.id} relationship={r.relationship} variant="row" />
+                    <FriendButton
+                      key={r.relationship}
+                      personId={r.id}
+                      relationship={r.relationship}
+                      variant="row"
+                    />
                   </div>
                 ) : null}
               </div>
@@ -422,6 +427,7 @@ export function CommunityList({
                             </Button>
                           ) : null}
                           <FriendButton
+                            key={r.relationship}
                             personId={r.id}
                             relationship={r.relationship}
                             variant="row"

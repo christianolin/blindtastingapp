@@ -178,7 +178,7 @@ export default async function ProfilePage({
           Cellar
         </Button>
       ) : null}
-      <FriendButton personId={profile.id} relationship={friendState} variant="header" />
+      <FriendButton key={friendState} personId={profile.id} relationship={friendState} variant="header" />
     </>
   );
 

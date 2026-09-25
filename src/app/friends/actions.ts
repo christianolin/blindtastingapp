@@ -54,16 +54,20 @@ export async function cancelFriendRequest(to: string): Promise<FriendResult> {
 export async function acceptFriendRequest(from: string): Promise<FriendResult> {
   const supabase = await signedInClient();
   const { error } = await supabase.rpc("accept_friend_request", { p_from: from });
-  if (error) return { error: error.message };
+  // Refresh even on refusal (42501 "no request to accept" — the stale-page
+  // case: the request was already settled elsewhere) so the row re-renders
+  // its true relationship instead of sitting on a stale Accept/Decline pair
+  // until a manual reload. The refusal text still shows underneath it.
   refresh(from, true);
+  if (error) return { error: error.message };
   return { ok: true };
 }
 
 export async function declineFriendRequest(from: string): Promise<FriendResult> {
   const supabase = await signedInClient();
   const { error } = await supabase.rpc("decline_friend_request", { p_from: from });
-  if (error) return { error: error.message };
   refresh(from, true);
+  if (error) return { error: error.message };
   return { ok: true };
 }
 

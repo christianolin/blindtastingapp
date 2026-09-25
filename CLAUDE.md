@@ -378,10 +378,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (still the only way to open Friends; `/friends` and `/people` still
   redirect in), `?tab=requests` (the friend requests waiting on you, newest
   first, no Sort control; 2026-09-24), `?q`, `?sort` (`active`/`name`/`joined`,
-  each view has its own default when absent) and `?page`. A row action's steady state (the
-  friend chip's "Friends") stays visible at rest; only an action ("Add
-  friend", "Cellar") fades in on hover/focus, and only on a fine pointer, so
-  a touch device never has to hover an invisible button. Removing a friend
+  each view has its own default when absent) and `?page`. A row action's steady states
+  ("Friends", "Requested") and the incoming Accept · Decline pair stay
+  visible at rest; only "Add friend" and "Cellar" fade in on hover/focus, and
+  only on a fine pointer, so a touch device never has to hover an invisible
+  button. Removing a friend
   from a row is a two-tap confirm ("Friends" → "Tap again to remove" →
   removed, `console-copy.ts`'s `twoTapState`/`TWO_TAP_WINDOW_MS`) —
   `/u/[id]`'s own remove button stays one-tap. There is still no mutual-
