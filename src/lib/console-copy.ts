@@ -62,6 +62,15 @@ export function consoleEyebrow(t: {
   return "Self-paced · you are hosting";
 }
 
+/**
+ * The console header's Pause/Resume button: its label and which glyph sits
+ * before it (owner, 2026-09-25: while the label reads "Resume" the glyph is a
+ * play triangle, not the pause bars the button used to keep in both states).
+ */
+export function pauseControl(paused: boolean): { label: "Pause" | "Resume"; icon: "pause" | "play" } {
+  return paused ? { label: "Resume", icon: "play" } : { label: "Pause", icon: "pause" };
+}
+
 /** What every reveal action and Skip refuse with while the tasting is paused. */
 export const PAUSED_REFUSAL = "The tasting is paused — resume to reveal.";
 

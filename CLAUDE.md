@@ -2325,6 +2325,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
     `src/lib/console-copy.ts`) — there is no separate paused pill any more
     (owner, 2026-09-24; it used to be a gold band with its own Resume button
     atop the main column). The participants' `PausedBand` is unchanged.
+    The header's Pause/Resume button shows pause bars with "Pause" and a
+    play triangle with "Resume" (`pauseControl`, owner 2026-09-25 — it used
+    to keep the pause bars in both states).
   - **Guess ladder** (`play/guess-ladder.tsx`, `field-picker.tsx`,
     `guess-ladder-math.ts`, `grape-shortlist.ts`, `play/guesser.ts`): one row
     per field with its points. **Reversed** (spec §1.4 row 10): each pick no

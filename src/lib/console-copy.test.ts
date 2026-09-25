@@ -4,6 +4,7 @@ import {
   NEXT_ATTRIBUTE,
   PAUSED_REFUSAL,
   consoleEyebrow,
+  pauseControl,
   nextChipLabel,
   notLockedLine,
   pausedBand,
@@ -64,6 +65,13 @@ describe("consoleEyebrow (owner, 2026-09-24)", () => {
     expect(consoleEyebrow({ finished: false, timingMode: "ASYNC", paused: false })).toBe(
       "Self-paced · you are hosting",
     );
+  });
+});
+
+describe("pauseControl (owner, 2026-09-25)", () => {
+  it("shows pause bars with Pause and a play triangle with Resume", () => {
+    expect(pauseControl(false)).toEqual({ label: "Pause", icon: "pause" });
+    expect(pauseControl(true)).toEqual({ label: "Resume", icon: "play" });
   });
 });
 

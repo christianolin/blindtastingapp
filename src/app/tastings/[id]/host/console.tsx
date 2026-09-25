@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Pause as PauseIcon, Plus } from "lucide-react";
+import { ArrowLeft, Check, Pause as PauseIcon, Play, Plus } from "lucide-react";
 import { useAddWine } from "@/components/add-wine-context";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { LiveDot } from "@/components/overview/live-dot";
@@ -24,6 +24,7 @@ import {
 import {
   TWO_TAP_WINDOW_MS,
   consoleEyebrow,
+  pauseControl,
   notLockedLine,
   pouringNowEyebrow,
   revealEverythingLabel,
@@ -291,6 +292,14 @@ export function HostConsole({ data }: { data: ConsoleData }) {
     timingMode: data.timingMode,
     paused: data.paused,
   });
+  // The Pause/Resume button: a play triangle while paused (owner, 2026-09-25).
+  const pauseCtl = pauseControl(data.paused);
+  const pauseGlyph =
+    pauseCtl.icon === "play" ? (
+      <Play className="size-4" strokeWidth={2.5} aria-hidden />
+    ) : (
+      <PauseIcon className="size-4" strokeWidth={2.5} aria-hidden />
+    );
   const liveDotNode =
     !data.finished && data.timingMode === "LIVE" && data.paused ? (
       <PauseIcon className="size-3 shrink-0 text-gold-dark" aria-hidden />
@@ -327,8 +336,8 @@ export function HostConsole({ data }: { data: ConsoleData }) {
               disabled={pacingPending}
               className={cn(HEADER_BUTTON, "shrink-0 border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
             >
-              <PauseIcon className="size-4" strokeWidth={2.5} />
-              {data.paused ? "Resume" : "Pause"}
+              {pauseGlyph}
+              {pauseCtl.label}
             </button>
           ) : null}
           {!data.finished && !data.isSemiBlind ? (
@@ -362,8 +371,8 @@ export function HostConsole({ data }: { data: ConsoleData }) {
                 disabled={pacingPending}
                 className={cn(HEADER_BUTTON, "border-border text-foreground hover:border-gold hover:text-gold-dark disabled:opacity-50")}
               >
-                <PauseIcon className="size-4" strokeWidth={2.5} />
-                {data.paused ? "Resume" : "Pause"}
+                {pauseGlyph}
+                {pauseCtl.label}
               </button>
             ) : null}
             {!data.finished && !data.isSemiBlind ? (
