@@ -33,7 +33,8 @@ export default async function WineMapPage({
   const { place } = await searchParams;
 
   return (
-    <div className="flex flex-1 flex-col">
+    // Phones: exactly AppShell's column tall, never taller (see the wrapper).
+    <div className="flex flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden">
       {/* Next hoists these into <head>. crossOrigin matters: the tile and
           basemap fetches are CORS requests, and a preconnect opened without it
           warms the wrong connection and is silently wasted. */}
@@ -51,9 +52,21 @@ export default async function WineMapPage({
           pick, which fetches (and caches) it then. */}
       <link rel="preload" as="fetch" href={WINE_MAP_MANIFEST_URL} crossOrigin="anonymous" />
       <link rel="preload" as="fetch" href={BASEMAP_STYLE_URL.light} crossOrigin="anonymous" />
-      <AppHeader />
-      <div className="flex w-full flex-1 flex-col gap-6 p-6 sm:p-8">
-        <div>
+      <AppHeader title="Wine map" />
+      {/* Phones (below md; spec 2026-09-25 D1, D3): one fixed screen. This
+          wrapper is exactly what is left under the header, and under the
+          active-tasting strip when there is one, and it never scrolls, so a
+          drag on the map is always the map's. The height is a flex chain, not
+          a calc: AppShell's column is h-dvh, and this page's root and this
+          wrapper are flex-1 min-h-0 inside it, so a strip that appears simply
+          takes its share (a calc(100dvh - header) would overflow by the
+          strip). AppShell itself is untouched. From md it is laid out exactly
+          as before: sm:p-8 has always applied there. */}
+      <div
+        data-map-page=""
+        className="flex w-full flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden md:gap-6 md:p-8"
+      >
+        <div className="hidden md:block">
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
             Knowledge Explorer
           </h1>
