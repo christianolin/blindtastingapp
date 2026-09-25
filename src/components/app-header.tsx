@@ -68,7 +68,7 @@ export async function AppHeader({
   const name = displayName ?? "";
   // In parallel, so the strip costs no extra latency. A failed read renders
   // the epoch-stamped empty snapshot, which any later poll replaces (D13).
-  const [invites, active] = await Promise.all([
+  const [notifications, active] = await Promise.all([
     getPendingInvites(),
     readActiveTastings(userId),
   ]);
@@ -104,7 +104,7 @@ export async function AppHeader({
         </div>
         <div className="ml-auto flex items-center gap-2 md:gap-3">
           <ScanButton className={ICON_BUTTON} />
-          <NotificationsBell invites={invites} className={ICON_BUTTON} />
+          <NotificationsBell notifications={notifications} className={ICON_BUTTON} />
         </div>
       </header>
       {/* Scrolls with the page, not sticky — the bar stays the only sticky

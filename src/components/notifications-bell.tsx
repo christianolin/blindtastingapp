@@ -3,21 +3,37 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { FriendButton } from "@/components/friend-button";
 import { cn } from "@/lib/utils";
-import { getPendingInvites, type InviteNotification } from "@/lib/notifications";
+import { getPendingInvites } from "@/lib/notifications";
+import {
+  friendRequestLine,
+  notificationKey,
+  visibleNotifications,
+  withoutFriendRequest,
+  type PendingNotification,
+} from "@/lib/notification-items";
 import { invitePollIntervalMs } from "@/lib/notifications-poll";
 
-export type { InviteNotification };
+// A helper (not an inline Date.now()) keeps the clock read out of the React
+// purity lint's reach — the same pattern community/page.tsx's nowMs uses. It
+// only ever runs in a poll callback or after an Accept/Decline tap.
+function nowMs(): number {
+  return Date.now();
+}
 
 /**
- * Bell in the app header showing pending tasting invitations. Polls
- * getPendingInvites directly (not router.refresh()) while the tab is visible,
- * so a new invite shows up on its own instead of only after a manual page
- * reload — and without re-rendering the whole page the way a full refresh
- * would. The count badge is always rendered (fixed size) so it never shifts
- * layout; the dropdown lists each invite with a link into the tasting lobby
- * where you accept or decline.
+ * Bell in the app header: pending tasting invitations, then friend requests
+ * (friend-requests spec §3.6). Polls getPendingInvites directly (not
+ * router.refresh()) while the tab is visible, so a new item shows up on its
+ * own instead of only after a manual page reload — and without re-rendering
+ * the whole page the way a full refresh would. The count badge counts both
+ * kinds and is always rendered (fixed size) so it never shifts layout. A
+ * tasting invitation links into the lobby, where you accept or decline; a
+ * friend request is answered right here (Accept / Decline) and its row
+ * leaves on success.
  *
  * Cadence comes from invitePollIntervalMs: 15s while something is pending,
  * 90s when nothing is. Measured on production 2026-09-20, the old flat 15s
@@ -28,21 +44,24 @@ export type { InviteNotification };
  * request at a time, so a slow response never stacks on the next tick.
  */
 export function NotificationsBell({
-  invites: initialInvites,
+  notifications: initialNotifications,
   className,
 }: {
-  invites: InviteNotification[];
+  notifications: PendingNotification[];
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [invites, setInvites] = useState(initialInvites);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  // Friend requests answered in this bell (requester id → when): a poll that
+  // left before the answer landed must not bring the row back.
+  const settled = useRef(new Map<string, number>());
 
   const inFlight = useRef(false);
   const check = useCallback(() => {
     if (inFlight.current || document.visibilityState !== "visible") return;
     inFlight.current = true;
     getPendingInvites()
-      .then(setInvites)
+      .then((list) => setNotifications(visibleNotifications(list, settled.current, nowMs())))
       .catch(() => {
         // A transient failure just means the bell doesn't update this tick.
       })
@@ -51,7 +70,7 @@ export function NotificationsBell({
       });
   }, []);
 
-  const intervalMs = invitePollIntervalMs(invites);
+  const intervalMs = invitePollIntervalMs(notifications);
   useEffect(() => {
     const id = setInterval(check, intervalMs);
     const onWake = () => check();
@@ -64,7 +83,12 @@ export function NotificationsBell({
     };
   }, [check, intervalMs]);
 
-  const count = invites.length;
+  function settle(requesterId: string) {
+    settled.current.set(requesterId, nowMs());
+    setNotifications((list) => withoutFriendRequest(list, requesterId));
+  }
+
+  const count = notifications.length;
 
   return (
     <div className="relative">
@@ -100,20 +124,39 @@ export function NotificationsBell({
               </p>
             ) : (
               <ul className="flex flex-col">
-                {invites.map((inv) => (
-                  <li key={inv.tastingId}>
-                    <Link
-                      href={`/tastings/${inv.tastingId}`}
-                      onClick={() => setOpen(false)}
-                      className="flex flex-col gap-0.5 rounded-lg px-2 py-2 hover:bg-muted"
-                    >
-                      <span className="text-sm font-medium">
-                        {inv.tastingName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Invited by {inv.hostName} — tap to respond
-                      </span>
-                    </Link>
+                {notifications.map((n) => (
+                  <li key={notificationKey(n)}>
+                    {n.kind === "tasting" ? (
+                      <Link
+                        href={`/tastings/${n.tastingId}`}
+                        onClick={() => setOpen(false)}
+                        className="flex flex-col gap-0.5 rounded-lg px-2 py-2 hover:bg-muted"
+                      >
+                        <span className="text-sm font-medium">{n.tastingName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Invited by {n.hostName} — tap to respond
+                        </span>
+                      </Link>
+                    ) : (
+                      <div className="flex items-start gap-2 rounded-lg px-2 py-2">
+                        <Avatar src={n.avatarUrl} name={n.requesterName} />
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                          <Link
+                            href={`/u/${n.requesterId}`}
+                            onClick={() => setOpen(false)}
+                            className="text-sm font-medium break-words hover:underline"
+                          >
+                            {friendRequestLine(n.requesterName)}
+                          </Link>
+                          <FriendButton
+                            personId={n.requesterId}
+                            relationship="incoming"
+                            variant="row"
+                            onDone={() => settle(n.requesterId)}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
