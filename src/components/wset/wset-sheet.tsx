@@ -698,7 +698,7 @@ export function WsetSheet({
         ) : null}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt,mobileSection !== "appearance" && "hidden")}>
+          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt, mobileSection !== "appearance" && "hidden")}>
             <RowPair>
               <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
                 <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
@@ -733,7 +733,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(sectionScrollMt,mobileSection !== "nose" && "hidden")}>
+          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(sectionScrollMt, mobileSection !== "nose" && "hidden")}>
             <RowPair>
               <Row label={t("condition")} value={valueLabel(state.condition, L)}>
                 <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
@@ -754,7 +754,7 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour ?? colourFromHue(state.colourHue)} sheetTitle={t("aroma_characteristics")} lang={lang} />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(sectionScrollMt,mobileSection !== "palate" && "hidden")}>
+          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(sectionScrollMt, mobileSection !== "palate" && "hidden")}>
             <RowPair>
               <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
                 <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
@@ -820,7 +820,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(sectionScrollMt,mobileSection !== "conclusions" && "hidden")}>
+          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(sectionScrollMt, mobileSection !== "conclusions" && "hidden")}>
             <Row label={t("score")}>
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
             </Row>
