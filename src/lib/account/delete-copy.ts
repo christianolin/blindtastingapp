@@ -17,7 +17,7 @@ export const DELETED_LIST_ITEMS: readonly string[] = [
   "Your profile, photo and email",
   "Your cellar and its history",
   "Your tasting notes and ratings",
-  "Your friends list and invite links",
+  "Your friends list, friend requests and invite links",
 ];
 export const KEPT_LIST_HEADING = "Kept for others:";
 export const KEPT_LIST_ITEMS: readonly string[] = [
