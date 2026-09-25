@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { WsetSheet, type WsetSheetHandle } from "@/components/wset/wset-sheet";
 import { NOTES_ARCHIVE_HREF } from "@/lib/wset/note-saved";
+import { aromasToPayload, noteToPayload } from "@/lib/wset/note-state";
+import type { NoteContextKind } from "@/lib/wset/queries";
 import type {
   WsetNoteState,
   AromaTerm,
@@ -59,40 +61,16 @@ export function NoteEditor({
 
   const onSave = useCallback(
     async (state: WsetNoteState) => {
-      const pNote = {
-        id: state.id,
-        catalog_wine_id: wineId,
-        context_kind: contextKind,
-        tasting_wine_id: tastingWineId,
-        tasted_on: state.tastedOn,
-        clarity: state.clarity,
-        appearance_intensity: state.appearanceIntensity,
-        colour_hue: state.colourHue,
-        observations: state.observations,
-        condition: state.condition,
-        faults: state.faults,
-        nose_intensity: state.noseIntensity,
-        development: state.development,
-        sweetness: state.sweetness,
-        acidity: state.acidity,
-        tannin: state.tannin,
-        tannin_nature: state.tanninNature,
-        alcohol: state.alcohol,
-        body: state.body,
-        mousse: state.mousse,
-        flavour_intensity: state.flavourIntensity,
-        finish: state.finish,
-        quality_score: state.qualityScore,
-        price_category: state.priceCategory,
-        readiness: state.readiness,
-        taster_notes: state.tasterNotes,
-      };
-      const ids = [...new Set([...state.noseTermIds, ...state.palateTermIds])];
-      const pAromas = ids.map((termId) => ({
-        term_id: termId,
-        sensed_on_nose: state.noseTermIds.includes(termId),
-        sensed_on_palate: state.palateTermIds.includes(termId),
-      }));
+      // The payload keys live once, in note-state.ts (noteToPayload /
+      // aromasToPayload), shared with the training room. contextKind passes
+      // through unchanged: null keeps an existing note's context and means
+      // OPEN on insert; the database enum refuses anything else.
+      const pNote = noteToPayload(state, {
+        catalogWineId: wineId,
+        contextKind: contextKind as NoteContextKind | null,
+        tastingWineId,
+      });
+      const pAromas = aromasToPayload(state);
       let { data, error } = await supabase.rpc("save_wset_note", {
         p_note: pNote,
         p_aromas: pAromas,
