@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { getDesignationsPageData } from "@/lib/designations/page-data";
+import { lineageForParts } from "@/lib/training/archetype-view";
 import { LibraryTabs } from "./library-tabs";
 import type { GrapeRow } from "./grape-library";
 import type { ArchetypeCard } from "../archetypes/archetype-browser";
@@ -26,7 +27,9 @@ export default async function LibraryPage({
     supabase.from("wine_place_grapes").select("grape_id, wine_place_id"),
     supabase
       .from("wine_archetypes")
-      .select("id, name, colour, style, wine_place_id")
+      .select(
+        "id, name, colour, style, wine_place_id, country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id",
+      )
       .order("sort_order"),
   ]);
 
@@ -54,24 +57,51 @@ export default async function LibraryPage({
   }
 
   const archRows = archRes.data ?? [];
-  // wine_place_id is nullable since 20260925120000 (training-room D9).
-  const archPlaceIds = [
-    ...new Set(archRows.map((a) => a.wine_place_id).filter((id): id is string => id !== null)),
-  ];
-  const archPlaceName = new Map<string, string>();
-  if (archPlaceIds.length > 0) {
-    const { data: aps } = await supabase
-      .from("wine_places")
-      .select("id, name")
-      .in("id", archPlaceIds);
-    for (const p of aps ?? []) archPlaceName.set(p.id, p.name);
-  }
+  const distinct = (ids: (string | null)[]) =>
+    [...new Set(ids.filter((v): v is string => v !== null))];
+  // D9: an archetype may have no map place — only real places are looked up.
+  const archPlaceIds = distinct(archRows.map((a) => a.wine_place_id));
+  const countryIds = distinct(archRows.map((a) => a.country_id));
+  const regionIds = distinct(archRows.map((a) => a.region_id));
+  const appellationIds = distinct(archRows.map((a) => a.appellation_id));
+  const noRows = { data: [] as { id: string; name: string }[] };
+  const [archPlacesRes, countriesRes, regionsRes, appellationsRes] = await Promise.all([
+    archPlaceIds.length > 0
+      ? supabase.from("wine_places").select("id, name").in("id", archPlaceIds)
+      : noRows,
+    countryIds.length > 0
+      ? supabase.from("countries").select("id, name").in("id", countryIds)
+      : noRows,
+    regionIds.length > 0
+      ? supabase.from("regions").select("id, name").in("id", regionIds)
+      : noRows,
+    appellationIds.length > 0
+      ? supabase.from("appellations").select("id, name").in("id", appellationIds)
+      : noRows,
+  ]);
+  const nameMap = (rows: { id: string; name: string }[] | null) =>
+    new Map((rows ?? []).map((r) => [r.id, r.name] as const));
+  const archPlaceName = nameMap(archPlacesRes.data);
+  const countryName = nameMap(countriesRes.data);
+  const regionName = nameMap(regionsRes.data);
+  const appellationName = nameMap(appellationsRes.data);
+  // The grapes are already loaded above for the grape library.
+  const grapeName = new Map(grapes.map((g) => [g.id, g.name] as const));
+  const named = (id: string, names: Map<string, string>) => ({ id, name: names.get(id) ?? "" });
   const archetypes: ArchetypeCard[] = archRows.map((a) => ({
     id: a.id,
     name: a.name,
     colour: a.colour,
     style: a.style,
-    placeName: (a.wine_place_id ? archPlaceName.get(a.wine_place_id) : undefined) ?? "",
+    placeName: a.wine_place_id ? (archPlaceName.get(a.wine_place_id) ?? "") : "",
+    // D11: every card names where it is from, so no appellation is a bare word.
+    lineage: lineageForParts({
+      country: named(a.country_id, countryName),
+      region: named(a.region_id, regionName),
+      appellation: named(a.appellation_id, appellationName),
+      primaryGrape: named(a.primary_grape_id, grapeName),
+      secondaryGrape: a.secondary_grape_id ? named(a.secondary_grape_id, grapeName) : null,
+    }),
   }));
 
   return (

@@ -258,6 +258,28 @@ export function SnapSlider<T extends string>({
                   }}
                 />
               ) : null}
+              {range !== null && index !== null && index >= 0 ? (
+                // Read-only range mode with a value: the taster's own answer
+                // (training room), a gold ring over the band so it reads in or
+                // out of the typical range. A value off these stops draws none.
+                <div
+                  aria-hidden
+                  data-slot="range-answer"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: `${pct(index)}%`,
+                    transform: "translate(-50%, -50%)",
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    pointerEvents: "none",
+                    zIndex: 1,
+                    background: "var(--card)",
+                    border: "3px solid var(--gold-dark)",
+                  }}
+                />
+              ) : null}
             </div>
             {interactive ? (
               // The hit layer: a sibling of the track (so the unrated fade

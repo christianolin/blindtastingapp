@@ -9,7 +9,10 @@ export type ArchetypeCard = {
   name: string;
   colour: string;
   style: string;
+  /** The map place's name, "" when the archetype has none (training-room D9). */
   placeName: string;
+  /** "Pauillac · Bordeaux, France · Cabernet Sauvignon, Merlot" (D11). */
+  lineage: string;
 };
 
 const COLOUR_HEX: Record<string, string> = {
@@ -42,7 +45,7 @@ export function ArchetypeBrowser({ items }: { items: ArchetypeCard[] }) {
               <span className="font-medium">{a.name}</span>
             </span>
             <span className="text-sm text-muted-foreground">
-              {[a.placeName, cap(a.colour), cap(a.style)].filter(Boolean).join(" · ")}
+              {[a.lineage || a.placeName, cap(a.colour), cap(a.style)].filter(Boolean).join(" · ")}
             </span>
           </button>
         ))}

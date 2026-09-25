@@ -358,6 +358,8 @@ const UI_EN: UiDict = {
   typical_profile: "typical profile",
   in_a_nutshell: "In a nutshell",
   typical_range: "typical range",
+  // training room: the taster's own answer beside an archetype's range
+  your_answer: "you: {value}",
   quality: "Quality",
   sparkling: "sparkling",
   loading_profile: "Loading profile…",
@@ -570,6 +572,7 @@ const UI_DA: UiDict = {
   typical_profile: "typisk profil",
   in_a_nutshell: "Kort fortalt",
   typical_range: "typisk interval",
+  your_answer: "dig: {value}",
   quality: "Kvalitet",
   sparkling: "mousserende",
   loading_profile: "Indlæser profil…",

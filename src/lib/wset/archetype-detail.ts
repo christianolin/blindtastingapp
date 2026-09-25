@@ -1,16 +1,18 @@
 // A single "typical wine from here" reference profile, assembled for the
-// read-only ArchetypeSheet the wine map opens from its "Typical wine" list.
-// Place name, grape names and aroma terms are looked up separately (a small
-// reference set) to sidestep embed-relationship typing.
+// read-only ArchetypeSheet the wine map (and the Library) opens. Place name,
+// the reference names of the lineage, grape names and aroma terms are looked
+// up separately (a small reference set) to sidestep embed-relationship typing.
 //
 // Its own module, with type-only `@/` imports, so vitest (node, no path alias)
 // can load it; ./queries re-exports it for every existing importer. Same split
 // as ./archetype-query, and for the same reason.
 //
-// Spec: docs/superpowers/specs/2026-09-20-wine-map-data-latency.md §12.7.
+// Spec: docs/superpowers/specs/2026-09-20-wine-map-data-latency.md §12.7;
+// training-room spec D9 (the place is optional) and D11 (the lineage line).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { ArchetypeView } from "@/components/wset/archetype-sheet";
+import { lineageForParts } from "../training/archetype-view";
 
 export async function fetchArchetype(
   supabase: SupabaseClient<Database>,
@@ -42,16 +44,19 @@ export async function fetchArchetype(
   const grapeIds = [row.primary_grape_id, row.secondary_grape_id].filter(
     (v): v is string => Boolean(v),
   );
-  const [placeRes, grapesRes, linkRes] = await Promise.all([
-    // wine_place_id is nullable since 20260925120000 (training-room D9): no
-    // place, no lookup, and the sheet shows an empty place name.
+  // D9: an archetype may have no map place; then no place is asked for.
+  const noPlace = Promise.resolve({ data: null as { name: string } | null });
+  const [placeRes, grapesRes, linkRes, countryRes, regionRes, appellationRes] = await Promise.all([
     row.wine_place_id
       ? supabase.from("wine_places").select("name").eq("id", row.wine_place_id).maybeSingle()
-      : Promise.resolve({ data: null as { name: string } | null }),
+      : noPlace,
     grapeIds.length
       ? supabase.from("grapes").select("id, name").in("id", grapeIds)
       : Promise.resolve({ data: [] as { id: string; name: string }[] }),
     linkPromise,
+    supabase.from("countries").select("name").eq("id", row.country_id).maybeSingle(),
+    supabase.from("regions").select("name").eq("id", row.region_id).maybeSingle(),
+    supabase.from("appellations").select("name").eq("id", row.appellation_id).maybeSingle(),
   ]);
 
   const grapeName = new Map((grapesRes.data ?? []).map((g) => [g.id, g.name] as const));
@@ -59,6 +64,15 @@ export async function fetchArchetype(
     .map((gid) => (gid ? grapeName.get(gid) : null))
     .filter((v): v is string => Boolean(v))
     .join(" · ");
+  const lineage = lineageForParts({
+    country: { id: row.country_id, name: countryRes.data?.name ?? "" },
+    region: { id: row.region_id, name: regionRes.data?.name ?? "" },
+    appellation: { id: row.appellation_id, name: appellationRes.data?.name ?? "" },
+    primaryGrape: { id: row.primary_grape_id, name: grapeName.get(row.primary_grape_id) ?? "" },
+    secondaryGrape: row.secondary_grape_id
+      ? { id: row.secondary_grape_id, name: grapeName.get(row.secondary_grape_id) ?? "" }
+      : null,
+  });
 
   const links = linkRes.data ?? [];
   const noseIds = links.filter((l) => l.kind === "NOSE").map((l) => l.term_id);
@@ -83,7 +97,8 @@ export async function fetchArchetype(
     name: row.name,
     colour: row.colour,
     style: row.style,
-    placeName: placeRes.data?.name ?? "",
+    placeName: placeRes.data?.name ?? null,
+    lineage,
     grapes,
     description: row.description,
     qualityLow: row.quality_low,

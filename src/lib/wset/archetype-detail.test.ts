@@ -4,6 +4,7 @@
 // the sheet must open in two network rounds rather than three.
 import { describe, expect, it } from "vitest";
 import { fetchArchetype } from "./archetype-detail";
+import { lineageForParts } from "../training/archetype-view";
 import { stubClient, type RecordedQuery } from "../testing/stub-postgrest";
 
 const ARCHETYPE = {
@@ -12,6 +13,9 @@ const ARCHETYPE = {
   colour: "WHITE",
   style: "STILL",
   wine_place_id: "p1",
+  country_id: "c1",
+  region_id: "r1",
+  appellation_id: "ap1",
   primary_grape_id: "g1",
   secondary_grape_id: null,
   description: "Lean and mineral.",
@@ -23,6 +27,7 @@ const ARCHETYPE = {
 function archetypeClient(overrides?: {
   archetype?: unknown;
   aromas?: Array<{ term_id: string; kind: string }>;
+  names?: { region?: string; appellation?: string };
 }) {
   const aromas = overrides?.aromas ?? [
     { term_id: "t2", kind: "NOSE" },
@@ -37,6 +42,9 @@ function archetypeClient(overrides?: {
       }),
       wine_places: () => ({ data: { name: "Chablis" }, error: null }),
       grapes: () => ({ data: [{ id: "g1", name: "Chardonnay" }], error: null }),
+      countries: () => ({ data: { name: "France" }, error: null }),
+      regions: () => ({ data: { name: overrides?.names?.region ?? "Bourgogne" }, error: null }),
+      appellations: () => ({ data: { name: overrides?.names?.appellation ?? "Chablis AOC" }, error: null }),
       wine_archetype_aromas: () => ({ data: aromas, error: null }),
       wset_aroma_terms: (query: RecordedQuery) => ({
         data: [
@@ -63,13 +71,16 @@ describe("fetchArchetype", () => {
     expect(calls.queries[1].table).toBe("wine_archetypes");
   });
 
-  it("makes exactly five requests, and asks each table once", async () => {
+  it("makes exactly eight requests, and asks each table once", async () => {
     const { client, calls } = archetypeClient();
 
     await fetchArchetype(client, "a1");
 
     expect(calls.queries.map((q) => q.table).sort()).toEqual([
+      "appellations",
+      "countries",
       "grapes",
+      "regions",
       "wine_archetype_aromas",
       "wine_archetypes",
       "wine_places",
@@ -77,7 +88,7 @@ describe("fetchArchetype", () => {
     ]);
   });
 
-  it("returns the same view as before: place, grapes and sorted aroma terms", async () => {
+  it("returns place, lineage, grapes and sorted aroma terms", async () => {
     const { client } = archetypeClient();
 
     const view = await fetchArchetype(client, "a1");
@@ -87,6 +98,13 @@ describe("fetchArchetype", () => {
       colour: "WHITE",
       style: "STILL",
       placeName: "Chablis",
+      lineage: lineageForParts({
+        country: { id: "c1", name: "France" },
+        region: { id: "r1", name: "Bourgogne" },
+        appellation: { id: "ap1", name: "Chablis AOC" },
+        primaryGrape: { id: "g1", name: "Chardonnay" },
+        secondaryGrape: null,
+      }),
       grapes: "Chardonnay",
       description: "Lean and mineral.",
       qualityLow: "GOOD",
@@ -96,6 +114,24 @@ describe("fetchArchetype", () => {
       aromas: ["Lemon", "Chalk"],
       flavours: ["Green apple"],
     });
+  });
+
+  it("an archetype with no map place (D9) asks for none and still has its lineage", async () => {
+    const { client, calls } = archetypeClient({ archetype: { ...ARCHETYPE, wine_place_id: null } });
+
+    const view = await fetchArchetype(client, "a1");
+
+    expect(calls.queries.some((q) => q.table === "wine_places")).toBe(false);
+    expect(view?.placeName).toBeNull();
+    expect(view?.lineage).not.toBe("");
+  });
+
+  it("a regional appellation leaves the appellation out of the lineage", async () => {
+    const { client } = archetypeClient({ names: { appellation: "Bourgogne AOC" } });
+
+    const view = await fetchArchetype(client, "a1");
+
+    expect(view?.lineage).toBe("Bourgogne, France · Chardonnay");
   });
 
   it("an archetype with no aroma links skips the terms request entirely", async () => {
