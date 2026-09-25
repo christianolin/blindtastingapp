@@ -17,7 +17,6 @@ const BACK_TO_TASTING = "Back to the tasting";
 
 const COPY: Record<ActiveTastingState, BannerCopy> = {
   live: { status: "Live now", dot: "ping", tone: "running", cta: BACK_TO_TASTING },
-  paused: { status: "Paused", dot: "still", tone: "running", cta: BACK_TO_TASTING },
   "in-progress": {
     status: "In progress",
     dot: "still",

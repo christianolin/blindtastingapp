@@ -888,12 +888,19 @@ a raw subquery, regardless of which two tables look involved at a glance.
   IN_PROGRESS tasting where `startLandsOnConsole` holds goes to
   `/tastings/<id>/host`). Eligible: your own `tasting_participants` row is
   `JOINED` (never INVITED/DECLINED; never CLOSED or legacy `OPEN` status) and
-  the tasting is inside its window — IN_PROGRESS LIVE always (running or
-  paused; owner decision 2026-09-24, it used to hide after 24 h); IN_PROGRESS
-  ASYNC always; DRAFT while `scheduled_at` is between 12 h ago and 6 h ahead,
-  or with no schedule for 12 h after `created_at`. Priority: LIVE running,
-  LIVE paused, ASYNC, then DRAFT by nearest schedule; the rest collapse into
-  a "+N more" button to `/taste`. All rules are pure in
+  the tasting is inside its window — IN_PROGRESS LIVE while running, however
+  long ago it started (owner decision 2026-09-24, it used to hide after 24 h),
+  but NOT while paused (owner decision 2026-09-25, reversing the 2026-09-24
+  "paused shows too": a paused tasting hides the strip for everyone until the
+  host resumes — and the Overview's own live banner skips it too
+  (`pickLiveTasting`), so /overview falls through to next-up or the "No
+  tasting" row rather than showing a pulsing "Live now" for a paused
+  tasting; the strip is back with the next poll — ≤ 20 s while another strip
+  shows, ≤ 120 s with none — or with any navigation or tab focus; there is no
+  "paused" banner state any more); IN_PROGRESS ASYNC always; DRAFT while
+  `scheduled_at` is between 12 h ago and 6 h ahead, or with no schedule for
+  12 h after `created_at`. Priority: LIVE running, ASYNC, then DRAFT by
+  nearest schedule; the rest collapse into a "+N more" button to `/taste`. All rules are pure in
   `src/lib/active-tasting/select.ts` (vitest-covered); the one RLS-as-viewer
   read (own participant rows + `tastings!inner`, `cache()`d per request) is
   `read.ts`. Hidden on the shown tasting's own pages (`/tastings/<id>/**`,
@@ -2089,8 +2096,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
     calendar year even under All time. `range` lives in the URL
     (`?range=year|90d`, all-time is the bare path).
   - Live banner = an IN_PROGRESS tasting I'm JOINED in (LIVE timing
-    preferred); next-up = the soonest DRAFT I host or joined; otherwise a
-    single "No tasting on the calendar" row — never an empty bordeaux block.
+    preferred), never a paused LIVE one (`pickLiveTasting` skips it, owner
+    decision 2026-09-25 — the same rule as the header strip, or /overview
+    would swap the hidden strip for a bigger "Live now" banner); next-up =
+    the soonest DRAFT I host or joined; otherwise a single "No tasting on
+    the calendar" row — never an empty bordeaux block.
   - The sidebar collapses to a 60px icon rail between `md` and `xl`; its
     expand button opens the full sidebar as an overlay drawer that closes on
     backdrop, X, Escape or navigation. Below `md` MobileNav is unchanged.

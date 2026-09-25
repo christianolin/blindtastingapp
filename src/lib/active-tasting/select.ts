@@ -32,7 +32,7 @@ export type ActiveTastingCandidate = {
   myStatus: ParticipantStatus;
 };
 
-export type ActiveTastingState = "live" | "paused" | "in-progress" | "waiting";
+export type ActiveTastingState = "live" | "in-progress" | "waiting";
 
 export type ActiveTastingItem = {
   tastingId: string;
@@ -69,7 +69,7 @@ function timestampsParse(c: ActiveTastingCandidate): boolean {
 
 /** A LIVE tasting's anchor: when it started, or for a legacy row its schedule, or its
     creation. No longer a window bound (owner decision 2026-09-24: a running LIVE
-    tasting shows however long ago it started) — only the live/paused sort order
+    tasting shows however long ago it started) — only the live sort order
     still reads it. */
 function liveAnchor(c: ActiveTastingCandidate): number {
   return (ms(c.startedAt) ?? ms(c.scheduledAt) ?? ms(c.createdAt)) as number;
@@ -78,8 +78,8 @@ function liveAnchor(c: ActiveTastingCandidate): number {
 /**
  * D1 + D2: the banner state for one of the viewer's tastings, or null when it
  * is not eligible. Only the viewer's own row counts — JOINED (the host's row
- * always is). A running IN_PROGRESS tasting always counts; a DRAFT one only
- * inside its window.
+ * always is). A running IN_PROGRESS tasting always counts, a paused LIVE one
+ * never does, and a DRAFT one only inside its window.
  */
 export function activeState(
   c: ActiveTastingCandidate,
@@ -93,9 +93,10 @@ export function activeState(
     if (c.timingMode === "ASYNC") return "in-progress";
     if (c.timingMode !== "LIVE") return null;
     // No time limit (owner decision 2026-09-24): a forgotten tasting is the
-    // host's to end, and guests must always find their way back. Paused
-    // shows too, however long ago it started.
-    return c.pausedAt ? "paused" : "live";
+    // host's to end, and guests must always find their way back. A paused
+    // tasting hides the strip (owner decision 2026-09-25, reversing "paused
+    // shows too"); it is back with the first poll after the host resumes.
+    return c.pausedAt ? null : "live";
   }
 
   if (c.status === "DRAFT") {
@@ -126,9 +127,8 @@ export function activeHref(c: ActiveTastingCandidate, viewerId: string): string 
 
 const STATE_RANK: Record<ActiveTastingState, number> = {
   live: 0,
-  paused: 1,
-  "in-progress": 2,
-  waiting: 3,
+  "in-progress": 1,
+  waiting: 2,
 };
 
 type Ranked = { c: ActiveTastingCandidate; state: ActiveTastingState };
@@ -139,7 +139,6 @@ function compareWithinGroup(a: Ranked, b: Ranked, now: number): number {
   const { c: y } = b;
   switch (a.state) {
     case "live":
-    case "paused":
       return liveAnchor(y) - liveAnchor(x);
     case "in-progress":
       return (
@@ -160,7 +159,7 @@ function compareWithinGroup(a: Ranked, b: Ranked, now: number): number {
 }
 
 /**
- * The eligible tastings in D3 order — live, paused, in progress, then waiting —
+ * The eligible tastings in D3 order — live, in progress, then waiting —
  * with D10's tie-breaks and `id` ascending as the last resort.
  */
 export function selectActiveTastings(

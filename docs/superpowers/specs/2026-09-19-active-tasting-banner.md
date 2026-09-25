@@ -14,13 +14,13 @@ Announced to the owner:
 
 - **D1 Eligible rows.** Only tastings where the viewer's own `tasting_participants` row is `JOINED` (the host's row is always `JOINED`). Never `INVITED` or `DECLINED`. Never a `CLOSED` tasting. Never a legacy `OPEN`-status tasting. Being the host does not count on its own; only the row's status does.
 - **D2 Windows.**
-  - `IN_PROGRESS` + `LIVE`: shown while `IN_PROGRESS`, however long ago it started (owner decision 2026-09-24: a forgotten tasting is the host's to end, and guests must always find their way back); paused shows too. No time limit any more — it used to hide once `now − anchor > 24 h`, where `anchor = started_at ?? scheduled_at ?? created_at` (the fallback for legacy rows with a null `started_at`).
+  - `IN_PROGRESS` + `LIVE`: shown while `IN_PROGRESS`, however long ago it started (owner decision 2026-09-24: a forgotten tasting is the host's to end, and guests must always find their way back). **Reversed 2026-09-25** (owner: "make the banner not appear when tasting is paused"): a paused LIVE tasting (`paused_at` set) is not eligible at all — the strip hides for every viewer while the host has it paused and returns with the first poll or render after Resume. It had read "paused shows too" since 2026-09-24. No time limit any more — it used to hide once `now − anchor > 24 h`, where `anchor = started_at ?? scheduled_at ?? created_at` (the fallback for legacy rows with a null `started_at`).
   - `IN_PROGRESS` + `ASYNC`: always shown.
   - `DRAFT` with `scheduled_at` set: shown while `now − 12 h ≤ scheduled_at ≤ now + 6 h`.
   - `DRAFT` with no `scheduled_at`: shown while `now − created_at ≤ 12 h`.
   - Every bound is inclusive. An unparseable timestamp makes the row ineligible.
-- **D3 Priority.** LIVE running (not paused), then LIVE paused, then ASYNC running, then DRAFT by the nearest scheduled time. Show the first one. If more qualify, add a small real button, "+N more", that goes to `/taste`.
-- **D4 Copy.** A status word: "Live now" with the existing `LiveDot` (its ping is already dropped under reduced motion), "Paused" (`paused_at` set), "In progress" (ASYNC) or "Waiting to start" (DRAFT). Then the tasting name. Then a real `Button`: "Back to the tasting" once started, "Back to the lobby" while DRAFT.
+- **D3 Priority.** LIVE running, then ASYNC running, then DRAFT by the nearest scheduled time (LIVE paused sat second until 2026-09-25; a paused tasting is no longer eligible, see D2). Show the first one. If more qualify, add a small real button, "+N more", that goes to `/taste`.
+- **D4 Copy.** A status word: "Live now" with the existing `LiveDot` (its ping is already dropped under reduced motion), "In progress" (ASYNC) or "Waiting to start" (DRAFT). Then the tasting name. Then a real `Button`: "Back to the tasting" once started, "Back to the lobby" while DRAFT.
 - **D5 Href.** `/tastings/<id>`. The one exception is the host of an `IN_PROGRESS` tasting where `startLandsOnConsole` (`src/lib/tasting-lifecycle-copy.ts`) is true, who goes to `/tastings/<id>/host`. That page already redirects a DRAFT or non-LIVE tasting back to the lobby.
 - **D6 Placement.** The banner sits directly under the top bar, in the main column, full width of the content area, on every page that renders `AppHeader`. It is hidden on the shown tasting's own pages (`/tastings/<id>` and everything under it), using `usePathname` in a client component. It still shows on other tastings' pages. It never shows on `/login`, `/signup`, `/auth/*` or `/invite/*`. None of those render `AppHeader`, and the pure path rule refuses them anyway.
 - **D7 Live updates.** A `"use server"` action is re-checked every 20 s while the tab is visible, and again on window `focus`. This is the `NotificationsBell` / `getPendingInvites` pattern. It turns "Waiting to start" into "Live now" when the host presses Start, and the banner disappears when the tasting ends.
@@ -30,7 +30,7 @@ Defaults chosen here:
 
 - **D9 The banner scrolls with the page; it is not sticky.** The top bar stays the only sticky strip. A second sticky strip would take about 60 px of phone height on every page for up to a day. The banner is in normal flow with no z-index, so fixed overlays cover it: drawers, sheets, the map's expanded full-screen view and the map's phone details sheet. Making it sticky later means moving it inside a sticky wrapper with the `<header>`.
 - **D10 Tie-breaks inside a priority group.**
-  - live and paused: newest `anchor` first.
+  - live: newest `anchor` first (the paused group went with the paused state, 2026-09-25).
   - in-progress: newest `started_at ?? created_at` first.
   - waiting: drafts with a schedule come first, ordered by smallest `|scheduled_at − now|`, then the earlier schedule. Unscheduled drafts follow, newest `created_at` first.
   - Last resort: `id` ascending, so the order is deterministic.
@@ -52,7 +52,7 @@ export type ActiveTastingCandidate = {
   startedAt: string | null; pausedAt: string | null; scheduledAt: string | null; createdAt: string;
   myStatus: ParticipantStatus;
 };
-export type ActiveTastingState = "live" | "paused" | "in-progress" | "waiting";
+export type ActiveTastingState = "live" | "in-progress" | "waiting"; // "paused" removed 2026-09-25
 export type ActiveTastingItem = { tastingId: string; name: string; state: ActiveTastingState; href: string };
 export type ActiveTastingSnapshot = { items: ActiveTastingItem[]; checkedAt: string };
 export type BannerView = { item: ActiveTastingItem; more: number };
@@ -73,7 +73,7 @@ export function candidateFromRow(row: unknown): ActiveTastingCandidate | null;  
 export function overviewSlot(overviewTastingId: string | null, items: ActiveTastingItem[]): "banner" | "registrar-only" | "start-row"; // D8, §7
 ```
 
-`state`: `IN_PROGRESS` + `LIVE` gives `"paused"` when `pausedAt` is set, otherwise `"live"`. `IN_PROGRESS` + `ASYNC` gives `"in-progress"` and ignores `pausedAt`, since pause is LIVE-only. `DRAFT` gives `"waiting"`.
+`state`: `IN_PROGRESS` + `LIVE` gives `"live"`, or null (not eligible) when `pausedAt` is set — owner decision 2026-09-25; it gave `"paused"` before. `IN_PROGRESS` + `ASYNC` gives `"in-progress"` and ignores `pausedAt`, since pause is LIVE-only. `DRAFT` gives `"waiting"`.
 
 ## 4. Tests to write first
 
@@ -82,10 +82,10 @@ These are vitest files in node, with no DOM. Use a fixed `NOW = new Date("2026-0
 `src/lib/active-tasting/select.test.ts`
 
 - **`activeState` windows**
-  1. LIVE started 1 h ago → `"live"`. With `pausedAt` set → `"paused"`.
+  1. LIVE started 1 h ago → `"live"`. With `pausedAt` set → `null` (2026-09-25; was `"paused"`).
   2. LIVE shows however long ago it started (owner decision 2026-09-24, no
      time limit) — 24 h ago, 24 h 1 min ago, and 30 days ago all → `"live"`;
-     paused 5 days in → `"paused"`.
+     paused 5 days in → `null` (hides however long ago it started).
   3. LIVE with null `startedAt`:
      - `scheduledAt` 2 h ago → live; 25 h ago → live.
      - Both null, `createdAt` 3 h ago → live; 30 h ago → live.
@@ -108,7 +108,8 @@ These are vitest files in node, with no DOM. Use a fixed `NOW = new Date("2026-0
      - The host whose own row is INVITED.
   10. Unparseable `startedAt` or `scheduledAt` → `null`.
 - **Order (`selectActiveTastings`)**
-  11. Input in reverse order still returns live, paused, in-progress, waiting.
+  11. Input in reverse order still returns live, in-progress, waiting; a paused LIVE row in the input is dropped.
+  11b. A paused LIVE tasting neither shows nor counts toward "+N more"; paused alone gives `[]`, a null `bannerView`, and the idle poll cadence.
   12. Two live tastings: newer anchor first. Two in-progress tastings: newer `startedAt ?? createdAt` first.
   13. Drafts:
       - Scheduled 1 h ago beats scheduled 3 h ahead.
@@ -118,7 +119,7 @@ These are vitest files in node, with no DOM. Use a fixed `NOW = new Date("2026-0
   14. A full tie is broken by `id` ascending.
   15. Ineligible rows are dropped, and `[]` gives `[]`.
 - **Href (`activeHref`)**
-  16. Host of an IN_PROGRESS, LIVE, HOST_PROVIDES, BLIND tasting → `/tastings/t1/host`. The same holds for SEMI_BLIND and for a paused tasting.
+  16. Host of an IN_PROGRESS, LIVE, HOST_PROVIDES, BLIND tasting → `/tastings/t1/host`. The same holds for SEMI_BLIND, and `activeHref` alone (which never reads `pausedAt`) still answers the same for a paused row even though `activeState` now drops it.
   17. The same host while the tasting is DRAFT → `/tastings/t1`.
   18. Host of PARTICIPANT_CONTRIBUTED, host of ASYNC, host of reveal-mode OPEN → `/tastings/t1`.
   19. A guest of a console tasting → `/tastings/t1`.
@@ -221,7 +222,7 @@ section[aria-label="Your tasting"]  tone classes · px-4 py-2 sm:px-6 · flex fl
 
 **Tones.** Theme tokens only, and correct in both themes.
 
-- **running** (live, paused, in-progress):
+- **running** (live, in-progress; paused was in this group until 2026-09-25):
   - Strip: `bg-primary text-primary-foreground border-b border-primary`. It stays bordeaux in dark, since `.dark` keeps `--primary`.
   - Eyebrow: `text-gold-light`.
   - CTA: gold, `bg-gold text-foreground hover:bg-gold-deep font-semibold`. The existing `:where(.dark) .bg-gold.text-foreground` rule gives it `--on-accent` ink in dark.
@@ -253,6 +254,8 @@ section[aria-label="Your tasting"]  tone classes · px-4 py-2 sm:px-6 · flex fl
 
 `"start-row"` is exactly today's `kind === "none"` path, unchanged.
 
+2026-09-25: with a paused LIVE tasting no longer in `items` (D2), D8's de-dup would have let Overview's own banner show that tasting as "Live now" with the pulsing dot. `pickLiveTasting` (`src/lib/overview-math.ts`) therefore skips a LIVE row with `paused_at` set too (`getOverviewData` now selects `paused_at`), and /overview falls through to next-up or the "No tasting on the calendar" row while a host has the tasting paused.
+
 `QuickActions` is unchanged. The page keeps passing `bannerKind={data.banner.kind}`. A hidden live or next banner keeps its kind, so it never becomes `"none"`. The Taste-blind tile therefore stays gold, and it goes non-gold only when the "No tasting on the calendar" row shows, as today. Test 28 pins that a live or next banner never maps to `"start-row"`.
 
 Consequences, accepted:
@@ -265,7 +268,6 @@ Consequences, accepted:
 | state | status | dot | tone | CTA |
 |---|---|---|---|---|
 | `live` | Live now | ping (`LiveDot`) | running | Back to the tasting |
-| `paused` | Paused | still | running | Back to the tasting |
 | `in-progress` | In progress | still | running | Back to the tasting |
 | `waiting` | Waiting to start | none | waiting | Back to the lobby |
 
@@ -280,7 +282,7 @@ Consequences, accepted:
 New:
 
 - `src/lib/active-tasting/select.ts`: the types and pure rules from §3.
-- `src/lib/active-tasting/select.test.ts`: tests 1–28, written first.
+- `src/lib/active-tasting/select.test.ts`: tests 1–28 (plus 11b, 2026-09-25), written first.
 - `src/lib/active-tasting/copy.ts` and `copy.test.ts`: §8.
 - `src/lib/active-tasting/read.ts`: `server-only`, `cache()`, the §5 query.
 - `src/lib/active-tasting/actions.ts`: `"use server"`, `pollActiveTastings` only.

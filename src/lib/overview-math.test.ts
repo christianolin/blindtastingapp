@@ -122,18 +122,32 @@ describe("pickLiveTasting", () => {
     status: "IN_PROGRESS",
     myStatus: "JOINED",
     created_at: "2026-09-01T10:00:00Z",
+    paused_at: null,
   } as const;
 
   it("returns null when nothing is in progress for me", () => {
     expect(pickLiveTasting([])).toBeNull();
     expect(
       pickLiveTasting([
-        { id: "a", timing_mode: "LIVE", status: "DRAFT", myStatus: "JOINED", created_at: base.created_at },
-        { id: "b", timing_mode: "LIVE", status: "CLOSED", myStatus: "JOINED", created_at: base.created_at },
-        { id: "c", timing_mode: "LIVE", status: "IN_PROGRESS", myStatus: "INVITED", created_at: base.created_at },
-        { id: "d", timing_mode: "LIVE", status: "IN_PROGRESS", myStatus: "DECLINED", created_at: base.created_at },
+        { ...base, id: "a", timing_mode: "LIVE", status: "DRAFT" },
+        { ...base, id: "b", timing_mode: "LIVE", status: "CLOSED" },
+        { ...base, id: "c", timing_mode: "LIVE", status: "IN_PROGRESS", myStatus: "INVITED" },
+        { ...base, id: "d", timing_mode: "LIVE", status: "IN_PROGRESS", myStatus: "DECLINED" },
       ]),
     ).toBeNull();
+  });
+
+  it("skips a paused LIVE tasting, like the header strip (owner decision 2026-09-25)", () => {
+    const paused = { ...base, id: "paused", timing_mode: "LIVE", paused_at: "2026-09-25T09:14:00Z" };
+    expect(pickLiveTasting([paused])).toBeNull();
+    // With the LIVE one paused, a self-paced tasting takes the banner.
+    expect(pickLiveTasting([paused, { ...base, id: "async", timing_mode: "ASYNC" }])?.id).toBe("async");
+    // Another running LIVE tasting still wins over the ASYNC one.
+    expect(
+      pickLiveTasting([paused, { ...base, id: "async", timing_mode: "ASYNC" }, { ...base, id: "live", timing_mode: "LIVE" }])?.id,
+    ).toBe("live");
+    // ASYNC ignores paused_at (pause is LIVE-only).
+    expect(pickLiveTasting([{ ...base, id: "async", timing_mode: "ASYNC", paused_at: "2026-09-25T09:14:00Z" }])?.id).toBe("async");
   });
 
   it("prefers a LIVE tasting over a newer ASYNC one", () => {

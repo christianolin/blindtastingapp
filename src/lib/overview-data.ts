@@ -58,6 +58,8 @@ type TastingRowDb = {
   reveal_mode: RevealMode;
   status: TastingStatus;
   scheduled_at: string | null;
+  /** Read for pickLiveTasting: a paused LIVE tasting never takes the banner. */
+  paused_at: string | null;
   created_at: string;
 };
 
@@ -225,7 +227,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
     supabase
       .from("tastings")
       .select(
-        "id, name, host_id, timing_mode, wine_source, reveal_mode, status, scheduled_at, created_at",
+        "id, name, host_id, timing_mode, wine_source, reveal_mode, status, scheduled_at, paused_at, created_at",
       )
       .in("id", tastingIds.length ? tastingIds : [""]),
     supabase

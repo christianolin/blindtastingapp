@@ -61,17 +61,18 @@ const item = (tastingId: string): ActiveTastingItem => ({
 });
 
 describe("activeState windows (D1, D2)", () => {
-  it("1. a LIVE tasting started an hour ago is live; paused when paused_at is set", () => {
+  it("1. a LIVE tasting started an hour ago is live; hidden while paused_at is set", () => {
     expect(state()).toBe("live");
-    expect(state({ pausedAt: h(-0.5) })).toBe("paused");
+    // Owner decision 2026-09-25 (reversing "paused shows too").
+    expect(state({ pausedAt: h(-0.5) })).toBeNull();
   });
 
   it("2. LIVE shows however long ago it started", () => {
     expect(state({ startedAt: h(-24) })).toBe("live");
     expect(state({ startedAt: hm(-24, -1) })).toBe("live");
     expect(state({ startedAt: h(-24 * 30) })).toBe("live");
-    // A paused tasting shows too, however long ago it started.
-    expect(state({ startedAt: h(-24 * 5), pausedAt: h(-1) })).toBe("paused");
+    // A paused tasting hides, however long ago it started.
+    expect(state({ startedAt: h(-24 * 5), pausedAt: h(-1) })).toBeNull();
   });
 
   it("3. a LIVE legacy row with no started_at falls back to scheduled_at, then created_at", () => {
@@ -129,7 +130,7 @@ describe("activeState windows (D1, D2)", () => {
 });
 
 describe("selectActiveTastings order (D3, D10)", () => {
-  it("11. live, paused, in-progress, waiting — whatever the input order", () => {
+  it("11. live, in-progress, waiting — whatever the input order; a paused LIVE row is dropped", () => {
     const rows = [
       row({ id: "waiting", status: "DRAFT", startedAt: null, scheduledAt: h(1) }),
       row({ id: "async", timingMode: "ASYNC" }),
@@ -137,8 +138,23 @@ describe("selectActiveTastings order (D3, D10)", () => {
       row({ id: "live" }),
     ];
     const items = selectActiveTastings(rows, VIEWER, NOW);
-    expect(ids(items)).toEqual(["live", "paused", "async", "waiting"]);
-    expect(items.map((i) => i.state)).toEqual(["live", "paused", "in-progress", "waiting"]);
+    expect(ids(items)).toEqual(["live", "async", "waiting"]);
+    expect(items.map((i) => i.state)).toEqual(["live", "in-progress", "waiting"]);
+  });
+
+  it("11b. a paused LIVE tasting neither shows nor counts toward +N more", () => {
+    const items = selectActiveTastings(
+      [row({ id: "live" }), row({ id: "paused", pausedAt: h(-0.5), startedAt: h(-0.2) })],
+      VIEWER,
+      NOW,
+    );
+    expect(ids(items)).toEqual(["live"]);
+    expect(bannerView(items, "/overview")).toEqual({ item: items[0], more: 0 });
+    // Paused alone: nothing to show, and the poll backs off to the idle cadence.
+    const alone = selectActiveTastings([row({ pausedAt: h(-0.5) })], VIEWER, NOW);
+    expect(alone).toEqual([]);
+    expect(bannerView(alone, "/overview")).toBeNull();
+    expect(pollIntervalMs(alone)).toBe(POLL_IDLE_MS);
   });
 
   it("12. newer anchor first among live; newer started_at ?? created_at first among in-progress", () => {

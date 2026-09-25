@@ -10,10 +10,11 @@ export function LiveDot({ size = 7 }: { size?: number }) {
   );
 }
 
-// A running tasting nobody is gathered around right now (self-paced, or a
-// paused LIVE one): LiveDot's size without the ping, in gold on the bordeaux
-// ground (entry-4). Shared by the Overview banner and the header's
-// active-tasting strip.
+// A running tasting nobody is gathered around right now (self-paced):
+// LiveDot's size without the ping, in gold on the bordeaux ground (entry-4).
+// Shared by the Overview banner and the header's active-tasting strip. (A
+// paused LIVE tasting used to render this too; since 2026-09-25 neither banner
+// shows a paused tasting at all.)
 export function StillDot({ size = 7 }: { size?: number }) {
   return (
     <span

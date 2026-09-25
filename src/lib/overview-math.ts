@@ -20,6 +20,8 @@ export type LiveCandidate = {
   timing_mode: string;
   status: string;
   created_at: string;
+  /** tastings.paused_at: set while the host has a LIVE tasting paused. */
+  paused_at: string | null;
   /** My own tasting_participants.status for this tasting. */
   myStatus: string;
 };
@@ -41,10 +43,20 @@ export const isRunningStatus = (status: string) =>
  * OPEN) tasting where I am a JOINED participant (the host always is). A LIVE
  * (around-the-table) tasting beats a self-paced ASYNC one; within the same
  * timing mode the most recently created wins. Null when nothing is running
- * for me.
+ * for me. A paused LIVE tasting is left out (owner decision 2026-09-25), so
+ * this banner agrees with the header's active-tasting strip, which hides a
+ * paused tasting too — otherwise /overview would replace the hidden strip
+ * with a bigger "Live now" banner for the same paused tasting. ASYNC ignores
+ * paused_at: pause is LIVE-only, and the database clears the stamp the moment
+ * a tasting stops being LIVE + IN_PROGRESS.
  */
 export function pickLiveTasting<T extends LiveCandidate>(rows: T[]): T | null {
-  const running = rows.filter((r) => isRunningStatus(r.status) && r.myStatus === "JOINED");
+  const running = rows.filter(
+    (r) =>
+      isRunningStatus(r.status) &&
+      r.myStatus === "JOINED" &&
+      !(r.timing_mode === "LIVE" && r.paused_at !== null),
+  );
   if (running.length === 0) return null;
   const rank = (r: LiveCandidate) => (r.timing_mode === "LIVE" ? 0 : 1);
   return [...running].sort((a, b) => rank(a) - rank(b) || byNewestCreated(a, b))[0];

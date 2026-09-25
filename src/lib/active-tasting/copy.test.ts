@@ -15,12 +15,6 @@ describe("active tasting banner copy (§8)", () => {
       tone: "running",
       cta: "Back to the tasting",
     });
-    expect(bannerCopy("paused")).toEqual({
-      status: "Paused",
-      dot: "still",
-      tone: "running",
-      cta: "Back to the tasting",
-    });
     expect(bannerCopy("in-progress")).toEqual({
       status: "In progress",
       dot: "still",
