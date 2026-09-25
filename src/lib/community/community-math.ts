@@ -216,18 +216,32 @@ export function cellarLinkShown(visibility: string | null, isMe: boolean): boole
   return visibility === "FRIENDS" || visibility === "PUBLIC";
 }
 
+// Every FriendButton label (friend-requests spec §3.3, copy §4). `relationship`
+// is src/lib/friends/relationship.ts's Relationship, spelled out here because
+// this module imports nothing. `control` picks one of the incoming pair and is
+// ignored in the other states; `armed` is the first tap of a two-tap cancel or
+// remove (TWO_TAP_WINDOW_MS).
 export function friendButtonLabel(s: {
-  isFriend: boolean;
+  relationship: "none" | "requested" | "incoming" | "friends";
   pending: boolean;
   armed: boolean;
+  control?: "accept" | "decline";
 }): string {
-  if (!s.isFriend) return s.pending ? "Adding…" : "Add friend";
+  if (s.relationship === "incoming") {
+    if (s.control === "decline") return s.pending ? "Declining…" : "Decline";
+    return s.pending ? "Accepting…" : "Accept";
+  }
+  if (s.relationship === "none") return s.pending ? "Sending…" : "Add friend";
+  if (s.relationship === "requested") {
+    if (s.pending) return "Cancelling…";
+    return s.armed ? "Tap again to cancel" : "Requested";
+  }
   if (s.pending) return "Removing…";
   return s.armed ? "Tap again to remove" : "Friends";
 }
 
 const FRIENDS_EMPTY_BODY =
-  "Tap Add friend on anyone under Everyone to keep them here. Adding a friend is one-way: nobody is asked or notified.";
+  "Tap Add friend on anyone under Everyone. They'll be asked, and you're friends once they accept.";
 
 export function emptyCopy(
   view: CommunityView,

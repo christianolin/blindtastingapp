@@ -60,7 +60,7 @@ export function FriendButton({
     });
   }
 
-  const label = friendButtonLabel({ isFriend, pending, armed });
+  const label = friendButtonLabel({ relationship: isFriend ? "friends" : "none", pending, armed });
   function handleClick() {
     if (!isFriend) {
       doAdd();

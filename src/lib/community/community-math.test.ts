@@ -315,16 +315,45 @@ describe("cellarLinkShown", () => {
 });
 
 describe("friendButtonLabel", () => {
-  it("every combination", () => {
-    expect(friendButtonLabel({ isFriend: false, pending: false, armed: false })).toBe(
-      "Add friend",
+  it("none: Add friend, then Sending…", () => {
+    expect(friendButtonLabel({ relationship: "none", pending: false, armed: false })).toBe("Add friend");
+    expect(friendButtonLabel({ relationship: "none", pending: true, armed: false })).toBe("Sending…");
+  });
+
+  it("requested: Requested, a two-tap cancel, then Cancelling…", () => {
+    expect(friendButtonLabel({ relationship: "requested", pending: false, armed: false })).toBe(
+      "Requested",
     );
-    expect(friendButtonLabel({ isFriend: false, pending: true, armed: false })).toBe("Adding…");
-    expect(friendButtonLabel({ isFriend: true, pending: false, armed: false })).toBe("Friends");
-    expect(friendButtonLabel({ isFriend: true, pending: false, armed: true })).toBe(
+    expect(friendButtonLabel({ relationship: "requested", pending: false, armed: true })).toBe(
+      "Tap again to cancel",
+    );
+    expect(friendButtonLabel({ relationship: "requested", pending: true, armed: true })).toBe(
+      "Cancelling…",
+    );
+  });
+
+  it("incoming: the Accept / Decline pair and their pending labels", () => {
+    expect(
+      friendButtonLabel({ relationship: "incoming", control: "accept", pending: false, armed: false }),
+    ).toBe("Accept");
+    expect(
+      friendButtonLabel({ relationship: "incoming", control: "accept", pending: true, armed: false }),
+    ).toBe("Accepting…");
+    expect(
+      friendButtonLabel({ relationship: "incoming", control: "decline", pending: false, armed: false }),
+    ).toBe("Decline");
+    expect(
+      friendButtonLabel({ relationship: "incoming", control: "decline", pending: true, armed: false }),
+    ).toBe("Declining…");
+    expect(friendButtonLabel({ relationship: "incoming", pending: false, armed: false })).toBe("Accept");
+  });
+
+  it("friends: Friends, a two-tap remove, then Removing…", () => {
+    expect(friendButtonLabel({ relationship: "friends", pending: false, armed: false })).toBe("Friends");
+    expect(friendButtonLabel({ relationship: "friends", pending: false, armed: true })).toBe(
       "Tap again to remove",
     );
-    expect(friendButtonLabel({ isFriend: true, pending: true, armed: true })).toBe("Removing…");
+    expect(friendButtonLabel({ relationship: "friends", pending: true, armed: true })).toBe("Removing…");
   });
 });
 
@@ -333,7 +362,7 @@ describe("emptyCopy", () => {
     expect(emptyCopy("friends", "", 0)).toEqual({
       title: "No friends yet",
       body:
-        "Tap Add friend on anyone under Everyone to keep them here. Adding a friend is one-way: nobody is asked or notified.",
+        "Tap Add friend on anyone under Everyone. They'll be asked, and you're friends once they accept.",
       actions: ["everyone", "invite"],
     });
     expect(emptyCopy("friends", "x", 0).title).toBe("No friends yet");
