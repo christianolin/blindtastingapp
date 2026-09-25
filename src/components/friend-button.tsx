@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
-import { addFriend, removeFriend } from "@/app/friends/actions";
+import { removeFriend, sendFriendRequest } from "@/app/friends/actions";
 import { TWO_TAP_WINDOW_MS } from "@/lib/console-copy";
 import { friendButtonLabel } from "@/lib/community/community-math";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export function FriendButton({
   function doAdd() {
     setError(null);
     startTransition(async () => {
-      const result = await addFriend(friendId);
+      const result = await sendFriendRequest(friendId);
       if ("error" in result) setError(result.error);
     });
   }
