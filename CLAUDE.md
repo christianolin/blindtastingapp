@@ -376,8 +376,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `src/app/community/community-list.tsx` plus the pure
   `src/lib/community/community-math.ts`. The URL contract: `?tab=friends`
   (still the only way to open Friends; `/friends` and `/people` still
-  redirect in), `?q`, `?sort` (`active`/`name`/`joined`, each view has its
-  own default when absent) and `?page`. A row action's steady state (the
+  redirect in), `?tab=requests` (the friend requests waiting on you, newest
+  first, no Sort control; 2026-09-24), `?q`, `?sort` (`active`/`name`/`joined`,
+  each view has its own default when absent) and `?page`. A row action's steady state (the
   friend chip's "Friends") stays visible at rest; only an action ("Add
   friend", "Cellar") fades in on hover/focus, and only on a fine pointer, so
   a touch device never has to hover an invisible button. Removing a friend
@@ -387,6 +388,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   friends count: `friendships` has exactly one SELECT policy (`user_id =
   auth.uid()`), so a read of someone else's friendships always comes back
   empty — a real count needs a SECURITY DEFINER RPC, out of scope here.
+  (Since friend requests, 2026-09-24, the other direction of a PENDING
+  relationship is readable, through `friend_requests`, where both sides read
+  their own request rows; an accepted friendship is still readable only as
+  your own `friendships` rows.)
 - A profile page also shows that person's cross-tasting stats (wines
   guessed, avg points, per-category accuracy) and a list of tastings they've
   attended, each linking to `/u/[id]/tastings/[tastingId]` — a per-tasting
@@ -421,10 +426,60 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasting is closed. If anything fails once a tasting row exists, only that
   tasting (created in this run) is deleted before rethrowing, so a rerun
   never skips a half-made one.
-- Friends (`friendships` table) are one-way, no accept/request flow — adding
-  a friend is unilateral, like saving a contact (confirmed with the user).
-  A user only ever sees/manages rows where they are `user_id`; there's no
-  notion of the other side consenting or even being notified.
+- **Reversed** (spec `docs/superpowers/specs/2026-09-24-friend-requests-design.md`,
+  owner 2026-09-24): friends are no longer one-way. The old rule (adding a
+  friend is unilateral, like saving a contact; nobody is asked or notified)
+  is gone; see "Friend requests" below. `friendships` still has exactly one
+  SELECT policy (`user_id = auth.uid()`), so a read of it still returns only
+  your own rows.
+- **Friend requests** (2026-09-24, spec above; migrations
+  `20260925003000_friend_requests.sql`, then the app deploy, then
+  `20260925004000_friend_requests_lockdown.sql`, the M9a/M9b two-step). A
+  friendship exists only once the other person accepts, and it is always a
+  PAIR of `friendships` rows (A→B and B→A): the pair invariant, asserted by
+  004000's post-state. Every friend benefit needs it: the Friends pill and
+  band, the tasting-invite friend pickers, "by friends" ratings on a lot, and
+  a FRIENDS cellar through `can_view_cellar`, which was deliberately NOT
+  changed (with pairs, "a row in either direction" means "friends"; its md5
+  pins in the rule-1 migrations stay valid). A pending request grants
+  nothing. Requests live in `friend_requests` (one per direction; the
+  requester and the recipient read it, "friend_requests read own";
+  `authenticated` holds SELECT only, anon nothing). Every write goes through
+  five SECURITY DEFINER RPCs, EXECUTE for `authenticated` only (revoked from
+  PUBLIC, anon and service_role): `send_friend_request(p_to)` returns
+  `'requested'`, `'accepted'` (the other person had already asked, so it
+  accepts) or `'friends'`; `cancel_friend_request(p_to)`;
+  `accept_friend_request(p_from)` (deletes both directions, writes the pair;
+  "no request to accept"); `decline_friend_request(p_from)` (quiet: deletes,
+  tells nobody, and the requester may ask again); `remove_friend(p_other)`
+  (deletes both rows). Each takes a transaction advisory lock on the pair and
+  reads the other profile FOR KEY SHARE (it waits out an account-deletion
+  scrub); refusals "not signed in", "you cannot be your own friend", "that
+  account has been deleted". Since 004000 no client role holds
+  INSERT/UPDATE/DELETE on `friendships` ("friendships insert own" and
+  "friendships delete own" are dropped); only the five RPCs,
+  `accept_platform_invite` (still instant and both ways, and it clears any
+  pending request between the two) and `scrub_deleted_account` (deletes the
+  person's requests both ways, on every call) write it. A new writer must
+  keep the pair invariant and touch `friend_requests` before `friendships`
+  (the lock order every writer uses). `refuse_deleted_profile_link()` also
+  reads `requester_id`/`recipient_id` (trigger
+  `friend_requests_refuse_deleted_profile`). App: `src/app/friends/actions.ts`
+  (`sendFriendRequest`, `cancelFriendRequest`, `acceptFriendRequest`,
+  `declineFriendRequest`, `removeFriend`; `addFriend` is retired; the types
+  live in `src/lib/friends/types.ts`), the pure `relationship()`
+  (`src/lib/friends/relationship.ts`: friends, then incoming, then requested,
+  else none) that every surface derives its control from, and
+  `FriendButton({ personId, relationship })`: "Add friend", "Requested"
+  (two-tap "Tap again to cancel"), "Accept" · "Decline", "Friends" (two-tap
+  "Tap again to remove"), labels from `community-math.ts`'s
+  `friendButtonLabel`. A request is seen in the header bell ("{Name} wants to
+  be friends", answered inline), in /community's **Requests** pill
+  (`?tab=requests`: newest request first, no Sort control, "No requests right
+  now.") and on the requester's /u/[id] header. No email: the app cannot mail
+  an existing member. `scripts/friend-requests.test.mjs` is the database
+  suite (production, always rolled back, on throwaway profiles;
+  `FRIEND_REQUESTS_APPLY` dry-runs a migration that is not live yet).
 - **A `"use server"` file exports only async functions — not even a type re-export.**
   `export type { SendResult }` in `src/app/invite/actions.ts` compiled (tsc, eslint
   and `next build` all passed) but Next's server-actions loader re-exports every
@@ -449,7 +504,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `anon` and `authenticated` — inviter display name, avatar and a validity
   state only) and `accept_platform_invite(code)` (SECURITY DEFINER, EXECUTE
   for `authenticated` only, revoked from `anon`, `PUBLIC` and
-  `service_role` — writes the two `friendships` rows idempotently and counts
+  `service_role` — writes the two `friendships` rows idempotently, deletes
+  any pending friend request between the two either way (friend requests,
+  2026-09-24: an invite link stays instant) and counts
   a use). A friendship is never written on a bare page load: opening
   `/invite/<code>` only ever previews it; either the landing's own
   "Add {inviter} as a friend" tap (a signed-in visitor) or the first-sign-in
@@ -489,7 +546,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   null, write-once `deleted_at`); there is deliberately no FK from profiles to
   `auth.users` (the own-auth branch `auth-phase-1` needs profiles without a
   login, live migration 20260829265003 dropped it). Deleted: notes, cellar lots
-  and consumptions, friendships both ways, platform invites, drafts, pour
+  and consumptions, friendships and friend requests both ways, platform invites, drafts, pour
   intents, label reads, and places of tastings they hosted. Kept for others:
   tastings they hosted or joined, guesses, answer keys, catalog wines they
   created. A never-started DRAFT they host alone is deleted; any other
@@ -1258,6 +1315,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   own state — instead of the old behavior where a new invite only appeared
   after a full manual page reload. `AppHeader` still calls the same function
   for the initial server-rendered count, so there's one source of truth.
+  Since friend requests (2026-09-24) it returns `PendingNotification[]`
+  (`src/lib/notification-items.ts`, a plain module because the action's file
+  is `"use server"`): tasting invitations, then friend requests newest first,
+  which the bell answers inline (Accept / Decline through `FriendButton`; an
+  answered row stays hidden from polls for `SETTLED_HIDE_MS`). The badge
+  counts both; the cadence rule is unchanged.
 - `/knowledge` is a separate reference library, deliberately decoupled from
   tastings/scoring — nothing under it is scored or tasting-specific, it just
   requires login for consistency with the rest of the app. Three pages, each
