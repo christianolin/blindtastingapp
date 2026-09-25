@@ -106,6 +106,34 @@ server, `rm -rf .next`, start it again.
   `PASSWORD_SET_FLAG` (`password_set`) is written — set `true` in the same
   `updateUser({ password, data })` call that sets the password, so the gate
   never fires again for that account.
+- **One name, one field** (2026-09-25, spec
+  `docs/superpowers/specs/2026-09-25-account-name-step-design.md`). Signup
+  (`src/app/signup/`) and the invited account's welcome step
+  (`/auth/set-password`, setup mode) each ask for ONE required field, "Your
+  name" (`name="name"`, `autoComplete="name"`, `maxLength` 80, helper "How
+  you'll appear to other tasters."); `/profile/edit` keeps its one "Name"
+  field. `src/lib/auth/name.ts` is the only rule: `normalizeName` trims and
+  collapses whitespace and never joins parts, and `checkName` refuses, on
+  the server, an empty result and one over `NAME_MAX` (80 code points).
+  Signup writes auth metadata `{ display_name }` only — no
+  `first_name`/`last_name` (the dashboard email templates read
+  `.Data.display_name`). The welcome step pre-fills `setupNameSuggestion`
+  (`src/lib/auth/password-copy.ts`): the inviter's typed name
+  (`user_metadata.display_name`, normalised) when there is one, else
+  `suggestNameFromEmail` (`carsten.olin` → "Carsten Olin", `jens_h2` →
+  "Jens H"); a suggestion nothing saves until "Save and continue", and its
+  action (`passwordFormName`) refuses a bad name before `updateUser`, so no
+  password is ever saved without one. The invite dialog's "Their name
+  (optional)" only suggests ("They'll confirm it when they join.",
+  `INVITEE_NAME_HINT`). Why: from commit 4995d6a (2026-09-19) both forms
+  asked for First name + Last name (optional) and joined them, and the
+  welcome step pre-filled the whole invited name into the first box, so a
+  platform invitee was saved as "Carsten Olin Olin" (profile 42eec649…,
+  corrected by hand 2026-09-24). Never split the name into parts again, and
+  never pre-fill a name into a box that is joined with another;
+  `src/lib/auth/name-split-retired.test.ts` fails on any
+  `first_name`/`last_name`/`given-name`/`family-name`/`fullName` token
+  coming back under `src/`.
 - **Forgot password.** `/login/forgot` → `requestPasswordReset`
   (`src/app/login/actions.ts`) calls
   `supabase.auth.resetPasswordForEmail`, and always answers the same way
