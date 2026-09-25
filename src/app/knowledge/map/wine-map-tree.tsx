@@ -22,6 +22,8 @@ export function WineMapTree({
   filterKeys = null,
   english = false,
   onPrefetch,
+  active = true,
+  rootsCollapsed = false,
 }: {
   roots: WinePlaceTreeNode[];
   selectedKey: string | null;
@@ -37,6 +39,14 @@ export function WineMapTree({
       without it the rows behave exactly as before, and the rule itself refuses
       every call on a touch device. */
   onPrefetch?: PlacePrefetchHandlers;
+  /** Phones: false while the tree's tab is hidden (the map's bottom sheet on
+      Details). A hidden list cannot scroll, so turning true reveals the
+      selected row again. Defaults to true: the desktop card is always shown. */
+  active?: boolean;
+  /** Phones: countries start collapsed too, so the list opens as a menu of
+      countries (spec 2026-09-25 D4). Defaults to false: on desktop countries
+      open one level, as before. */
+  rootsCollapsed?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -127,6 +137,8 @@ export function WineMapTree({
   // path is derived below, so the row is guaranteed to be rendered.
   const selectedRowRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
+    // A hidden tab has no layout to scroll; this runs again once it is shown.
+    if (!active) return;
     const row = selectedRowRef.current;
     if (!row) return;
     // Reveal the selected row WITHIN the tree's own scroll area only — never
@@ -151,7 +163,7 @@ export function WineMapTree({
     } else if (rowRect.bottom > parRect.bottom) {
       parent.scrollTop += rowRect.bottom - parRect.bottom;
     }
-  }, [selectedKey]);
+  }, [selectedKey, active]);
 
   // Expand the selected place's ancestors when the selection CHANGES (a map
   // click or tree pick) so its row is revealed — then leave them be. The path
@@ -178,7 +190,7 @@ export function WineMapTree({
     const walk = (node: WinePlaceTreeNode, depth: number) => {
       if (visibleKeys && !visibleKeys.has(node.key)) return;
       if (node.children.length === 0) return;
-      const isCollapsed = collapsed[node.key] ?? node.tier >= 1;
+      const isCollapsed = collapsed[node.key] ?? (node.tier >= 1 || rootsCollapsed);
       out.push({ key: node.key, depth, isCollapsed });
       if (!isCollapsed) for (const child of node.children) walk(child, depth + 1);
     };
@@ -215,14 +227,14 @@ export function WineMapTree({
     // — not pinned open.
     const isCollapsed = searchKeep
       ? false
-      : (collapsed[node.key] ?? node.tier >= 1);
+      : (collapsed[node.key] ?? (node.tier >= 1 || rootsCollapsed));
     const hasVisibleChildren = node.children.length > 0;
 
     return (
       <li key={node.key}>
         <div
           ref={isSelected ? selectedRowRef : undefined}
-          className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-sm ${
+          className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-sm max-md:min-h-11 max-md:py-0 ${
             isSelected
               ? "bg-primary/10 font-medium text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -236,7 +248,7 @@ export function WineMapTree({
               onClick={() =>
                 setCollapsed((prev) => ({ ...prev, [node.key]: !isCollapsed }))
               }
-              className="shrink-0 text-muted-foreground hover:text-foreground"
+              className="shrink-0 text-muted-foreground hover:text-foreground max-md:flex max-md:h-11 max-md:w-7 max-md:items-center max-md:justify-center"
             >
               {isCollapsed ? (
                 <ChevronRight className="size-3.5" />
@@ -245,7 +257,7 @@ export function WineMapTree({
               )}
             </button>
           ) : (
-            <span className="w-3.5 shrink-0" />
+            <span className="w-3.5 shrink-0 max-md:w-7" />
           )}
           <button
             type="button"
@@ -254,7 +266,7 @@ export function WineMapTree({
             onFocus={onPrefetch ? () => onPrefetch.onEnter(node.key) : undefined}
             onMouseLeave={onPrefetch?.onLeave}
             onBlur={onPrefetch?.onLeave}
-            className="truncate text-left"
+            className="truncate text-left max-md:min-h-11 max-md:min-w-0 max-md:flex-1"
             title={label(node)}
           >
             {label(node)}
@@ -270,14 +282,16 @@ export function WineMapTree({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex items-center gap-1.5">
-        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border px-2 py-1.5">
+        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border px-2 py-1.5 max-md:min-h-11">
           <Search className="size-3.5 shrink-0 text-muted-foreground" />
+          {/* 16 px below md: iOS zooms the whole page into a smaller focused
+              field, which would undo the phone map's fixed screen. */}
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search regions, appellations…"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground max-md:text-base"
           />
         </label>
         <button
@@ -286,7 +300,7 @@ export function WineMapTree({
           title="Expand one level"
           disabled={Boolean(searchKeep)}
           onClick={expandOneLayer}
-          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40 max-md:flex max-md:size-11 max-md:items-center max-md:justify-center"
         >
           <ChevronsUpDown className="size-3.5" />
         </button>
@@ -296,7 +310,7 @@ export function WineMapTree({
           title="Collapse one level"
           disabled={Boolean(searchKeep)}
           onClick={collapseOneLayer}
-          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+          className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-40 max-md:flex max-md:size-11 max-md:items-center max-md:justify-center"
         >
           <ChevronsDownUp className="size-3.5" />
         </button>
