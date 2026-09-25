@@ -57,8 +57,8 @@ Pauillac") grown in batches from the WSET canon.
   contradicted colour, bubbles or fortification caps a candidate at 15 % and moves it
   under "Unlikely from what you've said".
 - **D4 Soft ranges.** Each SAT scale of an archetype is a `[low, high]` range on the
-  same stop ladder the note form renders. In range scores 1.0, one step outside 0.6,
-  two 0.2, further 0.
+  scale's enum ladder (§4.4). In range scores 1.0, one step outside 0.6, two 0.2,
+  further 0.
 - **D5 Aromas match on groups; signatures on exact terms.** Ordinary aroma credit is
   the share of the taster's aroma *groups* the archetype also carries. An archetype's
   aroma link may be flagged `signature`; picking that exact term adds a bonus worth a
