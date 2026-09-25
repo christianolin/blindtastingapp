@@ -13,6 +13,7 @@ import {
   effectiveSort,
   joinedLabel,
   lastActive,
+  orderByIds,
   pageCount as computePageCount,
   parseCommunityParams,
   peopleSearchOr,
@@ -105,6 +106,8 @@ export default async function CommunityPage({
     .is("deleted_at", null);
   if (params.view === "friends") {
     listQuery = listQuery.in("id", [...friendIds]);
+  } else if (params.view === "requests") {
+    listQuery = listQuery.in("id", requestOrder);
   }
   const or = peopleSearchOr(params.q);
   if (or) listQuery = listQuery.or(or);
@@ -128,11 +131,29 @@ export default async function CommunityPage({
   let total = 0;
   let queryError: string | null = null;
 
-  // Friends with no friends at all skips the query outright (§3.3) — an
-  // empty `.in("id", [])` isn't wrong, it's just a round trip for a result
-  // CommunityList already renders as its own empty state.
-  const skipQuery = params.view === "friends" && friendIds.size === 0;
-  if (!skipQuery) {
+  // Friends with no friends at all (or Requests with none waiting) skips the
+  // query outright (§3.3) — an empty `.in("id", [])` isn't wrong, it's just a
+  // round trip for a result CommunityList already renders as its own empty
+  // state.
+  const skipQuery =
+    (params.view === "friends" && friendIds.size === 0) ||
+    (params.view === "requests" && incomingIds.size === 0);
+  if (!skipQuery && params.view === "requests") {
+    // Newest request first (friend-requests §3.4): an order no profile column
+    // holds, so every requester comes back at once and is ordered and paged
+    // here. Someone's pending requests are few; the sort above is unused.
+    const { data, error } = await listQuery;
+    if (error) {
+      queryError = error.message;
+    } else {
+      const ordered = orderByIds(data ?? [], requestOrder);
+      total = ordered.length;
+      rows = ordered.slice(from, to + 1);
+      if (rows.length === 0 && params.page > 1) {
+        redirect(communityHref({ view: params.view, q: params.q, sort: params.sort, page: 1 }));
+      }
+    }
+  } else if (!skipQuery) {
     const { data, count, error } = await listQuery.range(from, to);
     if (error) {
       // R11: a page requested past the end (PostgREST's 416/PGRST103 range
@@ -213,7 +234,7 @@ export default async function CommunityPage({
         page={params.page}
         pageCount={pc}
         total={total}
-        counts={{ everyone: peopleCount ?? 0, friends: friendIds.size }}
+        counts={{ everyone: peopleCount ?? 0, friends: friendIds.size, requests: incomingIds.size }}
         inviterName={inviterName}
         error={queryError}
       />

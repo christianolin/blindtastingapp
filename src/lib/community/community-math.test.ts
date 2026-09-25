@@ -14,6 +14,7 @@ import {
   friendButtonLabel,
   joinedLabel,
   lastActive,
+  orderByIds,
   pageCount,
   parseCommunityParams,
   peopleSearchOr,
@@ -29,6 +30,8 @@ describe("parseCommunityParams", () => {
 
   it("tab", () => {
     expect(parseCommunityParams({ tab: "friends" }).view).toBe("friends");
+    expect(parseCommunityParams({ tab: "requests" }).view).toBe("requests");
+    expect(parseCommunityParams({ tab: ["requests", "friends"] }).view).toBe("requests");
     expect(parseCommunityParams({ tab: "people" }).view).toBe("everyone");
     expect(parseCommunityParams({ tab: "bogus" }).view).toBe("everyone");
   });
@@ -64,7 +67,7 @@ describe("effectiveSort", () => {
     expect(effectiveSort("friends", "active")).toBe("active");
   });
   it("DEFAULT_SORT matches", () => {
-    expect(DEFAULT_SORT).toEqual({ everyone: "active", friends: "name" });
+    expect(DEFAULT_SORT).toEqual({ everyone: "active", friends: "name", requests: "name" });
   });
 });
 
@@ -74,6 +77,12 @@ describe("communityHref", () => {
   });
   it("friends with no other params", () => {
     expect(communityHref({ view: "friends" })).toBe("/community?tab=friends");
+  });
+  it("requests keeps the same parameter order", () => {
+    expect(communityHref({ view: "requests" })).toBe("/community?tab=requests");
+    expect(communityHref({ view: "requests", q: "anna", page: 2 })).toBe(
+      "/community?tab=requests&q=anna&page=2",
+    );
   });
   it("q is encoded", () => {
     expect(communityHref({ view: "everyone", q: "anna b&c" })).toBe("/community?q=anna+b%26c");
@@ -148,6 +157,10 @@ describe("paging and the footer line", () => {
     expect(communityPageLine(1, 25, 32, "active")).toBe("1–25 of 32 · sorted by last active");
     expect(communityPageLine(2, 25, 32, "name")).toBe("26–32 of 32 · sorted by name");
   });
+  it("communityPageLine leaves the sort off for Requests (sort null)", () => {
+    expect(communityPageLine(1, 25, 3, null)).toBe("1–3 of 3");
+    expect(communityPageLine(2, 25, 30, null)).toBe("26–30 of 30");
+  });
   it("communityPageLine groups large numbers", () => {
     expect(communityPageLine(1, 25, 1234, "joined")).toBe(
       "1–25 of 1,234 · sorted by newest joined",
@@ -198,6 +211,29 @@ describe("filterLabel", () => {
   it("reads Everyone/Friends plus the count", () => {
     expect(filterLabel("everyone", 32)).toBe("Everyone 32");
     expect(filterLabel("friends", 0)).toBe("Friends 0");
+  });
+  it("shows the Requests count only when something is waiting", () => {
+    expect(filterLabel("requests", 0)).toBe("Requests");
+    expect(filterLabel("requests", 3)).toBe("Requests 3");
+    expect(filterLabel("requests", 1234)).toBe("Requests 1,234");
+  });
+});
+
+describe("orderByIds", () => {
+  const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  it("puts rows in the order of ids (newest request first)", () => {
+    expect(orderByIds(rows, ["c", "a", "b"]).map((r) => r.id)).toEqual(["c", "a", "b"]);
+  });
+  it("drops a row whose id is not listed, and ignores an id with no row", () => {
+    expect(orderByIds(rows, ["b", "x", "a"]).map((r) => r.id)).toEqual(["b", "a"]);
+  });
+  it("keeps the first place of a repeated id", () => {
+    expect(orderByIds(rows, ["a", "b", "a", "c"]).map((r) => r.id)).toEqual(["a", "b", "c"]);
+  });
+  it("does not change its input", () => {
+    const input = [{ id: "b" }, { id: "a" }];
+    orderByIds(input, ["a", "b"]);
+    expect(input.map((r) => r.id)).toEqual(["b", "a"]);
   });
 });
 
@@ -358,35 +394,55 @@ describe("friendButtonLabel", () => {
 });
 
 describe("emptyCopy", () => {
+  const none = { friends: 0, requests: 0 };
   it("friends with 0 friends, regardless of q", () => {
-    expect(emptyCopy("friends", "", 0)).toEqual({
+    expect(emptyCopy("friends", "", none)).toEqual({
       title: "No friends yet",
       body:
         "Tap Add friend on anyone under Everyone. They'll be asked, and you're friends once they accept.",
       actions: ["everyone", "invite"],
     });
-    expect(emptyCopy("friends", "x", 0).title).toBe("No friends yet");
-    expect(emptyCopy("friends", "x", 0).actions).toEqual(["everyone", "invite"]);
+    expect(emptyCopy("friends", "x", none).title).toBe("No friends yet");
+    expect(emptyCopy("friends", "x", none).actions).toEqual(["everyone", "invite"]);
   });
   it("friends with a search and some friends", () => {
-    expect(emptyCopy("friends", "x", 5)).toEqual({
+    expect(emptyCopy("friends", "x", { friends: 5, requests: 0 })).toEqual({
       title: "None of your friends match “x”",
       body: null,
       actions: ["clear"],
     });
   });
   it("everyone with a search", () => {
-    expect(emptyCopy("everyone", "x", 0)).toEqual({
+    expect(emptyCopy("everyone", "x", none)).toEqual({
       title: "Nobody matches “x”",
       body: null,
       actions: ["clear"],
     });
   });
   it("everyone with no search", () => {
-    expect(emptyCopy("everyone", "", 0)).toEqual({
+    expect(emptyCopy("everyone", "", none)).toEqual({
       title: "No one here yet",
       body: null,
       actions: ["invite"],
+    });
+  });
+  it("requests with nothing waiting, regardless of q", () => {
+    const expected = { title: "No requests right now.", body: null, actions: ["everyone"] };
+    expect(emptyCopy("requests", "", none)).toEqual(expected);
+    expect(emptyCopy("requests", "x", none)).toEqual(expected);
+  });
+  it("requests waiting but none on screen and no search", () => {
+    expect(emptyCopy("requests", "  ", { friends: 0, requests: 2 })).toEqual({
+      title: "No requests right now.",
+      body: null,
+      actions: ["everyone"],
+    });
+  });
+  it("requests waiting and a search that misses them all", () => {
+    expect(emptyCopy("requests", "x", { friends: 0, requests: 2 })).toEqual({
+      title: "Nobody matches “x”",
+      body: null,
+      actions: ["clear"],
     });
   });
 });

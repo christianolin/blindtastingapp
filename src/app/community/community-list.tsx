@@ -99,7 +99,8 @@ export function CommunityList({
   page: number;
   pageCount: number;
   total: number;
-  counts: { everyone: number; friends: number };
+  /** The pill counts; `requests` is the requests waiting on the viewer. */
+  counts: { everyone: number; friends: number; requests: number };
   inviterName: string;
   error: string | null;
 }) {
@@ -176,7 +177,7 @@ export function CommunityList({
     });
   }
 
-  const empty = rows.length === 0 && !error ? emptyCopy(view, q, counts.friends) : null;
+  const empty = rows.length === 0 && !error ? emptyCopy(view, q, counts) : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -194,24 +195,28 @@ export function CommunityList({
           />
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <label htmlFor="community-sort" className="hidden text-sm text-muted-foreground md:inline">
-            Sort
-          </label>
-          <select
-            id="community-sort"
-            aria-label="Sort"
-            className={selectCls}
-            value={sort}
-            onChange={(e) => changeSort(e.target.value as CommunitySort)}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Requests is always newest request first (friend-requests §3.4),
+            an order none of the three sorts holds, so it has no Sort control. */}
+        {view !== "requests" ? (
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="community-sort" className="hidden text-sm text-muted-foreground md:inline">
+              Sort
+            </label>
+            <select
+              id="community-sort"
+              aria-label="Sort"
+              className={selectCls}
+              value={sort}
+              onChange={(e) => changeSort(e.target.value as CommunitySort)}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-2">
           <span className="hidden text-sm text-muted-foreground md:inline">Filter</span>
@@ -231,6 +236,14 @@ export function CommunityList({
               className={pillCls(view === "friends")}
             >
               {filterLabel("friends", counts.friends)}
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === "requests"}
+              onClick={() => switchView("requests")}
+              className={pillCls(view === "requests")}
+            >
+              {filterLabel("requests", counts.requests)}
             </button>
           </div>
         </div>
@@ -427,7 +440,9 @@ export function CommunityList({
 
       {!error && rows.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>{communityPageLine(page, COMMUNITY_PAGE, total, sort)}</span>
+          <span>
+            {communityPageLine(page, COMMUNITY_PAGE, total, view === "requests" ? null : sort)}
+          </span>
           {pageCount > 1 ? (
             <div className="flex items-center gap-1.5">
               <button

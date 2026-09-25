@@ -2,7 +2,7 @@
 // §4.1). No imports on purpose — vitest (node env, no `@/` alias configured)
 // loads this directly, and nothing here needs anything beyond the language.
 
-export type CommunityView = "everyone" | "friends";
+export type CommunityView = "everyone" | "friends" | "requests";
 export type CommunitySort = "active" | "name" | "joined";
 export type CommunityParams = {
   view: CommunityView;
@@ -14,10 +14,14 @@ export type CommunityParams = {
 export const COMMUNITY_PAGE = 25;
 export const SEARCH_PLACEHOLDER = "Name, place or bio";
 
-// R5: each view's own default when `?sort` is absent.
+// R5: each view's own default when `?sort` is absent. Requests never sorts by
+// it: that view lists the newest request first (friend-requests spec §3.4,
+// `orderByIds` below), an order no profile column holds, so it shows no Sort
+// control; "name" only keeps the query builder's shape.
 export const DEFAULT_SORT: Record<CommunityView, CommunitySort> = {
   everyone: "active",
   friends: "name",
+  requests: "name",
 };
 
 export const SORT_OPTIONS: readonly { value: CommunitySort; label: string }[] = [
@@ -38,7 +42,8 @@ function parsePage(raw: string): number {
 export function parseCommunityParams(
   sp: Record<string, string | string[] | undefined>,
 ): CommunityParams {
-  const view: CommunityView = firstParam(sp.tab) === "friends" ? "friends" : "everyone";
+  const tab = firstParam(sp.tab);
+  const view: CommunityView = tab === "friends" || tab === "requests" ? tab : "everyone";
   const q = (firstParam(sp.q) ?? "").trim();
   const sortRaw = firstParam(sp.sort);
   const sort: CommunitySort | null =
@@ -65,7 +70,7 @@ export function communityHref(p: {
   page?: number;
 }): string {
   const sp = new URLSearchParams();
-  if (p.view === "friends") sp.set("tab", "friends");
+  if (p.view !== "everyone") sp.set("tab", p.view);
   const q = p.q?.trim();
   if (q) sp.set("q", q);
   if (p.sort) sp.set("sort", p.sort);
@@ -107,18 +112,34 @@ export function sortedByWord(sort: CommunitySort): string {
   return "newest joined";
 }
 
+// `sort` null (the Requests view, which has no Sort control) leaves the
+// "sorted by" part off.
 export function communityPageLine(
   page: number,
   per: number,
   total: number,
-  sort: CommunitySort,
+  sort: CommunitySort | null,
 ): string {
   const from = (page - 1) * per + 1;
   const to = Math.min(page * per, total);
-  return (
+  const range =
     `${from.toLocaleString("en-US")}–${to.toLocaleString("en-US")} of ` +
-    `${total.toLocaleString("en-US")} · sorted by ${sortedByWord(sort)}`
-  );
+    `${total.toLocaleString("en-US")}`;
+  return sort === null ? range : `${range} · sorted by ${sortedByWord(sort)}`;
+}
+
+// The Requests view's order (friend-requests spec §3.4): `ids` is the
+// requesters' ids, newest request first; rows come back from a profiles query
+// in any order and leave in that one. A row whose id is not in `ids` is
+// dropped.
+export function orderByIds<T extends { id: string }>(rows: readonly T[], ids: readonly string[]): T[] {
+  const rank = new Map<string, number>();
+  ids.forEach((id, i) => {
+    if (!rank.has(id)) rank.set(id, i);
+  });
+  return rows
+    .filter((r) => rank.has(r.id))
+    .sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
 }
 
 function peopleWord(n: number): string {
@@ -146,7 +167,12 @@ export function communityBand(b: { people: number; friends: number; active: numb
   return { parts, phone };
 }
 
+// Everyone and Friends always show their count; Requests only when there is
+// one waiting (friend-requests spec §3.4).
 export function filterLabel(view: CommunityView, count: number): string {
+  if (view === "requests") {
+    return count > 0 ? `Requests ${count.toLocaleString("en-US")}` : "Requests";
+  }
   const word = view === "everyone" ? "Everyone" : "Friends";
   return `${word} ${count.toLocaleString("en-US")}`;
 }
@@ -243,13 +269,21 @@ export function friendButtonLabel(s: {
 const FRIENDS_EMPTY_BODY =
   "Tap Add friend on anyone under Everyone. They'll be asked, and you're friends once they accept.";
 
+const REQUESTS_EMPTY_TITLE = "No requests right now.";
+
+// `counts` are the pill counts. Requests: with none waiting, or with no
+// search, the empty list is "No requests right now." (a search that misses
+// every requester reads like Everyone's miss, "Nobody matches …").
 export function emptyCopy(
   view: CommunityView,
   q: string,
-  friendsCount: number,
+  counts: { friends: number; requests: number },
 ): { title: string; body: string | null; actions: ("clear" | "everyone" | "invite")[] } {
-  if (view === "friends" && friendsCount === 0) {
+  if (view === "friends" && counts.friends === 0) {
     return { title: "No friends yet", body: FRIENDS_EMPTY_BODY, actions: ["everyone", "invite"] };
+  }
+  if (view === "requests" && (counts.requests === 0 || !q.trim())) {
+    return { title: REQUESTS_EMPTY_TITLE, body: null, actions: ["everyone"] };
   }
   const trimmed = q.trim();
   if (trimmed) {
