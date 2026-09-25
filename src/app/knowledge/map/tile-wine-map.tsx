@@ -1450,8 +1450,14 @@ export function TileWineMap({
     });
   }, [manifest, viewInfo.scanned, viewInfo.regions, english, palette]);
 
+  // Phones: the explorer's bottom sheet bar (56 px) lies over the map's bottom
+  // edge, so MapLibre's bottom-right corner (the compact attribution) is lifted
+  // to 54 px; with the control's own 10 px margin the "i" sits at 64 px, level
+  // with the legend. The trailing `!` is required: maplibre-gl.css is
+  // unlayered, and an unlayered rule beats every layered Tailwind utility
+  // whatever its specificity (see the note in globals.css).
   return (
-    <div className="relative h-full overflow-hidden rounded-lg border">
+    <div className="relative h-full overflow-hidden rounded-lg border max-md:[&_.maplibregl-ctrl-bottom-right]:bottom-[54px]!">
       <button
         type="button"
         onClick={onToggleExpanded}
@@ -1824,7 +1830,8 @@ export function TileWineMap({
           contextKey={selectedContextKey}
         />
       ) : null}
-      <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm">
+      {/* Phones: above the explorer's 56 px sheet bar (spec 2026-09-25 D5). */}
+      <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm max-md:bottom-16">
         <button
           type="button"
           onClick={() => setLegendOpen((o) => !o)}
