@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Ellipsis, X } from "lucide-react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
@@ -10,13 +19,21 @@ import {
   SWEETNESS_STOPS,
   LEVEL_STOPS,
   TANNIN_NATURE,
-  ALCOHOL_STOPS,
-  FORTIFIED_ALCOHOL_STOPS,
   BODY_STOPS,
   FINISH_STOPS,
   colourFromHue,
   sectionProgress,
 } from "@/lib/wset/vocab";
+import {
+  BUBBLES_OPTIONS,
+  alcoholPick,
+  alcoholShown,
+  alcoholStopsFor,
+  bubblesFromPill,
+  bubblesPill,
+  effectiveStyle,
+  mousseAfterBubbles,
+} from "@/lib/wset/sheet-extras";
 import {
   labelsFor,
   makeT,
@@ -61,6 +78,9 @@ const SECTION_ORDER: readonly SectionId[] = ["appearance", "nose", "palate", "co
 // this sheet's sticky bar (taller on phones: close, a two-line name, 44px tabs);
 // the modal resets its own scroll instead.
 const SECTION_SCROLL_MT = "scroll-mt-[190px] sm:scroll-mt-[160px]";
+// With a `belowBar` strip (the training room's 44px "Top match" line) the
+// sticky bar is 44px taller.
+const SECTION_SCROLL_MT_BELOW_BAR = "scroll-mt-[234px] sm:scroll-mt-[204px]";
 
 // The bordeaux primary button, as on every other 2026-09 surface: radius 9–11,
 // the ink under-shadow, the one allowed hover literal.
@@ -81,6 +101,19 @@ export type WsetSheetHandle = {
       exits. Modals route Escape and their backdrop through this. */
   requestClose: () => void;
 };
+
+/** The training room's footer: one action in place of Save, at every section. */
+export type WsetFooterAction = { label: string; onClick: () => void };
+
+/** A fact the form states (training-room D19): null until answered. */
+export type WsetTriState = { value: boolean | null; onChange: (v: boolean | null) => void };
+
+// Save, or the footer action in its place. With `footerAction` the Save button
+// and its states are gone, so `onSave` is optional there and required anywhere
+// else — every existing caller still has to pass it.
+type WsetSaveProps =
+  | { onSave: (state: WsetNoteState) => Promise<void>; footerAction?: undefined }
+  | { onSave?: (state: WsetNoteState) => Promise<void>; footerAction: WsetFooterAction };
 
 export function Row({
   label: rowLabel,
@@ -207,16 +240,23 @@ export function WsetSheet({
   onDelete,
   embedded = false,
   ref,
+  onChange,
+  footerAction,
+  belowBar,
+  aside,
+  onClose,
+  bubbles,
+  fortified,
 }: {
-  /** Null colour/style is the hidden-glass case (blind-tasting B8): the
-      family is not known yet. WineColourControl and AromaPicker already
-      degrade to "every family" / "every group" on null; sectionProgress
-      below falls back to STILL, since it has no null branch of its own. */
+  /** Null colour/style is the hidden-glass case (blind-tasting B8) and the
+      training room's unknown wine: the family is not known yet.
+      WineColourControl and AromaPicker already degrade to "every family" /
+      "every group" on null; the drawn style is `effectiveStyle` (STILL unless
+      the Bubbles / fortified answers say otherwise). */
   wine: { colour: WineColour | null; style: WineStyle | null };
   title: string;
   terms: AromaTerm[];
   initial: WsetNoteState;
-  onSave: (state: WsetNoteState) => Promise<void>;
   /** Exit without saving; renders Close (✕ on phones), which confirms a
       discard while the note has unsaved changes. */
   onDiscard?: () => void;
@@ -227,7 +267,25 @@ export function WsetSheet({
   // to the popup edges while the sections scroll between them.
   embedded?: boolean;
   ref?: React.Ref<WsetSheetHandle>;
-}) {
+  /** Every committed change of the note (the training room's live ranking and
+      its on-device draft). Also called once with the initial state. */
+  onChange?: (state: WsetNoteState) => void;
+  /** Rendered inside the sticky bar, under the section tabs, so it sticks
+      with them. The section scroll margin allows 44px for it. */
+  belowBar?: ReactNode;
+  /** The lg+ column beside the sections. Omitted: the live tasting note.
+      `null`: no column at all — the sheet renders single-column and the
+      caller owns the layout. */
+  aside?: ReactNode | null;
+  /** ✕ / Close with no discard confirm (the caller keeps the note). Takes
+      precedence over `onDiscard`. */
+  onClose?: () => void;
+  /** Appearance's Bubbles toggle (none / sparkling); "sparkling" switches the
+      mousse row on for an unknown wine. */
+  bubbles?: WsetTriState;
+  /** The alcohol row's display-only fourth stop, "fortified (15 %+)". */
+  fortified?: WsetTriState;
+} & WsetSaveProps) {
   const { lang, setLang } = useWsetLang();
   const L = labelsFor(lang);
   const t = makeT(lang);
@@ -261,16 +319,46 @@ export function WsetSheet({
     [],
   );
 
+  // The training room re-ranks on every change and keeps a draft. It hears
+  // the committed state after render; useEffectEvent, so a new `onChange`
+  // identity on each parent render never re-fires the effect.
+  const reportChange = useEffectEvent((next: WsetNoteState) => {
+    onChange?.(next);
+  });
+  useEffect(() => {
+    reportChange(state);
+  }, [state]);
+
   // The live note reads in the active language: term labels are translated, and
   // the prose stitching gets Danish scale words + the Danish quality band.
   const termLabels = useMemo(
     () => new Map(terms.map((tm) => [tm.id, translateTerm(tm.term, lang)])),
     [terms, lang],
   );
+  // The style the sheet draws with (training-room §3.3): the wine's own, else
+  // what the Bubbles / fortified answers imply, else STILL.
+  const shownStyle = effectiveStyle(wine.style, bubbles?.value, fortified?.value);
   const prog = useMemo(
-    () => sectionProgress(state, wine.style ?? "STILL"),
-    [state, wine.style],
+    () => sectionProgress(state, shownStyle),
+    [state, shownStyle],
   );
+  const sectionScrollMt = belowBar ? SECTION_SCROLL_MT_BELOW_BAR : SECTION_SCROLL_MT;
+  const showAside = !embedded && aside !== null;
+  // Both label tables are memoised like `termLabels` above: as plain object
+  // literals the React Compiler read them as capturing `L`/`t` and, once they
+  // reached valueLabel(), extended those two values' mutable range past the
+  // noteSections memo — a react-hooks/preserve-manual-memoization error.
+  const bubbleLabels = useMemo<Record<string, string>>(
+    () => ({ NONE: t("bubbles_none"), SPARKLING: t("bubbles_sparkling") }),
+    [t],
+  );
+  // With the fortified toggle the alcohol row names its fourth stop; the rest
+  // of the labels are the scale's own.
+  const alcoholLabels = useMemo(
+    () => (fortified ? { ...L, FORTIFIED: t("fortified_stop") } : L),
+    [L, t, fortified],
+  );
+  const alcoholValue = fortified ? alcoholShown(state.alcohol, fortified.value) : state.alcohol;
 
   const noteSections = useMemo(() => {
     const composed = composeLiveNote(state, termLabels, L, {
@@ -322,6 +410,9 @@ export function WsetSheet({
         : null;
 
   const handleSave = useCallback(async () => {
+    // Only reachable with a Save button, which renders only without a
+    // footerAction — and then onSave is required by the prop types.
+    if (!onSave) return;
     setSaveState("saving");
     try {
       await onSave(state);
@@ -339,10 +430,17 @@ export function WsetSheet({
     : saveState === "error" ? t("retry_save")
     : t("save_note");
 
+  // `onClose` exits at once (the caller keeps the note, e.g. the training
+  // room's on-device draft); otherwise a dirty note asks before discarding.
   const discard = useCallback(() => {
+    if (onClose) {
+      onClose();
+      return;
+    }
     if (dirty) setConfirmDiscard(true);
     else onDiscard?.();
-  }, [dirty, onDiscard]);
+  }, [dirty, onClose, onDiscard]);
+  const closable = onClose !== undefined || onDiscard !== undefined;
 
   useImperativeHandle(
     ref,
@@ -411,7 +509,7 @@ export function WsetSheet({
             Phones: ✕ · wine name over the progress … EN/DA · ⋯. Save lives in
             the footer at every width. */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {onDiscard ? (
+          {closable ? (
             <button
               type="button"
               aria-label={t("close")}
@@ -458,7 +556,7 @@ export function WsetSheet({
               </button>
             ))}
           </div>
-          {onDiscard ? (
+          {closable ? (
             // Always "Close": a clean note exits, a dirty one asks first (the
             // same path Escape and the modal backdrop take).
             <button
@@ -566,6 +664,10 @@ export function WsetSheet({
             );
           })}
         </div>
+        {/* Inside the sticky bar, so it sticks with the tabs (the training
+            room's "Top match" strip below lg). Rendered bare: spacing is the
+            caller's; sectionScrollMt allows its 44px. */}
+        {belowBar}
       </div>
 
       <div
@@ -575,22 +677,28 @@ export function WsetSheet({
           // inflated past the container by a card's intrinsic content width —
           // the section boxes stay within the modal's padding on phones.
           "grid grid-cols-1 items-start gap-6",
-          !embedded && "lg:grid-cols-[264px_minmax(0,1fr)]",
+          showAside && "lg:grid-cols-[264px_minmax(0,1fr)]",
           // The modal scrolls HERE, between the anchored header and footer.
           embedded && "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4",
         )}
       >
-        {embedded ? null : (
-        <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
-          <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
-          <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
-            {t("footer_wset")}
-          </p>
-        </aside>
-        )}
+        {showAside ? (
+          <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
+            {aside === undefined ? (
+              <>
+                <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
+                <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
+                  {t("footer_wset")}
+                </p>
+              </>
+            ) : (
+              aside
+            )}
+          </aside>
+        ) : null}
 
         <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "appearance" && "hidden")}>
+          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt,mobileSection !== "appearance" && "hidden")}>
             <RowPair>
               <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
                 <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
@@ -602,12 +710,30 @@ export function WsetSheet({
             <Row label={t("colour")} value={valueLabel(state.colourHue, L)}>
               <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} labels={L} lang={lang} />
             </Row>
+            {bubbles ? (
+              // Training room (D19): tri-state — neither pill is "not
+              // answered"; a second tap clears. "Sparkling" switches the mousse
+              // row on; leaving it drops a mousse the wine no longer has.
+              <Row label={t("bubbles")} value={valueLabel(bubblesPill(bubbles.value), bubbleLabels)}>
+                <PillGroup
+                  options={BUBBLES_OPTIONS}
+                  labels={bubbleLabels}
+                  value={bubblesPill(bubbles.value)}
+                  onChange={(v) => {
+                    const next = bubblesFromPill(v);
+                    bubbles.onChange(next);
+                    const mousse = mousseAfterBubbles(wine.style, next, fortified?.value ?? null, state.mousse);
+                    if (mousse !== state.mousse) set("mousse", mousse);
+                  }}
+                />
+              </Row>
+            ) : null}
             <Row label={t("other_observations")} sub={optionalSub(t("optional_not_counted", { total }))}>
               <PillGroup multi options={OBSERVATIONS} labels={L} value={state.observations} onChange={(v) => set("observations", v)} />
             </Row>
           </SectionCard>
 
-          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "nose" && "hidden")}>
+          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(sectionScrollMt,mobileSection !== "nose" && "hidden")}>
             <RowPair>
               <Row label={t("condition")} value={valueLabel(state.condition, L)}>
                 <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
@@ -628,7 +754,7 @@ export function WsetSheet({
               <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour ?? colourFromHue(state.colourHue)} sheetTitle={t("aroma_characteristics")} lang={lang} />
             </Row>
           </SectionCard>
-          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "palate" && "hidden")}>
+          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(sectionScrollMt,mobileSection !== "palate" && "hidden")}>
             <RowPair>
               <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
                 <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
@@ -646,19 +772,25 @@ export function WsetSheet({
               </Row>
             </RowPair>
             <RowPair>
-              <Row label={t("alcohol")} value={valueLabel(state.alcohol, L)}>
+              <Row label={t("alcohol")} value={valueLabel(alcoholValue, alcoholLabels)}>
                 <SnapSlider
-                  stops={wine.style === "FORTIFIED" ? FORTIFIED_ALCOHOL_STOPS : ALCOHOL_STOPS}
-                  labels={L}
-                  value={state.alcohol}
-                  onChange={(v) => set("alcohol", v)}
+                  stops={alcoholStopsFor(shownStyle, fortified !== undefined)}
+                  labels={alcoholLabels}
+                  value={alcoholValue}
+                  onChange={(v) => {
+                    // The fourth stop writes HIGH + fortified; any other stop
+                    // is that level and not fortified (D19).
+                    const pick = alcoholPick(v);
+                    set("alcohol", pick.alcohol);
+                    fortified?.onChange(pick.fortified);
+                  }}
                 />
               </Row>
               <Row label={t("body")} value={valueLabel(state.body, L)}>
                 <SnapSlider stops={BODY_STOPS} labels={L} value={state.body} onChange={(v) => set("body", v)} />
               </Row>
             </RowPair>
-            {wine.style === "SPARKLING" ? (
+            {shownStyle === "SPARKLING" ? (
               <RowPair>
                 <Row label={t("mousse")} value={valueLabel(state.mousse, L)} sub={state.mousse ? undefined : t("required_sparkling")}>
                   <PillGroup options={MOUSSE} labels={L} value={state.mousse} onChange={(v) => set("mousse", v)} />
@@ -688,7 +820,7 @@ export function WsetSheet({
             </Row>
           </SectionCard>
 
-          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(SECTION_SCROLL_MT, mobileSection !== "conclusions" && "hidden")}>
+          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(sectionScrollMt,mobileSection !== "conclusions" && "hidden")}>
             <Row label={t("score")}>
               <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
             </Row>
@@ -748,9 +880,11 @@ export function WsetSheet({
               {t("of_total_assessed", { total })}
             </span>
           </div>
-          <p className="mt-1 text-[10.5px] leading-[1.45] text-muted-foreground">
-            {t("nothing_required")}
-          </p>
+          {footerAction ? null : (
+            <p className="mt-1 text-[10.5px] leading-[1.45] text-muted-foreground">
+              {t("nothing_required")}
+            </p>
+          )}
         </div>
         <div className="flex flex-1 items-center gap-[9px] sm:ml-auto sm:flex-none">
           {step ? (
@@ -769,21 +903,36 @@ export function WsetSheet({
               )}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saveState === "saving"}
-            className={cn(
-              "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors disabled:opacity-70 max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
-              // Ink on the gold "Saved" fill (6.5:1), like every bg-gold button
-              // in the app; parchment is only for text on bordeaux.
-              saveState === "saved"
-                ? "bg-gold text-foreground hover:bg-gold-deep"
-                : PRIMARY_BUTTON,
-            )}
-          >
-            {saveLabel}
-          </button>
+          {footerAction ? (
+            // The training room's "Your call →" in place of Save, at every
+            // section (spec §3.3).
+            <button
+              type="button"
+              onClick={footerAction.onClick}
+              className={cn(
+                "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
+                PRIMARY_BUTTON,
+              )}
+            >
+              {footerAction.label}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saveState === "saving"}
+              className={cn(
+                "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors disabled:opacity-70 max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
+                // Ink on the gold "Saved" fill (6.5:1), like every bg-gold button
+                // in the app; parchment is only for text on bordeaux.
+                saveState === "saved"
+                  ? "bg-gold text-foreground hover:bg-gold-deep"
+                  : PRIMARY_BUTTON,
+              )}
+            >
+              {saveLabel}
+            </button>
+          )}
         </div>
       </div>
 

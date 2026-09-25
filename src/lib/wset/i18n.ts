@@ -299,6 +299,12 @@ const UI_EN: UiDict = {
   body: "Body",
   mousse: "Mousse",
   required_sparkling: "required — sparkling",
+  // training room (spec §3.3, D19): an unknown wine states its bubbles and
+  // fortification
+  bubbles: "Bubbles",
+  bubbles_none: "none",
+  bubbles_sparkling: "sparkling",
+  fortified_stop: "fortified (15 %+)",
   flavour_intensity: "Flavour intensity",
   flavour_characteristics: "Flavour characteristics",
   taste_not_smell: "what you taste, not just smell",
@@ -511,6 +517,10 @@ const UI_DA: UiDict = {
   body: "Fylde",
   mousse: "Mousse",
   required_sparkling: "påkrævet — mousserende",
+  bubbles: "Bobler",
+  bubbles_none: "ingen",
+  bubbles_sparkling: "mousserende",
+  fortified_stop: "hedvin (15 %+)",
   flavour_intensity: "Smagsintensitet",
   flavour_characteristics: "Smagsindtryk",
   taste_not_smell: "hvad du smager, ikke kun dufter",
