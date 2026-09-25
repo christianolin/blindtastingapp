@@ -6,7 +6,9 @@ import { getProfileFavourites, loadFavouriteRegionOptions } from "@/lib/profile-
 import { AvatarUploader } from "./avatar-uploader";
 import { EditProfileForm } from "./edit-profile-form";
 import { DeleteAccountSection } from "./delete-account-section";
+import { ShowTourAgainButton } from "./show-tour-again-button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TOUR_COPY } from "@/lib/first-run/tour";
 
 export default async function EditProfilePage() {
   const supabase = await createClient();
@@ -65,6 +67,17 @@ export default async function EditProfilePage() {
           </CardHeader>
           <CardContent>
             <ThemeToggle />
+          </CardContent>
+        </Card>
+
+        {/* Its own card, like Appearance: it replays the first-run tour
+            (spec 2026-09-25 D2), not a field of the profile form. */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{TOUR_COPY.cardTitle}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ShowTourAgainButton />
           </CardContent>
         </Card>
 
