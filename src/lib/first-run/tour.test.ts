@@ -77,10 +77,10 @@ describe("tourSteps (spec D5)", () => {
     }
   });
 
-  it("friend requests are not live in this release", () => {
-    // The main session flips this together with FRIEND_REQUESTS_LIVE in the
-    // friend-requests deploy (first-run tour plan Task 14).
-    expect(FRIEND_REQUESTS_LIVE).toBe(false);
+  it("friend requests are live (flipped in the friend-requests deploy, 2026-09-25)", () => {
+    // Step 5 reads "send a friend request" for real now: the request RPCs and
+    // both migrations are live (first-run tour plan Task 14).
+    expect(FRIEND_REQUESTS_LIVE).toBe(true);
   });
 });
 

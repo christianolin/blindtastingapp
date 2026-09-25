@@ -10,9 +10,9 @@
 // `tourSeenFromProfile` and `isProfileBare`, and a value imported from a
 // client module across the server boundary becomes a client reference.
 
-/** Step 5's friend sentence. False until the friend-requests release ships;
-    the main session flips it to true in that release's deploy (spec D5). */
-export const FRIEND_REQUESTS_LIVE = false;
+/** Step 5's friend sentence. True since the friend-requests release shipped
+    (2026-09-25, both migrations live); it read "add friends" before (spec D5). */
+export const FRIEND_REQUESTS_LIVE = true;
 
 export const TOUR_STEP_IDS = ["welcome", "taste", "cellar", "learn", "community", "profile"] as const;
 export type TourStepId = (typeof TOUR_STEP_IDS)[number];
