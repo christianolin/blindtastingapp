@@ -500,9 +500,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasting CLOSED without ever starting keeps DRAFT visibility. Never go back
   to a bare `status <> 'DRAFT'` or `status = 'CLOSED'` test for "started" —
   that hands every candidate card of never-revealed glasses to the JOINED
-  guests. Client UPDATE on `profiles` is a column grant on nine columns
+  guests. Client UPDATE on `profiles` is a column grant on ten columns
   (display_name, bio, avatar_url, location, phone, favorite_wine_type,
-  cellar_visibility, preferred_currency, last_seen_at); before it, any member
+  cellar_visibility, preferred_currency, last_seen_at, and since
+  20260925010000 tour_seen_at — see "First-run tour"); before it, any member
   could set their own `role` to ADMIN. Roles change only through
   `admin_set_user_role`. A link guard refuses new friendships or seats
   pointing at a deleted profile. Every people listing filters
@@ -848,6 +849,42 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `FlightHintRegistrar` stays, and `QuickActions`' gold-tile rule is
   unchanged. Rule 1: only `{ tastingId, name, state, href }` reaches the
   client.
+- **First-run tour** (2026-09-25, spec
+  `docs/superpowers/specs/2026-09-25-first-run-tour-design.md`, migration
+  `20260925010000_tour_seen.sql`). A six-step "Get started" sheet
+  (`TourSheet`, `src/components/first-run/tour-sheet.tsx`: one base-ui
+  `Dialog`, a bottom sheet below `md`, a centred 480 px card from `md`) shown
+  ONCE PER ACCOUNT. The flag is `profiles.tour_seen_at` (null = show), in the
+  client UPDATE column grant, readable by every member like `last_seen_at`,
+  and deliberately NOT scrubbed by `scrub_deleted_account` (not personal
+  data). Per account, not per device, because the complaint was "the same
+  person keeps getting them": a localStorage flag repeats on every device and
+  private window, and `user_metadata` is neither readable in the server
+  render without an Auth call nor queryable. Every profile was null at
+  release, so every existing user saw it once. `TourProvider`
+  (`tour-provider.tsx`) is mounted once by `AppShell`, which selects
+  `tour_seen_at`, `avatar_url` and `location` on its one profile read (no
+  polling; a failed read counts as seen, `tourSeenFromProfile`). AppShell is
+  in the ROOT layout, which never re-renders on a soft navigation, so "open
+  or not" is client state (`fresh` / `dismissed` / `replay`) over
+  `usePathname()` (`tourShouldOpen`), opened after hydration, not the server
+  prop alone. Never on `/auth/*`, `/login*`, `/signup*`, `/invite/*`, `/j/*`,
+  `/tastings` and below, or `/profile/edit` (`tourVisibleOn`): a self-serve
+  newcomer sees it on `/taste`, an invited one on `/overview`, a join-link
+  newcomer on their first page after the tasting. Skip tour, Done, Later,
+  "Set up my profile", the X and Escape all dismiss through the
+  `"use server"` `markTourSeen()` (`src/lib/first-run/actions.ts`); an
+  outside tap does not (`disablePointerDismissal`); a failed write keeps it
+  shut for the visit only. Focus moves in on a fine pointer only (the Popover
+  touch rule). `/profile/edit`'s "Getting started" card → "Show the tour
+  again" (`resetTour()` sets null, then `useTourReplay()` and
+  `router.push("/overview")`). Steps, copy and exclusions are pure in
+  `src/lib/first-run/tour.ts` (vitest): the Cellar & Catalog step names the
+  header camera only when `useCanScan()` is true; "Make it yours" shows only
+  for a bare profile (no avatar AND no location); the Community sentence says
+  "add friends" until `FRIEND_REQUESTS_LIVE` is flipped to true in the
+  friend-requests deploy (main session). DB suite:
+  `scripts/tour-seen.test.mjs`.
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in
@@ -1160,7 +1197,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   type is gone; spec `docs/superpowers/specs/2026-09-19-profile-favourites.md`,
   migration `20260919141700_profile_favourites.sql`). `favorite_wine_type`
   is retired from the app — the column stays in the database, in
-  `database.types.ts`'s Row and in the nine-column `profiles` UPDATE grant,
+  `database.types.ts`'s Row and in the `profiles` client UPDATE grant,
   but nothing in `src/` reads or writes it and `src/lib/wine-types.ts` is
   deleted (`src/lib/favourite-wine-type-retired.test.ts` fails on any
   reference coming back). In its place a person picks up to 10 favourite
