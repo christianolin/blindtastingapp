@@ -407,6 +407,27 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["friendships"]["Insert"]>;
         Relationships: [];
       };
+      // 20260925003000 (friend-requests spec §2.1): a pending friend
+      // request, at most one per direction. The requester and the recipient
+      // read it (RLS); no client inserts, updates or deletes it — every write
+      // is one of the five friend-request RPCs below. friendships keeps
+      // meaning "accepted, mutual" (rows in pairs once 20260925004000 runs).
+      friend_requests: {
+        Row: {
+          id: string;
+          requester_id: string;
+          recipient_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          requester_id: string;
+          recipient_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["friend_requests"]["Insert"]>;
+        Relationships: [];
+      };
       // 20260919141700 (profile-favourites spec §3, D2-D4): a person's
       // favourite regions and producers, position 1..10 in the order they
       // chose (at most 10 per table, enforced by the position range + a
@@ -2120,7 +2141,8 @@ export type Database = {
       // 20260918130500 (platform-invites spec §4, D10): the signed-in caller
       // becomes the inviter's friend both ways (two friendships rows,
       // idempotent), one use is counted per account, and the inviter id is
-      // returned. Authenticated only — EXECUTE revoked from PUBLIC, anon and
+      // returned. Since 20260925003000 it also deletes any pending friend
+      // request between the two, either way (friend-requests spec D5). Authenticated only — EXECUTE revoked from PUBLIC, anon and
       // service_role. Refusals (friendlyAcceptError maps them; plan copy):
       // "not signed in", "no invite has that code", "that is your own invite
       // link", "that invite link has expired", "that invite link has been
@@ -2128,6 +2150,35 @@ export type Database = {
       accept_platform_invite: {
         Args: { p_code: string };
         Returns: string;
+      };
+      // 20260925003000 (friend-requests spec §2.3): the only client path to
+      // friend_requests and friendships. SECURITY DEFINER; EXECUTE for
+      // authenticated only (revoked from PUBLIC, anon and service_role).
+      // Refusals, verbatim: "not signed in" (42501), "you cannot be your own
+      // friend" (22023), "that account has been deleted" (42501); accept
+      // also "no request to accept" (42501). send returns 'requested',
+      // 'accepted' (the other person had already asked: now friends) or
+      // 'friends' (already friends). cancel, decline and remove are no-ops
+      // when there is nothing to remove.
+      send_friend_request: {
+        Args: { p_to: string };
+        Returns: string;
+      };
+      cancel_friend_request: {
+        Args: { p_to: string };
+        Returns: undefined;
+      };
+      accept_friend_request: {
+        Args: { p_from: string };
+        Returns: undefined;
+      };
+      decline_friend_request: {
+        Args: { p_from: string };
+        Returns: undefined;
+      };
+      remove_friend: {
+        Args: { p_other: string };
+        Returns: undefined;
       };
       // 20260919141700 (profile-favourites spec §3.5, D6): replaces the
       // caller's favourite regions and producers in one go, position = list
