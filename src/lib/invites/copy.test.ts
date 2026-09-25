@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ABOUT_LINES, EYEBROW, addFriendLabel, footerLine, inviteState, invitedTitle, stateCopy } from "./copy";
+import { ABOUT_LINES, EYEBROW, INVITEE_NAME_HINT, addFriendLabel, footerLine, inviteState, invitedTitle, stateCopy } from "./copy";
 
 describe("invite copy (spec §8)", () => {
   it("owner strings, verbatim", () => {
@@ -29,5 +29,11 @@ describe("invite copy (spec §8)", () => {
   it("footer", () => {
     expect(footerLine("18 Oct 2026", 50)).toBe("Works until 18 Oct 2026 · up to 50 people");
     expect(footerLine("18 Oct 2026", 1)).toBe("Works until 18 Oct 2026 · up to 1 person");
+  });
+});
+
+describe("invitee name hint (account name step spec D5, §4)", () => {
+  it("owner copy, verbatim", () => {
+    expect(INVITEE_NAME_HINT).toBe("They'll confirm it when they join.");
   });
 });

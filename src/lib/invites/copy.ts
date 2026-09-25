@@ -13,6 +13,11 @@ export const SHARE = "Share";
 export const SEND_BY_EMAIL = "Send by email";
 export const OPEN_IN_MAIL_APP = "Open in my mail app";
 
+// Under the invite dialog's "Their name (optional)" field (account name step
+// spec D5, §4): the typed name only suggests; the invitee confirms their own
+// name on the welcome step.
+export const INVITEE_NAME_HINT = "They'll confirm it when they join.";
+
 // The hero sentence, then the two "More than a score" paragraphs from
 // `src/app/about/page.tsx`, quoted verbatim and in that order (spec §8).
 export const ABOUT_LINES: readonly [string, string, string] = [

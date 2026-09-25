@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { LocalDateTime } from "@/components/local-date-time";
-import { COPY_LINK, footerLine, OPEN_IN_MAIL_APP, SEND_BY_EMAIL, SHARE } from "@/lib/invites/copy";
+import { COPY_LINK, footerLine, INVITEE_NAME_HINT, OPEN_IN_MAIL_APP, SEND_BY_EMAIL, SHARE } from "@/lib/invites/copy";
 import { mailtoHref, platformInviteEmail, type PlatformInviteMessage } from "@/lib/email/platform-invite";
 import { createPlatformInvite, sendPlatformInvite } from "@/app/invite/actions";
 import type { CreatedInvite, SendResult } from "@/lib/invites/types";
@@ -70,6 +70,7 @@ export function InvitePeopleDialog({
   inviterName: string;
 }) {
   const nameId = useId();
+  const nameHintId = useId();
   const emailId = useId();
 
   const [name, setName] = useState("");
@@ -126,8 +127,14 @@ export function InvitePeopleDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
+                aria-describedby={nameHintId}
                 className="min-h-11 md:pointer-fine:min-h-8"
               />
+              {/* The typed name only suggests (account name step spec D5):
+                  the invitee confirms their own on the welcome step. */}
+              <p id={nameHintId} className="text-xs text-muted-foreground">
+                {INVITEE_NAME_HINT}
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor={emailId}>{EMAIL_LABEL}</Label>
