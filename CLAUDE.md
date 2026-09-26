@@ -951,6 +951,72 @@ a raw subquery, regardless of which two tables look involved at a glance.
   "add friends" until `FRIEND_REQUESTS_LIVE` is flipped to true in the
   friend-requests deploy (main session). DB suite:
   `scripts/tour-seen.test.mjs`.
+- **Training room** (2026-09-25, spec
+  `docs/superpowers/specs/2026-09-25-training-room-design.md`, plan
+  `docs/superpowers/plans/2026-09-25-training-room.md`, migrations
+  `20260925120000_training_room.sql` and `20260925130000_archetypes_batch_1.sql`;
+  DB suite `scripts/training-room.test.mjs`). `/taste/training` is a solo blind
+  practice room, live for everyone behind a **Preview** pill (`NavChild.preview`
+  read through `navChildState` in the sidebar and the phone drawer; the `/taste`
+  start menu's Training room item draws the same pill itself; no role gate, no
+  flag). The page (`page.tsx`) reads the pool, the aroma lexicon, the first
+  history page and the tally as the viewer (`src/lib/training/pool.ts`:
+  server-only, `cache()`d, paged past PostgREST's 1000-row cap, every rule in
+  the pure `pool-shape.ts`) and hands them to one client component,
+  `training-room.tsx`, with three states: landing, session, result. The session
+  is the WSET sheet in unknown-wine mode (`WsetSheet` with `onChange`,
+  `footerAction`, `belowBar`, `aside={null}`, `onClose`, `bubbles`,
+  `fortified`) beside a ranked list of typical wines (`wine_archetypes`) that
+  re-orders on every answer: the laptop column (`candidates-panel.tsx`, lg+), a
+  44 px strip in the sheet's sticky bar (`candidates-strip.tsx`) and a bottom
+  sheet (`candidates-sheet.tsx`) below lg. Matching is pure and on the device
+  (`src/lib/training/match.ts`): ranking, never filtering; soft ranges on the
+  full enum ladders (`ALCOHOL_STOPS` for an unfortified alcohol,
+  `HUES_BY_COLOUR[colour]` for hue); a scale the archetype lacks, or an
+  off-ladder range bound, leaves numerator AND denominator; a signature aroma
+  hit is a pure bonus (max two, closeness capped at 100); a contradicted
+  colour, bubbles or fortification caps a candidate at 15 % under "Unlikely
+  from what you've said", and an unanswered (`null`) fact never caps.
+  The unfinished session is a device draft only (`src/lib/training/draft.ts`,
+  key `blindr-training-draft:<userId>`, written on every change): nothing
+  reaches the server before the reveal, ✕ keeps the draft, and a finish or
+  Discard in another tab returns this one to the landing (`storage` event). The
+  reveal is the add-wine sheet's `{ kind: "note", reveal: true }` with
+  `onNotePick`: the pick comes back to the room, never opens `NewNoteModal`,
+  never draws down a cellar lot, and a stale pick from an earlier open is
+  ignored. One RPC writes the result: `record_training_attempt` (SECURITY
+  DEFINER; EXECUTE `authenticated` only, revoked from PUBLIC, `anon` and
+  `service_role`) saves the note through `save_wset_note` — inside a definer RLS
+  is bypassed, so the RPC itself forces `context_kind = 'TRAINING'` and the
+  identity fields, and takes no client note id (a re-reveal's note comes from
+  the caller's own attempt row) — drops a hue that does not fit the revealed
+  wine (`hue_cleared`, kept on the attempt for the result's hue line), scores
+  with the championship values (a DB test pins them to `reveal_wine`'s), and is
+  idempotent on the device-minted `session_key`. Reveal now re-runs it with
+  `attempt_id` and the wine only. The actions (`src/app/taste/training/actions.ts`)
+  check every input again (`src/lib/training/attempt-payload.ts`); their types
+  live in the plain `action-types.ts`. `training_attempts` is author-only SELECT
+  with no client write grant; history reads follow `catalog_wines.merged_into`
+  (`merge_catalog_wines` is deliberately not recreated), 20 rows a page on a
+  `(created_at, id)` cursor, and a wine the viewer cannot read shows as "a wine
+  you can't see yet". An identity-less TRAINING note is admitted by the
+  `wset_notes_one_identity` TRAINING branch (author-only by the existing read
+  policy) and shows in `/taste/notes` as "Training room · not revealed",
+  linking back to the room; a revealed one is a normal public note with a
+  "Training" badge (`catalog/[wineId]/your-notes.tsx`, the `/taste/notes` chip
+  in `notes-list.tsx`, the note modal's title). Deleting a revealed training
+  note deletes its attempt (cascade).
+  `/admin/archetypes` edits the scoring identity (country → region →
+  appellation with "Just the region"), designations, typical age, signature
+  aromas, an optional map place and mousse on sparkling; its ladders and checks
+  are pure in `src/app/admin/archetypes/profile-rules.ts`, whose test pins them
+  to the matcher's `ladderFor`. New archetypes arrive only as data migrations
+  generated from a reviewed JSON batch (`data/training/archetypes-batch-*.json`
+  → `scripts/training/gen-archetype-batch-migration.mjs`, checked read-only by
+  `validate-archetype-batch.mjs`, fail-closed on any name that does not resolve
+  to exactly one live row) — never through the Anthropic API (AGENTS.md). All
+  room copy lives in `src/lib/training/copy.ts` (English only, D20); never
+  hard-code a room string in a component.
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in

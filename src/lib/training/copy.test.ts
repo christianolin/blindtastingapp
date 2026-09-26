@@ -54,6 +54,8 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       beforeAnswers: "Start describing the wine",
       nothingFits: "Nothing fits yet — check colour and bubbles",
       unlikelyGroup: "Unlikely from what you've said",
+      higherThanTypical: "higher than typical",
+      lowerThanTypical: "lower than typical",
       colourDarker: "Colour darker than typical",
       colourLighter: "Colour lighter than typical",
       fitsSoFar: "Fits what you've said so far",

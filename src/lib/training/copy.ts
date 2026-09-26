@@ -36,6 +36,9 @@ export const TRAINING_COPY = {
   beforeAnswers: "Start describing the wine",
   nothingFits: "Nothing fits yet — check colour and bubbles",
   unlikelyGroup: "Unlikely from what you've said",
+  // explanation tails: "{Scale} higher than typical" / "{Scale} lower than typical"
+  higherThanTypical: "higher than typical",
+  lowerThanTypical: "lower than typical",
   // explanation lines without a template
   colourDarker: "Colour darker than typical",
   colourLighter: "Colour lighter than typical",
@@ -364,13 +367,14 @@ export function hueClearedLine(hue: string, colour: WineColour): string {
   return `Your colour call (${word}) didn't fit — it was ${withArticle(COLOUR_WORDS[colour])} wine.`;
 }
 
-/** "{Scale} higher than typical" / "lower"; colour reads darker / lighter
-    (the hue ladders run light → dark). */
+/** "{Scale} higher than typical" / "{Scale} lower than typical"; colour reads
+    darker / lighter (the hue ladders run light → dark). */
 export function scaleLossLine(scale: string, direction: "higher" | "lower"): string {
   if (scale === "colourHue") {
     return direction === "higher" ? TRAINING_COPY.colourDarker : TRAINING_COPY.colourLighter;
   }
-  return `${SCALE_LABELS[scale] ?? scale} ${direction} than typical`;
+  const tail = direction === "higher" ? TRAINING_COPY.higherThanTypical : TRAINING_COPY.lowerThanTypical;
+  return `${SCALE_LABELS[scale] ?? scale} ${tail}`;
 }
 
 /** "{Group} isn't typical" */
