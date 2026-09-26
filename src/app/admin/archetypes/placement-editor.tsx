@@ -9,7 +9,8 @@ import {
   removePlacement,
   type PlaceHit,
 } from "./actions";
-import { ArchetypeEditor, type ArchetypeProfile } from "./archetype-editor";
+import { ArchetypeEditor } from "./archetype-editor";
+import type { ArchetypeProfile, EditorReferences } from "./profile-rules";
 import type { AromaTerm } from "@/lib/wset/types";
 
 export type PlacementView = {
@@ -124,9 +125,11 @@ function AddPlace({
 export function PlacementEditor({
   archetypes,
   terms,
+  references,
 }: {
   archetypes: ArchetypeAdmin[];
   terms: AromaTerm[];
+  references: EditorReferences;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -196,7 +199,7 @@ export function PlacementEditor({
           </div>
 
           {openId === a.id ? (
-            <ArchetypeEditor archetype={a} terms={terms} />
+            <ArchetypeEditor archetype={a} terms={terms} references={references} />
           ) : null}
         </div>
       ))}

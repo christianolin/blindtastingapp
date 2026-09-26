@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isContributor } from "@/lib/auth/roles";
-import type { WineColour, WineStyle } from "@/lib/wset/types";
+import {
+  aromaRows,
+  designationRows,
+  validateProfile,
+  type ArchetypeProfileInput,
+} from "./profile-rules";
 
 export type PlaceHit = { id: string; name: string; kind: string; canonicalKey: string };
 
@@ -66,20 +71,12 @@ export async function removePlacement(
   return { ok: true };
 }
 
-export type ArchetypeProfileInput = {
-  name: string;
-  colour: WineColour;
-  style: WineStyle;
-  description: string | null;
-  qualityLow: number | null;
-  qualityHigh: number | null;
-  sat: { [key: string]: [string, string] };
-  noseTermIds: string[];
-  palateTermIds: string[];
-};
-
-// Save an archetype's tasting-sheet profile (SAT ranges, quality, aromas). RLS
-// gates the writes to curators (contributor + admin); the app check mirrors it.
+// Save an archetype's profile: SAT ranges, quality, aromas with their signature
+// flags, the scoring identity (country → region → appellation), designations,
+// typical age and the optional map place (training-room spec §4.5). RLS gates
+// every write to curators (contributor + admin); the app check mirrors it, and
+// the profile is validated again here — the editor's own check is only a
+// convenience.
 export async function updateArchetype(
   archetypeId: string,
   input: ArchetypeProfileInput,
@@ -87,16 +84,36 @@ export async function updateArchetype(
   const supabase = await ensureContributor();
   if (!supabase) return { error: "You don't have permission." };
 
+  const invalid = validateProfile(input);
+  if (invalid) return { error: invalid };
+
+  const [{ data: region }, { data: appellation }] = await Promise.all([
+    supabase.from("regions").select("country_id").eq("id", input.regionId).maybeSingle(),
+    supabase.from("appellations").select("region_id").eq("id", input.appellationId).maybeSingle(),
+  ]);
+  if (!region || region.country_id !== input.countryId) {
+    return { error: "That region is not in that country." };
+  }
+  if (!appellation || appellation.region_id !== input.regionId) {
+    return { error: "That appellation is not in that region." };
+  }
+
   const { error: upErr } = await supabase
     .from("wine_archetypes")
     .update({
-      name: input.name,
+      name: input.name.trim(),
       colour: input.colour,
       style: input.style,
       description: input.description,
       sat: input.sat,
       quality_low: input.qualityLow,
       quality_high: input.qualityHigh,
+      country_id: input.countryId,
+      region_id: input.regionId,
+      appellation_id: input.appellationId,
+      typical_age_low: input.typicalAgeLow,
+      typical_age_high: input.typicalAgeHigh,
+      wine_place_id: input.winePlaceId,
     })
     .eq("id", archetypeId);
   if (upErr) return { error: upErr.message };
@@ -106,16 +123,24 @@ export async function updateArchetype(
     .delete()
     .eq("archetype_id", archetypeId);
   if (delErr) return { error: delErr.message };
-
-  const rows = [
-    ...input.noseTermIds.map((term_id) => ({ archetype_id: archetypeId, term_id, kind: "NOSE" as const })),
-    ...input.palateTermIds.map((term_id) => ({ archetype_id: archetypeId, term_id, kind: "PALATE" as const })),
-  ];
+  const rows = aromaRows(archetypeId, input.nose, input.palate);
   if (rows.length > 0) {
     const { error: insErr } = await supabase.from("wine_archetype_aromas").insert(rows);
     if (insErr) return { error: insErr.message };
   }
 
+  const { error: delDesErr } = await supabase
+    .from("wine_archetype_designations")
+    .delete()
+    .eq("archetype_id", archetypeId);
+  if (delDesErr) return { error: delDesErr.message };
+  const designations = designationRows(archetypeId, input.designationIds);
+  if (designations.length > 0) {
+    const { error: insDesErr } = await supabase.from("wine_archetype_designations").insert(designations);
+    if (insDesErr) return { error: insDesErr.message };
+  }
+
   revalidatePath("/admin/archetypes");
+  revalidatePath("/taste/training");
   return { ok: true };
 }
