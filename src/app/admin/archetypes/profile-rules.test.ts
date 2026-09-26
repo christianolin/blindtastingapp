@@ -4,10 +4,12 @@ import type { TrainingCandidate } from "../../../lib/training/types";
 import type { WineColour, WineStyle } from "../../../lib/wset/types";
 import {
   aromaRows,
+  appellationListCacheable,
   appellationOptions,
   designationRows,
   filterAppellationOptions,
   rangeFits,
+  satForStyle,
   scalesFor,
   toggleSignature,
   validateProfile,
@@ -146,6 +148,34 @@ describe("validateProfile", () => {
     expect(validateProfile(profile({ winePlaceId: "x" }))).toBe("That map place is not valid.");
   });
 
+  it("refuses malformed input without throwing (the server's check runs on untrusted input)", () => {
+    const MALFORMED = "Something in the profile is malformed.";
+    const bad = (overrides: Record<string, unknown>) =>
+      validateProfile(profile(overrides as Partial<ArchetypeProfileInput>));
+    // A null range, a range that is not an array, a one-word range.
+    expect(bad({ sat: { tannin: null } })).toBe(MALFORMED);
+    expect(bad({ sat: { tannin: "HIGH" } })).toBe(MALFORMED);
+    expect(bad({ sat: { tannin: ["HIGH"] } })).toBe(MALFORMED);
+    expect(bad({ sat: { tannin: [1, 2] } })).toBe(MALFORMED);
+    // Even on a key the editor does not show.
+    expect(bad({ sat: { clarity: null } })).toBe(MALFORMED);
+    // An unknown colour or style — never reaches HUES_BY_COLOUR[colour].
+    expect(bad({ colour: "BLUE" })).toBe(MALFORMED);
+    expect(bad({ colour: null })).toBe(MALFORMED);
+    expect(bad({ style: "FIZZY" })).toBe(MALFORMED);
+    // sat that is not a plain object.
+    expect(bad({ sat: null })).toBe(MALFORMED);
+    expect(bad({ sat: [["HIGH", "HIGH"]] })).toBe(MALFORMED);
+    expect(bad({ sat: "tannin" })).toBe(MALFORMED);
+    // Aroma links and designations of the wrong shape.
+    expect(bad({ nose: [null] })).toBe(MALFORMED);
+    expect(bad({ palate: [{ termId: 1, signature: false }] })).toBe(MALFORMED);
+    expect(bad({ designationIds: ["not-an-id"] })).toBe(MALFORMED);
+    expect(bad({ description: 12 })).toBe(MALFORMED);
+    // Not an object at all.
+    expect(validateProfile(null as unknown as ArchetypeProfileInput)).toBe(MALFORMED);
+  });
+
   it("leaves keys it does not edit alone", () => {
     expect(
       validateProfile(profile({ sat: { clarity: ["HAZY", "CLEAR"], mousse: ["AGGRESSIVE", "DELICATE"] } })),
@@ -155,6 +185,38 @@ describe("validateProfile", () => {
         profile({ colour: "WHITE", style: "SPARKLING", sat: { mousse: ["AGGRESSIVE", "DELICATE"] } }),
       ),
     ).toBe("Mousse: pick a range on its own scale.");
+  });
+});
+
+describe("satForStyle", () => {
+  const sat: { [key: string]: [string, string] } = {
+    tannin: ["MEDIUM_PLUS", "HIGH"],
+    alcohol: ["MEDIUM", "HIGH"],
+    mousse: ["DELICATE", "CREAMY"],
+  };
+
+  it("drops mousse off sparkling, keeps it on sparkling", () => {
+    expect(satForStyle(sat, "WHITE", "STILL")).toEqual({
+      tannin: ["MEDIUM_PLUS", "HIGH"],
+      alcohol: ["MEDIUM", "HIGH"],
+    });
+    expect(satForStyle(sat, "WHITE", "SPARKLING")).toBe(sat);
+  });
+
+  it("drops an alcohol range off the new style's ladder", () => {
+    // MEDIUM_PLUS is a stop of the fortified ladder only.
+    const fortified: { [key: string]: [string, string] } = { alcohol: ["MEDIUM_PLUS", "HIGH"] };
+    expect(satForStyle(fortified, "RED", "FORTIFIED")).toBe(fortified);
+    expect(satForStyle(fortified, "RED", "STILL")).toEqual({});
+    // A range that fits both ladders stays.
+    expect(satForStyle({ alcohol: ["MEDIUM", "HIGH"] }, "RED", "FORTIFIED")).toEqual({ alcohol: ["MEDIUM", "HIGH"] });
+  });
+
+  it("returns the same object when nothing goes, and never touches the input", () => {
+    const plain: { [key: string]: [string, string] } = { tannin: ["LOW", "MEDIUM"] };
+    expect(satForStyle(plain, "RED", "STILL")).toBe(plain);
+    satForStyle(sat, "WHITE", "STILL");
+    expect(sat.mousse).toEqual(["DELICATE", "CREAMY"]);
   });
 });
 
@@ -172,6 +234,11 @@ describe("appellation options", () => {
       { id: "a3", name: "Chablis AOC" },
     ]);
     expect(appellationOptions("Loire", list)[0]).toEqual({ id: "a1", name: "Bourgogne Aligoté AOC" });
+  });
+
+  it("keeps a region's list for later searches only when the read found something", () => {
+    expect(appellationListCacheable(list)).toBe(true);
+    expect(appellationListCacheable([])).toBe(false);
   });
 
   it("filters by the label or the stored name, accents folded", () => {

@@ -128,6 +128,29 @@ function isId(v: unknown): v is string {
   return typeof v === "string" && UUID.test(v);
 }
 
+/** The colours and styles a profile may take — the editor's two selects. */
+export const PROFILE_COLOURS: readonly WineColour[] = ["WHITE", "ORANGE", "ROSE", "RED"];
+export const PROFILE_STYLES: readonly WineStyle[] = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"];
+
+const MALFORMED = "Something in the profile is malformed.";
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+function isRange(v: unknown): v is [string, string] {
+  return Array.isArray(v) && v.length === 2 && typeof v[0] === "string" && typeof v[1] === "string";
+}
+
+function isAromaLinks(v: unknown): v is AromaLink[] {
+  return (
+    Array.isArray(v) &&
+    v.every((l) => isPlainObject(l) && typeof l.termId === "string" && typeof l.signature === "boolean")
+  );
+}
+
 function pairOk(lo: number | null, hi: number | null, min: number, max: number): boolean {
   if (lo === null && hi === null) return true;
   if (lo === null || hi === null) return false;
@@ -135,9 +158,15 @@ function pairOk(lo: number | null, hi: number | null, min: number, max: number):
 }
 
 /** The first problem with a profile, in words, or null. Keys the editor does
-    not show (clarity; mousse off sparkling) are left alone and survive a save. */
+    not show (clarity; mousse off sparkling) are left alone and survive a save,
+    but every range must still be a pair of words. It runs on the server's
+    untrusted input too, so the shapes are checked before anything is indexed:
+    it answers, never throws. */
 export function validateProfile(p: ArchetypeProfileInput): string | null {
+  if (!isPlainObject(p)) return MALFORMED;
   if (typeof p.name !== "string" || p.name.trim() === "") return "Give it a name.";
+  if (!PROFILE_COLOURS.includes(p.colour) || !PROFILE_STYLES.includes(p.style)) return MALFORMED;
+  if (p.description !== null && typeof p.description !== "string") return MALFORMED;
   if (!isId(p.countryId) || !isId(p.regionId) || !isId(p.appellationId)) {
     return "Pick a country, region and appellation.";
   }
@@ -145,15 +174,41 @@ export function validateProfile(p: ArchetypeProfileInput): string | null {
   if (!pairOk(p.typicalAgeLow, p.typicalAgeHigh, 0, 100)) {
     return "Typical age takes two whole numbers of years, low to high.";
   }
+  if (!isPlainObject(p.sat) || !Object.values(p.sat).every(isRange)) return MALFORMED;
   for (const s of scalesFor(p.colour, p.style)) {
     const range = p.sat[s.key];
     if (range !== undefined && !rangeFits(s, range)) return `${s.label}: pick a range on its own scale.`;
   }
-  if (!Array.isArray(p.nose) || !Array.isArray(p.palate) || !Array.isArray(p.designationIds)) {
-    return "Something in the profile is malformed.";
+  if (
+    !isAromaLinks(p.nose) ||
+    !isAromaLinks(p.palate) ||
+    !Array.isArray(p.designationIds) ||
+    !p.designationIds.every(isId)
+  ) {
+    return MALFORMED;
   }
   if (p.winePlaceId !== null && !isId(p.winePlaceId)) return "That map place is not valid.";
   return null;
+}
+
+/** The profile's ranges after a style change (as changeColour tidies the
+    hue): an alcohol range off the new style's ladder goes, and so does mousse
+    when the style is not sparkling. The same object back when nothing goes. */
+export function satForStyle(
+  sat: { [key: string]: [string, string] },
+  colour: WineColour,
+  style: WineStyle,
+): { [key: string]: [string, string] } {
+  const drop: string[] = [];
+  const alcohol = scalesFor(colour, style).find((s) => s.key === "alcohol");
+  if (sat.alcohol !== undefined && alcohol && !(isRange(sat.alcohol) && rangeFits(alcohol, sat.alcohol))) {
+    drop.push("alcohol");
+  }
+  if (style !== "SPARKLING" && sat.mousse !== undefined) drop.push("mousse");
+  if (drop.length === 0) return sat;
+  const next = { ...sat };
+  for (const key of drop) delete next[key];
+  return next;
 }
 
 /** The answer-key forms' wording for a region's own appellation. */
@@ -169,6 +224,15 @@ export function appellationOptions(
     ...(self ? [{ id: self.id, name: `${JUST_THE_REGION} · ${self.name}`, matchName: self.name }] : []),
     ...list.filter((a) => a.id !== self?.id).map((a) => ({ id: a.id, name: a.name })),
   ];
+}
+
+/** Whether a region's appellation read may be kept for the editor's later
+    searches. Every region holds at least its self-named appellation, so an
+    empty list is a failed read (listAppellationsForRegions answers [] when its
+    first page fails) and is read again next time. A later page that fails
+    returns the rows before it and cannot be told apart here. */
+export function appellationListCacheable(list: readonly unknown[]): boolean {
+  return list.length > 0;
 }
 
 export const APPELLATION_RESULTS_MAX = 50;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,6 +30,7 @@ export function ReferenceCombobox({
   disabled,
   allowClear,
   triggerClassName,
+  labelledBy,
 }: {
   formFieldName: string;
   options: ReferenceOption[];
@@ -48,9 +49,14 @@ export function ReferenceCombobox({
    *  pickers' 44px phone target (profile-favourites spec §5.5). Defaults are
    *  unchanged, so no existing caller changes. */
   triggerClassName?: string;
+  /** The id of a visible label for this field (`aria-labelledby`): the
+   *  trigger then reads as that label followed by its own text ("Country
+   *  France"). Without it the trigger names itself, as before. */
+  labelledBy?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const triggerId = useId();
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +96,7 @@ export function ReferenceCombobox({
       >
         <PopoverTrigger
           disabled={disabled}
+          {...(labelledBy ? { id: triggerId, "aria-labelledby": `${labelledBy} ${triggerId}` } : {})}
           render={
             <Button
               variant="outline"

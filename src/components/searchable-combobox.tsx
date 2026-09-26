@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -52,6 +52,7 @@ export function SearchableCombobox({
   allowClear,
   emptyQueryHint,
   triggerClassName,
+  labelledBy,
 }: {
   formFieldName: string;
   value: string;
@@ -69,9 +70,14 @@ export function SearchableCombobox({
    *  pickers' 44px phone target (profile-favourites spec §5.5). Defaults are
    *  unchanged, so no existing caller changes. */
   triggerClassName?: string;
+  /** The id of a visible label for this field (`aria-labelledby`): the
+   *  trigger then reads as that label followed by its own text ("Country
+   *  France"). Without it the trigger names itself, as before. */
+  labelledBy?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const triggerId = useId();
   const [results, setResults] = useState<SearchOption[]>([]);
   const [pending, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
@@ -147,6 +153,7 @@ export function SearchableCombobox({
       >
         <PopoverTrigger
           disabled={disabled}
+          {...(labelledBy ? { id: triggerId, "aria-labelledby": `${labelledBy} ${triggerId}` } : {})}
           render={
             <Button
               variant="outline"

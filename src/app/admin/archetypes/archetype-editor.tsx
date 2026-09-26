@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Star, X } from "lucide-react";
 import type { AromaTerm, WineColour, WineStyle } from "@/lib/wset/types";
 import { LABELS, HUES_BY_COLOUR } from "@/lib/wset/vocab";
-import { listAppellationsForRegions } from "@/lib/reference-search";
+import { listAppellationsForRegions, type SearchOption } from "@/lib/reference-search";
+import { createKeyedCache } from "@/lib/wine-map/keyed-cache";
 import { EditableRange } from "@/components/wset/range-input";
 import { AromaPicker } from "@/components/wset/aroma-picker";
 import { ReferenceCombobox } from "@/components/reference-combobox";
@@ -14,8 +15,12 @@ import { TypeDesignationField, type TypeDesignationOption } from "@/components/t
 import { cn } from "@/lib/utils";
 import { searchPlaces, updateArchetype, type PlaceHit } from "./actions";
 import {
+  PROFILE_COLOURS,
+  PROFILE_STYLES,
+  appellationListCacheable,
   appellationOptions,
   filterAppellationOptions,
+  satForStyle,
   scalesFor,
   toggleSignature,
   validateProfile,
@@ -27,10 +32,11 @@ import {
   type EditorReferences,
 } from "./profile-rules";
 
-const COLOURS: WineColour[] = ["WHITE", "ORANGE", "ROSE", "RED"];
-const STYLES: WineStyle[] = ["STILL", "SPARKLING", "SWEET", "FORTIFIED"];
 const FIELD = "rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground";
 const LABEL = "flex flex-col gap-1 text-xs font-medium text-muted-foreground";
+// 44 px tap targets on touch, the control's own size on a laptop pointer.
+const TAP_ICON =
+  "inline-flex min-h-11 min-w-11 items-center justify-center md:pointer-fine:min-h-0 md:pointer-fine:min-w-0";
 
 function numberOrNull(s: string): number | null {
   return s.trim() === "" ? null : Number(s);
@@ -60,7 +66,7 @@ function SignatureToggles({
             aria-pressed={l.signature}
             onClick={() => onToggle(l.termId)}
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs",
+              "inline-flex min-h-11 items-center gap-1 rounded-full border px-2 py-0.5 text-xs md:pointer-fine:min-h-0",
               l.signature ? "border-gold bg-gold/15 text-foreground" : "border-border/70 text-muted-foreground",
             )}
           >
@@ -105,8 +111,27 @@ export function ArchetypeEditor({
   const [placeQuery, setPlaceQuery] = useState("");
   const [placeHits, setPlaceHits] = useState<PlaceHit[]>([]);
   const placeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // A region's appellation list, read once per region while the editor is open.
-  const appellationLists = useRef(new Map<string, AppellationOption[]>());
+  // Bumped by every keystroke and pick: only the newest search may land.
+  const placeRequest = useRef(0);
+  useEffect(
+    () => () => {
+      if (placeTimer.current) clearTimeout(placeTimer.current);
+    },
+    [],
+  );
+  // A region's appellation list, read once per region while the editor is
+  // open. A failed or empty read is not kept (every region has at least its
+  // self-named appellation), so the next search reads it again.
+  const [appellationLists] = useState(() =>
+    createKeyedCache<null, SearchOption[]>({
+      capacity: 50,
+      load: (_client, regionId) => listAppellationsForRegions([regionId]),
+      cacheable: appellationListCacheable,
+    }),
+  );
+  const countryLabelId = useId();
+  const regionLabelId = useId();
+  const appellationLabelId = useId();
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +160,13 @@ export function ArchetypeEditor({
       delete next[key];
       return next;
     });
+  // A new style drops what it cannot hold (an alcohol range off its ladder,
+  // mousse off sparkling), as a new colour drops a hue from another colour.
+  const changeStyle = (st: WineStyle) => {
+    setStyle(st);
+    setSat((s) => satForStyle(s, colour, st));
+    setStatus("idle");
+  };
   const changeColour = (c: WineColour) => {
     setColour(c);
     setSat((s) => {
@@ -166,23 +198,39 @@ export function ArchetypeEditor({
 
   async function searchRegionAppellations(query: string): Promise<AppellationOption[]> {
     if (!regionId || !regionName) return [];
-    let options = appellationLists.current.get(regionId);
-    if (!options) {
-      options = appellationOptions(regionName, await listAppellationsForRegions([regionId]));
-      appellationLists.current.set(regionId, options);
+    try {
+      const list = await appellationLists.load(null, regionId);
+      return filterAppellationOptions(appellationOptions(regionName, list), query);
+    } catch {
+      return [];
     }
-    return filterAppellationOptions(options, query);
+  }
+
+  // Cancels the pending search and drops any reply still on its way.
+  function stopPlaceSearch() {
+    if (placeTimer.current) clearTimeout(placeTimer.current);
+    placeTimer.current = null;
+    placeRequest.current += 1;
   }
 
   function runPlaceSearch(value: string) {
     setPlaceQuery(value);
-    if (placeTimer.current) clearTimeout(placeTimer.current);
+    stopPlaceSearch();
     if (value.trim().length < 2) {
       setPlaceHits([]);
       return;
     }
+    const request = placeRequest.current;
     placeTimer.current = setTimeout(() => {
-      searchPlaces(value).then(setPlaceHits);
+      placeTimer.current = null;
+      searchPlaces(value)
+        .then((hits) => {
+          if (request === placeRequest.current) setPlaceHits(hits);
+        })
+        .catch(() => {
+          // A failed search shows nothing; it never reopens a closed list.
+          if (request === placeRequest.current) setPlaceHits([]);
+        });
     }, 250);
   }
 
@@ -238,7 +286,7 @@ export function ArchetypeEditor({
           <label className={LABEL}>
             Colour
             <select value={colour} onChange={(e) => changeColour(e.target.value as WineColour)} className={FIELD}>
-              {COLOURS.map((c) => (
+              {PROFILE_COLOURS.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -247,8 +295,8 @@ export function ArchetypeEditor({
           </label>
           <label className={LABEL}>
             Style
-            <select value={style} onChange={(e) => setStyle(e.target.value as WineStyle)} className={FIELD}>
-              {STYLES.map((s) => (
+            <select value={style} onChange={(e) => changeStyle(e.target.value as WineStyle)} className={FIELD}>
+              {PROFILE_STYLES.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -262,28 +310,32 @@ export function ArchetypeEditor({
         <p className="text-xs font-medium text-muted-foreground">Where it scores</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className={LABEL}>
-            <span>Country</span>
+            <span id={countryLabelId}>Country</span>
             <ReferenceCombobox
               formFieldName="country_id"
               options={references.countries}
               value={countryId}
               onValueChange={changeCountry}
               placeholder="Pick a country"
+              createLabel="countries"
+              labelledBy={countryLabelId}
             />
           </div>
           <div className={LABEL}>
-            <span>Region</span>
+            <span id={regionLabelId}>Region</span>
             <ReferenceCombobox
               formFieldName="region_id"
               options={regionOptions}
               value={regionId}
               onValueChange={changeRegion}
               placeholder={countryId ? "Pick a region" : "Pick a country first"}
+              createLabel="regions"
+              labelledBy={regionLabelId}
               disabled={!countryId}
             />
           </div>
           <div className={LABEL}>
-            <span>Appellation</span>
+            <span id={appellationLabelId}>Appellation</span>
             <SearchableCombobox
               formFieldName="appellation_id"
               value={appellationId}
@@ -294,6 +346,8 @@ export function ArchetypeEditor({
               }}
               search={searchRegionAppellations}
               placeholder={regionId ? "Just the region, or pick one" : "Pick a region first"}
+              createLabel="appellations"
+              labelledBy={appellationLabelId}
               disabled={!regionId}
             />
           </div>
@@ -313,7 +367,7 @@ export function ArchetypeEditor({
                     type="button"
                     aria-label={`Remove ${designationName.get(id) ?? id}`}
                     onClick={() => setDesignationIds((ids) => ids.filter((x) => x !== id))}
-                    className="text-muted-foreground hover:text-foreground"
+                    className={cn(TAP_ICON, "text-muted-foreground hover:text-foreground")}
                   >
                     <X className="size-3" />
                   </button>
@@ -368,7 +422,7 @@ export function ArchetypeEditor({
                   type="button"
                   aria-label="Remove the map place"
                   onClick={() => setPlace(null)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className={cn(TAP_ICON, "text-muted-foreground hover:text-foreground")}
                 >
                   <X className="size-3" />
                 </button>
@@ -390,6 +444,7 @@ export function ArchetypeEditor({
                       key={h.id}
                       type="button"
                       onClick={() => {
+                        stopPlaceSearch();
                         setPlace({ id: h.id, name: h.name });
                         setPlaceQuery("");
                         setPlaceHits([]);

@@ -10,24 +10,45 @@ import type { EditorReferences } from "./profile-rules";
 export const metadata = { title: "Typical wines · Admin · Blindr" };
 
 type AromaLinkRow = { archetype_id: string; term_id: string; kind: "NOSE" | "PALATE"; signature: boolean };
+type DesignationLinkRow = { archetype_id: string; type_designation_id: string };
+type Page<T> = { data: T[] | null; error: { message: string } | null };
 
 // PostgREST answers at most 1000 rows per request; the training room's first
-// batch alone brings the aroma links close to that, so they are read in pages.
-async function readAromaLinks(supabase: SupabaseClient<Database>): Promise<AromaLinkRow[]> {
-  const rows: AromaLinkRow[] = [];
+// batch alone brings the aroma links close to that, so the link tables are
+// read in pages. A failed read fails the page: the editor saves the lists it
+// was given in full (delete, then insert), so a short list would delete links.
+async function readPaged<T>(what: string, page: (from: number, to: number) => PromiseLike<Page<T>>): Promise<T[]> {
+  const rows: T[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
+    const { data, error } = await page(from, from + 999);
+    if (error) throw new Error(`Typical wines: the ${what} read failed (${error.message})`);
+    const chunk = data ?? [];
+    rows.push(...chunk);
+    if (chunk.length < 1000) return rows;
+  }
+}
+
+function readAromaLinks(supabase: SupabaseClient<Database>): Promise<AromaLinkRow[]> {
+  return readPaged<AromaLinkRow>("aroma", (from, to) =>
+    supabase
       .from("wine_archetype_aromas")
       .select("archetype_id, term_id, kind, signature")
       .order("archetype_id")
       .order("term_id")
       .order("kind")
-      .range(from, from + 999);
-    if (error) throw new Error(`Typical wines: the aroma read failed (${error.message})`);
-    const page = (data ?? []) as AromaLinkRow[];
-    rows.push(...page);
-    if (page.length < 1000) return rows;
-  }
+      .range(from, to),
+  );
+}
+
+function readDesignationLinks(supabase: SupabaseClient<Database>): Promise<DesignationLinkRow[]> {
+  return readPaged<DesignationLinkRow>("designation", (from, to) =>
+    supabase
+      .from("wine_archetype_designations")
+      .select("archetype_id, type_designation_id")
+      .order("archetype_id")
+      .order("type_designation_id")
+      .range(from, to),
+  );
 }
 
 export default async function ArchetypesAdminPage() {
@@ -38,7 +59,7 @@ export default async function ArchetypesAdminPage() {
     { data: placements },
     aromaLinks,
     { data: termRows },
-    { data: designationLinks },
+    designationLinks,
     references,
   ] = await Promise.all([
     supabase
@@ -56,7 +77,7 @@ export default async function ArchetypesAdminPage() {
       .from("wset_aroma_terms")
       .select("id, family, origin, group_name, term, sort_order")
       .order("sort_order"),
-    supabase.from("wine_archetype_designations").select("archetype_id, type_designation_id"),
+    readDesignationLinks(supabase),
     loadByHandReferences(),
   ]);
 
@@ -117,7 +138,7 @@ export default async function ArchetypesAdminPage() {
     regionId: a.region_id,
     appellationId: a.appellation_id,
     appellationName: appellationName.get(a.appellation_id) ?? null,
-    designationIds: (designationLinks ?? [])
+    designationIds: designationLinks
       .filter((d) => d.archetype_id === a.id)
       .map((d) => d.type_designation_id),
     typicalAgeLow: a.typical_age_low,
