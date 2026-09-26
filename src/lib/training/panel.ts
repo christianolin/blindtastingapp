@@ -1,16 +1,17 @@
 // View rules for the room's candidate list and Your call card (training-room
 // spec §3.3, §5.8): the laptop column's top five and Show all, the
 // before-answers country groups, the "Unlikely from what you've said" group,
-// the Your call options and the vintage picker's ids. Pure, relative imports
-// only, so vitest pins it.
+// the Your call options and the vintage picker's groups and ids. Pure,
+// relative imports only, so vitest pins it.
 import {
   VINTAGE_NV_ID,
   VINTAGE_TAWNY_OTHER_ID,
   vintageTawnyId,
   vintageYearId,
+  type PickerGroup,
 } from "../../app/tastings/[id]/play/ladder-types";
 import { foldName } from "../wine-identity/fold";
-import { TRAINING_COPY } from "./copy";
+import { TRAINING_COPY, tawnyAgeOption } from "./copy";
 import type { RankedCandidate, VintageGuess } from "./types";
 
 /** Rows the laptop column shows before Show all. */
@@ -48,6 +49,16 @@ export function panelView(
   return { before, groups, total: ranked.length, hidden: ranked.length - rows.length };
 }
 
+/**
+ * Whether closing a candidate's laptop popover hands focus back to its row:
+ * only on a fine pointer (where it took focus as it opened), and not when a
+ * press or focus elsewhere closed it — focus is already where the taster went.
+ * `reason` is base-ui's close reason ("escape-key", "outside-press", …).
+ */
+export function detailReturnsFocus(reason: string | null, fine: boolean): boolean {
+  return fine && reason !== "outside-press" && reason !== "focus-out";
+}
+
 /** Your call's list without a search: the top five. */
 export const CALL_LIMIT = 5;
 /** Your call's search results. */
@@ -80,6 +91,28 @@ export function yourCallOptions(
     if (picked) return [...top, picked];
   }
   return top;
+}
+
+/** The vintage picker's groups, as the guess ladder's own (guess-ladder.tsx,
+    "vintage"): the years given, NV, then the tawny presets and "Other age…". */
+export function vintagePickerGroups(years: readonly number[], tawny: readonly number[]): PickerGroup[] {
+  return [
+    {
+      heading: TRAINING_COPY.vintageYearGroup,
+      options: years.map((y) => ({ id: vintageYearId(y), name: String(y) })),
+    },
+    {
+      heading: TRAINING_COPY.vintageNvGroup,
+      options: [{ id: VINTAGE_NV_ID, name: TRAINING_COPY.vintageNv, sub: TRAINING_COPY.vintageNvGroup }],
+    },
+    {
+      heading: TRAINING_COPY.vintageTawnyGroup,
+      options: [
+        ...tawny.map((n) => ({ id: vintageTawnyId(n), name: tawnyAgeOption(n) })),
+        { id: VINTAGE_TAWNY_OTHER_ID, name: TRAINING_COPY.vintageOtherAge },
+      ],
+    },
+  ];
 }
 
 /** The guess ladder's vintage picker row a guess sits on ("" = none). */

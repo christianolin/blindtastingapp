@@ -6,7 +6,7 @@
 // the frozen ranking with the real wine's style highlighted and where it
 // stood. Without a reveal: "Not revealed — your note is kept…".
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { Button } from "@/components/ui/button";
 import { NoteModal } from "@/components/wset/note-modal";
@@ -29,6 +29,7 @@ import {
 } from "@/lib/training/result-math";
 import type { TrainingCandidate } from "@/lib/training/types";
 import { cn } from "@/lib/utils";
+import { loadTrainingAttempt } from "./actions";
 
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
 
@@ -37,16 +38,26 @@ export function ResultView({
   pool,
   onAnotherGlass,
   onDone,
+  onGone,
 }: {
   detail: TrainingAttemptDetail;
   /** The room's archetypes: the real wine's own one names a cap's reason. */
   pool: readonly TrainingCandidate[];
   onAnotherGlass: () => void;
   onDone: () => void;
+  /** The attempt no longer exists (its note was deleted from "See the note"). */
+  onGone: () => void;
 }) {
   const router = useRouter();
   const { row, noteId, wineColour } = detail;
   const [noteOpen, setNoteOpen] = useState(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const said = row.picked ? youSaidLine(row.picked.name, row.vintage) : TRAINING_COPY.noPick;
 
   if (row.actual === null) {
@@ -160,6 +171,16 @@ export function ResultView({
             // An edit, or a delete (which takes its attempt with it), reaches the
             // landing's history and the tally.
             router.refresh();
+            // A delete cascades the attempt away: this result would show a
+            // session that no longer exists, so the room goes back to the
+            // landing. A failed read keeps the result.
+            // Only while this result is still on screen: Another glass may
+            // already have moved on.
+            loadTrainingAttempt(row.id)
+              .then((stillThere) => {
+                if (stillThere === null && mounted.current) onGone();
+              })
+              .catch(() => {});
           }}
         />
       ) : null}

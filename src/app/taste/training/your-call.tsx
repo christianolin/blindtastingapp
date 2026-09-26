@@ -6,20 +6,13 @@
 // guess ladder's own vintage picker (years, NV, tawny ages, "Other age…"), then
 // Reveal the bottle / I can't find out. Every value is React state owned by
 // the room (CLAUDE.md: never an uncontrolled input).
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { FieldPicker } from "@/app/tastings/[id]/play/field-picker";
 import { vintageOptions } from "@/app/tastings/[id]/play/guess-write";
 import { VINTAGE_EMPTY } from "@/app/tastings/[id]/play/ladder-copy";
-import {
-  VINTAGE_NV_ID,
-  VINTAGE_TAWNY_OTHER_ID,
-  vintageTawnyId,
-  vintageYearId,
-  type PickerGroup,
-} from "@/app/tastings/[id]/play/ladder-types";
 import {
   TRAINING_COPY,
   lineageLine,
@@ -30,6 +23,7 @@ import {
 import {
   tawnyYearsFromInput,
   vintageFromPickerId,
+  vintagePickerGroups,
   vintagePickerValue,
   yourCallOptions,
 } from "@/lib/training/panel";
@@ -116,22 +110,16 @@ export function YourCall({
   const vintageInputRef = useRef<HTMLInputElement>(null);
   const vintageButtonRef = useRef<HTMLButtonElement>(null);
   const otherInputRef = useRef<HTMLInputElement>(null);
+  // The vintage button is named by its label, then its own text:
+  // "Vintage (optional) 2016".
+  const vintageLabelId = useId();
+  const vintageButtonId = useId();
 
   const options = yourCallOptions(ranked, query, pickedId);
   const otherYears = tawnyYearsFromInput(otherText);
 
   // The ladder's own groups, word for word (guess-ladder.tsx, "vintage").
-  const groups: PickerGroup[] = [
-    { heading: "Year", options: years.map((y) => ({ id: vintageYearId(y), name: String(y) })) },
-    { heading: "Non-vintage", options: [{ id: VINTAGE_NV_ID, name: "NV", sub: "Non-vintage" }] },
-    {
-      heading: "Tawny",
-      options: [
-        ...tawny.map((n) => ({ id: vintageTawnyId(n), name: `${n} years` })),
-        { id: VINTAGE_TAWNY_OTHER_ID, name: "Other age…" },
-      ],
-    },
-  ];
+  const groups = vintagePickerGroups(years, tawny);
 
   function pick(id: string | null, listed: boolean) {
     setNotListed(!listed);
@@ -139,10 +127,15 @@ export function YourCall({
   }
 
   // Back to the vintage button, as the ladder's closePicker returns to its row:
-  // this also takes focus (and the phone keyboard) off the picker's search.
+  // this also takes focus (and the phone keyboard) off the picker's search, or
+  // off the "Other age…" box once it closes.
+  function focusVintageButton() {
+    vintageButtonRef.current?.focus({ preventScroll: true });
+  }
+
   function closeVintage() {
     setVintageOpen(false);
-    vintageButtonRef.current?.focus({ preventScroll: true });
+    focusVintageButton();
   }
 
   function pickVintage(id: string | null) {
@@ -167,6 +160,12 @@ export function YourCall({
     if (otherYears === null) return;
     onVintage({ kind: "TAWNY", years: otherYears });
     setOtherOpen(false);
+    focusVintageButton();
+  }
+
+  function cancelOther() {
+    setOtherOpen(false);
+    focusVintageButton();
   }
 
   return (
@@ -182,36 +181,54 @@ export function YourCall({
         </h2>
       </div>
 
-      <div role="radiogroup" aria-labelledby="your-call-title" className="flex flex-col gap-1.5">
-        {options.map((r) => (
-          <OptionRow
-            key={r.candidate.id}
-            checked={pickedId === r.candidate.id}
-            onSelect={() => pick(r.candidate.id, true)}
-            title={shortName(r.candidate.name)}
-            sub={lineageLine(r.candidate)}
-            pct={percentLabel(r.closeness) || undefined}
-          />
-        ))}
+      {/* On screen the search sits between the candidates and "It's not in
+          the list"; in the DOM it follows the radiogroup (a textbox is not a
+          radio). The group is a subgrid over the three rows and leaves the
+          middle one to the search, which paints over it. */}
+      <div className="grid grid-cols-1 grid-rows-[auto_auto_auto] gap-1.5">
+        <div
+          role="radiogroup"
+          aria-labelledby="your-call-title"
+          className="col-start-1 row-span-3 row-start-1 grid grid-rows-subgrid"
+        >
+          <div className="row-start-1 flex flex-col gap-1.5">
+            {options.map((r) => (
+              <OptionRow
+                key={r.candidate.id}
+                checked={pickedId === r.candidate.id}
+                onSelect={() => pick(r.candidate.id, true)}
+                title={shortName(r.candidate.name)}
+                sub={lineageLine(r.candidate)}
+                pct={percentLabel(r.closeness) || undefined}
+              />
+            ))}
+          </div>
+          <div className="row-start-3">
+            <OptionRow
+              checked={pickedId === null && notListed}
+              onSelect={() => pick(null, false)}
+              title={TRAINING_COPY.notInList}
+            />
+          </div>
+        </div>
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={TRAINING_COPY.somethingElse}
           aria-label={TRAINING_COPY.somethingElse}
-          className="min-h-11 w-full rounded-[10px] border border-border bg-card px-3 text-base text-foreground placeholder:text-muted-foreground md:text-[14px]"
-        />
-        <OptionRow
-          checked={pickedId === null && notListed}
-          onSelect={() => pick(null, false)}
-          title={TRAINING_COPY.notInList}
+          className="col-start-1 row-start-2 min-h-11 w-full rounded-[10px] border border-border bg-card px-3 text-base text-foreground placeholder:text-muted-foreground md:text-[14px]"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[13px] font-semibold">{TRAINING_COPY.vintageOptional}</span>
+        <span id={vintageLabelId} className="text-[13px] font-semibold">
+          {TRAINING_COPY.vintageOptional}
+        </span>
         <button
           ref={vintageButtonRef}
+          id={vintageButtonId}
+          aria-labelledby={`${vintageLabelId} ${vintageButtonId}`}
           type="button"
           onClick={() => {
             setVintageOpen(true);
@@ -236,7 +253,7 @@ export function YourCall({
             otherOpen ? "max-h-40 opacity-100" : "pointer-events-none max-h-0 overflow-hidden border-0 px-0 py-0 opacity-0",
           )}
         >
-          <span className="text-[11px] text-muted-foreground">Tawny age (years)</span>
+          <span className="text-[11px] text-muted-foreground">{TRAINING_COPY.tawnyAgeLabel}</span>
           <div className="flex items-center gap-[10px]">
             <input
               ref={otherInputRef}
@@ -252,17 +269,18 @@ export function YourCall({
                   confirmOther();
                 }
               }}
-              placeholder="e.g. 25"
+              placeholder={TRAINING_COPY.tawnyAgePlaceholder}
+              aria-label={TRAINING_COPY.tawnyAgeLabel}
               tabIndex={otherOpen ? undefined : -1}
               className="min-h-11 w-24 rounded-[10px] border border-border bg-card px-3 text-[15.5px] text-foreground"
             />
             <button
               type="button"
               tabIndex={otherOpen ? undefined : -1}
-              onClick={() => setOtherOpen(false)}
+              onClick={cancelOther}
               className="flex min-h-11 items-center px-2 text-[13px] font-semibold text-muted-foreground"
             >
-              Cancel
+              {TRAINING_COPY.tawnyAgeCancel}
             </button>
             <button
               type="button"
@@ -271,7 +289,7 @@ export function YourCall({
               onClick={confirmOther}
               className="ml-auto flex min-h-11 items-center justify-center rounded-[10px] bg-primary px-[16px] text-[13.5px] font-semibold text-primary-foreground disabled:opacity-50"
             >
-              Set age
+              {TRAINING_COPY.tawnyAgeSet}
             </button>
           </div>
         </div>

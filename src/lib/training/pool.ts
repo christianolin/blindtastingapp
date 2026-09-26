@@ -130,7 +130,8 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
     readByIds("type designations", designations.map((d) => d.type_designation_id), (chunk) =>
       supabase.from("type_designations").select("id, name, sort_order").in("id", chunk),
     ),
-    // Only non-null place ids: most batch-1 archetypes have no map place (D9).
+    // Only non-null place ids: a map place is optional (D9) — in batch 1, 69
+    // of the 87 archetypes have one and 18 do not.
     readByIds("map places", ids((a) => a.wine_place_id), (chunk) =>
       supabase.from("wine_places").select("id, canonical_key").in("id", chunk),
     ),

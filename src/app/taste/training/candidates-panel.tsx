@@ -3,13 +3,16 @@
 // "What it could be" — the laptop column (lg+, spec §3.3): the top five
 // candidates, Show all N in place, the capped ones last under "Unlikely from
 // what you've said". A row opens the candidate's profile in a popover anchored
-// to it. CandidateRow and CandidateGroups are shared with the phone sheet.
+// to it; on a fine pointer focus moves into the popover and, closed with
+// Escape, comes back to the row (the Popover touch rule: never on touch).
+// CandidateRow and CandidateGroups are shared with the phone sheet.
 // Tokens only: the bar is --primary, a capped row --muted-foreground.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Eyebrow } from "@/components/overview/eyebrow";
+import { finePointer } from "@/lib/fine-pointer";
 import { TRAINING_COPY, lineageLine, percentLabel, shortName, showAllLine } from "@/lib/training/copy";
-import { panelView, type PanelView } from "@/lib/training/panel";
+import { detailReturnsFocus, panelView, type PanelView } from "@/lib/training/panel";
 import type { RankedCandidate } from "@/lib/training/types";
 import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
@@ -21,15 +24,21 @@ const TAP = "min-h-11 md:pointer-fine:min-h-0";
 export function CandidateRow({
   r,
   onOpen,
+  expanded,
 }: {
   r: RankedCandidate;
   onOpen: (anchor: HTMLElement) => void;
+  /** Set where the row opens a popover (the laptop column): whether its
+      popover is the open one. The phone sheet swaps its own content instead. */
+  expanded?: boolean;
 }) {
   const capped = r.capped !== null;
   return (
     <button
       type="button"
       onClick={(e) => onOpen(e.currentTarget)}
+      aria-haspopup={expanded === undefined ? undefined : "dialog"}
+      aria-expanded={expanded}
       className={cn(
         "flex w-full flex-col gap-1 rounded-[10px] px-3 py-2.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring",
         TAP,
@@ -69,9 +78,12 @@ export function CandidateRow({
 export function CandidateGroups({
   view,
   onOpen,
+  openId,
 }: {
   view: PanelView;
   onOpen: (id: string, anchor: HTMLElement) => void;
+  /** The laptop column only: the candidate whose popover is open (null: none). */
+  openId?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -85,7 +97,11 @@ export function CandidateGroups({
           <ul className="flex flex-col">
             {group.rows.map((r) => (
               <li key={r.candidate.id}>
-                <CandidateRow r={r} onOpen={(anchor) => onOpen(r.candidate.id, anchor)} />
+                <CandidateRow
+                  r={r}
+                  onOpen={(anchor) => onOpen(r.candidate.id, anchor)}
+                  expanded={openId === undefined ? undefined : openId === r.candidate.id}
+                />
               </li>
             ))}
           </ul>
@@ -100,6 +116,11 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
   const [detail, setDetail] = useState<{ id: string; anchor: HTMLElement } | null>(null);
   const view = panelView(ranked, expanded);
   const open = detail ? (ranked.find((r) => r.candidate.id === detail.id) ?? null) : null;
+  const popupRef = useRef<HTMLDivElement>(null);
+  // The row the open popover belongs to, and why it last closed: kept outside
+  // `detail`, which is already null by the time the focus goes back.
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const closeReason = useRef<string | null>(null);
 
   return (
     <section
@@ -112,7 +133,15 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
       {view.before ? (
         <p className="px-3 text-[12.5px] text-muted-foreground">{TRAINING_COPY.beforeAnswers}</p>
       ) : null}
-      <CandidateGroups view={view} onOpen={(id, anchor) => setDetail({ id, anchor })} />
+      <CandidateGroups
+        view={view}
+        openId={open ? open.candidate.id : null}
+        onOpen={(id, anchor) => {
+          anchorRef.current = anchor;
+          closeReason.current = null;
+          setDetail({ id, anchor });
+        }}
+      />
       {view.hidden > 0 ? (
         <button
           type="button"
@@ -128,8 +157,10 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
 
       <PopoverPrimitive.Root
         open={open !== null}
-        onOpenChange={(next) => {
-          if (!next) setDetail(null);
+        onOpenChange={(next, details) => {
+          if (next) return;
+          closeReason.current = details.reason;
+          setDetail(null);
         }}
         modal={false}
       >
@@ -144,7 +175,12 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
             className="z-50"
           >
             <PopoverPrimitive.Popup
-              initialFocus={false}
+              ref={popupRef}
+              aria-label={open ? open.candidate.name : undefined}
+              initialFocus={() => (finePointer() ? popupRef.current : false)}
+              finalFocus={() =>
+                detailReturnsFocus(closeReason.current, finePointer()) ? (anchorRef.current ?? false) : false
+              }
               className="max-h-[80vh] w-[560px] overflow-y-auto overscroll-contain rounded-2xl bg-background p-4 shadow-lg ring-1 ring-foreground/10 outline-hidden"
             >
               {open ? <ArchetypeDetail candidate={open.candidate} note={note} /> : null}

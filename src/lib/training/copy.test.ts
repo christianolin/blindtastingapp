@@ -17,6 +17,7 @@ import {
   resultMark,
   resultTotalLine,
   scaleLossLine,
+  sessionsLine,
   sheetTitle,
   shortDate,
   shortName,
@@ -25,6 +26,7 @@ import {
   stripLine,
   styleVerdictLine,
   tallyLine,
+  tawnyAgeOption,
   vintageGuessLabel,
   youSaidLine,
 } from "./copy";
@@ -41,6 +43,7 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
     expect(TRAINING_COPY).toEqual({
       navLabel: "Training Room",
       previewPill: "Preview",
+      loading: "Setting up the training room…",
       eyebrow: "Training room · Preview",
       title: "Taste blind. Then find out.",
       promise:
@@ -54,6 +57,8 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       beforeAnswers: "Start describing the wine",
       nothingFits: "Nothing fits yet — check colour and bubbles",
       unlikelyGroup: "Unlikely from what you've said",
+      back: "Back",
+      close: "Close",
       higherThanTypical: "higher than typical",
       lowerThanTypical: "lower than typical",
       colourDarker: "Colour darker than typical",
@@ -68,6 +73,15 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       somethingElse: "Something else…",
       notInList: "It's not in the list",
       vintageOptional: "Vintage (optional)",
+      vintageYearGroup: "Year",
+      vintageNvGroup: "Non-vintage",
+      vintageNv: "NV",
+      vintageTawnyGroup: "Tawny",
+      vintageOtherAge: "Other age…",
+      tawnyAgeLabel: "Tawny age (years)",
+      tawnyAgePlaceholder: "e.g. 25",
+      tawnyAgeCancel: "Cancel",
+      tawnyAgeSet: "Set age",
       revealBottle: "Reveal the bottle",
       cantFindOut: "I can't find out",
       revealEyebrow: "Reveal the bottle",
@@ -237,6 +251,21 @@ describe("tallyLine", () => {
   });
 });
 
+describe("sessionsLine", () => {
+  const none = { scored: 0, grapeHits: 0, appellationHits: 0 };
+  it("says No sessions yet before any attempt", () => {
+    expect(sessionsLine(false, none)).toBe("No sessions yet");
+  });
+  it("is empty with attempts but nothing scored (the landing renders no line)", () => {
+    expect(sessionsLine(true, none)).toBe("");
+  });
+  it("is the tally once something is scored", () => {
+    expect(sessionsLine(true, { scored: 9, grapeHits: 6, appellationHits: 4 })).toBe(
+      "6 of 9 right on the grape · 4 on the appellation",
+    );
+  });
+});
+
 describe("percentLabel", () => {
   it("writes a space before the sign, as §9 does", () => {
     expect(percentLabel(91)).toBe("91 %");
@@ -253,6 +282,7 @@ describe("vintage and 'You said'", () => {
     expect(vintageGuessLabel({ kind: "YEAR", year: 2016 })).toBe("2016");
     expect(vintageGuessLabel({ kind: "NV" })).toBe("NV");
     expect(vintageGuessLabel({ kind: "TAWNY", years: 20 })).toBe("20 years tawny");
+    expect(tawnyAgeOption(20)).toBe("20 years");
   });
   it("You said {shortName}{, vintage}", () => {
     expect(youSaidLine("A typical Pauillac", null)).toBe("You said Pauillac");

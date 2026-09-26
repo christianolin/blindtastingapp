@@ -79,8 +79,9 @@ const SECTION_ORDER: readonly SectionId[] = ["appearance", "nose", "palate", "co
 // the modal resets its own scroll instead.
 const SECTION_SCROLL_MT = "scroll-mt-[190px] sm:scroll-mt-[160px]";
 // With a `belowBar` strip (the training room's 44px "Top match" line) the
-// sticky bar is 44px taller.
-const SECTION_SCROLL_MT_BELOW_BAR = "scroll-mt-[234px] sm:scroll-mt-[204px]";
+// sticky bar is 44px taller — below lg only: the strip is hidden from lg up,
+// where the margin falls back to SECTION_SCROLL_MT's own 160px.
+const SECTION_SCROLL_MT_BELOW_BAR = "scroll-mt-[234px] sm:scroll-mt-[204px] lg:scroll-mt-[160px]";
 
 // The bordeaux primary button, as on every other 2026-09 surface: radius 9–11,
 // the ink under-shadow, the one allowed hover literal.
@@ -271,7 +272,9 @@ export function WsetSheet({
       its on-device draft). Also called once with the initial state. */
   onChange?: (state: WsetNoteState) => void;
   /** Rendered inside the sticky bar, under the section tabs, so it sticks
-      with them. The section scroll margin allows 44px for it. */
+      with them. The slot must be exactly 44px tall below lg and hidden
+      (`lg:hidden`) from lg up: the section scroll margin allows 44px for it
+      below lg and nothing from lg up. */
   belowBar?: ReactNode;
   /** The lg+ column beside the sections. Omitted: the live tasting note.
       `null`: no column at all — the sheet renders single-column and the
@@ -666,7 +669,8 @@ export function WsetSheet({
         </div>
         {/* Inside the sticky bar, so it sticks with the tabs (the training
             room's "Top match" strip below lg). Rendered bare: spacing is the
-            caller's; sectionScrollMt allows its 44px. */}
+            caller's, inside its 44px; sectionScrollMt allows those 44px
+            below lg only. */}
         {belowBar}
       </div>
 

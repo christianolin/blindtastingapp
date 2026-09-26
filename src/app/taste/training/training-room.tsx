@@ -8,17 +8,28 @@
 // reads the draft back through useSyncExternalStore, so Continue survives a
 // reload; a finish or Discard in another tab returns a session here to the
 // landing (the `storage` event). Matching runs here, on the device, on every
-// change (D6).
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+// change (D6). Every switch between the three starts at the top of the app
+// shell's content column, the page's scroll container (the window never
+// scrolls in this app).
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAddWine } from "@/components/add-wine-context";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { Button } from "@/components/ui/button";
 import { WsetSheet } from "@/components/wset/wset-sheet";
 import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
+import { scrollContainerToTop } from "@/lib/scroll-container";
 import type { HistoryPage, TrainingAttemptDetail, TrainingTally } from "@/lib/training/action-types";
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
-import { TRAINING_COPY, clockTime, continueLine, sheetTitle, tallyLine } from "@/lib/training/copy";
+import { TRAINING_COPY, clockTime, continueLine, sessionsLine, sheetTitle } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
 import { rankCandidates, snapshotRanking } from "@/lib/training/match";
 import { anotherGlassPlan } from "@/lib/training/result-math";
@@ -79,6 +90,11 @@ export function TrainingRoom({
   const [error, setError] = useState<string | null>(null);
   const [armedAt, setArmedAt] = useState<number | null>(null);
   const [result, setResult] = useState<TrainingAttemptDetail | null>(null);
+  // One wrapper stays mounted across landing, session and result, so there is
+  // always an element to walk up from to the scroll container.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLButtonElement>(null);
+  const toTop = () => scrollContainerToTop(rootRef.current);
 
   // The stored draft as a string, so the snapshot compares by value. The
   // times it shows ("started 20:14") are only ever rendered on the client:
@@ -152,8 +168,17 @@ export function TrainingRoom({
   function showResult(detail: TrainingAttemptDetail | null) {
     setResult(detail);
     setView(detail ? "result" : "landing");
-    window.scrollTo({ top: 0 });
+    toTop();
     router.refresh();
+  }
+
+  // The result's own ways back to the landing: Done, and a note deleted from
+  // "See the note" (its attempt goes with it — the refresh drops the row).
+  function backToLanding(refresh: boolean) {
+    setResult(null);
+    setView("landing");
+    toTop();
+    if (refresh) router.refresh();
   }
 
   function start() {
@@ -170,7 +195,7 @@ export function TrainingRoom({
       vintage: null,
     });
     setView("session");
-    window.scrollTo({ top: 0 });
+    toTop();
   }
 
   function continueSession() {
@@ -178,7 +203,7 @@ export function TrainingRoom({
     setError(null);
     setSession(stored);
     setView("session");
-    window.scrollTo({ top: 0 });
+    toTop();
   }
 
   function discard() {
@@ -194,6 +219,7 @@ export function TrainingRoom({
   function leave() {
     setSheetOpen(false);
     setView("landing");
+    toTop();
   }
 
   async function finish(draft: TrainingDraft, snapshot: RankingSnapshot, actualCatalogWineId: string | null) {
@@ -256,27 +282,26 @@ export function TrainingRoom({
       start();
       return;
     }
-    setResult(null);
-    setView("landing");
-    window.scrollTo({ top: 0 });
+    backToLanding(false);
   }
 
+  // Under "Your sessions": "No sessions yet", the tally, or — with rows but
+  // nothing scored yet — no paragraph at all (an empty one still takes a gap).
+  const tallyText = sessionsLine(history.rows.length > 0, tally);
+
+  let body: ReactNode;
   if (view === "result" && result) {
-    return (
+    body = (
       <ResultView
         detail={result}
         pool={candidates}
         onAnotherGlass={anotherGlass}
-        onDone={() => {
-          setResult(null);
-          setView("landing");
-        }}
+        onDone={() => backToLanding(false)}
+        onGone={() => backToLanding(true)}
       />
     );
-  }
-
-  if (view === "session" && session) {
-    return (
+  } else if (view === "session" && session) {
+    body = (
       <>
         <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="flex min-w-0 flex-col gap-6">
@@ -288,7 +313,14 @@ export function TrainingRoom({
               initial={session.note}
               onChange={(next: WsetNoteState) => patchSession({ note: next })}
               footerAction={{ label: TRAINING_COPY.footerAction, onClick: scrollToCall }}
-              belowBar={<CandidatesStrip ranked={ranked} onOpen={() => setSheetOpen(true)} />}
+              belowBar={
+                <CandidatesStrip
+                  ref={stripRef}
+                  ranked={ranked}
+                  open={sheetOpen}
+                  onOpen={() => setSheetOpen(true)}
+                />
+              }
               aside={null}
               onClose={leave}
               bubbles={{ value: session.extras.bubbles, onChange: (v) => patchExtras({ bubbles: v }) }}
@@ -310,46 +342,58 @@ export function TrainingRoom({
             <CandidatesPanel ranked={ranked} note={session.note} />
           </aside>
         </div>
-        <CandidatesSheet open={sheetOpen} onOpenChange={setSheetOpen} ranked={ranked} note={session.note} />
+        <CandidatesSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          ranked={ranked}
+          note={session.note}
+          returnFocusRef={stripRef}
+        />
       </>
+    );
+  } else {
+    body = (
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-8">
+        <header className="flex flex-col gap-2">
+          <Eyebrow>{TRAINING_COPY.eyebrow}</Eyebrow>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">{TRAINING_COPY.title}</h1>
+          <p className="text-[14.5px] leading-relaxed">{TRAINING_COPY.promise}</p>
+          <p className="text-[13px] text-muted-foreground">{coverage}</p>
+        </header>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {stored ? (
+            <>
+              <Button className={cn(TAP, "px-4")} onClick={continueSession}>
+                {continueLine(clockTime(stored.startedAt))}
+              </Button>
+              <Button variant="ghost" className={TAP} onClick={discard}>
+                {discardState === "armed" ? TRAINING_COPY.discardArmed : TRAINING_COPY.discard}
+              </Button>
+            </>
+          ) : candidates.length > 0 ? (
+            <Button className={cn(TAP, "px-4")} onClick={start}>
+              {TRAINING_COPY.start}
+            </Button>
+          ) : null}
+        </div>
+
+        <section aria-labelledby="training-sessions" className="flex flex-col gap-3">
+          <h2 id="training-sessions" className="font-heading text-[22px] font-semibold">
+            {TRAINING_COPY.yourSessions}
+          </h2>
+          {tallyText ? <p className="text-[13px] text-muted-foreground">{tallyText}</p> : null}
+          <HistoryList key={history.rows[0]?.id ?? "empty"} initial={history} onRevealed={showResult} />
+        </section>
+      </div>
     );
   }
 
+  // display: contents — the wrapper adds no box, so each view lays out in the
+  // page exactly as it did as the component's root.
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <Eyebrow>{TRAINING_COPY.eyebrow}</Eyebrow>
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">{TRAINING_COPY.title}</h1>
-        <p className="text-[14.5px] leading-relaxed">{TRAINING_COPY.promise}</p>
-        <p className="text-[13px] text-muted-foreground">{coverage}</p>
-      </header>
-
-      <div className="flex flex-wrap items-center gap-3">
-        {stored ? (
-          <>
-            <Button className={cn(TAP, "px-4")} onClick={continueSession}>
-              {continueLine(clockTime(stored.startedAt))}
-            </Button>
-            <Button variant="ghost" className={TAP} onClick={discard}>
-              {discardState === "armed" ? TRAINING_COPY.discardArmed : TRAINING_COPY.discard}
-            </Button>
-          </>
-        ) : candidates.length > 0 ? (
-          <Button className={cn(TAP, "px-4")} onClick={start}>
-            {TRAINING_COPY.start}
-          </Button>
-        ) : null}
-      </div>
-
-      <section aria-labelledby="training-sessions" className="flex flex-col gap-3">
-        <h2 id="training-sessions" className="font-heading text-[22px] font-semibold">
-          {TRAINING_COPY.yourSessions}
-        </h2>
-        <p className="text-[13px] text-muted-foreground">
-          {history.rows.length === 0 ? TRAINING_COPY.noSessions : tallyLine(tally)}
-        </p>
-        <HistoryList key={history.rows[0]?.id ?? "empty"} initial={history} onRevealed={showResult} />
-      </section>
+    <div ref={rootRef} className="contents">
+      {body}
     </div>
   );
 }

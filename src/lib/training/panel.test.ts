@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { TRAINING_COPY } from "./copy";
 import {
   PANEL_LIMIT,
+  detailReturnsFocus,
   isBeforeAnswers,
   panelView,
   tawnyYearsFromInput,
   vintageFromPickerId,
+  vintagePickerGroups,
   vintagePickerValue,
   yourCallOptions,
 } from "./panel";
@@ -105,6 +107,19 @@ describe("panelView", () => {
   });
 });
 
+describe("detailReturnsFocus", () => {
+  it("hands focus back to the row on a fine pointer, for Escape and the like", () => {
+    expect(detailReturnsFocus("escape-key", true)).toBe(true);
+    expect(detailReturnsFocus("close-press", true)).toBe(true);
+    expect(detailReturnsFocus(null, true)).toBe(true);
+  });
+  it("never on touch, nor when a press or focus elsewhere closed it", () => {
+    expect(detailReturnsFocus("escape-key", false)).toBe(false);
+    expect(detailReturnsFocus("outside-press", true)).toBe(false);
+    expect(detailReturnsFocus("focus-out", true)).toBe(false);
+  });
+});
+
 describe("yourCallOptions", () => {
   it("lists the top five and keeps a pick from further down", () => {
     expect(ids(yourCallOptions(SCORED, "", null))).toEqual(["1", "2", "3", "4", "5"]);
@@ -146,5 +161,26 @@ describe("vintage picker mapping", () => {
     expect(tawnyYearsFromInput("0")).toBeNull();
     expect(tawnyYearsFromInput("101")).toBeNull();
     expect(tawnyYearsFromInput("2.5")).toBeNull();
+  });
+
+  it("groups the picker as the guess ladder does, in its words", () => {
+    expect(vintagePickerGroups([2027, 2026], [10, 20])).toEqual([
+      {
+        heading: "Year",
+        options: [
+          { id: "year:2027", name: "2027" },
+          { id: "year:2026", name: "2026" },
+        ],
+      },
+      { heading: "Non-vintage", options: [{ id: "nv", name: "NV", sub: "Non-vintage" }] },
+      {
+        heading: "Tawny",
+        options: [
+          { id: "tawny:10", name: "10 years" },
+          { id: "tawny:20", name: "20 years" },
+          { id: "tawny:other", name: "Other age…" },
+        ],
+      },
+    ]);
   });
 });

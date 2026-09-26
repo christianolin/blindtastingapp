@@ -22,6 +22,7 @@ export const TRAINING_COPY = {
   navLabel: "Training Room",
   previewPill: "Preview",
   // landing
+  loading: "Setting up the training room…",
   eyebrow: "Training room · Preview",
   title: "Taste blind. Then find out.",
   promise:
@@ -36,6 +37,9 @@ export const TRAINING_COPY = {
   beforeAnswers: "Start describing the wine",
   nothingFits: "Nothing fits yet — check colour and bubbles",
   unlikelyGroup: "Unlikely from what you've said",
+  // the phone candidates sheet's header buttons (accessible names)
+  back: "Back",
+  close: "Close",
   // explanation tails: "{Scale} higher than typical" / "{Scale} lower than typical"
   higherThanTypical: "higher than typical",
   lowerThanTypical: "lower than typical",
@@ -54,6 +58,16 @@ export const TRAINING_COPY = {
   somethingElse: "Something else…",
   notInList: "It's not in the list",
   vintageOptional: "Vintage (optional)",
+  // the vintage picker, word for word the guess ladder's (guess-ladder.tsx)
+  vintageYearGroup: "Year",
+  vintageNvGroup: "Non-vintage",
+  vintageNv: "NV",
+  vintageTawnyGroup: "Tawny",
+  vintageOtherAge: "Other age…",
+  tawnyAgeLabel: "Tawny age (years)",
+  tawnyAgePlaceholder: "e.g. 25",
+  tawnyAgeCancel: "Cancel",
+  tawnyAgeSet: "Set age",
   revealBottle: "Reveal the bottle",
   cantFindOut: "I can't find out",
   // reveal sheet (the add-wine note matrix, reveal variant)
@@ -213,6 +227,15 @@ export function tallyLine(t: { scored: number; grapeHits: number; appellationHit
   return `${t.grapeHits} of ${t.scored} right on the grape · ${t.appellationHits} on the appellation`;
 }
 
+/** The line under "Your sessions": "No sessions yet" before any attempt, then
+    the tally — empty (the landing then renders no line) until one is scored. */
+export function sessionsLine(
+  hasRows: boolean,
+  t: { scored: number; grapeHits: number; appellationHits: number },
+): string {
+  return hasRows ? tallyLine(t) : TRAINING_COPY.noSessions;
+}
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function dateParts(iso: string, timeZone: string | undefined) {
@@ -267,8 +290,13 @@ export function percentLabel(n: number | null): string {
 export function vintageGuessLabel(v: VintageGuess): string | null {
   if (v === null) return null;
   if (v.kind === "YEAR") return String(v.year);
-  if (v.kind === "NV") return "NV";
+  if (v.kind === "NV") return TRAINING_COPY.vintageNv;
   return `${v.years} years tawny`;
+}
+
+/** A tawny age in the vintage picker: "20 years" (the guess ladder's words). */
+export function tawnyAgeOption(years: number): string {
+  return `${years} years`;
 }
 
 /** "You said {shortName}{, vintage}" */

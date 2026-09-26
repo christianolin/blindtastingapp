@@ -34,6 +34,7 @@ import {
   tourSteps,
   type TourStepId,
 } from "@/lib/first-run/tour";
+import { finePointer } from "@/lib/fine-pointer";
 import { cn } from "@/lib/utils";
 
 // The sidebar's pillar icons where a step is a pillar (app-sidebar.tsx ICONS).
@@ -59,10 +60,6 @@ const PHONE =
 // md and up: a centred 480 px card.
 const CARD =
   "md:top-1/2 md:bottom-auto md:left-1/2 md:max-h-[80vh] md:w-[480px] md:max-w-[calc(100vw-2rem)] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:ring-1 md:ring-foreground/10 md:shadow-[0_30px_60px_-28px_color-mix(in_srgb,var(--foreground)_50%,transparent)]";
-
-function finePointer(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia("(pointer: fine)").matches;
-}
 
 export function TourSheet({
   profileBare,
