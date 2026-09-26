@@ -934,9 +934,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   or not" is client state (`fresh` / `dismissed` / `replay`) over
   `usePathname()` (`tourShouldOpen`), opened after hydration, not the server
   prop alone. Never on `/auth/*`, `/login*`, `/signup*`, `/invite/*`, `/j/*`,
-  `/tastings` and below, or `/profile/edit` (`tourVisibleOn`): a self-serve
-  newcomer sees it on `/taste`, an invited one on `/overview`, a join-link
-  newcomer on their first page after the tasting. Skip tour, Done, Later,
+  `/tastings` and below, or `/profile/edit` (`tourVisibleOn`): every sign-in
+  without a destination of its own now lands on `/overview`, so a self-serve
+  or invited newcomer sees it there, a join-link newcomer on their first page
+  after the tasting. Skip tour, Done, Later,
   "Set up my profile", the X and Escape all dismiss through the
   `"use server"` `markTourSeen()` (`src/lib/first-run/actions.ts`); an
   outside tap does not (`disablePointerDismissal`); a failed write keeps it
@@ -2052,7 +2053,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   add path's own INSERT (`tasting-wine-writes.ts`'s `insertGlassRow`, pinned
   by `wines_pin_adder`) and its undo DELETE.
 - **Overview / About / Your numbers (2026-09 redesign).** `/overview` is the
-  logged-in landing page (`/` redirects there): live/next-up banner, then
+  logged-in landing page (`/` redirects there, and every sign-in, email link
+  or magic link without a `next` of its own lands there through
+  `src/lib/safe-next.ts`'s `DEFAULT_NEXT` — owner, 2026-09-26; it used to be
+  `/taste`): live/next-up banner, then
   three equal subject cards in a fixed order — Blind tastings → Your ratings
   → Your cellar — then the "More than a score" photo band into `/about`.
   `/taste` stays the Taste pillar page but is only the Start-tasting menu +

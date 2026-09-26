@@ -114,10 +114,10 @@ describe("signInNext", () => {
     expect(signInNext("/j/ABCDEFGHJK")).toBe("/j/ABCDEFGHJK");
   });
 
-  it("falls back to /taste", () => {
-    expect(signInNext(null)).toBe("/taste");
-    expect(signInNext("")).toBe("/taste");
-    expect(signInNext("https://evil.example")).toBe("/taste");
+  it("falls back to /overview", () => {
+    expect(signInNext(null)).toBe("/overview");
+    expect(signInNext("")).toBe("/overview");
+    expect(signInNext("https://evil.example")).toBe("/overview");
   });
 
   // The review's repro: /login?next=%2F%09%2Fevil.example, then a valid
@@ -125,7 +125,7 @@ describe("signInNext", () => {
   it("does not follow a tab-split path off the site", () => {
     const next = new URL("/login?next=%2F%09%2Fevil.example", ORIGIN).searchParams.get("next");
     expect(next).toBe("/\t/evil.example");
-    expect(signInNext(next)).toBe("/taste");
+    expect(signInNext(next)).toBe("/overview");
   });
 
   // The same path relayed through the password step: the middleware's href
@@ -136,7 +136,7 @@ describe("signInNext", () => {
     const done = passwordNext(new URL(href, ORIGIN).searchParams.get("next"));
     expect(done).toBe("/login?next=%2F%09%2Fevil.example");
     const loginNext = new URL(done, ORIGIN).searchParams.get("next");
-    expect(signInNext(loginNext)).toBe("/taste");
+    expect(signInNext(loginNext)).toBe("/overview");
   });
 });
 

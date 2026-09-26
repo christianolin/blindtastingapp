@@ -76,9 +76,9 @@ describe("authRedirect", () => {
     expect(authRedirect(ORIGIN, "/cellar")).toBe(`${ORIGIN}/cellar`);
   });
 
-  it("falls back to /taste when there is no destination", () => {
-    expect(authRedirect(ORIGIN, null)).toBe(`${ORIGIN}/taste`);
-    expect(authRedirect(ORIGIN, "")).toBe(`${ORIGIN}/taste`);
+  it("falls back to /overview when there is no destination", () => {
+    expect(authRedirect(ORIGIN, null)).toBe(`${ORIGIN}/overview`);
+    expect(authRedirect(ORIGIN, "")).toBe(`${ORIGIN}/overview`);
   });
 
   // The assertion that matters: not "the string looks right" but "the browser

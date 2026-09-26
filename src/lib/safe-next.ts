@@ -14,8 +14,9 @@ export function safeNext(raw: string | null | undefined): string | null {
   return v;
 }
 
-/** Where sign-in lands when the link carried no destination of its own. */
-export const DEFAULT_NEXT = "/taste";
+/** Where sign-in lands when the link carried no destination of its own: the
+    Overview, the logged-in front page (owner, 2026-09-26; it was /taste). */
+export const DEFAULT_NEXT = "/overview";
 
 /**
  * The absolute URL an auth exchange redirects to. `${origin}${next}` is not a

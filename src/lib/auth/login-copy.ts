@@ -36,7 +36,7 @@ export function sameSiteNext(raw: unknown): string | null {
   return safe;
 }
 
-/** Where a successful sign-in redirects: `next` if it is same-site, else /taste. */
+/** Where a successful sign-in redirects: `next` if it is same-site, else /overview. */
 export function signInNext(raw: unknown): string {
   return sameSiteNext(raw) ?? DEFAULT_NEXT;
 }
