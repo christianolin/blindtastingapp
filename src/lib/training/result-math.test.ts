@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { emptyNoteState } from "../wset/note-state";
+import { clearDraft, readDraft, writeDraft } from "./draft";
 import {
   RESULT_ROW_ORDER,
+  anotherGlassPlan,
   mergeHistoryRows,
   pointedTopFive,
   styleVerdictContext,
   styleVerdictInput,
   verdictRows,
 } from "./result-math";
-import type { AttemptRow, RankingSnapshot } from "./types";
+import type { AttemptRow, RankingSnapshot, TrainingDraft } from "./types";
 
 const SNAPSHOT: RankingSnapshot = [
   { archetypeId: "a3", name: "A typical Margaux", closeness: 70, rank: 3, capped: null },
@@ -105,6 +108,45 @@ describe("styleVerdictContext", () => {
 
   it("is null when neither the archetype nor the wine's colour is known", () => {
     expect(styleVerdictContext("RUBY", null, null)).toBeNull();
+  });
+});
+
+describe("anotherGlassPlan", () => {
+  const USER = "11111111-2222-4333-8444-555555555555";
+  // An unfinished session the taster left with ✕ (the draft stays, spec §3.3).
+  const LEFT: TrainingDraft = {
+    userId: USER,
+    sessionKey: "0f8fad5b-d9cb-469f-a165-70867728950e",
+    startedAt: "2026-09-24T18:14:00.000Z",
+    note: { ...emptyNoteState(), tannin: "HIGH", noseTermIds: ["t1"] },
+    extras: { bubbles: false, fortified: null },
+    pickedArchetypeId: "arch-margaux",
+    vintage: { kind: "YEAR", year: 2016 },
+  };
+
+  function fakeStorage() {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    };
+    return () => storage;
+  }
+
+  it("starts a new session once the finished session's own draft is cleared", () => {
+    const get = fakeStorage();
+    writeDraft(LEFT, get);
+    clearDraft(USER, get); // finish() clears it before the result opens
+    expect(anotherGlassPlan(readDraft(USER, get))).toBe("start");
+  });
+
+  it("never replaces another session's draft: after a Reveal now it goes to the landing", () => {
+    // ✕ out of a session, then Reveal now on an older attempt: its result's
+    // Another glass must not mint a session over the one stored draft (D13).
+    const get = fakeStorage();
+    writeDraft(LEFT, get);
+    expect(anotherGlassPlan(readDraft(USER, get))).toBe("landing");
   });
 });
 

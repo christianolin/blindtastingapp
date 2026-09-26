@@ -21,6 +21,7 @@ import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
 import { TRAINING_COPY, clockTime, continueLine, sheetTitle, tallyLine } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
 import { rankCandidates, snapshotRanking } from "@/lib/training/match";
+import { anotherGlassPlan } from "@/lib/training/result-math";
 import type {
   AromaLexicon,
   MatchExtras,
@@ -247,12 +248,25 @@ export function TrainingRoom({
     void finish(session, snapshotRanking(ranked), null);
   }
 
+  // Another glass never overwrites a stored draft (result-math's
+  // anotherGlassPlan): after a Reveal now, a session left with ✕ may still be
+  // stored, and the landing's Continue / Discard decides what happens to it.
+  function anotherGlass() {
+    if (anotherGlassPlan(stored) === "start") {
+      start();
+      return;
+    }
+    setResult(null);
+    setView("landing");
+    window.scrollTo({ top: 0 });
+  }
+
   if (view === "result" && result) {
     return (
       <ResultView
         detail={result}
         pool={candidates}
-        onAnotherGlass={start}
+        onAnotherGlass={anotherGlass}
         onDone={() => {
           setResult(null);
           setView("landing");

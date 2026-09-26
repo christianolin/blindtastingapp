@@ -1,11 +1,12 @@
 // View rules for the training room's result and history (training-room spec
 // §3.5, §3.6): the seven verdict rows, the top five of the frozen ranking,
-// where the real wine's style stood in it, and the history list's merge of
-// its first page with the pages Show more fetched. Pure, relative imports only.
+// where the real wine's style stood in it, what Another glass does, and the
+// history list's merge of its first page with the pages Show more fetched.
+// Pure, relative imports only.
 import type { ColourHue, WineColour, WineStyle } from "../wset/types";
 import { colourFromHue } from "../wset/vocab";
 import { RESULT_ROW_LABELS, RESULT_ROW_ORDER, resultMark } from "./copy";
-import type { AttemptRow, CapReason, PointCategory, RankingSnapshot } from "./types";
+import type { AttemptRow, CapReason, PointCategory, RankingSnapshot, TrainingDraft } from "./types";
 
 // The seven rows' order lives in copy.ts beside their labels; re-exported here
 // so the result's view rules read from one module.
@@ -70,6 +71,21 @@ export function styleVerdictContext(
   return archetype
     ? { noteColour, candidateColour, candidateStyle: archetype.style }
     : { noteColour, candidateColour };
+}
+
+/** What the result's Another glass does. */
+export type AnotherGlassPlan = "start" | "landing";
+
+/**
+ * Another glass (spec §3.5) starts a new session only when no draft is stored.
+ * After a finish that is always so: finish() clears the session's own draft
+ * before the result opens. After a Reveal now another, unfinished session's
+ * draft may still be stored — one per user (D13) — and starting would overwrite
+ * it with no confirm, past Discard's two taps. The room then returns to the
+ * landing, whose Continue / Discard pair decides.
+ */
+export function anotherGlassPlan(storedDraft: TrainingDraft | null): AnotherGlassPlan {
+  return storedDraft ? "landing" : "start";
 }
 
 /** The server's first page plus the Show more pages, once each, newest first. */
