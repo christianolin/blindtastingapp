@@ -4,6 +4,7 @@
 // month groups, "Show N more", the header stats line and the row model's title
 // rule. No Next, React or Supabase import: vitest's node environment loads it
 // through relative imports, and notes-data.ts feeds it the author's own rows.
+import { TRAINING_COPY } from "../../../lib/training/copy";
 import { makeT, translateTerm, type WsetLang } from "../../../lib/wset/i18n";
 
 // --- Copy --------------------------------------------------------------------
@@ -57,6 +58,8 @@ export type NoteArchiveRow = {
   tastingWineId: string | null;
   /** That tasting's name, when the author can still read it. */
   tastingName: string | null;
+  /** wset_notes.context_kind: TRAINING rows carry the "Training" chip. */
+  contextKind: "OPEN" | "BLIND" | "TRAINING";
   /** Four flags in sheet order: Appearance, Nose, Palate, Conclusion. */
   sections: NoteSectionFlag[];
   /** Every section complete (note-summary's strict rule, ledger Q6). */
@@ -71,9 +74,16 @@ export type NoteArchiveRow = {
  * glass without leaking its answer; otherwise "Untitled wine".
  */
 export function archiveRowTitle(
-  input: { wineTitle: string | null; tastingName: string | null; glassNumber: number | null },
+  input: {
+    wineTitle: string | null;
+    tastingName: string | null;
+    glassNumber: number | null;
+    /** A training-room note whose bottle was never revealed (no identity). */
+    unrevealedTraining?: boolean;
+  },
   t: NotesT,
 ): string {
+  if (input.unrevealedTraining) return TRAINING_COPY.unrevealedBadge;
   if (input.wineTitle) return input.wineTitle;
   if (input.tastingName) {
     return input.glassNumber !== null
@@ -81,6 +91,16 @@ export function archiveRowTitle(
       : input.tastingName;
   }
   return t("untitled_wine");
+}
+
+/** Where an unrevealed training note's row goes: back to the room, whose
+    history offers Reveal now (training-room spec §3.6). */
+export const TRAINING_ROOM_HREF = "/taste/training";
+
+/** A row that links somewhere instead of opening the note view; null for every
+    note with a wine to open. */
+export function archiveRowHref(row: Pick<NoteArchiveRow, "contextKind" | "catalogWineId">): string | null {
+  return row.contextKind === "TRAINING" && row.catalogWineId === null ? TRAINING_ROOM_HREF : null;
 }
 
 /** Each glass's 1-based number in its tasting's list order (position ascending). */

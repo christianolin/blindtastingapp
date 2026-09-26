@@ -180,6 +180,7 @@ export async function getNotesArchive(authorId: string): Promise<NoteArchiveRow[
         wineTitle: wineTitles[i],
         tastingName,
         glassNumber: glass ? (glassNo.get(glass.id) ?? null) : null,
+        unrevealedTraining: note.context_kind === "TRAINING" && note.catalog_wine_id === null,
       },
       t,
     );
@@ -200,6 +201,7 @@ export async function getNotesArchive(authorId: string): Promise<NoteArchiveRow[
       score: note.quality_score,
       tastingWineId: note.tasting_wine_id,
       tastingName,
+      contextKind: note.context_kind,
       sections: summary.sections.map((s) => ({ labelKey: s.labelKey, complete: s.complete })),
       complete: summary.complete,
       searchText: noteSearchText({

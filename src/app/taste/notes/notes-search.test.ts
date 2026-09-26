@@ -6,6 +6,7 @@ import {
   NOTE_FILTERS,
   PAGE_SIZE,
   archiveRowTitle,
+  archiveRowHref,
   dayLabel,
   filterCounts,
   glassNumbers,
@@ -42,6 +43,7 @@ function row(overrides: Partial<NoteArchiveRow> = {}): NoteArchiveRow {
     score: 85,
     tastingWineId: null,
     tastingName: null,
+    contextKind: "OPEN",
     sections: flags([true, true, false, true]),
     complete: false,
     searchText: "",
@@ -302,5 +304,22 @@ describe("row model", () => {
     expect(sectionsLabel(t, flags([true, true, false, true]))).toBe(
       "Appearance section done · Nose section done · Palate not finished · Conclusion section done",
     );
+  });
+});
+
+describe("training notes (training room)", () => {
+  it("titles an unrevealed training note and links it to the room", () => {
+    expect(
+      archiveRowTitle({ wineTitle: null, tastingName: null, glassNumber: null, unrevealedTraining: true }, t),
+    ).toBe("Training room · not revealed");
+    expect(archiveRowHref(row({ contextKind: "TRAINING", catalogWineId: null }))).toBe("/taste/training");
+  });
+
+  it("leaves every other note's title and link alone", () => {
+    expect(
+      archiveRowTitle({ wineTitle: "Wine", tastingName: null, glassNumber: null, unrevealedTraining: false }, t),
+    ).toBe("Wine");
+    expect(archiveRowHref(row({ contextKind: "TRAINING", catalogWineId: "w1" }))).toBeNull();
+    expect(archiveRowHref(row({ contextKind: "OPEN", catalogWineId: null }))).toBeNull();
   });
 });

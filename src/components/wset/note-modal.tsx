@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCatalogWine, catalogWineTitle } from "@/lib/wset/queries";
 import { noteStateFromRow } from "@/lib/wset/note-state";
+import { TRAINING_COPY } from "@/lib/training/copy";
 import type {
   AromaTerm,
   WineColour,
@@ -70,7 +71,11 @@ export function NoteModal({
       }));
       setData({
         wine: { colour: wine.colour ?? "RED", style: wine.style ?? "STILL" },
-        title: catalogWineTitle(wine),
+        // A training note carries its badge in the sheet's title (D16).
+        title:
+          noteRes.data.context_kind === "TRAINING"
+            ? `${catalogWineTitle(wine)} · ${TRAINING_COPY.trainingBadge}`
+            : catalogWineTitle(wine),
         terms,
         initial: noteStateFromRow(noteRes.data, aromaRes.data ?? []),
       });

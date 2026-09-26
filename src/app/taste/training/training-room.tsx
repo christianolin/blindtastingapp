@@ -1,7 +1,7 @@
 "use client";
 
 // The training room (training-room spec §3): one client component with the
-// landing and a session (Task 11 adds the result). It owns every form value as
+// landing, a session and the result (§3.5). It owns every form value as
 // React state — the note the WSET sheet reports through `onChange`, the
 // Bubbles/Fortified facts, the pick and the vintage — and writes the draft to
 // this device on every change (D13, src/lib/training/draft.ts). The landing
@@ -16,7 +16,7 @@ import { Eyebrow } from "@/components/overview/eyebrow";
 import { Button } from "@/components/ui/button";
 import { WsetSheet } from "@/components/wset/wset-sheet";
 import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
-import type { HistoryPage, TrainingTally } from "@/lib/training/action-types";
+import type { HistoryPage, TrainingAttemptDetail, TrainingTally } from "@/lib/training/action-types";
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
 import { TRAINING_COPY, clockTime, continueLine, sheetTitle, tallyLine } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
@@ -32,10 +32,12 @@ import type {
 import { aromasToPayload, emptyNoteState, noteToPayload } from "@/lib/wset/note-state";
 import type { AromaTerm, WineColour, WineStyle, WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
-import { finishTrainingSession } from "./actions";
+import { finishTrainingSession, loadTrainingAttempt } from "./actions";
 import { CandidatesPanel } from "./candidates-panel";
 import { CandidatesSheet } from "./candidates-sheet";
 import { CandidatesStrip } from "./candidates-strip";
+import { HistoryList } from "./history-list";
+import { ResultView } from "./result-view";
 import { YourCall } from "./your-call";
 
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
@@ -50,7 +52,7 @@ function scrollToCall() {
   document.getElementById("your-call")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-type View = "landing" | "session";
+type View = "landing" | "session" | "result";
 
 export function TrainingRoom({
   userId,
@@ -75,6 +77,7 @@ export function TrainingRoom({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [armedAt, setArmedAt] = useState<number | null>(null);
+  const [result, setResult] = useState<TrainingAttemptDetail | null>(null);
 
   // The stored draft as a string, so the snapshot compares by value. The
   // times it shows ("started 20:14") are only ever rendered on the client:
@@ -143,9 +146,19 @@ export function TrainingRoom({
     [],
   );
 
+  // After a finish or a Reveal now: the stored attempt as the result (§3.5); a
+  // failed read falls back to the landing, where history shows the attempt.
+  function showResult(detail: TrainingAttemptDetail | null) {
+    setResult(detail);
+    setView(detail ? "result" : "landing");
+    window.scrollTo({ top: 0 });
+    router.refresh();
+  }
+
   function start() {
     setError(null);
     setArmedAt(null);
+    setResult(null);
     setSession({
       userId,
       sessionKey: newSessionKey(),
@@ -200,11 +213,12 @@ export function TrainingRoom({
         setError(res.error);
         return;
       }
+      // Saved either way: a failed read shows the landing (showResult).
+      const detail = await loadTrainingAttempt(res.attemptId).catch(() => null);
       clearDraft(userId);
       setSession(null);
       setSheetOpen(false);
-      setView("landing");
-      router.refresh();
+      showResult(detail);
     } catch {
       setError(SAVE_REFUSED);
     } finally {
@@ -231,6 +245,20 @@ export function TrainingRoom({
   function cantFindOut() {
     if (!session || busy) return;
     void finish(session, snapshotRanking(ranked), null);
+  }
+
+  if (view === "result" && result) {
+    return (
+      <ResultView
+        detail={result}
+        pool={candidates}
+        onAnotherGlass={start}
+        onDone={() => {
+          setResult(null);
+          setView("landing");
+        }}
+      />
+    );
   }
 
   if (view === "session" && session) {
@@ -306,6 +334,7 @@ export function TrainingRoom({
         <p className="text-[13px] text-muted-foreground">
           {history.rows.length === 0 ? TRAINING_COPY.noSessions : tallyLine(tally)}
         </p>
+        <HistoryList key={history.rows[0]?.id ?? "empty"} initial={history} onRevealed={showResult} />
       </section>
     </div>
   );

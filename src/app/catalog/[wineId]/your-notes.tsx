@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { NoteModal } from "@/components/wset/note-modal";
 import { dayMonthYear } from "@/lib/cellar/format";
+import { TRAINING_COPY } from "@/lib/training/copy";
 
 export type YourNoteRow = {
   id: string;
@@ -51,6 +52,11 @@ export function YourNotes({
                 {n.contextKind === "BLIND" ? (
                   <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
                     Blind
+                  </Badge>
+                ) : null}
+                {n.contextKind === "TRAINING" ? (
+                  <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                    {TRAINING_COPY.trainingBadge}
                   </Badge>
                 ) : null}
               </span>

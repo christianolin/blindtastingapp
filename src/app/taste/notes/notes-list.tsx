@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
@@ -7,10 +8,12 @@ import { CardEmptyRow } from "@/components/overview/subject-card";
 import { NoteModal } from "@/components/wset/note-modal";
 import { cn } from "@/lib/utils";
 import { makeT } from "@/lib/wset/i18n";
+import { TRAINING_COPY } from "@/lib/training/copy";
 import { NotesFilterChips, NotesSearchField } from "./notes-filters";
 import {
   NOTES_LANG,
   PAGE_SIZE,
+  archiveRowHref,
   dayLabel,
   filterCounts,
   groupByMonth,
@@ -85,10 +88,20 @@ function BarsLegend() {
  * One note: label thumb (hatch fallback), wine title, the day, the tasting
  * chip, the four section bars, the score in Cormorant and a chevron into the
  * note view. A note with no catalog wine has no note view to open, so its row
- * is plain text with no chevron. On desktop the chip names the tasting; on
+ * is plain text with no chevron — except an unrevealed training note, whose
+ * row links back to the room (Reveal now). On desktop the chip names the tasting; on
  * phones the meta line says "· from a tasting" and the bars sit under it.
  */
-function NoteRowView({ row, onOpen }: { row: NoteArchiveRow; onOpen: (() => void) | null }) {
+function NoteRowView({
+  row,
+  onOpen,
+  href,
+}: {
+  row: NoteArchiveRow;
+  onOpen: (() => void) | null;
+  /** A link instead of the note view: an unrevealed training note goes back to the room. */
+  href: string | null;
+}) {
   const describedBy = `note-${row.id}-meta note-${row.id}-bars note-${row.id}-score`;
   const inner = (
     <>
@@ -103,6 +116,11 @@ function NoteRowView({ row, onOpen }: { row: NoteArchiveRow; onOpen: (() => void
           className="flex min-w-0 items-center gap-2 text-[11.5px] text-muted-foreground max-md:gap-1 max-md:text-[10.5px]"
         >
           <span className="shrink-0">{dayLabel(row.tastedOn, NOTES_LANG)}</span>
+          {row.contextKind === "TRAINING" ? (
+            <span className="shrink-0 rounded-full border border-border bg-background px-2 py-px text-[10.5px]">
+              {TRAINING_COPY.trainingBadge}
+            </span>
+          ) : null}
           {row.tastingWineId !== null ? (
             <>
               <span className="truncate md:hidden">· {t("from_a_tasting")}</span>
@@ -128,7 +146,7 @@ function NoteRowView({ row, onOpen }: { row: NoteArchiveRow; onOpen: (() => void
         </span>
       </span>
       <span
-        className={cn("w-2 text-[15px] leading-none text-placeholder", !onOpen && "invisible")}
+        className={cn("w-2 text-[15px] leading-none text-placeholder", !onOpen && !href && "invisible")}
         aria-hidden
       >
         ›
@@ -137,6 +155,20 @@ function NoteRowView({ row, onOpen }: { row: NoteArchiveRow; onOpen: (() => void
   );
   const rowClass =
     "flex w-full items-center gap-[14px] p-[13px_16px] text-left text-foreground max-md:gap-2.5 max-md:p-[10px_12px]";
+  if (href) {
+    return (
+      <Link
+        href={href}
+        aria-describedby={describedBy}
+        className={cn(
+          rowClass,
+          "transition-colors hover:bg-background focus-visible:bg-background focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+        )}
+      >
+        {inner}
+      </Link>
+    );
+  }
   return onOpen ? (
     <button
       type="button"
@@ -238,6 +270,7 @@ export function NotesList({
                 <li key={row.id} className="border-b border-border-light last:border-b-0">
                   <NoteRowView
                     row={row}
+                    href={archiveRowHref(row)}
                     onOpen={
                       row.catalogWineId !== null
                         ? () => setOpen({ noteId: row.id, wineId: row.catalogWineId as string })
