@@ -546,14 +546,15 @@ a raw subquery, regardless of which two tables look involved at a glance.
   scrubbed (display name "Deleted user", undeliverable email, personal columns
   null, write-once `deleted_at`); there is deliberately no FK from profiles to
   `auth.users` (the own-auth branch `auth-phase-1` needs profiles without a
-  login, live migration 20260829265003 dropped it). Deleted: notes, cellar lots
-  and consumptions, friendships and friend requests both ways, platform invites, drafts, pour
-  intents, label reads, and places of tastings they hosted. Kept for others:
-  tastings they hosted or joined, guesses, answer keys, catalog wines they
-  created. A never-started DRAFT they host alone is deleted; any other
-  unfinished hosted tasting is CLOSED with nothing revealed; in someone else's
-  never-started tasting their seat and BYO glasses go, in a started one a
-  JOINED seat stays. `get_semi_blind_candidates` decides "started" as
+  login, live migration 20260829265003 dropped it). Deleted: notes, training
+  sessions, cellar lots and consumptions, friendships and friend requests both
+  ways, platform invites, drafts, pour intents, label reads, and places of
+  tastings they hosted. Kept for others: tastings they hosted or joined,
+  guesses, answer keys, catalog wines they created. A never-started DRAFT they
+  host alone is deleted; any other unfinished hosted tasting is CLOSED with
+  nothing revealed; in someone else's never-started tasting their seat and BYO
+  glasses go, in a started one a JOINED seat stays.
+  `get_semi_blind_candidates` decides "started" as
   `status <> 'DRAFT' and (started_at is not null or finished_at is null)`: a
   tasting CLOSED without ever starting keeps DRAFT visibility. Never go back
   to a bare `status <> 'DRAFT'` or `status = 'CLOSED'` test for "started" —
@@ -1005,7 +1006,15 @@ a raw subquery, regardless of which two tables look involved at a glance.
   linking back to the room; a revealed one is a normal public note with a
   "Training" badge (`catalog/[wineId]/your-notes.tsx`, the `/taste/notes` chip
   in `notes-list.tsx`, the note modal's title). Deleting a revealed training
-  note deletes its attempt (cascade).
+  note deletes its attempt (cascade); the result's "See the note" re-reads
+  the attempt when the note closes and returns to the landing if it is gone.
+  `scrub_deleted_account`'s latest body is the one in
+  `20260925120000_training_room.sql` (it deletes the person's
+  `training_attempts`, before their notes): a future recreate must start from
+  that body, not an older one. Every switch between landing, session and
+  result scrolls the app shell's content column back to the top
+  (`scrollContainerToTop`, `src/lib/scroll-container.ts`) — never
+  `window.scrollTo`: the window never scrolls in this app.
   `/admin/archetypes` edits the scoring identity (country → region →
   appellation with "Just the region"), designations, typical age, signature
   aromas, an optional map place and mousse on sparkling; its ladders and checks
@@ -1015,8 +1024,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   → `scripts/training/gen-archetype-batch-migration.mjs`, checked read-only by
   `validate-archetype-batch.mjs`, fail-closed on any name that does not resolve
   to exactly one live row) — never through the Anthropic API (AGENTS.md). All
-  room copy lives in `src/lib/training/copy.ts` (English only, D20); never
-  hard-code a room string in a component.
+  room copy lives in `src/lib/training/copy.ts` (English only, D20), which
+  the add-wine matrix's reveal branch (`matrix.ts`'s `noteMatrix`) and the
+  nav's Training Room label and Preview pill (`nav-links.ts`) also read;
+  never hard-code a room string in a component.
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in
