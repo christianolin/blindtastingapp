@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TRAINING_COPY } from "../../lib/training/copy";
 import { flightHintSubtitle, sheetMatrix } from "./matrix";
 import type { AddWineDestination } from "./types";
 
@@ -322,6 +323,20 @@ describe("the training room's reveal (a note destination with reveal, spec §3.4
       plain.home, plain.searchPlaceholder, plain.showMany, plain.multiTitle, plain.chips, plain.searchGroups, plain.cellarSource,
       plain.partialRead, plain.followUps, plain.leadLine, plain.footer.button, plain.confirm.eyebrowMatch, plain.byHand.footerNote,
     ]);
+  });
+  it.each([true, false])("canScan=%s: every reveal string is the training room's own (one source)", (canScan) => {
+    const x = sheetMatrix(reveal, canScan);
+    expect(x.eyebrow).toBe(TRAINING_COPY.revealEyebrow);
+    expect(x.title("home")).toBe(TRAINING_COPY.revealTitle);
+    expect(x.title("read")).toBe(TRAINING_COPY.revealTitle);
+    expect(x.enterHint).toBe(TRAINING_COPY.revealEnterHint);
+    expect(x.row({ source: "catalog", inFlight: false, owned: false }).label).toBe(TRAINING_COPY.revealRowAction);
+    expect(x.footer.primary).toBe(TRAINING_COPY.revealPrimary);
+    expect(x.confirm.primaryMatch).toBe(TRAINING_COPY.revealPrimary);
+    expect(x.confirm.primaryNoMatch).toBe(TRAINING_COPY.revealPrimary);
+    expect(x.byHand.primary(false)).toBe(TRAINING_COPY.revealByHandPrimary);
+    expect(x.byHand.primary(true)).toBe(TRAINING_COPY.revealByHandPrimary);
+    expect(x.byHand.eyebrow).toBe(`${TRAINING_COPY.revealEyebrow} · by hand`);
   });
   it("a plain note keeps Taste & rate's wording and its consume toggle", () => {
     expect(sheetMatrix({ kind: "note" }, true).eyebrow).toBe("Taste & rate");

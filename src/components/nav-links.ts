@@ -2,7 +2,8 @@
 // client sidebar / mobile drawer can all import the array as a real value.
 // Kept out of any "use client" module: a value imported from a client module
 // across the server boundary becomes a client reference and isn't iterable
-// server-side.
+// server-side. Relative imports only, so vitest loads it.
+import { TRAINING_COPY } from "../lib/training/copy";
 
 export type NavChild = {
   href: string;
@@ -25,10 +26,11 @@ export function navChildState(child: NavChild): NavChildState {
   return "link";
 }
 
-/** The pill beside a teaser or a preview item (same shape and tokens). */
+/** The pill beside a teaser or a preview item (same shape and tokens). The
+    preview pill is the training room's own word (src/lib/training/copy.ts). */
 export const NAV_CHILD_PILL: Record<Exclude<NavChildState, "link">, string> = {
   soon: "Soon",
-  preview: "Preview",
+  preview: TRAINING_COPY.previewPill,
 };
 export type NavLink = {
   key: string;
@@ -63,7 +65,7 @@ export const NAV_LINKS: NavLink[] = [
       { href: "/tastings/new", label: "Taste Blind", modal: "taste-blind" },
       { href: "/catalog", label: "Taste & Rate", modal: "taste-rate" },
       { href: "/taste/notes", label: "Tasting notes" },
-      { href: "/taste/training", label: "Training Room", preview: true },
+      { href: "/taste/training", label: TRAINING_COPY.navLabel, preview: true },
     ],
   },
   {

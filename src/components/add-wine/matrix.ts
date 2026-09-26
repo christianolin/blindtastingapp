@@ -8,6 +8,7 @@
 // Pure: no React, no Supabase, and only relative runtime imports (vitest has
 // no `@/` alias). Unit-tested in matrix.test.ts.
 import type { RevealMode } from "@/lib/supabase/database.types";
+import { TRAINING_COPY } from "../../lib/training/copy";
 import type { CellarSummary } from "./desktop-format";
 import { glassLabel } from "./format";
 import { bottlesLabel } from "./row-format";
@@ -286,8 +287,7 @@ function cellarMatrix(canScan: boolean): SheetMatrix {
 }
 
 // Training room (spec §3.4, §9): the note flow, naming the bottle poured blind.
-const THIS_IS_IT = "This is it";
-const REVEAL_EYEBROW = "Reveal the bottle";
+// Its wording is the room's own, from src/lib/training/copy.ts — one source.
 
 function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
   const note: SheetMatrix = {
@@ -336,19 +336,20 @@ function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
     followUps: TERMINAL,
   };
   if (!reveal) return note;
+  const copy = TRAINING_COPY;
   return {
     ...note,
-    eyebrow: REVEAL_EYEBROW,
-    title: () => "Which bottle was it?",
-    enterHint: "↵ reveals the first hit",
-    row: () => ({ label: THIS_IS_IT, action: "pick", disabled: false, affordance: "chevron" }),
+    eyebrow: copy.revealEyebrow,
+    title: () => copy.revealTitle,
+    enterHint: copy.revealEnterHint,
+    row: () => ({ label: copy.revealRowAction, action: "pick", disabled: false, affordance: "chevron" }),
     // A bottle poured blind was opened by someone else: never drawn down.
     consumeLabel: null,
     upload: { ...note.upload, body: "Read and matched exactly as it is on the phone, then your result shows." },
     cellarTileSubtitle: cellarTile(() => "if the bottle came from your cellar"),
-    footer: { ...note.footer, primary: THIS_IS_IT },
-    confirm: { ...note.confirm, primaryMatch: THIS_IS_IT, primaryNoMatch: THIS_IS_IT },
-    byHand: { ...note.byHand, eyebrow: `${REVEAL_EYEBROW} · by hand`, primary: () => THIS_IS_IT },
+    footer: { ...note.footer, primary: copy.revealPrimary },
+    confirm: { ...note.confirm, primaryMatch: copy.revealPrimary, primaryNoMatch: copy.revealPrimary },
+    byHand: { ...note.byHand, eyebrow: `${copy.revealEyebrow} · by hand`, primary: () => copy.revealByHandPrimary },
   };
 }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TRAINING_COPY } from "../lib/training/copy";
 import { NAV_CHILD_PILL, NAV_LINKS, navChildState } from "./nav-links";
 
 // Training-room spec §3.1 / D12: the Training Room is a live link with a
@@ -18,6 +19,11 @@ describe("navChildState", () => {
   });
   it("names the two pills", () => {
     expect(NAV_CHILD_PILL).toEqual({ soon: "Soon", preview: "Preview" });
+  });
+  it("takes the Preview pill and the Training Room label from the room's copy (one source)", () => {
+    expect(NAV_CHILD_PILL.preview).toBe(TRAINING_COPY.previewPill);
+    const taste = NAV_LINKS.find((l) => l.key === "taste");
+    expect(taste?.children?.find((c) => c.href === "/taste/training")?.label).toBe(TRAINING_COPY.navLabel);
   });
   it("Taste lists the Training Room as a preview link to /taste/training, and nothing as soon", () => {
     const taste = NAV_LINKS.find((l) => l.key === "taste");
