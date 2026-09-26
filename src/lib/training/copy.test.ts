@@ -13,6 +13,7 @@ import {
   hueClearedLine,
   itWasLine,
   lineageLine,
+  percentLabel,
   resultMark,
   resultTotalLine,
   scaleLossLine,
@@ -231,6 +232,16 @@ describe("tallyLine", () => {
   });
   it("is empty before anything is scored", () => {
     expect(tallyLine({ scored: 0, grapeHits: 0, appellationHits: 0 })).toBe("");
+  });
+});
+
+describe("percentLabel", () => {
+  it("writes a space before the sign, as §9 does", () => {
+    expect(percentLabel(91)).toBe("91 %");
+    expect(percentLabel(0)).toBe("0 %");
+  });
+  it("is empty without a number", () => {
+    expect(percentLabel(null)).toBe("");
   });
 });
 

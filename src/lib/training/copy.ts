@@ -253,6 +253,12 @@ export function showAllLine(n: number): string {
   return `Show all ${n}`;
 }
 
+/** A candidate's closeness as the strip and the rows write it: "91 %" (a
+    space before the sign, as §9 does); empty when it has no number. */
+export function percentLabel(n: number | null): string {
+  return n === null ? "" : `${n} %`;
+}
+
 /** The guessed vintage as the guess ladder words it: "2016", "NV",
     "20 years tawny"; null when no vintage was guessed. */
 export function vintageGuessLabel(v: VintageGuess): string | null {
