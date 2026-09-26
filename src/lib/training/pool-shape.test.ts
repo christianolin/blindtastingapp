@@ -18,6 +18,7 @@ import {
   type PoolRaw,
   type WineDisplay,
 } from "./pool-shape";
+import { lineageForParts } from "./archetype-view";
 
 const ARCH_PAUILLAC = "00000000-0000-4000-8000-00000000a001";
 const ARCH_BOURGOGNE = "00000000-0000-4000-8000-00000000a002";
@@ -339,6 +340,50 @@ describe("actualWineLineage", () => {
         designation: null,
       }),
     ).toBeNull();
+  });
+
+  it("needs an appellation and a primary grape too (catalog_wines holds all four)", () => {
+    const whole = {
+      appellation: "Saint-Julien AOC",
+      region: "Bordeaux",
+      country: "France",
+      primaryGrape: "Cabernet Sauvignon",
+      secondaryGrape: "Merlot",
+      designation: null,
+    };
+    expect(actualWineLineage({ ...whole, appellation: null })).toBeNull();
+    expect(actualWineLineage({ ...whole, primaryGrape: null })).toBeNull();
+  });
+
+  it("is the candidate lineage (lineageForParts), plus the designation", () => {
+    const n = (name: string) => ({ id: name, name });
+    const specific = {
+      country: n("France"),
+      region: n("Bordeaux"),
+      appellation: n("Saint-Julien AOC"),
+      primaryGrape: n("Cabernet Sauvignon"),
+      secondaryGrape: n("Merlot"),
+    };
+    const regional = {
+      country: n("France"),
+      region: n("Bourgogne"),
+      appellation: n("Bourgogne AOC"),
+      primaryGrape: n("Pinot Noir"),
+      secondaryGrape: null,
+    };
+    for (const parts of [specific, regional]) {
+      const flat = {
+        appellation: parts.appellation.name,
+        region: parts.region.name,
+        country: parts.country.name,
+        primaryGrape: parts.primaryGrape.name,
+        secondaryGrape: parts.secondaryGrape?.name ?? null,
+      };
+      expect(actualWineLineage({ ...flat, designation: null })).toBe(lineageForParts(parts));
+      expect(actualWineLineage({ ...flat, designation: "Grand Cru Classé" })).toBe(
+        `${lineageForParts(parts)} · Grand Cru Classé`,
+      );
+    }
   });
 });
 

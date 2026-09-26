@@ -3,8 +3,8 @@
 // rows here; nothing in this file touches Supabase, React or server-only, so
 // vitest pins every rule. Runtime imports are relative only (vitest has no
 // `@/` alias).
-import { justTheRegionOption } from "../../components/add-wine/self-named-appellation";
 import { catalogWineTitle } from "../wset/wine-title";
+import { isRegionalAppellation, lineageForParts } from "./archetype-view";
 import type { VintageKind } from "../supabase/database.types";
 import type { WineColour, WineStyle } from "../wset/types";
 import type { HistoryCursor } from "./action-types";
@@ -148,7 +148,7 @@ export function shapeCandidates(raw: PoolRaw): TrainingCandidate[] {
       style: a.style,
       country,
       region,
-      appellation: { ...appellation, isRegional: justTheRegionOption(region, [appellation]) !== null },
+      appellation: { ...appellation, isRegional: isRegionalAppellation(region, appellation) },
       primaryGrape,
       secondaryGrape: a.secondary_grape_id ? named(grapes.get(a.secondary_grape_id)) : null,
       designations,
@@ -238,8 +238,15 @@ export function finalWineId(start: string, mergedInto: ReadonlyMap<string, strin
   return id;
 }
 
-/** "Saint-Julien AOC · Bordeaux, France · Cabernet Sauvignon, Merlot · Grand Cru Classé";
-    a region's self-named appellation is left out, as the candidate lineage does. */
+/**
+ * "Saint-Julien AOC · Bordeaux, France · Cabernet Sauvignon, Merlot · Grand Cru Classé".
+ * The place and grapes are the candidate lineage itself (lineageForParts →
+ * copy.ts's lineageLine, so a region's self-named appellation is left out the
+ * same way and the two can never format differently); only the designation is
+ * appended here. Null when the viewer cannot name a region, country,
+ * appellation or primary grape — catalog_wines holds all four (NOT NULL), so a
+ * missing one is an unreadable reference, not a wine without one.
+ */
 export function actualWineLineage(p: {
   appellation: string | null;
   region: string | null;
@@ -248,14 +255,15 @@ export function actualWineLineage(p: {
   secondaryGrape: string | null;
   designation: string | null;
 }): string | null {
-  if (!p.region || !p.country) return null;
-  const regional =
-    p.appellation !== null &&
-    justTheRegionOption({ id: "region", name: p.region }, [{ id: "appellation", name: p.appellation }]) !== null;
-  const place =
-    p.appellation && !regional ? `${p.appellation} · ${p.region}, ${p.country}` : `${p.region}, ${p.country}`;
-  const grapes = [p.primaryGrape, p.secondaryGrape].filter((g): g is string => Boolean(g)).join(", ");
-  return [place, grapes, p.designation].filter((part): part is string => Boolean(part)).join(" · ");
+  if (!p.region || !p.country || !p.appellation || !p.primaryGrape) return null;
+  const base = lineageForParts({
+    country: { id: "", name: p.country },
+    region: { id: "", name: p.region },
+    appellation: { id: "", name: p.appellation },
+    primaryGrape: { id: "", name: p.primaryGrape },
+    secondaryGrape: p.secondaryGrape ? { id: "", name: p.secondaryGrape } : null,
+  });
+  return p.designation ? `${base} · ${p.designation}` : base;
 }
 
 type One<T> = T | T[] | null;
