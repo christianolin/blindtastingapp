@@ -804,3 +804,83 @@ test("the 15 live archetypes are back-filled by live name and every archetype na
     assert.deepEqual(sauternes, { p: "Semillon", s: "Sauvignon Blanc" });
   });
 });
+
+test("the batch-1 migration lands every archetype with its links, and a second apply is a no-op", async (t) => {
+  const file = "supabase/migrations/20260925130000_archetypes_batch_1.sql";
+  await withRollback(async () => {
+    await asOwner();
+    const ready = (await client.query("select to_regclass('public.wine_archetype_designations') is not null as ok")).rows[0]
+      .ok;
+    if (!ready) {
+      t.skip("20260925120000 is neither live nor in TRAINING_ROOM_APPLY");
+      return;
+    }
+    const sql = readFileSync(file, "utf8");
+    if (!APPLY.some((f) => f.endsWith("20260925130000_archetypes_batch_1.sql"))) await client.query(sql);
+    const batch = JSON.parse(readFileSync("data/training/archetypes-batch-1.json", "utf8"));
+    const names = batch.archetypes.map((a) => a.name);
+    const totals = async () =>
+      (
+        await client.query(
+          `select (select count(*)::int from wine_archetypes) archetypes,
+                  (select count(*)::int from wine_archetype_aromas) aromas,
+                  (select count(*)::int from wine_archetype_designations) designations,
+                  (select count(*)::int from wine_archetype_placements) placements`,
+        )
+      ).rows[0];
+    const first = await totals();
+    await client.query(sql);
+    assert.deepEqual(await totals(), first, "a second apply changes nothing");
+
+    const once = (
+      await client.query("select name, count(*)::int n from wine_archetypes where name = any($1::text[]) group by name", [
+        names,
+      ])
+    ).rows;
+    assert.equal(once.length, names.length);
+    assert.ok(once.every((x) => x.n === 1));
+
+    const pauillac = (
+      await client.query(
+        `select c.name country, r.name region, ap.name appellation, g.name grape, wp.canonical_key place,
+                (select array_agg(t.term order by t.term) from wine_archetype_aromas l
+                   join wset_aroma_terms t on t.id = l.term_id
+                  where l.archetype_id = a.id and l.signature and l.kind = 'NOSE') signatures,
+                (select array_agg(td.name) from wine_archetype_designations d
+                   join type_designations td on td.id = d.type_designation_id where d.archetype_id = a.id) designations,
+                (select count(*)::int from wine_archetype_placements p where p.archetype_id = a.id) placements,
+                a.typical_age_low, a.typical_age_high, a.sat -> 'tannin' tannin
+           from wine_archetypes a
+           join countries c on c.id = a.country_id
+           join regions r on r.id = a.region_id
+           join appellations ap on ap.id = a.appellation_id
+           join grapes g on g.id = a.primary_grape_id
+           left join wine_places wp on wp.id = a.wine_place_id
+          where a.name = 'A typical Pauillac'`,
+      )
+    ).rows[0];
+    assert.deepEqual(pauillac, {
+      country: "France",
+      region: "Bordeaux",
+      appellation: "Pauillac AOC",
+      grape: "Cabernet Sauvignon",
+      place: "france.bordeaux.haut-medoc.pauillac",
+      signatures: ["blackcurrant", "cedar"],
+      designations: ["Grand Cru Classé"],
+      placements: 1,
+      typical_age_low: 8,
+      typical_age_high: 30,
+      tannin: ["MEDIUM_PLUS", "HIGH"],
+    });
+    const napa = (
+      await client.query(
+        `select a.wine_place_id, (select count(*)::int from wine_archetype_placements p where p.archetype_id = a.id) placements
+           from wine_archetypes a where a.name = 'A typical Napa Cabernet Sauvignon'`,
+      )
+    ).rows[0];
+    assert.deepEqual(napa, { wine_place_id: null, placements: 0 }, "an archetype without a map place stays off the map");
+    const prosecco = (await client.query("select sat -> 'mousse' mousse from wine_archetypes where name = 'A typical Prosecco'"))
+      .rows[0];
+    assert.deepEqual(prosecco, { mousse: ["CREAMY", "AGGRESSIVE"] });
+  });
+});
