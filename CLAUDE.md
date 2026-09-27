@@ -743,6 +743,27 @@ a raw subquery, regardless of which two tables look involved at a glance.
   participants), F9 (new reference rows are public at once; guessing needs
   them), and F12 (`catalog_wine_identity_match`/`find_or_create_catalog_wine`
   confirm an exact guessed identity of someone's hidden wine).
+- **Cellar sort memory** (2026-09-27, spec
+  `docs/superpowers/specs/2026-09-27-cellar-sort-memory.md`, migration
+  `20260927110000_user_preferences.sql`). Every cellar list (`/cellar`, and
+  someone else's read-only `/u/[id]/cellar`) opens on the VIEWER's last
+  chosen sort, or "Newest added" (`"added"`: `created_at` desc, then title,
+  then lot id) if they never chose one. The choice is
+  `user_preferences.cellar_sort`, one owner-only row per person (RLS
+  `user_id = auth.uid()`; client grants SELECT, INSERT (user_id, cellar_sort),
+  UPDATE (cellar_sort), no DELETE; anon nothing) — deliberately not a
+  `profiles` column, since every member reads `profiles` and its client
+  UPDATE grant is pinned by later migrations. `profiles_deleted_drop_preferences`
+  removes the row when an account is deleted. The server pages read it with
+  `readCellarSort` (`src/lib/cellar/sort-preference.ts`, any error → null) and
+  `CellarBottles` opens on `resolveCellarSort(saved, readOnly)`
+  (`cellar-rows.ts`: anything invalid → "added"; "yours" in a read-only list →
+  "added"), one effective sort for both the select and the rows. Each Sort
+  change calls `saveCellarSort` (`src/app/cellar/sort-actions.ts`; fire and
+  forget, one `console.error` on failure, no revalidate), which updates the
+  row and inserts it when missing — never `.upsert()`: PostgREST's ON CONFLICT
+  DO UPDATE SET names every payload column, and `user_id` has no client
+  UPDATE grant.
 - The leaderboard sidebar shows more than a bare score per participant: a
   "wine X/Y" progress readout (their own scored-guess count over the
   tasting's total wine count — this can differ between participants if one
