@@ -2,8 +2,9 @@
 // C3, C4, §3): a person's own saved cellar sort. Owner-only RLS (read, insert
 // and update their own row; no delete), the check constraint on the five sort
 // keys, the exact client grants (anon nothing; authenticated SELECT,
-// INSERT (user_id, cellar_sort), UPDATE (cellar_sort)), and the account-deletion
-// trigger that removes a person's row when their profile's deleted_at is set.
+// INSERT (user_id, cellar_sort), UPDATE (cellar_sort)), the account-deletion
+// trigger that removes a person's row when their profile's deleted_at is set,
+// and the insert guard that refuses a row for a deleted profile afterwards.
 //
 // It connects to the database pgConfig() names, which is production, so only
 // the main session runs it. Every test runs inside a transaction that always
@@ -32,6 +33,8 @@ const APPLY = (process.env.USER_PREFERENCES_APPLY ?? "")
   .filter(Boolean);
 const TABLE = "public.user_preferences";
 const DROP_FN = "public.drop_deleted_profile_preferences()";
+const GUARD_FN = "public.user_preferences_guard()";
+const DELETED = /this account has been deleted/;
 const SORT_KEYS = ["bottles", "name", "added", "yours", "community"];
 
 const client = new pg.Client(pgConfig());
@@ -85,8 +88,8 @@ async function freshProfiles(n) {
 }
 
 // Runs `fn` inside a savepoint that is always rolled back, and checks it failed
-// with `code`.
-async function expectError(fn, code, what) {
+// with `code` (and, when given, a message matching `message`).
+async function expectError(fn, code, what, message) {
   await client.query("savepoint expect_error");
   let error = null;
   try {
@@ -97,6 +100,7 @@ async function expectError(fn, code, what) {
   await client.query("rollback to savepoint expect_error");
   assert.ok(error, `${what}: expected SQLSTATE ${code}, but it succeeded`);
   assert.equal(error.code, code, `${what}: ${error.message}`);
+  if (message) assert.match(error.message, message, what);
 }
 
 // Owner-role (RLS-bypassing) read of one person's saved sort; undefined = no row.
@@ -327,6 +331,87 @@ test("the account-deletion scrub removes the row too (it stamps deleted_at)", as
     await asOwner();
     await client.query("select public.scrub_deleted_account($1)", [a]);
     assert.equal(await savedSort(a), undefined);
+    await asUser(a);
+    await expectError(
+      () => client.query("insert into user_preferences (user_id, cellar_sort) values ($1, 'name')", [a]),
+      "42501",
+      "a token issued before the scrub cannot write a row back",
+      DELETED,
+    );
+    assert.equal(await savedSort(a), undefined);
+  });
+});
+
+test("no row for a deleted profile: the insert guard refuses it, whoever writes it", async () => {
+  await withRollback(async () => {
+    const [a, b] = await freshProfiles(2);
+    await asOwner();
+    await client.query("update profiles set deleted_at = now() where id = $1", [a]);
+    // The profile row is kept (so the foreign key is satisfied), and an access
+    // token issued before the deletion still names a until it expires.
+    await asUser(a);
+    await expectError(
+      () => client.query("insert into user_preferences (user_id, cellar_sort) values ($1, 'name')", [a]),
+      "42501",
+      "a leftover token inserts for the deleted profile",
+      DELETED,
+    );
+    await asOwner();
+    await expectError(
+      () => client.query("insert into user_preferences (user_id, cellar_sort) values ($1, 'name')", [a]),
+      "42501",
+      "the owner inserts for the deleted profile",
+      DELETED,
+    );
+    assert.equal(await savedSort(a), undefined, "no row was written");
+
+    // A live profile is untouched by the guard.
+    await asUser(b);
+    await client.query("insert into user_preferences (user_id, cellar_sort) values ($1, 'bottles')", [b]);
+    assert.equal(await savedSort(b), "bottles");
+  });
+});
+
+test("the insert guard is the table's only trigger, BEFORE INSERT, and its function is owner-only", async () => {
+  await withRollback(async () => {
+    await asOwner();
+    const trig = await client.query(
+      `select t.tgname, t.tgtype, t.tgenabled, t.tgfoid = to_regprocedure($2) as calls_guard,
+              regexp_replace(pg_get_triggerdef(t.oid), '\\mpublic\\.', '', 'g') as def
+         from pg_trigger t
+        where t.tgrelid = $1::regclass and not t.tgisinternal`,
+      [TABLE, GUARD_FN],
+    );
+    assert.deepEqual(trig.rows, [
+      {
+        tgname: "user_preferences_guard",
+        tgtype: 7,
+        tgenabled: "O",
+        calls_guard: true,
+        def: "CREATE TRIGGER user_preferences_guard BEFORE INSERT ON user_preferences FOR EACH ROW EXECUTE FUNCTION user_preferences_guard()",
+      },
+    ]);
+    const fn = await client.query(
+      `select p.prosecdef, p.proconfig,
+              (select string_agg(case when a.grantee = 0 then 'PUBLIC'
+                                      when a.grantee = p.proowner then 'OWNER'
+                                      else pg_get_userbyid(a.grantee)::text end, ',')
+                 from aclexplode(p.proacl) a where a.privilege_type = 'EXECUTE') as execute_holders,
+              has_function_privilege('anon', p.oid, 'EXECUTE') as anon,
+              has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated,
+              has_function_privilege('service_role', p.oid, 'EXECUTE') as service_role
+         from pg_proc p where p.oid = to_regprocedure($1)`,
+      [GUARD_FN],
+    );
+    assert.equal(fn.rowCount, 1, `${GUARD_FN} exists`);
+    assert.deepEqual(fn.rows[0], {
+      prosecdef: true,
+      proconfig: ["search_path=public"],
+      execute_holders: "OWNER",
+      anon: false,
+      authenticated: false,
+      service_role: false,
+    });
   });
 });
 

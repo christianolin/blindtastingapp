@@ -1,6 +1,7 @@
 // Cellar rows: dimensions, header stats, search, sort, filter, grouping,
 // paging and footer copy (CC-P1). Pure: runtime imports from ./format only.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { addedDate, addedMonth } from "./format";
 import {
   DEFAULT_CELLAR_SORT, DIMENSION_GROUP, EMPTY_FILTERS, GROUP_CAP, GROUP_LABELS, GROUP_ORDER, NO_PLACE, SORT_LABELS,
   SORT_ORDER, STRIP_CAPTION,
@@ -8,14 +9,14 @@ import {
   groupHeaderLine, groupRows, headerStats, headerSubtitle, isSortKey, matchesSearch, pageLabel, pageSlice, placeText,
   rangeLabel, resolveCellarSort, rowLines, searchPlaceholder, showMoreLabel, sortOrderFor, sortRows, visibleGroups,
 } from "./cellar-rows";
-import type { BottleRow } from "./types";
+import type { BottleRow, SortKey } from "./types";
 
 let seq = 0;
 function row(over: {
   id?: string; wineId?: string; producer?: string | null; name?: string | null; year?: number | null; kind?: "YEAR" | "NV" | "TAWNY";
   grape?: string | null; colour?: "RED" | "WHITE" | "ROSE" | "ORANGE" | null; designation?: string | null;
   appellation?: string | null; region?: string | null; country?: string | null; qty?: number; bought?: number;
-  place?: string | null; created?: string; yours?: number | null; avg?: number | null; count?: number; inFlight?: number;
+  place?: string | null; created?: string; purchased?: string | null; yours?: number | null; avg?: number | null; count?: number; inFlight?: number;
 } = {}): BottleRow {
   seq += 1;
   const id = over.id ?? `lot${seq}`;
@@ -23,7 +24,7 @@ function row(over: {
   return {
     lot: {
       id, quantity: over.qty ?? 1, purchasedQuantity: over.bought ?? over.qty ?? 1, bottleSizeMl: 750,
-      storageLocation: over.place === undefined ? "Cellar, rack B" : over.place, purchasedOn: null, purchaseSource: null,
+      storageLocation: over.place === undefined ? "Cellar, rack B" : over.place, purchasedOn: over.purchased ?? null, purchaseSource: null,
       pricePerBottle: null, currency: "DKK", drinkFrom: null, drinkTo: null, lotNote: null,
       createdAt: over.created ?? `2024-01-${String(seq).padStart(2, "0")}T00:00:00Z`,
     },
@@ -156,11 +157,100 @@ describe("sort", () => {
     expect(sortRows(rows, "added").map((r) => r.lot.id)).toEqual(["a", "b"]);
   });
 
+  it("C2: 'added' is the date each row shows (the purchase date, else created_at), so the order never contradicts its rows", () => {
+    const rows = [
+      // Entered today, bought in 2024: its row reads "added Mar 2024".
+      row({ id: "old-purchase", name: "Aalto", created: "2026-09-27T09:00:00Z", purchased: "2024-03-01" }),
+      row({ id: "plain", name: "Barolo", created: "2026-09-01T12:00:00Z" }),
+      row({ id: "recent-purchase", name: "Chianti", created: "2025-01-01T00:00:00Z", purchased: "2026-09-20" }),
+    ];
+    const sorted = sortRows(rows, "added");
+    expect(sorted.map((r) => r.lot.id)).toEqual(["recent-purchase", "plain", "old-purchase"]);
+    expect(sorted.map((r) => addedMonth(r.lot))).toEqual(["Sep 2026", "Sep 2026", "Mar 2024"]);
+    // Whatever the mix, a row's shown date is never newer than the one above it.
+    const shown = sortRows([...rows, ...cellar], "added").map((r) => Date.parse(addedDate(r.lot)));
+    for (let i = 1; i < shown.length; i += 1) expect(shown[i]).toBeLessThanOrEqual(shown[i - 1]);
+  });
+
+  it("C2: the same 'added' date breaks on created_at, newest first, before the title", () => {
+    const rows = [
+      row({ id: "earlier", name: "Aglianico", created: "2026-09-10T00:00:00Z", purchased: "2026-09-01" }),
+      row({ id: "later", name: "Zinfandel", created: "2026-09-12T00:00:00Z", purchased: "2026-09-01" }),
+    ];
+    expect(sortRows(rows, "added").map((r) => r.lot.id)).toEqual(["later", "earlier"]);
+    expect(sortRows(rows.slice().reverse(), "added").map((r) => r.lot.id)).toEqual(["later", "earlier"]);
+  });
+
   it("does not reorder its input", () => {
     const input = cellar.slice();
     sortRows(input, "added");
     expect(input.map((r) => r.lot.id)).toEqual(cellar.map((r) => r.lot.id));
   });
+});
+
+describe("title order does not depend on the runtime's default locale", () => {
+  // The list is server-rendered (Node's default locale) and hydrated in the
+  // browser (the viewer's, e.g. da-DK, where "Aa" sorts after "Z"): both must
+  // order tied rows alike. This emulates a runtime whose default locale is
+  // `locale` — every locale-less localeCompare and Intl.Collator resolves to
+  // it — and loads cellar-rows afresh under it. `probe` shows the emulation
+  // bites: a bare localeCompare of the two titles under that default.
+  async function underDefaultLocale(
+    locale: string,
+    rows: BottleRow[],
+    key: SortKey,
+  ): Promise<{ ids: string[]; probe: number }> {
+    const realCompare = String.prototype.localeCompare;
+    const RealCollator = Intl.Collator;
+    const collator = function (locales?: Intl.LocalesArgument, options?: Intl.CollatorOptions) {
+      return new RealCollator(locales ?? locale, options);
+    } as unknown as typeof Intl.Collator;
+    collator.supportedLocalesOf = RealCollator.supportedLocalesOf;
+    const spy = vi
+      .spyOn(String.prototype, "localeCompare")
+      .mockImplementation(function (this: string, that: string, locales?: Intl.LocalesArgument, options?: Intl.CollatorOptions) {
+        return realCompare.call(this, that, locales ?? locale, options);
+      });
+    Object.defineProperty(Intl, "Collator", { value: collator, writable: true, configurable: true });
+    try {
+      vi.resetModules();
+      const fresh = await import("./cellar-rows");
+      return {
+        ids: fresh.sortRows(rows, key).map((r) => r.lot.id),
+        probe: Math.sign("Aalto 2019".localeCompare("Barolo 2016")),
+      };
+    } finally {
+      Object.defineProperty(Intl, "Collator", { value: RealCollator, writable: true, configurable: true });
+      spy.mockRestore();
+    }
+  }
+
+  const same = "2026-09-01T12:00:00Z";
+  const cases: [SortKey, BottleRow[]][] = [
+    ["name", [row({ id: "barolo", name: "Barolo", year: 2016 }), row({ id: "aalto", name: "Aalto", year: 2019 })]],
+    [
+      "added",
+      [
+        row({ id: "barolo", name: "Barolo", year: 2016, created: same }),
+        row({ id: "aalto", name: "Aalto", year: 2019, created: same }),
+      ],
+    ],
+    [
+      "bottles",
+      [row({ id: "barolo", name: "Barolo", year: 2016, qty: 2 }), row({ id: "aalto", name: "Aalto", year: 2019, qty: 2 })],
+    ],
+  ];
+
+  for (const [key, rows] of cases) {
+    it(`"${key}": the same order under a da and an en default`, async () => {
+      const da = await underDefaultLocale("da", rows, key);
+      const en = await underDefaultLocale("en", rows, key);
+      expect(da.probe).toBe(1);
+      expect(en.probe).toBe(-1);
+      expect(da.ids).toEqual(["aalto", "barolo"]);
+      expect(en.ids).toEqual(["aalto", "barolo"]);
+    });
+  }
 });
 
 describe("which sort a list opens with (C5)", () => {

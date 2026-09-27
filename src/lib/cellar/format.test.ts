@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  addedDate,
   addedMonth,
   bottleTitle,
   colourWord,
@@ -130,6 +131,8 @@ describe("dates from date strings (no zone) and ISO timestamps (UTC)", () => {
     expect(dayMonth("2026-09-11")).toBe("11 Sep");
   });
   it("added = purchased_on, else created_at", () => {
+    expect(addedDate({ purchasedOn: "2023-11-05", createdAt: "2024-01-01T00:00:00Z" })).toBe("2023-11-05");
+    expect(addedDate({ purchasedOn: null, createdAt: "2024-01-01T00:00:00Z" })).toBe("2024-01-01T00:00:00Z");
     expect(
       addedMonth({ purchasedOn: "2023-11-05", createdAt: "2024-01-01T00:00:00Z" }),
     ).toBe("Nov 2023");

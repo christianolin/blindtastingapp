@@ -168,10 +168,20 @@ export function monthLabel(date: string): string {
   return `${MONTHS_LONG[month]} ${year}`;
 }
 
+/** The one definition of when a bottle was "added": its purchase date when it
+ *  has one, else when its lot was created. Every "added {month}" line, the lot
+ *  sheet's Added and the "Newest added" sort (cellar-rows.ts) read it, so the
+ *  default order never contradicts what the rows say. */
+export function addedDate(
+  lot: Pick<BottleLot, "purchasedOn" | "createdAt">,
+): string {
+  return lot.purchasedOn ?? lot.createdAt;
+}
+
 export function addedMonth(
   lot: Pick<BottleLot, "purchasedOn" | "createdAt">,
 ): string {
-  return monthYear(lot.purchasedOn ?? lot.createdAt);
+  return monthYear(addedDate(lot));
 }
 
 export function fmtAvg(n: number | null): string {

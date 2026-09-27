@@ -2,7 +2,7 @@
 // paging and footer copy (CC-P1). Pure: not server-bound, no Supabase
 // client, no React. Runtime imports come from ./format only — every type
 // comes from ./types as `import type`.
-import { bottleTitle, colourWord, plural, vintageLabel } from "./format";
+import { addedDate, bottleTitle, colourWord, plural, vintageLabel } from "./format";
 import type {
   BottleRow,
   Dimension,
@@ -324,6 +324,23 @@ function compareIds(a: string, b: string): number {
   return a < b ? -1 : 1;
 }
 
+// Titles are ordered by one fixed-locale collator, never a bare
+// `localeCompare`: that takes the runtime's default locale, so the server
+// render (Node's default) and the browser (e.g. da-DK, where "Aa" sorts after
+// "Z") could order the same rows differently, which React reports as a
+// hydration mismatch (the list is server-rendered).
+const TITLE_ORDER = new Intl.Collator("en");
+function compareTitles(a: BottleRow, b: BottleRow): number {
+  return TITLE_ORDER.compare(bottleTitle(a.wine), bottleTitle(b.wine));
+}
+
+/** Milliseconds for an ISO date or timestamp; an unreadable one is 0 (last in
+ *  a newest-first order) rather than NaN, which would break the sort. */
+function timeOf(iso: string): number {
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+
 /** `null`/unset always sorts after every real value, whichever side it is on. */
 function compareNullsLast(a: number | null, b: number | null): number {
   if (a == null && b == null) return 0;
@@ -339,23 +356,23 @@ export function sortRows(
   const arr = rows.slice();
   switch (key) {
     case "bottles":
-      arr.sort(
-        (a, b) =>
-          b.lot.quantity - a.lot.quantity ||
-          bottleTitle(a.wine).localeCompare(bottleTitle(b.wine)),
-      );
+      arr.sort((a, b) => b.lot.quantity - a.lot.quantity || compareTitles(a, b));
       break;
     case "name":
-      arr.sort((a, b) => bottleTitle(a.wine).localeCompare(bottleTitle(b.wine)));
+      arr.sort(compareTitles);
       break;
     case "added":
-      // C2: newest first, then title, then lot id. Lots written in one
-      // transaction (a CSV import) share created_at; without the tie-break
-      // their order is arbitrary and can shuffle between renders.
+      // C2: newest "added" first, by the same date every row's "added {month}"
+      // shows (addedDate: the purchase date, else created_at), so the default
+      // order never contradicts its own rows; then created_at, then title,
+      // then lot id. Lots written in one transaction (a CSV import) share
+      // created_at; without the tie-breaks their order is arbitrary and can
+      // shuffle between renders.
       arr.sort(
         (a, b) =>
-          new Date(b.lot.createdAt).getTime() - new Date(a.lot.createdAt).getTime() ||
-          bottleTitle(a.wine).localeCompare(bottleTitle(b.wine)) ||
+          timeOf(addedDate(b.lot)) - timeOf(addedDate(a.lot)) ||
+          timeOf(b.lot.createdAt) - timeOf(a.lot.createdAt) ||
+          compareTitles(a, b) ||
           compareIds(a.lot.id, b.lot.id),
       );
       break;

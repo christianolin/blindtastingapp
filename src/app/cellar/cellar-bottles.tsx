@@ -18,6 +18,7 @@ import { useMediaQuery } from "@/components/add-wine/use-camera";
 import { readValue, writeValue } from "@/lib/safe-storage";
 import { lotTitle } from "@/lib/cellar/format";
 import { mergeGroups, mergeNotice } from "@/lib/cellar/storage-merge";
+import { openingCellarSort, rememberTabSort } from "@/lib/cellar/tab-sort";
 import {
   applyFilters,
   dimensionCounts,
@@ -87,7 +88,8 @@ function storeView(v: CellarView): void {
 // Cellar-sort spec C6: every Sort change is saved for the viewer, fire and
 // forget. The list already shows the new order, so nothing waits on this; a
 // failed save keeps the on-screen choice and logs one line (a lost preference
-// is not worth interrupting anyone — the next visit opens on the old sort).
+// is not worth interrupting anyone — this tab still remembers the pick, a
+// reload or another device opens on the old sort).
 async function rememberSort(sort: SortKey): Promise<void> {
   let problem: string | null;
   try {
@@ -117,6 +119,7 @@ export function CellarBottles({
   rows,
   readOnly,
   savedSort,
+  viewerId,
 }: {
   rows: BottleRow[];
   readOnly: boolean;
@@ -124,6 +127,8 @@ export function CellarBottles({
    *  or unreadable), read by the server page — so the first render already
    *  has it: no flash, no hydration mismatch (spec C5). */
   savedSort: string | null;
+  /** The signed-in viewer, whose Sort pick this tab remembers (tab-sort.ts). */
+  viewerId: string;
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
@@ -132,8 +137,10 @@ export function CellarBottles({
 
   const [q, setQ] = useState("");
   const [group, setGroup] = useState<GroupKey>("none");
+  // The prop, unless this tab has picked a sort since: Back/Forward remounts
+  // this from a cached payload whose savedSort predates the pick (tab-sort.ts).
   const [chosenSort, setChosenSort] = useState<SortKey>(() =>
-    resolveCellarSort(savedSort, readOnly),
+    openingCellarSort(savedSort, readOnly, viewerId),
   );
   // One effective sort for both the toolbar's select and the rows' order, so
   // they can never disagree (a read-only list never offers "Your score").
@@ -236,6 +243,7 @@ export function CellarBottles({
   function handleSort(v: SortKey) {
     setChosenSort(v);
     resetPaging();
+    rememberTabSort(viewerId, v);
     void rememberSort(v);
   }
   function handleFilters(v: FilterState) {

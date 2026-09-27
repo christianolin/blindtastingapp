@@ -82,7 +82,7 @@ export default async function CellarPage({
 
       <CellarSubNav current="bottles" />
 
-      <CellarBottles rows={rows} readOnly={false} savedSort={savedSort} />
+      <CellarBottles rows={rows} readOnly={false} savedSort={savedSort} viewerId={user.id} />
     </div>
   );
 }

@@ -747,23 +747,42 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `docs/superpowers/specs/2026-09-27-cellar-sort-memory.md`, migration
   `20260927110000_user_preferences.sql`). Every cellar list (`/cellar`, and
   someone else's read-only `/u/[id]/cellar`) opens on the VIEWER's last
-  chosen sort, or "Newest added" (`"added"`: `created_at` desc, then title,
-  then lot id) if they never chose one. The choice is
+  chosen sort, or "Newest added" if they never chose one. `"added"` sorts by
+  the date each row shows as "added {month}" — `addedDate`
+  (`src/lib/cellar/format.ts`): the purchase date, else `created_at`; the
+  app's copy already calls that date "added", and sorting by `created_at`
+  alone put a bottle entered today with a 2024 purchase date, reading "added
+  Mar 2024", at the top — then `created_at`, title, lot id. Titles in
+  `sortRows` go through one `Intl.Collator("en")`, never a bare
+  `localeCompare`: the list is server-rendered, and Node's default locale and
+  a da-DK browser order "Aa…" differently (a hydration mismatch). The choice is
   `user_preferences.cellar_sort`, one owner-only row per person (RLS
   `user_id = auth.uid()`; client grants SELECT, INSERT (user_id, cellar_sort),
   UPDATE (cellar_sort), no DELETE; anon nothing) — deliberately not a
   `profiles` column, since every member reads `profiles` and its client
   UPDATE grant is pinned by later migrations. `profiles_deleted_drop_preferences`
-  removes the row when an account is deleted. The server pages read it with
-  `readCellarSort` (`src/lib/cellar/sort-preference.ts`, any error → null) and
-  `CellarBottles` opens on `resolveCellarSort(saved, readOnly)`
+  removes the row when an account is deleted, and the BEFORE INSERT
+  `user_preferences_guard` (the favourites guard precedent) refuses a new one
+  for a deleted profile, e.g. from an access token issued before the deletion.
+  The server pages read it with `readCellarSort`
+  (`src/lib/cellar/sort-preference.ts`, any error → null) and `CellarBottles`
+  opens on `openingCellarSort(saved, readOnly, viewerId)`
+  (`src/lib/cellar/tab-sort.ts`): this tab's own last pick by the same viewer
+  when there is one, else the saved value, through `resolveCellarSort`
   (`cellar-rows.ts`: anything invalid → "added"; "yours" in a read-only list →
-  "added"), one effective sort for both the select and the rows. Each Sort
-  change calls `saveCellarSort` (`src/app/cellar/sort-actions.ts`; fire and
-  forget, one `console.error` on failure, no revalidate), which updates the
-  row and inserts it when missing — never `.upsert()`: PostgREST's ON CONFLICT
-  DO UPDATE SET names every payload column, and `user_id` has no client
-  UPDATE grant.
+  "added"), one effective sort for both the select and the rows. The tab's
+  pick exists because nothing revalidates after a save and, without Cache
+  Components, browser Back/Forward remounts the list from the router's stale
+  cached payload: pick "Name", open a wine, press Back, and the prop still
+  carries the old sort. It is module state written only by the Sort handler
+  (a no-op on the server), so the server render and hydration always use the
+  prop; keyed by viewer, since a sign-out/sign-in is a soft navigation. A
+  newer pick from another device reaches an older tab only after a reload.
+  Each Sort change calls `saveCellarSort` (`src/app/cellar/sort-actions.ts`;
+  fire and forget, one `console.error` on failure, no revalidate or refresh),
+  which updates the row and inserts it when missing — never `.upsert()`:
+  PostgREST's ON CONFLICT DO UPDATE SET names every payload column, and
+  `user_id` has no client UPDATE grant.
 - The leaderboard sidebar shows more than a bare score per participant: a
   "wine X/Y" progress readout (their own scored-guess count over the
   tasting's total wine count — this can differ between participants if one

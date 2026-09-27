@@ -457,7 +457,9 @@ export type Database = {
       // cellar_sort, UPDATE cellar_sort only — so the app updates, then
       // inserts when there is no row (src/lib/cellar/sort-preference.ts), never
       // a PostgREST upsert, whose ON CONFLICT DO UPDATE SET names user_id too.
-      // A deleted profile has no row (profiles_deleted_drop_preferences).
+      // A deleted profile has no row: profiles_deleted_drop_preferences removes
+      // it at the deletion, and the BEFORE INSERT user_preferences_guard
+      // refuses a new one afterwards (42501, "this account has been deleted").
       user_preferences: {
         Row: { user_id: string; cellar_sort: CellarSortPreference | null };
         Insert: { user_id: string; cellar_sort?: CellarSortPreference | null };

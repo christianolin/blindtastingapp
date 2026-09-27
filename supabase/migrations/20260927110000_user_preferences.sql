@@ -13,7 +13,8 @@
 -- with --dry, then scripts/user-preferences.test.mjs with
 -- USER_PREFERENCES_APPLY) re-reads live before the apply:
 -- * No table user_preferences, no function drop_deleted_profile_preferences
---   and no trigger profiles_deleted_drop_preferences.
+--   or user_preferences_guard and no trigger profiles_deleted_drop_preferences
+--   or user_preferences_guard.
 -- * profiles: PRIMARY KEY (id); deleted_at timestamptz, nullable, made
 --   write-once by profiles_deleted_guard and stamped last by
 --   scrub_deleted_account (20260919101300; recreated since, never changed in
@@ -51,6 +52,16 @@
 --    profiles, only when it goes from null to set, deletes that person's row
 --    inside the stamping transaction (C4). scrub_deleted_account is not
 --    recreated.
+-- 5. user_preferences_guard (review round 1, C4): a BEFORE INSERT guard,
+--    SECURITY DEFINER, that refuses a row for a deleted profile (42501, "this
+--    account has been deleted") — the profile_favourite_regions_guard
+--    precedent (20260919141700). The drop trigger fires once, when deleted_at
+--    is stamped, and the profile row is kept, so without the guard an access
+--    token issued before the deletion (valid until it expires) could write a
+--    row for the scrubbed profile afterwards. The guard reads the profile row
+--    FOR SHARE, which conflicts with the scrub's FOR UPDATE, so an insert
+--    either commits first and is removed by the drop trigger, or waits and
+--    then sees deleted_at.
 --
 -- Note for the app (src/lib/cellar/sort-preference.ts): a PostgREST upsert
 -- lists every payload column in ON CONFLICT DO UPDATE SET, user_id included,
@@ -83,13 +94,14 @@ begin
   end if;
   select string_agg(p.oid::regprocedure::text, ', ') into v_text
   from pg_proc p
-  where p.pronamespace = 'public'::regnamespace and p.proname = 'drop_deleted_profile_preferences';
+  where p.pronamespace = 'public'::regnamespace
+    and p.proname in ('drop_deleted_profile_preferences', 'user_preferences_guard');
   if v_text is not null then
     raise exception 'a function this migration creates already exists: %; re-read live before applying', v_text;
   end if;
   select string_agg(format('%s.%s', t.tgrelid::regclass::text, t.tgname), ', ') into v_text
   from pg_trigger t
-  where t.tgname = 'profiles_deleted_drop_preferences';
+  where t.tgname in ('profiles_deleted_drop_preferences', 'user_preferences_guard');
   if v_text is not null then
     raise exception 'a trigger this migration creates already exists: %', v_text;
   end if;
@@ -136,7 +148,8 @@ begin
                          || 'EXECUTE FUNCTION drop_deleted_profile_favourites()') then
     raise exception 'profiles_deleted_drop_favourites is not the AFTER UPDATE OF deleted_at precedent this file copies';
   end if;
-  select format('secdef %s, config %s, execute %s', p.prosecdef, p.proconfig::text,
+  -- format() prints a bare boolean as t/f (boolout); ::text is true/false.
+  select format('secdef %s, config %s, execute %s', p.prosecdef::text, p.proconfig::text,
                 coalesce((select string_agg(x.g, ',' order by x.g collate "C")
                           from (select case when a.grantee = 0 then 'PUBLIC'
                                             when a.grantee = p.proowner then 'OWNER'
@@ -201,6 +214,30 @@ revoke all on function public.drop_deleted_profile_preferences() from public, an
 create trigger profiles_deleted_drop_preferences after update of deleted_at on public.profiles
   for each row when (old.deleted_at is null and new.deleted_at is not null)
   execute function public.drop_deleted_profile_preferences();
+
+-- ---------------------------------------------------------------------------
+-- Spec C4 (review round 1): no row for a deleted profile, ever — the
+-- profile_favourite_regions_guard precedent. The drop trigger above fires
+-- once; this refuses a row written after it (a leftover access token, or an
+-- insert racing the scrub). Every role is refused, the owner included.
+-- ---------------------------------------------------------------------------
+create function public.user_preferences_guard()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_deleted_at timestamptz;
+begin
+  -- FOR SHARE waits out an account-deletion scrub in flight (it holds this
+  -- row FOR UPDATE until it commits) and then reads the committed deleted_at.
+  select p.deleted_at into v_deleted_at from profiles p where p.id = new.user_id for share;
+  if v_deleted_at is not null then
+    raise exception 'this account has been deleted' using errcode = 'insufficient_privilege';
+  end if;
+  return new;
+end $$;
+revoke all on function public.user_preferences_guard() from public, anon, authenticated, service_role;
+
+create trigger user_preferences_guard before insert on public.user_preferences
+  for each row execute function public.user_preferences_guard();
 
 -- ---------------------------------------------------------------------------
 -- Post-state, same transaction: every check a raise exception.
@@ -304,11 +341,12 @@ begin
     raise exception 'user_preferences privileges are not spec C3''s';
   end if;
 
-  -- 5. The trigger function: SECURITY DEFINER, search_path public, plpgsql,
-  --    volatile, returns trigger, no arguments, this body (md5 of prosrc with
-  --    any CR stripped), EXECUTE held by its owner alone.
+  -- 5. The two trigger functions: SECURITY DEFINER, search_path public,
+  --    plpgsql, volatile, returns trigger, no arguments, these bodies (md5 of
+  --    prosrc with any CR stripped), EXECUTE held by the owner alone.
+  --    format() prints a bare boolean as t/f (boolout); ::text is true/false.
   select format('secdef %s, config %s, %s, %s, returns %s (set %s), args (%s), md5 %s, execute %s',
-                p.prosecdef, p.proconfig::text, l.lanname, p.provolatile, format_type(p.prorettype, null), p.proretset,
+                p.prosecdef::text, p.proconfig::text, l.lanname, p.provolatile, format_type(p.prorettype, null), p.proretset::text,
                 pg_get_function_identity_arguments(p.oid), md5(replace(p.prosrc, chr(13), '')),
                 coalesce((select string_agg(x.g, ',' order by x.g collate "C")
                           from (select case when a.grantee = 0 then 'PUBLIC'
@@ -328,6 +366,28 @@ begin
      or has_function_privilege('authenticated', 'public.drop_deleted_profile_preferences()', 'EXECUTE')
      or has_function_privilege('service_role', 'public.drop_deleted_profile_preferences()', 'EXECUTE') then
     raise exception 'a client role or service_role can execute drop_deleted_profile_preferences()';
+  end if;
+  select format('secdef %s, config %s, %s, %s, returns %s (set %s), args (%s), md5 %s, execute %s',
+                p.prosecdef::text, p.proconfig::text, l.lanname, p.provolatile, format_type(p.prorettype, null), p.proretset::text,
+                pg_get_function_identity_arguments(p.oid), md5(replace(p.prosrc, chr(13), '')),
+                coalesce((select string_agg(x.g, ',' order by x.g collate "C")
+                          from (select case when a.grantee = 0 then 'PUBLIC'
+                                            when a.grantee = p.proowner then 'OWNER'
+                                            else pg_get_userbyid(a.grantee)::text end as g
+                                from aclexplode(p.proacl) a where a.privilege_type = 'EXECUTE') x), '-'))
+    into v_text
+  from pg_proc p
+  join pg_language l on l.oid = p.prolang
+  where p.oid = to_regprocedure('public.user_preferences_guard()');
+  if v_text is distinct from
+       'secdef true, config {search_path=public}, plpgsql, v, returns trigger (set false), args (), '
+       || 'md5 147828302378058638e4c457dac9afe5, execute OWNER' then
+    raise exception 'user_preferences_guard() differs from spec C4: %', coalesce(v_text, 'missing');
+  end if;
+  if has_function_privilege('anon', 'public.user_preferences_guard()', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.user_preferences_guard()', 'EXECUTE')
+     or has_function_privilege('service_role', 'public.user_preferences_guard()', 'EXECUTE') then
+    raise exception 'a client role or service_role can execute user_preferences_guard()';
   end if;
 
   -- 6. The trigger: row-level AFTER UPDATE OF deleted_at (tgtype 17), enabled,
@@ -355,6 +415,23 @@ begin
       current_setting('blindr.user_preferences_profiles_triggers', true), v_text;
   end if;
 
+  -- 6b. user_preferences' only non-internal trigger is the guard: row-level
+  --     BEFORE INSERT (tgtype 7), enabled, calling user_preferences_guard().
+  select string_agg(format('%s %s %s %s', t.tgname, t.tgtype, t.tgenabled,
+                           regexp_replace(pg_get_triggerdef(t.oid), '\mpublic\.', '', 'g')),
+                    '; ' order by t.tgname::text collate "C")
+    into v_text
+  from pg_trigger t
+  where t.tgrelid = 'public.user_preferences'::regclass and not t.tgisinternal;
+  if v_text is distinct from
+       'user_preferences_guard 7 O CREATE TRIGGER user_preferences_guard BEFORE INSERT ON user_preferences '
+       || 'FOR EACH ROW EXECUTE FUNCTION user_preferences_guard()'
+     or not exists (select 1 from pg_trigger t
+                    where t.tgrelid = 'public.user_preferences'::regclass and t.tgname = 'user_preferences_guard'
+                      and t.tgfoid = to_regprocedure('public.user_preferences_guard()')) then
+    raise exception 'user_preferences triggers are "%", expected the BEFORE INSERT guard alone', coalesce(v_text, '-');
+  end if;
+
   -- 7. Not in a publication (nothing streams a person's preferences).
   if exists (select 1 from pg_publication_tables pt
              where pt.schemaname = 'public' and pt.tablename = 'user_preferences') then
@@ -366,8 +443,9 @@ begin
     raise exception 'user_preferences is not empty';
   end if;
 
-  -- Informational: the table's and the function's ACLs.
-  raise notice 'user_preferences: table acl %; drop_deleted_profile_preferences acl %',
+  -- Informational: the table's and the functions' ACLs.
+  raise notice 'user_preferences: table acl %; drop_deleted_profile_preferences acl %; user_preferences_guard acl %',
     (select c.relacl::text from pg_class c where c.oid = 'public.user_preferences'::regclass),
-    (select p.proacl::text from pg_proc p where p.oid = to_regprocedure('public.drop_deleted_profile_preferences()'));
+    (select p.proacl::text from pg_proc p where p.oid = to_regprocedure('public.drop_deleted_profile_preferences()')),
+    (select p.proacl::text from pg_proc p where p.oid = to_regprocedure('public.user_preferences_guard()'));
 end $$;

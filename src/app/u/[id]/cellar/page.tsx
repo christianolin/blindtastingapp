@@ -62,7 +62,7 @@ export default async function UserCellarPage({
             </p>
           </div>
         ) : (
-          <CellarBottles rows={rows} readOnly savedSort={savedSort} />
+          <CellarBottles rows={rows} readOnly savedSort={savedSort} viewerId={user.id} />
         )}
       </div>
     </div>
