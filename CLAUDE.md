@@ -928,7 +928,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   reachable on mobile via `MobileLeaderboard`'s floating button + bottom
   sheet. Both drawers are dependency-free overlay+panel client components,
   not base-ui Dialogs (avoids fighting Dialog positioning). AppHeader also
-  renders `NotificationsBell` (pending-invite count + dropdown).
+  renders `NotificationsBell` (pending-invite count + dropdown). Its
+  optional `title` is the page name next to the burger, phones only
+  (`md:hidden`; the sidebar names the page from md). Its optional `heading`
+  (2026-09-27) is the page's own `h1`, shown in the bar from md only, left of
+  the search box, in place of an in-page heading; the bar keeps its height.
+  Only the wine map passes it (see "Wine map on the desktop").
 - **Active-tasting banner** (2026-09-19, spec
   `docs/superpowers/specs/2026-09-19-active-tasting-banner.md`). A strip
   directly under the top bar (`ActiveTastingBanner`,
@@ -1961,28 +1966,40 @@ a raw subquery, regardless of which two tables look involved at a glance.
       long tasks, runs a scripted **Run test**, and offers **Copy results**
       JSON. Safari/WebKit has no long-task API, so the probe falls back to rAF
       frame deltas there. It is how the iPhone numbers are taken.
-  - **Measured** (production build, 2026-09-24). Probe script, 3 cold runs
-    per row, One and All, at 455x628 and 1400x850 full view: 0 long tasks on
-    every row, worst frame ≤ 34 ms (baseline before this work: one 1,475 ms
-    task on the first zoom at 455x628, 2,985 ms in full view). One ↔ All,
-    chip taps and flights: 0 long tasks. Two pre-existing costs remain, the
-    same on the Phase 1c build: a flip from dark to light has one 56-72 ms
-    task (MapLibre's basemap diff re-adds ~43 Carto layers, each serializing
-    the style, plus the wine paint writes), and a grape pick sometimes has one
-    ~60 ms `Worker.onmessage` task (a tile result decoded on the main thread).
+  - **Measured** (production build, 2026-09-24; both sizes are map
+    CANVASES under the pre-2026-09-27 desktop layout: 455x628 was a 1440x900
+    window's default canvas, ~1400x850 a Full-view canvas. The 2026-09-27
+    lock, see "Wine map on the desktop", gives larger default canvases,
+    predicted (its spec §6) at 532x557 for 1366x768 up to 1014x789 for
+    1920x1000, so still under that Full-view one; its §11 item 13 re-runs
+    this protocol at 1366x768, ~1675x865 and 1920x1000). Probe script, 3
+    cold runs per row, One and All, at 455x628 and 1400x850 full view: 0
+    long tasks on every row, worst frame ≤ 34 ms (baseline before this work:
+    one 1,475 ms task on the first zoom at 455x628, 2,985 ms in full view).
+    One ↔ All, chip taps and flights: 0 long tasks. Two pre-existing costs
+    remain, the same on the Phase 1c build: a flip from dark to light has one
+    56-72 ms task (MapLibre's basemap diff re-adds ~43 Carto layers, each
+    serializing the style, plus the wine paint writes), and a grape pick
+    sometimes has one ~60 ms `Worker.onmessage` task (a tile result decoded
+    on the main thread).
 - **Wine map on the phone** (2026-09-25; spec
   `docs/superpowers/specs/2026-09-25-phone-map-layout-design.md`, plan
   `docs/superpowers/plans/2026-09-25-phone-map-layout.md`). Owner: on the
   phone you want to pinch the map, not scroll the page. Below md
   (`(width < 48rem)`, exactly what `max-md:` compiles to) `/knowledge/map` is
-  one fixed screen: the header (titled "Wine map"; the page heading is
-  `hidden md:block`), the active-tasting strip when there is one, one toolbar
+  one fixed screen: the header (titled "Wine map" through AppHeader's
+  `title`; phones have no `h1`, since the page's `h1` is AppHeader's md+
+  `heading`), the active-tasting strip when there is one, one toolbar
   row (grape Filter, Local|English, a "Map options" button), the map filling
   the rest, and a bottom sheet over the map's bottom edge. The page never
-  scrolls; only the sheet's panels do. Tablets (md–xl) and desktop are
-  unchanged.
+  scrolls; only the sheet's panels do. Since 2026-09-27 tablets (md–xl) and
+  desktop are locked to the screen by the same flex chain, with their own
+  layout ("Wine map on the desktop", below). The phone layout did not change
+  (its final paint is identical; the ListFilter glyph now also shows in the
+  server paint), and that bullet's phone pin test holds every `max-md:`
+  class to its list.
   - **The height is a flex chain from AppShell's `h-dvh` column, never a
-    calc.** The page root and the `data-map-page` wrapper are flex-1
+    calc.** The page root and `<main data-map-page>` are flex-1
     `max-md:min-h-0 max-md:overflow-hidden` columns; the explorer column, its
     row, the map Card and its CardContent are each `max-md:min-h-0
     max-md:flex-1`; the map wrapper is `max-md:min-h-0 max-md:flex-1` and
@@ -2021,13 +2038,17 @@ a raw subquery, regardless of which two tables look involved at a glance.
     and expansion survive tab switches.
   - **Scroll containers in the sheet.** Explore: the tree's own `<ul>` (the
     panel gives `WineMapTree` a definite height, so the search box stays
-    pinned); its nearest-scrollable-ancestor walk finds that list, never the
-    page. Details: the panel itself. `WineMapTree`'s phone-only props are
-    `active` (false while its tab is hidden; turning true re-reveals the
-    selected row, which a hidden list cannot scroll to) and `rootsCollapsed`
-    (the phone list opens as the list of countries, like a menu). Below md
-    its rows, search box and level buttons are 44 px, and its search field is
-    16 px (iOS zooms the whole page into a smaller focused field).
+    pinned); the selected-row reveal scrolls that list alone (a ref on it,
+    since 2026-09-27; it used to walk up to the nearest scrollable
+    ancestor), never an ancestor or the page, and skips a row with no
+    layout. Details: the panel itself. `WineMapTree`'s `active` is false
+    while the tree is out of sight (here: its tab hidden; from md: a
+    collapsed card or side column); turning true re-reveals the selected
+    row, which a hidden list cannot scroll to. The phone-only prop is
+    `rootsCollapsed` (the phone list opens as the list of countries, like a
+    menu). Below md its rows, search box and level buttons are 44 px, and its
+    search field is 16 px (iOS zooms the whole page into a smaller focused
+    field).
   - **Map options** (`map-options-sheet.tsx`): a phone bottom Dialog holding
     `MapDetailControls` unchanged. Phones render neither the toolbar's
     switch and status row nor the chips, so the `role="status"` region
@@ -2075,6 +2096,95 @@ a raw subquery, regardless of which two tables look involved at a glance.
     phone layout. In the Browser pane, resize and then reload: `useIsPhone`
     follows a live resize, but the legend's open state is decided once at
     mount.
+- **Wine map on the desktop** (2026-09-27; spec
+  `docs/superpowers/specs/2026-09-27-desktop-map-layout-design.md`). Owner:
+  on a PC part of the map sat below the fold (a fixed `h-[70vh]` box under
+  ~280 px of chrome). From md `/knowledge/map` is locked to the screen like
+  the phone, so none of the map is ever below the fold. AppShell and
+  AppSidebar are untouched; the content column stays every other page's
+  scroll port.
+  - **The phone's flex chain, never a calc.** Two CSS-only custom variants
+    in `globals.css` (no JS twin): `map-lock` = `(width >= 48rem) and
+    (height >= 30rem)`, `map-scroll` = `(width >= 48rem) and (height <
+    30rem)`; they never overlap and never apply below md. Under `map-lock:`
+    the page root (the page-wrapper rule's `flex flex-1 flex-col`) and
+    `<main data-map-page>` (`md:p-4`) are `min-h-0 overflow-hidden`, the
+    explorer root and its row `min-h-0 flex-1`, and the map Card, its
+    CardContent and the map wrapper `md:min-h-0` flex-1 down to TileWineMap's
+    `h-full`, so the active-tasting strip takes its share. A window under
+    30rem tall (a landscape phone) gets `map-scroll:`: the row is a fixed
+    `h-[26.25rem]` (420 px), every panel still scrolls inside it, and the
+    column scrolls by the difference (the sticky header works there).
+  - **Top-bar heading.** "Knowledge Explorer" is the page's `h1` in the bar
+    from md, through AppHeader's opt-in `heading` prop; the subtitle stays,
+    verbatim, as a `sr-only max-md:hidden` `<p>` in `<main>`. At md+ the map
+    loses its Card chrome (TileWineMap keeps its 1 px border); the tree and
+    Details stay cards, labelled regions "Explorer" and "Details".
+  - **No row above the map may change height.** The canvas is flex-sized, so
+    a toolbar row that grows resizes MapLibre, and each resize fires
+    `moveend`, which re-syncs the shards. The filter row is `md:h-8`
+    nowrap; the grape combobox shrinks (`md:min-w-0`) while the badge and
+    Local|English do not; "Filter" is `md:sr-only` beside the ListFilter
+    glyph; the status `<p>` is `md:line-clamp-2`; the chips are `md:h-8`. The
+    One|All row's height then depends on the map column's width alone (the
+    status wraps under the radios only in a narrow column). Never
+    CSS-animate a panel's width or the map's size.
+  - **xl (1280 px up): three full-height columns, nothing sticky.** Tree
+    `xl:w-60` (`2xl:w-[280px]`), map flex-1, Details `xl:w-72` (`2xl:w-80`).
+    The tree's own `<ul>` scrolls; the Details body scrolls under its pinned
+    header and returns to the top on every new place (`detailsScrollRef`). A
+    collapsed card stays mounted (`xl:hidden`) and leaves a full-height 36 px
+    strip ("Show hierarchy"; "Show details", which names the selected place
+    vertically). Focus hands off between each collapse button and its strip
+    through a pending-focus ref consumed after commit, so a load never steals
+    focus.
+  - **md–xl: one side column beside the map.** The row is a grid, `18rem`
+    (`2.25rem` collapsed) by `minmax(0,1fr)`, rows `auto` (an Explore |
+    Details `aria-pressed` switch plus "Hide panel") and `minmax(0,1fr)`; the
+    map card spans both rows. The tree and Details cards share one cell, the
+    inactive one `max-xl:invisible` (box and scroll kept, not painted, not
+    focusable), so switching never resizes the canvas; collapsed, the column
+    is one "Show panel" strip naming the place. The state is the pure
+    `sidePanelReducer` (`src/lib/wine-map/side-panel.ts`, `{ tab, open }`,
+    starting on Details with `?place=`): `select` (a map tap, a tree pick or
+    a Nearby or Labelling chip through `selectDesktop`, and the render-time
+    deep link) shows Details and NEVER opens a collapsed column; `tab`
+    switches; `toggle` flips `open`. At no md+ width does a selection open,
+    close or resize a panel: `resize()` does not stop an in-flight `easeTo`.
+    A tree pick here hides the tree, so focus moves to the Details switch.
+    Retired: the fixed full-width Details bar (`sheetOpen`), the tree stacked
+    under the map and the `h-20` spacer. No panel state is persisted or put
+    in the URL.
+  - **The Details slot move at xl.** The row has seven fixed slots, each its
+    element or `null`, so the map's React parent chain is the same at every
+    width (new md+ elements follow the phone bullet's four rules). The
+    Details card is built once and goes before the map below xl and after it
+    from xl, so DOM order is visual order, chosen by `useIsWide()`
+    (`src/lib/use-is-wide.ts`, `WIDE_QUERY = "(width >= 80rem)"`, exactly
+    `xl:`, server snapshot `true`; it also picks the tree's `active`). Layout
+    stays CSS alone. The move remounts only the Details subtree (once after
+    hydration at md–xl, then on each resize across 1280), never MapLibre.
+  - **Full view** is the same element and the same inner chain; only the
+    explorer root turns `fixed inset-0 z-50 … p-4`, hiding the sidebar and
+    the top bar. Entry stays lg+, the exit button shows whenever it is on,
+    and it still resets below md. The window Escape listener ignores a
+    `defaultPrevented` event, and the tree search's Escape clears a
+    non-empty query first (`preventDefault`), so that Escape no longer also
+    exits Full view.
+  - **Legend.** Open by default only at `(width >= 64rem) and (height >=
+    56rem)` (`legendStartsOpen`, `src/lib/wine-map/legend-default.ts`),
+    decided once at mount, so closed at the owner's ~1675x865. At md+ its box
+    is at most 40% of the canvas and its list scrolls inside; phones keep
+    `max-h-[45vh]` and `max-md:bottom-16`.
+  - **Phone pin** (`src/app/knowledge/map/desktop-layout.test.ts`, a source
+    scan). The distinct `max-md:` classes in the map's six phone files
+    (`page.tsx`, the explorer, `tile-wine-map.tsx`, both sheets,
+    `wine-map-tree.tsx`) must equal a list frozen at a23cd16, so a phone
+    change has to update it on purpose. It also bans `h-[70vh]`,
+    `min-h-[420px]`, `calc(100dvh`, `xl:sticky` and `md:p-8` from the page
+    and the explorer and pins both variants' media strings. The camera,
+    engine, basemap and `mapStyle` are unchanged: the panels sit beside the
+    canvas, never over it, so every fit still frames the whole canvas.
 - **Wine Map dark mode** (2026-09-19, spec
   `docs/superpowers/specs/2026-09-19-map-dark-mode.md`). The map follows the
   theme `<html>` is rendering (its `.dark` class, via `useRenderedTheme` in
