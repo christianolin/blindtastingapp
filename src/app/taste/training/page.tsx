@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
-import { coverageLine } from "@/lib/training/copy";
+import { TRAINING_COPY, coverageLine } from "@/lib/training/copy";
 import {
   coverageCountries,
   readTrainingHistory,
@@ -11,7 +11,7 @@ import {
 import type { AromaTerm } from "@/lib/wset/types";
 import { TrainingRoom } from "./training-room";
 
-export const metadata = { title: "Training room · Blindr" };
+export const metadata = { title: `${TRAINING_COPY.appBarTitle} · Blindr` };
 
 // The training room (training-room spec §3, §8): a pillar page — the app bar,
 // then one client component with the landing, a session and the result. The
@@ -44,7 +44,7 @@ export default async function TrainingRoomPage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader title="Training room" />
+      <AppHeader title={TRAINING_COPY.appBarTitle} />
       <main className="flex w-full max-w-[1500px] flex-1 flex-col p-[14px] md:p-8">
         <TrainingRoom
           userId={user.id}

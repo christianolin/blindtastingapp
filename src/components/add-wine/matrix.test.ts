@@ -337,6 +337,10 @@ describe("the training room's reveal (a note destination with reveal, spec §3.4
     expect(x.byHand.primary(false)).toBe(TRAINING_COPY.revealByHandPrimary);
     expect(x.byHand.primary(true)).toBe(TRAINING_COPY.revealByHandPrimary);
     expect(x.byHand.eyebrow).toBe(`${TRAINING_COPY.revealEyebrow} · by hand`);
+    expect(x.upload.body).toBe(TRAINING_COPY.revealUploadBody);
+    expect(x.cellarTileSubtitle?.({ bottles: 38, readyToDrink: 6 })).toBe(
+      `38 bottles · ${TRAINING_COPY.revealCellarSubtitle}`,
+    );
   });
   it("a plain note keeps Taste & rate's wording and its consume toggle", () => {
     expect(sheetMatrix({ kind: "note" }, true).eyebrow).toBe("Taste & rate");

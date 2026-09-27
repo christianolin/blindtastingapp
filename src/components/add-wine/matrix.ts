@@ -345,8 +345,8 @@ function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
     row: () => ({ label: copy.revealRowAction, action: "pick", disabled: false, affordance: "chevron" }),
     // A bottle poured blind was opened by someone else: never drawn down.
     consumeLabel: null,
-    upload: { ...note.upload, body: "Read and matched exactly as it is on the phone, then your result shows." },
-    cellarTileSubtitle: cellarTile(() => "if the bottle came from your cellar"),
+    upload: { ...note.upload, body: copy.revealUploadBody },
+    cellarTileSubtitle: cellarTile(() => copy.revealCellarSubtitle),
     footer: { ...note.footer, primary: copy.revealPrimary },
     confirm: { ...note.confirm, primaryMatch: copy.revealPrimary, primaryNoMatch: copy.revealPrimary },
     byHand: { ...note.byHand, eyebrow: `${copy.revealEyebrow} · by hand`, primary: () => copy.revealByHandPrimary },

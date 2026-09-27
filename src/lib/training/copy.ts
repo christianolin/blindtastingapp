@@ -21,6 +21,8 @@ export const TRAINING_COPY = {
   // nav label / pill
   navLabel: "Training Room",
   previewPill: "Preview",
+  // the page's app bar (and, with " · Blindr", its browser title)
+  appBarTitle: "Training room",
   // landing
   loading: "Setting up the training room…",
   eyebrow: "Training room · Preview",
@@ -77,6 +79,9 @@ export const TRAINING_COPY = {
   revealPrimary: "This is it",
   revealEnterHint: "↵ reveals the first hit",
   revealByHandPrimary: "This is it",
+  // the reveal sheet's laptop upload zone and "From my cellar" tile tail
+  revealUploadBody: "Read and matched exactly as it is on the phone, then your result shows.",
+  revealCellarSubtitle: "if the bottle came from your cellar",
   // result
   noPick: "You didn't pick a wine",
   wherePointed: "Where your note pointed",

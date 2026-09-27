@@ -43,6 +43,7 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
     expect(TRAINING_COPY).toEqual({
       navLabel: "Training Room",
       previewPill: "Preview",
+      appBarTitle: "Training room",
       loading: "Setting up the training room…",
       eyebrow: "Training room · Preview",
       title: "Taste blind. Then find out.",
@@ -90,6 +91,8 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       revealPrimary: "This is it",
       revealEnterHint: "↵ reveals the first hit",
       revealByHandPrimary: "This is it",
+      revealUploadBody: "Read and matched exactly as it is on the phone, then your result shows.",
+      revealCellarSubtitle: "if the bottle came from your cellar",
       noPick: "You didn't pick a wine",
       wherePointed: "Where your note pointed",
       notInPool: "This style isn't in the pool yet",
