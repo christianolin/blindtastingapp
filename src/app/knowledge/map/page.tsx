@@ -33,8 +33,9 @@ export default async function WineMapPage({
   const { place } = await searchParams;
 
   return (
-    // Phones: exactly AppShell's column tall, never taller (see the wrapper).
-    <div className="flex flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden">
+    // Phones, and md+ windows at least 30rem tall (map-lock): exactly
+    // AppShell's column tall, never taller (see <main>).
+    <div className="flex flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden map-lock:min-h-0 map-lock:overflow-hidden">
       {/* Next hoists these into <head>. crossOrigin matters: the tile and
           basemap fetches are CORS requests, and a preconnect opened without it
           warms the wrong connection and is silently wasted. */}
@@ -52,32 +53,37 @@ export default async function WineMapPage({
           pick, which fetches (and caches) it then. */}
       <link rel="preload" as="fetch" href={WINE_MAP_MANIFEST_URL} crossOrigin="anonymous" />
       <link rel="preload" as="fetch" href={BASEMAP_STYLE_URL.light} crossOrigin="anonymous" />
-      <AppHeader title="Wine map" />
-      {/* Phones (below md; spec 2026-09-25 D1, D3): one fixed screen. This
-          wrapper is exactly what is left under the header, and under the
-          active-tasting strip when there is one, and it never scrolls, so a
-          drag on the map is always the map's. The height is a flex chain, not
-          a calc: AppShell's column is h-dvh, and this page's root and this
-          wrapper are flex-1 min-h-0 inside it, so a strip that appears simply
-          takes its share (a calc(100dvh - header) would overflow by the
-          strip). AppShell itself is untouched. From md it is laid out exactly
-          as before: sm:p-8 has always applied there. */}
-      <div
+      {/* "Wine map" names the page next to the burger on phones; from md the
+          bar carries the page's h1 instead (spec 2026-09-27 M3), since the
+          locked screen has no room for an in-page heading. */}
+      <AppHeader title="Wine map" heading="Knowledge Explorer" />
+      {/* One fixed screen (spec 2026-09-25 D1, D3 on phones; spec 2026-09-27
+          M1, M2 from md). <main> is exactly what is left under the header,
+          and under the active-tasting strip when there is one, and it never
+          scrolls, so a drag on the map is always the map's. The height is a
+          flex chain, not a calc: AppShell's column is h-dvh, and this page's
+          root and <main> are flex-1 min-h-0 inside it, so a strip that
+          appears simply takes its share (a calc(100dvh - header) would
+          overflow by the strip). AppShell itself is untouched: this page just
+          never overflows its column.
+          - Phones (below md): the max-md: utilities, unchanged.
+          - md+ and at least 30rem tall (map-lock:): the same chain, with a
+            16 px page padding.
+          - md+ and shorter (map-scroll:, e.g. a landscape phone): the
+            explorer's row takes a fixed 420 px and the column scrolls by the
+            difference, so a tiny window still gets a usable map. */}
+      <main
         data-map-page=""
-        className="flex w-full flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden md:gap-6 md:p-8"
+        className="flex w-full flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden md:p-4 map-lock:min-h-0 map-lock:overflow-hidden"
       >
-        <div className="hidden md:block">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            Knowledge Explorer
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Explore the world of wine through places, grapes, styles and the
-            rules that shape them.
-          </p>
-        </div>
-
+        {/* The heading moved into the top bar; its line stays for screen
+            readers from md, where that h1 is (phones never exposed either). */}
+        <p className="sr-only max-md:hidden">
+          Explore the world of wine through places, grapes, styles and the
+          rules that shape them.
+        </p>
         <TileWineMapExplorer initialPlaceKey={place ?? null} />
-      </div>
+      </main>
     </div>
   );
 }

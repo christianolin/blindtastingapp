@@ -3,15 +3,16 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useReducer,
   useRef,
   useState,
   useSyncExternalStore,
+  type RefObject,
 } from "react";
 import dynamic from "next/dynamic";
 import {
-  ChevronUp,
   Layers,
   ListFilter,
   PanelLeftClose,
@@ -89,6 +90,8 @@ import type { CameraTarget } from "./tile-wine-map";
 import type { ArchetypeListItem } from "@/lib/wset/queries";
 import { ArchetypeModal } from "@/components/wset/archetype-modal";
 import { PHONE_QUERY, useIsPhone } from "@/lib/use-is-phone";
+import { useIsWide } from "@/lib/use-is-wide";
+import { initialSidePanel, sidePanelReducer } from "@/lib/wine-map/side-panel";
 import {
   halfSnapHeightPx,
   initialSheet,
@@ -103,8 +106,10 @@ const TileWineMap = dynamic(
   () => import("./tile-wine-map").then((m) => m.TileWineMap),
   {
     ssr: false,
+    // Fills the map wrapper at every width: the wrapper's height comes from
+    // the page's flex chain (phones, and md+ since spec 2026-09-27).
     loading: () => (
-      <div className="h-[70vh] min-h-[420px] animate-pulse rounded-lg border bg-muted max-md:h-full max-md:min-h-0" />
+      <div className="animate-pulse rounded-lg border bg-muted max-md:h-full max-md:min-h-0 md:h-full md:min-h-0" />
     ),
   },
 );
@@ -334,19 +339,82 @@ export function TileWineMapExplorer({
   const slugsByShard = useMemo(() => areaSlugsByShard(tree ?? []), [tree]);
 
   // Expanded ("full view") keeps the tree and details visible but
-  // collapsible; Escape exits.
+  // collapsible; Escape exits. It is the same element and the same inner
+  // chain as the locked page; only the root turns fixed (spec 2026-09-27 M13).
   const [expanded, setExpanded] = useState(false);
+  // xl's two side cards (spec 2026-09-27 §5.2). A collapsed card stays
+  // mounted (xl:hidden), so the tree keeps its search, expansion and scroll.
   const [treeOpen, setTreeOpen] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(true);
-  const [sheetOpen, setSheetOpen] = useState(false);
   useEffect(() => {
     if (!expanded) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setExpanded(false);
+      // An Escape something else already handled is not ours: the tree
+      // search clearing its query (it marks the event), or a Base UI popover
+      // or dialog (it stops the event before it reaches the window).
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      setExpanded(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded]);
+
+  // md-xl's side column (spec 2026-09-27 §5.3, M9/M10): Explore or Details in
+  // one grid cell of a fixed size, open or collapsed to a 36 px strip. Pure
+  // state in lib/wine-map/side-panel; never persisted, never in the URL. A
+  // load with ?place= starts on Details. A selection only ever switches the
+  // tab, so it never resizes the map.
+  const [side, dispatchSide] = useReducer(
+    sidePanelReducer,
+    initialPlaceKey,
+    initialSidePanel,
+  );
+  // xl and up. Only picks the Details card's DOM slot (after the map from xl,
+  // before it below, so DOM order stays visual order) and which of the tree's
+  // two collapse states is its `active`. Layout is CSS alone, so the first
+  // paint is right at every width; the server snapshot is true.
+  const isWide = useIsWide();
+  const treeCardId = useId();
+  const detailsCardId = useId();
+
+  // Focus hand-offs (spec 2026-09-27 §5.2, §5.3): a control that hides itself
+  // hands focus to its counterpart, which may only exist after the next
+  // commit. The handler names the target here; the effect below focuses it
+  // once that commit is on screen, and clears it. Nothing is ever pending on
+  // the first mount, so a load never steals focus.
+  const collapseTreeRef = useRef<HTMLButtonElement | null>(null);
+  const showTreeRef = useRef<HTMLButtonElement | null>(null);
+  const collapseDetailsRef = useRef<HTMLButtonElement | null>(null);
+  const showDetailsRef = useRef<HTMLButtonElement | null>(null);
+  const hidePanelRef = useRef<HTMLButtonElement | null>(null);
+  const showPanelRef = useRef<HTMLButtonElement | null>(null);
+  const detailsTabRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRef = useRef<RefObject<HTMLButtonElement | null> | null>(null);
+  useEffect(() => {
+    const target = pendingFocusRef.current;
+    if (!target) return;
+    pendingFocusRef.current = null;
+    target.current?.focus();
+  });
+  const toggleTree = (open: boolean) => {
+    setTreeOpen(open);
+    pendingFocusRef.current = open ? collapseTreeRef : showTreeRef;
+  };
+  const toggleDetails = (open: boolean) => {
+    setDetailsOpen(open);
+    pendingFocusRef.current = open ? collapseDetailsRef : showDetailsRef;
+  };
+  const toggleSide = () => {
+    dispatchSide({ type: "toggle" });
+    pendingFocusRef.current = side.open ? showPanelRef : hidePanelRef;
+  };
+
+  // The Details body scrolls inside its own card (xl and md-xl alike) and
+  // starts at the top for every new place, as the phone sheet's does.
+  const detailsScrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    detailsScrollRef.current?.scrollTo({ top: 0 });
+  }, [selectedKey]);
 
   // Phones (below md; spec 2026-09-25) get one fixed screen: a toolbar row,
   // the map filling the rest, and a bottom sheet holding the hierarchy and the
@@ -355,7 +423,10 @@ export function TileWineMapExplorer({
   // the map's parent chain is the same at every width and crossing md (a
   // rotated phone) never remounts MapLibre; it also carries `max-md:hidden`,
   // because the server snapshot is false and SSR renders the md+ elements. The
-  // tree and the details each render in exactly one place.
+  // tree and the details each render in exactly one place. From md (spec
+  // 2026-09-27) the same holds: md:, xl: and the map-lock:/map-scroll:
+  // variants shape the layout, every max-md: utility stays as it was, and a
+  // new md+ element is null in place on phones and carries a hiding class.
   const isPhone = useIsPhone();
   // The sheet's snap and tab (lib/wine-map/sheet-state). Never persisted and
   // never in the URL: a load with ?place= starts on Details at half.
@@ -583,6 +654,28 @@ export function TileWineMapExplorer({
     [select],
   );
 
+  // md and up (spec 2026-09-27 §5.3): every selection, a map tap, a tree
+  // pick, a Nearby or Labelling chip, shows Details in the md-xl side column.
+  // It never opens a collapsed column (M10); the strip names the place
+  // instead. The camera path is select()'s, untouched.
+  const selectDesktop = useCallback(
+    (key: string, source: "map" | "ui" = "ui") => {
+      select(key, source);
+      dispatchSide({ type: "select" });
+    },
+    [select],
+  );
+  // The md+ tree's pick. Below xl it shows Details in the tree's own cell,
+  // hiding the tree the pick came from, so focus goes to the Details switch
+  // instead of falling to body.
+  const selectFromDesktopTree = useCallback(
+    (key: string) => {
+      selectDesktop(key);
+      if (!isWide) pendingFocusRef.current = detailsTabRef;
+    },
+    [selectDesktop, isWide],
+  );
+
   // Respond to a new ?place from a SAME-route navigation (e.g. the global search
   // while already on the map): the map page re-renders with a new
   // initialPlaceKey, so select it. Guarded so the initial mount (selectedKey
@@ -631,6 +724,8 @@ export function TileWineMapExplorer({
       // Phones: a link to a place opens its details (spec D4). The camera
       // flies as before; the sheet lies over the map and never resizes it.
       dispatchSheet({ type: "deepLink" });
+      // md-xl: the side column shows Details for it, open or not (M10).
+      dispatchSide({ type: "select" });
     }
   }
 
@@ -738,6 +833,8 @@ export function TileWineMapExplorer({
   // The phone sheet bar's label: the place whose details are showing. A
   // selection whose details failed or are missing is labelled "Details", the
   // tab that says so, never "Explore the map" as if nothing were selected.
+  // md+ reuses it, set vertically, on the collapsed Details strip (xl) and the
+  // collapsed side column's strip (md-xl), while a place is selected.
   const sheetTitle =
     context && context.place.key === selectedKey
       ? english
@@ -750,12 +847,14 @@ export function TileWineMapExplorer({
         : "Explore the map";
 
   // The hierarchy's body. The md+ tree card and the phone sheet's Explore tab
-  // both render it, and only one of them exists at a time. `phone` carries the
-  // phone tree's options: countries start collapsed like a menu, and the
-  // selected row is revealed each time the tab is shown.
+  // both render it, and only one of them exists at a time. `active` is false
+  // while the tree is out of sight (the phone sheet elsewhere, the xl card or
+  // the md-xl column collapsed), so the selected row is revealed again each
+  // time it is shown. `rootsCollapsed` is the phone's: countries start
+  // collapsed like a menu.
   const renderTree = (
     onPick: (key: string) => void,
-    phone?: { active: boolean },
+    options: { active: boolean; rootsCollapsed?: boolean },
   ) =>
     treeLoad.state === "failed" ? (
       <div
@@ -783,8 +882,8 @@ export function TileWineMapExplorer({
         filterKeys={visibleKeys}
         english={english}
         onPrefetch={prefetch}
-        active={phone?.active}
-        rootsCollapsed={phone !== undefined}
+        active={options.active}
+        rootsCollapsed={options.rootsCollapsed === true}
       />
     );
 
@@ -909,108 +1008,260 @@ export function TileWineMapExplorer({
       )}
       <KnowledgeSections
         context={context}
-        onSelect={select}
+        onSelect={isPhone ? select : selectDesktop}
         styleRows={styleRows}
         onPrefetch={prefetch}
       />
     </>
   );
 
+  // The md+ Details card, built once and placed in exactly one of two row
+  // slots (spec 2026-09-27 M14): slot 4, before the map, below xl, where it
+  // shares the side column's cell with the tree; slot 6, after the map, from
+  // xl, where it is the right-hand column. DOM order is then visual order at
+  // every width. Crossing xl moves it, which remounts this subtree alone (its
+  // scroll starts at the top again); the map's slot never moves, so MapLibre
+  // is unaffected. Phones: the details live in the bottom sheet's Details tab
+  // (isPhone), and the SSR paint hides the card (max-md:hidden).
+  const detailsCard = isPhone ? null : (
+    <Card
+      id={detailsCardId}
+      role="region"
+      aria-label="Details"
+      className={cn(
+        "max-md:hidden md:col-start-1 md:row-start-2 md:min-h-0 xl:order-3 xl:w-72 xl:shrink-0 2xl:w-80",
+        // xl: collapsed to its strip (slot 7), still mounted.
+        !detailsOpen && "xl:hidden",
+        // md-xl: the Explore tab is showing in the shared cell. Invisible
+        // keeps the box and its scroll, but it is not painted, not
+        // hit-testable and not in the tab order.
+        side.tab !== "details" && "max-xl:invisible",
+        // md-xl: the side column is collapsed to its strip (slot 1).
+        !side.open && "max-xl:hidden",
+      )}
+    >
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+        {/* xl only: at md-xl the side column's switch names the card. */}
+        <div className="hidden items-center justify-between xl:flex">
+          <span className="text-xs font-medium text-muted-foreground">
+            Details
+          </span>
+          <button
+            ref={collapseDetailsRef}
+            type="button"
+            aria-label="Collapse details"
+            onClick={() => toggleDetails(false)}
+            className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
+          >
+            <PanelRightClose className="size-4" />
+          </button>
+        </div>
+        {/* The body scrolls inside the card, under the pinned header, and
+            goes back to its top for every new place (detailsScrollRef). */}
+        <div
+          ref={detailsScrollRef}
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto"
+        >
+          {detailsBody}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div
       className={
         expanded
-          ? "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4"
-          : // Phones: the screen under the header. Relative, so the bottom
-            // sheet sits inside it; flex-1 min-h-0 carries the page's definite
-            // height on down to the map (the height chain, spec D3).
-            "flex flex-col gap-4 max-md:relative max-md:min-h-0 max-md:flex-1 max-md:gap-0 max-md:overflow-hidden"
+          ? // Full view (lg+): the same element and the same inner chain as
+            // the locked page, fixed over the whole window, so it only hides
+            // the sidebar and the top bar (spec 2026-09-27 M13).
+            "fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4"
+          : // The screen under the header, on phones and md+ (map-lock).
+            // Relative on phones, so the bottom sheet sits inside it;
+            // flex-1 min-h-0 carries the page's definite height on down to
+            // the map (the height chain: spec 2026-09-25 D3, spec 2026-09-27
+            // M1). A short md+ window (map-scroll) leaves it content-sized.
+            "flex flex-col gap-4 max-md:relative max-md:min-h-0 max-md:flex-1 max-md:gap-0 max-md:overflow-hidden map-lock:min-h-0 map-lock:flex-1"
       }
     >
+      {/* The row: one class string in both modes.
+          - Phones: a column holding the map card alone.
+          - md-xl: a grid. The side column (18rem, or 2.25rem collapsed) is
+            the tab strip over the Explore/Details cell; the map card spans
+            both rows beside it.
+          - xl: a flex row of three full-height columns, tree, map, Details,
+            nothing sticky.
+          Its height is the flex chain's (map-lock:), or a fixed 420 px in a
+          short window (map-scroll:), so every panel has a definite height and
+          scrolls inside itself, and nothing grows the page. Seven fixed
+          slots, each its element or null, so the map's React parent chain is
+          the same at every width and crossing md or xl never remounts
+          MapLibre. No panel's width or the map's size is ever animated. */}
       <div
-        className={`flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 xl:flex-row xl:items-stretch ${
-          // Height-lock the row on desktop only. On mobile the expanded view
-          // is a normal scrolling column (map first, near-fullscreen), so the
-          // flex algorithm can never crush the map card to zero height.
-          expanded ? "xl:min-h-0 xl:flex-1" : ""
-        }`}
+        className={cn(
+          "flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 md:grid md:gap-x-4 md:gap-y-2 md:grid-rows-[auto_minmax(0,1fr)] xl:flex xl:flex-row xl:items-stretch map-lock:min-h-0 map-lock:flex-1 map-scroll:h-[26.25rem]",
+          side.open
+            ? "md:grid-cols-[18rem_minmax(0,1fr)]"
+            : "md:grid-cols-[2.25rem_minmax(0,1fr)]",
+        )}
       >
-        {/* Phones: the tree lives in the bottom sheet's Explore tab. */}
-        {isPhone ? null : treeOpen ? (
-          <Card
-            className={`order-3 max-md:hidden xl:order-1 xl:w-[280px] xl:shrink-0 ${
-              expanded ? "" : "xl:sticky xl:top-6 xl:self-start"
-            }`}
+        {/* Slot 1 (md-xl): the side column's head. Open: the Explore |
+            Details switch (the phone sheet's words) and Hide panel. Collapsed:
+            one full-height Show panel strip naming the selected place. */}
+        {isPhone ? null : (
+          <div
+            className={cn(
+              "max-md:hidden md:col-start-1 md:row-start-1 md:flex md:items-center md:gap-1 xl:hidden",
+              !side.open && "md:row-span-2 md:items-stretch",
+            )}
           >
-            <CardContent
-              className={`flex flex-col pt-4 ${
-                expanded
-                  ? "h-[70vh] min-h-0 xl:h-full"
-                  : "h-[70vh] min-h-[420px]"
-              }`}
-            >
-              <div className="mb-2 flex items-center justify-between">
+            {side.open ? (
+              <>
+                <div className="flex shrink-0 items-center rounded-md border border-border p-0.5 text-xs">
+                  {(
+                    [
+                      { tab: "explore", label: "Explore", controls: treeCardId },
+                      { tab: "details", label: "Details", controls: detailsCardId },
+                    ] as const
+                  ).map((option) => {
+                    const pressed = side.tab === option.tab;
+                    return (
+                      <button
+                        key={option.tab}
+                        ref={option.tab === "details" ? detailsTabRef : undefined}
+                        type="button"
+                        aria-pressed={pressed}
+                        aria-controls={option.controls}
+                        onClick={() => dispatchSide({ type: "tab", tab: option.tab })}
+                        className={cn(
+                          "min-h-11 rounded px-2 py-1 outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid md:pointer-fine:min-h-0",
+                          // Shape as well as colour, like the Map detail
+                          // radios: bordeaux on the dark card is only 1.3:1.
+                          pressed
+                            ? "bg-primary font-semibold text-primary-foreground ring-2 ring-inset ring-foreground"
+                            : "font-medium text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  ref={hidePanelRef}
+                  type="button"
+                  aria-label="Hide panel"
+                  onClick={toggleSide}
+                  className="ml-auto inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
+                >
+                  <PanelLeftClose className="size-4" />
+                </button>
+              </>
+            ) : (
+              <button
+                ref={showPanelRef}
+                type="button"
+                aria-label="Show panel"
+                onClick={toggleSide}
+                className="flex h-full w-9 flex-col items-center gap-2 rounded-lg border border-border py-2 text-muted-foreground hover:text-foreground"
+              >
+                <PanelLeftOpen className="size-4 shrink-0" />
+                {selectedKey ? (
+                  <span
+                    aria-hidden
+                    className="min-h-0 flex-1 truncate text-xs [writing-mode:vertical-rl]"
+                  >
+                    {sheetTitle}
+                  </span>
+                ) : null}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Slot 2: the tree card, at every md+ width. xl: the left-hand
+            column, collapsed to its strip (slot 3) but still mounted, so its
+            search, expansion and scroll survive. md-xl: the Explore tab of
+            the side column, sharing its cell with the Details card (slot 4).
+            Phones: the tree lives in the bottom sheet's Explore tab. */}
+        {isPhone ? null : (
+          <Card
+            id={treeCardId}
+            role="region"
+            aria-label="Explorer"
+            className={cn(
+              "order-3 max-md:hidden md:col-start-1 md:row-start-2 md:min-h-0 xl:order-1 xl:w-60 xl:shrink-0 2xl:w-[280px]",
+              !treeOpen && "xl:hidden",
+              side.tab !== "explore" && "max-xl:invisible",
+              !side.open && "max-xl:hidden",
+            )}
+          >
+            <CardContent className="flex min-h-0 flex-1 flex-col">
+              {/* xl only: at md-xl the side column's switch names the card. */}
+              <div className="mb-2 flex items-center justify-between max-xl:hidden">
                 <span className="text-xs font-medium text-muted-foreground">
                   Explorer
                 </span>
                 <button
+                  ref={collapseTreeRef}
                   type="button"
                   aria-label="Collapse hierarchy"
-                  onClick={() => setTreeOpen(false)}
-                  // No collapse on phones: the reopen tab is desktop-only, so
-                  // collapsing there left the hierarchy gone with no way back.
-                  className="text-muted-foreground hover:text-foreground max-xl:hidden"
+                  onClick={() => toggleTree(false)}
+                  className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
                 >
                   <PanelLeftClose className="size-4" />
                 </button>
               </div>
+              {/* The tree's own <ul> is the scroller; its search box and
+                  level buttons stay pinned above it. */}
               <div className="min-h-0 flex-1">
-                {renderTree(select)}
+                {renderTree(selectFromDesktopTree, {
+                  active: isWide ? treeOpen : side.open,
+                })}
               </div>
             </CardContent>
           </Card>
-        ) : (
+        )}
+
+        {/* Slot 3 (xl): the collapsed tree's full-height 36 px strip. */}
+        {isPhone || treeOpen ? null : (
           <button
+            ref={showTreeRef}
             type="button"
             aria-label="Show hierarchy"
-            onClick={() => setTreeOpen(true)}
-            className={`order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center ${
-              expanded ? "" : "xl:sticky xl:top-6 xl:self-start"
-            }`}
+            onClick={() => toggleTree(true)}
+            className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center"
           >
             <PanelLeftOpen className="size-4" />
           </button>
         )}
 
-        <Card
-          className={
-            // overflow-hidden gives this flex item a zero minimum size, so in
-            // the mobile expanded column flex-1 would let it be crushed to
-            // nothing (the "map disappears" bug): full view opts out of
-            // shrinking below lg and sizes from the map's fixed height.
-            // Phones: no card chrome, and flex-1 min-h-0 so the map fills the
-            // screen under the toolbar (the height chain, spec D3).
-            expanded
-              ? "order-1 min-w-0 shrink-0 overflow-hidden xl:order-2 xl:flex-1 xl:shrink"
-              : "order-1 min-w-0 flex-1 overflow-hidden max-md:min-h-0 max-md:gap-0 max-md:rounded-none max-md:bg-transparent max-md:py-0 max-md:ring-0 xl:order-2"
-          }
-        >
-          <CardContent
-            className={`pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:px-0 max-md:pt-0 ${expanded ? "flex h-full min-h-0 flex-col" : ""}`}
-          >
+        {/* Slot 4 (md-xl): the Details card, before the map. */}
+        {isWide ? null : detailsCard}
+
+        {/* Slot 5: the map column. Phones and md+ alike lose the card chrome
+            (spec 2026-09-27 M5); TileWineMap keeps its own border. md-xl: the
+            grid's second column, spanning both rows. overflow-visible from md
+            keeps the combobox's focus ring and the radios' outline from being
+            clipped at the column's edge; min-w-0 and min-h-0 still give the
+            item its zero minimum size. */}
+        <Card className="order-1 min-w-0 flex-1 overflow-hidden max-md:min-h-0 max-md:gap-0 max-md:rounded-none max-md:bg-transparent max-md:py-0 max-md:ring-0 md:col-start-2 md:row-start-1 md:row-span-2 md:min-h-0 md:gap-0 md:overflow-visible md:rounded-none md:bg-transparent md:py-0 md:ring-0 xl:order-2">
+          <CardContent className="pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:px-0 max-md:pt-0 md:flex md:min-h-0 md:flex-1 md:flex-col md:px-0 md:pt-0">
             {/* Map filters: pick a grape and only places using it stay on
                 the map (France's outline remains as context). More filter
                 kinds will join this bar. */}
             {/* Phones: this row is the whole toolbar (spec D2): one line of
-                44 px targets, the grape Filter, Local|English, Map options. */}
-            <div className="mb-2 flex flex-wrap items-center gap-2 max-md:mb-0 max-md:shrink-0 max-md:flex-nowrap max-md:px-3 max-md:py-1.5">
-              {isPhone ? (
-                <ListFilter aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-              ) : null}
-              <span className="text-xs font-medium text-muted-foreground max-md:sr-only">
+                44 px targets, the grape Filter, Local|English, Map options.
+                md+: one 32 px line that never wraps (spec 2026-09-27 M6),
+                because the canvas below is flex-sized and any row that grows
+                would resize the map. The grape combobox gives up width
+                first; the badge and Local|English never shrink. */}
+            <div className="mb-2 flex flex-wrap items-center gap-2 max-md:mb-0 max-md:shrink-0 max-md:flex-nowrap max-md:px-3 max-md:py-1.5 md:h-8 md:shrink-0 md:flex-nowrap">
+              <ListFilter aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground max-md:sr-only md:sr-only">
                 Filter
               </span>
-              <div className="w-64 max-w-full max-md:w-auto max-md:min-w-0 max-md:flex-1">
+              <div className="w-64 max-w-full max-md:w-auto max-md:min-w-0 max-md:flex-1 md:min-w-0">
                 <ReferenceCombobox
                   formFieldName="map_grape_filter"
                   options={grapeOptions}
@@ -1031,13 +1282,13 @@ export function TileWineMapExplorer({
               {/* Phones keep the toolbar to one line; the map itself shows
                   what the filter keeps. */}
               {visibleKeys && !isPhone ? (
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="shrink-0">
                   {visibleKeys.length} place{visibleKeys.length === 1 ? "" : "s"}
                 </Badge>
               ) : null}
               {/* Label language: native local names vs English exonyms
                   (Italia->Italy, Toscana->Tuscany), across the map + tree. */}
-              <div className="ml-auto flex items-center rounded-md border border-border p-0.5 text-xs max-md:shrink-0">
+              <div className="ml-auto flex items-center rounded-md border border-border p-0.5 text-xs max-md:shrink-0 md:shrink-0">
                 <button
                   type="button"
                   onClick={() => chooseLang(false)}
@@ -1082,12 +1333,13 @@ export function TileWineMapExplorer({
             </div>
             {/* Map detail (spec 2026-09-23 §7.1): the One | All switch with its
                 status line, then the country chips. Both rows hold a fixed
-                height from first paint, so the map below never moves when the
-                status text or the chip list changes. */}
+                height from first paint (the status at most two lines), so
+                the map below never moves when the status text or the chip
+                list changes. */}
             {/* Phones: no chips, and the switch with its status line lives in
                 the Map options sheet (one role="status" region, never two). */}
             {isPhone ? null : (
-              <div className="mb-3 flex shrink-0 flex-col gap-2 max-md:hidden">
+              <div className="mb-2 flex shrink-0 flex-col gap-2 max-md:hidden">
                 <MapDetailControls
                   mode={detail}
                   onModeChange={setDetail}
@@ -1102,20 +1354,11 @@ export function TileWineMapExplorer({
                 />
               </div>
             )}
-            {/* Expanded on mobile needs a definite height: the lg full-view
-                relies on a flex-1/min-h-0 chain that only exists in the
-                xl:flex-row layout — in the phone column the hierarchy card's
-                natural height swallowed it and the map collapsed to zero. */}
-            <div
-              className={
-                expanded
-                  ? "h-[calc(100dvh-12rem)] xl:h-auto xl:min-h-0 xl:flex-1"
-                  : // Phones: the rest of the screen. A definite height from
-                    // the page's flex chain, never a percentage of an
-                    // indefinite parent (the "map collapsed to zero" trap).
-                    "h-[70vh] min-h-[420px] max-md:h-auto max-md:min-h-0 max-md:flex-1"
-              }
-            >
+            {/* The map: the rest of the column, at every width and in both
+                modes. A definite height from the page's flex chain, never a
+                percentage of an indefinite parent (the "map collapsed to
+                zero" trap) and never a calc. */}
+            <div className="max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1">
             {manifest ? (
               // Any render or effect error inside the map (or a failed
               // next/dynamic chunk after a deploy) lands here instead of
@@ -1129,7 +1372,7 @@ export function TileWineMapExplorer({
                   selectionFallback={selectionFallback}
                   selectedContextKey={context?.place.key ?? null}
                   cameraTarget={cameraTarget}
-                  onSelect={isPhone ? selectFromMap : select}
+                  onSelect={isPhone ? selectFromMap : selectDesktop}
                   visibleKeys={visibleKeys}
                   shardCountries={shardCountries}
                   areaSlugsByShard={slugsByShard}
@@ -1154,91 +1397,31 @@ export function TileWineMapExplorer({
           </CardContent>
         </Card>
 
-        {/* Phones: the details live in the bottom sheet's Details tab. */}
-        {detailsOpen && !isPhone ? (
-        <Card
-          className={cn(
-            "max-md:hidden xl:order-3 xl:w-[320px] xl:shrink-0",
-            // On phones this panel detaches into a frozen sheet pinned to the
-            // bottom of the screen; tapping its bar folds it open into a
-            // near-fullscreen scrollable profile and back down again.
-            "max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-40 max-xl:border-t max-xl:border-border max-xl:shadow-[0_-8px_24px_rgba(0,0,0,0.10)]",
-            sheetOpen ? "max-xl:top-14 max-xl:flex max-xl:flex-col" : "",
-            expanded ? "xl:overflow-y-auto" : "",
-          )}
-        >
-          <CardContent
-            className={cn(
-              "flex flex-col gap-3 pt-4",
-              sheetOpen ? "max-xl:h-full max-xl:min-h-0" : "",
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => setSheetOpen((open) => !open)}
-              aria-expanded={sheetOpen}
-              className="flex items-center justify-between gap-2 text-left xl:hidden"
-            >
-              <span className="flex min-w-0 flex-col">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Details
-                </span>
-                <span className="truncate text-sm font-medium">
-                  {context
-                    ? english
-                      ? englishName(context.place.name)
-                      : context.place.name
-                    : "Click on areas to learn more"}
-                </span>
-              </span>
-              <ChevronUp
-                className={cn(
-                  "size-4 shrink-0 text-muted-foreground transition-transform",
-                  sheetOpen ? "rotate-180" : "",
-                )}
-              />
-            </button>
-            <div className="hidden items-center justify-between xl:flex">
-              <span className="text-xs font-medium text-muted-foreground">
-                Details
-              </span>
-              <button
-                type="button"
-                aria-label="Collapse details"
-                onClick={() => setDetailsOpen(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <PanelRightClose className="size-4" />
-              </button>
-            </div>
-            <div
-              className={cn(
-                "flex flex-col gap-3",
-                sheetOpen
-                  ? "max-xl:min-h-0 max-xl:flex-1 max-xl:overflow-y-auto"
-                  : "max-xl:hidden",
-              )}
-            >
-            {detailsBody}
-            </div>
-          </CardContent>
-        </Card>
-        ) : null}
-        {!detailsOpen ? (
+        {/* Slot 6 (xl): the Details card, after the map. */}
+        {isWide ? detailsCard : null}
+
+        {/* Slot 7 (xl): the collapsed Details card's full-height 36 px strip,
+            naming the selected place so the selection stays in sight. */}
+        {isPhone || detailsOpen ? null : (
           <button
+            ref={showDetailsRef}
             type="button"
             aria-label="Show details"
-            onClick={() => setDetailsOpen(true)}
-            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:items-start xl:justify-center"
+            onClick={() => toggleDetails(true)}
+            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:flex-col xl:items-center xl:gap-2"
           >
-            <PanelRightOpen className="size-4" />
+            <PanelRightOpen className="size-4 shrink-0" />
+            {selectedKey ? (
+              <span
+                aria-hidden
+                className="min-h-0 flex-1 truncate text-xs [writing-mode:vertical-rl]"
+              >
+                {sheetTitle}
+              </span>
+            ) : null}
           </button>
-        ) : null}
+        )}
       </div>
-      {/* Reserve room so the frozen mobile sheet's bar never hides the last
-          of the page content beneath it. Tablets only: a phone has no page to
-          scroll, and its sheet bar lies over the map. */}
-      {isPhone ? null : <div aria-hidden className="h-20 max-md:hidden xl:hidden" />}
       {isPhone ? (
         <MapBottomSheet
           sheet={sheet}
@@ -1249,6 +1432,7 @@ export function TileWineMapExplorer({
             <div className="h-full">
               {renderTree(pickFromTree, {
                 active: sheet.snap !== "closed" && sheet.tab === "explore",
+                rootsCollapsed: true,
               })}
             </div>
           }

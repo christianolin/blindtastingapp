@@ -26,7 +26,11 @@ const ICON_BUTTON =
  * not here: the sidebar and the drawer always list it under the profile row.
  * The bar reads burger · title … scan · bell, the bell at the far right as in
  * the handoff. `title` is the page name shown next
- * to the burger on phones (the sidebar carries it on desktop).
+ * to the burger on phones (the sidebar carries it on desktop). The one
+ * exception is `heading`: when given, it is the page's own `h1`, shown in the
+ * bar from md up, left of the search box, in place of an in-page heading. Only
+ * the wine map passes it (spec 2026-09-27 M3: its locked screen has no room
+ * for a heading row). The bar stays 57 px tall either way.
  * Directly under the bar sits the active-tasting strip (ActiveTastingBanner:
  * the tasting you are in right now and a button back to it, hidden on that
  * tasting's own pages) — every caller already places AppHeader first in a
@@ -38,11 +42,14 @@ export async function AppHeader({
   displayName: displayNameProp,
   avatarUrl: avatarUrlProp,
   title,
+  heading,
 }: {
   userId?: string;
   displayName?: string;
   avatarUrl?: string | null;
   title?: string;
+  /** The page's md+ `h1`, rendered in the bar. Opt-in; see above. */
+  heading?: string;
 }) {
   const supabase = await createClient();
 
@@ -99,6 +106,11 @@ export async function AppHeader({
           <span className="font-heading text-xl font-semibold leading-none md:hidden">
             {title}
           </span>
+        ) : null}
+        {heading ? (
+          <h1 className="hidden font-heading text-xl font-semibold leading-none whitespace-nowrap md:block">
+            {heading}
+          </h1>
         ) : null}
         <div className="hidden max-w-[380px] flex-1 md:flex">
           <GlobalSearch />

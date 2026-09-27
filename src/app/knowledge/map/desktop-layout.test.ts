@@ -110,12 +110,68 @@ function phoneTokens(files: readonly string[]): string[] {
   return [...tokens].sort();
 }
 
-describe("desktop wine-map layout", () => {
-  it.todo(
-    "`page.tsx` and the explorer contain no `h-[70vh]`, `min-h-[420px]`, `calc(100dvh`, `xl:sticky` or `md:p-8`",
-  );
+const PAGE = `${MAP}/page.tsx`;
+const EXPLORER = `${MAP}/tile-wine-map-explorer.tsx`;
 
-  it.todo("`page.tsx` renders `<main data-map-page`");
+describe("desktop wine-map layout", () => {
+  it("`page.tsx` and the explorer contain no `h-[70vh]`, `min-h-[420px]`, `calc(100dvh`, `xl:sticky` or `md:p-8`", () => {
+    // The map's height comes from the flex chain at every width now (M1): no
+    // fixed viewport share, no calc, nothing sticky, and the old padding.
+    for (const file of [PAGE, EXPLORER]) {
+      const source = code(file);
+      for (const banned of ["h-[70vh]", "min-h-[420px]", "calc(100dvh", "xl:sticky", "md:p-8"]) {
+        expect(source.includes(banned), `${file} contains ${banned}`).toBe(false);
+      }
+    }
+  });
+
+  it("`page.tsx` renders `<main data-map-page`", () => {
+    const page = code(PAGE);
+    expect(page).toMatch(/<main\s+data-map-page/);
+    expect(page.match(/<main\b/g)).toHaveLength(1);
+    // The data-map-page element is <main> itself, not a div inside it.
+    expect(page).not.toMatch(/<div\s+data-map-page/);
+  });
+
+  it("locks <main> and the page root to the screen with the same flex chain as phones (M1)", () => {
+    const page = code(PAGE);
+    expect(page).toContain(
+      'className="flex flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden map-lock:min-h-0 map-lock:overflow-hidden"',
+    );
+    expect(page).toContain(
+      'className="flex w-full flex-1 flex-col max-md:min-h-0 max-md:overflow-hidden md:p-4 map-lock:min-h-0 map-lock:overflow-hidden"',
+    );
+  });
+
+  it("moves the heading into the top bar and keeps the subtitle for screen readers (M3)", () => {
+    const page = code(PAGE);
+    expect(page).toContain('<AppHeader title="Wine map" heading="Knowledge Explorer" />');
+    expect(page).not.toMatch(/<h1\b/);
+    expect(page).toContain('<p className="sr-only max-md:hidden">');
+    expect(page.replace(/\s+/g, " ")).toContain(
+      "Explore the world of wine through places, grapes, styles and the rules that shape them.",
+    );
+    const header = code("src/components/app-header.tsx");
+    expect(header).toMatch(/heading\?: string/);
+    expect(header).toContain(
+      '<h1 className="hidden font-heading text-xl font-semibold leading-none whitespace-nowrap md:block">',
+    );
+  });
+
+  it("retires the md-xl Details bar and the tablet spacer (M9)", () => {
+    const explorer = code(EXPLORER);
+    for (const gone of ["sheetOpen", "max-xl:fixed", "ChevronUp", "h-20"]) {
+      expect(explorer.includes(gone), `explorer still contains ${gone}`).toBe(false);
+    }
+  });
+
+  it("lets an Escape handled elsewhere leave Full view alone (M13)", () => {
+    expect(code(EXPLORER)).toContain(
+      'if (event.key !== "Escape" || event.defaultPrevented) return;',
+    );
+    const tree = code(`${MAP}/wine-map-tree.tsx`);
+    expect(tree).toMatch(/event\.preventDefault\(\);\s*setQuery\(""\);/);
+  });
 
   it("phone pin: the `max-md:` tokens of the map's phone files equal the list frozen at a23cd16", () => {
     expect(PHONE_TOKENS_AT_A23CD16).toEqual([...PHONE_TOKENS_AT_A23CD16].sort());
