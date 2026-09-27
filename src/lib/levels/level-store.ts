@@ -16,6 +16,11 @@ export type ToasterView = {
   visible: readonly ShownToast[];
   /** The text the polite live region reads: the cards that last appeared. */
   announcement: string;
+  /** Grows each time cards appear and never resets in this tab. The toaster
+      keys the live region's text node by it, so a card whose text matches the
+      previous one (two notes in a row) is still read: a replaced child is a
+      live-region addition, an unchanged string is no DOM change at all. */
+  announcementKey: number;
   /** Rows to mark seen without a card (toasts.ts's silentIds). */
   silent: readonly number[];
 };
@@ -29,7 +34,13 @@ type UserState = {
   welcomeDone: boolean;
 };
 
-export const EMPTY_VIEW: ToasterView = { userId: null, visible: [], announcement: "", silent: [] };
+export const EMPTY_VIEW: ToasterView = {
+  userId: null,
+  visible: [],
+  announcement: "",
+  announcementKey: 0,
+  silent: [],
+};
 
 export type LevelStore = ReturnType<typeof createLevelStore>;
 
@@ -41,7 +52,11 @@ export function createLevelStore() {
   let visible: ShownToast[] = [];
   let silent: number[] = [];
   let announcement = "";
-  let active = true;
+  let announcementKey = 0;
+  // Unknown until AwardsToaster reports the tab's visibility. AwardsFeed
+  // publishes in the same commit, before the toaster's mount effect runs, so a
+  // default of true would show (and mark seen) cards in a background tab.
+  let active = false;
   let view: ToasterView = EMPTY_VIEW;
 
   function userState(userId: string): UserState {
@@ -54,7 +69,7 @@ export function createLevelStore() {
   }
 
   function emit() {
-    view = { userId: current, visible: [...visible], announcement, silent: [...silent] };
+    view = { userId: current, visible: [...visible], announcement, announcementKey, silent: [...silent] };
     for (const l of listeners) l();
   }
 
@@ -69,6 +84,7 @@ export function createLevelStore() {
     }
     if (appeared.length === 0) return false;
     announcement = appeared.map((t) => (t.detail ? `${t.title}. ${t.detail}` : t.title)).join(". ");
+    announcementKey += 1;
     return true;
   }
 
@@ -121,7 +137,9 @@ export function createLevelStore() {
       emit();
     },
 
-    /** The tab became visible (true) or hidden (false). Hidden: nothing new shows. */
+    /** The tab became visible (true) or hidden (false). Hidden: nothing new
+        shows. The store starts hidden; the toaster's mount effect reports the
+        real state, and a true then shows everything that queued before it. */
     setActive(isVisible: boolean): void {
       if (active === isVisible) return;
       active = isVisible;

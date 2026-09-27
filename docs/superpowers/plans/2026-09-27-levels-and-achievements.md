@@ -3785,7 +3785,7 @@ cd /c/Users/Public/repos/blindtastingapp-mapdetail && git add src/lib/levels/typ
 - Consumes: `levelForXp` (Task 2's `./curve`); `ACHIEVEMENTS`, `isAchievementKey`, `kindLabel`, the toast copy (Task 2's `./copy`); `Toast`, `XpEvent`, `LevelSnapshot`, `OwnLevel` (Task 2's `./types`).
 - Produces:
   - `toasts.ts`: `TOAST_MS = 4000`, `WELCOME_MS = 6000`, `MAX_VISIBLE = 3`, `CATCH_UP_MS = 600000`, `MAX_SEEN_IDS = 100`, `freshEvents(events, seen: ReadonlySet<number>): XpEvent[]`, `buildToasts(events, { userId, welcome, xp, checkedAt }): { toasts: Toast[]; silentIds: number[] }`, `splitXp(text): { xp: string; rest: string } | null`, `cleanSeenIds(ids: unknown): number[] | null`.
-  - `level-store.ts`: `type ShownToast = Toast & { leaving: boolean }`, `type ToasterView = { userId: string | null; visible: readonly ShownToast[]; announcement: string; silent: readonly number[] }`, `EMPTY_VIEW`, `createLevelStore()` returning `{ subscribe(listener): () => void; getView(): ToasterView; getLevel(userId): OwnLevel | null; publish(snapshot: LevelSnapshot): void; setActive(visible: boolean): void; dismiss(toastId): void; remove(toastId): void; clearSilent(ids): void; markShownElsewhere(userId, ids, welcome): void }`, and the tab's instance `levelStore`.
+  - `level-store.ts`: `type ShownToast = Toast & { leaving: boolean }`, `type ToasterView = { userId: string | null; visible: readonly ShownToast[]; announcement: string; announcementKey: number; silent: readonly number[] }`, `EMPTY_VIEW`, `createLevelStore()` (starts hidden until `setActive(true)`) returning `{ subscribe(listener): () => void; getView(): ToasterView; getLevel(userId): OwnLevel | null; publish(snapshot: LevelSnapshot): void; setActive(visible: boolean): void; dismiss(toastId): void; remove(toastId): void; clearSilent(ids): void; markShownElsewhere(userId, ids, welcome): void }`, and the tab's instance `levelStore`.
 
 - [ ] **Step 1: Write the failing toast-rules test**
 
@@ -5155,11 +5155,17 @@ export function AwardsToaster({ userId }: { userId: string }) {
   const marked = useRef(new Set<string>());
   const channel = useRef<BroadcastChannel | null>(null);
 
+  // The store starts hidden (level-store.ts): AwardsFeed publishes earlier in
+  // this same commit, so this first sync is what lets a visible tab show the
+  // cards that queued before it. Unmounting hands the store back to "unknown".
   useEffect(() => {
     const sync = () => levelStore.setActive(document.visibilityState === "visible");
     sync();
     document.addEventListener("visibilitychange", sync);
-    return () => document.removeEventListener("visibilitychange", sync);
+    return () => {
+      document.removeEventListener("visibilitychange", sync);
+      levelStore.setActive(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -5197,8 +5203,9 @@ export function AwardsToaster({ userId }: { userId: string }) {
   const mine = view.userId === userId;
   return (
     <>
+      {/* Keyed child: a card whose text repeats the last one is still read. */}
       <div role="status" aria-live="polite" className="sr-only">
-        {mine ? view.announcement : ""}
+        {mine && view.announcement ? <span key={view.announcementKey}>{view.announcement}</span> : null}
       </div>
       <div className="pointer-events-none fixed z-[60] flex flex-col gap-2 max-md:inset-x-3 max-md:bottom-[max(0.75rem,env(safe-area-inset-bottom))] md:right-4 md:bottom-4 md:w-80">
         {mine ? view.visible.map((card) => <ToastCard key={card.id} card={card} />) : null}
