@@ -1405,6 +1405,11 @@ export type Database = {
           possible_points: number | null;
           scored_at: string | null;
           created_at: string;
+          // 20260927100000 (region-guess addendum R7): a pick that stopped at
+          // the region, with an optional grape. Never both a region and a
+          // picked_archetype_id; a grape only with a region (table checks).
+          picked_region_id: string | null;
+          picked_grape_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1412,6 +1417,8 @@ export type Database = {
           session_key: string;
           note_id: string;
           picked_archetype_id?: string | null;
+          picked_region_id?: string | null;
+          picked_grape_id?: string | null;
           guessed_vintage_kind?: VintageKind | null;
           guessed_vintage_year?: number | null;
           guessed_vintage_tawny_years?: number | null;
@@ -2313,16 +2320,21 @@ export type Database = {
       // TRAINING note and its training_attempts row, scoring the pick against
       // the revealed catalog wine in SQL. SECURITY DEFINER; EXECUTE for
       // authenticated only. p_attempt: { attempt_id?, session_key, started_at,
-      // picked_archetype_id?, guessed_vintage_kind?, guessed_vintage_year?,
+      // picked_archetype_id?, picked_region_id?, picked_grape_id?,
+      // guessed_vintage_kind?, guessed_vintage_year?,
       // guessed_vintage_tawny_years?, actual_catalog_wine_id?,
-      // candidates_snapshot }. Returns { attempt_id, note_id, points: {
+      // candidates_snapshot }. A region pick (20260927100000) scores country
+      // and region by the region's own FKs and the grape against the wine's
+      // primary grape. Returns { attempt_id, note_id, points: {
       // country, region, appellation, primary_grape, secondary_grape,
       // type_designation, vintage }, total, possible, actual_archetype_id,
       // hue_cleared }. Refusals, verbatim: "not signed in" (42501), "a new
       // session takes no note id" (42501), "that session is not yours"
       // (42501), "already revealed" (P0001); "no such wine", "no such typical
-      // wine", "a session key is required", "name the wine to reveal" and a
-      // malformed argument (22023).
+      // wine", "no such region", "no such grape", "a session key is
+      // required", "name the wine to reveal" and a malformed argument
+      // (22023); a typical wine and a region together, or a grape without a
+      // region, fail the table's checks (23514).
       record_training_attempt: {
         Args: { p_note: Json; p_aromas: Json; p_attempt: Json };
         Returns: Json;

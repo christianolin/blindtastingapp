@@ -3,7 +3,9 @@
 // (fresh attempts, re-reveals, the championship points, D17's style verdict,
 // the hue rule, idempotency, refusals and grants), training_attempts' RLS and
 // grants, the account-deletion scrub and the 15-row archetype back-fill of
-// 20260925120000_training_room.sql.
+// 20260925120000_training_room.sql; and the region pick of
+// 20260927100000_training_region_guess.sql (region-guess addendum §3: its
+// scoring, checks, columns and re-reveal).
 //
 // It connects to the database pgConfig() names, which is production, so only
 // the main session runs it. Every test runs inside a transaction that always
@@ -16,7 +18,7 @@
 // Dry run before a migration is live: TRAINING_ROOM_APPLY lists migration
 // files (comma-separated, in order) that each test applies inside its own
 // rolled-back transaction first, e.g.
-//   TRAINING_ROOM_APPLY=supabase/migrations/20260925120000_training_room.sql \
+//   TRAINING_ROOM_APPLY=supabase/migrations/20260927100000_training_region_guess.sql \
 //     node --env-file=.env.local --test scripts/training-room.test.mjs
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -121,6 +123,7 @@ async function refs() {
     spain: await byName("countries", "Spain"),
     bordeaux: await region("France", "Bordeaux"),
     bourgogne: await region("France", "Bourgogne"),
+    rioja: await region("Spain", "Rioja"),
     margauxAoc: await appellation("Bordeaux", "Margaux AOC"),
     vosneAoc: await appellation("Bourgogne", "Vosne-Romanée AOC"),
     chablisAoc: await appellation("Bourgogne", "Chablis AOC"),
@@ -882,5 +885,221 @@ test("the batch-1 migration lands every archetype with its links, and a second a
     const prosecco = (await client.query("select sat -> 'mousse' mousse from wine_archetypes where name = 'A typical Prosecco'"))
       .rows[0];
     assert.deepEqual(prosecco, { mousse: ["CREAMY", "AGGRESSIVE"] });
+  });
+});
+
+// --- The region pick (region-guess addendum R6, R7; 20260927100000) --------------
+
+test("a region pick with the right region and grape scores country 2, region 3 and grape 8", async () => {
+  await withRollback(async () => {
+    const [a] = await freshProfiles(1);
+    const r = await refs();
+    const w = await wine(a, margauxBottle(r));
+    const out = await fresh(a, { picked_region_id: r.bordeaux, picked_grape_id: r.cabernet, actual_catalog_wine_id: w });
+    assert.deepEqual(out.points, {
+      country: 2,
+      region: 3,
+      appellation: 0,
+      primary_grape: 8,
+      secondary_grape: 0,
+      type_designation: null,
+      vintage: null,
+    });
+    assert.equal(out.total, 13);
+    assert.equal(out.possible, 20, "possible depends on the wine, not the pick");
+    assert.equal(out.actual_archetype_id, r.margaux, "the style verdict is unchanged");
+    const row = await attemptRow(out.attempt_id);
+    assert.equal(row.picked_archetype_id, null);
+    assert.equal(row.picked_region_id, r.bordeaux);
+    assert.equal(row.picked_grape_id, r.cabernet);
+
+    // A designation on the wine is 0 for a region pick (it names none); the vintage scores as before.
+    const gcc = await wine(a, margauxBottle(r, { designation: r.grandCruClasse }));
+    const designated = await fresh(a, {
+      picked_region_id: r.bordeaux,
+      picked_grape_id: r.cabernet,
+      guessed_vintage_kind: "YEAR",
+      guessed_vintage_year: 2015,
+      actual_catalog_wine_id: gcc,
+    });
+    assert.deepEqual(designated.points, {
+      country: 2,
+      region: 3,
+      appellation: 0,
+      primary_grape: 8,
+      secondary_grape: 0,
+      type_designation: 0,
+      vintage: 2,
+    });
+    assert.equal(designated.total, 15);
+    assert.equal(designated.possible, 24);
+
+    // A wine with no second grape: that row does not apply, as for a typical-wine pick.
+    const plain = await wine(a, margauxBottle(r, { secondary: null }));
+    const single = await fresh(a, { picked_region_id: r.bordeaux, actual_catalog_wine_id: plain });
+    assert.equal(single.points.secondary_grape, null);
+    assert.equal(single.possible, 18);
+  });
+});
+
+test("a region pick with a wrong grape or none scores 5; another region only its country", async () => {
+  await withRollback(async () => {
+    const [a] = await freshProfiles(1);
+    const r = await refs();
+    const w = await wine(a, margauxBottle(r));
+    // Merlot is this wine's second grape: a region pick's one grape is scored as the primary only.
+    const wrongGrape = await fresh(a, { picked_region_id: r.bordeaux, picked_grape_id: r.merlot, actual_catalog_wine_id: w });
+    assert.deepEqual(wrongGrape.points, {
+      country: 2,
+      region: 3,
+      appellation: 0,
+      primary_grape: 0,
+      secondary_grape: 0,
+      type_designation: null,
+      vintage: null,
+    });
+    assert.equal(wrongGrape.total, 5);
+    const noGrape = await fresh(a, { picked_region_id: r.bordeaux, actual_catalog_wine_id: w });
+    assert.equal(noGrape.points.primary_grape, 0);
+    assert.equal(noGrape.total, 5);
+    const neighbour = await fresh(a, { picked_region_id: r.bourgogne, picked_grape_id: r.cabernet, actual_catalog_wine_id: w });
+    assert.deepEqual([neighbour.points.country, neighbour.points.region, neighbour.points.primary_grape], [2, 0, 8]);
+    assert.equal(neighbour.total, 10);
+    const abroad = await fresh(a, { picked_region_id: r.rioja, actual_catalog_wine_id: w });
+    assert.deepEqual([abroad.points.country, abroad.points.region], [0, 0]);
+    assert.equal(abroad.total, 0);
+  });
+});
+
+test("a typical-wine pick scores exactly as before and stores no region or grape", async () => {
+  await withRollback(async () => {
+    const [a] = await freshProfiles(1);
+    const r = await refs();
+    const w = await wine(a, margauxBottle(r));
+    const out = await fresh(a, { picked_archetype_id: r.margaux, actual_catalog_wine_id: w });
+    assert.deepEqual(out.points, {
+      country: 2,
+      region: 3,
+      appellation: 5,
+      primary_grape: 8,
+      secondary_grape: 2,
+      type_designation: null,
+      vintage: null,
+    });
+    assert.equal(out.total, 20);
+    assert.equal(out.possible, 20);
+    const row = await attemptRow(out.attempt_id);
+    assert.equal(row.picked_region_id, null);
+    assert.equal(row.picked_grape_id, null);
+  });
+});
+
+test("both picks, a grape without a region and unknown ids are refused, and nothing is written", async () => {
+  await withRollback(async () => {
+    const [a] = await freshProfiles(1);
+    const r = await refs();
+    await expectError(
+      () => fresh(a, { picked_archetype_id: r.margaux, picked_region_id: r.bordeaux }),
+      "23514",
+      'new row for relation "training_attempts" violates check constraint "training_attempts_one_pick"',
+    );
+    await expectError(
+      () => fresh(a, { picked_grape_id: r.cabernet }),
+      "23514",
+      'new row for relation "training_attempts" violates check constraint "training_attempts_grape_needs_region"',
+    );
+    await expectError(() => fresh(a, { picked_region_id: randomUUID() }), "22023", "no such region");
+    await expectError(
+      () => fresh(a, { picked_region_id: r.bordeaux, picked_grape_id: randomUUID() }),
+      "22023",
+      "no such grape",
+    );
+    await asOwner();
+    const counts = (
+      await client.query(
+        `select (select count(*)::int from training_attempts where author_id = $1) attempts,
+                (select count(*)::int from wset_notes where author_id = $1) notes`,
+        [a],
+      )
+    ).rows[0];
+    assert.deepEqual(counts, { attempts: 0, notes: 0 }, "a refused call keeps neither the attempt nor its note");
+  });
+});
+
+test("Reveal now scores a stored region pick and ignores the payload's pick", async () => {
+  await withRollback(async () => {
+    const [a] = await freshProfiles(1);
+    const r = await refs();
+    const unrevealed = await fresh(a, { picked_region_id: r.bourgogne, picked_grape_id: r.pinotNoir });
+    assert.equal(unrevealed.total, null);
+    const w = await wine(a, {
+      country: r.france,
+      region: r.bourgogne,
+      appellation: r.vosneAoc,
+      primary: r.pinotNoir,
+      producer: r.producer,
+    });
+    await asUser(a);
+    const out = await record({}, [], {
+      attempt_id: unrevealed.attempt_id,
+      actual_catalog_wine_id: w,
+      picked_archetype_id: r.margaux,
+      picked_region_id: r.bordeaux,
+    });
+    assert.deepEqual(out.points, {
+      country: 2,
+      region: 3,
+      appellation: 0,
+      primary_grape: 8,
+      secondary_grape: null,
+      type_designation: null,
+      vintage: null,
+    });
+    assert.equal(out.total, 13);
+    assert.equal(out.possible, 18);
+    assert.equal(out.actual_archetype_id, r.vosne);
+    const row = await attemptRow(unrevealed.attempt_id);
+    assert.deepEqual([row.picked_archetype_id, row.picked_region_id, row.picked_grape_id], [null, r.bourgogne, r.pinotNoir]);
+  });
+});
+
+test("training_attempts carries the two pick columns, their checks and their foreign keys", async () => {
+  await withRollback(async () => {
+    await asOwner();
+    const defs = (
+      await client.query(
+        `select conname, regexp_replace(pg_get_constraintdef(oid), '\\mpublic\\.', '', 'g') def
+           from pg_constraint
+          where conrelid = 'public.training_attempts'::regclass
+            and conname = any($1::text[])
+          order by conname collate "C"`,
+        [
+          [
+            "training_attempts_grape_needs_region",
+            "training_attempts_one_pick",
+            "training_attempts_picked_grape_id_fkey",
+            "training_attempts_picked_region_id_fkey",
+          ],
+        ],
+      )
+    ).rows;
+    assert.deepEqual(defs, [
+      {
+        conname: "training_attempts_grape_needs_region",
+        def: "CHECK (((picked_grape_id IS NULL) OR (picked_region_id IS NOT NULL)))",
+      },
+      {
+        conname: "training_attempts_one_pick",
+        def: "CHECK (((picked_archetype_id IS NULL) OR (picked_region_id IS NULL)))",
+      },
+      {
+        conname: "training_attempts_picked_grape_id_fkey",
+        def: "FOREIGN KEY (picked_grape_id) REFERENCES grapes(id) ON DELETE SET NULL",
+      },
+      {
+        conname: "training_attempts_picked_region_id_fkey",
+        def: "FOREIGN KEY (picked_region_id) REFERENCES regions(id) ON DELETE SET NULL",
+      },
+    ]);
   });
 });
