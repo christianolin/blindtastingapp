@@ -1223,6 +1223,54 @@ a raw subquery, regardless of which two tables look involved at a glance.
   refuses) — clear those attempts' picks first. The device draft carries
   `pickedRegionId` / `pickedGrapeId`; a draft from before them reads with both
   null, and Continue gives a picked typical wine its region (`normalizeCall`).
+- **Levels and achievements** (2026-09-27, spec
+  `docs/superpowers/specs/2026-09-27-levels-and-achievements-design.md`,
+  migration `20260927160000_levels_and_achievements.sql`). XP is an
+  append-only ledger, `xp_events`, unique per `(user_id, source_key)` and never
+  taken back, written only by SECURITY DEFINER triggers on the source tables
+  through one `xp_award()`: it locks the person's `profile_levels` row, applies
+  the kind's UTC-day caps from `xp_sources`, writes the row with its running
+  `xp_after` and moves the level (`level_for_xp`, `25·L·(L−1)`, cap 60; the TS
+  twin is `src/lib/levels/curve.ts`, both pinned to
+  `src/lib/levels/__fixtures__/curve.json`). Sources: a scored non-blank guess
+  at its glass's global reveal (`wines_xp_on_reveal`, which also pays the pour
+  that reveal unmasks), a CLOSED BLIND/SEMI_BLIND tasting with a revealed glass
+  (`tastings_xp_on_close`: the playing guests and a host with a guest), a
+  `cellar_lots` insert or `purchased_quantity` growth (at most 20 bottles a lot,
+  100 XP a day; an Edit-lot `quantity` correction pays nothing), a DRANK
+  consumption with a lot (`cellar_consumptions_xp`, a DEFERRABLE INITIALLY
+  DEFERRED constraint trigger — both pour RPCs insert the consumption before
+  pointing the pour intent at it, so a masked pour is skipped at COMMIT and paid
+  by the reveal), a non-TRAINING note, a scored training round, and twenty
+  achievements (numbers in the `achievements` table, names in
+  `src/lib/levels/copy.ts`; `copy.test.ts` and `scripts/levels.test.mjs` pin
+  the keys equal). Every trigger function wraps its work in `begin … exception
+  when others then raise warning`: an XP bug never blocks a reveal, pour, note
+  or cellar write, and `select public.xp_replay_user(<user>, false, false)`
+  (owner-only; also the launch backfill) repairs what a swallowed error missed.
+  **Rule 1:** levels, XP and achievements are public, so they are shared counts
+  — a bottle poured into an unrevealed glass counts as in the cellar and not
+  drunk until that reveal (`xp_consumption_masked` is
+  `catalog_wine_masked_pours`' predicate, pinned equal by the DB suite). Any new
+  count over `cellar_*` or `wset_notes` shown publicly must follow the same
+  rule. `wines_xp_on_reveal` fires after `trg_catalog_wine_unmark_blind` (which
+  deletes the glass's `flight_holds`) and before `wset_notes_resolve_on_reveal`
+  by name order; a new AFTER UPDATE OF is_revealed trigger on `wines` must keep
+  that order (the migration's post-state lists the accepted sets). Reads:
+  `profile_levels` by every signed-in member; `profile_achievements` likewise
+  except `gate = 'cellar'` rows (the owner or `can_view_cellar`); the ledger
+  owner-only; client RPCs `get_my_level_state`, `mark_xp_seen`,
+  `get_my_achievement_progress` (authenticated only). UI: AppHeader reads
+  `get_my_level_state` in its `Promise.all` and renders `<AwardsFeed>` (draws
+  nothing), which publishes into `src/lib/levels/level-store.ts`; the one
+  `<AwardsToaster>` in AppShell shows at most three cards (bottom corner, 4 s,
+  polite live region, a BroadcastChannel stops a second tab repeating one) and
+  calls `markXpSeen`, which never revalidates; the rings (`LevelRing`,
+  `useOwnLevel`) read the same store. A pop-up appears on the next render of an
+  AppHeader after the award commits, so a new award path whose page lives in a
+  section layout needs a `revalidatePath` or `router.refresh()` (the cellar adds
+  got theirs, L33). Account deletion drops the person's ledger, achievements
+  and level (`profiles_deleted_drop_levels`). Rollback SQL: spec §11.
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in

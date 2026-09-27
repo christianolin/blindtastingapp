@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { withoutBlindPending } from "@/lib/catalog-visibility";
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
@@ -87,6 +88,9 @@ export async function addCellarLot(
       console.error("addCellarLot failed", { error, payload: p });
       return { error: error?.message ?? "Couldn't save this wine. Please try again." };
     }
+    // Levels L33: re-renders the cellar layout's AppHeader, so the "+N XP"
+    // card shows at once (the add's own router.push keeps that layout).
+    revalidatePath("/cellar");
     return { id: data };
   } catch (error) {
     console.error("addCellarLot failed", {
@@ -159,6 +163,9 @@ export async function increaseCellarLotQuantity(
     })
     .eq("id", lotId);
   if (error) throw new Error(error.message);
+  // Levels L33: the add-wine sheet's merge card ("Add N to the existing lot")
+  // and /cellar/new's merge otherwise re-render nothing until the sheet closes.
+  revalidatePath("/cellar");
   return { id: lotId };
 }
 
