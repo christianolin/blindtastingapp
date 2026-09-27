@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ATTEMPT_COLUMNS,
   HISTORY_PAGE,
   actualWineLineage,
   coverageCountries,
@@ -114,6 +115,8 @@ function attempt(overrides: Partial<AttemptRaw> = {}): AttemptRaw {
     created_at: "2026-09-24T18:00:00.123456+00:00",
     note_id: NOTE,
     picked_archetype_id: ARCH_PAUILLAC,
+    picked_region_id: null,
+    picked_grape_id: null,
     guessed_vintage_kind: "YEAR",
     guessed_vintage_year: 2015,
     guessed_vintage_tawny_years: null,
@@ -137,11 +140,16 @@ function attempt(overrides: Partial<AttemptRaw> = {}): AttemptRaw {
   };
 }
 
+const REGION_BGN = "00000000-0000-4000-8000-00000000e101";
+const GRAPE_PN = "00000000-0000-4000-8000-00000000e201";
+
 const CTX = {
   archetypeNames: new Map([
     [ARCH_PAUILLAC, "A typical Pauillac"],
     [ARCH_BOURGOGNE, "A typical Bourgogne rouge"],
   ]),
+  regionNames: new Map([[REGION_BGN, "Bourgogne"]]),
+  grapeNames: new Map([[GRAPE_PN, "Pinot Noir"]]),
   mergedInto: new Map<string, string | null>([
     [WINE_OLD, WINE_NEW],
     [WINE_NEW, null],
@@ -418,6 +426,8 @@ describe("shapeAttemptRow", () => {
       id: ATTEMPT,
       createdAt: "2026-09-24T18:00:00.123456+00:00",
       picked: { id: ARCH_PAUILLAC, name: "A typical Pauillac" },
+      pickedRegion: null,
+      pickedGrape: null,
       vintage: { kind: "YEAR", year: 2015 },
       actual: {
         catalogWineId: WINE_NEW,
@@ -470,6 +480,23 @@ describe("shapeAttemptRow", () => {
 
     const hidden = shapeAttemptRow(attempt({ actual_catalog_wine_id: WINE_HIDDEN }), CTX);
     expect(hidden.actual).toEqual({ catalogWineId: WINE_HIDDEN, label: null, lineage: null });
+  });
+
+  it("names a pick that stopped at the region, with its grape (region-guess addendum R8)", () => {
+    const regionPick = shapeAttemptRow(
+      attempt({ picked_archetype_id: null, picked_region_id: REGION_BGN, picked_grape_id: GRAPE_PN }),
+      CTX,
+    );
+    expect(regionPick.picked).toBeNull();
+    expect(regionPick.pickedRegion).toEqual({ id: REGION_BGN, name: "Bourgogne" });
+    expect(regionPick.pickedGrape).toEqual({ id: GRAPE_PN, name: "Pinot Noir" });
+    // A name that was not read leaves the pick unnamed rather than half-named.
+    const unread = shapeAttemptRow(attempt({ picked_archetype_id: null, picked_region_id: "gone" }), CTX);
+    expect(unread.pickedRegion).toBeNull();
+  });
+
+  it("reads the two pick columns", () => {
+    expect(ATTEMPT_COLUMNS).toContain("picked_region_id, picked_grape_id");
   });
 });
 

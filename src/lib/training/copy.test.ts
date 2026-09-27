@@ -16,6 +16,7 @@ import {
   itWasLine,
   lineageLine,
   percentLabel,
+  pickSaidLine,
   regionLabel,
   resultMark,
   resultTotalLine,
@@ -343,6 +344,19 @@ describe("vintage and 'You said'", () => {
     expect(youSaidRegionLine("Bourgogne", "Pinot Noir", { kind: "YEAR", year: 2019 })).toBe(
       "You said Bourgogne · Pinot Noir, 2019",
     );
+  });
+  it("pickSaidLine words each kind of pick (R8)", () => {
+    const none = { picked: null, pickedRegion: null, pickedGrape: null };
+    const bourgogne = { id: "region-bgn", name: "Bourgogne" };
+    const nv = { kind: "NV" } as const;
+    expect(pickSaidLine({ ...none, picked: { id: "a", name: "A typical Chablis Premier Cru" } }, nv)).toBe(
+      "You said Chablis Premier Cru, NV",
+    );
+    expect(pickSaidLine({ ...none, pickedRegion: bourgogne, pickedGrape: { id: "g", name: "Chardonnay" } }, null)).toBe(
+      "You said Bourgogne · Chardonnay",
+    );
+    expect(pickSaidLine({ ...none, pickedRegion: bourgogne }, nv)).toBe("You said Bourgogne, NV");
+    expect(pickSaidLine(none, nv)).toBe("You didn't pick a wine");
   });
 });
 

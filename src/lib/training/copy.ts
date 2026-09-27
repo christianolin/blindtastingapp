@@ -369,14 +369,30 @@ export function youSaidRegionLine(region: string, grape: string | null, vintage:
   return `You said ${region}${grape ? ` · ${grape}` : ""}${v ? `, ${v}` : ""}`;
 }
 
+/**
+ * What the taster said (R8): a typical wine "You said Pauillac{, vintage}", a
+ * region "You said Bourgogne · Chardonnay{, vintage}" or "You said
+ * Bourgogne{, vintage}", else "You didn't pick a wine". The history row passes
+ * no vintage — its line never showed one.
+ */
+export function pickSaidLine(
+  row: Pick<AttemptRow, "picked" | "pickedRegion" | "pickedGrape">,
+  vintage: VintageGuess,
+): string {
+  if (row.picked) return youSaidLine(row.picked.name, vintage);
+  if (row.pickedRegion) return youSaidRegionLine(row.pickedRegion.name, row.pickedGrape?.name ?? null, vintage);
+  return TRAINING_COPY.noPick;
+}
+
 /** "It was {wine}"; an unreadable wine reads "a wine you can't see yet". */
 export function itWasLine(wine: string | null): string {
   return `It was ${wine ?? TRAINING_COPY.unreadableWine}`;
 }
 
 /**
- * One history row's text (spec §3.6, §9 "history"):
+ * One history row's text (spec §3.6, §9 "history"; region-guess addendum R8):
  * "24 Sep · You said Pauillac · It was Saint-Julien · 14 of 22",
+ * "24 Sep · You said Bourgogne · Chardonnay · It was … · 13 of 22",
  * "24 Sep · You didn't pick a wine · It was … · 0 of 22",
  * "24 Sep · You said Pauillac · Not revealed". An unrevealed row's
  * "Reveal now" is a button the list renders after this text
@@ -384,7 +400,7 @@ export function itWasLine(wine: string | null): string {
  */
 export function attemptRowLine(row: AttemptRow, opts?: { timeZone?: string }): string {
   const parts = [shortDate(row.createdAt, opts?.timeZone)];
-  parts.push(row.picked ? `You said ${shortName(row.picked.name)}` : TRAINING_COPY.noPick);
+  parts.push(pickSaidLine(row, null));
   if (row.actual === null) {
     parts.push(TRAINING_COPY.notRevealedShort);
   } else {

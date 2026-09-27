@@ -16,6 +16,8 @@ const WINE = "00000000-0000-4000-8000-00000000b001";
 const TERM = "00000000-0000-4000-8000-00000000f001";
 const ATTEMPT = "00000000-0000-4000-8000-00000000c001";
 const NOTE = "00000000-0000-4000-8000-00000000d001";
+const REGION = "00000000-0000-4000-8000-00000000e101";
+const GRAPE = "00000000-0000-4000-8000-00000000e201";
 const ENTRY = { archetypeId: ARCH, name: "A typical Pauillac", closeness: 91, rank: 1, capped: null };
 
 function input(overrides: Partial<FinishInput> = {}): FinishInput {
@@ -25,6 +27,8 @@ function input(overrides: Partial<FinishInput> = {}): FinishInput {
     note: { id: null, colour_hue: "RUBY" },
     aromas: [{ term_id: TERM, sensed_on_nose: true, sensed_on_palate: false }],
     pickedArchetypeId: ARCH,
+    pickedRegionId: null,
+    pickedGrapeId: null,
     vintage: { kind: "YEAR", year: 2016 },
     actualCatalogWineId: WINE,
     snapshot: [ENTRY],
@@ -49,6 +53,8 @@ describe("attemptPayload", () => {
         session_key: SESSION,
         started_at: "2026-09-25T18:14:00.000Z",
         picked_archetype_id: ARCH,
+        picked_region_id: null,
+        picked_grape_id: null,
         guessed_vintage_kind: "YEAR",
         guessed_vintage_year: 2016,
         guessed_vintage_tawny_years: null,
@@ -61,6 +67,8 @@ describe("attemptPayload", () => {
         session_key: SESSION,
         started_at: "2026-09-25T18:14:00.000Z",
         picked_archetype_id: null,
+        picked_region_id: null,
+        picked_grape_id: null,
         guessed_vintage_kind: null,
         guessed_vintage_year: null,
         guessed_vintage_tawny_years: null,
@@ -81,15 +89,31 @@ describe("attemptPayload", () => {
     });
   });
 
+  it("sends a pick that stopped at the region, with or without its grape", () => {
+    expect(attemptPayload(input({ pickedArchetypeId: null, pickedRegionId: REGION, pickedGrapeId: GRAPE }))).toMatchObject({
+      attempt: { picked_archetype_id: null, picked_region_id: REGION, picked_grape_id: GRAPE },
+    });
+    expect(attemptPayload(input({ pickedArchetypeId: null, pickedRegionId: REGION }))).toMatchObject({
+      attempt: { picked_archetype_id: null, picked_region_id: REGION, picked_grape_id: null },
+    });
+  });
+
   it("refuses a bad session key, start time, pick or wine id", () => {
     for (const bad of [
       input({ sessionKey: "nope" }),
       input({ startedAt: "yesterday" }),
       input({ pickedArchetypeId: "x" }),
+      input({ pickedArchetypeId: null, pickedRegionId: "x" }),
+      input({ pickedArchetypeId: null, pickedRegionId: REGION, pickedGrapeId: "x" }),
       input({ actualCatalogWineId: "x" }),
     ]) {
       expect(attemptPayload(bad)).toEqual({ error: SAVE_REFUSED });
     }
+  });
+
+  it("refuses a typical wine and a region together, and a grape without a region", () => {
+    expect(attemptPayload(input({ pickedRegionId: REGION }))).toEqual({ error: SAVE_REFUSED });
+    expect(attemptPayload(input({ pickedArchetypeId: null, pickedGrapeId: GRAPE }))).toEqual({ error: SAVE_REFUSED });
   });
 
   it("refuses an off-range vintage", () => {

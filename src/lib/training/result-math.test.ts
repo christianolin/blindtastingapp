@@ -26,6 +26,8 @@ function row(id: string, createdAt: string): AttemptRow {
     id,
     createdAt,
     picked: null,
+    pickedRegion: null,
+    pickedGrape: null,
     vintage: null,
     actual: null,
     actualArchetype: null,
@@ -121,6 +123,8 @@ describe("anotherGlassPlan", () => {
     note: { ...emptyNoteState(), tannin: "HIGH", noseTermIds: ["t1"] },
     extras: { bubbles: false, fortified: null },
     pickedArchetypeId: "arch-margaux",
+    pickedRegionId: "region-bordeaux",
+    pickedGrapeId: null,
     vintage: { kind: "YEAR", year: 2016 },
   };
 

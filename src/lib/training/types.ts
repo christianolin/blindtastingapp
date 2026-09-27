@@ -96,7 +96,9 @@ export type VintageGuess =
   | { kind: "TAWNY"; years: number }
   | null;
 
-/** An unfinished session, kept on the device only (D13). */
+/** An unfinished session, kept on the device only (D13). Its pick is Your
+    call's (CallPick): a region, optionally a grape, or a typical wine — whose
+    region the draft keeps too, so the region step can show it. */
 export type TrainingDraft = {
   userId: string;
   sessionKey: string;
@@ -104,6 +106,8 @@ export type TrainingDraft = {
   note: WsetNoteState;
   extras: MatchExtras;
   pickedArchetypeId: string | null;
+  pickedRegionId: string | null;
+  pickedGrapeId: string | null;
   vintage: VintageGuess;
 };
 
@@ -116,11 +120,15 @@ export type PointCategory =
   | "typeDesignation"
   | "vintage";
 
-/** One row of Your sessions (spec §3.6). */
+/** One row of Your sessions (spec §3.6). `picked` is a typical wine; a pick
+    that stopped at the region has `pickedRegion` (and maybe `pickedGrape`)
+    instead (region-guess addendum R7, R8). */
 export type AttemptRow = {
   id: string;
   createdAt: string;
   picked: Named | null;
+  pickedRegion: Named | null;
+  pickedGrape: Named | null;
   vintage: VintageGuess;
   actual: { catalogWineId: string; label: string | null; lineage: string | null } | null;
   actualArchetype: Named | null;

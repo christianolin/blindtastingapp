@@ -53,6 +53,12 @@ function isVintage(v: unknown): v is VintageGuess {
   return false;
 }
 
+// A pick id: a string, or none. A draft saved before the region step
+// (region-guess addendum R5) has no region or grape key at all.
+function isOptionalId(v: unknown): v is string | null | undefined {
+  return v === undefined || v === null || typeof v === "string";
+}
+
 const NOTE_ARRAYS = ["observations", "faults", "tanninNature", "noseTermIds", "palateTermIds"] as const;
 
 /**
@@ -60,7 +66,9 @@ const NOTE_ARRAYS = ["observations", "faults", "tanninNature", "noseTermIds", "p
  * valid JSON, or its shape is wrong (a draft from another user, a bad session
  * key or timestamp, a malformed pick, extras or vintage). A note saved by an
  * older build is filled up from `emptyNoteState()`, so a field added later
- * starts unrated rather than undefined.
+ * starts unrated rather than undefined; a draft from before the region step
+ * reads with no region and no grape (the room then gives a picked typical wine
+ * its region: call.ts's normalizeCall).
  */
 export function readDraft(
   userId: string,
@@ -84,6 +92,7 @@ export function readDraft(
   for (const k of NOTE_ARRAYS) if (!Array.isArray(note[k])) return null;
   if (!isExtras(d.extras)) return null;
   if (d.pickedArchetypeId !== null && typeof d.pickedArchetypeId !== "string") return null;
+  if (!isOptionalId(d.pickedRegionId) || !isOptionalId(d.pickedGrapeId)) return null;
   if (!isVintage(d.vintage)) return null;
   return {
     userId,
@@ -92,6 +101,8 @@ export function readDraft(
     note,
     extras: { bubbles: d.extras.bubbles, fortified: d.extras.fortified },
     pickedArchetypeId: d.pickedArchetypeId,
+    pickedRegionId: d.pickedRegionId ?? null,
+    pickedGrapeId: d.pickedGrapeId ?? null,
     vintage: d.vintage,
   };
 }

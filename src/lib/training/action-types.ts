@@ -21,7 +21,11 @@ export type FinishInput = {
       the RPC forces the identity fields anyway (D14). */
   note: Record<string, unknown>;
   aromas: AromaPayload[];
+  /** call.ts's callPayload: a typical wine alone, or a region with an
+      optional grape, or none (region-guess addendum R7). */
   pickedArchetypeId: string | null;
+  pickedRegionId: string | null;
+  pickedGrapeId: string | null;
   vintage: VintageGuess;
   actualCatalogWineId: string | null;
   snapshot: RankingSnapshot;

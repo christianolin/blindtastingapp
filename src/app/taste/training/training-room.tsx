@@ -29,6 +29,7 @@ import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
 import { scrollContainerToTop } from "@/lib/scroll-container";
 import type { HistoryPage, TrainingAttemptDetail, TrainingTally } from "@/lib/training/action-types";
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
+import { NO_CALL, callPayload, normalizeCall } from "@/lib/training/call";
 import { TRAINING_COPY, clockTime, continueLine, sessionsLine, sheetTitle } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
 import { groupRanking } from "@/lib/training/groups";
@@ -222,16 +223,18 @@ export function TrainingRoom({
       startedAt: new Date().toISOString(),
       note: emptyNoteState(),
       extras: { bubbles: null, fortified: null },
-      pickedArchetypeId: null,
+      ...NO_CALL,
       vintage: null,
     });
     enterView("session");
   }
 
+  // A draft from before the region step names a typical wine but no region:
+  // normalizeCall gives the wine its region (and drops a pick that left the pool).
   function continueSession() {
     if (!stored) return;
     setError(null);
-    setSession(stored);
+    setSession({ ...stored, ...normalizeCall(stored, candidates) });
     enterView("session");
   }
 
@@ -259,7 +262,8 @@ export function TrainingRoom({
         startedAt: draft.startedAt,
         note: noteToPayload(draft.note, { catalogWineId: null, contextKind: "TRAINING", tastingWineId: null }),
         aromas: aromasToPayload(draft.note),
-        pickedArchetypeId: draft.pickedArchetypeId,
+        // A typical wine alone, or the region with its optional grape (R7).
+        ...callPayload(draft),
         vintage: draft.vintage,
         actualCatalogWineId,
         snapshot,

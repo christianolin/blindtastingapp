@@ -16,10 +16,10 @@ import {
   hueClearedLine,
   itWasLine,
   percentLabel,
+  pickSaidLine,
   resultTotalLine,
   shortName,
   styleVerdictLine,
-  youSaidLine,
 } from "@/lib/training/copy";
 import {
   pointedTopFive,
@@ -61,7 +61,8 @@ export function ResultView({
       mounted.current = false;
     };
   }, []);
-  const said = row.picked ? youSaidLine(row.picked.name, row.vintage) : TRAINING_COPY.noPick;
+  // "You said Pauillac, 2016" · "You said Bourgogne · Chardonnay" · "You didn't pick a wine".
+  const said = pickSaidLine(row, row.vintage);
 
   if (row.actual === null) {
     return (

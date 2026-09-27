@@ -324,7 +324,8 @@ export function wineDisplay(row: CatalogDisplayRaw): WineDisplay {
 
 /** Every training_attempts column the room reads (spec §6.1). */
 export const ATTEMPT_COLUMNS: string =
-  "id, created_at, note_id, picked_archetype_id, guessed_vintage_kind, guessed_vintage_year, " +
+  "id, created_at, note_id, picked_archetype_id, picked_region_id, picked_grape_id, " +
+  "guessed_vintage_kind, guessed_vintage_year, " +
   "guessed_vintage_tawny_years, actual_catalog_wine_id, actual_archetype_id, note_colour_hue, " +
   "hue_cleared, candidates_snapshot, country_points, region_points, appellation_points, " +
   "primary_grape_points, secondary_grape_points, type_designation_points, vintage_points, " +
@@ -335,6 +336,8 @@ export type AttemptRaw = {
   created_at: string;
   note_id: string;
   picked_archetype_id: string | null;
+  picked_region_id: string | null;
+  picked_grape_id: string | null;
   guessed_vintage_kind: VintageKind | null;
   guessed_vintage_year: number | null;
   guessed_vintage_tawny_years: number | null;
@@ -379,18 +382,24 @@ function pointsOf(raw: PointColumns): Record<PointCategory, number | null> {
   };
 }
 
+// An id with its name, or null when there is no id or no name was read for it.
+function namedFrom(names: ReadonlyMap<string, string>, id: string | null): Named | null {
+  const name = id ? names.get(id) : undefined;
+  return id && name !== undefined ? { id, name } : null;
+}
+
 export function shapeAttemptRow(
   raw: AttemptRaw,
   ctx: {
     archetypeNames: ReadonlyMap<string, string>;
+    /** The picked regions' and grapes' names (region-guess addendum R8). */
+    regionNames: ReadonlyMap<string, string>;
+    grapeNames: ReadonlyMap<string, string>;
     mergedInto: ReadonlyMap<string, string | null>;
     wines: ReadonlyMap<string, WineDisplay>;
   },
 ): AttemptRow {
-  const archetype = (id: string | null): Named | null => {
-    const name = id ? ctx.archetypeNames.get(id) : undefined;
-    return id && name !== undefined ? { id, name } : null;
-  };
+  const archetype = (id: string | null) => namedFrom(ctx.archetypeNames, id);
   let actual: AttemptRow["actual"] = null;
   if (raw.actual_catalog_wine_id) {
     const catalogWineId = finalWineId(raw.actual_catalog_wine_id, ctx.mergedInto);
@@ -401,6 +410,8 @@ export function shapeAttemptRow(
     id: raw.id,
     createdAt: raw.created_at,
     picked: archetype(raw.picked_archetype_id),
+    pickedRegion: namedFrom(ctx.regionNames, raw.picked_region_id),
+    pickedGrape: namedFrom(ctx.grapeNames, raw.picked_grape_id),
     vintage: vintageFromColumns(
       raw.guessed_vintage_kind,
       raw.guessed_vintage_year,

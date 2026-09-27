@@ -169,20 +169,23 @@ async function followMerges(supabase: Client, ids: readonly string[]): Promise<M
 
 type Hydrated = { row: AttemptRow; raw: AttemptRaw; wineColour: WineColour | null };
 
-// Names the picks and the archetypes, follows merged wines and reads their labels.
-// A wine the viewer cannot read (a hidden catalog row) keeps label null: the copy
-// says "a wine you can't see yet".
+// Names the picks (a typical wine, or a region and grape) and the archetypes,
+// follows merged wines and reads their labels. A wine the viewer cannot read (a
+// hidden catalog row) keeps label null: the copy says "a wine you can't see yet".
 async function hydrateAttempts(supabase: Client, raws: readonly AttemptRaw[]): Promise<Hydrated[]> {
   if (raws.length === 0) return [];
-  const archetypeIds = raws
-    .flatMap((r) => [r.picked_archetype_id, r.actual_archetype_id])
-    .filter((id): id is string => id !== null);
-  const wineIds = raws.map((r) => r.actual_catalog_wine_id).filter((id): id is string => id !== null);
+  const present = (ids: (string | null)[]) => ids.filter((id): id is string => id !== null);
+  const archetypeIds = present(raws.flatMap((r) => [r.picked_archetype_id, r.actual_archetype_id]));
+  const regionIds = present(raws.map((r) => r.picked_region_id));
+  const grapeIds = present(raws.map((r) => r.picked_grape_id));
+  const wineIds = present(raws.map((r) => r.actual_catalog_wine_id));
 
-  const [archetypes, mergedInto] = await Promise.all([
+  const [archetypes, regions, grapes, mergedInto] = await Promise.all([
     readByIds("archetype names", archetypeIds, (chunk) =>
       supabase.from("wine_archetypes").select("id, name").in("id", chunk),
     ),
+    readByIds("picked regions", regionIds, (chunk) => supabase.from("regions").select("id, name").in("id", chunk)),
+    readByIds("picked grapes", grapeIds, (chunk) => supabase.from("grapes").select("id, name").in("id", chunk)),
     followMerges(supabase, wineIds),
   ]);
   const finals = wineIds.map((id) => finalWineId(id, mergedInto));
@@ -193,9 +196,11 @@ async function hydrateAttempts(supabase: Client, raws: readonly AttemptRaw[]): P
     (displayRows as unknown as CatalogDisplayRaw[]).map((w) => [w.id, wineDisplay(w)]),
   );
   const archetypeNames = new Map(archetypes.map((a) => [a.id, a.name] as const));
+  const regionNames = new Map(regions.map((r) => [r.id, r.name] as const));
+  const grapeNames = new Map(grapes.map((g) => [g.id, g.name] as const));
 
   return raws.map((raw) => {
-    const row = shapeAttemptRow(raw, { archetypeNames, mergedInto, wines });
+    const row = shapeAttemptRow(raw, { archetypeNames, regionNames, grapeNames, mergedInto, wines });
     const wineColour = row.actual ? (wines.get(row.actual.catalogWineId)?.colour ?? null) : null;
     return { row, raw, wineColour };
   });

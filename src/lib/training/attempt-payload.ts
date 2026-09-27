@@ -69,7 +69,11 @@ function validAromas(aromas: unknown): aromas is AromaPayload[] {
   );
 }
 
-/** record_training_attempt's p_attempt for a fresh attempt, or a refusal. */
+/**
+ * record_training_attempt's p_attempt for a fresh attempt, or a refusal. The
+ * pick is a typical wine, or a region with an optional grape — never both, and
+ * never a grape alone (the table's own checks, region-guess addendum R7).
+ */
 export function attemptPayload(
   input: FinishInput,
 ): { attempt: Record<string, unknown> } | { error: string } {
@@ -80,6 +84,10 @@ export function attemptPayload(
     typeof input.startedAt === "string" &&
     TIMESTAMP.test(input.startedAt) &&
     (input.pickedArchetypeId === null || isUuid(input.pickedArchetypeId)) &&
+    (input.pickedRegionId === null || isUuid(input.pickedRegionId)) &&
+    (input.pickedGrapeId === null || isUuid(input.pickedGrapeId)) &&
+    (input.pickedArchetypeId === null || input.pickedRegionId === null) &&
+    (input.pickedGrapeId === null || input.pickedRegionId !== null) &&
     (input.actualCatalogWineId === null || isUuid(input.actualCatalogWineId)) &&
     validVintage(input.vintage) &&
     input.note !== null &&
@@ -95,6 +103,8 @@ export function attemptPayload(
       session_key: input.sessionKey,
       started_at: input.startedAt,
       picked_archetype_id: input.pickedArchetypeId,
+      picked_region_id: input.pickedRegionId,
+      picked_grape_id: input.pickedGrapeId,
       ...vintageColumns(input.vintage),
       actual_catalog_wine_id: input.actualCatalogWineId,
       candidates_snapshot: input.snapshot,

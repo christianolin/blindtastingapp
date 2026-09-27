@@ -33,6 +33,8 @@ function draft(patch: Partial<TrainingDraft> = {}): TrainingDraft {
     note: { ...emptyNoteState(), tannin: "HIGH", noseTermIds: ["t1"] },
     extras: { bubbles: false, fortified: null },
     pickedArchetypeId: "arch-margaux",
+    pickedRegionId: "region-bordeaux",
+    pickedGrapeId: null,
     vintage: { kind: "YEAR", year: 2016 },
     ...patch,
   };
@@ -59,6 +61,27 @@ describe("write, read, clear", () => {
       expect(readDraft(USER, s.get)?.vintage).toEqual(vintage);
       expect(readDraft(USER, s.get)?.pickedArchetypeId).toBeNull();
     }
+  });
+
+  it("keeps a pick that stopped at the region, with or without a grape", () => {
+    const s = fakeStorage();
+    const regionPick = { pickedArchetypeId: null, pickedRegionId: "region-bourgogne", pickedGrapeId: "grape-chardonnay" };
+    writeDraft(draft(regionPick), s.get);
+    expect(readDraft(USER, s.get)).toEqual(draft(regionPick));
+    writeDraft(draft({ ...regionPick, pickedGrapeId: null }), s.get);
+    expect(readDraft(USER, s.get)?.pickedGrapeId).toBeNull();
+  });
+
+  it("reads a draft saved before the region step with no region and no grape", () => {
+    const s = fakeStorage();
+    const older: Record<string, unknown> = { ...draft() };
+    delete older.pickedRegionId;
+    delete older.pickedGrapeId;
+    s.get().setItem(draftKey(USER), JSON.stringify(older));
+    const read = readDraft(USER, s.get);
+    expect(read?.pickedArchetypeId).toBe("arch-margaux");
+    expect(read?.pickedRegionId).toBeNull();
+    expect(read?.pickedGrapeId).toBeNull();
   });
 
   it("clears only this user's draft", () => {
@@ -104,6 +127,8 @@ describe("write, read, clear", () => {
       { ...draft(), note: { ...draft().note, noseTermIds: "t1" } },
       { ...draft(), extras: { bubbles: "yes", fortified: null } },
       { ...draft(), pickedArchetypeId: 42 },
+      { ...draft(), pickedRegionId: 7 },
+      { ...draft(), pickedGrapeId: { id: "grape-chardonnay" } },
       { ...draft(), vintage: { kind: "YEAR" } },
       { ...draft(), vintage: { kind: "MAGNUM" } },
     ];
