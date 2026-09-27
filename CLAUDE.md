@@ -1074,7 +1074,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `training-room-layout.test.ts`): an open region can outgrow any window
   (Bourgogne has 15 typical wines), and a sticky column taller than the window
   shows its foot only once the page reaches its end — the one nested scroller
-  base spec §8 did not foresee; never drop it to restore §8's wording.
+  base spec §8 did not foresee (controller ruling 2026-09-27 after the
+  1280×800 browser check; shown to the owner with the region-guess deploy).
+  Every "Your sessions" row has a two-tap Delete (owner, 2026-09-27):
+  `deleteTrainingSession` deletes the session's own TRAINING note under
+  "wset notes delete", and the attempt goes with it through
+  `training_attempts.note_id … on delete cascade`.
   Your call (`your-call.tsx`, every rule pure in `call.ts`) is
   two steps: which region (top five, a search that also matches a region's
   wines and appellations, "It's not in the list"), then "Go deeper" ("Just the

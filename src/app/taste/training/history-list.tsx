@@ -147,7 +147,10 @@ export function HistoryList({
               className="flex items-center gap-2 border-b border-border-light py-2.5 pr-2 pl-4 last:border-b-0"
             >
               <span className="min-w-0 flex-1 text-[13px] leading-snug">{line}</span>
-              {row.actual === null ? (
+              {/* While this row's delete is armed (5 s), "Reveal now" steps
+                  aside: on a phone the confirm and both buttons squeezed the
+                  line to a sliver. */}
+              {row.actual === null && !isArmed ? (
                 <Button
                   variant="outline"
                   className={cn(TAP, "shrink-0")}
