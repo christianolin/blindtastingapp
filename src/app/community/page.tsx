@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { InvitePeopleButton } from "@/components/invite/invite-people-button";
 import { createClient } from "@/lib/supabase/server";
 import { getBulkProfileSummaries } from "@/lib/profile-stats";
+import { readLevels } from "@/lib/levels/read";
 import { relationship } from "@/lib/friends/relationship";
 import {
   COMMUNITY_PAGE,
@@ -174,8 +175,13 @@ export default async function CommunityPage({
   }
 
   // Batched once for the whole page (CLAUDE.md's People/profile rule): never
-  // fetch one profile's stats at a time in a loop.
-  const summaries = await getBulkProfileSummaries(rows.map((r) => r.id));
+  // fetch one profile's stats at a time in a loop. Levels (levels spec §8.3,
+  // L31) are one `.in()` read beside them; anyone without a row is level 1.
+  const rowIds = rows.map((r) => r.id);
+  const [summaries, levels] = await Promise.all([
+    getBulkProfileSummaries(rowIds),
+    readLevels(supabase, rowIds),
+  ]);
 
   const communityRows: CommunityRow[] = rows.map((p) => {
     const isMe = p.id === user.id;
@@ -197,6 +203,7 @@ export default async function CommunityPage({
       lastActive: lastActive(p.last_seen_at, now),
       joined: joinedLabel(p.created_at),
       stats: statCells(summaries.get(p.id)),
+      level: levels.get(p.id) ?? 1,
     };
   });
 

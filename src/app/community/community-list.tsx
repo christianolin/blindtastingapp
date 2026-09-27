@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { FriendButton } from "@/components/friend-button";
 import { InvitePeopleButton } from "@/components/invite/invite-people-button";
+import { LevelPill } from "@/components/levels/level-pill";
 import type { Relationship } from "@/lib/friends/relationship";
 import { cn } from "@/lib/utils";
 import {
@@ -47,6 +48,8 @@ export type CommunityRow = {
   lastActive: { column: string; phrase: string; fresh: boolean } | null;
   joined: string;
   stats: { tastings: string; wines: string | null; avg: string; phoneBottom: string };
+  /** The person's level (levels spec §8.3); 1 when they have no row. */
+  level: number;
 };
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -295,6 +298,7 @@ export function CommunityList({
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{r.name}</span>
                       {r.isMe ? <Badge variant="secondary">You</Badge> : null}
+                      <LevelPill level={r.level} />
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
                       {phoneMeta({
@@ -375,6 +379,7 @@ export function CommunityList({
                           <span className="flex items-center gap-2">
                             <span className="truncate font-medium">{r.name}</span>
                             {r.isMe ? <Badge variant="secondary">You</Badge> : null}
+                            <LevelPill level={r.level} />
                           </span>
                           {r.bio ? (
                             <span className="line-clamp-1 text-xs text-muted-foreground">
