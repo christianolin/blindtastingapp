@@ -1,24 +1,27 @@
 "use client";
 
-// Below lg: the full ranked list as the app's bottom sheet (spec §3.3, §8) —
-// the tour sheet's idiom: one base-ui Dialog, rounded top, drag pill, at most
-// 88dvh, the PHONE classes as max-lg: variants and a centred card from lg
-// (never seen: the column takes over there). A row swaps the sheet's content
-// to that candidate's profile with a back arrow — no stacked sheets. ✕, Escape
-// and the backdrop close it; focus moves in, and back to the strip on close,
-// on a fine pointer only (the Popover touch rule). The list body is the only
-// nested scroller (§8).
+// Below lg: the ranked regions as the app's bottom sheet (spec §3.3, §8;
+// region-guess addendum R3) — the tour sheet's idiom: one base-ui Dialog,
+// rounded top, drag pill, at most 88dvh, the PHONE classes as max-lg: variants
+// and a centred card from lg (never seen: the column takes over there). The
+// top five regions, Show all N regions, a region row opening its typical wines
+// in place (the top region starts open); a wine row swaps the sheet's content
+// to that wine's profile with a back arrow — no stacked sheets — and back
+// finds the list as it was left (the open regions and Show all live here, not
+// in the list). ✕, Escape and the backdrop close it; focus moves in, and back
+// to the strip on close, on a fine pointer only (the Popover touch rule). The
+// list body is the only nested scroller (§8).
 import { useState, type RefObject } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { finePointer } from "@/lib/fine-pointer";
 import { TRAINING_COPY } from "@/lib/training/copy";
-import { panelView } from "@/lib/training/panel";
-import type { RankedCandidate } from "@/lib/training/types";
+import { findMember, regionPanelView, toggleGroup, type ExpandState } from "@/lib/training/groups";
+import type { RegionGroup } from "@/lib/training/types";
 import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
 import { ArchetypeDetail } from "./archetype-detail";
-import { CandidateGroups } from "./candidates-panel";
+import { RegionGroups, ShowAllRegions } from "./candidates-panel";
 
 // Overrides DialogContent's centred defaults below lg (tailwind-merge keeps the
 // variants beside the defaults; a variant wins where it applies). max-w needs
@@ -30,20 +33,22 @@ const CARD = "lg:max-h-[80vh] lg:w-[480px] lg:max-w-[calc(100vw-2rem)] lg:rounde
 export function CandidatesSheet({
   open,
   onOpenChange,
-  ranked,
+  groups,
   note,
   returnFocusRef,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ranked: RankedCandidate[];
+  groups: RegionGroup[];
   note: WsetNoteState;
   /** The strip that opened the sheet: focus goes back to it on close (fine pointer only). */
   returnFocusRef?: RefObject<HTMLElement | null>;
 }) {
   const [detailId, setDetailId] = useState<string | null>(null);
-  const detail = detailId ? (ranked.find((r) => r.candidate.id === detailId) ?? null) : null;
-  const view = panelView(ranked, true);
+  const [showAll, setShowAll] = useState(false);
+  const [expand, setExpand] = useState<ExpandState>({});
+  const detail = detailId ? findMember(groups, detailId) : null;
+  const view = regionPanelView(groups, showAll);
 
   return (
     <Dialog
@@ -95,7 +100,15 @@ export function CandidatesSheet({
               <ArchetypeDetail candidate={detail.candidate} note={note} />
             </div>
           ) : (
-            <CandidateGroups view={view} onOpen={(id) => setDetailId(id)} />
+            <div className="flex flex-col gap-2">
+              <RegionGroups
+                view={view}
+                expand={expand}
+                onToggle={(key) => setExpand((e) => toggleGroup(e, key, view.topKey))}
+                onOpen={(id) => setDetailId(id)}
+              />
+              <ShowAllRegions view={view} onShowAll={() => setShowAll(true)} />
+            </div>
           )}
         </div>
       </DialogContent>

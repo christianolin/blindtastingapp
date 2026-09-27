@@ -336,11 +336,6 @@ export function sheetTitle(time: string): string {
   return `Unknown wine · started ${time}`;
 }
 
-/** "Show all {n}" */
-export function showAllLine(n: number): string {
-  return `Show all ${n}`;
-}
-
 /** A candidate's closeness as the strip and the rows write it: "91 %" (a
     space before the sign, as §9 does); empty when it has no number. */
 export function percentLabel(n: number | null): string {

@@ -31,6 +31,7 @@ import type { HistoryPage, TrainingAttemptDetail, TrainingTally } from "@/lib/tr
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
 import { TRAINING_COPY, clockTime, continueLine, sessionsLine, sheetTitle } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
+import { groupRanking } from "@/lib/training/groups";
 import { rankCandidates, snapshotRanking } from "@/lib/training/match";
 import { anotherGlassPlan } from "@/lib/training/result-math";
 import type {
@@ -179,6 +180,8 @@ export function TrainingRoom({
     () => (note && extras ? rankCandidates(note, extras, candidates, lexicon) : []),
     [note, extras, candidates, lexicon],
   );
+  // The same ranking by region (region-guess addendum R1-R3).
+  const groups = useMemo(() => groupRanking(ranked), [ranked]);
 
   // Functional updates: the sheet's onChange and a Bubbles/Fortified tap can
   // land in the same tick, and neither may overwrite the other.
@@ -366,13 +369,13 @@ export function TrainingRoom({
             />
           </div>
           <aside className="sticky top-[72px] hidden self-start lg:block">
-            <CandidatesPanel ranked={ranked} note={session.note} />
+            <CandidatesPanel groups={groups} note={session.note} />
           </aside>
         </div>
         <CandidatesSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
-          ranked={ranked}
+          groups={groups}
           note={session.note}
           returnFocusRef={stripRef}
         />

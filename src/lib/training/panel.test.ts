@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { TRAINING_COPY } from "./copy";
 import {
   PANEL_LIMIT,
   detailReturnsFocus,
   isBeforeAnswers,
-  panelView,
   pressOnOwningRow,
   tawnyYearsFromInput,
   vintageFromPickerId,
@@ -42,16 +40,6 @@ function ranked(c: TrainingCandidate, closeness: number | null, capped: CapReaso
 
 const ids = (rows: RankedCandidate[]) => rows.map((r) => r.candidate.id);
 
-const BEFORE = [
-  ranked(candidate("1", "A typical Barossa Shiraz", "Australia"), null),
-  ranked(candidate("2", "A typical Clare Valley Riesling", "Australia"), null),
-  ranked(candidate("3", "A typical Bandol", "France"), null),
-  ranked(candidate("4", "A typical Chablis", "France"), null),
-  ranked(candidate("5", "A typical Margaux", "France"), null),
-  ranked(candidate("6", "A typical Barolo", "Italy"), null),
-  ranked(candidate("7", "A typical Soave", "Italy"), null),
-];
-
 const SCORED = [
   ranked(candidate("1", "A typical Pauillac", "France", "Bordeaux"), 91),
   ranked(candidate("2", "A typical Margaux", "France", "Bordeaux"), 84),
@@ -62,41 +50,9 @@ const SCORED = [
   ranked(candidate("7", "A typical Côte-Rôtie", "France", "Rhône"), 55),
 ];
 
-describe("panelView", () => {
-  it("groups the first five by country before anything is answered", () => {
-    const view = panelView(BEFORE, false);
-    expect(view.before).toBe(true);
-    expect(view.total).toBe(7);
-    expect(view.hidden).toBe(2);
-    expect(view.groups.map((g) => [g.heading, ids(g.rows)])).toEqual([
-      ["Australia", ["1", "2"]],
-      ["France", ["3", "4", "5"]],
-    ]);
+describe("isBeforeAnswers", () => {
+  it("shows five region groups before Show all", () => {
     expect(PANEL_LIMIT).toBe(5);
-  });
-
-  it("shows every candidate once expanded", () => {
-    const view = panelView(BEFORE, true);
-    expect(view.hidden).toBe(0);
-    expect(view.groups.map((g) => g.heading)).toEqual(["Australia", "France", "Italy"]);
-  });
-
-  it("puts capped candidates under the unlikely heading", () => {
-    const list = [
-      ranked(candidate("1", "A typical Pauillac", "France"), 91),
-      ranked(candidate("2", "A typical Margaux", "France"), 84),
-      ranked(candidate("3", "A typical Bandol", "France"), null),
-      ranked(candidate("4", "A typical Chablis", "France"), 15, "colour"),
-      ranked(candidate("5", "A typical Champagne", "France"), 12, "bubbles"),
-      ranked(candidate("6", "A typical Sancerre", "France"), null, "colour"),
-    ];
-    const view = panelView(list, false);
-    expect(view.before).toBe(false);
-    expect(view.groups.map((g) => [g.heading, ids(g.rows)])).toEqual([
-      [null, ["1", "2", "3"]],
-      [TRAINING_COPY.unlikelyGroup, ["4", "5"]],
-    ]);
-    expect(view.hidden).toBe(1);
   });
 
   it("is in before-answers mode only while nothing has a number or a cap", () => {

@@ -1,8 +1,9 @@
 // View rules for the room's candidate list and Your call card (training-room
-// spec §3.3, §5.8): the laptop column's top five and Show all, the
-// before-answers country groups, the "Unlikely from what you've said" group,
-// the Your call options and the vintage picker's groups and ids. Pure,
-// relative imports only, so vitest pins it.
+// spec §3.3, §5.8): how many rows the lists show, whether anything has been
+// answered yet, the laptop popover's focus rules, the Your call options and
+// the vintage picker's groups and ids. The list's region groups live in
+// ./groups (region-guess addendum R1-R3). Pure, relative imports only, so
+// vitest pins it.
 import {
   VINTAGE_NV_ID,
   VINTAGE_TAWNY_OTHER_ID,
@@ -14,39 +15,12 @@ import { foldName } from "../wine-identity/fold";
 import { TRAINING_COPY, tawnyAgeOption } from "./copy";
 import type { RankedCandidate, VintageGuess } from "./types";
 
-/** Rows the laptop column shows before Show all. */
+/** Region groups the laptop column and the phone sheet show before Show all. */
 export const PANEL_LIMIT = 5;
-
-export type PanelGroup = { key: string; heading: string | null; rows: RankedCandidate[] };
-export type PanelView = { before: boolean; groups: PanelGroup[]; total: number; hidden: number };
 
 /** Nothing answered yet that any candidate can be measured on, and nothing capped. */
 export function isBeforeAnswers(ranked: readonly RankedCandidate[]): boolean {
   return ranked.every((r) => r.closeness === null && r.capped === null);
-}
-
-/**
- * The list as groups, in the matcher's order. Before any answer the groups are
- * countries (the matcher already sorts un-numbered candidates by country then
- * name); after, the uncapped rows come first without a heading and the capped
- * ones follow under "Unlikely from what you've said".
- */
-export function panelView(
-  ranked: readonly RankedCandidate[],
-  expanded: boolean,
-  limit: number = PANEL_LIMIT,
-): PanelView {
-  const before = isBeforeAnswers(ranked);
-  const rows = expanded ? [...ranked] : ranked.slice(0, limit);
-  const groups: PanelGroup[] = [];
-  for (const r of rows) {
-    const key = before ? `country:${r.candidate.country.name}` : r.capped ? "unlikely" : "likely";
-    const heading = before ? r.candidate.country.name : r.capped ? TRAINING_COPY.unlikelyGroup : null;
-    const last = groups[groups.length - 1];
-    if (last && last.key === key) last.rows.push(r);
-    else groups.push({ key, heading, rows: [r] });
-  }
-  return { before, groups, total: ranked.length, hidden: ranked.length - rows.length };
 }
 
 /**

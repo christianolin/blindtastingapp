@@ -24,7 +24,6 @@ import {
   sheetTitle,
   shortDate,
   shortName,
-  showAllLine,
   showAllRegionsLine,
   signatureLine,
   stripLine,
@@ -130,7 +129,6 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
   it("fills the templated lines", () => {
     expect(continueLine("20:14")).toBe("Continue your session · started 20:14");
     expect(sheetTitle("20:14")).toBe("Unknown wine · started 20:14");
-    expect(showAllLine(17)).toBe("Show all 17");
     expect(itWasLine("Château Talbot 2016")).toBe("It was Château Talbot 2016");
     expect(itWasLine(null)).toBe("It was a wine you can't see yet");
     expect(resultTotalLine(14, 22)).toBe("14 of 22");

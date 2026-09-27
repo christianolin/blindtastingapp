@@ -1,8 +1,10 @@
 "use client";
 
 // Below lg: the 44 px strip in the WSET sheet's sticky bar (`belowBar`, spec
-// §3.3) — "Top match: Pauillac 91 % · 2 more close" — which opens the
-// candidates sheet. It re-renders with every answer. Exactly 44 px tall with
+// §3.3) — "Top match: Bordeaux · Pauillac 91 % · 2 more close" (the leading
+// wine's region, then the wine: region-guess addendum R4, copy.ts's
+// stripLine) — which opens the candidates sheet. It re-renders with every
+// answer; the one line truncates rather than wraps. Exactly 44 px tall with
 // no outer margin, so the sheet's section scroll margin (which allows 44 px
 // for the strip below lg) is exact: the gap under the section tabs is the
 // button's own top padding, and the whole 44 px is the tap target.
