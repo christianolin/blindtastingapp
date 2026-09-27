@@ -69,7 +69,7 @@ export default async function TastePage({
     : await readPlacements(firstPagePlacementIds(archive.tastings, filter));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       {livePoll ? <AutoRefresh intervalMs={15000} /> : null}
       <AppHeader
         userId={user.id}

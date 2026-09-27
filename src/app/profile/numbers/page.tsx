@@ -58,7 +58,7 @@ export default async function YourNumbersPage({
     profile?.display_name ?? user.email ?? numbers.displayName;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       {/* No `title` here: on phones the page's own header row below (back
           arrow + eyebrow + h1) is the only place "Your numbers" appears, as
           drawn — passing it to AppHeader would stack the title twice. */}
