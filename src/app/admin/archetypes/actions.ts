@@ -72,8 +72,10 @@ export async function removePlacement(
 }
 
 // Save an archetype's profile: SAT ranges, quality, aromas with their signature
-// flags, the scoring identity (country → region → appellation), designations,
-// typical age and the optional map place (training-room spec §4.5). RLS gates
+// flags, the scoring identity (country → region → appellation, primary and
+// second grape), designations, typical age and the optional map place
+// (training-room spec §4.5; the grapes since the sheet editor, plan
+// 2026-09-26-archetype-editor-sheet). RLS gates
 // every write to curators (contributor + admin); the app check mirrors it, and
 // the profile is validated again here — the editor's own check is only a
 // convenience.
@@ -111,6 +113,8 @@ export async function updateArchetype(
       country_id: input.countryId,
       region_id: input.regionId,
       appellation_id: input.appellationId,
+      primary_grape_id: input.primaryGrapeId,
+      secondary_grape_id: input.secondaryGrapeId,
       typical_age_low: input.typicalAgeLow,
       typical_age_high: input.typicalAgeHigh,
       wine_place_id: input.winePlaceId,

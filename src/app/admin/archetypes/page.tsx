@@ -65,7 +65,7 @@ export default async function ArchetypesAdminPage() {
     supabase
       .from("wine_archetypes")
       .select(
-        "id, name, colour, style, description, quality_low, quality_high, sat, country_id, region_id, appellation_id, typical_age_low, typical_age_high, wine_place_id",
+        "id, name, colour, style, description, quality_low, quality_high, sat, country_id, region_id, appellation_id, primary_grape_id, secondary_grape_id, typical_age_low, typical_age_high, wine_place_id",
       )
       .order("sort_order"),
     supabase
@@ -138,6 +138,8 @@ export default async function ArchetypesAdminPage() {
     regionId: a.region_id,
     appellationId: a.appellation_id,
     appellationName: appellationName.get(a.appellation_id) ?? null,
+    primaryGrapeId: a.primary_grape_id,
+    secondaryGrapeId: a.secondary_grape_id,
     designationIds: designationLinks
       .filter((d) => d.archetype_id === a.id)
       .map((d) => d.type_designation_id),
@@ -162,6 +164,7 @@ export default async function ArchetypesAdminPage() {
   const editorReferences: EditorReferences = {
     countries: references.countries,
     regions: references.regions,
+    grapes: references.grapes,
     typeDesignations: references.typeDesignations.map(({ id, name, category }) => ({ id, name, category })),
   };
 
@@ -174,8 +177,8 @@ export default async function ArchetypesAdminPage() {
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">Typical wines</h1>
         <p className="mt-2 text-muted-foreground">
           Edit each typical wine&apos;s tasting-sheet profile — where it scores (country, region,
-          appellation), designations, typical age, appearance, nose, palate and quality ranges plus
-          aromas and their signature terms — and choose which map places surface it.
+          appellation, grapes), designations, typical age, appearance, nose, palate and quality
+          ranges plus aromas and their signature terms — and choose which map places surface it.
         </p>
       </div>
       <PlacementEditor archetypes={items} terms={terms} references={editorReferences} />

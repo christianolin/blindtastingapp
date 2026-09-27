@@ -251,6 +251,8 @@ export function ArchetypeEditor({
       countryId,
       regionId,
       appellationId,
+      primaryGrapeId: archetype.primaryGrapeId,
+      secondaryGrapeId: archetype.secondaryGrapeId,
       designationIds,
       typicalAgeLow: numberOrNull(ageLow),
       typicalAgeHigh: numberOrNull(ageHigh),

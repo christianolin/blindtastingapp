@@ -39,6 +39,8 @@ export type ArchetypeProfile = {
   regionId: string;
   appellationId: string;
   appellationName: string | null;
+  primaryGrapeId: string;
+  secondaryGrapeId: string | null;
   designationIds: string[];
   typicalAgeLow: number | null;
   typicalAgeHigh: number | null;
@@ -60,6 +62,8 @@ export type ArchetypeProfileInput = {
   countryId: string;
   regionId: string;
   appellationId: string;
+  primaryGrapeId: string;
+  secondaryGrapeId: string | null;
   designationIds: string[];
   typicalAgeLow: number | null;
   typicalAgeHigh: number | null;
@@ -70,6 +74,7 @@ export type ArchetypeProfileInput = {
 export type EditorReferences = {
   countries: { id: string; name: string }[];
   regions: { id: string; name: string; countryId: string }[];
+  grapes: { id: string; name: string }[];
   typeDesignations: { id: string; name: string; category: string | null }[];
 };
 
@@ -170,6 +175,9 @@ export function validateProfile(p: ArchetypeProfileInput): string | null {
   if (!isId(p.countryId) || !isId(p.regionId) || !isId(p.appellationId)) {
     return "Pick a country, region and appellation.";
   }
+  if (!isId(p.primaryGrapeId)) return "Pick a primary grape.";
+  if (p.secondaryGrapeId !== null && !isId(p.secondaryGrapeId)) return MALFORMED;
+  if (p.secondaryGrapeId === p.primaryGrapeId) return "The second grape must differ from the primary grape.";
   if (!pairOk(p.qualityLow, p.qualityHigh, 50, 100)) return "Quality runs from 50 to 100, low to high.";
   if (!pairOk(p.typicalAgeLow, p.typicalAgeHigh, 0, 100)) {
     return "Typical age takes two whole numbers of years, low to high.";

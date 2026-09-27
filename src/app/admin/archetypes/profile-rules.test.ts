@@ -21,6 +21,8 @@ const COUNTRY = "00000000-0000-4000-8000-000000000c01";
 const REGION = "00000000-0000-4000-8000-000000000c02";
 const APPELLATION = "00000000-0000-4000-8000-000000000c03";
 const ARCH = "00000000-0000-4000-8000-000000000c05";
+const GRAPE = "00000000-0000-4000-8000-000000000c06";
+const GRAPE_2 = "00000000-0000-4000-8000-000000000c07";
 const AGE = "Typical age takes two whole numbers of years, low to high.";
 
 function candidate(colour: WineColour, style: WineStyle): TrainingCandidate {
@@ -63,6 +65,8 @@ function profile(overrides: Partial<ArchetypeProfileInput> = {}): ArchetypeProfi
     countryId: COUNTRY,
     regionId: REGION,
     appellationId: APPELLATION,
+    primaryGrapeId: GRAPE,
+    secondaryGrapeId: null,
     designationIds: [],
     typicalAgeLow: 8,
     typicalAgeHigh: 25,
@@ -132,6 +136,7 @@ describe("rangeFits", () => {
 describe("validateProfile", () => {
   it("accepts a complete profile, with or without a quality range", () => {
     expect(validateProfile(profile())).toBeNull();
+    expect(validateProfile(profile({ secondaryGrapeId: GRAPE_2 }))).toBeNull();
     expect(validateProfile(profile({ qualityLow: null, qualityHigh: null }))).toBeNull();
     expect(validateProfile(profile({ typicalAgeLow: null, typicalAgeHigh: null }))).toBeNull();
   });
@@ -139,6 +144,10 @@ describe("validateProfile", () => {
   it("names the first thing that is wrong", () => {
     expect(validateProfile(profile({ name: "  " }))).toBe("Give it a name.");
     expect(validateProfile(profile({ appellationId: "" }))).toBe("Pick a country, region and appellation.");
+    expect(validateProfile(profile({ primaryGrapeId: "" }))).toBe("Pick a primary grape.");
+    expect(validateProfile(profile({ secondaryGrapeId: GRAPE }))).toBe(
+      "The second grape must differ from the primary grape.",
+    );
     expect(validateProfile(profile({ qualityLow: 40 }))).toBe("Quality runs from 50 to 100, low to high.");
     expect(validateProfile(profile({ typicalAgeLow: 5, typicalAgeHigh: null }))).toBe(AGE);
     expect(validateProfile(profile({ typicalAgeLow: 12, typicalAgeHigh: 5 }))).toBe(AGE);
@@ -171,6 +180,8 @@ describe("validateProfile", () => {
     expect(bad({ nose: [null] })).toBe(MALFORMED);
     expect(bad({ palate: [{ termId: 1, signature: false }] })).toBe(MALFORMED);
     expect(bad({ designationIds: ["not-an-id"] })).toBe(MALFORMED);
+    expect(bad({ secondaryGrapeId: "not-an-id" })).toBe(MALFORMED);
+    expect(bad({ secondaryGrapeId: undefined })).toBe(MALFORMED);
     expect(bad({ description: 12 })).toBe(MALFORMED);
     // Not an object at all.
     expect(validateProfile(null as unknown as ArchetypeProfileInput)).toBe(MALFORMED);
