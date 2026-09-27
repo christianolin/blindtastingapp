@@ -110,6 +110,33 @@ async function freshProfiles(n) {
   return ids;
 }
 
+// Throwaway people with a real auth.users row (on_auth_user_created writes the
+// profile), for tables whose owner FK points at auth.users rather than
+// profiles — wine_pour_intents.owner_id. Same shape as scripts/levels.test.mjs'
+// authPeople; rolled back with the test like everything else.
+async function authPeople(n) {
+  await asOwner();
+  const can = (await client.query("select has_table_privilege('auth.users', 'INSERT') as ok")).rows[0].ok;
+  assert.ok(can, "the suite's login role needs INSERT on auth.users for a throwaway pour owner");
+  const ids = [];
+  for (let i = 1; i <= n; i += 1) {
+    const name = `Sharing defaults auth ${i}`;
+    const r = await client.query(
+      `insert into auth.users (id, aud, role, email, raw_user_meta_data)
+       values (gen_random_uuid(), 'authenticated', 'authenticated',
+               'sharing-defaults-test+' || gen_random_uuid()::text || '@blindr.invalid',
+               jsonb_build_object('display_name', $1::text))
+       returning id, email`,
+      [name],
+    );
+    const { id, email } = r.rows[0];
+    const p = await client.query("update profiles set display_name = $2, email = $3 where id = $1", [id, name, email]);
+    assert.equal(p.rowCount, 1, "on_auth_user_created wrote the throwaway profile");
+    ids.push(id);
+  }
+  return ids;
+}
+
 async function setNotes(id, value) {
   await asOwner();
   await client.query("update profiles set notes_visibility = $2 where id = $1", [id, value]);
@@ -743,7 +770,9 @@ test("M1's back-fill holds a note whose author already adds an unrevealed glass 
 
 test("a note on the wine of its author's masked pour is held from its save, the pour link hides it too, until that glass's reveal", async () => {
   await withRollback(async () => {
-    const [host, guest, stranger] = await freshProfiles(3);
+    // The host owns a pour intent, whose owner FK points at auth.users.
+    const [host] = await authPeople(1);
+    const [guest, stranger] = await freshProfiles(2);
     const poured = await catalogWine(host);
     const keyed = await catalogWine(host); // the glass now names another wine (a Swap)
     const { glass } = await flight({ host, guests: [guest], wineId: keyed });
