@@ -5,6 +5,7 @@ import {
   detailReturnsFocus,
   isBeforeAnswers,
   panelView,
+  pressOnOwningRow,
   tawnyYearsFromInput,
   vintageFromPickerId,
   vintagePickerGroups,
@@ -117,6 +118,31 @@ describe("detailReturnsFocus", () => {
     expect(detailReturnsFocus("escape-key", false)).toBe(false);
     expect(detailReturnsFocus("outside-press", true)).toBe(false);
     expect(detailReturnsFocus("focus-out", true)).toBe(false);
+  });
+  it("hands focus back to the row whose own second press closed it", () => {
+    expect(detailReturnsFocus("trigger-press", true)).toBe(true);
+    expect(detailReturnsFocus("trigger-press", false)).toBe(false);
+  });
+});
+
+describe("pressOnOwningRow", () => {
+  // A row and its children, as plain objects: contains() is the DOM's.
+  type N = { parent: N | null };
+  const row: N = { parent: null };
+  const label: N = { parent: row };
+  const elsewhere: N = { parent: null };
+  const anchor = { contains: (n: N) => n === row || n.parent === row };
+
+  it("is an outside press that lands on the owning row or inside it", () => {
+    expect(pressOnOwningRow("outside-press", anchor, row)).toBe(true);
+    expect(pressOnOwningRow("outside-press", anchor, label)).toBe(true);
+  });
+  it("is not a press elsewhere, another reason, or no row / target", () => {
+    expect(pressOnOwningRow("outside-press", anchor, elsewhere)).toBe(false);
+    expect(pressOnOwningRow("escape-key", anchor, row)).toBe(false);
+    expect(pressOnOwningRow("focus-out", anchor, label)).toBe(false);
+    expect(pressOnOwningRow("outside-press", null, row)).toBe(false);
+    expect(pressOnOwningRow("outside-press", anchor, null)).toBe(false);
   });
 });
 

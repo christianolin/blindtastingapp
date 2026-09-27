@@ -32,9 +32,11 @@ import {
   type EditorReferences,
 } from "./profile-rules";
 
-const FIELD = "rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground";
-const LABEL = "flex flex-col gap-1 text-xs font-medium text-muted-foreground";
 // 44 px tap targets on touch, the control's own size on a laptop pointer.
+const TAP = "min-h-11 md:pointer-fine:min-h-0";
+// 16 px text below md, so iOS does not zoom into a focused field.
+const FIELD = `${TAP} rounded-md border border-border bg-background px-2 py-1 text-base text-foreground md:text-sm`;
+const LABEL = "flex flex-col gap-1 text-xs font-medium text-muted-foreground";
 const TAP_ICON =
   "inline-flex min-h-11 min-w-11 items-center justify-center md:pointer-fine:min-h-0 md:pointer-fine:min-w-0";
 
@@ -132,6 +134,7 @@ export function ArchetypeEditor({
   const countryLabelId = useId();
   const regionLabelId = useId();
   const appellationLabelId = useId();
+  const placeLabelId = useId();
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -319,6 +322,7 @@ export function ArchetypeEditor({
               placeholder="Pick a country"
               createLabel="countries"
               labelledBy={countryLabelId}
+              triggerClassName={TAP}
             />
           </div>
           <div className={LABEL}>
@@ -332,6 +336,7 @@ export function ArchetypeEditor({
               createLabel="regions"
               labelledBy={regionLabelId}
               disabled={!countryId}
+              triggerClassName={TAP}
             />
           </div>
           <div className={LABEL}>
@@ -349,6 +354,7 @@ export function ArchetypeEditor({
               createLabel="appellations"
               labelledBy={appellationLabelId}
               disabled={!regionId}
+              triggerClassName={TAP}
             />
           </div>
         </div>
@@ -413,7 +419,7 @@ export function ArchetypeEditor({
         </div>
 
         <div className={LABEL}>
-          <span>Map place (optional)</span>
+          <span id={placeLabelId}>Map place (optional)</span>
           <div className="flex flex-wrap items-center gap-2">
             {place ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-border/70 px-2 py-0.5 text-xs text-foreground">
@@ -435,6 +441,7 @@ export function ArchetypeEditor({
                 value={placeQuery}
                 onChange={(e) => runPlaceSearch(e.target.value)}
                 placeholder="Search the map…"
+                aria-labelledby={placeLabelId}
                 className={cn(FIELD, "w-48")}
               />
               {placeHits.length > 0 ? (
@@ -449,7 +456,10 @@ export function ArchetypeEditor({
                         setPlaceQuery("");
                         setPlaceHits([]);
                       }}
-                      className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+                      className={cn(
+                        "flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted",
+                        TAP,
+                      )}
                     >
                       <span className="truncate">{h.name}</span>
                       <span className="shrink-0 text-[10px] tracking-wide text-muted-foreground uppercase">
@@ -504,7 +514,10 @@ export function ArchetypeEditor({
                 <button
                   type="button"
                   onClick={() => clearRange(sc.key)}
-                  className="text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+                  className={cn(
+                    "px-2 text-[10px] text-muted-foreground transition-colors hover:text-foreground",
+                    TAP,
+                  )}
                 >
                   clear
                 </button>
@@ -557,7 +570,10 @@ export function ArchetypeEditor({
           type="button"
           onClick={save}
           disabled={pending}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          className={cn(
+            "rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60",
+            TAP,
+          )}
         >
           {pending ? "Saving…" : status === "saved" ? "Saved ✓" : "Save profile"}
         </button>

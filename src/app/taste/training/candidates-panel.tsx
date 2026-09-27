@@ -3,8 +3,9 @@
 // "What it could be" — the laptop column (lg+, spec §3.3): the top five
 // candidates, Show all N in place, the capped ones last under "Unlikely from
 // what you've said". A row opens the candidate's profile in a popover anchored
-// to it; on a fine pointer focus moves into the popover and, closed with
-// Escape, comes back to the row (the Popover touch rule: never on touch).
+// to it, and pressed again closes it; on a fine pointer focus moves into the
+// popover and, closed with Escape, comes back to the row (the Popover touch
+// rule: never on touch).
 // CandidateRow and CandidateGroups are shared with the phone sheet.
 // Tokens only: the bar is --primary, a capped row --muted-foreground.
 import { useRef, useState } from "react";
@@ -12,7 +13,7 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { finePointer } from "@/lib/fine-pointer";
 import { TRAINING_COPY, lineageLine, percentLabel, shortName, showAllLine } from "@/lib/training/copy";
-import { detailReturnsFocus, panelView, type PanelView } from "@/lib/training/panel";
+import { detailReturnsFocus, panelView, pressOnOwningRow, type PanelView } from "@/lib/training/panel";
 import type { RankedCandidate } from "@/lib/training/types";
 import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
@@ -137,6 +138,12 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
         view={view}
         openId={open ? open.candidate.id : null}
         onOpen={(id, anchor) => {
+          // The open popover's own row toggles it closed, as a trigger would.
+          if (detail?.id === id) {
+            closeReason.current = "trigger-press";
+            setDetail(null);
+            return;
+          }
           anchorRef.current = anchor;
           closeReason.current = null;
           setDetail({ id, anchor });
@@ -159,6 +166,13 @@ export function CandidatesPanel({ ranked, note }: { ranked: RankedCandidate[]; n
         open={open !== null}
         onOpenChange={(next, details) => {
           if (next) return;
+          // A press on the owning row is the row's to handle: its click, which
+          // follows, closes the popover (onOpen above).
+          const target = details.event?.target;
+          if (pressOnOwningRow(details.reason, anchorRef.current, target instanceof Node ? target : null)) {
+            details.cancel();
+            return;
+          }
           closeReason.current = details.reason;
           setDetail(null);
         }}

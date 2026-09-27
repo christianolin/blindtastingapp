@@ -59,6 +59,21 @@ export function detailReturnsFocus(reason: string | null, fine: boolean): boolea
   return fine && reason !== "outside-press" && reason !== "focus-out";
 }
 
+/**
+ * Whether a request to close a candidate's laptop popover is a press on the
+ * row that owns it. That row toggles its popover itself (its own click closes
+ * it), so this outside press — base-ui's, which lands before the row's click —
+ * must not close it too, or the click would open it again at once. `anchor` is
+ * the owning row (null: none), `target` the press's target node.
+ */
+export function pressOnOwningRow<T>(
+  reason: string,
+  anchor: { contains(node: T): boolean } | null,
+  target: T | null,
+): boolean {
+  return reason === "outside-press" && anchor !== null && target !== null && anchor.contains(target);
+}
+
 /** Your call's list without a search: the top five. */
 export const CALL_LIMIT = 5;
 /** Your call's search results. */
