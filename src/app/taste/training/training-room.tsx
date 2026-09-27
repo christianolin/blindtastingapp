@@ -368,7 +368,13 @@ export function TrainingRoom({
               error={error}
             />
           </div>
-          <aside className="sticky top-[72px] hidden self-start lg:block">
+          {/* Never taller than the window below its sticky top (16 px short of
+              the foot), and it scrolls itself: the top region starts open
+              (Bourgogne alone has 15 typical wines), and a sticky column
+              taller than the window shows its foot — regions 2-5, Show all —
+              only once the page reaches its end. training-room-layout.test.ts
+              pins it. */}
+          <aside className="sticky top-[72px] hidden max-h-[calc(100dvh-88px)] self-start overflow-y-auto lg:block">
             <CandidatesPanel groups={groups} note={session.note} />
           </aside>
         </div>

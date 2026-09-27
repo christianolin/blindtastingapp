@@ -45,6 +45,7 @@ Where the addendum is silent, this plan chooses (flagged for the owner's review)
 - Choosing a typical wine hides the grape step but keeps the grape in the draft (going back to "Just the region" shows it again); `callPayload` never sends it with a wine.
 - A region pick's result line keeps today's vintage suffix: "You said Bourgogne · Chardonnay, 2019".
 - Continue drops a stored wine or region that has left the pool (and a grape without a region) rather than sending an id the RPC would refuse.
+- (Task 3 review round.) The laptop column is capped to the window below its sticky top (`max-h-[calc(100dvh-88px)]`, 16 px short of the foot) and scrolls itself (`overflow-y-auto`), pinned by `src/app/taste/training/training-room-layout.test.ts`. With the top region open, Bordeaux's 7 or Bourgogne's 15 typical wines make the column roughly 1,100–1,900 px tall against 728 px of sticky area at 1280×800, and a sticky column taller than the window shows its foot (regions 2–5, "Show all N regions") only once the page reaches its end. This departs from base spec §8's "no nested scroller except the candidates sheet body below `lg`"; it keeps R3 (the top region opens) and R10 (no new copy). The alternatives each change the addendum: capping an open region's wines behind a new "Show all N wines" line (R10), or opening the top region only while it is small (R3). By the same estimate a 3-wine limit still leaves the answered column about 800 px tall, so neither alone keeps five regions in view at 800 px.
 
 ## File map
 
@@ -4562,7 +4563,13 @@ with:
   its typical wines in place (the top one starts open; the phone sheet keeps
   the open regions across a wine's detail and back), and the phone strip reads
   "Top match: {region} · {wine} {pct} %" (the region alone when the wine is
-  named like it). Your call (`your-call.tsx`, every rule pure in `call.ts`) is
+  named like it). The laptop column is capped to the window below its sticky
+  top and scrolls itself (`training-room.tsx`'s aside, pinned by
+  `training-room-layout.test.ts`): an open region can outgrow any window
+  (Bourgogne has 15 typical wines), and a sticky column taller than the window
+  shows its foot only once the page reaches its end — the one nested scroller
+  base spec §8 did not foresee; never drop it to restore §8's wording.
+  Your call (`your-call.tsx`, every rule pure in `call.ts`) is
   two steps: which region (top five, a search that also matches a region's
   wines and appellations, "It's not in the list"), then "Go deeper" ("Just the
   region" or one of its typical wines) and, only while it stays at the region,
@@ -4614,7 +4621,7 @@ EOF
 Sign in as a demo taster (`.superpowers/demo-session.mjs`, never a typed password). The Browser pane must be fronted: a hidden pane stalls on `loading.tsx`.
 
 1. **Grouping before answers (laptop).** `/taste/training` → Start a session. The column reads "What it could be", "Start describing the wine", five region rows ("{Region}, {Country}", alphabetical by country, then region) with no bar and no "best:" line, the first one open on its wines (no %), and "Show all N regions" (N = the pool's region count: 43 live on 2026-09-27).
-2. **Grouping with answers (laptop).** Set a ruby hue, high tannin, high acidity, black fruit. Regions reorder; each row reads "Bordeaux, France", "best: …" and a bar with %; the top region is open. Open another region, close the top one; a wine row inside opens its popover (Escape returns focus to that wine row; pressing a region row closes the popover). A white-only region shows under "Unlikely from what you've said" after Show all, muted.
+2. **Grouping with answers (laptop).** Set a ruby hue, high tannin, high acidity, black fruit. Regions reorder; each row reads "Bordeaux, France", "best: …" and a bar with %; the top region is open. Open another region, close the top one; a wine row inside opens its popover (Escape returns focus to that wine row; pressing a region row closes the popover). A white-only region shows under "Unlikely from what you've said" after Show all, muted. With the largest region leading (Bordeaux, then Bourgogne — steer the answers until each tops the list, closing nothing), regions 2–5 and "Show all N regions" stay reachable at 1280×800 without scrolling the page to its end: the column stops 16 px above the window's foot and scrolls itself; with a wine's popover open, scrolling the column keeps the popover beside its row.
 3. **Expand/collapse and Show all (phone).** The strip reads "Top match: {region} · {wine} {pct} % · k more close" on one truncated line inside the sticky bar, which stays flush under the top bar while scrolling (eb14ffd not regressed; no gap, nothing ghosting through). Tap it: the sheet lists five regions, the top one open, "Show all N regions" works; open a region, tap a wine → its profile with a back arrow → Back shows the list with the same regions open. No horizontal scroll at 375.
 4. **Region only.** Your call: "Which region is it?" with five radios (region, country, %) and "It's not in the list". Type "chablis" in "Search regions…" → Bourgogne. Pick it → "Go deeper (optional)" appears with "Just the region" checked and Bourgogne's wines with %, and "Grape (optional)" chips (most named first) plus "Other grape…". Reveal the bottle (catalog search) → the result reads "You said Bourgogne" (plus ", 2019" if a vintage was set), the verdict rows show Country ✓ 2 / Region ✓ 3 when right, Appellation ✗ 0, and "{n} of {m}" with the same m a deep pick would have.
 5. **Region + grape.** New glass; pick a region, tap a grape chip (pressed, ✓), tap it again (released), tap it once more. "Other grape…" opens the picker: the search field has focus (on the phone the keyboard opens), placeholder "Search grapes…"; pick a grape the region's wines do not name → the picker closes, focus returns to "Other grape…", the grape shows as a pressed chip. Change the region → the deeper choice resets to "Just the region" and no chip is pressed. Reveal → "You said Bourgogne · Chardonnay"; Grape ✓ 8 when it is the wine's primary grape.
