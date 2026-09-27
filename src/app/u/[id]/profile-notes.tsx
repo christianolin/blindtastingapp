@@ -23,17 +23,18 @@ import {
  */
 export function ProfileNotes({
   rows,
-  fetched,
+  capped,
   own,
 }: {
   rows: ProfileNoteRow[];
-  fetched: number;
+  /** The list was cut at the cap (capNotes): say so under it. */
+  capped: boolean;
   /** Your own profile: who can see these, and where to change it. */
   own: { line: string; changeHref: string } | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const more = showAllLabel(rows.length);
-  const footer = cappedFooter(fetched);
+  const footer = cappedFooter(capped);
 
   return (
     <section aria-labelledby="profile-notes" className="flex flex-col gap-3">
@@ -42,9 +43,13 @@ export function ProfileNotes({
           <Eyebrow size="lg">{own ? SHARED_NOTES_COPY.profileHeadingOwn : SHARED_NOTES_COPY.profileHeading}</Eyebrow>
         </h2>
         {own ? (
-          <p className="text-sm text-muted-foreground">
-            {own.line} ·{" "}
-            <Link href={own.changeHref} className="font-medium text-primary hover:underline">
+          // One sentence that wraps as one; "Change" is a 44px tap target on touch.
+          <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
+            <span>{own.line} ·</span>
+            <Link
+              href={own.changeHref}
+              className="inline-flex min-h-11 items-center font-medium text-primary hover:underline md:pointer-fine:min-h-0"
+            >
               {SHARED_NOTES_COPY.change}
             </Link>
           </p>
@@ -74,7 +79,15 @@ export function ProfileNotes({
                     {row.held ? <span>{SHARED_NOTES_COPY.heldTag}</span> : null}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums">{row.score}</span>
+                {/* The band under the number, as ProfileTastings' cards: a
+                    one-line "88 · Above average" left a 375px phone's title
+                    about 18 characters. */}
+                <span className="shrink-0 text-right text-sm">
+                  <span className="font-semibold tabular-nums">{row.scoreValue}</span>
+                  {row.scoreBand ? (
+                    <span className="block text-xs text-muted-foreground">{row.scoreBand}</span>
+                  ) : null}
+                </span>
               </Link>
             </li>
           ))}

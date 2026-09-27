@@ -723,7 +723,9 @@ export function WsetSheet({
         embedded={embedded}
         notice={
           saveNotice ? (
-            <p role="status" className="text-[12.5px] leading-[1.45] text-rose">
+            // An alert, not a status: it appears together with its text, and
+            // only an alert is reliably announced that way (archetype-editor's notice).
+            <p role="alert" className="text-[12.5px] leading-[1.45] text-rose">
               {saveNotice}
             </p>
           ) : undefined

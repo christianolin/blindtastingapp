@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { dismissSharingNotice } from "@/lib/sharing/actions";
-import { SHARING_NOTICE, sharingNoticeHiddenKey, type SharingNoticeCopy } from "@/lib/sharing/notice";
+import {
+  SHARING_NOTICE,
+  focusAfterDismiss,
+  sharingNoticeHiddenKey,
+  type SharingNoticeCopy,
+} from "@/lib/sharing/notice";
 import { readFlag, writeFlag } from "@/lib/safe-storage";
 
 const noopSubscribe = () => () => {};
@@ -18,11 +23,14 @@ const tabStorage = () => window.sessionStorage;
  * Both stamp dismissed_at through dismissSharingNotice, so it never shows
  * again on any device, and both set a per-tab flag, so a failed write (or a
  * back navigation to a cached page) keeps it hidden for the rest of the visit.
+ * "Got it" moves focus to /overview's <main> first (focusAfterDismiss), since
+ * it removes the card together with the focused button.
  */
 export function SharingNotice({ userId, copy }: { userId: string; copy: SharingNoticeCopy }) {
   const key = sharingNoticeHiddenKey(userId);
   const hiddenThisVisit = useSyncExternalStore(noopSubscribe, () => readFlag(tabStorage, key), () => false);
   const [dismissed, setDismissed] = useState(false);
+  const card = useRef<HTMLElement>(null);
   if (dismissed || hiddenThisVisit) return null;
 
   function remember() {
@@ -32,6 +40,7 @@ export function SharingNotice({ userId, copy }: { userId: string; copy: SharingN
 
   return (
     <section
+      ref={card}
       aria-labelledby="sharing-notice-title"
       className="flex flex-col gap-2 rounded-[13px] border border-border bg-card p-[16px_18px]"
     >
@@ -51,6 +60,7 @@ export function SharingNotice({ userId, copy }: { userId: string; copy: SharingN
         <button
           type="button"
           onClick={() => {
+            focusAfterDismiss(card.current);
             setDismissed(true);
             remember();
           }}

@@ -1,18 +1,21 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  NOTES_CAP,
   NOTES_FETCHED,
   NOTES_SHOWN,
   NOTE_CONTENT_COLUMNS,
   OTHERS_NOTE_SELECT,
   PROFILE_NOTE_SELECT,
   SHARED_NOTES_COPY,
+  capNotes,
   cappedFooter,
   contextBadge,
   noteHasContent,
   noteSummaryLine,
   orderNotes,
   scoreLine,
+  scoreParts,
   showAllLabel,
   tastedLine,
   toOthersNoteRows,
@@ -174,10 +177,40 @@ describe("the cap", () => {
     expect(showAllLabel(6)).toBe("Show all 6 notes");
   });
 
-  it("says the list is cut only when the fetch hit its cap of 50", () => {
-    expect(NOTES_FETCHED).toBe(50);
-    expect(cappedFooter(49)).toBeNull();
-    expect(cappedFooter(50)).toBe("Showing the 50 most recent notes.");
+  it("lists at most 50 notes with content, and reads four times that", () => {
+    expect(NOTES_CAP).toBe(50);
+    expect(NOTES_FETCHED).toBe(200);
+  });
+
+  it("caps after the content rule: empty rows read first never crowd a note out", () => {
+    // 150 empty "Save all to ratings" rows newer than the one real note: the
+    // content rule keeps the note, and the cap counts only notes with content.
+    const raws = [
+      ...Array.from({ length: 150 }, (_, i) =>
+        raw({ id: `empty-${String(i).padStart(3, "0")}`, tasted_on: "2026-09-26", quality_score: null, aromas: [] }),
+      ),
+      raw({ id: "real", tasted_on: "2026-09-01" }),
+    ];
+    const listed = capNotes(toOthersNoteRows(raws, "w1"), raws.length);
+    expect(listed).toMatchObject({ capped: false });
+    expect(listed.rows.map((r) => r.id)).toEqual(["real"]);
+  });
+
+  it("cuts at 50 and says so when more notes with content came back", () => {
+    const rows = Array.from({ length: 51 }, (_, i) => i);
+    expect(capNotes(rows, 51)).toEqual({ rows: rows.slice(0, 50), capped: true });
+  });
+
+  it("calls a full list cut when the read itself hit its limit, and nothing shorter", () => {
+    const fifty = Array.from({ length: 50 }, (_, i) => i);
+    expect(capNotes(fifty, 200).capped).toBe(true);
+    expect(capNotes(fifty, 120).capped).toBe(false);
+    expect(capNotes(fifty.slice(0, 49), 200).capped).toBe(false);
+  });
+
+  it("words the footer only for a cut list", () => {
+    expect(cappedFooter(false)).toBeNull();
+    expect(cappedFooter(true)).toBe("Showing the 50 most recent notes.");
   });
 });
 
@@ -192,6 +225,15 @@ describe("badges, score and date lines", () => {
   it("shows the score with its band word, or Not scored", () => {
     expect(scoreLine(92)).toBe("92 · Outstanding");
     expect(scoreLine(null)).toBe("Not scored");
+  });
+
+  it("splits the score into the number and the band under it, the same words as the line", () => {
+    expect(scoreParts(92)).toEqual({ value: "92", band: "Outstanding" });
+    expect(scoreParts(null)).toEqual({ value: "Not scored", band: null });
+    for (const score of [50, 72, 88, 100]) {
+      const { value, band } = scoreParts(score);
+      expect(`${value} · ${band}`).toBe(scoreLine(score));
+    }
   });
 
   it("dates the read view's author line", () => {
@@ -303,6 +345,8 @@ describe("toProfileNoteRows", () => {
         wineTitle: "Château Margaux Grand Vin Margaux AOC 2015",
         imageUrl: "wine.jpg",
         held: true,
+        scoreValue: "90",
+        scoreBand: "Outstanding",
       },
     ]);
   });

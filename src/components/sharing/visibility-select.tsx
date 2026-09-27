@@ -1,12 +1,16 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   AUDIENCE_OPTIONS,
+  initialWrites,
   isSharingAudience,
   notSavedLine,
   profileWriteSaved,
+  writeAnswered,
+  writeStarted,
+  type SelectWrites,
   type SharingAudience,
 } from "@/lib/sharing/visibility";
 import { cn } from "@/lib/utils";
@@ -19,8 +23,16 @@ export type SharingColumn = "cellar_visibility" | "notes_visibility";
  * §7.6). Writes the signed-in person's own profile row as the viewer, under
  * the column grant and "profiles update own". The select never claims a
  * setting the row does not hold: a refused write, or one that matched no row
- * (a session that is no longer this person's), snaps back to what was stored
- * and says so (the old CellarVisibilityControl rule).
+ * (a session that is no longer this person's), snaps back to what the row
+ * last confirmed and says so (the old CellarVisibilityControl rule).
+ *
+ * It stays enabled while it saves: disabling the focused select would drop
+ * keyboard focus to the page after every change (an arrow key on a closed
+ * select saves at once on Windows), so it says aria-busy instead, and
+ * writeAnswered lets only the settled outcome of every write in flight touch
+ * the screen. The "Not saved" line is a live region that is always in the
+ * page (one that appears together with its text is often not announced),
+ * visually hidden while empty, and it describes the select.
  *
  * `variant="inline"` is /cellar's compact "Visible to [select]" row;
  * `variant="field"` is the Sharing card's labelled field with a help line.
@@ -43,33 +55,43 @@ export function VisibilitySelect({
   const [value, setValue] = useState<SharingAudience>(current);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  const writes = useRef<SelectWrites>(initialWrites(current));
   const selectId = useId();
   const helpId = useId();
+  const statusId = useId();
 
   async function change(next: SharingAudience) {
-    const previous = value;
     setValue(next);
-    setSaving(true);
     setFailed(false);
-    const supabase = createClient();
-    const values = column === "cellar_visibility" ? { cellar_visibility: next } : { notes_visibility: next };
-    const result = await supabase.from("profiles").update(values).eq("id", userId).select("id");
-    if (!profileWriteSaved(result)) {
-      setValue(previous);
-      setFailed(true);
+    setSaving(true);
+    const started = writeStarted(writes.current);
+    writes.current = started.writes;
+    let saved = false;
+    try {
+      const supabase = createClient();
+      const values = column === "cellar_visibility" ? { cellar_visibility: next } : { notes_visibility: next };
+      saved = profileWriteSaved(await supabase.from("profiles").update(values).eq("id", userId).select("id"));
+    } catch {
+      saved = false;
     }
-    setSaving(false);
+    const answered = writeAnswered(writes.current, started.seq, next, saved);
+    writes.current = answered.writes;
+    if (answered.settled) {
+      setValue(answered.settled.value);
+      setFailed(answered.settled.failed);
+      setSaving(false);
+    }
   }
 
   const select = (
     <select
       id={selectId}
       value={value}
-      aria-describedby={help ? helpId : undefined}
+      aria-describedby={help ? `${helpId} ${statusId}` : statusId}
+      aria-busy={saving}
       onChange={(e) => {
         if (isSharingAudience(e.target.value)) void change(e.target.value);
       }}
-      disabled={saving}
       className={cn(
         "min-h-11 rounded-md border border-border bg-background px-2 text-sm text-foreground md:pointer-fine:min-h-9",
         variant === "field" ? "w-full" : undefined,
@@ -82,11 +104,11 @@ export function VisibilitySelect({
       ))}
     </select>
   );
-  const status = failed ? (
-    <span role="status" className="text-xs text-destructive">
-      {notSavedLine(value)}
+  const status = (
+    <span id={statusId} role="status" className={cn("text-xs text-destructive", failed ? undefined : "sr-only")}>
+      {failed ? notSavedLine(value) : ""}
     </span>
-  ) : null;
+  );
 
   if (variant === "inline") {
     return (

@@ -84,7 +84,7 @@ beforeEach(() => {
 });
 
 describe("getOthersNotesForWine", () => {
-  it("reads this wine's notes by everyone but the viewer, newest first, at most 50", async () => {
+  it("reads this wine's notes by everyone but the viewer, newest first, 200 rows for at most 50 notes", async () => {
     const { client, calls } = fakeClient({ data: [note("n1")], error: null });
     const result = await getOthersNotesForWine(client, "w1", "me");
     expect(calls).toEqual([
@@ -95,17 +95,28 @@ describe("getOthersNotesForWine", () => {
       ["order", "tasted_on", { ascending: false }],
       ["order", "created_at", { ascending: false }],
       ["order", "id", { ascending: false }],
-      ["limit", 50],
+      ["limit", 200],
     ]);
-    expect(result?.fetched).toBe(1);
+    expect(result?.capped).toBe(false);
     expect(result?.rows.map((r) => [r.id, r.author.name, r.score])).toEqual([["n1", "Gustav", "88 · Very good"]]);
   });
 
-  it("counts every fetched row toward the cap, even the empty ones it hides", async () => {
-    const { client } = fakeClient({ data: [note("n1"), note("empty", { quality_score: null })], error: null });
+  it("caps after dropping empty rows: 60 newer placeholders do not hide an older note", async () => {
+    const placeholders = Array.from({ length: 60 }, (_, i) =>
+      note(`empty-${String(i).padStart(2, "0")}`, { quality_score: null, tasted_on: "2026-09-26" }),
+    );
+    const { client } = fakeClient({ data: [...placeholders, note("n1", { tasted_on: "2026-09-01" })], error: null });
     const result = await getOthersNotesForWine(client, "w1", "me");
-    expect(result).toMatchObject({ fetched: 2 });
     expect(result?.rows.map((r) => r.id)).toEqual(["n1"]);
+    expect(result?.capped).toBe(false);
+  });
+
+  it("shows 50 notes and says the list was cut when more came back", async () => {
+    const notes = Array.from({ length: 51 }, (_, i) => note(`n${String(i).padStart(2, "0")}`));
+    const { client } = fakeClient({ data: notes, error: null });
+    const result = await getOthersNotesForWine(client, "w1", "me");
+    expect(result?.rows).toHaveLength(50);
+    expect(result?.capped).toBe(true);
   });
 
   it("answers null on a failed read, never an empty list", async () => {
@@ -124,7 +135,8 @@ describe("getProfileNotes", () => {
       ["eq", "author_id", "u2"],
       ["not", "catalog_wine_id", "is", null],
     ]);
-    expect(own.calls).toContainEqual(["rpc", "wset_my_held_notes", { p_note_ids: ["n1", "n2"] }]);
+    // Only the rows on screen, in their order (newest first; same day, so id desc).
+    expect(own.calls).toContainEqual(["rpc", "wset_my_held_notes", { p_note_ids: ["n2", "n1"] }]);
     expect(result?.rows.map((r) => [r.id, r.held])).toEqual([
       ["n2", true],
       ["n1", false],
@@ -138,6 +150,17 @@ describe("getProfileNotes", () => {
   it("answers null on a failed read", async () => {
     const { client } = fakeClient({ data: null, error: { message: "boom" } });
     await expect(getProfileNotes(client, "u2", { own: true })).resolves.toBeNull();
+  });
+
+  it("does not let empty placeholders crowd out a person's notes, and asks about no placeholder", async () => {
+    const placeholders = Array.from({ length: 60 }, (_, i) =>
+      note(`empty-${String(i).padStart(2, "0")}`, { quality_score: null, tasted_on: "2026-09-26" }),
+    );
+    const own = fakeClient({ data: [...placeholders, note("real", { tasted_on: "2026-09-01" })], error: null });
+    const result = await getProfileNotes(own.client, "u2", { own: true });
+    expect(result?.rows.map((r) => r.id)).toEqual(["real"]);
+    expect(result?.capped).toBe(false);
+    expect(own.calls).toContainEqual(["rpc", "wset_my_held_notes", { p_note_ids: ["real"] }]);
   });
 });
 

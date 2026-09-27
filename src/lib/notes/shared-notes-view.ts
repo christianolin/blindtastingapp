@@ -24,8 +24,15 @@ export const SHARED_NOTES_COPY = {
 
 /** Rows shown before "Show all". */
 export const NOTES_SHOWN = 5;
-/** Rows fetched at most, newest first. */
-export const NOTES_FETCHED = 50;
+/** Notes with content listed at most, newest first ("Showing the 50 most recent notes."). */
+export const NOTES_CAP = 50;
+/**
+ * Rows read at most, newest first. The content rule runs after the read, so
+ * the read overfetches: the empty rows "Save all to ratings" writes (6-7 per
+ * flight) would otherwise fill a 50-row read and hide the notes behind them.
+ * An aroma-only note is content too, which a PostgREST filter cannot say.
+ */
+export const NOTES_FETCHED = 200;
 /** Aroma words in a summary line at most. */
 export const SUMMARY_AROMAS = 4;
 /** Characters of free text in a summary line at most, before the "…". */
@@ -120,9 +127,23 @@ export function showAllLabel(count: number): string | null {
   return count > NOTES_SHOWN ? `Show all ${count} notes` : null;
 }
 
-/** The footer under a list that hit the fetch cap. */
-export function cappedFooter(fetched: number): string | null {
-  return fetched >= NOTES_FETCHED ? `Showing the ${NOTES_FETCHED} most recent notes.` : null;
+/**
+ * The list a surface shows: the first NOTES_CAP rows with content (already
+ * filtered and ordered), and whether it was cut there — more content rows
+ * were read, or the read itself hit NOTES_FETCHED with the cap full, so older
+ * notes may exist past it. A list shorter than the cap is never called cut:
+ * the footer would claim 50 on screen.
+ */
+export function capNotes<T>(rows: readonly T[], fetched: number): { rows: T[]; capped: boolean } {
+  return {
+    rows: rows.slice(0, NOTES_CAP),
+    capped: rows.length > NOTES_CAP || (rows.length === NOTES_CAP && fetched >= NOTES_FETCHED),
+  };
+}
+
+/** The footer under a list that was cut at the cap. */
+export function cappedFooter(capped: boolean): string | null {
+  return capped ? `Showing the ${NOTES_CAP} most recent notes.` : null;
 }
 
 /** "Blind", "Training", or no badge (an OPEN note). */
@@ -134,8 +155,15 @@ export function contextBadge(kind: string | null): string | null {
 
 /** "{n} · {band}", or "Not scored". */
 export function scoreLine(score: number | null): string {
-  if (score === null) return SHARED_NOTES_COPY.notScored;
-  return `${score} · ${scoreWord(score, "en")}`;
+  const { value, band } = scoreParts(score);
+  return band ? `${value} · ${band}` : value;
+}
+
+/** The score line in two parts, for a row that stacks the band under the
+    number on a phone: "88" and "Very good", or "Not scored" and no band. */
+export function scoreParts(score: number | null): { value: string; band: string | null } {
+  if (score === null) return { value: SHARED_NOTES_COPY.notScored, band: null };
+  return { value: String(score), band: scoreWord(score, "en") };
 }
 
 /** "Tasted 27 Sep 2026", for the read view's author line. */
@@ -218,6 +246,9 @@ export type ProfileNoteRow = SharedNoteRow & {
   wineTitle: string;
   imageUrl: string | null;
   held: boolean;
+  /** `score` in two parts: the number (or "Not scored") and the band under it. */
+  scoreValue: string;
+  scoreBand: string | null;
 };
 
 function aromaWords(raw: RawSharedNote): string[] {
@@ -264,9 +295,12 @@ export function toProfileNoteRows(raws: readonly RawProfileNote[], held: Readonl
     .flatMap((raw) => {
       const wine = one(raw.catalog_wine);
       if (!wine || !raw.catalog_wine_id) return [];
+      const score = scoreParts(typeof raw.quality_score === "number" ? raw.quality_score : null);
       return [
         {
           ...sharedRow(raw, raw.catalog_wine_id),
+          scoreValue: score.value,
+          scoreBand: score.band,
           wineTitle: catalogWineTitle({
             producerName: one(wine.producer)?.name ?? null,
             wineName: wine.wine_name,

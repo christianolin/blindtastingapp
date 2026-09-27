@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -37,5 +38,24 @@ describe("SharingNotice", () => {
     const html = renderToStaticMarkup(<SharingNotice userId="u1" copy={copy} />);
     expect(html).toContain("border-border bg-card");
     expect(html).not.toContain("bg-primary");
+  });
+});
+
+// "Got it" removes the card with its focused button: focus must land on a
+// real target, not <body>. Source inspection, as elsewhere in this codebase
+// (no DOM renderer); focusAfterDismiss itself is tested in notice.test.ts.
+describe("focus after Got it", () => {
+  const notice = readFileSync("src/app/overview/sharing-notice.tsx", "utf8");
+  const page = readFileSync("src/app/overview/page.tsx", "utf8");
+
+  it("hands focus to the card's <main> before hiding the card", () => {
+    const click = notice.slice(notice.indexOf("focusAfterDismiss(card.current);"));
+    expect(click.indexOf("focusAfterDismiss(card.current);")).toBe(0);
+    expect(click.indexOf("setDismissed(true);")).toBeGreaterThan(0);
+    expect(notice).toMatch(/<section\s+ref=\{card\}/);
+  });
+
+  it("makes /overview's <main> focusable by script only", () => {
+    expect(page).toMatch(/<main\s+tabIndex=\{-1\}/);
   });
 });

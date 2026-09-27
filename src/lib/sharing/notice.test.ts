@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { SharingAudience } from "../supabase/database.types";
-import { SHARING_NOTICE, sharingNoticeCopy, sharingNoticeHiddenKey, type SharingNoticeInput } from "./notice";
+import {
+  SHARING_NOTICE,
+  focusAfterDismiss,
+  sharingNoticeCopy,
+  sharingNoticeHiddenKey,
+  type SharingNoticeInput,
+} from "./notice";
 
 // Sharing defaults spec 2026-09-27 S4, S15, §7.5.
 
@@ -80,5 +86,28 @@ describe("sharingNoticeHiddenKey", () => {
   it("is per person, so another account in the same tab still sees its own notice", () => {
     expect(sharingNoticeHiddenKey("u1")).toBe("blindr:sharing-notice-hidden:u1");
     expect(sharingNoticeHiddenKey("u1")).not.toBe(sharingNoticeHiddenKey("u2"));
+  });
+});
+
+describe("focusAfterDismiss", () => {
+  it("moves focus to the card's <main> without scrolling, before the card and its button go", () => {
+    const calls: unknown[] = [];
+    const main = { focus: (options?: { preventScroll?: boolean }) => calls.push(["focus", options]) };
+    const card = {
+      closest: (selector: "main") => {
+        calls.push(["closest", selector]);
+        return main;
+      },
+    };
+    focusAfterDismiss(card);
+    expect(calls).toEqual([
+      ["closest", "main"],
+      ["focus", { preventScroll: true }],
+    ]);
+  });
+
+  it("does nothing without a card or outside a <main>", () => {
+    expect(() => focusAfterDismiss(null)).not.toThrow();
+    expect(() => focusAfterDismiss({ closest: () => null })).not.toThrow();
   });
 });

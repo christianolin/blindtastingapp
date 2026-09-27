@@ -4,6 +4,10 @@
 // hold and the pour link, and the reader's own "catalog read". The shaping is
 // pure, in ./shared-notes-view.ts. A failed read returns null and the caller
 // hides the section: never a claim that someone has no notes.
+//
+// Each read overfetches (NOTES_FETCHED) and the cap (NOTES_CAP) is applied
+// after the content rule, so empty "Save all to ratings" rows never crowd
+// real notes out of the list.
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
@@ -11,6 +15,7 @@ import {
   NOTES_FETCHED,
   OTHERS_NOTE_SELECT,
   PROFILE_NOTE_SELECT,
+  capNotes,
   toOthersNoteRows,
   toProfileNoteRows,
   type OthersNoteRow,
@@ -21,7 +26,8 @@ import {
 
 type Client = SupabaseClient<Database>;
 
-export type SharedNotesResult<Row> = { rows: Row[]; fetched: number };
+/** The rows to show (at most NOTES_CAP) and whether the list was cut there. */
+export type SharedNotesResult<Row> = { rows: Row[]; capped: boolean };
 
 /** "Notes from others" on a wine's page: everyone's but the viewer's, newest first, at most 50. */
 export async function getOthersNotesForWine(
@@ -43,7 +49,7 @@ export async function getOthersNotesForWine(
     return null;
   }
   const raws = (data ?? []) as unknown as RawOthersNote[];
-  return { rows: toOthersNoteRows(raws, wineId), fetched: raws.length };
+  return capNotes(toOthersNoteRows(raws, wineId), raws.length);
 }
 
 /** A person's identified notes as the viewer may read them; `own` adds the held tags. */
@@ -66,8 +72,14 @@ export async function getProfileNotes(
     return null;
   }
   const raws = (data ?? []) as unknown as RawProfileNote[];
-  const held = own ? await getMyHeldNoteIds(supabase, raws.map((r) => r.id)) : new Set<string>();
-  return { rows: toProfileNoteRows(raws, held), fetched: raws.length };
+  const listed = capNotes(toProfileNoteRows(raws, new Set()), raws.length);
+  if (!own) return listed;
+  // Only the rows on screen are asked about.
+  const held = await getMyHeldNoteIds(
+    supabase,
+    listed.rows.map((r) => r.id),
+  );
+  return { ...listed, rows: listed.rows.map((r) => ({ ...r, held: held.has(r.id) })) };
 }
 
 /** Which of these are the viewer's own notes others cannot read yet (S19).

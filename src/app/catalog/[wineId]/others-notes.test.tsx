@@ -18,7 +18,7 @@ const row = (i: number): OthersNoteRow => ({
 
 describe("OthersNotes", () => {
   it("shows five rows, each two sibling links, and offers the rest", () => {
-    const html = renderToStaticMarkup(<OthersNotes rows={[0, 1, 2, 3, 4, 5, 6].map(row)} fetched={7} />);
+    const html = renderToStaticMarkup(<OthersNotes rows={[0, 1, 2, 3, 4, 5, 6].map(row)} capped={false} />);
     const items = html.split("<li").slice(1);
     expect(items).toHaveLength(5);
     for (const item of items) {
@@ -34,7 +34,7 @@ describe("OthersNotes", () => {
   });
 
   it("carries the badge, the score, the summary and a 44px tap target on both links", () => {
-    const html = renderToStaticMarkup(<OthersNotes rows={[row(0)]} fetched={1} />);
+    const html = renderToStaticMarkup(<OthersNotes rows={[row(0)]} capped={false} />);
     expect(html).toContain(">Blind</span>");
     expect(html).toContain(">90 · Outstanding</span>");
     expect(html).toContain(">cedar, violet</span>");
@@ -42,8 +42,8 @@ describe("OthersNotes", () => {
     expect(html).not.toContain("Show all");
   });
 
-  it("says the list is cut when the fetch hit its cap", () => {
-    const html = renderToStaticMarkup(<OthersNotes rows={[row(0)]} fetched={50} />);
+  it("says the list is cut when it was cut at the cap", () => {
+    const html = renderToStaticMarkup(<OthersNotes rows={[row(0)]} capped />);
     expect(html).toContain("Showing the 50 most recent notes.");
   });
 });

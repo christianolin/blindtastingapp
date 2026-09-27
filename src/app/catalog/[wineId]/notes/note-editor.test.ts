@@ -59,8 +59,20 @@ describe("the notes Rule 1 refusal reaches the sheet as a sentence", () => {
     expect(refusal).toBeLessThan(generic);
   });
 
-  it("WsetSheet puts a save refusal's sentence in the footer's notice slot", () => {
+  it("WsetSheet puts a save refusal's sentence in the footer's notice slot, as an alert", () => {
     expect(wsetSheetSrc).toContain("setSaveNotice(saveRefusalMessage(error));");
     expect(wsetSheetSrc).toMatch(/<SheetFooter[\s\S]*?notice=\{\s*saveNotice \?/);
+    // It mounts with its text, which only role="alert" reliably announces.
+    const notice = wsetSheetSrc.slice(wsetSheetSrc.indexOf("saveNotice ? ("));
+    expect(notice.slice(0, notice.indexOf("{saveNotice}"))).toContain('<p role="alert"');
+  });
+
+  it("reports a failed cellar-drink link instead of dropping it, and never throws after the note saved", () => {
+    const link = noteEditorSrc.slice(noteEditorSrc.indexOf('.from("cellar_consumptions")'));
+    const block = link.slice(0, link.indexOf("// A modal (Taste & Rate)"));
+    expect(noteEditorSrc).toContain("const { error: linkError } = await supabase");
+    expect(block).toContain("if (linkError) {");
+    expect(block).toContain("console.error(");
+    expect(block).not.toContain("throw");
   });
 });

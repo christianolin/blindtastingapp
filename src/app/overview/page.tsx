@@ -91,7 +91,12 @@ export default async function OverviewPage() {
         avatarUrl={profile?.avatar_url ?? null}
         title="Overview"
       />
-      <main className="flex flex-1 flex-col gap-[22px] p-[22px_26px_26px] max-md:gap-[11px] max-md:p-[11px_14px_14px]">
+      {/* tabIndex -1: the sharing notice's "Got it" hands focus here as it
+          removes itself (focusAfterDismiss), so focus never falls to <body>. */}
+      <main
+        tabIndex={-1}
+        className="flex flex-1 flex-col gap-[22px] p-[22px_26px_26px] outline-none max-md:gap-[11px] max-md:p-[11px_14px_14px]"
+      >
         {/* First, at every width, above the invitation card (spec S15). */}
         {sharingCopy ? <SharingNotice userId={user.id} copy={sharingCopy} /> : null}
         {/* The invitation card (S5b): laptop only — the Blind tastings card

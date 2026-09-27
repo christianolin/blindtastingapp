@@ -65,7 +65,7 @@
   - Contexts: OPEN, BLIND (only after its glass is revealed, since an unrevealed one has no identity) and TRAINING (after the room's reveal). BLIND and TRAINING carry the existing badges.
   - Content: only notes with something in them (§7.1). The empty "Save all to ratings" rows are left out.
   - Order: `tasted_on desc, created_at desc, id desc`.
-  - Amount: 50 rows at most are fetched. 5 show, then "Show all" expands in place.
+  - Amount: at most 50 notes with content, newest first (200 rows are read so the empty rows cannot crowd them out; whole-branch review). 5 show, then "Show all" expands in place.
 - **S17 The note route is read-only for non-authors.** `/catalog/[wineId]/notes/[noteId]` keeps the editor for the author.
   - Anyone else the policy admits gets a server-rendered read view, built from the note's composed prose (`composeLiveNote`). The WSET sheet has no read-only mode, and `sheet-markup.test.tsx` pins its markup.
   - A note the policy hides returns `notFound()`, the same answer as an id that does not exist.
@@ -145,9 +145,9 @@ Both files follow `20260925120000_training_room.sql`:
 
 - None of these exist yet:
   - `profiles.notes_visibility`;
-  - tables `wset_note_holds` and `sharing_notices`;
+  - tables `wset_note_holds`, `sharing_notices` and `sharing_m1_open_cellars`;
   - functions `can_view_notes(uuid)`, `wset_note_held(uuid)`, `wset_my_held_notes(uuid[])` and `catalog_wine_unrevealed_glasses_of(uuid,uuid)`;
-  - the three trigger functions and triggers below;
+  - the four trigger functions and triggers below (plus the notice drop, step 11);
   - the three indexes.
 - Enum `cellar_visibility` labels are exactly `{PRIVATE,FRIENDS,PUBLIC}`. `profiles.cellar_visibility` defaults to `'PRIVATE'`.
 - `wset_notes` has RLS on and not forced, exactly the four policies with the live text (§2), exactly the four triggers, and `wset_notes_one_identity` as live.
@@ -197,9 +197,12 @@ Both files follow `20260925120000_training_room.sql`:
 
    | Trigger | Table | When | Does |
    |---|---|---|---|
-   | `wset_notes_hold_on_identity` | `wset_notes` | AFTER INSERT OR UPDATE OF catalog_wine_id | writes holds (S10) |
+   | `wset_notes_hold_on_identity` | `wset_notes` | AFTER INSERT OR UPDATE OF catalog_wine_id, tasting_wine_id | writes holds (S10) |
    | `wines_release_note_holds` | `wines` | AFTER UPDATE OF is_revealed, `WHEN (new.is_revealed and not old.is_revealed)` | deletes that glass's holds |
    | `wset_notes_rule1_guard` | `wset_notes` | BEFORE UPDATE OR DELETE | the S12 guard |
+   | `wset_note_aromas_rule1_guard` | `wset_note_aromas` | BEFORE INSERT OR UPDATE OR DELETE | the S12 guard's first condition, on the parent note (§5.3) |
+
+   The hold also fires on `tasting_wine_id` (whole-branch review): Postgres fires a column-specific UPDATE trigger only for the columns in the statement's SET list, and `wset_notes_glass_resolve_on_write` fills `catalog_wine_id` itself, in a BEFORE trigger, when a note is moved onto a revealed glass. Its body's early returns skip every write that is not an arrival.
 
 5. **Indexes:**
    ```sql
@@ -249,11 +252,24 @@ Both files follow `20260925120000_training_room.sql`:
       using (user_id = auth.uid()) with check (user_id = auth.uid());
     ```
     Plus `profiles_deleted_drop_sharing_notice`, AFTER UPDATE OF deleted_at on `profiles` `WHEN (old.deleted_at is null and new.deleted_at is not null)`. It deletes that person's row. This is the `profiles_deleted_drop_favourites` precedent; its function is owner-only.
+12. **The cellars already shared** (whole-branch review), for M2's flip:
+    ```sql
+    create table public.sharing_m1_open_cellars (
+      user_id uuid primary key references public.profiles(id) on delete cascade,
+      created_at timestamptz not null default now()
+    );
+    alter table public.sharing_m1_open_cellars enable row level security;   -- no policies
+    revoke all on public.sharing_m1_open_cellars from public, anon, authenticated;
+    insert into public.sharing_m1_open_cellars (user_id)
+    select p.id from public.profiles p where p.deleted_at is null and p.cellar_visibility <> 'PRIVATE';
+    ```
+    The Sharing card ships between M1 and M2 (§10.2), so a cellar that is Friends or Everyone here and Only me at M2 was set so by hand; M2 leaves it (§3.2).
 
 **Post-state:**
 
 - **The read policy** has the new text exactly; the plan pins the normalized `pg_get_expr` output after a dry run. The insert, update and delete policies are byte-identical to the pre-state.
-- **`wset_notes` triggers** are the four from before plus `wset_notes_hold_on_identity` and `wset_notes_rule1_guard`. `wines` gained `wines_release_note_holds`.
+- **`wset_notes` triggers** are the four from before plus `wset_notes_hold_on_identity` and `wset_notes_rule1_guard`. `wset_note_aromas` gained `wset_note_aromas_rule1_guard`; `wines` gained `wines_release_note_holds`.
+- **`sharing_m1_open_cellars`:** RLS on, 0 policies, no privilege for PUBLIC/anon/authenticated; its rows are exactly the non-deleted cellars that are not `PRIVATE`.
 - **Profiles:**
   - `profiles.notes_visibility` is not null with default `'PUBLIC'`, and every row holds `'PUBLIC'`.
   - The client UPDATE grant is exactly eleven columns: the ten plus `notes_visibility`.
@@ -262,7 +278,7 @@ Both files follow `20260925120000_training_room.sql`:
   - `can_view_notes` = {postgres, authenticated, service_role};
   - `wset_note_held` = {postgres, authenticated};
   - `wset_my_held_notes` = {postgres, authenticated};
-  - `catalog_wine_unrevealed_glasses_of` and the four new trigger functions = {postgres}.
+  - `catalog_wine_unrevealed_glasses_of` and the five new trigger functions = {postgres}.
 - **`wset_note_holds`:** RLS on, 0 policies, no privilege for PUBLIC/anon/authenticated. Its rows equal the snapshot's backfill set.
 - **`sharing_notices`:** RLS on, exactly the two policies, `authenticated` SELECT plus UPDATE(dismissed_at) only, anon nothing, 0 rows.
 - **Functions:**
@@ -275,12 +291,13 @@ Both files follow `20260925120000_training_room.sql`:
 
 **Pre-state:**
 
-- M1 is present: its policy text, `sharing_notices` with 0 rows, `notes_visibility`.
+- M1 is present: its policy text, `sharing_notices` with 0 rows, `notes_visibility`, `sharing_m1_open_cellars`.
 - `cellar_visibility` still defaults to `'PRIVATE'`.
 - `handle_new_user` md5 is `f18c8dc3…` (it names no visibility column).
 - Every deleted profile's cellar is `PRIVATE`.
+- `lock table profiles in share row exclusive mode` (writers wait, readers do not; the `20260925004000_friend_requests_lockdown` lock), so nobody's setting changes between the snapshot and the flip.
 - Snapshot into a temp table, **before** anything changes:
-  - `flipped` = non-deleted profiles with `cellar_visibility = 'PRIVATE'`;
+  - `flipped` = non-deleted profiles with `cellar_visibility = 'PRIVATE'` that are not in `sharing_m1_open_cellars`: private when M1 ran, or made since (still on the old PRIVATE default, R12). A cellar that was shared at M1 and is Only me now was set so on the deployed Sharing card, and stays (whole-branch review);
   - `noted` = non-deleted authors who have at least one note that others could now see. Such a note meets all three conditions:
     - `catalog_wine_id is not null`;
     - `not wset_note_held(id)`;
@@ -301,14 +318,14 @@ Both files follow `20260925120000_training_room.sql`:
    insert into sharing_notices (user_id, cellar_flipped, notes_shared)
    select id, id in flipped, id in noted from flipped ∪ noted;
    ```
-2. `update profiles set cellar_visibility = 'PUBLIC' where deleted_at is null and cellar_visibility = 'PRIVATE';` It runs as the table owner, so `profiles_deleted_guard` lets it through, and deleted rows are excluded anyway.
+2. `update profiles set cellar_visibility = 'PUBLIC' where id in (select id from flipped);` Exactly the snapshot. It runs as the table owner, so `profiles_deleted_guard` lets it through, and deleted rows are excluded anyway.
 3. `alter table profiles alter column cellar_visibility set default 'PUBLIC';`
 
 **Post-state:**
 
-- No non-deleted profile is `PRIVATE`.
+- Every flipped profile is `PUBLIC`; the only non-deleted `PRIVATE` profiles left are ones in `sharing_m1_open_cellars` (set to Only me after M1).
 - The FRIENDS count equals the snapshot.
-- PUBLIC = the snapshot's PUBLIC + |flipped|.
+- PUBLIC = the snapshot's PUBLIC + |flipped|; PRIVATE = the snapshot's PRIVATE − |flipped|.
 - Every deleted profile is unchanged and `PRIVATE`.
 - The column default is `'PUBLIC'`.
 - `sharing_notices` has exactly |flipped ∪ noted| rows. Each row's flags match the snapshot sets, and `dismissed_at` is null everywhere.
@@ -419,27 +436,34 @@ The scenario this change creates: a host writes an OPEN note on the catalog wine
 
 ### 5.1 The hold (S10): enforced in the database, at write time
 
+The trigger is AFTER INSERT OR UPDATE OF `catalog_wine_id, tasting_wine_id`. Its body (M1 has the full text; shown here in outline):
+
 ```sql
-create function public.wset_notes_hold_on_identity() returns trigger
-language plpgsql security definer set search_path = public as $$
 begin
   if new.catalog_wine_id is null then return null; end if;
   if tg_op = 'UPDATE' and old.catalog_wine_id is not null then return null; end if;  -- a move is not an arrival
-  insert into wset_note_holds (note_id, wine_id)
-  select new.id, g from catalog_wine_unrevealed_glasses_of(new.catalog_wine_id, new.author_id) g
-  on conflict (note_id, wine_id) do nothing;
+  -- 1. unrevealed glasses keyed to the note's wine (wine_answers) whose adder is the author
+  --    (catalog_wine_unrevealed_glasses_of's clause, inlined), or on which the author holds a
+  --    scored guess in an ASYNC IMMEDIATE tasting at reveal_step 0 (has_scored_guess's rule);
+  -- 2. unrevealed glasses that pour a bottle of the wine from the author's own cellar
+  --    (flight_holds.wine_id or wine_pour_intents.wine_id of the author's consumption of it);
+  -- each read FOR SHARE OF w, then insert (new.id, glass) on conflict do nothing.
   return null;
-end $$;
+end
 ```
 
-- **Keyed on the author's glasses, not `auth.uid()`.** So every path is covered:
+- **Keyed on the author, not `auth.uid()`.** So every path is covered:
   - `save_wset_note`;
   - `record_training_attempt`, which is DEFINER;
   - `saveAllToRatings`' insert;
-  - `wset_notes_glass_resolve_on_write`, which sets the identity in BEFORE INSERT, so this AFTER trigger sees it;
+  - `wset_notes_glass_resolve_on_write`, which sets the identity in a BEFORE trigger, on an insert and on a move (an UPDATE of `tasting_wine_id` onto a revealed glass). Postgres fires a column-specific UPDATE trigger only for the columns in the SET list, never for a column a BEFORE trigger changed, so the hold is also `OF tasting_wine_id` (whole-branch review: a crafted `PATCH {tasting_wine_id}` otherwise gave an identity with no hold);
   - `wset_notes_resolve_on_reveal`, for BLIND notes on another glass of the same wine;
   - `resolve_unidentified_wine`, which is null→catalog.
 - **The adder** is the host for an `added_by_host` glass and the contributor for a BYO glass. Only unrevealed glasses count, so an OPEN board's glasses, inserted with `is_revealed = true`, never hold a note.
+- **Two more glasses hold a note, each known to its author alone** (whole-branch review):
+  - **An ASYNC IMMEDIATE guesser** reads the answer as soon as their own guess is scored (`score_own_guess`), before the glass's reveal. A note they then write on that wine would otherwise top their profile's newest-first list while others are still guessing. The clause is exactly `has_scored_guess`'s (JOINED, same tasting, ASYNC + IMMEDIATE, scored, `reveal_step = 0`), so a LIVE guess stamped `scored_at` by a step reveal holds nothing: its "Hidden from others" tag would otherwise name the wine to a guesser who does not know it yet.
+  - **The owner of a pour** `catalog_wine_masked_pours` masks: a note on the poured wine is held from its save, not only once the history "Rate" path links the consumption in a second request (§5.2).
+- **No race with a reveal.** The glasses are read `FOR SHARE OF w` (a STABLE helper cannot lock, so the adder clause is inlined): a reveal in flight is waited for and `is_revealed` re-read after it, and a reveal that comes later waits for the note's commit, so its `wines_release_note_holds` sees the hold. Without the lock both could commit with a hold left on a revealed glass (fails closed: hidden for good). The same pattern as `wset_notes_glass_resolve_on_write`.
 - **No oracle:**
   - The hold depends only on the writer's own glasses.
   - Nobody else ever saw the note, so nothing vanishes.
@@ -452,7 +476,7 @@ end $$;
 Suppose a note is linked to a pour of its own author that `catalog_wine_masked_pours` masks: a D11 draw-down at Start, a running pour, or one kept after a Swap. The note is hidden from others while the pour is masked.
 
 - A consumption is masked from the moment it is created (the pour itself) until the reveal. A normal Drink never becomes a pour. So a note is never shown and then hidden.
-- The history "Rate" button on tonight's D11 pour is the path this catches. Usually §5.1 has already held the note; §5.2 also covers the pour of a glass that has since been Swapped to another wine, where the author no longer adds a glass keyed to the first wine.
+- The history "Rate" button on tonight's D11 pour is the path this catches. The note editor saves the note and links the consumption in a second request, so §5.1 holds a note on the poured wine at its save (the pour clause), including the pour of a glass since Swapped to another wine; the link then keeps it hidden by itself, and a failed link update is logged, never lost silently.
 
 ### 5.3 The guard (S12): the `catalog_wines_rule1_guard` analogue
 
@@ -482,6 +506,7 @@ end $$;
 - **What stays allowed:** the author's edits to a held note, since nobody else sees it, and every write by anyone who is not an adder.
 - **`save_wset_note` (INVOKER)** runs its UPDATE at trigger depth 1, so it is judged. Its "never overwrite an existing identity" rule stays.
 - **Direct client UPDATEs of `catalog_wine_id` are judged too.** `authenticated` holds UPDATE on all 30 `wset_notes` columns.
+- **A note's aromas** (whole-branch review): `wset_note_aromas_rule1_guard` (BEFORE INSERT OR UPDATE OR DELETE on `wset_note_aromas`, owner-only) applies the first condition to the parent note, raising the same 42501 sentence. The aroma write policies check only the author, so without it the adder could change a visible note's aromas (its read view and "What people find") mid-tasting. `save_wset_note` writes aromas after its note write, which the note guard has already judged, and a note it has just created on the poured wine is held by then; cascades (depth > 1) and the scrub pass. Revoking the client's aroma writes instead would break `save_wset_note`, which is INVOKER.
 - **In the app:** the note editor already throws `error.message` for a failed save or delete. A pure `src/lib/notes/rule1-guard.ts` (`NOTE_RULE1_MESSAGE`, `isNoteRule1Refusal(error)`, the `src/lib/catalog/rule1-guard.ts` pattern) lets the sheet show the sentence rather than a generic error.
 
 ### 5.4 Hidden and unidentified wines
@@ -578,7 +603,7 @@ All copy below is a draft for the owner to approve. Copy lives in pure modules, 
 - `noteHasContent(row, aromaCount)`: `summarizeNoteRow(...).done > 0 || aromaCount > 0 || taster_notes.trim() !== ""`. It is the twin of M2's SQL.
 - `noteSummaryLine({ aromaWords, tasterNotes })`: up to 4 distinct aroma words joined by ", ". Otherwise the free text cut at a word boundary to at most 90 characters plus "…". Otherwise null.
 - `orderNotes`: `tasted_on desc, created_at desc, id desc`.
-- `NOTES_SHOWN = 5` and `NOTES_FETCHED = 50`.
+- `NOTES_SHOWN = 5`, `NOTES_CAP = 50` and `NOTES_FETCHED = 200`. The content rule runs after the read, so the read overfetches and `capNotes(rows, fetched)` cuts the filtered rows at 50: the "Save all to ratings" placeholders (6-7 a flight) can no longer fill a 50-row read and hide real notes. A PostgREST filter cannot say "has an aroma row", so the rule stays in TypeScript. A list is "cut" when more than 50 notes came back, or 50 did and the read hit 200.
 - `contextBadge(kind)`: "Blind", or "Training" (`TRAINING_COPY.trainingBadge`), or none.
 
 **`src/lib/notes/rule1-guard.ts`:** as §5.3.
@@ -593,7 +618,7 @@ Placed directly after "Your notes". It is hidden when empty.
   embeds:
     author:profiles!wset_notes_author_id_fkey(id, display_name, avatar_url)
     aromas:wset_note_aromas(term:wset_aroma_terms(term))
-  order per §7.1, limit 50, then filter noteHasContent
+  order per §7.1, limit 200, then filter noteHasContent, then cap at 50
   ```
 - **Row:** two sibling links, never nested.
   - The avatar (32 px, initial fallback as on the Participants card) and the display name link to `/u/{id}`.
@@ -602,7 +627,7 @@ Placed directly after "Your notes". It is hidden when empty.
     - the score, "{n} · {band}" with `scoreWord`, or "Not scored";
     - the summary line.
   - Min height 44 px; tokens only; dark mode.
-- **Show all:** "Show all {n} notes" / "Show fewer", in place (client). When 50 were fetched, a footer reads "Showing the 50 most recent notes."
+- **Show all:** "Show all {n} notes" / "Show fewer", in place (client). When the list was cut at 50 (`capNotes`), a footer reads "Showing the 50 most recent notes."
 - **"Your notes" rows** gain a muted "Hidden from others" tag for ids returned by `wset_my_held_notes`.
 
 ### 7.3 Profile `/u/[id]`: "Tasting notes"
@@ -615,16 +640,16 @@ Placed after the tastings list. It renders even when the stats empty state shows
   embeds:
     catalog_wine:catalog_wines!inner(title fields, image_url)
     aromas
-  order, limit 50, filter noteHasContent
+  order, limit 200, filter noteHasContent, cap at 50
   ```
 - **Row:** one link to the note view, containing:
   - the wine thumbnail (`image_url`, or `HatchThumb`);
   - the wine title (`catalogWineTitle`);
   - the date and badge;
-  - the score.
+  - the score: the number, with its band on a line under it (a one-line "88 · Above average" left a 375 px phone about 18 characters of title; whole-branch review).
 - **Someone else's profile:** the heading is "Tasting notes". With no visible rows the section is hidden, so it never tells "their notes are private" apart from "no notes".
 - **Your own profile:**
-  - The heading is "Your tasting notes", with `ownNotesLine(notes_visibility)` · "Change" linking to `/profile/edit#sharing`.
+  - The heading is "Your tasting notes", with `ownNotesLine(notes_visibility)` · "Change" linking to `/profile/edit#sharing`. "Change" is a 44 px tap target on touch (`min-h-11`, reset on a fine pointer) in a line that wraps as one sentence.
   - Held rows carry "Hidden from others".
   - Empty state: "No tasting notes yet."
 - **Cap and "Show all":** as §7.2.
@@ -655,6 +680,7 @@ Placed after the tastings list. It renders even when the stats empty state shows
   - Style: a quiet bordered card with an eyebrow, not the bordeaux banner.
 - **Actions:**
   - "Got it" calls `dismissSharingNotice()`. It lives in `src/lib/sharing/actions.ts`, a `"use server"` file that exports async functions only, and it sets `dismissed_at = now()` on the viewer's own row.
+  - "Got it" removes the card with its own focused button, so it first moves focus to the card's `<main>` (`focusAfterDismiss`, `preventScroll`; `/overview`'s `<main>` carries `tabIndex={-1}`), never leaving it on `<body>` (whole-branch review).
   - The primary link dismisses too, then navigates to `/profile/edit#sharing`.
   - The card hides at once. A failed write keeps it hidden for the visit.
 - **Copy** (eyebrow "Sharing"):
@@ -678,6 +704,8 @@ Placed after the tastings list. It renders even when the stats empty state shows
 - **Component:** `src/components/sharing/visibility-select.tsx` (client), `VisibilitySelect({ userId, column: "cellar_visibility" | "notes_visibility", current, label, help })`.
   - It generalizes `CellarVisibilityControl`: it writes `profiles.update({ [column]: v })` as the viewer, under the column grant and "profiles update own".
   - On failure it snaps back and shows `notSavedLine`.
+  - It stays enabled while it saves, with `aria-busy` (whole-branch review): disabling the focused select dropped keyboard focus to the page after every change, and an arrow key on a closed select saves at once on Windows. So several writes can be in flight; `writeStarted`/`writeAnswered` (`src/lib/sharing/visibility.ts`) change the screen only when the last one answers, showing what the row last confirmed, and say "Not saved" only when the newest write failed.
+  - The "Not saved" line is a `role="status"` region that is always rendered (visually hidden while empty) and is in the select's `aria-describedby`, so it is announced.
 - **Rows:**
   - **"Who can see your cellar"**, help: "Your bottles and where you keep them. What you paid, where you bought them and your private notes stay yours." (true after S13)
   - **"Who can see your tasting notes"**, help: "Applies to every note you write. A note on a wine in your own unrevealed flight stays hidden until the reveal."
@@ -743,21 +771,25 @@ The tour copy is owner-approved and pinned in `tour.test.ts`.
    - The same for a BYO contributor.
    - A guest's own note → not held.
    - A note written before the glass → stays readable after the glass is added (no vanish).
-   - Reveal (`reveal_wine`) → readable.
+   - Reveal (`reveal_wine`) → readable; a note written after the reveal → not held.
    - Remove the glass before the reveal → still held.
    - Delete the tasting → still held.
    - Identity arrival paths each hold:
      - `wset_notes_resolve_on_reveal` on glass 1 while the author adds an unrevealed glass 2 of the same wine;
+     - a move (`update wset_notes set tasting_wine_id = <a revealed glass of W>`) of an identity-less note, the resolver filling the identity, while the author adds an unrevealed glass of W;
      - `record_training_attempt`;
      - `resolve_unidentified_wine`.
+   - An ASYNC IMMEDIATE guesser with a scored guess on an unrevealed glass of W → their note on W is held; a LIVE guess with `scored_at` set → not held.
    - A merge move L→W → not held.
    - M1's backfill holds an existing adder's note.
+   - (Not in the suite: a note write racing that glass's reveal. Every test runs on one connection in a transaction that rolls back, so a second connection never sees its fixtures; the `FOR SHARE` ordering is reviewed, not run.)
 6. **Pour link:**
-   - The author's masked D11 consumption with `wset_note_id` set → hidden from others; visible after the reveal.
+   - A note on the wine of the author's masked D11 pour → held at its save (before any link); with that hold removed, the link alone hides it; visible after the reveal.
    - Another owner's consumption pointing at my note → does not hide it.
 7. **Guard:**
    - The adder's UPDATE, `save_wset_note` and DELETE of a shared note on W → 42501 with the message.
    - Moving a note onto W → 42501.
+   - The adder's INSERT, UPDATE and DELETE of a shared note's aroma rows → 42501 with the message; a new note on W saved with aromas → allowed (held); a held note's aromas → allowed; a guest's → allowed.
    - The same writes on a held note → allowed.
    - A non-adder → allowed.
    - After the reveal → allowed.
@@ -766,11 +798,12 @@ The tour copy is owner-approved and pinned in `tour.test.ts`.
 8. **Grants and ACLs:**
    - Profiles UPDATE grant = the eleven columns.
    - `sharing_notices`: SELECT plus UPDATE(dismissed_at) for `authenticated`; own row only; a client cannot update `cellar_flipped` or insert; anon nothing.
-   - `wset_note_holds`: no client privilege.
+   - `wset_note_holds` and `sharing_m1_open_cellars`: no client privilege.
    - The ACLs of §3.1.
 9. **`shared_cellar_lots`:** a non-owner gets null `lot_note`, `price_per_bottle` and `purchase_source`, and the real `storage_location` and quantity with masked pours. The owner calling on themselves gets everything.
 10. **M2:**
     - Every non-deleted PRIVATE profile → PUBLIC; FRIENDS unchanged; deleted rows unchanged.
+    - A cellar Everyone at M1 and Only me before M2 → stays PRIVATE, no notice; one PRIVATE at M1, and an account made after M1 → PUBLIC with a notice.
     - A new profile inserted like `handle_new_user` → cellar and notes both PUBLIC, and no notice row.
     - Notices = flipped ∪ noted, with the right flags; an empty-placeholder-only author is not "noted".
     - `dismissSharingNotice`'s UPDATE as the user stamps only their own row.
@@ -843,8 +876,9 @@ Keep the SQL at `scripts/sharing-defaults/rollback-m2.sql` and `rollback-m1.sql`
   ```
   This also re-privatizes anyone who deliberately kept PUBLIC after the notice (R10).
 - **M1 undo (after the app revert):**
+  - **It publishes notes** (whole-branch review): the old policy lets every member read every identified note, so every held note (tonight's host note, one held for good after a Remove, one linked to a masked pour) and every note of someone set to Friends or Only me becomes readable at once, and counts in `catalog_wine_ratings`. The pre-state prints both counts on every run, `--dry` included, and refuses while either is non-zero unless the run sets `blindr.rollback_publishes_hidden_notes = 'yes'` (`run-sql.mjs … --publish-hidden-notes`), which needs the owner's explicit go-ahead.
   - Restore the old read policy text exactly: `num_nonnulls(catalog_wine_id, unidentified_wine_id) = 1 or author_id = auth.uid()`.
-  - Drop the three triggers and their functions, the four helpers, `wset_note_holds` and `sharing_notices`.
+  - Drop the four triggers and their functions (the hold, the release, both guards) and the notice drop, the four helpers, `wset_note_holds`, `sharing_notices` and `sharing_m1_open_cellars`.
   - `alter function catalog_wine_structure(uuid) security definer`.
   - Recreate `catalog_wine_usage` and `shared_cellar_lots` from the pinned live bodies (md5 `8544e9af…`, `c3da48f2…`).
   - `revoke update (notes_visibility)` and drop the column. People's choices are lost.
@@ -856,7 +890,7 @@ Keep the SQL at `scripts/sharing-defaults/rollback-m2.sql` and `rollback-m1.sql`
   - A possible mitigation, not in scope and for the owner to choose: while you host a tasting that is DRAFT or running, bottles you add to your cellar show to others only after it ends.
   - That depends on the owner's own tastings, not on which wine is poured, so it is no oracle.
   - Or: a one-line hint in the flight add flow.
-- **R2.** A held note whose glass is removed, or whose tasting is deleted or closed unrevealed, stays hidden for good (OD4). The author sees "Hidden from others".
+- **R2.** A held note whose glass is removed, or whose tasting is deleted or closed unrevealed, stays hidden for good (OD4). The author sees "Hidden from others". The same holds for a note held by a scored ASYNC IMMEDIATE guess or by a masked pour (§5.1): only that glass's reveal releases it.
 - **R3.** A curator merge can move a note others can see onto a wine that is in its author's unrevealed glass (§5.6).
 - **R4.** Community figures differ between viewers: a Friends note counts for friends only. This is by design (S9).
 - **R5.** The adder cannot edit or delete an older note that others see, on tonight's wine, until the reveal, and never if that glass stays unrevealed in a CLOSED tasting. This is the same trade the owner accepted for `catalog_wines_rule1_guard`.
@@ -866,7 +900,7 @@ Keep the SQL at `scripts/sharing-defaults/rollback-m2.sql` and `rollback-m1.sql`
 - **R9.** The minutes between the app deploy and M2: notes are displayed before the notices exist.
 - **R10.** Rolling back M2 re-privatizes flipped cellars that are still PUBLIC, including anyone who chose PUBLIC on purpose after the notice.
 - **R11.** `notes_visibility`, like `cellar_visibility`, is readable by every member.
-- **R12.** The notice audience is fixed at M2's apply time. A signup between M1 and M2 counts as existing: PRIVATE, so it is flipped and gets a notice.
+- **R12.** The notice audience is fixed at M2's apply time. A signup between M1 and M2 counts as existing: PRIVATE, so it is flipped and gets a notice. A cellar that was Friends or Everyone when M1 ran and is Only me at M2 was set so on the deployed Sharing card and is left alone, with no notice (`sharing_m1_open_cellars`); a cellar private at M1 that someone re-chose as Only me after the deploy cannot be told apart from an untouched one, and is flipped.
 
 ## 12. Not verified here
 

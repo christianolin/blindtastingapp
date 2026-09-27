@@ -61,3 +61,17 @@ export function sharingNoticeCopy(input: SharingNoticeInput): SharingNoticeCopy 
 export function sharingNoticeHiddenKey(userId: string): string {
   return `blindr:sharing-notice-hidden:${userId}`;
 }
+
+/** What focusAfterDismiss needs of the card: the DOM's closest(), structurally. */
+export type DismissedCard = {
+  closest(selector: "main"): { focus(options?: { preventScroll?: boolean }): void } | null;
+};
+
+/**
+ * "Got it" removes the whole card, the focused button with it, and focus would
+ * fall to <body> with nothing announced. Move it first to the card's <main>
+ * (tabIndex -1 on /overview), without scrolling: the card was its first child.
+ */
+export function focusAfterDismiss(card: DismissedCard | null): void {
+  card?.closest("main")?.focus({ preventScroll: true });
+}

@@ -578,9 +578,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `cellar_visibility` enum and one vocabulary, Everyone / Friends / Only me
   (`src/lib/sharing/visibility.ts`; one `VisibilitySelect` on `/profile/edit`'s
   Sharing card, `#sharing`, and on `/cellar`): `profiles.cellar_visibility`
-  (M2 turned every non-deleted PRIVATE into PUBLIC and made PUBLIC the
-  default) and `profiles.notes_visibility` (default PUBLIC; governs every
-  note the person writes). `can_view_notes(author)` is `can_view_cellar`'s
+  (M2 turned every non-deleted PRIVATE into PUBLIC — except a cellar that
+  was shared when M1 ran and set to Only me since, which M1 recorded in
+  owner-only `sharing_m1_open_cellars`; M2 locks `profiles` and flips
+  exactly its snapshot — and made PUBLIC the default) and
+  `profiles.notes_visibility` (default PUBLIC; governs every note the person
+  writes). `can_view_notes(author)` is `can_view_cellar`'s
   friend rule byte for byte, plus "never a deleted author". "wset notes read"
   admits the author, or anyone when the note names a catalog wine AND
   `can_view_notes(author)` AND `not wset_note_held(id)` AND the wine passes
@@ -590,13 +593,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   author-only. Rule 1, three parts: a note that gains an identity while its
   author adds an unrevealed glass of that wine is held (`wset_note_holds`,
   internal; written by `wset_notes_hold_on_identity` from the author's own
-  glasses; only that glass's reveal releases it — a removed glass or a
-  deleted or CLOSED tasting keeps it held for good, the `flight_holds` rule);
+  glasses — ones they added, ones they hold a scored ASYNC IMMEDIATE guess
+  on (`has_scored_guess`'s rule), and ones that pour a bottle of it from
+  their own cellar — read FOR SHARE so a racing reveal leaves no hold; it
+  fires AFTER INSERT OR UPDATE OF `catalog_wine_id, tasting_wine_id`, since
+  `wset_notes_glass_resolve_on_write` fills the identity in a BEFORE trigger
+  and Postgres fires a column trigger only for the SET list; only that
+  glass's reveal releases it — a removed glass or a deleted or CLOSED
+  tasting keeps it held for good, the `flight_holds` rule);
   a note linked through its author's own `cellar_consumptions.wset_note_id`
   to a pour `catalog_wine_masked_pours` still masks is hidden too
   (`wset_note_held`); and `wset_notes_rule1_guard` refuses the adder's update
   or delete of a note others see on that wine, and any move onto it (42501,
-  `src/lib/notes/rule1-guard.ts`; the note sheet shows the sentence). Never
+  `src/lib/notes/rule1-guard.ts`; the note sheet shows the sentence as an
+  alert), and `wset_note_aromas_rule1_guard` refuses the same adder's
+  insert, update or delete of that note's aroma rows (the aroma write
+  policies check only the author; `save_wset_note` is INVOKER, so the
+  client grants must stay). Never
   hold an existing note when a glass is keyed: that is the vanish oracle.
   Community figures follow the reader: `catalog_wine_ratings` and
   `catalog_wine_descriptors` (invoker views) and `catalog_wine_structure`
@@ -604,7 +617,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   held notes. `shared_cellar_lots` returns `lot_note`, `price_per_bottle` and
   `purchase_source` as null to anyone but the owner. Other people's notes
   show on a wine's page ("Notes from others") and on `/u/[id]` ("Tasting
-  notes"), through `src/lib/notes/shared-notes.ts`; the author's own held
+  notes"), through `src/lib/notes/shared-notes.ts` (200 rows read, then the
+  empty "Save all to ratings" rows dropped, then capped at 50 — `capNotes`,
+  so placeholders never crowd real notes out); the author's own held
   notes carry "Hidden from others" (`wset_my_held_notes`). A non-author
   opening `/catalog/[wineId]/notes/[noteId]` gets a server-rendered read view
   (`noteRouteMode`), and a note the policy hides is `notFound()` like a
@@ -615,10 +630,17 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `dismissed_at`. Grants: `sharing_notices` SELECT + UPDATE(dismissed_at) on
   the own row; `wset_note_holds` nothing; `can_view_notes` authenticated +
   service_role; `wset_note_held` and `wset_my_held_notes` authenticated only;
-  the internal helper `catalog_wine_unrevealed_glasses_of` and the four
-  trigger functions owner-only. Rollback SQL lives in
-  `scripts/sharing-defaults/` (`rollback-m2.sql`, `rollback-m1.sql`, run by
-  `run-sql.mjs` with `--dry` first), never under `supabase/migrations`.
+  the internal helper `catalog_wine_unrevealed_glasses_of` and the five
+  trigger functions owner-only; `sharing_m1_open_cellars` nothing. Rollback
+  SQL lives in `scripts/sharing-defaults/` (`rollback-m2.sql`,
+  `rollback-m1.sql`, run by `run-sql.mjs` with `--dry` first), never under
+  `supabase/migrations`. `rollback-m1.sql` publishes every held note and
+  every Friends/Only me note (the old policy), so it prints both counts and
+  refuses unless run with `--publish-hidden-notes` — the owner's call. The
+  sharing `VisibilitySelect` stays enabled while it saves (`aria-busy`;
+  disabling the focused select dropped keyboard focus): `writeStarted`/
+  `writeAnswered` settle the screen only when the last write answers, on
+  what the row last confirmed.
   Accepted residuals (spec §11): a host's fresh cellar lot or cellar scan of
   tonight's bottle is now seen by every guest (O1, offered as a follow-up);
   a curator merge can move a note others see onto a wine in its author's

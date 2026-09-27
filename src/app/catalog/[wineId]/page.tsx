@@ -57,6 +57,26 @@ export default async function CatalogWinePage({
     .maybeSingle();
   if (blindRow?.blind_pending) notFound();
 
+  // Your own notes, as a real promise: a query builder runs its request again
+  // on every then(), and the held lookup chains off this one.
+  const myNotesRead = Promise.resolve(
+    supabase
+      .from("wset_notes")
+      .select("id, tasted_on, quality_score, context_kind")
+      .eq("catalog_wine_id", wineId)
+      .eq("author_id", user.id)
+      .order("tasted_on", { ascending: false })
+      .order("created_at", { ascending: false }),
+  );
+  // Your own notes others cannot read yet carry "Hidden from others" (S19),
+  // asked as soon as they arrive, alongside the other reads.
+  const heldRead = myNotesRead.then(({ data }) =>
+    getMyHeldNoteIds(
+      supabase,
+      (data ?? []).map((n) => n.id),
+    ),
+  );
+
   const [
     { data: myNotes },
     descriptors,
@@ -68,14 +88,9 @@ export default async function CatalogWinePage({
     ownLots,
     photoRows,
     others,
+    heldIds,
   ] = await Promise.all([
-    supabase
-      .from("wset_notes")
-      .select("id, tasted_on, quality_score, context_kind")
-      .eq("catalog_wine_id", wineId)
-      .eq("author_id", user.id)
-      .order("tasted_on", { ascending: false })
-      .order("created_at", { ascending: false }),
+    myNotesRead,
     fetchWineDescriptors(supabase, wineId),
     fetchWineGuessStats(supabase, wineId),
     fetchWineBlend(supabase, wineId),
@@ -87,12 +102,8 @@ export default async function CatalogWinePage({
     // "Notes from others" (sharing-defaults spec §7.2): the policy decides
     // whose notes come back; null on a failed read hides the section.
     getOthersNotesForWine(supabase, wineId, user.id),
+    heldRead,
   ]);
-  // Your own notes others cannot read yet carry "Hidden from others" (S19).
-  const heldIds = await getMyHeldNoteIds(
-    supabase,
-    (myNotes ?? []).map((n) => n.id),
-  );
 
   const title = catalogWineTitle(wine);
   const grapes = formatBlend(blend);
@@ -371,7 +382,7 @@ export default async function CatalogWinePage({
       </div>
 
       {others && others.rows.length > 0 ? (
-        <OthersNotes rows={others.rows} fetched={others.fetched} />
+        <OthersNotes rows={others.rows} capped={others.capped} />
       ) : null}
     </div>
   );

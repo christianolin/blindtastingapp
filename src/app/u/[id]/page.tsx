@@ -227,7 +227,7 @@ export default async function ProfilePage({
         {notes && (isOwnProfile || notes.rows.length > 0) ? (
           <ProfileNotes
             rows={notes.rows}
-            fetched={notes.fetched}
+            capped={notes.capped}
             own={
               isOwnProfile
                 ? { line: ownNotesLine(profile.notes_visibility), changeHref: SHARING_COPY.settingsHref }

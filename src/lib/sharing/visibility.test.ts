@@ -3,10 +3,15 @@ import {
   AUDIENCE_OPTIONS,
   SHARING_COPY,
   audienceLabel,
+  initialWrites,
   isSharingAudience,
   notSavedLine,
   ownNotesLine,
   profileWriteSaved,
+  writeAnswered,
+  writeStarted,
+  type SelectWrites,
+  type SharingAudience,
 } from "./visibility";
 
 // Sharing defaults spec 2026-09-27 S6, §7.1, §7.6.
@@ -86,5 +91,102 @@ describe("SHARING_COPY", () => {
 
   it("links to the card's own id", () => {
     expect(SHARING_COPY.settingsHref.endsWith(`#${SHARING_COPY.sectionId}`)).toBe(true);
+  });
+});
+
+describe("the select's writes (it stays enabled while it saves)", () => {
+  // Starts one write per value, in order; answers them as `answers` lists
+  // them ([write index, saved]); returns what each answer settled (null
+  // while other writes are still in flight).
+  function run(stored: SharingAudience, values: SharingAudience[], answers: [number, boolean][]) {
+    let writes: SelectWrites = initialWrites(stored);
+    const seqs: number[] = [];
+    for (let i = 0; i < values.length; i += 1) {
+      const started = writeStarted(writes);
+      writes = started.writes;
+      seqs.push(started.seq);
+    }
+    const settled: ({ value: SharingAudience; failed: boolean } | null)[] = [];
+    for (const [index, saved] of answers) {
+      const answered = writeAnswered(writes, seqs[index], values[index], saved);
+      writes = answered.writes;
+      settled.push(answered.settled);
+    }
+    return settled;
+  }
+
+  it("one saved write keeps the new value and says nothing", () => {
+    expect(run("PUBLIC", ["FRIENDS"], [[0, true]])).toEqual([{ value: "FRIENDS", failed: false }]);
+  });
+
+  it("one failed write snaps back to the stored value and says Not saved", () => {
+    expect(run("PUBLIC", ["FRIENDS"], [[0, false]])).toEqual([{ value: "PUBLIC", failed: true }]);
+  });
+
+  it("changes nothing on screen until the last write in flight answers", () => {
+    const settled = run(
+      "PUBLIC",
+      ["FRIENDS", "PRIVATE"],
+      [
+        [0, true],
+        [1, true],
+      ],
+    );
+    expect(settled[0]).toBeNull();
+    expect(settled[1]).toEqual({ value: "PRIVATE", failed: false });
+  });
+
+  it("two failed writes land on the stored value, never the first write's unsaved choice", () => {
+    expect(
+      run(
+        "PUBLIC",
+        ["FRIENDS", "PRIVATE"],
+        [
+          [0, false],
+          [1, false],
+        ],
+      ).at(-1),
+    ).toEqual({ value: "PUBLIC", failed: true });
+  });
+
+  it("a failed newest write lands on what the older write saved", () => {
+    for (const answers of [
+      [
+        [0, true],
+        [1, false],
+      ],
+      [
+        [1, false],
+        [0, true],
+      ],
+    ] as [number, boolean][][]) {
+      expect(run("PUBLIC", ["FRIENDS", "PRIVATE"], answers).at(-1)).toEqual({ value: "FRIENDS", failed: true });
+    }
+  });
+
+  it("a stale failed answer neither snaps the select back nor says Not saved", () => {
+    for (const answers of [
+      [
+        [0, false],
+        [1, true],
+      ],
+      [
+        [1, true],
+        [0, false],
+      ],
+    ] as [number, boolean][][]) {
+      expect(run("PUBLIC", ["FRIENDS", "PRIVATE"], answers).at(-1)).toEqual({ value: "PRIVATE", failed: false });
+    }
+  });
+
+  it("a later write starts clean: an earlier failure does not stick to it", () => {
+    let writes = initialWrites("PUBLIC");
+    const first = writeStarted(writes);
+    writes = writeAnswered(first.writes, first.seq, "FRIENDS", false).writes;
+    const second = writeStarted(writes);
+    expect(writeAnswered(second.writes, second.seq, "PRIVATE", true).settled).toEqual({
+      value: "PRIVATE",
+      failed: false,
+    });
   });
 });

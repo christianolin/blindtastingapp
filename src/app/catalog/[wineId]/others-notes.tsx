@@ -18,10 +18,10 @@ import {
  * their profile, the rest to the note's read view. Five show; "Show all"
  * expands in place. The page renders nothing when there are no rows.
  */
-export function OthersNotes({ rows, fetched }: { rows: OthersNoteRow[]; fetched: number }) {
+export function OthersNotes({ rows, capped }: { rows: OthersNoteRow[]; capped: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const more = showAllLabel(rows.length);
-  const footer = cappedFooter(fetched);
+  const footer = cappedFooter(capped);
 
   return (
     <section aria-labelledby="others-notes" className="flex flex-col gap-2">

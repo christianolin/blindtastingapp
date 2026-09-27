@@ -37,6 +37,59 @@ export function profileWriteSaved(result: { data: readonly unknown[] | null; err
   return !result.error && result.data?.length === 1;
 }
 
+/**
+ * The select's bookkeeping while writes are in flight. The select stays
+ * enabled while it saves (disabling the focused control drops keyboard
+ * focus), so a second change can start before the first one answers — two
+ * arrow presses on a closed select on Windows are two writes.
+ */
+export type SelectWrites = {
+  /** The number of the newest write started. */
+  latest: number;
+  /** Writes started and not answered yet. */
+  pending: number;
+  /** The value the row last confirmed holding: the stored value at first
+      paint, then each saved write's value in the order the answers came. */
+  confirmed: SharingAudience;
+  /** Whether the newest write came back saved; null while it is in flight. */
+  latestSaved: boolean | null;
+};
+
+/** No write yet: the row holds what the page read. */
+export function initialWrites(stored: SharingAudience): SelectWrites {
+  return { latest: 0, pending: 0, confirmed: stored, latestSaved: null };
+}
+
+/** A change starts a write; `seq` names it when it answers. */
+export function writeStarted(writes: SelectWrites): { writes: SelectWrites; seq: number } {
+  const seq = writes.latest + 1;
+  return { writes: { ...writes, latest: seq, pending: writes.pending + 1, latestSaved: null }, seq };
+}
+
+/**
+ * A write answered. Nothing on screen changes until the last write in flight
+ * answers; then the select shows what the row last confirmed and says "Not
+ * saved" only when the newest write failed. So a stale answer never snaps the
+ * select back or flags a failure, and a failed write never restores a value
+ * the row does not hold — two failed writes land on the stored value, not on
+ * the first one's never-saved choice.
+ */
+export function writeAnswered(
+  writes: SelectWrites,
+  seq: number,
+  value: SharingAudience,
+  saved: boolean,
+): { writes: SelectWrites; settled: { value: SharingAudience; failed: boolean } | null } {
+  const next: SelectWrites = {
+    latest: writes.latest,
+    pending: Math.max(0, writes.pending - 1),
+    confirmed: saved ? value : writes.confirmed,
+    latestSaved: seq === writes.latest ? saved : writes.latestSaved,
+  };
+  if (next.pending > 0) return { writes: next, settled: null };
+  return { writes: next, settled: { value: next.confirmed, failed: next.latestSaved === false } };
+}
+
 /** The line under "Your tasting notes" on your own profile. */
 export function ownNotesLine(value: SharingAudience): string {
   switch (value) {

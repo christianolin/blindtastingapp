@@ -98,11 +98,20 @@ export function NoteEditor({
       if (error) throw new Error(error.message);
       const savedId = data as unknown as string;
       // Back-link a cellar drink to the note it produced (owner-only via RLS).
+      // A second request, so it can fail after the note saved; the note is
+      // not exposed meanwhile: a note on the wine of the author's own masked
+      // pour is held from its save (wset_notes_hold_on_identity, sharing-
+      // defaults spec §5.2), and this link only adds S11 on top. The save
+      // stands (throwing now would make "Retry save" insert a second note),
+      // but the failure is reported rather than dropped.
       if (consumptionId && savedId) {
-        await supabase
+        const { error: linkError } = await supabase
           .from("cellar_consumptions")
           .update({ wset_note_id: savedId })
           .eq("id", consumptionId);
+        if (linkError) {
+          console.error("[note-editor] linking the note to its cellar drink failed", linkError.code, linkError.message);
+        }
       }
       // A modal (Taste & Rate) closes itself after saving; the standalone
       // route instead swaps to the saved note's own URL. wineId is only ever
