@@ -5,8 +5,10 @@
 // the Sort select, on any cellar list (your own or someone else's), saves the
 // viewer's choice on their own `user_preferences` row.
 //
-// No revalidate or refresh: the list already shows the new order, and the
-// next render of any cellar list reads the saved value itself. The caller
+// No revalidate or refresh: the list already shows the new order. A fresh
+// render reads the saved row; a Back/Forward remount from the router's cached
+// payload opens on this tab's own last pick instead (src/lib/cellar/tab-sort.ts,
+// spec C5) — never remove that pick on the strength of this comment. The caller
 // logs a failure and carries on — a lost preference is not worth interrupting
 // anyone.
 //
