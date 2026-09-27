@@ -10,7 +10,7 @@
 // landing (the `storage` event). Matching runs here, on the device, on every
 // change (D6). Every switch between the three starts at the top of the app
 // shell's content column, the page's scroll container (the window never
-// scrolls in this app).
+// scrolls in this app), with keyboard focus on the new view's heading.
 import {
   useCallback,
   useEffect,
@@ -95,6 +95,35 @@ export function TrainingRoom({
   const rootRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLButtonElement>(null);
   const toTop = () => scrollContainerToTop(rootRef.current);
+  // Each view's heading (tabIndex -1), where focus lands when it opens: the
+  // landing's and the result's h1, and the session sheet's title.
+  const landingHeadingRef = useRef<HTMLHeadingElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const sessionTitleRef = useRef<HTMLParagraphElement>(null);
+  // The view focus last moved into. Starts at the first view, so the first
+  // mount (twice under StrictMode) leaves focus where the page put it.
+  const enteredView = useRef<View>(view);
+
+  // Every switch between the three views, from the top of the content column
+  // (the effect below then moves focus into the new view).
+  function enterView(next: View) {
+    setView(next);
+    toTop();
+  }
+
+  // A new view takes keyboard focus on its heading, without scrolling: the
+  // column is already back at its top.
+  useEffect(() => {
+    if (enteredView.current === view) return;
+    enteredView.current = view;
+    const heading =
+      view === "landing"
+        ? landingHeadingRef.current
+        : view === "result"
+          ? resultHeadingRef.current
+          : sessionTitleRef.current;
+    heading?.focus({ preventScroll: true });
+  }, [view]);
 
   // The stored draft as a string, so the snapshot compares by value. The
   // times it shows ("started 20:14") are only ever rendered on the client:
@@ -125,6 +154,7 @@ export function TrainingRoom({
         setSession(null);
         setSheetOpen(false);
         setView("landing");
+        scrollContainerToTop(rootRef.current);
       }
     };
     window.addEventListener("storage", onStorage);
@@ -167,8 +197,7 @@ export function TrainingRoom({
   // failed read falls back to the landing, where history shows the attempt.
   function showResult(detail: TrainingAttemptDetail | null) {
     setResult(detail);
-    setView(detail ? "result" : "landing");
-    toTop();
+    enterView(detail ? "result" : "landing");
     router.refresh();
   }
 
@@ -176,8 +205,7 @@ export function TrainingRoom({
   // "See the note" (its attempt goes with it — the refresh drops the row).
   function backToLanding(refresh: boolean) {
     setResult(null);
-    setView("landing");
-    toTop();
+    enterView("landing");
     if (refresh) router.refresh();
   }
 
@@ -194,16 +222,14 @@ export function TrainingRoom({
       pickedArchetypeId: null,
       vintage: null,
     });
-    setView("session");
-    toTop();
+    enterView("session");
   }
 
   function continueSession() {
     if (!stored) return;
     setError(null);
     setSession(stored);
-    setView("session");
-    toTop();
+    enterView("session");
   }
 
   function discard() {
@@ -218,8 +244,7 @@ export function TrainingRoom({
   // ✕ returns to the landing and KEEPS the draft (spec §3.3).
   function leave() {
     setSheetOpen(false);
-    setView("landing");
-    toTop();
+    enterView("landing");
   }
 
   async function finish(draft: TrainingDraft, snapshot: RankingSnapshot, actualCatalogWineId: string | null) {
@@ -293,6 +318,7 @@ export function TrainingRoom({
   if (view === "result" && result) {
     body = (
       <ResultView
+        headingRef={resultHeadingRef}
         detail={result}
         pool={candidates}
         onAnotherGlass={anotherGlass}
@@ -309,6 +335,7 @@ export function TrainingRoom({
               key={session.sessionKey}
               wine={UNKNOWN_WINE}
               title={sheetTitle(clockTime(session.startedAt))}
+              titleRef={sessionTitleRef}
               terms={terms}
               initial={session.note}
               onChange={(next: WsetNoteState) => patchSession({ note: next })}
@@ -356,7 +383,13 @@ export function TrainingRoom({
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-8">
         <header className="flex flex-col gap-2">
           <Eyebrow>{TRAINING_COPY.eyebrow}</Eyebrow>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">{TRAINING_COPY.title}</h1>
+          <h1
+            ref={landingHeadingRef}
+            tabIndex={-1}
+            className="font-heading text-3xl font-semibold tracking-tight outline-none"
+          >
+            {TRAINING_COPY.title}
+          </h1>
           <p className="text-[14.5px] leading-relaxed">{TRAINING_COPY.promise}</p>
           <p className="text-[13px] text-muted-foreground">{coverage}</p>
         </header>

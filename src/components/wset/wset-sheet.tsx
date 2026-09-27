@@ -241,6 +241,7 @@ export function WsetSheet({
   onDelete,
   embedded = false,
   ref,
+  titleRef,
   onChange,
   footerAction,
   belowBar,
@@ -268,6 +269,9 @@ export function WsetSheet({
   // to the popup edges while the sections scroll between them.
   embedded?: boolean;
   ref?: React.Ref<WsetSheetHandle>;
+  /** Makes the bar's title focusable (tabIndex -1) and hands it over: the
+      training room moves keyboard focus there as a session opens. */
+  titleRef?: React.Ref<HTMLParagraphElement>;
   /** Every committed change of the note (the training room's live ranking and
       its on-device draft). Also called once with the initial state. */
   onChange?: (state: WsetNoteState) => void;
@@ -526,7 +530,11 @@ export function WsetSheet({
             <Eyebrow size="sm" className="block max-sm:hidden">
               {t("tasting_note")}
             </Eyebrow>
-            <p className="font-heading text-[16px] leading-[1.2] font-semibold text-foreground max-sm:line-clamp-2 sm:mt-0.5 sm:truncate sm:text-[17px]">
+            <p
+              ref={titleRef}
+              tabIndex={titleRef ? -1 : undefined}
+              className="font-heading text-[16px] leading-[1.2] font-semibold text-foreground outline-none max-sm:line-clamp-2 sm:mt-0.5 sm:truncate sm:text-[17px]"
+            >
               {title}
             </p>
             {/* Phones carry the progress in the bar; desktop keeps it in the

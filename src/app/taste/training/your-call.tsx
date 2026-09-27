@@ -1,8 +1,8 @@
 "use client";
 
 // "Your call" — the card under the sheet at every width (spec §3.3): which
-// wine it is (the ranked candidates with their percentages, a search over
-// every candidate, or "It's not in the list"), an optional vintage through the
+// wine it is (a search over every candidate above the ranked candidates with
+// their percentages, and "It's not in the list"), an optional vintage through the
 // guess ladder's own vintage picker (years, NV, tawny ages, "Other age…"), then
 // Reveal the bottle / I can't find out. Every value is React state owned by
 // the room (CLAUDE.md: never an uncontrolled input).
@@ -52,7 +52,7 @@ function OptionRow({
       aria-checked={checked}
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-3 rounded-[10px] border px-3 py-2 text-left transition-colors",
+        "flex w-full min-w-0 items-center gap-3 rounded-[10px] border px-3 py-2 text-left transition-colors",
         checked ? "border-primary bg-gold/10" : "border-border hover:bg-muted",
         TAP,
       )}
@@ -181,44 +181,36 @@ export function YourCall({
         </h2>
       </div>
 
-      {/* On screen the search sits between the candidates and "It's not in
-          the list"; in the DOM it follows the radiogroup (a textbox is not a
-          radio). The group is a subgrid over the three rows and leaves the
-          middle one to the search, which paints over it. */}
-      <div className="grid grid-cols-1 grid-rows-[auto_auto_auto] gap-1.5">
-        <div
-          role="radiogroup"
-          aria-labelledby="your-call-title"
-          className="col-start-1 row-span-3 row-start-1 grid grid-rows-subgrid"
-        >
-          <div className="row-start-1 flex flex-col gap-1.5">
-            {options.map((r) => (
-              <OptionRow
-                key={r.candidate.id}
-                checked={pickedId === r.candidate.id}
-                onSelect={() => pick(r.candidate.id, true)}
-                title={shortName(r.candidate.name)}
-                sub={lineageLine(r.candidate)}
-                pct={percentLabel(r.closeness) || undefined}
-              />
-            ))}
-          </div>
-          <div className="row-start-3">
-            <OptionRow
-              checked={pickedId === null && notListed}
-              onSelect={() => pick(null, false)}
-              title={TRAINING_COPY.notInList}
-            />
-          </div>
-        </div>
+      {/* The "Something else…" search sits above the list it filters, on
+          screen and in the DOM (a textbox is not a radio, so it stays outside
+          the radiogroup). Flex columns, not a grid: every row is as wide as
+          the card and truncates its lines (min-w-0) instead of widening it. */}
+      <div className="flex min-w-0 flex-col gap-1.5">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={TRAINING_COPY.somethingElse}
           aria-label={TRAINING_COPY.somethingElse}
-          className="col-start-1 row-start-2 min-h-11 w-full rounded-[10px] border border-border bg-card px-3 text-base text-foreground placeholder:text-muted-foreground md:text-[14px]"
+          className="min-h-11 w-full min-w-0 rounded-[10px] border border-border bg-card px-3 text-base text-foreground placeholder:text-muted-foreground md:text-[14px]"
         />
+        <div role="radiogroup" aria-labelledby="your-call-title" className="flex min-w-0 flex-col gap-1.5">
+          {options.map((r) => (
+            <OptionRow
+              key={r.candidate.id}
+              checked={pickedId === r.candidate.id}
+              onSelect={() => pick(r.candidate.id, true)}
+              title={shortName(r.candidate.name)}
+              sub={lineageLine(r.candidate)}
+              pct={percentLabel(r.closeness) || undefined}
+            />
+          ))}
+          <OptionRow
+            checked={pickedId === null && notListed}
+            onSelect={() => pick(null, false)}
+            title={TRAINING_COPY.notInList}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -229,6 +221,8 @@ export function YourCall({
           ref={vintageButtonRef}
           id={vintageButtonId}
           aria-labelledby={`${vintageLabelId} ${vintageButtonId}`}
+          aria-haspopup="dialog"
+          aria-expanded={vintageOpen}
           type="button"
           onClick={() => {
             setVintageOpen(true);

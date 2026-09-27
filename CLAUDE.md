@@ -1014,7 +1014,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   that body, not an older one. Every switch between landing, session and
   result scrolls the app shell's content column back to the top
   (`scrollContainerToTop`, `src/lib/scroll-container.ts`) — never
-  `window.scrollTo`: the window never scrolls in this app.
+  `window.scrollTo`: the window never scrolls in this app — and moves
+  keyboard focus onto the new view's heading (`tabIndex={-1}`, `preventScroll`:
+  the landing's and the result's h1, the sheet title through `WsetSheet`'s
+  `titleRef`); the first mount leaves focus alone.
   `/admin/archetypes` edits the scoring identity (country → region →
   appellation with "Just the region"), designations, typical age, signature
   aromas, an optional map place and mousse on sparkling; its ladders and checks

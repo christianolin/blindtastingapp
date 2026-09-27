@@ -34,12 +34,15 @@ import { loadTrainingAttempt } from "./actions";
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
 
 export function ResultView({
+  headingRef,
   detail,
   pool,
   onAnotherGlass,
   onDone,
   onGone,
 }: {
+  /** The result's h1 (tabIndex -1): the room moves focus there as it opens. */
+  headingRef?: React.Ref<HTMLHeadingElement>;
   detail: TrainingAttemptDetail;
   /** The room's archetypes: the real wine's own one names a cap's reason. */
   pool: readonly TrainingCandidate[];
@@ -64,7 +67,9 @@ export function ResultView({
     return (
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4">
         <Eyebrow>{TRAINING_COPY.eyebrow}</Eyebrow>
-        <h1 className="font-heading text-[26px] leading-tight font-semibold">{said}</h1>
+        <h1 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] leading-tight font-semibold outline-none">
+          {said}
+        </h1>
         <p className="text-[14px] text-muted-foreground">{TRAINING_COPY.notRevealed}</p>
         <div className="flex flex-wrap gap-3">
           <Button className={cn(TAP, "px-4")} onClick={onAnotherGlass}>
@@ -94,7 +99,13 @@ export function ResultView({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <section className="rounded-[12px] border border-border bg-card p-4">
-          <h1 className="font-heading text-[22px] leading-tight font-semibold">{itWasLine(actual.label)}</h1>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="font-heading text-[22px] leading-tight font-semibold outline-none"
+          >
+            {itWasLine(actual.label)}
+          </h1>
           {actual.lineage ? (
             <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">{actual.lineage}</p>
           ) : null}
