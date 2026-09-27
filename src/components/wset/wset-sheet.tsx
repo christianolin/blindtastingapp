@@ -42,6 +42,7 @@ import {
 } from "@/lib/wset/i18n";
 import { useWsetLang } from "@/lib/wset/wset-lang";
 import { composeLiveNote } from "@/lib/wset/live-note.mjs";
+import { NOTE_CAPTIONS } from "@/lib/wset/note-captions";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { SnapSlider } from "./snap-slider";
 import { PillGroup } from "./pill-group";
@@ -75,15 +76,6 @@ const FAULTS = ["OXIDISED", "OUT_OF_CONDITION", "CORK_TAINT", "OTHER"] as const;
 const MOUSSE = ["DELICATE", "CREAMY", "AGGRESSIVE"] as const;
 const PRICE = ["INEXPENSIVE", "MID_PRICED", "HIGH_PRICED", "PREMIUM", "DONT_KNOW"] as const;
 const READINESS = ["NEEDS_TIME", "READY_CAN_IMPROVE", "READY_WONT_IMPROVE", "TOO_OLD"] as const;
-
-// The live-note section keys, paired with the UI-dict key that names each one.
-const NOTE_CAPTIONS: { key: keyof ReturnType<typeof composeLiveNote>; uiKey: string }[] = [
-  { key: "appearance", uiKey: "appearance" },
-  { key: "nose", uiKey: "nose" },
-  { key: "palate", uiKey: "palate" },
-  { key: "conclusions", uiKey: "conclusions" },
-  { key: "taster", uiKey: "taster" },
-];
 
 type SectionId = "appearance" | "nose" | "palate" | "conclusions";
 const SECTION_ORDER: readonly SectionId[] = ["appearance", "nose", "palate", "conclusions"];
