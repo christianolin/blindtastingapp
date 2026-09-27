@@ -56,6 +56,7 @@ export function TypeDesignationField({
   allowClear = true,
   onCreate,
   onOptionCreated,
+  triggerClassName,
 }: {
   formFieldName: string;
   options: TypeDesignationOption[];
@@ -65,6 +66,10 @@ export function TypeDesignationField({
   allowClear?: boolean;
   onCreate?: (name: string) => Promise<TypeDesignationOption>;
   onOptionCreated?: (option: TypeDesignationOption) => void;
+  /** Merged into the trigger Button's className — e.g. the admin
+   *  typical-wine editor's 44px touch target — as ReferenceCombobox's.
+   *  Defaults are unchanged, so no existing caller changes. */
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -123,7 +128,7 @@ export function TypeDesignationField({
           render={
             <Button
               variant="outline"
-              className="w-full justify-between font-normal"
+              className={cn("w-full justify-between font-normal", triggerClassName)}
             />
           }
         >

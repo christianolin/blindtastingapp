@@ -228,6 +228,7 @@ export function WineSection({
           onValueChange={(id) => onChange({ type: "addDesignation", id })}
           placeholder={EDITOR_COPY.addDesignation}
           allowClear={false}
+          triggerClassName={TAP}
         />
       </Row>
 

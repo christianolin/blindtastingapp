@@ -195,11 +195,29 @@ export function applyDraft(d: ArchetypeDraft, a: DraftAction): ArchetypeDraft {
   }
 }
 
-// A draft in one canonical form: range keys sorted, so clearing a range and
-// setting it back to what it was reads as no change.
+const byText = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0);
+
+// A draft in one canonical form, holding only what a save sends: range keys,
+// aromas (by term) and designations sorted — none of their orders is stored —
+// so clearing a range and setting it back, or removing an aroma or a
+// designation and adding it again, reads as no change. The display-only names
+// (the appellation's label, the map place's name) are left out: re-picking the
+// same appellation or place may carry a differently spelled label, and
+// neither name is saved.
 function canonical(d: ArchetypeDraft): string {
-  const sat = Object.fromEntries(Object.entries(d.sat).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0)));
-  return JSON.stringify({ ...d, sat });
+  const sat = Object.fromEntries(Object.entries(d.sat).sort(([x], [y]) => byText(x, y)));
+  const nose = [...d.nose].sort((x, y) => byText(x.termId, y.termId));
+  const palate = [...d.palate].sort((x, y) => byText(x.termId, y.termId));
+  const designationIds = [...d.designationIds].sort(byText);
+  return JSON.stringify({
+    ...d,
+    appellationLabel: null,
+    place: d.place ? d.place.id : null,
+    sat,
+    nose,
+    palate,
+    designationIds,
+  });
 }
 
 /** Whether the draft differs from what was last saved (or opened). */

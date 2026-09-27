@@ -210,6 +210,63 @@ describe("isDirty", () => {
     const back = applyDraft(cleared, { type: "range", key: "tannin", range: ["MEDIUM_PLUS", "HIGH"] });
     expect(isDirty(back, base)).toBe(false);
   });
+
+  it("re-picking the same appellation is no change, whatever label it carries", () => {
+    const base = draft();
+    // A search hit's label need not match the name the page loaded.
+    const repicked = applyDraft(base, { type: "appellation", id: APPELLATION, label: "Pauillac" });
+    expect(repicked.appellationLabel).toBe("Pauillac");
+    expect(isDirty(repicked, base)).toBe(false);
+    // A draft opened before the label loaded is the same draft too.
+    expect(isDirty(draft({ appellationName: null }), base)).toBe(false);
+    // Another appellation is a change.
+    const other = applyDraft(base, { type: "appellation", id: APPELLATION.replace("c03", "c04"), label: "Pauillac AOC" });
+    expect(isDirty(other, base)).toBe(true);
+  });
+
+  it("re-picking the same map place is no change; another place is", () => {
+    const base = draft();
+    const cleared = applyDraft(base, { type: "place", place: null });
+    expect(isDirty(cleared, base)).toBe(true);
+    const back = applyDraft(cleared, { type: "place", place: { id: PLACE, name: "Pauillac (Bordeaux)" } });
+    expect(isDirty(back, base)).toBe(false);
+    const other = applyDraft(cleared, { type: "place", place: { id: PLACE.replace("c21", "c22"), name: "Pauillac" } });
+    expect(isDirty(other, base)).toBe(true);
+  });
+
+  it("removing an aroma and adding it back is no change, in either list", () => {
+    const base = draft({
+      nose: [
+        { termId: "t1", signature: true },
+        { termId: "t2", signature: false },
+      ],
+      palate: [
+        { termId: "t3", signature: false },
+        { termId: "t4", signature: false },
+      ],
+    });
+    let d = applyDraft(base, { type: "aromas", kind: "nose", ids: ["t1"] });
+    expect(isDirty(d, base)).toBe(true);
+    d = applyDraft(d, { type: "aromas", kind: "nose", ids: ["t1", "t2"] });
+    expect(isDirty(d, base)).toBe(false);
+    // The re-added term now comes first: order is not saved, so still clean.
+    d = applyDraft(d, { type: "aromas", kind: "palate", ids: ["t4"] });
+    d = applyDraft(d, { type: "aromas", kind: "palate", ids: ["t4", "t3"] });
+    expect(d.palate.map((l) => l.termId)).toEqual(["t4", "t3"]);
+    expect(isDirty(d, base)).toBe(false);
+    // A signature is saved: toggling one is a change.
+    expect(isDirty(applyDraft(d, { type: "signature", kind: "palate", termId: "t3" }), base)).toBe(true);
+  });
+
+  it("removing a designation and adding it back is no change", () => {
+    const base = draft({ designationIds: ["d1", "d2"] });
+    let d = applyDraft(base, { type: "removeDesignation", id: "d1" });
+    expect(isDirty(d, base)).toBe(true);
+    d = applyDraft(d, { type: "addDesignation", id: "d1" });
+    expect(d.designationIds).toEqual(["d2", "d1"]);
+    expect(isDirty(d, base)).toBe(false);
+    expect(isDirty(applyDraft(d, { type: "addDesignation", id: "d3" }), base)).toBe(true);
+  });
 });
 
 describe("editorLadders", () => {
