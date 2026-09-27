@@ -175,8 +175,11 @@ export function YourCall({
   const vintageGroups = vintagePickerGroups(years, tawny);
   const grapeGroups = [{ options: grapes.map((g) => ({ id: g.id, name: g.name })) }];
 
+  // A pick clears the search, so step 1 goes back to the top five plus the
+  // pick (regionCallOptions keeps it listed) and always shows it checked.
   function chooseRegion(regionId: string) {
     setNotListed(false);
+    setQuery("");
     onRegion(regionId);
   }
 

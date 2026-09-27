@@ -164,6 +164,16 @@ describe("normalizeCall", () => {
     expect(normalizeCall({ pickedArchetypeId: null, pickedRegionId: null, pickedGrapeId: "g" }, POOL)).toEqual(NO_CALL);
     expect(normalizeCall(NO_CALL, POOL)).toEqual(NO_CALL);
   });
+
+  it("drops a grape that is no longer among the loaded grapes (merged away since the draft)", () => {
+    const pick = { pickedArchetypeId: null, pickedRegionId: "region-Bourgogne", pickedGrapeId: "g-gone" };
+    expect(normalizeCall(pick, POOL, ["g-pinot", "g-chardonnay"])).toEqual({
+      pickedArchetypeId: null,
+      pickedRegionId: "region-Bourgogne",
+      pickedGrapeId: null,
+    });
+    expect(normalizeCall({ ...pick, pickedGrapeId: "g-pinot" }, POOL, ["g-pinot"]).pickedGrapeId).toBe("g-pinot");
+  });
 });
 
 describe("callPayload", () => {

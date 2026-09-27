@@ -247,11 +247,12 @@ export function TrainingRoom({
   }
 
   // A draft from before the region step names a typical wine but no region:
-  // normalizeCall gives the wine its region (and drops a pick that left the pool).
+  // normalizeCall gives the wine its region (and drops a pick that left the pool,
+  // or a grape merged away since the draft was saved).
   function continueSession() {
     if (!stored) return;
     setError(null);
-    setSession({ ...stored, ...normalizeCall(stored, candidates) });
+    setSession({ ...stored, ...normalizeCall(stored, candidates, grapes.map((g) => g.id)) });
     enterView("session");
   }
 

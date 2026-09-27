@@ -103,15 +103,24 @@ export function chooseGrape(pick: CallPick, grapeId: string | null): CallPick {
  * region step, or one whose rows left the pool): a typical wine names its own
  * region; a wine no longer in the pool is dropped; a region no wine of the pool
  * is in is dropped with its grape; a grape never stands without a region.
+ * Given the grapes the page loaded, a grape no longer among them (merged away
+ * since the draft was saved) is dropped too, rather than sent for the RPC to
+ * refuse with nothing on screen to undo.
  */
-export function normalizeCall(pick: CallPick, pool: readonly TrainingCandidate[]): CallPick {
+export function normalizeCall(
+  pick: CallPick,
+  pool: readonly TrainingCandidate[],
+  knownGrapeIds?: readonly string[],
+): CallPick {
   const wine = pick.pickedArchetypeId ? pool.find((c) => c.id === pick.pickedArchetypeId) : undefined;
   const regionId = wine ? wine.region.id : pick.pickedRegionId;
   const regionKnown = regionId !== null && pool.some((c) => c.region.id === regionId);
+  const grapeKnown =
+    pick.pickedGrapeId !== null && (knownGrapeIds === undefined || knownGrapeIds.includes(pick.pickedGrapeId));
   return {
     pickedArchetypeId: wine ? wine.id : null,
     pickedRegionId: regionKnown ? regionId : null,
-    pickedGrapeId: regionKnown ? pick.pickedGrapeId : null,
+    pickedGrapeId: regionKnown && grapeKnown ? pick.pickedGrapeId : null,
   };
 }
 
