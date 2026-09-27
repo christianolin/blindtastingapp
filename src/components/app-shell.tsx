@@ -4,6 +4,7 @@ import { AddWineProvider } from "@/components/add-wine-context";
 import { TasteLauncherProvider } from "@/components/taste-launcher-context";
 import { TourProvider } from "@/components/first-run/tour-provider";
 import { isProfileBare, tourSeenFromProfile } from "@/lib/first-run/tour";
+import { AwardsToaster } from "@/components/levels/awards-toaster";
 
 // The authenticated app shell: a persistent left sidebar + the page as the main
 // column. Rendered once at the root so every signed-in page gets the nav and
@@ -59,6 +60,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               {children}
             </div>
           </div>
+          {/* The one award toaster (levels spec §8.1, L28): the root layout
+              is never re-rendered by a soft navigation, so it keeps its
+              queue; AppHeader's AwardsFeed fills it. */}
+          <AwardsToaster userId={user.id} />
         </TourProvider>
       </TasteLauncherProvider>
     </AddWineProvider>
