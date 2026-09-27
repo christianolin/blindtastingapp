@@ -9,6 +9,8 @@ import { ScanButton } from "@/components/scan/scan-button";
 import { ActiveTastingBanner } from "@/components/active-tasting-banner";
 import { readActiveTastings } from "@/lib/active-tasting/read";
 import { EMPTY_SNAPSHOT } from "@/lib/active-tasting/select";
+import { AwardsFeed } from "@/components/levels/awards-feed";
+import { readLevelSnapshot } from "@/lib/levels/read";
 
 // The bordered icon-button look from the redesign's top bar: 1px border on
 // the raised parchment, radius 8, a 19px icon, gold border + white fill on
@@ -75,9 +77,12 @@ export async function AppHeader({
   const name = displayName ?? "";
   // In parallel, so the strip costs no extra latency. A failed read renders
   // the epoch-stamped empty snapshot, which any later poll replaces (D13).
-  const [notifications, active] = await Promise.all([
+  // The level snapshot (levels spec §6.2, L28) rides the same Promise.all:
+  // null on any error, and the feed then publishes nothing.
+  const [notifications, active, levelSnapshot] = await Promise.all([
     getPendingInvites(),
     readActiveTastings(userId),
+    readLevelSnapshot(supabase, userId),
   ]);
   const { data: roleRow } = await supabase
     .from("profiles")
@@ -123,6 +128,9 @@ export async function AppHeader({
       {/* Scrolls with the page, not sticky — the bar stays the only sticky
           strip (D9). */}
       <ActiveTastingBanner initial={active ?? EMPTY_SNAPSHOT} />
+      {/* Draws nothing: hands this render's level snapshot to the tab's
+          store, which AppShell's AwardsToaster and the rings read (L28). */}
+      <AwardsFeed snapshot={levelSnapshot} />
     </>
   );
 }
