@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -33,7 +34,7 @@ import {
   fetchWineMapManifest,
   type WineMapManifest,
 } from "@/lib/wine-map/manifest";
-import type { WinePlaceContext } from "@/lib/wine-map/context";
+import type { WinePlaceContext, WinePlaceGrape } from "@/lib/wine-map/context";
 import type { StyleRow } from "@/lib/wine-map/place-styles";
 import {
   clearWinePlaceCaches,
@@ -80,7 +81,8 @@ import {
   type ChipFocus,
   type DetailReport,
 } from "@/lib/wine-map/focus";
-import { KnowledgeSections } from "./knowledge-sections";
+import { GrapeModal, KnowledgeSections } from "./knowledge-sections";
+import { MAP_FOCUS_RING } from "./focus-ring";
 import { ReferenceCombobox } from "@/components/reference-combobox";
 import {
   grapeVisibleKeys,
@@ -92,6 +94,7 @@ import { ArchetypeModal } from "@/components/wset/archetype-modal";
 import { PHONE_QUERY, useIsPhone } from "@/lib/use-is-phone";
 import { useIsWide } from "@/lib/use-is-wide";
 import { initialSidePanel, sidePanelReducer } from "@/lib/wine-map/side-panel";
+import { detailsTopDue } from "@/lib/wine-map/details-scroll";
 import {
   halfSnapHeightPx,
   initialSheet,
@@ -410,11 +413,21 @@ export function TileWineMapExplorer({
   };
 
   // The Details body scrolls inside its own card (xl and md-xl alike) and
-  // starts at the top for every new place, as the phone sheet's does.
+  // starts at the top for every new place, as the phone sheet's does. A place
+  // picked while the card is collapsed (display:none, nothing to scroll) is
+  // reset when the card is shown again, once per place, so a plain collapse
+  // and reopen of the same place keeps its scroll (lib/wine-map/
+  // details-scroll). A layout effect, so a reopened card never paints one
+  // frame at the offset the browser restored. A remounted card (the slot
+  // move at xl) already starts at the top.
   const detailsScrollRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
+  const detailsShown = isWide ? detailsOpen : side.open;
+  const detailsTopForRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!detailsTopDue(detailsShown, selectedKey, detailsTopForRef.current)) return;
+    detailsTopForRef.current = selectedKey;
     detailsScrollRef.current?.scrollTo({ top: 0 });
-  }, [selectedKey]);
+  }, [selectedKey, detailsShown]);
 
   // Phones (below md; spec 2026-09-25) get one fixed screen: a toolbar row,
   // the map filling the rest, and a bottom sheet holding the hierarchy and the
@@ -509,6 +522,11 @@ export function TileWineMapExplorer({
   const [openArchetype, setOpenArchetype] = useState<ArchetypeListItem | null>(
     null,
   );
+  // The grape whose dialog is open, held here rather than in
+  // KnowledgeSections for the same reason as openArchetype: the Details card
+  // moves between two row slots when the window crosses xl (a browser zoom
+  // step is enough), which remounts everything inside it.
+  const [openGrape, setOpenGrape] = useState<WinePlaceGrape | null>(null);
   useEffect(() => {
     if (!selectedKey) return;
     let cancelled = false;
@@ -851,10 +869,16 @@ export function TileWineMapExplorer({
   // while the tree is out of sight (the phone sheet elsewhere, the xl card or
   // the md-xl column collapsed), so the selected row is revealed again each
   // time it is shown. `rootsCollapsed` is the phone's: countries start
-  // collapsed like a menu.
+  // collapsed like a menu. `clearSearchOnEscape` is the md+ card's: its
+  // search box's Escape clears the query before Full view sees it (M13); the
+  // phone sheet's tree keeps its search box exactly as it was.
   const renderTree = (
     onPick: (key: string) => void,
-    options: { active: boolean; rootsCollapsed?: boolean },
+    options: {
+      active: boolean;
+      rootsCollapsed?: boolean;
+      clearSearchOnEscape?: boolean;
+    },
   ) =>
     treeLoad.state === "failed" ? (
       <div
@@ -884,6 +908,7 @@ export function TileWineMapExplorer({
         onPrefetch={prefetch}
         active={options.active}
         rootsCollapsed={options.rootsCollapsed === true}
+        clearSearchOnEscape={options.clearSearchOnEscape === true}
       />
     );
 
@@ -1009,6 +1034,7 @@ export function TileWineMapExplorer({
       <KnowledgeSections
         context={context}
         onSelect={isPhone ? select : selectDesktop}
+        onOpenGrape={setOpenGrape}
         styleRows={styleRows}
         onPrefetch={prefetch}
       />
@@ -1051,7 +1077,10 @@ export function TileWineMapExplorer({
             type="button"
             aria-label="Collapse details"
             onClick={() => toggleDetails(false)}
-            className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
+            className={cn(
+              "inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8",
+              MAP_FOCUS_RING,
+            )}
           >
             <PanelRightClose className="size-4" />
           </button>
@@ -1102,7 +1131,9 @@ export function TileWineMapExplorer({
           "flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 md:grid md:gap-x-4 md:gap-y-2 md:grid-rows-[auto_minmax(0,1fr)] xl:flex xl:flex-row xl:items-stretch map-lock:min-h-0 map-lock:flex-1 map-scroll:h-[26.25rem]",
           side.open
             ? "md:grid-cols-[18rem_minmax(0,1fr)]"
-            : "md:grid-cols-[2.25rem_minmax(0,1fr)]",
+            : // Collapsed: the Show panel strip's column, 44 px wide on a
+              // coarse pointer (an iPad) so the strip is a real target.
+              "md:grid-cols-[2.25rem_minmax(0,1fr)] md:pointer-coarse:grid-cols-[2.75rem_minmax(0,1fr)]",
         )}
       >
         {/* Slot 1 (md-xl): the side column's head. Open: the Explore |
@@ -1134,11 +1165,17 @@ export function TileWineMapExplorer({
                         aria-controls={option.controls}
                         onClick={() => dispatchSide({ type: "tab", tab: option.tab })}
                         className={cn(
-                          "min-h-11 rounded px-2 py-1 outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid md:pointer-fine:min-h-0",
+                          "min-h-11 rounded px-2 py-1 transition-colors md:pointer-fine:min-h-0",
+                          MAP_FOCUS_RING,
                           // Shape as well as colour, like the Map detail
                           // radios: bordeaux on the dark card is only 1.3:1.
+                          // Windows high contrast (forced colours) drops
+                          // both the fill and the ring (a box-shadow), so
+                          // the pressed one is also underlined there: an
+                          // underline, not an outline, so it can never be
+                          // mistaken for the focus ring.
                           pressed
-                            ? "bg-primary font-semibold text-primary-foreground ring-2 ring-inset ring-foreground"
+                            ? "bg-primary font-semibold text-primary-foreground ring-2 ring-inset ring-foreground forced-colors:underline forced-colors:decoration-2 forced-colors:underline-offset-4"
                             : "font-medium text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -1152,18 +1189,28 @@ export function TileWineMapExplorer({
                   type="button"
                   aria-label="Hide panel"
                   onClick={toggleSide}
-                  className="ml-auto inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
+                  className={cn(
+                    "ml-auto inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8",
+                    MAP_FOCUS_RING,
+                  )}
                 >
                   <PanelLeftClose className="size-4" />
                 </button>
               </>
             ) : (
+              // Its accessible name carries the place it shows, the only
+              // visible text on it, so a speech-input user who says that
+              // name finds it (WCAG 2.5.3). 44 px wide on a coarse pointer,
+              // as its grid column is.
               <button
                 ref={showPanelRef}
                 type="button"
-                aria-label="Show panel"
+                aria-label={selectedKey ? `Show panel, ${sheetTitle}` : "Show panel"}
                 onClick={toggleSide}
-                className="flex h-full w-9 flex-col items-center gap-2 rounded-lg border border-border py-2 text-muted-foreground hover:text-foreground"
+                className={cn(
+                  "flex h-full w-9 flex-col items-center gap-2 rounded-lg border border-border py-2 text-muted-foreground hover:text-foreground pointer-coarse:w-11",
+                  MAP_FOCUS_RING,
+                )}
               >
                 <PanelLeftOpen className="size-4 shrink-0" />
                 {selectedKey ? (
@@ -1207,7 +1254,10 @@ export function TileWineMapExplorer({
                   type="button"
                   aria-label="Collapse hierarchy"
                   onClick={() => toggleTree(false)}
-                  className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8"
+                  className={cn(
+                    "inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:pointer-fine:size-8",
+                    MAP_FOCUS_RING,
+                  )}
                 >
                   <PanelLeftClose className="size-4" />
                 </button>
@@ -1217,20 +1267,25 @@ export function TileWineMapExplorer({
               <div className="min-h-0 flex-1">
                 {renderTree(selectFromDesktopTree, {
                   active: isWide ? treeOpen : side.open,
+                  clearSearchOnEscape: true,
                 })}
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Slot 3 (xl): the collapsed tree's full-height 36 px strip. */}
+        {/* Slot 3 (xl): the collapsed tree's full-height 36 px strip (44 px
+            on a coarse pointer). */}
         {isPhone || treeOpen ? null : (
           <button
             ref={showTreeRef}
             type="button"
             aria-label="Show hierarchy"
             onClick={() => toggleTree(true)}
-            className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center"
+            className={cn(
+              "order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center xl:pointer-coarse:w-11",
+              MAP_FOCUS_RING,
+            )}
           >
             <PanelLeftOpen className="size-4" />
           </button>
@@ -1400,15 +1455,20 @@ export function TileWineMapExplorer({
         {/* Slot 6 (xl): the Details card, after the map. */}
         {isWide ? detailsCard : null}
 
-        {/* Slot 7 (xl): the collapsed Details card's full-height 36 px strip,
-            naming the selected place so the selection stays in sight. */}
+        {/* Slot 7 (xl): the collapsed Details card's full-height 36 px strip
+            (44 px on a coarse pointer), naming the selected place so the
+            selection stays in sight. That name is its only visible text, so
+            it is in the accessible name too (WCAG 2.5.3). */}
         {isPhone || detailsOpen ? null : (
           <button
             ref={showDetailsRef}
             type="button"
-            aria-label="Show details"
+            aria-label={selectedKey ? `Show details, ${sheetTitle}` : "Show details"}
             onClick={() => toggleDetails(true)}
-            className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:flex-col xl:items-center xl:gap-2"
+            className={cn(
+              "order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:flex-col xl:items-center xl:gap-2 xl:pointer-coarse:w-11",
+              MAP_FOCUS_RING,
+            )}
           >
             <PanelRightOpen className="size-4 shrink-0" />
             {selectedKey ? (
@@ -1455,6 +1515,9 @@ export function TileWineMapExplorer({
           name={openArchetype.name}
           onClose={() => setOpenArchetype(null)}
         />
+      ) : null}
+      {openGrape ? (
+        <GrapeModal grape={openGrape} onClose={() => setOpenGrape(null)} />
       ) : null}
     </div>
   );

@@ -124,8 +124,12 @@ type GrapeProfile = {
 };
 
 // Clicking a grape never navigates away: global profile (Grape Library
-// data) + the local block for the selected place, in a dialog.
-function GrapeModal({
+// data) + the local block for the selected place, in a dialog. The explorer
+// renders it, at its root beside ArchetypeModal, and owns which grape is open:
+// the Details card moves between two row slots when the window crosses xl
+// (spec 2026-09-27 M14), which remounts KnowledgeSections, and state kept in
+// here would close an open dialog on a zoom step.
+export function GrapeModal({
   grape,
   onClose,
 }: {
@@ -246,11 +250,15 @@ function GrapeModal({
 export function KnowledgeSections({
   context,
   onSelect,
+  onOpenGrape,
   styleRows,
   onPrefetch,
 }: {
   context: WinePlaceContext;
   onSelect: (key: string) => void;
+  /** Opens a grape's dialog. The explorer holds the open grape (see
+      GrapeModal), so the dialog survives this subtree being remounted. */
+  onOpenGrape: (grape: WinePlaceGrape) => void;
   /** A place's styles WITH their colour dimension, which the context RPC does
       not carry (its style_list is {style, note} only) — so it stays its own
       request. The explorer owns it now and fires it in parallel with the
@@ -261,7 +269,6 @@ export function KnowledgeSections({
       and on a touch device the rule refuses every call anyway. */
   onPrefetch?: PlacePrefetchHandlers;
 }) {
-  const [openGrape, setOpenGrape] = useState<WinePlaceGrape | null>(null);
   const {
     grapes,
     designations,
@@ -321,7 +328,7 @@ export function KnowledgeSections({
               <button
                 key={g.id}
                 type="button"
-                onClick={() => setOpenGrape(g)}
+                onClick={() => onOpenGrape(g)}
                 className="w-full rounded-lg border border-border/70 px-2.5 py-2 text-left transition-colors hover:bg-muted/60"
               >
                 <span className="flex items-center gap-2">
@@ -446,9 +453,6 @@ export function KnowledgeSections({
             ))}
           </div>
         </div>
-      ) : null}
-      {openGrape ? (
-        <GrapeModal grape={openGrape} onClose={() => setOpenGrape(null)} />
       ) : null}
     </>
   );

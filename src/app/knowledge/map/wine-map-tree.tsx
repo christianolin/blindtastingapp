@@ -24,6 +24,7 @@ export function WineMapTree({
   onPrefetch,
   active = true,
   rootsCollapsed = false,
+  clearSearchOnEscape = false,
 }: {
   roots: WinePlaceTreeNode[];
   selectedKey: string | null;
@@ -48,6 +49,14 @@ export function WineMapTree({
       countries (spec 2026-09-25 D4). Defaults to false: on desktop countries
       open one level, as before. */
   rootsCollapsed?: boolean;
+  /** md+ only (the explorer's card passes it): Escape with a query clears
+      the query in React state and marks the event handled, so the map's
+      Full view, which ignores a handled Escape, stays open (spec 2026-09-27
+      M13). Defaults to false, which leaves the search box with no Escape
+      handler, exactly as on phones before: there the bottom sheet's own
+      Escape closes the sheet, and by cancelling the keydown it also stops
+      the browser's native clear, so the query survives. */
+  clearSearchOnEscape?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -284,20 +293,24 @@ export function WineMapTree({
           <Search className="size-3.5 shrink-0 text-muted-foreground" />
           {/* 16 px below md: iOS zooms the whole page into a smaller focused
               field, which would undo the phone map's fixed screen. */}
-          {/* Escape with a query clears it here, in React state, and marks the
-              event handled, so the map's Full view (which ignores a handled
-              Escape) stays open; with the box empty Escape passes through
-              and exits Full view. The phone sheet's own Escape still closes
-              it: it does not read defaultPrevented. */}
+          {/* md+ (clearSearchOnEscape): Escape with a query clears it here,
+              in React state, and marks the event handled, so the map's Full
+              view (which ignores a handled Escape) stays open; with the box
+              empty Escape passes through and exits Full view. Phones get no
+              handler at all, so their search behaves exactly as before. */}
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key !== "Escape" || query === "") return;
-              event.preventDefault();
-              setQuery("");
-            }}
+            onKeyDown={
+              clearSearchOnEscape
+                ? (event) => {
+                    if (event.key !== "Escape" || query === "") return;
+                    event.preventDefault();
+                    setQuery("");
+                  }
+                : undefined
+            }
             placeholder="Search regions, appellations…"
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground max-md:text-base"
           />

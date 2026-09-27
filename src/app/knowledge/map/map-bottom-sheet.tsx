@@ -31,6 +31,8 @@ import {
   type SheetState,
   type SheetTab,
 } from "@/lib/wine-map/sheet-state";
+// The map's one focus ring (the same string the radios use).
+import { MAP_FOCUS_RING as FOCUS_RING } from "./focus-ring";
 
 const TABS: readonly { value: SheetTab; label: string }[] = [
   { value: "explore", label: "Explore" },
@@ -42,10 +44,6 @@ const SNAP_HEIGHT: Record<SheetState["snap"], string> = {
   half: "h-[50dvh]",
   full: "h-full",
 };
-
-// The focus ring the map's radios use (map-detail-controls.tsx).
-const FOCUS_RING =
-  "outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 export function MapBottomSheet({
   sheet,

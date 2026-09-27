@@ -92,7 +92,7 @@ The two ranges never overlap, and no property is set by both a `map-lock:` and a
       - **Explorer root**:
         - not expanded: `flex flex-col gap-4 max-md:relative max-md:min-h-0 max-md:flex-1 max-md:gap-0 max-md:overflow-hidden map-lock:min-h-0 map-lock:flex-1`
         - expanded (unchanged): `fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background p-4`
-        - **Row** (one string for both modes): `flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 md:grid md:gap-x-4 md:gap-y-2 md:grid-rows-[auto_minmax(0,1fr)] xl:flex xl:flex-row xl:items-stretch map-lock:min-h-0 map-lock:flex-1 map-scroll:h-[26.25rem]`, plus `sideOpen ? "md:grid-cols-[18rem_minmax(0,1fr)]" : "md:grid-cols-[2.25rem_minmax(0,1fr)]"`.
+        - **Row** (one string for both modes): `flex flex-col gap-4 max-md:min-h-0 max-md:flex-1 max-md:gap-0 md:grid md:gap-x-4 md:gap-y-2 md:grid-rows-[auto_minmax(0,1fr)] xl:flex xl:flex-row xl:items-stretch map-lock:min-h-0 map-lock:flex-1 map-scroll:h-[26.25rem]`, plus `sideOpen ? "md:grid-cols-[18rem_minmax(0,1fr)]" : "md:grid-cols-[2.25rem_minmax(0,1fr)] md:pointer-coarse:grid-cols-[2.75rem_minmax(0,1fr)]"`.
           - Slot 1: side tab strip (md–xl)
           - Slot 2: tree card
           - Slot 3: tree strip (xl)
@@ -155,7 +155,8 @@ Visual or DOM differences on phones:
 
 - The ListFilter glyph is now rendered unconditionally, so the phone's server paint shows it one paint earlier; the final state is identical.
 - The sr-only subtitle carries `max-md:hidden`, so phones expose exactly what they do today.
-- The tree search's Escape now clears the query in React state instead of natively. The sheet still closes as before, because its handler does not read `defaultPrevented`.
+- The tree search's Escape is unchanged on phones. Only the md+ card passes `clearSearchOnEscape` to `WineMapTree`, so the phone sheet's tree has no Escape handler, as at a23cd16: the sheet's own handler closes the sheet, and its `preventDefault()` also cancels the browser's native clear of the `type=search` field (Chrome and Safari clear it only in the keydown's default action), so the query survives and reopening Explore shows the filtered list. (Review round: the first build gave every tree the handler, which wiped the query on a phone with a hardware keyboard.)
+- The grape dialog's state moved from KnowledgeSections to the explorer (§14). It is portaled either way, and the sheet's Escape already ignores events from outside its own element, so a phone sees no difference.
 
 ### 5.2 xl (1280 px and up, 240 px sidebar): three columns
 
@@ -168,14 +169,16 @@ Visual or DOM differences on phones:
 - Also on the Card: `role="region" aria-label="Explorer"` and an `id`.
 - CardContent: `flex min-h-0 flex-1 flex-col` (replaces `pt-4 h-[70vh] min-h-[420px]` and its expanded variant).
 - Header row "Explorer" plus the collapse button: `mb-2 flex items-center justify-between max-xl:hidden`.
-- The collapse button becomes a real target: `inline-flex size-11 items-center justify-center rounded-md md:pointer-fine:size-8`.
-- Body: `min-h-0 flex-1`, then `renderTree(selectFromDesktopTree, { active: isWide ? treeOpen : side.open })`.
+- The collapse button becomes a real target: `inline-flex size-11 items-center justify-center rounded-md md:pointer-fine:size-8`, plus the map's focus ring (below).
+- Body: `min-h-0 flex-1`, then `renderTree(selectFromDesktopTree, { active: isWide ? treeOpen : side.open, clearSearchOnEscape: true })`.
 - The tree's own `<ul>` is the scroller. The search box and level buttons stay pinned.
 
 **Tree strip (slot 3).**
 
-- `isPhone || treeOpen ? null : <button aria-label="Show hierarchy" className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center">`
-- There is no sticky. With `xl:items-stretch` it becomes a full-height 36 px strip.
+- `isPhone || treeOpen ? null : <button aria-label="Show hierarchy" className="order-3 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-1 xl:flex xl:w-9 xl:items-start xl:justify-center xl:pointer-coarse:w-11" + MAP_FOCUS_RING>`
+- There is no sticky. With `xl:items-stretch` it becomes a full-height 36 px strip (44 px on a coarse pointer, an iPad Pro at 1366).
+
+**The focus ring.** Every md+ panel control (the Explore | Details switch, Hide panel, Show panel, both Collapse buttons and both xl strips) carries `MAP_FOCUS_RING` (`src/app/knowledge/map/focus-ring.ts`): `outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`, the string the phone sheet (which now imports it) and the Map detail radios use. Without it a control falls back to the UA outline, which the base layer's `outline-ring/50` turns into a ring of about 1.4:1 on the light background. Each of these controls has at least 16 px of room before a clipping box, so the 2 px outline at a 2 px offset is never cut.
 
 **Centre, the map column (slot 5).** Flex-1, as in §4.3.
 
@@ -188,7 +191,9 @@ Visual or DOM differences on phones:
 - CardContent: `flex min-h-0 flex-1 flex-col gap-3`.
 - The header row "Details" plus its collapse button stays as it is (`hidden items-center justify-between xl:flex`) and stays pinned. The collapse button is enlarged the same way as the tree's.
 - Body: `<div ref={detailsScrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">{detailsBody}</div>`
-  - with `useEffect(() => { detailsScrollRef.current?.scrollTo({ top: 0 }); }, [selectedKey])`
+  - reset with `const detailsShown = isWide ? detailsOpen : side.open;` and a layout effect on `[selectedKey, detailsShown]` that, when `detailsTopDue(detailsShown, selectedKey, detailsTopForRef.current)` (`src/lib/wine-map/details-scroll.ts`), records the key in `detailsTopForRef` and calls `scrollTo({ top: 0 })`.
+  - Why not `[selectedKey]` alone (the first build): a collapsed card is `display:none`, so it has no layout box and `scrollTo` does nothing; when the box comes back, Chrome and Safari restore the offset it had. A place picked on the map while the card was collapsed then opened at the previous place's scroll. The reset now waits until the card is shown and runs once per place, so a plain collapse and reopen of the same place keeps its scroll. It is a layout effect so the reopened card never paints a frame at the restored offset. A remounted card (the xl slot move) already starts at 0.
+  - The grape dialog's open grape lives in the explorer (`openGrape`, rendered as `<GrapeModal>` beside ArchetypeModal at the explorer root; KnowledgeSections takes `onOpenGrape`), so the slot move at xl never closes an open dialog.
 - Deleted:
   - every `max-xl:fixed … inset-x-0 bottom-0 z-40 … shadow-[…]` class
   - the `sheetOpen` classes
@@ -197,8 +202,9 @@ Visual or DOM differences on phones:
 
 **Details strip (slot 7).**
 
-- `isPhone || detailsOpen ? null : <button aria-label="Show details" className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:flex-col xl:items-center xl:gap-2">`
+- `` isPhone || detailsOpen ? null : <button aria-label={selectedKey ? `Show details, ${sheetTitle}` : "Show details"} className="order-2 hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground xl:order-3 xl:flex xl:w-9 xl:flex-col xl:items-center xl:gap-2 xl:pointer-coarse:w-11" + MAP_FOCUS_RING> ``
 - Inside: PanelRightOpen, then, while a place is selected, `<span aria-hidden className="min-h-0 flex-1 truncate text-xs [writing-mode:vertical-rl]">{sheetTitle}</span>`.
+- The place name is the strip's only visible text, so it is part of the accessible name (WCAG 2.5.3 Label in Name): a speech-input user who says "click Pauillac" finds the strip, and a screen reader hears which place is selected. The span stays `aria-hidden`, since the name already carries it.
 
 **Focus hand-offs.** Collapse moves focus to the strip, and the strip moves it back to the collapse button. Use refs plus a pending-focus ref consumed after commit, so the initial mount never steals focus.
 
@@ -206,7 +212,7 @@ Visual or DOM differences on phones:
 
 The row is a grid:
 
-- side column: 18rem, or 2.25rem when collapsed
+- side column: 18rem, or 2.25rem when collapsed (2.75rem on a coarse pointer: `md:pointer-coarse:grid-cols-[2.75rem_minmax(0,1fr)]` beside the 2.25rem class in the collapsed branch)
 - map column: `minmax(0,1fr)`
 - rows: `auto` (the tab strip) and `minmax(0,1fr)`
 - `gap-x-4`, `gap-y-2`
@@ -218,12 +224,14 @@ The row is a grid:
 - **When open:**
   - A segmented pair of `aria-pressed` buttons, **Explore** and **Details** (the phone sheet's words).
   - Each button has `aria-controls` pointing at the tree card's or the Details card's id.
-  - They are styled like MapDetailControls' radios: `min-h-11 rounded px-2 py-1 md:pointer-fine:min-h-0`.
+  - They are styled like MapDetailControls' radios: `min-h-11 rounded px-2 py-1 transition-colors md:pointer-fine:min-h-0` plus `MAP_FOCUS_RING` (§5.2).
   - The pressed state is `bg-primary font-semibold text-primary-foreground ring-2 ring-inset ring-foreground`, so dark mode is marked by shape, not just bordeaux (1.3:1).
-  - Next to the pair, an `ml-auto` icon button, PanelLeftClose, `aria-label="Hide panel"`, `inline-flex size-11 items-center justify-center rounded-md md:pointer-fine:size-8`.
+  - In Windows forced colours (high contrast) the fill is replaced and the ring, a box-shadow, is dropped, which left only semibold against medium at 12 px. The pressed branch therefore also carries `forced-colors:underline forced-colors:decoration-2 forced-colors:underline-offset-4`: an underline in the forced text colour, chosen over an inset outline so it can never be read as the focus ring. MapDetailControls' radios and the phone sheet's tabs have the same weakness (pre-existing); they are a follow-up.
+  - Next to the pair, an `ml-auto` icon button, PanelLeftClose, `aria-label="Hide panel"`, `inline-flex size-11 items-center justify-center rounded-md md:pointer-fine:size-8` plus `MAP_FOCUS_RING`.
 - **When collapsed:**
-  - One full-height strip button, `aria-label="Show panel"`, `flex h-full w-9 flex-col items-center gap-2 rounded-lg border border-border py-2 text-muted-foreground hover:text-foreground`.
-  - It holds PanelLeftOpen and, while a place is selected, the vertical `sheetTitle` as in slot 7.
+  - One full-height strip button, `` aria-label={selectedKey ? `Show panel, ${sheetTitle}` : "Show panel"} ``, `flex h-full w-9 flex-col items-center gap-2 rounded-lg border border-border py-2 text-muted-foreground hover:text-foreground pointer-coarse:w-11` plus `MAP_FOCUS_RING`.
+  - It is 44 px wide on a coarse pointer (iPads at 768–1279), with its grid column, so it is a real target like every other new control; a fine pointer keeps 36 px.
+  - It holds PanelLeftOpen and, while a place is selected, the vertical `sheetTitle` as in slot 7, which the accessible name carries too (WCAG 2.5.3, as slot 7).
 
 **Row 2, column 1: the tree card (slot 2) and the Details card (slot 4, `!isPhone && !isWide`) in the same cell.**
 
@@ -274,7 +282,9 @@ A map tap with the column collapsed does not reopen it (M10). The tab still beco
 - The same structure applies.
 - The row is a fixed `h-[26.25rem]` (420 px), so every panel still has a definite height and scrolls inside.
 - The page root and `<main>` are not `overflow-hidden`, so the column scrolls by the difference and the sticky header works.
-- At 932x430 the page is 509 px tall (79 px of scroll) and the canvas is about 834x298. Collapsing the side column widens it.
+- At 932x430 the page is 509 px tall (79 px of scroll). The md–xl side column starts open, so the map column is 932 − 60 (rail) − 32 (`md:p-4`) − 288 (side column) − 16 (`md:gap-x-4`) = 536 px and the canvas is about **534x298** (420 − 120 − 2). With the side column collapsed it is 932 − 60 − 32 − 36 − 16 = 788, a canvas of about **786x298** on a fine pointer; a phone's coarse pointer widens the strip column to 44 px (§5.3), so about 778x298 there.
+- At 844x390 (a common iPhone landscape) the page is also 509 px tall (119 px of scroll). The map column is 448 px, so the canvas is about **446x298**, right at the status-wrap edge (about 426 ± 25, §4.3); if the status wraps, the canvas is 262 tall. Collapsed: about 698x298 on a fine pointer, 690x298 on the phone's coarse one.
+- (Review round: the first draft said about 834x298 at 932x430, leaving the open side column out.) If the owner finds the landscape map too narrow, the lever is a `map-scroll`-only default of a collapsed side column. It must not auto-open on selection (M10) and must not be persisted (M16).
 
 ## 6. Predicted map rects
 
@@ -319,7 +329,11 @@ At 1366, collapsing panels:
 |---|---|
 | Details | 784 |
 | tree | 736 |
-| both | 1036 |
+| both | 988 |
+
+(Both collapsed: the tree strip is at 256–292 and the Details strip at 1314–1350, so the map column runs 308–1298, 990 px, a 988 px canvas. The first draft said 1036.)
+
+On a coarse pointer (an iPad Pro at 1366, an iPad at 768–1279) a collapsed strip and its md–xl grid column are 44 px, not 36, so every collapsed-panel width in this section is 8 px narrower per collapsed strip (for example 1024x768 side collapsed: 137, 194, 870, 557; 1366 both collapsed: 972). The default layouts above collapse nothing, so they do not change.
 
 Extra checks, all with 0 px below the fold:
 
@@ -361,7 +375,8 @@ The legend, when open, is capped at 40% of the canvas: at most 223 px at 1366x76
 | md–xl tree | stacked below the map, 70vh | Explore tab of the side column |
 | md–xl Details | fixed full-width bar over the rail | Details tab of the side column; bar retired |
 | `h-20` spacer | md–xl | deleted |
-| ArchetypeModal / GrapeModal | portaled | unchanged |
+| ArchetypeModal / GrapeModal | portaled | still portaled; GrapeModal's open grape moves from KnowledgeSections to the explorer root, beside ArchetypeModal's, so the xl slot move (§14) never closes it |
+| Panel controls' focus ring | none (UA outline at 50% ring alpha) | `MAP_FOCUS_RING` on every md+ panel control (§5.2) |
 | Global search results, bell dropdown | in the header | unchanged; they must still open unclipped over the locked page (checklist) |
 
 ## 8. Copy changes (verbatim)
@@ -372,7 +387,7 @@ Any new or changed wording is **provisional until the owner approves it**.
 - **Now screen-reader only at md+, same words:** "Explore the world of wine through places, grapes, styles and the rules that shape them."
 - **Now screen-reader only at md+, same word:** "Filter".
 - **New visible labels at md–xl, reusing the phone sheet's tab words:** "Explore", "Details".
-- **New accessible names (provisional):** "Hide panel", "Show panel".
+- **New accessible names (provisional):** "Hide panel", "Show panel". While a place is selected the collapsed strips' names carry it, since the vertical place name is their only visible text (WCAG 2.5.3): "Show panel, {place}" and "Show details, {place}" ({place} is `sheetTitle`, the same text the strip shows). With nothing selected they are "Show panel" and "Show details".
 - **Retired with the md–xl bar:** its "Details" eyebrow and the line "Click on areas to learn more".
 - **Unchanged:** every `detail-status.ts` sentence, "Show hierarchy", "Collapse hierarchy", "Show details", "Collapse details", "Full view", "Exit full view", "Legend", "Grape — only places using it", "Pick a region on the map or in the hierarchy to explore it.", "Explorer", "Details".
 
@@ -409,7 +424,7 @@ Any new or changed wording is **provisional until the owner approves it**.
    - `initialViewState`, the camera paths, `mapStyle` and `swapBasemap` are untouched
 10. **`src/app/knowledge/map/map-detail-controls.tsx`**: `md:line-clamp-2` on the `role="status"` `<p>`.
 11. **`src/app/knowledge/map/wine-map-tree.tsx`**:
-    - The search input's `onKeyDown`: on Escape with a non-empty query, `preventDefault()` and `setQuery("")`.
+    - A `clearSearchOnEscape` prop (default false). Only when it is true (the md+ card's `renderTree` call), the search input's `onKeyDown`: on Escape with a non-empty query, `preventDefault()` and `setQuery("")`. Phones keep no handler (§5.1).
     - The selected-row reveal returns early when `row.getClientRects().length === 0`, and scrolls only the tree's own `<ul>` (a list ref), never an ancestor.
 12. **`CLAUDE.md`**:
     - New "Wine map on the desktop" bullet covering:
@@ -425,6 +440,10 @@ Any new or changed wording is **provisional until the owner approves it**.
     - Amend the AppHeader/title notes (the `heading` prop).
     - Amend the performance bullet's measured sizes after re-measuring.
 13. **`docs/superpowers/specs/2026-09-27-desktop-map-layout-design.md`**: this document, with the owner's rulings recorded.
+14. Review round (2026-09-27):
+    - **`src/app/knowledge/map/focus-ring.ts`** (new): `MAP_FOCUS_RING`, imported by the explorer and `map-bottom-sheet.tsx` (whose local copy it replaces, same string).
+    - **`src/lib/wine-map/details-scroll.ts`** (new): the pure `detailsTopDue(shown, selectedKey, resetFor)` behind the Details reset (§5.2).
+    - **`src/app/knowledge/map/knowledge-sections.tsx`**: `GrapeModal` exported; its open grape moves to the explorer (`onOpenGrape`).
 
 ## 10. Tests
 
@@ -448,7 +467,12 @@ vitest runs in node only; there are no DOM, visual or e2e tests.
   - `globals.css` defines `map-lock` and `map-scroll` with the exact media strings
   - `page.tsx` and the explorer contain no `h-[70vh]`, `min-h-[420px]`, `calc(100dvh`, `xl:sticky` or `md:p-8`
   - `page.tsx` renders `<main data-map-page`
-  - **phone pin:** the set of `max-md:` tokens in `page.tsx`, the explorer, `tile-wine-map.tsx`, `map-bottom-sheet.tsx`, `map-options-sheet.tsx` and `wine-map-tree.tsx` equals a frozen list taken at a23cd16. Any future phone change then has to update the list on purpose.
+  - **phone pin**, over `page.tsx`, the explorer, `tile-wine-map.tsx`, `map-bottom-sheet.tsx`, `map-options-sheet.tsx`, `wine-map-tree.tsx` and `map-detail-controls.tsx` (drawn on phones inside Map options). Any future phone change then has to update it on purpose.
+    - Per file, in source order, every class string that carries a `max-md:` utility, reduced to its `max-md:` utilities in order, equals a frozen list. Against a23cd16 every string then present keeps its `max-md:` utilities verbatim; only `max-md:hidden` strings of new and retired md+ elements differ. So a dropped utility, a utility moved to another element, or an md+ element losing its `max-md:hidden` fails, while `md:`/`map-lock:` utilities appended beside them do not.
+    - The exact class strings of the phone's height chain (page root, `<main>`, explorer root, row, map Card, CardContent, filter row, map wrapper, loading placeholder), the two phone-only sheets' outer strings and the Map detail radios' mobile-first string (`min-h-11 … md:min-h-0`), which a `max-md:` scan cannot see.
+    - (Review round: the first pin compared one de-duplicated set of tokens across all six files, so it missed a deleted or moved occurrence of any token that also appeared elsewhere, such as the map wrapper's `max-md:min-h-0 max-md:flex-1`.)
+  - review round: the md+-only tree Escape (`clearSearchOnEscape`), the Details reset wiring, the lifted grape dialog, `MAP_FOCUS_RING` on the six panel controls, the 44 px coarse-pointer strips, the strips' accessible names and the switch's forced-colours underline.
+- **`src/lib/wine-map/details-scroll.test.ts`**: `detailsTopDue` waits while the card is collapsed, resets on reopening for a place picked while collapsed, keeps the scroll for a plain collapse and reopen of the same place, and has nothing to do before any selection.
 
 **Unchanged, and they must stay green:**
 
@@ -473,7 +497,7 @@ Also run `tsc --noEmit`, lint and `next build`.
 
 **On each size:**
 
-1. **Fit.** The content column satisfies `scrollHeight === clientHeight`, except `map-scroll` at 932x430. The `.maplibregl-canvas` rect is within ±2 px of §6, and nothing is below the fold. There is no Windows scrollbar.
+1. **Fit.** The content column satisfies `scrollHeight === clientHeight`, except `map-scroll` at 932x430. The `.maplibregl-canvas` rect is within ±2 px of §6 (§5.5 for 932x430), and nothing is below the fold. There is no Windows scrollbar.
 2. **Active-tasting strip.** Repeat with an injected 80 px strip: the canvas is 80 px shorter and still fully visible.
 3. **Light and dark.**
    - The toolbar now sits on `bg-background`; the combobox, radios and chips stay legible.
@@ -485,9 +509,12 @@ Also run `tsc --noEmit`, lint and `next build`.
    - Escape in the tree search with text clears only the search; with it empty, it exits.
    - Escape inside ArchetypeModal or GrapeModal closes only the modal.
    - Resize below lg while expanded: the exit button is still shown.
+   - Phones (375 wide, a hardware keyboard or desktop emulation): type in Explore's search, press Escape. The sheet closes and, on reopening Explore, the query and its filtered list are still there, as at a23cd16.
 5. **Long details.** Select France, then a Burgundy grand cru.
    - The Details body scrolls inside its card and the page never moves.
    - A Nearby chip swaps the place and resets the scroll to the top.
+   - xl: select France, scroll Details down about 600 px, Collapse details, tap a Burgundy grand cru on the map, Show details: the grand cru opens at its heading. The same at md–xl with Hide panel and Show panel. Collapsing and reopening without a new selection keeps the scroll.
+   - Open a grape's dialog, then zoom the browser across 1280 CSS px (Ctrl+ at 1366, or Ctrl− back): the dialog stays open.
 6. **Tree scroll.**
    - A map tap on a deep climat reveals its row inside the tree's list, and the page never scrolls.
    - Collapse the tree (xl) or the side column (md–xl), select on the map, reopen: the row is revealed.
@@ -498,6 +525,10 @@ Also run `tsc --noEmit`, lint and `next build`.
    - A tree pick at md–xl moves focus to the Details button.
    - Chips keep their roving tabindex.
    - There is exactly one `role="status"` region.
+   - Every panel control (switch, Hide/Show panel, Collapse hierarchy/details, both xl strips) shows the solid 2 px focus ring in light and dark.
+   - A collapsed strip's accessible name includes the selected place ("Show panel, Pauillac").
+   - Windows high contrast: the pressed Explore/Details button is underlined.
+   - On an iPad (coarse pointer) the collapsed strips are 44 px wide.
 8. **Deep link.** Load `?place=<key>` at xl and at 1024: Details opens (the tab at md–xl) and the camera fit is correct.
 9. **No remount.**
    - Tag the MapLibre instance (`window.__wineMap`).
@@ -544,11 +575,11 @@ Also run `tsc --noEmit`, lint and `next build`.
   - The 240 px tree at 1280–1535 truncates deep climat names sooner (titles keep the full name).
   - At 1024 the default map (626 px) is narrower than today's 851 px, but all of it is visible.
   - At 768 portrait the map column is 372 px.
-- **The Details slot move at xl.** It remounts the Details subtree once after hydration at md–xl and on every resize across 1280, so its scroll and local state reset there. MapLibre is unaffected.
-- **Landscape phones (≥ 48rem wide).** They move from today's scrolling tablet layout to the new md layout in `map-scroll` mode (79 px of scroll, a canvas about 298 px tall). Verify on the owner's iPhone.
-- **iPads at md+.** Tree rows and the toolbar stay small on a coarse pointer (pre-existing). Only the new controls get 44 px.
+- **The Details slot move at xl.** It remounts the Details subtree once after hydration at md–xl and on every resize across 1280 (a browser zoom step is enough: 110% on a 1366 laptop, 150% in the owner's window), so its scroll resets there. MapLibre is unaffected. Nothing in that subtree holds state worth keeping any more: the grape dialog's open grape lives in the explorer (review round), so an open GrapeModal stays open. Its return-focus target, the grape button, is remounted with the subtree, so closing the dialog after such a move may leave focus on `body`.
+- **Landscape phones (≥ 48rem wide).** They move from today's scrolling tablet layout to the new md layout in `map-scroll` mode (79 px of scroll at 932x430, 119 at 844x390, a canvas about 298 px tall and, with the side column open, about 534 or 446 px wide; §5.5). Verify on the owner's iPhone.
+- **iPads at md+.** Tree rows and the toolbar stay small on a coarse pointer (pre-existing). Only the new controls get 44 px, the collapsed strips included (review round).
 - **Sticky header.** It is moot under the lock. The page root's `overflow-hidden` (as on phones) must not clip the header's own dropdowns (checklist item 11).
 - **Dark mode.** The toolbar moves from `bg-card` to `bg-background` at md+; contrast is checked in item 3. No new canvas overlay and no backdrop-blur. `mapStyle` stays frozen.
 - **Full view.** Still no focus containment (pre-existing).
-- **Owner rulings.** The heading and subtitle (M3), the card chrome (M5), the panel widths (M7), the md–xl side column (M9), the legend default (M12) and the new accessible names are owner decisions. Anything the owner rejects falls back as §3 describes.
+- **Owner rulings.** The heading and subtitle (M3), the card chrome (M5), the panel widths (M7), the md–xl side column (M9), the legend default (M12) and the new accessible names are owner decisions. Until the owner has reviewed them live they are controller rulings, marked provisional in CLAUDE.md as well; anything the owner rejects falls back as §3 describes, and the owner's actual rulings replace that marker in both documents.
 - **No DOM safety net.** Layout regressions show up only in the browser pass and the source pin test.
