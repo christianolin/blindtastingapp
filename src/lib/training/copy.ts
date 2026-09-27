@@ -1,6 +1,7 @@
 // Every string the training room shows (spec 2026-09-25-training-room-design.md
 // §9, English only — D20), and the pure helpers that fill its templates. Pure:
 // relative imports only, no React, no DB, no browser globals, so vitest loads it.
+import { foldName } from "../wine-identity/fold";
 import type { WineColour, WineStyle } from "../wset/types";
 import { LABELS } from "../wset/vocab";
 import type {
@@ -8,6 +9,7 @@ import type {
   CapReason,
   PointCategory,
   RankedCandidate,
+  RegionGroup,
   TrainingCandidate,
   VintageGuess,
 } from "./types";
@@ -59,6 +61,14 @@ export const TRAINING_COPY = {
   whichWine: "Which wine is it?",
   somethingElse: "Something else…",
   notInList: "It's not in the list",
+  // your call by region (region-guess addendum R5, R10)
+  whichRegion: "Which region is it?",
+  searchRegions: "Search regions…",
+  goDeeper: "Go deeper (optional)",
+  justTheRegion: "Just the region",
+  grapeOptional: "Grape (optional)",
+  otherGrape: "Other grape…",
+  searchGrapes: "Search grapes…",
   vintageOptional: "Vintage (optional)",
   // the vintage picker, word for word the guess ladder's (guess-ladder.tsx)
   vintageYearGroup: "Year",
@@ -185,8 +195,12 @@ export function coverageLine(
 }
 
 /**
- * The phone strip under the sheet's bar (spec §3.3, §9). `ranked` is
- * rankCandidates' output, already in §5.8 order (uncapped numbered first).
+ * The phone strip under the sheet's bar (spec §3.3, §9; region-guess addendum
+ * R4): "Top match: Bourgogne · Chablis Premier Cru 100 % · 3 more close" — the
+ * leading wine's region, then the wine (the region alone when the wine's short
+ * name is the region's own, folded: "Top match: Champagne 88 %"). `ranked` is
+ * rankCandidates' output, already in §5.8 order (uncapped numbered first); k
+ * counts the other uncapped wines within CLOSE_WINDOW of the leader.
  */
 export function stripLine(ranked: readonly RankedCandidate[]): string {
   if (ranked.length === 0) return TRAINING_COPY.beforeAnswers;
@@ -201,8 +215,32 @@ export function stripLine(ranked: readonly RankedCandidate[]): string {
       r.closeness !== null &&
       top - r.closeness <= CLOSE_WINDOW,
   ).length;
-  const head = `Top match: ${shortName(leader.candidate.name)} ${top} %`;
+  const wine = shortName(leader.candidate.name);
+  const region = leader.candidate.region.name;
+  const label = foldName(wine) === foldName(region) ? wine : `${region} · ${wine}`;
+  const head = `Top match: ${label} ${top} %`;
   return k === 0 ? head : `${head} · ${k} more close`;
+}
+
+/** A region group's name with its country: "Bourgogne, France" (R1). */
+export function regionLabel(g: { region: { name: string }; country: { name: string } }): string {
+  return `${g.region.name}, ${g.country.name}`;
+}
+
+/** "best: {shortName}" (R3). */
+export function bestLine(wineShortName: string): string {
+  return `best: ${wineShortName}`;
+}
+
+/** A group row's second line: its best wine, once the list has numbers — before
+    any answer there is no "best" (R3), so the row has no second line. */
+export function groupSubLine(g: RegionGroup): string | null {
+  return g.closeness === null ? null : bestLine(shortName(g.best.candidate.name));
+}
+
+/** "Show all {n} regions" (R3). */
+export function showAllRegionsLine(n: number): string {
+  return `Show all ${n} regions`;
 }
 
 /** "{Appellation} · {Region}, {Country} · {grapes}"; a regional appellation
@@ -308,6 +346,13 @@ export function tawnyAgeOption(years: number): string {
 export function youSaidLine(pickName: string, vintage: VintageGuess): string {
   const v = vintageGuessLabel(vintage);
   return `You said ${shortName(pickName)}${v ? `, ${v}` : ""}`;
+}
+
+/** "You said {region} · {grape}{, vintage}" / "You said {region}{, vintage}" —
+    a pick that stopped at the region (R8). */
+export function youSaidRegionLine(region: string, grape: string | null, vintage: VintageGuess): string {
+  const v = vintageGuessLabel(vintage);
+  return `You said ${region}${grape ? ` · ${grape}` : ""}${v ? `, ${v}` : ""}`;
 }
 
 /** "It was {wine}"; an unreadable wine reads "a wine you can't see yet". */

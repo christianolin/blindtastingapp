@@ -56,6 +56,28 @@ export type RankedCandidate = {
   signatureHits: string[];
 };
 
+/** One region of the ranking (region-guess addendum R1, R2): its typical wines
+    in ranking order, and its standing — the best uncapped member's closeness,
+    or, when every member is capped, the best capped one's (`capped` is then
+    that member's reason, null otherwise). `key` is the region id. */
+export type RegionGroup = {
+  key: string;
+  region: Named;
+  country: Named;
+  closeness: number | null;
+  capped: CapReason | null;
+  best: RankedCandidate;
+  members: RankedCandidate[];
+};
+
+/** What Your call has picked (addendum R5): a region, optionally a grape, or a
+    typical wine of that region. The device draft carries the same three fields. */
+export type CallPick = {
+  pickedArchetypeId: string | null;
+  pickedRegionId: string | null;
+  pickedGrapeId: string | null;
+};
+
 /** The whole ranking, frozen into the attempt at reveal (spec §5.8). */
 export type RankingSnapshot = {
   archetypeId: string;

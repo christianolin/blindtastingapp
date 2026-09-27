@@ -5,15 +5,18 @@ import {
   RESULT_ROW_LABELS,
   RESULT_ROW_ORDER,
   TRAINING_COPY,
+  bestLine,
   capReasonLine,
   clockTime,
   continueLine,
   coverageLine,
   groupLossLine,
+  groupSubLine,
   hueClearedLine,
   itWasLine,
   lineageLine,
   percentLabel,
+  regionLabel,
   resultMark,
   resultTotalLine,
   scaleLossLine,
@@ -22,6 +25,7 @@ import {
   shortDate,
   shortName,
   showAllLine,
+  showAllRegionsLine,
   signatureLine,
   stripLine,
   styleVerdictLine,
@@ -29,7 +33,9 @@ import {
   tawnyAgeOption,
   vintageGuessLabel,
   youSaidLine,
+  youSaidRegionLine,
 } from "./copy";
+import { groupRanking } from "./groups";
 import type { CapReason, RankedCandidate } from "./types";
 
 // Spec 2026-09-25-training-room-design.md §9: every string verbatim.
@@ -73,6 +79,13 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       whichWine: "Which wine is it?",
       somethingElse: "Something else…",
       notInList: "It's not in the list",
+      whichRegion: "Which region is it?",
+      searchRegions: "Search regions…",
+      goDeeper: "Go deeper (optional)",
+      justTheRegion: "Just the region",
+      grapeOptional: "Grape (optional)",
+      otherGrape: "Other grape…",
+      searchGrapes: "Search grapes…",
       vintageOptional: "Vintage (optional)",
       vintageYearGroup: "Year",
       vintageNvGroup: "Non-vintage",
@@ -202,7 +215,7 @@ describe("stripLine", () => {
   it("uses a 10-point window", () => {
     expect(CLOSE_WINDOW).toBe(10);
   });
-  it("leader plus the other uncapped candidates within 10 points", () => {
+  it("the leader's region and the leader, plus the other uncapped wines within 10 points", () => {
     // 91 − 85 = 6 and 91 − 81 = 10 count; 91 − 80 = 11 and the capped one do not.
     const ranked = [
       rc("margaux", 91),
@@ -211,15 +224,18 @@ describe("stripLine", () => {
       rc("cdp", 80),
       rc("chablis", 15, "colour"),
     ];
-    expect(stripLine(ranked)).toBe("Top match: Margaux 91 % · 2 more close");
+    expect(stripLine(ranked)).toBe("Top match: Bordeaux · Margaux 91 % · 2 more close");
   });
   it("k = 1", () => {
     expect(stripLine([rc("margaux", 91), rc("bandol", 81), rc("cdp", 70)])).toBe(
-      "Top match: Margaux 91 % · 1 more close",
+      "Top match: Bordeaux · Margaux 91 % · 1 more close",
     );
   });
   it("k = 0: just the leader", () => {
-    expect(stripLine([rc("margaux", 20), rc("chablis", 15, "colour")])).toBe("Top match: Margaux 20 %");
+    expect(stripLine([rc("margaux", 20), rc("chablis", 15, "colour")])).toBe("Top match: Bordeaux · Margaux 20 %");
+  });
+  it("names the region once when the wine is the region's own name", () => {
+    expect(stripLine([rc("champagne", 88)])).toBe("Top match: Champagne 88 %");
   });
   it("a leader with no number: the pre-answer hint", () => {
     expect(stripLine([rc("margaux", null), rc("bandol", null)])).toBe("Start describing the wine");
@@ -229,6 +245,22 @@ describe("stripLine", () => {
     expect(stripLine([rc("chablis", 15, "colour"), rc("margaux", null, "bubbles")])).toBe(
       "Nothing fits yet — check colour and bubbles",
     );
+  });
+});
+
+describe("region groups (region-guess addendum R1, R3)", () => {
+  it("names a region with its country, its best wine and Show all", () => {
+    expect(regionLabel({ region: { name: "Bourgogne" }, country: { name: "France" } })).toBe("Bourgogne, France");
+    expect(bestLine("Chablis Premier Cru")).toBe("best: Chablis Premier Cru");
+    expect(showAllRegionsLine(12)).toBe("Show all 12 regions");
+  });
+  it("a group row's second line is its best wine, only once there are numbers", () => {
+    const [bourgogne] = groupRanking([rc("vosne", 88), rc("chablis", 70)]);
+    expect(groupSubLine(bourgogne)).toBe("best: Vosne-Romanée");
+    const [before] = groupRanking([rc("vosne", null), rc("chablis", null)]);
+    expect(groupSubLine(before)).toBeNull();
+    const [capped] = groupRanking([rc("chablis", 15, "colour")]);
+    expect(groupSubLine(capped)).toBe("best: Chablis");
   });
 });
 
@@ -291,6 +323,13 @@ describe("vintage and 'You said'", () => {
     expect(youSaidLine("A typical Pauillac", null)).toBe("You said Pauillac");
     expect(youSaidLine("A typical Pauillac", { kind: "YEAR", year: 2016 })).toBe("You said Pauillac, 2016");
     expect(youSaidLine("A typical Champagne", { kind: "NV" })).toBe("You said Champagne, NV");
+  });
+  it("You said {region} · {grape}{, vintage} for a pick that stopped at the region", () => {
+    expect(youSaidRegionLine("Bourgogne", "Chardonnay", null)).toBe("You said Bourgogne · Chardonnay");
+    expect(youSaidRegionLine("Bourgogne", null, null)).toBe("You said Bourgogne");
+    expect(youSaidRegionLine("Bourgogne", "Pinot Noir", { kind: "YEAR", year: 2019 })).toBe(
+      "You said Bourgogne · Pinot Noir, 2019",
+    );
   });
 });
 
