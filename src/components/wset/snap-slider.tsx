@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { bandOnStops, dragBand, sameBand, tapBand, type Band } from "@/lib/wset/range-edit";
 
 /** How far (CSS px) a finger or pen travels before a scale decides slide vs scroll. */
 export const SLIDE_SLOP = 6;
@@ -86,7 +87,12 @@ export function useSlideGesture(setFromClientX: (clientX: number) => void) {
 // A snapping graded slider for the WSET scales. Value is one of `stops` or null
 // (the unrated ghost state). Pointer-capture drag snaps to the nearest stop.
 // Read-only `range` mode draws a low→high band (both end-caps) instead of a
-// single thumb — used to visualise an archetype's typical range.
+// single thumb — used to visualise an archetype's typical range. Editable range
+// mode (`onRangeChange`, the admin's typical-wine editor) draws the same band
+// and edits it by range-edit.ts's rule: a tap outside the band extends the
+// nearer end, inside moves the nearer end in, the first tap seeds a one-stop
+// band, and a press that slides on moves the end it took. With no band yet the
+// track fades like an unrated scale.
 //
 // The pointer lives on an invisible 44px hit layer over the 6px track (reaching
 // past both ends by the thumb's radius), not on the track itself, so a finger
@@ -96,7 +102,8 @@ export function useSlideGesture(setFromClientX: (clientX: number) => void) {
 // the slop, and an up/down swipe is left to the browser (touch-action: pan-y)
 // so the note still scrolls. The thumb stays pointer-events none and is never
 // pre-rendered: the thumb appears where the first value lands. The stop dots
-// stay buttons under the layer for keyboard and screen-reader users.
+// stay buttons under the layer for keyboard and screen-reader users: Enter on
+// one is a tap on it (in range mode each reports whether it is in the band).
 export function SnapSlider<T extends string>({
   stops,
   value,
@@ -105,45 +112,98 @@ export function SnapSlider<T extends string>({
   staggered,
   range = null,
   readOnly = false,
+  onRangeChange,
 }: {
   stops: readonly T[];
   value: T | null;
   onChange?: (value: T) => void;
   labels: Record<string, string>;
   staggered?: boolean;
+  /** Read-only: the band drawn. With `onRangeChange`: the band being edited
+      (null: not set yet). */
   range?: readonly [T, T] | null;
   readOnly?: boolean;
+  /** Editable range mode. Never called with an unchanged band; clearing is
+      the caller's own control. */
+  onRangeChange?: (range: [T, T]) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  // The end a range press holds still while it slides (range-edit.ts's
+  // anchor); null until the press's first write.
+  const anchorRef = useRef<number | null>(null);
   const n = stops.length;
   const index = value === null ? null : stops.indexOf(value);
   const useStagger = staggered ?? n >= 4;
   const pct = (i: number) => (n <= 1 ? 0 : (i / (n - 1)) * 100);
+  const editRange = !readOnly && onRangeChange !== undefined;
+  // Band mode: a read-only band, or an editable one (drawn or not yet set).
+  const rangeMode = range !== null || editRange;
+  // The band being edited, as stop indices; a bound off these stops draws
+  // nothing and the next tap seeds a fresh band.
+  const band = editRange ? bandOnStops(stops, range) : null;
+  const shown = editRange && band === null ? null : range;
 
-  // Range band bounds (sorted); -1 when not in range mode.
-  const rLo = range ? Math.min(stops.indexOf(range[0]), stops.indexOf(range[1])) : -1;
-  const rHi = range ? Math.max(stops.indexOf(range[0]), stops.indexOf(range[1])) : -1;
-  const inRange = (i: number) => range !== null && i >= rLo && i <= rHi;
-  const interactive = !readOnly && !!onChange;
+  // Range band bounds (sorted); -1 when no band is drawn.
+  const rLo = shown ? Math.min(stops.indexOf(shown[0]), stops.indexOf(shown[1])) : -1;
+  const rHi = shown ? Math.max(stops.indexOf(shown[0]), stops.indexOf(shown[1])) : -1;
+  const inRange = (i: number) => shown !== null && i >= rLo && i <= rHi;
+  const interactive = !readOnly && (!!onChange || editRange);
+
+  // A band change, reported only when it changes something.
+  const commitBand = useCallback(
+    (next: Band) => {
+      if (onRangeChange && !sameBand(band, next)) onRangeChange([stops[next[0]], stops[next[1]]]);
+    },
+    [band, onRangeChange, stops],
+  );
 
   const setFromClientX = useCallback(
     (clientX: number) => {
       const el = trackRef.current;
-      if (!el || !onChange) return;
+      if (!el) return;
       const rect = el.getBoundingClientRect();
       const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-      onChange(stops[Math.round(frac * (n - 1))]);
+      const at = Math.round(frac * (n - 1));
+      if (editRange) {
+        // The press's first write is a tap; the rest slide the end it took.
+        const anchor = anchorRef.current;
+        const next = anchor === null ? tapBand(band, at) : { band: dragBand(anchor, at), anchor };
+        anchorRef.current = next.anchor;
+        commitBand(next.band);
+        return;
+      }
+      if (!onChange) return;
+      onChange(stops[at]);
     },
-    [n, onChange, stops],
+    [band, commitBand, editRange, n, onChange, stops],
   );
   const gesture = useSlideGesture(setFromClientX);
+  // Each new press starts with a tap.
+  const hitHandlers = editRange
+    ? {
+        ...gesture,
+        onPointerDown: (e: ReactPointerEvent<HTMLElement>) => {
+          anchorRef.current = null;
+          gesture.onPointerDown(e);
+        },
+      }
+    : gesture;
+  // A stop dot or a stop label: the value, or in range mode a tap on it.
+  const pick = (i: number) => {
+    if (editRange) {
+      anchorRef.current = null;
+      commitBand(tapBand(band, i).band);
+      return;
+    }
+    onChange!(stops[i]);
+  };
 
-  const showLabelRow = range !== null;
+  const showLabelRow = rangeMode;
   return (
     // Interactive scales frame the track with just the endpoint labels
     // (Low ○──●──○ High) at every width — the chosen value reads at the row
-    // title. Only the read-only range mode (archetype view) keeps the full
-    // per-stop label row on desktop: there the labels ARE the content.
+    // title. The range modes (archetype view, editor) keep the full per-stop
+    // label row on desktop: there the labels ARE the content.
     <div
       className={showLabelRow ? "px-0 sm:px-[46px]" : "px-0"}
       style={{ userSelect: "none", touchAction: "pan-y" }}
@@ -164,23 +224,26 @@ export function SnapSlider<T extends string>({
                 height: 6,
                 borderRadius: 3,
                 background: "var(--secondary)",
-                // Unrated single-value sliders fade back; range mode is always solid.
-                opacity: !range && index === null ? 0.4 : 1,
+                // Unrated single-value sliders and an unset band fade back; a
+                // drawn band is always solid.
+                opacity: (rangeMode ? shown === null : index === null) ? 0.4 : 1,
                 transition: "opacity 120ms",
               }}
             >
-              {range !== null ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: `${pct(rLo)}%`,
-                    top: 0,
-                    height: 6,
-                    borderRadius: 3,
-                    background: "var(--primary)",
-                    width: `${pct(rHi) - pct(rLo)}%`,
-                  }}
-                />
+              {rangeMode ? (
+                shown !== null ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: `${pct(rLo)}%`,
+                      top: 0,
+                      height: 6,
+                      borderRadius: 3,
+                      background: "var(--primary)",
+                      width: `${pct(rHi) - pct(rLo)}%`,
+                    }}
+                  />
+                ) : null
               ) : index !== null && index > 0 ? (
                 <div
                   style={{
@@ -195,13 +258,14 @@ export function SnapSlider<T extends string>({
                 />
               ) : null}
               {stops.map((stop, i) => {
-                const reached = range !== null ? inRange(i) : index !== null && i <= index;
+                const reached = rangeMode ? inRange(i) : index !== null && i <= index;
                 return (
                   <button
                     key={stop}
                     type="button"
                     aria-label={labels[stop] ?? stop}
-                    onClick={interactive ? () => onChange!(stop) : undefined}
+                    aria-pressed={editRange ? inRange(i) : undefined}
+                    onClick={interactive ? () => pick(i) : undefined}
                     disabled={!interactive}
                     style={{
                       position: "absolute",
@@ -219,26 +283,28 @@ export function SnapSlider<T extends string>({
                   />
                 );
               })}
-              {range !== null ? (
-                [rLo, rHi].map((i, k) => (
-                  <div
-                    key={k}
-                    aria-hidden
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: `${pct(i)}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      pointerEvents: "none",
-                      background: "var(--primary)",
-                      border: "3px solid var(--card)",
-                      boxShadow: "0 1px 4px rgba(42,33,30,0.3)",
-                    }}
-                  />
-                ))
+              {rangeMode ? (
+                shown !== null ? (
+                  [rLo, rHi].map((i, k) => (
+                    <div
+                      key={k}
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: `${pct(i)}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        pointerEvents: "none",
+                        background: "var(--primary)",
+                        border: "3px solid var(--card)",
+                        boxShadow: "0 1px 4px rgba(42,33,30,0.3)",
+                      }}
+                    />
+                  ))
+                ) : null
               ) : index !== null ? (
                 <div
                   aria-hidden
@@ -258,7 +324,7 @@ export function SnapSlider<T extends string>({
                   }}
                 />
               ) : null}
-              {range !== null && index !== null && index >= 0 ? (
+              {shown !== null && index !== null && index >= 0 ? (
                 // Read-only range mode with a value: the taster's own answer
                 // (training room), a gold ring over the band so it reads in or
                 // out of the typical range. A value off these stops draws none.
@@ -289,7 +355,7 @@ export function SnapSlider<T extends string>({
               <div
                 aria-hidden
                 data-slot="slider-hit"
-                {...gesture}
+                {...hitHandlers}
                 style={{
                   position: "absolute",
                   left: -11,
@@ -314,13 +380,13 @@ export function SnapSlider<T extends string>({
       </div>
       <div className={showLabelRow ? "max-sm:hidden" : "hidden"} style={{ position: "relative", height: useStagger ? 32 : 18, marginTop: 8 }}>
         {stops.map((stop, i) => {
-          const active = range !== null ? i === rLo || i === rHi : index === i;
+          const active = rangeMode ? shown !== null && (i === rLo || i === rHi) : index === i;
           const lower = useStagger && i % 2 === 1;
           return (
             <button
               key={stop}
               type="button"
-              onClick={interactive ? () => onChange!(stop) : undefined}
+              onClick={interactive ? () => pick(i) : undefined}
               disabled={!interactive}
               style={{
                 position: "absolute",
