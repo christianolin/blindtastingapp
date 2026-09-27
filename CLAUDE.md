@@ -570,7 +570,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `.is("deleted_at", null)`. Never pass `shouldSoftDelete` to
   `admin.deleteUser`: the hard delete is what frees the email for a new
   signup. A dashboard delete leaves the avatar file behind (spec §7 R5).
-- **Sharing defaults** (2026-09-27, spec
+- **Sharing defaults** (2026-09-27, applied live 2026-09-27 with the owner's
+  go-ahead: M1, app 1eee2b6, M2 — 34 cellars flipped, 36 notices; spec
   `docs/superpowers/specs/2026-09-27-sharing-defaults-design.md`; M1
   `20260927140000_sharing_defaults.sql`, then the app deploy, then M2
   `20260927150000_sharing_defaults_flip.sql`). Cellars and tasting notes are
