@@ -6,12 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { NoteModal } from "@/components/wset/note-modal";
 import { dayMonthYear } from "@/lib/cellar/format";
 import { TRAINING_COPY } from "@/lib/training/copy";
+import { SHARED_NOTES_COPY } from "@/lib/notes/shared-notes-view";
 
 export type YourNoteRow = {
   id: string;
   tastedOn: string;
   score: number | null;
   contextKind: string | null;
+  /** Others cannot read it yet: a Rule 1 hold or a masked pour (sharing-defaults S19). */
+  held: boolean;
 };
 
 /**
@@ -58,6 +61,9 @@ export function YourNotes({
                   <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
                     {TRAINING_COPY.trainingBadge}
                   </Badge>
+                ) : null}
+                {n.held ? (
+                  <span className="text-xs text-muted-foreground">{SHARED_NOTES_COPY.heldTag}</span>
                 ) : null}
               </span>
               <span className="font-medium">

@@ -25,6 +25,8 @@ import { WineStructure } from "./wine-structure";
 import { WineAdminControls } from "./wine-admin-controls";
 import { CellarStrip } from "./cellar-strip";
 import { YourNotes } from "./your-notes";
+import { OthersNotes } from "./others-notes";
+import { getMyHeldNoteIds, getOthersNotesForWine } from "@/lib/notes/shared-notes";
 import { getOwnLotsForWine } from "@/lib/cellar/own-lots";
 import { fmtAvg, plural } from "@/lib/cellar/format";
 import { countWord } from "@/lib/count-words";
@@ -65,6 +67,7 @@ export default async function CatalogWinePage({
     { data: usageRows },
     ownLots,
     photoRows,
+    others,
   ] = await Promise.all([
     supabase
       .from("wset_notes")
@@ -81,7 +84,15 @@ export default async function CatalogWinePage({
     supabase.rpc("catalog_wine_usage", { p_id: wineId }),
     getOwnLotsForWine(supabase, user.id, wineId),
     fetchWinePhotos(supabase, wineId, user.id),
+    // "Notes from others" (sharing-defaults spec §7.2): the policy decides
+    // whose notes come back; null on a failed read hides the section.
+    getOthersNotesForWine(supabase, wineId, user.id),
   ]);
+  // Your own notes others cannot read yet carry "Hidden from others" (S19).
+  const heldIds = await getMyHeldNoteIds(
+    supabase,
+    (myNotes ?? []).map((n) => n.id),
+  );
 
   const title = catalogWineTitle(wine);
   const grapes = formatBlend(blend);
@@ -354,9 +365,14 @@ export default async function CatalogWinePage({
             tastedOn: n.tasted_on,
             score: n.quality_score,
             contextKind: n.context_kind,
+            held: heldIds.has(n.id),
           }))}
         />
       </div>
+
+      {others && others.rows.length > 0 ? (
+        <OthersNotes rows={others.rows} fetched={others.fetched} />
+      ) : null}
     </div>
   );
 }
