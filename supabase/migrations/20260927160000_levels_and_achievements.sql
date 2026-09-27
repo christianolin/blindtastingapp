@@ -117,7 +117,7 @@ begin
     ('public.semi_blind_release_revealed_wine()',       'f2b99368997eaa08944e7d31943ed12a'),
     ('public.send_friend_request(uuid)',                '8efbf4536f08f335934d517ca5007238'),
     ('public.wset_note_held(uuid)',                     '9599a36cd224a3af0d5c2fb3dea70b2b'),
-    ('public.wset_notes_hold_on_identity()',            '8b500cd6a6f62204c02c66c4760793fc'),
+    ('public.wset_notes_hold_on_identity()',            '392edc2f47b146e8fa291703c6739702'),
     ('public.wines_release_note_holds()',               '419a9f4dda4fac12a601207ea3f3b45a')
   ) as s (sig, md5)
   left join pg_proc p on p.oid = to_regprocedure(s.sig)
@@ -142,7 +142,7 @@ begin
   where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal
     and t.tgname = 'wset_notes_hold_on_identity';
   if v_text is distinct from
-       'CREATE TRIGGER wset_notes_hold_on_identity AFTER INSERT OR UPDATE OF catalog_wine_id ON wset_notes '
+       'CREATE TRIGGER wset_notes_hold_on_identity AFTER INSERT OR UPDATE OF catalog_wine_id, tasting_wine_id ON wset_notes '
        || 'FOR EACH ROW EXECUTE FUNCTION wset_notes_hold_on_identity()' then
     raise exception 'wset_notes_hold_on_identity is not sharing-defaults'' trigger: %', v_text;
   end if;
@@ -890,7 +890,8 @@ end $$;
 -- trg_catalog_wine_unmark_blind has deleted the glass's flight_holds rows and
 -- wines_release_note_holds its wset_note_holds rows (name order). Step 3 is
 -- for the glass's adder (the host of an added_by_host glass, else the
--- contributor) and each pour owner: their unpaid notes on the glass's catalog
+-- contributor), each pour owner and each guesser (sharing holds an ASYNC
+-- IMMEDIATE guesser's note keyed to the glass): their unpaid notes on the glass's catalog
 -- wine or its pour's wine, or linked to its pour, are paid now unless another
 -- unrevealed glass still holds them (xp_award_note), then the notes check.
 create function public.xp_on_glass_revealed()
@@ -925,7 +926,12 @@ begin
                   select c.owner_id
                     from wine_pour_intents i
                     join cellar_consumptions c on c.id = i.cellar_consumption_id
-                   where i.wine_id = new.id) a
+                   where i.wine_id = new.id
+                  union
+                  select gp.user_id
+                    from guesses gg
+                    join tasting_participants gp on gp.id = gg.participant_id
+                   where gg.wine_id = new.id) a
            where a.user_id is not null
         ) x
        order by x.user_id, x.step, x.guess_id, x.consumption_id
@@ -1478,7 +1484,7 @@ begin
        'p_user uuid, p_seen boolean, p_backfill boolean, p_repair boolean',
        '84cd76a07bc5d20cdb2c421839ef4ca3', 'OWNER'),
       ('public.xp_on_glass_revealed()', true, 'v', 'plpgsql', 'trigger', false, '',
-       'cbb6b965b8421af8e476e529c9691324', 'OWNER'),
+       'b4a8798d26678112ea52f764b588e0fe', 'OWNER'),
       ('public.xp_on_tasting_closed()', true, 'v', 'plpgsql', 'trigger', false, '',
        'a5ba1c057b2b99f8f00fc796c3467bd4', 'OWNER'),
       ('public.xp_on_cellar_lot()', true, 'v', 'plpgsql', 'trigger', false, '',

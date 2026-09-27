@@ -38,7 +38,7 @@ const PINS: Record<string, string> = {
   xp_award_note: "e04cf320098a84a871eba439e8af0a66",
   xp_award_training: "52a1e008282add33cafcbddf17eb63bc",
   xp_replay_user: "84cd76a07bc5d20cdb2c421839ef4ca3",
-  xp_on_glass_revealed: "cbb6b965b8421af8e476e529c9691324",
+  xp_on_glass_revealed: "b4a8798d26678112ea52f764b588e0fe",
   xp_on_tasting_closed: "a5ba1c057b2b99f8f00fc796c3467bd4",
   xp_on_cellar_lot: "5174e05a934bec37adc7b6c3b88ed677",
   xp_on_cellar_consumption: "908ed16361d1c53d273853798cbc4aa2",
@@ -71,7 +71,7 @@ describe(FILE, () => {
   it("requires sharing-defaults M1: pins the hold's functions and accepts only the four-trigger wines set", () => {
     const pre = sql.slice(0, sql.indexOf("create table public.xp_sources"));
     expect(pre).toContain("('public.wset_note_held(uuid)',                     '9599a36cd224a3af0d5c2fb3dea70b2b')");
-    expect(pre).toContain("('public.wset_notes_hold_on_identity()',            '8b500cd6a6f62204c02c66c4760793fc')");
+    expect(pre).toContain("('public.wset_notes_hold_on_identity()',            '392edc2f47b146e8fa291703c6739702')");
     expect(pre).toContain("('public.wines_release_note_holds()',               '419a9f4dda4fac12a601207ea3f3b45a')");
     const sets = [...sql.matchAll(/v_text is distinct from '(semi_blind_release_revealed_wine,[^']*)'/g)].map((m) => m[1]);
     expect(sets).toEqual([
@@ -91,6 +91,8 @@ describe(FILE, () => {
     const reveal = body("xp_on_glass_revealed");
     expect(reveal).toContain("order by x.user_id, x.step, x.guess_id, x.consumption_id");
     expect(reveal).toContain("case when new.added_by_host then t.host_id else tp.user_id end");
+    // Each guesser too: sharing holds an ASYNC IMMEDIATE guesser's note keyed to the glass.
+    expect(reveal).toContain("join tasting_participants gp on gp.id = gg.participant_id");
     expect(reveal).toContain("perform xp_award_note(v_note.id, now(), false, false);");
     expect(reveal).toContain("perform xp_check_achievements(r.user_id, 'notes', now(), false, false);");
   });

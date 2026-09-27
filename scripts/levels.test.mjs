@@ -535,8 +535,15 @@ test("5. ASYNC IMMEDIATE: score_own_guess pays nothing, the global reveal pays (
     await asOwner();
     assert.ok((await client.query("select scored_at from guesses where id = $1", [ga])).rows[0].scored_at);
     assert.deepEqual(await ledger(a), [], "self-scored, not yet public");
+    // Sharing holds the self-scored guesser's note on the wine until the global
+    // reveal (wset_notes_hold_on_identity); levels pays it at that reveal.
+    const n = await note(a, { catalog_wine_id: wine.id });
+    await asOwner();
+    assert.equal((await client.query("select public.wset_note_held($1) as h", [n])).rows[0].h, true, "held by the scored guess");
+    assert.ok(!keysOf(await ledger(a)).includes(`note:${n}`), "a held note pays nothing yet");
     await reveal(host, g1);
     assert.ok(keysOf(await ledger(a)).includes(`guess:${ga}`));
+    assert.ok(keysOf(await ledger(a)).includes(`note:${n}`), "the reveal that releases the guesser's note pays it");
   });
 });
 
@@ -1088,16 +1095,17 @@ test("16. RLS: levels and public achievements are readable; cellar ones follow t
     };
     const setVisibility = (v) => client.query("update profiles set cellar_visibility = $2 where id = $1", [owner, v]);
 
-    assert.deepEqual((await read(owner)).keys, ["first_bottle", "first_note"], "the owner sees their own");
+    // The friendship fixture unlocks the public first_friend for both sides.
+    assert.deepEqual((await read(owner)).keys, ["first_bottle", "first_friend", "first_note"], "the owner sees their own");
     assert.ok((await read(owner)).events > 0);
     await setVisibility("PUBLIC");
-    assert.deepEqual(await read(stranger), { levels: 1, keys: ["first_bottle", "first_note"], events: 0 });
+    assert.deepEqual(await read(stranger), { levels: 1, keys: ["first_bottle", "first_friend", "first_note"], events: 0 });
     await setVisibility("FRIENDS");
-    assert.deepEqual((await read(friend)).keys, ["first_bottle", "first_note"]);
-    assert.deepEqual((await read(stranger)).keys, ["first_note"]);
+    assert.deepEqual((await read(friend)).keys, ["first_bottle", "first_friend", "first_note"]);
+    assert.deepEqual((await read(stranger)).keys, ["first_friend", "first_note"]);
     await setVisibility("PRIVATE");
-    assert.deepEqual((await read(friend)).keys, ["first_note"]);
-    assert.deepEqual((await read(stranger)).keys, ["first_note"]);
+    assert.deepEqual((await read(friend)).keys, ["first_friend", "first_note"]);
+    assert.deepEqual((await read(stranger)).keys, ["first_friend", "first_note"]);
     assert.equal((await read(friend)).events, 0, "nobody reads another's ledger");
 
     await asAnon();
