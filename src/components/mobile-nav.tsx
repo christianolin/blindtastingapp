@@ -31,6 +31,10 @@ import {
 import { PROFILE_LINKS } from "@/components/profile-links";
 import { useAddWine } from "@/components/add-wine-context";
 import { useTasteLauncher } from "@/components/taste-launcher-context";
+import { LevelRing } from "@/components/levels/level-ring";
+import { useOwnLevel } from "@/components/levels/live-level-ring";
+import { ringLinkLabel } from "@/lib/levels/copy";
+import type { OwnLevel } from "@/lib/levels/types";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -62,14 +66,18 @@ export function MobileNav({
   avatarUrl,
   links,
   notifications,
+  level: initialLevel,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
   links: NavLink[];
   notifications?: React.ReactNode;
+  /** AppHeader's snapshot level (levels spec §8.2); the store keeps it live. */
+  level: OwnLevel | null;
 }) {
   const [open, setOpen] = useState(false);
+  const level = useOwnLevel(userId, initialLevel);
   const pathname = usePathname();
   const close = () => setOpen(false);
   const { openAddWine } = useAddWine();
@@ -80,6 +88,19 @@ export function MobileNav({
     else if (kind === "taste-blind") openTaste("blind");
     else openTaste("rate");
   };
+
+  const drawerAvatar = avatarUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={avatarUrl}
+      alt=""
+      className="size-8 shrink-0 rounded-full object-cover ring-1 ring-primary-foreground/20"
+    />
+  ) : (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-xs font-medium">
+      {displayName.slice(0, 1).toUpperCase()}
+    </span>
+  );
 
   const drawer =
     open && typeof document !== "undefined"
@@ -200,23 +221,19 @@ export function MobileNav({
                 <div className="mb-1">
                   <SidebarThemeSwitch variant="full" />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className={cn("flex items-center gap-2", level && "pt-2")}>
                   <Link
                     href={`/u/${userId}`}
                     onClick={close}
+                    aria-label={level ? ringLinkLabel(displayName, level.xp) : undefined}
                     className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-primary-foreground/10"
                   >
-                    {avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={avatarUrl}
-                        alt=""
-                        className="size-8 shrink-0 rounded-full object-cover ring-1 ring-primary-foreground/20"
-                      />
+                    {level ? (
+                      <LevelRing level={level.level} xp={level.xp} size={40} tone="sidebar">
+                        {drawerAvatar}
+                      </LevelRing>
                     ) : (
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-xs font-medium">
-                        {displayName.slice(0, 1).toUpperCase()}
-                      </span>
+                      drawerAvatar
                     )}
                     <span className="truncate text-sm font-medium">
                       {displayName}

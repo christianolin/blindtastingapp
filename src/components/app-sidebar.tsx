@@ -32,6 +32,10 @@ import { signOut } from "@/app/actions";
 import { BlindrMark } from "@/components/logo";
 import { SidebarThemeSwitch } from "@/components/sidebar-theme-switch";
 import { PROFILE_LINKS } from "@/components/profile-links";
+import { LevelRing } from "@/components/levels/level-ring";
+import { useOwnLevel } from "@/components/levels/live-level-ring";
+import { ringLinkLabel } from "@/lib/levels/copy";
+import type { OwnLevel } from "@/lib/levels/types";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -54,9 +58,12 @@ type SidebarUser = { id: string; name: string; avatarUrl: string | null };
 export function AppSidebar({
   isManager,
   user,
+  level,
 }: {
   isManager: boolean;
   user: SidebarUser;
+  /** The ring's first paint (AppShell's read); the store keeps it live. */
+  level: OwnLevel | null;
 }) {
   const pathname = usePathname();
   const links = navWithAdmin(isManager);
@@ -107,6 +114,7 @@ export function AppSidebar({
                 variant="full"
                 links={links}
                 user={user}
+                level={level}
                 onNavigate={closeDrawer}
                 onClose={closeDrawer}
               />
@@ -125,12 +133,14 @@ export function AppSidebar({
           variant="full"
           links={links}
           user={user}
+          level={level}
           className="hidden xl:flex"
         />
         <SidebarBody
           variant="rail"
           links={links}
           user={user}
+          level={level}
           className="flex xl:hidden"
           onExpand={() => setDrawerOpen(true)}
         />
@@ -147,6 +157,7 @@ function SidebarBody({
   variant,
   links,
   user,
+  level: initialLevel,
   className,
   onNavigate,
   onClose,
@@ -155,6 +166,7 @@ function SidebarBody({
   variant: "full" | "rail";
   links: NavLink[];
   user: SidebarUser;
+  level: OwnLevel | null;
   className?: string;
   // Drawer only: fired on every link and launcher tap so the overlay closes
   // even when the path does not change (already on that page, or a modal).
@@ -167,6 +179,10 @@ function SidebarBody({
 }) {
   const pathname = usePathname();
   const profileActive = pathname.startsWith("/profile") || pathname === `/u/${user.id}`;
+  // The viewer's level (levels spec §8.2, L8): AppShell's first paint, kept
+  // live by the store AppHeader's AwardsFeed fills. Null: the bare avatar.
+  const level = useOwnLevel(user.id, initialLevel);
+  const profileLabel = level ? ringLinkLabel(user.name, level.xp) : user.name;
   // Collapsible sub-nav: a pillar's children show when you're inside that
   // section; a chevron tap overrides either way. Keeps the sidebar one calm
   // line per pillar instead of every section's sub-pages all the time.
@@ -233,14 +249,21 @@ function SidebarBody({
           <SidebarThemeSwitch variant="rail" />
           <Link
             href={`/u/${user.id}`}
-            aria-label={user.name}
+            aria-label={profileLabel}
             title={user.name}
             className={cn(
               "flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-primary-foreground/10",
               profileActive && "bg-primary-foreground/15",
+              level && "mt-1.5",
             )}
           >
-            <UserAvatar user={user} className="size-[30px]" />
+            {level ? (
+              <LevelRing level={level.level} xp={level.xp} size={34} tone="sidebar">
+                <UserAvatar user={user} className="size-[26px]" />
+              </LevelRing>
+            ) : (
+              <UserAvatar user={user} className="size-[30px]" />
+            )}
           </Link>
         </div>
       </div>
@@ -384,16 +407,23 @@ function SidebarBody({
           the active item. */}
       <div className="shrink-0 border-t border-primary-foreground/15 p-3">
         <SidebarThemeSwitch variant="full" />
-        <div className="mt-1 flex items-center gap-2">
+        <div className={cn("mt-1 flex items-center gap-2", level && "pt-2")}>
           <Link
             href={`/u/${user.id}`}
             onClick={onNavigate}
+            aria-label={level ? profileLabel : undefined}
             className={cn(
               "flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-primary-foreground/10",
               profileActive && "bg-primary-foreground/15",
             )}
           >
-            <UserAvatar user={user} className="size-8" />
+            {level ? (
+              <LevelRing level={level.level} xp={level.xp} size={40} tone="sidebar">
+                <UserAvatar user={user} className="size-8" />
+              </LevelRing>
+            ) : (
+              <UserAvatar user={user} className="size-8" />
+            )}
             <span
               className={cn(
                 "truncate text-sm",

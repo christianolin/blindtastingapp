@@ -106,6 +106,7 @@ export async function AppHeader({
           displayName={name}
           avatarUrl={avatarUrl}
           links={navLinks}
+          level={levelSnapshot ? { xp: levelSnapshot.xp, level: levelSnapshot.level } : null}
         />
         {title ? (
           <span className="font-heading text-xl font-semibold leading-none md:hidden">

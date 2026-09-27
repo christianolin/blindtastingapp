@@ -5,6 +5,7 @@ import { TasteLauncherProvider } from "@/components/taste-launcher-context";
 import { TourProvider } from "@/components/first-run/tour-provider";
 import { isProfileBare, tourSeenFromProfile } from "@/lib/first-run/tour";
 import { AwardsToaster } from "@/components/levels/awards-toaster";
+import { readOwnLevel } from "@/lib/levels/read";
 
 // The authenticated app shell: a persistent left sidebar + the page as the main
 // column. Rendered once at the root so every signed-in page gets the nav and
@@ -16,11 +17,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   } = await supabase.auth.getUser();
   if (!user) return <>{children}</>;
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("display_name, avatar_url, role, location, tour_seen_at")
-    .eq("id", user.id)
-    .maybeSingle();
+  // The sidebar ring's first paint (levels spec §6.2) runs beside the profile
+  // read; null on any error, and the ring then waits for AppHeader's snapshot.
+  const [{ data: profile, error: profileError }, level] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, role, location, tour_seen_at")
+      .eq("id", user.id)
+      .maybeSingle(),
+    readOwnLevel(supabase, user.id),
+  ]);
   // A failed read blanks the sidebar and hides the tour; say so in the server
   // log (code and message only) so a schema mismatch after a deploy — e.g. the
   // tour_seen_at migration not yet applied — is diagnosable from Vercel's logs.
@@ -50,6 +56,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex h-dvh overflow-hidden">
             <AppSidebar
               isManager={isManager}
+              level={level}
               user={{
                 id: user.id,
                 name: profile?.display_name ?? user.email ?? "",
