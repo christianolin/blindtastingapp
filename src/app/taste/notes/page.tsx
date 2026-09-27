@@ -37,7 +37,7 @@ export default async function TastingNotesPage() {
   const stats = notesStats(rows);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <AppHeader
         userId={user.id}
         displayName={profile?.display_name ?? user.email ?? ""}

@@ -613,6 +613,18 @@
     --wset-gap: 11px;
   }
 }
+/* The sticky app header's rendered height (src/components/app-header.tsx:
+   py-2.5 around a 32 px icon row on phones, a 36 px search field from md, plus
+   its 1 px border). Offsets that sit under it read this — the WSET sheet's
+   sticky bar tucks into its border. Change both together. */
+:root {
+  --app-header-h: 53px;
+}
+@media (min-width: 768px) {
+  :root {
+    --app-header-h: 57px;
+  }
+}
 /* Desktop: the sheet reads too small on a monitor (it's tuned for a phone), so
    scale the whole thing up at laptop width and let the dialog take more width. */
 @media (min-width: 1024px) {
@@ -625,6 +637,9 @@
      values so this is a single, easily-tuned number. */
   .wset-sheet {
     zoom: 1.15;
+    /* Read by offsets that must land on unzoomed page pixels (the sticky
+       bar's top: calc(56px / var(--wset-zoom))). Keep equal to the zoom. */
+    --wset-zoom: 1.15;
   }
 }
 /* Live-banner dot (Overview): a duplicate behind the dot scales out and

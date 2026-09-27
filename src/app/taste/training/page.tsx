@@ -43,7 +43,7 @@ export default async function TrainingRoomPage() {
   }));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <AppHeader title={TRAINING_COPY.appBarTitle} />
       <main className="flex w-full max-w-[1500px] flex-1 flex-col p-[14px] md:p-8">
         <TrainingRoom

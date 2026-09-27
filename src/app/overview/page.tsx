@@ -62,7 +62,7 @@ export default async function OverviewPage() {
     // are not squeezed onto one screen: the banner, the tile row and the
     // cards keep their natural heights and the column scrolls (phone layout
     // revision, 2026-09-12); the photo band is hidden below md.
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <AppHeader
         userId={user.id}
         displayName={profile?.display_name ?? user.email ?? ""}

@@ -86,11 +86,17 @@ export function SheetBar({ embedded, children }: { embedded: boolean; children: 
           : "max-sm:mx-[calc(50%-50vw)] max-sm:px-4 sm:px-1",
       )}
       style={{
-        top: embedded ? 0 : 56,
-        // Solid card-cream in the modal so nothing ghosts through; the page
-        // keeps the translucent blur since content scrolls under it there.
-        background: embedded ? "var(--card)" : "color-mix(in srgb, var(--background) 94%, transparent)",
-        backdropFilter: embedded ? undefined : "blur(8px)",
+        // On the page the bar tucks under the app header, overlapping its
+        // 1 px border: --app-header-h is the header's height at each width
+        // (globals.css; 53 px on phones, 57 px from md). From 1024 px the whole
+        // sheet is zoomed (.wset-sheet, --wset-zoom) and zoom scales this
+        // offset too — a bare 56 stuck at ~64 px and left a strip the form
+        // showed through (owner, 2026-09-27) — so it is divided back out.
+        top: embedded ? 0 : "calc((var(--app-header-h, 57px) - 1px) / var(--wset-zoom, 1))",
+        // Solid in both places so nothing ghosts through: card-cream in the
+        // modal, the page background on the page (it was a 94% blur, which
+        // let the form show through the bar as it scrolled under it).
+        background: embedded ? "var(--card)" : "var(--background)",
         borderBottom: "1px solid var(--border)",
       }}
     >

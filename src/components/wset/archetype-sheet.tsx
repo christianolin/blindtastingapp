@@ -325,6 +325,9 @@ export function ArchetypeSheet({
         {scaleRow("alcohol", t("alcohol"))}
         {scaleRow("body", t("body"))}
         {scaleRow("flavourIntensity", t("flavour_intensity"))}
+        {/* Finish sits above the flavour characteristics on every WSET sheet
+            (owner, 2026-09-27), read-only and editing alike. */}
+        {scaleRow("finish", t("finish"))}
         {edit ? (
           aromaRow("palate")
         ) : a.flavours.length > 0 ? (
@@ -332,7 +335,6 @@ export function ArchetypeSheet({
             <AromaPills terms={a.flavours} lang={lang} />
           </Row>
         ) : null}
-        {scaleRow("finish", t("finish"))}
       </SectionCard>
 
       <SectionCard

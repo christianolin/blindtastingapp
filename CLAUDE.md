@@ -869,6 +869,16 @@ a raw subquery, regardless of which two tables look involved at a glance.
   chain of fixes started from has not been re-verified on a real device
   since this change — if it resurfaces, the fix belongs in taming
   floating-ui's reposition-on-resize behavior, not in re-delaying focus().
+- **Page wrapper: `flex flex-1 flex-col`, never `min-h-full`** (2026-09-27,
+  owner: the training room's "Tasting note" bar hung under an empty gap).
+  Every page renders `<div className="flex flex-1 flex-col"><AppHeader … /><main>`
+  inside AppShell's scrolling column. `min-h-full` overrides a flex item's
+  content minimum, so the wrapper stays exactly one screen tall and its
+  content overflows it; the sticky AppHeader can only stick inside its
+  parent's box, so after one screen of scrolling it scrolled away — and the
+  WSET sheet's bar, pinned at `top: 56` below it, hung over nothing.
+  Overview, Your numbers, Tasting notes, All tastings and the training room
+  had it.
 - The app nav (`src/components/app-header.tsx`) is global and self-fetching:
   it looks up the current user/profile itself when props aren't passed, so
   any page/layout can render `<AppHeader />` with no prop-drilling (the
