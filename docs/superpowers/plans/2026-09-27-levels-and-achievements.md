@@ -6949,7 +6949,7 @@ Then `cd /c/Users/Public/repos/blindtastingapp-mapdetail && node --env-file=.env
 
 **R9 — Rollback.**
 - App: `git revert` + push; the triggers keep awarding silently (harmless).
-- One misbehaving trigger: `alter table public.<table> disable trigger <name>` (owner only), then `xp_replay_user` per person once fixed.
+- One misbehaving trigger: `alter table public.<table> disable trigger <name>` (owner only), then `xp_replay_user(u, false, false, true)` per person once fixed.
 - Full database rollback (after the app revert), then delete the history row `20260927160000`:
 
 ```sql

@@ -417,11 +417,11 @@ unlocked achievement's bonus row present once.
 insert into profile_levels (user_id, welcome_pending)
 select id, true from profiles where deleted_at is null
 on conflict (user_id) do nothing;
-select public.xp_replay_user(p.id, true, true)
+select public.xp_replay_user(p.id, true, true, false)
   from profiles p where p.deleted_at is null order by p.id;
 ```
 
-`xp_replay_user(u, p_seen, p_backfill)` walks u's facts oldest first, each with its own
+`xp_replay_user(u, p_seen, p_backfill, p_repair)` walks u's facts oldest first, each with its own
 time, through the same award functions with `p_check = false`:
 
 | Fact | Selection | Time (`p_at`) |
@@ -793,7 +793,7 @@ test's transaction for the dry run. Deferred triggers fire only at commit, so dr
     test transaction, `reveal_wine`, `consume_cellar_lot` and `save_wset_note` still succeed,
     with no ledger rows and a WARNING.
 21. Replay parity: history created with live triggers, the ledger deleted, then
-    `xp_replay_user(u, true, false)` → the same keys and XP.
+    `xp_replay_user(u, true, false, false)` → the same keys and XP.
 22. Timing: an 8-guesser reveal's duration is logged.
 
 ### 10.2 Vitest
@@ -855,7 +855,7 @@ Front the Browser pane (a hidden pane never hydrates and never shows a card).
 
 - App: `git revert` + push; the triggers keep awarding silently (harmless).
 - A misbehaving trigger without a revert: `alter table … disable trigger <name>` (owner
-  only), then `xp_replay_user` per person once fixed.
+  only), then `xp_replay_user(u, false, false, true)` per person once fixed.
 - Full DB rollback (after the app revert):
 
 ```sql
