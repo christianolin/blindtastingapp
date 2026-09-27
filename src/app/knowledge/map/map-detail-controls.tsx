@@ -84,7 +84,11 @@ export function MapDetailControls({
         {DETAIL_WARNING}
       </span>
       <div className="flex min-h-8 flex-1 basis-56 items-center gap-2 text-xs leading-4 text-muted-foreground">
-        <p role="status" aria-live="polite">
+        {/* md+: never more than two lines, so the toolbar above the map's
+            flex-sized canvas cannot grow with the sentence (spec 2026-09-27
+            M6); a longer one is clipped on screen, never for a screen
+            reader. The phone's Map options sheet (below md) is unaffected. */}
+        <p role="status" aria-live="polite" className="md:line-clamp-2">
           {status.text}
         </p>
         {status.retry ? (

@@ -77,6 +77,8 @@ import {
 import { useRenderedTheme } from "@/lib/rendered-theme";
 import type { Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { browserMatchMedia } from "@/lib/use-is-phone";
+import { legendStartsOpen } from "@/lib/wine-map/legend-default";
 
 // The basemap (Carto Positron in light, Dark Matter in dark) and its tweaks
 // live in lib/wine-map/basemap; every colour the map canvas draws lives in
@@ -903,12 +905,14 @@ export function TileWineMap({
   // change never speaks for the new focus.
   const [scanFocus, setScanFocus] = useState<string | null>(null);
   // The legend covers much of a phone screen (owner screenshots), so make it
-  // collapsible: collapsed by default below lg, expanded from lg up. The map is
-  // dynamic ssr:false, so `window` exists at first render (no hydration flash).
-  const [legendOpen, setLegendOpen] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 1024px)").matches,
+  // collapsible. It starts open only on a window both wide and tall enough
+  // (legendStartsOpen: 64rem x 56rem, spec 2026-09-27 M12, owner ruling); at
+  // the owner's ~1675x865 it would otherwise cover about a third of the map.
+  // Decided once, here; after that only the Legend button opens or closes it.
+  // The map is dynamic ssr:false, so `window` exists at first render (no
+  // hydration flash).
+  const [legendOpen, setLegendOpen] = useState(() =>
+    legendStartsOpen(browserMatchMedia()),
   );
   const scanView = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -1525,9 +1529,14 @@ export function TileWineMap({
         type="button"
         onClick={onToggleExpanded}
         aria-label={expanded ? "Exit full view" : "Full view"}
-        // Full view is a desktop affordance only — on phones it just swaps one
-        // stacked column for another, so it's hidden below lg.
-        className="absolute right-2 top-2 z-10 hidden rounded-md border border-border bg-background/85 p-1.5 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground lg:block"
+        // Full view is entered from lg up only (phone spec D5); the exit
+        // shows whenever it is on, so a window narrowed below lg while
+        // expanded still has a way out besides Escape. About 44 px on a
+        // coarse pointer (an iPad at lg).
+        className={cn(
+          "absolute right-2 top-2 z-10 rounded-md border border-border bg-background/85 p-1.5 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground pointer-coarse:p-[13px]",
+          expanded ? "block" : "hidden lg:block",
+        )}
       >
         {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
       </button>
@@ -1893,8 +1902,11 @@ export function TileWineMap({
           contextKey={selectedContextKey}
         />
       ) : null}
-      {/* Phones: above the explorer's 56 px sheet bar (spec 2026-09-25 D5). */}
-      <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm max-md:bottom-16">
+      {/* Phones: above the explorer's 56 px sheet bar (spec 2026-09-25 D5),
+          the list at most 45vh. md+: the canvas is flex-sized now, so the box
+          is at most 40% of it (spec 2026-09-27 M12) and its list scrolls
+          inside that. */}
+      <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md border border-border bg-background/85 text-[11px] leading-tight text-muted-foreground backdrop-blur-sm max-md:bottom-16 md:flex md:max-h-[40%] md:flex-col">
         <button
           type="button"
           onClick={() => setLegendOpen((o) => !o)}
@@ -1911,7 +1923,7 @@ export function TileWineMap({
         </button>
         <div
           className={cn(
-            "max-h-[45vh] overflow-y-auto px-2.5 pb-2",
+            "max-h-[45vh] overflow-y-auto px-2.5 pb-2 md:max-h-none md:min-h-0",
             legendOpen ? "" : "hidden",
           )}
         >

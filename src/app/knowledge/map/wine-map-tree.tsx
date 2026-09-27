@@ -39,9 +39,10 @@ export function WineMapTree({
       without it the rows behave exactly as before, and the rule itself refuses
       every call on a touch device. */
   onPrefetch?: PlacePrefetchHandlers;
-  /** Phones: false while the tree's tab is hidden (the map's bottom sheet on
-      Details). A hidden list cannot scroll, so turning true reveals the
-      selected row again. Defaults to true: the desktop card is always shown. */
+  /** False while the tree is out of sight: the phone sheet on Details, the xl
+      card collapsed, the md-xl side column collapsed. A hidden list cannot
+      scroll, so turning true reveals the selected row again. Defaults to
+      true. */
   active?: boolean;
   /** Phones: countries start collapsed too, so the list opens as a menu of
       countries (spec 2026-09-25 D4). Defaults to false: on desktop countries
@@ -136,32 +137,29 @@ export function WineMapTree({
   // on Saint-Julien), scroll the selected row into view. Expansion of the
   // path is derived below, so the row is guaranteed to be rendered.
   const selectedRowRef = useRef<HTMLDivElement | null>(null);
+  // The tree's own scroller. The reveal moves this list and nothing else.
+  const listRef = useRef<HTMLUListElement | null>(null);
   useEffect(() => {
     // A hidden tab has no layout to scroll; this runs again once it is shown.
     if (!active) return;
     const row = selectedRowRef.current;
-    if (!row) return;
-    // Reveal the selected row WITHIN the tree's own scroll area only — never
-    // scroll the window. scrollIntoView bubbles to the page, which on mobile
-    // jumped the whole screen down to the detail box on a map click.
-    let parent = row.parentElement;
-    while (parent) {
-      const oy = getComputedStyle(parent).overflowY;
-      if (
-        (oy === "auto" || oy === "scroll") &&
-        parent.scrollHeight > parent.clientHeight
-      ) {
-        break;
-      }
-      parent = parent.parentElement;
-    }
-    if (!parent) return;
+    const list = listRef.current;
+    if (!row || !list) return;
+    // Not laid out at all (a display:none card): its rects would all be zero
+    // and the sums below would scroll the list to a wrong place.
+    if (row.getClientRects().length === 0) return;
+    // Reveal the selected row WITHIN the tree's own list only — never an
+    // ancestor, never the window. scrollIntoView bubbles to the page, which
+    // on mobile jumped the whole screen down to the detail box on a map
+    // click, and a walk up to the nearest overflowing scrollable ancestor
+    // could land on AppShell's content column whenever the list itself did
+    // not overflow.
     const rowRect = row.getBoundingClientRect();
-    const parRect = parent.getBoundingClientRect();
-    if (rowRect.top < parRect.top) {
-      parent.scrollTop -= parRect.top - rowRect.top;
-    } else if (rowRect.bottom > parRect.bottom) {
-      parent.scrollTop += rowRect.bottom - parRect.bottom;
+    const listRect = list.getBoundingClientRect();
+    if (rowRect.top < listRect.top) {
+      list.scrollTop -= listRect.top - rowRect.top;
+    } else if (rowRect.bottom > listRect.bottom) {
+      list.scrollTop += rowRect.bottom - listRect.bottom;
     }
   }, [selectedKey, active]);
 
@@ -286,10 +284,20 @@ export function WineMapTree({
           <Search className="size-3.5 shrink-0 text-muted-foreground" />
           {/* 16 px below md: iOS zooms the whole page into a smaller focused
               field, which would undo the phone map's fixed screen. */}
+          {/* Escape with a query clears it here, in React state, and marks the
+              event handled, so the map's Full view (which ignores a handled
+              Escape) stays open; with the box empty Escape passes through
+              and exits Full view. The phone sheet's own Escape still closes
+              it: it does not read defaultPrevented. */}
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape" || query === "") return;
+              event.preventDefault();
+              setQuery("");
+            }}
             placeholder="Search regions, appellations…"
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground max-md:text-base"
           />
@@ -315,7 +323,7 @@ export function WineMapTree({
           <ChevronsDownUp className="size-3.5" />
         </button>
       </div>
-      <ul className="min-h-0 flex-1 overflow-y-auto pr-1">
+      <ul ref={listRef} className="min-h-0 flex-1 overflow-y-auto pr-1">
         {roots.map((root) => renderNode(root, 0))}
         {visibleKeys && visibleKeys.size === 0 ? (
           <li className="px-1.5 py-2 text-sm text-muted-foreground">
