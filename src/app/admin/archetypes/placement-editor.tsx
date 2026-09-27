@@ -10,6 +10,7 @@ import {
   type PlaceHit,
 } from "./actions";
 import { ArchetypeEditor } from "./archetype-editor";
+import { EDITOR_COPY } from "./editor-copy";
 import type { ArchetypeProfile, EditorReferences } from "./profile-rules";
 import type { AromaTerm } from "@/lib/wset/types";
 
@@ -133,7 +134,10 @@ export function PlacementEditor({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // The archetype whose profile is open in the editor sheet; a refresh after a
+  // save hands it the new props without closing it.
   const [openId, setOpenId] = useState<string | null>(null);
+  const open = archetypes.find((a) => a.id === openId) ?? null;
 
   const remove = (archetypeId: string, placeId: string) =>
     startTransition(async () => {
@@ -155,11 +159,11 @@ export function PlacementEditor({
             </span>
             <button
               type="button"
-              onClick={() => setOpenId(openId === a.id ? null : a.id)}
-              className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setOpenId(a.id)}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground md:pointer-fine:min-h-0"
             >
-              <Pencil className="size-3.5" />
-              {openId === a.id ? "Close" : "Edit profile"}
+              <Pencil aria-hidden className="size-3.5" />
+              {EDITOR_COPY.editProfile}
             </button>
           </div>
           <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
@@ -197,12 +201,17 @@ export function PlacementEditor({
               onDone={() => router.refresh()}
             />
           </div>
-
-          {openId === a.id ? (
-            <ArchetypeEditor archetype={a} terms={terms} references={references} />
-          ) : null}
         </div>
       ))}
+      {open ? (
+        <ArchetypeEditor
+          key={open.id}
+          archetype={open}
+          terms={terms}
+          references={references}
+          onClose={() => setOpenId(null)}
+        />
+      ) : null}
     </div>
   );
 }

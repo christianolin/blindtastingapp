@@ -1018,11 +1018,27 @@ a raw subquery, regardless of which two tables look involved at a glance.
   keyboard focus onto the new view's heading (`tabIndex={-1}`, `preventScroll`:
   the landing's and the result's h1, the sheet title through `WsetSheet`'s
   `titleRef`); the first mount leaves focus alone.
-  `/admin/archetypes` edits the scoring identity (country → region →
-  appellation with "Just the region"), designations, typical age, signature
-  aromas, an optional map place and mousse on sparkling; its ladders and checks
-  are pure in `src/app/admin/archetypes/profile-rules.ts`, whose test pins them
-  to the matcher's `ladderFor`. New archetypes arrive only as data migrations
+  `/admin/archetypes` lists the typical wines; "Edit profile" opens one in the
+  Taste & Rate note's own popup and sheet (plan
+  `docs/superpowers/plans/2026-09-26-archetype-editor-sheet.md`). The frame is
+  shared: `src/components/wset/sheet-shell.tsx` (bar, tabs, one section on
+  screen, footer step and Save, discard confirm) serves WsetSheet and the
+  editor alike. Tabs: Wine (the editor's own `wine-section.tsx`: name,
+  colour/style, country → region → appellation with "Just the region", primary
+  and second grape, designations, typical age, map place, description), then
+  the four WSET sections drawn by `ArchetypeSheet`'s `edit` mode — every range
+  on SnapSlider/QualitySlider in editable range mode (`src/lib/wset/range-edit.ts`:
+  a tap outside the band extends the nearer end, inside moves it in, the first
+  tap seeds one stop, a slide moves the end the press took; "clear" empties
+  it), aromas on the note's AromaPicker with a ★ per chosen term for
+  signatures. The working copy and every rule a change carries (cascade,
+  colour → hue, style → `satForStyle`, tab counts, dirty check) are pure in
+  `profile-draft.ts`; ladders and checks stay in `profile-rules.ts`, whose test
+  pins them to the matcher's `ladderFor`. `src/components/wset/sheet-markup.test.tsx`
+  pins the read-only archetype sheet's and the note sheet's markup byte for
+  byte (react-dom/server in vitest, through the `@/` alias in
+  `vitest.config.mts`): an intended change to either is committed with `-u`
+  and its diff reviewed. New archetypes arrive only as data migrations
   generated from a reviewed JSON batch (`data/training/archetypes-batch-*.json`
   → `scripts/training/gen-archetype-batch-migration.mjs`, checked read-only by
   `validate-archetype-batch.mjs`, fail-closed on any name that does not resolve
