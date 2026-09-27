@@ -6,11 +6,10 @@ import {
   useEffectEvent,
   useImperativeHandle,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { Ellipsis, X } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import type { WsetNoteState, WineColour, WineStyle, AromaTerm } from "@/lib/wset/types";
 import {
   APPEARANCE_INTENSITY_STOPS,
@@ -45,13 +44,26 @@ import { useWsetLang } from "@/lib/wset/wset-lang";
 import { composeLiveNote } from "@/lib/wset/live-note.mjs";
 import { qualityBand } from "@/lib/wset/quality-curve.mjs";
 import { SnapSlider } from "./snap-slider";
-import { PillGroup, PHONE_HIT_44 } from "./pill-group";
+import { PillGroup } from "./pill-group";
 import { WineColourControl } from "./wine-colour-control";
 import { AromaPicker } from "./aroma-picker";
 import { QualitySlider } from "./quality-slider";
 import { type SectionNavItem } from "./section-nav";
 import { LiveTastingNote } from "./live-tasting-note";
-import { Eyebrow } from "@/components/overview/eyebrow";
+import {
+  DiscardConfirm,
+  PRIMARY_BUTTON,
+  SheetBar,
+  SheetBody,
+  SheetFooter,
+  SheetFooterProgress,
+  SheetFrame,
+  SheetHeaderRow,
+  SheetSaveButton,
+  SheetStepButton,
+  SheetTabs,
+  useSheetSteps,
+} from "./sheet-shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -82,11 +94,6 @@ const SECTION_SCROLL_MT = "scroll-mt-[190px] sm:scroll-mt-[160px]";
 // sticky bar is 44px taller — below lg only: the strip is hidden from lg up,
 // where the margin falls back to SECTION_SCROLL_MT's own 160px.
 const SECTION_SCROLL_MT_BELOW_BAR = "scroll-mt-[234px] sm:scroll-mt-[204px] lg:scroll-mt-[160px]";
-
-// The bordeaux primary button, as on every other 2026-09 surface: radius 9–11,
-// the ink under-shadow, the one allowed hover literal.
-const PRIMARY_BUTTON =
-  "bg-primary text-primary-foreground shadow-[0_2px_0_0_rgba(42,33,30,.18)] hover:bg-primary-hover";
 
 // The selected value's display label (in the active language), or nothing. An
 // empty control already says "not set" — spelling it out on every unrated row
@@ -293,7 +300,7 @@ export function WsetSheet({
   /** The alcohol row's display-only fourth stop, "fortified (15 %+)". */
   fortified?: WsetTriState;
 } & WsetSaveProps) {
-  const { lang, setLang } = useWsetLang();
+  const { lang } = useWsetLang();
   const L = labelsFor(lang);
   const t = makeT(lang);
   const [state, setState] = useState<WsetNoteState>(initial);
@@ -309,12 +316,11 @@ export function WsetSheet({
   // One WSET section on screen at a time, at every breakpoint — the tabs in
   // the sticky bar and the footer's step switch between them. (Was phone-only;
   // the owner extended it to tablet/desktop, which retired the scroll-spy rail.)
-  const [mobileSection, setMobileSection] = useState<SectionId>("appearance");
-  const [menuOpen, setMenuOpen] = useState(false);
-  // In the modal the sections scroll INSIDE this container while the header
-  // and footer stay put — switching section resets it to the top instead of
+  // In the modal the sections scroll INSIDE scrollRef while the header and
+  // footer stay put — switching section resets it to the top instead of
   // yanking the whole dialog around.
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { active: mobileSection, goTo: goToSection, step, scrollRef } = useSheetSteps(SECTION_ORDER, embedded);
+  const [menuOpen, setMenuOpen] = useState(false);
   const dirty = useMemo(
     () => JSON.stringify(state) !== JSON.stringify(baseline),
     [state, baseline],
@@ -350,7 +356,6 @@ export function WsetSheet({
     [state, shownStyle],
   );
   const sectionScrollMt = belowBar ? SECTION_SCROLL_MT_BELOW_BAR : SECTION_SCROLL_MT;
-  const showAside = !embedded && aside !== null;
   // Both label tables are memoised like `termLabels` above: as plain object
   // literals the React Compiler read them as capturing `L`/`t` and, once they
   // reached valueLabel(), extended those two values' mutable range past the
@@ -385,36 +390,9 @@ export function WsetSheet({
   ];
   const done = navItems.reduce((n, s) => n + s.done, 0);
   const total = navItems.reduce((n, s) => n + s.total, 0);
-  const donePct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   // A section's short name, as the tabs and the footer step print it.
   const sectionName = (id: SectionId) => (id === "conclusions" ? t("conclusion_short") : t(id));
-
-  const goToSection = useCallback(
-    (id: SectionId) => {
-      setMobileSection(id);
-      // After the hidden card mounts: in the modal just reset the inner
-      // scroll; on the page line the card up under the bar.
-      requestAnimationFrame(() => {
-        if (scrollRef.current && embedded) {
-          scrollRef.current.scrollTo({ top: 0 });
-        } else {
-          document.getElementById(id)?.scrollIntoView();
-        }
-      });
-    },
-    [embedded],
-  );
-
-  // The footer's one step, as drawn: forward while a section lies ahead, back
-  // from the last one. The tabs above still jump anywhere.
-  const at = SECTION_ORDER.indexOf(mobileSection);
-  const step: { id: SectionId; forward: boolean } | null =
-    at < SECTION_ORDER.length - 1
-      ? { id: SECTION_ORDER[at + 1], forward: true }
-      : at > 0
-        ? { id: SECTION_ORDER[at - 1], forward: false }
-        : null;
 
   const handleSave = useCallback(async () => {
     // Only reachable with a Save button, which renders only without a
@@ -480,529 +458,307 @@ export function WsetSheet({
   );
 
   return (
-    <div
-      className={cn(
-        "wset-sheet min-w-0",
-        embedded && "flex min-h-0 flex-1 flex-col",
-      )}
-      style={{ color: "var(--foreground)" }}
-    >
-      <div
-        className={cn(
-          "sticky z-30 mb-4 py-2.5 sm:py-3",
-          // Full-bleed on phones so the bar spans the whole screen like a real
-          // app header. A modal is a full-screen box with a known p-4, so a
-          // plain -mx-4 reaches the edges without any viewport math (the 50vw
-          // calc misbehaves inside the fixed, scrolling modal); the note page,
-          // whose nesting/padding is unknown, uses the viewport calc.
-          // In the modal the bar must own the very top: the dialog's p-4 left
-          // a gap the content scrolled past, so the "sticky" header looked
-          // detached. Negative margins cancel that padding on every side and
-          // the top corners take over the dialog's own radius.
-          embedded
-            ? "-mx-4 -mt-4 px-4 sm:rounded-t-[16px] sm:px-6"
-            : "max-sm:mx-[calc(50%-50vw)] max-sm:px-4 sm:px-1",
-        )}
-        style={{
-          top: embedded ? 0 : 56,
-          // Solid card-cream in the modal so nothing ghosts through; the page
-          // keeps the translucent blur since content scrolls under it there.
-          background: embedded ? "var(--card)" : "color-mix(in srgb, var(--background) 94%, transparent)",
-          backdropFilter: embedded ? undefined : "blur(8px)",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        {/* Desktop: eyebrow + wine name … EN/DA · Close · ⋯.
-            Phones: ✕ · wine name over the progress … EN/DA · ⋯. Save lives in
-            the footer at every width. */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {closable ? (
-            <button
-              type="button"
-              aria-label={t("close")}
-              onClick={discard}
-              className="-ml-2.5 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted sm:hidden"
-            >
-              <X aria-hidden className="size-5" />
-            </button>
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <Eyebrow size="sm" className="block max-sm:hidden">
-              {t("tasting_note")}
-            </Eyebrow>
-            <p
-              ref={titleRef}
-              tabIndex={titleRef ? -1 : undefined}
-              className="font-heading text-[16px] leading-[1.2] font-semibold text-foreground outline-none max-sm:line-clamp-2 sm:mt-0.5 sm:truncate sm:text-[17px]"
-            >
-              {title}
-            </p>
-            {/* Phones carry the progress in the bar; desktop keeps it in the
-                footer, beside Save. */}
-            <div className="mt-1 flex items-center gap-2 sm:hidden">
-              <span aria-hidden className="h-[5px] max-w-[120px] flex-1 overflow-hidden rounded-full bg-muted">
-                <span className="block h-full bg-primary" style={{ width: `${donePct}%` }} />
-              </span>
-              <span className="text-[11px] whitespace-nowrap text-muted-foreground tabular-nums">
-                {t("assessed_short", { done, total })}
-              </span>
-            </div>
-          </div>
-          {/* EN/DA toggle — mirrors the map's; the sheet language is shared and
-              persisted, so it also drives the read-only archetype view. */}
-          <div className="flex shrink-0 items-center rounded-md border border-border p-0.5 text-[11px]">
-            {(["en", "da"] as const).map((lng) => (
-              <button
-                key={lng}
-                type="button"
-                onClick={() => setLang(lng)}
-                aria-pressed={lang === lng}
-                className={cn(PHONE_HIT_44, "rounded px-1.5 py-0.5 font-medium max-sm:min-w-9 max-sm:py-1")}
-                style={{
-                  background: lang === lng ? "var(--primary)" : "transparent",
-                  color: lang === lng ? "var(--primary-foreground)" : "var(--muted-foreground)",
-                }}
-              >
-                {lng.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          {closable ? (
-            // Always "Close": a clean note exits, a dirty one asks first (the
-            // same path Escape and the modal backdrop take).
-            <button
-              type="button"
-              onClick={discard}
-              className="shrink-0 rounded-[8px] border border-border bg-card px-3.5 py-2 text-[12.5px] font-semibold whitespace-nowrap text-muted-foreground hover:bg-muted max-sm:hidden"
-            >
-              {t("close")}
-            </button>
-          ) : null}
-          {onDelete ? (
-            // The ⋯ menu holds Delete for a saved note — rare and destructive,
-            // so it stays out of the footer's reach.
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                aria-label={t("more_actions")}
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((o) => !o)}
-                className="-mr-2.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted sm:mr-0 sm:size-[30px] sm:border sm:border-border"
-              >
-                <Ellipsis aria-hidden className="size-4" />
-              </button>
-              {menuOpen ? (
-                <>
-                  <div
-                    aria-hidden
-                    onClick={() => setMenuOpen(false)}
-                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
-                  />
-                  <div
-                    role="menu"
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "calc(100% + 6px)",
-                      zIndex: 41,
-                      minWidth: 150,
-                      padding: 5,
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      boxShadow: "0 8px 28px rgba(42,33,30,0.18)",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setDeleteError(null);
-                        setConfirmDelete(true);
+    <SheetFrame embedded={embedded}>
+      <SheetBar embedded={embedded}>
+        <SheetHeaderRow
+          eyebrow={t("tasting_note")}
+          title={title}
+          titleRef={titleRef}
+          onClose={closable ? discard : undefined}
+          progress={{ done, total }}
+          trailing={
+            onDelete ? (
+              // The ⋯ menu holds Delete for a saved note — rare and destructive,
+              // so it stays out of the footer's reach.
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  aria-label={t("more_actions")}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="-mr-2.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted sm:mr-0 sm:size-[30px] sm:border sm:border-border"
+                >
+                  <Ellipsis aria-hidden className="size-4" />
+                </button>
+                {menuOpen ? (
+                  <>
+                    <div
+                      aria-hidden
+                      onClick={() => setMenuOpen(false)}
+                      style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    />
+                    <div
+                      role="menu"
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        top: "calc(100% + 6px)",
+                        zIndex: 41,
+                        minWidth: 150,
+                        padding: 5,
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        boxShadow: "0 8px 28px rgba(42,33,30,0.18)",
                       }}
-                      className="block w-full rounded-[8px] px-3 py-[9px] text-left text-[13px] font-semibold text-destructive hover:bg-muted max-sm:min-h-11"
                     >
-                      {t("delete_note")}
-                    </button>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-        {/* Section tabs: one section on screen at a time; each tab carries its
-            count. Phones get a 4-column grid of 44px targets. */}
-        <div className="mt-2 gap-1 max-sm:grid max-sm:grid-cols-4 sm:flex sm:gap-2">
-          {navItems.map((s) => {
-            const active = s.id === mobileSection;
-            const complete = s.total > 0 && s.done >= s.total;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => goToSection(s.id as SectionId)}
-                className="rounded-[10px] px-0.5 py-[5px] max-sm:min-h-11 sm:inline-flex sm:items-baseline sm:gap-1.5 sm:px-3 sm:py-1.5"
-                style={{
-                  border: "none",
-                  cursor: "pointer",
-                  background: active ? "var(--primary)" : "var(--accent)",
-                }}
-              >
-                <span
-                  className="block sm:inline"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: active ? "var(--primary-foreground)" : "var(--foreground)",
-                  }}
-                >
-                  {sectionName(s.id as SectionId)}
-                </span>
-                <span
-                  className="block sm:inline"
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: active ? "var(--primary-foreground)" : complete ? "var(--gold-dark)" : "var(--muted-foreground)",
-                  }}
-                >
-                  {complete ? "✓" : `${s.done}/${s.total}`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setDeleteError(null);
+                          setConfirmDelete(true);
+                        }}
+                        className="block w-full rounded-[8px] px-3 py-[9px] text-left text-[13px] font-semibold text-destructive hover:bg-muted max-sm:min-h-11"
+                      >
+                        {t("delete_note")}
+                      </button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            ) : undefined
+          }
+        />
+        <SheetTabs
+          tabs={navItems.map((s) => ({
+            id: s.id,
+            label: sectionName(s.id as SectionId),
+            done: s.done,
+            total: s.total,
+          }))}
+          active={mobileSection}
+          onSelect={(id) => goToSection(id as SectionId)}
+        />
         {/* Inside the sticky bar, so it sticks with the tabs (the training
             room's "Top match" strip below lg). Rendered bare: spacing is the
             caller's, inside its 44px; sectionScrollMt allows those 44px
             below lg only. */}
         {belowBar}
-      </div>
+      </SheetBar>
 
-      <div
-        ref={scrollRef}
-        className={cn(
-          // grid-cols-1 (=minmax(0,1fr)) so the single column can't be
-          // inflated past the container by a card's intrinsic content width —
-          // the section boxes stay within the modal's padding on phones.
-          "grid grid-cols-1 items-start gap-6",
-          showAside && "lg:grid-cols-[264px_minmax(0,1fr)]",
-          // The modal scrolls HERE, between the anchored header and footer.
-          embedded && "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4",
-        )}
+      <SheetBody
+        embedded={embedded}
+        scrollRef={scrollRef}
+        column={
+          aside === undefined ? (
+            <>
+              <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
+              <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
+                {t("footer_wset")}
+              </p>
+            </>
+          ) : (
+            aside
+          )
+        }
       >
-        {showAside ? (
-          <aside className="sticky top-[114px] hidden flex-col gap-4 lg:flex">
-            {aside === undefined ? (
-              <>
-                <LiveTastingNote sections={noteSections} heading={t("tasting_note_live")} emptyText={t("note_empty")} />
-                <p style={{ fontSize: 10.5, color: "var(--placeholder)" }}>
-                  {t("footer_wset")}
-                </p>
-              </>
-            ) : (
-              aside
-            )}
-          </aside>
-        ) : null}
+        <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt, mobileSection !== "appearance" && "hidden")}>
+          <RowPair>
+            <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
+              <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
+            </Row>
+            <Row label={t("intensity")} value={valueLabel(state.appearanceIntensity, L)}>
+              <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={L} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
+            </Row>
+          </RowPair>
+          <Row label={t("colour")} value={valueLabel(state.colourHue, L)}>
+            <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} labels={L} lang={lang} />
+          </Row>
+          {bubbles ? (
+            // Training room (D19): tri-state — neither pill is "not
+            // answered"; a second tap clears. "Sparkling" switches the mousse
+            // row on; leaving it drops a mousse the wine no longer has.
+            <Row label={t("bubbles")} value={valueLabel(bubblesPill(bubbles.value), bubbleLabels)}>
+              <PillGroup
+                options={BUBBLES_OPTIONS}
+                labels={bubbleLabels}
+                value={bubblesPill(bubbles.value)}
+                onChange={(v) => {
+                  const next = bubblesFromPill(v);
+                  bubbles.onChange(next);
+                  const mousse = mousseAfterBubbles(wine.style, next, fortified?.value ?? null, state.mousse);
+                  if (mousse !== state.mousse) set("mousse", mousse);
+                }}
+              />
+            </Row>
+          ) : null}
+          <Row label={t("other_observations")} sub={optionalSub(t("optional_not_counted", { total }))}>
+            <PillGroup multi options={OBSERVATIONS} labels={L} value={state.observations} onChange={(v) => set("observations", v)} />
+          </Row>
+        </SectionCard>
 
-        <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "var(--wset-gap,18px)" }}>
-          <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt, mobileSection !== "appearance" && "hidden")}>
-            <RowPair>
-              <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
-                <PillGroup options={CLARITY} labels={L} value={state.clarity} onChange={(v) => set("clarity", v)} />
-              </Row>
-              <Row label={t("intensity")} value={valueLabel(state.appearanceIntensity, L)}>
-                <SnapSlider stops={APPEARANCE_INTENSITY_STOPS} labels={L} value={state.appearanceIntensity} onChange={(v) => set("appearanceIntensity", v)} />
-              </Row>
-            </RowPair>
-            <Row label={t("colour")} value={valueLabel(state.colourHue, L)}>
-              <WineColourControl colour={wine.colour} hue={state.colourHue} onChange={(v) => set("colourHue", v)} labels={L} lang={lang} />
+        <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(sectionScrollMt, mobileSection !== "nose" && "hidden")}>
+          <RowPair>
+            <Row label={t("condition")} value={valueLabel(state.condition, L)}>
+              <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
             </Row>
-            {bubbles ? (
-              // Training room (D19): tri-state — neither pill is "not
-              // answered"; a second tap clears. "Sparkling" switches the mousse
-              // row on; leaving it drops a mousse the wine no longer has.
-              <Row label={t("bubbles")} value={valueLabel(bubblesPill(bubbles.value), bubbleLabels)}>
-                <PillGroup
-                  options={BUBBLES_OPTIONS}
-                  labels={bubbleLabels}
-                  value={bubblesPill(bubbles.value)}
-                  onChange={(v) => {
-                    const next = bubblesFromPill(v);
-                    bubbles.onChange(next);
-                    const mousse = mousseAfterBubbles(wine.style, next, fortified?.value ?? null, state.mousse);
-                    if (mousse !== state.mousse) set("mousse", mousse);
-                  }}
-                />
-              </Row>
-            ) : null}
-            <Row label={t("other_observations")} sub={optionalSub(t("optional_not_counted", { total }))}>
-              <PillGroup multi options={OBSERVATIONS} labels={L} value={state.observations} onChange={(v) => set("observations", v)} />
+            <Row label={t("intensity")} value={valueLabel(state.noseIntensity, L)}>
+              <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
             </Row>
-          </SectionCard>
-
-          <SectionCard id="nose" numeral="II" title={t("nose")} rated={t("assessed_of", { done: prog.nose[0], total: prog.nose[1] })} className={cn(sectionScrollMt, mobileSection !== "nose" && "hidden")}>
-            <RowPair>
-              <Row label={t("condition")} value={valueLabel(state.condition, L)}>
-                <PillGroup options={CONDITION} labels={L} value={state.condition} onChange={(v) => set("condition", v)} />
-              </Row>
-              <Row label={t("intensity")} value={valueLabel(state.noseIntensity, L)}>
-                <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.noseIntensity} onChange={(v) => set("noseIntensity", v)} />
-              </Row>
-            </RowPair>
-            {state.condition === "UNCLEAN" ? (
-              <Row label={t("fault")} sub={t("whats_wrong")}>
-                <PillGroup multi options={FAULTS} labels={L} value={state.faults} onChange={(v) => set("faults", v)} />
-              </Row>
-            ) : null}
-            <Row label={t("development")} value={valueLabel(state.development, L)}>
-              <SnapSlider stops={DEVELOPMENT_STOPS} labels={L} value={state.development} onChange={(v) => set("development", v)} />
+          </RowPair>
+          {state.condition === "UNCLEAN" ? (
+            <Row label={t("fault")} sub={t("whats_wrong")}>
+              <PillGroup multi options={FAULTS} labels={L} value={state.faults} onChange={(v) => set("faults", v)} />
             </Row>
-            <Row wide label={t("aroma_characteristics")} sub={t("select_all")}>
-              <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour ?? colourFromHue(state.colourHue)} sheetTitle={t("aroma_characteristics")} lang={lang} />
+          ) : null}
+          <Row label={t("development")} value={valueLabel(state.development, L)}>
+            <SnapSlider stops={DEVELOPMENT_STOPS} labels={L} value={state.development} onChange={(v) => set("development", v)} />
+          </Row>
+          <Row wide label={t("aroma_characteristics")} sub={t("select_all")}>
+            <AromaPicker terms={terms} selectedIds={state.noseTermIds} onChange={(ids) => set("noseTermIds", ids)} colour={wine.colour ?? colourFromHue(state.colourHue)} sheetTitle={t("aroma_characteristics")} lang={lang} />
+          </Row>
+        </SectionCard>
+        <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(sectionScrollMt, mobileSection !== "palate" && "hidden")}>
+          <RowPair>
+            <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
+              <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
             </Row>
-          </SectionCard>
-          <SectionCard id="palate" numeral="III" title={t("palate")} rated={t("assessed_of", { done: prog.palate[0], total: prog.palate[1] })} className={cn(sectionScrollMt, mobileSection !== "palate" && "hidden")}>
+            <Row label={t("acidity")} value={valueLabel(state.acidity, L)}>
+              <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.acidity} onChange={(v) => set("acidity", v)} />
+            </Row>
+          </RowPair>
+          <RowPair>
+            <Row label={t("tannin")} value={valueLabel(state.tannin, L)}>
+              <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.tannin} onChange={(v) => set("tannin", v)} />
+            </Row>
+            <Row label={t("tannin_nature")} sub={t("optional")}>
+              <PillGroup multi options={TANNIN_NATURE} labels={L} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
+            </Row>
+          </RowPair>
+          <RowPair>
+            <Row label={t("alcohol")} value={valueLabel(alcoholValue, alcoholLabels)}>
+              <SnapSlider
+                stops={alcoholStopsFor(shownStyle, fortified !== undefined)}
+                labels={alcoholLabels}
+                value={alcoholValue}
+                onChange={(v) => {
+                  // The fourth stop writes HIGH + fortified; any other stop
+                  // is that level and not fortified (D19).
+                  const pick = alcoholPick(v);
+                  set("alcohol", pick.alcohol);
+                  fortified?.onChange(pick.fortified);
+                }}
+              />
+            </Row>
+            <Row label={t("body")} value={valueLabel(state.body, L)}>
+              <SnapSlider stops={BODY_STOPS} labels={L} value={state.body} onChange={(v) => set("body", v)} />
+            </Row>
+          </RowPair>
+          {shownStyle === "SPARKLING" ? (
             <RowPair>
-              <Row label={t("sweetness")} value={valueLabel(state.sweetness, L)}>
-                <SnapSlider stops={SWEETNESS_STOPS} labels={L} value={state.sweetness} onChange={(v) => set("sweetness", v)} />
+              <Row label={t("mousse")} value={valueLabel(state.mousse, L)} sub={state.mousse ? undefined : t("required_sparkling")}>
+                <PillGroup options={MOUSSE} labels={L} value={state.mousse} onChange={(v) => set("mousse", v)} />
               </Row>
-              <Row label={t("acidity")} value={valueLabel(state.acidity, L)}>
-                <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.acidity} onChange={(v) => set("acidity", v)} />
-              </Row>
-            </RowPair>
-            <RowPair>
-              <Row label={t("tannin")} value={valueLabel(state.tannin, L)}>
-                <SnapSlider stops={LEVEL_STOPS} labels={L} value={state.tannin} onChange={(v) => set("tannin", v)} />
-              </Row>
-              <Row label={t("tannin_nature")} sub={t("optional")}>
-                <PillGroup multi options={TANNIN_NATURE} labels={L} value={state.tanninNature} onChange={(v) => set("tanninNature", v)} />
-              </Row>
-            </RowPair>
-            <RowPair>
-              <Row label={t("alcohol")} value={valueLabel(alcoholValue, alcoholLabels)}>
-                <SnapSlider
-                  stops={alcoholStopsFor(shownStyle, fortified !== undefined)}
-                  labels={alcoholLabels}
-                  value={alcoholValue}
-                  onChange={(v) => {
-                    // The fourth stop writes HIGH + fortified; any other stop
-                    // is that level and not fortified (D19).
-                    const pick = alcoholPick(v);
-                    set("alcohol", pick.alcohol);
-                    fortified?.onChange(pick.fortified);
-                  }}
-                />
-              </Row>
-              <Row label={t("body")} value={valueLabel(state.body, L)}>
-                <SnapSlider stops={BODY_STOPS} labels={L} value={state.body} onChange={(v) => set("body", v)} />
-              </Row>
-            </RowPair>
-            {shownStyle === "SPARKLING" ? (
-              <RowPair>
-                <Row label={t("mousse")} value={valueLabel(state.mousse, L)} sub={state.mousse ? undefined : t("required_sparkling")}>
-                  <PillGroup options={MOUSSE} labels={L} value={state.mousse} onChange={(v) => set("mousse", v)} />
-                </Row>
-                <Row label={t("flavour_intensity")} value={valueLabel(state.flavourIntensity, L)}>
-                  <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
-                </Row>
-              </RowPair>
-            ) : (
               <Row label={t("flavour_intensity")} value={valueLabel(state.flavourIntensity, L)}>
                 <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
               </Row>
-            )}
-            <Row wide label={t("flavour_characteristics")} sub={t("taste_not_smell")}>
-              <AromaPicker
-                terms={terms}
-                selectedIds={state.palateTermIds}
-                onChange={(ids) => set("palateTermIds", ids)}
-                copyFrom={{ label: t("copy_from_nose"), ids: state.noseTermIds }}
-                colour={wine.colour ?? colourFromHue(state.colourHue)}
-                sheetTitle={t("flavour_characteristics")}
-                lang={lang}
-              />
-            </Row>
-            <Row label={t("finish")} value={valueLabel(state.finish, L)}>
-              <SnapSlider stops={FINISH_STOPS} labels={L} value={state.finish} onChange={(v) => set("finish", v)} />
-            </Row>
-          </SectionCard>
-
-          <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(sectionScrollMt, mobileSection !== "conclusions" && "hidden")}>
-            <Row label={t("score")}>
-              <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
-            </Row>
-            <RowPair>
-              <Row label={t("price_category")} value={valueLabel(state.priceCategory, L)}>
-                <PillGroup options={PRICE} labels={L} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
-              </Row>
-              <Row label={t("readiness")} value={valueLabel(state.readiness, L)}>
-                <PillGroup options={READINESS} labels={L} value={state.readiness} onChange={(v) => set("readiness", v)} />
-              </Row>
             </RowPair>
-            <Row label={t("tasters_notes")} sub={optionalSub(t("own_words_sub"))}>
-              <textarea
-                value={state.tasterNotes}
-                onChange={(e) => set("tasterNotes", e.target.value)}
-                placeholder={t("notes_placeholder")}
-                style={{
-                  width: "100%",
-                  minHeight: 96,
-                  resize: "vertical",
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: "var(--foreground)",
-                }}
-              />
+          ) : (
+            <Row label={t("flavour_intensity")} value={valueLabel(state.flavourIntensity, L)}>
+              <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
             </Row>
-          </SectionCard>
-        </div>
-      </div>
+          )}
+          <Row wide label={t("flavour_characteristics")} sub={t("taste_not_smell")}>
+            <AromaPicker
+              terms={terms}
+              selectedIds={state.palateTermIds}
+              onChange={(ids) => set("palateTermIds", ids)}
+              copyFrom={{ label: t("copy_from_nose"), ids: state.noseTermIds }}
+              colour={wine.colour ?? colourFromHue(state.colourHue)}
+              sheetTitle={t("flavour_characteristics")}
+              lang={lang}
+            />
+          </Row>
+          <Row label={t("finish")} value={valueLabel(state.finish, L)}>
+            <SnapSlider stops={FINISH_STOPS} labels={L} value={state.finish} onChange={(v) => set("finish", v)} />
+          </Row>
+        </SectionCard>
 
-      {/* The footer: progress (desktop) beside the section step and Save. In
-          the modal it is the popup's last row, so it stays pinned while the
-          sections scroll; on the note page it sticks to the viewport bottom. */}
-      <div
-        className={cn(
-          "flex items-center gap-[9px] sm:gap-3",
-          embedded
-            ? "-mx-4 -mb-4 border-t border-border bg-card px-4 pt-[11px] pb-[max(11px,env(safe-area-inset-bottom))] sm:rounded-b-[16px] sm:px-6 sm:py-3"
-            : "sticky bottom-0 z-30 mt-6 border-t border-border py-[11px] max-sm:mx-[calc(50%-50vw)] max-sm:px-4 max-sm:pb-[max(11px,env(safe-area-inset-bottom))] sm:px-1 sm:py-3",
-        )}
-        style={
-          embedded
-            ? undefined
-            : { background: "color-mix(in srgb, var(--background) 94%, transparent)", backdropFilter: "blur(8px)" }
+        <SectionCard id="conclusions" numeral="IV" title={t("conclusions")} rated={t("assessed_of", { done: prog.conclusions[0], total: prog.conclusions[1] })} className={cn(sectionScrollMt, mobileSection !== "conclusions" && "hidden")}>
+          <Row label={t("score")}>
+            <QualitySlider score={state.qualityScore} onChange={(v) => set("qualityScore", v)} lang={lang} />
+          </Row>
+          <RowPair>
+            <Row label={t("price_category")} value={valueLabel(state.priceCategory, L)}>
+              <PillGroup options={PRICE} labels={L} value={state.priceCategory} onChange={(v) => set("priceCategory", v)} />
+            </Row>
+            <Row label={t("readiness")} value={valueLabel(state.readiness, L)}>
+              <PillGroup options={READINESS} labels={L} value={state.readiness} onChange={(v) => set("readiness", v)} />
+            </Row>
+          </RowPair>
+          <Row label={t("tasters_notes")} sub={optionalSub(t("own_words_sub"))}>
+            <textarea
+              value={state.tasterNotes}
+              onChange={(e) => set("tasterNotes", e.target.value)}
+              placeholder={t("notes_placeholder")}
+              style={{
+                width: "100%",
+                minHeight: 96,
+                resize: "vertical",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: "12px 14px",
+                fontSize: 13,
+                lineHeight: 1.6,
+                color: "var(--foreground)",
+              }}
+            />
+          </Row>
+        </SectionCard>
+      </SheetBody>
+
+      <SheetFooter
+        embedded={embedded}
+        progress={
+          <SheetFooterProgress
+            done={done}
+            caption={t("of_total_assessed", { total })}
+            note={footerAction ? null : t("nothing_required")}
+          />
         }
       >
-        <div className="min-w-0 max-sm:hidden">
-          <div className="flex items-baseline gap-[7px]">
-            <span className="font-heading text-[22px] leading-none font-semibold text-primary tabular-nums">
-              {done}
-            </span>
-            <span className="text-[11.5px] text-muted-foreground">
-              {t("of_total_assessed", { total })}
-            </span>
-          </div>
-          {footerAction ? null : (
-            <p className="mt-1 text-[10.5px] leading-[1.45] text-muted-foreground">
-              {t("nothing_required")}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-1 items-center gap-[9px] sm:ml-auto sm:flex-none">
-          {step ? (
-            <button
-              type="button"
-              onClick={() => goToSection(step.id)}
-              className="min-h-11 rounded-[10px] border border-border bg-background p-[13px] text-[13.5px] font-semibold whitespace-nowrap text-primary hover:bg-muted max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[15px] sm:py-[10px] sm:text-[13px]"
-            >
-              {step.forward ? (
-                <>
-                  <span className="sm:hidden">{t("next_section_short", { section: sectionName(step.id) })}</span>
-                  <span className="max-sm:hidden">{t("next_section", { section: sectionName(step.id) })}</span>
-                </>
-              ) : (
-                t("prev_section", { section: sectionName(step.id) })
-              )}
-            </button>
-          ) : null}
-          {footerAction ? (
-            // The training room's "Your call →" in place of Save, at every
-            // section (spec §3.3).
-            <button
-              type="button"
-              onClick={footerAction.onClick}
-              className={cn(
-                "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
-                PRIMARY_BUTTON,
-              )}
-            >
-              {footerAction.label}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saveState === "saving"}
-              className={cn(
-                "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors disabled:opacity-70 max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
-                // Ink on the gold "Saved" fill (6.5:1), like every bg-gold button
-                // in the app; parchment is only for text on bordeaux.
-                saveState === "saved"
-                  ? "bg-gold text-foreground hover:bg-gold-deep"
-                  : PRIMARY_BUTTON,
-              )}
-            >
-              {saveLabel}
-            </button>
-          )}
-        </div>
-      </div>
+        {step ? (
+          <SheetStepButton section={sectionName(step.id)} forward={step.forward} onClick={() => goToSection(step.id)} />
+        ) : null}
+        {footerAction ? (
+          // The training room's "Your call →" in place of Save, at every
+          // section (spec §3.3).
+          <button
+            type="button"
+            onClick={footerAction.onClick}
+            className={cn(
+              "min-h-11 rounded-[10px] p-[13px] text-[14px] font-semibold whitespace-nowrap shadow-[0_2px_0_0_rgba(42,33,30,.18)] transition-colors max-sm:flex-1 sm:min-h-0 sm:rounded-[9px] sm:px-[19px] sm:py-[11px] sm:text-[13.5px]",
+              PRIMARY_BUTTON,
+            )}
+          >
+            {footerAction.label}
+          </button>
+        ) : (
+          <SheetSaveButton
+            label={saveLabel}
+            onClick={handleSave}
+            disabled={saveState === "saving"}
+            saved={saveState === "saved"}
+          />
+        )}
+      </SheetFooter>
 
       {confirmDiscard ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setConfirmDiscard(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 60,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            background: "color-mix(in srgb, var(--foreground) 45%, transparent)",
+        <DiscardConfirm
+          title={t("discard_q")}
+          body={t("discard_body")}
+          keepLabel={t("keep_editing")}
+          discardLabel={t("discard")}
+          onKeep={() => setConfirmDiscard(false)}
+          onDiscard={() => {
+            setConfirmDiscard(false);
+            onDiscard?.();
           }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: 360,
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-              borderRadius: 16,
-              padding: 20,
-              boxShadow: "0 12px 40px rgba(42,33,30,0.25)",
-            }}
-          >
-            <h3 className="font-heading" style={{ fontSize: 17, fontWeight: 600, color: "var(--foreground)", marginBottom: 6 }}>
-              {t("discard_q")}
-            </h3>
-            <p style={{ fontSize: 13, color: "var(--muted-foreground)", lineHeight: 1.5, marginBottom: 18 }}>
-              {t("discard_body")}
-            </p>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button
-                type="button"
-                onClick={() => setConfirmDiscard(false)}
-                className="rounded-[9px] border border-border bg-transparent px-4 py-[9px] text-[13px] font-semibold text-foreground hover:bg-muted max-sm:min-h-11"
-              >
-                {t("keep_editing")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmDiscard(false);
-                  onDiscard?.();
-                }}
-                className={cn("rounded-[9px] px-4 py-[9px] text-[13px] font-semibold max-sm:min-h-11", PRIMARY_BUTTON)}
-              >
-                {t("discard")}
-              </button>
-            </div>
-          </div>
-        </div>
+        />
       ) : null}
       {confirmDelete ? (
         <div
@@ -1076,6 +832,6 @@ export function WsetSheet({
           </div>
         </div>
       ) : null}
-    </div>
+    </SheetFrame>
   );
 }

@@ -23,6 +23,7 @@ import type {
 import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
 import { useNoteSavedStep } from "@/components/note-saved-sheet";
 import type { WsetSheetHandle } from "@/components/wset/wset-sheet";
+import { SHEET_DIALOG_CLASS } from "@/components/wset/sheet-shell";
 
 /**
  * What NewNoteModal opens on. `catalog` is every existing caller (a catalog
@@ -344,7 +345,7 @@ export function NewNoteModal({
         // Wider on big screens: the sheet reads small on a desktop monitor, so
         // the dialog takes more of the viewport (capped) and the .wset-sheet
         // desktop scale in globals.css enlarges its type to match.
-        className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:w-[calc(100vw-3rem)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-[16px] lg:max-w-[1400px]"
+        className={SHEET_DIALOG_CLASS}
       >
         <DialogTitle className="sr-only">
           {data && data !== "loading" && data !== "unsupported" ? data.title : "Tasting note"}
