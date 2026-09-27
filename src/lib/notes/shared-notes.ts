@@ -10,9 +10,13 @@ import type { Database } from "@/lib/supabase/database.types";
 import {
   NOTES_FETCHED,
   OTHERS_NOTE_SELECT,
+  PROFILE_NOTE_SELECT,
   toOthersNoteRows,
+  toProfileNoteRows,
   type OthersNoteRow,
+  type ProfileNoteRow,
   type RawOthersNote,
+  type RawProfileNote,
 } from "./shared-notes-view";
 
 type Client = SupabaseClient<Database>;
@@ -40,6 +44,30 @@ export async function getOthersNotesForWine(
   }
   const raws = (data ?? []) as unknown as RawOthersNote[];
   return { rows: toOthersNoteRows(raws, wineId), fetched: raws.length };
+}
+
+/** A person's identified notes as the viewer may read them; `own` adds the held tags. */
+export async function getProfileNotes(
+  supabase: Client,
+  profileId: string,
+  { own }: { own: boolean },
+): Promise<SharedNotesResult<ProfileNoteRow> | null> {
+  const { data, error } = await supabase
+    .from("wset_notes")
+    .select(PROFILE_NOTE_SELECT)
+    .eq("author_id", profileId)
+    .not("catalog_wine_id", "is", null)
+    .order("tasted_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(NOTES_FETCHED);
+  if (error) {
+    console.error("[shared-notes] profile notes read failed", error.code, error.message);
+    return null;
+  }
+  const raws = (data ?? []) as unknown as RawProfileNote[];
+  const held = own ? await getMyHeldNoteIds(supabase, raws.map((r) => r.id)) : new Set<string>();
+  return { rows: toProfileNoteRows(raws, held), fetched: raws.length };
 }
 
 /** Which of these are the viewer's own notes others cannot read yet (S19).

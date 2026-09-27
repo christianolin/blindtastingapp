@@ -26,6 +26,9 @@ import {
 import { ProfileHeader } from "./profile-header";
 import { ProfileStatCards } from "./profile-stat-cards";
 import { ProfileTastings } from "./profile-tastings";
+import { ProfileNotes } from "./profile-notes";
+import { getProfileNotes } from "@/lib/notes/shared-notes";
+import { SHARING_COPY, ownNotesLine } from "@/lib/sharing/visibility";
 
 export default async function ProfilePage({
   params,
@@ -48,7 +51,7 @@ export default async function ProfilePage({
     supabase
       .from("profiles")
       .select(
-        "id, display_name, bio, avatar_url, location, created_at, deleted_at",
+        "id, display_name, bio, avatar_url, location, created_at, deleted_at, notes_visibility",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -101,7 +104,7 @@ export default async function ProfilePage({
   // request the viewer sent, the request waiting on the viewer) and the
   // cellar gate are only meaningful for someone else's profile; stats and
   // favourites run either way. All in parallel.
-  const [friendshipResult, outgoingResult, incomingResult, cellarResult, stats, favourites] =
+  const [friendshipResult, outgoingResult, incomingResult, cellarResult, stats, favourites, notes] =
     await Promise.all([
       isOwnProfile
         ? Promise.resolve(null)
@@ -131,6 +134,9 @@ export default async function ProfilePage({
       getProfileStats(profile.id),
       // Null on a failed read: the chips then simply do not render (D11).
       getProfileFavourites(supabase, profile.id),
+      // "Tasting notes" (sharing-defaults spec §7.3): as the viewer, so the
+      // policy decides; null on a failed read hides the section.
+      getProfileNotes(supabase, profile.id, { own: isOwnProfile }),
     ]);
   const friendState = relationship({
     friend: Boolean(friendshipResult?.data),
@@ -214,6 +220,21 @@ export default async function ProfilePage({
             {rows.length > 0 ? <ProfileTastings rows={rows} footer={footer} /> : null}
           </>
         )}
+
+        {/* After the tastings, and outside the stats empty state: notes are
+            not guesses. Someone else's section hides when nothing is readable,
+            so "private" and "no notes" look the same. */}
+        {notes && (isOwnProfile || notes.rows.length > 0) ? (
+          <ProfileNotes
+            rows={notes.rows}
+            fetched={notes.fetched}
+            own={
+              isOwnProfile
+                ? { line: ownNotesLine(profile.notes_visibility), changeHref: SHARING_COPY.settingsHref }
+                : null
+            }
+          />
+        ) : null}
       </div>
     </div>
   );

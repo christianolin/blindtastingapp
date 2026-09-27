@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { getMyHeldNoteIds, getOthersNotesForWine } from "./shared-notes";
-import { OTHERS_NOTE_SELECT } from "./shared-notes-view";
+import { getMyHeldNoteIds, getOthersNotesForWine, getProfileNotes } from "./shared-notes";
+import { OTHERS_NOTE_SELECT, PROFILE_NOTE_SELECT } from "./shared-notes-view";
 
 type Result = { data: unknown; error: { code?: string; message: string } | null };
 
@@ -111,6 +111,33 @@ describe("getOthersNotesForWine", () => {
   it("answers null on a failed read, never an empty list", async () => {
     const { client } = fakeClient({ data: null, error: { code: "42P01", message: "boom" } });
     await expect(getOthersNotesForWine(client, "w1", "me")).resolves.toBeNull();
+  });
+});
+
+describe("getProfileNotes", () => {
+  it("reads the person's identified notes and asks which are held only on their own profile", async () => {
+    const own = fakeClient({ data: [note("n1"), note("n2")], error: null }, { data: ["n2"], error: null });
+    const result = await getProfileNotes(own.client, "u2", { own: true });
+    expect(own.calls.slice(0, 4)).toEqual([
+      ["from", "wset_notes"],
+      ["select", PROFILE_NOTE_SELECT],
+      ["eq", "author_id", "u2"],
+      ["not", "catalog_wine_id", "is", null],
+    ]);
+    expect(own.calls).toContainEqual(["rpc", "wset_my_held_notes", { p_note_ids: ["n1", "n2"] }]);
+    expect(result?.rows.map((r) => [r.id, r.held])).toEqual([
+      ["n2", true],
+      ["n1", false],
+    ]);
+
+    const other = fakeClient({ data: [note("n1")], error: null });
+    await getProfileNotes(other.client, "u2", { own: false });
+    expect(other.calls.some((c) => c[0] === "rpc")).toBe(false);
+  });
+
+  it("answers null on a failed read", async () => {
+    const { client } = fakeClient({ data: null, error: { message: "boom" } });
+    await expect(getProfileNotes(client, "u2", { own: true })).resolves.toBeNull();
   });
 });
 
