@@ -78,7 +78,7 @@ export function tourSteps(opts: {
       id: "cellar",
       title: "Cellar & Catalog",
       paragraphs: [
-        `Add bottles by ${addBy} — the catalog is everyone's reference, your cellar is yours and private unless you say otherwise.`,
+        `Add bottles by ${addBy} — the catalog is everyone's reference, and other members can see your cellar unless you change it in your profile settings.`,
       ],
     },
     {
@@ -92,7 +92,7 @@ export function tourSteps(opts: {
       id: "community",
       title: "Community",
       paragraphs: [
-        `Find people, ${befriend}, share your invite link. Friends can see each other's cellars when you allow it.`,
+        `Find people, ${befriend}, share your invite link. You choose who sees your cellar and your notes: everyone, friends or only you.`,
       ],
     },
   ];

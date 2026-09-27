@@ -148,8 +148,9 @@ export async function getLotSheet(
   }
 
   // 4. D7: the spread from the wine's own scored notes plus the viewer's
-  // friendships. A note with an identity is readable by every signed-in user
-  // (`"wset_notes read"`), so this needs no view widening and no migration.
+  // friendships. "wset notes read" returns only the notes each author shares
+  // with this viewer (a held note never), so the spread follows every friend's
+  // own notes setting.
   const { data: spreadData } = await supabase
     .from("wset_notes")
     .select("quality_score, author_id")

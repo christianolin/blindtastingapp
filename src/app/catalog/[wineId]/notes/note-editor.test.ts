@@ -41,3 +41,26 @@ describe("note-editor -> WsetSheet wine prop (A-07 regression)", () => {
     );
   });
 });
+
+// Sharing defaults spec 2026-09-27 §5.3: the notes Rule 1 guard's refusal
+// reaches the author as its sentence, not a bare "Retry save". Source
+// inspection, as above: no DOM renderer in this codebase.
+describe("the notes Rule 1 refusal reaches the sheet as a sentence", () => {
+  const noteEditorSrc = readFileSync(
+    path.join(process.cwd(), "src/app/catalog/[wineId]/notes/note-editor.tsx"),
+    "utf8",
+  );
+  const wsetSheetSrc = readFileSync(path.join(process.cwd(), "src/components/wset/wset-sheet.tsx"), "utf8");
+
+  it("NoteEditor throws the guard's refusal as a save refusal, before the generic error", () => {
+    const refusal = noteEditorSrc.indexOf("if (isNoteRule1Refusal(error)) throw noteSaveRefusal(NOTE_RULE1_MESSAGE);");
+    const generic = noteEditorSrc.indexOf("if (error) throw new Error(error.message);");
+    expect(refusal).toBeGreaterThan(-1);
+    expect(refusal).toBeLessThan(generic);
+  });
+
+  it("WsetSheet puts a save refusal's sentence in the footer's notice slot", () => {
+    expect(wsetSheetSrc).toContain("setSaveNotice(saveRefusalMessage(error));");
+    expect(wsetSheetSrc).toMatch(/<SheetFooter[\s\S]*?notice=\{\s*saveNotice \?/);
+  });
+});

@@ -295,7 +295,8 @@ export async function fetchHiddenNoteState(
 export type WineDescriptor = { term: string; origin: string | null; mentions: number };
 
 // The community's most-mentioned aromas/flavours for a wine, drawn from the
-// public catalog_wine_descriptors view (all notes, any author).
+// catalog_wine_descriptors view (security_invoker: only the notes this viewer
+// may read, sharing defaults S9).
 export async function fetchWineDescriptors(
   supabase: SupabaseClient<Database>,
   wineId: string,
@@ -354,8 +355,9 @@ export type WineStructureDimension = {
   n: number;
 };
 
-// Community-averaged nose/palate structure for a wine (SECURITY DEFINER RPC;
-// aggregates the ordinal SAT fields across all authors). Returned in WSET order
+// Community-averaged nose/palate structure for a wine (SECURITY INVOKER RPC
+// since sharing defaults: averages the ordinal SAT fields over the notes this
+// viewer may read). Returned in WSET order
 // nose -> finish; dimensions with no data are already omitted server-side.
 export async function fetchWineStructure(
   supabase: SupabaseClient<Database>,

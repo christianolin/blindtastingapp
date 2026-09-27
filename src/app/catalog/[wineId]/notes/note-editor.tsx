@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { WsetSheet, type WsetSheetHandle } from "@/components/wset/wset-sheet";
 import { NOTES_ARCHIVE_HREF } from "@/lib/wset/note-saved";
+import { NOTE_RULE1_MESSAGE, isNoteRule1Refusal, noteSaveRefusal } from "@/lib/notes/rule1-guard";
 import { aromasToPayload, noteToPayload } from "@/lib/wset/note-state";
 import type { NoteContextKind } from "@/lib/wset/queries";
 import type {
@@ -91,6 +92,9 @@ export function NoteEditor({
           p_aromas: pAromas,
         }));
       }
+      // The notes Rule 1 guard (sharing-defaults spec §5.3): the sheet shows
+      // its sentence rather than a bare "Retry save".
+      if (isNoteRule1Refusal(error)) throw noteSaveRefusal(NOTE_RULE1_MESSAGE);
       if (error) throw new Error(error.message);
       const savedId = data as unknown as string;
       // Back-link a cellar drink to the note it produced (owner-only via RLS).

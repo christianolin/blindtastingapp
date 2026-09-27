@@ -65,6 +65,7 @@ import {
   useSheetSteps,
 } from "./sheet-shell";
 import { Button } from "@/components/ui/button";
+import { saveRefusalMessage } from "@/lib/notes/rule1-guard";
 import { cn } from "@/lib/utils";
 
 const CLARITY = ["CLEAR", "HAZY"] as const;
@@ -318,6 +319,10 @@ export function WsetSheet({
   // sheet is clean again, and Close exits without asking.
   const [baseline, setBaseline] = useState<WsetNoteState>(initial);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // A refusal the author must read (the notes Rule 1 guard, sharing-defaults
+  // spec §5.3): shown above the footer until the next save. Any other failed
+  // save keeps the bare "Retry save".
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -408,13 +413,15 @@ export function WsetSheet({
     // footerAction — and then onSave is required by the prop types.
     if (!onSave) return;
     setSaveState("saving");
+    setSaveNotice(null);
     try {
       await onSave(state);
       setBaseline(state);
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2200);
-    } catch {
+    } catch (error) {
       setSaveState("error");
+      setSaveNotice(saveRefusalMessage(error));
     }
   }, [onSave, state]);
 
@@ -722,6 +729,13 @@ export function WsetSheet({
 
       <SheetFooter
         embedded={embedded}
+        notice={
+          saveNotice ? (
+            <p role="status" className="text-[12.5px] leading-[1.45] text-rose">
+              {saveNotice}
+            </p>
+          ) : undefined
+        }
         progress={
           <SheetFooterProgress
             done={done}

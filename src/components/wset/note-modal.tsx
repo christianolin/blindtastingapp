@@ -25,9 +25,10 @@ type EditData = {
 // Opens a saved note as the full WSET sheet — the very editor the note page
 // uses — so a taster can review AND edit it in place: from the Tasting notes
 // archive (/taste/notes) and from a bottle's "Show note" in the cellar. Data is
-// fetched on open by note id. The notes read policy is public, so privacy is
-// the caller's job: pass only the signed-in author's own notes. NoteEditor owns
-// saving.
+// fetched on open by note id. Other people's notes can be readable too (the
+// "wset notes read" policy follows each author's sharing setting), so the
+// caller passes only the signed-in author's own notes: this is their editor.
+// NoteEditor owns saving.
 export function NoteModal({
   noteId,
   wineId,

@@ -289,7 +289,7 @@ export async function PlayExperience({
   // this wine"'s "Your note · {d} of {t} assessed" (it reopens the note
   // instead of starting a blank one). A still-hidden note is only readable
   // by its author under the "wset notes read" policy, but a RESOLVED note
-  // (identity set at the reveal) is readable by anyone once resolved — so an
+  // (identity set at the reveal) is readable by whoever its author shares with — so an
   // explicit author filter is required here to keep this "my own note only".
   const { data: myGlassNotes } = await supabase
     .from("wset_notes")

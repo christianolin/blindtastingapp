@@ -52,19 +52,19 @@ describe("tourSteps (spec D5)", () => {
 
   it("names the header camera only where canScan is true", () => {
     expect(paragraphsOf(tourSteps({ ...BASE, canScan: true }), "cellar")).toEqual([
-      "Add bottles by scanning a label with the camera at the top — the catalog is everyone's reference, your cellar is yours and private unless you say otherwise.",
+      "Add bottles by scanning a label with the camera at the top — the catalog is everyone's reference, and other members can see your cellar unless you change it in your profile settings.",
     ]);
     expect(paragraphsOf(tourSteps({ ...BASE, canScan: false }), "cellar")).toEqual([
-      "Add bottles by searching the shared catalog — the catalog is everyone's reference, your cellar is yours and private unless you say otherwise.",
+      "Add bottles by searching the shared catalog — the catalog is everyone's reference, and other members can see your cellar unless you change it in your profile settings.",
     ]);
   });
 
   it("says add friends until friend requests ship, then send a friend request", () => {
     expect(paragraphsOf(tourSteps({ ...BASE, friendRequestsLive: false }), "community")).toEqual([
-      "Find people, add friends, share your invite link. Friends can see each other's cellars when you allow it.",
+      "Find people, add friends, share your invite link. You choose who sees your cellar and your notes: everyone, friends or only you.",
     ]);
     expect(paragraphsOf(tourSteps({ ...BASE, friendRequestsLive: true }), "community")).toEqual([
-      "Find people, send a friend request, share your invite link. Friends can see each other's cellars when you allow it.",
+      "Find people, send a friend request, share your invite link. You choose who sees your cellar and your notes: everyone, friends or only you.",
     ]);
   });
 
