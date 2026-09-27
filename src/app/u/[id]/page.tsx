@@ -24,6 +24,8 @@ import {
   tastingsFooter,
 } from "@/lib/profile/profile-view-math";
 import { ProfileHeader } from "./profile-header";
+import { LevelCard } from "./level-card";
+import { readProfileLevel } from "@/lib/levels/read";
 import { ProfileStatCards } from "./profile-stat-cards";
 import { ProfileTastings } from "./profile-tastings";
 import { ProfileNotes } from "./profile-notes";
@@ -99,6 +101,9 @@ export default async function ProfilePage({
 
   const isOwnProfile = view === "own";
   const inviterName = me?.display_name ?? user.email ?? "";
+  // Levels (spec 2026-09-27 §6.2, §8.4): started before the reads below so it
+  // runs alongside them; never rejects — null hides the ring and the card.
+  const levelRead = readProfileLevel(supabase, profile.id, isOwnProfile).catch(() => null);
 
   // R2/§3 step 4: the relationship (friend-requests §3.5: the friendship, the
   // request the viewer sent, the request waiting on the viewer) and the
@@ -145,6 +150,7 @@ export default async function ProfilePage({
   });
   // An RPC error hides the button rather than throwing (R2).
   const canViewCellar = cellarResult?.data === true;
+  const profileLevel = await levelRead;
   const { summary, tastings } = stats;
 
   const meta = profileMeta({
@@ -204,7 +210,12 @@ export default async function ProfilePage({
           bio={profile.bio}
           favourites={<FavouritesChips favourites={favourites} className="mt-3" />}
           actions={actions}
+          level={profileLevel ? { xp: profileLevel.xp, level: profileLevel.level } : null}
+          liveUserId={isOwnProfile ? user.id : undefined}
         />
+        {/* L32: directly under the header, shown even when the empty state
+            replaces the stats below (a cellar-only person still has a level). */}
+        {profileLevel ? <LevelCard level={profileLevel} /> : null}
 
         {summary.winesGuessed === 0 ? (
           <EmptyState title={empty.title} description={empty.body} />
