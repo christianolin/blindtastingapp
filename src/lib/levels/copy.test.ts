@@ -4,7 +4,9 @@ import {
   ACHIEVEMENTS,
   ACHIEVEMENT_KEYS,
   CATEGORY_ORDER,
+  UNIT_CAPS,
   achievementToastTitle,
+  atUnitCap,
   awayToastTitle,
   formatUtcDate,
   formatXp,
@@ -87,6 +89,30 @@ describe("kind labels", () => {
     expect(kindLabel("training", 2, 30)).toBe("2 training rounds");
     expect(kindLabel("achievement", 1, 1)).toBeNull();
     expect(kindLabel("mystery", 1, 1)).toBeNull();
+  });
+
+  // units are the bottles PAID, capped per award (a lot pays at most 20, a
+  // drink 6): at the cap the real count may be higher, so no number is said.
+  it("say no count once an award's bottles reached the kind's unit cap", () => {
+    expect(kindLabel("cellar_add", 1, 20, true)).toBe("Bottles added");
+    expect(kindLabel("drink", 1, 6, true)).toBe("Bottles opened");
+    expect(kindLabel("drink", 2, 7, true)).toBe("Bottles opened");
+    expect(kindLabel("cellar_add", 1, 19, false)).toBe("19 bottles added");
+    expect(kindLabel("note", 1, 1, true)).toBe("Tasting note");
+  });
+  it("know the unit caps the migration seeds (xp_sources.unit_cap)", () => {
+    expect(atUnitCap("cellar_add", 20)).toBe(true);
+    expect(atUnitCap("cellar_add", 19)).toBe(false);
+    expect(atUnitCap("drink", 6)).toBe(true);
+    expect(atUnitCap("drink", 5)).toBe(false);
+    expect(atUnitCap("drink", null)).toBe(false);
+    expect(atUnitCap("guess", 26)).toBe(false);
+    const sql = readFileSync("supabase/migrations/20260927160000_levels_and_achievements.sql", "utf8").replace(/\r/g, "");
+    const seed = sql.slice(sql.indexOf("insert into public.xp_sources"), sql.indexOf("create table public.achievements"));
+    const caps = Object.fromEntries(
+      [...seed.matchAll(/\('(\w+)',\s+\d+,\s+\d+,\s+(\d+),/g)].map((m) => [m[1], Number(m[2])]),
+    );
+    expect(caps).toEqual(UNIT_CAPS);
   });
 });
 

@@ -1246,17 +1246,28 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `src/lib/levels/copy.ts`; `copy.test.ts` and `scripts/levels.test.mjs` pin
   the keys equal). Every trigger function wraps its work in `begin … exception
   when others then raise warning`: an XP bug never blocks a reveal, pour, note
-  or cellar write, and `select public.xp_replay_user(<user>, false, false)`
-  (owner-only; also the launch backfill) repairs what a swallowed error missed.
+  or cellar write, and `select public.xp_replay_user(<user>, false, false,
+  true)` (owner-only; the launch backfill ran it with `p_repair` false) repairs
+  what a swallowed error missed — `p_repair` pays a lot-less drink only when a
+  pour links it and clamps every fact's time into the account's life, but it
+  re-derives from the rows as they are now, and `cellar_*`/`wset_notes` rows
+  are client-writable, so check that person's rows before running it. Award
+  and unlock take the profile row FOR SHARE, so one racing an account deletion
+  is either dropped by the scrub or pays nothing.
   **Rule 1:** levels, XP and achievements are public, so they are shared counts
   — a bottle poured into an unrevealed glass counts as in the cellar and not
   drunk until that reveal (`xp_consumption_masked` is
-  `catalog_wine_masked_pours`' predicate, pinned equal by the DB suite). Any new
-  count over `cellar_*` or `wset_notes` shown publicly must follow the same
-  rule. `wines_xp_on_reveal` fires after `trg_catalog_wine_unmark_blind` (which
-  deletes the glass's `flight_holds`) and before `wset_notes_resolve_on_reveal`
-  by name order; a new AFTER UPDATE OF is_revealed trigger on `wines` must keep
-  that order (the migration's post-state lists the accepted sets). Reads:
+  `catalog_wine_masked_pours`' predicate, pinned equal by the DB suite), and a
+  note sharing-defaults holds (`wset_note_held`) earns no XP and counts for no
+  notes achievement until the reveal that releases it, which pays it
+  (`xp_on_glass_revealed`'s third step, for the glass's adder and pour owners).
+  The migration therefore requires sharing-defaults M1. Any new count over
+  `cellar_*` or `wset_notes` shown publicly must follow the same rule.
+  `wines_xp_on_reveal` fires after `trg_catalog_wine_unmark_blind` (which
+  deletes the glass's `flight_holds`) and `wines_release_note_holds`, and
+  before `wset_notes_resolve_on_reveal`, by name order; a new AFTER UPDATE OF
+  is_revealed trigger on `wines` must keep that order (the migration's
+  post-state lists the accepted set). Reads:
   `profile_levels` by every signed-in member; `profile_achievements` likewise
   except `gate = 'cellar'` rows (the owner or `can_view_cellar`); the ledger
   owner-only; client RPCs `get_my_level_state`, `mark_xp_seen`,

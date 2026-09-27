@@ -3,7 +3,7 @@
 import { useId, useState, type ComponentType } from "react";
 import { Boxes, GraduationCap, NotebookPen, Users, Wine } from "lucide-react";
 import { StatCard } from "@/app/profile/numbers/stat-card";
-import { levelCardView } from "@/lib/levels/card";
+import { levelCardView, type LevelCardView } from "@/lib/levels/card";
 import { CARD_COPY } from "@/lib/levels/copy";
 import type { AchievementCategory, ProfileLevel } from "@/lib/levels/types";
 import { cn } from "@/lib/utils";
@@ -78,57 +78,67 @@ export function LevelCard({ level }: { level: ProfileLevel }) {
           </button>
         ) : null}
       </div>
-      {open ? (
-        <div id={panelId} className="flex flex-col gap-4 border-t border-border-light pt-3">
-          {v.earnedGroups.length > 0 ? (
-            <section className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold">{CARD_COPY.earned}</h3>
-              {v.earnedGroups.map((group) => {
-                const Icon = ICONS[group.category];
-                return (
-                  <div key={group.category} className="flex flex-col gap-1">
-                    <h4 className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Icon className="size-3.5" />
-                      {group.label}
-                    </h4>
-                    <ul className="flex flex-col gap-1">
-                      {group.items.map((item) => (
-                        <li key={item.key} className="flex items-baseline justify-between gap-3 text-sm">
-                          <span className="min-w-0">
-                            <span className="font-medium">{item.name}</span>
-                            <span className="block text-xs text-muted-foreground">{item.description}</span>
-                          </span>
-                          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{item.when}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </section>
-          ) : null}
-          {v.notYet && v.notYet.length > 0 ? (
-            <section className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold">{CARD_COPY.notYet}</h3>
-              <ul className="flex flex-col gap-2.5">
-                {v.notYet.map((item) => (
-                  <li key={item.key} className="flex flex-col gap-1 text-sm">
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span className="font-medium">{item.name}</span>
-                      <span className="shrink-0 text-xs text-gold-dark tabular-nums">{item.bonus}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">{item.description}</span>
-                    <span className="flex items-center gap-2">
-                      <Bar fraction={item.fraction} className="h-1 flex-1" />
-                      <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{item.progress}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-        </div>
-      ) : null}
+      {open ? <LevelCardDetails view={v} panelId={panelId} /> : null}
     </StatCard>
+  );
+}
+
+/**
+ * The expanded lists. Heading levels follow the page's outline: the only
+ * heading above this card on /u/[id] is ProfileHeader's h1 (StatCard's title
+ * is an Eyebrow span), so "Earned" and "Not yet" are h2 and each category
+ * under Earned an h3. Hook-free, so a markup test renders it.
+ */
+export function LevelCardDetails({ view: v, panelId }: { view: LevelCardView; panelId: string }) {
+  return (
+    <div id={panelId} className="flex flex-col gap-4 border-t border-border-light pt-3">
+      {v.earnedGroups.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold">{CARD_COPY.earned}</h2>
+          {v.earnedGroups.map((group) => {
+            const Icon = ICONS[group.category];
+            return (
+              <div key={group.category} className="flex flex-col gap-1">
+                <h3 className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Icon className="size-3.5" />
+                  {group.label}
+                </h3>
+                <ul className="flex flex-col gap-1">
+                  {group.items.map((item) => (
+                    <li key={item.key} className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="min-w-0">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="block text-xs text-muted-foreground">{item.description}</span>
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{item.when}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
+      {v.notYet && v.notYet.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold">{CARD_COPY.notYet}</h2>
+          <ul className="flex flex-col gap-2.5">
+            {v.notYet.map((item) => (
+              <li key={item.key} className="flex flex-col gap-1 text-sm">
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="font-medium">{item.name}</span>
+                  <span className="shrink-0 text-xs text-gold-dark tabular-nums">{item.bonus}</span>
+                </span>
+                <span className="text-xs text-muted-foreground">{item.description}</span>
+                <span className="flex items-center gap-2">
+                  <Bar fraction={item.fraction} className="h-1 flex-1" />
+                  <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{item.progress}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </div>
   );
 }

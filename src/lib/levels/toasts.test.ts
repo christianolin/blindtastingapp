@@ -39,6 +39,15 @@ describe("buildToasts: the XP card", () => {
     expect(buildToasts(bottles, opts()).toasts[0].title).toBe("+60 XP · 12 bottles added");
   });
 
+  it("names no count when an award reached its unit cap (a 24-bottle lot pays 20, 10 opened pay 6)", () => {
+    expect(buildToasts([ev("cellar_add", 100, 100, { units: 20 })], opts()).toasts[0].title).toBe(
+      "+100 XP · Bottles added",
+    );
+    expect(buildToasts([ev("drink", 90, 90, { units: 6 })], opts()).toasts[0].title).toBe("+90 XP · Bottles opened");
+    const mixed = [ev("cellar_add", 100, 100, { units: 20 }), ev("cellar_add", 15, 115, { units: 3 })];
+    expect(buildToasts(mixed, opts()).toasts[0].title).toBe("+115 XP · Bottles added");
+  });
+
   it("merges two kinds, the bigger first, the second lower-cased", () => {
     const events = [ev("drink", 15, 15, { units: 1 }), ev("guess", 30, 45, { units: 20 })];
     expect(buildToasts(events, opts()).toasts[0].title).toBe("+45 XP · Glass revealed & bottle opened");

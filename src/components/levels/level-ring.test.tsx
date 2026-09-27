@@ -31,12 +31,13 @@ describe("LevelRing", () => {
   });
 
   it("fills 0 %, 37 % and 100 % of a 40 px arc", () => {
-    // 40 px: r 18.75, C 117.81, arc 101.45 (310° of 360°).
+    // 40 px: r 18.75, C 117.81, arc 89.67 (274° of 360°: an 86° badge gap).
     const offsets = (html: string) => [...html.matchAll(/stroke-dashoffset="([\d.]+)"/g)].map((m) => m[1]);
-    expect(ring(0, 1)).toContain('stroke-dasharray="101.45 117.81"');
-    expect(offsets(ring(0, 1))).toEqual(["101.45"]);
+    expect(ring(0, 1)).toContain('stroke-dasharray="89.67 117.81"');
+    expect(ring(0, 1)).toContain('transform="rotate(-47 20 20)"');
+    expect(offsets(ring(0, 1))).toEqual(["89.67"]);
     // level 4 spans 300..500: 37 % is 374 XP.
-    expect(offsets(ring(374, 4))).toEqual(["63.91"]);
+    expect(offsets(ring(374, 4))).toEqual(["56.49"]);
     expect(offsets(ring(88_500, 60))).toEqual(["0"]);
   });
 

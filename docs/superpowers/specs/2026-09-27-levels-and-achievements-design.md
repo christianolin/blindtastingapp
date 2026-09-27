@@ -244,8 +244,8 @@ own-profile progress RPC. `u` = `p_user`. Shared expressions:
 | perfect_glass | `select count(*) from tasting_participants p join guesses g on g.participant_id = p.id join wines w on w.id = g.wine_id join tastings t on t.id = w.tasting_id where p.user_id = u and t.reveal_mode = 'BLIND' and w.is_revealed and g.scored_at is not null and possible(g) > 0 and g.total_points = possible(g)` |
 | winner | `select count(*) from tasting_participants s join tastings t on t.id = s.tasting_id where s.user_id = u and xp_tasting_counts(t) and xp_tasting_won_by(t.id, u)`, where `xp_tasting_won_by(t, u)` sums `total_points` per JOINED user over scored non-blank guesses on revealed glasses of `t`, and is true when there are ≥ 3 such users, the maximum is > 0 and `u`'s sum equals it |
 | glasses_50 | `select count(*) from xp_events where user_id = u and kind in ('guess','guess_match')` (L24) |
-| first_note, notes_25, notes_100 | `select count(*) from wset_notes where author_id = u` (every context, identity-less notes included — a count names no wine) |
-| note_countries_10 | `select count(distinct cw.country_id) from wset_notes n join catalog_wines cw on cw.id = n.catalog_wine_id where n.author_id = u and not cw.blind_pending` |
+| first_note, notes_25, notes_100 | `select count(*) from wset_notes n where n.author_id = u and not wset_note_held(n.id)` (every context, identity-less notes included — a count names no wine; a held note left out, §14 A1) |
+| note_countries_10 | `select count(distinct cw.country_id) from wset_notes n join catalog_wines cw on cw.id = n.catalog_wine_id where n.author_id = u and not cw.blind_pending and not wset_note_held(n.id)` (§14 A1) |
 | first_training, training_10 | `select count(*) from training_attempts where author_id = u and scored_at is not null` |
 | training_ace | `select count(*) from training_attempts where author_id = u and scored_at is not null and possible_points > 0 and total_points = possible_points` |
 | first_friend, friends_10 | `select count(*) from friendships where user_id = u` (pairs: each side has its own row) |
@@ -376,9 +376,9 @@ owner-only.
 | `xp_award_tasting_close(p_tasting uuid, p_user uuid, p_at, p_seen, p_check)` | definer | Pays `p_user`'s share of a closed tasting (L13): `finish:` for a qualifying guest, `host:` for a qualifying host; then the tastings check. |
 | `xp_award_cellar_lot(p_lot uuid, p_old integer, p_new integer, p_at, p_seen, p_check)` | definer | `least(p_new,20) − least(p_old,20)` bottles × 5 under key `cellar_add:<lot>:<least(p_new,20)>`; then the cellar check. |
 | `xp_award_drink(p_consumption uuid, p_at, p_seen, p_check, p_require_lot boolean)` | definer | Re-reads the row; pays `least(quantity,6)` × 15 when DRANK, unmasked and (if required) with a lot; then the cellar check. |
-| `xp_award_note(p_note uuid, p_at, p_seen, p_check)` | definer | 20 unless `context_kind = 'TRAINING'`; then the notes check (always, TRAINING included). |
+| `xp_award_note(p_note uuid, p_at, p_seen, p_check)` | definer | 20 unless `context_kind = 'TRAINING'` or the note is held (`wset_note_held`, §14 A1: its reveal pays it); then the notes check (always, TRAINING included). |
 | `xp_award_training(p_attempt uuid, p_at, p_seen, p_check)` | definer | 20 + `total_points` when scored; then the training check. |
-| `xp_replay_user(p_user uuid, p_seen boolean, p_backfill boolean)` | definer | §5.5. Also the repair tool (L20). |
+| `xp_replay_user(p_user uuid, p_seen boolean, p_backfill boolean, p_repair boolean)` | definer | §5.5. With `p_repair` the repair tool (L20, §14 A3). |
 | trigger functions `xp_on_glass_revealed`, `xp_on_tasting_closed`, `xp_on_cellar_lot`, `xp_on_cellar_consumption`, `xp_on_wset_note`, `xp_on_training_scored`, `xp_on_friendship`, `xp_drop_deleted_profile` | definer | §7; each wraps its body per L20 and returns null |
 | `get_my_level_state() returns jsonb` | invoker, stable | §6.1 |
 | `mark_xp_seen(p_ids bigint[], p_welcome boolean) returns void` | definer | §6.1 |
@@ -534,8 +534,8 @@ unchanged.
 | D11 pour at Start (`draw_down_flight_cellar_lots`) or into a running flight (`pour_cellar_lot_into_glass`) | nothing moves until that glass's reveal | The deferred trigger sees the pour intent and the `flight_holds` row and skips; on-hand (cellar_25/100) counts the masked bottle as still in the cellar; no drink XP, no first_drink, no pop-up. At the reveal the drink is paid (+15, "Bottle opened"). |
 | A masked pour whose glass is removed or whose tasting is deleted before its reveal | never | The hold stays for good (OD4); everyone but the owner counts the bottle as unopened, and so does XP. |
 | Cellar add | at the add | A count of bottles names no wine, even when the lot's wine is `blind_pending`. |
-| Note XP, note counts | at the write, hidden-glass notes included | A count names no wine. |
-| note_countries_10 | when a note gets an identity on a wine with `blind_pending = false` | Identity-less notes and notes on hidden wines never count; a hidden-glass note counts once `wset_notes_resolve_on_reveal` gives it the revealed identity. |
+| Note XP, note counts | at the write, hidden-glass notes included; a note sharing-defaults holds, at the reveal that releases it (§14 A1) | A count names no wine; a held note is tonight's wine in its adder's hands, so it moves nothing until then. |
+| note_countries_10 | when a note gets an identity on a wine with `blind_pending = false` and is not held | Identity-less notes, notes on hidden wines and held notes never count; a hidden-glass note counts once `wset_notes_resolve_on_reveal` gives it the revealed identity, a held one once its last holding glass is revealed. |
 | Training | at the round's scoring | The round is solo practice; the XP delta carries points, not identity. |
 | Friends | at the friendship | No wine involved. |
 
@@ -634,8 +634,10 @@ LevelRing({
 the bare avatar, never a false 0 %.
 
 Geometry: stroke 2.5 px and gap 1.5 px below 64 px, 3 px and 2 px from 64 px. The track and
-the fill are one circle drawn as an arc of `360° − g` (g = 50° below 64 px, 36° from 64 px)
-starting at 12 o'clock + g/2, clockwise, computed in px (`strokeDasharray`), so the gap sits
+the fill are one circle drawn as an arc of `360° − g` (g worked out from the badge, §14 A5:
+34 px 109°, 40 px 86°, 74 px 52°, 90 px 42°; first drafted as a fixed 50°/36°, which the
+badge and its halo overlapped) starting at 12 o'clock + g/2, clockwise, computed in px
+(`strokeDasharray`), so the gap sits
 under the badge and no progress hides beneath it; fill length = arc × `fraction`;
 `motion-safe:transition-[stroke-dashoffset] duration-700`. Badge: centred on the top edge,
 `bg-gold text-on-accent font-semibold tabular-nums rounded-full`, 14 px tall / 9 px text
@@ -902,6 +904,21 @@ drop table if exists public.profile_achievements, public.xp_events, public.profi
 - R15 There is no opt-out of showing one's level.
 - R16 This branch's `database.types.ts` will conflict with `training-region-guess`'s when
   both merge; resolve by keeping both sets of changes.
+- R17 The notes achievements (`first_note`, `notes_25`, `notes_100`, `note_countries_10`)
+  are gate `public` whatever the author's `notes_visibility` (sharing-defaults S2): a
+  person whose notes are "Only me" still shows "Critic" or "Well travelled" to every member.
+  They carry counts, never a note or a wine (R1 already makes aggregate activity public).
+  Owner decision pending: a `notes` gate following `can_view_notes`, the way cellar
+  achievements follow `can_view_cellar`, is the alternative (§14 A4).
+- R18 A held note is paid by the reveal that releases it only when it is on that glass's
+  catalog wine or its pour's wine, or linked to its pour. A note held by a glass that was
+  later Swapped to another wine without a pour is released at that reveal but paid only by
+  a repair (`xp_replay_user(u, false, false, true)`); its count and country still count at
+  the author's next notes event (R6).
+- R19 A cellar-add pop-up names the bottles PAID: a lot that crosses its 20-bottle life cap
+  by growth (18 → 25) says "2 bottles added". An award that reached the cap itself (a new
+  24-bottle lot, 10 bottles opened at once) names no count ("Bottles added" / "Bottles
+  opened", §14 A6).
 
 ## 13. Controller rulings (2026-09-27, binding on the plan)
 
@@ -909,3 +926,34 @@ drop table if exists public.profile_achievements, public.xp_events, public.profi
 - **C2 Go-ahead.** The owner approved the design ("Go ahead", 2026-09-27) and has authorised pushes and applies for this work; §11 step 1 is satisfied. Every apply is dry-run first and done when no LIVE reveal is running.
 - **C3 Copy.** §8's drafts ship as written; the owner reviews them live and changes follow as copy edits.
 - **C4 Order across branches.** `training-region-guess` and then `sharing-defaults` merge to master first; this branch rebases onto master before its final review and deploy. `database.types.ts`, `CLAUDE.md`, `src/app/u/[id]/page.tsx` and `profile-header.tsx` may conflict: keep both sides. Re-check the §5.4 md5 pins against live at dry-run time (sharing recreates `shared_cellar_lots` and `catalog_wine_usage`, which this file does not pin).
+
+## 14. Whole-branch review amendments (2026-09-27)
+
+- **A1 Held notes (amends C1's "pins none of their objects").** Under sharing-defaults
+  (S9-S11) a note is *held* while its author adds an unrevealed glass of its wine, or while
+  its linked pour is masked; a held note must move no count others see. So
+  `xp_award_note` pays no held note, the four notes metrics leave held notes out, and
+  `xp_on_glass_revealed` gains a third step, inside the same `user_id` order (L34): for the
+  glass's adder and each pour owner it pays their unpaid notes on the glass's catalog wine or
+  its pour's wine, or linked to its pour (unless another unrevealed glass still holds them),
+  then runs the notes check. Without it, a host with visible notes from 9 countries who
+  notes tonight's public wine from a tenth would unlock "Well travelled" (+100) before the
+  reveal, telling guests tonight's country. The migration now REQUIRES sharing-defaults M1:
+  the pre-state pins `wset_note_held`, `wset_notes_hold_on_identity` and
+  `wines_release_note_holds` and accepts only the four-trigger `wines` set. DB test 13c.
+- **A2 The deletion race.** `xp_award` and `xp_check_achievements` take the profile row FOR
+  SHARE for the deleted-profile check, which conflicts with the scrub's UPDATE of
+  `deleted_at`, so an award racing an account deletion either lands before the scrub (which
+  then drops it) or re-reads the profile as deleted and pays nothing (L27).
+- **A3 The repair.** `xp_replay_user` gains `p_repair`: a lot-less DRANK row pays only when a
+  pour links it (the live rule), and every fact's time is clamped to on or after the
+  account's `created_at` (and never after now), so a row dated before the account cannot
+  open an older cap bucket. It still re-derives from the rows as they are now, so it is run
+  only for a person whose cellar and notes rows have been checked. The backfill passes
+  `false`. DB test 21b.
+- **A4 Notes achievements' gate:** left `public` and recorded as R17 for the owner.
+- **A5 The ring's gap** is worked out from the badge (§8.2), so no progress hides under the
+  badge or its halo at a two-digit level.
+- **A6 Capped bottle counts.** A cellar-add or drink row whose paid bottles reached the
+  kind's unit cap (20, 6) labels its pop-up "Bottles added" / "Bottles opened" instead of a
+  number that may be lower than the real one. New copy, for the owner's live review (C3).

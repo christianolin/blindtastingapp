@@ -52,6 +52,7 @@ Read against live (read-only, 2026-09-27) and the code. Each is deliberate; the 
 11. **/u/[id]** starts the level read before the page's existing `Promise.all` and awaits it after (same parallelism) instead of adding a slot inside it: that destructuring is the line `sharing-defaults` edits.
 12. **Rings.** The sidebar, rail and drawer call `useOwnLevel` and render `LevelRing` directly (the profile link's `aria-label` needs the level too); `LiveLevelRing` serves the own /u/[id] header. `ProfileHeader` renders two rings (90 px from md, 74 px on phones) toggled by breakpoint, since each size has its own geometry.
 13. **Calibration.** §3.2's activity XP was recomputed read-only from live under this plan's rules: every row of the table matches (d3ee0f40 480, 95584be2 276, f9d82d2a 257, 430f8450 250, …).
+14. **Whole-branch review round** (spec §14 A1-A6). The migration now requires sharing-defaults M1 (held notes pay and count only at the reveal that releases them; pre-state pins `wset_note_held`, `wset_notes_hold_on_identity`, `wines_release_note_holds` and only the four-trigger `wines` set — correction 1's three-trigger alternative is gone); `xp_award`/`xp_check_achievements` take the profile row FOR SHARE; `xp_replay_user` gains `p_repair`; the ring's badge gap is computed from the badge; capped bottle rows pop a count-free label; the level card's headings are h2/h3. The DB suite gains 13c and 21b (25 tests).
 
 ## File map
 
@@ -6912,7 +6913,9 @@ Every step below touches production and is run by the main session, never by an 
 
 `cd /c/Users/Public/repos/blindtastingapp-mapdetail && LEVELS_APPLY=supabase/migrations/20260927160000_levels_and_achievements.sql node --env-file=.env.local --test scripts/levels.test.mjs`
 
-Expected: 23 tests pass and a `# 8-guesser reveal: N ms` line (logged, not asserted). How to read a failure:
+The migration requires sharing-defaults M1 (`20260927140000`, confirmed live in R1); if it is not live yet, list it first: `LEVELS_APPLY=supabase/migrations/20260927140000_sharing_defaults.sql,supabase/migrations/20260927160000_levels_and_achievements.sql`.
+
+Expected: 25 tests pass and a `# 8-guesser reveal: N ms` line (logged, not asserted). How to read a failure:
 - **A post-state deparse string** (the migration raises "… differ from spec …: <actual text>"): if the actual text differs from the expected only in formatting (parentheses, casts, spacing, schema qualification), paste the actual text into that expected string, re-run `npx vitest run src/lib/levels/levels-migration.test.ts` (function bodies are untouched, so it still passes), commit `fix(db): levels post-state deparse strings`, and re-run R2. Any semantic difference stops the rollout and goes back to review.
 - **A pre-state md5 or trigger-set failure:** something live changed since 2026-09-27 (the rebase names the likely cause). Read the new body, confirm the trigger's premise still holds (for `reveal_wine`/`reveal_next_category`: guesses scored before `is_revealed`; for the pour RPCs: the consumption inserted before the intent update), then update the pin. Never re-pin blind.
 - **A fixture error** (a live constraint a helper missed): fix the fixture, never the assertion.
@@ -6927,7 +6930,7 @@ Expected: `DRY RUN OK: 20260927160000_levels_and_achievements ran in N ms and wa
 - `select left(user_id::text, 8), xp, level from profile_levels order by xp desc, user_id limit 6` — §3.2: d3ee0f40 780 (6), f9d82d2a 557 (5), 95584be2 401 (4), 430f8450 400 (4), caa708a1 270 (3), ad5343d0 250 (3), plus anything earned since.
 - `select count(*) filter (where seen_at is null) as unseen, count(*) as rows from xp_events` — unseen 0.
 - `select (select count(*) from profile_levels where welcome_pending) = (select count(*) from profiles where deleted_at is null)` — true.
-Then `cd /c/Users/Public/repos/blindtastingapp-mapdetail && node --env-file=.env.local --test scripts/levels.test.mjs` (no LEVELS_APPLY) → 23 pass against the applied schema.
+Then `cd /c/Users/Public/repos/blindtastingapp-mapdetail && node --env-file=.env.local --test scripts/levels.test.mjs` (no LEVELS_APPLY) → 25 pass against the applied schema.
 
 **R6 — App deploy.** After the whole-branch review: fast-forward `master` to `levels` and push (a production deploy); wait for `gh api repos/christianolin/blindtastingapp/commits/<full sha>/status` to read `success`. Rollback is `git revert` + push (R9).
 
@@ -6942,7 +6945,7 @@ Then `cd /c/Users/Public/repos/blindtastingapp-mapdetail && node --env-file=.env
 - Network idle for 5 minutes: no new periodic request.
 - Server timing of an AppHeader page before and after (the owner's devices: desktop and iPhone Safari/Chrome).
 
-**R8 — Watch and repair.** A person reporting a missing award: `select public.xp_replay_user('<user id>', false, false)` (owner-only; idempotent; returns the XP it added). A swallowed error shows only as a Postgres WARNING (R10).
+**R8 — Watch and repair.** A person reporting a missing award: first read their `cellar_lots`, `cellar_consumptions` and `wset_notes` rows for crafted values (a `created_at` far from its neighbours, a reason edited to DRANK) — those tables are client-writable (R4) and a repair re-derives from the rows as they are now — then `select public.xp_replay_user('<user id>', false, false, true)` (owner-only; idempotent; `p_repair` pays a lot-less drink only when a pour links it and clamps every fact's time into the account's life; returns the XP it added). A swallowed error shows only as a Postgres WARNING (R10).
 
 **R9 — Rollback.**
 - App: `git revert` + push; the triggers keep awarding silently (harmless).
@@ -6965,7 +6968,7 @@ drop function if exists
   public.xp_on_glass_revealed(), public.xp_on_tasting_closed(), public.xp_on_cellar_lot(),
   public.xp_on_cellar_consumption(), public.xp_on_wset_note(), public.xp_on_training_scored(),
   public.xp_on_friendship(), public.xp_drop_deleted_profile(),
-  public.xp_replay_user(uuid, boolean, boolean),
+  public.xp_replay_user(uuid, boolean, boolean, boolean),
   public.xp_award_training(uuid, timestamptz, boolean, boolean),
   public.xp_award_note(uuid, timestamptz, boolean, boolean),
   public.xp_award_drink(uuid, timestamptz, boolean, boolean, boolean),

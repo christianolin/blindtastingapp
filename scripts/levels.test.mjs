@@ -20,6 +20,8 @@
 // rolled-back transaction first, e.g.
 //   LEVELS_APPLY=supabase/migrations/20260927160000_levels_and_achievements.sql \
 //     node --env-file=.env.local --test --test-concurrency=1 scripts/levels.test.mjs
+// The migration requires sharing-defaults M1 (20260927140000, its held notes):
+// while that is not live either, list it first in LEVELS_APPLY.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
@@ -203,6 +205,30 @@ async function catalogWine(createdBy, f = {}) {
     [w.country, w.region, w.appellation, w.primary, w.producer, createdBy, w.blindPending],
   );
   return row.rows[0];
+}
+
+// `n` catalog wines from `n` different live countries, each with a region of
+// that country and an appellation of that region (first by id): the countries
+// note_countries_10 counts.
+async function countryWines(createdBy, n) {
+  await asOwner();
+  const rows = (
+    await client.query(
+      `select distinct on (c.id) c.id as country, r.id as region, a.id as appellation
+         from countries c
+         join regions r on r.country_id = c.id
+         join appellations a on a.region_id = r.id
+        order by c.id, r.id, a.id
+        limit $1`,
+      [n],
+    )
+  ).rows;
+  assert.equal(rows.length, n, `${n} live countries with a region and an appellation`);
+  const wines = [];
+  for (const row of rows) {
+    wines.push(await catalogWine(createdBy, { country: row.country, region: row.region, appellation: row.appellation }));
+  }
+  return wines;
 }
 
 // A tasting as DRAFT with the host's JOINED seat; `start` moves it on.
@@ -401,7 +427,22 @@ test("2. seeds, copy keys, triggers and grants are spec §5", async () => {
     ).rows.map((r) => r.tgname);
     const at = order.indexOf("wines_xp_on_reveal");
     assert.ok(at > order.indexOf("trg_catalog_wine_unmark_blind"), `fires after the unmark: ${order}`);
+    assert.ok(order.indexOf("wines_release_note_holds") >= 0, `sharing-defaults' release exists: ${order}`);
+    assert.ok(at > order.indexOf("wines_release_note_holds"), `fires after the note-hold release: ${order}`);
     assert.ok(at < order.indexOf("wset_notes_resolve_on_reveal"), `fires before the note resolve: ${order}`);
+    const noteOrder = (
+      await client.query(
+        `select t.tgname from pg_trigger t
+          where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal
+            and t.tgname in ('wset_notes_hold_on_identity', 'wset_notes_xp_insert', 'wset_notes_xp_identity')
+          order by t.tgname collate "C"`,
+      )
+    ).rows.map((r) => r.tgname);
+    assert.deepEqual(
+      noteOrder,
+      ["wset_notes_hold_on_identity", "wset_notes_xp_identity", "wset_notes_xp_insert"],
+      "the hold is written before either note XP trigger runs",
+    );
     const exec = async (role, sig) =>
       (await client.query("select has_function_privilege($1, $2, 'EXECUTE') as ok", [role, sig])).rows[0].ok;
     for (const sig of ["public.get_my_level_state()", "public.mark_xp_seen(bigint[],boolean)", "public.get_my_achievement_progress()"]) {
@@ -411,7 +452,7 @@ test("2. seeds, copy keys, triggers and grants are spec §5", async () => {
     }
     for (const sig of [
       "public.xp_award(uuid,text,text,integer,integer,text,timestamptz,boolean)",
-      "public.xp_replay_user(uuid,boolean,boolean)",
+      "public.xp_replay_user(uuid,boolean,boolean,boolean)",
       "public.level_for_xp(integer)",
     ]) {
       assert.equal(await exec("authenticated", sig), false, sig);
@@ -901,6 +942,66 @@ test("13b. a hidden-glass BLIND note pays 20 at its insert", async () => {
   });
 });
 
+test("13c. a held note (sharing S10) moves no public count until the reveal that releases it (Rule 1)", async () => {
+  await withRollback(async () => {
+    const [host, guest] = await people(2);
+    const wines = await countryWines(host, 10);
+    for (const w of wines.slice(0, 9)) await note(host, { catalog_wine_id: w.id });
+    // Their rows move to yesterday, so today's five-note cap (test 13) leaves
+    // room to see the held note's +20 at its reveal.
+    await asOwner();
+    await client.query("update xp_events set day = day - 1 where user_id = $1 and kind = 'note'", [host]);
+    assert.equal(await metric(host, "note_countries_10"), 9);
+
+    // Tonight's wine is public and from a tenth country; the host adds two
+    // glasses of it, so the note stays held until both are revealed.
+    const tonight = wines[9];
+    const t = await tasting(host);
+    await seat(t, guest);
+    const g1 = await glass(t, 1, tonight);
+    const g2 = await glass(t, 2, tonight);
+    await start(t);
+    const publicView = async () => {
+      await asUser(guest);
+      const xp = (await client.query("select xp from profile_levels where user_id = $1", [host])).rows[0]?.xp ?? 0;
+      const keys = (
+        await client.query("select achievement_key from profile_achievements where user_id = $1 order by 1", [host])
+      ).rows.map((r) => r.achievement_key);
+      await asOwner();
+      return { xp, keys };
+    };
+    const held = async (id) => (await client.query("select public.wset_note_held($1) as h", [id])).rows[0].h;
+    const before = await publicView();
+    assert.ok(!before.keys.includes("note_countries_10"));
+
+    const n = await note(host, { catalog_wine_id: tonight.id });
+    assert.equal(await held(n), true, "sharing-defaults holds the adder's note on tonight's wine");
+    assert.equal(await metric(host, "note_countries_10"), 9, "a held note's country does not count");
+    assert.equal(await metric(host, "first_note"), 9, "nor does the note itself");
+    assert.ok(!keysOf(await ledger(host)).includes(`note:${n}`), "no note XP while it is held");
+    assert.ok(!(await achievementsOf(host)).includes("note_countries_10"));
+    assert.deepEqual(await publicView(), before, "a guest sees no change: nothing names tonight's country");
+
+    await reveal(host, g1);
+    assert.equal(await held(n), true, "the second glass still holds it");
+    assert.ok(!keysOf(await ledger(host)).includes(`note:${n}`));
+    assert.deepEqual(await publicView(), before, "still nothing while one glass of it is hidden");
+
+    await reveal(host, g2);
+    assert.equal(await held(n), false);
+    assert.deepEqual(
+      (await ledger(host)).filter((r) => r.source_key === `note:${n}`).map((r) => r.xp),
+      [20],
+      "the reveal that releases the note pays it",
+    );
+    assert.equal(await metric(host, "note_countries_10"), 10);
+    assert.ok((await achievementsOf(host)).includes("note_countries_10"), "and unlocks Well travelled");
+    const after = await publicView();
+    assert.equal(after.xp, before.xp + 20 + 100);
+    assert.ok(after.keys.includes("note_countries_10"));
+  });
+});
+
 test("14. training: a scored round pays 20 + points once, five a day; Spot on at total = possible", async () => {
   await withRollback(async () => {
     const [u] = await people(1);
@@ -1190,12 +1291,62 @@ test("21. xp_replay_user rebuilds exactly what the live triggers paid", async ()
     await client.query("delete from xp_events where user_id = $1", [u]);
     await client.query("delete from profile_achievements where user_id = $1", [u]);
     await client.query("update profile_levels set xp = 0, level = 1 where user_id = $1", [u]);
-    const added = (await client.query("select public.xp_replay_user($1, true, false) as n", [u])).rows[0].n;
+    const added = (await client.query("select public.xp_replay_user($1, true, false, false) as n", [u])).rows[0].n;
     assert.deepEqual(await snapshot(), live);
     assert.equal(added, liveTotal);
     assert.equal((await xpOf(u)).xp, liveTotal);
-    // Idempotent: a second run adds nothing.
-    assert.equal((await client.query("select public.xp_replay_user($1, false, false) as n", [u])).rows[0].n, 0);
+    // Idempotent: a second run, and a repair, add nothing.
+    assert.equal((await client.query("select public.xp_replay_user($1, false, false, false) as n", [u])).rows[0].n, 0);
+    assert.equal((await client.query("select public.xp_replay_user($1, false, false, true) as n", [u])).rows[0].n, 0);
+  });
+});
+
+test("21b. a repair pays nothing the live rules refused: a lot-less drink, a day before the account", async () => {
+  await withRollback(async () => {
+    const [a, b] = await people(2);
+    const drinks = async (u) => (await ledger(u)).filter((r) => r.kind === "drink").map((r) => r.source_key);
+    const repair = async (u) =>
+      (await client.query("select public.xp_replay_user($1, false, false, true) as n", [u])).rows[0].n;
+
+    // a: a lot-less DRANK row written straight to the table (a client may, R4)
+    // with room left in today's drink cap. Live pays nothing (L17), and so
+    // does the repair.
+    const wa = await catalogWine(a);
+    const la = await addLot(a, 20, wa);
+    const ca = await consume(a, la, 1);
+    await asOwner();
+    await client.query(
+      `insert into cellar_consumptions (owner_id, lot_id, catalog_wine_id, quantity, reason, consumed_on)
+       values ($1, null, $2, 1, 'DRANK', current_date)`,
+      [a, wa.id],
+    );
+    await immediate();
+    assert.deepEqual(await drinks(a), [`drink:${ca}`], "live: a lot-less drink pays nothing");
+    const aBefore = (await xpOf(a)).xp;
+    assert.equal(await repair(a), 0);
+    assert.deepEqual(await drinks(a), [`drink:${ca}`], "the repair: nor here");
+    assert.equal((await xpOf(a)).xp, aBefore);
+
+    // b: today's 90 is spent; DRANK rows with a lot dated before the account
+    // existed, and in the future, pay nothing live (today's cap). A repair
+    // clamps them into the account's life, so they open no other day.
+    const wb = await catalogWine(b);
+    const lb = await addLot(b, 20, wb);
+    const cb = await consume(b, lb, 6);
+    await asOwner();
+    await client.query(
+      `insert into cellar_consumptions (owner_id, lot_id, catalog_wine_id, quantity, reason, consumed_on, created_at)
+       values ($1, $2, $3, 1, 'DRANK', current_date, '2001-01-01T12:00:00Z'),
+              ($1, $2, $3, 1, 'DRANK', current_date, '2001-01-02T12:00:00Z'),
+              ($1, $2, $3, 1, 'DRANK', current_date, now() + interval '400 days')`,
+      [b, lb, wb.id],
+    );
+    await immediate();
+    assert.deepEqual(await drinks(b), [`drink:${cb}`], "live: today's 90 cap");
+    const bBefore = (await xpOf(b)).xp;
+    assert.equal(await repair(b), 0);
+    assert.deepEqual(await drinks(b), [`drink:${cb}`], "the repair: no 2001 or future bucket");
+    assert.equal((await xpOf(b)).xp, bBefore);
   });
 });
 

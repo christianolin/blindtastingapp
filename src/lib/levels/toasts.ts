@@ -8,6 +8,7 @@ import {
   WELCOME_DETAIL_EARNED,
   WELCOME_DETAIL_FRESH,
   achievementToastTitle,
+  atUnitCap,
   awayToastTitle,
   bonusDetail,
   isAchievementKey,
@@ -47,18 +48,22 @@ function lowerFirst(text: string): string {
     "{label1} & more", ordered by XP (ties: first seen). Null when no kind has
     a label. */
 function xpCardLabel(events: readonly XpEvent[]): string | null {
-  const groups = new Map<string, { kind: string; count: number; units: number; xp: number; first: number }>();
+  const groups = new Map<
+    string,
+    { kind: string; count: number; units: number; capped: boolean; xp: number; first: number }
+  >();
   events.forEach((e, index) => {
     const key = labelGroup(e.kind);
-    const g = groups.get(key) ?? { kind: key, count: 0, units: 0, xp: 0, first: index };
+    const g = groups.get(key) ?? { kind: key, count: 0, units: 0, capped: false, xp: 0, first: index };
     g.count += 1;
     g.units += e.units ?? 1;
+    g.capped ||= atUnitCap(e.kind, e.units);
     g.xp += e.xp;
     groups.set(key, g);
   });
   const labels = [...groups.values()]
     .sort((a, b) => b.xp - a.xp || a.first - b.first)
-    .map((g) => kindLabel(g.kind, g.count, g.units))
+    .map((g) => kindLabel(g.kind, g.count, g.units, g.capped))
     .filter((l): l is string => l !== null);
   if (labels.length === 0) return null;
   if (labels.length === 1) return labels[0];

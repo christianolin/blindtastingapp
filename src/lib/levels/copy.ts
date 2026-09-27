@@ -113,9 +113,23 @@ export const WELCOME_DETAIL_EARNED =
   "Levels are here — your tastings, cellar and notes so far already count.";
 export const WELCOME_DETAIL_FRESH = "Levels are here — taste, cellar and note wines to earn XP.";
 
+/** The migration's xp_sources.unit_cap (copy.test.ts pins them equal): one
+    award pays at most this many bottles, so a row's `units` is the bottles
+    PAID — a 24-bottle lot's row says 20, ten bottles opened at once say 6. */
+export const UNIT_CAPS: Readonly<Record<string, number>> = { cellar_add: 20, drink: 6 };
+
+/** A row whose paid bottles reached its kind's cap: the real count may be
+    higher, so its label names none. */
+export function atUnitCap(kind: string, units: number | null): boolean {
+  const cap = Object.hasOwn(UNIT_CAPS, kind) ? UNIT_CAPS[kind] : undefined;
+  return cap !== undefined && units !== null && units >= cap;
+}
+
 /** One kind's label on the XP card. `count` events, `units` summed (bottles for
-    cellar_add and drink). Null for a kind the app has no label for. */
-export function kindLabel(kind: string, count: number, units: number): string | null {
+    cellar_add and drink). `capped`: one of those rows reached its unit cap
+    (atUnitCap), so the bottle labels say no number. Null for a kind the app
+    has no label for. */
+export function kindLabel(kind: string, count: number, units: number, capped = false): string | null {
   switch (kind) {
     case "guess":
     case "guess_match":
@@ -125,8 +139,10 @@ export function kindLabel(kind: string, count: number, units: number): string | 
     case "tasting_hosted":
       return count === 1 ? "Tasting hosted" : `${count} tastings hosted`;
     case "cellar_add":
+      if (capped) return "Bottles added";
       return units === 1 ? "Bottle added" : `${units} bottles added`;
     case "drink":
+      if (capped) return "Bottles opened";
       return units === 1 ? "Bottle opened" : `${units} bottles opened`;
     case "note":
       return count === 1 ? "Tasting note" : `${count} tasting notes`;

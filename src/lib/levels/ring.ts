@@ -28,14 +28,25 @@ export type RingGeometry = {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Below 64 px: stroke 2.5, gap 1.5, a 50° badge gap, a 14 px badge with 9 px
-    text; from 64 px: 3, 2, 36°, 20 px, 12 px. */
+/** Half the badge's width at a two-digit level (level-ring.tsx: min-width =
+    its height, px-1, tabular digits), plus its ring-2 halo, which is painted in
+    the surrounding colour and so erases the stroke beneath it. */
+const BADGE_HALF = { small: 9.5 + 2, big: 12 + 2 } as const;
+
+/** Below 64 px: stroke 2.5, gap 1.5, a 14 px badge with 9 px text; from 64 px:
+    3, 2, 20 px, 12 px. The badge gap g is worked out from the badge: the
+    smallest whole angle whose arc ends (stroke included) clear the badge and
+    its halo at a two-digit level (34 px 109°, 40 px 86°, 74 px 52°, 90 px 42°). */
 export function ringGeometry(size: number, fraction: number): RingGeometry {
   const big = size >= 64;
   const stroke = big ? 3 : 2.5;
   const gap = big ? 2 : 1.5;
-  const gapDegrees = big ? 36 : 50;
   const radius = (size - stroke) / 2;
+  const clear = (big ? BADGE_HALF.big : BADGE_HALF.small) + stroke / 2;
+  const gapDegrees = Math.min(
+    360,
+    Math.ceil((2 * Math.asin(Math.min(1, clear / Math.max(radius, 1e-6))) * 180) / Math.PI),
+  );
   const circumference = 2 * Math.PI * radius;
   const arc = (circumference * (360 - gapDegrees)) / 360;
   const f = Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0;

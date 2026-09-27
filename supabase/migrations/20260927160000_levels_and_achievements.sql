@@ -18,10 +18,18 @@
 --   at it, which is why the consumption trigger is deferred to COMMIT (L21).
 -- * The AFTER UPDATE OF is_revealed triggers on wines are
 --   semi_blind_release_revealed_wine, trg_catalog_wine_unmark_blind (which
---   deletes the glass's flight_holds rows) and wset_notes_resolve_on_reveal;
---   sharing-defaults (20260927140000) adds wines_release_note_holds. Same-event
---   triggers fire in name order, so wines_xp_on_reveal runs after the unmark
---   and before the note resolve.
+--   deletes the glass's flight_holds rows), wines_release_note_holds
+--   (sharing-defaults 20260927140000: deletes the glass's wset_note_holds) and
+--   wset_notes_resolve_on_reveal. Same-event triggers fire in name order, so
+--   wines_xp_on_reveal runs after the unmark and the note-hold release and
+--   before the note resolve.
+-- * This file REQUIRES sharing-defaults M1 (20260927140000; review round,
+--   amending C1): a held note (wset_note_held, S10/S11) moves no count others
+--   see (S9), so note XP and the notes achievements leave it out until the
+--   reveal that releases it pays it. wset_notes_hold_on_identity sorts before
+--   wset_notes_xp_insert and wset_notes_xp_identity, so the hold row exists
+--   when those run. The pre-state pins wset_note_held, the hold trigger and
+--   the release trigger.
 -- * No trigger exists on cellar_consumptions, training_attempts or
 --   friendships beyond friendships_refuse_deleted_profile.
 -- * wset_notes has no index on author_id and tasting_participants none on
@@ -82,8 +90,10 @@ begin
 
   -- 2. The bodies the triggers rely on (md5 of prosrc with any CR stripped).
   --    §5.4's seventeen, plus semi_blind_release_revealed_wine (the third
-  --    same-event trigger on wines) and send_friend_request (the other writer
-  --    of friendships).
+  --    same-event trigger on wines), send_friend_request (the other writer
+  --    of friendships) and sharing-defaults' hold: wset_note_held (what
+  --    "held" means), wset_notes_hold_on_identity (writes a hold) and
+  --    wines_release_note_holds (the reveal that releases it).
   select string_agg(format('%s %s', s.sig, coalesce(md5(replace(p.prosrc, chr(13), '')), 'missing')), '; ')
     into v_text
   from (values
@@ -105,7 +115,10 @@ begin
     ('public.accept_friend_request(uuid)',              '8c473e36e07123e4a4ab2ee5b211b454'),
     ('public.accept_platform_invite(text)',             '9b3e4a89a84d2eb482c312eba87c4d37'),
     ('public.semi_blind_release_revealed_wine()',       'f2b99368997eaa08944e7d31943ed12a'),
-    ('public.send_friend_request(uuid)',                '8efbf4536f08f335934d517ca5007238')
+    ('public.send_friend_request(uuid)',                '8efbf4536f08f335934d517ca5007238'),
+    ('public.wset_note_held(uuid)',                     '9599a36cd224a3af0d5c2fb3dea70b2b'),
+    ('public.wset_notes_hold_on_identity()',            '8b500cd6a6f62204c02c66c4760793fc'),
+    ('public.wines_release_note_holds()',               '419a9f4dda4fac12a601207ea3f3b45a')
   ) as s (sig, md5)
   left join pg_proc p on p.oid = to_regprocedure(s.sig)
   where p.oid is null or md5(replace(p.prosrc, chr(13), '')) <> s.md5;
@@ -114,14 +127,24 @@ begin
   end if;
 
   -- 3. L21's name-order premise: the same-event triggers on wines are the
-  --    three live ones, or those plus sharing-defaults' note-hold release.
+  --    three live ones plus sharing-defaults' note-hold release, and the hold
+  --    on wset_notes is sharing-defaults' (it must run before this file's
+  --    wset_notes_xp_* triggers, which it does by name).
   select string_agg(t.tgname, ',' order by t.tgname collate "C") into v_text
   from pg_trigger t
   where t.tgrelid = 'public.wines'::regclass and not t.tgisinternal
     and pg_get_triggerdef(t.oid) like '% AFTER UPDATE OF is_revealed ON public.wines %';
-  if v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wset_notes_resolve_on_reveal'
-     and v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wines_release_note_holds,wset_notes_resolve_on_reveal' then
-    raise exception 'the AFTER UPDATE OF is_revealed triggers on wines are not the known set: %', v_text;
+  if v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wines_release_note_holds,wset_notes_resolve_on_reveal' then
+    raise exception 'the AFTER UPDATE OF is_revealed triggers on wines are not the known set (sharing-defaults M1 applied): %', v_text;
+  end if;
+  select string_agg(regexp_replace(pg_get_triggerdef(t.oid), '\mpublic\.', '', 'g'), ' | ') into v_text
+  from pg_trigger t
+  where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal
+    and t.tgname = 'wset_notes_hold_on_identity';
+  if v_text is distinct from
+       'CREATE TRIGGER wset_notes_hold_on_identity AFTER INSERT OR UPDATE OF catalog_wine_id ON wset_notes '
+       || 'FOR EACH ROW EXECUTE FUNCTION wset_notes_hold_on_identity()' then
+    raise exception 'wset_notes_hold_on_identity is not sharing-defaults'' trigger: %', v_text;
   end if;
 
   -- 4. The enum labels the functions compare against.
@@ -283,7 +306,10 @@ end $$;
 --    kind's daily caps for the UTC day of p_at (L16), writes the ledger row
 --    with its running total, and moves the level. Returns the XP paid; 0 when
 --    p_xp <= 0, the profile is missing or deleted, the key was paid, or a cap
---    took it all (no zero-XP rows).
+--    took it all (no zero-XP rows). The deleted-profile check holds the
+--    profile row FOR SHARE, which conflicts with the account scrub's UPDATE
+--    of deleted_at (L27): either the scrub waits and then drops this award's
+--    rows, or this award waits, re-reads the row as deleted and pays nothing.
 -- ---------------------------------------------------------------------------
 create function public.xp_award(p_user uuid, p_kind text, p_source_key text, p_xp integer,
                                 p_units integer, p_achievement text, p_at timestamptz, p_seen boolean)
@@ -301,7 +327,8 @@ begin
   if p_user is null or p_source_key is null or coalesce(p_xp, 0) <= 0 then
     return 0;
   end if;
-  if not exists (select 1 from profiles where id = p_user and deleted_at is null) then
+  perform 1 from profiles where id = p_user and deleted_at is null for share;
+  if not found then
     return 0;
   end if;
   select * into v_src from xp_sources where kind = p_kind;
@@ -470,13 +497,16 @@ begin
     -- The ledger's guess rows (L24): exact, because guess XP is uncapped.
     select count(*) into v from xp_events where user_id = p_user and kind in ('guess', 'guess_match');
   elsif p_key in ('first_note', 'notes_25', 'notes_100') then
-    -- Every note, identity-less ones included: a count names no wine.
-    select count(*) into v from wset_notes where author_id = p_user;
+    -- Every note, identity-less ones included (a count names no wine), but a
+    -- held one: it moves no count others see until its reveal (sharing S9).
+    select count(*) into v from wset_notes n where n.author_id = p_user and not wset_note_held(n.id);
   elsif p_key = 'note_countries_10' then
+    -- A held note is tonight's wine in its adder's hands: its country would
+    -- name it (Rule 1, sharing S9-S11).
     select count(distinct cw.country_id) into v
       from wset_notes n
       join catalog_wines cw on cw.id = n.catalog_wine_id
-     where n.author_id = p_user and not cw.blind_pending;
+     where n.author_id = p_user and not cw.blind_pending and not wset_note_held(n.id);
   elsif p_key in ('first_training', 'training_10') then
     select count(*) into v from training_attempts where author_id = p_user and scored_at is not null;
   elsif p_key = 'training_ace' then
@@ -494,6 +524,7 @@ end $$;
 -- (a veteran pays nothing for earned ones), in sort_order; unlocks each whose
 -- metric reached its target and pays its bonus. Takes the person's
 -- profile_levels row before any profile_achievements row: one lock order.
+-- The deleted-profile check holds the profile row FOR SHARE, as xp_award's.
 create function public.xp_check_achievements(p_user uuid, p_category text, p_at timestamptz,
                                              p_seen boolean, p_backfill boolean)
 returns integer language plpgsql volatile security definer set search_path = public as $$
@@ -502,8 +533,11 @@ declare
   v_locked boolean := false;
   v_unlocked integer := 0;
 begin
-  if p_user is null
-     or not exists (select 1 from profiles where id = p_user and deleted_at is null) then
+  if p_user is null then
+    return 0;
+  end if;
+  perform 1 from profiles where id = p_user and deleted_at is null for share;
+  if not found then
     return 0;
   end if;
   for r in
@@ -692,6 +726,8 @@ begin
 end $$;
 
 -- L18: a TRAINING note is paid by its round, but still counts as a note.
+-- A held note (sharing S9-S11) is not paid yet: the reveal that releases it
+-- pays it (xp_on_glass_revealed), so its +20 names no unrevealed glass.
 create function public.xp_award_note(p_note uuid, p_at timestamptz, p_seen boolean, p_check boolean)
 returns integer language plpgsql volatile security definer set search_path = public as $$
 declare
@@ -704,7 +740,7 @@ begin
   if v_author is null then
     return 0;
   end if;
-  if v_context <> 'TRAINING' then
+  if v_context <> 'TRAINING' and not wset_note_held(p_note) then
     select * into v_src from xp_sources where kind = 'note';
     v_paid := xp_award(v_author, 'note', 'note:' || p_note::text, v_src.base_xp, null, null, p_at, p_seen);
   end if;
@@ -742,25 +778,40 @@ begin
   return v_paid;
 end $$;
 
--- §5.5: a person's facts, oldest first, each with its own time, through the
--- same award functions; then every category's check once. Keys make it
--- idempotent: run again (the repair after a swallowed error, L20) it adds only
--- what is missing. Returns the XP it added.
-create function public.xp_replay_user(p_user uuid, p_seen boolean, p_backfill boolean)
+-- §5.5: a person's facts, oldest first, each with its own time (never later
+-- than now), through the same award functions; then every category's check
+-- once. Keys make it idempotent: run again it adds only what is missing.
+-- p_repair is the tool for what a swallowed error missed (L20); false only
+-- for the launch backfill and the parity test. cellar_lots,
+-- cellar_consumptions and wset_notes rows are client-writable (R4), so a
+-- repair refuses what the live triggers refuse where it can: a lot-less DRANK
+-- row pays only when a pour links it (the reveal's own rule, L17/L21), and
+-- every fact's time is clamped to on or after the account's created_at, so a
+-- row dated before the account existed cannot open an older cap bucket. It
+-- still re-derives from the rows as they are now (a created_at set inside the
+-- account's life, a reason edited to DRANK), so run it only for a person whose
+-- cellar and notes rows have been checked. Returns the XP it added.
+create function public.xp_replay_user(p_user uuid, p_seen boolean, p_backfill boolean, p_repair boolean)
 returns integer language plpgsql volatile security definer set search_path = public as $$
 declare
   r record;
+  v_repair boolean := coalesce(p_repair, false);
+  v_joined timestamptz;
+  v_at timestamptz;
   v_before integer;
   v_after integer;
   v_category text;
 begin
-  if p_user is null
-     or not exists (select 1 from profiles where id = p_user and deleted_at is null) then
+  if p_user is null then
+    return 0;
+  end if;
+  select p.created_at into v_joined from profiles p where p.id = p_user and p.deleted_at is null;
+  if not found then
     return 0;
   end if;
   select coalesce((select xp from profile_levels where user_id = p_user), 0) into v_before;
   for r in
-    select f.kind, f.fact, f.at, f.qty
+    select f.kind, f.fact, least(f.at, now()) as at, f.qty
       from (
         select 'guess'::text as kind, g.id as fact, coalesce(w.revealed_at, g.scored_at) as at,
                null::integer as qty
@@ -789,6 +840,9 @@ begin
         select 'drink', c.id, c.created_at, null
           from cellar_consumptions c
          where c.owner_id = p_user and c.reason = 'DRANK'
+           and (not v_repair
+                or c.lot_id is not null
+                or exists (select 1 from wine_pour_intents i where i.cellar_consumption_id = c.id))
         union all
         select 'note', n.id, n.created_at, null
           from wset_notes n
@@ -798,20 +852,21 @@ begin
           from training_attempts a
          where a.author_id = p_user and a.scored_at is not null
       ) f
-     order by f.at, f.kind, f.fact
+     order by 3, f.kind, f.fact
   loop
+    v_at := case when v_repair then greatest(r.at, v_joined) else r.at end;
     if r.kind = 'guess' then
-      perform xp_award_guess(r.fact, r.at, p_seen, false);
+      perform xp_award_guess(r.fact, v_at, p_seen, false);
     elsif r.kind = 'close' then
-      perform xp_award_tasting_close(r.fact, p_user, r.at, p_seen, false);
+      perform xp_award_tasting_close(r.fact, p_user, v_at, p_seen, false);
     elsif r.kind = 'lot' then
-      perform xp_award_cellar_lot(r.fact, 0, r.qty, r.at, p_seen, false);
+      perform xp_award_cellar_lot(r.fact, 0, r.qty, v_at, p_seen, false);
     elsif r.kind = 'drink' then
-      perform xp_award_drink(r.fact, r.at, p_seen, false, false);
+      perform xp_award_drink(r.fact, v_at, p_seen, false, false);
     elsif r.kind = 'note' then
-      perform xp_award_note(r.fact, r.at, p_seen, false);
+      perform xp_award_note(r.fact, v_at, p_seen, false);
     elsif r.kind = 'training' then
-      perform xp_award_training(r.fact, r.at, p_seen, false);
+      perform xp_award_training(r.fact, v_at, p_seen, false);
     end if;
   end loop;
   foreach v_category in array array['cellar', 'tastings', 'notes', 'training', 'friends'] loop
@@ -825,35 +880,88 @@ end $$;
 -- 6. Trigger functions (§7.1). Each wraps its work (L20): an XP error is a
 --    WARNING, never a failed reveal, pour, note or cellar write; a loop wraps
 --    each person, so one bad award never costs the others theirs.
---    xp_replay_user repairs whatever a swallowed error missed.
+--    xp_replay_user(u, false, false, true) repairs whatever a swallowed error
+--    missed.
 -- ---------------------------------------------------------------------------
 
--- Every guess on the glass, and the pour this reveal unmasks (L21), one person
--- at a time in user_id order (L34). Runs after trg_catalog_wine_unmark_blind
--- has deleted the glass's flight_holds rows (name order).
+-- Every guess on the glass (step 1), the pour this reveal unmasks (step 2,
+-- L21), and the notes it releases (step 3, sharing S10/S11): one person at a
+-- time in user_id order (L34), each step in its own block. Runs after
+-- trg_catalog_wine_unmark_blind has deleted the glass's flight_holds rows and
+-- wines_release_note_holds its wset_note_holds rows (name order). Step 3 is
+-- for the glass's adder (the host of an added_by_host glass, else the
+-- contributor) and each pour owner: their unpaid notes on the glass's catalog
+-- wine or its pour's wine, or linked to its pour, are paid now unless another
+-- unrevealed glass still holds them (xp_award_note), then the notes check.
 create function public.xp_on_glass_revealed()
 returns trigger language plpgsql volatile security definer set search_path = public as $$
 declare
   r record;
+  v_note record;
+  v_wine uuid;
+  v_any boolean;
 begin
   begin
+    select wa.catalog_wine_id into v_wine from wine_answers wa where wa.wine_id = new.id;
     for r in
-      select p.user_id, g.id as guess_id, null::uuid as consumption_id
-        from guesses g
-        join tasting_participants p on p.id = g.participant_id
-       where g.wine_id = new.id
-      union all
-      select c.owner_id, null::uuid, c.id
-        from wine_pour_intents i
-        join cellar_consumptions c on c.id = i.cellar_consumption_id
-       where i.wine_id = new.id
-      order by 1, 2, 3
+      select x.user_id, x.step, x.guess_id, x.consumption_id
+        from (
+          select p.user_id, 1 as step, g.id as guess_id, null::uuid as consumption_id
+            from guesses g
+            join tasting_participants p on p.id = g.participant_id
+           where g.wine_id = new.id
+          union all
+          select c.owner_id, 2, null::uuid, c.id
+            from wine_pour_intents i
+            join cellar_consumptions c on c.id = i.cellar_consumption_id
+           where i.wine_id = new.id
+          union all
+          select a.user_id, 3, null::uuid, null::uuid
+            from (select case when new.added_by_host then t.host_id else tp.user_id end as user_id
+                    from tastings t
+                    left join tasting_participants tp on tp.id = new.contributor_participant_id
+                   where t.id = new.tasting_id
+                  union
+                  select c.owner_id
+                    from wine_pour_intents i
+                    join cellar_consumptions c on c.id = i.cellar_consumption_id
+                   where i.wine_id = new.id) a
+           where a.user_id is not null
+        ) x
+       order by x.user_id, x.step, x.guess_id, x.consumption_id
     loop
       begin
-        if r.guess_id is not null then
+        if r.step = 1 then
           perform xp_award_guess(r.guess_id, now(), false, true);
-        else
+        elsif r.step = 2 then
           perform xp_award_drink(r.consumption_id, now(), false, true, false);
+        else
+          v_any := false;
+          for v_note in
+            select n.id,
+                   exists (select 1 from xp_events e
+                            where e.user_id = r.user_id and e.source_key = 'note:' || n.id::text) as paid
+              from wset_notes n
+             where n.author_id = r.user_id
+               and (n.catalog_wine_id = v_wine
+                    or n.catalog_wine_id in (select c.catalog_wine_id
+                                               from wine_pour_intents i
+                                               join cellar_consumptions c on c.id = i.cellar_consumption_id
+                                              where i.wine_id = new.id and c.owner_id = r.user_id)
+                    or n.id in (select c.wset_note_id
+                                  from wine_pour_intents i
+                                  join cellar_consumptions c on c.id = i.cellar_consumption_id
+                                 where i.wine_id = new.id and c.owner_id = r.user_id))
+             order by n.created_at, n.id
+          loop
+            v_any := true;
+            if not v_note.paid then
+              perform xp_award_note(v_note.id, now(), false, false);
+            end if;
+          end loop;
+          if v_any then
+            perform xp_check_achievements(r.user_id, 'notes', now(), false, false);
+          end if;
         end if;
       exception when others then
         raise warning 'xp_on_glass_revealed: glass %, user %: % %', new.id, r.user_id, sqlstate, sqlerrm;
@@ -1076,7 +1184,8 @@ revoke all on function public.xp_award_note(uuid, timestamptz, boolean, boolean)
   from public, anon, authenticated, service_role;
 revoke all on function public.xp_award_training(uuid, timestamptz, boolean, boolean)
   from public, anon, authenticated, service_role;
-revoke all on function public.xp_replay_user(uuid, boolean, boolean) from public, anon, authenticated, service_role;
+revoke all on function public.xp_replay_user(uuid, boolean, boolean, boolean)
+  from public, anon, authenticated, service_role;
 revoke all on function public.xp_on_glass_revealed() from public, anon, authenticated, service_role;
 revoke all on function public.xp_on_tasting_closed() from public, anon, authenticated, service_role;
 revoke all on function public.xp_on_cellar_lot() from public, anon, authenticated, service_role;
@@ -1136,7 +1245,7 @@ declare
   r record;
 begin
   for r in select p.id from public.profiles p where p.deleted_at is null order by p.id loop
-    perform public.xp_replay_user(r.id, true, true);
+    perform public.xp_replay_user(r.id, true, true, false);
   end loop;
 end $$;
 
@@ -1333,7 +1442,7 @@ begin
        'e1e671dec9b7f9fe961895fb89da0b1f', 'OWNER'),
       ('public.xp_award(uuid,text,text,integer,integer,text,timestamptz,boolean)', true, 'v', 'plpgsql', 'integer', false,
        'p_user uuid, p_kind text, p_source_key text, p_xp integer, p_units integer, p_achievement text, p_at timestamp with time zone, p_seen boolean',
-       'be99b79b59a85c5b94932708547d25e6', 'OWNER'),
+       '25cd28e3b4d2501d32e9031ca87b9bca', 'OWNER'),
       ('public.xp_consumption_masked(uuid)', true, 's', 'sql', 'boolean', false, 'p_consumption uuid',
        '9a8f6ce6d9de3063e5743dac5bec12b4', 'OWNER'),
       ('public.xp_cellar_on_hand(uuid)', true, 's', 'sql', 'integer', false, 'p_user uuid',
@@ -1343,10 +1452,10 @@ begin
       ('public.xp_tasting_won_by(uuid,uuid)', true, 's', 'sql', 'boolean', false, 'p_tasting uuid, p_user uuid',
        'a9c32de88c5af2fc781bd7ec0d5689f2', 'OWNER'),
       ('public.xp_achievement_metric(uuid,text)', true, 's', 'plpgsql', 'integer', false, 'p_user uuid, p_key text',
-       'c6f6c368814f0694d82d90e95350181c', 'OWNER'),
+       '6221cc770dd3aee16c43bc50a2ca1004', 'OWNER'),
       ('public.xp_check_achievements(uuid,text,timestamptz,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
        'p_user uuid, p_category text, p_at timestamp with time zone, p_seen boolean, p_backfill boolean',
-       'ddea6ee0dcb39c0b975ff0c6df39e69f', 'OWNER'),
+       '42fb379abdab68f1fdeec11f1af96b58', 'OWNER'),
       ('public.xp_award_guess(uuid,timestamptz,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
        'p_guess uuid, p_at timestamp with time zone, p_seen boolean, p_check boolean',
        '599f905cd9d9f4cc631b57cb2bf4c887', 'OWNER'),
@@ -1361,15 +1470,15 @@ begin
        'bb4410ed83f66ceed1a5f469c68f2b91', 'OWNER'),
       ('public.xp_award_note(uuid,timestamptz,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
        'p_note uuid, p_at timestamp with time zone, p_seen boolean, p_check boolean',
-       'a6d7d6862ae10cecb65509cc02419f59', 'OWNER'),
+       'e04cf320098a84a871eba439e8af0a66', 'OWNER'),
       ('public.xp_award_training(uuid,timestamptz,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
        'p_attempt uuid, p_at timestamp with time zone, p_seen boolean, p_check boolean',
        '52a1e008282add33cafcbddf17eb63bc', 'OWNER'),
-      ('public.xp_replay_user(uuid,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
-       'p_user uuid, p_seen boolean, p_backfill boolean',
-       '84480be4887b33b1ec9bc0a253fa5fbf', 'OWNER'),
+      ('public.xp_replay_user(uuid,boolean,boolean,boolean)', true, 'v', 'plpgsql', 'integer', false,
+       'p_user uuid, p_seen boolean, p_backfill boolean, p_repair boolean',
+       '84cd76a07bc5d20cdb2c421839ef4ca3', 'OWNER'),
       ('public.xp_on_glass_revealed()', true, 'v', 'plpgsql', 'trigger', false, '',
-       '76b15ee71e070281ec48b8c3e7b8be4c', 'OWNER'),
+       'cbb6b965b8421af8e476e529c9691324', 'OWNER'),
       ('public.xp_on_tasting_closed()', true, 'v', 'plpgsql', 'trigger', false, '',
        'a5ba1c057b2b99f8f00fc796c3467bd4', 'OWNER'),
       ('public.xp_on_cellar_lot()', true, 'v', 'plpgsql', 'trigger', false, '',
@@ -1442,9 +1551,16 @@ begin
   from pg_trigger t
   where t.tgrelid = 'public.wines'::regclass and not t.tgisinternal
     and pg_get_triggerdef(t.oid) like '% AFTER UPDATE OF is_revealed ON public.wines %';
-  if v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wines_xp_on_reveal,wset_notes_resolve_on_reveal'
-     and v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wines_release_note_holds,wines_xp_on_reveal,wset_notes_resolve_on_reveal' then
-    raise exception 'wines_xp_on_reveal does not fire after the unmark and before the note resolve: %', v_text;
+  if v_text is distinct from 'semi_blind_release_revealed_wine,trg_catalog_wine_unmark_blind,wines_release_note_holds,wines_xp_on_reveal,wset_notes_resolve_on_reveal' then
+    raise exception 'wines_xp_on_reveal does not fire after the unmark and the note-hold release and before the note resolve: %', v_text;
+  end if;
+  -- The hold row exists before either note trigger runs (name order).
+  select string_agg(t.tgname, ',' order by t.tgname collate "C") into v_text
+  from pg_trigger t
+  where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal
+    and t.tgname in ('wset_notes_hold_on_identity', 'wset_notes_xp_identity', 'wset_notes_xp_insert');
+  if v_text is distinct from 'wset_notes_hold_on_identity,wset_notes_xp_identity,wset_notes_xp_insert' then
+    raise exception 'the note hold does not fire before the note XP triggers: %', v_text;
   end if;
 
   -- 9. The backfill (§5.4): totals and levels agree with the ledger, each
