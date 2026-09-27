@@ -9,19 +9,33 @@
 //
 // --dry runs the whole file inside BEGIN ... ROLLBACK: every statement and
 // every same-transaction assert executes, nothing is kept.
+//
+// --publish-hidden-notes (rollback-m1.sql only) sets
+// blindr.rollback_publishes_hidden_notes = 'yes' for the transaction. Without
+// it rollback-m1.sql refuses while any held note, or anyone's Friends or
+// Only me notes setting, exists — the old policy would publish those notes.
+// Pass it only with the owner's explicit go-ahead, after reading the counts a
+// --dry run prints.
 import { readFileSync } from "node:fs";
 import pg from "pg";
 
-const [, , file, flag] = process.argv;
-if (!file || (flag !== undefined && flag !== "--dry")) {
-  console.error("usage: run-sql.mjs <file.sql> [--dry]");
+const [, , file, ...flags] = process.argv;
+const known = new Set(["--dry", "--publish-hidden-notes"]);
+if (!file || flags.some((f) => !known.has(f)) || new Set(flags).size !== flags.length) {
+  console.error("usage: run-sql.mjs <file.sql> [--dry] [--publish-hidden-notes]");
   process.exit(2);
 }
-if (!/^scripts\/sharing-defaults\/rollback-m[12]\.sql$/.test(file.replace(/\\/g, "/"))) {
+const normalized = file.replace(/\\/g, "/");
+if (!/^scripts\/sharing-defaults\/rollback-m[12]\.sql$/.test(normalized)) {
   console.error("run-sql.mjs only runs scripts/sharing-defaults/rollback-m1.sql or rollback-m2.sql");
   process.exit(2);
 }
-const dry = flag === "--dry";
+const dry = flags.includes("--dry");
+const publishHiddenNotes = flags.includes("--publish-hidden-notes");
+if (publishHiddenNotes && normalized !== "scripts/sharing-defaults/rollback-m1.sql") {
+  console.error("--publish-hidden-notes applies to rollback-m1.sql only");
+  process.exit(2);
+}
 const sql = readFileSync(file, "utf8");
 
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
@@ -29,6 +43,9 @@ client.on("notice", (n) => console.log("NOTICE:", n.message));
 await client.connect();
 try {
   await client.query("begin");
+  if (publishHiddenNotes) {
+    await client.query("select set_config('blindr.rollback_publishes_hidden_notes', 'yes', true)");
+  }
   const t0 = Date.now();
   await client.query(sql);
   if (dry) {

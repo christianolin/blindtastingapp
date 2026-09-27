@@ -512,7 +512,7 @@ test("a note written before the glass stays readable after the glass is poured (
   });
 });
 
-test("the reveal releases the hold", async () => {
+test("the reveal releases the hold, and a note written after the reveal is never held", async () => {
   await withRollback(async () => {
     const [host, guest] = await freshProfiles(2);
     const wine = await catalogWine(host);
@@ -522,6 +522,9 @@ test("the reveal releases the hold", async () => {
     await reveal(host, glass);
     assert.equal(await sees(guest, n), true);
     assert.deepEqual(await holdsOf(n), []);
+    const later = await note(host, wine);
+    assert.deepEqual(await holdsOf(later), [], "the hold reads is_revealed as the reveal left it");
+    assert.equal(await sees(guest, later), true);
   });
 });
 
@@ -562,6 +565,90 @@ test("an identity that arrives at another glass's reveal is held while the autho
     );
     assert.deepEqual(await holdsOf(n), [second.glass]);
     assert.equal(await sees(guest, n), false);
+  });
+});
+
+test("an identity filled in by moving a note onto a revealed glass is held while the author adds an unrevealed glass of that wine", async () => {
+  await withRollback(async () => {
+    const [author, other, guest] = await freshProfiles(3);
+    const wine = await catalogWine(other);
+    // An earlier tasting the author joined, whose glass of the wine is revealed.
+    const earlier = await flight({ host: other, guests: [author, guest], wineId: wine });
+    await reveal(other, earlier.glass);
+    // Tonight the author pours the same wine, unrevealed.
+    const tonight = await flight({ host: author, guests: [guest], wineId: wine });
+    // An identity-less note of the author's, on a hidden glass of a third flight.
+    const third = await flight({ host: other, guests: [author, guest], wineId: await catalogWine(other) });
+    await asUser(author);
+    const n = (
+      await client.query("select public.save_wset_note($1::jsonb, '[]'::jsonb) as id", [
+        JSON.stringify({ context_kind: "BLIND", tasting_wine_id: third.glass, quality_score: 85 }),
+      ])
+    ).rows[0].id;
+    assert.deepEqual(await holdsOf(n), []);
+    // A crafted PATCH naming only tasting_wine_id: the resolver fills
+    // catalog_wine_id in a BEFORE trigger, outside the UPDATE's SET list.
+    await asUser(author);
+    assert.equal(
+      (await client.query("update wset_notes set tasting_wine_id = $2 where id = $1", [n, earlier.glass])).rowCount,
+      1,
+    );
+    await asOwner();
+    assert.equal(
+      (await client.query("select catalog_wine_id from wset_notes where id = $1", [n])).rows[0].catalog_wine_id,
+      wine,
+      "the resolver gave the moved note the revealed glass's wine",
+    );
+    assert.deepEqual(await holdsOf(n), [tonight.glass]);
+    assert.equal(await sees(guest, n), false, "a guest does not read it before tonight's reveal");
+    assert.equal(await sees(author, n), true);
+  });
+});
+
+test("an ASYNC IMMEDIATE guesser's note on the wine they have scored is held; a LIVE scored guess holds nothing", async () => {
+  await withRollback(async () => {
+    const [host, guesser, stranger] = await freshProfiles(3);
+    const wine = await catalogWine(host);
+    await asOwner();
+    const tasting = (
+      await client.query(
+        `insert into tastings (name, host_id, timing_mode, async_reveal_policy, wine_source, reveal_mode)
+         values ('Sharing defaults test', $1, 'ASYNC', 'IMMEDIATE', 'HOST_PROVIDES', 'BLIND') returning id`,
+        [host],
+      )
+    ).rows[0].id;
+    await client.query("insert into tasting_participants (tasting_id, user_id, status) values ($1, $2, 'JOINED')", [
+      tasting,
+      host,
+    ]);
+    const seat = (
+      await client.query(
+        "insert into tasting_participants (tasting_id, user_id, status) values ($1, $2, 'JOINED') returning id",
+        [tasting, guesser],
+      )
+    ).rows[0].id;
+    const glass = await addGlass(tasting, wine, null, 1);
+    await client.query("update tastings set status = 'IN_PROGRESS' where id = $1", [tasting]);
+    // What score_own_guess leaves behind: the guesser's own row, locked and scored.
+    await client.query("insert into guesses (wine_id, participant_id, locked_at, scored_at) values ($1, $2, now(), now())", [
+      glass,
+      seat,
+    ]);
+    const n = await note(guesser, wine);
+    assert.deepEqual(await holdsOf(n), [glass], "the guesser reads the answer before the reveal");
+    assert.equal(await sees(stranger, n), false);
+    assert.deepEqual(await myHeld(guesser, [n]), [n], "the tag tells the guesser nothing they cannot read already");
+
+    // A LIVE guess stamped scored_at by a step reveal grants no answer, so it
+    // holds nothing: the tag would name the wine to its author.
+    const liveWine = await catalogWine(host);
+    const live = await flight({ host, guests: [stranger], wineId: liveWine });
+    await asOwner();
+    await client.query("insert into guesses (wine_id, participant_id, locked_at, scored_at) values ($1, $2, now(), now())", [
+      live.glass,
+      live.seats.get(stranger),
+    ]);
+    assert.deepEqual(await holdsOf(await note(stranger, liveWine)), []);
   });
 });
 
@@ -654,7 +741,7 @@ test("M1's back-fill holds a note whose author already adds an unrevealed glass 
 // 6. The pour link (S11)
 // ---------------------------------------------------------------------------
 
-test("a note linked to its author's masked pour is hidden from others until that glass's reveal", async () => {
+test("a note on the wine of its author's masked pour is held from its save, the pour link hides it too, until that glass's reveal", async () => {
   await withRollback(async () => {
     const [host, guest, stranger] = await freshProfiles(3);
     const poured = await catalogWine(host);
@@ -678,15 +765,79 @@ test("a note linked to its author's masked pour is hidden from others until that
        values ($1, $2, $3, true, $4)`,
       [glass, host, lot, pour],
     );
+    // The history "Rate" path saves the note first and links the pour in a
+    // second request: the note must already be hidden between the two.
     const n = await note(host, poured);
+    assert.deepEqual(await holdsOf(n), [glass], "held at its save, keyed to the glass that pours the bottle");
+    assert.equal(await sees(stranger, n), false, "hidden before any link");
     await asUser(host);
     await client.query("update cellar_consumptions set wset_note_id = $1 where id = $2", [n, pour]);
-    assert.deepEqual(await holdsOf(n), [], "no hold row: the pour link alone hides it");
+    // With the hold row gone, the link alone still hides it (S11 in wset_note_held).
+    await asOwner();
+    await client.query("delete from wset_note_holds where note_id = $1", [n]);
     assert.equal(await sees(stranger, n), false, "the masked pour hides it");
     assert.equal(await sees(host, n), true);
     assert.deepEqual(await myHeld(host, [n]), [n]);
     await reveal(host, glass);
     assert.equal(await sees(stranger, n), true, "the reveal unmasks the pour");
+  });
+});
+
+test("the adder's aroma writes on a note others see on the poured wine are refused; on a held note, or by anyone else, they go through", async () => {
+  await withRollback(async () => {
+    const r = await refs();
+    const [host, guest] = await freshProfiles(2);
+    const wine = await catalogWine(host);
+    const shared = await note(host, wine, { quality_score: 80 });
+    await aroma(shared, r.terms[0]);
+    const guests = await note(guest, wine, { quality_score: 70 });
+    await flight({ host, guests: [guest], wineId: wine });
+
+    await asUser(host);
+    await expectError(
+      () =>
+        client.query(
+          "insert into wset_note_aromas (note_id, term_id, sensed_on_nose, sensed_on_palate) values ($1, $2, true, false)",
+          [shared, r.terms[1]],
+        ),
+      "42501",
+      GUARD,
+    );
+    await expectError(
+      () => client.query("update wset_note_aromas set sensed_on_palate = true where note_id = $1", [shared]),
+      "42501",
+      GUARD,
+    );
+    await expectError(() => client.query("delete from wset_note_aromas where note_id = $1", [shared]), "42501", GUARD);
+
+    // A new note on the poured wine, aromas included, is held by the time
+    // save_wset_note writes its aromas: allowed, and nobody else sees it.
+    await asUser(host);
+    const held = (
+      await client.query("select public.save_wset_note($1::jsonb, $2::jsonb) as id", [
+        JSON.stringify({ catalog_wine_id: wine, quality_score: 84 }),
+        JSON.stringify([{ term_id: r.terms[1], sensed_on_nose: true }]),
+      ])
+    ).rows[0].id;
+    assert.equal((await holdsOf(held)).length, 1);
+    await asUser(host);
+    assert.equal(
+      (await client.query("delete from wset_note_aromas where note_id = $1", [held])).rowCount,
+      1,
+      "the author edits a held note's aromas freely",
+    );
+
+    await asUser(guest);
+    assert.equal(
+      (
+        await client.query(
+          "insert into wset_note_aromas (note_id, term_id, sensed_on_nose, sensed_on_palate) values ($1, $2, true, false)",
+          [guests, r.terms[2]],
+        )
+      ).rowCount,
+      1,
+      "a guest is not an adder",
+    );
   });
 });
 
@@ -848,21 +999,23 @@ test("sharing_notices: a person reads and dismisses only their own row, writes n
   });
 });
 
-test("wset_note_holds grants nothing to any client role", async () => {
+test("wset_note_holds and sharing_m1_open_cellars grant nothing to any client role", async () => {
   await withRollback(async () => {
-    for (const role of ["anon", "authenticated"]) {
-      for (const privilege of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
-        assert.equal(
-          (await client.query("select has_table_privilege($1, 'public.wset_note_holds', $2) as ok", [role, privilege]))
-            .rows[0].ok,
-          false,
-          `${role} ${privilege}`,
-        );
+    for (const table of ["public.wset_note_holds", "public.sharing_m1_open_cellars"]) {
+      for (const role of ["anon", "authenticated"]) {
+        for (const privilege of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
+          assert.equal(
+            (await client.query("select has_table_privilege($1, $2, $3) as ok", [role, table, privilege])).rows[0].ok,
+            false,
+            `${table} ${role} ${privilege}`,
+          );
+        }
       }
     }
     const [a] = await freshProfiles(1);
     await asUser(a);
     await expectError(() => client.query("select * from wset_note_holds"), "42501");
+    await expectError(() => client.query("select * from sharing_m1_open_cellars"), "42501");
   });
 });
 
@@ -887,6 +1040,7 @@ test("the new functions' EXECUTE is exactly spec §3.1's", async () => {
           "wset_notes_hold_on_identity",
           "wines_release_note_holds",
           "wset_notes_rule1_guard",
+          "wset_note_aromas_rule1_guard",
           "drop_deleted_profile_sharing_notice",
         ],
       ],
@@ -897,6 +1051,7 @@ test("the new functions' EXECUTE is exactly spec §3.1's", async () => {
       "drop_deleted_profile_sharing_notice()": "OWNER",
       "wines_release_note_holds()": "OWNER",
       "wset_my_held_notes(uuid[])": "OWNER,authenticated",
+      "wset_note_aromas_rule1_guard()": "OWNER",
       "wset_note_held(uuid)": "OWNER,authenticated",
       "wset_notes_hold_on_identity()": "OWNER",
       "wset_notes_rule1_guard()": "OWNER",

@@ -41,12 +41,18 @@ describe("the guard's message is pinned to the migration", () => {
   const sql = readFileSync(MIGRATION, "utf8").replace(/\r\n/g, "\n");
   const quoted = "message = '" + NOTE_RULE1_MESSAGE.replaceAll("'", "''") + "'";
 
-  it("raises exactly this message once", () => {
-    expect(sql.split(quoted).length - 1).toBe(1);
+  // Twice: wset_notes_rule1_guard and wset_note_aromas_rule1_guard, which
+  // judges a note's aroma rows by the same rule and in the same words.
+  it("raises exactly this message in the note guard and the aromas guard", () => {
+    expect(sql.split(quoted).length - 1).toBe(2);
+    for (const fn of ["wset_notes_rule1_guard", "wset_note_aromas_rule1_guard"]) {
+      const from = sql.slice(sql.indexOf(`create function public.${fn}()`));
+      expect(from.slice(0, from.indexOf("end $$;")), fn).toContain(quoted);
+    }
   });
 
-  it("raises it as 42501", () => {
-    expect(sql.split("errcode = '42501',\n      " + quoted).length - 1).toBe(1);
+  it("raises it as 42501 both times", () => {
+    expect(sql.split("errcode = '42501',\n      " + quoted).length - 1).toBe(2);
   });
 });
 

@@ -1,7 +1,9 @@
 -- Sharing defaults, M1 of 2: the notes setting, the narrowed notes read
--- policy and its Rule 1 machinery (the hold, the pour link, the guard), the
--- community figures that follow the reader, shared cellars without the
--- owner-only lot fields, and the empty notice table M2 fills.
+-- policy and its Rule 1 machinery (the hold, the pour link, the guard on a
+-- note and on its aromas), the community figures that follow the reader,
+-- shared cellars without the owner-only lot fields, the empty notice table
+-- M2 fills, and the cellars already shared now (M2's flip leaves a cellar
+-- set to Only me after this file).
 --
 -- Spec: docs/superpowers/specs/2026-09-27-sharing-defaults-design.md (§3.1,
 -- §4, §5; S5-S14, S19-S23). Plan: docs/superpowers/plans/2026-09-27-sharing-defaults.md,
@@ -68,8 +70,9 @@ begin
              where table_schema = 'public' and table_name = 'profiles' and column_name = 'notes_visibility') then
     raise exception 'profiles.notes_visibility already exists; re-read live before applying';
   end if;
-  if to_regclass('public.wset_note_holds') is not null or to_regclass('public.sharing_notices') is not null then
-    raise exception 'wset_note_holds or sharing_notices already exists; re-read live before applying';
+  if to_regclass('public.wset_note_holds') is not null or to_regclass('public.sharing_notices') is not null
+     or to_regclass('public.sharing_m1_open_cellars') is not null then
+    raise exception 'wset_note_holds, sharing_notices or sharing_m1_open_cellars already exists; re-read live before applying';
   end if;
   select string_agg(p.oid::regprocedure::text, ', ') into v_text
   from pg_proc p
@@ -77,14 +80,15 @@ begin
     and p.proname in ('can_view_notes', 'wset_note_held', 'wset_my_held_notes',
                       'catalog_wine_unrevealed_glasses_of', 'wset_notes_hold_on_identity',
                       'wines_release_note_holds', 'wset_notes_rule1_guard',
-                      'drop_deleted_profile_sharing_notice');
+                      'wset_note_aromas_rule1_guard', 'drop_deleted_profile_sharing_notice');
   if v_text is not null then
     raise exception 'a function this migration creates already exists: %', v_text;
   end if;
   if exists (select 1 from pg_trigger t
              where not t.tgisinternal
                and t.tgname in ('wset_notes_hold_on_identity', 'wines_release_note_holds',
-                                'wset_notes_rule1_guard', 'profiles_deleted_drop_sharing_notice')) then
+                                'wset_notes_rule1_guard', 'wset_note_aromas_rule1_guard',
+                                'profiles_deleted_drop_sharing_notice')) then
     raise exception 'a trigger this migration creates already exists';
   end if;
   if exists (select 1 from pg_indexes i
@@ -340,15 +344,30 @@ revoke all on function public.wset_my_held_notes(uuid[]) from public, anon, serv
 grant execute on function public.wset_my_held_notes(uuid[]) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 4. Triggers (spec §5): the hold, its release, the guard.
+-- 4. Triggers (spec §5): the hold, its release, the guard on a note and on
+--    its aromas.
 -- ---------------------------------------------------------------------------
 
 -- S10: a note that gains an identity while its author adds an unrevealed
 -- glass of that wine is held until that glass is revealed. Keyed on the
--- author's glasses, never auth.uid(), so every write path is covered.
+-- author, never auth.uid(), so every write path is covered. Two more glasses
+-- hold it, each known to the author alone: one where the author's own guess
+-- is scored in an ASYNC IMMEDIATE tasting (has_scored_guess's rule: they read
+-- the answer before the reveal), and one that pours a bottle of the wine from
+-- the author's own cellar (the pour catalog_wine_masked_pours masks, also
+-- after a Swap), so a note is held from its save, not from a later cellar
+-- link (S11). The adder clause is catalog_wine_unrevealed_glasses_of's,
+-- inlined: the glasses are read FOR SHARE (a STABLE helper cannot lock), so a
+-- reveal in flight is waited for and is_revealed re-read after it, and no
+-- hold lands on a glass whose release (wines_release_note_holds) already ran.
+-- The trigger also fires on a move (tasting_wine_id): an identity that
+-- wset_notes_glass_resolve_on_write fills in a BEFORE trigger is not in the
+-- UPDATE's SET list, so an "update of catalog_wine_id" trigger alone would miss it.
 create function public.wset_notes_hold_on_identity()
 returns trigger
 language plpgsql security definer set search_path = public as $$
+declare
+  v_glass uuid;
 begin
   if new.catalog_wine_id is null then
     return null;
@@ -357,14 +376,54 @@ begin
   if tg_op = 'UPDATE' and old.catalog_wine_id is not null then
     return null;
   end if;
-  insert into wset_note_holds (note_id, wine_id)
-  select new.id, g from catalog_wine_unrevealed_glasses_of(new.catalog_wine_id, new.author_id) g
-  on conflict (note_id, wine_id) do nothing;
+  -- The glasses keyed to the note's wine: the author added it, or has a
+  -- scored ASYNC IMMEDIATE guess on it.
+  for v_glass in
+    select w.id
+      from wine_answers wa
+      join wines w on w.id = wa.wine_id
+      join tastings t on t.id = w.tasting_id
+      left join tasting_participants tp on tp.id = w.contributor_participant_id
+     where wa.catalog_wine_id = new.catalog_wine_id
+       and not w.is_revealed
+       and ((case when w.added_by_host then t.host_id = new.author_id else tp.user_id = new.author_id end)
+            or (t.timing_mode = 'ASYNC' and t.async_reveal_policy = 'IMMEDIATE' and w.reveal_step = 0
+                and exists (select 1
+                              from guesses g
+                              join tasting_participants gp on gp.id = g.participant_id
+                             where g.wine_id = w.id
+                               and gp.tasting_id = w.tasting_id
+                               and gp.user_id = new.author_id
+                               and gp.status = 'JOINED'
+                               and g.scored_at is not null)))
+       for share of w
+  loop
+    insert into wset_note_holds (note_id, wine_id) values (new.id, v_glass)
+    on conflict (note_id, wine_id) do nothing;
+  end loop;
+  -- The glasses that pour a bottle of it from the author's own cellar.
+  for v_glass in
+    select w.id
+      from wines w
+     where not w.is_revealed
+       and exists (select 1
+                     from cellar_consumptions c
+                    where c.owner_id = new.author_id
+                      and c.catalog_wine_id = new.catalog_wine_id
+                      and (exists (select 1 from flight_holds h
+                                    where h.consumption_id = c.id and h.wine_id = w.id)
+                           or exists (select 1 from wine_pour_intents i
+                                       where i.cellar_consumption_id = c.id and i.wine_id = w.id)))
+       for share of w
+  loop
+    insert into wset_note_holds (note_id, wine_id) values (new.id, v_glass)
+    on conflict (note_id, wine_id) do nothing;
+  end loop;
   return null;
 end $$;
 revoke all on function public.wset_notes_hold_on_identity() from public, anon, authenticated, service_role;
 create trigger wset_notes_hold_on_identity
-  after insert or update of catalog_wine_id on public.wset_notes
+  after insert or update of catalog_wine_id, tasting_wine_id on public.wset_notes
   for each row execute function public.wset_notes_hold_on_identity();
 
 -- Only a reveal releases a hold: that glass's. A removed glass, a deleted
@@ -409,6 +468,47 @@ revoke all on function public.wset_notes_rule1_guard() from public, anon, authen
 create trigger wset_notes_rule1_guard
   before update or delete on public.wset_notes
   for each row execute function public.wset_notes_rule1_guard();
+
+-- S12 on a note's aromas: the same adder may not add, change or remove the
+-- aroma rows of a note on W that others can already see, which would change
+-- that note's read view and W's "What people find" mid-tasting (the
+-- wset_note_aromas write policies check only the author). The guard's first
+-- condition, judged on the parent note. save_wset_note writes aromas only
+-- after its note write, which the note guard has already judged, and a note
+-- it just created on W is held by then; RI cascades (depth > 1) and the scrub
+-- (no auth.uid()) are not judged.
+create function public.wset_note_aromas_rule1_guard()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  v_notes uuid[] := '{}';
+begin
+  if pg_trigger_depth() > 1 or auth.uid() is null then
+    return coalesce(new, old);
+  end if;
+  if tg_op <> 'INSERT' then
+    v_notes := v_notes || old.note_id;
+  end if;
+  if tg_op <> 'DELETE' then
+    v_notes := v_notes || new.note_id;
+  end if;
+  if exists (select 1
+               from wset_notes n
+              where n.id = any (v_notes)
+                and n.author_id = auth.uid()
+                and n.catalog_wine_id is not null
+                and not wset_note_held(n.id)
+                and exists (select 1 from catalog_wine_unrevealed_glasses_of(n.catalog_wine_id, n.author_id))) then
+    raise exception using
+      errcode = '42501',
+      message = 'This wine is in one of your flights that hasn''t been revealed yet. Change or delete this note after the reveal.';
+  end if;
+  return coalesce(new, old);
+end $$;
+revoke all on function public.wset_note_aromas_rule1_guard() from public, anon, authenticated, service_role;
+create trigger wset_note_aromas_rule1_guard
+  before insert or update or delete on public.wset_note_aromas
+  for each row execute function public.wset_note_aromas_rule1_guard();
 
 -- ---------------------------------------------------------------------------
 -- 5. Indexes for the new surfaces (by author, by wine) and the pour link.
@@ -474,7 +574,11 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 9. Back-fill holds for notes whose author adds an unrevealed glass of the
 --    note's wine right now (0 live). A one-off hide of notes the app has
---    never shown to anyone but their author.
+--    never shown to anyone but their author; the trigger's other two
+--    clauses (a scored ASYNC IMMEDIATE guess, a masked pour) hold arrivals
+--    from here on only. No reveal can race it: creating
+--    wines_release_note_holds above took a lock on wines that every reveal's
+--    UPDATE waits for until this transaction ends.
 -- ---------------------------------------------------------------------------
 insert into public.wset_note_holds (note_id, wine_id)
 select n.id, g from public.wset_notes n
@@ -550,6 +654,24 @@ create trigger profiles_deleted_drop_sharing_notice
   execute function public.drop_deleted_profile_sharing_notice();
 
 -- ---------------------------------------------------------------------------
+-- 12. The cellars already shared now (Friends or Everyone), for M2's flip.
+--     The Sharing card ships between M1 and M2 (spec §10.2), so a cellar
+--     that is shared here and Only me by M2 was set so by hand, and M2
+--     leaves it. Internal: no client access; the app never reads it. Step
+--     1's add column holds an exclusive lock on profiles until commit, so no
+--     cellar changes between this insert and the post-state's check of it.
+-- ---------------------------------------------------------------------------
+create table public.sharing_m1_open_cellars (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.sharing_m1_open_cellars enable row level security;
+revoke all on public.sharing_m1_open_cellars from public, anon, authenticated;
+insert into public.sharing_m1_open_cellars (user_id)
+select p.id from public.profiles p
+ where p.deleted_at is null and p.cellar_visibility <> 'PRIVATE';
+
+-- ---------------------------------------------------------------------------
 -- Post-state: every check in the same transaction; any failure rolls it all back.
 -- ---------------------------------------------------------------------------
 do $$
@@ -589,7 +711,7 @@ begin
   end if;
 
   -- 2. Triggers: the four from before plus the hold and the guard; the
-  --    release on wines; the notice drop on profiles.
+  --    aromas guard; the release on wines; the notice drop on profiles.
   if (select string_agg(t.tgname::text, ',' order by t.tgname::text collate "C")
         from pg_trigger t where t.tgrelid = 'public.wset_notes'::regclass and not t.tgisinternal)
      is distinct from
@@ -602,15 +724,17 @@ begin
     into v_text
   from pg_trigger t
   where not t.tgisinternal
-    and t.tgname in ('wset_notes_hold_on_identity', 'wset_notes_rule1_guard', 'wines_release_note_holds',
-                     'profiles_deleted_drop_sharing_notice');
+    and t.tgname in ('wset_notes_hold_on_identity', 'wset_notes_rule1_guard', 'wset_note_aromas_rule1_guard',
+                     'wines_release_note_holds', 'profiles_deleted_drop_sharing_notice');
   if v_text is distinct from
        'CREATE TRIGGER profiles_deleted_drop_sharing_notice AFTER UPDATE OF deleted_at ON profiles FOR EACH ROW '
        || 'WHEN (((old.deleted_at IS NULL) AND (new.deleted_at IS NOT NULL))) EXECUTE FUNCTION drop_deleted_profile_sharing_notice()'
        || ' | CREATE TRIGGER wines_release_note_holds AFTER UPDATE OF is_revealed ON wines FOR EACH ROW '
        || 'WHEN ((new.is_revealed AND (NOT old.is_revealed))) EXECUTE FUNCTION wines_release_note_holds()'
-       || ' | CREATE TRIGGER wset_notes_hold_on_identity AFTER INSERT OR UPDATE OF catalog_wine_id ON wset_notes '
-       || 'FOR EACH ROW EXECUTE FUNCTION wset_notes_hold_on_identity()'
+       || ' | CREATE TRIGGER wset_note_aromas_rule1_guard BEFORE INSERT OR DELETE OR UPDATE ON wset_note_aromas '
+       || 'FOR EACH ROW EXECUTE FUNCTION wset_note_aromas_rule1_guard()'
+       || ' | CREATE TRIGGER wset_notes_hold_on_identity AFTER INSERT OR UPDATE OF catalog_wine_id, tasting_wine_id '
+       || 'ON wset_notes FOR EACH ROW EXECUTE FUNCTION wset_notes_hold_on_identity()'
        || ' | CREATE TRIGGER wset_notes_rule1_guard BEFORE DELETE OR UPDATE ON wset_notes '
        || 'FOR EACH ROW EXECUTE FUNCTION wset_notes_rule1_guard()' then
     raise exception 'the new triggers differ from spec §3.1 step 4: %', v_text;
@@ -783,11 +907,13 @@ begin
       ('public.wset_my_held_notes(uuid[])', true, 's', 'sql', 'uuid', true,
        'p_note_ids uuid[]', '3a08cb7faf015f9b2f592d60d6a5bafb', 'OWNER,authenticated'),
       ('public.wset_notes_hold_on_identity()', true, 'v', 'plpgsql', 'trigger', false,
-       '', '8b500cd6a6f62204c02c66c4760793fc', 'OWNER'),
+       '', '392edc2f47b146e8fa291703c6739702', 'OWNER'),
       ('public.wines_release_note_holds()', true, 'v', 'plpgsql', 'trigger', false,
        '', '419a9f4dda4fac12a601207ea3f3b45a', 'OWNER'),
       ('public.wset_notes_rule1_guard()', true, 'v', 'plpgsql', 'trigger', false,
        '', '770e9c571942c4a9e6bd337fc0dbf200', 'OWNER'),
+      ('public.wset_note_aromas_rule1_guard()', true, 'v', 'plpgsql', 'trigger', false,
+       '', 'cc66665c8d7771678016919f6aa1ed5e', 'OWNER'),
       ('public.drop_deleted_profile_sharing_notice()', true, 'v', 'plpgsql', 'trigger', false,
        '', '656d8d4d8f86f71b61a0238f1cf59636', 'OWNER'),
       ('public.catalog_wine_usage(uuid)', true, 's', 'sql', 'record', true,
@@ -839,7 +965,27 @@ begin
     raise exception 'a function this file relies on changed: %', v_text;
   end if;
 
+  -- 9. sharing_m1_open_cellars: internal (RLS on, no policy, no client
+  --    privilege), and exactly the non-deleted cellars shared right now.
+  if not exists (select 1 from pg_class c
+                 where c.oid = 'public.sharing_m1_open_cellars'::regclass and c.relrowsecurity and not c.relforcerowsecurity)
+     or exists (select 1 from pg_policy p where p.polrelid = 'public.sharing_m1_open_cellars'::regclass)
+     or exists (select 1 from pg_class c, aclexplode(c.relacl) a
+                where c.oid = 'public.sharing_m1_open_cellars'::regclass
+                  and (a.grantee = 0 or a.grantee in ('anon'::regrole, 'authenticated'::regrole))) then
+    raise exception 'sharing_m1_open_cellars is not internal (RLS on, no policy, no PUBLIC/anon/authenticated privilege)';
+  end if;
+  if exists ((select o.user_id from public.sharing_m1_open_cellars o)
+             except
+             (select p.id from public.profiles p where p.deleted_at is null and p.cellar_visibility <> 'PRIVATE'))
+     or exists ((select p.id from public.profiles p where p.deleted_at is null and p.cellar_visibility <> 'PRIVATE')
+                except
+                (select o.user_id from public.sharing_m1_open_cellars o)) then
+    raise exception 'sharing_m1_open_cellars is not the set of cellars shared when M1 ran';
+  end if;
+
   select count(*)::int into v_n from public.wset_note_holds;
-  raise notice 'sharing defaults M1: % hold(s) back-filled; % notes; % profiles',
-    v_n, (select n from _sd_notes_before), (select sum(n) from _sd_profiles_before);
+  raise notice 'sharing defaults M1: % hold(s) back-filled; % notes; % profiles; % cellar(s) already shared',
+    v_n, (select n from _sd_notes_before), (select sum(n) from _sd_profiles_before),
+    (select count(*) from public.sharing_m1_open_cellars);
 end $$;

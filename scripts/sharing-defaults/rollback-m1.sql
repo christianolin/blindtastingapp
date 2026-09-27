@@ -4,10 +4,26 @@
 -- read notes_visibility, sharing_notices or wset_my_held_notes, and after
 -- rollback-m2.sql (or before M2 was ever applied). People's notes settings
 -- are lost. The three indexes stay (harmless). Removes M1's history row.
+--
+-- It PUBLISHES NOTES: the old read policy lets every signed-in member read
+-- every identified note, so at the commit these become readable to everyone
+-- (and count in catalog_wine_ratings, so a wine's average and note count can
+-- move mid-tasting):
+-- * every held note — a host's note on tonight's wine, one held for good
+--   after a Remove (R2), one linked to a masked pour of its author's (S11);
+-- * every note of anyone who chose Friends or Only me.
+-- The pre-state prints both counts on every run, --dry included, and refuses
+-- while either is non-zero unless the run sets
+-- blindr.rollback_publishes_hidden_notes = 'yes' — run-sql.mjs does that for
+-- --publish-hidden-notes, which is for the owner's explicit go-ahead only.
 
 set local lock_timeout = '10s';
 
 do $$
+declare
+  v_held int;
+  v_notes int;
+  v_people int;
 begin
   if to_regclass('public.sharing_notices') is null then
     raise exception 'M1 is not applied';
@@ -17,6 +33,20 @@ begin
          where table_schema = 'public' and table_name = 'profiles' and column_name = 'cellar_visibility')
         is distinct from '''PRIVATE''::cellar_visibility' then
     raise exception 'M2 is still applied: run rollback-m2.sql first';
+  end if;
+  select count(*)::int into v_held from public.wset_notes n where public.wset_note_held(n.id);
+  select count(*)::int into v_people
+    from public.profiles p where p.deleted_at is null and p.notes_visibility <> 'PUBLIC';
+  select count(*)::int into v_notes
+    from public.wset_notes n
+    join public.profiles p on p.id = n.author_id
+   where p.notes_visibility <> 'PUBLIC' and n.catalog_wine_id is not null;
+  raise notice 'rollback M1 publishes to everyone: % held note(s); % note(s) of % person(s) set to Friends or Only me',
+    v_held, v_notes, v_people;
+  if (v_held > 0 or v_people > 0)
+     and coalesce(current_setting('blindr.rollback_publishes_hidden_notes', true), '') <> 'yes' then
+    raise exception 'rollback M1 would make % held note(s) and the notes of % person(s) set to Friends or Only me readable by everyone: re-run with --publish-hidden-notes only with the owner''s go-ahead',
+      v_held, v_people;
   end if;
 end $$;
 
@@ -31,6 +61,8 @@ create policy "wset notes read" on public.wset_notes for select to authenticated
   using ((num_nonnulls(catalog_wine_id, unidentified_wine_id) = 1) or (author_id = auth.uid()));
 
 -- 3. The hold, release and guard triggers.
+drop trigger wset_note_aromas_rule1_guard on public.wset_note_aromas;
+drop function public.wset_note_aromas_rule1_guard();
 drop trigger wset_notes_rule1_guard on public.wset_notes;
 drop trigger wset_notes_hold_on_identity on public.wset_notes;
 drop trigger wines_release_note_holds on public.wines;
@@ -100,6 +132,9 @@ drop table public.wset_note_holds;
 revoke update (notes_visibility) on public.profiles from authenticated;
 alter table public.profiles drop column notes_visibility;
 
+-- 7. The cellars M1 recorded as already shared (M2's input).
+drop table public.sharing_m1_open_cellars;
+
 delete from supabase_migrations.schema_migrations where version = '20260927140000';
 
 do $$
@@ -125,7 +160,11 @@ begin
   if exists (select 1 from information_schema.columns
              where table_schema = 'public' and table_name = 'profiles' and column_name = 'notes_visibility')
      or to_regclass('public.wset_note_holds') is not null
-     or to_regprocedure('public.can_view_notes(uuid)') is not null then
+     or to_regclass('public.sharing_m1_open_cellars') is not null
+     or to_regprocedure('public.can_view_notes(uuid)') is not null
+     or to_regprocedure('public.wset_note_aromas_rule1_guard()') is not null
+     or exists (select 1 from pg_trigger t
+                 where t.tgrelid = 'public.wset_note_aromas'::regclass and t.tgname = 'wset_note_aromas_rule1_guard') then
     raise exception 'an M1 object is still present';
   end if;
   if exists (select 1 from supabase_migrations.schema_migrations where version = '20260927140000') then
