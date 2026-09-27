@@ -201,13 +201,22 @@ export function coverageLine(
  * name is the region's own, folded: "Top match: Champagne 88 %"). `ranked` is
  * rankCandidates' output, already in §5.8 order (uncapped numbered first); k
  * counts the other uncapped wines within CLOSE_WINDOW of the leader.
+ *
+ * The leader is the list's top group's best wine (R3), not simply the ranking's
+ * first: rankCandidates breaks a tie by wine name, groupRanking (groups.ts
+ * byPlace) by country, then region, then region id. So among the uncapped wines
+ * at the top closeness, the one whose place sorts first leads; within one
+ * region the earliest (that group's best) is kept.
  */
 export function stripLine(ranked: readonly RankedCandidate[]): string {
   if (ranked.length === 0) return TRAINING_COPY.beforeAnswers;
-  const leader = ranked.find((r) => r.capped === null);
-  if (!leader) return TRAINING_COPY.nothingFits;
-  if (leader.closeness === null) return TRAINING_COPY.beforeAnswers;
-  const top = leader.closeness;
+  const first = ranked.find((r) => r.capped === null);
+  if (!first) return TRAINING_COPY.nothingFits;
+  if (first.closeness === null) return TRAINING_COPY.beforeAnswers;
+  const top = first.closeness;
+  const leader = ranked
+    .filter((r) => r.capped === null && r.closeness === top)
+    .reduce((a, b) => (byPlace(b, a) < 0 ? b : a));
   const k = ranked.filter(
     (r) =>
       r !== leader &&
@@ -220,6 +229,16 @@ export function stripLine(ranked: readonly RankedCandidate[]): string {
   const label = foldName(wine) === foldName(region) ? wine : `${region} · ${wine}`;
   const head = `Top match: ${label} ${top} %`;
   return k === 0 ? head : `${head} · ${k} more close`;
+}
+
+// groups.ts's byPlace on a wine's own place, so the strip's tie-break is the
+// list's (groups.ts imports this module, so it is not imported from there).
+function byPlace(x: RankedCandidate, y: RankedCandidate): number {
+  return (
+    x.candidate.country.name.localeCompare(y.candidate.country.name, "en") ||
+    x.candidate.region.name.localeCompare(y.candidate.region.name, "en") ||
+    x.candidate.region.id.localeCompare(y.candidate.region.id)
+  );
 }
 
 /** A region group's name with its country: "Bourgogne, France" (R1). */

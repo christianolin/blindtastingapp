@@ -237,6 +237,21 @@ describe("stripLine", () => {
   it("names the region once when the wine is the region's own name", () => {
     expect(stripLine([rc("champagne", 88)])).toBe("Top match: Champagne 88 %");
   });
+  it("a tie at the top names the list's top group, not the matcher's first wine (R4 = R3's top group)", () => {
+    // rankCandidates breaks the tie by wine name (Bandol first); groupRanking
+    // by country, then region, so Niederösterreich leads the list.
+    const ranked = [rc("bandol", 80), rc("sancerre", 80), rc("tannin-free-white", 80)];
+    expect(groupRanking(ranked)[0].region.name).toBe("Niederösterreich");
+    expect(stripLine(ranked)).toBe("Top match: Niederösterreich · Tannin-free White 80 % · 2 more close");
+  });
+  it("a tie inside the top region names that group's best, its first wine", () => {
+    const ranked = [rc("vosne", 80), rc("chablis", 80)];
+    expect(groupRanking(ranked)[0].best.candidate.id).toBe("arch-vosne");
+    expect(stripLine(ranked)).toBe("Top match: Bourgogne · Vosne-Romanée 80 % · 1 more close");
+    expect(stripLine([rc("chablis", 80), rc("vosne", 80)])).toBe(
+      "Top match: Bourgogne · Chablis 80 % · 1 more close",
+    );
+  });
   it("a leader with no number: the pre-answer hint", () => {
     expect(stripLine([rc("margaux", null), rc("bandol", null)])).toBe("Start describing the wine");
     expect(stripLine([])).toBe("Start describing the wine");
