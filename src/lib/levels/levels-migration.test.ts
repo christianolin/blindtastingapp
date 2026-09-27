@@ -38,7 +38,7 @@ const PINS: Record<string, string> = {
   xp_award_note: "e04cf320098a84a871eba439e8af0a66",
   xp_award_training: "52a1e008282add33cafcbddf17eb63bc",
   xp_replay_user: "84cd76a07bc5d20cdb2c421839ef4ca3",
-  xp_on_glass_revealed: "b4a8798d26678112ea52f764b588e0fe",
+  xp_on_glass_revealed: "d6820017f7549a2d2ee7773817d08e07",
   xp_on_tasting_closed: "a5ba1c057b2b99f8f00fc796c3467bd4",
   xp_on_cellar_lot: "5174e05a934bec37adc7b6c3b88ed677",
   xp_on_cellar_consumption: "908ed16361d1c53d273853798cbc4aa2",
@@ -93,6 +93,7 @@ describe(FILE, () => {
     expect(reveal).toContain("case when new.added_by_host then t.host_id else tp.user_id end");
     // Each guesser too: sharing holds an ASYNC IMMEDIATE guesser's note keyed to the glass.
     expect(reveal).toContain("join tasting_participants gp on gp.id = gg.participant_id");
+    expect(reveal).toContain("and gt.timing_mode = 'ASYNC' and gt.async_reveal_policy = 'IMMEDIATE'");
     expect(reveal).toContain("perform xp_award_note(v_note.id, now(), false, false);");
     expect(reveal).toContain("perform xp_check_achievements(r.user_id, 'notes', now(), false, false);");
   });

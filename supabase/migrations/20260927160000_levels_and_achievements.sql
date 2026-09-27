@@ -890,8 +890,9 @@ end $$;
 -- trg_catalog_wine_unmark_blind has deleted the glass's flight_holds rows and
 -- wines_release_note_holds its wset_note_holds rows (name order). Step 3 is
 -- for the glass's adder (the host of an added_by_host glass, else the
--- contributor), each pour owner and each guesser (sharing holds an ASYNC
--- IMMEDIATE guesser's note keyed to the glass): their unpaid notes on the glass's catalog
+-- contributor), each pour owner and, in an ASYNC IMMEDIATE tasting, each
+-- guesser (the one case where sharing's hold names a guesser; elsewhere a
+-- capped note stays lost, L16): their unpaid notes on the glass's catalog
 -- wine or its pour's wine, or linked to its pour, are paid now unless another
 -- unrevealed glass still holds them (xp_award_note), then the notes check.
 create function public.xp_on_glass_revealed()
@@ -931,7 +932,9 @@ begin
                   select gp.user_id
                     from guesses gg
                     join tasting_participants gp on gp.id = gg.participant_id
-                   where gg.wine_id = new.id) a
+                    join tastings gt on gt.id = new.tasting_id
+                   where gg.wine_id = new.id
+                     and gt.timing_mode = 'ASYNC' and gt.async_reveal_policy = 'IMMEDIATE') a
            where a.user_id is not null
         ) x
        order by x.user_id, x.step, x.guess_id, x.consumption_id
@@ -1484,7 +1487,7 @@ begin
        'p_user uuid, p_seen boolean, p_backfill boolean, p_repair boolean',
        '84cd76a07bc5d20cdb2c421839ef4ca3', 'OWNER'),
       ('public.xp_on_glass_revealed()', true, 'v', 'plpgsql', 'trigger', false, '',
-       'b4a8798d26678112ea52f764b588e0fe', 'OWNER'),
+       'd6820017f7549a2d2ee7773817d08e07', 'OWNER'),
       ('public.xp_on_tasting_closed()', true, 'v', 'plpgsql', 'trigger', false, '',
        'a5ba1c057b2b99f8f00fc796c3467bd4', 'OWNER'),
       ('public.xp_on_cellar_lot()', true, 'v', 'plpgsql', 'trigger', false, '',

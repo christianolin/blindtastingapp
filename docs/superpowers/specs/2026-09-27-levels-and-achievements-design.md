@@ -930,11 +930,14 @@ drop table if exists public.profile_achievements, public.xp_events, public.profi
 ## 14. Whole-branch review amendments (2026-09-27)
 
 - **A1 Held notes (amends C1's "pins none of their objects").** Under sharing-defaults
-  (S9-S11) a note is *held* while its author adds an unrevealed glass of its wine, or while
-  its linked pour is masked; a held note must move no count others see. So
+  (S9-S11) a note is *held* while its author adds an unrevealed glass of its wine, holds a
+  scored ASYNC IMMEDIATE guess on one, or while its linked pour is masked; a held note must
+  move no count others see. So
   `xp_award_note` pays no held note, the four notes metrics leave held notes out, and
   `xp_on_glass_revealed` gains a third step, inside the same `user_id` order (L34): for the
-  glass's adder and each pour owner it pays their unpaid notes on the glass's catalog wine or
+  glass's adder, each pour owner and, in an ASYNC IMMEDIATE tasting, each guesser (the one
+  case the hold names a guesser; elsewhere a capped note stays lost, L16) it pays their
+  unpaid notes on the glass's catalog wine or
   its pour's wine, or linked to its pour (unless another unrevealed glass still holds them),
   then runs the notes check. Without it, a host with visible notes from 9 countries who
   notes tonight's public wine from a tenth would unlock "Well travelled" (+100) before the

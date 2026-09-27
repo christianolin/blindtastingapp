@@ -1260,7 +1260,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `catalog_wine_masked_pours`' predicate, pinned equal by the DB suite), and a
   note sharing-defaults holds (`wset_note_held`) earns no XP and counts for no
   notes achievement until the reveal that releases it, which pays it
-  (`xp_on_glass_revealed`'s third step, for the glass's adder and pour owners).
+  (`xp_on_glass_revealed`'s third step, for the glass's adder, its pour owners
+  and, in an ASYNC IMMEDIATE tasting, its guessers — the hold names a guesser
+  only there).
   The migration therefore requires sharing-defaults M1. Any new count over
   `cellar_*` or `wset_notes` shown publicly must follow the same rule.
   `wines_xp_on_reveal` fires after `trg_catalog_wine_unmark_blind` (which
