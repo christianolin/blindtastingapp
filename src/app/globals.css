@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The desktop wine-map lock (spec 2026-09-27-desktop-map-layout-design).
+   No JS twin: nothing in JS depends on it. */
+@custom-variant map-lock {
+  @media (width >= 48rem) and (height >= 30rem) { @slot; }
+}
+@custom-variant map-scroll {
+  @media (width >= 48rem) and (height < 30rem) { @slot; }
+}
+
 /* Hide the native scrollbar (track + arrow buttons) on intentional
    horizontal scrollers like tab strips. On Windows an `overflow-x-auto`
    element also computes `overflow-y: auto`, so a sub-pixel of vertical
