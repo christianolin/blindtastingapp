@@ -1057,6 +1057,45 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the add-wine matrix's reveal branch (`matrix.ts`'s `noteMatrix`) and the
   nav's Training Room label and Preview pill (`nav-links.ts`) also read;
   never hard-code a room string in a component.
+  **Region guess** (2026-09-27, addendum
+  `docs/superpowers/specs/2026-09-27-training-room-region-guess.md`, plan
+  `docs/superpowers/plans/2026-09-27-training-room-region-guess.md`, migration
+  `20260927100000_training_region_guess.sql`): the candidate list groups the
+  ranking by scoring region (`src/lib/training/groups.ts`'s `groupRanking`: a
+  region stands at its best UNCAPPED wine, a region whose wines are all capped
+  is capped at its best capped one; the matcher is unchanged and the attempt's
+  snapshot is still the full wine ranking). The laptop column and the phone
+  sheet show the top five regions ("Show all N regions"); a region row opens
+  its typical wines in place (the top one starts open; the phone sheet keeps
+  the open regions across a wine's detail and back), and the phone strip reads
+  "Top match: {region} · {wine} {pct} %" (the region alone when the wine is
+  named like it). The laptop column is capped to the window below its sticky
+  top and scrolls itself (`training-room.tsx`'s aside, pinned by
+  `training-room-layout.test.ts`): an open region can outgrow any window
+  (Bourgogne has 15 typical wines), and a sticky column taller than the window
+  shows its foot only once the page reaches its end — the one nested scroller
+  base spec §8 did not foresee; never drop it to restore §8's wording.
+  Your call (`your-call.tsx`, every rule pure in `call.ts`) is
+  two steps: which region (top five, a search that also matches a region's
+  wines and appellations, "It's not in the list"), then "Go deeper" ("Just the
+  region" or one of its typical wines) and, only while it stays at the region,
+  an optional grape (the region's grapes as chips, "Other grape…" over every
+  grape through the guess ladder's `FieldPicker`, preloaded by
+  `readTrainingGrapes`). `training_attempts.picked_region_id` /
+  `picked_grape_id` (on delete set null) store a region pick; checks refuse a
+  typical wine and a region together and a grape without a region, and
+  `callPayload` never sends either. `record_training_attempt` scores a region
+  pick country 2 + region 3 by the region's own FKs and 8 when the grape is
+  the wine's PRIMARY grape (appellation 0; second grape and designation 0 when
+  the wine has one, null when not); `possible_points` is the wine's, the same
+  as for a deep pick. Its latest body is the one in
+  `20260927100000_training_region_guess.sql` (md5
+  `f6a24c83c24aaab34ab568dc6280083f`): a future recreate starts from that
+  body. A region with a grape-bearing region pick on it cannot be deleted (the
+  FK's SET NULL would leave a grape without a region, which the check
+  refuses) — clear those attempts' picks first. The device draft carries
+  `pickedRegionId` / `pickedGrapeId`; a draft from before them reads with both
+  null, and Continue gives a picked typical wine its region (`normalizeCall`).
 - Tasting lifecycle: a new tasting is created `DRAFT` ("not started"), NOT
   `OPEN` — the create action used to force `OPEN`. While `DRAFT` the host can
   add wines and invite more people (`HostControls` in
