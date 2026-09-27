@@ -7,7 +7,8 @@
 //
 // It connects to the database pgConfig() names, which is production, so only
 // the main session runs it. Every test runs inside a transaction that always
-// rolls back, on throwaway profiles, catalog wines, lots and tastings created
+// rolls back, on throwaway profiles (11-12's pour owner also gets a throwaway
+// auth.users row, authPeople()), catalog wines, lots and tastings created
 // inside that transaction: no real person's row decides a result or is written.
 // Deferred triggers fire only at COMMIT, so the drink tests run
 // `set constraints all immediate` after the write.
@@ -97,6 +98,44 @@ async function people(n) {
       [`Levels test ${i}`],
     );
     ids.push(r.rows[0].id);
+  }
+  return ids;
+}
+
+// Throwaway people who also have an auth.users row, for a column that still
+// references auth.users(id): wine_pour_intents.owner_id
+// (20260912103000_cellar_pour_intent.sql:16, live per 20260919101300's header).
+// profiles itself has had no FK to auth.users since 20260829265003, so
+// people() needs none. The row is inserted as the owner role inside the
+// rolled-back transaction, before any profile exists for its id:
+// on_auth_user_created -> handle_new_user() (init_schema.sql:54, md5-pinned by
+// 20260919101300) writes the profile with a plain insert (no ON CONFLICT),
+// from new.id, raw_user_meta_data's display_name and new.email. The update
+// after it pins display_name and email whatever that body derives. No real
+// person's account is borrowed, and no FK is dropped.
+async function authPeople(n) {
+  await asOwner();
+  const can = (await client.query("select has_table_privilege('auth.users', 'INSERT') as ok")).rows[0].ok;
+  assert.ok(can, "the suite's login role needs INSERT on auth.users for a throwaway pour owner");
+  const ids = [];
+  for (let i = 1; i <= n; i += 1) {
+    const name = `Levels test auth ${i}`;
+    const r = await client.query(
+      `insert into auth.users (id, aud, role, email, raw_user_meta_data)
+       values (gen_random_uuid(), 'authenticated', 'authenticated',
+               'levels-test+' || gen_random_uuid()::text || '@blindr.invalid',
+               jsonb_build_object('display_name', $1::text))
+       returning id, email`,
+      [name],
+    );
+    const { id, email } = r.rows[0];
+    const p = await client.query("update profiles set display_name = $2, email = $3 where id = $1", [
+      id,
+      name,
+      email,
+    ]);
+    assert.equal(p.rowCount, 1, "on_auth_user_created wrote the throwaway profile");
+    ids.push(id);
   }
   return ids;
 }
@@ -697,7 +736,9 @@ test("10. a drink pays at COMMIT: 15 a bottle up to 6, 90 a day; GIFTED and lot-
 
 test("11-12. a masked pour pays nothing until its glass is revealed; a removed glass never (Rule 1)", async () => {
   await withRollback(async () => {
-    const [host, other] = await people(2);
+    // The pour owner writes wine_pour_intents, whose owner_id references auth.users(id).
+    const [host] = await authPeople(1);
+    const [other] = await people(1);
     const wine = await catalogWine(host);
     const lot = await addLot(host, 3, wine);
     const onHand = async () =>
