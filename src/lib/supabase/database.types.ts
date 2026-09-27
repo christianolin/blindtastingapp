@@ -500,6 +500,125 @@ export type Database = {
         Update: { cellar_sort?: CellarSortPreference | null };
         Relationships: [];
       };
+      // 20260927160000 (levels spec §5.1, L22, L23): XP values and caps per
+      // kind, and the twenty achievements (their names live in
+      // src/lib/levels/copy.ts). Every signed-in member reads both; no client
+      // role writes either (the Insert/Update shapes only describe the table).
+      xp_sources: {
+        Row: {
+          kind: string;
+          base_xp: number;
+          unit_xp: number;
+          unit_cap: number | null;
+          daily_xp_cap: number | null;
+          daily_count_cap: number | null;
+        };
+        Insert: {
+          kind: string;
+          base_xp?: number;
+          unit_xp?: number;
+          unit_cap?: number | null;
+          daily_xp_cap?: number | null;
+          daily_count_cap?: number | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["xp_sources"]["Insert"]>;
+        Relationships: [];
+      };
+      achievements: {
+        Row: {
+          key: string;
+          category: string;
+          gate: string;
+          target: number;
+          bonus_xp: number;
+          sort_order: number;
+          is_active: boolean;
+        };
+        Insert: {
+          key: string;
+          category: string;
+          gate: string;
+          target: number;
+          bonus_xp: number;
+          sort_order: number;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["achievements"]["Insert"]>;
+        Relationships: [];
+      };
+      // The append-only XP ledger (levels spec §5.1, L3, L19): written only by
+      // the triggers' SECURITY DEFINER award functions and read by its owner
+      // alone ("xp events read own"); seen_at is written only by mark_xp_seen.
+      xp_events: {
+        Row: {
+          id: number;
+          user_id: string;
+          kind: string;
+          source_key: string;
+          xp: number;
+          xp_after: number;
+          units: number | null;
+          achievement_key: string | null;
+          day: string;
+          created_at: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          kind: string;
+          source_key: string;
+          xp: number;
+          xp_after: number;
+          units?: number | null;
+          achievement_key?: string | null;
+          day: string;
+          created_at?: string;
+          seen_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["xp_events"]["Insert"]>;
+        Relationships: [];
+      };
+      // A person's total and level; every signed-in member reads every row
+      // (L23). Someone with no row is level 1 with 0 XP.
+      profile_levels: {
+        Row: {
+          user_id: string;
+          xp: number;
+          level: number;
+          welcome_pending: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          xp?: number;
+          level?: number;
+          welcome_pending?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["profile_levels"]["Insert"]>;
+        Relationships: [];
+      };
+      // Unlocked achievements. A 'cellar'-gated row is read only by its owner
+      // and whoever can_view_cellar admits (L6, L23); a backfilled row shows
+      // "Before levels" instead of a date (L25).
+      profile_achievements: {
+        Row: {
+          user_id: string;
+          achievement_key: string;
+          gate: string;
+          unlocked_at: string;
+          backfill: boolean;
+        };
+        Insert: {
+          user_id: string;
+          achievement_key: string;
+          gate: string;
+          unlocked_at?: string;
+          backfill?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["profile_achievements"]["Insert"]>;
+        Relationships: [];
+      };
       // 20260918130500 (platform-invites spec §4, D4, D7, D8): a personal
       // "join Blindr" link. The inviter reads and inserts their own rows (RLS
       // by inviter_id = auth.uid()); no client UPDATE or DELETE, and the
@@ -2368,6 +2487,36 @@ export type Database = {
       set_profile_favourites: {
         Args: { p_region_ids: string[]; p_producer_ids: string[] };
         Returns: void;
+      };
+      // 20260927160000 (levels spec §6.1): the caller's level state — { xp,
+      // level, welcome, checked_at, unseen: [{ id, kind, xp, xp_after, units,
+      // achievement, created_at }] } (the oldest 50 unseen ledger rows, by id;
+      // times are UTC ISO strings). SECURITY INVOKER; authenticated only.
+      // Parsed by src/lib/levels/snapshot.ts's parseLevelSnapshot.
+      get_my_level_state: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      // Marks the caller's own listed ledger rows seen (others' ids are
+      // ignored) and, with p_welcome, clears their welcome. Idempotent.
+      // Refusals: "not signed in" (42501), more than 100 ids (22023).
+      mark_xp_seen: {
+        Args: { p_ids: number[]; p_welcome: boolean };
+        Returns: undefined;
+      };
+      // Every active achievement with the caller's progress (your own profile's
+      // card). SECURITY DEFINER; computes for auth.uid() only.
+      get_my_achievement_progress: {
+        Args: Record<string, never>;
+        Returns: {
+          key: string;
+          category: string;
+          bonus_xp: number;
+          target: number;
+          progress: number;
+          unlocked_at: string | null;
+          backfill: boolean;
+        }[];
       };
       // 20260919183100 (scan-photos spec §6.3): attaches the caller's own object
       // in wine-images (their catalog/staging/<uid>/scan-*.jpg, or an upload in
