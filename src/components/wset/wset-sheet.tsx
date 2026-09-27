@@ -125,22 +125,29 @@ type WsetSaveProps =
 
 export function Row({
   label: rowLabel,
+  labelId,
   sub,
   value,
+  action,
   children,
   wide,
 }: {
   label: string;
+  /** An id on the title, for a control that names itself by it
+      (`aria-labelledby`: the admin editor's comboboxes and inputs). */
+  labelId?: string;
   sub?: React.ReactNode;
   /** The chosen value, shown emphasised beside the title: "Acidity · high". */
   value?: string;
+  /** At the far end of the title line (the admin editor's "clear"). */
+  action?: React.ReactNode;
   children: React.ReactNode;
   wide?: boolean;
 }) {
   const heading = (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{rowLabel}</span>
+        <span id={labelId} style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{rowLabel}</span>
         {value !== undefined ? (
           <>
             <span aria-hidden style={{ fontSize: 12, color: "var(--muted-foreground)" }}>
@@ -152,6 +159,7 @@ export function Row({
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary-ink)" }}>{value}</span>
           </>
         ) : null}
+        {action !== undefined ? <span style={{ marginLeft: "auto" }}>{action}</span> : null}
       </div>
       {sub !== undefined ? (
         <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", marginTop: 2 }}>{sub}</div>
@@ -190,7 +198,8 @@ export function SectionCard({
   children,
 }: {
   id: string;
-  numeral: string;
+  /** "I"–"IV", or an icon (the admin editor's Wine section). */
+  numeral: React.ReactNode;
   title: string;
   rated: string;
   className?: string;

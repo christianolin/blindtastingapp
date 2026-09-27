@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { Star } from "lucide-react";
 import type { AromaTerm, AromaOrigin, WineColour } from "@/lib/wset/types";
 import { aromaVisibleFor } from "@/lib/wset/vocab";
 import { AromaIcon } from "./aroma-icon";
@@ -97,6 +98,41 @@ function splitGroupName(groupName: string, term: string): string {
   return groupName;
 }
 
+/** Marks chosen terms as signatures (the admin typical-wine editor, training-room D5). */
+export type AromaSignature = {
+  ids: readonly string[];
+  onToggle: (termId: string) => void;
+  /** The ★ button's name for a term, e.g. "Signature term: cassis". */
+  label: (term: string) => string;
+};
+
+// The ★ before a chosen term: pressed = a signature. A 44px target on touch
+// (min-h-11), the 26px circle alone on a laptop pointer. Module-level so React
+// keeps one component identity across renders.
+function SignatureStar({ on, label, onToggle }: { on: boolean; label: string; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      aria-label={label}
+      onClick={onToggle}
+      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full md:pointer-fine:min-h-0 md:pointer-fine:min-w-0"
+    >
+      <span
+        aria-hidden
+        className="inline-flex size-[26px] items-center justify-center rounded-full border"
+        style={{
+          borderColor: on ? "var(--gold)" : "var(--border-strong)",
+          background: on ? "color-mix(in srgb, var(--gold) 18%, var(--card))" : "var(--card)",
+          color: on ? "var(--gold-dark)" : "var(--muted-foreground)",
+        }}
+      >
+        <Star className="size-3.5" fill={on ? "currentColor" : "none"} />
+      </span>
+    </button>
+  );
+}
+
 // Multi-select aroma/flavour picker over the seeded WSET lexicon. Origin tabs
 // (Primary / Secondary / Tertiary — how the aroma arises) carry a per-origin
 // selected count; the active tab shows its clusters (caption + wrapped pills in
@@ -116,6 +152,7 @@ export function AromaPicker({
   colour,
   sheetTitle = "Aromas & flavours",
   lang = "en",
+  signature,
 }: {
   terms: AromaTerm[];
   selectedIds: string[];
@@ -125,6 +162,9 @@ export function AromaPicker({
   /** Heading of the mobile bottom-sheet picker. */
   sheetTitle?: string;
   lang?: WsetLang;
+  /** A ★ before every chosen term (phones' summary and the desktop
+      "Selected" strip). Omitted: the note form's picker, unchanged. */
+  signature?: AromaSignature;
 }) {
   const t = makeT(lang);
   // A cluster heading in the active language: the six tertiary sub-clusters use
@@ -228,7 +268,7 @@ export function AromaPicker({
           {selectedIds.map((id) => {
             const term = byId.get(id);
             if (!term) return null;
-            return (
+            const chip = (
               <button
                 key={id}
                 type="button"
@@ -251,6 +291,17 @@ export function AromaPicker({
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
                   {`${translateTerm(term.term, lang)} ×`}
               </button>
+            );
+            if (!signature) return chip;
+            return (
+              <span key={id} className="inline-flex items-center gap-0.5">
+                <SignatureStar
+                  on={signature.ids.includes(id)}
+                  label={signature.label(translateTerm(term.term, lang))}
+                  onToggle={() => signature.onToggle(id)}
+                />
+                {chip}
+              </span>
             );
           })}
           <button
@@ -416,7 +467,7 @@ export function AromaPicker({
             {selectedIds.map((id) => {
               const term = byId.get(id);
               if (!term) return null;
-              return (
+              const chip = (
                 <button
                   key={id}
                   type="button"
@@ -437,6 +488,17 @@ export function AromaPicker({
                   <AromaIcon term={term.term} family={term.groupName} size={17} />
                 {`${translateTerm(term.term, lang)} ×`}
                 </button>
+              );
+              if (!signature) return chip;
+              return (
+                <span key={id} className="inline-flex items-center gap-0.5">
+                  <SignatureStar
+                    on={signature.ids.includes(id)}
+                    label={signature.label(translateTerm(term.term, lang))}
+                    onToggle={() => signature.onToggle(id)}
+                  />
+                  {chip}
+                </span>
               );
             })}
             <button
