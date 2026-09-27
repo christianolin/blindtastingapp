@@ -29,7 +29,14 @@ import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
 import { scrollContainerToTop } from "@/lib/scroll-container";
 import type { HistoryPage, TrainingAttemptDetail, TrainingTally } from "@/lib/training/action-types";
 import { SAVE_REFUSED } from "@/lib/training/attempt-payload";
-import { NO_CALL, callPayload, normalizeCall } from "@/lib/training/call";
+import {
+  NO_CALL,
+  callPayload,
+  chooseDeeper,
+  chooseGrape,
+  chooseRegion,
+  normalizeCall,
+} from "@/lib/training/call";
 import { TRAINING_COPY, clockTime, continueLine, sessionsLine, sheetTitle } from "@/lib/training/copy";
 import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
 import { groupRanking } from "@/lib/training/groups";
@@ -37,7 +44,9 @@ import { rankCandidates, snapshotRanking } from "@/lib/training/match";
 import { anotherGlassPlan } from "@/lib/training/result-math";
 import type {
   AromaLexicon,
+  CallPick,
   MatchExtras,
+  Named,
   RankingSnapshot,
   TrainingCandidate,
   TrainingDraft,
@@ -71,6 +80,7 @@ type View = "landing" | "session" | "result";
 export function TrainingRoom({
   userId,
   candidates,
+  grapes,
   terms,
   history,
   tally,
@@ -78,6 +88,8 @@ export function TrainingRoom({
 }: {
   userId: string;
   candidates: TrainingCandidate[];
+  /** Every grape, for Your call's "Other grape…" (region-guess addendum R11). */
+  grapes: Named[];
   terms: AromaTerm[];
   history: HistoryPage;
   tally: TrainingTally;
@@ -187,8 +199,13 @@ export function TrainingRoom({
   // Functional updates: the sheet's onChange and a Bubbles/Fortified tap can
   // land in the same tick, and neither may overwrite the other.
   const patchSession = useCallback(
-    (patch: Partial<Pick<TrainingDraft, "note" | "pickedArchetypeId" | "vintage">>) =>
-      setSession((s) => (s ? { ...s, ...patch } : s)),
+    (patch: Partial<Pick<TrainingDraft, "note" | "vintage">>) => setSession((s) => (s ? { ...s, ...patch } : s)),
+    [],
+  );
+  // Your call's taps, through call.ts's rules (a new region clears the deeper
+  // choice and the grape; a grape needs a region), functional like the rest.
+  const patchCall = useCallback(
+    (next: (pick: CallPick) => CallPick) => setSession((s) => (s ? { ...s, ...next(s) } : s)),
     [],
   );
   const patchExtras = useCallback(
@@ -361,9 +378,13 @@ export function TrainingRoom({
               fortified={{ value: session.extras.fortified, onChange: (v) => patchExtras({ fortified: v }) }}
             />
             <YourCall
-              ranked={ranked}
-              pickedId={session.pickedArchetypeId}
-              onPick={(id) => patchSession({ pickedArchetypeId: id })}
+              groups={groups}
+              pick={session}
+              grapes={grapes}
+              onRegion={(id) => patchCall((p) => chooseRegion(p, id))}
+              onDeeper={(id) => patchCall((p) => chooseDeeper(p, id))}
+              onGrape={(id) => patchCall((p) => chooseGrape(p, id))}
+              onNotListed={() => patchCall(() => NO_CALL)}
               vintage={session.vintage}
               onVintage={(v: VintageGuess) => patchSession({ vintage: v })}
               onReveal={reveal}

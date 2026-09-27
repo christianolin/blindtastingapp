@@ -151,6 +151,15 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
   });
 });
 
+/** Every grape by name — Your call's "Other grape…" list (region-guess addendum
+    R11; ≈280 rows, preloaded as the guess ladder preloads its grapes, paged
+    all the same). */
+export const readTrainingGrapes = cache(async (supabase: Client): Promise<Named[]> =>
+  readAll("grapes", (from, to) =>
+    supabase.from("grapes").select("id, name").order("name").order("id").range(from, to),
+  ),
+);
+
 // Follows merged_into from the given wines, a hop at a time (spec §6.1).
 async function followMerges(supabase: Client, ids: readonly string[]): Promise<Map<string, string | null>> {
   const mergedInto = new Map<string, string | null>();

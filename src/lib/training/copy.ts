@@ -58,8 +58,6 @@ export const TRAINING_COPY = {
   capNotFortified: "Not fortified",
   // your call
   yourCall: "Your call",
-  whichWine: "Which wine is it?",
-  somethingElse: "Something else…",
   notInList: "It's not in the list",
   // your call by region (region-guess addendum R5, R10)
   whichRegion: "Which region is it?",

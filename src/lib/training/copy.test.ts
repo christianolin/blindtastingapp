@@ -76,8 +76,6 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       capFortified: "Fortified",
       capNotFortified: "Not fortified",
       yourCall: "Your call",
-      whichWine: "Which wine is it?",
-      somethingElse: "Something else…",
       notInList: "It's not in the list",
       whichRegion: "Which region is it?",
       searchRegions: "Search regions…",

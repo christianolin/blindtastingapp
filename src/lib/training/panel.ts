@@ -1,9 +1,9 @@
 // View rules for the room's candidate list and Your call card (training-room
 // spec §3.3, §5.8): how many rows the lists show, whether anything has been
-// answered yet, the laptop popover's focus rules, the Your call options and
-// the vintage picker's groups and ids. The list's region groups live in
-// ./groups (region-guess addendum R1-R3). Pure, relative imports only, so
-// vitest pins it.
+// answered yet, the laptop popover's focus rules and the vintage picker's
+// groups and ids. The list's region groups live in ./groups and Your call's
+// region rules in ./call (region-guess addendum R1-R5). Pure, relative imports
+// only, so vitest pins it.
 import {
   VINTAGE_NV_ID,
   VINTAGE_TAWNY_OTHER_ID,
@@ -11,7 +11,6 @@ import {
   vintageYearId,
   type PickerGroup,
 } from "../../app/tastings/[id]/play/ladder-types";
-import { foldName } from "../wine-identity/fold";
 import { TRAINING_COPY, tawnyAgeOption } from "./copy";
 import type { RankedCandidate, VintageGuess } from "./types";
 
@@ -48,39 +47,10 @@ export function pressOnOwningRow<T>(
   return reason === "outside-press" && anchor !== null && target !== null && anchor.contains(target);
 }
 
-/** Your call's list without a search: the top five. */
+/** Your call's regions without a search: the top five (call.ts's regionCallOptions). */
 export const CALL_LIMIT = 5;
-/** Your call's search results. */
+/** Your call's region search results. */
 export const CALL_SEARCH_LIMIT = 20;
-
-/**
- * The candidates Your call offers: the ranking's top five (plus the current
- * pick when it sits further down), or — with a query — every candidate whose
- * name, appellation, region or country contains it, accents and punctuation
- * folded, in ranking order.
- */
-export function yourCallOptions(
-  ranked: readonly RankedCandidate[],
-  query: string,
-  pickedId: string | null,
-): RankedCandidate[] {
-  const key = foldName(query);
-  if (key !== "") {
-    return ranked
-      .filter((r) =>
-        [r.candidate.name, r.candidate.appellation.name, r.candidate.region.name, r.candidate.country.name].some(
-          (n) => foldName(n).includes(key),
-        ),
-      )
-      .slice(0, CALL_SEARCH_LIMIT);
-  }
-  const top = ranked.slice(0, CALL_LIMIT);
-  if (pickedId && !top.some((r) => r.candidate.id === pickedId)) {
-    const picked = ranked.find((r) => r.candidate.id === pickedId);
-    if (picked) return [...top, picked];
-  }
-  return top;
-}
 
 /** The vintage picker's groups, as the guess ladder's own (guess-ladder.tsx,
     "vintage"): the years given, NV, then the tawny presets and "Other age…". */

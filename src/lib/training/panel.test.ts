@@ -8,7 +8,6 @@ import {
   vintageFromPickerId,
   vintagePickerGroups,
   vintagePickerValue,
-  yourCallOptions,
 } from "./panel";
 import type { CapReason, RankedCandidate, TrainingCandidate } from "./types";
 
@@ -37,18 +36,6 @@ function candidate(id: string, name: string, country: string, region = "Somewher
 function ranked(c: TrainingCandidate, closeness: number | null, capped: CapReason | null = null): RankedCandidate {
   return { candidate: c, closeness, capped, explanation: null, signatureHits: [] };
 }
-
-const ids = (rows: RankedCandidate[]) => rows.map((r) => r.candidate.id);
-
-const SCORED = [
-  ranked(candidate("1", "A typical Pauillac", "France", "Bordeaux"), 91),
-  ranked(candidate("2", "A typical Margaux", "France", "Bordeaux"), 84),
-  ranked(candidate("3", "A typical Bandol", "France", "Provence"), 80),
-  ranked(candidate("4", "A typical Barolo", "Italy", "Piemonte"), 72),
-  ranked(candidate("5", "A typical Rioja Reserva", "Spain", "Rioja"), 70),
-  ranked(candidate("6", "A typical Barossa Shiraz", "Australia", "South Australia"), 61),
-  ranked(candidate("7", "A typical Côte-Rôtie", "France", "Rhône"), 55),
-];
 
 describe("isBeforeAnswers", () => {
   it("shows five region groups before Show all", () => {
@@ -99,21 +86,6 @@ describe("pressOnOwningRow", () => {
     expect(pressOnOwningRow("focus-out", anchor, label)).toBe(false);
     expect(pressOnOwningRow("outside-press", null, row)).toBe(false);
     expect(pressOnOwningRow("outside-press", anchor, null)).toBe(false);
-  });
-});
-
-describe("yourCallOptions", () => {
-  it("lists the top five and keeps a pick from further down", () => {
-    expect(ids(yourCallOptions(SCORED, "", null))).toEqual(["1", "2", "3", "4", "5"]);
-    expect(ids(yourCallOptions(SCORED, "", "7"))).toEqual(["1", "2", "3", "4", "5", "7"]);
-    expect(ids(yourCallOptions(SCORED, "", "2"))).toEqual(["1", "2", "3", "4", "5"]);
-  });
-
-  it("searches every candidate by name, region or country, accents folded", () => {
-    expect(ids(yourCallOptions(SCORED, "cote rotie", null))).toEqual(["7"]);
-    expect(ids(yourCallOptions(SCORED, "rhone", null))).toEqual(["7"]);
-    expect(ids(yourCallOptions(SCORED, "italy", null))).toEqual(["4"]);
-    expect(ids(yourCallOptions(SCORED, "zzz", null))).toEqual([]);
   });
 });
 

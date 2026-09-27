@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TRAINING_COPY, coverageLine } from "@/lib/training/copy";
 import {
   coverageCountries,
+  readTrainingGrapes,
   readTrainingHistory,
   readTrainingPool,
   readTrainingTally,
@@ -15,8 +16,9 @@ export const metadata = { title: `${TRAINING_COPY.appBarTitle} · Blindr` };
 
 // The training room (training-room spec §3, §8): a pillar page — the app bar,
 // then one client component with the landing, a session and the result. The
-// pool, the aroma lexicon, the first history page and the tally are read here,
-// as the viewer; nothing about a session is on the server before its reveal.
+// pool, the grapes (Your call's "Other grape…"), the aroma lexicon, the first
+// history page and the tally are read here, as the viewer; nothing about a
+// session is on the server before its reveal.
 export default async function TrainingRoomPage() {
   const supabase = await createClient();
   const {
@@ -24,8 +26,9 @@ export default async function TrainingRoomPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [candidates, termRes, history, tally] = await Promise.all([
+  const [candidates, grapes, termRes, history, tally] = await Promise.all([
     readTrainingPool(supabase),
+    readTrainingGrapes(supabase),
     supabase
       .from("wset_aroma_terms")
       .select("id, family, origin, group_name, term, sort_order")
@@ -49,6 +52,7 @@ export default async function TrainingRoomPage() {
         <TrainingRoom
           userId={user.id}
           candidates={candidates}
+          grapes={grapes}
           terms={terms}
           history={history}
           tally={tally}
