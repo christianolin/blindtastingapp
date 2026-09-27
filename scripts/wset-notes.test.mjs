@@ -4,15 +4,26 @@
 // probes (the pooled role owns the tables, so RLS only bites after
 // `set local role authenticated` inside a rolled-back transaction).
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
 import pg from "pg";
 import { pgConfig } from "./wine-map-tiles/lib.mjs";
+
+// Dry run before the sharing-defaults migrations are live:
+// SHARING_DEFAULTS_APPLY lists them (comma-separated); each test applies
+// every file but M2 (20260927150000, the cellar flip) inside its own
+// rolled-back transaction first.
+const APPLY = (process.env.SHARING_DEFAULTS_APPLY ?? "")
+  .split(",")
+  .map((f) => f.trim())
+  .filter((f) => f && !f.endsWith("20260927150000_sharing_defaults_flip.sql"));
 
 const client = new pg.Client(pgConfig());
 
 async function withRollback(callback) {
   await client.query("begin");
   try {
+    for (const file of APPLY) await client.query(readFileSync(file, "utf8"));
     return await callback();
   } finally {
     await client.query("rollback");
@@ -205,10 +216,20 @@ test("insert with another profile's author_id is rejected by RLS", async () => {
   });
 });
 
-test("another author's note is visible under authenticated (public read)", async () => {
+test("another author's note is visible to a signed-in reader while its author shares with everyone", async () => {
   const ids = await referenceIds();
-  const [selfId, otherId] = await profilePair();
+  const [selfId] = await profilePair();
   await withRollback(async () => {
+    // A throwaway author: notes_visibility defaults to PUBLIC, and no real
+    // person's setting (sharing defaults, 20260927140000) decides the result.
+    const otherId = (
+      await client.query(
+        `insert into profiles (id, display_name, email)
+         values (gen_random_uuid(), 'wset-notes test author',
+                 'wset-notes-test+' || gen_random_uuid()::text || '@blindr.invalid')
+         returning id`,
+      )
+    ).rows[0].id;
     const catalogWineId = await insertCatalog(ids);
     // Seeded as the pooled owner role, which bypasses RLS.
     const note = await client.query(

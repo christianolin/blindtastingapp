@@ -31,6 +31,10 @@ export type CellarConsumptionReason = "DRANK" | "GIFTED" | "LOST" | "OTHER";
 export type CellarVisibility = "PRIVATE" | "FRIENDS" | "PUBLIC";
 /** user_preferences.cellar_sort's check constraint — the cellar list's SortKey. */
 export type CellarSortPreference = "bottles" | "name" | "added" | "yours" | "community";
+// Sharing defaults (20260927140000): the cellar and the notes settings share
+// one enum and one vocabulary — Everyone / Friends / Only me
+// (src/lib/sharing/visibility.ts).
+export type SharingAudience = CellarVisibility;
 export type GrapeColor = "RED" | "WHITE";
 export type WinePlaceKind =
   | "COUNTRY"
@@ -344,6 +348,10 @@ export type Database = {
           role: UserRole;
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
+          // Sharing defaults (20260927140000, spec 2026-09-27 S5): who may read
+          // this person's tasting notes; default PUBLIC; in the client UPDATE
+          // grant. can_view_notes applies it with can_view_cellar's friend rule.
+          notes_visibility: CellarVisibility;
           last_seen_at: string | null;
           // First-run tour (20260925010000, spec 2026-09-25 D1): null = show
           // the tour. Stamped by markTourSeen, cleared by resetTour
@@ -369,6 +377,7 @@ export type Database = {
           role?: UserRole;
           preferred_currency?: string;
           cellar_visibility?: CellarVisibility;
+          notes_visibility?: CellarVisibility;
           last_seen_at?: string | null;
           tour_seen_at?: string | null;
           created_at?: string;
@@ -386,6 +395,7 @@ export type Database = {
           role: UserRole;
           preferred_currency: string;
           cellar_visibility: CellarVisibility;
+          notes_visibility: CellarVisibility;
           last_seen_at: string | null;
           tour_seen_at: string | null;
           created_at: string;
@@ -428,6 +438,30 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["friend_requests"]["Insert"]>;
+        Relationships: [];
+      };
+      // 20260927140000 (sharing-defaults spec §3.1 step 11, S14, S15): the
+      // one-time "your cellar and notes are now visible" notice, one row per
+      // person M2 (20260927150000) flipped or whose notes became visible.
+      // Owner-only: SELECT own row; the one client write is an UPDATE of
+      // dismissed_at on it (dismissSharingNotice). No client INSERT or
+      // DELETE; an account deletion drops the row.
+      sharing_notices: {
+        Row: {
+          user_id: string;
+          cellar_flipped: boolean;
+          notes_shared: boolean;
+          created_at: string;
+          dismissed_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          cellar_flipped: boolean;
+          notes_shared: boolean;
+          created_at?: string;
+          dismissed_at?: string | null;
+        };
+        Update: { dismissed_at?: string | null };
         Relationships: [];
       };
       // 20260919141700 (profile-favourites spec §3, D2-D4): a person's
@@ -2066,6 +2100,21 @@ export type Database = {
       can_view_cellar: {
         Args: { p_owner: string };
         Returns: boolean;
+      };
+      // 20260927140000 (sharing-defaults spec S7): may the caller read
+      // p_author's notes — notes_visibility with can_view_cellar's friend
+      // rule, never a deleted author's. The "wset notes read" policy calls it;
+      // the author's own clause is the policy's, not this function's.
+      can_view_notes: {
+        Args: { p_author: string };
+        Returns: boolean;
+      };
+      // 20260927140000 (spec S19): which of these note ids are the caller's
+      // own notes that others cannot read yet (a Rule 1 hold or a masked
+      // pour link). Only ever returns the caller's own ids.
+      wset_my_held_notes: {
+        Args: { p_note_ids: string[] };
+        Returns: string[];
       };
       // 20260919223100 (spec 2026-09-19-rule1-older-leaks D10): someone's cellar
       // as another person may see it — the owner, or can_view_cellar. A bottle

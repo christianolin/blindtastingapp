@@ -3,15 +3,26 @@
 // withRollback for probes, `set local role authenticated` + a JWT sub so
 // auth.uid() resolves inside the SECURITY DEFINER functions.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
 import pg from "pg";
 import { pgConfig } from "./wine-map-tiles/lib.mjs";
+
+// Dry run before the sharing-defaults migrations are live:
+// SHARING_DEFAULTS_APPLY lists them (comma-separated); each test applies
+// every file but M2 (20260927150000, the cellar flip) inside its own
+// rolled-back transaction first.
+const APPLY = (process.env.SHARING_DEFAULTS_APPLY ?? "")
+  .split(",")
+  .map((f) => f.trim())
+  .filter((f) => f && !f.endsWith("20260927150000_sharing_defaults_flip.sql"));
 
 const client = new pg.Client(pgConfig());
 
 async function withRollback(cb) {
   await client.query("begin");
   try {
+    for (const file of APPLY) await client.query(readFileSync(file, "utf8"));
     return await cb();
   } finally {
     await client.query("rollback");

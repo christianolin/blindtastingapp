@@ -5,9 +5,19 @@
 // still counts in its lot (spec 2026-09-19-rule1-older-leaks D10, D11). Passes
 // only once 20260919223200 is live.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
 import pg from "pg";
 import { pgConfig } from "./wine-map-tiles/lib.mjs";
+
+// Dry run before the sharing-defaults migrations are live:
+// SHARING_DEFAULTS_APPLY lists them (comma-separated); each test applies
+// every file but M2 (20260927150000, the cellar flip) inside its own
+// rolled-back transaction first.
+const APPLY = (process.env.SHARING_DEFAULTS_APPLY ?? "")
+  .split(",")
+  .map((f) => f.trim())
+  .filter((f) => f && !f.endsWith("20260927150000_sharing_defaults_flip.sql"));
 
 const client = new pg.Client(pgConfig());
 before(async () => {
@@ -20,6 +30,7 @@ after(async () => {
 async function withRollback(cb) {
   await client.query("begin");
   try {
+    for (const file of APPLY) await client.query(readFileSync(file, "utf8"));
     return await cb();
   } finally {
     await client.query("rollback");

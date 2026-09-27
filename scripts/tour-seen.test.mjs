@@ -1,14 +1,25 @@
 // First-run tour DB suite (spec docs/superpowers/specs/2026-09-25-first-run-tour-design.md
 // D1, §3): profiles.tour_seen_at is written by the signed-in person through the
-// ten-column client UPDATE grant and "profiles update own" — never on someone
+// client UPDATE grant (eleven columns since 20260927140000 added
+// notes_visibility) and "profiles update own" — never on someone
 // else's row, never by anon — and the grant did not widen past it. Every test
 // runs inside a transaction that is rolled back. Passes only once
 // 20260925010000_tour_seen is live; before that four tests fail (the column
 // does not exist, the grant is still nine columns) and one passes.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
 import pg from "pg";
 import { pgConfig } from "./wine-map-tiles/lib.mjs";
+
+// Dry run before the sharing-defaults migrations are live:
+// SHARING_DEFAULTS_APPLY lists them (comma-separated); each test applies
+// every file but M2 (20260927150000, the cellar flip) inside its own
+// rolled-back transaction first.
+const APPLY = (process.env.SHARING_DEFAULTS_APPLY ?? "")
+  .split(",")
+  .map((f) => f.trim())
+  .filter((f) => f && !f.endsWith("20260927150000_sharing_defaults_flip.sql"));
 
 const client = new pg.Client(pgConfig());
 before(async () => {
@@ -21,6 +32,7 @@ after(async () => {
 async function withRollback(cb) {
   await client.query("begin");
   try {
+    for (const file of APPLY) await client.query(readFileSync(file, "utf8"));
     return await cb();
   } finally {
     await client.query("rollback");
@@ -93,18 +105,21 @@ test("anon cannot write tour_seen_at", async () => {
   });
 });
 
-test("the client UPDATE grant is exactly the ten columns", async () => {
-  const r = await client.query(
-    `select string_agg(format('%s:%s', a.attname, x.privilege_type), ','
-              order by a.attname::text collate "C", x.privilege_type collate "C") as acl
-       from pg_attribute a, aclexplode(a.attacl) x
-      where a.attrelid = 'public.profiles'::regclass and a.attnum > 0 and not a.attisdropped`,
-  );
-  assert.equal(
-    r.rows[0].acl,
-    "avatar_url:UPDATE,bio:UPDATE,cellar_visibility:UPDATE,display_name:UPDATE,favorite_wine_type:UPDATE," +
-      "last_seen_at:UPDATE,location:UPDATE,phone:UPDATE,preferred_currency:UPDATE,tour_seen_at:UPDATE",
-  );
+test("the client UPDATE grant is exactly the eleven columns", async () => {
+  await withRollback(async () => {
+    const r = await client.query(
+      `select string_agg(format('%s:%s', a.attname, x.privilege_type), ','
+                order by a.attname::text collate "C", x.privilege_type collate "C") as acl
+         from pg_attribute a, aclexplode(a.attacl) x
+        where a.attrelid = 'public.profiles'::regclass and a.attnum > 0 and not a.attisdropped`,
+    );
+    assert.equal(
+      r.rows[0].acl,
+      "avatar_url:UPDATE,bio:UPDATE,cellar_visibility:UPDATE,display_name:UPDATE,favorite_wine_type:UPDATE," +
+        "last_seen_at:UPDATE,location:UPDATE,notes_visibility:UPDATE,phone:UPDATE,preferred_currency:UPDATE," +
+        "tour_seen_at:UPDATE",
+    );
+  });
 });
 
 test("the grant did not widen: role and deleted_at stay unwritable", async () => {

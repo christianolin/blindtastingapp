@@ -1,20 +1,34 @@
 // catalog_wine_structure RPC — migration 20260829251000.
 //
-// Averages the ordinal SAT fields across ALL notes for a catalog wine (any
-// author), mapping each enum value to its 1-based position. Proves: the
-// average index is correct, max_index reflects the enum size, no-data
-// dimensions are omitted, and a SECURITY DEFINER call aggregates across
-// authors (past per-author RLS) for an authenticated caller.
+// Averages the ordinal SAT fields over the notes for a catalog wine the
+// caller may read, mapping each enum value to its 1-based position. Proves:
+// the average index is correct, max_index reflects the enum size, no-data
+// dimensions are omitted, and it aggregates across authors who share their
+// notes. SECURITY INVOKER since 20260927140000 (sharing defaults S9): an
+// Only-me or held note leaves others' averages — scripts/sharing-defaults.test.mjs
+// pins that. The authors here are throwaway profiles made inside the
+// rolled-back transaction, so no real person's setting decides a result.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { after, before } from "node:test";
 import pg from "pg";
 import { pgConfig } from "./wine-map-tiles/lib.mjs";
+
+// Dry run before the sharing-defaults migrations are live:
+// SHARING_DEFAULTS_APPLY lists them (comma-separated); each test applies
+// every file but M2 (20260927150000, the cellar flip) inside its own
+// rolled-back transaction first.
+const APPLY = (process.env.SHARING_DEFAULTS_APPLY ?? "")
+  .split(",")
+  .map((f) => f.trim())
+  .filter((f) => f && !f.endsWith("20260927150000_sharing_defaults_flip.sql"));
 
 const client = new pg.Client(pgConfig());
 
 async function withRollback(callback) {
   await client.query("begin");
   try {
+    for (const file of APPLY) await client.query(readFileSync(file, "utf8"));
     return await callback();
   } finally {
     await client.query("rollback");
@@ -48,10 +62,20 @@ async function referenceIds() {
   return ids;
 }
 
+// Two throwaway authors inside the current transaction (owner role): a
+// real person's notes setting or deletion must never decide a result.
 async function profilePair() {
-  const r = await client.query("select id from profiles order by id limit 2");
-  assert.equal(r.rowCount, 2, "need at least two profiles");
-  return [r.rows[0].id, r.rows[1].id];
+  const ids = [];
+  for (const name of ["Structure test A", "Structure test B"]) {
+    const r = await client.query(
+      `insert into profiles (id, display_name, email)
+       values (gen_random_uuid(), $1, 'structure-test+' || gen_random_uuid()::text || '@blindr.invalid')
+       returning id`,
+      [name],
+    );
+    ids.push(r.rows[0].id);
+  }
+  return ids;
 }
 
 const CATALOG_INSERT = `
@@ -77,11 +101,11 @@ after(async () => {
 
 test("averages ordinal SAT levels across authors; omits no-data dimensions", async () => {
   const ids = await referenceIds();
-  const [authorA, authorB] = await profilePair();
   await withRollback(async () => {
+    const [authorA, authorB] = await profilePair();
     const wineId = await insertCatalog(ids);
-    // Seeded as the pooled owner (bypasses RLS). Two authors, so a correct
-    // aggregate must see both notes via SECURITY DEFINER.
+    // Seeded as the pooled owner (bypasses RLS). Two authors, both sharing
+    // with everyone (the default), so the aggregate sees both notes.
     // acidity MEDIUM(3)+HIGH(5) -> 4; body MEDIUM(3)+FULL(5) -> 4;
     // finish SHORT(1)+LONG(5) -> 3; sweetness left null -> omitted.
     await client.query(
