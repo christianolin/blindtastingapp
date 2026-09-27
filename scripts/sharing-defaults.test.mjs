@@ -986,3 +986,142 @@ test("an account deletion drops the notice and the notes, and the guard does not
     assert.deepEqual(left, { notices: 0, notes: 0, deleted: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 10. M2: the flip, the default, the notices
+// ---------------------------------------------------------------------------
+
+async function cellarDefault() {
+  await asOwner();
+  return (
+    await client.query(
+      `select column_default from information_schema.columns
+        where table_schema = 'public' and table_name = 'profiles' and column_name = 'cellar_visibility'`,
+    )
+  ).rows[0].column_default;
+}
+
+test("M2 flips every non-deleted PRIVATE cellar, keeps FRIENDS and deleted rows, and writes exactly the notices", async (t) => {
+  if (!M2_FILE) {
+    t.skip("runs only while M2 is not live and SHARING_DEFAULTS_APPLY lists it");
+    return;
+  }
+  await withRollback(async () => {
+    const people = await freshProfiles(9);
+    const [privNone, privNoted, friendsNoted, placeholderOnly, publicNone, gone, heldOnly, blankText, onlyMeNoted] =
+      people;
+    const wine = await catalogWine(privNone);
+    const cellars = {
+      [privNone]: "PRIVATE",
+      [privNoted]: "PRIVATE",
+      [friendsNoted]: "FRIENDS",
+      [placeholderOnly]: "PUBLIC",
+      [publicNone]: "PUBLIC",
+      [gone]: "PRIVATE",
+      [heldOnly]: "PUBLIC",
+      [blankText]: "PUBLIC",
+      [onlyMeNoted]: "PUBLIC",
+    };
+    for (const [id, value] of Object.entries(cellars)) await setCellar(id, value);
+    await note(privNoted, wine, { quality_score: 88 });
+    await note(friendsNoted, wine, { taster_notes: "Lovely" });
+    await note(placeholderOnly, wine, {}); // the empty "Save all to ratings" row
+    await note(blankText, wine, { taster_notes: "  \n " });
+    await flight({ host: heldOnly, guests: [publicNone], wineId: wine });
+    await note(heldOnly, wine, { quality_score: 90 }); // held: never shown to anyone
+    await setNotes(onlyMeNoted, "PRIVATE");
+    await note(onlyMeNoted, wine, { quality_score: 70 }); // noted: the flag records facts, the card reads settings
+    await asOwner();
+    await client.query("select public.scrub_deleted_account($1)", [gone]);
+
+    await client.query(readFileSync(M2_FILE, "utf8"));
+
+    await asOwner();
+    const after = Object.fromEntries(
+      (await client.query("select id, cellar_visibility from profiles where id = any($1)", [people])).rows.map((r) => [
+        r.id,
+        r.cellar_visibility,
+      ]),
+    );
+    assert.deepEqual(after, {
+      [privNone]: "PUBLIC",
+      [privNoted]: "PUBLIC",
+      [friendsNoted]: "FRIENDS",
+      [placeholderOnly]: "PUBLIC",
+      [publicNone]: "PUBLIC",
+      [gone]: "PRIVATE",
+      [heldOnly]: "PUBLIC",
+      [blankText]: "PUBLIC",
+      [onlyMeNoted]: "PUBLIC",
+    });
+    const notices = Object.fromEntries(
+      (
+        await client.query(
+          "select user_id, cellar_flipped, notes_shared, dismissed_at from sharing_notices where user_id = any($1)",
+          [people],
+        )
+      ).rows.map((r) => [r.user_id, [r.cellar_flipped, r.notes_shared, r.dismissed_at]]),
+    );
+    assert.deepEqual(notices, {
+      [privNone]: [true, false, null],
+      [privNoted]: [true, true, null],
+      [friendsNoted]: [false, true, null],
+      [onlyMeNoted]: [false, true, null],
+    });
+    assert.equal(
+      (await client.query("select count(*)::int as n from profiles where deleted_at is null and cellar_visibility = 'PRIVATE'"))
+        .rows[0].n,
+      0,
+    );
+    assert.equal(await cellarDefault(), "'PUBLIC'::cellar_visibility");
+  });
+});
+
+test("an account made after M2 starts with its cellar and notes visible to everyone, and no notice", async (t) => {
+  const live = (await cellarDefault()) === "'PUBLIC'::cellar_visibility";
+  if (!M2_FILE && !live) {
+    t.skip("M2 is neither live nor in SHARING_DEFAULTS_APPLY");
+    return;
+  }
+  await withRollback(async () => {
+    if (M2_FILE) await client.query(readFileSync(M2_FILE, "utf8"));
+    await asOwner();
+    // handle_new_user inserts (id, display_name, email) and nothing else.
+    const row = (
+      await client.query(
+        `insert into profiles (id, display_name, email)
+         values (gen_random_uuid(), 'New account', 'sharing-defaults-new+' || gen_random_uuid()::text || '@blindr.invalid')
+         returning id, cellar_visibility, notes_visibility`,
+      )
+    ).rows[0];
+    assert.deepEqual([row.cellar_visibility, row.notes_visibility], ["PUBLIC", "PUBLIC"]);
+    assert.equal(
+      (await client.query("select count(*)::int as n from sharing_notices where user_id = $1", [row.id])).rows[0].n,
+      0,
+    );
+  });
+});
+
+test("dismissSharingNotice's update, as the person, stamps only their own notice", async (t) => {
+  if (!M2_FILE) {
+    t.skip("runs only while M2 is not live and SHARING_DEFAULTS_APPLY lists it");
+    return;
+  }
+  await withRollback(async () => {
+    const [a, b] = await freshProfiles(2);
+    await setCellar(a, "PRIVATE");
+    await setCellar(b, "PRIVATE");
+    await client.query(readFileSync(M2_FILE, "utf8"));
+    await asUser(a);
+    const stamped = await client.query("update sharing_notices set dismissed_at = now() returning user_id");
+    assert.deepEqual(
+      stamped.rows.map((r) => r.user_id),
+      [a],
+    );
+    await asOwner();
+    assert.equal(
+      (await client.query("select dismissed_at from sharing_notices where user_id = $1", [b])).rows[0].dismissed_at,
+      null,
+    );
+  });
+});
