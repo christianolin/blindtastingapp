@@ -14,6 +14,8 @@ import { TastingsCard } from "./tastings-card";
 import { RatingsCard } from "./ratings-card";
 import { CellarCard } from "./cellar-card";
 import { QuickActions } from "./quick-actions";
+import { SharingNotice } from "./sharing-notice";
+import { sharingNoticeCopy } from "@/lib/sharing/notice";
 
 // The logged-in landing page: the live / next-up banner, the three subject
 // cards in the redesign's fixed order (Blind tastings → Ratings → Cellar) and
@@ -29,10 +31,10 @@ export default async function OverviewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, data, invitation, active] = await Promise.all([
+  const [{ data: profile }, data, invitation, active, notice] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, cellar_visibility, notes_visibility")
       .eq("id", user.id)
       .maybeSingle(),
     getOverviewData(user.id),
@@ -43,7 +45,27 @@ export default async function OverviewPage() {
     // The header strip's own read — a cache() hit with AppHeader's in this
     // request, so both see the same snapshot (active-tasting banner §7).
     readActiveTastings(user.id),
+    // The one-time sharing notice (sharing-defaults spec §7.5): the viewer's
+    // own row, if M2 wrote one. A read error means no card.
+    supabase
+      .from("sharing_notices")
+      .select("cellar_flipped, notes_shared, dismissed_at")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
+
+  // Worded from the current settings, never the flags alone (S15); null when
+  // dismissed, when nothing it would say still holds, or when a read failed.
+  const sharingCopy =
+    profile && notice.data && !notice.error
+      ? sharingNoticeCopy({
+          cellarFlipped: notice.data.cellar_flipped,
+          notesShared: notice.data.notes_shared,
+          cellar: profile.cellar_visibility,
+          notes: profile.notes_visibility,
+          dismissedAt: notice.data.dismissed_at,
+        })
+      : null;
 
   // D8: when the strip under the top bar already names this banner's tasting
   // (on /overview it always shows the first item), the Overview does not
@@ -70,6 +92,8 @@ export default async function OverviewPage() {
         title="Overview"
       />
       <main className="flex flex-1 flex-col gap-[22px] p-[22px_26px_26px] max-md:gap-[11px] max-md:p-[11px_14px_14px]">
+        {/* First, at every width, above the invitation card (spec S15). */}
+        {sharingCopy ? <SharingNotice userId={user.id} copy={sharingCopy} /> : null}
         {/* The invitation card (S5b): laptop only — the Blind tastings card
             below keeps its own invitation rows for phones and for any other
             pending invitation this one doesn't cover (Does bullet, last

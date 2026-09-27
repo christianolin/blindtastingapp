@@ -559,16 +559,70 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasting CLOSED without ever starting keeps DRAFT visibility. Never go back
   to a bare `status <> 'DRAFT'` or `status = 'CLOSED'` test for "started" —
   that hands every candidate card of never-revealed glasses to the JOINED
-  guests. Client UPDATE on `profiles` is a column grant on ten columns
+  guests. Client UPDATE on `profiles` is a column grant on eleven columns
   (display_name, bio, avatar_url, location, phone, favorite_wine_type,
-  cellar_visibility, preferred_currency, last_seen_at, and since
-  20260925010000 tour_seen_at — see "First-run tour"); before it, any member
+  cellar_visibility, preferred_currency, last_seen_at, since 20260925010000
+  tour_seen_at — see "First-run tour" — and since 20260927140000
+  notes_visibility — see "Sharing defaults"); before it, any member
   could set their own `role` to ADMIN. Roles change only through
   `admin_set_user_role`. A link guard refuses new friendships or seats
   pointing at a deleted profile. Every people listing filters
   `.is("deleted_at", null)`. Never pass `shouldSoftDelete` to
   `admin.deleteUser`: the hard delete is what frees the email for a new
   signup. A dashboard delete leaves the avatar file behind (spec §7 R5).
+- **Sharing defaults** (2026-09-27, spec
+  `docs/superpowers/specs/2026-09-27-sharing-defaults-design.md`; M1
+  `20260927140000_sharing_defaults.sql`, then the app deploy, then M2
+  `20260927150000_sharing_defaults_flip.sql`). Cellars and tasting notes are
+  visible to everyone unless the person changes it. Two settings share the
+  `cellar_visibility` enum and one vocabulary, Everyone / Friends / Only me
+  (`src/lib/sharing/visibility.ts`; one `VisibilitySelect` on `/profile/edit`'s
+  Sharing card, `#sharing`, and on `/cellar`): `profiles.cellar_visibility`
+  (M2 turned every non-deleted PRIVATE into PUBLIC and made PUBLIC the
+  default) and `profiles.notes_visibility` (default PUBLIC; governs every
+  note the person writes). `can_view_notes(author)` is `can_view_cellar`'s
+  friend rule byte for byte, plus "never a deleted author". "wset notes read"
+  admits the author, or anyone when the note names a catalog wine AND
+  `can_view_notes(author)` AND `not wset_note_held(id)` AND the wine passes
+  the reader's own "catalog read". **Never add a `catalog_wines_unidentified`
+  check to that policy**: `can_read_unidentified_wine` is SECURITY INVOKER
+  over `wset_notes` and it would recurse — unidentified-wine notes are simply
+  author-only. Rule 1, three parts: a note that gains an identity while its
+  author adds an unrevealed glass of that wine is held (`wset_note_holds`,
+  internal; written by `wset_notes_hold_on_identity` from the author's own
+  glasses; only that glass's reveal releases it — a removed glass or a
+  deleted or CLOSED tasting keeps it held for good, the `flight_holds` rule);
+  a note linked through its author's own `cellar_consumptions.wset_note_id`
+  to a pour `catalog_wine_masked_pours` still masks is hidden too
+  (`wset_note_held`); and `wset_notes_rule1_guard` refuses the adder's update
+  or delete of a note others see on that wine, and any move onto it (42501,
+  `src/lib/notes/rule1-guard.ts`; the note sheet shows the sentence). Never
+  hold an existing note when a glass is keyed: that is the vanish oracle.
+  Community figures follow the reader: `catalog_wine_ratings` and
+  `catalog_wine_descriptors` (invoker views) and `catalog_wine_structure`
+  (SECURITY INVOKER since M1); `catalog_wine_usage.note_count` leaves out
+  held notes. `shared_cellar_lots` returns `lot_note`, `price_per_bottle` and
+  `purchase_source` as null to anyone but the owner. Other people's notes
+  show on a wine's page ("Notes from others") and on `/u/[id]` ("Tasting
+  notes"), through `src/lib/notes/shared-notes.ts`; the author's own held
+  notes carry "Hidden from others" (`wset_my_held_notes`). A non-author
+  opening `/catalog/[wineId]/notes/[noteId]` gets a server-rendered read view
+  (`noteRouteMode`), and a note the policy hides is `notFound()` like a
+  missing id. The one-time notice lives in owner-only `sharing_notices`
+  (never a column on `profiles`, which every member reads — it would publish
+  who used to be private), filled once by M2; `/overview` words it from the
+  current settings (`sharingNoticeCopy`) and `dismissSharingNotice` stamps
+  `dismissed_at`. Grants: `sharing_notices` SELECT + UPDATE(dismissed_at) on
+  the own row; `wset_note_holds` nothing; `can_view_notes` authenticated +
+  service_role; `wset_note_held` and `wset_my_held_notes` authenticated only;
+  the internal helper `catalog_wine_unrevealed_glasses_of` and the four
+  trigger functions owner-only. Rollback SQL lives in
+  `scripts/sharing-defaults/` (`rollback-m2.sql`, `rollback-m1.sql`, run by
+  `run-sql.mjs` with `--dry` first), never under `supabase/migrations`.
+  Accepted residuals (spec §11): a host's fresh cellar lot or cellar scan of
+  tonight's bottle is now seen by every guest (O1, offered as a follow-up);
+  a curator merge can move a note others see onto a wine in its author's
+  unrevealed glass (R3); `get_app_stats().notes_created` counts every note.
 - The tasting-invite UI (`tastings/new/invite-field.tsx`) is NOT a
   comma/newline-separated textarea — participants are added one at a time
   (typed email + "Add", or picked from a friends combobox), rendered as
