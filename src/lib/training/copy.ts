@@ -108,6 +108,12 @@ export const TRAINING_COPY = {
   revealNow: "Reveal now",
   showMore: "Show more",
   noSessions: "No sessions yet",
+  // deleting a session (owner, 2026-09-27): a two-tap confirm, since the
+  // session's tasting note goes with it (training_attempts.note_id cascades)
+  deleteSession: "Delete session",
+  deleteSessionArmed: "Tap again to delete",
+  deleteSessionHint: "Deleting a session also deletes its tasting note.",
+  deleteSessionFailed: "Not deleted. Try again.",
   // badges
   trainingBadge: "Training",
   unrevealedBadge: "Training room · not revealed",

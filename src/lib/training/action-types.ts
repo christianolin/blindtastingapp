@@ -11,6 +11,9 @@ export type HistoryCursor = { createdAt: string; id: string };
 
 export type HistoryPage = { rows: AttemptRow[]; nextCursor: HistoryCursor | null };
 
+/** deleteTrainingSession's answer: gone, or why not (shown under the list). */
+export type DeleteSessionResult = { ok: true } | { error: string };
+
 /** One `wset_note_aromas` row as `save_wset_note` takes it. */
 export type AromaPayload = { term_id: string; sensed_on_nose: boolean; sensed_on_palate: boolean };
 
