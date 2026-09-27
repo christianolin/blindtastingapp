@@ -816,6 +816,9 @@ export function WsetSheet({
                 <SnapSlider stops={INTENSITY_STOPS} labels={L} value={state.flavourIntensity} onChange={(v) => set("flavourIntensity", v)} />
               </Row>
             )}
+            <Row label={t("finish")} value={valueLabel(state.finish, L)}>
+              <SnapSlider stops={FINISH_STOPS} labels={L} value={state.finish} onChange={(v) => set("finish", v)} />
+            </Row>
             <Row wide label={t("flavour_characteristics")} sub={t("taste_not_smell")}>
               <AromaPicker
                 terms={terms}
@@ -826,9 +829,6 @@ export function WsetSheet({
                 sheetTitle={t("flavour_characteristics")}
                 lang={lang}
               />
-            </Row>
-            <Row label={t("finish")} value={valueLabel(state.finish, L)}>
-              <SnapSlider stops={FINISH_STOPS} labels={L} value={state.finish} onChange={(v) => set("finish", v)} />
             </Row>
           </SectionCard>
 

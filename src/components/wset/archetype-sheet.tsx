@@ -208,14 +208,14 @@ export function ArchetypeSheet({
           <Row label={t("flavour_intensity")} sub={sub("flavourIntensity")}>
             {band("flavourIntensity")}
           </Row>
+          <Row label={t("finish")} sub={sub("finish")}>
+            {band("finish")}
+          </Row>
           {a.flavours.length > 0 ? (
             <Row wide label={t("flavour_characteristics")} sub={t("typical")}>
               <AromaPills terms={a.flavours} lang={lang} />
             </Row>
           ) : null}
-          <Row label={t("finish")} sub={sub("finish")}>
-            {band("finish")}
-          </Row>
         </SectionCard>
 
         <SectionCard id={`${idPrefix}conclusions`} numeral="IV" title={t("conclusions")} rated={t("typical")}>
