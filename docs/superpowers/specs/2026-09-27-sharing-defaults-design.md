@@ -901,6 +901,7 @@ Keep the SQL at `scripts/sharing-defaults/rollback-m2.sql` and `rollback-m1.sql`
 - **R10.** Rolling back M2 re-privatizes flipped cellars that are still PUBLIC, including anyone who chose PUBLIC on purpose after the notice.
 - **R11.** `notes_visibility`, like `cellar_visibility`, is readable by every member.
 - **R12.** The notice audience is fixed at M2's apply time. A signup between M1 and M2 counts as existing: PRIVATE, so it is flipped and gets a notice. A cellar that was Friends or Everyone when M1 ran and is Only me at M2 was set so on the deployed Sharing card and is left alone, with no notice (`sharing_m1_open_cellars`); a cellar private at M1 that someone re-chose as Only me after the deploy cannot be told apart from an untouched one, and is flipped.
+- **R13 (controller ruling, 2026-09-27, accepted).** A masked pour whose glass was removed, or whose tasting was deleted, before its reveal has no glass left to hold a note against. A note written on it from cellar history ("Rate") is therefore hidden from others only once `note-editor.tsx`'s second request links it (S11), and stays readable if that link write fails (it is logged). The Swap, D11-at-Start and running-pour cases are held at write time. Rejected fix: holding every later note on that wine, which would never release. The narrow window is accepted; a same-transaction link (the consumption id passed to `save_wset_note`) is the follow-up if it ever matters.
 
 ## 12. Not verified here
 
