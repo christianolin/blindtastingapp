@@ -35,6 +35,7 @@ import {
   pageLabel,
   pageSlice,
   rangeLabel,
+  resolveCellarSort,
   searchPlaceholder,
   showMoreLabel,
   sortRows,
@@ -55,6 +56,7 @@ import { CellarToolbar } from "./cellar-toolbar";
 import { DimensionStrip } from "./dimension-strip";
 import { DrinkSheet, type DrinkLot } from "./drink-sheet";
 import { LotSheet } from "./lot-sheet";
+import { saveCellarSort } from "./sort-actions";
 
 const CELLAR_VIEW_KEY = "cellar-view";
 
@@ -82,6 +84,21 @@ function storeView(v: CellarView): void {
   for (const listener of VIEW_LISTENERS) listener();
 }
 
+// Cellar-sort spec C6: every Sort change is saved for the viewer, fire and
+// forget. The list already shows the new order, so nothing waits on this; a
+// failed save keeps the on-screen choice and logs one line (a lost preference
+// is not worth interrupting anyone — the next visit opens on the old sort).
+async function rememberSort(sort: SortKey): Promise<void> {
+  let problem: string | null;
+  try {
+    const result = await saveCellarSort(sort);
+    problem = "error" in result ? result.error : null;
+  } catch (e) {
+    problem = e instanceof Error ? e.message : String(e);
+  }
+  if (problem !== null) console.error(`Could not save the cellar sort: ${problem}`);
+}
+
 function drinkLotFrom(row: BottleRow): DrinkLot {
   return {
     lotId: row.lot.id,
@@ -99,9 +116,14 @@ const pageButtonCls =
 export function CellarBottles({
   rows,
   readOnly,
+  savedSort,
 }: {
   rows: BottleRow[];
   readOnly: boolean;
+  /** The VIEWER's own saved `user_preferences.cellar_sort` (null when none
+   *  or unreadable), read by the server page — so the first render already
+   *  has it: no flash, no hydration mismatch (spec C5). */
+  savedSort: string | null;
 }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
@@ -110,7 +132,12 @@ export function CellarBottles({
 
   const [q, setQ] = useState("");
   const [group, setGroup] = useState<GroupKey>("none");
-  const [sort, setSort] = useState<SortKey>("bottles");
+  const [chosenSort, setChosenSort] = useState<SortKey>(() =>
+    resolveCellarSort(savedSort, readOnly),
+  );
+  // One effective sort for both the toolbar's select and the rows' order, so
+  // they can never disagree (a read-only list never offers "Your score").
+  const sort = resolveCellarSort(chosenSort, readOnly);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   // The persisted list/grid choice is read through useSyncExternalStore with
   // a "list" server snapshot: reading localStorage in a useState initialiser
@@ -207,8 +234,9 @@ export function CellarBottles({
     resetPaging();
   }
   function handleSort(v: SortKey) {
-    setSort(v);
+    setChosenSort(v);
     resetPaging();
+    void rememberSort(v);
   }
   function handleFilters(v: FilterState) {
     setFilters(v);

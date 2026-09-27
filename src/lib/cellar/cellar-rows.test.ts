@@ -2,10 +2,11 @@
 // paging and footer copy (CC-P1). Pure: runtime imports from ./format only.
 import { describe, expect, it } from "vitest";
 import {
-  DIMENSION_GROUP, EMPTY_FILTERS, GROUP_CAP, GROUP_LABELS, GROUP_ORDER, NO_PLACE, SORT_LABELS, STRIP_CAPTION,
+  DEFAULT_CELLAR_SORT, DIMENSION_GROUP, EMPTY_FILTERS, GROUP_CAP, GROUP_LABELS, GROUP_ORDER, NO_PLACE, SORT_LABELS,
+  SORT_ORDER, STRIP_CAPTION,
   applyFilters, clearFilter, dimensionCounts, filterChips, filterCount, filterOptions, foldSearch, footerLine,
-  groupHeaderLine, groupRows, headerStats, headerSubtitle, matchesSearch, pageLabel, pageSlice, placeText, rangeLabel,
-  rowLines, searchPlaceholder, showMoreLabel, sortRows, visibleGroups,
+  groupHeaderLine, groupRows, headerStats, headerSubtitle, isSortKey, matchesSearch, pageLabel, pageSlice, placeText,
+  rangeLabel, resolveCellarSort, rowLines, searchPlaceholder, showMoreLabel, sortOrderFor, sortRows, visibleGroups,
 } from "./cellar-rows";
 import type { BottleRow } from "./types";
 
@@ -118,6 +119,91 @@ describe("sort", () => {
     expect(sortRows(cellar, "community").map((r) => r.lot.id)).toEqual(["d", "a", "b", "c", "e", "f"]);
     expect(SORT_LABELS.bottles).toBe("Most bottles");
     expect(SORT_LABELS.community).toBe("Community rating");
+  });
+
+  it("C1: the owner's label is 'Newest added'; the order and the other labels are unchanged", () => {
+    expect(SORT_LABELS.added).toBe("Newest added");
+    expect(SORT_ORDER).toEqual(["bottles", "name", "added", "yours", "community"]);
+    expect(SORT_LABELS).toEqual({
+      bottles: "Most bottles",
+      name: "Name",
+      added: "Newest added",
+      yours: "Your score",
+      community: "Community rating",
+    });
+  });
+
+  it("C2: newest added first; a shared created_at breaks on the title, then the lot id, whatever the input order", () => {
+    const same = "2026-09-01T12:00:00Z";
+    const rows = [
+      row({ id: "z2", name: "Barolo", year: 2016, created: same }),
+      row({ id: "old", name: "Aglianico", year: 2019, created: "2026-08-01T00:00:00Z" }),
+      row({ id: "z1", name: "Barolo", year: 2016, created: same }),
+      row({ id: "new", name: "Zinfandel", year: 2020, created: "2026-09-02T00:00:00Z" }),
+      row({ id: "a9", name: "Amarone", year: 2015, created: same }),
+    ];
+    const expected = ["new", "a9", "z1", "z2", "old"];
+    expect(sortRows(rows, "added").map((r) => r.lot.id)).toEqual(expected);
+    expect(sortRows(rows.slice().reverse(), "added").map((r) => r.lot.id)).toEqual(expected);
+    expect(sortRows([rows[2], rows[4], rows[0], rows[3], rows[1]], "added").map((r) => r.lot.id)).toEqual(expected);
+  });
+
+  it("C2: the same instant written two ways is a tie, not an order", () => {
+    const rows = [
+      row({ id: "b", name: "Barolo", created: "2026-09-01T12:00:00.000+00:00" }),
+      row({ id: "a", name: "Barolo", created: "2026-09-01T12:00:00Z" }),
+    ];
+    expect(sortRows(rows, "added").map((r) => r.lot.id)).toEqual(["a", "b"]);
+  });
+
+  it("does not reorder its input", () => {
+    const input = cellar.slice();
+    sortRows(input, "added");
+    expect(input.map((r) => r.lot.id)).toEqual(cellar.map((r) => r.lot.id));
+  });
+});
+
+describe("which sort a list opens with (C5)", () => {
+  it("newest added when nothing usable was saved", () => {
+    expect(DEFAULT_CELLAR_SORT).toBe("added");
+    const unusable: unknown[] = [
+      undefined, null, "", "Added", "ADDED", " added", "added ", "Newest added", "newest", "price",
+      0, 1, true, false, {}, [], ["name"], { sort: "name" }, "constructor", "toString", "__proto__", "hasOwnProperty",
+    ];
+    for (const saved of unusable) {
+      expect(resolveCellarSort(saved, false), String(saved)).toBe("added");
+      expect(resolveCellarSort(saved, true), String(saved)).toBe("added");
+    }
+  });
+
+  it("a saved key is kept on your own cellar, Your score included", () => {
+    for (const key of SORT_ORDER) expect(resolveCellarSort(key, false)).toBe(key);
+    expect(resolveCellarSort("yours", false)).toBe("yours");
+  });
+
+  it("in someone else's cellar Your score becomes newest added; every other key is kept", () => {
+    expect(resolveCellarSort("yours", true)).toBe("added");
+    for (const key of ["bottles", "name", "added", "community"] as const) {
+      expect(resolveCellarSort(key, true)).toBe(key);
+    }
+  });
+
+  it("the options: all five on your own cellar, no Your score on someone else's", () => {
+    expect(sortOrderFor(false)).toEqual(["bottles", "name", "added", "yours", "community"]);
+    expect(sortOrderFor(true)).toEqual(["bottles", "name", "added", "community"]);
+  });
+
+  it("the select never shows one sort while the rows follow another: the resolved sort is always an offered option", () => {
+    for (const readOnly of [false, true]) {
+      for (const saved of [...SORT_ORDER, null, undefined, "junk"]) {
+        expect(sortOrderFor(readOnly)).toContain(resolveCellarSort(saved, readOnly));
+      }
+    }
+  });
+
+  it("isSortKey is exactly the five keys", () => {
+    for (const key of SORT_ORDER) expect(isSortKey(key)).toBe(true);
+    for (const v of ["", "Added", "constructor", "toString", null, undefined, 2, {}]) expect(isSortKey(v)).toBe(false);
   });
 });
 

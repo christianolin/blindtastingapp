@@ -287,10 +287,42 @@ export const SORT_ORDER: readonly SortKey[] = [
 export const SORT_LABELS: Record<SortKey, string> = {
   bottles: "Most bottles",
   name: "Name",
-  added: "Added",
+  // (owner, 2026-09-27: "cellars should default sort by newest added")
+  added: "Newest added",
   yours: "Your score",
   community: "Community rating",
 };
+
+/** What a cellar list opens with when its viewer has never chosen a sort, or
+ *  their saved one is unreadable (cellar-sort spec C1). */
+export const DEFAULT_CELLAR_SORT: SortKey = "added";
+
+export function isSortKey(v: unknown): v is SortKey {
+  return typeof v === "string" && (SORT_ORDER as readonly string[]).includes(v);
+}
+
+/** The Sort select's options. A read-only cellar (someone else's, §5.9)
+ *  shows nothing of the viewer's own score, so "Your score" is left out. */
+export function sortOrderFor(readOnly: boolean): readonly SortKey[] {
+  return readOnly ? SORT_ORDER.filter((s) => s !== "yours") : SORT_ORDER;
+}
+
+/** The sort a list opens with, from the viewer's saved `user_preferences`
+ *  value (spec C5): a valid key is kept, anything else is newest added; in a
+ *  read-only list "yours" is newest added too, since that option is not
+ *  offered there. The result is always one of `sortOrderFor(readOnly)`, so the
+ *  select and the rows' order use the same sort. */
+export function resolveCellarSort(saved: unknown, readOnly: boolean): SortKey {
+  if (!isSortKey(saved)) return DEFAULT_CELLAR_SORT;
+  if (readOnly && saved === "yours") return DEFAULT_CELLAR_SORT;
+  return saved;
+}
+
+/** Code-point order: deterministic and locale-free, for ids. */
+function compareIds(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
 
 /** `null`/unset always sorts after every real value, whichever side it is on. */
 function compareNullsLast(a: number | null, b: number | null): number {
@@ -317,9 +349,14 @@ export function sortRows(
       arr.sort((a, b) => bottleTitle(a.wine).localeCompare(bottleTitle(b.wine)));
       break;
     case "added":
+      // C2: newest first, then title, then lot id. Lots written in one
+      // transaction (a CSV import) share created_at; without the tie-break
+      // their order is arbitrary and can shuffle between renders.
       arr.sort(
         (a, b) =>
-          new Date(b.lot.createdAt).getTime() - new Date(a.lot.createdAt).getTime(),
+          new Date(b.lot.createdAt).getTime() - new Date(a.lot.createdAt).getTime() ||
+          bottleTitle(a.wine).localeCompare(bottleTitle(b.wine)) ||
+          compareIds(a.lot.id, b.lot.id),
       );
       break;
     case "yours":

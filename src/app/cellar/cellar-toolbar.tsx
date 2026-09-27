@@ -13,7 +13,7 @@ import {
   GROUP_LABELS,
   GROUP_ORDER,
   SORT_LABELS,
-  SORT_ORDER,
+  sortOrderFor,
   type FilterOptions,
 } from "@/lib/cellar/cellar-rows";
 import type { CellarView, FilterState, GroupKey, SortKey } from "@/lib/cellar/types";
@@ -71,11 +71,10 @@ export function CellarToolbar({
   const activeFilterCount = filterCount(filters);
   const chips = filterChips(filters);
   // §5.9: a read-only cellar shows nothing of the viewer's own score, so
-  // "Your score" is dropped from the sort options — and a sort that was
-  // already "yours" (e.g. via a stale URL) reads as "bottles" instead of
-  // pointing the select at a hidden option.
-  const sortOrder = readOnly ? SORT_ORDER.filter((s) => s !== "yours") : SORT_ORDER;
-  const sortValue = readOnly && sort === "yours" ? "bottles" : sort;
+  // "Your score" is dropped from the sort options. `sort` is already the
+  // effective sort CellarBottles orders the rows by (resolveCellarSort never
+  // returns "yours" in a read-only list), so the select shows it as it is.
+  const sortOrder = sortOrderFor(readOnly);
 
   function setFilterValue(key: keyof FilterState, raw: string) {
     const value = raw === "" ? null : raw;
@@ -123,7 +122,7 @@ export function CellarToolbar({
           <span className="text-sm text-muted-foreground max-md:hidden">Sort</span>
           <select
             aria-label="Sort"
-            value={sortValue}
+            value={sort}
             onChange={(e) => onSort(e.target.value as SortKey)}
             className={selectCls}
           >

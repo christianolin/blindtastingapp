@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/patterns/page-header";
 import { getCellarBottles } from "@/lib/cellar/bottles";
 import { headerStats, headerSubtitle } from "@/lib/cellar/cellar-rows";
+import { readCellarSort } from "@/lib/cellar/sort-preference";
 import { CellarBottles } from "@/app/cellar/cellar-bottles";
 import { isDeletedProfile } from "@/lib/account/delete-account";
 
@@ -29,11 +30,13 @@ export default async function UserCellarPage({
   if (!user) redirect("/login");
   if (id === user.id) redirect("/cellar");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, deleted_at")
-    .eq("id", id)
-    .maybeSingle();
+  // The VIEWER's own saved sort, never the owner's (cellar-sort spec C5): the
+  // list opens the way the viewer last sorted any cellar. Read alongside the
+  // owner's profile; a missing row or a failed read is null (newest added).
+  const [{ data: profile }, savedSort] = await Promise.all([
+    supabase.from("profiles").select("display_name, deleted_at").eq("id", id).maybeSingle(),
+    readCellarSort(supabase, user.id),
+  ]);
   // A deleted account's cellar is gone with it (D16).
   if (!profile || isDeletedProfile(profile)) notFound();
   const displayName = profile.display_name ?? "This member";
@@ -59,7 +62,7 @@ export default async function UserCellarPage({
             </p>
           </div>
         ) : (
-          <CellarBottles rows={rows} readOnly />
+          <CellarBottles rows={rows} readOnly savedSort={savedSort} />
         )}
       </div>
     </div>

@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { AddWineButton } from "@/components/add-wine-button";
 import { getCellarBottles } from "@/lib/cellar/bottles";
 import { headerStats, headerSubtitle } from "@/lib/cellar/cellar-rows";
+import { readCellarSort } from "@/lib/cellar/sort-preference";
 import { CellarBottles } from "./cellar-bottles";
 import { CellarSubNav } from "./cellar-sub-nav";
 import { CellarVisibilityControl } from "./cellar-visibility-control";
@@ -30,11 +31,13 @@ export default async function CellarPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("cellar_visibility")
-    .eq("id", user.id)
-    .maybeSingle();
+  // The viewer's saved sort (cellar-sort spec C5) is read alongside the
+  // profile; a missing row or a failed read is null, so the list opens on
+  // newest added.
+  const [{ data: profile }, savedSort] = await Promise.all([
+    supabase.from("profiles").select("cellar_visibility").eq("id", user.id).maybeSingle(),
+    readCellarSort(supabase, user.id),
+  ]);
   const visibility = profile?.cellar_visibility ?? "PRIVATE";
 
   const rows = await getCellarBottles(supabase, user.id, user.id, { readOnly: false });
@@ -79,7 +82,7 @@ export default async function CellarPage({
 
       <CellarSubNav current="bottles" />
 
-      <CellarBottles rows={rows} readOnly={false} />
+      <CellarBottles rows={rows} readOnly={false} savedSort={savedSort} />
     </div>
   );
 }

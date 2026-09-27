@@ -82,6 +82,9 @@ export type Dimension =
   | "grapes"
   | "vintages";
 export type SortKey = "bottles" | "name" | "added" | "yours" | "community";
+/** saveCellarSort's answer (cellar-sort spec C6). Lives here, not in the
+ *  "use server" file, which may export async functions only. */
+export type SaveCellarSortResult = { ok: true } | { error: string };
 export type FilterState = {
   country: string | null;
   region: string | null;
