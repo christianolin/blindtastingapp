@@ -46,3 +46,25 @@ export function scoreBand(range: readonly [number, number] | null): Band | null 
   if (range === null) return null;
   return range[0] <= range[1] ? [range[0], range[1]] : [range[1], range[0]];
 }
+
+// The keyboard on a focused end cap (QualitySlider's range mode): an arrow
+// moves that end one score, five with Shift; right and up raise it, left and
+// down lower it. An end stops at the scale's ends and at the other end — it
+// never crosses it, so low ≤ high holds and the cap under focus stays the
+// same end.
+
+/** How far a key moves a focused end, or null for a key the cap leaves alone. */
+export function capKeyStep(key: string, shift: boolean): number | null {
+  const size = shift ? 5 : 1;
+  if (key === "ArrowRight" || key === "ArrowUp") return size;
+  if (key === "ArrowLeft" || key === "ArrowDown") return -size;
+  return null;
+}
+
+/** The band with one end (0 low, 1 high) moved by `delta`, kept within
+    min–max and never past the other end. */
+export function stepBandEnd(band: Band, end: 0 | 1, delta: number, min: number, max: number): Band {
+  const [lo, hi] = band;
+  if (end === 0) return [Math.min(hi, Math.max(min, lo + delta)), hi];
+  return [lo, Math.max(lo, Math.min(max, hi + delta))];
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bandOnStops, dragBand, sameBand, scoreBand, tapBand } from "./range-edit";
+import { bandOnStops, capKeyStep, dragBand, sameBand, scoreBand, stepBandEnd, tapBand, type Band } from "./range-edit";
 
 describe("tapBand (EditableRange's rule)", () => {
   it("seeds a one-stop band on the first tap", () => {
@@ -70,5 +70,52 @@ describe("scoreBand", () => {
     expect(scoreBand([96, 88])).toEqual([88, 96]);
     expect(scoreBand([88, 96])).toEqual([88, 96]);
     expect(scoreBand(null)).toBeNull();
+  });
+});
+
+describe("capKeyStep (a focused quality cap)", () => {
+  it("moves one score on an arrow, five with Shift; right and up raise, left and down lower", () => {
+    expect(capKeyStep("ArrowRight", false)).toBe(1);
+    expect(capKeyStep("ArrowUp", false)).toBe(1);
+    expect(capKeyStep("ArrowLeft", false)).toBe(-1);
+    expect(capKeyStep("ArrowDown", false)).toBe(-1);
+    expect(capKeyStep("ArrowRight", true)).toBe(5);
+    expect(capKeyStep("ArrowLeft", true)).toBe(-5);
+  });
+
+  it("leaves every other key alone (Tab still leaves the cap)", () => {
+    for (const key of ["Tab", "Enter", " ", "Home", "End", "a"]) expect(capKeyStep(key, false)).toBeNull();
+    expect(capKeyStep("Tab", true)).toBeNull();
+  });
+});
+
+describe("stepBandEnd", () => {
+  it("moves the one end it is given", () => {
+    expect(stepBandEnd([88, 96], 0, 1, 50, 100)).toEqual([89, 96]);
+    expect(stepBandEnd([88, 96], 1, -5, 50, 100)).toEqual([88, 91]);
+  });
+
+  it("stops at the ends of the scale", () => {
+    expect(stepBandEnd([52, 90], 0, -5, 50, 100)).toEqual([50, 90]);
+    expect(stepBandEnd([50, 90], 0, -1, 50, 100)).toEqual([50, 90]);
+    expect(stepBandEnd([80, 98], 1, 5, 50, 100)).toEqual([80, 100]);
+    expect(stepBandEnd([80, 100], 1, 1, 50, 100)).toEqual([80, 100]);
+  });
+
+  it("never lets an end pass the other: low stays at or under high", () => {
+    expect(stepBandEnd([88, 90], 0, 5, 50, 100)).toEqual([90, 90]);
+    expect(stepBandEnd([90, 90], 0, 1, 50, 100)).toEqual([90, 90]);
+    expect(stepBandEnd([88, 90], 1, -5, 50, 100)).toEqual([88, 88]);
+    expect(stepBandEnd([90, 90], 1, -1, 50, 100)).toEqual([90, 90]);
+  });
+
+  it("lets a keyboard curator set 88–94 from a tapped 85", () => {
+    const press = (band: Band, end: 0 | 1, key: string, shift = false) =>
+      stepBandEnd(band, end, capKeyStep(key, shift)!, 50, 100);
+    let band = tapBand(null, 85).band;
+    band = press(band, 1, "ArrowRight", true); // high 90
+    for (let i = 0; i < 4; i++) band = press(band, 1, "ArrowRight"); // high 94
+    for (let i = 0; i < 3; i++) band = press(band, 0, "ArrowRight"); // low 88
+    expect(band).toEqual([88, 94]);
   });
 });

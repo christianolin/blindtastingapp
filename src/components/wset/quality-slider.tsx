@@ -7,12 +7,14 @@ import {
   pctToScore,
   qualityBand,
 } from "@/lib/wset/quality-curve.mjs";
-import { makeT, translateBand, type WsetLang } from "@/lib/wset/i18n";
-import { dragBand, sameBand, scoreBand, tapBand, type Band } from "@/lib/wset/range-edit";
+import { labelsFor, makeT, translateBand, type WsetLang } from "@/lib/wset/i18n";
+import { capKeyStep, dragBand, sameBand, scoreBand, stepBandEnd, tapBand, type Band } from "@/lib/wset/range-edit";
 import { cn } from "@/lib/utils";
 import { useSlideGesture } from "./snap-slider";
 
 const TICKS = [50, 70, 80, 85, 90, 95, 100];
+const SCORE_MIN = TICKS[0];
+const SCORE_MAX = TICKS[TICKS.length - 1];
 
 /** One score (the note), or a low→high score range (the admin's typical-wine editor). */
 type QualitySliderProps =
@@ -53,6 +55,7 @@ type QualitySliderProps =
 export function QualitySlider(props: QualitySliderProps) {
   const lang = props.lang ?? "en";
   const t = makeT(lang);
+  const L = labelsFor(lang);
   const trackRef = useRef<HTMLDivElement>(null);
   // The end a range press holds still while it slides; null until the press's
   // first write.
@@ -243,11 +246,26 @@ export function QualitySlider(props: QualitySliderProps) {
               );
             })}
             {rangeMode ? (
-              bandPct !== null ? (
+              band !== null && bandPct !== null ? (
                 bandPct.map((p, k) => (
+                  // Each cap is a keyboard slider for its end (range-edit.ts's
+                  // capKeyStep/stepBandEnd): an arrow moves it one score, five
+                  // with Shift, within 50–100 and never past the other end. The
+                  // pointer still goes to the hit layer (pointer-events none).
                   <div
                     key={k}
-                    aria-hidden
+                    role="slider"
+                    tabIndex={0}
+                    aria-label={`${t("score")}, ${k === 0 ? L.LOW : L.HIGH}`}
+                    aria-valuemin={k === 0 ? SCORE_MIN : band[0]}
+                    aria-valuemax={k === 0 ? band[1] : SCORE_MAX}
+                    aria-valuenow={band[k]}
+                    onKeyDown={(e) => {
+                      const delta = capKeyStep(e.key, e.shiftKey);
+                      if (delta === null) return;
+                      e.preventDefault();
+                      commitBand(stepBandEnd(band, k === 0 ? 0 : 1, delta, SCORE_MIN, SCORE_MAX));
+                    }}
                     style={{
                       position: "absolute",
                       top: "50%",

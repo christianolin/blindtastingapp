@@ -388,6 +388,13 @@ export function SnapSlider<T extends string>({
               type="button"
               onClick={interactive ? () => pick(i) : undefined}
               disabled={!interactive}
+              // Editing a band, a label is a second tap target for the pointer
+              // only: the stop dots above already carry keyboard and
+              // screen-reader use (a button each, aria-pressed), so the labels
+              // stay out of the tab order and the accessibility tree rather
+              // than repeat every stop as a second, unpressed control.
+              tabIndex={editRange ? -1 : undefined}
+              aria-hidden={editRange ? true : undefined}
               style={{
                 position: "absolute",
                 left: `${pct(i)}%`,

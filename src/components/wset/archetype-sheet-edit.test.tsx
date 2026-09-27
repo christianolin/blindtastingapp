@@ -110,6 +110,16 @@ describe("ArchetypeSheet, editable", () => {
     expect(count(html, ">Varies</span>")).toBe(12);
   });
 
+  it("puts Finish above the flavour characteristics, as every WSET sheet does (owner, 2026-09-27)", () => {
+    const html = renderToStaticMarkup(<ArchetypeSheet a={WHITE_SPARKLING} edit={edit()} />);
+    const intensity = html.indexOf(">Flavour intensity<");
+    const finish = html.indexOf(">Finish<");
+    const flavours = html.indexOf(">Flavour characteristics<");
+    expect(intensity).toBeGreaterThan(-1);
+    expect(finish).toBeGreaterThan(intensity);
+    expect(flavours).toBeGreaterThan(finish);
+  });
+
   it("skips a scale the editor does not edit (mousse off sparkling)", () => {
     const still: ArchetypeSheetEdit["ladders"] = { ...LADDERS };
     delete still.mousse;
