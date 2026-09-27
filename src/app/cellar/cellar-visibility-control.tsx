@@ -1,68 +1,24 @@
-"use client";
+import { VisibilitySelect } from "@/components/sharing/visibility-select";
+import { SHARING_COPY, type SharingAudience } from "@/lib/sharing/visibility";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { CellarVisibility } from "@/lib/supabase/database.types";
-
-const OPTIONS: { value: CellarVisibility; label: string }[] = [
-  { value: "PRIVATE", label: "Private" },
-  { value: "FRIENDS", label: "Friends" },
-  { value: "PUBLIC", label: "Public" },
-];
-
-// Owner-only control on /cellar to set who may view the cellar. Writes straight
-// to the caller's own profile row (RLS: id = auth.uid()).
+// Owner-only control on /cellar: who may view the cellar, in the same words
+// and through the same component as the Sharing card on /profile/edit
+// (sharing-defaults spec 2026-09-27 S6, S18). VisibilitySelect keeps the rule
+// this control introduced: a failed write snaps back and says what is stored.
 export function CellarVisibilityControl({
   userId,
   current,
 }: {
   userId: string;
-  current: CellarVisibility;
+  current: SharingAudience;
 }) {
-  const supabase = createClient();
-  const [value, setValue] = useState<CellarVisibility>(current);
-  const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  // The label must never claim a privacy setting the row does not hold: a
-  // failed write used to leave "Private" on screen over a still-public cellar.
-  // On failure the select snaps back to what is actually stored and says so.
-  async function change(v: CellarVisibility) {
-    const previous = value;
-    setValue(v);
-    setSaving(true);
-    setFailed(false);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ cellar_visibility: v })
-      .eq("id", userId);
-    if (error) {
-      setValue(previous);
-      setFailed(true);
-    }
-    setSaving(false);
-  }
-
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      Visible to
-      <select
-        value={value}
-        onChange={(e) => change(e.target.value as CellarVisibility)}
-        disabled={saving}
-        className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
-      >
-        {OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      {failed ? (
-        <span role="status" className="text-destructive">
-          Not saved — still {OPTIONS.find((o) => o.value === value)?.label.toLowerCase()}.
-        </span>
-      ) : null}
-    </label>
+    <VisibilitySelect
+      userId={userId}
+      column="cellar_visibility"
+      current={current}
+      label={SHARING_COPY.cellarControlLabel}
+      variant="inline"
+    />
   );
 }

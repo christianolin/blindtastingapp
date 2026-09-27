@@ -33,12 +33,13 @@ export default async function CellarPage({
 
   // The viewer's saved sort (cellar-sort spec C5) is read alongside the
   // profile; a missing row or a failed read is null, so the list opens on
-  // newest added.
+  // newest added. A failed profile read renders no visibility control:
+  // falling back to a value would claim a setting the row may not hold
+  // (sharing-defaults spec §7.6).
   const [{ data: profile }, savedSort] = await Promise.all([
     supabase.from("profiles").select("cellar_visibility").eq("id", user.id).maybeSingle(),
     readCellarSort(supabase, user.id),
   ]);
-  const visibility = profile?.cellar_visibility ?? "PRIVATE";
 
   const rows = await getCellarBottles(supabase, user.id, user.id, { readOnly: false });
   const stats = headerStats(rows);
@@ -75,7 +76,9 @@ export default async function CellarPage({
                 Add a bottle
               </AddWineButton>
             </div>
-            <CellarVisibilityControl userId={user.id} current={visibility} />
+            {profile ? (
+              <CellarVisibilityControl userId={user.id} current={profile.cellar_visibility} />
+            ) : null}
           </div>
         }
       />

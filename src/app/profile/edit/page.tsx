@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
+import { ScrollToHash } from "@/components/scroll-to-hash";
+import { VisibilitySelect } from "@/components/sharing/visibility-select";
+import { SHARING_COPY } from "@/lib/sharing/visibility";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileFavourites, loadFavouriteRegionOptions } from "@/lib/profile-favourites";
 import { AvatarUploader } from "./avatar-uploader";
@@ -22,7 +25,7 @@ export default async function EditProfilePage() {
   const [{ data: profile }, favourites, regionOptions] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, bio, avatar_url, location, phone")
+      .select("display_name, bio, avatar_url, location, phone, cellar_visibility, notes_visibility")
       .eq("id", user.id)
       .single(),
     getProfileFavourites(supabase, user.id),
@@ -56,6 +59,36 @@ export default async function EditProfilePage() {
             />
           </CardContent>
         </Card>
+
+        {/* Sharing (sharing-defaults spec §7.6, S18): who can see your cellar
+            and your tasting notes. Each select saves on its own, like
+            /cellar's. Rendered only with the stored values in hand, so it
+            never shows a setting the row does not hold. #sharing is the
+            Overview notice's and the profile's "Change" target. */}
+        {profile ? (
+          <Card id={SHARING_COPY.sectionId} className="scroll-mt-20">
+            <CardHeader>
+              <CardTitle>{SHARING_COPY.cardTitle}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <VisibilitySelect
+                userId={user.id}
+                column="cellar_visibility"
+                current={profile.cellar_visibility}
+                label={SHARING_COPY.cellarLabel}
+                help={SHARING_COPY.cellarHelp}
+              />
+              <VisibilitySelect
+                userId={user.id}
+                column="notes_visibility"
+                current={profile.notes_visibility}
+                label={SHARING_COPY.notesLabel}
+                help={SHARING_COPY.notesHelp}
+              />
+              <ScrollToHash id={SHARING_COPY.sectionId} />
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Its own card, not a row in the profile form: the theme is a device
             preference kept in this browser, not a column on the profile, and
