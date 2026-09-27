@@ -29,6 +29,8 @@ export type WineLeaderboardReveal = "PER_ATTRIBUTE" | "PER_WINE";
 export type VintageKind = "YEAR" | "NV" | "TAWNY";
 export type CellarConsumptionReason = "DRANK" | "GIFTED" | "LOST" | "OTHER";
 export type CellarVisibility = "PRIVATE" | "FRIENDS" | "PUBLIC";
+/** user_preferences.cellar_sort's check constraint — the cellar list's SortKey. */
+export type CellarSortPreference = "bottles" | "name" | "added" | "yours" | "community";
 export type GrapeColor = "RED" | "WHITE";
 export type WinePlaceKind =
   | "COUNTRY"
@@ -447,6 +449,19 @@ export type Database = {
         Row: { profile_id: string; producer_id: string; position: number; created_at: string };
         Insert: { profile_id: string; producer_id: string; position: number; created_at?: never };
         Update: { position?: number };
+        Relationships: [];
+      };
+      // 20260927110000 (cellar-sort spec C3, C4): one row per person, read
+      // and written by that person alone (RLS user_id = auth.uid(); no DELETE
+      // policy or grant). The client INSERT grant covers user_id and
+      // cellar_sort, UPDATE cellar_sort only — so the app updates, then
+      // inserts when there is no row (src/lib/cellar/sort-preference.ts), never
+      // a PostgREST upsert, whose ON CONFLICT DO UPDATE SET names user_id too.
+      // A deleted profile has no row (profiles_deleted_drop_preferences).
+      user_preferences: {
+        Row: { user_id: string; cellar_sort: CellarSortPreference | null };
+        Insert: { user_id: string; cellar_sort?: CellarSortPreference | null };
+        Update: { cellar_sort?: CellarSortPreference | null };
         Relationships: [];
       };
       // 20260918130500 (platform-invites spec §4, D4, D7, D8): a personal
