@@ -1,6 +1,6 @@
--- Sharing defaults, M2 of 2: every private cellar becomes visible to
--- everyone, new accounts start public, and the people this affects get a
--- one-time notice.
+-- Sharing defaults, M2 of 2: every private cellar (but one set to Only me
+-- after M1) becomes visible to everyone, new accounts start public, and the
+-- people this affects get a one-time notice.
 --
 -- Spec: docs/superpowers/specs/2026-09-27-sharing-defaults-design.md (§3.2;
 -- S1, S4, S14, S21). Plan: docs/superpowers/plans/2026-09-27-sharing-defaults.md,
@@ -22,6 +22,14 @@
 -- this file): any of the 17 assessment columns set, an aroma row, or free
 -- text with a non-space character — on an identified note that is not held.
 --
+-- "Flipped" is a non-deleted PRIVATE cellar that was not already shared when
+-- M1 ran (M1's sharing_m1_open_cellars): the Sharing card ships between the
+-- two files, so a cellar that was Friends or Everyone at M1 and is Only me
+-- now was set so by hand, and stays. A private-at-M1 cellar, or an account
+-- made since (still on the old PRIVATE default), is flipped. profiles is
+-- locked against writers from the snapshot on, and the flip is exactly the
+-- snapshot, so a setting changed mid-file is never flipped without a notice.
+--
 -- No begin/commit: the applier owns the transaction.
 
 set local lock_timeout = '10s';
@@ -32,6 +40,7 @@ set local lock_timeout = '10s';
 do $$
 begin
   if to_regclass('public.sharing_notices') is null
+     or to_regclass('public.sharing_m1_open_cellars') is null
      or not exists (select 1 from information_schema.columns
                     where table_schema = 'public' and table_name = 'profiles' and column_name = 'notes_visibility')
      or to_regprocedure('public.wset_note_held(uuid)') is null then
@@ -63,11 +72,17 @@ begin
   end if;
 end $$;
 
+-- Writers wait from here to the commit; readers do not (the
+-- 20260925004000_friend_requests_lockdown lock). Nobody's setting changes
+-- between the snapshot and the flip.
+lock table public.profiles in share row exclusive mode;
+
 -- The snapshot, before anything changes.
 drop table if exists pg_temp._sd_flipped;
 create temp table _sd_flipped on commit drop as
 select p.id from public.profiles p
- where p.deleted_at is null and p.cellar_visibility = 'PRIVATE';
+ where p.deleted_at is null and p.cellar_visibility = 'PRIVATE'
+   and not exists (select 1 from public.sharing_m1_open_cellars o where o.user_id = p.id);
 
 drop table if exists pg_temp._sd_noted;
 create temp table _sd_noted on commit drop as
@@ -104,12 +119,13 @@ select u.id,
   from (select id from _sd_flipped union select id from _sd_noted) u;
 
 -- ---------------------------------------------------------------------------
--- 2. The flip (S1): PRIVATE becomes PUBLIC; FRIENDS stays; deleted rows are
---    never touched. Runs as the owner, so profiles_deleted_guard lets it through.
+-- 2. The flip (S1): exactly the snapshot's PRIVATE cellars become PUBLIC;
+--    FRIENDS stays; an Only me set after M1 stays; deleted rows are never
+--    touched. Runs as the owner, so profiles_deleted_guard lets it through.
 -- ---------------------------------------------------------------------------
 update public.profiles
    set cellar_visibility = 'PUBLIC'
- where deleted_at is null and cellar_visibility = 'PRIVATE';
+ where id in (select f.id from _sd_flipped f);
 
 -- ---------------------------------------------------------------------------
 -- 3. New accounts start public.
@@ -125,8 +141,13 @@ declare
   v_noted int := (select count(*)::int from _sd_noted);
   v_rows int;
 begin
-  if exists (select 1 from public.profiles where deleted_at is null and cellar_visibility = 'PRIVATE') then
-    raise exception 'a non-deleted profile is still PRIVATE';
+  if exists (select 1 from public.profiles p join _sd_flipped f on f.id = p.id where p.cellar_visibility <> 'PUBLIC') then
+    raise exception 'a flipped cellar is not PUBLIC';
+  end if;
+  if exists (select 1 from public.profiles p
+              where p.deleted_at is null and p.cellar_visibility = 'PRIVATE'
+                and not exists (select 1 from public.sharing_m1_open_cellars o where o.user_id = p.id)) then
+    raise exception 'a non-deleted profile that was private at M1, or made since, is still PRIVATE';
   end if;
   if (select count(*)::int from public.profiles where deleted_at is null and cellar_visibility = 'FRIENDS')
      is distinct from coalesce((select n from _sd_counts_before where visibility = 'FRIENDS' and not deleted), 0) then
@@ -135,6 +156,10 @@ begin
   if (select count(*)::int from public.profiles where deleted_at is null and cellar_visibility = 'PUBLIC')
      is distinct from coalesce((select n from _sd_counts_before where visibility = 'PUBLIC' and not deleted), 0) + v_flipped then
     raise exception 'PUBLIC is not the snapshot''s PUBLIC plus the flipped';
+  end if;
+  if (select count(*)::int from public.profiles where deleted_at is null and cellar_visibility = 'PRIVATE')
+     is distinct from coalesce((select n from _sd_counts_before where visibility = 'PRIVATE' and not deleted), 0) - v_flipped then
+    raise exception 'PRIVATE is not the snapshot''s PRIVATE minus the flipped';
   end if;
   if exists ((select id, visibility, notes from _sd_deleted_before)
              except
@@ -162,5 +187,9 @@ begin
   ) then
     raise exception 'a notice''s flags differ from the snapshot, or it starts dismissed';
   end if;
-  raise notice 'sharing defaults M2: % cellar(s) flipped, % noted author(s), % notice row(s)', v_flipped, v_noted, v_rows;
+  raise notice 'sharing defaults M2: % cellar(s) flipped, % set to Only me since M1 and kept, % noted author(s), % notice row(s)',
+    v_flipped,
+    (select count(*) from public.profiles p
+      where p.deleted_at is null and p.cellar_visibility = 'PRIVATE'),
+    v_noted, v_rows;
 end $$;

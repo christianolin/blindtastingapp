@@ -1232,6 +1232,53 @@ test("M2 flips every non-deleted PRIVATE cellar, keeps FRIENDS and deleted rows,
   });
 });
 
+test("M2 keeps a cellar set to Only me after M1, and flips one private at M1 or made since", async (t) => {
+  if (!M1_FILE || !M2_FILE) {
+    t.skip("runs only while neither migration is live and SHARING_DEFAULTS_APPLY lists both");
+    return;
+  }
+  await withRollback(async () => {
+    const [wasPrivate, choseLater, stayedFriends] = await freshProfiles(3);
+    await setCellar(wasPrivate, "PRIVATE");
+    await setCellar(choseLater, "PUBLIC");
+    await setCellar(stayedFriends, "FRIENDS");
+    await asOwner();
+    await client.query(readFileSync(M1_FILE, "utf8"));
+    // Between the two files: the Sharing card is live and someone picks Only me.
+    await setCellar(choseLater, "PRIVATE");
+    // A signup after M1 still gets the old PRIVATE default (R12).
+    const [newcomer] = await freshProfiles(1);
+    await asOwner();
+    await client.query(readFileSync(M2_FILE, "utf8"));
+
+    await asOwner();
+    const people = [wasPrivate, choseLater, stayedFriends, newcomer];
+    const after = Object.fromEntries(
+      (await client.query("select id, cellar_visibility from profiles where id = any($1)", [people])).rows.map((r) => [
+        r.id,
+        r.cellar_visibility,
+      ]),
+    );
+    assert.deepEqual(after, {
+      [wasPrivate]: "PUBLIC",
+      [choseLater]: "PRIVATE",
+      [stayedFriends]: "FRIENDS",
+      [newcomer]: "PUBLIC",
+    });
+    const notices = Object.fromEntries(
+      (
+        await client.query("select user_id, cellar_flipped, notes_shared from sharing_notices where user_id = any($1)", [
+          people,
+        ])
+      ).rows.map((r) => [r.user_id, [r.cellar_flipped, r.notes_shared]]),
+    );
+    assert.deepEqual(notices, {
+      [wasPrivate]: [true, false],
+      [newcomer]: [true, false],
+    });
+  }, []);
+});
+
 test("an account made after M2 starts with its cellar and notes visible to everyone, and no notice", async (t) => {
   const live = (await cellarDefault()) === "'PUBLIC'::cellar_visibility";
   if (!M2_FILE && !live) {
