@@ -133,8 +133,9 @@ function AromaPills({ terms, lang }: { terms: string[]; lang: WsetLang }) {
 }
 
 // The editor's "clear" at the end of a range row's title. Its 44px touch strip
-// is a ::before (no layout change), so setting or clearing a band never moves
-// the slider under the finger; a laptop pointer gets the word alone.
+// is a ::before (no layout change), and the row's "Varies" sub line keeps its
+// box, hidden, while a band is set (scaleRow), so setting or clearing a band
+// never moves the slider under the finger; a laptop pointer gets the word alone.
 function ClearRange({ text, rowLabel, onClear }: { text: string; rowLabel: string; onClear: () => void }) {
   return (
     <button
@@ -200,6 +201,9 @@ export function ArchetypeSheet({
   // One scale's row. Read-only: the band's words under the title and the band
   // drawn, or "Varies". Editing: the words as the row's value (or "Varies"
   // under the title while unset), a clear, and the slider on the edit ladder.
+  // A set row keeps the "Varies" line's box, invisible (D8): were the line to
+  // go, the heading would shrink ~19px and the slider would jump under a held
+  // press the moment the first band appears.
   const scaleRow = (key: ArchetypeScale, label: string) => {
     if (!edit) {
       return (
@@ -215,7 +219,11 @@ export function ArchetypeSheet({
       <Row
         label={label}
         value={range ? rangeLabel(range) : undefined}
-        sub={range ? undefined : varies}
+        sub={
+          <span aria-hidden={range ? true : undefined} style={range ? { visibility: "hidden" } : undefined}>
+            {varies}
+          </span>
+        }
         action={range ? <ClearRange text={t("clear")} rowLabel={label} onClear={() => edit.onRange(key, null)} /> : undefined}
       >
         <SnapSlider

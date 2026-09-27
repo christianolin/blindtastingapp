@@ -94,6 +94,22 @@ describe("ArchetypeSheet, editable", () => {
     expect(html).toContain("88–94");
   });
 
+  it("keeps a set row's Varies line, hidden, so a band appearing never moves the slider (D8)", () => {
+    const html = renderToStaticMarkup(<ArchetypeSheet a={WHITE_SPARKLING} edit={edit()} />);
+    // One row's heading: from its title to its slider's hit layer.
+    const heading = (title: string) => {
+      const start = html.indexOf(`>${title}<`);
+      return html.slice(start, html.indexOf('data-slot="slider-hit"', start));
+    };
+    // Acidity is set: the line keeps its box, invisible and out of the
+    // accessibility tree, so the heading is as tall as an unset row's.
+    expect(heading("Acidity")).toContain('<span aria-hidden="true" style="visibility:hidden">Varies</span>');
+    // Sweetness is unset: the same line, shown.
+    expect(heading("Sweetness")).toContain("<span>Varies</span>");
+    // Every edited scale carries the line, set or not: twelve on sparkling.
+    expect(count(html, ">Varies</span>")).toBe(12);
+  });
+
   it("skips a scale the editor does not edit (mousse off sparkling)", () => {
     const still: ArchetypeSheetEdit["ladders"] = { ...LADDERS };
     delete still.mousse;
