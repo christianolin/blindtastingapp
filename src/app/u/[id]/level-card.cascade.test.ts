@@ -1,7 +1,13 @@
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { compile } from "@tailwindcss/node";
 import { describe, expect, it } from "vitest";
+
+// The compiler the app's own CSS pipeline uses: resolved through the declared
+// @tailwindcss/postcss plugin rather than imported by name, so the test runs the
+// exact Tailwind that builds production and needs no dependency of its own.
+const fromPlugin = createRequire(createRequire(import.meta.url).resolve("@tailwindcss/postcss"));
+const { compile } = fromPlugin("@tailwindcss/node") as typeof import("@tailwindcss/node");
 
 // Review finding (2026-09-28): the card's wide layout lost to its `md:` rules.
 // Tailwind 4 sorts arbitrary `min-[…]` variants by unit, px before rem, so a

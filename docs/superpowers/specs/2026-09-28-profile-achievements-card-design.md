@@ -89,7 +89,10 @@ What stays the same:
   onClick={onToggle}
   className="relative inline-flex items-center gap-1 rounded-sm text-[12.5px] leading-none font-semibold whitespace-nowrap text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring after:absolute after:-inset-x-2 after:-inset-y-[15px] after:content-[''] md:pointer-fine:after:content-none"
 >
-  {open ? CARD_COPY.showFewer : CARD_COPY.showAll}
+  <span className="inline-grid justify-items-end">
+    <span className={cn("[grid-area:1/1]", open && "invisible")}>{CARD_COPY.showAll}</span>
+    <span className={cn("[grid-area:1/1]", !open && "invisible")}>{CARD_COPY.showFewer}</span>
+  </span>
   <ChevronDown aria-hidden className={cn("size-3.5 motion-safe:transition-transform", open && "rotate-180")} />
 </button>
 ```
