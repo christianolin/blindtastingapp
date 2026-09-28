@@ -8,26 +8,52 @@ import { cn } from "@/lib/utils";
  * (14/16 on phones), a mono eyebrow first, then the chart. `empty` swaps the
  * body for a one-line muted note so a card with no data still shows what it
  * would hold instead of an empty plot.
+ *
+ * Optional and additive (profile achievements card spec 2026-09-28 §3.1):
+ * `headingId` makes the title a real h2 that labels the section (for a card
+ * with sub-headings); `action` puts a right-aligned control on the title's
+ * row. With neither, the markup is exactly the plain card
+ * (stat-card.test.tsx pins it).
  */
 export function StatCard({
   title,
   empty,
   children,
   className,
+  headingId,
+  action,
 }: {
   title: string;
   empty?: string | null;
   children?: ReactNode;
   className?: string;
+  headingId?: string;
+  action?: ReactNode;
 }) {
+  const eyebrow = <Eyebrow size="sm">{title}</Eyebrow>;
+  const heading = headingId ? (
+    <h2 id={headingId} className="leading-none">
+      {eyebrow}
+    </h2>
+  ) : (
+    eyebrow
+  );
   return (
     <section
+      aria-labelledby={headingId}
       className={cn(
         "flex flex-col gap-3 rounded-xl border border-border-strong bg-card p-[16px_18px] max-md:p-[14px_16px]",
         className,
       )}
     >
-      <Eyebrow size="sm">{title}</Eyebrow>
+      {action ? (
+        <div className="flex items-center gap-2.5">
+          {heading}
+          <div className="ml-auto">{action}</div>
+        </div>
+      ) : (
+        heading
+      )}
       {empty ? (
         <p className="text-[12.5px] text-muted-foreground italic">{empty}</p>
       ) : (
@@ -74,14 +100,16 @@ export function StatFooterRow({
   label,
   value,
   valueClassName,
+  labelClassName,
 }: {
   label: string;
   value: ReactNode;
   valueClassName?: string;
+  labelClassName?: string;
 }) {
   return (
     <span className="flex items-baseline justify-between gap-3 text-[12px]">
-      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className={cn("shrink-0 text-muted-foreground", labelClassName)}>{label}</span>
       <span
         className={cn(
           "min-w-0 truncate text-right font-semibold tabular-nums",

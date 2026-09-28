@@ -26,3 +26,13 @@ describe("toneForPct", () => {
     expect(toneForPct(29)).toBe("rose");
   });
 });
+
+describe("the level tone", () => {
+  it("fills gold-deep on the muted track", () => {
+    const html = renderToStaticMarkup(
+      <AccuracyRows rows={[{ label: "To level 5", pct: 60, value: "120 / 200 XP", tone: "level" }]} valueWidth="auto" />,
+    );
+    expect(html).toContain('<span class="block h-full rounded-full bg-gold-deep" style="width:60%"></span>');
+    expect(html).toContain("bg-muted");
+  });
+});

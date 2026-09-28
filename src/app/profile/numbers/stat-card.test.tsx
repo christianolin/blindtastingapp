@@ -45,3 +45,33 @@ describe("StatFooter / StatFooterRow default markup", () => {
     );
   });
 });
+
+describe("StatCard / StatFooterRow optional props", () => {
+  it("makes the title an h2 that labels the section with headingId", () => {
+    const html = renderToStaticMarkup(<StatCard title="Title" headingId="t"><p>Body</p></StatCard>);
+    expect(html).toContain('<section aria-labelledby="t"');
+    expect(html).toContain(
+      '<h2 id="t" class="leading-none"><span class="font-mono uppercase text-muted-foreground text-[10px] tracking-[.12em]">Title</span></h2>',
+    );
+    expect(html).not.toContain("gap-2.5");
+  });
+
+  it("puts the action on the title's row, right-aligned", () => {
+    const html = renderToStaticMarkup(
+      <StatCard title="Title" headingId="t" action={<button type="button">Go</button>}>
+        <p>Body</p>
+      </StatCard>,
+    );
+    expect(html).toContain(
+      '<div class="flex items-center gap-2.5"><h2 id="t" class="leading-none">' +
+        '<span class="font-mono uppercase text-muted-foreground text-[10px] tracking-[.12em]">Title</span></h2>' +
+        '<div class="ml-auto"><button type="button">Go</button></div></div><p>Body</p>',
+    );
+  });
+
+  it("merges labelClassName into the label", () => {
+    expect(
+      renderToStaticMarkup(<StatFooterRow label="Best" value="12" labelClassName="font-semibold text-foreground" />),
+    ).toContain('<span class="shrink-0 font-semibold text-foreground">Best</span>');
+  });
+});

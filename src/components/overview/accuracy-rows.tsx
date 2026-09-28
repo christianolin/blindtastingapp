@@ -1,11 +1,15 @@
 import { cn } from "@/lib/utils";
 
-export type BarTone = "primary" | "gold" | "rose";
+export type BarTone = "primary" | "gold" | "rose" | "level";
 
 const TONE: Record<BarTone, string> = {
   primary: "bg-primary",
   gold: "bg-gold",
   rose: "bg-rose",
+  // Level and achievement progress only (/u/[id]'s level card): it echoes the
+  // level ring's gold-deep arc (levels spec L30). Never a hit rate or a share;
+  // toneForPct and toneForShare never return it.
+  level: "bg-gold-deep",
 };
 
 // The handoff's rule for hit-rate bars: at least 50% bordeaux, 30–49% gold,
