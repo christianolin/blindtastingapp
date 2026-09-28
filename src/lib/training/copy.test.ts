@@ -11,6 +11,7 @@ import {
   continueLine,
   coverageLine,
   groupLossLine,
+  groupsLossLine,
   groupSubLine,
   hueClearedLine,
   itWasLine,
@@ -19,6 +20,7 @@ import {
   pickSaidLine,
   regionLabel,
   resultMark,
+  reasonsLine,
   resultTotalLine,
   scaleLossLine,
   sessionsLine,
@@ -27,6 +29,7 @@ import {
   shortName,
   showAllRegionsLine,
   signatureLine,
+  signaturesLine,
   stripLine,
   styleVerdictLine,
   tallyLine,
@@ -141,6 +144,13 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
     expect(scaleLossLine("colourHue", "lower")).toBe("Colour lighter than typical");
     expect(groupLossLine("Black fruit")).toBe("Black fruit isn't typical");
     expect(signatureLine("petrol")).toBe("✓ petrol — a signature");
+    expect(signaturesLine("petrol", "lime")).toBe("✓ petrol and lime — signatures");
+    expect(groupsLossLine(["Herbal"])).toBe("Herbal isn't typical");
+    expect(groupsLossLine(["Herbal", "Red fruit"])).toBe("Herbal and red fruit aren't typical");
+    expect(groupsLossLine(["Herbal", "Floral", "Oak", "Spice"])).toBe("Herbal, floral and oak aren't typical");
+    expect(reasonsLine(["✓ petrol — a signature", "Tannin higher than typical"])).toBe(
+      "✓ petrol — a signature · Tannin higher than typical",
+    );
   });
 
   it("labels the seven result rows in order and marks them", () => {

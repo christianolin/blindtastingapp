@@ -432,14 +432,17 @@ describe("explanations (§5.7)", () => {
     );
   });
 
-  it("names the largest scale loss and its direction", () => {
-    // Riesling note above: tannin loss 1.5·(1 − 0.2) = 1.2 beats aromas 2·(1/3) = 0.67.
+  it("names the signature hit first, then each loss largest first, with its direction", () => {
+    // Riesling note above: petrol is a signature; tannin loss 1.5·(1 − 0.2) =
+    // 1.2 comes before aromas 2·(1/3) = 0.67 (banana's group is not its own).
     const r = rank({
       acidity: "HIGH",
       tannin: "MEDIUM",
       noseTermIds: [tid("White wine", "petrol"), tid("Citrus fruit", "lime"), tid("Tropical fruit", "banana")],
     });
-    expect(get(r, "alsace-riesling").explanation).toBe("Tannin higher than typical");
+    expect(get(r, "alsace-riesling").explanation).toBe(
+      "✓ petrol — a signature · Tannin higher than typical · Tropical fruit isn't typical",
+    );
     expect(get(rank({ tannin: "LOW" }), "margaux").explanation).toBe("Tannin lower than typical");
   });
 
@@ -450,7 +453,7 @@ describe("explanations (§5.7)", () => {
     expect(get(rank({ colourHue: "PURPLE" }), "margaux").explanation).toBe("Colour lighter than typical");
   });
 
-  it("names the taster's missing group with the most picked terms", () => {
+  it("names the taster's missing groups, the most picked first", () => {
     // Margaux: grass + green bell pepper (Herbaceous ×2), banana (Tropical
     // fruit ×1), blackcurrant (Black fruit, Margaux's): a = 1/3, loss 1.33.
     const r = rank({
@@ -461,7 +464,7 @@ describe("explanations (§5.7)", () => {
         tid("Black fruit", "blackcurrant"),
       ],
     });
-    expect(get(r, "margaux").explanation).toBe("Herbaceous isn't typical");
+    expect(get(r, "margaux").explanation).toBe("Herbaceous and tropical fruit aren't typical");
   });
 
   it("below 0.3: a signature hit, else 'Fits what you've said so far'", () => {
@@ -488,10 +491,10 @@ describe("explanations (§5.7)", () => {
         capped: null,
         signatureHits: ["cedar"],
         losses: [{ scale: "body", loss: 0.96, direction: "lower" }],
-        aromaLoss: { loss: 1.0, group: "Tropical fruit" },
+        aromaLoss: { loss: 1.0, groups: ["Tropical fruit"] },
       }),
-    ).toBe("Tropical fruit isn't typical");
-    // A tie goes to the scale seen first.
+    ).toBe("✓ cedar — a signature · Tropical fruit isn't typical · Body lower than typical");
+    // A tie keeps the scale seen first first.
     expect(
       explain({
         candidate: c,
@@ -504,7 +507,7 @@ describe("explanations (§5.7)", () => {
         ],
         aromaLoss: null,
       }),
-    ).toBe("Acidity higher than typical");
+    ).toBe("Acidity higher than typical · Tannin lower than typical");
     expect(
       explain({
         candidate: c,
@@ -515,6 +518,58 @@ describe("explanations (§5.7)", () => {
         aromaLoss: null,
       }),
     ).toBe("✓ cedar — a signature");
+  });
+
+  it("names at most three mismatches, and two signature hits together (owner, 2026-09-28)", () => {
+    const c = arch("margaux");
+    expect(
+      explain({
+        candidate: c,
+        closeness: 30,
+        capped: null,
+        signatureHits: ["cedar", "blackcurrant", "tobacco"],
+        losses: [
+          { scale: "sweetness", loss: 1.5, direction: "higher" },
+          { scale: "acidity", loss: 0.6, direction: "lower" },
+          { scale: "tannin", loss: 1.2, direction: "lower" },
+          { scale: "body", loss: 0.24, direction: "lower" },
+          { scale: "finish", loss: 0.32, direction: "lower" },
+        ],
+        aromaLoss: { loss: 1.33, groups: ["Herbal", "Floral", "Oak", "Spice"] },
+      }),
+    ).toBe(
+      "✓ cedar and blackcurrant — signatures · Sweetness higher than typical · " +
+        "Herbal, floral and oak aren't typical · Tannin lower than typical",
+    );
+    // Below the threshold every loss stays unnamed, however many there are.
+    expect(
+      explain({
+        candidate: c,
+        closeness: 95,
+        capped: null,
+        signatureHits: [],
+        losses: [
+          { scale: "body", loss: 0.24, direction: "lower" },
+          { scale: "finish", loss: 0.29, direction: "higher" },
+        ],
+        aromaLoss: { loss: 0, groups: [] },
+      }),
+    ).toBe("Fits what you've said so far");
+  });
+
+  it("tells two rows that share their largest mismatch apart", () => {
+    // The owner's screenshot: rows at 100 % and at 87 % both read "Herbal
+    // isn't typical". Same largest loss, different rest.
+    const base = { candidate: arch("margaux"), capped: null, aromaLoss: { loss: 0.67, groups: ["Herbal"] } };
+    const top = explain({ ...base, closeness: 100, signatureHits: ["black pepper"], losses: [] });
+    const lower = explain({
+      ...base,
+      closeness: 87,
+      signatureHits: [],
+      losses: [{ scale: "body", loss: 0.48, direction: "lower" }],
+    });
+    expect(top).toBe("✓ black pepper — a signature · Herbal isn't typical");
+    expect(lower).toBe("Herbal isn't typical · Body lower than typical");
   });
 });
 
@@ -567,9 +622,15 @@ describe("order (§5.8)", () => {
       ["A typical Châteauneuf-du-Pape", 80],
       ["A typical Vintage Port", 79],
     ]);
-    expect(get(r, "cote-rotie").explanation).toBe("Colour darker than typical");
-    expect(get(r, "bandol").explanation).toBe("Oak isn't typical");
-    expect(get(r, "vintage-port").explanation).toBe("Sweetness lower than typical");
+    expect(get(r, "cote-rotie").explanation).toBe(
+      "Colour darker than typical · Nose intensity lower than typical · Flavour intensity lower than typical",
+    );
+    expect(get(r, "bandol").explanation).toBe(
+      "Oak isn't typical · Nose intensity lower than typical · Flavour intensity lower than typical",
+    );
+    expect(get(r, "vintage-port").explanation).toBe(
+      "Sweetness lower than typical · Flavour intensity lower than typical · Nose intensity lower than typical",
+    );
     // GARNET caps every white; they close the list.
     const whites = r.filter((x) => x.candidate.colour === "WHITE");
     expect(whites.every((x) => x.capped === "colour")).toBe(true);

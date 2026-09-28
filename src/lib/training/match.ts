@@ -16,10 +16,12 @@ import {
 import {
   TRAINING_COPY,
   capReasonLine,
-  groupLossLine,
+  groupsLossLine,
+  reasonsLine,
   scaleLossLine,
   shortName,
   signatureLine,
+  signaturesLine,
 } from "./copy";
 import type {
   AromaLexicon,
@@ -75,8 +77,12 @@ export const SIGNATURE_MAX_HITS = 2;
 /** A contradicted colour, bubbles or fortification caps closeness here (D3). */
 export const CAP_MAX = 15;
 
-/** Below this largest weighted loss the explanation praises instead (§5.7). */
+/** A weighted loss below this is not worth naming (§5.7). */
 export const EXPLAIN_THRESHOLD = 0.3;
+
+/** At most this many mismatches in one explanation (owner, 2026-09-28: "I
+    think we need to give more than just one thing"). */
+export const EXPLAIN_MAX_MISSES = 3;
 
 // Full enum orders (spec §4.4, "since the critique"): the note sliders offer
 // fewer stops on some scales (appearance: PALE / MEDIUM / DEEP; sweetness has
@@ -175,13 +181,18 @@ function capFor(note: WsetNoteState, extras: MatchExtras, c: TrainingCandidate):
 }
 
 /**
- * The one explanation line of a candidate row (spec §5.7). A capped candidate
- * explains its cap. Otherwise null when nothing answered applies; else the
- * largest weighted loss (the first in MATCHED_SCALES order on a tie, aromas
- * after every scale) names a scale direction or the taster's aroma group the
- * archetype lacks; below EXPLAIN_THRESHOLD a signature hit reads
- * "✓ {term} — a signature" and no hit "Fits what you've said so far".
- * `noteColour` is `colourFromHue(note.colourHue)`, for the colour cap line.
+ * The explanation line of a candidate row (spec §5.7). A capped candidate
+ * explains its cap. Otherwise null when nothing answered applies. Else it
+ * names every weighted loss at or above EXPLAIN_THRESHOLD, largest first (the
+ * first in MATCHED_SCALES order on a tie, aromas after every scale), at most
+ * EXPLAIN_MAX_MISSES of them: a scale direction, or the taster's aroma groups
+ * the archetype lacks. The signature hits come first — "✓ {term} — a
+ * signature", or two of them — since they are why a candidate with a mismatch
+ * can still sit at the top. The parts are joined with " · " (owner,
+ * 2026-09-28: rows at 100 % and at 87 % both read "Herbal isn't typical", which
+ * explained neither). With no loss worth naming it is the signature hit, or
+ * "Fits what you've said so far". `noteColour` is
+ * `colourFromHue(note.colourHue)`, for the colour cap line.
  */
 export function explain(input: {
   candidate: TrainingCandidate;
@@ -189,7 +200,7 @@ export function explain(input: {
   capped: CapReason | null;
   signatureHits: string[];
   losses: { scale: string; loss: number; direction: "higher" | "lower" | null }[];
-  aromaLoss: { loss: number; group: string | null } | null;
+  aromaLoss: { loss: number; groups: string[] } | null;
   noteColour?: WineColour | null;
 }): string | null {
   const { candidate, capped } = input;
@@ -201,27 +212,28 @@ export function explain(input: {
     });
   }
   if (input.losses.length === 0 && input.aromaLoss === null) return null;
-  let top: { kind: "scale"; scale: string; loss: number; direction: "higher" | "lower" | null } | {
-    kind: "aroma";
-    loss: number;
-    group: string | null;
-  } | null = null;
+  // Losses arrive in MATCHED_SCALES order and the aromas go last, so the
+  // stable sort keeps that order on a tie.
+  const misses: { loss: number; line: string }[] = [];
   for (const l of input.losses) {
-    if (top === null || l.loss > top.loss) top = { kind: "scale", ...l };
+    // A loss ≥ 0.3 always comes from a distance > 0, so direction is set.
+    if (l.loss >= EXPLAIN_THRESHOLD && l.direction) {
+      misses.push({ loss: l.loss, line: scaleLossLine(l.scale, l.direction) });
+    }
   }
-  if (input.aromaLoss && (top === null || input.aromaLoss.loss > top.loss)) {
-    top = { kind: "aroma", ...input.aromaLoss };
+  const aroma = input.aromaLoss;
+  if (aroma && aroma.loss >= EXPLAIN_THRESHOLD && aroma.groups.length > 0) {
+    misses.push({ loss: aroma.loss, line: groupsLossLine(aroma.groups) });
   }
-  if (top === null || top.loss < EXPLAIN_THRESHOLD) {
-    return input.signatureHits.length > 0
-      ? signatureLine(input.signatureHits[0])
-      : TRAINING_COPY.fitsSoFar;
-  }
-  if (top.kind === "aroma") {
-    return top.group ? groupLossLine(top.group) : TRAINING_COPY.fitsSoFar;
-  }
-  // A loss ≥ 0.3 always comes from a distance > 0, so direction is set.
-  return top.direction ? scaleLossLine(top.scale, top.direction) : TRAINING_COPY.fitsSoFar;
+  misses.sort((a, b) => b.loss - a.loss);
+  const hits = input.signatureHits;
+  const praise =
+    hits.length === 0 ? null : hits.length === 1 ? signatureLine(hits[0]) : signaturesLine(hits[0], hits[1]);
+  if (misses.length === 0) return praise ?? TRAINING_COPY.fitsSoFar;
+  return reasonsLine([
+    ...(praise === null ? [] : [praise]),
+    ...misses.slice(0, EXPLAIN_MAX_MISSES).map((m) => m.line),
+  ]);
 }
 
 function scoreOne(
@@ -254,7 +266,7 @@ function scoreOne(
   }
 
   // Aromas (§5.5): the share of the taster's groups the archetype also carries.
-  let aromaLoss: { loss: number; group: string | null } | null = null;
+  let aromaLoss: { loss: number; groups: string[] } | null = null;
   const perGroup = new Map<string, number>();
   for (const id of noteTermIds) {
     const entry = lexicon[id];
@@ -266,12 +278,12 @@ function scoreOne(
     const a = shared / perGroup.size;
     num += WEIGHTS.aromas * a;
     den += WEIGHTS.aromas;
-    // The taster's group the archetype lacks with the most picked terms;
+    // The taster's groups the archetype lacks, most picked terms first;
     // ties by group name.
     const missing = [...perGroup.entries()]
       .filter(([g]) => !archGroups.has(g))
       .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0], "en"));
-    aromaLoss = { loss: WEIGHTS.aromas * (1 - a), group: missing[0]?.[0] ?? null };
+    aromaLoss = { loss: WEIGHTS.aromas * (1 - a), groups: missing.map(([g]) => g) };
   }
 
   // Signature hits: the taster's exact term ids ∩ the archetype's signature

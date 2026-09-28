@@ -49,7 +49,8 @@ export type RankedCandidate = {
   /** 0..100; null when nothing answered applies to this candidate. */
   closeness: number | null;
   capped: CapReason | null;
-  /** Spec §5.7; null before anything answered applies. */
+  /** Spec §5.7: the signature hits, then up to three mismatches, joined with
+      " · "; null before anything answered applies. */
   explanation: string | null;
   /** The exact signature terms the taster picked (every hit, in the
       candidate's aroma order; only the first two earn the bonus). */

@@ -494,7 +494,26 @@ export function groupLossLine(group: string): string {
   return `${group} isn't typical`;
 }
 
+/** "Herbal isn't typical" · "Herbal and floral aren't typical" · "Herbal,
+    floral and oak aren't typical" — the first three, most picked first. */
+export function groupsLossLine(groups: readonly string[]): string {
+  const shown = groups.slice(0, 3);
+  if (shown.length <= 1) return groupLossLine(shown[0] ?? "");
+  const [first, ...rest] = shown;
+  return `${listAll([first, ...rest.map((g) => g.toLowerCase())])} aren't typical`;
+}
+
 /** "✓ {term} — a signature" */
 export function signatureLine(term: string): string {
   return `✓ ${term} — a signature`;
+}
+
+/** "✓ {a} and {b} — signatures" */
+export function signaturesLine(a: string, b: string): string {
+  return `✓ ${a} and ${b} — signatures`;
+}
+
+/** The parts of one explanation, in order, on one line. */
+export function reasonsLine(parts: readonly string[]): string {
+  return parts.join(" · ");
 }
