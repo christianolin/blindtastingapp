@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
-import { glossaryTermTab, systemTab } from "@/lib/designations/tabs";
+import { dropRepeatedHits, glossaryTermTab, systemTab } from "@/lib/designations/tabs";
 
 type Hit = {
   kind: string;
@@ -128,7 +128,12 @@ export function GlobalSearch() {
             <p className="px-3 py-2 text-muted-foreground">No results.</p>
           ) : (
             GROUPS.map((g) => {
-              const items = hits.filter((h) => h.kind === g.kind);
+              // A system and a glossary term can share a name and a page
+              // ("Cru Classé de Graves"): show that pair once.
+              const items = dropRepeatedHits(
+                hits.filter((h) => h.kind === g.kind),
+                hrefFor,
+              );
               if (items.length === 0) return null;
               return (
                 <div key={g.kind} className="py-1">

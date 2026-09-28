@@ -141,3 +141,21 @@ export function systemTab(key: string): string | null {
   }
   return null;
 }
+
+// A classification system and a glossary term can share a name and a page
+// ("Cru Classé de Graves": the Graves system and the type designation both
+// open the Bordeaux tab). A list of search hits keeps the first of each
+// (label, destination) pair, so the top-bar search shows one row, not two.
+// Hits with the same label but a different destination all stay.
+export function dropRepeatedHits<T extends { label: string }>(
+  hits: readonly T[],
+  href: (hit: T) => string,
+): T[] {
+  const seen = new Set<string>();
+  return hits.filter((h) => {
+    const key = `${h.label}\u0000${href(h)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
