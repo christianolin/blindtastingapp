@@ -1283,8 +1283,15 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `<AwardsToaster>` in AppShell shows at most three cards (bottom corner, 4 s,
   polite live region, a BroadcastChannel stops a second tab repeating one) and
   calls `markXpSeen`, which never revalidates; the rings (`LevelRing`,
-  `useOwnLevel`) read the same store. A pop-up appears on the next render of an
-  AppHeader after the award commits, so a new award path whose page lives in a
+  `useOwnLevel`) read the same store. /u/[id]'s Level & achievements card
+  (spec `2026-09-28-profile-achievements-card-design.md`, amending levels
+  §8.4) is built from the Your numbers primitives — StatTrio, AccuracyRows
+  with the `level` BarTone (`bg-gold-deep`, for level/achievement progress
+  only, never a hit rate), StatFooterRow, Eyebrow group headings; its XP is
+  live through `useOwnLevel` on your own profile, and '7/20' shows only while
+  `locked` is non-null (your own profile) — never a total, a per-category
+  count or a placeholder on someone else's. A pop-up appears on the next
+  render of an AppHeader after the award commits, so a new award path whose page lives in a
   section layout needs a `revalidatePath` or `router.refresh()` (the cellar adds
   got theirs, L33). Account deletion drops the person's ledger, achievements
   and level (`profiles_deleted_drop_levels`). Rollback SQL: spec §11.

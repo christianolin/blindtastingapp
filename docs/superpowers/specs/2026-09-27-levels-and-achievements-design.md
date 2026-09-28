@@ -89,7 +89,7 @@ this migration does not touch `record_training_attempt`.
 | L29 | Cards: one render's new awards become at most three cards — one XP card, one achievement card (merged when ≥ 2), one level-up card (the highest level reached). The welcome card comes first. Awards older than 10 minutes collapse into "+N XP while you were away". A hidden tab queues; `BroadcastChannel` stops a second tab repeating a card. | L7's "max 3 stacked" per action; no flood after an absence. |
 | L30 | Ring tones: on the bordeaux sidebar and drawer the fill is `--gold` over `primary-foreground/20` (5.28:1 light, 6.19:1 dark); on the page surface (/u/[id]) the fill is `--gold-deep` over `--border-light`, supplementary to the card's text; the badge is `bg-gold text-on-accent`. The ring is an arc with a gap under the badge. | Measured contrasts in §8.2; no progress hides under the badge. |
 | L31 | /community shows a text pill "Lv N" beside the name (cards and table), not a ring; one batched `.in()` read in the same `Promise.all` as `getBulkProfileSummaries`. | A ring on every row is noise. |
-| L32 | The /u/[id] card sits directly under `ProfileHeader`, compact (one row collapsed), and shows even when the empty state replaces the stats. | A person with only cellar XP still has a level. |
+| L32 | The /u/[id] card sits directly under `ProfileHeader`, compact (one row collapsed), and shows even when the empty state replaces the stats. One row collapsed now holds on laptops from 1100px (trio \| level row \| footer); amended 2026-09-28. | A person with only cellar XP still has a level. |
 | L33 | `src/app/cellar/new/actions.ts`'s `addCellarLot` and `increaseCellarLotQuantity` each gain `revalidatePath("/cellar")`. | `/cellar/new` then `router.push`es inside the cellar layout, whose AppHeader a soft navigation keeps, and the add-wine sheet's merge card ("Add N to the existing lot", `lotMerge` in `use-sheet-adds.ts`) calls `increaseCellarLotQuantity` with no re-render until the sheet closes; every other award path already re-renders (§9). |
 | L34 | A trigger that pays several people loops in `user_id` order. | One lock order on `profile_levels`, so two concurrent reveals cannot deadlock each other. |
 | L35 | Winner = most points over fully revealed glasses among ≥ 3 players (JOINED, with a scored non-blank guess on a revealed glass); top > 0; ties all win. | Partial step points of a glass left mid-reveal at close are not final. |
@@ -689,6 +689,16 @@ your own profile only, **Not yet** (name, description, a thin progress bar and "
 (no count, no placeholder). Another person with none: "No achievements yet." Icons: cellar
 `Boxes`, tastings `Wine`, notes `NotebookPen`, training `GraduationCap`, friends `Users`.
 A key the app has no copy for (DB ahead of a deploy) is skipped, never rendered raw.
+
+**Amended 2026-09-28** (owner: 'more in sync with the rest of the design'; see
+`2026-09-28-profile-achievements-card-design.md`): the card is rebuilt from the Your numbers
+primitives — StatTrio (level · XP in all · achievements, '7/20' on your own profile only),
+one AccuracyRows level row (`bg-gold-deep` on `bg-muted`, was `bg-secondary`), Latest/Closest
+footer rows; the chips and category icons are gone; the toggle is a text button with a
+chevron in the header row; the title is an h2 (Earned/Not yet h3, categories h4); Not yet is
+grouped by category with 6px bars; expanded groups flow in 2/3 columns. Rule 1 wording
+unchanged: someone else's count is visible-only, never 'of N'. Owner approved the direction
+on 2026-09-28; strings provisional.
 
 No new page (the page-wrapper rule is untouched); no Button composed with a Link here, so
 no `nativeButton` concerns.
