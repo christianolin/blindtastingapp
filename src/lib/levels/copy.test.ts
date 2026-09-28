@@ -6,8 +6,12 @@ import {
   CATEGORY_ORDER,
   UNIT_CAPS,
   achievementToastTitle,
+  achievementsLabel,
   atUnitCap,
   awayToastTitle,
+  cardFact,
+  earnedOfTotal,
+  earnedOfTotalSpoken,
   formatUtcDate,
   formatXp,
   isAchievementKey,
@@ -17,7 +21,9 @@ import {
   pillText,
   ringLabel,
   ringLinkLabel,
+  toLevel,
   welcomeTitle,
+  xpOfSpan,
   xpToastTitle,
 } from "./copy";
 
@@ -165,5 +171,25 @@ describe("formatting", () => {
   it("the pill", () => {
     expect(pillText(7)).toBe("Lv 7");
     expect(pillLabel(7)).toBe("Level 7");
+  });
+});
+
+describe("the level card (profile achievements card spec 2026-09-28 §7)", () => {
+  it("names the next level and the XP span", () => {
+    expect(toLevel(13)).toBe("To level 13");
+    expect(xpOfSpan(2775, 2900)).toBe("2,775 / 2,900 XP");
+  });
+  it("is singular only for someone else's count of one", () => {
+    expect(achievementsLabel(1, null)).toBe("achievement");
+    expect(achievementsLabel(1, 20)).toBe("achievements");
+    expect(achievementsLabel(0, null)).toBe("achievements");
+  });
+  it("states your own earned count against the total, seen and spoken", () => {
+    expect(earnedOfTotal(7, 20)).toBe("7/20");
+    expect(earnedOfTotalSpoken(7, 20)).toBe("7 of 20");
+  });
+  it("joins a fact as name · detail", () => {
+    expect(cardFact("Serious cellar", "12 Sep 2026")).toBe("Serious cellar · 12 Sep 2026");
+    expect(cardFact("Note taker", "12 / 25")).toBe("Note taker · 12 / 25");
   });
 });

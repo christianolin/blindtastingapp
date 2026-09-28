@@ -215,7 +215,7 @@ export default async function ProfilePage({
         />
         {/* L32: directly under the header, shown even when the empty state
             replaces the stats below (a cellar-only person still has a level). */}
-        {profileLevel ? <LevelCard level={profileLevel} /> : null}
+        {profileLevel ? <LevelCard level={profileLevel} liveUserId={isOwnProfile ? user.id : undefined} /> : null}
 
         {summary.winesGuessed === 0 ? (
           <EmptyState title={empty.title} description={empty.body} />

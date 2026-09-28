@@ -170,24 +170,43 @@ export const bonusDetail = (sum: number): string => `+${formatXp(sum)} XP`;
 export const levelUpTitle = (level: number): string => `Level up · You're level ${level}`;
 
 // ---------------------------------------------------------------------------
-// /u/[id]'s "Level & achievements" card (spec §8.4)
+// /u/[id]'s "Level & achievements" card (spec §8.4, as amended by
+// docs/superpowers/specs/2026-09-28-profile-achievements-card-design.md §7).
+// The 2026-09-28 additions (levelLabel, xpLabel, latest, closest, "Show
+// fewer" and the helpers below levelHeading) are PROVISIONAL until the owner
+// approves the wording. Rule 1: no string here may state a total, a
+// per-category count or "N of 20" on a path someone else's profile reaches —
+// earnedOfTotal/earnedOfTotalSpoken are for your own profile only.
 // ---------------------------------------------------------------------------
 
 export const CARD_COPY = {
   title: "Level & achievements",
   topLevel: "Top level",
   showAll: "All achievements",
-  showFewer: "Fewer",
+  showFewer: "Show fewer",
   earned: "Earned",
   notYet: "Not yet",
   beforeLevels: "Before levels",
   noneYet: "No achievements yet.",
+  levelLabel: "level",
+  xpLabel: "XP in all",
+  latest: "Latest",
+  closest: "Closest",
 } as const;
 
 export const levelHeading = (level: number): string => `Level ${level}`;
-export const xpInAll = (xp: number): string => `${formatXp(xp)} XP in all`;
-export const toNextLevel = (into: number, span: number, next: number): string =>
-  `${formatXp(into)} / ${formatXp(span)} XP to level ${next}`;
+/** The trio's achievements label: singular only for someone else's count of
+    one (your own profile always reads "0/1 achievements", "7/20 achievements"). */
+export const achievementsLabel = (count: number, total: number | null): string =>
+  total === null && count === 1 ? "achievement" : "achievements";
+/** "7/20" — your own profile only (Rule 1). */
+export const earnedOfTotal = (earned: number, total: number): string => `${earned}/${total}`;
+/** "7 of 20" — the sr-only reading of earnedOfTotal. */
+export const earnedOfTotalSpoken = (earned: number, total: number): string => `${earned} of ${total}`;
+export const toLevel = (next: number): string => `To level ${next}`;
+export const xpOfSpan = (into: number, span: number): string => `${formatXp(into)} / ${formatXp(span)} XP`;
+/** "Serious cellar · 12 Sep 2026", "Note taker · 12 / 25". */
+export const cardFact = (name: string, detail: string): string => `${name} · ${detail}`;
 export const progressText = (progress: number, target: number): string =>
   `${formatXp(progress)} / ${formatXp(target)}`;
 export const bonusText = (bonus: number): string => `+${formatXp(bonus)} XP`;
