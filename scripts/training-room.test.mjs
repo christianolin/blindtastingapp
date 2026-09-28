@@ -892,6 +892,40 @@ test("the batch-1 migration lands every archetype with its links, and a second a
   });
 });
 
+// --- Cru Classé de Graves (20260928130000) ---------------------------------------
+
+test("Cru Classé de Graves follows Premier Grand Cru Classé, and both Pessac-Léognan typical wines carry it", async () => {
+  const file = "supabase/migrations/20260928130000_cru_classe_de_graves.sql";
+  await withRollback(async () => {
+    await asOwner();
+    const live = (await client.query("select count(*)::int n from type_designations where name = 'Cru Classé de Graves'")).rows[0].n === 1;
+    if (!live && !APPLY.some((f) => f.endsWith("20260928130000_cru_classe_de_graves.sql"))) await client.query(readFileSync(file, "utf8"));
+    const order = (await client.query("select name from type_designations where sort_order between 12 and 18 order by sort_order")).rows.map((r) => r.name);
+    assert.deepEqual(order, ["Grand Cru Classé", "Premier Grand Cru Classé", "Cru Classé de Graves", "Cru Bourgeois", "Cru Artisan", "Cru Exceptionnel", "Gutswein"]);
+    const row = (
+      await client.query(
+        `select td.category, c.name country, r.name region, td.is_active from type_designations td
+           left join countries c on c.id = td.country_id left join regions r on r.id = td.region_id
+          where td.name = 'Cru Classé de Graves'`,
+      )
+    ).rows[0];
+    assert.deepEqual(row, { category: "Quality Classification", country: "France", region: "Bordeaux", is_active: true });
+    const pessac = (
+      await client.query(
+        `select a.name, array_agg(td.name order by td.name) designations from wine_archetypes a
+           join wine_archetype_designations d on d.archetype_id = a.id join type_designations td on td.id = d.type_designation_id
+          where a.name in ('A typical Pessac-Léognan red', 'A typical Pessac-Léognan white') group by a.name order by a.name`,
+      )
+    ).rows;
+    assert.deepEqual(pessac, [
+      { name: "A typical Pessac-Léognan red", designations: ["Cru Classé de Graves"] },
+      { name: "A typical Pessac-Léognan white", designations: ["Cru Classé de Graves"] },
+    ]);
+    const link = (await client.query("select td.name from wine_designations wd join type_designations td on td.id = wd.type_designation_id where wd.key = 'graves-cru-classe'")).rows;
+    assert.deepEqual(link, [{ name: "Cru Classé de Graves" }]);
+  });
+});
+
 // --- The region pick (region-guess addendum R6, R7; 20260927100000) --------------
 
 test("a region pick with the right region and grape scores country 2, region 3 and grape 8", async () => {
