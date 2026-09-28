@@ -40,7 +40,7 @@ What stays the same:
 - **A9 — The toggle uses solid `text-primary` and `hover:underline`, with no `/80` and no `dark:` classes.** Reason: `globals.css` (430–452) measured the translucent hover under AA and already remaps `text-primary` in dark.
 - **A10 — Expanded headings follow the notes-list idiom (Eyebrow plus an `h-px flex-1` rule). Category captions are 11.5px semibold with no icons.** Reason: these are the site's existing grouped-list heading and the "Countries"/"Regions" caption. No other stat card puts icons in a subhead.
 - **A11 — Not yet is grouped by category like Earned, in catalogue (ladder) order, with no cap.** Reason: the card now agrees with itself; ladders read in order; "Closest" already surfaces the nearest one; and expanding is opt-in.
-- **A12 — Expanded groups flow in CSS columns** (`md:columns-2 min-[1100px]:columns-3`, `break-inside-avoid`). Reason: a grid would leave ragged gaps between a 5-row and a 2-row group. Columns also stop a name sitting about 1,000px from its date. The aroma picker is the production precedent.
+- **A12 — Expanded groups flow in CSS columns** (`md:columns-2 min-[68.75rem]:columns-3`, `break-inside-avoid`). Reason: a grid would leave ragged gaps between a 5-row and a 2-row group. Columns also stop a name sitting about 1,000px from its date. The aroma picker is the production precedent.
 - **A13 — Achievement count: "7/20" (spoken "7 of 20") only when `locked !== null`, i.e. your own profile. Anyone else sees the visible count alone, singular or plural.** Reason: Rule 1. No "of N" can reach another viewer.
 - **A14 — "Latest" order:** achievements that were not backfilled, newest `unlockedAt` first; then backfilled ones; ties in catalogue order. Reason: the order is deterministic, and a real unlock always beats "Before levels".
 - **A15 — "Closest"** (own profile only) is the locked achievement with the largest fraction above 0, ties in catalogue order. The row is left out when nothing has progress. Reason: a calm nudge that never appears for anyone else.
@@ -97,21 +97,21 @@ What stays the same:
 - **Type:** 12.5px/600 `text-primary` is the redesign's show-more type (`tastings-tabs.tsx`, `notes-list.tsx`).
 - **Tap target:** the `::after` pad copies LinkPill. It gives a hit area of about 44px on any touch pointer without making the header row taller. With a fine pointer at `md` and up, the pad is dropped (the site's `md:pointer-fine` rule).
 - **Chevron:** the `candidates-panel.tsx` disclosure precedent.
-- **Stability:** the button stays in the header when the card opens or closes, so it never jumps. Focus stays on it.
+- **Stability:** the button stays in the header when the card opens or closes, so it never jumps. Focus stays on it. Both labels sit in one grid cell (`inline-grid justify-items-end`, each `[grid-area:1/1]`, the idle one `invisible`), so the button keeps one width in both states and the title beside it never reflows (amended 2026-09-28 after review: at 320px the title needs two lines, and a label swap changed its wrap).
 
 ### 3.2 Summary: laptop (owner's desktop Chrome, about 1675×865)
 
 The content column is about 1104px and the card's inner width about 1066px.
 
 ```tsx
-<div className="grid gap-[13px] md:grid-cols-2 md:items-center md:gap-x-9 min-[1100px]:grid-cols-3">
+<div className="grid grid-cols-1 gap-[13px] md:grid-cols-2 md:items-center md:gap-x-9 min-[68.75rem]:grid-cols-3">
   <StatTrio stats={trioStats(v.trio)} />
   <AccuracyRows
     rows={[{ label: v.levelRow.label, pct: v.levelRow.fraction * 100, value: v.levelRow.value, tone: "level" }]}
     labelWidth={72}
     valueWidth="auto"
   />
-  <StatFooter className="md:col-span-2 min-[1100px]:col-span-1 min-[1100px]:border-t-0 min-[1100px]:pt-0">
+  <StatFooter className="md:col-span-2 min-[68.75rem]:col-span-1 min-[68.75rem]:border-t-0 min-[68.75rem]:pt-0">
     {v.empty ? (
       <p className="text-[12.5px] text-muted-foreground italic">{v.empty}</p>
     ) : (
@@ -121,6 +121,8 @@ The content column is about 1104px and the card's inner width about 1066px.
   </StatFooter>
 </div>
 ```
+
+**Breakpoint unit (amended 2026-09-28 after review).** The 1100px step is written `min-[68.75rem]:`, never `min-[1100px]:`. Tailwind 4 sorts arbitrary `min-[…]` variants by unit, px before rem, so a px step was emitted before `md:` (48rem) and lost to it at every width: the card never formed one row and the lists never reached three columns. `grid-cols-1` gives the phone grid a `minmax(0,1fr)` track, so a long Latest value truncates instead of widening the card. `level-card.cascade.test.ts` compiles the classes and pins both.
 
 **The three blocks:**
 - **`StatTrio`** is unchanged: 27px Cormorant numerals with `lining-nums tabular-nums` over 11px muted labels. `trioStats` maps a `spoken` entry to `<><span aria-hidden>7/20</span><span className="sr-only">7 of 20</span></>`, the LevelPill pattern.
@@ -205,7 +207,7 @@ Everything stacks in one column with 13px gaps:
 The old `border-t pt-3` goes, because the Earned heading's rule does the separating. The card's 13px gap sits above the panel.
 
 - **`GroupHeading`** (local): `<div className="flex items-center gap-2.5">`, then `<h3 id={id} className="leading-none"><Eyebrow size="sm">{children}</Eyebrow></h3>`, then `<span aria-hidden className="h-px flex-1 bg-border-light" />`. This is the notes-list idiom with the in-card hairline token, and the rule stays visible on phones.
-- **`CategoryColumns`** (local): `<div className="gap-x-9 md:columns-2 min-[1100px]:columns-3">`.
+- **`CategoryColumns`** (local): `<div className="gap-x-9 md:columns-2 min-[68.75rem]:columns-3">`.
   - Each category is a plain block, `<div className="mb-4 break-inside-avoid last:mb-0">`. This copies the aroma-picker precedent: a block child, not a flex child.
   - Each block holds `<h4 className="mb-[7px] text-[11.5px] font-semibold">{label}</h4>` and `<ul className="flex flex-col gap-[9px] max-md:gap-2">`.
   - Categories come in `CATEGORY_ORDER`; an empty category is left out. There are no icons.

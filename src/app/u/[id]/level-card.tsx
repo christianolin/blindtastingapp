@@ -63,7 +63,14 @@ function ExpandToggle({ open, controls, onToggle }: { open: boolean; controls: s
       onClick={onToggle}
       className="relative inline-flex items-center gap-1 rounded-sm text-[12.5px] leading-none font-semibold whitespace-nowrap text-primary underline-offset-2 after:absolute after:-inset-x-2 after:-inset-y-[15px] after:content-[''] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:pointer-fine:after:content-none"
     >
-      {open ? CARD_COPY.showFewer : CARD_COPY.showAll}
+      {/* Both labels share one grid cell and the idle one is `invisible`
+          (hidden from AT too), so the button is as wide open as closed: the
+          title beside it wraps the same way in both states (at 320px it
+          wraps to two lines either way) and the header never reflows. */}
+      <span className="inline-grid justify-items-end">
+        <span className={cn("[grid-area:1/1]", open && "invisible")}>{CARD_COPY.showAll}</span>
+        <span className={cn("[grid-area:1/1]", !open && "invisible")}>{CARD_COPY.showFewer}</span>
+      </span>
       <ChevronDown aria-hidden className={cn("size-3.5 motion-safe:transition-transform", open && "rotate-180")} />
     </button>
   );
@@ -86,14 +93,14 @@ function trioStats(trio: TrioStat[]): { value: ReactNode; label: string }[] {
 
 function LevelCardSummary({ view: v }: { view: LevelCardView }) {
   return (
-    <div className="grid gap-[13px] md:grid-cols-2 md:items-center md:gap-x-9 min-[1100px]:grid-cols-3">
+    <div className="grid grid-cols-1 gap-[13px] md:grid-cols-2 md:items-center md:gap-x-9 min-[68.75rem]:grid-cols-3">
       <StatTrio stats={trioStats(v.trio)} />
       <AccuracyRows
         rows={[{ label: v.levelRow.label, pct: v.levelRow.fraction * 100, value: v.levelRow.value, tone: "level" }]}
         labelWidth={72}
         valueWidth="auto"
       />
-      <StatFooter className="md:col-span-2 min-[1100px]:col-span-1 min-[1100px]:border-t-0 min-[1100px]:pt-0">
+      <StatFooter className="md:col-span-2 min-[68.75rem]:col-span-1 min-[68.75rem]:border-t-0 min-[68.75rem]:pt-0">
         {v.empty ? (
           <p className="text-[12.5px] text-muted-foreground italic">{v.empty}</p>
         ) : (
@@ -124,7 +131,7 @@ function CategoryColumns<T extends { key: string }>({
   renderItem: (item: T) => ReactNode;
 }) {
   return (
-    <div className="gap-x-9 md:columns-2 min-[1100px]:columns-3">
+    <div className="gap-x-9 md:columns-2 min-[68.75rem]:columns-3">
       {groups.map((group) => (
         <div key={group.category} className="mb-4 break-inside-avoid last:mb-0">
           <h4 className="mb-[7px] text-[11.5px] font-semibold">{group.label}</h4>

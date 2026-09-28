@@ -78,6 +78,15 @@ describe("LevelCard", () => {
     expect(html).toContain("All achievements");
   });
 
+  it("keeps both toggle labels in one cell, the idle one invisible, so the header never reflows", () => {
+    expect(html).toContain('<span class="[grid-area:1/1]">All achievements</span>');
+    expect(html).toContain('<span class="[grid-area:1/1] invisible">Show fewer</span>');
+  });
+
+  it("gives the summary grid a shrinkable phone column, so Latest truncates", () => {
+    expect(html).toContain('class="grid grid-cols-1 gap-[13px] md:grid-cols-2');
+  });
+
   it("keeps the lists closed while collapsed", () => {
     expect(html).not.toContain(">Earned<");
     expect(html).not.toContain("<h3");
