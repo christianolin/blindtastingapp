@@ -1166,7 +1166,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
   signatures. The working copy and every rule a change carries (cascade,
   colour → hue, style → `satForStyle`, tab counts, dirty check) are pure in
   `profile-draft.ts`; ladders and checks stay in `profile-rules.ts`, whose test
-  pins them to the matcher's `ladderFor`. `src/components/wset/sheet-markup.test.tsx`
+  pins them to the matcher's `ladderFor` — except development, which the
+  editor still records but the matcher never reads (owner, 2026-09-28:
+  youthful/developing/tired is the bottle's age, not the wine's style, so it
+  is not in `MATCHED_SCALES` or `WEIGHTS`; it stays in the note and on the
+  archetype's reference profile). `src/components/wset/sheet-markup.test.tsx`
   pins the read-only archetype sheet's and the note sheet's markup byte for
   byte (react-dom/server in vitest, through the `@/` alias in
   `vitest.config.mts`): an intended change to either is committed with `-u`

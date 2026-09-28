@@ -63,7 +63,6 @@ describe("stepScore and the constants", () => {
       noseIntensity: 0.8,
       flavourIntensity: 0.8,
       finish: 0.8,
-      development: 0.6,
       appearanceIntensity: 0.6,
       aromas: 2.0,
     });
@@ -90,12 +89,10 @@ describe("ladderFor", () => {
       "LUSCIOUS",
     ]);
     expect(ladderFor("tannin", arch("margaux"))).toEqual(["LOW", "MEDIUM_MINUS", "MEDIUM", "MEDIUM_PLUS", "HIGH"]);
-    expect(ladderFor("development", arch("margaux"))).toEqual([
-      "YOUTHFUL",
-      "DEVELOPING",
-      "FULLY_DEVELOPED",
-      "TIRED_PAST_BEST",
-    ]);
+  });
+
+  it("never matches development: it is the bottle's age, not the style (owner, 2026-09-28)", () => {
+    expect(ladderFor("development", arch("margaux"))).toBeNull();
   });
 
   it("takes hue from the candidate's colour row", () => {
@@ -473,11 +470,6 @@ describe("explanations (§5.7)", () => {
       get(rank({ acidity: "HIGH", noseTermIds: [tid("White wine", "petrol")] }), "alsace-riesling").explanation,
     ).toBe("✓ petrol — a signature");
     expect(get(rank({ tannin: "HIGH" }), "margaux").explanation).toBe("Fits what you've said so far");
-    // development FULLY_DEVELOPED vs [YOUTHFUL, DEVELOPING]: d1, loss
-    // 0.6·0.4 = 0.24 < 0.3 → still "fits" (closeness 0.36/0.6 = 60).
-    const dev = get(rank({ development: "FULLY_DEVELOPED" }), "margaux");
-    expect(dev.closeness).toBe(60);
-    expect(dev.explanation).toBe("Fits what you've said so far");
     // nose PRONOUNCED vs [MEDIUM, MEDIUM_PLUS]: d1, loss 0.8·0.4 = 0.32 ≥ 0.3.
     expect(get(rank({ noseIntensity: "PRONOUNCED" }), "margaux").explanation).toBe(
       "Nose intensity higher than typical",
@@ -537,8 +529,9 @@ describe("order (§5.8)", () => {
 
   it("ranks a left-bank claret note: Margaux first, then by closeness", () => {
     // Every scale answered + blackcurrant/cedar/tobacco on the nose and
-    // blackcurrant/leather on the palate. Σw over the 11 scales = 11.3,
-    // + aromas 2 = 13.3 (Port skips alcohol: 12.3).
+    // blackcurrant/leather on the palate. Development is answered too but never
+    // matched, so Σw over the 10 matched scales = 10.7, + aromas 2 = 12.7
+    // (Port skips alcohol: 11.7).
     const r = rank({
       appearanceIntensity: "DEEP",
       colourHue: "GARNET",
@@ -555,24 +548,24 @@ describe("order (§5.8)", () => {
       palateTermIds: [tid("Black fruit", "blackcurrant"), tid("Red wine", "leather")],
     });
     // Margaux: every scale in range, groups {Black fruit, Oak, Red wine} all
-    // its own → 13.3/13.3 → 100 (+ cedar, capped at 100).
+    // its own → 12.7/12.7 → 100 (+ cedar, capped at 100).
     // Côte-Rôtie: hue GARNET vs [PURPLE, RUBY] d1 (−0.4), nose and flavour
     // MEDIUM vs [MEDIUM_PLUS, …] d1 (−0.32 each), aromas a = 1:
-    // (11.3 − 1.04 + 2) / 13.3 = 12.26 / 13.3 = 0.9218 → 92.
+    // (10.7 − 1.04 + 2) / 12.7 = 11.66 / 12.7 = 0.9181 → 92.
     // Bandol: nose, flavour d1 (−0.64), no Oak → a = 2/3:
-    // (11.3 − 0.64 + 1.333) / 13.3 = 0.9018 → 90.
+    // (10.7 − 0.64 + 1.333) / 12.7 = 0.8971 → 90.
     // Châteauneuf: nose, flavour d1 (−0.64), acidity MEDIUM_PLUS vs
     // [MEDIUM_MINUS, MEDIUM] d1 (−0.6), tannin HIGH vs [MEDIUM, MEDIUM_PLUS]
-    // d1 (−0.6), a = 2/3: (11.3 − 1.84 + 1.333) / 13.3 = 0.8115 → 81.
+    // d1 (−0.6), a = 2/3: (10.7 − 1.84 + 1.333) / 12.7 = 0.8026 → 80.
     // Vintage Port (alcohol skipped): nose d1 (−0.32), sweetness DRY vs
     // [MEDIUM_SWEET, SWEET] d4 (−1.5), flavour MEDIUM vs [PRONOUNCED] d2
-    // (−0.64), a = 1: (10.3 − 2.46 + 2) / 12.3 = 9.84 / 12.3 = 0.8 → 80.
+    // (−0.64), a = 1: (9.7 − 2.46 + 2) / 11.7 = 9.24 / 11.7 = 0.7897 → 79.
     expect(r.slice(0, 5).map((x) => [x.candidate.name, x.closeness])).toEqual([
       ["A typical Margaux", 100],
       ["A typical Côte-Rôtie", 92],
       ["A typical Bandol", 90],
-      ["A typical Châteauneuf-du-Pape", 81],
-      ["A typical Vintage Port", 80],
+      ["A typical Châteauneuf-du-Pape", 80],
+      ["A typical Vintage Port", 79],
     ]);
     expect(get(r, "cote-rotie").explanation).toBe("Colour darker than typical");
     expect(get(r, "bandol").explanation).toBe("Oak isn't typical");
@@ -581,6 +574,16 @@ describe("order (§5.8)", () => {
     const whites = r.filter((x) => x.candidate.colour === "WHITE");
     expect(whites.every((x) => x.capped === "colour")).toBe(true);
     expect(r.slice(-whites.length).every((x) => x.candidate.colour === "WHITE")).toBe(true);
+  });
+
+  it("never lets development move the ranking (owner, 2026-09-28)", () => {
+    // Alone it matches nothing, so every closeness stays null (no answer yet).
+    expect(rank({ development: "TIRED_PAST_BEST" }).every((x) => x.closeness === null)).toBe(true);
+    // With a real answer, any development leaves every closeness as it was.
+    const base = rank({ tannin: "HIGH" }).map((x) => [x.candidate.id, x.closeness]);
+    for (const development of ["YOUTHFUL", "DEVELOPING", "FULLY_DEVELOPED", "TIRED_PAST_BEST"] as const) {
+      expect(rank({ tannin: "HIGH", development }).map((x) => [x.candidate.id, x.closeness])).toEqual(base);
+    }
   });
 
   it("breaks a tie by short name", () => {

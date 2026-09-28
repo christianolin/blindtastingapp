@@ -107,6 +107,12 @@ describe("scalesFor", () => {
       ["WHITE", "STILL"],
     ] as const) {
       for (const s of scalesFor(colour, style)) {
+        // Development stays on the profile for reference but is never matched
+        // (owner, 2026-09-28: it is the bottle's age, not the style).
+        if (s.key === "development") {
+          expect(ladderFor(s.key, candidate(colour, style))).toBeNull();
+          continue;
+        }
         expect(ladderFor(s.key, candidate(colour, style))).toEqual([...s.ladder]);
       }
     }

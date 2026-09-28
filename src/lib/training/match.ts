@@ -7,7 +7,6 @@ import type { WineColour, WsetNoteState } from "../wset/types";
 import {
   ALCOHOL_STOPS,
   BODY_STOPS,
-  DEVELOPMENT_STOPS,
   FINISH_STOPS,
   HUES_BY_COLOUR,
   INTENSITY_STOPS,
@@ -32,12 +31,15 @@ import type {
 } from "./types";
 
 /** The matched sat keys, in the order the explanation's tie-break walks them
-    (spec §4.4). clarity is stored on the live rows and never matched (D18). */
+    (spec §4.4). clarity is stored on the live rows and never matched (D18).
+    Nor is development (owner, 2026-09-28: "it just really depends on how old
+    the wine is we are drinking"): youthful/developing/tired describes this
+    bottle's age, not the style, so it stays in the note and in an archetype's
+    profile but never moves a closeness. */
 export const MATCHED_SCALES = [
   "appearanceIntensity",
   "colourHue",
   "noseIntensity",
-  "development",
   "sweetness",
   "acidity",
   "tannin",
@@ -61,7 +63,6 @@ export const WEIGHTS: Record<MatchedScale | "aromas", number> = {
   noseIntensity: 0.8,
   flavourIntensity: 0.8,
   finish: 0.8,
-  development: 0.6,
   appearanceIntensity: 0.6,
   aromas: 2.0,
 };
@@ -95,7 +96,7 @@ const MOUSSE_LADDER = ["DELICATE", "CREAMY", "AGGRESSIVE"];
 
 /**
  * The ladder a scale is measured on for this candidate, or null when the scale
- * is not matched for it: clarity and unknown keys; alcohol on a FORTIFIED
+ * is not matched for it: clarity, development (the bottle's age) and unknown keys; alcohol on a FORTIFIED
  * candidate (D19: never a distance); mousse on anything but SPARKLING. Hue is
  * the candidate colour's own hue row; unfortified alcohol is ALCOHOL_STOPS
  * (three steps, so medium → high is one step).
@@ -109,8 +110,6 @@ export function ladderFor(scale: string, candidate: TrainingCandidate): string[]
     case "noseIntensity":
     case "flavourIntensity":
       return INTENSITY_STOPS;
-    case "development":
-      return DEVELOPMENT_STOPS;
     case "sweetness":
       return SWEETNESS_LADDER;
     case "acidity":
