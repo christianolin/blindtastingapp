@@ -236,6 +236,18 @@ a raw subquery, regardless of which two tables look involved at a glance.
   intended order. Host-created designations land with `category` null (an
   "Other" group). Scoring is unchanged — still a plain `type_designation_id`
   FK comparison.
+  One row was added after that seed: "Cru Classé de Graves" (Quality
+  Classification, France/Bordeaux, `sort_order` 14 right after Premier Grand
+  Cru Classé; `20260928130000_cru_classe_de_graves.sql`, owner 2026-09-28).
+  It is the Graves classification's own label term (1953, revised 1959; every
+  estate now in Pessac-Léognan), not "Grand Cru Classé", the 1855 and
+  Saint-Émilion term. Both Pessac-Léognan typical wines carry it, and the
+  Library's `graves-cru-classe` system links to it (it pointed at Grand Cru
+  Classé before). The label reader matches it by folded exact name only:
+  "Grand Cru Classé de Graves", the wording many current labels print, still
+  resolves to no designation — there is no curated designation alias yet.
+  Never re-apply 20260717090000: its upsert rewrites `sort_order` and would
+  now tie rows.
 - Vintage is its own type: `vintage_kind` (`YEAR` | `NV` | `TAWNY`) plus
   `vintage_year` or `vintage_tawny_years`. Scoring: exact match → 2 pts;
   `YEAR` off by exactly 1 → 1 pt; anything else → 0.

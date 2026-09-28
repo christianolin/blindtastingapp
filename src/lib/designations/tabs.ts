@@ -33,6 +33,7 @@ export const DESIGNATION_TABS: DesignationTab[] = [
     glossaryTerms: [
       "Grand Cru Classé",
       "Premier Grand Cru Classé",
+      "Cru Classé de Graves",
       "Cru Bourgeois",
       "Cru Artisan",
       "Cru Exceptionnel",

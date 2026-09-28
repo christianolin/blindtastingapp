@@ -51,8 +51,16 @@ const normText = (s: string) =>
 // and all Burgundy vineyards — each tagged with the tab that hosts it.
 function buildIndex(data: DesignationsPageData): SearchEntry[] {
   const out: SearchEntry[] = [];
-  const push = (label: string, sub: string, tab: string) =>
+  const seen = new Set<string>();
+  // A glossary term can share its name with a system on the same tab
+  // ("Cru Classé de Graves"): one hit, not two. The key keeps `sub`, so a
+  // château in two systems (Haut-Brion: Médoc 1855 and Graves) keeps both.
+  const push = (label: string, sub: string, tab: string) => {
+    const key = `${tab}\u0000${sub}\u0000${label}`;
+    if (seen.has(key)) return;
+    seen.add(key);
     out.push({ label, sub, tab, norm: normText(label) });
+  };
   for (const t of DESIGNATION_TABS) {
     if (t.kind === "systems" || t.kind === "bordeaux") {
       for (const key of t.systemKeys ?? []) {

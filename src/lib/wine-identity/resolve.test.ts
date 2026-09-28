@@ -609,6 +609,38 @@ describe("step 8: a designation's bracketed short form, or its name without the 
   });
 });
 
+// 20260928130000: "Cru Classé de Graves" is its own France/Bordeaux row, beside
+// "Grand Cru Classé". Step 8 is folded equality (then the bracket rule), so the
+// exact term resolves, a longer label wording does not, and no country, nothing.
+describe("step 8: Cru Classé de Graves", () => {
+  const snap = (): ReferenceSnapshot => ({
+    countries: [{ id: "fr", name: "France" }],
+    regions: [], appellations: [], none: [], producers: [], grapes: [],
+    type_designations: [
+      { id: "gcc", name: "Grand Cru Classé", country_id: "fr" },
+      { id: "ccg", name: "Cru Classé de Graves", country_id: "fr" },
+    ],
+  });
+  const plain = { noGeographicIndication: false, appellation: null, region: null, producer: null, designation: null, grapes: [] };
+  const pick = async (country: string | null, designation: string) => {
+    const d = await resolve("vin-de-france.json", { ...plain, country, designation }, snap());
+    return [d.typeDesignationId, d.provenance.typeDesignation ?? null];
+  };
+  it("the exact term, any case or accents, resolves in France", async () => {
+    expect(await pick("France", "Cru Classé de Graves")).toEqual(["ccg", "label"]);
+    expect(await pick("France", "CRU CLASSE DE GRAVES")).toEqual(["ccg", "label"]);
+  });
+  it("Grand Cru Classé stays its own row", async () => {
+    expect(await pick("France", "Grand Cru Classé")).toEqual(["gcc", "label"]);
+  });
+  it("the longer label wording resolves to nothing (no alias yet)", async () => {
+    expect(await pick("France", "Grand Cru Classé de Graves")).toEqual([null, null]);
+  });
+  it("with no country read, nothing", async () => {
+    expect(await pick(null, "Cru Classé de Graves")).toEqual([null, null]);
+  });
+});
+
 // Owner approval 3 (2026-09-13): "a blank is safer than a wrong answer that looks
 // right" — narrowed by owner fix A (2026-09-19). A read with no appellation text
 // places its region from its region field alone (step 5). When the producer it

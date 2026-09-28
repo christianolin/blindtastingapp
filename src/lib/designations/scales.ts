@@ -485,7 +485,11 @@ export const BORDEAUX_TERMS: ScaleFigureContent = {
     },
     {
       name: "Grand Cru Classé",
-      note: "The classified tier in Saint-Émilion, and also the term used in the Graves ranking of 1959. Not to be confused with Saint-Émilion Grand Cru, which is an appellation any qualifying estate in the zone may use — no classification involved.",
+      note: "The classified tier in Saint-Émilion; many Médoc growths of 1855 also print \"Grand Cru Classé en 1855\". Not to be confused with Saint-Émilion Grand Cru, which is an appellation any qualifying estate in the zone may use — no classification involved.",
+    },
+    {
+      name: "Cru Classé de Graves",
+      note: "The Graves classification of 1953, revised in 1959: one tier with no ranking, each château classified for its red, its dry white or both. All are now in Pessac-Léognan, and many labels read \"Grand Cru Classé de Graves\". Haut-Brion is also an 1855 First Growth.",
     },
     {
       name: "Cru Bourgeois",

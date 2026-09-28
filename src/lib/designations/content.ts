@@ -65,7 +65,7 @@ export const DESIGNATION_CONTENT: Record<string, DesignationContent> = {
   },
   "graves-cru-classe": {
     intro:
-      "The Cru Classé de Graves (1959) is a single flat tier — châteaux classified for red wine, white wine, or both. All lie within what is now Pessac-Léognan.",
+      "The Cru Classé de Graves (1953, revised 1959) is a single flat tier — châteaux classified for red wine, white wine, or both. All lie within what is now Pessac-Léognan.",
     pyramid: [{ name: "Cru Classé", color: "#5C1A2B" }],
   },
   "burgundy-grand-cru": {
