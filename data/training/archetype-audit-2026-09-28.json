@@ -1,0 +1,3445 @@
+{
+ "audit": "Training-room typical-wine audit, 2026-09-28",
+ "owner_request": "double check the typical wines. Its very very good right now but i want it to be perfect",
+ "method": "14 regional batches + 3 cross-set passes (structure; aroma groups and signatures; grapes, designations, ages, places); each proposal voted by three independent checks (WSET/MW examiner, source-checker, effect on the ranking); applied: majority-accepted changes plus owner-list items the synthesis recommended.",
+ "migration": "supabase/migrations/20260928120000_archetype_audit.sql",
+ "changes": [
+  {
+   "arch": "A typical Margaux",
+   "op": "aroma_add",
+   "term": "violet",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "bordeaux-1",
+     "why": "Violet/floral perfume is the textbook hallmark that separates Margaux from the other Médoc communes. Without a Floral group, a taster who notes violet on a Margaux is told floral isn't typical. No other Bordeaux archetype in the batch has violet as a signature (Cahors carries it without the flag), so it discriminates within the region call. Pauillac, Saint-Julien and Saint-Estèphe all share cedar, so Margaux currently has no signature at all.",
+     "sources": [
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/",
+      "Oxford Companion to Wine, 'Margaux' (the most perfumed, elegant Médoc wines)",
+      "https://www.wineinvestment.com/learn/wine/bordeaux/margaux/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-8",
+     "why": "Margaux is the most perfumed and floral of the Médoc communes (violets), and violet is the most-cited distinguishing note. Right now a taster who picks violet or floral on a Margaux is told Floral is not typical.",
+     "sources": [
+      "https://www.vivino.com/wine-styles/bordeaux-left-bank-margaux",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/",
+      "Oxford Companion to Wine, 'Margaux'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-3",
+     "why": "A floral, violet-scented perfume is THE classic trait that separates Margaux from the other Médoc communes. Today a taster who notes violet is told Floral is not typical, which is the Châteauneuf model case again.",
+     "sources": [
+      "https://www.wine-searcher.com/regions-margaux",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/",
+      "Oxford Companion to Wine, 'Margaux' (the most perfumed Médoc commune)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-4",
+     "why": "Margaux is the only Médoc commune without a signature. Its real discriminator against Pauillac, Saint-Julien and Saint-Estèphe is the floral perfume, and no other Bordeaux archetype carries violet.",
+     "sources": [
+      "https://www.wine-searcher.com/regions-margaux",
+      "https://www.grapeguru.de/en/knowledge/wine-regions/margaux"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "description",
+   "to": "Cabernet-led Médoc from thin, gravelly soils: blackcurrant with a violet perfume and cedar, over fine, silky tannin — lighter-framed and more fragrant than Pauillac or Saint-Estèphe. Tobacco and leather come with bottle age.",
+   "from": "Left-bank Cabernet-led claret — blackcurrant, cedar and tobacco with firm, structured tannin.",
+   "evidence": [
+    {
+     "id": "bordeaux-2",
+     "why": "The current text is generic enough to fit any Left Bank wine and leaves out the giveaway: perfume and violets, silky rather than massive tannin, and a lighter frame than Pauillac. The other Médoc descriptions each name what sets their commune apart; this one doesn't.",
+     "sources": [
+      "Oxford Companion to Wine, 'Margaux'",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "designations",
+   "to": [
+    "Grand Cru Classé"
+   ],
+   "from": [],
+   "evidence": [
+    {
+     "id": "bordeaux-3",
+     "why": "Margaux has the most 1855 classed growths of any commune (21), and their labels read 'Grand Cru Classé en 1855'. Pauillac, Saint-Julien and Saint-Estèphe all carry Grand Cru Classé, so leaving it off Margaux costs a correct taster 2 points and is inconsistent.",
+     "sources": [
+      "1855 Classification (Oxford Companion to Wine, 'classed growths')",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-10",
+     "why": "Margaux has the most 1855 classed growths of any commune (21), and they hold most of its vineyard. Pauillac and Saint-Julien already carry Grand Cru Classé, so a null on Margaux (quality 90–95, classed-growth level) is an inconsistency that costs a correct taster 2 points.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Bordeaux_Wine_Official_Classification_of_1855",
+      "Oxford Companion to Wine, 'Margaux'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "age",
+   "to": [
+    8,
+    25
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "bordeaux-4",
+     "why": "No value is set. A classed Margaux is usually drunk from about 8 to 25 years, the same window as Saint-Julien (8–25) and within Pauillac's (8–30).",
+     "sources": [
+      "Jancis Robinson / Oxford Companion to Wine on Médoc cru classé ageing",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-12",
+     "why": "No age is set. Peers are Pauillac 8-30 and Saint-Julien 8-25, and the RUBY-GARNET hue assumes this window.",
+     "sources": [
+      "https://www.jancisrobinson.com/learn/vintages/bordeaux"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-17",
+     "why": "A classed-growth Médoc is usually met 8–25 years from vintage; Margaux opens a little earlier than Pauillac (8–30) and matches Saint-Julien (8–25).",
+     "sources": [
+      "Oxford Companion to Wine, 'Bordeaux: ageing'",
+      "Internal consistency with the Médoc archetypes"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "sat",
+   "key": "finish",
+   "from": [
+    "LONG",
+    "LONG"
+   ],
+   "to": [
+    "MEDIUM_PLUS",
+    "LONG"
+   ],
+   "evidence": [
+    {
+     "id": "bordeaux-5",
+     "why": "A single LONG value is narrower than every other Médoc commune ([MEDIUM_PLUS, LONG]). It penalises the many typical Margaux, including crus bourgeois and lesser classed growths, that finish medium(+).",
+     "sources": [
+      "WSET Level 3 SAT",
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/margaux/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-10",
+     "why": "The single value LONG is stricter than for Pauillac, Saint-Julien and Saint-Estèphe (all MEDIUM_PLUS-LONG). A typical Margaux, many of them cru bourgeois, often finishes medium(+).",
+     "sources": [
+      "https://www.bordeaux.com/en/designations/medoc/",
+      "WSET Level 3: Bordeaux"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "sat",
+   "key": "alcohol",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM",
+    "HIGH"
+   ],
+   "evidence": [
+    {
+     "id": "bordeaux-7",
+     "why": "Recent warm vintages of Margaux (2015–2022) are regularly 14% or more. Every other Médoc and Right Bank archetype uses [MEDIUM, HIGH]; this is the only one fixed at MEDIUM.",
+     "sources": [
+      "Producer technical sheets (e.g. Château Palmer and Château Margaux 2018–2022 at 14%+)",
+      "WSET Level 3 SAT (high = 14%+)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Saint-Estèphe",
+   "op": "designations",
+   "to": [
+    "Grand Cru Classé",
+    "Cru Bourgeois"
+   ],
+   "from": [
+    "Grand Cru Classé"
+   ],
+   "evidence": [
+    {
+     "id": "bordeaux-12",
+     "why": "Saint-Estèphe has only 5 classed growths but the largest concentration of Crus Bourgeois in the Médoc (around 35 châteaux, e.g. Ormes de Pez, de Pez, Le Crock). A typical bottle is at least as likely to carry Cru Bourgeois as Grand Cru Classé.",
+     "sources": [
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/st-estephe/",
+      "https://en.wikipedia.org/wiki/Cru_Bourgeois"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-9",
+     "why": "Saint-Estèphe has only five 1855 classed growths in about 1,200 ha. It is the Médoc commune most dominated by Crus Bourgeois (15 in the 2020 classification, 35 historically), so a typical bottle (quality 86–95) is as likely to carry 'Cru Bourgeois' as 'Grand Cru Classé'.",
+     "sources": [
+      "https://www.thewinecellarinsider.com/bordeaux-wine-producer-profiles/bordeaux/st-estephe/",
+      "https://www.crus-bourgeois.com/app/uploads/2020/03/Press-kit-2020-Crus-Bourgeois-du-M%C3%A9doc-Classification.pdf"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Pomerol",
+   "op": "aroma_add",
+   "term": "red plum",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "bordeaux-15",
+     "why": "Merlot-led Pomerol is routinely described with red as well as black fruit (fresh plum, damson, red cherry). Saint-Émilion already carries red plum. With no Red fruit group, a taster who notes plum or red cherry on a Pomerol is told Red fruit isn't typical, which is the same fault as the Châteauneuf case in the brief.",
+     "sources": [
+      "https://www.thedrinksbusiness.com/2022/05/tasting-notes-pomerol/",
+      "https://www.bordeaux.com/en/designations/saint-emilion-pomerol-fronsac/pomerol/",
+      "Oxford Companion to Wine, 'Merlot'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chablis",
+   "op": "age",
+   "to": [
+    1,
+    5
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "chablis-macon-1",
+     "why": "Missing value. Village Chablis is released about 18 months after the harvest and the BIVB advises drinking it young, at 2-3 years, so it is usually met at 1-5 years. That puts it above Petit Chablis and below premier cru (3-15).",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/chablis-and-chablis-premier-cru,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MjU5Jnw%3D",
+      "Oxford Companion to Wine, 'Chablis'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-19",
+     "why": "Village Chablis is mostly drunk young, between Petit Chablis and Premier Cru (3–15).",
+     "sources": [
+      "https://www.chablis-wines.com/",
+      "Oxford Companion to Wine, 'Chablis'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chablis",
+   "op": "aroma_signature",
+   "term": "wet stones",
+   "group": "Other",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "chablis-macon-8",
+     "why": "Wet stones is a signature on Chablis Premier Cru and Grand Cru but not on village Chablis, the most common bottle. A taster who notes the classic Chablis minerality on a village wine gets the bonus only on 1er and GC, so the room ranks them above plain Chablis. Kimmeridgian mineral character (flint, wet stone) is the textbook marker of Chablis at every level.",
+     "sources": [
+      "https://www.chablis-wines.com/tasting/minerality/minerality,3310,16328.html",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/chablis-and-chablis-premier-cru,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MjU5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Petit Chablis",
+   "op": "age",
+   "to": [
+    1,
+    3
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "chablis-macon-2",
+     "why": "Missing value. The BIVB says Petit Chablis is drunk young, ideally within two years. That matches the 'drink young' in the description.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/petit-chablis,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzY2Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-20",
+     "why": "Petit Chablis is made to be drunk young; the archetype's own description says 'drink young'.",
+     "sources": [
+      "https://www.chablis-wines.com/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Petit Chablis",
+   "op": "aroma_add",
+   "term": "acacia",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "chablis-macon-7",
+     "why": "The BIVB's Petit Chablis profile leads with white flowers (may blossom, acacia) before citrus and gunflint. A floral note is a legitimate pick on a typical Petit Chablis, and the profile has only 4 nose terms.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/petit-chablis,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzY2Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: modify"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Mâconnais",
+   "op": "age",
+   "to": [
+    1,
+    4
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "chablis-macon-3",
+     "why": "Missing value. Mâcon and Mâcon-Villages whites are mostly unoaked, fruit-led wines made for early drinking and usually met at 1-4 years. That is shorter than Pouilly-Fuissé (2-8) and close to Bourgogne blanc (1-5).",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/macon-villages,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzM1Jnw%3D",
+      "Oxford Companion to Wine, 'Mâconnais'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-24",
+     "why": "Mâcon-Villages is unoaked or lightly oaked and made for early drinking. It sits below Pouilly-Fuissé (2–8).",
+     "sources": [
+      "Oxford Companion to Wine, 'Mâconnais'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Mâconnais",
+   "op": "aroma_add",
+   "term": "acacia",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "chablis-macon-4",
+     "why": "Floral is missing. The BIVB's official Mâcon-Villages profile opens with white flowers: broom, white rose, acacia and honeysuckle. A taster who notes acacia or honeysuckle on a young Mâcon (the most common descriptor) is currently told that Floral is not typical.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/macon-villages,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzM1Jnw%3D",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/gallery_files/site/321/402/79294/79301.pdf"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chablis Grand Cru",
+   "op": "sat",
+   "key": "flavourIntensity",
+   "from": [
+    "PRONOUNCED",
+    "PRONOUNCED"
+   ],
+   "to": [
+    "MEDIUM_PLUS",
+    "PRONOUNCED"
+   ],
+   "evidence": [
+    {
+     "id": "chablis-macon-9",
+     "why": "A single fixed value is too narrow for a style that is not fixed. Grand cru Chablis is restrained and tight in youth and within its 5-20 year window, and it is often recorded as medium(+). The profile's own nose range is already [MEDIUM_PLUS, PRONOUNCED], so the flavour range should match.",
+     "sources": [
+      "https://www.chablis-wines.com/explore/chablis-appellations/chablis-grand-cru/chablis-grand-cru,1820,7663.html",
+      "Oxford Companion to Wine, 'Chablis'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: reject"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chablis Premier Cru",
+   "op": "aroma_add",
+   "term": "blossom",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "chablis-macon-10",
+     "why": "The description says 'steely… mostly unoaked', and the BIVB's premier cru profile gives mineral/tight when young and 'flowery' with age, with no butter. Village Chablis and grand cru carry no malolactic aroma at all, so butter on the 1er's nose is the odd one out. Palate butter can stay for the full malolactic most Chablis undergoes.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/chablis-and-chablis-premier-cru,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MjU5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: modify",
+      "matcher: reject"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Pouilly-Fuissé",
+   "op": "aroma_add",
+   "term": "hazelnut",
+   "group": "White wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "chablis-macon-11",
+     "why": "The BIVB and producer descriptions of Pouilly-Fuissé name almond and hazelnut as core aromas: citrus and white fruit when young, then hazelnut and toasted almond after a few years. That falls within the typical 2-8 year window. A taster noting hazelnut on a typical Pouilly-Fuissé would currently get no group credit.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/pouilly-fuisse,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzcxJnw%3D",
+      "https://hospices-beaune.com/en/appellations/pouilly-fuisse"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Beaune",
+   "op": "age",
+   "to": [
+    2,
+    8
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "cotedor-white-1",
+     "why": "No age hint is set. A typical Côte de Beaune village white (the level this generic profile describes: medium to medium(+) acidity, youthful to developing) is usually drunk 2–8 years from the vintage. That sits between Bourgogne blanc (1–5) and the Meursault/Puligny/Chassagne entries (3–12), which are premier-cru-leaning.",
+     "sources": [
+      "Oxford Companion to Wine, 'Côte de Beaune' / 'Burgundy' (village whites drink from about 3 to 8 years)",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/meursault,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzQ5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-22",
+     "why": "The benchmark Côte de Beaune village white is usually met 3–10 years from vintage, in line with Meursault/Puligny/Chassagne (3–12).",
+     "sources": [
+      "Internal consistency with the Côte de Beaune white archetypes"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Beaune",
+   "op": "aroma_remove",
+   "term": "toast",
+   "group": "Yeast",
+   "kinds": [
+    "PALATE"
+   ],
+   "evidence": [
+    {
+     "id": "cotedor-white-2",
+     "why": "In barrel-fermented white Burgundy, the toast comes from toasted oak barrels. It is not autolytic yeast toast (Champagne). The seed's distinct-on-term lookup probably picked the Yeast row by sort order. Every sibling (Meursault, Puligny, Chassagne, Corton-Charlemagne) carries Oak | toast. Yeast stays covered by 'biscuit' on the nose, so nothing is lost at group level.",
+     "sources": [
+      "WSET Level 3 SAT: toast is listed under both Yeast (autolysis) and Oak; for oaked still Chardonnay it is the Oak descriptor",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/chassagne-montrachet,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9Mjc2Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Beaune",
+   "op": "aroma_add",
+   "term": "toast",
+   "group": "Oak",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cotedor-white-3",
+     "why": "This is the replacement for the Yeast | toast row: the toast in white Burgundy is oak-derived.",
+     "sources": [
+      "WSET Level 3 SAT (Oak: vanilla, cloves, … toast …)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Beaune",
+   "op": "aroma_add",
+   "term": "wet stones",
+   "group": "Other",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cotedor-white-4",
+     "why": "The profile's own description ends on 'a long, mineral finish', but it carries no mineral term. Every Côte d'Or white neighbour (Puligny, Chassagne, Corton-Charlemagne, and the Chablis tiers) carries flint or wet stones. A taster who notes wet stones or flint on a generic Côte de Beaune white is currently told the mineral group is atypical.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/meursault,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzQ5Jnw%3D",
+      "https://en.wikipedia.org/wiki/Puligny-Montrachet_wine"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Meursault",
+   "op": "aroma_add",
+   "term": "lemon",
+   "group": "Citrus fruit",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cotedor-white-6",
+     "why": "Citrus is present in virtually every Meursault. The BIVB lists 'citrus fruits' among Meursault's aromas, and critics routinely cite lemon / lemon-cream. At the moment a taster who notes lemon on a typical Meursault is told citrus is not typical. Meursault is the only Côte d'Or white in the batch without a Citrus fruit group.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/meursault,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzQ5Jnw%3D",
+      "https://www.decanter.com/premium/meursault-regional-profile-33-wines-tasted-510989/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chassagne-Montrachet",
+   "op": "aroma_add",
+   "term": "hazelnut",
+   "group": "White wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cotedor-white-8",
+     "why": "The profile's own description says Chassagne has 'a hint of hazelnut', and the BIVB lists hazelnut among Chassagne blanc's aromas. As things stand, Chassagne's aromas and sat are exactly the same as Puligny's, so the room cannot tell the two apart. This one term, which is also the documented difference, restores the distinction the description claims.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/chassagne-montrachet,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9Mjc2Jnw%3D",
+      "https://www.drouhin.com/en_US/wine/chassagne-montrachet-blanc/2020"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Nuits",
+   "op": "age",
+   "to": [
+    4,
+    12
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-nuits-1",
+     "why": "There is no age hint at the moment. A typical Côte de Nuits red (village level from the named communes, quality 89-93) is usually drunk between about 4 and 15 years. That matches the batch's own Gevrey-Chambertin and Chambolle-Musigny (4-15).",
+     "sources": [
+      "Oxford Companion to Wine (4th ed.), 'Côte d'Or' / 'Burgundy' entries on drinking windows",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/gevrey-chambertin,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzA5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-23",
+     "why": "A district-level Côte de Nuits red opens slightly earlier than the villages (Gevrey 4–15, Nuits-Saint-Georges 5–18).",
+     "sources": [
+      "Internal consistency with the Côte de Nuits village archetypes"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte de Nuits",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-nuits-5",
+     "why": "Same reason as Vosne. Red Burgundy is pale to medium in intensity, and a single MEDIUM scores a PALE note at 0.2. Gevrey and Nuits-Saint-Georges, the deepest-coloured villages of the district, already use [MEDIUM_MINUS, MEDIUM].",
+     "sources": [
+      "WSET Level 3 Award in Wines, 'Wines: Looking Behind the Label' – Pinot Noir / Burgundy"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "age",
+   "to": [
+    5,
+    15
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-nuits-2",
+     "why": "There is no age hint. Village Vosne is usually opened at about 5-15 years. The Interprofession says it can seem austere at first and needs bottle time to become fleshy. This sits with Gevrey/Chambolle (4-15) and Nuits-Saint-Georges (5-18).",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D",
+      "Oxford Companion to Wine (4th ed.), 'Vosne-Romanée'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-25",
+     "why": "Village and premier cru Vosne is usually met 5–18 years from vintage, in line with Chambolle (4–15) and Nuits-Saint-Georges (5–18).",
+     "sources": [
+      "Internal consistency with the Côte de Nuits village archetypes"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "sat",
+   "key": "finish",
+   "from": [
+    "LONG",
+    "LONG"
+   ],
+   "to": [
+    "MEDIUM_PLUS",
+    "LONG"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-nuits-3",
+     "why": "A single-value LONG range only makes sense where the style fixes it. A typical village Vosne often has a medium(+) finish, and only premier/grand cru is reliably long. Every other Côte de Nuits profile in the batch uses [MEDIUM_PLUS, LONG], so this range punishes a correct taster for no reason.",
+     "sources": [
+      "WSET Level 3 Award in Wines, 'Wines: Looking Behind the Label' – Burgundy Pinot Noir quality levels",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-nuits-4",
+     "why": "WSET describes Côte d'Or Pinot Noir as pale to medium ruby. The note offers only PALE/MEDIUM/DEEP, so with the current single MEDIUM a taster who writes PALE is two steps out (0.2). Widening to MEDIUM_MINUS puts PALE one step out and matches Gevrey and Nuits-Saint-Georges.",
+     "sources": [
+      "WSET Level 3 Award in Wines, 'Wines: Looking Behind the Label' – Pinot Noir / Burgundy",
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "aroma_add",
+   "term": "black cherry",
+   "group": "Black fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cote-de-nuits-6",
+     "why": "Vosne is the darker-fruited, more opulent sibling of Chambolle. Typical descriptions name black cherry, and the Interprofession names bilberry and blackcurrant. Without a Black fruit group, the room tells a taster who notes black cherry that it isn't typical, even though the generic Côte de Nuits, Gevrey and Nuits-Saint-Georges all carry it.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D",
+      "https://www.burgundy-report.com/burgundy-report-extra/10-2006/vosne-romanee-a-profile/",
+      "Jasper Morris MW, 'Inside Burgundy' – Vosne-Romanée"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "aroma_add",
+   "term": "cloves",
+   "group": "Oak",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cote-de-nuits-7",
+     "why": "'Ripe fruit over spices' is the Interprofession's lead descriptor for Vosne, and critics routinely call its spice 'exotic'. Vosne estates also commonly use a sizeable share of new barrels. Cloves (Oak) covers both, and it adds the one group, sweet spice/oak, that a taster would legitimately pick here and that the profile lacks. Cinnamon (PRIMARY/Spice) would be the alternative if the owner prefers to treat the spice as primary.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D",
+      "Jasper Morris MW, 'Inside Burgundy' – Vosne-Romanée",
+      "Oxford Companion to Wine, 'Vosne-Romanée'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Vosne-Romanée",
+   "op": "description",
+   "to": "Velvety, dense Côte de Nuits Pinot Noir: red and black cherry with violet, rose and sweet spice, fleshier than Chambolle yet finer-grained than Gevrey or Nuits-Saint-Georges. Forest floor, earth and mushroom build with age.",
+   "from": "Silky, perfumed Côte de Nuits Pinot Noir — red fruit, floral lift, fine tannin, savoury with age.",
+   "evidence": [
+    {
+     "id": "cote-de-nuits-8",
+     "why": "The current text leaves out the giveaways a taster uses to tell Vosne from Chambolle: velvet texture, density, spice and darker fruit. Without them it reads as a description of Chambolle. The other village profiles in the batch all position themselves against their neighbours.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/vosne-romanee,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9NDA3Jnw%3D",
+      "Jasper Morris MW, 'Inside Burgundy'"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: accept",
+      "matcher: modify"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Gevrey-Chambertin",
+   "op": "aroma_add",
+   "term": "liquorice",
+   "group": "Spice",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cote-de-nuits-9",
+     "why": "The Bourgogne Interprofession lists liquorice first among Gevrey's maturing aromas ('liquorices, leather and fur, with gamey notes and hints of underbrush'), and liquorice is a standard descriptor for the village's darker, more muscular style. At the moment a taster who notes liquorice gets 'Spice isn't typical'.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/gevrey-chambertin,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzA5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Gevrey-Chambertin",
+   "op": "aroma_add",
+   "term": "meat",
+   "group": "Red wine",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cote-de-nuits-15",
+     "why": "Gevrey's hallmark is meaty/gamey/fur ('rich and meaty', per the Interprofession), not the smoked-meat/bacon or olive of Syrah. Smoked meat would blur Gevrey into Northern Rhône Syrah. The description already says 'meaty', but the aroma list lacks the existing 'meat' term.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/gevrey-chambertin,2458,9253.html?args=Y29tcF9pZD0yMjc4JmFjdGlvbj12aWV3RmljaGUmaWQ9MzA5Jnw%3D"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Pommard",
+   "op": "aroma_add",
+   "term": "red cherry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-1",
+     "why": "Every other Burgundy Pinot in the region call carries Red fruit, and the BIVB's own Pommard description names groseille (redcurrant, mistranslated as 'gooseberry') and cherry pit next to blackberry and plum. As it stands, a taster who notes red cherry on a Pommard is told red fruit isn't typical, the same failure the Châteauneuf fix addressed. Dark fruit stays dominant: this adds one red term and removes nothing.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/pommard,2458,9253.html (BIVB: 'blackberry, bilberry, or gooseberry, cherry pit and ripe plum')",
+      "Oxford Companion to Wine, 'Pommard'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Pommard",
+   "op": "sat",
+   "key": "tannin",
+   "from": [
+    "MEDIUM_PLUS",
+    "HIGH"
+   ],
+   "to": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-2",
+     "why": "The typical Pommard is a village wine met at 5–18 years. By then the BIVB's 'chewy tannins' have 'properly smoothed down' and read as medium(+), very rarely high, because Pinot Noir seldom reaches WSET 'high' tannin. At a 1.5 weight, a taster who writes MEDIUM for a polished modern Pommard now scores only 0.6. Moving the range down one step keeps M+ as the core, still separates Pommard from Volnay (M-–M), and leaves HIGH only one step out.",
+     "sources": [
+      "https://www.bourgogne-wines.com/wine-and-terroir/bourgogne-and-its-appellations/pommard,2458,9253.html",
+      "https://www.vinovest.co/blog/pommard ('medium bodied, with balanced tannin and acidity')"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte Chalonnaise",
+   "op": "age",
+   "to": [
+    3,
+    8
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-5",
+     "why": "Mercurey, Givry and Rully reds are made and bought for early drinking: the 'country cousins' of the Côte d'Or, valued for early drinkability. A village bottle is usually met 3–8 years from vintage, just above Bourgogne rouge (2–6) and below the Côte de Beaune villages (4–15/5–18).",
+     "sources": [
+      "https://www.wine-searcher.com/regions-cote+chalonnaise",
+      "https://www.jancisrobinson.com/learn/wine-regions/france/burgundy/cote-chalonnaise"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-21",
+     "why": "Chalonnaise red (Mercurey, Givry) is an earlier-maturing Burgundy, usually drunk 2–8 years from vintage.",
+     "sources": [
+      "Oxford Companion to Wine, 'Côte Chalonnaise'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte Chalonnaise",
+   "op": "sat",
+   "key": "acidity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "to": [
+    "MEDIUM_PLUS",
+    "HIGH"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-6",
+     "why": "Côte Chalonnaise Pinot comes from cooler, more exposed slopes and is known as crisp and high in acid (Rully 'specializes in crisp, high-acid wines'). It is no softer than Bourgogne rouge or the Côte de Beaune villages, which are all M+–HIGH here. The current range gives a taster who writes HIGH only 0.6 (weight 1.5), and it makes this the lowest-acid red Burgundy in the region call, which is backwards.",
+     "sources": [
+      "https://www.wine-searcher.com/regions-cote+chalonnaise",
+      "Oxford Companion to Wine, 'Côte Chalonnaise'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte Chalonnaise",
+   "op": "sat",
+   "key": "body",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-7",
+     "why": "The single value is too narrow (the brief's norm is 1–2 steps), and Chalonnaise reds are lighter and leaner than Côte d'Or villages. A typical Givry or Rully is often recorded medium(-), the same as Bourgogne rouge (M-–M).",
+     "sources": [
+      "https://www.wine-searcher.com/regions-cote+chalonnaise",
+      "Oxford Companion to Wine, 'Côte Chalonnaise'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte Chalonnaise",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "cote-de-beaune-red-8",
+     "why": "The single value is too narrow. Chalonnaise Pinot is pale-to-medium ruby, and a taster who writes PALE (the note offers only PALE/MEDIUM/DEEP) now scores 0.2. Bourgogne rouge is PALE–MEDIUM, Volnay and Chambolle are PALE–MEDIUM, and Gevrey and NSG are M-–M.",
+     "sources": [
+      "Oxford Companion to Wine, 'Côte Chalonnaise'",
+      "WSET Level 3 Award in Wines, Burgundy chapter (Pinot Noir: pale-to-medium ruby)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Châteauneuf-du-Pape",
+   "op": "sat",
+   "key": "alcohol",
+   "from": [
+    "MEDIUM",
+    "HIGH"
+   ],
+   "to": [
+    "HIGH",
+    "HIGH"
+   ],
+   "evidence": [
+    {
+     "id": "rhone-provence-1",
+     "why": "Typical CdP is 14–15.5% abv (Grenache-dominant, very warm site); a MEDIUM (11–13.9%) CdP is atypical today. Gigondas in the same batch is already HIGH–HIGH, and the description itself says 'warm'. Narrowing also separates it from the northern Rhône Syrahs (Côte-Rôtie/Crozes MEDIUM).",
+     "sources": [
+      "https://www.jancisrobinson.com/articles/chateauneufs-dilemma",
+      "https://www.laithwaites.co.uk/blog/wines-around-the-world/complete-guide-chateauneuf-du-pape",
+      "Oxford Companion to Wine, 'Châteauneuf-du-Pape'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-3",
+     "why": "This is out of line with its peer Gigondas (HIGH-HIGH) and the other warm Grenache, Amarone, Primitivo and Priorat profiles (all HIGH). Typical Châteauneuf runs 14-15.5% (legal minimum 12.5%). WSET's cut-off for high alcohol is 14%, and high alcohol is the textbook marker of Southern Rhône Grenache.",
+     "sources": [
+      "https://winefolly.com/deep-dive/about-chateauneuf-du-pape-wine/",
+      "https://www.bbr.com/region-1026-chateauneuf-du-pape",
+      "WSET Level 3 Award in Wines: Southern Rhône"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Châteauneuf-du-Pape",
+   "op": "age",
+   "to": [
+    4,
+    15
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "rhone-provence-2",
+     "why": "Missing value. Red CdP is usually drunk between about 5 and 15 years; that matches the profile's RUBY–GARNET colour and DEVELOPING development, and sits with Gigondas (4–15).",
+     "sources": [
+      "Oxford Companion to Wine, 'Châteauneuf-du-Pape'",
+      "https://www.jancisrobinson.com/articles/chateauneuf-du-pape"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-4",
+     "why": "No age is set. Most bottles are opened between the mid-term and about 15 years, which matches the current DEVELOPING and RUBY-GARNET values.",
+     "sources": [
+      "https://www.bbr.com/region-1026-chateauneuf-du-pape",
+      "https://www.jancisrobinson.com/learn/vintages"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-28",
+     "why": "Châteauneuf is usually met 4–15 years from vintage, matching Gigondas (4–15).",
+     "sources": [
+      "Oxford Companion to Wine, 'Châteauneuf-du-Pape'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Châteauneuf-du-Pape",
+   "op": "aroma_signature",
+   "term": "dried herbs",
+   "group": "Herbal",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "rhone-provence-3",
+     "why": "Garrigue is the textbook hallmark of CdP. At the moment only Gigondas carries dried herbs as a signature, so a taster who notes garrigue on a CdP gets a bonus that pushes Gigondas above CdP. Both wines should carry it (or neither); CdP has no signature at all right now.",
+     "sources": [
+      "https://www.laithwaites.co.uk/blog/wines-around-the-world/complete-guide-chateauneuf-du-pape",
+      "Oxford Companion to Wine, 'garrigue'",
+      "WSET Level 3 Wines, Southern Rhône"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Gigondas",
+   "op": "aroma_add",
+   "term": "kirsch",
+   "group": "Red wine",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "rhone-provence-5",
+     "why": "The profile's own description says 'kirsch-like black cherry', but the lexicon term that exists (kirsch, TERTIARY/Red wine) is not carried.",
+     "sources": [
+      "Oxford Companion to Wine, 'Gigondas' / 'Grenache'",
+      "https://www.jancisrobinson.com/learn/grape-varieties/red/grenache"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte-Rôtie",
+   "op": "sat",
+   "key": "colourHue",
+   "from": [
+    "PURPLE",
+    "RUBY"
+   ],
+   "to": [
+    "RUBY",
+    "GARNET"
+   ],
+   "evidence": [
+    {
+     "id": "rhone-provence-6",
+     "why": "Côte-Rôtie is usually drunk from about 6 to 20 years, and at that age it is ruby moving to garnet, not purple (the brief's own example). Hermitage is already RUBY–GARNET.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/C%C3%B4te-R%C3%B4tie_AOC",
+      "https://en.lespassionnesduvin.com/les-vins/rhone/cote-rotie-aop.html",
+      "Oxford Companion to Wine, 'Côte-Rôtie'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-1",
+     "why": "Côte-Rôtie usually opens around 7 years after vintage and peaks at about 15, so the typical bottle is ruby going garnet, not purple. Hermitage (8-30) is already RUBY-GARNET. The brief uses this wine as its own example of a hue that is wrong for the age.",
+     "sources": [
+      "https://www.jancisrobinson.com/learn/vintages/northern-rhone",
+      "https://www.farrvintners.com/blog/post.php?post=1872",
+      "https://en.lespassionnesduvin.com/les-vins/rhone/cote-rotie-aop.html"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte-Rôtie",
+   "op": "age",
+   "to": [
+    6,
+    20
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "rhone-provence-7",
+     "why": "Missing value. Good Côte-Rôtie needs roughly 10–15 years to show fully, and is commonly opened from about 6 years; this fits between Crozes (2–8) and Hermitage (8–30).",
+     "sources": [
+      "https://en.wikipedia.org/wiki/C%C3%B4te-R%C3%B4tie_AOC",
+      "https://www.openingabottle.com/first-taste-guide-to-cote-rotie/"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-2",
+     "why": "Traditionally it opens at around 7 years and peaks near 15; ripe modern vintages are drunk a little earlier. This also anchors the RUBY-GARNET hue.",
+     "sources": [
+      "https://www.farrvintners.com/blog/post.php?post=1872",
+      "https://www.jancisrobinson.com/learn/vintages/northern-rhone"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-29",
+     "why": "Côte-Rôtie is usually drunk 6–20 years from vintage (the brief's own example is 8–15). It sits between Crozes (2–8) and Hermitage (8–30).",
+     "sources": [
+      "Oxford Companion to Wine, 'Côte-Rôtie'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte-Rôtie",
+   "op": "aroma_signature",
+   "term": "black pepper",
+   "group": "Spice",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "rhone-provence-8",
+     "why": "Crozes-Hermitage and Hermitage both carry black pepper as a signature, but Côte-Rôtie (the most perfumed and peppery of the three) carries none. A taster who notes pepper on a Côte-Rôtie is therefore steered to Hermitage or Crozes. Côte-Rôtie currently has no signature at all.",
+     "sources": [
+      "https://www.openingabottle.com/first-taste-guide-to-cote-rotie/",
+      "Oxford Companion to Wine, 'Côte-Rôtie' / 'rotundone'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte-Rôtie",
+   "op": "aroma_signature",
+   "term": "violet",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "rhone-provence-9",
+     "why": "The violet/floral lift, partly from co-fermented Viognier, is the classic marker that separates Côte-Rôtie from Hermitage and Cornas.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/C%C3%B4te-R%C3%B4tie_AOC",
+      "https://worldwebwines.ch/en/37-cote-rotie"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-6",
+     "why": "Côte-Rôtie is the only northern Rhône Syrah without a signature, so any Syrah hit favours Hermitage or Crozes. Violet, lifted by Viognier co-fermentation, is its recognised perfume hallmark. Hermitage and Crozes carry violet without a signature, so this separates them.",
+     "sources": [
+      "https://www.openingabottle.com/first-taste-guide-to-cote-rotie/",
+      "Jancis Robinson / Oxford Companion to Wine, 'Côte-Rôtie' (Viognier co-fermentation, perfume)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Côte-Rôtie",
+   "op": "aroma_add",
+   "term": "raspberry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "lens-aroma-5",
+     "why": "Raspberry is one of the most often cited Côte-Rôtie notes. Côte-Rôtie is the lightest, most perfumed northern Rhône Syrah, often co-fermented with Viognier. Without Red fruit, a taster noting raspberry is told it is atypical, the same miss as Châteauneuf.",
+     "sources": [
+      "https://www.openingabottle.com/first-taste-guide-to-cote-rotie/",
+      "https://syrahqueen.com/cote-rotie/",
+      "Oxford Companion to Wine, 'Côte-Rôtie'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Bandol",
+   "op": "grape",
+   "which": "secondary",
+   "to": "Grenache",
+   "from": null,
+   "evidence": [
+    {
+     "id": "rhone-provence-12",
+     "why": "Red Bandol is a blend, not a varietal wine: Mourvèdre 50–95% (cahier des charges), with Grenache as the usual #2 and Cinsault. A null secondary tells a taster who calls 'Mourvèdre/Grenache' that there is no second grape.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Bandol",
+      "https://www.vinsocialclub.fr/magazine-vin/guide-du-vin/les-vins-de-bandol-des-rouges-puissants-et-elegants/",
+      "INAO cahier des charges AOC Bandol"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-5",
+     "why": "Red Bandol can never be a varietal wine. The cahier des charges caps Mourvèdre at 50–95% and requires at least two of Mourvèdre, Grenache and Cinsault; Grenache is the usual #2. A null secondary treats Bandol as 100% Mourvèdre.",
+     "sources": [
+      "https://extranet.inao.gouv.fr/fichier/PNO2022AOPBANDOL.pdf",
+      "https://fr.wikipedia.org/wiki/Bandol_(AOC)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Bandol",
+   "op": "age",
+   "to": [
+    5,
+    15
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "rhone-provence-13",
+     "why": "Missing value. The rules require at least 18 months in wood, so the wine is released at about 3 years, and it needs several more to soften its Mourvèdre tannin; it is typically drunk from 5 to 15 years. This matches the RUBY–GARNET colour.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Bandol",
+      "https://www.jancisrobinson.com/learn/grape-varieties/red/mourvedre"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-14",
+     "why": "No age is set. Bandol rouge needs at least 18 months in wood and is typically opened at about 5-15 years, which matches its RUBY-GARNET hue and YOUTHFUL-DEVELOPING development.",
+     "sources": [
+      "Bandol AOC cahier des charges (18 months élevage sous bois)",
+      "http://www.eliewine.com/2025/09/a-grape-of-memory-ten-provencal-producers-show-how-bandols-mourvedre-evolves-into-wines-of-haunting-complexity-and-depths-that-only-time-delivers-future-classics-in-a-tuck-away-pac/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-27",
+     "why": "Red Bandol needs at least 18 months in wood before release and is famously slow; it is usually met 5–15 years from vintage.",
+     "sources": [
+      "https://extranet.inao.gouv.fr/fichier/PNO2022AOPBANDOL.pdf",
+      "https://quench.me/longform/bandol-reds-that-age/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Bandol",
+   "op": "aroma_add",
+   "term": "game",
+   "group": "Red wine",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "rhone-provence-14",
+     "why": "The gamey, animal character of Mourvèdre is its hallmark (Oxford Companion; Jancis Robinson) and is found on the nose as well as the palate. Bandol currently has no signature at all. Gevrey also uses game as a signature, but the two are never neighbours on structure.",
+     "sources": [
+      "https://www.jancisrobinson.com/learn/grape-varieties/red/mourvedre",
+      "https://www.cellartours.com/blog/france/a-mover-and-shaker-mourvedre",
+      "Oxford Companion to Wine, 'Mourvèdre'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Bandol",
+   "op": "aroma_signature",
+   "term": "game",
+   "group": "Red wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "rhone-provence-14",
+     "why": "The gamey, animal character of Mourvèdre is its hallmark (Oxford Companion; Jancis Robinson) and is found on the nose as well as the palate. Bandol currently has no signature at all. Gevrey also uses game as a signature, but the two are never neighbours on structure.",
+     "sources": [
+      "https://www.jancisrobinson.com/learn/grape-varieties/red/mourvedre",
+      "https://www.cellartours.com/blog/france/a-mover-and-shaker-mourvedre",
+      "Oxford Companion to Wine, 'Mourvèdre'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Crozes-Hermitage",
+   "op": "aroma_add",
+   "term": "raspberry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "rhone-provence-15",
+     "why": "Young Crozes, much of it from the Chassis plain, very commonly shows red fruit (raspberry, red cherry) alongside the black fruit. Without the Red fruit group, a taster who notes raspberry is told red fruit is atypical.",
+     "sources": [
+      "https://wineanorak.com/2025/02/26/crozes-hermitage-my-pick-of-22-of-the-best-wines-from-this-interesting-appellation/",
+      "https://www.helensavage.com/tastings/crozes.html"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Champagne",
+   "op": "designations",
+   "to": [
+    "Brut"
+   ],
+   "from": [],
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-1",
+     "why": "About 85-90% of Champagne shipped is Brut and it is printed on the label of nearly every typical bottle. Franciacorta and Cava already carry Brut, so a taster who correctly calls Champagne 'Brut' currently gets 0 of 2 points on the most typical sparkling wine of all.",
+     "sources": [
+      "https://maisons-champagne.com/en/appellation/stages-in-winemaking/preparation-for-shipment-many-years-later/article/dosage",
+      "https://www.champagne.fr/en/about-champagne/how-champagne-is-made/dosage"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-1",
+     "why": "Non-vintage Brut is the core of the category (77.9% of volume per the Comité Champagne; over 90% of Champagne is Brut dosage). Brut is on the label of a typical bottle and exists in .typeDesignations. It is already on Cava, Franciacorta and Prosecco, so a taster who correctly calls Brut on Champagne currently loses 2 points.",
+     "sources": [
+      "https://www.champagne.fr/en/champagne-tasting/type-of-champagne/non-vintage-brut",
+      "https://www.thedrinksbusiness.com/2026/08/champagne-market-shows-signs-of-recovery-after-years-of-decline/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Champagne",
+   "op": "aroma_signature",
+   "term": "brioche",
+   "group": "Yeast",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-2",
+     "why": "Autolytic brioche is THE hallmark of Champagne (the brief itself names it). Right now only Franciacorta carries brioche as a signature, so a taster who writes brioche on a Champagne gets the diagnostic bonus for Franciacorta and none for Champagne.",
+     "sources": [
+      "Oxford Companion to Wine, 'Champagne' / 'autolysis'",
+      "WSET Level 3 Award in Wines, sparkling wine chapter (traditional-method autolytic character)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-11",
+     "why": "Autolytic brioche is the textbook Champagne giveaway (the brief's own example). Today a taster noting brioche gets the bonus toward Franciacorta, not Champagne: the hallmark rewards the wrong neighbour.",
+     "sources": [
+      "https://maisons-champagne.com/en/houses/the-art-of-tasting/the-fundamentals/article/sensory-pleasure",
+      "WSET Level 3 Award in Wines, sparkling wine: autolytic character (brioche, biscuit, toast)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Champagne",
+   "op": "grape",
+   "which": "primary",
+   "to": "Pinot Noir",
+   "from": "Chardonnay",
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-3",
+     "why": "Pinot Noir is Champagne's most planted grape: 38% of the area, against 31% for Chardonnay and 31% for Meunier. It also leads the NV Brut blends of most big houses (Veuve Clicquot, Bollinger, Mumm, Piper, Moët's Pinot-led blend), which are what a typical bottle is. A Chardonnay lead describes Blanc de Blancs, or a few houses (Taittinger, Laurent-Perrier). This change also stops Champagne and Franciacorta, which is Chardonnay-led, from sharing a grape answer.",
+     "sources": [
+      "https://www.champagne.fr/en/about-champagne/a-great-blended-wine/champagne-and-its-grape-varieties",
+      "https://www.wsetglobal.com/knowledge-centre/blog/2025/the-key-champagne-grape-varieties"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-2",
+     "why": "Pinot Noir is the most planted Champagne variety (38%; Chardonnay and Meunier about 31% each). It leads most house NV Brut blends: Veuve Clicquot, Bollinger, Lanson, Piper-Heidsieck and Mumm are PN-led, and Moët and Feuillatte are PN/Meunier-led. Chardonnay leads only a minority of NV Bruts, such as Taittinger and Laurent-Perrier. Primary grape is worth 8 points in the call.",
+     "sources": [
+      "https://www.champagne.fr/en/about-champagne/a-great-blended-wine/champagne-and-its-grape-varieties",
+      "https://www.wsetglobal.com/knowledge-centre/blog/2025/the-key-champagne-grape-varieties"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Champagne",
+   "op": "grape",
+   "which": "secondary",
+   "to": "Chardonnay",
+   "from": "Pinot Noir",
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-4",
+     "why": "This goes with the primary-grape swap. Chardonnay and Meunier are tied at 31% of plantings, and Chardonnay is the more usual #2 in the leading house NV blends. If the primary grape stays Chardonnay, leave this as it is.",
+     "sources": [
+      "https://www.champagne.fr/en/about-champagne/a-great-blended-wine/champagne-and-its-grape-varieties"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-3",
+     "why": "Goes with Pinot Noir moving to primary. Chardonnay is the usual #2 in the PN-led majority of NV blends; Meunier is the alternative and exists as 'Pinot Meunier', but its share is equal and it is less often named on labels or back-labels.",
+     "sources": [
+      "https://www.champagne.fr/en/about-champagne/a-great-blended-wine/champagne-and-its-grape-varieties"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sancerre",
+   "op": "age",
+   "to": [
+    1,
+    4
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-6",
+     "why": "This value is missing. Sancerre is drunk young, from release up to about three years from vintage. Pouilly-Fumé, its twin, is already set to 1-5.",
+     "sources": [
+      "https://www.decanter.com/learn/the-difference-between-sancerre-and-pouilly-fume-ask-decanter-430760/",
+      "Oxford Companion to Wine, 'Sancerre'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-26",
+     "why": "Unoaked Sancerre is drunk young, in line with Pouilly-Fumé (1–5) and shorter than Marlborough's upper bound.",
+     "sources": [
+      "Oxford Companion to Wine, 'Sancerre'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Pouilly-Fumé",
+   "op": "aroma_signature",
+   "term": "gooseberry",
+   "group": "Green fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "lens-aroma-12",
+     "why": "Gooseberry is a Sauvignon Blanc varietal marker, shared equally by Sancerre (non-signature here) and Marlborough (signature). As a Pouilly-Fumé signature it pushes every Loire Sauvignon toward Pouilly-Fumé over Sancerre for no real reason. Flint/gunflint (fumé, silex) is the genuine Pouilly-Fumé discriminator and stays.",
+     "sources": [
+      "Oxford Companion to Wine, 'Sauvignon Blanc' and 'Pouilly-Fumé'",
+      "https://www.jancisrobinson.com/learn/grape-varieties/white/sauvignon-blanc"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Alsace Riesling",
+   "op": "age",
+   "to": [
+    2,
+    10
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-9",
+     "why": "This value is missing. Generic Alsace Riesling is usually drunk 2-8 years from vintage, and grand crus later. 2-10 covers a typical bottle and sits alongside Rheingau trocken (2-12) and Wachau (2-15).",
+     "sources": [
+      "https://www.vinsalsace.com/en/tastes-and-colours/grapes-varieties/fresh-and-dry/riesling-dalsace/",
+      "Oxford Companion to Wine, 'Alsace'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-16",
+     "why": "Dry Alsace Riesling is usually drunk 2–10 years from vintage; petrol develops within that window. This fits Alsace Pinot Gris (2–8) and Wachau Riesling (2–15).",
+     "sources": [
+      "Oxford Companion to Wine, 'Alsace'",
+      "https://www.vinsalsace.com/en/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Alsace Riesling",
+   "op": "sat",
+   "key": "body",
+   "from": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-10",
+     "why": "Alsace Riesling is the fuller, drier and more alcoholic Riesling (12-14%), with noticeable weight in the mid-palate. As set now it is lighter-bodied than Rheingau trocken and Wachau (both MEDIUM-MEDIUM_PLUS), which reverses the textbook order. A taster recording medium(+) for a typical Alsace example currently loses points.",
+     "sources": [
+      "https://www.vinissimus.co.uk/en/content/german-riesling-vs-alsatian-riesling/",
+      "https://www.thewinesociety.com/discover/wine-basics/grape-varieties/riesling-the-ultimate-grape-guide/",
+      "https://www.vinsalsace.com/en/tastes-and-colours/grapes-varieties/fresh-and-dry/riesling-dalsace/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Alsace Riesling",
+   "op": "aroma_signature",
+   "term": "petrol",
+   "group": "White wine",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-11",
+     "why": "Every other Riesling carries petrol as a signature: Clare, Eden, Wachau, Rheingau and both Mosels. Alsace, which is known for developing TDN relatively early (the Wachau description says so), does not, so a taster who writes petrol on an Alsace Riesling gets the bonus for every other Riesling but not this one. Setting it only restores parity. Region is then decided by structure.",
+     "sources": [
+      "https://www.winespectator.com/articles/what-causes-petrol-note-in-aged-riesling-57107",
+      "https://www.vinsalsace.com/en/tastes-and-colours/grapes-varieties/fresh-and-dry/riesling-dalsace/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Alsace Riesling",
+   "op": "aroma_add",
+   "term": "blossom",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-12",
+     "why": "The official Vins d'Alsace profile names floral notes alongside citrus, stone fruit and mineral. Floral (white flowers) is a standard WSET descriptor for young dry Riesling, and without it a taster who picks blossom is told it isn't typical.",
+     "sources": [
+      "https://www.vinsalsace.com/en/tastes-and-colours/grapes-varieties/fresh-and-dry/riesling-dalsace/",
+      "WSET Level 3 Award in Wines, Riesling"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Alsace Riesling",
+   "op": "description",
+   "to": "Dry Riesling from Alsace: lime, apple and peach with white blossom over a stony core, high acidity and petrol that develops within a few years. Rounder and fuller-bodied than Mosel or Australian Riesling, at 12.5–13.5% alcohol; that weight alongside Riesling's high acidity is the tell.",
+   "from": "Dry, aromatic Riesling — lime and orchard fruit with a petrol note developing over stony minerality.",
+   "evidence": [
+    {
+     "id": "loire-alsace-champagne-13",
+     "why": "The current text is correct but misses THE giveaway. It says nothing that tells Alsace apart from the other five Rieslings: its fuller body, higher alcohol and dryness against German examples.",
+     "sources": [
+      "https://www.vinissimus.co.uk/en/content/german-riesling-vs-alsatian-riesling/",
+      "https://www.thewinesociety.com/discover/wine-basics/grape-varieties/riesling-the-ultimate-grape-guide/"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: modify",
+      "matcher: modify"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Barolo",
+   "op": "age",
+   "to": [
+    5,
+    25
+   ],
+   "from": [
+    8,
+    30
+   ],
+   "evidence": [
+    {
+     "id": "italy-north-1",
+     "why": "Barolo's minimum ageing is 38 months (18 in wood) from 1 November of the harvest year, so it can be released on 1 January of the fourth year after the vintage. Most bottles are met from release, at about 4–6 years, and on through their second decade. A low of 8 years steers a taster away from the Barolo most often poured, a recently released one. The sat profile (garnet, drying tannin) still fits a 5-year-old Nebbiolo.",
+     "sources": [
+      "Barolo DOCG disciplinare (38 months minimum, 18 in wood)",
+      "https://en.wikipedia.org/wiki/Barolo",
+      "Oxford Companion to Wine, 'Barolo'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: modify",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Barbaresco",
+   "op": "age",
+   "to": [
+    4,
+    15
+   ],
+   "from": [
+    6,
+    20
+   ],
+   "evidence": [
+    {
+     "id": "italy-north-2",
+     "why": "Barbaresco's minimum ageing is 26 months (9 in wood), and its earliest release date is 1 January of the third year after the vintage (V+3). Typical bottles are met from about 4 years. Keeping Barbaresco's window younger than Barolo's (5-25) matches the description's line 'approachable a few years sooner'.",
+     "sources": [
+      "https://italianwinecentral.com/denomination/barbaresco-docg/",
+      "Barbaresco DOCG disciplinare (26 months, 9 in wood)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: modify",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Amarone",
+   "op": "aroma_add",
+   "term": "black cherry",
+   "group": "Black fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "italy-north-3",
+     "why": "Black cherry and plum are the core primary fruit of a typical Amarone in every mainstream profile. A taster who writes black cherry or black plum is currently told Black fruit isn't typical, which is the same kind of miss as the Châteauneuf red-fruit case. Ripasso, its closest neighbour, already carries black cherry, so this also stops the room ranking Ripasso above Amarone on fruit.",
+     "sources": [
+      "https://winefolly.com/deep-dive/amarone-wine-turns-raisins-into-gold/",
+      "https://www.vinerra.com/education/wines/amarone-della-valpolicella-an-in-depth-wine-profile",
+      "WSET Diploma D3: Veneto, appassimento styles"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-10",
+     "why": "Descriptions of the Amarone DOCG profile lead with ripe cherry, amarena (black/sour cherry), plum and blackberry, often in dried or spirit-preserved form. Once 'dried fruit' leaves the primary list, Amarone has no primary fruit group at all, so a taster noting black cherry would score zero on groups.",
+     "sources": [
+      "https://www.quattrocalici.it/denominazioni/amarone-della-valpolicella-docg/",
+      "https://www.quattrocalici.it/schede-degustazione/amarone/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Prosecco",
+   "op": "age",
+   "to": [
+    1,
+    2
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "italy-north-8",
+     "why": "Prosecco is harvested in September, tank-fermented and bottled on demand from the following spring, and drunk young, within about 1–2 years of the harvest. The profile's development is set to YOUTHFUL to YOUTHFUL.",
+     "sources": [
+      "https://www.prosecco.wine/en/prosecco/production-regulation/",
+      "Oxford Companion to Wine, 'Prosecco'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Chianti Classico",
+   "op": "aroma_add",
+   "term": "violet",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "italy-south-greece-1",
+     "why": "The Chianti Classico production rules describe the wine's smell as floral notes of violet and iris over red fruit, which makes it THE textbook Sangiovese floral note. A taster who writes violet on a typical Chianti Classico is currently told Floral isn't typical.",
+     "sources": [
+      "Disciplinare di produzione DOCG Chianti Classico, art. 6 (chianticlassico.com/wp-content/uploads/2020/11/disciplinare-Chianti-Classico.pdf)",
+      "https://www.chianticlassico.com/en/wine/characteristics/",
+      "Oxford Companion to Wine, 'Sangiovese'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-7",
+     "why": "The Chianti Classico production rules themselves name floral notes of violet (mammola) and iris as the wine's characteristic nose. A taster noting violet is currently told Floral is atypical. Iris is also named there but is missing from the lexicon (see the missing-term item).",
+     "sources": [
+      "https://www.chianticlassico.com/wp-content/uploads/2020/11/disciplinare-Chianti-Classico.pdf",
+      "https://it.wikipedia.org/wiki/Chianti_Classico_(vino)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Brunello di Montalcino",
+   "op": "age",
+   "to": [
+    5,
+    25
+   ],
+   "from": [
+    8,
+    25
+   ],
+   "evidence": [
+    {
+     "id": "italy-south-greece-4",
+     "why": "Brunello cannot be released until 1 January of the fifth year after harvest (Riserva: the sixth), and it is very often met right at release, 5–8 years from vintage. A low end of 8 steers the vintage hint away from the bottles most commonly poured.",
+     "sources": [
+      "Disciplinare Brunello di Montalcino DOCG, art. 5 (consorziobrunellodimontalcino.it)",
+      "Oxford Companion to Wine, 'Brunello di Montalcino'"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: modify",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Taurasi",
+   "op": "age",
+   "to": [
+    5,
+    20
+   ],
+   "from": [
+    8,
+    25
+   ],
+   "evidence": [
+    {
+     "id": "italy-south-greece-5",
+     "why": "Taurasi needs at least 3 years of ageing, including at least 12 months in wood (Riserva: 4 years, 18 months in wood), so it is released at about 3–4 years and usually met at 5–15. A low end of 8 is later than most bottles are poured.",
+     "sources": [
+      "Disciplinare Taurasi DOCG, art. 5",
+      "Oxford Companion to Wine, 'Taurasi'",
+      "https://www.wineenthusiast.com/culture/wine/taurasi-flagship-wine-of-southern-italy/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: modify",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Taurasi",
+   "op": "aroma_add",
+   "term": "violet",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "italy-south-greece-6",
+     "why": "Violet is a standard Aglianico/Taurasi descriptor: black cherry and violet when young, leather, tobacco and balsamic with age. A taster noting violet on a Taurasi is currently told Floral isn't typical.",
+     "sources": [
+      "https://www.wineenthusiast.com/culture/wine/taurasi-flagship-wine-of-southern-italy/",
+      "https://winefolly.com/deep-dive/understanding-aglianico-wine-italys-next-red/",
+      "Wine Grapes (Robinson/Harding/Vouillamoz), 'Aglianico'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Montepulciano d'Abruzzo",
+   "op": "aroma_add",
+   "term": "red cherry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "italy-south-greece-7",
+     "why": "Sour cherry and red plum are the most-cited fruit on everyday Montepulciano d'Abruzzo. The black-only profile tells a taster who notes cherry or red plum that Red fruit isn't typical.",
+     "sources": [
+      "https://winefolly.com/grapes/montepulciano/",
+      "https://wineandtravelitaly.com/wines/montepulciano-dabruzzo-doc/",
+      "Oxford Companion to Wine, 'Montepulciano'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Rioja Gran Reserva",
+   "op": "aroma_add",
+   "term": "red cherry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "spain-4",
+     "why": "A Gran Reserva at 10–20 years still shows fresh red cherry/strawberry (sour cherry and strawberry are the classic notes on La Rioja Alta 904/890 and Viña Ardanza) under the leather and tobacco. A taster who picks Red fruit is currently penalised on the most classic Spanish red.",
+     "sources": [
+      "https://www.skurnik.com/sku/rioja-gran-reserva-904-la-rioja-alta-5-2-2-2-3-2-2-3/",
+      "https://www.thedrinksbusiness.com/2026/01/top-10-rioja-gran-reservas/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: modify"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Bierzo",
+   "op": "aroma_add",
+   "term": "liquorice",
+   "group": "Spice",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "spain-7",
+     "why": "Anise/black liquorice and a peppery lift are standard Mencía descriptors. Without them a taster's Spice pick counts as atypical.",
+     "sources": [
+      "https://winefolly.com/grapes/mencia/",
+      "https://www.thegrapegrind.com/grapes/all-you-need-to-know-about-mencia-a-quick-guide/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Cava",
+   "op": "description",
+   "to": "Traditional-method sparkling from Macabeo, Xarel·lo and Parellada, mostly from Penedès: citrus, apple and a light bready note from shorter lees ageing, often with a faintly earthy edge from the native Catalan grapes, dry, with medium to medium(+) acidity and a creamy mousse. Less acidic and less brioche-rich than Champagne.",
+   "from": "Traditional-method sparkling from Macabeo, Xarel·lo and Parellada, mostly from Penedès: citrus, apple and a light bready, earthy note from shorter lees ageing, dry, with medium to medium(+) acidity and a creamy mousse. Less acidic and less brioche-rich than Champagne.",
+   "evidence": [
+    {
+     "id": "spain-9",
+     "why": "The description credits the earthy note to lees ageing. The Oxford Companion credits Cava's earthy character to Xarel·lo (and the local varieties); it is not from autolysis. This is the style's main giveaway against Champagne.",
+     "sources": [
+      "Oxford Companion to Wine, 'Cava' and 'Xarel-lo' entries",
+      "https://en.wikipedia.org/wiki/Xarel%C2%B7lo"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: modify",
+      "matcher: modify"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Cava",
+   "op": "grape",
+   "which": "primary",
+   "to": "Macabeu",
+   "from": "Viura",
+   "evidence": [
+    {
+     "id": "lens-metadata-4",
+     "why": "In Cava the grape is Macabeo/Macabeu (36.6% of DO Cava plantings, the most planted). Viura is its Rioja name. The app has separate 'Viura' and 'Macabeu' grape rows, and region_grapes (20260914131500) offers Cava tasters 'Macabeu' as the PRINCIPAL chip, so a taster who picks the chip gets 0 of the 8 primary-grape points against 'Viura'. The archetype's own description already says Macabeo.",
+     "sources": [
+      "https://www.cava.wine/en/origin-cava/authorised-grape-varieties/",
+      "https://www.decanter.com/do-cava/cavas-grape-varieties-378712/",
+      "supabase/migrations/20260914131500_region_grapes.sql ('Spain','Cava','Macabeu','PRINCIPAL')"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Rueda Verdejo",
+   "op": "aroma_add",
+   "term": "melon",
+   "group": "Tropical fruit",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "spain-14",
+     "why": "Melon (honeydew) and occasional tropical notes are standard Verdejo descriptors, from its thiol-driven, cool-fermented style. Without melon a taster's Tropical pick counts as atypical.",
+     "sources": [
+      "https://www.grapeguru.de/en/knowledge/grape-varieties/verdejo",
+      "https://www.vinerra.com/education/wines/verdejo-an-in-depth-wine-profile"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Ribera del Duero",
+   "op": "sat",
+   "key": "colourHue",
+   "from": [
+    "PURPLE",
+    "RUBY"
+   ],
+   "to": [
+    "RUBY",
+    "GARNET"
+   ],
+   "evidence": [
+    {
+     "id": "spain-16",
+     "why": "The typical age window is 4–15 years and every example is oak-aged (Crianza ≥12 months in barrel). Such wines are ruby at 4–8 years and garnet-rimmed at 10–15, not purple. This also brings Ribera in line with Priorat (5–15, RUBY–GARNET).",
+     "sources": [
+      "https://www.riberadelduero.es (Consejo Regulador ageing categories)",
+      "WSET Level 3: colour evolution with oak and bottle age"
+     ],
+     "votes": [
+      "examiner: reject",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-structure-7",
+     "why": "At the typical 4-15 years (mostly oak-aged Crianza and Reserva), Ribera is described as deep ruby with a garnet rim. Tempranillo peers at the same age (Rioja Reserva 5-15, and Priorat 5-15) are RUBY-GARNET.",
+     "sources": [
+      "https://magazine.winerist.com/wines-of-ribera-del-duero/",
+      "https://www.vinerra.com/education/wines/ribera-del-duero-an-in-depth-wine-profile"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Mosel Riesling Spätlese",
+   "op": "aroma_add",
+   "term": "pineapple",
+   "group": "Tropical fruit",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "germany-austria-2",
+     "why": "Ripe Mosel Spätlese very often shows pineapple and other tropical notes alongside peach and apricot. Without the group, the room would tell a taster who notes pineapple that tropical fruit is not typical. It also sets the riper Spätlese apart from the Kabinett.",
+     "sources": [
+      "https://vinovoss.com/wine/monchhof-mosel-slate-riesling-spatlese/?year=2021",
+      "https://www.vinovest.co/blog/spatlese"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Mosel Riesling Spätlese",
+   "op": "aroma_add",
+   "term": "wet stones",
+   "group": "Other",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "germany-austria-3",
+     "why": "Slate-derived stony minerality is a defining Mosel trait at every Prädikat level, and the batch's Kabinett already carries it. As it stands, a Spätlese taster who notes a stony character gets no group credit.",
+     "sources": [
+      "https://www.vinovest.co/blog/spatlese",
+      "Oxford Companion to Wine, 'Mosel'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Blaufränkisch",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "to": [
+    "MEDIUM_PLUS",
+    "DEEP"
+   ],
+   "evidence": [
+    {
+     "id": "germany-austria-5",
+     "why": "Blaufränkisch is consistently described as deeply or intensely coloured (deep ruby to purple). A taster recording DEEP, the natural call on the note's PALE/MEDIUM/DEEP scale, currently gets only 0.6. The change would also separate it from Spätburgunder (PALE-MEDIUM).",
+     "sources": [
+      "https://www.wine-searcher.com/grape-550-blaufrankisch-lemberger",
+      "https://vinepair.com/wine-101/blaufrankisch-wine-guide/",
+      "Robinson/Harding/Vouillamoz, Wine Grapes, 'Blaufränkisch'"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sonoma Chardonnay",
+   "op": "aroma_add",
+   "term": "lemon",
+   "group": "Citrus fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "new-world-americas-nz-1",
+     "why": "Citrus (Meyer lemon, lemon curd, lemon zest) is one of the most frequent descriptors for Sonoma (Russian River / Sonoma Coast) Chardonnay, and WSET puts citrus with stone fruit and melon for moderate-climate Chardonnay. At the moment a taster who writes lemon on a textbook Sonoma Chardonnay is told Citrus fruit isn't typical, which is the same group-level gap the Châteauneuf 'Red fruit' fix addressed. The Meursault, Puligny and Pouilly-Fuissé profiles all carry lemon, so adding it doesn't blur them. The oak and butter terms still separate them.",
+     "sources": [
+      "WSET Level 3 Award in Wines, Chardonnay by climate (cool: green fruit/citrus; moderate: stone fruit, citrus, melon; warm: tropical)",
+      "https://www.sonomamag.com/top-100-wines-chardonnay/",
+      "https://www.sonomacutrer.com/wine/russian-river-ranches-23/"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Central Otago Pinot Noir",
+   "op": "aroma_signature",
+   "term": "dried herbs",
+   "group": "Herbal",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "new-world-americas-nz-5",
+     "why": "Critics widely treat the wild-thyme herbal note as Central Otago's regional fingerprint, and the profile's own description names it. Right now the wine has no diagnostic hit to set it apart from Willamette, whose sat profile is almost the same (identical body, tannin, acidity and alcohol ranges).",
+     "sources": [
+      "https://winejournal.robertparker.com/the-wild-side-of-central-otago",
+      "https://www.therealreview.com/2014/04/01/its-about-thyme/",
+      "https://www.decanter.com/learn/get-to-know-central-otago-pinot-noir-good-better-best-457835/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Mendoza Malbec",
+   "op": "aroma_add",
+   "term": "red plum",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "new-world-americas-nz-7",
+     "why": "Wines of Argentina's own descriptors say Luján de Cuyo, the classic heart of Mendoza Malbec, shows 'pronounced red fruits and a little ripe black fruit evoking plums and red fruit jam', and East Mendoza shows red-fruit jam. Plum is the most-cited Malbec fruit, and a taster who writes red plum or red cherry would currently be told Red fruit isn't typical. Black fruit and violet still lead the profile.",
+     "sources": [
+      "https://blog.winesofargentina.com/destacadas/malbec-descriptors-in-different-areas/",
+      "Oxford Companion to Wine, 'Malbec' / 'Argentina'"
+     ],
+     "votes": [
+      "examiner: modify",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Napa Cabernet Sauvignon",
+   "op": "age",
+   "to": [
+    3,
+    12
+   ],
+   "from": [
+    5,
+    20
+   ],
+   "evidence": [
+    {
+     "id": "new-world-americas-nz-8",
+     "why": "Napa Cabernet is released about 2.5 to 3 years after the vintage, and most bottles are opened within roughly 3 to 12 years (entry-level within 5 to 8, mid-tier 8 to 12). Only top mountain or reserve wines go to 20 or more. A low end of 5 misses the most common encounter, and a high end of 20 contradicts the profile's own PURPLE–RUBY hue and YOUTHFUL–DEVELOPING development, since a 15 to 20-year-old Napa Cabernet is garnet and developed. The alternative is to keep 5–20 and widen colourHue to [RUBY, GARNET].",
+     "sources": [
+      "https://www.collectorcellar.ai/napa-cabernet-aging-guide",
+      "Oxford Companion to Wine, 'Napa Valley'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Clare Valley Riesling",
+   "op": "aroma_add",
+   "term": "apple",
+   "group": "Green fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "australia-sa-1",
+     "why": "Green apple is one of the standard descriptors of young Clare Riesling, alongside lime zest and talc. Every European Riesling archetype already carries apple. As things stand, a taster who notes green apple on a young Clare is told Green fruit is not typical, and the room pushes them towards Alsace or Rheingau.",
+     "sources": [
+      "https://www.wineselectors.com.au/selector-magazine/wine/assessing-the-best-in-clare-valley-riesling-a-selector-state-of-play",
+      "https://mclarenvalecellars.com/blogs/articles/riesling-from-clare-valley",
+      "Oxford Companion to Wine, 'Clare Valley' / 'Riesling' (Australian lime-and-green-apple style)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Clare Valley Riesling",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "PALE",
+    "PALE"
+   ],
+   "to": [
+    "PALE",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "australia-sa-3",
+     "why": "The typical age window runs to 12 years, and the profile itself carries toast and petrol development. A 6–12-year-old Clare Riesling is visibly deeper than pale. With PALE–PALE, a taster who records MEDIUM (the note offers only PALE/MEDIUM/DEEP) is two steps out and scores 0.2. Every other Riesling archetype (Alsace, Rheingau, Wachau) uses PALE–MEDIUM.",
+     "sources": [
+      "WSET Level 3 Award in Wines, SAT: appearance intensity deepens with bottle age in white wines",
+      "https://younggunofwine.com/clare-valleys-best-riesling/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Eden Valley Riesling",
+   "op": "sat",
+   "key": "appearanceIntensity",
+   "from": [
+    "PALE",
+    "PALE"
+   ],
+   "to": [
+    "PALE",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "australia-sa-4",
+     "why": "Same reason as for Clare: the age window runs to 12 years and the profile includes petrol and toast development. PALE–PALE scores a taster's MEDIUM at 0.2 on a developed bottle, and every other Riesling archetype uses PALE–MEDIUM.",
+     "sources": [
+      "WSET Level 3 Award in Wines, SAT: appearance intensity deepens with bottle age"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Coonawarra Cabernet Sauvignon",
+   "op": "sat",
+   "key": "colourHue",
+   "from": [
+    "PURPLE",
+    "RUBY"
+   ],
+   "to": [
+    "RUBY",
+    "GARNET"
+   ],
+   "evidence": [
+    {
+     "id": "australia-sa-5",
+     "why": "The typical age is 5–20 years. By 5 years a Cabernet has largely lost its purple, and at 10–20 years (the ageing Coonawarra is known for) the rim is garnet. The current range scores a correctly observed garnet as out of range on a typical mature bottle. This matches the Pauillac and Saint-Julien archetypes, which have a similar age window.",
+     "sources": [
+      "https://www.wineanorak.com/etn_wynns.htm",
+      "WSET Level 3 SAT: red hue moves purple → ruby → garnet with age",
+      "Oxford Companion to Wine, 'Coonawarra' (long-lived Cabernet)"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: reject"
+     ]
+    },
+    {
+     "id": "lens-structure-5",
+     "why": "The typical age is 5-20 years, but the hue describes a young wine. Peers with the same age window (Bolgheri 5-20, Pauillac 8-30) are RUBY-GARNET. Descriptions of mature Coonawarra Cabernet give garnet hues.",
+     "sources": [
+      "https://justwines.com.au/blogs/wines/coonawarra-cabernet-sauvignon-the-complete-guide",
+      "https://mclarenvalecellars.com/blogs/articles/coonawarra-cabernet-sauvignon"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Coonawarra Cabernet Sauvignon",
+   "op": "aroma_add",
+   "term": "tobacco",
+   "group": "Red wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "australia-sa-6",
+     "why": "The typical window is 5–20 years. Mature Coonawarra Cabernet routinely shows tobacco, earth and cedar development. Without any tertiary group, a taster who notes tobacco on a 10-year-old bottle is told it is atypical.",
+     "sources": [
+      "https://www.wineanorak.com/etn_wynns.htm",
+      "https://justwines.com.au/blogs/wines/coonawarra-cabernet-sauvignon-the-complete-guide"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: reject"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Stellenbosch Chenin Blanc",
+   "op": "aroma_add",
+   "term": "lemon",
+   "group": "Citrus fruit",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "australia-sa-8",
+     "why": "Much Stellenbosch Chenin is fermented partly or wholly in steel for citrus freshness. Lemon and citrus peel on the palate is a routine descriptor, and the Vouvray archetype carries lemon on the palate too. As things stand, a taster who notes lemon is told Citrus is atypical for Cape Chenin.",
+     "sources": [
+      "https://smallwineshop.com/product/raats-family-old-vine-chenin-blanc-stellenbosch/",
+      "https://winefolly.com/grapes/chenin-blanc/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "aroma_remove",
+   "term": "caramel",
+   "group": "Red wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-1",
+     "why": "A white botrytised wine carries a 'Red wine' tertiary group, which is the wrong group: caramel exists in the White wine tertiary group and that is where WSET lists it for white wines. Tokaji already uses the White wine group for caramel. The same term just moves to the right group.",
+     "sources": [
+      "WSET Level 4 SAT Wine-Lexicon (Tertiary: White wine … honey, caramel)",
+      "SCRATCH/wset-l4-sat.txt lines 100-104"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-1",
+     "why": "Sauternes is the only wine in the set carrying a term from the wrong colour group: a white wine holding TERTIARY/Red wine 'caramel'. The lexicon has 'caramel' under TERTIARY/White wine, and Tokaji Aszú already uses that one. A white-wine taster picks the White wine term, so the group never matches.",
+     "sources": [
+      "WSET Level 3 Systematic Approach to Tasting Wine lexicon (tertiary descriptors split into red and white wine)",
+      "https://www.bordeaux.com/en/designations/graves-sauternes/sauternes/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "aroma_add",
+   "term": "caramel",
+   "group": "White wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "sweet-fortified-1",
+     "why": "A white botrytised wine carries a 'Red wine' tertiary group, which is the wrong group: caramel exists in the White wine tertiary group and that is where WSET lists it for white wines. Tokaji already uses the White wine group for caramel. The same term just moves to the right group.",
+     "sources": [
+      "WSET Level 4 SAT Wine-Lexicon (Tertiary: White wine … honey, caramel)",
+      "SCRATCH/wset-l4-sat.txt lines 100-104"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-1",
+     "why": "Sauternes is the only wine in the set carrying a term from the wrong colour group: a white wine holding TERTIARY/Red wine 'caramel'. The lexicon has 'caramel' under TERTIARY/White wine, and Tokaji Aszú already uses that one. A white-wine taster picks the White wine term, so the group never matches.",
+     "sources": [
+      "WSET Level 3 Systematic Approach to Tasting Wine lexicon (tertiary descriptors split into red and white wine)",
+      "https://www.bordeaux.com/en/designations/graves-sauternes/sauternes/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "aroma_signature",
+   "term": "honey",
+   "group": "White wine",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [
+    {
+     "id": "sweet-fortified-2",
+     "why": "Sauternes is the only wine in the batch with no signature at all. Meanwhile Tokaji holds dried apricot and orange marmalade as signatures, so a taster who notes the classic botrytis trio on a Sauternes earns Tokaji's bonus and none for Sauternes. The brief itself names botrytis/honey as the Sauternes hallmark. Honey is the one botrytis/Sémillon marker present on the profile, and it is not a signature anywhere else.",
+     "sources": [
+      "https://winefolly.com/tips/wine-tasting-challenge-sauternes/",
+      "Oxford Companion to Wine, 'Sauternes' / 'noble rot' (honeyed, apricot, marmalade character)",
+      "https://www.wineenthusiast.com/culture/wine/sauternes-wine/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-aroma-2",
+     "why": "Sauternes is a textbook hallmark wine with no signature at all. Its neighbour Tokaji takes dried apricot* and orange marmalade*, so a botrytis/honey note currently rewards Tokaji over Sauternes. The brief names honey/botrytis as the Sauternes giveaway, and 'botrytis' is not in the lexicon (see the missing-term item). Honey carries no signature on any other wine, so it still discriminates.",
+     "sources": [
+      "https://www.bordeaux.com/en/designations/graves-sauternes/sauternes/",
+      "Oxford Companion to Wine, 'Sauternes' and 'botrytis'",
+      "https://www.grapeguru.de/en/knowledge/wine-regions/sauternes"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "aroma_add",
+   "term": "pineapple",
+   "group": "Tropical fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [
+    {
+     "id": "sweet-fortified-3",
+     "why": "Pineapple (with mango and other tropical fruit) is one of the most common descriptors of young and mid-aged Sauternes in professional notes. It is also one of the aromatic cues that separates it from Tokaji. Right now a taster who notes pineapple on a Sauternes is told that Tropical fruit is not typical.",
+     "sources": [
+      "https://winefolly.com/tips/wine-tasting-challenge-sauternes/ (dried pineapple on palate)",
+      "https://www.thewinecellarinsider.com/2021/11/2020-sauternes-complete-guide-tasting-notes-ratings-vintage-report/",
+      "Jancis Robinson, Oxford Companion to Wine, 'Sauternes'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "age",
+   "to": [
+    5,
+    20
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-4",
+     "why": "Sauternes is sold from about 2-3 years but is usually drunk between roughly 5 and 20 years after the vintage. That fits the profile's GOLD-AMBER hue and its DEVELOPING-FULLY_DEVELOPED development.",
+     "sources": [
+      "Oxford Companion to Wine, 'Sauternes'",
+      "https://www.decanter.com/wine/wine-regions/bordeaux-wine-region/sauternes/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-18",
+     "why": "Sauternes is released at about 3 years and usually drunk at 5–25; it turns amber and develops marmalade with age. This is close to Tokaji Aszú (5–30).",
+     "sources": [
+      "Oxford Companion to Wine, 'Sauternes'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Sauternes",
+   "op": "description",
+   "to": "Botrytised Sémillon with some Sauvignon Blanc from Bordeaux: deep gold, with honey, apricot, pineapple and marmalade over new-oak vanilla, luscious and full-bodied, with medium(+) to high acidity at about 13.5–14 % alcohol. Richer, oakier and more alcoholic than Tokaji Aszú, with less piercing acidity.",
+   "from": "Botrytised sweet white — luscious apricot, honey and marmalade balanced by bright acidity.",
+   "evidence": [
+    {
+     "id": "sweet-fortified-5",
+     "why": "The current text fits any botrytised wine and misses what separates Sauternes from its direct neighbour Tokaji Aszú: the oak, the higher alcohol and the fuller, lower-acid Sémillon weight. Tokaji's own description already draws this contrast from its side.",
+     "sources": [
+      "https://winefolly.com/tips/wine-tasting-challenge-sauternes/",
+      "Oxford Companion to Wine, 'Sauternes' and 'Tokaji'"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Tawny Port",
+   "op": "age",
+   "to": [
+    10,
+    20
+   ],
+   "from": [
+    null,
+    null
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-10",
+     "why": "The profile (tawny hue, walnut, FULLY_DEVELOPED) and the description ('10 or 20 years') describe an age-indicated tawny. The vintage call for tawny is a tawny age, and 10 and 20 years are the categories usually met.",
+     "sources": [
+      "IVDP age-indicated tawny categories (10/20/30/40 Years Old)",
+      "https://www.prtwine.com/port-styles/aged-tawny-port/"
+     ],
+     "votes": [
+      "examiner: accept",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    },
+    {
+     "id": "lens-metadata-34",
+     "why": "The archetype's own description names the typical age indications (10 or 20 Year Old). The vintage guess for this style is TAWNY plus years, so the hint should span the common indications.",
+     "sources": [
+      "https://www.ivdp.pt/en/"
+     ],
+     "votes": [
+      "examiner: reject",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Manzanilla",
+   "op": "sat",
+   "key": "acidity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-14",
+     "why": "The Consejo Regulador describes Manzanilla as having 'light acidity', and Palomino is a low-acid grape. The sharpness tasters feel comes from salinity and acetaldehyde. WSET-oriented blind-tasting guidance calls flor sherry acidity low to medium(-), not medium(+).",
+     "sources": [
+      "https://www.sherry.wine/sherry-wine/dry-sherry-wines/manzanilla",
+      "https://www.rachelvonsturmer.com/blog/blindtasting-qa-iding-acidity-in-fino-sherry"
+     ],
+     "votes": [
+      "examiner: reject",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Fino",
+   "op": "sat",
+   "key": "acidity",
+   "from": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "to": [
+    "MEDIUM_MINUS",
+    "MEDIUM"
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-15",
+     "why": "The reasoning is the same as for Manzanilla. Palomino is low in acid, the Consejo describes flor wines as delicate, and the perceived bite comes from acetaldehyde and salinity. Examiners expect medium(-) to medium.",
+     "sources": [
+      "https://www.rachelvonsturmer.com/blog/blindtasting-qa-iding-acidity-in-fino-sherry",
+      "https://www.sherry.wine/sherry-wine/dry-sherry-wines/fino"
+     ],
+     "votes": [
+      "examiner: reject",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Fino",
+   "op": "sat",
+   "key": "colourHue",
+   "from": [
+    "LEMON",
+    "LEMON"
+   ],
+   "to": [
+    "LEMON",
+    "GOLD"
+   ],
+   "evidence": [
+    {
+     "id": "sweet-fortified-16",
+     "why": "The Consejo Regulador gives Fino's colour as 'bright straw yellow to pale gold'. Older finos and en rama bottlings reach pale gold, and a taster who writes gold would score only 0.6. Manzanilla ('pale straw') stays LEMON.",
+     "sources": [
+      "https://www.sherry.wine/sherry-wine/dry-sherry-wines/fino"
+     ],
+     "votes": [
+      "examiner: reject",
+      "sources: accept",
+      "matcher: accept"
+     ]
+    }
+   ]
+  },
+  {
+   "arch": "A typical Margaux",
+   "op": "sat",
+   "key": "body",
+   "from": [
+    "MEDIUM_PLUS",
+    "FULL"
+   ],
+   "to": [
+    "MEDIUM",
+    "MEDIUM_PLUS"
+   ],
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Margaux's body drop to medium–medium(+) so it reads lighter than Pauillac, even though classed-growth Margaux can be full?",
+    "recommendation": "Yes. One panel voted 3-0, the other 1-2. Margaux is consistently the lighter-framed commune, and the new range still includes MEDIUM_PLUS."
+   }
+  },
+  {
+   "arch": "A typical Chablis",
+   "op": "aroma_add",
+   "term": "acacia",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Petit Chablis gets acacia; should village Chablis get it too, so a floral note doesn't rank Petit Chablis above Chablis?",
+    "recommendation": "Yes. The BIVB says lime-flower and acacia 'occur frequently' in village Chablis."
+   }
+  },
+  {
+   "arch": "A typical Mâconnais",
+   "op": "appellation",
+   "to": "Macon-Villages AOC",
+   "from": "Macon AOC",
+   "evidence": [],
+   "owner_list": {
+    "question": "Should the Mâconnais white point at Mâcon-Villages, the bulk white label, rather than the umbrella Mâcon AOC chosen in the spec?",
+    "recommendation": "Yes, if the 'Macon-Villages AOC' row reaches the Mâconnais region cascade. Mâcon-Villages is about 1,876 ha against about 385 ha for plain Mâcon (2-1)."
+   }
+  },
+  {
+   "arch": "A typical Côte de Beaune",
+   "op": "quality",
+   "to": [
+    86,
+    94
+   ],
+   "from": [
+    90,
+    94
+   ],
+   "evidence": [],
+   "owner_list": {
+    "question": "Should the district white's floor drop below Meursault, Puligny and Chassagne (87–88)?",
+    "recommendation": "Yes, to 86-94 (2-1). The generic district white should not have a higher floor than its own villages."
+   }
+  },
+  {
+   "arch": "A typical Meursault",
+   "op": "aroma_add",
+   "term": "flint",
+   "group": "Other",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Meursault carry flint, which the BIVB cites, even though that removes a Meursault/Puligny contrast the description relies on?",
+    "recommendation": "Add it (2-1), and change the description's 'less stony' to 'less linear'. The BIVB sets young Meursault in a 'mineral (flint)' frame."
+   }
+  },
+  {
+   "arch": "A typical Meursault",
+   "op": "description",
+   "to": "The broadest, richest Côte de Beaune white: ripe apple and peach with hazelnut, butter and toasty oak, a full body and medium(+) acidity. Rounder and nuttier than Puligny, less linear.",
+   "from": "The broadest, richest Côte de Beaune white: ripe apple and peach with hazelnut, butter and toasty oak, a full body and medium(+) acidity. Rounder and nuttier than Puligny, less stony.",
+   "evidence": [],
+   "owner_list": {
+    "note": "owner-list item applied on the synthesis recommendation"
+   }
+  },
+  {
+   "arch": "A typical Côte de Nuits",
+   "op": "quality",
+   "to": [
+    86,
+    94
+   ],
+   "from": [
+    89,
+    93
+   ],
+   "evidence": [],
+   "owner_list": {
+    "question": "Should the district red's floor drop below Gevrey's (87) and Nuits-Saint-Georges' (86)?",
+    "recommendation": "Yes, to 86-94 while the appellation stays Bourgogne AOC. Use 86-91 only if it becomes Côte de Nuits-Villages."
+   }
+  },
+  {
+   "arch": "A typical Côte Chalonnaise",
+   "op": "description",
+   "to": "Pinot Noir from the Côte Chalonnaise (Mercurey, Givry, Rully): red cherry, raspberry and strawberry with an earthy, savoury edge, crisp acidity, light-to-medium body and fine, medium tannin. Less depth and concentration than the Côte d'Or villages; usually drunk young.",
+   "from": "Approachable red Burgundy — red cherry and raspberry with an earthy, savoury edge and medium tannin.",
+   "evidence": [],
+   "owner_list": {
+    "question": "Which rewrite do you approve for the Côte Chalonnaise?",
+    "recommendation": "B. A's 'shorter finish' contradicts the finish range, which equals Pommard's, and 'rustic/tart' conflicts with sources calling the tannin fine."
+   }
+  },
+  {
+   "arch": "A typical Beaujolais cru",
+   "op": "aroma_add",
+   "term": "kirsch",
+   "group": "Red wine",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should the cru carry kirsch, and should it be the only Gamay signature?",
+    "recommendation": "Add kirsch without a signature. Inter Beaujolais names it for Morgon, but it is equally typical of Grenache, Amarone and Zinfandel (split 1-1-1)."
+   }
+  },
+  {
+   "arch": "A typical Beaujolais cru",
+   "op": "aroma_add",
+   "term": "black cherry",
+   "group": "Black fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Is black fruit typical for a Morgon-type cru?",
+    "recommendation": "Add it (2-1). Morgon and Moulin-à-Vent are widely described with dark cherry, although Inter Beaujolais's Morgon text stresses sour cherry."
+   }
+  },
+  {
+   "arch": "A typical Etna Rosso",
+   "op": "aroma_add",
+   "term": "rose",
+   "group": "Floral",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Is a rose-petal note typical of Etna Rosso?",
+    "recommendation": "Add it. One panel voted 3-0 and the other 1-2; Tim Atkin cites rose petal repeatedly, while Wine Folly and Opening a Bottle stress herbs and volcanic notes."
+   }
+  },
+  {
+   "arch": "A typical Priorat",
+   "op": "aroma_add",
+   "term": "red cherry",
+   "group": "Red fruit",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Does Garnacha-led Priorat typically show red fruit?",
+    "recommendation": "Add it (2-1). Opening a Bottle says Garnacha-led Priorats lead with red fruit, although Torres stresses black fruit."
+   }
+  },
+  {
+   "arch": "A typical Bierzo",
+   "op": "sat",
+   "key": "alcohol",
+   "from": [
+    "MEDIUM",
+    "MEDIUM"
+   ],
+   "to": [
+    "MEDIUM",
+    "HIGH"
+   ],
+   "evidence": [],
+   "owner_list": {
+    "question": "Is a 14% Bierzo typical enough to widen alcohol to MEDIUM–HIGH?",
+    "recommendation": "Yes (2-1). Many benchmark Bierzos are labelled 14%, though other sources put the bulk at 12.5–14%."
+   }
+  },
+  {
+   "arch": "A typical Ribera del Duero",
+   "op": "aroma_add",
+   "term": "tobacco",
+   "group": "Red wine",
+   "kinds": [
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Ribera carry one tertiary note for Reservas, and if so leather or tobacco?",
+    "recommendation": "Add tobacco on the palate (split 1-1-1). Development already runs to DEVELOPING."
+   }
+  },
+  {
+   "arch": "A typical Wachau Riesling",
+   "op": "aroma_signature",
+   "term": "petrol",
+   "group": "White wine",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Wachau's signature move from petrol to apricot?",
+    "recommendation": "Yes. germany-austria-4 was 3-0, and sources say petrol 'rarely appears in the Wachau'. lens-aroma-14 was 1-2 because apricot is also carried by Alsace, Mosel Spätlese and Condrieu, but structure separates those."
+   }
+  },
+  {
+   "arch": "A typical Wachau Riesling",
+   "op": "aroma_signature",
+   "term": "apricot",
+   "group": "Stone fruit",
+   "kinds": [
+    "NOSE",
+    "PALATE"
+   ],
+   "signature": true,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Wachau's signature move from petrol to apricot?",
+    "recommendation": "Yes. germany-austria-4 was 3-0, and sources say petrol 'rarely appears in the Wachau'. lens-aroma-14 was 1-2 because apricot is also carried by Alsace, Mosel Spätlese and Condrieu, but structure separates those."
+   }
+  },
+  {
+   "arch": "A typical Tokaji Aszú",
+   "op": "aroma_add",
+   "term": "apricot",
+   "group": "Stone fruit",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Should Tokaji carry fresh apricot, and quince as well?",
+    "recommendation": "Apricot only, and keep ginger on the nose (split 1-1-1). Quince has thin support, and apricot gives Tokaji the Stone fruit group Sauternes has."
+   }
+  },
+  {
+   "arch": "A typical Tawny Port",
+   "op": "aroma_add",
+   "term": "orange peel",
+   "group": "Citrus fruit",
+   "kinds": [
+    "NOSE"
+   ],
+   "signature": false,
+   "evidence": [],
+   "owner_list": {
+    "question": "Is candied orange peel typical of aged tawny?",
+    "recommendation": "Add it (2-1). Critic notes on Taylor's 10-year cite candied peel, though the official notes don't."
+   }
+  }
+ ]
+}

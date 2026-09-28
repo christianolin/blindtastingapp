@@ -365,6 +365,10 @@ test("second grape and designation: null when the wine has none, 0 when missed, 
   await withRollback(async () => {
     const [a] = await freshProfiles(1);
     const r = await refs();
+    // The pick starts with no designation, whatever the live Margaux carries
+    // (the 2026-09-28 audit gave it Grand Cru Classé).
+    await asOwner();
+    await client.query("delete from wine_archetype_designations where archetype_id = $1", [r.margaux]);
     const gcc = await wine(a, margauxBottle(r, { designation: r.grandCruClasse }));
     let out = await fresh(a, { picked_archetype_id: r.margaux, actual_catalog_wine_id: gcc });
     assert.equal(out.points.secondary_grape, 2);
@@ -791,7 +795,7 @@ test("the 15 live archetypes are back-filled by live name and every archetype na
       "A typical Côte de Nuits -> France / Bourgogne / Bourgogne AOC",
       "A typical Côte-Rôtie -> France / Rhône / Côte-Rôtie AOC",
       "A typical Margaux -> France / Bordeaux / Margaux AOC",
-      "A typical Mâconnais -> France / Bourgogne / Macon AOC",
+      "A typical Mâconnais -> France / Bourgogne / Macon-Villages AOC",
       "A typical Petit Chablis -> France / Bourgogne / Petit Chablis AOC",
       "A typical Sancerre -> France / Loire / Sancerre AOC",
       "A typical Sauternes -> France / Bordeaux / Sauternes AOC",
