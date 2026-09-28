@@ -346,13 +346,17 @@ test("note-aroma with neither nose nor palate sensed is rejected", async () => {
   });
 });
 
-// ---- Task 3: wset_aroma_terms lexicon (89-term seed) ----
+// ---- Task 3: wset_aroma_terms lexicon ----
+// 89-term seed (20260829195000), grown to 143 by the L3+L4 lexicon
+// (20260829201000), then 144 by 20260902210000_wset_aroma_coastal_terms:
+// "pear drop" left and "minerality" + "saltiness" joined PRIMARY "Other"
+// (net +1 PRIMARY). That migration asserts the same 144 and 69/25/50.
 
-test("aroma lexicon holds exactly 143 terms", async () => {
+test("aroma lexicon holds exactly 144 terms", async () => {
   const result = await client.query(
     "select count(*)::int as n from wset_aroma_terms",
   );
-  assert.equal(result.rows[0].n, 143);
+  assert.equal(result.rows[0].n, 144);
 });
 
 test("every term carries a legacy family from the WSET five", async () => {
@@ -373,7 +377,7 @@ test("per-origin term counts match the P/S/T mapping", async () => {
   );
   const counts = Object.fromEntries(result.rows.map((r) => [r.origin, r.n]));
   assert.deepEqual(counts, {
-    PRIMARY: 68,
+    PRIMARY: 69,
     SECONDARY: 25,
     TERTIARY: 50,
   });
