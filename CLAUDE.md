@@ -243,9 +243,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
   estate now in Pessac-Léognan), not "Grand Cru Classé", the 1855 and
   Saint-Émilion term. Both Pessac-Léognan typical wines carry it, and the
   Library's `graves-cru-classe` system links to it (it pointed at Grand Cru
-  Classé before). The label reader matches it by folded exact name only:
-  "Grand Cru Classé de Graves", the wording many current labels print, still
-  resolves to no designation — there is no curated designation alias yet.
+  Classé before). The label reader matches it by folded exact name, then by
+  the curated spellings in `resolve.ts`'s `DESIGNATION_SYNONYMS` ("Grand Cru
+  Classé de Graves", the wording most current labels print, and three
+  variants), under the same country rule; a plain "Grand Cru Classé" still
+  resolves to its own row. It is a lookup table, never a heuristic.
   Never re-apply 20260717090000: its upsert rewrites `sort_order` and would
   now tie rows.
 - Vintage is its own type: `vintage_kind` (`YEAR` | `NV` | `TAWNY`) plus

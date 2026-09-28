@@ -239,6 +239,19 @@ function bracketParts(name: string): { name: string; short: string } | null {
   return match ? { name: match[1], short: match[2] } : null;
 }
 
+/** Curated label spellings of a designation row: folded spelling → the row's
+    exact name. Owner, 2026-09-28 ("yes add Cru Classé de Graves"): the Graves
+    classification's own term is "Cru Classé de Graves", but most classified
+    Pessac-Léognan labels print "Grand Cru Classé de Graves" (CIVB). Tried only
+    when folded equality picked nothing, under the same country rule. A lookup
+    table, never a heuristic: a plain "Grand Cru Classé" stays its own row. */
+export const DESIGNATION_SYNONYMS: Readonly<Record<string, string>> = {
+  [foldName("Grand Cru Classé de Graves")]: "Cru Classé de Graves",
+  [foldName("Grand Cru Classé des Graves")]: "Cru Classé de Graves",
+  [foldName("Cru Classé des Graves")]: "Cru Classé de Graves",
+  [foldName("Crus Classés de Graves")]: "Cru Classé de Graves",
+};
+
 async function resolveDesignation(
   designation: string,
   lookup: RefLookup,
@@ -256,6 +269,13 @@ async function resolveDesignation(
   const matches = rows.filter((row) => foldName(row.name) === wanted);
   const preferred = matches.find(inDraftCountry) ?? matches.find((row) => row.countryId === null);
   if (preferred !== undefined) return preferred.id;
+
+  // A curated label spelling (DESIGNATION_SYNONYMS), under the same country rule.
+  if (Object.prototype.hasOwnProperty.call(DESIGNATION_SYNONYMS, wanted)) {
+    const target = rows.filter((row) => row.name === DESIGNATION_SYNONYMS[wanted]);
+    const hit = target.find(inDraftCountry) ?? target.find((row) => row.countryId === null);
+    if (hit !== undefined) return hit.id;
+  }
 
   // Owner approval 1b (2026-09-13), only when folded equality picked nothing: a
   // reference row whose bracketed short form ("LBV" → "Late Bottled Vintage (LBV)")

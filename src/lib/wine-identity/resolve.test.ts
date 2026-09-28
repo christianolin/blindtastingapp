@@ -610,8 +610,8 @@ describe("step 8: a designation's bracketed short form, or its name without the 
 });
 
 // 20260928130000: "Cru Classé de Graves" is its own France/Bordeaux row, beside
-// "Grand Cru Classé". Step 8 is folded equality (then the bracket rule), so the
-// exact term resolves, a longer label wording does not, and no country, nothing.
+// "Grand Cru Classé". Step 8 is folded equality, then the curated label
+// spellings (DESIGNATION_SYNONYMS), then the bracket rule; no country, nothing.
 describe("step 8: Cru Classé de Graves", () => {
   const snap = (): ReferenceSnapshot => ({
     countries: [{ id: "fr", name: "France" }],
@@ -633,8 +633,18 @@ describe("step 8: Cru Classé de Graves", () => {
   it("Grand Cru Classé stays its own row", async () => {
     expect(await pick("France", "Grand Cru Classé")).toEqual(["gcc", "label"]);
   });
-  it("the longer label wording resolves to nothing (no alias yet)", async () => {
-    expect(await pick("France", "Grand Cru Classé de Graves")).toEqual([null, null]);
+  it("the printed label spellings resolve to it (owner, 2026-09-28)", async () => {
+    expect(await pick("France", "Grand Cru Classé de Graves")).toEqual(["ccg", "label"]);
+    expect(await pick("France", "GRAND CRU CLASSE DES GRAVES")).toEqual(["ccg", "label"]);
+    expect(await pick("France", "Cru Classé des Graves")).toEqual(["ccg", "label"]);
+    expect(await pick("France", "Crus Classés de Graves")).toEqual(["ccg", "label"]);
+  });
+  it("a spelling that is not curated still resolves to nothing", async () => {
+    expect(await pick("France", "Grand Cru de Graves")).toEqual([null, null]);
+    expect(await pick("France", "Graves Grand Cru Classé")).toEqual([null, null]);
+  });
+  it("a curated spelling obeys the country rule", async () => {
+    expect(await pick(null, "Grand Cru Classé de Graves")).toEqual([null, null]);
   });
   it("with no country read, nothing", async () => {
     expect(await pick(null, "Cru Classé de Graves")).toEqual([null, null]);
