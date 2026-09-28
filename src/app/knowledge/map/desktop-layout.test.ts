@@ -205,7 +205,7 @@ describe("desktop wine-map layout", () => {
 
   it("moves the heading into the top bar and keeps the subtitle for screen readers (M3)", () => {
     const page = code(PAGE);
-    expect(page).toContain('<AppHeader title="Wine map" heading="Knowledge Explorer" />');
+    expect(page).toContain('<AppHeader title="Wine map" heading="Wine map" />');
     expect(page).not.toMatch(/<h1\b/);
     expect(page).toContain('<p className="sr-only max-md:hidden">');
     expect(page.replace(/\s+/g, " ")).toContain(

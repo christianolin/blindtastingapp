@@ -14,7 +14,7 @@ import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 const TILE_ORIGIN = new URL(WINE_MAP_MANIFEST_URL).origin;
 
 export const metadata = {
-  title: "Wine Map · Knowledge · Blindr",
+  title: "Wine map · Blindr",
 };
 
 export default async function WineMapPage({
@@ -56,7 +56,7 @@ export default async function WineMapPage({
       {/* "Wine map" names the page next to the burger on phones; from md the
           bar carries the page's h1 instead (spec 2026-09-27 M3), since the
           locked screen has no room for an in-page heading. */}
-      <AppHeader title="Wine map" heading="Knowledge Explorer" />
+      <AppHeader title="Wine map" heading="Wine map" />
       {/* One fixed screen (spec 2026-09-25 D1, D3 on phones; spec 2026-09-27
           M1, M2 from md). <main> is exactly what is left under the header,
           and under the active-tasting strip when there is one, and it never
