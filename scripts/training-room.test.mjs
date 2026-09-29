@@ -1306,3 +1306,59 @@ test("RM9a: every placed typical wine outside france.bourgogne also sits on its 
     assert.equal(bourgogne, 7, "Bourgogne keeps its seven curated typical wines");
   });
 });
+
+// --- Phase R2: curated display points (spec §4.3, RM23) -------------------------
+// Before 20260929150000 is live, name its file in TRAINING_ROOM_APPLY.
+
+async function displayPointsLive() {
+  return (
+    await client.query(
+      `select count(*) = 2 as live from information_schema.columns
+        where table_schema = 'public' and table_name = 'wine_archetypes'
+          and column_name in ('display_lon', 'display_lat')`,
+    )
+  ).rows[0].live;
+}
+
+test("R2: every unplaced typical wine of the curated list carries a point a signed-in reader sees", async (t) => {
+  await withRollback(async () => {
+    await asOwner();
+    if (!(await displayPointsLive())) {
+      t.skip("R2's display points are neither live nor in TRAINING_ROOM_APPLY");
+      return;
+    }
+    // Any signed-in caller: wine_archetypes is readable to every member.
+    await asUser(randomUUID());
+    const got = (
+      await client.query(
+        `select count(*) filter (where display_lon is not null)::int with_point,
+                count(*) filter (where display_lon is not null and wine_place_id is not null)::int placed_with_point
+           from wine_archetypes`,
+      )
+    ).rows[0];
+    // 18 before the USA wave places its three, 15 after; never a placed one.
+    assert.ok([15, 18].includes(got.with_point), `with_point = ${got.with_point}`);
+    assert.equal(got.placed_with_point, 0);
+    const wachau = (
+      await client.query(
+        `select display_lon, display_lat from wine_archetypes
+          where name in ('A typical Wachau Grüner Veltliner', 'A typical Wachau Riesling')`,
+      )
+    ).rows;
+    assert.deepEqual(wachau, [
+      { display_lon: 15.42, display_lat: 48.39 },
+      { display_lon: 15.42, display_lat: 48.39 },
+    ]);
+    await asOwner();
+    // Both or neither, and in range (wine_archetypes_display_point_check).
+    await expectError(
+      () => client.query("update wine_archetypes set display_lon = 1 where name = 'A typical Pauillac'"),
+      "23514",
+    );
+    await expectError(
+      () =>
+        client.query("update wine_archetypes set display_lon = 181, display_lat = 1 where name = 'A typical Pauillac'"),
+      "23514",
+    );
+  });
+});

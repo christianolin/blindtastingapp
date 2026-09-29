@@ -7,14 +7,18 @@ import { describe, expect, it } from "vitest";
 // refresh (CLAUDE.md) and none touches what the tiles are built from. Found by
 // name suffix: the versions are re-picked at apply time (spec §4).
 const DIR = fileURLToPath(new URL("../../../supabase/migrations/", import.meta.url));
-const NAMES = ["training_archetype_places.sql", "training_region_placements.sql"];
+const NAMES = [
+  "training_archetype_places.sql",
+  "training_region_placements.sql",
+  "training_room_display_points.sql",
+];
 const WRITE =
   /\b(insert\s+into|update|delete\s+from|alter\s+table|truncate(\s+table)?|drop\s+table(\s+if\s+exists)?)\s+(public\.)?wine_place(s|_boundaries)\b/i;
 
 const files = readdirSync(DIR).filter((f) => NAMES.some((n) => f.endsWith(`_${n}`)));
 
 describe("the training-room-map migrations", () => {
-  it("are both there, once each", () => {
+  it("are all there, once each", () => {
     expect(files.map((f) => f.replace(/^\d{14}_/, "")).sort()).toEqual(NAMES);
   });
 

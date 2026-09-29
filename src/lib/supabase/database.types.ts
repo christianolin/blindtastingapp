@@ -1481,6 +1481,11 @@ export type Database = {
           typical_age_high: number | null;
           sort_order: number;
           created_at: string;
+          // 20260929150000 (training-room-map spec RM23): a curated,
+          // display-only map point for a typical wine with no map place.
+          // Both null or both set (wine_archetypes_display_point_check).
+          display_lon: number | null;
+          display_lat: number | null;
         };
         Insert: {
           id?: string;
@@ -1501,6 +1506,8 @@ export type Database = {
           typical_age_high?: number | null;
           sort_order?: number;
           created_at?: string;
+          display_lon?: number | null;
+          display_lat?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["wine_archetypes"]["Insert"]>;
         Relationships: [];

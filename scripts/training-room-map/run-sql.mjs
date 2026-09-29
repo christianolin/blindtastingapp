@@ -18,8 +18,8 @@ if (!file || flags.some((f) => f !== "--dry") || flags.length > 1) {
   process.exit(2);
 }
 const normalized = file.replace(/\\/g, "/");
-if (!/^scripts\/training-room-map\/rollback-r1[ab]\.sql$/.test(normalized)) {
-  console.error("run-sql.mjs only runs scripts/training-room-map/rollback-r1a.sql or rollback-r1b.sql");
+if (!/^scripts\/training-room-map\/rollback-r(1a|1b|2)\.sql$/.test(normalized)) {
+  console.error("run-sql.mjs only runs scripts/training-room-map/rollback-r1a.sql, rollback-r1b.sql or rollback-r2.sql");
   process.exit(2);
 }
 const dry = flags.includes("--dry");
