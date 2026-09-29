@@ -1244,7 +1244,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
 - **Training room on the wine map, R1** (2026-09-29, spec
   `docs/superpowers/specs/2026-09-29-training-room-map-design.md`, plan
   `docs/superpowers/plans/2026-09-29-training-room-map-r1.md`; R2, the
-  likelihood map, is not built yet). **Training room only** (RM1): no
+  likelihood map, is the next bullet). **Training room only** (RM1): no
   likelihood, room map or matcher output in a tasting, a lobby or the play
   page. Links both ways: a typical wine's detail in the room (laptop popover
   and phone sheet, `ArchetypeDetail`) ends with "See it on the wine map" — a
@@ -1253,7 +1253,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `src/app/taste/training/map-link.tsx`) — or plain "Not on the wine map
   yet"; an expanded region group's first row (its own `<li>`, never inside
   the region row's `<button>`) names the MAP region its wines sit in
-  ("Veneto on the wine map" under Prosecco; `groupMapRegion`: the region
+  ("Veneto on the wine map" under Prosecco, in the explorer's English — `englishName` — since R2; `groupMapRegion`: the region
   most members name, ties by key). `ArchetypeLinks`
   (`src/components/wset/archetype-links.tsx`) puts "Practise blind in the
   training room →" under `ArchetypeModal` and `/knowledge/archetypes/[id]` —
@@ -1303,6 +1303,69 @@ a raw subquery, regardless of which two tables look involved at a glance.
   leaves `auth.uid()` as the zero UUID for the rest of the applier's
   transaction, and the suite's first R1 test fails if any file under test
   does that.
+- **Training room on the wine map, R2 — the likelihood map** (2026-09-29,
+  same spec, plan `docs/superpowers/plans/2026-09-29-training-room-map-r2.md`).
+  Still **training room only** (RM1): `training-map.tsx` and
+  `src/lib/training/map-view.ts` are imported only from under
+  `src/app/taste/training/` (and map-view's own test);
+  `training-room-map-imports.test.ts` pins it and the rules below. On
+  demand on both widths: a List | Map tablist (`map-switch.tsx`: roving
+  tabIndex, arrows, Home/End) beside "What it could be" on the laptop
+  column and under the phone sheet's title. The choice is
+  `roomMapReducer` state in `TrainingRoom` (`room-map-state.ts`): every page
+  visit starts on List, it survives the sheet closing and a new session,
+  and it is NEVER stored. The map is a lean MapLibre map (`TrainingMap`,
+  never `TileWineMap`: no pmtiles, manifest or shards), its own chunk
+  through ONE loader (`training-map-loader.ts`'s `loadTrainingMap`, used by
+  `room-map-slot.tsx`'s `next/dynamic(…, { ssr: false })` and by the Map
+  tab's warm-up on pointerenter/focus, which also `import()`s `basemap.ts`
+  to fetch the style), so the room's first load carries no MapLibre,
+  basemap or palette. It mounts only in the Map view — in the laptop column
+  from lg (`LG_QUERY`), in the phone sheet below it, never both (one WebGL
+  context). One dot per typical wine at its home's `label_point`, else the
+  nearest ancestor's, else a CURATED display-only point
+  (`wine_archetypes.display_lon`/`display_lat`, both or neither,
+  `…_training_room_display_points.sql`: 18 values set by id and live name
+  while unplaced; read by its own fail-soft select, `training pool: display
+  points`). A curated point is never a map place: that wine's detail still
+  reads "Not on the wine map yet", and the legend says curated spots are
+  approximate. Heat is RELATIVE to the leader (`heatOf` = closeness / the
+  best uncapped closeness); colour and size ramp over heat 0.5–1 through
+  `MAP_PALETTES[theme].heat` (kept LAST in both tables — a collaborator
+  edits the file too); a capped wine is a hollow ring, an unscored one
+  neutral. The % shown is the list's own (`shortName` + `percentLabel`):
+  three always-on labels, the rest from z7 where they fit, a hover tooltip
+  on fine pointers, and a "Closest on the map" row of real buttons. One
+  GeoJSON source, `TRAINING_SOURCE_ID` (`wine-training`, known to
+  `isWineSourceId` so a theme swap carries it); `setData` at most once per
+  frame and only when `featuresFingerprint` changes. Theme: `mapStyle`
+  frozen at mount (the cached style or the URL), flips through
+  `setStyle(…, { diff: true, validate: false, transformStyle:
+  withWineLayers(prev, tuneBasemapStyle(next)) })` — never a changing
+  `mapStyle`. Camera: Europe while there is no leader; then the fit set
+  (the close set's wines with a dot, ≤ 12, within 25° of the first) 600 ms
+  after it last changed, until the viewer moves the map; then "Fit to the
+  closest". A dot opens the SAME detail a row does — laptop: the extracted
+  `CandidateDetailPopover`, anchored to a virtual element at the dot, closed
+  by any camera move (and dropped, never reopened, when the view, the map's
+  mount or lg changes: `targetAfterMapChange`), focus back to the map
+  container; phone: the sheet
+  swaps to the detail or a "{n} wines here" chooser OVER the kept, inert
+  map. Failure: a lost WebGL context or react-maplibre's constructor error
+  (`onError` with `target` null) → back to List with "The map stopped
+  working"; a chunk error (`MapErrorBoundary`'s new optional `fallback`, or
+  a rejected warm-up) → "The map needs a page reload". `hover-cursor.ts`
+  gained optional `isClickable`/`box`/`onHover` (the explorer passes none).
+  **Kill switch:** `NEXT_PUBLIC_TRAINING_MAP=0` at BUILD time removes the
+  tablist and the room is exactly R1 — an env change plus a redeploy, no
+  code revert. Rollback: the app revert or the kill switch; the two columns
+  stay (nullable, harmless); `scripts/training-room-map/rollback-r2.sql`
+  only if the feature is abandoned. `check-display-points.mjs` is the
+  pre-deploy PostgREST check. The R2 copy is provisional until the owner
+  approves spec §9's R2 rows. The room's pre-map JS grew by about 6 KB gzip
+  in the planning build, against spec §12's 3 KB: whether that stands is the
+  owner's call before the deploy (the R2 plan's "Main session afterwards",
+  step 3).
 - **Aroma lexicon v2** (2026-09-29, migration
   `20260929090000_aroma_lexicon_v2.sql`, data only; spec, lexicon review and
   the typical-wine votes in `data/training/aroma-lexicon-v2-2026-09-29.json`).
