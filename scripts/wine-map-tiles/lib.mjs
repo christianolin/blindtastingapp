@@ -319,6 +319,19 @@ export const ATTRIBUTION = {
       + "Abgrenzung nach der Produktspezifikation im EU-Register eAmbrosia, "
       + "für Baden und Württemberg nach GBl. BW 1983 Nr. 23",
   },
+  // United States AVAs (spec 2026-09-29 §5.5, D9). The UC Davis Library
+  // digitization of 27 CFR Part 9 (CC0) is traced by hand from the USGS maps the
+  // CFR names: an approximation, and the credit says so. TTB's own Map Explorer
+  // outlines fill the 2026 AVAs UC Davis lacks (US-5). Provisional copy until
+  // the owner approves it (spec §18).
+  UCD_TTB_AVA: {
+    key: "ucd-ava",
+    text: "AVA outlines: American Viticultural Areas Digitizing Project, UC Davis Library et al. (CC0) — a generalized digitization of 27 CFR Part 9, not TTB's legal boundary",
+  },
+  TTB_AVA_MAP: {
+    key: "ttb-ava",
+    text: "AVA outlines: TTB AVA Map Explorer (public domain) — generalized, not the legal boundary",
+  },
 };
 
 export function attributionKeyFor(namespace) {

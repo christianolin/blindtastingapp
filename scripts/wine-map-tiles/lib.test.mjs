@@ -210,6 +210,8 @@ test("attribution keys reject unknown namespaces", () => {
     "dgt-caop": ATTRIBUTION.CAOP_CONCELHOS.text,
     "hvbg-atkis": ATTRIBUTION.HESSEN_ATKIS_WEINBAU.text,
     "de-spec-atkis": ATTRIBUTION.DE_SPEC_ATKIS_WEINBAU.text,
+    "ucd-ava": ATTRIBUTION.UCD_TTB_AVA.text,
+    "ttb-ava": ATTRIBUTION.TTB_AVA_MAP.text,
   });
 });
 
@@ -466,4 +468,14 @@ test("coverage: an unknown country throws, prototype names included", () => {
     () => featureOutsideCoverage({ expected: [{ id: "a", key: "austria.wachau", label_lon: 15.4, label_lat: 48.4 }] }),
     /No coverage box for country "austria"/,
   );
+});
+
+test("the US AVA namespaces resolve to their own credits and never claim a legal boundary", () => {
+  assert.equal(attributionKeyFor("UCD_TTB_AVA"), "ucd-ava");
+  assert.equal(attributionKeyFor("TTB_AVA_MAP"), "ttb-ava");
+  assert.match(ATTRIBUTION.UCD_TTB_AVA.text, /not TTB's legal boundary$/);
+  assert.match(ATTRIBUTION.TTB_AVA_MAP.text, /not the legal boundary$/);
+  for (const { text } of [ATTRIBUTION.UCD_TTB_AVA, ATTRIBUTION.TTB_AVA_MAP]) {
+    assert.doesNotMatch(text, /official/i);
+  }
 });
