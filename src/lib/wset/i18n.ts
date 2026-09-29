@@ -9,7 +9,7 @@
 //
 // Three surfaces live here:
 //   1. LABELS_DA      — the enum → word map (mirrors vocab.ts LABELS).
-//   2. TERMS_DA/GROUPS_DA — the aroma lexicon (144 terms, 18 clusters).
+//   2. TERMS_DA/GROUPS_DA — the aroma lexicon (150 terms, 18 clusters).
 //   3. UI_DA          — the chrome (headings, buttons, captions, dialogs).
 // Plus the quality-band words and the live-note connector words.
 import { LABELS } from "./vocab";
@@ -130,7 +130,8 @@ export function labelsFor(lang: WsetLang): Record<string, string> {
 
 // --- 2. The aroma/flavour lexicon -----------------------------------------
 // Keyed by the lowercased English term (the DB value the components receive).
-// Cross-cluster repeats (raisin, cinnamon, almond, cheese, toast, caramel…)
+// Cross-cluster repeats (raisin, cinnamon, ginger, truffle, almond, cheese,
+// toast, caramel…)
 // intentionally collapse to one Danish word.
 const TERMS_DA: Record<string, string> = {
   // floral
@@ -138,19 +139,21 @@ const TERMS_DA: Record<string, string> = {
   honeysuckle: "kaprifolie", jasmine: "jasmin", chamomile: "kamille",
   geranium: "geranie", rose: "rose", violet: "violet",
   // green fruit
-  apple: "æble", pear: "pære", gooseberry: "stikkelsbær", grape: "drue",
-  quince: "kvæde",
+  "green apple": "grønt æble", "red apple": "rødt æble", pear: "pære",
+  gooseberry: "stikkelsbær", grape: "drue", quince: "kvæde",
   // citrus
   grapefruit: "grapefrugt", lemon: "citron", lime: "lime", orange: "appelsin",
-  "lemon peel": "citronskal", "orange peel": "appelsinskal",
+  "lemon peel": "citronskal", "lime zest": "limeskal",
+  "orange peel": "appelsinskal",
   // stone
   peach: "fersken", apricot: "abrikos", nectarine: "nektarin",
   // tropical
   banana: "banan", lychee: "litchi", mango: "mango", melon: "melon",
   "passion fruit": "passionsfrugt", pineapple: "ananas",
   // red fruit
-  redcurrant: "ribs", cranberry: "tranebær", raspberry: "hindbær",
-  strawberry: "jordbær", "red cherry": "rød kirsebær", "red plum": "rød blomme",
+  redcurrant: "ribs", cranberry: "tranebær", pomegranate: "granatæble",
+  raspberry: "hindbær", strawberry: "jordbær", "red cherry": "rød kirsebær",
+  "red plum": "rød blomme",
   // black fruit
   blackcurrant: "solbær", blackberry: "brombær", blueberry: "blåbær",
   "black cherry": "sort kirsebær", "black plum": "sort blomme",
@@ -158,23 +161,26 @@ const TERMS_DA: Record<string, string> = {
   // herbaceous
   "green bell pepper": "grøn peberfrugt", grass: "græs",
   "tomato leaf": "tomatblad", asparagus: "asparges",
-  "blackcurrant leaf": "solbærblad",
+  "blackcurrant leaf": "solbærblad", "black olive": "sort oliven",
+  "green olive": "grøn oliven",
   // herbal
   eucalyptus: "eukalyptus", mint: "mynte", fennel: "fennikel", dill: "dild",
   "dried herbs": "tørrede krydderurter", medicinal: "medicinsk",
   lavender: "lavendel",
   // spice
   "black pepper": "sort peber", "white pepper": "hvid peber",
-  liquorice: "lakrids", cinnamon: "kanel",
+  liquorice: "lakrids", cinnamon: "kanel", ginger: "ingefær",
   // fruit ripeness
   "unripe fruit": "umoden frugt", "ripe fruit": "moden frugt",
-  "dried fruit": "tørret frugt", "cooked fruit": "kogt frugt",
   jammy: "marmeladeagtig",
   // other
-  simple: "enkel", "wet stones": "våde sten", flint: "flint", candy: "slik",
-  "wet wool": "våd uld", minerality: "mineralitet", saltiness: "saltethed",
+  simple: "enkel", "wet stones": "våde sten",
+  "flint / struck match": "flint / strøget tændstik", minerality: "mineralitet",
+  saline: "saltholdig", candy: "slik", "wet wool": "våd uld",
   // yeast
-  biscuit: "kiks", "graham cracker": "grahamskiks", bread: "brød",
+  biscuit: "kiks", bread: "brød", "toasted bread": "ristet brød",
+  // Oak and White wine keep "toast"; it shares the Danish word with Yeast's
+  // toasted bread, as the old Yeast toast did.
   toast: "ristet brød", pastry: "bagværk", brioche: "brioche",
   "bread dough": "brøddej", cheese: "ost", yogurt: "yoghurt",
   acetaldehyde: "acetaldehyd",
@@ -187,18 +193,19 @@ const TERMS_DA: Record<string, string> = {
   coffee: "kaffe", resinous: "harpiksagtig",
   // red-wine tertiary
   prune: "sveske", raisin: "rosin", fig: "figen", "cooked plum": "kogt blomme",
-  "cooked cherry": "kogt kirsebær", "cooked red plum": "kogt rød blomme",
+  "cooked cherry": "kogt kirsebær",
   "dried blackberry": "tørret brombær", "dried cranberry": "tørret tranebær",
   "cooked blackberry": "kogt brombær", kirsch: "kirsch", leather: "læder",
-  earth: "jord", mushroom: "svamp", meat: "kød", game: "vildt",
-  tobacco: "tobak", "wet leaves": "våde blade", "forest floor": "skovbund",
+  earth: "jord", mushroom: "svamp", truffle: "trøffel", meat: "kød",
+  "smoked meat": "røget kød", game: "vildt", tobacco: "tobak",
+  "black tea": "sort te", "wet leaves": "våde blade", "forest floor": "skovbund",
   vegetal: "vegetabilsk", savoury: "umami", farmyard: "stald", tar: "tjære",
   caramel: "karamel",
   // white-wine tertiary
   "dried apricot": "tørret abrikos", sultana: "sultana",
   "orange marmalade": "appelsinmarmelade", petrol: "petroleum",
-  kerosene: "kerosen", ginger: "ingefær", almond: "mandel",
-  hazelnut: "hasselnød", honey: "honning", nutty: "nøddeagtig", hay: "hø",
+  almond: "mandel", hazelnut: "hasselnød", honey: "honning",
+  beeswax: "bivoks", nutty: "nøddeagtig", hay: "hø",
   "dried apple": "tørret æble", "dried banana": "tørret banan",
   // deliberately oxidised
   marzipan: "marcipan", walnut: "valnød", toffee: "toffee",

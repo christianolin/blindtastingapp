@@ -13,24 +13,25 @@ type IconMeta = { set: string; icon: string; color?: string };
 // The .mjs literal infers per-key shapes; widen it to one indexable record.
 const META: Record<string, IconMeta> = ICON_META;
 
+// The lexicon as of 20260929090000_aroma_lexicon_v2 (150 terms), in sort order.
 const LEXICON: Record<string, string[]> = {
   Floral: ["blossom", "acacia", "elderflower", "honeysuckle", "jasmine", "chamomile", "geranium", "rose", "violet"],
-  "Green fruit": ["apple", "pear", "gooseberry", "grape", "quince"],
-  "Citrus fruit": ["grapefruit", "lemon", "lime", "orange", "lemon peel", "orange peel"],
+  "Green fruit": ["green apple", "red apple", "pear", "gooseberry", "grape", "quince"],
+  "Citrus fruit": ["grapefruit", "lemon", "lime", "orange", "lemon peel", "lime zest", "orange peel"],
   "Stone fruit": ["peach", "apricot", "nectarine"],
   "Tropical fruit": ["banana", "lychee", "mango", "melon", "passion fruit", "pineapple"],
-  "Red fruit": ["redcurrant", "cranberry", "raspberry", "strawberry", "red cherry", "red plum"],
+  "Red fruit": ["redcurrant", "cranberry", "pomegranate", "raspberry", "strawberry", "red cherry", "red plum"],
   "Black fruit": ["blackcurrant", "blackberry", "blueberry", "black cherry", "black plum", "bramble"],
-  Herbaceous: ["green bell pepper", "grass", "tomato leaf", "asparagus", "blackcurrant leaf"],
+  Herbaceous: ["green bell pepper", "grass", "tomato leaf", "asparagus", "blackcurrant leaf", "black olive", "green olive"],
   Herbal: ["eucalyptus", "mint", "fennel", "dill", "dried herbs", "medicinal", "lavender"],
-  Spice: ["black pepper", "white pepper", "liquorice", "cinnamon"],
-  "Fruit ripeness": ["unripe fruit", "ripe fruit", "dried fruit", "cooked fruit", "jammy"],
-  Other: ["simple", "wet stones", "flint", "minerality", "saltiness", "candy", "wet wool"],
-  Yeast: ["biscuit", "graham cracker", "bread", "toast", "pastry", "brioche", "bread dough", "cheese", "yogurt", "acetaldehyde"],
+  Spice: ["black pepper", "white pepper", "liquorice", "cinnamon", "ginger"],
+  "Fruit ripeness": ["unripe fruit", "ripe fruit", "jammy"],
+  Other: ["simple", "wet stones", "flint / struck match", "minerality", "saline", "candy", "wet wool"],
+  Yeast: ["biscuit", "bread", "toasted bread", "pastry", "brioche", "bread dough", "cheese", "yogurt", "acetaldehyde"],
   Malolactic: ["butter", "cream", "cheese"],
   Oak: ["vanilla", "cloves", "nutmeg", "coconut", "butterscotch", "toast", "cedar", "charred wood", "smoke", "chocolate", "coffee", "resinous"],
-  "Red wine": ["prune", "raisin", "fig", "cooked plum", "cooked cherry", "cooked red plum", "dried blackberry", "dried cranberry", "cooked blackberry", "kirsch", "leather", "earth", "mushroom", "meat", "game", "tobacco", "wet leaves", "forest floor", "vegetal", "savoury", "farmyard", "tar", "caramel"],
-  "White wine": ["dried apricot", "sultana", "raisin", "orange marmalade", "petrol", "kerosene", "cinnamon", "ginger", "nutmeg", "almond", "hazelnut", "honey", "caramel", "toast", "nutty", "mushroom", "hay", "dried apple", "dried banana"],
+  "Red wine": ["prune", "raisin", "fig", "cooked plum", "cooked cherry", "dried blackberry", "dried cranberry", "cooked blackberry", "kirsch", "leather", "earth", "mushroom", "truffle", "meat", "smoked meat", "game", "tobacco", "black tea", "wet leaves", "forest floor", "vegetal", "savoury", "farmyard", "tar", "caramel"],
+  "White wine": ["dried apricot", "sultana", "raisin", "orange marmalade", "petrol", "cinnamon", "ginger", "nutmeg", "almond", "hazelnut", "honey", "beeswax", "caramel", "toast", "nutty", "mushroom", "truffle", "hay", "dried apple", "dried banana"],
   "Deliberately oxidised": ["almond", "marzipan", "hazelnut", "walnut", "chocolate", "coffee", "toffee", "caramel"],
 };
 

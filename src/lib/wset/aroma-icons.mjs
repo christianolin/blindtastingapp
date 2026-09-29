@@ -57,7 +57,10 @@ export const ICON_META = {
   rose: { set: E, icon: "rose" },
   violet: { set: G, icon: "spoted-flower", color: "#7B4FA8" },
   // ---- GREEN FRUIT ----
-  apple: { set: E, icon: "green-apple" },
+  "green-apple": { set: E, icon: "green-apple" },
+  // The literal red apple, the pair of green apple's glyph. It used to be ripe
+  // fruit's icon; ripe fruit moved to the fruit bowl (freed by dried fruit).
+  "red-apple": { set: E, icon: "red-apple" },
   pear: { set: E, icon: "pear" },
   // Owner disliked the leafy berry-bush (busy cluster). A single green orchard
   // fruit with a leaf reads cleaner at pill size; no set has a literal gooseberry.
@@ -67,6 +70,7 @@ export const ICON_META = {
   // ---- CITRUS ----
   lemon: { set: E, icon: "lemon" },
   "lemon-peel": { set: G, icon: "cut-lemon", color: C.citrus },
+  "lime-zest": { set: G, icon: "cut-lemon", color: "#7FBF3A" }, // lemon peel's glyph in lime's tint
   lime: { set: G, icon: "lemon", color: "#7FBF3A" },
   grapefruit: { set: P, icon: "orange-one", color: "#EF6A5A" },
   orange: { set: E, icon: "tangerine" },
@@ -90,6 +94,9 @@ export const ICON_META = {
   // ---- RED FRUIT (single-object glyphs, no clusters) ----
   redcurrant: { set: G, icon: "berry-bush", color: C.red },
   cranberry: { set: G, icon: "raspberry", color: "#C42A3A" },
+  // No set has a pomegranate except openmoji's, which is lychee's stand-in. A
+  // halved red fruit showing its seeds is the next-closest thing, in garnet.
+  pomegranate: { set: G, icon: "apple-seeds", color: "#A3203A" },
   raspberry: { set: G, icon: "raspberry", color: C.pinkred },
   strawberry: { set: E, icon: "strawberry" },
   "red-cherry": { set: P, icon: "cherry", color: "#C42A3A" },
@@ -107,6 +114,10 @@ export const ICON_META = {
   "tomato-leaf": { set: E, icon: "tomato" },
   asparagus: { set: G, icon: "asparagus", color: C.herb },
   "blackcurrant-leaf": { set: G, icon: "vine-leaf", color: C.herb },
+  // Green olive is the 3D emoji olive; black olive the olive sprig in a
+  // purple-black tint (no set has a black olive).
+  "black-olive": { set: G, icon: "olive", color: "#3A2E3A" },
+  "green-olive": { set: E, icon: "olive" },
   // ---- HERBAL ----
   eucalyptus: { set: E, icon: "leaf-fluttering-in-wind" },
   mint: { set: E, icon: "herb" },
@@ -122,25 +133,27 @@ export const ICON_META = {
   cinnamon: { set: G, icon: "wood-stick", color: "#9C5A2B" },
   // ---- FRUIT RIPENESS ----
   "unripe-fruit": { set: G, icon: "shiny-apple", color: C.green },
-  "ripe-fruit": { set: E, icon: "red-apple" },
-  "dried-fruit": { set: G, icon: "fruit-bowl", color: "#8A5A2E" }, // was a wheat sheaf
-  "cooked-fruit": { set: E, icon: "pie" }, // baked fruit, not a savoury stew pot
+  // A bowl of fruit in a warm, ripe tint. The literal red apple is red apple's
+  // own now that apple is split into green and red.
+  "ripe-fruit": { set: G, icon: "fruit-bowl", color: "#C8553A" },
   jammy: { set: O, icon: "jar-with-red-content" }, // jam IN the jar, not an empty one
   // ---- OTHER ----
   simple: { set: E, icon: "wine-glass" },
   "wet-stones": { set: E, icon: "rock" },
-  flint: { set: G, icon: "flint-spark", color: C.slate },
+  "flint-struck-match": { set: G, icon: "flint-spark", color: C.slate },
   candy: { set: E, icon: "candy" },
   "wet-wool": { set: G, icon: "wool", color: C.grey },
   // Coastal whites: the two notes the WSET lexicon leaves out. Minerality gets
   // a crystal cluster (distinct from wet stones' rounded pebble and flint's
-  // spark); saltiness gets the salt shaker itself.
+  // spark); saline gets the salt shaker itself.
   minerality: { set: G, icon: "minerals", color: "#5E7E9E" },
-  saltiness: { set: E, icon: "salt" },
+  saline: { set: E, icon: "salt" },
   // ---- YEAST ----
   biscuit: { set: E, icon: "cookie" },
-  "graham-cracker": { set: G, icon: "bread-slice", color: "#C98A4A" },
   bread: { set: E, icon: "bread" },
+  // Yeast's toasted bread takes the plain slice; Oak and White wine keep
+  // `toast`, the buttered one.
+  "toasted-bread": { set: G, icon: "bread-slice", color: "#C98A4A" },
   toast: { set: G, icon: "butter-toast", color: "#B07A3A" },
   pastry: { set: E, icon: "croissant" },
   // A round, domed, scored bun — the shape brioche is baked in. (The burger
@@ -179,11 +192,11 @@ export const ICON_META = {
   raisin: { set: G, icon: "grapes", color: "#5A3A2E" },
   "orange-marmalade": { set: G, icon: "honey-jar", color: "#E07A2E" },
   petrol: { set: E, icon: "fuel-pump" },
-  kerosene: { set: G, icon: "jerrycan", color: "#5A6A6A" },
   ginger: { set: E, icon: "ginger-root" },
   almond: { set: G, icon: "almond", color: "#C9A46A" },
   hazelnut: { set: E, icon: "peanuts" },
   honey: { set: E, icon: "honey-pot" },
+  beeswax: { set: G, icon: "honeycomb", color: "#D4A017" },
   caramel: { set: G, icon: "honey-jar", color: C.amber },
   nutty: { set: G, icon: "peanut", color: "#B58248" },
   hay: { set: G, icon: "wheat", color: C.gold },
@@ -194,7 +207,6 @@ export const ICON_META = {
   fig: { set: G, icon: "fruiting", color: "#6E3560" },
   "cooked-plum": { set: G, icon: "cooking-pot", color: "#7A3A6E" },
   "cooked-cherry": { set: G, icon: "cherry", color: "#8A2A2E" },
-  "cooked-red-plum": { set: G, icon: "saucepan", color: "#A33A3A" },
   "dried-blackberry": { set: G, icon: "berries-bowl", color: "#4A2A44" },
   "dried-cranberry": { set: G, icon: "berry-bush", color: "#8A2A32" },
   "cooked-blackberry": { set: G, icon: "jelly", color: C.darkpurple },
@@ -202,13 +214,18 @@ export const ICON_META = {
   leather: { set: G, icon: "leather-vest", color: "#8A5A32" },
   earth: { set: G, icon: "stone-block", color: "#6B4A32" },
   mushroom: { set: E, icon: "brown-mushroom" },
+  // No set has a truffle; a dark, knobbly tuber is its shape. One slug serves
+  // the Red wine and White wine truffle alike.
+  truffle: { set: G, icon: "potato", color: "#3E2C26" },
   meat: { set: E, icon: "cut-of-meat" },
+  "smoked-meat": { set: E, icon: "bacon" },
   game: { set: E, icon: "deer" },
   tobacco: { set: G, icon: "smoking-pipe", color: "#6B4A2E" },
+  "black-tea": { set: G, icon: "teapot", color: "#7A4A2A" }, // hot-beverage is coffee's
   "wet-leaves": { set: E, icon: "fallen-leaf" },
   "forest-floor": { set: E, icon: "deciduous-tree" },
   vegetal: { set: E, icon: "broccoli" },
-  // A steaming broth bowl says umami. The salt shaker moved to `saltiness`,
+  // A steaming broth bowl says umami. The salt shaker moved to `saline`,
   // where it is literal — two shakers in one lexicon would just be confusing.
   savoury: { set: E, icon: "steaming-bowl" },
   farmyard: { set: G, icon: "barn", color: "#9C3A2E" },

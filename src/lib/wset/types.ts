@@ -160,8 +160,8 @@ export type CatalogWine = {
   typeDesignationName: string | null;
 };
 
-// One seeded wset_aroma_terms row. sortOrder is the term's 1..89 position on
-// the WSET sheet; groupName is the sub-heading ("Citrus", "Ripeness", …).
+// One seeded wset_aroma_terms row. sortOrder is the term's global position
+// across the whole lexicon (unique, with gaps: 1..156 as of aroma lexicon v2); groupName is the sub-heading ("Citrus", "Ripeness", …).
 export type AromaTerm = {
   id: string;
   family: AromaFamily;

@@ -31,8 +31,8 @@ const SUBGROUP_KEY: Record<string, string> = {
   "Petrol, honey & earth": "sub_petrol_honey_earth",
 };
 
-// Tertiary ageing is one big WSET bucket per wine colour — "Red wine" holds 23
-// terms and "White wine" 19, which reads as an undifferentiated wall of pills.
+// Tertiary ageing is one big WSET bucket per wine colour — "Red wine" holds 25
+// terms and "White wine" 20, which reads as an undifferentiated wall of pills.
 // WSET's own lexicon doesn't subdivide them, but for scanning we do: each term
 // maps to a themed sub-cluster (dried/cooked fruit vs earth & forest vs savoury
 // & smoke). Presentation only — the DB group_name, the saved note and the
@@ -44,7 +44,6 @@ const TERTIARY_SUBGROUP: Record<string, string> = {
   fig: "Dried & cooked fruit",
   "cooked plum": "Dried & cooked fruit",
   "cooked cherry": "Dried & cooked fruit",
-  "cooked red plum": "Dried & cooked fruit",
   "dried blackberry": "Dried & cooked fruit",
   "dried cranberry": "Dried & cooked fruit",
   "cooked blackberry": "Dried & cooked fruit",
@@ -53,14 +52,17 @@ const TERTIARY_SUBGROUP: Record<string, string> = {
   leather: "Earth & forest",
   earth: "Earth & forest",
   mushroom: "Earth & forest",
+  truffle: "Earth & forest",
   "wet leaves": "Earth & forest",
   "forest floor": "Earth & forest",
   farmyard: "Earth & forest",
   vegetal: "Earth & forest",
   // Red wine — savoury & smoke
   meat: "Savoury & smoke",
+  "smoked meat": "Savoury & smoke",
   game: "Savoury & smoke",
   tobacco: "Savoury & smoke",
+  "black tea": "Savoury & smoke",
   savoury: "Savoury & smoke",
   tar: "Savoury & smoke",
   caramel: "Savoury & smoke",
@@ -83,10 +85,11 @@ const WHITE_TERTIARY_SUBGROUP: Record<string, string> = {
   toast: "Nut, spice & toast",
   // White wine — petrol, honey & earth
   petrol: "Petrol, honey & earth",
-  kerosene: "Petrol, honey & earth",
   honey: "Petrol, honey & earth",
+  beeswax: "Petrol, honey & earth",
   caramel: "Petrol, honey & earth",
   mushroom: "Petrol, honey & earth",
+  truffle: "Petrol, honey & earth",
   hay: "Petrol, honey & earth",
 };
 
@@ -214,7 +217,7 @@ export function AromaPicker({
   }, [selectedIds, byId]);
 
   // Clusters of the active origin, in sort order, caption preserved. Tertiary's
-  // two huge WSET clusters ("Red wine" 23 terms, "White wine" 19) are subdivided
+  // two huge WSET clusters ("Red wine" 25 terms, "White wine" 20) are subdivided
   // for readability — see splitGroupName.
   const groups = useMemo(() => {
     const inOrigin = terms
