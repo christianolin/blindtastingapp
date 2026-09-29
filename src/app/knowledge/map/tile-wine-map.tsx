@@ -173,6 +173,12 @@ const REGION_LABELS: Record<string, string> = {
   "peninsula-de-setubal": "Península de Setúbal",
   alentejo: "Alentejo",
   madeira: "Madeira",
+  // Without these the fallback capitalises the key: "New-york".
+  "united-states": "United States",
+  california: "California",
+  washington: "Washington",
+  oregon: "Oregon",
+  "new-york": "New York",
 };
 // Diagnostic escape hatch: `?debugFills=off` on the map URL renders outlines
 // and labels but no polygon fills. Fills are the only thing that stacks —

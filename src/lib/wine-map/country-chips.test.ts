@@ -87,6 +87,19 @@ describe("countryChips", () => {
   it("is empty without a tree", () => {
     expect(countryChips([], { english: true, visibleKeys: null })).toEqual([]);
   });
+
+  it("tags the United States as English in local mode and sorts it last", () => {
+    const roots = [...ROOTS, node("united-states", "United States", "COUNTRY", 0)];
+    const local = countryChips(roots, { english: false, visibleKeys: null });
+    expect(local.find((c) => c.key === "united-states")).toEqual({
+      key: "united-states",
+      label: "United States",
+      lang: "en",
+      count: null,
+    });
+    const english = countryChips(roots, { english: true, visibleKeys: null });
+    expect(english.map((c) => c.key).at(-1)).toBe("united-states");
+  });
 });
 
 describe("rovingIndex", () => {

@@ -21,6 +21,7 @@ const LOCAL_LANG: Record<string, string> = {
   italy: "it",
   portugal: "pt",
   spain: "es",
+  "united-states": "en",
 };
 
 /** The chips in the order the viewer reads them: collated on the DISPLAYED

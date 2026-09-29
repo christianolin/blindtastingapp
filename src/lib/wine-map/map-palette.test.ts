@@ -130,11 +130,12 @@ const NEIGHBOURS: [string, string][] = [
   ["abruzzo", "marche"], ["sicilia", "calabria"], ["puglia", "basilicata"],
   ["mosel", "nahe"], ["mosel", "ahr"], ["pfalz", "rheinhessen"],
   ["bairrada", "dao"], ["douro", "minho"], ["alentejo", "peninsula-de-setubal"],
+  ["washington", "oregon"], ["oregon", "california"],
 ];
 
 describe("the two map palettes are keyed alike", () => {
-  it("has the same 64 region keys, 12 districts, label and classification keys", () => {
-    expect(Object.keys(light.regions)).toHaveLength(64);
+  it("has the same 69 region keys, 12 districts, label and classification keys", () => {
+    expect(Object.keys(light.regions)).toHaveLength(69);
     expect(Object.keys(dark.regions).sort()).toEqual(Object.keys(light.regions).sort());
     // paletteArms(slugs, 12) keys both tables identically only if both have 12.
     expect(light.districts).toHaveLength(12);
@@ -163,6 +164,8 @@ describe("the two map palettes are keyed alike", () => {
       }
     }
     expect(dark.fallback).toBe(dark.regions.france);
+    expect(light.regions["united-states"]).toBe(light.fallback);
+    expect(dark.regions["united-states"]).toBe(dark.fallback);
   });
 });
 
